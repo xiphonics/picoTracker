@@ -1,0 +1,11 @@
+
+include $(PWD)/osx_rules
+
+CFLAGS	:= -O3 -Wall -I$(PWD) -I/Library/Frameworks/SDL.framework/Headers 
+
+CXXFLAGS:= $(CFLAGS)
+
+EXTENSION:= app
+
+LIBS	:=  
+

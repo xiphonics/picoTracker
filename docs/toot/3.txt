@@ -1,0 +1,32 @@
+> 3. Song structure (still in tardline)
+>    Chains/Phrase concept
+>    Navigating through from song to phrase
+>    Start/stop at phrase level
+>    Start/stop at chain level
+
+There are two major differences between Little G P Tracker and conventional Trackers.
+
+The first difference is that a pattern does not include note data across all channels. For each step in the song screen, each channel has it's own chain number containing data for that channel exclusively. As you can see, each chain is represented by an hexadecimal number from 0 0 to F F. 
+
+This make it convenient if you want to re-use a drum pattern for example but want to alter the melody. All you need is to copy the drum chain a couple of time and creat new ones for the melody. It makes building song structure a lot easier.
+
+The second difference is that a chain doesn't contain directly note data. Rather, it will hold a collection of sub-patterns, called phrases, that will contain the note data. The chain can be seen as a bigger bloc of notes that makes sense repeating in the song.  For example it could be a drum pattern, with a fill at the end repeating across the song.
+
+Let's look at an example and examine chain 0 E. As you can see, it is repeated 4 times because it's a repeating block at that stage of the song.
+
+As we learned in the previous chapter, Little G P Tracker is organised around a serie of map-like screens. The chain screen, where you edit chain content, is located to the right of the song screen. To navigate to the chain screen, you need to be on a non empty slot and hit the right shoulder button and the right arrow direction.
+
+As we mentioned earlier, the chain is a collection of phrases, in this case, 4, that will be played one after the other sequentially. To see the content of a phrase, highlight it using the up and down button and press again right shoulder and the right direction, since the phrase screen is located to the right of the chain screen.
+
+As you can see now, the phrases contain the note data. If you press play while being in the phrase screen, you will hear that phrase going over and over.
+
+
+You can also go back to the chain screen and press start there. All of the phrases of that chain will be played sequentially allowing you to hear the whole block.
+
+
+
+
+
+If you want to start the whole song from the last cursor position while being in either chain or phrase screen, simply hit right shoulder and start simultaneously.
+
+  

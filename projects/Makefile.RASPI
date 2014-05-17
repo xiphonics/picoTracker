@@ -1,0 +1,13 @@
+
+include $(PWD)/raspi_rules
+
+CFLAGS := -O3 -DCPP_MEMORY -Wall -I/usr/local/include -I$(PWD)/../sources -D__LINUX_ALSA__ -D__LINUX_ALSASEQ__ -D_NO_JACK_ -D_NDEBUG
+#CFLAGS	:= -g -DCPP_MEMORY -Wall -I/usr/local/include -I$(PWD)/../sources -D__LINUX_ALSA__ -D__LINUX_ALSASEQ__ -D_NO_JACK_
+ 
+
+CXXFLAGS:= $(CFLAGS)
+
+EXTENSION:= rpi-exe
+
+LIBS	:= -lasound -lSDL -lpthread
+

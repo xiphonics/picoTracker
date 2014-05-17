@@ -1,0 +1,5 @@
+-include $(PWD)/base_rules
+
+TARGET=lgpt
+
+export OBJS:=$(OFILES)

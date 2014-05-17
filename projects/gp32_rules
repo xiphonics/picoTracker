@@ -1,0 +1,18 @@
+-include $(DEVKITARM)/base_rules
+
+LIBMIRKO	:=	$(DEVKITPRO)/libmirko
+
+#---------------------------------------------------------------------------------
+%.fxe: %.bin
+	b2fxec -a "$(AUTHOR)" -t "$(NAME)" -b "$(PWD)/$(ICON)" $< $@
+	@echo built ... $(notdir $@)
+
+#---------------------------------------------------------------------------------
+%.bin: %.elf
+	@$(OBJCOPY) -O binary $< $@
+	@echo built ... $(notdir $@)
+
+#---------------------------------------------------------------------------------
+%.elf:
+	@echo linking binary
+	@$(LD)  $(LDFLAGS) -specs=gp32.specs $(OFILES) $(LIBPATHS) $(LIBS) -o $@

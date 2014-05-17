@@ -1,0 +1,36 @@
+ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
+endif
+
+include $(DEVKITARM)/base_rules
+
+LIBNDS	:=	$(DEVKITPRO)/libnds
+
+#---------------------------------------------------------------------------------
+%.ds.gba: %.nds
+	@dsbuild $<
+	@echo built ... $(notdir $@)
+
+#---------------------------------------------------------------------------------
+%.nds: %.arm9 %.arm7
+	ndstool -c $@ -9 $(OUTPUT).arm9 -7 $(OUTPUT).arm7
+	dsbuild $<
+#	dlditool $(PWD)/dsx.dldi $(OUTPUT).nds 
+	dlditool $(PWD)/r4tf.dldi $(OUTPUT).nds 
+	@echo built ... $(notdir $@)
+
+#---------------------------------------------------------------------------------
+%.arm9: %.elf
+	@$(OBJCOPY) -O binary $< $@
+	@echo built ... $(notdir $@)
+ 
+#---------------------------------------------------------------------------------
+%._arm7: %.elf
+	$(OBJCOPY) -O binary $< $@
+	echo built ... $(notdir $@)
+
+#---------------------------------------------------------------------------------
+%._elf:
+	@echo linking $(notdir $@)
+	$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $@
+

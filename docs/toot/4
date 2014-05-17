@@ -1,0 +1,24 @@
+> 4. Editing 1: Basics (still in tardline)
+>    Creating a new chain (principle of A,A)
+>    Navigate in chain
+>    Creating a phrase
+>    Entering note.
+>    Principle of A+arrows for modifying
+>    Changing instrument number
+>    transpose paramete in chains
+
+Let's now learn to create new material. Let's go to the end of the song and position ourself on an empty slot.
+To create a new empty chain, tap twice the A button. This will fill the slot with the first empty chain number.
+We can now enter the chain and create a new phrase using the same principle, hitting A twice and enter the empty phrase.
+
+To enter a note, simply press A in the first row of dashes. This will enter a note (C 3) and associate it to an instrument. The instrument is the number right next to the note, in this case zero.
+
+Editing values in Little G P Tracker uses always the same principle. Simply go to the item you would like to change an hit the A button and the arrows simultaneously. Using A and right will increment the value, A and left will decrement it and up and down will increase or decrease the value in bigger chunk. For example, changing the note by hitting twice A and left will change it to D 3. Hitting now A and up will change the note one octave up to D 4.
+
+The same can be done on the instrument field to change the instrument by increment of 1, using left and right or by increment of 10 using up and down.
+
+To delete a note, press simultaneously A and B. This is also something that will be used across the whole software.
+
+Once your phrase is completed, you can go back to the chain and add a new one. Enter a new set of notes. And so on. Until you are happy with it.
+
+Then you might want to go back to the song screen and create a new chain. Either under the existing one, if it is a continuation of the sequence or next to it if you are planning on doing a new layer in the arrangment.

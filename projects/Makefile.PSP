@@ -1,0 +1,24 @@
+
+PATH=$PATH:/c/devkitpro/devkitPSP/bin
+
+TARGET = lgpt
+
+EXTRA_TARGETS = EBOOT.PBP
+PSP_EBOOT_TITLE = LittleGPTracker
+PSP_EBOOT_ICON = $(PWD)/psp_icon.png
+PSP_EBOOT_PIC1 = $(PWD)/psp_bg.png
+
+include $(PWD)/psp_rules
+
+PSPSDK=$(shell /c/devkitpro/devkitPSP/bin/psp-config --pspsdk-path)
+PSPBIN = $(PSPSDK)/../bin
+
+CFLAGS	:=	-O3 -G0 -Wall -DPLATFORM_$(PLATFORM) -DNDEBUG -DCPP_MEMORY -I$(PWD)/../sources -I$(PSPSDK)/include
+
+CXXFLAGS:=	$(CFLAGS) -fexceptions -fno-rtti
+
+EXTENSION:= elf
+
+LIBS = -L/usr/local/pspsdk/lib -lSDL_image -lpng -lz -lstdc++
+LIBS += -lSDL -lGL -lglu -lglut -lpspvfpu -lm -lpspdebug -lpspgu -lpspctrl -lpspge -lpspdisplay -lpsphprm -lpspsdk -lpsprtc -lpspaudio -lc -lpspuser -lpsputility -lpspkernel -lpspnet_inet -ljpeg
+

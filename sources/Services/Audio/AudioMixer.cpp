@@ -1,0 +1,86 @@
+#include "AudioMixer.h"
+#include "System/System/System.h"
+
+AudioMixer::AudioMixer(const char *name):
+	T_SimpleList<AudioModule>(false),
+	enableRendering_(0),
+	writer_(0),
+	name_(name)
+{
+	volume_=(i2fp(1)) ;
+} ;
+
+AudioMixer::~AudioMixer() {
+}
+
+void AudioMixer::SetFileRenderer(const char *path) {
+	renderPath_=path ;
+} ;
+
+void AudioMixer::EnableRendering(bool enable) {
+
+	if (enable==enableRendering_) {
+		return ;
+	}
+
+	if (enable) {
+		writer_=new WavFileWriter(renderPath_.c_str()) ;
+	} 
+
+	enableRendering_=enable ;
+	if (!enable) {
+		writer_->Close() ;
+		SAFE_DELETE(writer_) ;
+	}
+} ;
+
+bool AudioMixer::Render(fixed *buffer,int samplecount) {
+
+     fixed *mixBuffer=0 ;
+     bool gotData=false ;
+     IteratorPtr<AudioModule>it(GetIterator()) ;
+     for (it->Begin();!it->IsDone();it->Next()) {
+         AudioModule &current=it->CurrentItem() ;
+         if (!gotData) {
+            gotData=current.Render(buffer,samplecount) ;           
+         } else {
+            if (!mixBuffer) {
+               mixBuffer=(fixed *)malloc(samplecount*2*sizeof(fixed)) ;
+            } 
+            if (current.Render(mixBuffer,samplecount)) {
+               fixed *dst=buffer ;
+               fixed *src=mixBuffer ;
+               int count=samplecount*2 ;
+               while (count--) {
+                 *dst+=*src ;
+                 dst++ ;
+                 src++ ;
+               }
+            }
+         }
+     }
+
+//  Aplply volume
+
+	 if (gotData) {
+		fixed *c=buffer ;
+		if (volume_!=i2fp(1)) {
+			for (int i=0;i<samplecount*2;i++) {
+				fixed v = fp_mul(*c,volume_) ;
+        *c++= v;
+			}
+		}
+	 }
+	if (enableRendering_&&writer_) {
+		if (!gotData) {
+			memset(buffer,0,samplecount*2*sizeof(fixed)) ;
+		} ;
+		writer_->AddBuffer(buffer,samplecount) ;
+	}
+     SAFE_FREE(mixBuffer) ;
+     return gotData ;
+} ;
+
+void AudioMixer::SetVolume(fixed volume) {
+	volume_=volume ;
+}

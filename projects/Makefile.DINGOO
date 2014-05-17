@@ -1,0 +1,17 @@
+
+DEVKIT=/opt/mipsel-linux-uclibc
+
+TOOLPATH=$(DEVKIT)/usr/bin
+PREFIX		:=	mipsel-linux-
+SDL_BASE = /opt/mipsel-linux-uclibc/usr/bin/
+
+include $(PWD)/dingoo_rules
+
+CFLAGS	:=	`$(SDL_BASE)sdl-config --cflags` -O3 -D_DEBUG -Wall -DPLATFORM_$(PLATFORM) -I$(PWD)/../sources -D__LINUX_ALSA__  -DCPP_MEMORY
+
+CXXFLAGS:=	$(CFLAGS)
+
+EXTENSION:= dge
+
+LIBS	:=  -L/opt/mipsel-linux-uclibc/usr/lib -lSDL -lpthread 
+LIBDIRS	:=	$(DEKVIT)/usr/lib

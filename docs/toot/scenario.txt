@@ -1,0 +1,104 @@
+Here ya go
+
+Peter Swimm
+
+
+
+
+On Sat, May 17, 2008 at 4:59 AM, M-.-n <nostromo@arkaos.net> wrote:
+>
+>
+> Here's my thoughts on the structure for the getting started videos. I 
+> think that way we cover main bases and won't be exceeding 5 mins per chapter.
+> Feedback wanted.
+> Marc
+>
+> ----------------------------------------------------------------------
+> ------
+> --------
+> 1. Basics
+>    Project list > Selecting Tardline
+>    Song Start-stop
+>    Timeline organisation
+>    Chain numbers vs. "--"
+>    Moving across the timeline
+>
+> 2. Navigating (still in tardline)
+>    Principle of screen map.
+>    Going to project screen
+>    Navigating in the project
+>    Saving the song
+>    Going back to song screen
+>    Going back to the project
+>    Load song entry
+>
+> 3. Song structure (still in tardline)
+>    Chains/Phrase concept
+>    Navigating through from song to phrase
+>    Start/stop at phrase level
+>    Start/stop at chain level
+>
+> 4. Editing 1: Basics (still in tardline)
+>    Creating a new chain (principle of A,A)
+>    Navigate in chain
+>    Creating a phrase
+>    Entering note.
+>    Principle of A+arrows for modifying
+>    Changing instrument number
+>    transpose paramete in chains
+>
+> 5. Editing 2: Selections (still in tardline)
+>    Create a Selection
+>    Copy
+>    Paste
+>    Cut
+>    Paste
+>    Cut single element
+>
+>    Show it works also in phrases
+>
+>    Cloning
+>
+> 6. Editing 3: Instrument paramters (still in tardline)
+>
+>    List all instrument parameters and show their effect (except for 
+> table &
+> automation)
+	 Samplelib
+>
+> 7. Starting from scratch (using new)
+>
+>    Create chain
+>    Create phrase
+>    Sample library
+>    Importing samples
+>
+> 8. Commands
+>
+>    Principle
+>    Editing
+>    Show a few
+>
+> 9. Tables 1: Basics
+>
+>    What's a tick ?
+>    Table editing
+>    Tables in the phrase screen
+>
+> 10. Tables 2: Instrument tables
+>
+>   Assigning tables to instruments
+>   Automation
+>   Example
+>
+> 11. Groove
+>
+>    Principles
+>    Groove
+>    Assigning grooves
+>    Example doing shuffles
+>    Example doing triplets
+>
+> 12. Live mode and muting
+>
+>

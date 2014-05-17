@@ -1,0 +1,14 @@
+
+include $(PWD)/deb_rules
+
+CFLAGS	:= -O3 -DCPP_MEMORY -Wall -I/usr/local/include -I$(PWD)/../sources -D__LINUX_ALSA__ -D__LINUX_ALSASEQ__ -D_DEBUG
+#CFLAGS	:= -g -DCPP_MEMORY -Wall -I/usr/local/include -I$(PWD)/../sources -D__LINUX_ALSA__ -D__LINUX_ALSASEQ__
+ 
+
+CXXFLAGS:= $(CFLAGS)
+
+EXTENSION:= deb-exe
+
+LIBS	:=  -O3 -L/local/lib -Wl,-rpath,/usr/local/lib -lasound -lSDL -ljack -lpthread
+#LIBS	:=  -g -L/local/lib -Wl,-rpath,/usr/local/lib -lasound -lSDL -ljack -lpthread
+

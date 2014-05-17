@@ -1,0 +1,24 @@
+As we mentioned earlier, little g p tracker is organized around a set of screens. Screens are organised in a map-like fashion, that is to say that one screen is on top or to the left of another one.
+
+ 
+
+If you take a look at the left side of the display, you will see a rectangle with letters in it. This rectangle is the screen map representation and currently the S letter is highlighted because we are in the song screen.
+
+ 
+
+To navigate to another screen, simply press the right shoulder button and hit the direction in which you would like to go. For example, the project screen - the letter P in the scren map - is above the song screen. So to go to the project screen, we simply hit the right shoulder button and the up direction. To go back to the song screen from the project screen, we do the opposite and hit right shoulder and down.
+
+ 
+
+The project screen is where you can change the song's tempo and manage your project: you can save your current song, load a new one or exit the program. To trigger any entry, simply highlight it using the arrows and hit A. For example
+
+ 
+
+saving the current song
+
+ 
+
+or go back to the project list to load another project.
+
+ 
+

@@ -1,0 +1,25 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lgpt", "lgpt.vcproj", "{AA286D27-4C78-44DD-B559-F08A533C5935}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		demo_sane|Win32 = demo_sane|Win32
+		Demo|Win32 = Demo|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.Debug|Win32.Build.0 = Debug|Win32
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.demo_sane|Win32.ActiveCfg = demo_sane|Win32
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.demo_sane|Win32.Build.0 = demo_sane|Win32
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.Demo|Win32.ActiveCfg = Demo|Win32
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.Demo|Win32.Build.0 = Demo|Win32
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.Release|Win32.ActiveCfg = Release|Win32
+		{AA286D27-4C78-44DD-B559-F08A533C5935}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

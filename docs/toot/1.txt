@@ -1,0 +1,10 @@
+Welcome to the first little g p tracker tutorial video. Throughout our sessions, we'll examine the different aspect of the software...
+
+When you start the program, the first thing you see is the project selection screen. From this screen you can select what project you would like to work on or create a new one. All projects are folders starting with the 4 l g p t letters. The installation archive contains two project: one with an existing song called 10 k and an empty one called new. 
+
+Let's start by loading the 10 k project. Use the up and down arrow to highlight the project and press A to load it. After loading the project and it's project, you will be transported on the song screen. The song screen is where you organise your pattern into songs. Since little gp tracker is, well, a tracker, it uses a vertical timeline. Horizontally, you got one column per channel and vertically is the sequence of patterns (or chains, as we will call them) played in each channel.
+
+To play the song, simply press the start button. Press start again to stop it.
+
+You can navigate up, down, left, right and press start to play the song from the current cursor position. Notice that only the channels with chains on them are started, empty slots, represented by a double dash, are not played at startup.
+

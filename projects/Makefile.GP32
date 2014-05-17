@@ -1,0 +1,22 @@
+
+DEVKITARM=/c/devkitGP32/devkitarm
+
+DEVKITPRO=$(DEVKITARM)/..
+
+TOOLPATH=$(DEVKITARM)/bin
+PREFIX		:=	arm-linux-
+
+include $(PWD)/gp32_rules
+
+CFLAGS	:=	-Wall -O2 -mtune=arm9tdmi\
+ 			-fomit-frame-pointer\
+			-ffast-math $(INCLUDE)\
+			-DPLATFORM_$(PLATFORM) -I$(PWD)/../sources
+
+CXXFLAGS:=	-fexceptions $(CFLAGS)
+
+EXTENSION:= fxe
+
+LIBS	:=	-lmirkoSDK -laddon -lm
+
+LIBDIRS	:=	$(LIBMIRKO)
