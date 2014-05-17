@@ -72,6 +72,17 @@ std::string Path::GetCanonicalPath() {
 	} ;
 	return copy ;
 } ;
+
+Path Path::Descend(const std::string& leaf)
+{
+  std::string currentPath = GetPath();
+  if (currentPath[currentPath.size()-1] != '/')
+  {
+    currentPath += "/";
+  }
+  return Path(currentPath+leaf);
+}
+
 void Path::getType() {
 	if (!gotType_) {
 		gotType_=true ;
