@@ -146,10 +146,20 @@ I_File *PSPFileSystem::Open(const char *path,char *mode) {
 FileType PSPFileSystem::GetFileType(const char *path) {
 
 	struct stat attributes ;
-	if (stat(path,&attributes)==0) {
+	if (stat(path,&attributes)==0)
+	{
 		if (attributes.st_mode&S_IFDIR) return FT_DIR ;
 		if (attributes.st_mode&S_IFREG) return FT_FILE ;
 	}
+	else
+	{
+		if (!strcmp("ms0:", path))
+		{
+			return FT_DIR;
+		}
+
+	}
+
 	return FT_UNKNOWN ;
 
 }
