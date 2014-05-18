@@ -1328,6 +1328,7 @@ void SampleInstrument::Purge() {
 		Variable &v=it->CurrentItem() ;
 		v.Reset() ;
 	}
+  source_ = NULL;
 /*    Variable *v=FindVariable(SIP_SAMPLE) ;
 	if (v->GetInt()!=-1) {
 	    v->SetInt(-1) ;
