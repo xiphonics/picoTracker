@@ -16,8 +16,8 @@
 #define VAR_TRANSPOSE  MAKE_FOURCC('T','R','S','P')
 
 #define PROJECT_NUMBER "1.3"
-#define PROJECT_RELEASE "l"
-#define BUILD_COUNT "050"
+#define PROJECT_RELEASE "m"
+#define BUILD_COUNT "051"
 
 #define MAX_TAP 3
 
