@@ -29,6 +29,8 @@ public:
 
 	Path &operator=(const Path &other) ;
 
+  Path Descend(const std::string& leaf);
+
 	std::string GetPath() const;
 	std::string GetCanonicalPath() ;
 	std::string GetName() ;
