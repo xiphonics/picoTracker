@@ -174,6 +174,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction,int xOffset,int
 					*cc=CommandList::GetPrevAlpha(*cc) ;
 					break ;
 			}
+			lastCmd_=*cc ;
 			break ;
 		case 5:
 			switch(direction) {
