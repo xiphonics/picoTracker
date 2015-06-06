@@ -333,7 +333,7 @@
 		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		5048396D09E3307300765E4B /* lgptProj.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; path = lgptProj.xcconfig; sourceTree = "<group>"; };
 		5048396E09E3307300765E4B /* lgptTarget.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; path = lgptTarget.xcconfig; sourceTree = "<group>"; };
-		508344B209E5C41E0093A071 /* LittleGPTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LittleGPTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		508344B209E5C41E0093A071 /* LittleGPTracker_d.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LittleGPTracker_d.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		73084560150CE70D004E451D /* RTMidiOutDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RTMidiOutDevice.cpp; path = ../../LittleGPTracker/sources/Adapters/RTMidi/RTMidiOutDevice.cpp; sourceTree = SOURCE_ROOT; };
 		73084561150CE70D004E451D /* RTMidiOutDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RTMidiOutDevice.h; path = ../../LittleGPTracker/sources/Adapters/RTMidi/RTMidiOutDevice.h; sourceTree = SOURCE_ROOT; };
 		73084562150CE70D004E451D /* RTMidiService.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RTMidiService.cpp; path = ../../LittleGPTracker/sources/Adapters/RTMidi/RTMidiService.cpp; sourceTree = SOURCE_ROOT; };
@@ -350,7 +350,7 @@
 		734B75CA151D2F9900CC5A14 /* revision.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = revision.txt; path = ../../LittleGPTracker/docs/revision.txt; sourceTree = SOURCE_ROOT; };
 		734C2518151DD43A0072494B /* NCEventManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NCEventManager.h; path = ../../LittleGPTracker/sources/Adapters/Unix/GUI/NCEventManager.h; sourceTree = SOURCE_ROOT; };
 		734C2519151DD43A0072494B /* NCEventManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NCEventManager.cpp; path = ../../LittleGPTracker/sources/Adapters/Unix/GUI/NCEventManager.cpp; sourceTree = SOURCE_ROOT; };
-		734C2592151DD8070072494B /* lgpt_ncurses */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lgpt_ncurses; sourceTree = BUILT_PRODUCTS_DIR; };
+		734C2592151DD8070072494B /* lgpt_ncurses */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = lgpt_ncurses; path = lgpt_ncurses_d; sourceTree = BUILT_PRODUCTS_DIR; };
 		734C2827151E1E190072494B /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		734FFEF5166DF384003FD4C3 /* Result.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Result.cpp; sourceTree = "<group>"; };
 		734FFEF6166DF384003FD4C3 /* Result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Result.h; sourceTree = "<group>"; };
@@ -722,7 +722,7 @@
 		195DF8CFFE9D517E11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				508344B209E5C41E0093A071 /* LittleGPTracker.app */,
+				508344B209E5C41E0093A071 /* LittleGPTracker_d.app */,
 				734C2592151DD8070072494B /* lgpt_ncurses */,
 			);
 			name = Products;
@@ -1620,7 +1620,7 @@
 			name = LittleGPTracker;
 			productInstallPath = "$(HOME)/Applications";
 			productName = lgpt;
-			productReference = 508344B209E5C41E0093A071 /* LittleGPTracker.app */;
+			productReference = 508344B209E5C41E0093A071 /* LittleGPTracker_d.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -2088,7 +2088,7 @@
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)";
 				CONFIGURATION_TEMP_DIR = "";
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks/;
 				GCC_PREFIX_HEADER = "";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					CPP_MEMORY,
@@ -2096,10 +2096,11 @@
 					_DEBUG,
 				);
 				HEADER_SEARCH_PATHS = "";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				OBJROOT = ../build;
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = LittleGPTracker_d;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx;
 				SYMROOT = ../bin;
 			};
 			name = Debug;
@@ -2110,7 +2111,7 @@
 			buildSettings = {
 				CONFIGURATION_BUILD_DIR = ../bin;
 				DEAD_CODE_STRIPPING = YES;
-				FRAMEWORK_SEARCH_PATHS = "";
+				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks/;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PREFIX_HEADER = "";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2123,10 +2124,12 @@
 					../sources/,
 				);
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				OBJROOT = ../build;
 				OTHER_LDFLAGS = "";
 				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
 				PRODUCT_NAME = LittleGPTracker;
+				SDKROOT = macosx;
 				SYMROOT = ../bin;
 			};
 			name = Release;
