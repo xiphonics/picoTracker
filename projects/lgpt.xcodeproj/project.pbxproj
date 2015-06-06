@@ -2096,6 +2096,7 @@
 					_DEBUG,
 				);
 				HEADER_SEARCH_PATHS = "";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				OBJROOT = ../build;
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = LittleGPTracker_d;
@@ -2123,6 +2124,7 @@
 					../sources/,
 				);
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				OBJROOT = ../build;
 				OTHER_LDFLAGS = "";
 				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
