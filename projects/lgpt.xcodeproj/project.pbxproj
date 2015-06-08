@@ -71,7 +71,6 @@
 		734C25D1151DD8EF0072494B /* HexBuffers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11C80BCE66F000099CB3 /* HexBuffers.cpp */; };
 		734C25D2151DD8F00072494B /* HYDRA.CPP in Sources */ = {isa = PBXBuildFile; fileRef = 73A88F8A10E89070006BF857 /* HYDRA.CPP */; };
 		734C25D3151DD8F10072494B /* I_Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11D10BCE66F000099CB3 /* I_Action.cpp */; };
-		734C25D4151DD8F10072494B /* I_Hashkey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11FC0BCE66F000099CB3 /* I_Hashkey.cpp */; };
 		734C25D5151DD8F20072494B /* I_GUIWindowImp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12560BCE66F000099CB3 /* I_GUIWindowImp.cpp */; };
 		734C25D6151DD8F30072494B /* ImportSampleDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73A4F10A0DAB749C006B1114 /* ImportSampleDialog.cpp */; };
 		734C25D7151DD8F60072494B /* InstrumentBank.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11940BCE66F000099CB3 /* InstrumentBank.cpp */; };
@@ -105,7 +104,6 @@
 		734C25F3151DDB090072494B /* Player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11BB0BCE66F000099CB3 /* Player.cpp */; };
 		734C25F4151DDB0A0072494B /* PlayerChannel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87CA0E7F0F7E0FC4001D6BD0 /* PlayerChannel.cpp */; };
 		734C25F5151DDB0D0072494B /* PlayerMixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87CA0E810F7E0FC4001D6BD0 /* PlayerMixer.cpp */; };
-		734C25F6151DDB0E0072494B /* PointerHashKey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12030BCE66F000099CB3 /* PointerHashKey.cpp */; };
 		734C25F7151DDB0E0072494B /* Process.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D123A0BCE66F000099CB3 /* Process.cpp */; };
 		734C25F8151DDB0F0072494B /* Project.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11A90BCE66F000099CB3 /* Project.cpp */; };
 		734C25F9151DDB100072494B /* ProjectView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11F10BCE66F000099CB3 /* ProjectView.cpp */; };
@@ -116,9 +114,7 @@
 		734C25FE151DDB130072494B /* RtMidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73292F2A0DBE77C9007363BD /* RtMidi.cpp */; };
 		734C25FF151DDB140072494B /* RTMidiOutDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73084560150CE70D004E451D /* RTMidiOutDevice.cpp */; };
 		734C2600151DDB140072494B /* RTMidiService.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73084562150CE70D004E451D /* RTMidiService.cpp */; };
-		734C2601151DDB150072494B /* RTTypable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12050BCE66F000099CB3 /* RTTypable.cpp */; };
 		734C2602151DDB150072494B /* SampleInstrument.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11980BCE66F000099CB3 /* SampleInstrument.cpp */; };
-		734C2603151DDB160072494B /* RTTypeInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12070BCE66F000099CB3 /* RTTypeInfo.cpp */; };
 		734C2604151DDB170072494B /* SamplePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D119B0BCE66F000099CB3 /* SamplePool.cpp */; };
 		734C2605151DDB180072494B /* SampleVariable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73A640340D3CF9CB00F43955 /* SampleVariable.cpp */; };
 		734C2608151DDB1B0072494B /* SDLTimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87CA0E9A0F7E10F3001D6BD0 /* SDLTimer.cpp */; };
@@ -228,11 +224,7 @@
 		737D128C0BCE66F000099CB3 /* TableView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11F50BCE66F000099CB3 /* TableView.cpp */; };
 		737D128D0BCE66F000099CB3 /* UIController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11F70BCE66F000099CB3 /* UIController.cpp */; };
 		737D128E0BCE66F000099CB3 /* ViewData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11F90BCE66F000099CB3 /* ViewData.cpp */; };
-		737D128F0BCE66F000099CB3 /* I_Hashkey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D11FC0BCE66F000099CB3 /* I_Hashkey.cpp */; };
 		737D12900BCE66F000099CB3 /* Observable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12010BCE66F000099CB3 /* Observable.cpp */; };
-		737D12910BCE66F000099CB3 /* PointerHashKey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12030BCE66F000099CB3 /* PointerHashKey.cpp */; };
-		737D12920BCE66F000099CB3 /* RTTypable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12050BCE66F000099CB3 /* RTTypable.cpp */; };
-		737D12930BCE66F000099CB3 /* RTTypeInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D12070BCE66F000099CB3 /* RTTypeInfo.cpp */; };
 		737D12940BCE66F000099CB3 /* Service.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D120A0BCE66F000099CB3 /* Service.cpp */; };
 		737D12950BCE66F000099CB3 /* ServiceRegistry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D120C0BCE66F000099CB3 /* ServiceRegistry.cpp */; };
 		737D12960BCE66F000099CB3 /* SubService.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 737D120E0BCE66F000099CB3 /* SubService.cpp */; };
@@ -476,19 +468,11 @@
 		737D11F80BCE66F000099CB3 /* UIController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = UIController.h; sourceTree = "<group>"; };
 		737D11F90BCE66F000099CB3 /* ViewData.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ViewData.cpp; sourceTree = "<group>"; };
 		737D11FA0BCE66F000099CB3 /* ViewData.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ViewData.h; sourceTree = "<group>"; };
-		737D11FC0BCE66F000099CB3 /* I_Hashkey.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = I_Hashkey.cpp; sourceTree = "<group>"; };
-		737D11FD0BCE66F000099CB3 /* I_Hashkey.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = I_Hashkey.h; sourceTree = "<group>"; };
 		737D11FE0BCE66F000099CB3 /* I_Iterator.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = I_Iterator.h; sourceTree = "<group>"; };
 		737D11FF0BCE66F000099CB3 /* I_list.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = I_list.h; sourceTree = "<group>"; };
 		737D12000BCE66F000099CB3 /* IteratorPtr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = IteratorPtr.h; sourceTree = "<group>"; };
 		737D12010BCE66F000099CB3 /* Observable.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Observable.cpp; sourceTree = "<group>"; };
 		737D12020BCE66F000099CB3 /* Observable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = Observable.h; sourceTree = "<group>"; };
-		737D12030BCE66F000099CB3 /* PointerHashKey.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = PointerHashKey.cpp; sourceTree = "<group>"; };
-		737D12040BCE66F000099CB3 /* PointerHashKey.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = PointerHashKey.h; sourceTree = "<group>"; };
-		737D12050BCE66F000099CB3 /* RTTypable.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RTTypable.cpp; sourceTree = "<group>"; };
-		737D12060BCE66F000099CB3 /* RTTypable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = RTTypable.h; sourceTree = "<group>"; };
-		737D12070BCE66F000099CB3 /* RTTypeInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RTTypeInfo.cpp; sourceTree = "<group>"; };
-		737D12080BCE66F000099CB3 /* RTTypeInfo.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = RTTypeInfo.h; sourceTree = "<group>"; };
 		737D120A0BCE66F000099CB3 /* Service.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Service.cpp; sourceTree = "<group>"; };
 		737D120B0BCE66F000099CB3 /* Service.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = Service.h; sourceTree = "<group>"; };
 		737D120C0BCE66F000099CB3 /* ServiceRegistry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ServiceRegistry.cpp; sourceTree = "<group>"; };
@@ -498,13 +482,10 @@
 		737D12100BCE66F000099CB3 /* SingletonRegistry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = SingletonRegistry.cpp; sourceTree = "<group>"; };
 		737D12110BCE66F000099CB3 /* SingletonRegistry.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SingletonRegistry.h; sourceTree = "<group>"; };
 		737D12130BCE66F000099CB3 /* T_Factory.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_Factory.h; sourceTree = "<group>"; };
-		737D12150BCE66F000099CB3 /* T_Hashtable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_Hashtable.h; sourceTree = "<group>"; };
-		737D12170BCE66F000099CB3 /* T_HashtableIterator.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_HashtableIterator.h; sourceTree = "<group>"; };
 		737D12190BCE66F000099CB3 /* T_SimpleList.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_SimpleList.h; sourceTree = "<group>"; };
 		737D121B0BCE66F000099CB3 /* T_SimpleListIterator.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_SimpleListIterator.h; sourceTree = "<group>"; };
 		737D121D0BCE66F000099CB3 /* T_Singleton.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_Singleton.h; sourceTree = "<group>"; };
 		737D121F0BCE66F000099CB3 /* T_Stack.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_Stack.h; sourceTree = "<group>"; };
-		737D12210BCE66F000099CB3 /* T_Vector.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = T_Vector.h; sourceTree = "<group>"; };
 		737D12230BCE66F000099CB3 /* types.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
 		737D12250BCE66F000099CB3 /* Variable.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = Variable.cpp; sourceTree = "<group>"; };
 		737D12260BCE66F000099CB3 /* Variable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = Variable.h; sourceTree = "<group>"; };
@@ -1079,30 +1060,19 @@
 		737D11FB0BCE66F000099CB3 /* Foundation */ = {
 			isa = PBXGroup;
 			children = (
-				737D11FC0BCE66F000099CB3 /* I_Hashkey.cpp */,
-				737D11FD0BCE66F000099CB3 /* I_Hashkey.h */,
 				737D11FE0BCE66F000099CB3 /* I_Iterator.h */,
 				737D11FF0BCE66F000099CB3 /* I_list.h */,
 				737D12000BCE66F000099CB3 /* IteratorPtr.h */,
 				737D12010BCE66F000099CB3 /* Observable.cpp */,
 				737D12020BCE66F000099CB3 /* Observable.h */,
-				737D12030BCE66F000099CB3 /* PointerHashKey.cpp */,
-				737D12040BCE66F000099CB3 /* PointerHashKey.h */,
-				737D12050BCE66F000099CB3 /* RTTypable.cpp */,
-				737D12060BCE66F000099CB3 /* RTTypable.h */,
-				737D12070BCE66F000099CB3 /* RTTypeInfo.cpp */,
-				737D12080BCE66F000099CB3 /* RTTypeInfo.h */,
 				737D12090BCE66F000099CB3 /* Services */,
 				737D12100BCE66F000099CB3 /* SingletonRegistry.cpp */,
 				737D12110BCE66F000099CB3 /* SingletonRegistry.h */,
 				737D12130BCE66F000099CB3 /* T_Factory.h */,
-				737D12150BCE66F000099CB3 /* T_Hashtable.h */,
-				737D12170BCE66F000099CB3 /* T_HashtableIterator.h */,
 				737D12190BCE66F000099CB3 /* T_SimpleList.h */,
 				737D121B0BCE66F000099CB3 /* T_SimpleListIterator.h */,
 				737D121D0BCE66F000099CB3 /* T_Singleton.h */,
 				737D121F0BCE66F000099CB3 /* T_Stack.h */,
-				737D12210BCE66F000099CB3 /* T_Vector.h */,
 				737D12220BCE66F000099CB3 /* Types */,
 				737D12240BCE66F000099CB3 /* Variables */,
 			);
@@ -1739,7 +1709,6 @@
 				734C25D1151DD8EF0072494B /* HexBuffers.cpp in Sources */,
 				734C25D2151DD8F00072494B /* HYDRA.CPP in Sources */,
 				734C25D3151DD8F10072494B /* I_Action.cpp in Sources */,
-				734C25D4151DD8F10072494B /* I_Hashkey.cpp in Sources */,
 				734C25D5151DD8F20072494B /* I_GUIWindowImp.cpp in Sources */,
 				734C25D6151DD8F30072494B /* ImportSampleDialog.cpp in Sources */,
 				734C25D7151DD8F60072494B /* InstrumentBank.cpp in Sources */,
@@ -1773,7 +1742,6 @@
 				734C25F3151DDB090072494B /* Player.cpp in Sources */,
 				734C25F4151DDB0A0072494B /* PlayerChannel.cpp in Sources */,
 				734C25F5151DDB0D0072494B /* PlayerMixer.cpp in Sources */,
-				734C25F6151DDB0E0072494B /* PointerHashKey.cpp in Sources */,
 				734C25F7151DDB0E0072494B /* Process.cpp in Sources */,
 				734C25F8151DDB0F0072494B /* Project.cpp in Sources */,
 				734C25F9151DDB100072494B /* ProjectView.cpp in Sources */,
@@ -1784,9 +1752,7 @@
 				734C25FE151DDB130072494B /* RtMidi.cpp in Sources */,
 				734C25FF151DDB140072494B /* RTMidiOutDevice.cpp in Sources */,
 				734C2600151DDB140072494B /* RTMidiService.cpp in Sources */,
-				734C2601151DDB150072494B /* RTTypable.cpp in Sources */,
 				734C2602151DDB150072494B /* SampleInstrument.cpp in Sources */,
-				734C2603151DDB160072494B /* RTTypeInfo.cpp in Sources */,
 				734C2604151DDB170072494B /* SamplePool.cpp in Sources */,
 				734C2605151DDB180072494B /* SampleVariable.cpp in Sources */,
 				734C2608151DDB1B0072494B /* SDLTimer.cpp in Sources */,
@@ -1883,11 +1849,7 @@
 				737D128C0BCE66F000099CB3 /* TableView.cpp in Sources */,
 				737D128D0BCE66F000099CB3 /* UIController.cpp in Sources */,
 				737D128E0BCE66F000099CB3 /* ViewData.cpp in Sources */,
-				737D128F0BCE66F000099CB3 /* I_Hashkey.cpp in Sources */,
 				737D12900BCE66F000099CB3 /* Observable.cpp in Sources */,
-				737D12910BCE66F000099CB3 /* PointerHashKey.cpp in Sources */,
-				737D12920BCE66F000099CB3 /* RTTypable.cpp in Sources */,
-				737D12930BCE66F000099CB3 /* RTTypeInfo.cpp in Sources */,
 				737D12940BCE66F000099CB3 /* Service.cpp in Sources */,
 				737D12950BCE66F000099CB3 /* ServiceRegistry.cpp in Sources */,
 				737D12960BCE66F000099CB3 /* SubService.cpp in Sources */,
