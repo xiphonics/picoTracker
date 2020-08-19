@@ -54,7 +54,7 @@ void DEBSystem::Boot(int argc,char **argv) {
 	}
 	Path::SetAlias("bin",dirname(buff)) ;
 
-	Path::SetAlias("root","bin:..") ;
+	Path::SetAlias("root",".") ;
 
 #ifdef _DEBUG
   Trace::GetInstance()->SetLogger(*(new StdOutLogger()));
