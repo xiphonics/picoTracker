@@ -1,11 +1,13 @@
 
 include $(PWD)/osx_rules
 
-CFLAGS	:= -O3 -Wall -I$(PWD) -I/Library/Frameworks/SDL.framework/Headers 
+CFLAGS  := -O3 -DCPP_MEMORY -Wall -I$(PWD)/../sources -I/opt/homebrew/include
+# DEBUG BUILD (use this to debug with lldb)
+#CFLAGS	:= -g -O0 -DCPP_MEMORY -Wall -I$(PWD)/../sources -I/opt/homebrew/Cellar/sdl12-compat/1.2.60/include/ -D_DEBUG -DDEBUG
 
 CXXFLAGS:= $(CFLAGS)
 
 EXTENSION:= app
 
-LIBS	:=  
+LIBS	:=  -lSDL
 

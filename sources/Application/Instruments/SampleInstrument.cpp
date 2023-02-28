@@ -24,7 +24,7 @@ bool SampleInstrument::useDirtyDownsampling_ = false;
 
 #define SHOULD_KILL_CLICKS false
 
-char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT]= {
+signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT]= {
 	-1,-1,-1,-1,-1,-1,-1,-1
 } ;
 
@@ -751,7 +751,7 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
         {
 	        if (useDirtyDownsampling_)
 	        {
-	          i1 =(short *)(((unsigned int)input)&dsMask);
+	          i1 =(short *)(((uintptr_t)input)&dsMask);
 	        }
           else
 	        {

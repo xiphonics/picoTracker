@@ -137,13 +137,13 @@ typedef unsigned short        EMUSTAT;
   #error <datatype.h>: short is out of range!
 #endif
 
-#if (LONG_MAX != LONG_MAXVAL)
-  #error <datatype.h>: long is out of range!
-#endif
+//#if (LONG_MAX != LONG_MAXVAL)
+//  #error <datatype.h>: long is out of range!
+//#endif
 
-#if (ULONG_MAX != DWORD_MAXVAL)
-  #error <datatype.h>: unsigned long is out of range!
-#endif
+//#if (ULONG_MAX != DWORD_MAXVAL)
+//  #error <datatype.h>: unsigned long is out of range!
+//#endif
 
 #ifdef __BYTE_COHERENT
 

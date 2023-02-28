@@ -4,7 +4,7 @@
 .SUFFIXES:
 #---------------------------------------------------------------------------------
 
-PLATFORM:=  RASPI
+PLATFORM:=  OSX
 
 include $(PWD)/Makefile.$(PLATFORM)
 
@@ -29,7 +29,7 @@ NDSDIRS	:=    . \
 				../sources/Adapters/Dummy/Midi \
 				../sources/Adapters/NDS/Sound \
 				../sources/Adapters/NDS/UI
-				
+
 
 
 DEBDIRS	:=			../sources/Adapters/Unix/FileSystem \
@@ -146,6 +146,21 @@ W32DIRS     :=  .\
 				../sources/Adapters/W32/Audio \
 				../sources/System/Process
 
+OSXDIRS := .\
+				../sources/Adapters/OSX/OSXMain \
+				../sources/Adapters/Unix/Process \
+				../sources/System/Process \
+        ../sources/Adapters/SDL/Audio \
+				../sources/Externals/RTAudio \
+				../sources/Externals/RtMidi \
+				../sources/Adapters/OSX/OSXSystem \
+				../sources/Adapters/SDL/Timer\
+				../sources/Adapters/SDL/GUI \
+				../sources/Adapters/Unix/FileSystem \
+				../sources/Adapters/RTAudio \
+				../sources/Adapters/RTMidi \
+				../sources/Adapters/Dummy/Midi \
+
 COMMONDIRS	:=	../sources/System/Console \
 				../sources/System/io \
 				../sources/Services/Midi \
@@ -173,7 +188,7 @@ COMMONDIRS	:=	../sources/System/Console \
 				../sources/Application/Persistency \
 				../sources/Foundation \
 				../sources/Services/Audio \
-  				../sources/Foundation/Services \
+				../sources/Foundation/Services \
 				../sources/Foundation/Variables \
 				../sources/Externals/Compression \
 				../sources/Externals/Soundfont \
@@ -211,7 +226,7 @@ PSPFILES		:=	PSPmain.o  \
 					SDLProcess.o \
 					SDLTimer.o \
 					PSPSystem.o  
-					
+
 DEBFILES		:=	UnixFileSystem.o \
 					DEBmain.o \
 					DEBSystem.o \
@@ -224,13 +239,35 @@ DEBFILES		:=	UnixFileSystem.o \
 					RTAudioStub.o \
 					RtAudio.o\
 					RtMidi.o\
-					RTMidiService.o\
-					RTMidiOutDevice.o\
-                                        RTMidiInDevice.o\
+					RTMidiService.o \
+					RTMidiOutDevice.o \
+          RTMidiInDevice.o \
 					SDLTimer.o \
 					JackAudioDriver.o \
 					JackClient.o \
 					JackAudio.o 
+
+OSXFILES := UnixFileSystem.o \
+	OSXmain.o \
+	SDLMain.o \
+	OSXSystem.o \
+	SDLGUIWindowImp.o \
+	SDLEventManager.o \
+	SDLAudioDriver.o \
+	SDLAudio.o \
+  DummyMidi.o \
+	SDLTimer.o \
+  Process.o \
+	UnixProcess.o \
+	GUIFactory.o \
+# RT Audio and MIDI not working
+#  RTAudioDriver.o \
+#  RTAudioStub.o \
+#  RtAudio.o\
+#  RtMidi.o\
+#  RTMidiService.o \
+#  RTMidiOutDevice.o \
+#  RTMidiInDevice.o \
 
 BEAGLEBOARDFILES                :=      UnixFileSystem.o \
                                         DEBmain.o \
@@ -375,7 +412,7 @@ CAANOOFILES		:=	CAANOOSDLMain.o \
 TARGET		:=	$(TITLE)
 BUILD		:=	build$(PLATFORM)
 SOURCES		:=	$($(PLATFORM)DIRS) $(COMMONDIRS)
-				
+
 INCLUDES	:=
 
 
@@ -450,7 +487,7 @@ all: $(OUTPUT).$(EXTENSION)
 $(OUTPUT).exe   :   $(OFILES)
 	@echo "linking result.."
 	@$(LD) $(LDFLAGS) -o $@ $(OFILES) $(LIBS)
-	
+
 $(OUTPUT).fxe	:	$(OUTPUT).gxb
 
 $(OUTPUT).gxb	:	$(OUTPUT).elf

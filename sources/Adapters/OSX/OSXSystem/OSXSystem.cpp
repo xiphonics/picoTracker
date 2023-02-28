@@ -1,7 +1,10 @@
 
 #include "OSXSystem.h"
-#include "Adapters/RTMidi/RTMidiService.h"
-#include "Adapters/RTAudio/RTAudioStub.h"
+// TODO: Check what's wrong with RT Audio and MIDI
+//#include "Adapters/RTMidi/RTMidiService.h"
+#include "Adapters/Dummy/Midi/DummyMidi.h"
+//#include "Adapters/RTAudio/RTAudioStub.h"
+#include "Adapters/SDL/Audio/SDLAudio.h"
 #ifndef _USE_NCURSES_
 #include "Adapters/SDL/GUI/GUIFactory.h"
 #include "Adapters/SDL/GUI/SDLGUIWindowImp.h"
@@ -67,10 +70,12 @@ void OSXSystem::Boot(int argc,char **argv)
 	hints.bufferSize_=64 ;
 	hints.preBufferCount_=0;
 	
-	Audio::Install(new RTAudioStub(hints)) ;
+  //	Audio::Install(new RTAudioStub(hints)) ;
+  Audio::Install(new SDLAudio(hints));
 
 	// Install Midi
-	MidiService::Install(new RTMidiService()) ;
+  //	MidiService::Install(new RTMidiService()) ;
+  MidiService::Install(new DummyMidi());
 
 	// Install Threads
 
@@ -176,21 +181,21 @@ void OSXSystem::Free(void *ptr) {
 
 void OSXSystem::Memset(void *addr,char val,int size) {
     
-    unsigned int ad=(unsigned int)addr ;
-    if (((ad&0x3)==0)&&((size&0x3)==0)) { // Are we 4-byte aligned ?
-        unsigned int intVal=0 ;
-        for (int i=0;i<4;i++) {
-             intVal=(intVal<<8)+val ;  
-        }
-        unsigned int *dst=(unsigned int *)addr ;
-        size_t intSize=size>>2 ;
-        
-        for (unsigned int i=0;i<intSize;i++) {
-            *dst++=intVal ;
-        }        
-    } else {
-        memset(addr,val,size) ;
+  uintptr_t ad=(uintptr_t)addr ;
+  if (((ad&0x3)==0)&&((size&0x3)==0)) { // Are we 4-byte aligned ?
+    unsigned int intVal=0 ;
+    for (int i=0;i<4;i++) {
+      intVal=(intVal<<8)+val ;
     }
+    unsigned int *dst=(unsigned int *)addr ;
+    size_t intSize=size>>2 ;
+
+    for (unsigned int i=0;i<intSize;i++) {
+      *dst++=intVal ;
+    }
+  } else {
+    memset(addr,val,size) ;
+  }
 }
 
 

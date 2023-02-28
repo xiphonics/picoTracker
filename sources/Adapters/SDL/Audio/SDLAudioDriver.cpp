@@ -74,10 +74,12 @@ bool SDLAudioDriver::InitDriver() {
   SDL_AudioDriverName(bufferName,256) ;
 
   fragSize_=returned.size ;
+  // TODO: is it needed to align memory? crash in OSX
   // Allocates a rotating sound buffer
-  unalignedMain_=(char *)SYS_MALLOC(fragSize_+SOUND_BUFFER_MAX) ;
-  // Make sure the buffer is aligned
-  mainBuffer_=(char *)((((int)unalignedMain_)+1)&(0xFFFFFFFC)) ;
+  //unalignedMain_=(char *)SYS_MALLOC(fragSize_+SOUND_BUFFER_MAX) ;
+  // Make sure the buffer is aligned.
+  // mainBuffer_=(char *)((((int)unalignedMain_)+1)&(0xFFFFFFFC)) ;
+  mainBuffer_=(char *)SYS_MALLOC(fragSize_+SOUND_BUFFER_MAX);
 
   Trace::Log("AUDIO","%s successfully opened with %d samples",bufferName,fragSize_/4 ) ;
 

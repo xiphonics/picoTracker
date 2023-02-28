@@ -2,5 +2,5 @@
 
 #---------------------------------------------------------------------------------
 %.app: $(OFILES)
-	$(CXX) $(LDFLAGS) -arch i386 -framework SDL -framework Cocoa -framework Carbon -o $@ $(OFILES) $(LIBS)
+	$(CXX) $(LDFLAGS) -arch arm64 -framework Cocoa -framework Carbon -o $@ $(OFILES) $(LIBS) -L/opt/homebrew/Cellar/sdl12-compat/1.2.60/lib
 	mv $@ ../lgpt
