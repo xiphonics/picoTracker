@@ -7,22 +7,32 @@
  *
  */
 
+#ifndef PICOBUILD
 #include <SDL/SDL.h>
+#else
+#include "pico/mutex.h"
+#endif
 
 class SysMutex {
 public:
-	SysMutex() ;
-	~SysMutex() ;
-	bool Lock() ;
-	void Unlock() ;
+  SysMutex();
+  ~SysMutex();
+  bool Lock();
+  void Unlock();
+
 private:
-	SDL_mutex *mutex_ ;
-} ;
+#ifndef PICOBUILD
+  SDL_mutex *mutex_;
+#else
+  mutex_t *mutex_;
+#endif
+};
 
 class SysMutexLocker {
 public:
-	SysMutexLocker(SysMutex &mutex) ;
-	~SysMutexLocker() ;
+  SysMutexLocker(SysMutex &mutex);
+  ~SysMutexLocker();
+
 private:
-	SysMutex *mutex_ ;
-} ;
+  SysMutex *mutex_;
+};

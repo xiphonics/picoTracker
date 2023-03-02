@@ -1,0 +1,4 @@
+add_subdirectory(BasicDatas)
+add_subdirectory(Framework)
+add_subdirectory(Interfaces)
+add_subdirectory(SimpleBaseClasses)

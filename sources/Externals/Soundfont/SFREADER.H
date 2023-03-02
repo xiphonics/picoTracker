@@ -91,11 +91,11 @@ class sfReader {
 
   void         OpenSFBFile(CHAR * pchFilename);
   void         CloseSFBFile(void);
-  #ifdef USE_MACINTOSH
-  HydraClass*  ReadSFBFile(FSSpec * pSpecifier, CHAR *chReqdWaveTable = '\0');
-  #endif
-  HydraClass*  ReadSFBFile(CHAR *sfFileName, CHAR *chReqdWaveTable = '\0');
- 
+#ifdef USE_MACINTOSH
+  HydraClass *ReadSFBFile(FSSpec *pSpecifier, CHAR *chReqdWaveTable = (CHAR *)"\0");
+#endif
+  HydraClass *ReadSFBFile(CHAR *sfFileName, CHAR *chReqdWaveTable = (CHAR *)"\0");
+
   BOOL         IsValid(void);
 
   DWORD         GetAllSampleSize(void) {return dwSampleSize;}

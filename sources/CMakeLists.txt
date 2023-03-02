@@ -1,0 +1,93 @@
+cmake_minimum_required(VERSION 3.13)
+
+# Pull in SDK (must be before project)
+include(pico_sdk_import.cmake)
+
+# Add the pico extras
+include(pico_extras_import.cmake)
+
+project(lgpt)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
+if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
+    message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+endif()
+
+set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
+
+# Make this a PICO Build within the project
+add_definitions(-DPICOBUILD)
+
+# For debugging purposes, print all mallocs
+#add_definitions(-DPICO_DEBUG_MALLOC)
+#add_definitions(-DPICOSTATS)
+#add_definitions(-DDUMMY_AUDIO)
+#add_definitions(-DDUMMY_MIDI)
+#add_definitions(-DALL_MALLOC)
+add_definitions(-DDISABLESF)
+# Enable SDIO - this setting affects code in SdFat library as well as the project
+# This consumes ~7k+ RAM and has some performance problems ATM
+# Also enable HAS_SDIO_CLASS in SdFatConfig.h
+# Switching to this mode may require full pico reset (why?)
+# add_definitions(-DSD_SDIO)
+# Enable Streaming from SD, bad performance for the moment
+# add_definitions(-DSD_STREAMING)
+# Enable loading samples into Flash
+# add_definitions(-DFLASH_LOADING)
+
+# Initialize the SDK
+pico_sdk_init()
+
+add_subdirectory(Adapters)
+add_subdirectory(UIFramework)
+add_subdirectory(System)
+add_subdirectory(Application)
+add_subdirectory(Externals)
+add_subdirectory(Services)
+add_subdirectory(Foundation)
+
+add_compile_options(-Wall
+        -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+        -Wno-unused-function # we have some for the docs that aren't called
+        -Wno-maybe-uninitialized
+        )
+
+set_property(TARGET lgpt APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
+
+
+target_compile_definitions(lgpt PUBLIC
+#	PICO_HEAP_SIZE=204800
+#  PICO_STACK_SIZE=1024
+   PICO_MALLOC_PANIC=0
+   PICO_DEBUG_MALLOC_LOW_WATER=1000
+)
+
+#if (SD_SDIO)
+#MESSAGE(STATUS "SDIO enabled")
+#target_compile_definitions(lgpt PUBLIC HAS_SDIO_CLASS=1)
+#endif()
+
+pico_enable_stdio_usb(${PROJECT_NAME} 0)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
+
+# Debug build
+#set_target_properties(lgpt PROPERTIES COMPILE_DEFINITIONS "DEBUG")
+
+#get_property(dirs1 TARGET application_model PROPERTY INCLUDE_DIRECTORIES)
+#get_property(dirs1 TARGET system_system PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+#get_property(dirs1 TARGET application_model PROPERTY LINK_DIRECTORIES)
+#get_property(dirs1 TARGET application_model PROPERTY IMPORTED_TARGETS)
+foreach(dir ${dirs1})
+  message(STATUS "Interface include directory for my_target: ${dir}")
+endforeach()
+macro(print_all_variables)
+    message(STATUS "print_all_variables------------------------------------------{")
+    get_cmake_property(_variableNames VARIABLES)
+    foreach (_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+    message(STATUS "print_all_variables------------------------------------------}")
+endmacro()
+
+#print_all_variables()

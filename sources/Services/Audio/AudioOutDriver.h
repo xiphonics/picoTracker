@@ -7,7 +7,11 @@
 
 class AudioDriver ;
 
+#ifndef PICOBUILD
 #define MIX_BUFFER_SIZE 40000
+#else
+#define MIX_BUFFER_SIZE 4000
+#endif
 
 class AudioOutDriver: public AudioOut,protected I_Observer {
 public:

@@ -1,6 +1,10 @@
 #include "TimeService.h"
 #include "System/System/System.h"
+#ifndef PICOBUILD
 #include "SDL/SDL.h"
+#else
+#include "pico/stdlib.h"
+#endif
 
 /*Date::Date() {
 } ;
@@ -42,5 +46,9 @@ Time TimeService::GetTime() {
 } ;
 
 void TimeService::Sleep(int msecs) {
-	SDL_Delay(msecs) ;
+#ifndef PICOBUILD
+  SDL_Delay(msecs);
+#else
+  sleep_ms(msecs);
+#endif
 } ;

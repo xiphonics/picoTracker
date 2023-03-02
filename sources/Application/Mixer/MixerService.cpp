@@ -81,12 +81,15 @@ bool MixerService::Init() {
     out_->AddObserver(*MidiService::GetInstance());
 	}
 
-	sync_=SDL_CreateMutex() ;
-	NAssert(sync_) ;
+#ifndef PICOBUILD
+  sync_=SDL_CreateMutex() ;
+#else
+  mutex_init(sync_);
+#endif
+  NAssert(sync_);
 
-	if (result) 
-  {
-       Trace::Debug("Out initialized") ;
+  if (result) {
+    Trace::Debug("Out initialized");
   } else {
        Trace::Debug("Failed to get output") ;
   }
@@ -120,8 +123,10 @@ void MixerService::Close() {
 	   bus_[i].Empty() ;
    }
 	out_=0 ;
-	SDL_DestroyMutex(sync_) ;
-	sync_=0 ;
+#ifndef PICOBUILD
+  SDL_DestroyMutex(sync_);
+  sync_=0 ;
+#endif
 } ;
 
 bool MixerService::Start() {
@@ -223,11 +228,20 @@ AudioOut *MixerService::GetAudioOut() {
 	return out_ ;
 } ;
 
-
 void MixerService::Lock() {
-	if (sync_) SDL_LockMutex(sync_) ;
+  if (sync_)
+#ifndef PICOBUILD
+    SDL_LockMutex(sync_);
+#else
+    mutex_enter_blocking(sync_);
+#endif
 }
 
 void MixerService::Unlock() {
-	if (sync_) SDL_UnlockMutex(sync_) ;
+  if (sync_)
+#ifndef PICOBUILD
+    SDL_UnlockMutex(sync_);
+#else
+    mutex_exit(sync_);
+#endif
 }

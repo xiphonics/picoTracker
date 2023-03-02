@@ -95,10 +95,10 @@ std::string Path::GetName() {
 	unsigned int index=0 ;
 	for (unsigned int i=0;i<strlen(path_);i++) {
 		if (path_[i]=='/') {
-			index=i ;
+			index=i+1 ;
 		} ;
 	} ;
-	if (index!=0) index++ ;
+  //	if (index!=0) index++ ;
 	return std::string(path_+index);
 } ;
 

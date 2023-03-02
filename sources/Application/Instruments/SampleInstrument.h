@@ -45,7 +45,11 @@ enum SampleInstrumentLoopMode {
 #define SIP_FBTUNE			MAKE_FOURCC('F','B','T','U')
 #define SIP_FBMIX			MAKE_FOURCC('F','B','M','X')
 
+#ifndef PICOBUILD 
 #define FB_BUFFER_LENGTH 3500 // (in samples)
+#else
+#define FB_BUFFER_LENGTH 350
+#endif
 
 class SampleInstrument: public I_Instrument,I_Observer {
 

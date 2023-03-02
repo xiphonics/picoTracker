@@ -7,15 +7,19 @@
 #include "Services/Audio/AudioOut.h"
 #include "Application/Commands/CommandDispatcher.h" // Would be better done externally and call an API here
 #include "MixBus.h"
+#ifndef PICOBUILD
 #include "SDL/SDL.h"
+#else
+#include "pico/mutex.h"
+#endif
 
-enum MixerServiceMode {
-	MSM_AUDIO,
-	MSM_FILE,
-	MSM_FILESPLIT,
-	MSM_FILERT,
-	MSM_FILESPLITRT
-} ;
+    enum MixerServiceMode {
+      MSM_AUDIO,
+      MSM_FILE,
+      MSM_FILESPLIT,
+      MSM_FILERT,
+      MSM_FILESPLITRT
+    };
 
 #define MAX_BUS_COUNT 10
 
@@ -61,7 +65,10 @@ private:
 	MixBus master_ ;
 	MixBus bus_[MAX_BUS_COUNT] ;
 	MixerServiceMode mode_ ;
-	SDL_mutex *sync_ ;  
-
+#ifndef PICOBUILD
+  SDL_mutex *sync_ ;
+#else
+  mutex_t *sync_;
+#endif
 } ;
 #endif

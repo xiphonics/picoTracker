@@ -5,8 +5,13 @@
 #include "Foundation/T_Singleton.h"
 #include "Application/Persistency/Persistent.h"
 
+#ifndef PICOBUILD
 #define TABLE_COUNT 0x80
 #define TABLE_STEPS 16
+#else
+#define TABLE_COUNT 0x0F
+#define TABLE_STEPS 16
+#endif
 
 #define NO_MORE_TABLE TABLE_COUNT+10
 

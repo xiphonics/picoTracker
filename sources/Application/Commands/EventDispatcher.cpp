@@ -1,14 +1,9 @@
 #include "EventDispatcher.h"
 #include "System/Console/Trace.h"
 #include "Application/Model/Config.h"
-#include "SDL/SDL.h"
 
 int EventDispatcher::keyRepeat_=30 ;
 int EventDispatcher::keyDelay_=500 ;
-
-Uint32 OnTimer(Uint32 interval) {
-	return EventDispatcher::GetInstance()->OnTimerTick() ;
-} ;
 
 EventDispatcher::EventDispatcher() {
 	window_=0;
