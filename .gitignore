@@ -1,4 +1,42 @@
 bin/**
 build/**
+build-opt/**
 projects/buildPSP/**
 tracks/**
+ref/**
+doxygen/html/**
+util/**
+sources/Adapters/PICO/data/**
+projects/buildOSX/**
+projects/lgpt
+samplelib/**
+lgpt_*
+lgpt.log
+
+# OSX
+## General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## Icon must end with two \r
+Icon
+
+## Thumbnails
+._*
+
+## Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+## Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
