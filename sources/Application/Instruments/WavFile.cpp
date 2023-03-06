@@ -1,10 +1,20 @@
 
 #include "WavFile.h"
-#include "System/Console/Trace.h"
+#include "Application/Model/Config.h"
 #include "Foundation/Types/Types.h"
 #include "Services/Time/TimeService.h"
-#include "Application/Model/Config.h"
+#include "System/Console/Trace.h"
 #include <stdlib.h>
+
+#ifdef LOAD_IN_FLASH
+#include "hardware/flash.h"
+#include "hardware/sync.h"
+
+// We'll use Flash region from 0x10100000 - 0x10200000 ??
+#define FLASH_TARGET_OFFSET (1024 * 1024)
+
+int WavFile::flashOffset_ = FLASH_TARGET_OFFSET;
+#endif
 
 int WavFile::bufferChunkSize_=-1 ;
 bool WavFile::initChunkSize_=true ;
@@ -325,6 +335,81 @@ bool WavFile::GetBuffer(long start,long size) {
 	} 
 	return true ;
 } ;
+
+#ifdef LOAD_IN_FLASH
+bool WavFile::LoadInFlash() {
+
+  // compute the sample buffer size we need,
+  // allocate if needed
+
+  int sampleBufferSize = 2 * channelCount_ * size_;
+
+  // TODO: check this will fit in flash
+  samples_ = (short *)(XIP_BASE + flashOffset_);
+  sampleBufferSize_ = sampleBufferSize;
+  int sectorsToErase =
+      ((sampleBufferSize_ / FLASH_SECTOR_SIZE) + 1) * FLASH_SECTOR_SIZE;
+  // TODO: write actual data in FLASH_PAGE_SIZE chunks rather than FLASH_SECTOR_SIZE
+  //  int sizeInFlash =
+  //      sampleBufferSize_ /
+  //      FLASH_PAGE_SIZE; // FLASH_PAGE_SIZE (256) < FLASH_SECTOR_SIZE (4K)
+  // Erase flash
+  int irqs = save_and_disable_interrupts();
+  Trace::Debug("About to erase %i sectors in flash offset %X", sectorsToErase,
+               flashOffset_);
+  flash_range_erase(flashOffset_, sectorsToErase);
+
+  // compute the file buffer size we need to read
+
+  int bufferSize = size_ * channelCount_ * bytePerSample_;
+  int bufferStart = dataPosition_;
+
+  // Read the buffer but in small chunk to let the system breathe
+  // if the files are big
+
+  int count = bufferSize;
+  int offset = 0;
+  int readSize = (bufferChunkSize_ > 0) ? bufferChunkSize_
+    : count > 4096         ? 4096
+    : count;
+
+  while (count > 0) {
+    readSize = (count > readSize)
+      ? readSize
+      : ((count / FLASH_PAGE_SIZE) + 1) * FLASH_PAGE_SIZE;
+    readBlock(bufferStart, readSize);
+    
+    // Have to expand 8 bit data (if needed) before writing to flash
+    unsigned char *src = (unsigned char *)readBuffer_;
+    short *dst = (short *)readBuffer_;
+    for (int i = size_ - 1; i >= 0; i--) {
+      if (bytePerSample_ == 1) {
+        dst[i] = (src[i] - 128) * 256;
+      } else {
+        *dst = Swap16(*dst);
+        dst++;
+        if (channelCount_ > 1) {
+          *dst = Swap16(*dst);
+          dst++;
+        }
+      }
+    }
+
+    // There will be trash at the end, but sampleBufferSize_ gives me the bounds
+    Trace::Debug("About to write %i sectors in flash offset %X", readSize, flashOffset_ + offset);
+    flash_range_program(flashOffset_ + offset, (uint8_t *)readBuffer_, readSize);
+    bufferStart += readSize;
+    count -= readSize;
+    offset += readSize;
+    if (bufferChunkSize_ > 0)
+      TimeService::GetInstance()->Sleep(1);
+  }
+
+  flashOffset_ += sectorsToErase;
+  restore_interrupts(irqs);
+  return true;
+};
+#endif
 
 void WavFile::Close() {
 	file_->Close() ;

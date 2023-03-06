@@ -31,7 +31,7 @@ add_definitions(-DDISABLESF)
 # Enable Streaming from SD, bad performance for the moment
 # add_definitions(-DSD_STREAMING)
 # Enable loading samples into Flash
-# add_definitions(-DFLASH_LOADING)
+add_definitions(-DLOAD_IN_FLASH)
 
 # Initialize the SDK
 pico_sdk_init()

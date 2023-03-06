@@ -18,7 +18,10 @@ public:
 	virtual int GetChannelCount(int note) ;
 	virtual int GetRootNote(int note) ;
 	bool GetBuffer(long start,long sampleCount) ; // values in smples
-	void Close() ;
+#ifdef LOAD_IN_FLASH
+  bool LoadInFlash();
+#endif
+  void Close() ;
 	virtual bool IsMulti() {return false ; } ;
 
 protected:
@@ -34,6 +37,10 @@ private:
 	int channelCount_ ; // mono / stereo
 	int bytePerSample_ ; // original file is in 8/16bit
 	int dataPosition_ ; // offset in file to get to data
+
+#ifdef LOAD_IN_FLASH
+  static int flashOffset_;
+#endif
 
 	static int bufferChunkSize_ ;
 	static bool initChunkSize_ ;

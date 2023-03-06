@@ -127,7 +127,11 @@ bool SamplePool::loadSample(const char *path) {
 		names_[count_]=(char*)SYS_MALLOC(name.length()+1) ;
 		strcpy(names_[count_],name.c_str()) ;
 		count_++ ;
-		wave->GetBuffer(0,wave->GetSize(-1)) ;
+#ifdef LOAD_IN_FLASH
+    wave->LoadInFlash();
+#else
+    wave->GetBuffer(0, wave->GetSize(-1));
+#endif
 		wave->Close() ;
 		return true ;
 	} else {
