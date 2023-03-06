@@ -16,6 +16,8 @@
 #define PICO_AUDIO_I2S_DMA_IRQ 0
 #define AUDIO_I2S
 
+#define MINI_BLANK_SIZE 128
+
 class PICOAudioDriver : public AudioDriver {
 public:
   PICOAudioDriver(AudioSettings &settings);
@@ -41,10 +43,9 @@ private:
   static PICOAudioDriver *instance_;
 
   AudioSettings settings_;
-  char *miniBlank_;
+  static char miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
   int volume_;
   int ticksBeforeMidi_;
   uint32_t startTime_;
-
 };
 #endif

@@ -15,7 +15,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#define SAMPLES_PER_BUFFER 256 // Samples / channel
+char PICOAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
 
 PICOAudioDriver *PICOAudioDriver::instance_ = NULL;
 
@@ -35,7 +35,7 @@ void __isr __time_critical_func(audio_i2s_dma_irq_handler)() {
 void PICOAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 
 PICOAudioDriver::PICOAudioDriver(AudioSettings &settings)
-    : AudioDriver(settings), miniBlank_(0) {
+    : AudioDriver(settings) {
 
   isPlaying_ = false;
   PICO_exit = 0;
@@ -91,13 +91,12 @@ bool PICOAudioDriver::InitDriver() {
                              divider & 0xffu);
 
   // Create mini blank buffer for underrun
-  miniBlank_ = (char *)malloc(SAMPLES_PER_BUFFER * 2 * sizeof(short));
-  memset(miniBlank_, 0, SAMPLES_PER_BUFFER * 2 * sizeof(short));
+  memset(miniBlank_, 0, MINI_BLANK_SIZE * 2 * sizeof(short));
 
   // Enable audio
   irq_set_enabled(DMA_IRQ_0 + PICO_AUDIO_I2S_DMA_IRQ, true);
   dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA, miniBlank_,
-                                       SAMPLES_PER_BUFFER);
+                                       MINI_BLANK_SIZE);
   pio_sm_set_enabled(audio_pio, PICO_AUDIO_I2S_SM, true);
 
   volume_ = 65;
@@ -119,10 +118,6 @@ void PICOAudioDriver::SetVolume(int v) {
 int PICOAudioDriver::GetVolume() { return volume_; };
 
 void PICOAudioDriver::CloseDriver() {
-  if (miniBlank_) {
-    SYS_FREE(miniBlank_);
-    miniBlank_ = 0;
-  }
 
   // TODO: proper hardware shudown and free resources?
   // If we do not do this at loading the driver again we don't have pio 0 for
@@ -142,7 +137,7 @@ bool PICOAudioDriver::StartDriver() {
   ticksBeforeMidi_ = 4;
 
   for (int i = 0; i < ticksBeforeMidi_; i++) {
-    AddBuffer((short *)miniBlank_, SAMPLES_PER_BUFFER * 2 * sizeof(short) / 4);
+    AddBuffer((short *)miniBlank_, MINI_BLANK_SIZE);
   }
 
   PICO_sound_pause(0);
@@ -167,19 +162,26 @@ void PICOAudioDriver::OnChunkDone() {
     poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
 
     // Start DMA of next one
-
-    dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA,
-                                         pool_[poolPlayPosition_].buffer_,
-                                         pool_[poolPlayPosition_].size_ / 4);
-    int start = micros();
-    OnNewBufferNeeded();
-    printf("%i - Time taken on OnNewBufferNeeded(): %ius\n", micros(), micros() - start);
-
-    // Process MIDI
-    if (ticksBeforeMidi_) {
-      ticksBeforeMidi_--;
+    if (pool_[poolPlayPosition_].buffer_ == 0) {
+      dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA,
+                                           miniBlank_,
+                                           MINI_BLANK_SIZE);
+      return;
     } else {
-      MidiService::GetInstance()->Flush();
+      dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA,
+                                           pool_[poolPlayPosition_].buffer_,
+                                           pool_[poolPlayPosition_].size_ / 4);
+      int start = micros();
+      OnNewBufferNeeded();
+      printf("%i - Time taken on OnNewBufferNeeded(): %ius\n", micros(),
+             micros() - start);
+
+      // Process MIDI
+      if (ticksBeforeMidi_) {
+        ticksBeforeMidi_--;
+      } else {
+        MidiService::GetInstance()->Flush();
+      }
     }
   }
 }
