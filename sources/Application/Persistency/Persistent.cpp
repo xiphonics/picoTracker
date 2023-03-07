@@ -11,10 +11,10 @@ void Persistent::Save(TiXmlNode *node) {
 	SaveContent(first) ;
 } ;
 
-bool Persistent::Restore(TiXmlElement *element) {
-	if (!strcmp(element->Value(),nodeName_)) {
-		RestoreContent(element) ;
-		return true ;
-	}
-	return false ;
-} ;
+bool Persistent::Restore(PersistencyDocument *doc) {
+  if (!strcmp(doc->ElemName(), nodeName_)) {
+    RestoreContent(doc);
+    return true;
+  }
+  return false;
+};

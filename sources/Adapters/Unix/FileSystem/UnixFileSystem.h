@@ -9,6 +9,7 @@ class UnixFile: public I_File {
 public:
 	UnixFile(FILE *) ;
 	virtual int Read(void *ptr, int size, int nmemb) ;
+  virtual int GetC();
 	virtual int Write(const void *ptr, int size, int nmemb) ;
 	virtual void Printf(const char *format,...);
 	virtual void Seek(long offset,int whence) ;

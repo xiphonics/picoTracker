@@ -20,15 +20,17 @@ char *InstrumentTypeData[IT_LAST]= {
 InstrumentBank::InstrumentBank():Persistent("INSTRUMENTBANK") {
 
    	for (int i=0;i<MAX_SAMPLEINSTRUMENT_COUNT;i++) {
-        SampleInstrument *s=new SampleInstrument() ;
-        instrument_[i]=s ;
+      Trace::Debug("Loading sample instrument: %i", i);
+      SampleInstrument *s = new SampleInstrument();
+      instrument_[i] = s;
     }
 	for (int i=0;i<MAX_MIDIINSTRUMENT_COUNT;i++) {
-        MidiInstrument *s=new MidiInstrument() ;
-        s->SetChannel(i) ;
-        instrument_[MAX_SAMPLEINSTRUMENT_COUNT+i]=s ;
-    }
-    Status::Set("All instrument loaded") ;
+    Trace::Debug("Loading MIDI instrument: %i", i);
+    MidiInstrument *s = new MidiInstrument();
+    s->SetChannel(i);
+    instrument_[MAX_SAMPLEINSTRUMENT_COUNT + i] = s;
+  }
+  Status::Set("All instrument loaded") ;
 } ;
 
 //
@@ -84,11 +86,8 @@ void InstrumentBank::SaveContent(TiXmlNode *node) {
 	}
 } ;
 
-void InstrumentBank::RestoreContent(TiXmlElement *element) {
+void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
 
-	TiXmlElement *current=element->FirstChildElement() ;
-
-	PersistencyDocument *doc=(PersistencyDocument *)element->GetDocument() ;
   if (doc->version_ < 130)
   {
     if (Config::GetInstance()->GetValue("LEGACYDOWNSAMPLING") != NULL)
@@ -96,32 +95,41 @@ void InstrumentBank::RestoreContent(TiXmlElement *element) {
       SampleInstrument::EnableDownsamplingLegacy();
     }
   }
-	while (current) {
+  bool elem = doc->FirstChild();
+  while (elem) {
+    // Check it is an instrument
+    if (!strcmp(doc->ElemName(), "INSTRUMENT")) {
+      // Get the instrument ID
+      unsigned char id;
+      char *hexid = NULL;
+      char *instype = NULL;
+      bool hasAttr = doc->NextAttribute();
+      while (hasAttr) {
+        if (!strcmp(doc->attrname_, "ID")) {
+          hexid = doc->attrval_;
+          unsigned char b1 = (c2h__(hexid[0])) << 4;
+          unsigned char b2 = c2h__(hexid[1]);
+          id = b1 + b2;    
+        }
+        if (!strcmp(doc->attrname_, "TYPE")) {
+          instype = doc->attrval_;
+        }
+        hasAttr = doc->NextAttribute();
+      }
 
-		// Check it is an instrument
-		
-		if (!strcmp(current->Value(),"INSTRUMENT")) {
-
-			// Get the instrument ID
-			
-			const char* hexid=current->Attribute("ID") ;
-			unsigned char b1=(c2h__(hexid[0]))<<4 ;
-			unsigned char b2=c2h__(hexid[1]) ;
-			unsigned char id=b1+b2 ;			
-
-			InstrumentType it=IT_LAST ;
-			const char* instype=current->Attribute("TYPE") ;
-			if (instype) {
-				for (int i=0;i<IT_LAST;i++) {
-					if (!strcmp(instype,InstrumentTypeData[i])) {
-						it=(InstrumentType)i ;
-						break ;
-					}
-				}
-			} else {
-				it=(id<MAX_SAMPLEINSTRUMENT_COUNT)?IT_SAMPLE:IT_MIDI ;
-			} ;
-			if (id<MAX_INSTRUMENT_COUNT) {
+      InstrumentType it = IT_LAST;
+      if (instype) {
+        for (int i = 0; i < IT_LAST; i++) {
+          if (!strcmp(instype, InstrumentTypeData[i])) {
+            it = (InstrumentType)i;
+            break;
+          }
+        }
+      }
+      else {
+        it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE : IT_MIDI;
+      };
+      if (id < MAX_INSTRUMENT_COUNT) {
         I_Instrument *instr=instrument_[id] ;
 				if (instr->GetType()!=it) {
 					delete instr ;
@@ -136,36 +144,41 @@ void InstrumentBank::RestoreContent(TiXmlElement *element) {
 					instrument_[id]=instr ;
 				} ;
 
-        TiXmlElement *param=current->FirstChildElement() ;
-				while (param) {
-					const char *name=param->Attribute("NAME") ;
-					const char *value=param->Attribute("VALUE") ;
-
-          // Convert old filter dist to newer filter mode
-
-          if (!strcmp(name,"filter dist"))
-          {
-            name = "filter mode";
-            if (!strcmp(value,"none"))
-            {
-              value = "original";
+        bool subelem = doc->FirstChild();
+        while (subelem) {
+          bool hasAttr = doc->NextAttribute();
+          char name[24];
+          char value[24];
+          while (hasAttr) {
+            if (!strcmp(doc->attrname_, "NAME")) {
+              strcpy(name, doc->attrval_);
             }
-            else
-            {
-              value = "scream";
+            if (!strcmp(doc->attrname_, "VALUE")) {
+              strcpy(value, doc->attrval_);
             }
+            hasAttr = doc->NextAttribute();
           }
 
-					IteratorPtr<Variable> it(instr->GetIterator()) ;
-					for (it->Begin();!it->IsDone();it->Next()) {
-						Variable &v=it->CurrentItem() ;
-						if (!strcmp(v.GetName(),name)) {
-							v.SetString(value) ;
-						} ;
-					}
-					param=param->NextSiblingElement() ;
-				}
-				if (doc->version_<38) {
+          // Convert old filter dist to newer filter mode
+          if (!strcmp(name, "filter dist")) {
+            strcpy(name, "filter mode");
+            if (!strcmp(value, "none")) {
+              strcpy(value, "original");
+            } else {
+              strcpy(value, "scream");
+            }
+          }
+          
+          IteratorPtr<Variable> it(instr->GetIterator());
+          for (it->Begin(); !it->IsDone(); it->Next()) {
+            Variable &v = it->CurrentItem();
+            if (!strcmp(v.GetName(), name)) {
+              v.SetString(value);
+            };
+          }
+          subelem = doc->NextSibling();
+        }
+        if (doc->version_<38) {
 					Variable *cvl=instr->FindVariable(SIP_CRUSHVOL) ;
 					Variable *vol=instr->FindVariable(SIP_VOLUME);
 					Variable *crs=instr->FindVariable(SIP_CRUSH) ;
@@ -175,12 +188,12 @@ void InstrumentBank::RestoreContent(TiXmlElement *element) {
 							vol->SetInt(cvl->GetInt()) ;
 							cvl->SetInt(temp) ;
 						}
-					} ;
-				}
+					};
+        }
 			}
-		}
-		current=current->NextSiblingElement() ;
-	} ;
+    }
+    elem = doc->NextSibling();
+  };
 };
 
 void InstrumentBank::Init() {

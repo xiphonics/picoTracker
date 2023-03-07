@@ -40,50 +40,46 @@ void Song::SaveContent(TiXmlNode *node) {
 	saveHexBuffer(node,"PARAM2",phrase_->param2_,PHRASE_COUNT*16) ;
 
 } ;
+void Song::RestoreContent(PersistencyDocument *doc) {
+  bool elem = doc->FirstChild();
 
-void Song::RestoreContent(TiXmlElement *element) {
+  while (elem) {
+    if (!strcmp("SONG",doc->ElemName())) {
+      restoreHexBuffer(doc,data_) ;
+    } ;
+    if (!strcmp("CHAINS",doc->ElemName())) {
+      restoreHexBuffer(doc,chain_->data_) ;
+    } ;
+    if (!strcmp("TRANSPOSES",doc->ElemName())) {
+      restoreHexBuffer(doc,chain_->transpose_) ;
+    } ;
+    if (!strcmp("NOTES",doc->ElemName())) {
+      restoreHexBuffer(doc,phrase_->note_) ;
+    } ;
+    if (!strcmp("INSTRUMENTS",doc->ElemName())) {
+      restoreHexBuffer(doc,phrase_->instr_) ;
+    } ;
+    if (!strcmp("COMMAND1",doc->ElemName())) {
+      restoreHexBuffer(doc,(uchar *)phrase_->cmd1_) ;
+    } ;
+    if (!strcmp("PARAM1",doc->ElemName())) {
+      restoreHexBuffer(doc,(uchar *)phrase_->param1_) ;
+      for (int i=0; i<PHRASE_COUNT*16; i++) {
+        phrase_->param1_[i] = Swap16(phrase_->param1_[i]);
+      }
+    } ;
+    if (!strcmp("COMMAND2",doc->ElemName())) {
+      restoreHexBuffer(doc,(uchar *)phrase_->cmd2_) ;
+    } ;
+    if (!strcmp("PARAM2",doc->ElemName())) {
+      restoreHexBuffer(doc,(uchar *)phrase_->param2_) ;
+      for (int i=0; i<PHRASE_COUNT*16; i++) {
+        phrase_->param2_[i] = Swap16(phrase_->param2_[i]);
+      }
+    } ;
+    elem = doc->NextSibling();
+  }
 
-	TiXmlElement *current=element->FirstChildElement() ;
-	while(current) {
-		const char *value=current->Value() ;
-		if (!strcmp("SONG",value)) {
-			restoreHexBuffer(current,data_) ;
-		} ;
-		if (!strcmp("CHAINS",value)) {
-			restoreHexBuffer(current,chain_->data_) ;
-		} ;
-		if (!strcmp("TRANSPOSES",value)) {
-			restoreHexBuffer(current,chain_->transpose_) ;
-		} ;
-		if (!strcmp("NOTES",value)) {
-			restoreHexBuffer(current,phrase_->note_) ;
-		} ;
-		if (!strcmp("INSTRUMENTS",value)) {
-			restoreHexBuffer(current,phrase_->instr_) ;
-		} ;
-		if (!strcmp("COMMAND1",value)) {
-			restoreHexBuffer(current,(uchar *)phrase_->cmd1_) ;
-		} ;
-		if (!strcmp("PARAM1",value)) {
-			restoreHexBuffer(current,(uchar *)phrase_->param1_) ;
-		} ;
-		if (!strcmp("COMMAND2",value)) {
-			restoreHexBuffer(current,(uchar *)phrase_->cmd2_) ;
-		} ;
-		if (!strcmp("PARAM2",value)) {
-			restoreHexBuffer(current,(uchar *)phrase_->param2_) ;
-		} ;
-		
-		
-		for (int i=0; i<PHRASE_COUNT*16; i++)
-		{
-			phrase_->param1_[i] = Swap16(phrase_->param1_[i]);
-			phrase_->param2_[i] = Swap16(phrase_->param2_[i]);
-		}
-		
-		current=current->NextSiblingElement() ;
-	} ;
-	
 	Status::Set("Restoring allocation") ;
 
 	// Restore chain & phrase allocation table

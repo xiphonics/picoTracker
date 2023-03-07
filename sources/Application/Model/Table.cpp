@@ -99,60 +99,62 @@ void TableHolder::SaveContent(TiXmlNode *node) {
 	}
 } ;
 
-void TableHolder::RestoreContent(TiXmlElement *element) {
+void TableHolder::RestoreContent(PersistencyDocument *doc) {
 
-	TiXmlElement *current=element->FirstChildElement() ;
-	while (current) {
+  bool elem = doc->FirstChild();
+  while (elem) {
+    // Check it is a table
+    if (!strcmp(doc->ElemName(),"TABLE")) {
+      // Get the table ID
+      bool attr = doc->NextAttribute();
+      const char* hexid;
+      while (attr) {
+        if (!strcmp(doc->attrname_, "ID")) {
+          hexid = doc->attrval_;
+          // found what we wanted
+          break;
+        }
+        attr = doc->NextAttribute();
+      }
+      unsigned char b1=(c2h__(hexid[0]))<<4;
+      unsigned char b2=c2h__(hexid[1]);
+      unsigned char id=b1+b2;
 
-		// Check it is an table
-		
-		if (!strcmp(current->Value(),"TABLE")) {
+      Table &table=table_[id];
 
-			// Get the table ID
-			
-			const char* hexid=current->Attribute("ID") ;
-			unsigned char b1=(c2h__(hexid[0]))<<4 ;
-			unsigned char b2=c2h__(hexid[1]) ;
-			unsigned char id=b1+b2 ;	
+      bool subelem = doc->FirstChild();
+      while (subelem) {
+        if (!strcmp("CMD1",doc->ElemName())) {
+          restoreHexBuffer(doc,(unsigned char *)table.cmd1_) ;
+        } ;
+        if (!strcmp("PARAM1",doc->ElemName())) {
+          restoreHexBuffer(doc,(unsigned char *)table.param1_) ;
+        } ;
+        if (!strcmp("CMD2",doc->ElemName())) {
+          restoreHexBuffer(doc,(unsigned char *)table.cmd2_) ;
+        } ;
+        if (!strcmp("PARAM2",doc->ElemName())) {
+          restoreHexBuffer(doc,(unsigned char *)table.param2_) ;
+        } ;
+        if (!strcmp("CMD3",doc->ElemName())) {
+          restoreHexBuffer(doc,(unsigned char *)table.cmd3_) ;
+        } ;
+        if (!strcmp("PARAM3",doc->ElemName())) {
+          restoreHexBuffer(doc,(unsigned char *)table.param3_) ;
+        } ;
 
-			Table &table=table_[id] ;
-
-			TiXmlElement *sub=current->FirstChildElement() ;
-			while(sub) {
-				const char *value=sub->Value() ;
-				if (!strcmp("CMD1",value)) {
-					restoreHexBuffer(sub,(unsigned char *)table.cmd1_) ;
-				} ;
-				if (!strcmp("PARAM1",value)) {
-					restoreHexBuffer(sub,(unsigned char *)table.param1_) ;
-				} ;
-				if (!strcmp("CMD2",value)) {
-					restoreHexBuffer(sub,(unsigned char *)table.cmd2_) ;
-				} ;
-				if (!strcmp("PARAM2",value)) {
-					restoreHexBuffer(sub,(unsigned char *)table.param2_) ;
-				} ;
-				if (!strcmp("CMD3",value)) {
-					restoreHexBuffer(sub,(unsigned char *)table.cmd3_) ;
-				} ;
-				if (!strcmp("PARAM3",value)) {
-					restoreHexBuffer(sub,(unsigned char *)table.param3_) ;
-				} ;
-				
-				for (int i=0; i<16; i++)
-				{
-					table.param1_[i] = Swap16(table.param1_[i]);
-					table.param2_[i] = Swap16(table.param2_[i]);
-					table.param3_[i] = Swap16(table.param3_[i]);
-				}
-
-				
-				sub=sub->NextSiblingElement() ;
-			}
-			allocation_[id]=!table.IsEmpty() ;
-		}
-		current=current->NextSiblingElement() ;
-	} ;
+        for (int i=0; i<16; i++)
+          {
+            table.param1_[i] = Swap16(table.param1_[i]);
+            table.param2_[i] = Swap16(table.param2_[i]);
+            table.param3_[i] = Swap16(table.param3_[i]);
+          }
+        subelem = doc->NextSibling();
+      }
+      allocation_[id]=!table.IsEmpty() ;
+    }
+    elem = doc->NextSibling();
+  }
 }
 
 void TableHolder::SetUsed(int i) {

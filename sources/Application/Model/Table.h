@@ -9,7 +9,7 @@
 #define TABLE_COUNT 0x80
 #define TABLE_STEPS 16
 #else
-#define TABLE_COUNT 0x0F
+#define TABLE_COUNT 0x10
 #define TABLE_STEPS 16
 #endif
 
@@ -40,7 +40,7 @@ public:
 	int GetNext() ;
 	int Clone(int table) ;
 	virtual void SaveContent(TiXmlNode *node) ;
-	virtual void RestoreContent(TiXmlElement *element);
+  virtual void RestoreContent(PersistencyDocument *doc);
 
 private:
 	Table table_[TABLE_COUNT] ;

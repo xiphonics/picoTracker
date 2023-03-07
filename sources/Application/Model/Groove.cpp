@@ -46,12 +46,13 @@ void Groove::SaveContent(TiXmlNode *node) {
 	 saveHexBuffer(node,"DATA",(unsigned char *)data_,16*MAX_GROOVES) ;
 } ;
 
- void Groove::RestoreContent(TiXmlElement *element) {
- 	TiXmlElement *current=element->FirstChildElement() ;
-	restoreHexBuffer(current,(unsigned char*)data_) ;
+void Groove::RestoreContent(PersistencyDocument *doc) {
+  if (doc->FirstChild()) {
+    restoreHexBuffer(doc, (unsigned char *)data_);
+  }
 }
-// Trigger grooves so we go to the next step
 
+// Trigger grooves so we go to the next step
 void Groove::Trigger() {
 	for (int i=0;i<SONG_CHANNEL_COUNT;i++) {
 		ChannelGroove &c=channelGroove_[i] ;

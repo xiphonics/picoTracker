@@ -18,7 +18,7 @@ add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
 #add_definitions(-DPICO_DEBUG_MALLOC)
-#add_definitions(-DPICOSTATS)
+add_definitions(-DPICOSTATS)
 #add_definitions(-DDUMMY_AUDIO)
 #add_definitions(-DDUMMY_MIDI)
 #add_definitions(-DALL_MALLOC)
@@ -31,7 +31,7 @@ add_definitions(-DDISABLESF)
 # Enable Streaming from SD, bad performance for the moment
 # add_definitions(-DSD_STREAMING)
 # Enable loading samples into Flash
-add_definitions(-DLOAD_IN_FLASH)
+# add_definitions(-DLOAD_IN_FLASH)
 
 # Initialize the SDK
 pico_sdk_init()

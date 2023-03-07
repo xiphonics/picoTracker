@@ -112,6 +112,10 @@ int UnixFile::Read(void *ptr,int size, int nmemb) {
 	return fread(ptr,size,nmemb,file_) ;
 } ;
 
+int UnixFile::GetC() {
+  return fgetc(file_);
+}
+
 int UnixFile::Write(const void *ptr,int size, int nmemb) {
 	return fwrite(ptr,size,nmemb,file_) ;
 } ;

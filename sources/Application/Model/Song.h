@@ -12,7 +12,7 @@
 #define MAX_SAMPLEINSTRUMENT_COUNT 0x80
 #define MAX_MIDIINSTRUMENT_COUNT 0x10
 #else
-#define MAX_SAMPLEINSTRUMENT_COUNT 0x02
+#define MAX_SAMPLEINSTRUMENT_COUNT 0x0D
 #define MAX_MIDIINSTRUMENT_COUNT 0x00
 #endif
 
@@ -24,9 +24,9 @@ public:
 	~Song() ;
 
 	virtual void SaveContent(TiXmlNode *node) ;
-	virtual void RestoreContent(TiXmlElement *element);
+  virtual void RestoreContent(PersistencyDocument *doc);
 
-	unsigned char *data_ ;
+  unsigned char *data_ ;
 	Chain *chain_ ;
 	Phrase *phrase_ ;
 } ;

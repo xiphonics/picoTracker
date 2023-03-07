@@ -17,7 +17,8 @@ public:
 	inline int GetBus(int i) { return channelBus_[i]  ; } ;
 
 	virtual void SaveContent(TiXmlNode *node) ;
-	virtual void RestoreContent(TiXmlElement *element);
+  virtual void RestoreContent(PersistencyDocument *doc);
+
 private:
 	char channelBus_[SONG_CHANNEL_COUNT] ;
 } ;	

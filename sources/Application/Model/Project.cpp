@@ -256,40 +256,44 @@ void Project::PurgeInstruments(bool removeFromDisk) {
 	}
 } ;
 
-void Project::RestoreContent(TiXmlElement *element) {
+void Project::RestoreContent(PersistencyDocument *doc) {
+  bool attr = doc->NextAttribute();
+  doc->version_ = 32;
+  int tableRatio = 0;
+  while (attr) {
+    if (!strcmp(doc->attrname_, "VERSION")) {
+      doc->version_ = int(atof(doc->attrval_)*100);
+    }
+    if (!strcmp(doc->attrname_, "TABLERATIO")) {
+      tableRatio = atoi(doc->attrval_);
+    }
+    attr = doc->NextAttribute();
+  }
+  if (!tableRatio) tableRatio = (doc->version_ <= 32)?2:1;
+  SyncMaster::GetInstance()->SetTableRatio(tableRatio);
 
-	// Get version attribute
-
-	PersistencyDocument *doc=(PersistencyDocument *)element->GetDocument() ;
-	doc->version_=32 ;
-
-	const char *aVersion=element->Attribute("VERSION") ;
-	if (aVersion) {
-		doc->version_=int(atof(aVersion)*100) ;
-	};
-
-	// Get table ratio
-	
-	int tableRatio ;
-	if (!element->Attribute("TABLERATIO",&tableRatio)) {
-		tableRatio=(doc->version_<=32)?2:1 ;
-	}
-	SyncMaster::GetInstance()->SetTableRatio(tableRatio) ;
-
-	// Now loop on all variables
-
-	TiXmlElement *current=element->FirstChildElement() ;
-	while (current) {
-		const char *name=current->Attribute("NAME") ;
-		const char *value=current->Attribute("VALUE") ;
-		Variable *v=FindVariable(name) ;
-		if (v) {
-			v->SetString(value) ;
-		} ;
-		current=current->NextSiblingElement() ;
-	} ;
-};
-
+  // Now loop on all variables
+  bool elem = doc->FirstChild();
+  while (elem) {
+    bool attr = doc->NextAttribute();
+    char name[24];
+    char value[24];
+    while(attr) {
+      if (!strcmp(doc->attrname_, "NAME")) {
+        strcpy(name, doc->attrval_);
+      }
+      if (!strcmp(doc->attrname_, "VALUE")) {
+        strcpy(value, doc->attrval_);
+      }
+      attr = doc->NextAttribute();
+    }
+    Variable *v=FindVariable(name);
+    if (v) {
+      v->SetString(value);
+    }
+    elem = doc->NextSibling();
+  }
+}
 
 void Project::SaveContent(TiXmlNode *node) {
 

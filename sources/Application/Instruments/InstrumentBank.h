@@ -14,8 +14,8 @@ public:
 	void AssignDefaults() ;
 	I_Instrument *GetInstrument(int i) ;
 	virtual void SaveContent(TiXmlNode *node);
-	virtual void RestoreContent(TiXmlElement *element);
-	void Init() ;
+  virtual void RestoreContent(PersistencyDocument *doc);
+  void Init() ;
 	void OnStart() ;
 	unsigned short GetNext() ;
 	unsigned short Clone(unsigned short i) ;

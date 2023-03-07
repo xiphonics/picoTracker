@@ -44,9 +44,9 @@ public:
  
 	InstrumentBank* GetInstrumentBank() ;
 	virtual void SaveContent(TiXmlNode *node) ;
-	virtual void RestoreContent(TiXmlElement *element);
+	virtual void RestoreContent(PersistencyDocument *doc);
 
-	void LoadFirstGen(const char *root) ;
+  void LoadFirstGen(const char *root) ;
 
 protected:
 	void buildMidiDeviceList() ;

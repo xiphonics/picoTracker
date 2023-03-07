@@ -18,5 +18,4 @@ void Mixer::Clear() {
 void Mixer::SaveContent(TiXmlNode *node) {
 } ;
 
- void Mixer::RestoreContent(TiXmlElement *element) {
-}
+void Mixer::RestoreContent(PersistencyDocument *doc) {}

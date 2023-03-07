@@ -190,9 +190,9 @@ COMMONDIRS	:=	../sources/System/Console \
 				../sources/Services/Audio \
 				../sources/Foundation/Services \
 				../sources/Foundation/Variables \
-				../sources/Externals/Compression \
 				../sources/Externals/Soundfont \
-				../sources/Externals/TinyXML
+				../sources/Externals/TinyXML \
+	      ../sources/Externals/yxml \
 
 #---------------------------------------------------------------------------------
 # files definition
@@ -388,7 +388,7 @@ CAANOOFILES		:=	CAANOOSDLMain.o \
 					SyncMaster.o TablePlayback.o Player.o \
 					Table.o TableView.o\
 					InstrumentBank.o WavFileWriter.o WavFile.o MidiInstrument.o Filters.o SampleVariable.o SampleInstrument.o SamplePool.o CommandList.o \
-					PersistencyService.o Persistent.o \
+					PersistencyService.o Persistent.o PersistencyDocument.o \
 					Observable.o SingletonRegistry.o \
 					Audio.o AudioMixer.o AudioOutDriver.o AudioDriver.o \
 					AudioOut.o \
@@ -399,8 +399,9 @@ CAANOOFILES		:=	CAANOOSDLMain.o \
 					Variable.o VariableContainer.o WatchedVariable.o \
 					SoundFontPreset.o SoundFontManager.o SoundFontSample.o \
 					ENAB.o HYDRA.o OMEGA.o RIFF.o SFDETECT.o SFLOOKUP.o SFNAV.o SFREADER.o WIN_MEM.o \
-					HexBuffers.o lz.o \
+					HexBuffers.o \
 					tinyxmlparser.o tinyxml.o tinyxmlerror.o tinystr.o Tiny2NosStub.o \
+		      yxml.o \
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
