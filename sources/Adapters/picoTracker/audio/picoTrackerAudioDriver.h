@@ -27,6 +27,7 @@ public:
   int GetVolume();
   virtual double GetStreamTime();
   static void IRQHandler();
+  static void BufferNeeded();
 
 private:
   static picoTrackerAudioDriver *instance_;

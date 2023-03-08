@@ -10,6 +10,7 @@
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/pio.h"
+#include "pico/multicore.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +35,16 @@ void __isr __time_critical_func(audio_i2s_dma_irq_handler)() {
 
 void picoTrackerAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 
-picoTrackerAudioDriver::picoTrackerAudioDriver(AudioSettings &settings)
+void AudioThread() {
+  while (true) {
+    uint32_t g = multicore_fifo_pop_blocking();
+    PICOAudioDriver::BufferNeeded();
+  }
+}
+
+void PICOAudioDriver::BufferNeeded() { instance_->OnNewBufferNeeded(); }
+
+PICOAudioDriver::PICOAudioDriver(AudioSettings &settings)
     : AudioDriver(settings) {
 
   isPlaying_ = false;
@@ -106,6 +116,10 @@ bool picoTrackerAudioDriver::InitDriver() {
                                        MINI_BLANK_SIZE);
   pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, true);
 
+  // Set Audio render thread on core1
+  multicore_reset_core1();
+  multicore_launch_core1(AudioThread);
+
   volume_ = 65;
   Config *config = Config::GetInstance();
   const char *volume = config->GetValue("VOLUME");
@@ -142,7 +156,8 @@ bool picoTrackerAudioDriver::StartDriver() {
   //    AddBuffer((short *)miniBlank_,fragSize_/4) ;
   //  }
   if (settings_.preBufferCount_ == 0) {
-    OnNewBufferNeeded();
+    //    OnNewBufferNeeded();
+    multicore_fifo_push_blocking(0);
   }
 
   ticksBeforeMidi_ = 4;
@@ -181,11 +196,15 @@ void picoTrackerAudioDriver::OnChunkDone() {
     dma_channel_transfer_from_buffer_now(AUDIO_DMA,
                                            pool_[poolPlayPosition_].buffer_,
                                            pool_[poolPlayPosition_].size_ / 4);
+
     // Audio tick processes MIDI among other things
     onAudioBufferTick();
 
-    // Finally we calculate the next buffer
-    OnNewBufferNeeded();
+    // Finally we call core1 to calculate the next buffer
+    bool pushed = multicore_fifo_push_timeout_us(0, 15);
+    if (!pushed) {
+      printf("Data could not be pushed!, FIFO full\n");
+    }
   }
 }
 
