@@ -226,7 +226,7 @@ void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
         const uint8_t *pixel_data = font_data[character];
 
         // draw the character into the buffer
-        for (int j = CHAR_HEIGHT; j >= 0; j--) {
+        for (int j = CHAR_HEIGHT - 1; j >= 0; j--) {
           *buffer_idx++ = (pixel_data[j] & mask) ? fg_color : bg_color;
         }
       }
