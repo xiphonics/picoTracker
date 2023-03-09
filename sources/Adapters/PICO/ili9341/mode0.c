@@ -110,6 +110,9 @@ static const uint8_t font_data[95][8] = {
 
 #define TEXT_HEIGHT 30
 #define TEXT_WIDTH 40
+#define CHAR_HEIGHT 8
+#define CHAR_WIDTH 8
+#define BUFFER_CHARS 30
 
 #define SWAP_BYTES(color) ((uint16_t)(color >> 8) | (uint16_t)(color << 8))
 
@@ -120,6 +123,8 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint8_t colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
+// TODO: reduce this, 4K RAM wasted
+static uint16_t buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
 
 // Using a bit array in order to save memory, there is a slight performance
 // hit in doing so vs a bool array
@@ -205,14 +210,13 @@ void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   ili9341_set_command(ILI9341_RAMWR);
 
   ili9341_start_writing();
-  uint16_t buffer[8 * screen_height]; // 'amount' pixels wide, 240 pixels tall
 
   for (int page = x; page < x + width; page++) {
     // create one column of screen information
     uint16_t *buffer_idx = buffer;
 
-    for (int bit = 7; bit >= 0; bit--) {
-      uint8_t mask = 64 >> bit;
+    for (int bit = CHAR_WIDTH - 1; bit >= 0; bit--) {
+      uint8_t mask = 128 >> bit;  // 2 ^ (CHAR_WIDTH - 1) >> bit
       for (int col = y + height - 1; col >= y; col--) {
         int16_t idx = col * TEXT_WIDTH + page;
         uint8_t character = screen[idx];
@@ -222,13 +226,12 @@ void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
         const uint8_t *pixel_data = font_data[character];
 
         // draw the character into the buffer
-        for (int j = 7; j >= 0; j--) {
+        for (int j = CHAR_HEIGHT; j >= 0; j--) {
           *buffer_idx++ = (pixel_data[j] & mask) ? fg_color : bg_color;
         }
       }
     }
-    // now send the slice
-    ili9341_write_data_continuous(buffer, 8 * screen_height * sizeof(int16_t));
+    ili9341_write_data_continuous(buffer, CHAR_WIDTH * screen_height * sizeof(int16_t));
   }
   ili9341_stop_writing();
   
