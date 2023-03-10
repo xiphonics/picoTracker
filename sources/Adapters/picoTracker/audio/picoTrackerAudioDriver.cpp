@@ -38,7 +38,10 @@ void picoTrackerAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 void AudioThread() {
   while (true) {
     uint32_t g = multicore_fifo_pop_blocking();
+    int start = micros();
     PICOAudioDriver::BufferNeeded();
+    Trace::Debug("%i - Time taken on OnNewBufferNeeded(): %ius", micros(),
+           micros() - start);
   }
 }
 
@@ -48,6 +51,7 @@ PICOAudioDriver::PICOAudioDriver(AudioSettings &settings)
     : AudioDriver(settings) {
 
   isPlaying_ = false;
+  lastBufferGood_ = true;
   picoTracker_exit = 0;
 }
 
@@ -190,21 +194,15 @@ void picoTrackerAudioDriver::OnChunkDone() {
     pool_[poolPlayPosition_].empty_ = true;
     poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
 
-    // In this non multithreaded implementation, we only have two buffers in the ring buffer,
-    // One where we write to, and another one from where we read. We know we are not going to
-    // Step on each other because these operations are happening in sync.
-    dma_channel_transfer_from_buffer_now(AUDIO_DMA,
-                                           pool_[poolPlayPosition_].buffer_,
-                                           pool_[poolPlayPosition_].size_ / 4);
-
-    // Audio tick processes MIDI among other things
-    onAudioBufferTick();
-
     // Finally we call core1 to calculate the next buffer
     bool pushed = multicore_fifo_push_timeout_us(0, 15);
     if (!pushed) {
       printf("Data could not be pushed!, FIFO full\n");
     }
+
+    // Audio tick processes MIDI among other things
+    onAudioBufferTick();
+
   }
 }
 

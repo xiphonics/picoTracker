@@ -37,5 +37,7 @@ private:
   int volume_;
   int ticksBeforeMidi_;
   uint32_t startTime_;
+
+  bool lastBufferGood_;
 };
 #endif
