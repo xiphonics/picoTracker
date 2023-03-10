@@ -10,10 +10,12 @@
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 
-// We'll use Flash region from 0x10100000 - 0x10200000 ??
+// We'll use Flash region from 0x10100000 - 0x10200000
 #define FLASH_TARGET_OFFSET (1024 * 1024)
+#define FLASH_LIMIT (2 * 1024 * 1024)
 
-int WavFile::flashOffset_ = FLASH_TARGET_OFFSET;
+int WavFile::flashEraseOffset_ = FLASH_TARGET_OFFSET;
+int WavFile::flashWriteOffset_ = FLASH_TARGET_OFFSET;
 #endif
 
 int WavFile::bufferChunkSize_=-1 ;
@@ -339,50 +341,74 @@ bool WavFile::GetBuffer(long start,long size) {
 #ifdef LOAD_IN_FLASH
 bool WavFile::LoadInFlash() {
 
-  // compute the sample buffer size we need,
-  // allocate if needed
+  // Size needed in flash before accounting for page size
+  int FlashBaseBufferSize = 2 * channelCount_ * size_;
+  // Store the size of samples
+  sampleBufferSize_ = FlashBaseBufferSize;
+  // Size actually occupied in flash
+  int FlashPageBufferSize =
+    ((FlashBaseBufferSize / FLASH_PAGE_SIZE) + ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) * FLASH_PAGE_SIZE;
 
-  int sampleBufferSize = 2 * channelCount_ * size_;
+  if (flashWriteOffset_ + FlashPageBufferSize > FLASH_LIMIT) {
+    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)", FlashPageBufferSize, FLASH_LIMIT - flashWriteOffset_);
+    return false;
+  }
 
-  // TODO: check this will fit in flash
-  samples_ = (short *)(XIP_BASE + flashOffset_);
-  sampleBufferSize_ = sampleBufferSize;
-  int sectorsToErase =
-      ((sampleBufferSize_ / FLASH_SECTOR_SIZE) + 1) * FLASH_SECTOR_SIZE;
-  // TODO: write actual data in FLASH_PAGE_SIZE chunks rather than FLASH_SECTOR_SIZE
-  //  int sizeInFlash =
-  //      sampleBufferSize_ /
-  //      FLASH_PAGE_SIZE; // FLASH_PAGE_SIZE (256) < FLASH_SECTOR_SIZE (4K)
-  // Erase flash
+  // Pointer to location in flash
+  samples_ = (short *)(XIP_BASE + flashWriteOffset_);
+
+  // Any operation on the flash need to ensure that nothing else reads or writes
+  // on it We disable IRQs and ensure that we don't have multiprocessing on at
+  // this time
   int irqs = save_and_disable_interrupts();
-  Trace::Debug("About to erase %i sectors in flash offset %X", sectorsToErase,
-               flashOffset_);
-  flash_range_erase(flashOffset_, sectorsToErase);
 
-  // compute the file buffer size we need to read
+  // If data doesn't fit in previously erased page, we'll have to erase
+  // additional ones
+  if (FlashPageBufferSize > (flashEraseOffset_ - flashWriteOffset_)) {
+    int additionalData =
+        FlashPageBufferSize - flashEraseOffset_ +
+      flashWriteOffset_;
+    int sectorsToErase =
+      ((additionalData / FLASH_SECTOR_SIZE) + ((additionalData % FLASH_SECTOR_SIZE) != 0)) * FLASH_SECTOR_SIZE;
+    Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
+                 sectorsToErase, flashEraseOffset_,
+                 flashEraseOffset_ + sectorsToErase);
+    // Erase required number of sectors
+    flash_range_erase(flashEraseOffset_, sectorsToErase);
+    // Move erase pointer to new position
+    flashEraseOffset_ += sectorsToErase;
+  }
 
+  // Actual buffer needed to read whole file (may be lower than
+  // FlashBaseBufferSize if it's an 8bit sample)
   int bufferSize = size_ * channelCount_ * bytePerSample_;
+  // Where the data starts in the WAV (after header)
   int bufferStart = dataPosition_;
 
   // Read the buffer but in small chunk to let the system breathe
   // if the files are big
-
   int count = bufferSize;
   int offset = 0;
-  int readSize = (bufferChunkSize_ > 0) ? bufferChunkSize_
-    : count > 4096         ? 4096
-    : count;
+  int readSize = count > 4096 ? 4096 : count;
+
+  // TODO: refactor readBlock to include this usecase
+  // We need double the readSize buffer in order to expand
+  // 8bit data later if needed
+  // We generally don't want to use the heap in pico, but in this case, this happens
+  // before the main program runs and we can use the ram for more useful things later
+  void *readBuffer;
+  readBuffer = SYS_MALLOC(readSize * 2);
 
   while (count > 0) {
-    readSize = (count > readSize)
-      ? readSize
-      : ((count / FLASH_PAGE_SIZE) + 1) * FLASH_PAGE_SIZE;
-    readBlock(bufferStart, readSize);
-    
+    readSize = (count > readSize) ? readSize : count;
+
+    file_->Seek(bufferStart, SEEK_SET);
+    file_->Read(readBuffer, readSize, 1);
+
     // Have to expand 8 bit data (if needed) before writing to flash
-    unsigned char *src = (unsigned char *)readBuffer_;
-    short *dst = (short *)readBuffer_;
-    for (int i = size_ - 1; i >= 0; i--) {
+    unsigned char *src = (unsigned char *)readBuffer;
+    short *dst = (short *)readBuffer;
+    for (int i = readSize - 1; i >= 0; i--) {
       if (bytePerSample_ == 1) {
         dst[i] = (src[i] - 128) * 256;
       } else {
@@ -394,18 +420,25 @@ bool WavFile::LoadInFlash() {
         }
       }
     }
+    
+    // We need to write double the bytes if we needed to expand to 16 bit
+    int writeSize = (bytePerSample_ == 1) ? readSize * 2 : readSize;
+    // Adjust to page size
+    writeSize = ((writeSize / FLASH_PAGE_SIZE) + ((writeSize % FLASH_PAGE_SIZE) != 0)) * FLASH_PAGE_SIZE;
 
-    // There will be trash at the end, but sampleBufferSize_ gives me the bounds
-    Trace::Debug("About to write %i sectors in flash offset %X", readSize, flashOffset_ + offset);
-    flash_range_program(flashOffset_ + offset, (uint8_t *)readBuffer_, readSize);
+    // There will be trash at the end, but sampleBufferSize_ gives me the
+    // bounds
+    Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X", writeSize,
+                 flashWriteOffset_ + offset,
+                 flashWriteOffset_ + offset + writeSize);
+    flash_range_program(flashWriteOffset_ + offset, (uint8_t *)readBuffer, writeSize);
     bufferStart += readSize;
     count -= readSize;
-    offset += readSize;
-    if (bufferChunkSize_ > 0)
-      TimeService::GetInstance()->Sleep(1);
+    flashWriteOffset_ += writeSize;
   }
 
-  flashOffset_ += sectorsToErase;
+  SAFE_FREE(readBuffer);
+  // Lastly we restore the IRQs
   restore_interrupts(irqs);
   return true;
 };

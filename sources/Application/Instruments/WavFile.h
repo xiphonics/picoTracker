@@ -39,10 +39,11 @@ private:
 	int dataPosition_ ; // offset in file to get to data
 
 #ifdef LOAD_IN_FLASH
-  static int flashOffset_;
+        static int flashEraseOffset_;
+        static int flashWriteOffset_;
 #endif
 
-	static int bufferChunkSize_ ;
+        static int bufferChunkSize_ ;
 	static bool initChunkSize_ ;
 } ;
 #endif
