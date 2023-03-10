@@ -10,12 +10,8 @@
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 
-// We'll use Flash region from 0x10100000 - 0x10200000
-#define FLASH_TARGET_OFFSET (1024 * 1024)
+// Raspberry pi pico has 2MB of Flash
 #define FLASH_LIMIT (2 * 1024 * 1024)
-
-int WavFile::flashEraseOffset_ = FLASH_TARGET_OFFSET;
-int WavFile::flashWriteOffset_ = FLASH_TARGET_OFFSET;
 #endif
 
 int WavFile::bufferChunkSize_=-1 ;
@@ -69,7 +65,9 @@ WavFile::~WavFile() {
 		file_->Close() ;
 		delete file_ ;
 	}
-	SAFE_FREE(samples_) ;
+#ifndef LOAD_IN_FLASH
+  SAFE_FREE(samples_) ;
+#endif
 	SAFE_FREE(readBuffer_) ;
 } ;
 
@@ -339,7 +337,7 @@ bool WavFile::GetBuffer(long start,long size) {
 } ;
 
 #ifdef LOAD_IN_FLASH
-bool WavFile::LoadInFlash() {
+bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset) {
 
   // Size needed in flash before accounting for page size
   int FlashBaseBufferSize = 2 * channelCount_ * size_;
@@ -349,13 +347,13 @@ bool WavFile::LoadInFlash() {
   int FlashPageBufferSize =
     ((FlashBaseBufferSize / FLASH_PAGE_SIZE) + ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) * FLASH_PAGE_SIZE;
 
-  if (flashWriteOffset_ + FlashPageBufferSize > FLASH_LIMIT) {
-    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)", FlashPageBufferSize, FLASH_LIMIT - flashWriteOffset_);
+  if (flashWriteOffset + FlashPageBufferSize > FLASH_LIMIT) {
+    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)", FlashPageBufferSize, FLASH_LIMIT - flashWriteOffset);
     return false;
   }
 
   // Pointer to location in flash
-  samples_ = (short *)(XIP_BASE + flashWriteOffset_);
+  samples_ = (short *)(XIP_BASE + flashWriteOffset);
 
   // Any operation on the flash need to ensure that nothing else reads or writes
   // on it We disable IRQs and ensure that we don't have multiprocessing on at
@@ -364,19 +362,19 @@ bool WavFile::LoadInFlash() {
 
   // If data doesn't fit in previously erased page, we'll have to erase
   // additional ones
-  if (FlashPageBufferSize > (flashEraseOffset_ - flashWriteOffset_)) {
+  if (FlashPageBufferSize > (flashEraseOffset - flashWriteOffset)) {
     int additionalData =
-        FlashPageBufferSize - flashEraseOffset_ +
-      flashWriteOffset_;
+        FlashPageBufferSize - flashEraseOffset +
+      flashWriteOffset;
     int sectorsToErase =
       ((additionalData / FLASH_SECTOR_SIZE) + ((additionalData % FLASH_SECTOR_SIZE) != 0)) * FLASH_SECTOR_SIZE;
     Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
-                 sectorsToErase, flashEraseOffset_,
-                 flashEraseOffset_ + sectorsToErase);
+                 sectorsToErase, flashEraseOffset,
+                 flashEraseOffset + sectorsToErase);
     // Erase required number of sectors
-    flash_range_erase(flashEraseOffset_, sectorsToErase);
+    flash_range_erase(flashEraseOffset, sectorsToErase);
     // Move erase pointer to new position
-    flashEraseOffset_ += sectorsToErase;
+    flashEraseOffset += sectorsToErase;
   }
 
   // Actual buffer needed to read whole file (may be lower than
@@ -429,12 +427,12 @@ bool WavFile::LoadInFlash() {
     // There will be trash at the end, but sampleBufferSize_ gives me the
     // bounds
     Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X", writeSize,
-                 flashWriteOffset_ + offset,
-                 flashWriteOffset_ + offset + writeSize);
-    flash_range_program(flashWriteOffset_ + offset, (uint8_t *)readBuffer, writeSize);
+                 flashWriteOffset + offset,
+                 flashWriteOffset + offset + writeSize);
+    flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer, writeSize);
     bufferStart += readSize;
     count -= readSize;
-    flashWriteOffset_ += writeSize;
+    flashWriteOffset += writeSize;
   }
 
   SAFE_FREE(readBuffer);

@@ -117,11 +117,15 @@ void PICOAudioDriver::SetVolume(int v) {
 
 int PICOAudioDriver::GetVolume() { return volume_; };
 
-void PICOAudioDriver::CloseDriver() {
+void PICOAudioDriver::CloseDriver(){
 
-  // TODO: proper hardware shudown and free resources?
-  // If we do not do this at loading the driver again we don't have pio 0 for
-  // use
+  pio_sm_set_enabled(audio_pio, PICO_AUDIO_I2S_SM, false);
+  irq_set_enabled(DMA_IRQ_0 + PICO_AUDIO_I2S_DMA_IRQ, false);
+  dma_irqn_set_channel_enabled(PICO_AUDIO_I2S_DMA_IRQ, PICO_AUDIO_I2S_DMA,
+                               false);
+  irq_remove_handler(DMA_IRQ_0 + PICO_AUDIO_I2S_DMA_IRQ, audio_i2s_dma_irq_handler);
+  dma_channel_unclaim(PICO_AUDIO_I2S_DMA);
+  pio_sm_unclaim(audio_pio, PICO_AUDIO_I2S_SM);
 };
 
 bool PICOAudioDriver::StartDriver() {

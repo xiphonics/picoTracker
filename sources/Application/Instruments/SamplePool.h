@@ -37,6 +37,11 @@ protected:
 	int count_ ;
 	char* names_[MAX_PIG_SAMPLES] ;
 	SoundSource *wav_[MAX_PIG_SAMPLES] ;
+
+#ifdef LOAD_IN_FLASH
+  static int flashEraseOffset_;
+  static int flashWriteOffset_;
+#endif
 } ;
 
 #endif

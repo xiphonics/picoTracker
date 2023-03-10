@@ -10,7 +10,16 @@
 #include "SoundFontManager.h"
 #include "Application/Model/Config.h"
 
-#define SAMPLE_LIB "root:samplelib" 
+#define SAMPLE_LIB "root:samplelib"
+
+#ifdef LOAD_IN_FLASH
+// We'll use Flash region from 0x10100000 - 0x10200000
+#define FLASH_TARGET_OFFSET (1024 * 1024)
+//#define FLASH_LIMIT (2 * 1024 * 1024)
+
+int SamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
+int SamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
+#endif
 
 SamplePool::SamplePool() {
 	for (int i=0;i<MAX_PIG_SAMPLES;i++) {
@@ -40,6 +49,10 @@ void SamplePool::Reset() {
 		SAFE_FREE(names_[i]) ;
 	} ;
 	SoundFontManager::GetInstance()->Reset() ;
+
+  // Reset flash erase and write pointers when we close project
+  flashEraseOffset_ = FLASH_TARGET_OFFSET;
+  flashWriteOffset_ = FLASH_TARGET_OFFSET;
 } ;
 
 void SamplePool::Load() {
@@ -128,7 +141,7 @@ bool SamplePool::loadSample(const char *path) {
 		strcpy(names_[count_],name.c_str()) ;
 		count_++ ;
 #ifdef LOAD_IN_FLASH
-    wave->LoadInFlash();
+    wave->LoadInFlash(flashEraseOffset_, flashWriteOffset_);
 #else
     wave->GetBuffer(0, wave->GetSize(-1));
 #endif

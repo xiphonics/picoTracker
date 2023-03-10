@@ -19,7 +19,7 @@ public:
 	virtual int GetRootNote(int note) ;
 	bool GetBuffer(long start,long sampleCount) ; // values in smples
 #ifdef LOAD_IN_FLASH
-  bool LoadInFlash();
+  bool LoadInFlash(int &flashEraseOffset, int &flashWriteOffset);
 #endif
   void Close() ;
 	virtual bool IsMulti() {return false ; } ;
@@ -38,12 +38,7 @@ private:
 	int bytePerSample_ ; // original file is in 8/16bit
 	int dataPosition_ ; // offset in file to get to data
 
-#ifdef LOAD_IN_FLASH
-        static int flashEraseOffset_;
-        static int flashWriteOffset_;
-#endif
-
-        static int bufferChunkSize_ ;
+  static int bufferChunkSize_ ;
 	static bool initChunkSize_ ;
 } ;
 #endif
