@@ -28,7 +28,7 @@ enum FilterMode
   FM_LAST
 };
 
-fixed panlaw[]= {0x0,
+const fixed panlaw[]= {0x0,
 0x808,
 0xb5b,
 0xde9,
