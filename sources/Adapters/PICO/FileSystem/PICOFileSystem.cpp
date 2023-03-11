@@ -41,6 +41,10 @@ void PICODir::GetContent(char *mask) {
       Insert(path);
     }
   }
+  // Insert a parent dir path given that FatFS doesn't provide it
+  Path cur(this->path_);
+  Path *parent = new Path(cur.GetParent().GetPath());
+  Insert(parent);
   dir.close();
 }
 
