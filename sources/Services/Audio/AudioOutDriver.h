@@ -1,16 +1,17 @@
 #ifndef _AUDIO_OUT_DRIVER_H_
 #define _AUDIO_OUT_DRIVER_H_
 
+#include "Application/Instruments/WavFileWriter.h"
+#include "AudioDriver.h"
 #include "AudioOut.h"
 #include "Foundation/Observable.h"
-#include "Application/Instruments/WavFileWriter.h"
 
 class AudioDriver ;
 
 #ifndef PICOBUILD
 #define MIX_BUFFER_SIZE 40000
 #else
-#define MIX_BUFFER_SIZE 4000
+#define MIX_BUFFER_SIZE (MAX_SAMPLE_COUNT * 2)
 #endif
 
 class AudioOutDriver: public AudioOut,protected I_Observer {
@@ -51,8 +52,8 @@ private:
        	bool clipped_ ;
        	bool hasSound_ ;
 
-	    fixed *primarySoundBuffer_ ;
-	    short *mixBuffer_ ;
-	    int sampleCount_ ;       
+	    static fixed primarySoundBuffer_[MIX_BUFFER_SIZE];
+	    static short mixBuffer_[MIX_BUFFER_SIZE];
+	    int sampleCount_ ;
 } ;
 #endif

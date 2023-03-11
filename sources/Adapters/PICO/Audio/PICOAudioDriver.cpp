@@ -138,7 +138,9 @@ bool PICOAudioDriver::StartDriver() {
     OnNewBufferNeeded();
   }
 
-  ticksBeforeMidi_ = 4;
+  // TODO: Reenable this, potentially
+  // ticksBeforeMidi_ = 4;
+  ticksBeforeMidi_ = 2;
 
   for (int i = 0; i < ticksBeforeMidi_; i++) {
     AddBuffer((short *)miniBlank_, MINI_BLANK_SIZE);
@@ -158,34 +160,25 @@ void PICOAudioDriver::StopDriver() {
 void PICOAudioDriver::OnChunkDone() {
   if (isPlaying_) {
 
-    // TODO: Only clear last buffer if last transfer finished
-
-    // clear last ring buffer
-    SYS_FREE(pool_[poolPlayPosition_].buffer_);
-    pool_[poolPlayPosition_].buffer_ = 0;
+    // Advance to next buffer
     poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
 
-    // Start DMA of next one
-    if (pool_[poolPlayPosition_].buffer_ == 0) {
-      dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA,
-                                           miniBlank_,
-                                           MINI_BLANK_SIZE);
-      return;
-    } else {
-      dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA,
+    // In this non multithreaded implementation, we only have two buffers in the ring buffer,
+    // One where we write to, and another one from where we read. We know we are not going to
+    // Step on each other because these operations are happening in sync.
+    dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA,
                                            pool_[poolPlayPosition_].buffer_,
                                            pool_[poolPlayPosition_].size_ / 4);
-      int start = micros();
-      OnNewBufferNeeded();
-      printf("%i - Time taken on OnNewBufferNeeded(): %ius\n", micros(),
-             micros() - start);
+    int start = micros();
+    OnNewBufferNeeded();
+    printf("%i - Time taken on OnNewBufferNeeded(): %ius\n", micros(),
+           micros() - start);
 
-      // Process MIDI
-      if (ticksBeforeMidi_) {
-        ticksBeforeMidi_--;
-      } else {
-        MidiService::GetInstance()->Flush();
-      }
+    // Process MIDI
+    if (ticksBeforeMidi_) {
+      ticksBeforeMidi_--;
+    } else {
+      MidiService::GetInstance()->Flush();
     }
   }
 }

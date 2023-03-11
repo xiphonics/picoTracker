@@ -4,13 +4,14 @@
 #include "Foundation/Observable.h"
 #include "AudioSettings.h"
 
-#define SOUND_BUFFER_COUNT 50
-#define SOUND_BUFFER_MAX 20000
+#define SOUND_BUFFER_COUNT 2
+#define SOUND_BUFFER_MAX 7500
+#define MAX_SAMPLE_COUNT 1875
 
 struct AudioBufferData {
-   char *buffer_ ;
-   int size_ ;
-   void *driverData_ ;
+  char buffer_[MAX_SAMPLE_COUNT * 2 * sizeof(short)];
+  int size_ ;
+  void *driverData_ ;
 } ;
 
 class AudioDriver: public Observable {
@@ -65,9 +66,9 @@ protected:
   
 protected:
 	bool isPlaying_ ;
-	AudioBufferData pool_[SOUND_BUFFER_COUNT] ;
-	int poolQueuePosition_ ;
-	int poolPlayPosition_ ;
+  static AudioBufferData pool_[SOUND_BUFFER_COUNT];
+  int poolQueuePosition_;
+  int poolPlayPosition_ ;
 	int bufferPos_ ;
 	int bufferSize_ ;
 	bool hasData_ ;

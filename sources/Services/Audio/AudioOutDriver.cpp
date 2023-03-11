@@ -1,16 +1,16 @@
 
 #include "AudioOutDriver.h"
 #include "System/System/System.h"
-#include "AudioDriver.h"
 #include "Application/Player/SyncMaster.h" // Should be installable
 #include "System/Console/Trace.h"
 #include "Services/Time/TimeService.h"
 
+fixed AudioOutDriver::primarySoundBuffer_[MIX_BUFFER_SIZE];
+short AudioOutDriver::mixBuffer_[MIX_BUFFER_SIZE];
+
 AudioOutDriver::AudioOutDriver(AudioDriver &driver) {
     driver_=&driver ;
     driver.AddObserver(*this) ;
-	primarySoundBuffer_=0 ;
-	mixBuffer_=0 ;        
     SetOwnership(false) ;                       
 }
 
@@ -20,15 +20,11 @@ AudioOutDriver::~AudioOutDriver() {
 };
 
 bool AudioOutDriver::Init() {
-	primarySoundBuffer_=(fixed *)SYS_MALLOC(MIX_BUFFER_SIZE*sizeof(fixed)/2) ;
-	mixBuffer_=(short *)SYS_MALLOC(MIX_BUFFER_SIZE) ;
     return driver_->Init() ;     
 } ;
 
 void AudioOutDriver::Close() {
      driver_->Close() ;
-	SAFE_FREE(primarySoundBuffer_) ;
-	SAFE_FREE(mixBuffer_) ;     
 }
 
 bool AudioOutDriver::Start() {
