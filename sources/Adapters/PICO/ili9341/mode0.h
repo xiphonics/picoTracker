@@ -34,6 +34,7 @@ void mode0_clear(mode0_color_t color);
 void mode0_draw_screen();
 void mode0_draw_changed();
 void mode0_draw_changed_simple();
+void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 void mode0_set_foreground(mode0_color_t color);
 void mode0_set_background(mode0_color_t color);

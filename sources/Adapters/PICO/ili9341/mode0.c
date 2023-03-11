@@ -112,7 +112,7 @@ static const uint8_t font_data[95][8] = {
 #define TEXT_WIDTH 40
 #define CHAR_HEIGHT 8
 #define CHAR_WIDTH 8
-#define BUFFER_CHARS 30
+#define BUFFER_CHARS 8
 
 #define SWAP_BYTES(color) ((uint16_t)(color >> 8) | (uint16_t)(color << 8))
 
@@ -134,7 +134,7 @@ static uint8_t changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0};
 #define TestBit(A, k) (A[(k) / 8] & (1 << ((k) % 8)))
 
 static int depth = 0;
-static uint16_t palette[16] = {
+static const uint16_t palette[16] = {
     SWAP_BYTES(0x0000), SWAP_BYTES(0x49E5), SWAP_BYTES(0xB926),
     SWAP_BYTES(0xE371), SWAP_BYTES(0x9CF3), SWAP_BYTES(0xA324),
     SWAP_BYTES(0xEC46), SWAP_BYTES(0xF70D), SWAP_BYTES(0xffff),
@@ -189,7 +189,20 @@ void mode0_write(const char *str, int len, bool invert) {
   }
 }
 
+
 void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+
+  int remainder = height;
+  while (remainder) {
+    int sub_height = (remainder > BUFFER_CHARS) ? BUFFER_CHARS:remainder;
+    int sub_y = y + height - remainder;
+    remainder -= sub_height;
+    mode0_draw_sub_region(x, sub_y, width, sub_height);
+  }
+}
+
+inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+  assert(height > BUFFER_CHARS);
 
   uint16_t screen_x = x * 8;
   uint16_t screen_y = (TEXT_HEIGHT - height - y) * 8;
