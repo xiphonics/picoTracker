@@ -48,7 +48,7 @@ enum SampleInstrumentLoopMode {
 #ifndef PICOBUILD 
 #define FB_BUFFER_LENGTH 3500 // (in samples)
 #else
-#define FB_BUFFER_LENGTH 350
+#define FB_BUFFER_LENGTH 0
 #endif
 
 class SampleInstrument: public I_Instrument,I_Observer {

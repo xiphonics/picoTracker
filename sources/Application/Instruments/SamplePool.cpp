@@ -5,9 +5,11 @@
 #include "Application/Persistency/PersistencyService.h" 
 #include "System/io/Status.h"
 #include <string>
+#ifndef DISABLESF
 #include "SoundFontSample.h"
 #include "SoundFontPreset.h"
 #include "SoundFontManager.h"
+#endif
 #include "Application/Model/Config.h"
 
 #define SAMPLE_LIB "root:samplelib"
@@ -48,7 +50,9 @@ void SamplePool::Reset() {
 		SAFE_DELETE(wav_[i]) ;
 		SAFE_FREE(names_[i]) ;
 	} ;
-	SoundFontManager::GetInstance()->Reset() ;
+#ifndef DISABLESF
+  SoundFontManager::GetInstance()->Reset() ;
+#endif
 
 #ifdef LOAD_IN_FLASH
   // Reset flash erase and write pointers when we close project
@@ -83,17 +87,18 @@ void SamplePool::Load() {
 
 	} ;
 
-	// now, let's look at soundfonts
+#ifndef DISABLESF
+  // now, let's look at soundfonts
 
-	dir->GetContent("*.sf2") ;
-	IteratorPtr<Path> it2(dir->GetIterator()) ;
+  dir->GetContent("*.sf2") ;
+  IteratorPtr<Path> it2(dir->GetIterator()) ;
 
 	for(it2->Begin();!it2->IsDone();it2->Next()) {
 		Path &path=it2->CurrentItem() ;
 		loadSoundFont(path.GetPath().c_str()) ;
 	} ;
-
-	delete dir ;
+#endif
+  delete dir ;
 
 	// now sort the samples
 
@@ -245,6 +250,7 @@ void SamplePool::PurgeSample(int i) {
 	NotifyObservers(&ev) ;
 } ;
 
+#ifndef DISABLESF
 bool SamplePool::loadSoundFont(const char *path) {
 
 	sfBankID  id=SoundFontManager::GetInstance()->LoadBank(path) ;
@@ -291,3 +297,4 @@ bool SamplePool::loadSoundFont(const char *path) {
 	}
 */	return true ;
 } ;
+#endif
