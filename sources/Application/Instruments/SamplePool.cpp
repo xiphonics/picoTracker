@@ -50,9 +50,11 @@ void SamplePool::Reset() {
 	} ;
 	SoundFontManager::GetInstance()->Reset() ;
 
+#ifdef LOAD_IN_FLASH
   // Reset flash erase and write pointers when we close project
   flashEraseOffset_ = FLASH_TARGET_OFFSET;
   flashWriteOffset_ = FLASH_TARGET_OFFSET;
+#endif
 } ;
 
 void SamplePool::Load() {
