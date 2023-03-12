@@ -138,10 +138,7 @@ bool PICOAudioDriver::StartDriver() {
     OnNewBufferNeeded();
   }
 
-  // TODO: Reenable this, potentially
-  // ticksBeforeMidi_ = 4;
-  ticksBeforeMidi_ = 2;
-
+  ticksBeforeMidi_ = 4;
   for (int i = 0; i < ticksBeforeMidi_; i++) {
     AddBuffer((short *)miniBlank_, MINI_BLANK_SIZE);
   }
@@ -161,6 +158,7 @@ void PICOAudioDriver::OnChunkDone() {
   if (isPlaying_) {
 
     // Advance to next buffer
+    pool_[poolPlayPosition_].empty_ = true;
     poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
 
     // In this non multithreaded implementation, we only have two buffers in the ring buffer,

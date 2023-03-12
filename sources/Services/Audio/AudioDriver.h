@@ -4,13 +4,20 @@
 #include "Foundation/Observable.h"
 #include "AudioSettings.h"
 
+#ifndef PICOBUILD
+#define SOUND_BUFFER_COUNT 50
+#define SOUND_BUFFER_MAX 20000
+#define MAX_SAMPLE_COUNT 5000
+#else
 #define SOUND_BUFFER_COUNT 2
 #define SOUND_BUFFER_MAX 7500
 #define MAX_SAMPLE_COUNT 1875
+#endif
 
 struct AudioBufferData {
   char buffer_[MAX_SAMPLE_COUNT * 2 * sizeof(short)];
   int size_ ;
+  bool empty_;
   void *driverData_ ;
 } ;
 
