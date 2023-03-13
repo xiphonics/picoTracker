@@ -65,9 +65,9 @@ private:
 		int height_ ;
 		uchar note_[16] ;
 		uchar instr_[16] ;
-		uint cmd1_[16] ;
+		uchar cmd1_[16] ;
  		ushort param1_[16] ;
-		uint cmd2_[16] ;
+		uchar cmd2_[16] ;
  		ushort param2_[16] ;
 	} clipboard_ ;
 

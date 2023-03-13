@@ -73,16 +73,16 @@ void TableView::fillClipboardData() {
     
 	Table &table=TableHolder::GetInstance()->GetTable(viewData_->currentTable_) ;
 
-    uint *src1=table.cmd1_ ;
-    uint *dst1=clipboard_.cmd1_ ;
+    uchar *src1=table.cmd1_ ;
+    uchar *dst1=clipboard_.cmd1_ ;
     ushort *src2=table.param1_ ;
     ushort *dst2=clipboard_.param1_ ;
-    uint *src3=table.cmd2_ ;
-    uint *dst3=clipboard_.cmd2_ ;
+    uchar *src3=table.cmd2_ ;
+    uchar *dst3=clipboard_.cmd2_ ;
     ushort *src4=table.param2_ ;
     ushort *dst4=clipboard_.param2_ ;
-    uint *src5=table.cmd3_ ;
-    uint *dst5=clipboard_.cmd3_ ;
+    uchar *src5=table.cmd3_ ;
+    uchar *dst5=clipboard_.cmd3_ ;
     ushort *src6=table.param3_ ;
     ushort *dst6=clipboard_.param3_ ;
     
@@ -146,11 +146,11 @@ void TableView::cutSelection() {
 // Loop over selection col, row & clear data inside it
 
 	Table &table=TableHolder::GetInstance()->GetTable(viewData_->currentTable_) ;
-    uint *dst1=table.cmd1_ ;
+    uchar *dst1=table.cmd1_ ;
     ushort *dst2=table.param1_ ;
-    uint *dst3=table.cmd2_ ;
+    uchar *dst3=table.cmd2_ ;
     ushort *dst4=table.param2_ ;
-    uint *dst5=table.cmd3_ ;
+    uchar *dst5=table.cmd3_ ;
     ushort *dst6=table.param3_ ;
 
     for (int i=0;i<clipboard_.width_;i++) {
@@ -204,16 +204,16 @@ void TableView::pasteClipboard() {
   */  
 	Table &table=TableHolder::GetInstance()->GetTable(viewData_->currentTable_) ;
 
-    uint *dst1=table.cmd1_ ;
-    uint *src1=clipboard_.cmd1_ ;
+    uchar *dst1=table.cmd1_ ;
+    uchar *src1=clipboard_.cmd1_ ;
     ushort *dst2=table.param1_ ;
     ushort *src2=clipboard_.param1_ ;
-    uint *dst3=table.cmd2_ ;
-    uint *src3=clipboard_.cmd2_ ;
+    uchar *dst3=table.cmd2_ ;
+    uchar *src3=clipboard_.cmd2_ ;
     ushort *dst4=table.param2_ ;
     ushort *src4=clipboard_.param2_ ;
-    uint *dst5=table.cmd3_ ;
-    uint *src5=clipboard_.cmd3_ ;
+    uchar *dst5=table.cmd3_ ;
+    uchar *src5=clipboard_.cmd3_ ;
     ushort *dst6=table.param3_ ;
     ushort *src6=clipboard_.param3_ ;
     
@@ -440,18 +440,18 @@ void TableView::updateCursorValue(int offset) {
 }
 
 void TableView::pasteLast() {
-	uint   *i=0 ;
+	uchar *c=0 ;
 	
 	Table &table=TableHolder::GetInstance()->GetTable(viewData_->currentTable_) ;
 
 	switch (col_) {
 		case 0:
-			i=table.cmd1_+row_ ;
-			if (*i==I_CMD_NONE) {
-				*i=lastCmd_ ;
+			c=table.cmd1_+row_ ;
+			if (*c==I_CMD_NONE) {
+				*c=lastCmd_ ;
 				isDirty_=true ;
 			} else {
-				lastCmd_=*i ;
+				lastCmd_=*c ;
 			}
 			break ;
 			
@@ -459,12 +459,12 @@ void TableView::pasteLast() {
 			break ;
 
 		case 2:
-			i=table.cmd2_+row_ ;
-			if (*i==I_CMD_NONE) {
-				*i=lastCmd_ ;
+			c=table.cmd2_+row_ ;
+			if (*c==I_CMD_NONE) {
+				*c=lastCmd_ ;
 				isDirty_=true ;
 			} else {
-				lastCmd_=*i ;
+				lastCmd_=*c ;
 			}
 			break ;
 
@@ -472,12 +472,12 @@ void TableView::pasteLast() {
 			break ;
 
 		case 4:
-			i=table.cmd3_+row_ ;
-			if (*i==I_CMD_NONE) {
-				*i=lastCmd_ ;
+			c=table.cmd3_+row_ ;
+			if (*c==I_CMD_NONE) {
+				*c=lastCmd_ ;
 				isDirty_=true ;
 			} else {
-				lastCmd_=*i ;
+				lastCmd_=*c ;
 			}
 			break ;
 

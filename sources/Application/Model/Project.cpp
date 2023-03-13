@@ -1,15 +1,16 @@
 #include "Project.h"
-#include "Services/Midi/MidiService.h"
-#include "System/FileSystem/FileSystem.h"
-#include "System/Console/Trace.h"
-#include "System/io/Status.h"
-#include "Foundation/Variables/WatchedVariable.h"
-#include "Application/Player/SyncMaster.h"
-#include "Table.h"
-#include "Groove.h"
-#include "Application/Persistency/PersistencyService.h"
-#include "Application/Instruments/SamplePool.h"
+#include "Application/Instruments/CommandList.h"
 #include "Application/Instruments/SampleInstrument.h"
+#include "Application/Instruments/SamplePool.h"
+#include "Application/Persistency/PersistencyService.h"
+#include "Application/Player/SyncMaster.h"
+#include "Foundation/Variables/WatchedVariable.h"
+#include "Groove.h"
+#include "Services/Midi/MidiService.h"
+#include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
+#include "System/io/Status.h"
+#include "Table.h"
 
 #include <math.h>
 
@@ -178,10 +179,10 @@ void Project::Purge() {
 			if (!song_->phrase_->IsUsed(i)) {
 				*data=0xFF ;
 				*data2=0xFF ;
-				*cmd1='----' ;
-				*param1=0 ;
-				*cmd2='----' ;
-				*param2=0 ;
+        *cmd1 = I_CMD_NONE;
+        *param1=0 ;
+        *cmd2 = I_CMD_NONE;
+        *param2 = 0;
 			}
             data++ ;
             data2++ ;

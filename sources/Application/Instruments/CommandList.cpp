@@ -73,7 +73,7 @@ FourCC CommandList::GetPrevAlpha(FourCC current) {
 
 	char letter=((char *)&current)[0];
 	bool found=false ;
-	FourCC tReturn=0xFFFFFFFF ;
+	FourCC tReturn=0xFF ;
 	uint count=sizeof(_all)/sizeof(FourCC) ;
 
 	for (uint i=count-1;i>0;i--) {
@@ -84,7 +84,7 @@ FourCC CommandList::GetPrevAlpha(FourCC current) {
 			}
 		} else {
 			if (tLetter!=letter) {
-				if (tReturn==0xFFFFFFFF) {
+				if (tReturn==0xFF) {
 					tReturn=_all[i] ;
 				} else {
 					if (tLetter!=((char *)&tReturn)[0]) {
@@ -96,7 +96,7 @@ FourCC CommandList::GetPrevAlpha(FourCC current) {
 			}
 		} ;
 	} ;
-	if (tReturn!=0xFFFFFFFF) {
+	if (tReturn!=0xFF) {
 		return tReturn ;
 	} 
 	return current ;

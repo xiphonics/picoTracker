@@ -107,7 +107,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction,int xOffset,int
 	unsigned char *c=0 ;
 	unsigned char limit=0 ;
 	bool wrap=false ;
-    FourCC *cc ;
+  FourCC *cc ;
     
     
 	switch (col_+xOffset) {
@@ -218,7 +218,6 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction,int xOffset,int
 void PhraseView::pasteLast() {
 
 	uchar  *c=0	 ;
-	uint   *i=0 ;
 	
 	switch (col_) {
 		case 0:
@@ -244,12 +243,12 @@ void PhraseView::pasteLast() {
 			}
 			break ;
 		case 2:
-			i=phrase_->cmd1_+(16*viewData_->currentPhrase_+row_) ;
-			if (*i==I_CMD_NONE) {
-				*i=lastCmd_ ;
+			c=phrase_->cmd1_+(16*viewData_->currentPhrase_+row_) ;
+			if (*c==I_CMD_NONE) {
+				*c=lastCmd_ ;
 				isDirty_=true ;
 			} else {
-				lastCmd_=*i ;
+				lastCmd_=*c ;
 			}
 			break ;
 			
@@ -263,12 +262,12 @@ void PhraseView::pasteLast() {
 �*/			break ;
 
 		case 4:
-			i=phrase_->cmd2_+(16*viewData_->currentPhrase_+row_) ;
-			if (*i==I_CMD_NONE) {
-				*i=lastCmd_ ;
+			c=phrase_->cmd2_+(16*viewData_->currentPhrase_+row_) ;
+			if (*c==I_CMD_NONE) {
+				*c=lastCmd_ ;
 				isDirty_=true ;
 			} else {
-				lastCmd_=*i ;
+				lastCmd_=*c ;
 			}
 			break ;
 
@@ -393,12 +392,12 @@ void PhraseView::fillClipboardData() {
     uchar *dst1=clipboard_.note_ ;
     uchar *src2=viewData_->song_->phrase_->instr_+16*viewData_->currentPhrase_ ;
     uchar *dst2=clipboard_.instr_ ;
-    uint *src3=viewData_->song_->phrase_->cmd1_+16*viewData_->currentPhrase_ ;
-    uint *dst3=clipboard_.cmd1_ ;
+    uchar *src3=viewData_->song_->phrase_->cmd1_+16*viewData_->currentPhrase_ ;
+    uchar *dst3=clipboard_.cmd1_ ;
     ushort *src4=viewData_->song_->phrase_->param1_+16*viewData_->currentPhrase_ ;
     ushort *dst4=clipboard_.param1_ ;
-    uint *src5=viewData_->song_->phrase_->cmd2_+16*viewData_->currentPhrase_ ;
-    uint *dst5=clipboard_.cmd2_ ;
+    uchar *src5=viewData_->song_->phrase_->cmd2_+16*viewData_->currentPhrase_ ;
+    uchar *dst5=clipboard_.cmd2_ ;
     ushort *src6=viewData_->song_->phrase_->param2_+16*viewData_->currentPhrase_ ;
     ushort *dst6=clipboard_.param2_ ;
     
@@ -494,9 +493,9 @@ void PhraseView::cutSelection() {
 
     uchar *dst1=viewData_->song_->phrase_->note_+16*viewData_->currentPhrase_ ;
     uchar *dst2=viewData_->song_->phrase_->instr_+16*viewData_->currentPhrase_ ;
-    uint *dst3=viewData_->song_->phrase_->cmd1_+16*viewData_->currentPhrase_ ;
+    uchar *dst3=viewData_->song_->phrase_->cmd1_+16*viewData_->currentPhrase_ ;
     ushort *dst4=viewData_->song_->phrase_->param1_+16*viewData_->currentPhrase_ ;
-    uint *dst5=viewData_->song_->phrase_->cmd2_+16*viewData_->currentPhrase_ ;
+    uchar *dst5=viewData_->song_->phrase_->cmd2_+16*viewData_->currentPhrase_ ;
     ushort *dst6=viewData_->song_->phrase_->param2_+16*viewData_->currentPhrase_ ;
 
     for (int i=0;i<clipboard_.width_;i++) {
@@ -552,12 +551,12 @@ void PhraseView::pasteClipboard() {
     uchar *src1=clipboard_.note_ ;
     uchar *dst2=viewData_->song_->phrase_->instr_+16*viewData_->currentPhrase_ ;
     uchar *src2=clipboard_.instr_ ;
-    uint *dst3=viewData_->song_->phrase_->cmd1_+16*viewData_->currentPhrase_ ;
-    uint *src3=clipboard_.cmd1_ ;
+    uchar *dst3=viewData_->song_->phrase_->cmd1_+16*viewData_->currentPhrase_ ;
+    uchar *src3=clipboard_.cmd1_ ;
     ushort *dst4=viewData_->song_->phrase_->param1_+16*viewData_->currentPhrase_ ;
     ushort *src4=clipboard_.param1_ ;
-    uint *dst5=viewData_->song_->phrase_->cmd2_+16*viewData_->currentPhrase_ ;
-    uint *src5=clipboard_.cmd2_ ;
+    uchar *dst5=viewData_->song_->phrase_->cmd2_+16*viewData_->currentPhrase_ ;
+    uchar *src5=clipboard_.cmd2_ ;
     ushort *dst6=viewData_->song_->phrase_->param2_+16*viewData_->currentPhrase_ ;
     ushort *src6=clipboard_.param2_ ;
     

@@ -38,8 +38,8 @@ protected:
 	GUIRect getSelectionRect() ;
 
 private:
-	int row_ ;
-	int col_ ;
+	uchar row_ ;
+	uchar col_ ;
 	uchar lastVol_ ;
 	uchar lastTick_ ;
 	uchar lastTsp_ ;
@@ -55,11 +55,11 @@ private:
 		int row_ ;
 		int width_ ;
 		int height_ ;
-		uint cmd1_[16] ;
+		uchar cmd1_[16] ;
  		ushort param1_[16] ;
-		uint cmd2_[16] ;
+		uchar cmd2_[16] ;
  		ushort param2_[16] ;
-		uint cmd3_[16] ;
+		uchar cmd3_[16] ;
  		ushort param3_[16] ;
 	} clipboard_ ;
 
