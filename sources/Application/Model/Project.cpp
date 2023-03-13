@@ -295,28 +295,25 @@ void Project::RestoreContent(PersistencyDocument *doc) {
   }
 }
 
-void Project::SaveContent(TiXmlNode *node) {
+void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
 
 	// store project version
-
-	TiXmlElement *element=(TiXmlElement *)node ;
-	element->SetAttribute("VERSION",PROJECT_NUMBER) ;
+  printer->PushAttribute("VERSION", PROJECT_NUMBER);
 
 	// store table ratio if not one
-
 	int tableRatio=SyncMaster::GetInstance()->GetTableRatio() ;
 	if (tableRatio!=1) {
-		element->SetAttribute("TABLERATIO",tableRatio) ;
+		printer->PushAttribute("TABLERATIO",tableRatio) ;
 	}
+
 	// save all of the project's parameters
-	
 	IteratorPtr<Variable> it(GetIterator()) ;
 	for (it->Begin();!it->IsDone();it->Next()) {
-		TiXmlElement param("PARAMETER") ;
+    printer->OpenElement("PARAMETER") ;
 		Variable v=it->CurrentItem() ;
-		param.SetAttribute("NAME",v.GetName()) ;
-		param.SetAttribute("VALUE",v.GetString()) ;
-		node->InsertEndChild(param) ;
+    printer->PushAttribute("NAME",v.GetName()) ;
+		printer->PushAttribute("VALUE",v.GetString()) ;
+    printer->CloseElement();
 	}
 } ;
 

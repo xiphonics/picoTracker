@@ -23,23 +23,23 @@ Song::~Song() {
 	delete phrase_ ;
 } ;
 
-void Song::SaveContent(TiXmlNode *node) {
+void Song::SaveContent(tinyxml2::XMLPrinter *printer) {
 	for (int i=0; i<PHRASE_COUNT*16; i++)
 	{
 		phrase_->param1_[i] = Swap16(phrase_->param1_[i]);
 		phrase_->param2_[i] = Swap16(phrase_->param2_[i]);
 	}	
-	saveHexBuffer(node,"SONG",data_,SONG_ROW_COUNT*SONG_CHANNEL_COUNT) ;
-	saveHexBuffer(node,"CHAINS",chain_->data_,CHAIN_COUNT*16) ;
-	saveHexBuffer(node,"TRANSPOSES",chain_->transpose_,CHAIN_COUNT*16) ;
-	saveHexBuffer(node,"NOTES",phrase_->note_,PHRASE_COUNT*16) ;
-	saveHexBuffer(node,"INSTRUMENTS",phrase_->instr_,PHRASE_COUNT*16) ;
-	saveHexBuffer(node,"COMMAND1",phrase_->cmd1_,PHRASE_COUNT*16) ;
-	saveHexBuffer(node,"PARAM1",phrase_->param1_,PHRASE_COUNT*16) ;
-	saveHexBuffer(node,"COMMAND2",phrase_->cmd2_,PHRASE_COUNT*16) ;
-	saveHexBuffer(node,"PARAM2",phrase_->param2_,PHRASE_COUNT*16) ;
+	saveHexBuffer(printer,"SONG",data_,SONG_ROW_COUNT*SONG_CHANNEL_COUNT) ;
+  saveHexBuffer(printer, "CHAINS", chain_->data_, CHAIN_COUNT * 16);
+  saveHexBuffer(printer, "TRANSPOSES", chain_->transpose_, CHAIN_COUNT * 16);
+  saveHexBuffer(printer, "NOTES", phrase_->note_, PHRASE_COUNT * 16);
+  saveHexBuffer(printer, "INSTRUMENTS", phrase_->instr_, PHRASE_COUNT * 16);
+  saveHexBuffer(printer, "COMMAND1", phrase_->cmd1_, PHRASE_COUNT * 16);
+  saveHexBuffer(printer, "PARAM1", phrase_->param1_, PHRASE_COUNT * 16);
+  saveHexBuffer(printer, "COMMAND2", phrase_->cmd2_, PHRASE_COUNT * 16);
+  saveHexBuffer(printer, "PARAM2", phrase_->param2_, PHRASE_COUNT * 16);
+};
 
-} ;
 void Song::RestoreContent(PersistencyDocument *doc) {
   bool elem = doc->FirstChild();
 

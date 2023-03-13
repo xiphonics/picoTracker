@@ -85,6 +85,8 @@ long PICOFile::Tell() { return file_.curPosition(); }
 
 void PICOFile::Close() { file_.close(); }
 
+int PICOFile::Error() { file_.getError(); }
+
 PICOFileSystem::PICOFileSystem() {
 
   // Check for the common case, FAT filesystem as first partition
@@ -113,10 +115,10 @@ I_File *PICOFileSystem::Open(const char *path, char *mode) {
   oflag_t rmode;
   switch (*mode) {
   case 'r':
-    rmode = FILE_READ; // O_RDONLY
+    rmode = O_RDONLY;
     break;
   case 'w':
-    rmode = FILE_WRITE; // O_RDWR | O_CREAT | O_AT_END
+    rmode = O_WRONLY | O_CREAT | O_TRUNC;
     break;
   default:
     Trace::Error("Invalid mode: %s", mode);

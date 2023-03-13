@@ -60,28 +60,26 @@ I_Instrument *InstrumentBank::GetInstrument(int i) {
 	return instrument_[i] ;
 } ;
 
-void InstrumentBank::SaveContent(TiXmlNode *node) {
+void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
 	char hex[3] ;
 	for (int i=0;i<MAX_INSTRUMENT_COUNT;i++) {
 
 		I_Instrument *instr=instrument_[i] ;
 		if (!instr->IsEmpty()) {
-			TiXmlElement data("INSTRUMENT") ;
+      printer->OpenElement("INSTRUMENT") ;
 			hex2char(i,hex) ;
-			data.SetAttribute("ID",hex) ;
-			data.SetAttribute("TYPE",InstrumentTypeData[instr->GetType()]) ;
+      printer->PushAttribute("ID",hex) ;
+			printer->PushAttribute("TYPE",InstrumentTypeData[instr->GetType()]) ;
 
 			IteratorPtr<Variable> it(instr->GetIterator()) ;
-			int count=0 ;
 			for (it->Begin();!it->IsDone();it->Next()) {
 				Variable &v=it->CurrentItem() ;
-				TiXmlElement param("PARAM") ;
-				param.SetAttribute("NAME",v.GetName()) ;
-				param.SetAttribute("VALUE",v.GetString()) ;
-				data.InsertEndChild(param) ;
-				count++ ;
+				printer->OpenElement("PARAM") ;
+        printer->PushAttribute("NAME",v.GetName()) ;
+				printer->PushAttribute("VALUE",v.GetString()) ;
+        printer->CloseElement(); // PARAM
 			}
-			if (count) node->InsertEndChild(data) ;
+      printer->CloseElement(); // INSTRUMENT
 		}
 	}
 } ;

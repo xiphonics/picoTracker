@@ -4,7 +4,7 @@
 
 #define XML_CUT_LENGTH 64
 
-void prepareHexChunk(TiXmlElement &d, unsigned char *datasrc, int len) {
+void prepareHexChunk(tinyxml2::XMLPrinter *printer, unsigned char *datasrc, int len) {
 
   bool singleValue = true;
   int singleValueData = -1;
@@ -26,46 +26,45 @@ void prepareHexChunk(TiXmlElement &d, unsigned char *datasrc, int len) {
   };
   buffer += (const char *)hexBuffer;
   if (singleValue) {
-    d.SetAttribute("VALUE", singleValueData);
-    d.SetAttribute("LENGTH", len);
+    printer->PushAttribute("VALUE", singleValueData);
+    printer->PushAttribute("LENGTH", len);
   } else {
-    TiXmlText text(buffer.c_str());
-    d.InsertEndChild(text);
+    printer->PushText(buffer.c_str());
   }
 }
 
-void saveHexBuffer(TiXmlNode *parent, const char *nodeName, unsigned char *src,
-                   unsigned len) {
+void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
+                   unsigned char *src, unsigned len) {
 
-  TiXmlElement data(nodeName);
-  TiXmlNode *dataNode = parent->InsertEndChild(data);
+  printer->OpenElement(nodeName);
 
   unsigned int count = len / XML_CUT_LENGTH;
   unsigned char *datasrc = (unsigned char *)src;
 
   for (unsigned i = 0; i < count; i++) {
-    TiXmlElement d("DATA");
-    prepareHexChunk(d, datasrc, XML_CUT_LENGTH);
+    printer->OpenElement("DATA");
+    prepareHexChunk(printer, datasrc, XML_CUT_LENGTH);
     datasrc += XML_CUT_LENGTH;
-    dataNode->InsertEndChild(d);
+    printer->CloseElement();
   };
 
   len -= count * XML_CUT_LENGTH;
   if (len > 0) {
-    TiXmlElement d("DATA");
-    prepareHexChunk(d, datasrc, len);
-    dataNode->InsertEndChild(d);
+    printer->OpenElement("DATA");
+    prepareHexChunk(printer, datasrc, len);
+    printer->CloseElement();
   }
+  printer->CloseElement();
 };
 
-void saveHexBuffer(TiXmlNode *parent, const char *nodeName, unsigned int *src,
-                   unsigned len) {
-  saveHexBuffer(parent, nodeName, (unsigned char *)src, len * sizeof(int));
+void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
+                   unsigned int *src, unsigned len) {
+  saveHexBuffer(printer, nodeName, (unsigned char *)src, len * sizeof(int));
 }
 
-void saveHexBuffer(TiXmlNode *parent, const char *nodeName, unsigned short *src,
-                   unsigned len) {
-  saveHexBuffer(parent, nodeName, (unsigned char *)src, len * sizeof(short));
+void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
+                   unsigned short *src, unsigned len) {
+  saveHexBuffer(printer, nodeName, (unsigned char *)src, len * sizeof(short));
 }
 
 void restoreHexBuffer(PersistencyDocument *doc, unsigned char *destination) {

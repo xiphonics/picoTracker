@@ -23,10 +23,10 @@ public:
 	Song() ;
 	~Song() ;
 
-	virtual void SaveContent(TiXmlNode *node) ;
+  virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
-  unsigned char *data_ ;
+  unsigned char *data_;
 	Chain *chain_ ;
 	Phrase *phrase_ ;
 } ;

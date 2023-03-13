@@ -72,32 +72,32 @@ Table &TableHolder::GetTable(int table) {
 	return table_[table] ;
 }
 
-void TableHolder::SaveContent(TiXmlNode *node) {
+void TableHolder::SaveContent(tinyxml2::XMLPrinter *printer) {
 
-	char hex[3] ;
-	for (int i=0;i<TABLE_COUNT;i++) {
-		TiXmlElement data("TABLE") ;
-		hex2char(i,hex) ;
-		data.SetAttribute("ID",hex) ;
+  char hex[3];
+  for (int i = 0; i < TABLE_COUNT; i++) {
+    printer->OpenElement("TABLE");
+    hex2char(i, hex);
+    printer->PushAttribute("ID", hex);
 
-		Table &table=table_[i] ;
-		if (!table.IsEmpty()) {
-			TiXmlNode *dataNode=node->InsertEndChild(data) ;
-			for (int i=0; i<16; i++)
-			{
-				table.param1_[i] = Swap16(table.param1_[i]);
-				table.param2_[i] = Swap16(table.param2_[i]);
-				table.param3_[i] = Swap16(table.param3_[i]);
-			}
-			saveHexBuffer(dataNode,"CMD1",table.cmd1_,TABLE_STEPS) ;
-			saveHexBuffer(dataNode,"PARAM1",table.param1_,TABLE_STEPS) ;
-			saveHexBuffer(dataNode,"CMD2",table.cmd2_,TABLE_STEPS) ;
-			saveHexBuffer(dataNode,"PARAM2",table.param2_,TABLE_STEPS) ;
-			saveHexBuffer(dataNode,"CMD3",table.cmd3_,TABLE_STEPS) ;
-			saveHexBuffer(dataNode,"PARAM3",table.param3_,TABLE_STEPS) ;
-		}
-	}
-} ;
+    Table &table = table_[i];
+    if (!table.IsEmpty()) {
+      //      TiXmlNode *dataNode = node->InsertEndChild(data);
+      for (int i = 0; i < 16; i++) {
+        table.param1_[i] = Swap16(table.param1_[i]);
+        table.param2_[i] = Swap16(table.param2_[i]);
+        table.param3_[i] = Swap16(table.param3_[i]);
+      }
+      saveHexBuffer(printer, "CMD1", table.cmd1_, TABLE_STEPS);
+      saveHexBuffer(printer, "PARAM1", table.param1_, TABLE_STEPS);
+      saveHexBuffer(printer, "CMD2", table.cmd2_, TABLE_STEPS);
+      saveHexBuffer(printer, "PARAM2", table.param2_, TABLE_STEPS);
+      saveHexBuffer(printer, "CMD3", table.cmd3_, TABLE_STEPS);
+      saveHexBuffer(printer, "PARAM3", table.param3_, TABLE_STEPS);
+    }
+    printer->CloseElement();
+  }
+};
 
 void TableHolder::RestoreContent(PersistencyDocument *doc) {
 

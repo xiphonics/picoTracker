@@ -9,22 +9,28 @@ PersistencyService::PersistencyService():Service(MAKE_FOURCC('S','V','P','S')) {
 void PersistencyService::Save() {
 
 	Path filename("project:lgptsav.dat") ;
+  I_File *fp = FileSystem::GetInstance()->Open(filename.GetPath().c_str(), "w");
+  printf("File: %s\n", filename.GetPath().c_str());
+  if (!fp) {
+    Trace::Error("Could not open file for writing: %s", filename.GetPath().c_str());
+  }
+  tinyxml2::XMLPrinter printer(fp);
 
-	TiXmlDocument doc(filename.GetPath().c_str());
-	TiXmlElement first("LITTLEGPTRACKER") ;
-	TiXmlNode *node=doc.InsertEndChild(first) ;
+  printer.OpenElement("LITTLEGPTRACKER");
 
 	// Loop on all registered service
-	// accumulating XML flow
-	
+	// accumulating XML flow	
 	IteratorPtr<SubService> it(GetIterator()) ;
 	for (it->Begin();!it->IsDone();it->Next()) {
 		Persistent *currentItem=(Persistent *)&it->CurrentItem() ;
-		currentItem->Save(node) ;
+		currentItem->Save(&printer);
 	} ;
 
-	doc.SaveFile() ;
-} ;
+  printer.CloseElement();
+
+  fp->Close();
+  delete (fp);
+};
 
 bool PersistencyService::Load() {
   Path filename("project:lgptsav.dat");

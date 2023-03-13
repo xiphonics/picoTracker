@@ -39,7 +39,7 @@ public:
 	void SetUsed(int table) ;	
 	int GetNext() ;
 	int Clone(int table) ;
-	virtual void SaveContent(TiXmlNode *node) ;
+  virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
 private:

@@ -141,6 +141,10 @@ void UnixFile::Close() {
 	fclose(file_) ;
 } ;
 
+int UnixFile::Error() {
+  return ferror(file_);
+}
+
 UnixFileSystem::UnixFileSystem() {
 }
 

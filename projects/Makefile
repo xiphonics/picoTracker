@@ -192,6 +192,7 @@ COMMONDIRS	:=	../sources/System/Console \
 				../sources/Foundation/Variables \
 				../sources/Externals/Soundfont \
 				../sources/Externals/TinyXML \
+				../sources/Externals/TinyXML2 \
 	      ../sources/Externals/yxml \
 
 #---------------------------------------------------------------------------------
@@ -401,7 +402,7 @@ CAANOOFILES		:=	CAANOOSDLMain.o \
 					ENAB.o HYDRA.o OMEGA.o RIFF.o SFDETECT.o SFLOOKUP.o SFNAV.o SFREADER.o WIN_MEM.o \
 					HexBuffers.o \
 					tinyxmlparser.o tinyxml.o tinyxmlerror.o tinystr.o Tiny2NosStub.o \
-		      yxml.o \
+		      yxml.o tinyxml2.o tinyxml2adapter.o \
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output

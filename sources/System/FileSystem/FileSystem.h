@@ -83,6 +83,7 @@ public:
 	virtual void Seek(long offset,int whence)=0 ;
 	virtual long Tell()=0 ;
 	virtual void Close()=0 ;
+  virtual int Error()=0;
 } ;
 
 class I_Dir: public T_SimpleList<Path> {

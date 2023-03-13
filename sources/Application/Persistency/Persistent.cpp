@@ -5,10 +5,10 @@ Persistent::Persistent(const char *nodeName):SubService(MAKE_FOURCC('S','V','P',
 	nodeName_=nodeName ;
 } ;
 
-void Persistent::Save(TiXmlNode *node) {
-	TiXmlElement master(nodeName_) ;
-	TiXmlNode *first=node->InsertEndChild(master) ;
-	SaveContent(first) ;
+void Persistent::Save(tinyxml2::XMLPrinter *printer) {
+  printer->OpenElement(nodeName_);
+	SaveContent(printer) ;
+  printer->CloseElement();
 } ;
 
 bool Persistent::Restore(PersistencyDocument *doc) {

@@ -42,8 +42,8 @@ void Groove::GetChannelData(int channel,int *groove,int *position) {
 		*position=c.position_ ;
 } ;
 
-void Groove::SaveContent(TiXmlNode *node) {
-	 saveHexBuffer(node,"DATA",(unsigned char *)data_,16*MAX_GROOVES) ;
+void Groove::SaveContent(tinyxml2::XMLPrinter *printer) {
+	 saveHexBuffer(printer,"DATA",(unsigned char *)data_,16*MAX_GROOVES) ;
 } ;
 
 void Groove::RestoreContent(PersistencyDocument *doc) {

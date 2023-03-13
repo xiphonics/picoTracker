@@ -13,9 +13,9 @@ public:
 	~InstrumentBank() ;
 	void AssignDefaults() ;
 	I_Instrument *GetInstrument(int i) ;
-	virtual void SaveContent(TiXmlNode *node);
+  virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
-  void Init() ;
+  void Init();
 	void OnStart() ;
 	unsigned short GetNext() ;
 	unsigned short Clone(unsigned short i) ;

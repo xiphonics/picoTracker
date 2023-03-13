@@ -16,7 +16,6 @@
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
-#include "Externals/TinyXML/tinyxml.h"
 #include "System/Console/Logger.h"
 #include <assert.h>
 #include <fcntl.h>

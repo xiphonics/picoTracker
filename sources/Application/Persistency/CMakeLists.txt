@@ -6,6 +6,7 @@ add_library(application_persistency
 
 target_link_libraries(application_persistency PUBLIC foundation_services
                                               PUBLIC yxml
+                                              PUBLIC tinyxml2
 )
 
 target_include_directories(application_persistency PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

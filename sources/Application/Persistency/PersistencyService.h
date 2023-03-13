@@ -1,7 +1,7 @@
 #ifndef _PERSISTENCY_SERVICE_H_
 #define _PERSISTENCY_SERVICE_H_
 
-#include "Externals/TinyXML/tinyxml.h"
+#include "Externals/TinyXML2/tinyxml2.h"
 #include "Externals/yxml/yxml.h"
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"

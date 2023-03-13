@@ -15,6 +15,7 @@ public:
 	virtual void Seek(long offset,int whence) ;
 	virtual long Tell() ;
 	virtual void Close() ;
+  virtual int Error();
 private:
 	FILE *file_ ;
 } ;

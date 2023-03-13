@@ -29,7 +29,7 @@ public:
 	bool UpdateGroove(ChannelGroove &g,bool reverse) ;
 	void GetChannelData(int channel,int *groove,int *position) ;
 	unsigned char *GetGrooveData(int groove) ;
-	virtual void SaveContent(TiXmlNode *node) ;
+  virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
 private:
