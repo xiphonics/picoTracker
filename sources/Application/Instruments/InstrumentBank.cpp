@@ -1,6 +1,7 @@
 
 #include "InstrumentBank.h"
 #include "Application/Instruments/MidiInstrument.h"
+#include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
@@ -9,7 +10,7 @@
 #include "Filters.h"
 #include "System/io/Status.h"
 
-const char *InstrumentTypeData[] = {"Sample", "Midi"};
+const char *InstrumentTypeData[] = {"Sample", "SID", "Midi"};
 
 // Contain all instrument definition
 
@@ -68,6 +69,22 @@ InstrumentBank::InstrumentBank()
   mi15.SetChannel(15);
   instrument_[31] = &mi15;
 
+  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
+    Trace::Debug("Loading sample instrument: %i", i);
+    SampleInstrument *s = new SampleInstrument();
+    instrument_[i] = s;
+  }
+  for (int i = 0; i < MAX_SIDINSTRUMENT_COUNT; i++) {
+    Trace::Debug("Loading SID instrument: %i", i);
+    SIDInstrument *s = new SIDInstrument();
+    instrument_[MAX_SAMPLEINSTRUMENT_COUNT + i] = s;
+  }
+  for (int i = 0; i < MAX_MIDIINSTRUMENT_COUNT; i++) {
+    Trace::Debug("Loading MIDI instrument: %i", i);
+    MidiInstrument *s = new MidiInstrument();
+    s->SetChannel(i);
+    instrument_[MAX_SAMPLEINSTRUMENT_COUNT + MAX_SIDINSTRUMENT_COUNT + i] = s;
+  }
   Status::Set("All instrument loaded");
 };
 
