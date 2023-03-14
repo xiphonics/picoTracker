@@ -18,7 +18,9 @@
 #include "SampleInstrumentDatas.h"
 #include "Application/Player/SyncMaster.h"
 
+#ifndef DISABLE_FEEDBACK
 fixed SampleInstrument::feedback_[SONG_CHANNEL_COUNT][FB_BUFFER_LENGTH*2] ;
+#endif
 
 bool SampleInstrument::useDirtyDownsampling_ = false;
 
@@ -102,11 +104,13 @@ SampleInstrument::SampleInstrument() {
 	 tableAuto_=new Variable("table automation",SIP_TABLEAUTO,false) ;
 	 Insert(tableAuto_) ;
 
-	 fbTune_=new Variable("feedback tune",SIP_FBTUNE,0xB0) ;
+#ifndef DISABLE_FEEDBACK
+   fbTune_=new Variable("feedback tune",SIP_FBTUNE,0xB0) ;
 	 Insert(fbTune_) ;
 
 	 fbMix_=new Variable("feedback mix",SIP_FBMIX,0x00) ;
 	 Insert(fbMix_) ;
+#endif
 
  // Initalize instrument's voices update list
  
@@ -294,15 +298,16 @@ bool SampleInstrument::Start(int channel,unsigned char midinote,bool cleanstart)
 
 	rp->finished_=false ;
 
+#ifndef DISABLE_FEEDBACK
   // Initialize feedback data
+  memset(feedback_[channel],0,FB_BUFFER_LENGTH*2*sizeof(fixed)) ;
 
-	memset(feedback_[channel],0,FB_BUFFER_LENGTH*2*sizeof(fixed)) ;
+  rp->feedbackIn_=0 ;
+  rp->feedbackMode_=FB_NONE ;
 
-	rp->feedbackIn_=0 ;
-	rp->feedbackMode_=FB_NONE ;
-
-	rp->baseFbTun_=rp->fbTun_=fl2fp(fbTune_->GetInt()/255.0f) ; 
-	rp->baseFbMix_=rp->fbMix_=fl2fp(fbMix_->GetInt()/255.0f) ; 
+  rp->baseFbTun_=rp->fbTun_=fl2fp(fbTune_->GetInt()/255.0f) ;
+  rp->baseFbMix_=rp->fbMix_=fl2fp(fbMix_->GetInt()/255.0f) ;
+#endif
 
   // If we do a clean start (there was a instr number on the line)
 
@@ -381,6 +386,7 @@ void SampleInstrument::doKRateUpdate(int channel) {
 	
 } ;
 
+#ifndef DISABLE_FEEDBACK
 void SampleInstrument::updateFeedback(renderParams *rp) {
 
 	 SampleInstrumentLoopMode loopMode=(SampleInstrumentLoopMode)loopMode_->GetInt() ;
@@ -419,6 +425,7 @@ void SampleInstrument::updateFeedback(renderParams *rp) {
 		}
 	} ;
 }
+#endif
 
 // Size in samples
 
@@ -576,7 +583,8 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
         
     fixed zerofive=fl2fp(0.5f) ;
 
-		// Get feedback pointer position & boundary
+#ifndef DISABLE_FEEDBACK
+    // Get feedback pointer position & boundary
 
 		fixed *feedbackIn=feedback_[channel]+rp->feedbackIn_*2 ;
 		fixed *feedbackStart=feedback_[channel] ;
@@ -591,12 +599,16 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 
 		fixed f_32767=i2fp(32767/4) ;
 		fixed f_m32768=i2fp(-32768/4) ;
+#endif
 
 		// try to speed up access using pointers rather than structure access
 
 		bool rpReverse=rp->reverse_ ;
 		int rpKrateCount=rp->krateCount_ ;
-		FeedbackMode rpFeedbackMode=rp->feedbackMode_ ;
+
+#ifndef DISABLE_FEEDBACK
+    FeedbackMode rpFeedbackMode=rp->feedbackMode_ ;
+#endif
 
 		fixed *fltSpeed=flt->speed ;
 		fixed *fltHeight=flt->height ;
@@ -723,12 +735,13 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 						set_filter(channel,FLT_LOWPASS,rp->cutoff_,rp->reso_,filterMix,bassyFilter);
 						filtering=(rp->cutoff_<i2fp(1))||(rp->reso_>i2fp(0)) ;
 
-						rp->feedbackIn_ = (feedbackIn-feedback_[channel])/2 ;
-
-						updateFeedback(rp) ;
-						feedbackPick=feedback_[channel]+rp->feedbackOut_*2 ;
-						feedbackEta=fp_mul(rp->fbMix_,fl2fp(4.0f));
-
+#ifndef DISABLE_FEEDBACK
+            rp->feedbackIn_ = (feedbackIn - feedback_[channel]) / 2;
+                                                
+            updateFeedback(rp) ;
+            feedbackPick=feedback_[channel]+rp->feedbackOut_*2 ;
+            feedbackEta=fp_mul(rp->fbMix_,fl2fp(4.0f));
+#endif
 						volfactor=fp_mul(rp->volume_,volscale) ;
 						pan=fp2i(rp->pan_) ;
 						fixed fixedpanl=panlaw[pan] ;
@@ -800,8 +813,9 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 							break ;
 					}
 
-				// apply feedback mix
-
+#ifndef DISABLE_FEEDBACK
+          // apply feedback mix
+          
 					switch(rpFeedbackMode) {
 						case FB_NONE:
 
@@ -826,6 +840,7 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 							s1=fp_sub(s1,s2) ;
 							break ;
 					}
+#endif
 
 				// crush predrive
 
@@ -875,12 +890,14 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 
 				if (channelCount==1) {
 					t2=s2 ;
-					feedbackPick++ ;
+          //					feedbackPick++ ;
 				}
 
-				if (feedbackPick>=feedbackEnd) {
+#ifndef DISABLE_FEEDBACK
+        if (feedbackPick>=feedbackEnd) {
 					feedbackPick=feedbackStart ;
 				} ;
+#endif
 
 				// introduce panning & vol - store result
 
@@ -890,12 +907,14 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 				*result++=s2 ;
 				*result++=t2 ;
 
-				*feedbackIn++=s2 ;
+#ifndef DISABLE_FEEDBACK
+        *feedbackIn++=s2 ;
 				*feedbackIn++=t2 ;
 
 				if (feedbackIn>=feedbackEnd) {
 					feedbackIn=feedbackStart ;
 				} ;
+#endif
 
 			// Computes new pos for next input sample
 			// fpPos is always relative to 'input' pointer
@@ -914,10 +933,12 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 		// Update final sample position
     rp->position_=(((char *)input)-wavbuf)/(2*channelCount)+fp2fl(fpPos) ;
 
-		// Update feedback position
+#ifndef DISABLE_FEEDBACK
+    // Update feedback position
 
-		rp->feedbackIn_=(feedbackIn-feedbackStart)/2 ;
-		rp->feedbackOut_=(feedbackPick-feedbackStart)/2 ;
+    rp->feedbackIn_=(feedbackIn-feedbackStart)/2 ;
+    rp->feedbackOut_=(feedbackPick-feedbackStart)/2 ;
+#endif
 		somethingToMix=true ;
     }
 
@@ -1135,7 +1156,7 @@ void SampleInstrument::ProcessCommand(int channel,FourCC cc,ushort value) {
 			break ;
 
 			// Feedback mix
-
+      /*
 		case I_CMD_FBMX:
 			{
 				float target=float(value&0xFF)/255.0f ;
@@ -1169,7 +1190,7 @@ void SampleInstrument::ProcessCommand(int channel,FourCC cc,ushort value) {
 				}
 			}
 			break ;
-
+      */
 		case I_CMD_PTCH:
 			{
 				int pitch=(char)(value&0xFF) ; // number of semi tones

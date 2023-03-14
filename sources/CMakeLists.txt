@@ -32,6 +32,9 @@ add_definitions(-DDISABLESF)
 # add_definitions(-DSD_STREAMING)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
+# Disable feedback for sample instruments. Due to low memory in the PICO
+# there is very low chance to bring this back
+add_definitions(-DDISABLE_FEEDBACK)
 
 # Initialize the SDK
 pico_sdk_init()
