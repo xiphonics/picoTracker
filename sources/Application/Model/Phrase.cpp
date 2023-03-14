@@ -29,10 +29,10 @@ Phrase::Phrase() {
 Phrase::~Phrase() {
 	if (note_) SYS_FREE(note_) ;
 	if (instr_) SYS_FREE(instr_) ;
-    /* CMDS_HERE
-	if (cmd_) SYS_FREE(cmd_) ;
-	if (cmdData_) SYS_FREE(cmdData_) ;
-	*/
+  if (cmd1_) SYS_FREE(cmd1_);
+  if (param1_) SYS_FREE(param1_);
+  if (cmd2_) SYS_FREE(cmd2_);
+  if (param2_) SYS_FREE(param2_);
 } ;
 
 unsigned short Phrase::GetNext() {
