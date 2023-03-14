@@ -9,11 +9,18 @@
 #define LIST_SIZE 20
 #define LIST_WIDTH 32
 
+#ifndef NO_EXIT
 static char *buttonText[3]= {
 	"Load",
 	"New",
 	"Exit"	
 } ;
+#else
+static char *buttonText[2]= {
+	"Load",
+	"New"
+} ;
+#endif
 
 Path SelectProjectDialog::lastFolder_("root:") ;
 int SelectProjectDialog::lastProject_ = 0 ;
@@ -104,17 +111,24 @@ void SelectProjectDialog::DrawView() {
 	} ;
 
 	y=LIST_SIZE+2 ;
+#ifndef NO_EXIT
 	int offset=LIST_WIDTH/4 ;
+#else
+  int offset = LIST_WIDTH / 3;
+#endif
 
-	SetColor(CD_NORMAL) ;
+  SetColor(CD_NORMAL) ;
 
+#ifndef NO_EXIT
 	for (int i=0;i<3;i++) {
-		const char *text=buttonText[i] ;
-		x=offset*(i+1)-strlen(text)/2 ;
-		props.invert_=(i==selected_)?true:false ;
-		DrawString(x,y,text,props) ;
-	}	
-
+#else
+  for (int i = 0; i < 2; i++) {
+#endif
+    const char *text = buttonText[i];
+    x = offset * (i + 1) - strlen(text) / 2;
+    props.invert_ = (i == selected_) ? true : false;
+    DrawString(x, y, text, props);
+  }
 };
 
 void SelectProjectDialog::OnPlayerUpdate(PlayerEventType ,unsigned int currentTick) {
@@ -182,9 +196,11 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask,bool pressed) {
 				DoModal(npd,NewProjectCallback) ;
 				break ;
 			}
+#ifndef NO_EXIT
 			case 2: // Exit ;
 				EndModal(0) ;
 				break ;
+#endif
 		}
 	  } else {
 

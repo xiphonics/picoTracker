@@ -9,8 +9,10 @@
 
 #define ACTION_PURGE MAKE_FOURCC('P','U','R','G')
 #define ACTION_SAVE  MAKE_FOURCC('S','A','V','E')
-#define ACTION_LOAD  MAKE_FOURCC('L','O','A','D')
-#define ACTION_QUIT  MAKE_FOURCC('Q','U','I','T')
+#define ACTION_LOAD MAKE_FOURCC('L', 'O', 'A', 'D')
+#ifndef NO_EXIT
+#define ACTION_QUIT MAKE_FOURCC('Q', 'U', 'I', 'T')
+#endif
 #define ACTION_PURGE_INSTRUMENT MAKE_FOURCC('P','R','G','I')
 #define ACTION_TEMPO_CHANGED MAKE_FOURCC('T','E','M','P')
 
@@ -81,11 +83,12 @@ ProjectView::ProjectView(GUIWindow &w,ViewData *data):FieldView(w,data) {
 	UIIntVarField *f3=new UIIntVarField(position,*v,"midi: %s",0,MidiService::GetInstance()->Size(),1,1) ;
 	T_SimpleList<UIField>::Insert(f3) ;
 
+#ifndef NO_EXIT
 	position._y+=2 ;
 	a1=new UIActionField("Exit",ACTION_QUIT,position) ;
 	a1->AddObserver(*this) ;
 	T_SimpleList<UIField>::Insert(a1) ;
-
+#endif
 }
 
 ProjectView::~ProjectView() {
@@ -180,6 +183,7 @@ void ProjectView::Update(Observable &,I_ObservableData *data) {
 			}
 			break ;
 		}
+#ifndef NO_EXIT
 		case ACTION_QUIT:
 		{
 			if (!player->IsRunning()) {
@@ -191,6 +195,7 @@ void ProjectView::Update(Observable &,I_ObservableData *data) {
 			}
 			break ;
 		}
+#endif
 		case ACTION_TEMPO_CHANGED:
 			break ;
 		default:

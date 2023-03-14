@@ -35,6 +35,9 @@ add_definitions(-DLOAD_IN_FLASH)
 # Disable feedback for sample instruments. Due to low memory in the PICO
 # there is very low chance to bring this back
 add_definitions(-DDISABLE_FEEDBACK)
+# Disable exit dialogs. Eventually this could send device to dormant mode
+# but probably unnecessary since it's easier and safe to just turn off
+add_definitions(-DNO_EXIT)
 
 # Initialize the SDK
 pico_sdk_init()
