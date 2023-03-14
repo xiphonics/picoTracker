@@ -66,7 +66,7 @@ inline void oct2visualizer(unsigned char d,char *s) {
 };
 
 
-inline constexpr void fourCC2char(const FourCC f, char *s) {
+inline void fourCC2char(const FourCC f, char *s) {
   switch (f) {
   case 0:
     strcpy(s, "ARPG");
