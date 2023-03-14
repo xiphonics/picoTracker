@@ -6,8 +6,8 @@
 #define PHRASE_COUNT 0xFF
 #define NO_MORE_PHRASE 0x100
 #else
-#define PHRASE_COUNT 0x7F
-#define NO_MORE_PHRASE 0x80
+#define PHRASE_COUNT 0x80
+#define NO_MORE_PHRASE 0x81
 #endif
 
 class Phrase {

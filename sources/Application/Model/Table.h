@@ -9,7 +9,7 @@
 #define TABLE_COUNT 0x80
 #define TABLE_STEPS 16
 #else
-#define TABLE_COUNT 0x10
+#define TABLE_COUNT 0x20
 #define TABLE_STEPS 16
 #endif
 

@@ -5,8 +5,8 @@
 #define CHAIN_COUNT 0xFF
 #define NO_MORE_CHAIN 0x100
 #else
-#define CHAIN_COUNT 0x7F
-#define NO_MORE_CHAIN 0x80
+#define CHAIN_COUNT 0x80
+#define NO_MORE_CHAIN 0x81
 #endif
 
 class Chain {
