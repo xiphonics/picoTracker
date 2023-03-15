@@ -5,7 +5,7 @@
 #include "pico/stdlib.h"
 
 #define UART_ID uart1
-#define BAUD_RATE 38400
+#define BAUD_RATE 31250
 #define UART_TX_PIN 8
 #define UART_RX_PIN 9
 
@@ -18,13 +18,14 @@ PICOSerialMidiOutDevice::PICOSerialMidiOutDevice(const char *name,
 bool PICOSerialMidiOutDevice::Init() {
 
   // TODO: Move this to platform init
-  // Set up our UART with the required speed.
-  uart_init(port_, BAUD_RATE);
-
   // Set the TX and RX pins by using the function select on the GPIO
   // Set datasheet for more information on function select
   gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
   gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+
+  // Set up our UART with the required speed.
+  uint baudrate = uart_init(port_, BAUD_RATE);
+  Trace::Log("MIDI", "Init MIDI device with %i baud rate", baudrate);
 
   return true;
 }

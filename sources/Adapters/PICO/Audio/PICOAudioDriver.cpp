@@ -157,6 +157,13 @@ void PICOAudioDriver::StopDriver() {
 void PICOAudioDriver::OnChunkDone() {
   if (isPlaying_) {
 
+    // Process MIDI
+    if (ticksBeforeMidi_) {
+      ticksBeforeMidi_--;
+    } else {
+      MidiService::GetInstance()->Flush();
+    }
+
     // Advance to next buffer
     pool_[poolPlayPosition_].empty_ = true;
     poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
@@ -167,17 +174,11 @@ void PICOAudioDriver::OnChunkDone() {
     dma_channel_transfer_from_buffer_now(PICO_AUDIO_I2S_DMA,
                                            pool_[poolPlayPosition_].buffer_,
                                            pool_[poolPlayPosition_].size_ / 4);
-    int start = micros();
-    OnNewBufferNeeded();
-    printf("%i - Time taken on OnNewBufferNeeded(): %ius\n", micros(),
-           micros() - start);
+    // Audio tick processes MIDI among other things
+    onAudioBufferTick();
 
-    // Process MIDI
-    if (ticksBeforeMidi_) {
-      ticksBeforeMidi_--;
-    } else {
-      MidiService::GetInstance()->Flush();
-    }
+    // Finally we calculate the next buffer
+    OnNewBufferNeeded();
   }
 }
 
