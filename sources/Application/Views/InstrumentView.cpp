@@ -196,8 +196,8 @@ void InstrumentView::fillSampleParameters() {
 
 	position._y+=1 ;
 	v=instrument->FindVariable(SIP_TABLE) ;
-	f1=new UIIntVarOffField(position,*v,"table: %2.2X",0x00,0x7F,1,0x10) ;
-	T_SimpleList<UIField>::Insert(f1) ;
+  f1 = new UIIntVarOffField(position, *v, "table: %2.2X", 0x00, TABLE_COUNT - 1, 1, 0x10);
+  T_SimpleList<UIField>::Insert(f1) ;
 
 } ;
 

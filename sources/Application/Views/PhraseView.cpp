@@ -809,8 +809,8 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
 						param=phrase_->param2_+(16*viewData_->currentPhrase_+row_) ;
 					}
 					if (*cmd==I_CMD_TABL) {
-						viewData_->currentTable_=(*param)&0x7F ;
-					}
+						viewData_->currentTable_=(*param)&(TABLE_COUNT - 1);
+          }
 					ViewEvent ve(VET_SWITCH_VIEW,&vt) ;
 					SetChanged();
 					NotifyObservers(&ve) ;
