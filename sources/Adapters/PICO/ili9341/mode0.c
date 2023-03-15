@@ -121,14 +121,15 @@ static mode0_color_t screen_fg_color =
     MODE0_WHITE; // TODO need to store a color per cell
 static int cursor_x = 0;
 static int cursor_y = 0;
-static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
-static uint8_t colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
-// TODO: reduce this, 4K RAM wasted
-static uint16_t buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
+// Store ~3.5K of static data for the screen in scratch_x
+// May be a problem if we later want to go smp
+static uint8_t __scratch_x("screen") screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
+static uint8_t __scratch_x("screen") colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
+static uint16_t __scratch_x("screen")  buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
 
 // Using a bit array in order to save memory, there is a slight performance
 // hit in doing so vs a bool array
-static uint8_t changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0};
+static uint8_t __scratch_x("screen")  changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0};
 #define SetBit(A, k) (A[(k) / 8] |= (1 << ((k) % 8)))
 #define ClearBit(A, k) (A[(k) / 8] &= ~(1 << ((k) % 8)))
 #define TestBit(A, k) (A[(k) / 8] & (1 << ((k) % 8)))
@@ -202,7 +203,7 @@ void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
 }
 
 inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
-  assert(height > BUFFER_CHARS);
+  assert(height <= BUFFER_CHARS);
 
   uint16_t screen_x = x * 8;
   uint16_t screen_y = (TEXT_HEIGHT - height - y) * 8;
@@ -247,7 +248,6 @@ inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width, uint8_t h
     ili9341_write_data_continuous(buffer, CHAR_WIDTH * screen_height * sizeof(int16_t));
   }
   ili9341_stop_writing();
-  
 }
 
 void mode0_draw_changed() {
