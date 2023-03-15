@@ -8,7 +8,7 @@ void Status::Set(char *fmt, ...) {
 	Status *status=Status::GetInstance() ;
 	if (!status) return ;
 
-     char buffer[4096] ;
+     char buffer[128] ;
      va_list args;
      va_start(args,fmt);
 
