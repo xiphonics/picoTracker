@@ -4,8 +4,7 @@ add_executable(lgpt
 
 target_link_libraries(lgpt PUBLIC pico_stdlib
                            PUBLIC pico_system
-                           PUBLIC hardware_pll
-                           PUBLIC hardware_clocks
+                           PUBLIC platform
 )
 
 target_include_directories(lgpt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -5,28 +5,6 @@
 #include "pico/stdlib.h"
 #include <stdint.h>
 
-/*
-#define SPI_PORT spi0
-#define PIN_MISO 4
-#define PIN_CS   5
-#define PIN_SCK  6
-#define PIN_MOSI 7
-#define PIN_RESET 8
-#define PIN_DC 9  // data/command
-*/
-
-typedef struct {
-  spi_inst_t *port;
-  uint pin_miso;
-  uint pin_cs;
-  uint pin_sck;
-  uint pin_mosi;
-  uint pin_reset;
-  uint pin_dc;
-} ili9341_config_t;
-
-extern ili9341_config_t ili9341_config;
-
 #define ILI9341_TFTWIDTH 240  ///< ILI9341 max TFT width
 #define ILI9341_TFTHEIGHT 320 ///< ILI9341 max TFT height
 

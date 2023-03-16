@@ -1,16 +1,11 @@
 // Driver and interface for accessing SD card in SPI mode
 
+#include "Adapters/PICO/platform/platform.h"
 #include <SdFat.h>
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
 
 #ifndef SD_SDIO
-
-#define SD_SPI spi1
-#define SD_SPI_SCK 10
-#define SD_SPI_MOSI 11
-#define SD_SPI_MISO 12
-#define SD_SPI_CS 15
 
 class RP2040SPIDriver : public SdSpiBaseClass
 {

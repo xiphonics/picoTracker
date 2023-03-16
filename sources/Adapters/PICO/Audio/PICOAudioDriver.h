@@ -5,17 +5,6 @@
 #include "Services/Audio/AudioDriver.h"
 #include "System/Process/Process.h"
 
-#define PICO_AUDIO_I2S_CLOCK_PIN_BASE 26
-#define PICO_AUDIO_I2S_DATA_PIN 28
-#define PICO_AUDIO_I2S_PIO 0
-#define audio_pio __CONCAT(pio, PICO_AUDIO_I2S_PIO)
-#define GPIO_FUNC_PIOx __CONCAT(GPIO_FUNC_PIO, PICO_AUDIO_I2S_PIO)
-#define DREQ_PIOx_TX0 __CONCAT(__CONCAT(DREQ_PIO, PICO_AUDIO_I2S_PIO), _TX0)
-#define PICO_AUDIO_I2S_SM 0
-#define PICO_AUDIO_I2S_DMA 0
-#define PICO_AUDIO_I2S_DMA_IRQ 0
-#define AUDIO_I2S
-
 #define MINI_BLANK_SIZE 128
 
 class PICOAudioDriver : public AudioDriver {

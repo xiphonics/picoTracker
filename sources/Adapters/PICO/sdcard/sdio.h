@@ -4,17 +4,9 @@
 
 #ifndef SDIO_H_
 #define SDIO_H_
-#include <stdint.h>
-
+#include "Adapters/PICO/platform/platform.h"
 #include "pico/stdlib.h"
-
-// Platform specific
-#define SDIO_CLK 10
-#define SDIO_CMD 11
-#define SDIO_D0 12
-#define SDIO_D1 13
-#define SDIO_D2 14
-#define SDIO_D3 15
+#include <stdint.h>
 
 typedef void (*sd_callback_t)(uint32_t bytes_complete);
 uint32_t millis(void);

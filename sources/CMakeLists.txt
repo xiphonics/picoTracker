@@ -19,8 +19,6 @@ add_definitions(-DPICOBUILD)
 # For debugging purposes, print all mallocs
 #add_definitions(-DPICO_DEBUG_MALLOC)
 add_definitions(-DPICOSTATS)
-#add_definitions(-DDUMMY_AUDIO)
-#add_definitions(-DDUMMY_MIDI)
 #add_definitions(-DALL_MALLOC)
 add_definitions(-DDISABLESF)
 # Enable SDIO - this setting affects code in SdFat library as well as the project

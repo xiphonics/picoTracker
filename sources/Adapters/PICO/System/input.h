@@ -17,7 +17,6 @@ typedef enum KEYPAD_BITS {
   KEY_SELECT = BIT(9), //!< Keypad SELECT button.
 } KEYPAD_BITS;
 
-void inputInit();
 uint16_t scanKeys();
 
 #endif

@@ -52,8 +52,6 @@ int PICOSystem::MainLoop() {
 
 void PICOSystem::Boot(int argc, char **argv) {
 
-  inputInit();
-
   // TODO: check where this should go
   //  vTaskStartScheduler();
 
