@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 # Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(lgpt)
+project(picoTracker)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -54,10 +54,10 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
         )
 
-set_property(TARGET lgpt APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
+set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
 
 
-target_compile_definitions(lgpt PUBLIC
+target_compile_definitions(picoTracker PUBLIC
 #	PICO_HEAP_SIZE=204800
   PICO_DEBUG_MALLOC_LOW_WATER=1000
   PICO_MALLOC_PANIC=0
@@ -67,14 +67,14 @@ target_compile_definitions(lgpt PUBLIC
 
 #if (SD_SDIO)
 #MESSAGE(STATUS "SDIO enabled")
-#target_compile_definitions(lgpt PUBLIC HAS_SDIO_CLASS=1)
+#target_compile_definitions(picoTracker PUBLIC HAS_SDIO_CLASS=1)
 #endif()
 
 pico_enable_stdio_usb(${PROJECT_NAME} 0)
 pico_enable_stdio_uart(${PROJECT_NAME} 1)
 
 # Debug build
-#set_target_properties(lgpt PROPERTIES COMPILE_DEFINITIONS "DEBUG")
+#set_target_properties(picoTracker PROPERTIES COMPILE_DEFINITIONS "DEBUG")
 
 #get_property(dirs1 TARGET application_model PROPERTY INCLUDE_DIRECTORIES)
 #get_property(dirs1 TARGET system_system PROPERTY INTERFACE_INCLUDE_DIRECTORIES)

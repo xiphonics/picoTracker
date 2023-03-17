@@ -1,1 +1,1 @@
-add_subdirectory(PICO)
+add_subdirectory(picoTracker)

@@ -4,7 +4,8 @@ add_library(sdfat_sdcard
   SdCardInfo.h SdCardInfo.cpp
 )
 
-target_link_libraries(sdfat_sdcard PUBLIC pico_utils
+target_link_libraries(sdfat_sdcard PUBLIC platform_utils
+                                   PUBLIC pico_stdlib
 )
 
 target_include_directories(sdfat_sdcard PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
