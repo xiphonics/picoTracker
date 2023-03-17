@@ -19,6 +19,7 @@
 char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
 
 picoTrackerAudioDriver *picoTrackerAudioDriver::instance_ = NULL;
+static semaphore_t *sem_ = NULL;
 
 static volatile unsigned long picoTracker_sound_pausei, picoTracker_exit;
 
@@ -37,7 +38,8 @@ void picoTrackerAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 
 void AudioThread() {
   while (true) {
-    uint32_t g = multicore_fifo_pop_blocking();
+    //    uint32_t g = multicore_fifo_pop_blocking();
+    sem_acquire_blocking(sem_);
     int start = micros();
     PICOAudioDriver::BufferNeeded();
     Trace::Debug("%i - Time taken on OnNewBufferNeeded(): %ius", micros(),
@@ -132,6 +134,7 @@ bool picoTrackerAudioDriver::InitDriver() {
     volume_ = atoi(volume);
   }
 
+  sem_init(sem_, 0, 1);
   return true;
 };
 
@@ -190,18 +193,36 @@ void picoTrackerAudioDriver::OnChunkDone() {
       MidiService::GetInstance()->Flush();
     }
 
-    // Advance to next buffer
+    // We got an IRQ so we know we finished playing from poolPlayPosition_
+    // We mark it as empty and inspect the next buffer, if the buffer is not empty,
+    // it means thread 2 finished processing that buffer and there are no underruns
+    // Otherwise, we send a small blank buffer and wait for the other thread to finish
     pool_[poolPlayPosition_].empty_ = true;
-    poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
 
-    // Finally we call core1 to calculate the next buffer
-    bool pushed = multicore_fifo_push_timeout_us(0, 15);
-    if (!pushed) {
-      printf("Data could not be pushed!, FIFO full\n");
+    // We release the semaphore because if we are here it means that we finished playing
+    // the buffer. Regardless if thread2 finished, it can start processing the next one asap
+    sem_release(sem_);
+
+    //    poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
+    int next = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
+
+    if (pool_[next].empty_) {
+      dma_channel_transfer_from_buffer_now(
+          AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
+    } else {
+      poolPlayPosition_ = next;
+      dma_channel_transfer_from_buffer_now(
+          AUDIO_DMA, pool_[poolPlayPosition_].buffer_,
+          pool_[poolPlayPosition_].size_ / 4);
+
+      // Audio tick processes MIDI among other things
+      onAudioBufferTick();
     }
-
-    // Audio tick processes MIDI among other things
-    onAudioBufferTick();
+    // Finally we call core1 to calculate the next buffer
+    //    bool pushed = multicore_fifo_push_timeout_us(0, 15);
+    //    if (!pushed) {
+    ///      printf("Data could not be pushed!, FIFO full\n");
+    //    }
 
   }
 }

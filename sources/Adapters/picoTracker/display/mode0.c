@@ -123,13 +123,13 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 // Store ~3.5K of static data for the screen in scratch_x
 // May be a problem if we later want to go smp
-static uint8_t __scratch_x("screen") screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
-static uint8_t __scratch_x("screen") colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
-static uint16_t __scratch_x("screen")  buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
+static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
+static uint8_t colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
+static uint16_t buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
 
 // Using a bit array in order to save memory, there is a slight performance
 // hit in doing so vs a bool array
-static uint8_t __scratch_x("screen")  changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0};
+static uint8_t changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0};
 #define SetBit(A, k) (A[(k) / 8] |= (1 << ((k) % 8)))
 #define ClearBit(A, k) (A[(k) / 8] &= ~(1 << ((k) % 8)))
 #define TestBit(A, k) (A[(k) / 8] & (1 << ((k) % 8)))
