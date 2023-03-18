@@ -1,5 +1,6 @@
 #ifndef _GUICOLOR_H_
 #define _GUICOLOR_H_
+#include <stdint.h>
 
 // A simple RGB Color representation class
 

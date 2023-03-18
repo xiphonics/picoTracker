@@ -261,19 +261,19 @@ void TableView::updateCursor(int dx,int dy) {
 	GUIPoint p(anchor) ;
 	switch(col_) {
 		case 1:
-			p._x+=5 ;
+			p._x+=4 ;
 			p._y+=row_ ;
 			cmdEditField_->SetPosition(p) ;
 			cmdEdit_.SetInt(*(table.param1_+row_)) ;
 			break ;
 		case 3:
-			p._x+=15 ;
+			p._x+=13 ;
 			p._y+=row_ ;
 			cmdEditField_->SetPosition(p) ;
 			cmdEdit_.SetInt(*(table.param2_+row_)) ;
 			break ;
 		case 5:
-			p._x+=25 ;
+			p._x+=22 ;
 			p._y+=row_ ;
 			cmdEditField_->SetPosition(p) ;
 			cmdEdit_.SetInt(*(table.param3_+row_)) ;
@@ -706,9 +706,9 @@ void TableView::DrawView() {
 	for (int j=0;j<16;j++) {
 		FourCC command=*f++ ;
 		fourCC2char(command,buffer) ;
-        setTextProps(props,0,j,false) ;
+    setTextProps(props,0,j,false) ;
 		DrawString(pos._x,pos._y,buffer,props) ;
-        setTextProps(props,0,j,true) ;
+    setTextProps(props,0,j,true) ;
 		pos._y++ ;
 	}
 
@@ -716,24 +716,24 @@ void TableView::DrawView() {
 // Draw commands params 1
 
 	pos=anchor ;
-	pos._x+=5 ;
+	pos._x+=4 ;
 
 	ushort *param=table.param1_ ;
 	buffer[5]=0 ;
 	
 	for (int j=0;j<16;j++) {
 		ushort p=*param++ ;
-        setTextProps(props,1,j,false) ;
+    setTextProps(props,1,j,false) ;
 		hexshort2char(p,buffer) ;
 		DrawString(pos._x,pos._y,buffer,props) ;
-      	setTextProps(props,1,j,true) ;
+    setTextProps(props,1,j,true) ;
 		pos._y++ ;
 	}
 	
 // Draw commands 2
 
 	pos=anchor ;
-	pos._x+=10 ;
+	pos._x+=9 ;
 
 	f=table.cmd2_ ;
 
@@ -742,33 +742,33 @@ void TableView::DrawView() {
 	for (int j=0;j<16;j++) {
 		FourCC command=*f++ ;
 		fourCC2char(command,buffer) ;
-        setTextProps(props,2,j,false) ;
+    setTextProps(props,2,j,false) ;
 		DrawString(pos._x,pos._y,buffer,props) ;
-        setTextProps(props,2,j,true) ;
+    setTextProps(props,2,j,true) ;
 		pos._y++ ;
 	}
 
 // Draw commands params
 
 	pos=anchor ;
-	pos._x+=15 ;
+	pos._x+=13 ;
 
 	param=table.param2_ ;
 	buffer[5]=0 ;
 
 	for (int j=0;j<16;j++) {
 		ushort p=*param++ ;
-        setTextProps(props,3,j,false) ;
+    setTextProps(props,3,j,false) ;
 		hexshort2char(p,buffer) ;
 		DrawString(pos._x,pos._y,buffer,props) ;
-        setTextProps(props,3,j,true) ;
+    setTextProps(props,3,j,true) ;
 		pos._y++ ;
 	}
 
 // Draw command 3
 
 	pos=anchor ;
-	pos._x+=20 ;
+	pos._x+=18 ;
 
 	f=table.cmd3_ ;
 
@@ -777,9 +777,9 @@ void TableView::DrawView() {
 	for (int j=0;j<16;j++) {
 		FourCC command=*f++ ;
 		fourCC2char(command,buffer) ;
-        setTextProps(props,4,j,false) ;
+    setTextProps(props,4,j,false) ;
 		DrawString(pos._x,pos._y,buffer,props) ;
-        setTextProps(props,4,j,true) ;
+    setTextProps(props,4,j,true) ;
 		pos._y++ ;
 	}
 
@@ -787,7 +787,7 @@ void TableView::DrawView() {
 // Draw commands params 3
 
 	pos=anchor ;
-	pos._x+=25 ;
+	pos._x+=22 ;
 
 	param=table.param3_ ;
 	buffer[5]=0 ;

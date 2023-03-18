@@ -17,7 +17,7 @@ View::View(GUIWindow &w, ViewData *viewData) : w_(w), viewData_(viewData), viewM
 	   GUIRect rect=w.GetRect() ;
      miniLayout_=(rect.Width()<320);
 	   View::margin_=0 ;
-	   songRowCount_=miniLayout_?16:22 ;
+	   songRowCount_=miniLayout_?16:16 ;
 
      initPrivate_=true ;
   }
@@ -29,9 +29,9 @@ View::View(GUIWindow &w, ViewData *viewData) : w_(w), viewData_(viewData), viewM
 } ;
 
 GUIPoint View::GetAnchor() {
-	int width=40 ;
-	int height=30 ;
-	return GUIPoint((width-SONG_CHANNEL_COUNT*3)/2+2,(height-View::songRowCount_)/2) ;
+	int width=32 ;
+	int height=24 ;
+	return GUIPoint((width-SONG_CHANNEL_COUNT*3)/2 + 1,(height-View::songRowCount_)/2) ;
 }
 
 GUIPoint View::GetTitlePosition() {
@@ -57,109 +57,109 @@ void View::Unlock() {
 }
 
 void View::drawMap() {
-    if (!miniLayout_) {
-        GUIPoint anchor=GetAnchor() ;
-		GUIPoint pos(View::margin_,anchor._y);
-    	GUITextProperties props ;
+  if (!miniLayout_) {
+    GUIPoint anchor=GetAnchor() ;
+    GUIPoint pos(View::margin_, anchor._y + View::songRowCount_ + 1);
+    GUITextProperties props ;
 
 		//draw entire map
-		SetColor(CD_HILITE1) ;
-    	char buffer[5] ;
-		props.invert_=true ;
+    SetColor(CD_NORMAL);
+    char buffer[5] ;
+		props.invert_=false ;
 		//row1
 		sprintf(buffer,"P G ");
-        DrawString(pos._x,pos._y,buffer,props) ;
+    DrawString(pos._x,pos._y,buffer,props) ;
 		pos._y++ ;		
 		//row2
 		sprintf(buffer,"SCPI");
-        DrawString(pos._x,pos._y,buffer,props) ;
+    DrawString(pos._x,pos._y,buffer,props) ;
 		pos._y++ ;		
 		//row3
 		sprintf(buffer,"  TT");
-        DrawString(pos._x,pos._y,buffer,props) ;
-
+    DrawString(pos._x,pos._y,buffer,props) ;
+    
 		//draw current screen on map
 		SetColor(CD_HILITE2) ;
-		pos._y = anchor._y;
-		switch(viewType_)
+    pos._y = anchor._y + View::songRowCount_ + 1;
+    switch(viewType_)
 		{
 		case VT_CHAIN:
 			pos._x+=1;
 			pos._y+=1;
-	        DrawString(pos._x,pos._y,"C",props) ;
+      DrawString(pos._x,pos._y,"C",props) ;
 			break;
 		case VT_PHRASE:
 			pos._x+=2;
 			pos._y+=1;
-	        DrawString(pos._x,pos._y,"P",props) ;
+      DrawString(pos._x,pos._y,"P",props) ;
 			break;
 		case VT_PROJECT:
-	        DrawString(pos._x,pos._y,"P",props) ;
+      DrawString(pos._x,pos._y,"P",props) ;
 			break;
 		case VT_INSTRUMENT:
 			pos._x+=3;
 			pos._y+=1;
-	        DrawString(pos._x,pos._y,"I",props) ;
+      DrawString(pos._x,pos._y,"I",props) ;
 			break;
 		case VT_TABLE: //under phrase
 			pos._x+=2;
 			pos._y+=2;
-	        DrawString(pos._x,pos._y,"T",props) ;
+      DrawString(pos._x,pos._y,"T",props) ;
 			break;
 		case VT_TABLE2: //under instrument
 			pos._x+=3;
 			pos._y+=2;
-	        DrawString(pos._x,pos._y,"T",props) ;
+      DrawString(pos._x,pos._y,"T",props) ;
 			break;
 		case VT_GROOVE:
 			pos._x+=2;
-	        DrawString(pos._x,pos._y,"G",props) ;
+      DrawString(pos._x,pos._y,"G",props) ;
 			break;
 		default: //VT_SONG
 			pos._y+=1;
-	        DrawString(pos._x,pos._y,"S",props) ;
+      DrawString(pos._x,pos._y,"S",props) ;
 		}
-
+    
 	}//!minilayout
 }
 
 void View::drawNotes() {
 
-    if (!miniLayout_) {
+  if (!miniLayout_) {
 
-		GUIPoint anchor=GetAnchor() ;
-		int initialX = View::margin_+10 ;
-		int initialY = anchor._y+23 ;
-		GUIPoint pos(initialX,initialY) ;
-		GUITextProperties props ;
-
-        Player *player=Player::GetInstance() ;
+    GUIPoint anchor=GetAnchor() ;
+    int initialX = View::margin_+5 ;
+    int initialY = anchor._y+17 ;
+    GUIPoint pos(initialX,initialY) ;
+    GUITextProperties props ;
+    
+    Player *player=Player::GetInstance() ;
 		
-		//column banger refactor
-		props.invert_= true;
-        for (int i=0;i<SONG_CHANNEL_COUNT;i++) {
-			if (i==viewData_->songX_) {
-				SetColor(CD_HILITE2) ;
-			} else {
-				SetColor(CD_HILITE1) ;
-			}
-			if (player->IsRunning()) {
-				DrawString(pos._x,pos._y,player->GetPlayedNote(i),props) ; //row for the note values
-				pos._y++ ;
-				DrawString(pos._x,pos._y,player->GetPlayedOctive(i),props) ; //row for the octive values
-				pos._y++ ;
-				DrawString(pos._x,pos._y,player->GetPlayedInstrument(i),props) ; //draw instrument number
-			} else {
-				DrawString(pos._x,pos._y,"  ",props) ; //row for the note values
-				pos._y++ ;
-				DrawString(pos._x,pos._y,"  ",props) ; //row for the octive values
-				pos._y++ ;
-				DrawString(pos._x,pos._y,"  ",props) ; //draw instrument number
-			}
-			pos._y = initialY ;
-			pos._x+= 3;
-		}
-     }
+    //column banger refactor
+    props.invert_= true;
+    for (int i=0;i<SONG_CHANNEL_COUNT;i++) {
+      if (i==viewData_->songX_) {
+        SetColor(CD_HILITE2) ;
+      } else {
+        SetColor(CD_HILITE1) ;
+      }
+      if (player->IsRunning()) {
+        DrawString(pos._x,pos._y,player->GetPlayedNote(i),props) ; //row for the note values
+        pos._y++ ;
+        DrawString(pos._x,pos._y,player->GetPlayedOctive(i),props) ; //row for the octive values
+        pos._y++ ;
+        DrawString(pos._x,pos._y,player->GetPlayedInstrument(i),props) ; //draw instrument number
+      } else {
+        DrawString(pos._x,pos._y,"  ",props) ; //row for the note values
+        pos._y++ ;
+        DrawString(pos._x,pos._y,"  ",props) ; //row for the octive values
+        pos._y++ ;
+        DrawString(pos._x,pos._y,"  ",props) ; //draw instrument number
+      }
+      pos._y = initialY ;
+      pos._x+= 3;
+    }
+  }
 }
 
 void View::DoModal(ModalView *view,ModalViewCallback cb) {

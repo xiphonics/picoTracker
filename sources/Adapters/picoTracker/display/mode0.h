@@ -11,10 +11,10 @@ extern "C" {
 // ARNE-16 palette converted to RGB565 --
 // https://lospec.com/palette-list/arne-16
 typedef enum {
-  MODE0_BLACK,
-  MODE0_BROWN,
-  MODE0_RED,
-  MODE0_BLUSH,
+  MODE0_BG,
+  MODE0_NORMAL,
+  MODE0_HILITE,
+  MODE0_HILITE2,
   MODE0_GRAY,
   MODE0_DESERT,
   MODE0_ORANGE,

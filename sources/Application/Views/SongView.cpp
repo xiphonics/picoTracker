@@ -952,8 +952,8 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
       pos._y=0 ;
       pos._x=25 ;
   } else {
-      pos=anchor ;
-      pos._x+=25 ;
+      pos=0 ;
+      pos._x=27 ;
   }
     
 	if (player->Clipped()) {

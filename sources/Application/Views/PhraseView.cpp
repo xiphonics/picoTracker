@@ -86,13 +86,13 @@ void PhraseView::updateCursor(int dx,int dy) {
 	GUIPoint p(anchor) ;
 	switch(col_) {
 		case 3:
-			p._x+=13 ;
+			p._x+=12 ;
 			p._y+=row_ ;
 			cmdEditField_->SetPosition(p) ;
 			cmdEdit_.SetInt(*(phrase_->param1_+(16*viewData_->currentPhrase_+row_))) ;
 			break ;
 		case 5:
-			p._x+=23 ;
+			p._x+=21 ;
 			p._y+=row_ ;
 			cmdEditField_->SetPosition(p) ;
 			cmdEdit_.SetInt(*(phrase_->param2_+(16*viewData_->currentPhrase_+row_))) ;
@@ -1061,7 +1061,7 @@ void PhraseView::DrawView() {
 // Draw commands params 1
 
 	pos=anchor ;
-	pos._x+=13 ;
+	pos._x+=12 ;
 
 	ushort *param=phrase_->param1_+(16*viewData_->currentPhrase_) ;
 	buffer[5]=0 ;
@@ -1082,7 +1082,7 @@ void PhraseView::DrawView() {
 // Draw commands 2
 
 	pos=anchor ;
-	pos._x+=18 ;
+	pos._x+=17 ;
 
 	f=phrase_->cmd2_+(16*viewData_->currentPhrase_) ;
 
@@ -1100,7 +1100,7 @@ void PhraseView::DrawView() {
 // Draw commands params
 
 	pos=anchor ;
-	pos._x+=23 ;
+	pos._x+=21 ;
 
 	param=phrase_->param2_+(16*viewData_->currentPhrase_) ;
 	buffer[5]=0 ;

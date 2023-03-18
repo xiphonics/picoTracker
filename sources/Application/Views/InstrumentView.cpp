@@ -78,6 +78,7 @@ void InstrumentView::fillSampleParameters() {
 	GUIPoint position=GetAnchor() ;
 	
 //	position._y+=View::fieldSpaceHeight_;
+  position._y-=2;
 	Variable *v=instrument->FindVariable(SIP_SAMPLE) ;
 	SamplePool *sp=SamplePool::GetInstance() ;
 	UIIntVarField *f1=new UIIntVarField(position,*v,"sample: %s",0,sp->GetNameListSize()-1,1,0x10) ;
@@ -105,7 +106,7 @@ void InstrumentView::fillSampleParameters() {
 	T_SimpleList<UIField>::Insert(f1) ;
 
 
-	position._y+=2 ;
+	position._y+=1 ;
 	v=instrument->FindVariable(SIP_CRUSHVOL) ;
 	f1=new UIIntVarField(position,*v,"drive: %2.2X",0,0xFF,1,0x10) ;
 	T_SimpleList<UIField>::Insert(f1) ;
@@ -174,7 +175,7 @@ void InstrumentView::fillSampleParameters() {
 	f1=new UIIntVarField(position,*v,"loop mode: %s",0,SILM_LAST-1,1,1) ;
 	T_SimpleList<UIField>::Insert(f1) ;
 
-	position._y+=2 ;
+	position._y+=1 ;
 	v=instrument->FindVariable(SIP_START) ;
 	f1=new UIBigHexVarField(position,*v,7,"start: %7.7X",0,instrument->GetSampleSize()-1,16) ;
 	T_SimpleList<UIField>::Insert(f1) ;

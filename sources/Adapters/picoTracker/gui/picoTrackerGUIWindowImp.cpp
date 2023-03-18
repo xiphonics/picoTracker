@@ -58,6 +58,7 @@ mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
   mode0_set_palette_color(c._paletteIndex, to_rgb565(c));
   return (mode0_color_t)c._paletteIndex;
 }
+
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   mode0_set_foreground(GetColor(c));
 };

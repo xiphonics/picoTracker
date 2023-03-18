@@ -13,7 +13,7 @@ endif()
 
 set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 
-# Make this a PICO Build within the project
+# Make this a picoTracker build within the project
 add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs

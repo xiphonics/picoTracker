@@ -28,7 +28,7 @@ GUIColor AppWindow::normalColor_(0x77,0x6B,0x56, 1) ;
 GUIColor AppWindow::highlightColor_(0xA8, 0x16, 0x16, 2);
 GUIColor AppWindow::highlight2Color_(0x8E, 0xA0, 0x4A, 3);
 GUIColor AppWindow::cursorColor_(0x77,0x6B,0x56, 4) ;
-GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 4);
+GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 5);
 
 int AppWindow::charWidth_=8;
 int AppWindow::charHeight_=8 ;
