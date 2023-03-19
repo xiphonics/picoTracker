@@ -566,7 +566,7 @@ void AppWindow::Print(char *line) {
 	Clear() ;
 	strcpy(_statusLine,line) ;
 // unwrapped for gcc
-	int position=40 ;
+	int position=32 ;
 	position-=strlen(_statusLine) ;
 	position/=2 ;
 	GUIPoint pos(position,12) ;
@@ -576,8 +576,8 @@ void AppWindow::Print(char *line) {
 	DrawString(_statusLine,pos,props) ;
 	char buildString[80] ;
 	sprintf(buildString,"Piggy build %s%s_%s",PROJECT_NUMBER,PROJECT_RELEASE,BUILD_COUNT) ;
-	pos._y=28 ;
-	pos._x=(40-strlen(buildString))/2 ;
+	pos._y=22 ;
+	pos._x=(32-strlen(buildString))/2 ;
 	DrawString(buildString,pos,props) ;
 	Flush() ;
 } ;

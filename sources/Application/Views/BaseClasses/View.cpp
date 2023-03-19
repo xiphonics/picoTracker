@@ -31,7 +31,7 @@ View::View(GUIWindow &w, ViewData *viewData) : w_(w), viewData_(viewData), viewM
 GUIPoint View::GetAnchor() {
 	int width=32 ;
 	int height=24 ;
-	return GUIPoint((width-SONG_CHANNEL_COUNT*3)/2 + 1,(height-View::songRowCount_)/2) ;
+	return GUIPoint((width-SONG_CHANNEL_COUNT*3)/2 + 1,(height-View::songRowCount_)/2 - 1) ;
 }
 
 GUIPoint View::GetTitlePosition() {
@@ -59,7 +59,7 @@ void View::Unlock() {
 void View::drawMap() {
   if (!miniLayout_) {
     GUIPoint anchor=GetAnchor() ;
-    GUIPoint pos(View::margin_, anchor._y + View::songRowCount_ + 1);
+    GUIPoint pos(View::margin_, anchor._y + View::songRowCount_ + 2);
     GUITextProperties props ;
 
 		//draw entire map
@@ -80,7 +80,7 @@ void View::drawMap() {
     
 		//draw current screen on map
 		SetColor(CD_HILITE2) ;
-    pos._y = anchor._y + View::songRowCount_ + 1;
+    pos._y = anchor._y + View::songRowCount_ + 2;
     switch(viewType_)
 		{
 		case VT_CHAIN:
@@ -129,7 +129,7 @@ void View::drawNotes() {
 
     GUIPoint anchor=GetAnchor() ;
     int initialX = View::margin_+5 ;
-    int initialY = anchor._y+17 ;
+    int initialY = anchor._y + View::songRowCount_ + 2;
     GUIPoint pos(initialX,initialY) ;
     GUITextProperties props ;
     

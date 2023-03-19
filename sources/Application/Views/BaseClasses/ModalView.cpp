@@ -32,15 +32,15 @@ void ModalView::DrawString(int x,int y,const char *txt,GUITextProperties &props)
 
 void ModalView::SetWindow(int width,int height) {
 
-	if (width>36) {
-		width=36 ;
-	} ;
-	if (height>26) {
-		height=26 ;
-	} ;
+	if (width>28) {
+		width=28 ;
+  } ;
+	if (height>20) {
+		height=20 ;
+  } ;
 	
-	left_=20-width/2 ;
-	top_=10-height/2 ;
+	left_=16-width/2 ;
+	top_=12-height/2 ;
 	if (top_<2) {
 		top_=2 ;
 	}

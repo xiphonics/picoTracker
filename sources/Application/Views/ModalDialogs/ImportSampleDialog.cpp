@@ -4,7 +4,7 @@
 #include <memory>
 
 #define LIST_SIZE 15
-#define LIST_WIDTH 28
+#define LIST_WIDTH 24
 
 bool ImportSampleDialog::initStatic_=false ;
 Path ImportSampleDialog::sampleLib_("") ;
@@ -60,7 +60,7 @@ void ImportSampleDialog::DrawView() {
 
 	IteratorPtr<Path> it(sampleList_.GetIterator()) ;
 	int count=0 ;
-	char buffer[256] ;
+	char buffer[64] ;
 	for(it->Begin();!it->IsDone();it->Next()) {
 		if ((count>=topIndex_)&&(count<topIndex_+LIST_SIZE)) {
 			Path &current=it->CurrentItem() ;
@@ -88,13 +88,13 @@ void ImportSampleDialog::DrawView() {
 	} ;
 
 	y=LIST_SIZE+2 ;
-	int offset=LIST_WIDTH/4 ;
+	int offset=7 ;
 
 	SetColor(CD_NORMAL) ;
 
 	for (int i=0;i<3;i++) {
 		const char *text=buttonText[i] ;
-		x=offset*(i+1)-strlen(text)/2 ;
+		x=(offset*(i+1)-strlen(text)/2) - 2;
 		props.invert_=(i==selected_)?true:false ;
 		DrawString(x,y,text,props) ;
 	}	

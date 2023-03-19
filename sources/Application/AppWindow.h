@@ -19,6 +19,10 @@
 #include "System/Process/SysMutex.h"
 
 #define PROP_INVERT 0x80
+#define CHAR_WIDTH 10
+#define CHAR_HEIGHT 10
+#define SCREEN_WIDTH 40
+#define SCREEN_HEIGHT 30
 
 class AppWindow:public GUIWindow,I_Observer,Status {
 protected:
@@ -82,24 +86,25 @@ private:
 	unsigned long _lastA ;
 	unsigned long _lastB ;
 	char _statusLine[80] ;
-	static unsigned char _charScreen[1200] ;
-	static unsigned char _charScreenProp[1200] ;
-	static unsigned char _preScreen[1200] ;
-	static unsigned char _preScreenProp[1200] ;
 
-  static GUIColor backgroundColor_ ;
-  static GUIColor normalColor_ ;
+  static unsigned char _charScreen[SCREEN_WIDTH * SCREEN_HEIGHT];
+  static unsigned char _charScreenProp[SCREEN_WIDTH * SCREEN_HEIGHT];
+  static unsigned char _preScreen[SCREEN_WIDTH * SCREEN_HEIGHT];
+  static unsigned char _preScreenProp[SCREEN_WIDTH * SCREEN_HEIGHT];
+
+  static GUIColor backgroundColor_;
+  static GUIColor normalColor_;
   static GUIColor highlight2Color_;
   static GUIColor highlightColor_;
   static GUIColor consoleColor_;
   static GUIColor cursorColor_;
 
-	ColorDefinition colorIndex_ ;
+  ColorDefinition colorIndex_;
 
-	static int charWidth_ ;
-	static int charHeight_ ;
-	
-	SysMutex drawMutex_ ;
+  static int charWidth_;
+  static int charHeight_;
+
+  SysMutex drawMutex_;
 } ;
 
 

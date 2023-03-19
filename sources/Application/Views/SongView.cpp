@@ -953,7 +953,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
       pos._x=25 ;
   } else {
       pos=0 ;
-      pos._x=27 ;
+      pos._x=26 ;
   }
     
 	if (player->Clipped()) {
@@ -963,7 +963,8 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
     }
 
 	char strbuffer[10] ;
-	pos._y+=1 ;
+  /*
+  pos._y+=1 ;
 	sprintf(strbuffer,"%3.3d%%",player->GetPlayedBufferPercentage()) ; 
 	DrawString(pos._x,pos._y,strbuffer,props) ;
 
@@ -982,7 +983,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
     	sprintf(strbuffer,"%3.3d",batt) ; 
 	    DrawString(pos._x,pos._y,strbuffer,props) ;
     }
-
+  */
 	if (eventType!=PET_STOP) {
 		SetColor(CD_NORMAL) ;
 		props.invert_=false ;

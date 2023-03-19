@@ -78,7 +78,7 @@ void InstrumentView::fillSampleParameters() {
 	GUIPoint position=GetAnchor() ;
 	
 //	position._y+=View::fieldSpaceHeight_;
-  position._y-=2;
+  position._y-=1;
 	Variable *v=instrument->FindVariable(SIP_SAMPLE) ;
 	SamplePool *sp=SamplePool::GetInstance() ;
 	UIIntVarField *f1=new UIIntVarField(position,*v,"sample: %s",0,sp->GetNameListSize()-1,1,0x10) ;

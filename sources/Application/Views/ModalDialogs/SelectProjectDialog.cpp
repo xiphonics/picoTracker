@@ -6,8 +6,8 @@
 
 #include <algorithm>
 
-#define LIST_SIZE 20
-#define LIST_WIDTH 32
+#define LIST_SIZE 16
+#define LIST_WIDTH 26
 
 #ifndef NO_EXIT
 static const char *buttonText[3]= {
