@@ -1,6 +1,7 @@
 #include "ImportSampleDialog.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Instruments/SampleInstrument.h"
+#include <memory>
 
 #define LIST_SIZE 15
 #define LIST_WIDTH 28
@@ -26,6 +27,8 @@ ImportSampleDialog::ImportSampleDialog(View &view):ModalView(view) {
 } ;
 
 ImportSampleDialog::~ImportSampleDialog() {
+  sampleList_.SetOwnership(true);
+  sampleList_.Empty();
 } ;
 
 void ImportSampleDialog::DrawView() {
@@ -217,7 +220,7 @@ void ImportSampleDialog::setCurrentFolder(Path *path) {
 	sampleList_.Empty() ;
 	if (path) {
 		int count=0 ;
-		I_Dir *dir=FileSystem::GetInstance()->Open(path->GetPath().c_str()) ;	
+    std::unique_ptr<I_Dir> dir(FileSystem::GetInstance()->Open(path->GetPath().c_str())) ;	
 		if (dir) {
 			dir->GetContent("*") ;
 			dir->Sort() ;
