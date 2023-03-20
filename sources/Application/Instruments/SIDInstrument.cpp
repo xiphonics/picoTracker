@@ -92,6 +92,7 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     samplesElapsed += bufSize;
     }*/
   for (int n = 0 ; n < size; n++) {
+    // Have to calculate ASDRs somewhere here
     int output = sid_->cRSID_emulateWaves();
     buffer[n] = (fixed)output;
   }

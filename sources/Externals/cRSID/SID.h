@@ -12,6 +12,7 @@ struct cRSID_SIDwavOutput {
 class cRSID {
 public:
   cRSID(unsigned short model, bool realsid, unsigned short samplerate);
+  void cRSID_emulateADSRs(char cycles);
   int cRSID_emulateWaves();
   cRSID_SIDwavOutput cRSID_emulateHQwaves(char cycles);
 
@@ -47,7 +48,6 @@ public:
   signed int         PrevVolume; //lowpass-filtered version of Volume-band register
 
 private:
-  void cRSID_emulateADSRs(char cycles);
   int cRSID_emulateSIDoutputStage();
   unsigned short combinedWF(const unsigned char *WFarray,
                             unsigned short oscval, unsigned char Channel);
