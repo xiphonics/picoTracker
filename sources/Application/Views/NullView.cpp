@@ -19,10 +19,10 @@ void NullView::DrawView() {
 	SetColor(CD_HILITE2) ;
 
 	char buildString[80] ;
-	sprintf(buildString,"Piggy build %s%s_%s",PROJECT_NUMBER,PROJECT_RELEASE,BUILD_COUNT) ;
+	sprintf(buildString,"picoTracker build %s%s_%s",PROJECT_NUMBER,PROJECT_RELEASE,BUILD_COUNT) ;
 	GUIPoint pos ;
-	pos._y=28;
-	pos._x=(40-strlen(buildString))/2 ;
+	pos._y=22;
+	pos._x=(32-strlen(buildString))/2 ;
 	DrawString(pos._x,pos._y,buildString,props) ;
 
 } ;

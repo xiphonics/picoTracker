@@ -68,8 +68,9 @@ ProjectView::ProjectView(GUIWindow &w,ViewData *data):FieldView(w,data) {
 	T_SimpleList<UIField>::Insert(a1) ;
 
 	position._y+=2 ;
-	a1=new UIActionField("Load Song",ACTION_LOAD,position) ;
-	a1->AddObserver(*this) ;
+	a1=new UIActionField("Load Song **DISABLED**",ACTION_LOAD,position) ;
+  // TODO: reenable this once we get rid of all memory leaks
+  //	a1->AddObserver(*this) ;
 	T_SimpleList<UIField>::Insert(a1) ;
 
 	position._y+=1 ;

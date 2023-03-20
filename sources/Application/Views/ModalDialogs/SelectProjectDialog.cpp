@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#define LIST_SIZE 16
+#define LIST_SIZE 14
 #define LIST_WIDTH 26
 
 #ifndef NO_EXIT

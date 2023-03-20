@@ -40,7 +40,7 @@ void ModalView::SetWindow(int width,int height) {
   } ;
 	
 	left_=16-width/2 ;
-	top_=12-height/2 ;
+	top_=8-height/2 ;
 	if (top_<2) {
 		top_=2 ;
 	}
