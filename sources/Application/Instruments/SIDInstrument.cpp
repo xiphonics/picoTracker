@@ -1,4 +1,4 @@
-#include "Adapters/PICO/Utils/utils.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "CommandList.h"
 #include "SIDInstrument.h"
 #include "System/Console/Trace.h"
@@ -93,6 +93,7 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     }*/
   for (int n = 0 ; n < size; n++) {
     // Have to calculate ASDRs somewhere here
+    sid_->cRSID_emulateADSRs(6);
     int output = sid_->cRSID_emulateWaves();
     buffer[n] = (fixed)output;
   }

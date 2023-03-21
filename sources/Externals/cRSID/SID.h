@@ -26,9 +26,9 @@ public:
 
   // ADSR-related:
   unsigned char ADSRstate[15];
-  unsigned short     RateCounter[15];
-  unsigned char      EnvelopeCounter[15];
-  unsigned char      ExponentCounter[15];
+  unsigned short RateCounter[15];
+  unsigned char EnvelopeCounter[15];
+  unsigned char ExponentCounter[15];
   //Wave-related:
   int                PhaseAccu[15];       //28bit precision instead of 24bit
   int                PrevPhaseAccu[15];   //(integerized ClockRatio fractionals, WebSID has similar solution)
