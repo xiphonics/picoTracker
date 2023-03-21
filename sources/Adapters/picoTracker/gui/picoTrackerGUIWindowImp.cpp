@@ -10,8 +10,7 @@
 #include "UIFramework/BasicDatas/GUIEvent.h"
 #include <string>
 
-// #define to_rgb565(color) ((color._r & 0b11111000) << 8) | ((color._g &
-// 0b11111100) << 3) | (color._b >> 3)
+#define to_rgb565(color) ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) | (color._b >> 3)
 
 picoTrackerGUIWindowImp *instance_;
 
@@ -54,20 +53,10 @@ void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
 };
 
 mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
-  // TODO: This is hacky AF but works for now
-  if (c._r == 119 && c._g == 107 && c._b == 86) {
-    return MODE0_BROWN;
-  } else if (c._r == 241 && c._g == 241 && c._b == 150) {
-    return MODE0_YELLOW;
-  } else if (c._r == 142 && c._g == 160 && c._b == 74) {
-    return MODE0_BLUE;
-  } else if (c._r == 168 && c._g == 22 && c._b == 22) {
-    return MODE0_RED;
-  } else {
-    // This shouldn't appear, seems like there are 4 colors used only
-    Trace::Debug("Selected color UNKNOWN!!!");
-    return MODE0_BLUSH;
-  }
+  // Palette index should always be < 16. Wont check it.
+  // TODO: should not be redefining the palette colors every call
+  mode0_set_palette_color(c._paletteIndex, to_rgb565(c));
+  return (mode0_color_t)c._paletteIndex;
 }
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   mode0_set_foreground(GetColor(c));

@@ -51,7 +51,6 @@ bool Application::Init(GUICreateWindowParams &params) {
   audio->Init() ;
 	CommandDispatcher::GetInstance()->Init() ;
   initMidiInput();
-	ControlRoom::GetInstance()->LoadMapping("bin:mapping.xml") ;
 	return true ;
 } ;
 

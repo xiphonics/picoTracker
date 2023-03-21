@@ -1,59 +1,48 @@
 #include "Config.h"
-
+#include "Application/Persistency/PersistencyDocument.h"
+#include "System/FileSystem/FileSystem.h"
+#include <cstring>
 
 Config::Config() 
 {
 	Path path("bin:config.xml") ;
 	Trace::Log("CONFIG","Got config path=%s",path.GetPath().c_str()) ;
-	TiXmlDocument *document=new TiXmlDocument(path.GetPath());
-	bool loadOkay = document->LoadFile();
+  PersistencyDocument doc;
+  if (!doc.Load(path.GetPath())) {
+    Trace::Log("CONFIG", "No config.xml");
+    return;
+  }
+  bool elem = doc.FirstChild();
+  if (!elem || strcmp(doc.ElemName(), "CONFIG")) {
+    Trace::Log("CONFIG", "Bad config.xml");
+    return;
+  }
 
-	if (loadOkay) 
-  { 
-		// Check first node is CONFIG/ GPCONFIG
-
-		TiXmlNode* rootnode = 0;
-
-		rootnode = document->FirstChild( "CONFIG" );
-		if (!rootnode)
-    {
-		   rootnode = document->FirstChild( "GPCONFIG" );
+  bool validElem;
+  elem = doc.FirstChild();
+  while (elem) {
+    validElem = true;
+    if (strcmp(doc.ElemName(), "BACKGROUND") &&
+        strcmp(doc.ElemName(), "FOREGROUND") &&
+        strcmp(doc.ElemName(), "HICOLOR1") &&
+        strcmp(doc.ElemName(), "HICOLOR2")) {
+      Trace::Log("CONFIG", "Found unknown config parameter \"%s\", skipping...", doc.ElemName());
+      validElem = false;
     }
-    
-		if (rootnode)
-    {
-			TiXmlElement *rootelement = rootnode->ToElement();
-			TiXmlNode *node = rootelement->FirstChildElement() ;
-
-			// Loop on all children
-		
-			if (node)
-      {
-				TiXmlElement *element = node->ToElement();
-				while (element) 
-        {
-					const char *key=element->Value() ;
-					const char *value=element->Attribute("value") ;
-					if (!value)
-          {
-						value=element->Attribute("VALUE") ;
-					}
-					if (key&&value)
-          {
-						Variable *v=new Variable(key,0,value) ;
-						Insert(v) ;
-					}
-					element = element->NextSiblingElement(); 
-				}
-			}
-
+    bool hasAttr = doc.NextAttribute();
+    while (hasAttr) {
+      if (!strcmp(doc.attrname_, "value")) {
+        if (validElem) {
+          Variable *v = new Variable(doc.ElemName(), 0, doc.attrval_);
+          Insert(v);
+        }
+      }
+      hasAttr = doc.NextAttribute();
     }
-    } else {
-		Trace::Log("CONFIG","No (bad?) config.xml") ;
-	}
- 	delete(document) ;
+    elem = doc.NextSibling();
+  }
+  Trace::Log("CONFIG", "Loaded successfully");
 }
-
 
 //------------------------------------------------------------------------------
 

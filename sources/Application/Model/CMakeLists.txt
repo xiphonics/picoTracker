@@ -11,7 +11,6 @@ add_library(application_model
 
 target_link_libraries(application_model PUBLIC system_system
                                         PUBLIC foundation_variables
-                                        PUBLIC tiny_xml
 )
 
 target_include_directories(application_model PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

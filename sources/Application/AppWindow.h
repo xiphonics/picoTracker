@@ -56,7 +56,7 @@ protected: // GUIWindow implementation
 
 	virtual void Print(char *) ;
 
-    void defineColor(const char *colorName,GUIColor &color) ;
+  void defineColor(const char *colorName,GUIColor &color, int paletteIndex) ;
 
 	void onQuitApp() ;
 private:

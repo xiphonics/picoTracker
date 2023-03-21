@@ -135,7 +135,8 @@ static uint8_t __scratch_x("screen")  changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0
 #define TestBit(A, k) (A[(k) / 8] & (1 << ((k) % 8)))
 
 static int depth = 0;
-static const uint16_t palette[16] = {
+// Default palette, can be redefined
+static uint16_t __scratch_x("palette")  palette[16] = {
     SWAP_BYTES(0x0000), SWAP_BYTES(0x49E5), SWAP_BYTES(0xB926),
     SWAP_BYTES(0xE371), SWAP_BYTES(0x9CF3), SWAP_BYTES(0xA324),
     SWAP_BYTES(0xEC46), SWAP_BYTES(0xF70D), SWAP_BYTES(0xffff),
@@ -308,6 +309,10 @@ void mode0_draw_changed_simple() {
 void mode0_draw_screen() {
   // draw the whole screen
   mode0_draw_region(0, 0, TEXT_WIDTH, TEXT_HEIGHT);
+}
+
+void mode0_set_palette_color(int idx, uint16_t rgb565_color) {
+  palette[idx] = SWAP_BYTES(rgb565_color);
 }
 
 void mode0_init() { ili9341_init(); }

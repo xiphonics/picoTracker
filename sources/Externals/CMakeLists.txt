@@ -1,4 +1,3 @@
-add_subdirectory(TinyXML)
 add_subdirectory(TinyXML2)
 add_subdirectory(Soundfont)
 #add_subdirectory(FreeRTOS)

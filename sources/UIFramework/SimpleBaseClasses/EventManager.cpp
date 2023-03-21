@@ -11,6 +11,7 @@
 #include "Application/Model/Config.h"
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Commands/NodeList.h"
+#include <cstring>
 
 bool EventManager::Init() {
 	return true ;

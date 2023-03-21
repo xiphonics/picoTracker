@@ -1,9 +1,10 @@
 #include "MidiService.h"
+#include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
+#include "Services/Audio/AudioDriver.h"
 #include "System/Console/Trace.h"
 #include "System/Timer/Timer.h"
-#include "Application/Model/Config.h"
-#include "Services/Audio/AudioDriver.h"
+#include <cstring>
 
 #ifdef SendMessage
 #undef SendMessage

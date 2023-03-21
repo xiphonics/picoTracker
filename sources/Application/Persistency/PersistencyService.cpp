@@ -38,7 +38,7 @@ bool PersistencyService::Load() {
   if (!doc.Load(filename.GetPath())) return false;
 
   bool elem = doc.FirstChild(); // advance to first child
-  if (!elem || strcmp(doc.ElemName(), "LITTLEGPTRACKER")) {
+  if (!elem || strcmp(doc.ElemName(), "PICOTRACKER")) {
     Trace::Error("could not find master node");
     return false;
   }

@@ -3,7 +3,6 @@
 #include "Services/Controllers/ControllerService.h"
 #include "Services/Controllers/MultiChannelAdapter.h"
 #include "System/Console/Trace.h"
-#include "Externals/TinyXML/tinyxml.h"
 #include <string>
 
 
@@ -71,47 +70,5 @@ bool ControlRoom::Attach(const char *nodeUrl,const char *controllerUrl) {
 	} else {
 		Trace::Debug("Failed to attach %s to %s",nodeUrl,controllerUrl) ;
 	} ;
-	return true ;
-} ;
-
-bool ControlRoom::LoadMapping(const char *mappingFile) {
-
-	Path path(mappingFile) ;
-	TiXmlDocument document(path.GetPath());
-	bool loadOkay = document.LoadFile();
-	if (!loadOkay) {
-		Trace::Log("MAPPING","No (bad?) mapping file (%s)",mappingFile) ;
-		return false ;
-	}
-
-	// Check first node is CONFIG/ GPCONFIG
-
-	TiXmlNode* rootnode = 0;
-
-	rootnode = document.FirstChild( "MAPPINGS" );
-
-	if (!rootnode)  {
-		Trace::Error("No master node for mappings") ;
-		return false ;
-	}
-
-	TiXmlElement *rootelement = rootnode->ToElement();
-	TiXmlNode *node = rootelement->FirstChildElement() ;
-
-	// Loop on all children
-
-	if (node) {
-		TiXmlElement *element = node->ToElement();
-		while (element) {
-			const char *elem=element->Value() ; // sould be mapping but we don't really care
-			const char *src=element->Attribute("src") ;
-			const char *dst=element->Attribute("dst") ;
-			if ((src)&&(dst)) {
-				Attach(dst,src) ;
-			}
-			element = element->NextSiblingElement(); 
-		}
-	}
-
 	return true ;
 } ;

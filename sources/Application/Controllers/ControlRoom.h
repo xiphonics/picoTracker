@@ -17,8 +17,6 @@ public:
 	bool Attach(const char *nodeUrl,const char *controllerUrl) ;
 	AssignableControlNode *GetControlNode(const std::string url) ;
 
-	bool LoadMapping(const char *path) ;
-
 	void Dump() ;
 } ;
 #endif
