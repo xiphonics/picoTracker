@@ -82,17 +82,17 @@ private:
 	unsigned long _lastA ;
 	unsigned long _lastB ;
 	char _statusLine[80] ;
-	unsigned char _charScreen[1200] ;
-	unsigned char _charScreenProp[1200] ;
-	unsigned char _preScreen[1200] ;
-	unsigned char _preScreenProp[1200] ;
+	static unsigned char _charScreen[1200] ;
+	static unsigned char _charScreenProp[1200] ;
+	static unsigned char _preScreen[1200] ;
+	static unsigned char _preScreenProp[1200] ;
 
-    static GUIColor backgroundColor_ ;
-    static GUIColor normalColor_ ;
-    static GUIColor highlight2Color_;
-    static GUIColor highlightColor_;
-    static GUIColor consoleColor_;
-    static GUIColor cursorColor_;
+  static GUIColor backgroundColor_ ;
+  static GUIColor normalColor_ ;
+  static GUIColor highlight2Color_;
+  static GUIColor highlightColor_;
+  static GUIColor consoleColor_;
+  static GUIColor cursorColor_;
 
 	ColorDefinition colorIndex_ ;
 
