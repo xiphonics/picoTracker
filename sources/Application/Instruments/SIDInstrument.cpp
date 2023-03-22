@@ -36,9 +36,9 @@ void SIDInstrument::OnStart() {
   //  delta_t_ = 0;
   // Set freq C3
   //  sid_.write(0x00, 0x93);
-  sid_->Register[0] = 0x93;
+  //*  sid_->Register[0] = 0x93;
   //  sid_.write(0x01, 0x08);
-  sid_->Register[1] = 0x08;
+  //*  sid_->Register[1] = 0x08;
   // Attack and decay to mid values
   //  sid_.write(0x05, 0x88);
   sid_->Register[5] = 0x88;
@@ -48,12 +48,18 @@ void SIDInstrument::OnStart() {
   // Set Triangle wave and open gate
   //  sid_.write(0x04, 0x11);
   sid_->Register[4] = 0x11;
+
+  // Main volume
+  sid_->Register[24] = 0x0F;
   tableState_.Reset();
 };
 
 bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   playing_ = true;
-
+  printf("Playing note: %i\n", note);
+  //  Shift = -24;
+  sid_->Register[0] = sid_notes[note - 24] & 0xFF;
+  sid_->Register[1] = sid_notes[note - 24] >> 8;
   return true;
 };
 
@@ -91,16 +97,16 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     }
     samplesElapsed += bufSize;
     }*/
-  for (int n = 0 ; n < size / 2; n++) {
+  for (int n = 0 ; n < size; n++) {
     // Have to calculate ASDRs somewhere here
-    sid_->cRSID_emulateADSRs(6);
+    sid_->cRSID_emulateADSRs(1);
     int output = sid_->cRSID_emulateWaves();
-    buffer[2*n] = (fixed)output; // L
-    buffer[2*n + 1] = (fixed)output; // R
+    buffer[2*n] = (fixed)output * 65536; // L
+    buffer[2*n + 1] = (fixed)output * 65536; // R
   }
   int time_taken = micros() - start;
   Trace::Log("RENDER", "SID Render took %ius (%i%% ts)", time_taken, (time_taken * 44100) / size / 10000);
-  return false;
+  return true;
 };
 
 bool SIDInstrument::IsInitialized() {

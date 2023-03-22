@@ -1,30 +1,40 @@
 //cRSID SID emulation engine
-
 #include "SID.h"
 #include "SIDfilter.h"
 #include "SIDwaves.h"
 
 int cRSID::cRSID_emulateSIDoutputStage () {
- enum SIDspecs { CHANNELS=3+1, VOLUME_MAX=0xF, D418_DIGI_VOLUME=2 }; //digi-channel is counted too
- enum FilterBits { OFF3_BITVAL=0x80, HIGHPASS_BITVAL=0x40, BANDPASS_BITVAL=0x20, LOWPASS_BITVAL=0x10 };
+  enum SIDspecs {
+    CHANNELS = 3 + 1,
+    VOLUME_MAX = 0xF,
+    D418_DIGI_VOLUME = 2
+  }; // digi-channel is counted too
+  enum FilterBits {
+    OFF3_BITVAL = 0x80,
+    HIGHPASS_BITVAL = 0x40,
+    BANDPASS_BITVAL = 0x20,
+    LOWPASS_BITVAL = 0x10
+  };
 
- static char MainVolume;
- static unsigned char FilterSwitchReso, VolumeBand;
- static int Tmp, NonFilted, FilterInput, Cutoff, ResonancePos, FilterOutput, Output;
- unsigned short Resonance;
+  static char MainVolume;
+  static unsigned char FilterSwitchReso, VolumeBand;
+  static int Tmp, NonFilted, FilterInput, Cutoff, ResonancePos, FilterOutput,
+      Output;
+  unsigned short Resonance;
 
-     FilterSwitchReso = Register[0x17];
- VolumeBand = Register[0x18];
- Cutoff = (Register[0x16] << 3) + (Register[0x15] & 7);
- ResonancePos = FilterSwitchReso >> 4;
+  FilterSwitchReso = Register[0x17];
+  VolumeBand = Register[0x18];
+  Cutoff = (Register[0x16] << 3) + (Register[0x15] & 7);
+  ResonancePos = FilterSwitchReso >> 4;
 
- NonFilted=NonFiltedSample; FilterInput=FilterInputSample;
+  NonFilted = NonFiltedSample;
+  FilterInput = FilterInputSample;
 
- //Filter
+  // Filter
 
- if (ChipModel == 8580) {
-  Cutoff = CutoffMul8580_44100Hz[Cutoff];
-  Resonance = Resonances8580[ResonancePos];
+  if (ChipModel == 8580) {
+    Cutoff = CutoffMul8580_44100Hz[Cutoff];
+    Resonance = Resonances8580[ResonancePos];
  }
  else { //6581
   Cutoff += (FilterInput*105)>>16; if (Cutoff>0x7FF) Cutoff=0x7FF; else if (Cutoff<0) Cutoff=0; //MOSFET-VCR control-voltage calculation
@@ -57,9 +67,7 @@ int cRSID::cRSID_emulateSIDoutputStage () {
  else MainVolume = VolumeBand & 0xF;
 
  Output = ((NonFilted+FilterOutput) * MainVolume) / ( (CHANNELS*VOLUME_MAX) + ATTENUATION);
-
  return Output; // master output of a SID
-
 }
 
 
@@ -181,7 +189,7 @@ int cRSID::cRSID_emulateWaves () {
 
 
  NonFiltedSample = FilterInputSample = 0;
- FilterSwitchReso = BasePtr[0x17]; VolumeBand=BasePtr[0x18];
+ FilterSwitchReso = Register[0x17]; VolumeBand=Register[0x18];
 
 
  //Waveform-generator //(phase accumulator and waveform-selector)
@@ -280,7 +288,6 @@ int cRSID::cRSID_emulateWaves () {
   else if ( Channel!=14 || !(VolumeBand & OFF3_BITVAL) ) {
    NonFiltedSample += ( ((int)WavGenOut-0x8000) * Envelope ) >> 8;
   }
-
  }
  //update readable SID1-registers (some SID tunes might use 3rd channel ENV3/OSC3 value as control)
  // SID->C64->IObankRD[SID->BaseAddress+0x1B] = WavGenOut>>8; //OSC3, ENV3 (some players rely on it, unfortunately even for timing)

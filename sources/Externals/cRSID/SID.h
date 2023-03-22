@@ -18,8 +18,6 @@ public:
 
   // SID-chip data:
   unsigned short     ChipModel;     //values: 8580 / 6581
-  unsigned short     BaseAddress;   //SID-baseaddress location in C64-memory (IO)
-  unsigned char*     BasePtr;       //SID-baseaddress location in host's memory
   unsigned char Register[29];
   unsigned short SampleClockRatio;
   bool RealSIDmode;
