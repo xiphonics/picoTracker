@@ -91,11 +91,12 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     }
     samplesElapsed += bufSize;
     }*/
-  for (int n = 0 ; n < size; n++) {
+  for (int n = 0 ; n < size / 2; n++) {
     // Have to calculate ASDRs somewhere here
     sid_->cRSID_emulateADSRs(6);
     int output = sid_->cRSID_emulateWaves();
-    buffer[n] = (fixed)output;
+    buffer[2*n] = (fixed)output; // L
+    buffer[2*n + 1] = (fixed)output; // R
   }
   int time_taken = micros() - start;
   Trace::Log("RENDER", "SID Render took %ius (%i%% ts)", time_taken, (time_taken * 44100) / size / 10000);
