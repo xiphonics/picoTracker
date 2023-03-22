@@ -15,6 +15,4 @@ target_link_libraries(application_model PUBLIC system_system
 
 target_include_directories(application_model PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# TODO: check this, how to do properly? this finds System/System/System.h
-# include_directories(/Users/fran/github/LittleGPTracker-pico/sources/)
 include_directories(${PROJECT_SOURCE_DIR})

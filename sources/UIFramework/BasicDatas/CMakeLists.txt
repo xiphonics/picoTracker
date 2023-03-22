@@ -1,6 +1,4 @@
 add_library(uiframework_basicdatas
-# TODO: Cleanup, these don't seem to be used
-#  GUIBitmap.h GUIBitmap.cpp
   GUICreateWindowParams.h
   GUIEvent.h GUIEvent.cpp
   GUIPoint.h

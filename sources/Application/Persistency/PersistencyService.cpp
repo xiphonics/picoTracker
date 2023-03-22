@@ -16,7 +16,7 @@ void PersistencyService::Save() {
   }
   tinyxml2::XMLPrinter printer(fp);
 
-  printer.OpenElement("LITTLEGPTRACKER");
+  printer.OpenElement("PICOTRACKER");
 
 	// Loop on all registered service
 	// accumulating XML flow	
