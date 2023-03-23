@@ -26,6 +26,7 @@ protected:
   void warpToNext(int offset);
   void onInstrumentChange();
   void fillSampleParameters();
+  void fillSIDParameters();
   void fillMidiParameters();
   InstrumentType getInstrumentType();
   void Update(Observable &o, I_ObservableData *d);

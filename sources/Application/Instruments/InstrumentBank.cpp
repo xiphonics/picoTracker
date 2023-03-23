@@ -8,6 +8,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/char.h"
 #include "Filters.h"
+#include "SIDInstrument.h"
 #include "System/io/Status.h"
 
 const char *InstrumentTypeData[] = {"Sample", "SID", "Midi"};
@@ -171,7 +172,13 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           }
         }
       } else {
-        it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE : IT_MIDI;
+        if (id < MAX_SAMPLEINSTRUMENT_COUNT) {
+          it = IT_SAMPLE;
+        } else if (id < MAX_SIDINSTRUMENT_COUNT) {
+          it = IT_SID;
+        } else {
+          it = IT_MIDI;
+        }
       };
       if (id < MAX_INSTRUMENT_COUNT) {
         I_Instrument *instr = instrument_[id];
@@ -180,6 +187,9 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           switch (it) {
           case IT_SAMPLE:
             instr = new SampleInstrument();
+            break;
+          case IT_SID:
+            instr = new SIDInstrument();
             break;
           case IT_MIDI:
             instr = new MidiInstrument();

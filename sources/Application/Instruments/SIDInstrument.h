@@ -4,9 +4,33 @@
 #include "Externals/cRSID/SID.h"
 #include "I_Instrument.h"
 
-#define DIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
+#define DIP_V1PW MAKE_FOURCC('D', '1', 'P', 'W')
+#define DIP_V1WF MAKE_FOURCC('D', '1', 'W', 'F')
+#define DIP_V1SYNC MAKE_FOURCC('D', '1', 'S', 'Y')
+#define DIP_V1GATE MAKE_FOURCC('D', '1', 'G', 'T')
+#define DIP_V1ADSR MAKE_FOURCC('D', '1', 'A', 'D')
+#define DIP_V1FILTERON MAKE_FOURCC('D', '1', 'F', 'O')
+#define DIP_V2FREQOFF MAKE_FOURCC('D', '2', 'F', 'O')
+#define DIP_V2PW MAKE_FOURCC('D', '2', 'P', 'W')
+#define DIP_V2WF MAKE_FOURCC('D', '2', 'W', 'F')
+#define DIP_V2SYNC MAKE_FOURCC('D', '2', 'S', 'Y')
+#define DIP_V2GATE MAKE_FOURCC('D', '2', 'G', 'T')
+#define DIP_V2ADSR MAKE_FOURCC('D', '2', 'A', 'D')
+#define DIP_V2FON MAKE_FOURCC('D', '2', 'F', 'O')
+#define DIP_V3FREQOFF MAKE_FOURCC('D', '3', 'F', 'O')
+#define DIP_V3PW MAKE_FOURCC('D', '3', 'P', 'W')
+#define DIP_V3WF MAKE_FOURCC('D', '3', 'W', 'F')
+#define DIP_V3GATE MAKE_FOURCC('D', '3', 'G', 'T')
+#define DIP_V3ADSR MAKE_FOURCC('D', '3', 'A', 'D')
+#define DIP_V3FON MAKE_FOURCC('D', '3', 'F', 'O')
+#define DIP_FILTCUT MAKE_FOURCC('D', 'F', 'C', 'T')
+#define DIP_RES MAKE_FOURCC('D', 'R', 'E', 'S')
+#define DIP_FMODE MAKE_FOURCC('D', 'F', 'M', 'D')
+#define DIP_VOLUME MAKE_FOURCC('D', 'V', 'O', 'L')
+
 #define DIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
 #define DIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
+
 
 static const unsigned short sid_notes[96] = {
     0x0112, 0x0123, 0x0134, 0x0146, 0x015A, 0x016E, 0x0184, 0x018B, 0x01B3,

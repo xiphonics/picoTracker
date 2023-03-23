@@ -1,5 +1,6 @@
 #include "InstrumentView.h"
 #include "Application/Instruments/MidiInstrument.h"
+#include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
@@ -51,6 +52,9 @@ void InstrumentView::onInstrumentChange() {
   switch (it) {
   case IT_MIDI:
     fillMidiParameters();
+    break;
+  case IT_SID:
+    fillSIDParameters();
     break;
   case IT_SAMPLE:
     fillSampleParameters();
@@ -189,6 +193,48 @@ void InstrumentView::fillSampleParameters() {
   intVarOffField_.emplace_back(position, *v, "table: %2.2X", 0x00,
                                TABLE_COUNT - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
+};
+
+void InstrumentView::fillSIDParameters() {
+
+  int i = viewData_->currentInstrument_;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  I_Instrument *instr = bank->GetInstrument(i);
+  SIDInstrument *instrument = (SIDInstrument *)instr;
+  GUIPoint position = GetAnchor();
+
+  //	position._y+=2 ;
+  Variable *v = instrument->FindVariable(DIP_V1PW);
+  UIIntVarField *f1 = new UIIntVarField(
+      position, *v, "Voice 1 Pulse width: %d [%2.2X]", 0, 0xFFF, 1, 10);
+  T_SimpleList<UIField>::Insert(f1);
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_V1WF);
+  // Only support independent waveforms for the moment
+  f1 = new UIIntVarField(position, *v, "Voice 1 Waveform: %s", 0, 3, 1, 1);
+  T_SimpleList<UIField>::Insert(f1);
+
+  position._y += 2;
+  v = instrument->FindVariable(DIP_V1SYNC);
+  f1 = new UIIntVarField(position, *v, "Voice 1 Sync: %s", 0, 1, 1, 1);
+  T_SimpleList<UIField>::Insert(f1);
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_V1GATE);
+  f1 = new UIIntVarField(position, *v, "Voice 1 gate: %s", 0, 1, 1, 1);
+  T_SimpleList<UIField>::Insert(f1);
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_V1ADSR);
+  f1 = new UINoteVarField(position, *v, "Voice 1 ADSR: %4.4X", 0, 0xFFFF, 1,
+                          0x10);
+  T_SimpleList<UIField>::Insert(f1);
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_V1FILTERON);
+  f1 = new UIIntVarField(position, *v, "Voice 1 filter: %s", 0, 1, 1, 1);
+  T_SimpleList<UIField>::Insert(f1);
 };
 
 void InstrumentView::fillMidiParameters() {
