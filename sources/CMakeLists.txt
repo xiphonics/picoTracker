@@ -47,7 +47,6 @@ add_compile_options(
 #  -Wno-unused-function # we have some for the docs that aren't called
 #  -Wno-maybe-uninitialized
   # SHOULD FIX LATER
-  -Wno-write-strings
   -Wno-int-to-pointer-cast
 )
 

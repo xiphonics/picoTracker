@@ -38,7 +38,7 @@ Variable::Variable(const char *name,FourCC id,const char *value) {
 	type_=STRING ;
 } ;
 
-Variable::Variable(const char *name,FourCC id,char **list,int size,int index) {
+Variable::Variable(const char *name,FourCC id,const char * const *list,int size,int index) {
 	name_=name ;
 	id_=id ;
 	list_.char_=list ;
@@ -255,7 +255,7 @@ void Variable::CopyFrom(Variable &other) {
 	onChange();
 }
 
-char **Variable::GetListPointer() {
+const char * const *Variable::GetListPointer() {
 	NAssert(type_==CHAR_LIST) ;
 	return list_.char_ ;
 } ;
