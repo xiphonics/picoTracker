@@ -92,7 +92,7 @@ typedef struct ckListTag
 //       Statics           //
 /////////////////////////////
 
-DWORD MAKE_ID(char *);
+DWORD MAKE_ID(const char *);
 
 /////////////////////////////
 //       Enumerations      //
@@ -166,7 +166,7 @@ class RIFFClass
     WORD  ReadCkHdr(void);
     WORD  Descend(void);
     WORD  Ascend(void);
-    WORD  FindCk(CHAR* pID);
+    WORD  FindCk(const CHAR* pID);
     WORD  Reset(void);
 
     DWORD  GetRIFFSize(void);

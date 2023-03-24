@@ -46,8 +46,6 @@ public:
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
-  void LoadFirstGen(const char *root) ;
-
 protected:
 	void buildMidiDeviceList() ;
 private:

@@ -47,12 +47,12 @@ void InstrumentView::onInstrumentChange() {
 	InstrumentType it=getInstrumentType() ;
  
  	switch (it) {
-		case IT_MIDI:
-			fillMidiParameters() ;
-			break ;
-		case IT_SAMPLE:
-			fillSampleParameters() ;
-			break ;
+  case IT_MIDI:
+    fillMidiParameters() ;
+    break ;
+  case IT_SAMPLE:
+    fillSampleParameters() ;
+    break ;
 	} ;
 
 	SetFocus(T_SimpleList<UIField>::GetFirst()) ;

@@ -5,7 +5,7 @@
 
 picoTrackerDir::picoTrackerDir(const char *path) : I_Dir(path){};
 
-void picoTrackerDir::GetContent(char *mask) {
+void picoTrackerDir::GetContent(const char *mask) {
   Trace::Log("FILESYSTEM", "GetContent %s with mask %s", path_, mask);
   Empty();
   FsBaseFile dir;
@@ -85,7 +85,7 @@ long picoTrackerFile::Tell() { return file_.curPosition(); }
 
 void picoTrackerFile::Close() { file_.close(); }
 
-int picoTrackerFile::Error() { file_.getError(); }
+int picoTrackerFile::Error() { return file_.getError(); }
 
 picoTrackerFileSystem::picoTrackerFileSystem() {
 
@@ -110,7 +110,7 @@ picoTrackerFileSystem::picoTrackerFileSystem() {
   }
 }
 
-I_File *picoTrackerFileSystem::Open(const char *path, char *mode) {
+I_File *picoTrackerFileSystem::Open(const char *path, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file %s, mode: %s", path, mode);
   oflag_t rmode;
   switch (*mode) {

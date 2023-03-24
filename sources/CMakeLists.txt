@@ -40,6 +40,17 @@ add_definitions(-DNO_EXIT)
 # Initialize the SDK
 pico_sdk_init()
 
+add_compile_options(
+  -Werror
+  -Wall
+  -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+#  -Wno-unused-function # we have some for the docs that aren't called
+#  -Wno-maybe-uninitialized
+  # SHOULD FIX LATER
+#  -Wno-write-strings
+  -Wno-int-to-pointer-cast
+)
+
 add_subdirectory(Adapters)
 add_subdirectory(UIFramework)
 add_subdirectory(System)
@@ -47,12 +58,6 @@ add_subdirectory(Application)
 add_subdirectory(Externals)
 add_subdirectory(Services)
 add_subdirectory(Foundation)
-
-add_compile_options(-Wall
-        -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
-        -Wno-unused-function # we have some for the docs that aren't called
-        -Wno-maybe-uninitialized
-        )
 
 set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
 

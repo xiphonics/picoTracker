@@ -134,7 +134,6 @@ static uint8_t __scratch_x("screen")  changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0
 #define ClearBit(A, k) (A[(k) / 8] &= ~(1 << ((k) % 8)))
 #define TestBit(A, k) (A[(k) / 8] & (1 << ((k) % 8)))
 
-static int depth = 0;
 // Default palette, can be redefined
 static uint16_t __scratch_x("palette")  palette[16] = {
     SWAP_BYTES(0x0000), SWAP_BYTES(0x49E5), SWAP_BYTES(0xB926),
@@ -180,7 +179,7 @@ void mode0_putc(char c, bool invert) {
 
 void mode0_print(const char *str, bool invert) {
   char c;
-  while (c = *str++) {
+  while ((c = *str++)) {
     mode0_putc(c, invert);
   }
 }

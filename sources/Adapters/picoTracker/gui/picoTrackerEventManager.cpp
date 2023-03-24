@@ -40,7 +40,6 @@ bool picoTrackerEventManager::Init() {
 
 int picoTrackerEventManager::MainLoop() {
   picoTrackerEventQueue *queue = picoTrackerEventQueue::GetInstance();
-  bool finished = false;
   int loops = 0;
   int events = 0;
   while (!finished_) {

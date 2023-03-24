@@ -3,7 +3,7 @@
 #include <stdarg.h>
 //#include <windows.h>
 
-void Status::Set(char *fmt, ...) {
+void Status::Set(const char *fmt, ...) {
 
 	Status *status=Status::GetInstance() ;
 	if (!status) return ;

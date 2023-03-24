@@ -2,8 +2,8 @@
 #include "MultiChannelAdapter.h"
 #include "Services/Controllers/ControllerService.h"
 
-MultiChannelAdapter::MultiChannelAdapter(const char *name,bool owner):Channel(name),T_SimpleList<Channel>(owner) {
-} ;
+MultiChannelAdapter::MultiChannelAdapter(const char *name, bool owner)
+    : T_SimpleList<Channel>(owner), Channel(name){};
 
 MultiChannelAdapter::~MultiChannelAdapter() {
 	IteratorPtr<Channel> it(GetIterator()) ;

@@ -114,8 +114,6 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
 					UIField *next=0 ;
 					UIField *first=0 ;
 
-					GUIPoint focusPos=focus_->GetPosition() ;
-
 					IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator()) ;
 					for (it->Begin();!it->IsDone();it->Next()) {
 						UIField &current=it->CurrentItem() ;
@@ -195,8 +193,6 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
 				if (mask&EPBM_RIGHT) {
 					UIField *next=0 ;
 					UIField *first=0 ;
-
-					GUIPoint focusPos=focus_->GetPosition() ;
 
 					IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator()) ;
 					for (it->Begin();!it->IsDone();it->Next()) {

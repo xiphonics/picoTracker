@@ -65,10 +65,6 @@ public:
 	bool	IsCtrlPressed(){return _ctrl;};
 	bool	IsBtnPressed(){return _btn;};
 
-	// Utils
-
-	void Dump() ;
-
 private:
 	GUIPoint _position ; // The event's position
 	GUIEventType _type ; // The event's type

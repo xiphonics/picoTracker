@@ -7,7 +7,11 @@
 
 class AudioDriver ;
 
+#ifndef PICOBUILD
 #define MIX_BUFFER_SIZE 40000
+#else
+#define MIX_BUFFER_SIZE (MAX_SAMPLE_COUNT * 2)
+#endif
 
 class AudioOut: public AudioMixer,public Observable {
 public:

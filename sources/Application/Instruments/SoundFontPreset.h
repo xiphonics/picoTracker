@@ -24,10 +24,10 @@ protected:
 	
 	void checkNote(int note) ;
 private:
-	SoundFontNavigator navigator_ ;
-	sfData *vect_ ;
-	int  sfID_ ;
-	int	presetID_ ;
-	int lastNote_ ;
+  int sfID_;
+  int presetID_;
+  sfData *vect_;
+  int lastNote_;
+  SoundFontNavigator navigator_;
 } ;
 #endif

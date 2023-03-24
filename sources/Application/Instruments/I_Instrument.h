@@ -9,8 +9,7 @@
 
 enum InstrumentType {
 	IT_SAMPLE=0,
-	IT_MIDI,
-	IT_LAST
+	IT_MIDI
 } ;
 
 class I_Instrument:public VariableContainer, public Observable {

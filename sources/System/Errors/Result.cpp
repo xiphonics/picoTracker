@@ -4,29 +4,19 @@
 Result Result::NoError ;
 
 Result::Result()
-:success_(true)
-,error_("success")
-,checked_(true)
-,child_(0){}
+  : error_("success"),
+    success_(true), checked_(true), child_(0) {}
 
 Result::Result(const std::string &error)
-:success_(false)
-,error_(error)
-,checked_(false)
-,child_(0) {}
+    : error_(error), success_(false), checked_(false), child_(0) {}
 
 Result::Result(const std::ostringstream &error)
-:success_(false)
-,error_(error.str())
-,checked_(false)
-,child_(0) {}
+    : error_(error.str()), success_(false), checked_(false), child_(0)
+      {}
 
-Result::Result(Result &cause,const std::string &error)
-:success_(false)
-,error_(error)
-,checked_(false)
-,child_(new Result(cause))
-{
+Result::Result(Result &cause, const std::string &error)
+  : error_(error), success_(false), checked_(false),
+      child_(new Result(cause)) {
   child_->checked_ = true;
 	cause.checked_ = true;
 }

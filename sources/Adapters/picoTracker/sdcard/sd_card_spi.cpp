@@ -2,6 +2,7 @@
 
 #include "Adapters/picoTracker/platform/platform.h"
 #include <SdFat.h>
+#include <cstdio>
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
 
@@ -33,7 +34,7 @@ public:
 
     void activate() {
       uint baudrate = spi_init(SD_SPI, m_sckfreq);
-      //      printf("SD SPI baudrate: %i\n", baudrate);
+      printf("SD SPI baudrate: %i\n", baudrate);
       spi_set_format(SD_SPI, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 

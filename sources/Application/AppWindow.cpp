@@ -197,7 +197,6 @@ void AppWindow::Flush() {
 	SysMutexLocker locker(drawMutex_) ;
 
 	Lock() ;
-	long flushStart=System::GetInstance()->GetClock() ;
 
 	GUITextProperties props ;
 	GUIPoint pos ;
@@ -260,7 +259,6 @@ void AppWindow::Flush() {
 		pos._y+=AppWindow::charHeight_ ;
 		pos._x=0 ;
 	}
-	long flushEnd=System::GetInstance()->GetClock() ;
   GUIWindow::Flush() ;
 	Unlock() ;
 	memcpy(_preScreen,_charScreen,1200) ;
@@ -477,80 +475,81 @@ void AppWindow::Update(Observable &o,I_ObservableData *d) {
 
 	switch(ve->GetType()) {
 
-	  case VET_SWITCH_VIEW:
+  case VET_SWITCH_VIEW:
 	  {
-		ViewType *vt=(ViewType*)ve->GetData() ;
-		if (_currentView) {
-			_currentView->LooseFocus() ;
-		}
-		switch (*vt) {
+      ViewType *vt=(ViewType*)ve->GetData() ;
+      if (_currentView) {
+        _currentView->LooseFocus() ;
+      }
+      switch (*vt) {
 			case VT_SONG:
-			_currentView=_songView ;
-			break ;
+        _currentView=_songView ;
+        break ;
 			case VT_CHAIN:
-			_currentView=_chainView ;
-			break ;
+        _currentView=_chainView ;
+        break ;
 			case VT_PHRASE:
-			_currentView=_phraseView ;
-			break ;
+        _currentView=_phraseView ;
+        break ;
 			case VT_PROJECT:
-			_currentView=_projectView ;
-			break ;
+        _currentView=_projectView ;
+        break ;
 			case VT_INSTRUMENT:
-			_currentView=_instrumentView ;
-			break ;
+        _currentView=_instrumentView ;
+        break ;
 			case VT_TABLE:
-			_currentView=_tableView ;
-			break ;
+        _currentView=_tableView ;
+        break ;
 			case VT_TABLE2:
-			_currentView=_tableView ;
-			break ;
+        _currentView=_tableView ;
+        break ;
 			case VT_GROOVE:
-			_currentView=_grooveView ;
-			break ;
-/*			case VT_MIXER:
-			_currentView=_mixerView ;
-*/			break ;
-			
-		}
-		_currentView->SetFocus(*vt) ;
-		_isDirty=true ;
-		GUIWindow::Clear(backgroundColor_,true) ;
-		Clear(true);
-		Redraw() ;
-		break ;
+        _currentView=_grooveView ;
+        break ;
+        /*			case VT_MIXER:
+                _currentView=_mixerView ;
+        */
+      default:
+        break ;
+        
+      }
+      _currentView->SetFocus(*vt) ;
+      _isDirty=true ;
+      GUIWindow::Clear(backgroundColor_,true) ;
+      Clear(true);
+      Redraw() ;
+      break ;
 	  }
 
-	  case VET_PLAYER_POSITION_UPDATE:
+  case VET_PLAYER_POSITION_UPDATE:
 	  {
-		PlayerEvent *pt=(PlayerEvent*)ve ;
-
-		if (_currentView) {
-			SysMutexLocker locker(drawMutex_) ;
-			_currentView->OnPlayerUpdate(pt->GetType(),pt->GetTickCount()) ;
-  		    Invalidate() ;
-		}
-
-		break ;
+      PlayerEvent *pt=(PlayerEvent*)ve ;
+      if (_currentView) {
+        SysMutexLocker locker(drawMutex_) ;
+        _currentView->OnPlayerUpdate(pt->GetType(),pt->GetTickCount()) ;
+        Invalidate() ;
+      }
+      break ;
 	  }
 
-/*	  case VET_LIST_SELECT:
+    /*	  case VET_LIST_SELECT:
+          {
+          char *name=(char*)ve->GetData() ;
+          LoadProject(name) ;
+          break ;
+          } */
+  case VET_QUIT_PROJECT:
 	  {
-		char *name=(char*)ve->GetData() ;
-		LoadProject(name) ;
-		break ;
-	  } */
-	  case VET_QUIT_PROJECT:
-	  {
-   // defer event to after we got out of the view
-		_closeProject=true ;
-		break ;
+      // defer event to after we got out of the view
+      _closeProject=true ;
+      break ;
 	  }
-	  case VET_QUIT_APP:
+  case VET_QUIT_APP:
 		_shouldQuit=true ;
 		break ;
-   	}
-
+  default: // VET_LIST_SELECT, VET_UPDATE
+    break;
+  }
 }
 
 void AppWindow::onQuitApp() {

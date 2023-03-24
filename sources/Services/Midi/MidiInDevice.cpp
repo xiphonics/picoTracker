@@ -131,7 +131,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
 
 	int midiChannel = event.status_ & 0x0F;
 
-	bool isMidiClockEvent = (event.status_ == 0xF8);
+  //	bool isMidiClockEvent = (event.status_ == 0xF8);
 
 	switch (event.GetType())
   {

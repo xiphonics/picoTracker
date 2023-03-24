@@ -354,10 +354,6 @@ bool SampleInstrument::Start(int channel,unsigned char midinote,bool cleanstart)
 }
 
 void SampleInstrument::Stop(int channel) {
-
-	// Get Rendering params for current voice & fill init data
-
-	 renderParams *rp=renderParams_+channel ;
 	 running_=false ;
 }
 
@@ -744,8 +740,6 @@ bool SampleInstrument::Render(int channel,fixed *buffer,int size,bool updateTick
 #endif
 						volfactor=fp_mul(rp->volume_,volscale) ;
 						pan=fp2i(rp->pan_) ;
-						fixed fixedpanl=panlaw[pan] ;
-						fixed fixedpanr=panlaw[254-pan] ;
 
 						if (rpReverse) {
 							fpSpeed=-rp->speed_ ;

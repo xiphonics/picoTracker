@@ -4,8 +4,6 @@
 #include "Services/Audio/AudioOut.h"
 #include "System/Process/Process.h"
 
-#define MIX_BUFFER_SIZE 40000
-
 class DummyAudioOut ;
 
 class DummyOutThread:public SysThread {

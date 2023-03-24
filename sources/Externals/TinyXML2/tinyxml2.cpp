@@ -2283,7 +2283,7 @@ XMLUnknown* XMLDocument::NewUnknown( const char* str )
     return unk;
 }
 
-static FILE* callfopen( const char* filepath, char* mode )
+static FILE* callfopen( const char* filepath, const char* mode )
 {
     TIXMLASSERT( filepath );
     TIXMLASSERT( mode );

@@ -361,7 +361,7 @@ sdio_status_t rp2040_sdio_rx_start(uint8_t *buffer, uint32_t num_blocks) {
 
   // Create DMA block descriptors to store each block of 512 bytes of data to
   // buffer and then 8 bytes to g_sdio.received_checksums.
-  for (int i = 0; i < num_blocks; i++) {
+  for (uint32_t i = 0; i < num_blocks; i++) {
     g_sdio.dma_blocks[i * 2].write_addr = buffer + i * SDIO_BLOCK_SIZE;
     g_sdio.dma_blocks[i * 2].transfer_count =
         SDIO_BLOCK_SIZE / sizeof(uint32_t);
@@ -431,7 +431,7 @@ static void sdio_verify_rx_checksums(uint32_t maxcount) {
     if (checksum != expected) {
       g_sdio.checksum_errors++;
       if (g_sdio.checksum_errors == 1) {
-        // Trace::Debug
+        Trace::Debug
         ("SDIO checksum error in reception: block ", blockidx, " calculated ",
          checksum, " expected ", expected);
       }

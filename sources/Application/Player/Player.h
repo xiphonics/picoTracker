@@ -20,12 +20,12 @@ enum SequencerMode {
 } ;
 
 enum QueueingMode {
-     QM_NONE,
-     QM_CHAINSTART,
-     QM_PHRASESTART,
-     QM_CHAINSTOP,
-	 QM_PHRASESTOP,
-	 QM_TICKSTART
+  QM_NONE,
+  QM_CHAINSTART,
+  QM_PHRASESTART,
+  QM_CHAINSTOP,
+  QM_PHRASESTOP,
+  QM_TICKSTART
 } ;
 
 class PlayerEvent: public ViewEvent {
@@ -134,7 +134,7 @@ private:
 								   //  for blinking effect
 	unsigned long now_ ;
 	int lastPercentage_ ;
-	int lastBeatCount_ ;
+	unsigned int lastBeatCount_ ;
 	unsigned char lastSongPos_ ;
 	bool firstPlayCycle_ ;
 	bool triggerLiveChains_ ;

@@ -21,13 +21,13 @@ static void LoadCallback(View &v,ModalView &dialog) {
 		((ProjectView &)v).OnLoadProject() ;
 	}
 } ;
-
+#ifndef NO_EXIT
 static void QuitCallback(View &v,ModalView &dialog) {
 	if (dialog.GetReturnCode()==MBL_YES) {
 		((ProjectView &)v).OnQuit() ;
 	}
 } ;
-
+#endif
 static void PurgeCallback(View &v,ModalView &dialog) {
 	((ProjectView &)v).OnPurgeInstruments(dialog.GetReturnCode()==MBL_YES) ;
 } ;

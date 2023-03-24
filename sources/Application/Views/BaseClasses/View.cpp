@@ -11,12 +11,7 @@ int View::margin_=0 ;
 int View::songRowCount_ ;//=21 ;
 bool View::miniLayout_=false ;
 
-View::View(GUIWindow &w,ViewData *viewData):
-	w_(w),
-	modalView_(0),
-	modalViewCallback_(0),
-	hasFocus_(false)
-{
+View::View(GUIWindow &w, ViewData *viewData) : w_(w), viewData_(viewData), viewMode_(VM_NORMAL) {
   if (!initPrivate_) 
   {
 	   GUIRect rect=w.GetRect() ;
@@ -27,9 +22,10 @@ View::View(GUIWindow &w,ViewData *viewData):
      initPrivate_=true ;
   }
 	mask_=0 ;
-	viewMode_=VM_NORMAL ;
 	locked_=false ;
-	viewData_=viewData;
+  modalView_=0;
+  modalViewCallback_=0;
+  hasFocus_=false;
 } ;
 
 GUIPoint View::GetAnchor() {
@@ -122,7 +118,6 @@ void View::drawMap() {
 		default: //VT_SONG
 			pos._y+=1;
 	        DrawString(pos._x,pos._y,"S",props) ;
-			int foo=0;
 		}
 
 	}//!minilayout
@@ -194,7 +189,6 @@ void View::ProcessButton(unsigned short mask, bool pressed) {
 	isDirty_=false ;
 	if (modalView_) {
 		modalView_->ProcessButton(mask,pressed);
-		modalView_->isDirty_;
 		if (modalView_->IsFinished()) {
 			// process callback sending the modal dialog
 			if (modalViewCallback_) {

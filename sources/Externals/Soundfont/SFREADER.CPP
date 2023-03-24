@@ -758,7 +758,6 @@ BYTEPTR sfReader::Allocate(SHORT        iHydraSymbol,
 //***************************************************************************
 {
 
-sfVersion  *fileVersion; 
 DWORD      rcnt; 
 BYTEPTR    pData = NULL; 
 
@@ -767,12 +766,8 @@ WORD       mono =        monoSample;
 
   tRIFF.SwapBytes(&mono);
 
-  fileVersion = (sfVersion*)(infoCkValues[Ifil]);
-
   if ( iHydraSymbol == sampHdr )  {
      
-    fileVersion = (sfVersion*)(infoCkValues[Ifil] );
-
     // get the count of how many sampleHdr elements in the array...
 
     hf->awStructSize[iHydraSymbol] = 

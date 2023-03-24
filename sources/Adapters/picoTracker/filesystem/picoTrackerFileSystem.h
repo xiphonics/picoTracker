@@ -26,13 +26,13 @@ class picoTrackerDir : public I_Dir {
 public:
   picoTrackerDir(const char *path);
   virtual ~picoTrackerDir(){};
-  virtual void GetContent(char *mask);
+  virtual void GetContent(const char *mask);
 };
 
 class picoTrackerFileSystem : public FileSystem {
 public:
   picoTrackerFileSystem();
-  virtual I_File *Open(const char *path, char *mode);
+  virtual I_File *Open(const char *path, const char *mode);
   virtual I_Dir *Open(const char *path);
   virtual FileType GetFileType(const char *path);
   virtual Result MakeDir(const char *path);

@@ -42,9 +42,6 @@ bool AudioOutDriver::Clipped() {
 } ;
 
 void AudioOutDriver::Trigger() {
-
-	TimeService *ts=TimeService::GetInstance() ;
-
   prepareMixBuffers() ;
   hasSound_=AudioMixer::Render(primarySoundBuffer_,sampleCount_) ;
   clipToMix() ;

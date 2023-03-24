@@ -9,7 +9,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Filters.h"
 
-char *InstrumentTypeData[IT_LAST]= {
+const char *InstrumentTypeData[]= {
 	"Sample",
 	"Midi"
 } ;
@@ -115,9 +115,9 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
         hasAttr = doc->NextAttribute();
       }
 
-      InstrumentType it = IT_LAST;
+      InstrumentType it;
       if (instype) {
-        for (int i = 0; i < IT_LAST; i++) {
+        for (uint i = 0; i < sizeof(InstrumentTypeData); i++) {
           if (!strcmp(instype, InstrumentTypeData[i])) {
             it = (InstrumentType)i;
             break;
@@ -132,12 +132,12 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
 				if (instr->GetType()!=it) {
 					delete instr ;
 					switch (it) {
-						case IT_SAMPLE:
-							instr=new SampleInstrument() ;
-							break ;
-						case IT_MIDI:
-							instr=new MidiInstrument() ;
-							break ;
+          case IT_SAMPLE:
+            instr=new SampleInstrument() ;
+            break ;
+          case IT_MIDI:
+            instr=new MidiInstrument() ;
+            break ;
 					}
 					instrument_[id]=instr ;
 				} ;

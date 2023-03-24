@@ -93,13 +93,13 @@ static CHAR IMOD[5] = { 'i', 'm', 'o', 'd','\0' };
 static CHAR IGEN[5] = { 'i', 'g', 'e', 'n','\0' };
 static CHAR SHDR[5] = { 's', 'h', 'd', 'r','\0' };
 
-//// Other IDs ////
-static CHAR WAVEID[5] = { 'W', 'A', 'V', 'E','\0' };
-static CHAR FMTID[5]  = { 'f', 'm', 't', ' ','\0' };
-static CHAR DATAID[5] = { 'd', 'a', 't', 'a','\0' };
+//// Other IDs (unused) ////
+//static CHAR WAVEID[5] = { 'W', 'A', 'V', 'E','\0' };
+//static CHAR FMTID[5]  = { 'f', 'm', 't', ' ','\0' };
+//static CHAR DATAID[5] = { 'd', 'a', 't', 'a','\0' };
 
-//// Macintosh IDs ////
-static CHAR AIFF[5]   = { 'A', 'I', 'F', 'F','\0' };
+//// Macintosh IDs (unused) ////
+//static CHAR AIFF[5]   = { 'A', 'I', 'F', 'F','\0' };
 
 
 
@@ -166,7 +166,7 @@ SHORT RIFFClass::initRiffTokensArray()
 {
   // Riff Header Chunks Tokens...
 
- memset(RiffTokens,0,RiffCkCount);
+  memset(RiffTokens,0,sizeof(RiffTokens));
  
 
  RiffTokens[Riff] = RIFF;
@@ -303,13 +303,9 @@ WORD  RIFFClass::ReadCkHdr(void)
   if (RIFFRead(&ckHdr, sizeof(ckHdr), 1) != 1)
 	 return (RIFF_READFILEERROR);
 
-  char RIFFDebug[5];
-  RIFFDebug[4] = 0;
-
   char *chIdPtr=(char *)&(ckHdr.dwCkID) ;
   for (int i=0;i<4;i++) 
   {
-	  RIFFDebug[i] = *chIdPtr = toupper(*chIdPtr) ;
 	  chIdPtr++ ;
   } ;
   dwLastID   = ckHdr.dwCkID;
@@ -376,7 +372,7 @@ WORD  RIFFClass::Ascend(void)
 //**************************************
 // Find a subchunk with the pID identity
 //**************************************
-WORD  RIFFClass::FindCk(CHAR* pID)
+WORD  RIFFClass::FindCk(const CHAR* pID)
 {
   char tmp[4] ;
   for (int i=0;i<4;i++) 
