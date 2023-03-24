@@ -1,7 +1,7 @@
 
 #include "NewProjectDialog.h"
 
-static char *buttonText[2]= {
+const static char *buttonText[2]= {
 	"Ok",
 	"Cancel"
 } ;

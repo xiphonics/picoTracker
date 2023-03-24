@@ -10,13 +10,13 @@
 #define LIST_WIDTH 32
 
 #ifndef NO_EXIT
-static char *buttonText[3]= {
+static const char *buttonText[3]= {
 	"Load",
 	"New",
 	"Exit"	
 } ;
 #else
-static char *buttonText[2]= {
+static const char *buttonText[2]= {
 	"Load",
 	"New"
 } ;

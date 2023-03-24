@@ -212,15 +212,15 @@ void Player::Stop() {
 	mixer_->Unlock() ;
 }
 
-char *Player::GetPlayedNote(int channel) {
+const char *Player::GetPlayedNote(int channel) {
 	return mixer_->GetPlayedNote(channel) ;
 }
 
-char *Player::GetPlayedOctive(int channel) {
+const char *Player::GetPlayedOctive(int channel) {
 	return mixer_->GetPlayedOctive(channel) ;
 }
 
-char *Player::GetPlayedInstrument(int channel) {
+const char *Player::GetPlayedInstrument(int channel) {
 	if( (mixer_->GetPlayedOctive(channel))[1] == ' ' ){
 		return mixer_->GetPlayedOctive(channel);
 	} else {
@@ -232,7 +232,7 @@ char *Player::GetPlayedInstrument(int channel) {
 	}
 }
 
-char *Player::GetLiveIndicator(int channel) {
+const char *Player::GetLiveIndicator(int channel) {
 
 	bool blink=true ;
 

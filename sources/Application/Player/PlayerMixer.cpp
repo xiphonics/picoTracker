@@ -173,7 +173,7 @@ int PlayerMixer::GetChannelNote(int channel) {
 	return notes_[channel] ;
 }
 
-char *PlayerMixer::GetPlayedNote(int channel) {
+const char *PlayerMixer::GetPlayedNote(int channel) {
 
     if (notes_[channel]!=0xFF) {
 		note2visualizer(notes_[channel],noteBuffer) ; 
@@ -182,7 +182,7 @@ char *PlayerMixer::GetPlayedNote(int channel) {
     return "  " ;
 } ;
 
-char *PlayerMixer::GetPlayedOctive(int channel) {
+const char *PlayerMixer::GetPlayedOctive(int channel) {
     if (notes_[channel]!=0xFF) {
 		if (!IsChannelMuted(channel)) {
 	        oct2visualizer(notes_[channel],noteBuffer) ; 

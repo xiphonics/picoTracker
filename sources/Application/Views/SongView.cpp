@@ -934,7 +934,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
 					int y=player->GetQueuePosition(i)-viewData_->songOffset_ ;
 					if (y>=0 && y<View::songRowCount_) {
 						pos._y=anchor._y+y ;
-						char *indicator=player->GetLiveIndicator(i) ;
+						const char *indicator=player->GetLiveIndicator(i) ;
 						DrawString(pos._x,pos._y,indicator,props) ;
 						lastQueuedPosition_[i]=player->GetQueuePosition(i) ;
 					}

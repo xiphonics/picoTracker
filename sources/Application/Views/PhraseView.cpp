@@ -1183,7 +1183,7 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
 					unsigned char songPos=player->GetQueuePosition(i) ;
 					unsigned char *chain=viewData_->song_->data_+i+8*songPos ;
 					if (*chain==viewData_->currentChain_) {
-						char *indicator=player->GetLiveIndicator(i) ;
+						const char *indicator=player->GetLiveIndicator(i) ;
 						DrawString(pos._x,pos._y,indicator,props) ;
 						break ;
 					}

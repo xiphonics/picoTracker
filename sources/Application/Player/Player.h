@@ -89,12 +89,12 @@ public:
 	unsigned char GetQueueChainPosition(int i) ;
 	void QueueChannel(int i,QueueingMode mode,unsigned char position,unsigned char chainpos=0) ;
 
-	char *GetLiveIndicator(int channel) ;
+	const char *GetLiveIndicator(int channel) ;
 	double GetPlayTime() ;
 
-	char *GetPlayedNote(int channel) ;
-	char *GetPlayedOctive(int channel) ;
-	char *GetPlayedInstrument(int channel) ;
+	const char *GetPlayedNote(int channel) ;
+	const char *GetPlayedOctive(int channel) ;
+	const char *GetPlayedInstrument(int channel) ;
 
 	// info
 	int GetPlayedBufferPercentage() ;

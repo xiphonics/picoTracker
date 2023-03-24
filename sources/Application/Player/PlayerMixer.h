@@ -51,8 +51,8 @@ public:
 	void SetChannelMute(int channel,bool mute) ;
 	bool IsChannelMuted(int channel) ;
 
-	char *GetPlayedNote(int channel) ;
-	char *GetPlayedOctive(int channel) ;
+	const char *GetPlayedNote(int channel) ;
+	const char *GetPlayedOctive(int channel) ;
 	
 	AudioOut *GetAudioOut() ;
 
