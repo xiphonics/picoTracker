@@ -21,7 +21,7 @@ add_library(application_instruments
 
 target_link_libraries(application_instruments PUBLIC foundation_services
                                               PUBLIC system_io
-                                              PUBLIC soundfont
+#                                              PUBLIC soundfont
                                               PUBLIC pico_stdlib
                                               PUBLIC hardware_flash
                                               PUBLIC pico_stdlib                            

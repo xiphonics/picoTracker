@@ -41,36 +41,36 @@ EventDispatcher::~EventDispatcher() {
 void EventDispatcher::Execute(FourCC id,float value) {
 
 	if (window_) {
-		GUIEventPadButtonType mapping ;
-		switch(id) {
-			case TRIG_EVENT_A:
-				mapping=EPBT_A;
-				break ;
-			case TRIG_EVENT_B:
-				mapping=EPBT_B;
-				break ;
-			case TRIG_EVENT_LEFT:
-				mapping=EPBT_LEFT;
-				break ;
-			case TRIG_EVENT_RIGHT:
-				mapping=EPBT_RIGHT;
-				break ;
-			case TRIG_EVENT_UP:
-				mapping=EPBT_UP;
-				break ;
-			case TRIG_EVENT_DOWN:
-				mapping=EPBT_DOWN;
-				break ;
-			case TRIG_EVENT_LSHOULDER:
-				mapping=EPBT_L;
-				break ;
-			case TRIG_EVENT_RSHOULDER:
-				mapping=EPBT_R;
-				break ;
-			case TRIG_EVENT_START:
-				mapping=EPBT_START;
-				break ;
-				//	EPBT_SELECT
+    GUIEventPadButtonType mapping = EPBT_INVALID;
+    switch (id) {
+    case TRIG_EVENT_A:
+      mapping = EPBT_A;
+      break;
+    case TRIG_EVENT_B:
+      mapping = EPBT_B;
+      break;
+    case TRIG_EVENT_LEFT:
+      mapping = EPBT_LEFT;
+      break;
+    case TRIG_EVENT_RIGHT:
+      mapping = EPBT_RIGHT;
+      break;
+    case TRIG_EVENT_UP:
+      mapping = EPBT_UP;
+      break;
+    case TRIG_EVENT_DOWN:
+      mapping = EPBT_DOWN;
+      break;
+    case TRIG_EVENT_LSHOULDER:
+      mapping = EPBT_L;
+      break;
+    case TRIG_EVENT_RSHOULDER:
+      mapping = EPBT_R;
+      break;
+    case TRIG_EVENT_START:
+      mapping = EPBT_START;
+      break;
+      //	EPBT_SELECT
 		}
 
 		// Compute mask and repeat if needed

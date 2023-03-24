@@ -98,15 +98,13 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
     // Check it is an instrument
     if (!strcmp(doc->ElemName(), "INSTRUMENT")) {
       // Get the instrument ID
-      unsigned char id;
-      char *hexid = NULL;
+      unsigned char id = '\0';
       char *instype = NULL;
       bool hasAttr = doc->NextAttribute();
       while (hasAttr) {
         if (!strcmp(doc->attrname_, "ID")) {
-          hexid = doc->attrval_;
-          unsigned char b1 = (c2h__(hexid[0])) << 4;
-          unsigned char b2 = c2h__(hexid[1]);
+          unsigned char b1 = (c2h__(doc->attrval_[0])) << 4;
+          unsigned char b2 = c2h__(doc->attrval_[1]);
           id = b1 + b2;    
         }
         if (!strcmp(doc->attrname_, "TYPE")) {

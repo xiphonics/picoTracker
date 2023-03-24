@@ -1,5 +1,5 @@
 add_subdirectory(TinyXML2)
-add_subdirectory(Soundfont)
+#add_subdirectory(Soundfont)
 #add_subdirectory(FreeRTOS)
 add_subdirectory(SdFat)
 add_subdirectory(yxml)

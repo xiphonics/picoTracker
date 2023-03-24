@@ -76,16 +76,20 @@ void restoreHexBuffer(PersistencyDocument *doc, unsigned char *destination) {
     if (hasAttr) {
       int data;
       int length = 0;
+      bool gotData = false;
       while (hasAttr) {
         if (!strcmp(doc->attrname_, "VALUE")) {
           data = atoi(doc->attrval_);
+          gotData = true;
         }
         if (!strcmp(doc->attrname_, "LENGTH")) {
           length = atoi(doc->attrval_);
         }
         hasAttr = doc->NextAttribute();
       }
-      memset(dst, data, length);
+      if (gotData) {
+        memset(dst, data, length);
+      }
       dst += length;
     } else {
       if (doc->HasContent()) {

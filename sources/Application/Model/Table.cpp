@@ -106,19 +106,18 @@ void TableHolder::RestoreContent(PersistencyDocument *doc) {
     // Check it is a table
     if (!strcmp(doc->ElemName(),"TABLE")) {
       // Get the table ID
+      unsigned char id = '\0';
       bool attr = doc->NextAttribute();
-      const char* hexid;
       while (attr) {
         if (!strcmp(doc->attrname_, "ID")) {
-          hexid = doc->attrval_;
+          unsigned char b1 = (c2h__(doc->attrval_[0])) << 4;
+          unsigned char b2 = c2h__(doc->attrval_[1]);
+          id = b1 + b2;
           // found what we wanted
           break;
         }
         attr = doc->NextAttribute();
       }
-      unsigned char b1=(c2h__(hexid[0]))<<4;
-      unsigned char b2=c2h__(hexid[1]);
-      unsigned char id=b1+b2;
 
       Table &table=table_[id];
 

@@ -27,17 +27,18 @@ enum  GUIEventKeyType
 };
 
 enum GUIEventPadButtonType {
-EPBT_LEFT,
-EPBT_DOWN,
-EPBT_RIGHT, 
-EPBT_UP, 
-EPBT_L, 
-EPBT_B, 
-EPBT_A, 
-EPBT_R, 
-EPBT_START, 
-EPBT_SELECT 
-} ;
+  EPBT_LEFT,
+  EPBT_DOWN,
+  EPBT_RIGHT,
+  EPBT_UP,
+  EPBT_L,
+  EPBT_B,
+  EPBT_A,
+  EPBT_R,
+  EPBT_START,
+  EPBT_SELECT,
+  EPBT_INVALID,
+};
 
 class GUIEvent {
 public:
