@@ -69,19 +69,19 @@ inline void oct2visualizer(unsigned char d,char *s) {
 inline void fourCC2char(const FourCC f, char *s) {
   switch (f) {
   case 0:
-    strcpy(s, "ARP ");
+    strcpy(s, "ARP "); // ARPG
     break;
   case 1:
     strcpy(s, "CHNL");
     break;
   case 2:
-    strcpy(s, "CSH ");
+    strcpy(s, "CSH "); // CSH
     break;
   case 3:
     strcpy(s, "CRSV");
     break;
   case 4:
-    strcpy(s, "DLY ");
+    strcpy(s, "DLY "); // DLAY
     break;
   case 5:
     strcpy(s, "DSPL");
@@ -129,13 +129,13 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "FBTU");
     break;
   case 20:
-    strcpy(s, "FCT ");
+    strcpy(s, "FCT "); // FCUT
     break;
   case 21:
     strcpy(s, "FIMO");
     break;
   case 22:
-    strcpy(s, "FLT ");
+    strcpy(s, "FLT "); // FLTR
     break;
   case 23:
     strcpy(s, "FMIX");
@@ -144,10 +144,10 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "FNTN");
     break;
   case 25:
-    strcpy(s, "FRS ");
+    strcpy(s, "FRS "); // FRES
     break;
   case 26:
-    strcpy(s, "GRV ");
+    strcpy(s, "GRV "); // GROV
     break;
   case 27:
     strcpy(s, "HOP ");
@@ -156,13 +156,13 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "INTP");
     break;
   case 29:
-    strcpy(s, "IRT ");
+    strcpy(s, "IRT "); // IRTG
     break;
   case 30:
-    strcpy(s, "KIL ");
+    strcpy(s, "KIL "); // KILL
     break;
   case 31:
-    strcpy(s, "LEG ");
+    strcpy(s, "LEG "); // LEGA
     break;
   case 32:
     strcpy(s, "LENG");
@@ -177,16 +177,16 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "LOAD");
     break;
   case 36:
-    strcpy(s, "LOF ");
+    strcpy(s, "LOF "); // LPOF
     break;
   case 37:
     strcpy(s, "LSTA");
     break;
   case 38:
-    strcpy(s, "MCC ");
+    strcpy(s, "MCC "); // MDCC
     break;
   case 39:
-    strcpy(s, "MPG ");
+    strcpy(s, "MPG "); // MDPG
     break;
   case 40:
     strcpy(s, "MIDI");
@@ -201,19 +201,19 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "PAN_");
     break;
   case 44:
-    strcpy(s, "PFT ");
+    strcpy(s, "PFT "); // PFIN
     break;
   case 45:
-    strcpy(s, "---");
+    strcpy(s, "--- "); // ----
     break;
   case 46:
-    strcpy(s, "POF ");
+    strcpy(s, "POF "); // PLOF
     break;
   case 47:
     strcpy(s, "PRGI");
     break;
   case 48:
-    strcpy(s, "PCH ");
+    strcpy(s, "PCH "); // PTCH
     break;
   case 49:
     strcpy(s, "PURG");
@@ -225,7 +225,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "ROOT");
     break;
   case 52:
-    strcpy(s, "RTG ");
+    strcpy(s, "RTG "); // RTRG
     break;
   case 53:
     strcpy(s, "SAVE");
@@ -234,7 +234,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "SMPL");
     break;
   case 55:
-    strcpy(s, "STP ");
+    strcpy(s, "STP "); // STOP
     break;
   case 56:
     strcpy(s, "STRT");
@@ -243,7 +243,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "SVPS");
     break;
   case 58:
-    strcpy(s, "TBL ");
+    strcpy(s, "TBL "); // TABL
     break;
   case 59:
     strcpy(s, "TBED");
@@ -255,7 +255,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "TEMP");
     break;
   case 62:
-    strcpy(s, "TPO ");
+    strcpy(s, "TPO "); // TMPO
     break;
   case 63:
     strcpy(s, "TRSP");
@@ -273,7 +273,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "VLUP");
     break;
   case 68:
-    strcpy(s, "VOL ");
+    strcpy(s, "VOL "); // VOLM
     break;
   case 69:
     strcpy(s, "WRAP");
