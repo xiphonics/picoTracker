@@ -24,14 +24,14 @@ ViewData::~ViewData() {
 } ;
 
 unsigned char ViewData::UpdateSongChain(int offset) {
-	unsigned char *c=song_->data_+songX_+8*(songOffset_+songY_) ;
+	unsigned char *c=song_->data_+songX_+SONG_CHANNEL_COUNT*(songOffset_+songY_) ;
 	updateData(c,offset,CHAIN_COUNT-1,false) ;
 	return *c ;
 
 }
 
 void ViewData::SetSongChain(unsigned char value) {
-	unsigned char *c=song_->data_+songX_+8*(songOffset_+songY_) ;
+	unsigned char *c=song_->data_+songX_+SONG_CHANNEL_COUNT*(songOffset_+songY_) ;
 	*c=value ;
 }
 
@@ -47,7 +47,7 @@ void ViewData::UpdateSongCursor(int dx,int dy) {
 }
 
 void ViewData::checkSongBoundaries() {
-	if (songX_>7) songX_=7 ;
+	if (songX_>SONG_CHANNEL_COUNT - 1) songX_ = SONG_CHANNEL_COUNT - 1;
 	if (songX_<0) songX_=0 ;
 	if (songY_<0) {
 		songOffset_+=songY_ ;
@@ -66,7 +66,7 @@ void ViewData::checkSongBoundaries() {
 }
 
 unsigned char *ViewData::GetCurrentSongPointer() {
-	return song_->data_+songX_+8*(songOffset_+songY_) ;
+	return song_->data_+songX_+SONG_CHANNEL_COUNT*(songOffset_+songY_) ;
 } ;
 
 

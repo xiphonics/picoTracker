@@ -201,7 +201,7 @@ void MixerView::DrawView() {
 	pos=anchor ;
 	short dx=3;
 
-	for (int i=0;i<8;i++) {
+	for (int i=0;i<SONG_CHANNEL_COUNT;i++) {
 		if (i==viewData_->mixerCol_) {
 			 props.invert_=true;
 			 SetColor(CD_HILITE2) ;

@@ -57,13 +57,14 @@ private:
 
 	unsigned char lastChain_ ;    // .Last chain clipboard
 
-	int lastPlayedPosition_[8] ;  // .Last position played for song
-								  //  used for drawing purpose
-	
-	int lastQueuedPosition_[8] ;  // .Last live queued position for song
+	int lastPlayedPosition_[SONG_CHANNEL_COUNT] ;  // .Last position played for song
 								  //  used for drawing purpose
 
-	struct {                      // .Clipboard structure
+        int lastQueuedPosition_
+            [SONG_CHANNEL_COUNT]; // .Last live queued position for song
+                                  //  used for drawing purpose
+
+        struct {                      // .Clipboard structure
         bool active_ ;            // .If currently making a selection
         unsigned char *data_ ;    // .Null if clipboard empty
         int x_ ;                  // .Current selection positions

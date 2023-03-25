@@ -29,9 +29,10 @@ View::View(GUIWindow &w, ViewData *viewData) : w_(w), viewData_(viewData), viewM
 } ;
 
 GUIPoint View::GetAnchor() {
-	int width=32 ;
-	int height=24 ;
-	return GUIPoint((width-SONG_CHANNEL_COUNT*3)/2 + 1,(height-View::songRowCount_)/2 - 1) ;
+  // Original code had a dynamic anchor point dending on song count, but changing the
+  // song count didn't work anyway given that there are many places where it was statically
+  // defined as 8. Other screens also don't fit with a dynamic anchor point
+	return GUIPoint(5,3) ;
 }
 
 GUIPoint View::GetTitlePosition() {

@@ -26,22 +26,23 @@ bool SampleInstrument::useDirtyDownsampling_ = false;
 
 #define SHOULD_KILL_CLICKS false
 
-signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT]= {
-	-1,-1,-1,-1,-1,-1,-1,-1
-} ;
-
+signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
+    
 #define KRATE_SAMPLE_COUNT 100
 
 SampleInstrument::SampleInstrument() {
 
-// Initialize instruments settings
+  // Initialize MIDI notes
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    SampleInstrument::lastMidiNote_[i] = -1;
+  }
 
-     source_=0 ;
-     dirty_=false ;
-     running_=false ;
+  // Initialize instruments settings
+  source_=0 ;
+  dirty_=false ;
+  running_=false ;
 
-// Initialize exported variables
-
+  // Initialize exported variables
 	 WatchedVariable *wv=new SampleVariable("sample",SIP_SAMPLE) ;
 	 Insert(wv) ;
 	 wv->AddObserver(*this) ;

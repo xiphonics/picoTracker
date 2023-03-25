@@ -17,7 +17,7 @@ SongView::SongView(GUIWindow &w,ViewData *viewData,const char *song):View(w,view
 	lastChain_=0 ;
 	songname_=song ;
 
-	for (int i=0;i<8;i++) {
+	for (int i=0;i<SONG_CHANNEL_COUNT;i++) {
 		this->lastPlayedPosition_[i]=0 ;
 		this->lastQueuedPosition_[i]=0 ;
 	}
@@ -651,7 +651,7 @@ void SongView::processNormalButtonMask(unsigned int mask) {
 	}
 	
 	if ((!(mask&EPBM_A))&&updatingChain_) {
-		unsigned char *c=viewData_->song_->data_+updateX_+8*(viewData_->songOffset_+updateY_) ;
+		unsigned char *c=viewData_->song_->data_+updateX_+SONG_CHANNEL_COUNT*(viewData_->songOffset_+updateY_) ;
 		viewData_->song_->chain_->SetUsed(*c) ;
 		updatingChain_=false ;
 	}
@@ -808,7 +808,7 @@ void SongView::DrawView() {
 
 		pos._x=anchor._x ;
 
-		for (int i=0; i<8;i++) {
+		for (int i=0; i<SONG_CHANNEL_COUNT;i++) {
             
             bool invert=false ;
             
