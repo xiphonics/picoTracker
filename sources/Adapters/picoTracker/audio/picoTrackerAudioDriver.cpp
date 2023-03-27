@@ -19,7 +19,7 @@
 char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
 
 picoTrackerAudioDriver *picoTrackerAudioDriver::instance_ = NULL;
-static semaphore_t *sem_ = NULL;
+struct semaphore sem_;
 
 static volatile unsigned long picoTracker_sound_pausei, picoTracker_exit;
 
@@ -38,18 +38,18 @@ void picoTrackerAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 
 void AudioThread() {
   while (true) {
-    //    uint32_t g = multicore_fifo_pop_blocking();
-    sem_acquire_blocking(sem_);
+    sem_acquire_blocking(&sem_);
+    printf("Audiothread!\n");
     int start = micros();
-    PICOAudioDriver::BufferNeeded();
+    picoTrackerAudioDriver::BufferNeeded();
     Trace::Debug("%i - Time taken on OnNewBufferNeeded(): %ius", micros(),
-           micros() - start);
+                 micros() - start);
   }
 }
 
-void PICOAudioDriver::BufferNeeded() { instance_->OnNewBufferNeeded(); }
+void picoTrackerAudioDriver::BufferNeeded() { instance_->OnNewBufferNeeded(); }
 
-PICOAudioDriver::PICOAudioDriver(AudioSettings &settings)
+picoTrackerAudioDriver::picoTrackerAudioDriver(AudioSettings &settings)
     : AudioDriver(settings) {
 
   isPlaying_ = false;
@@ -134,7 +134,7 @@ bool picoTrackerAudioDriver::InitDriver() {
     volume_ = atoi(volume);
   }
 
-  sem_init(sem_, 0, 1);
+  sem_init(&sem_, 0, 1);
   return true;
 };
 
@@ -199,16 +199,12 @@ void picoTrackerAudioDriver::OnChunkDone() {
     // Otherwise, we send a small blank buffer and wait for the other thread to finish
     pool_[poolPlayPosition_].empty_ = true;
 
-    // We release the semaphore because if we are here it means that we finished playing
-    // the buffer. Regardless if thread2 finished, it can start processing the next one asap
-    sem_release(sem_);
-
-    //    poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
     int next = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
-
     if (pool_[next].empty_) {
+      printf("Sent miniblank\n");
       dma_channel_transfer_from_buffer_now(
           AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
+      return;
     } else {
       poolPlayPosition_ = next;
       dma_channel_transfer_from_buffer_now(
@@ -219,11 +215,7 @@ void picoTrackerAudioDriver::OnChunkDone() {
       onAudioBufferTick();
     }
     // Finally we call core1 to calculate the next buffer
-    //    bool pushed = multicore_fifo_push_timeout_us(0, 15);
-    //    if (!pushed) {
-    ///      printf("Data could not be pushed!, FIFO full\n");
-    //    }
-
+    sem_release(&sem_);
   }
 }
 

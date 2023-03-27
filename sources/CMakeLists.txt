@@ -66,6 +66,7 @@ target_compile_definitions(picoTracker PUBLIC
   PICO_DEBUG_MALLOC_LOW_WATER=1000
   PICO_MALLOC_PANIC=0
   PICO_STACK_SIZE=4096
+  PICO_CORE1_STACK_SIZE=4096 # Safe value. 2K seems to be enough. Is it for all use cases?
   PICO_USE_STACK_GUARDS
 )
 

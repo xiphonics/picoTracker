@@ -135,7 +135,7 @@ static uint8_t changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0};
 #define TestBit(A, k) (A[(k) / 8] & (1 << ((k) % 8)))
 
 // Default palette, can be redefined
-static uint16_t __scratch_x("palette")  palette[16] = {
+static uint16_t palette[16] = {
     SWAP_BYTES(0x0000), SWAP_BYTES(0x49E5), SWAP_BYTES(0xB926),
     SWAP_BYTES(0xE371), SWAP_BYTES(0x9CF3), SWAP_BYTES(0xA324),
     SWAP_BYTES(0xEC46), SWAP_BYTES(0xF70D), SWAP_BYTES(0xffff),
