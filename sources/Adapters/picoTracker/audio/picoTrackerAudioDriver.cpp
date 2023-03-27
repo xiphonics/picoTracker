@@ -44,7 +44,16 @@ void AudioThread() {
   }
 }
 
-void picoTrackerAudioDriver::BufferNeeded() { instance_->OnNewBufferNeeded(); }
+void picoTrackerAudioDriver::BufferNeeded() {
+  // Audio tick processes MIDI among other things
+  // TODO: understand tick and buffer size relationship. currently not constant
+  // probably not right
+  // TODO: This could (should?) go into the main thread. If done tho, we geat a deadlock
+  // in malloc mutex due to malloc being called from core1 and isr simultaneously
+  instance_->onAudioBufferTick();
+
+  instance_->OnNewBufferNeeded();
+}
 
 picoTrackerAudioDriver::picoTrackerAudioDriver(AudioSettings &settings)
     : AudioDriver(settings) {
@@ -201,11 +210,6 @@ void picoTrackerAudioDriver::OnChunkDone() {
           AUDIO_DMA, pool_[poolPlayPosition_].buffer_,
           pool_[poolPlayPosition_].size_ / 4);
     }
-
-    // Audio tick processes MIDI among other things
-    // TODO: understand tick and buffer size relationship. currently not constant
-    // probably not right
-    onAudioBufferTick();
 
     // Finally we allow core1 to calculate an additional buffer
     sem_release(&core1_audio);
