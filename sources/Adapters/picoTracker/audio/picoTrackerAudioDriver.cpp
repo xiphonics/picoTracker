@@ -11,6 +11,7 @@
 #include "hardware/irq.h"
 #include "hardware/pio.h"
 #include "pico/multicore.h"
+#include "pico/sync.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +20,7 @@
 char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
 
 picoTrackerAudioDriver *picoTrackerAudioDriver::instance_ = NULL;
-struct semaphore sem_;
+semaphore_t core1_audio;
 
 static volatile unsigned long picoTracker_sound_pausei, picoTracker_exit;
 
@@ -38,12 +39,8 @@ void picoTrackerAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 
 void AudioThread() {
   while (true) {
-    sem_acquire_blocking(&sem_);
-    printf("Audiothread!\n");
-    int start = micros();
+    sem_acquire_blocking(&core1_audio);
     picoTrackerAudioDriver::BufferNeeded();
-    Trace::Debug("%i - Time taken on OnNewBufferNeeded(): %ius", micros(),
-                 micros() - start);
   }
 }
 
@@ -53,7 +50,6 @@ picoTrackerAudioDriver::picoTrackerAudioDriver(AudioSettings &settings)
     : AudioDriver(settings) {
 
   isPlaying_ = false;
-  lastBufferGood_ = true;
   picoTracker_exit = 0;
 }
 
@@ -125,6 +121,7 @@ bool picoTrackerAudioDriver::InitDriver() {
   // Set Audio render thread on core1
   multicore_reset_core1();
   multicore_launch_core1(AudioThread);
+  sem_init(&core1_audio, 0, SOUND_BUFFER_COUNT - 1);
 
   volume_ = 65;
   Config *config = Config::GetInstance();
@@ -134,7 +131,6 @@ bool picoTrackerAudioDriver::InitDriver() {
     volume_ = atoi(volume);
   }
 
-  sem_init(&sem_, 0, 1);
   return true;
 };
 
@@ -159,18 +155,14 @@ void picoTrackerAudioDriver::CloseDriver(){
 bool picoTrackerAudioDriver::StartDriver() {
   isPlaying_ = true;
 
-  //  for (int i=0;i<settings_.preBufferCount_;i++) {
-  //    AddBuffer((short *)miniBlank_,fragSize_/4) ;
-  //  }
-  if (settings_.preBufferCount_ == 0) {
-    //    OnNewBufferNeeded();
-    multicore_fifo_push_blocking(0);
+  // Start filling up as many buffers as we have
+  for (int i = 0; i < SOUND_BUFFER_COUNT - 1; i++) {
+    sem_release(&core1_audio);
   }
 
+  // Set MIDI delay
+  // TODO: placeholder, check what's the right value
   ticksBeforeMidi_ = 4;
-  for (int i = 0; i < ticksBeforeMidi_; i++) {
-    AddBuffer((short *)miniBlank_, MINI_BLANK_SIZE);
-  }
 
   picoTracker_sound_pause(0);
   startTime_ = millis();
@@ -201,21 +193,22 @@ void picoTrackerAudioDriver::OnChunkDone() {
 
     int next = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
     if (pool_[next].empty_) {
-      printf("Sent miniblank\n");
       dma_channel_transfer_from_buffer_now(
           AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
-      return;
     } else {
       poolPlayPosition_ = next;
       dma_channel_transfer_from_buffer_now(
           AUDIO_DMA, pool_[poolPlayPosition_].buffer_,
           pool_[poolPlayPosition_].size_ / 4);
-
-      // Audio tick processes MIDI among other things
-      onAudioBufferTick();
     }
-    // Finally we call core1 to calculate the next buffer
-    sem_release(&sem_);
+
+    // Audio tick processes MIDI among other things
+    // TODO: understand tick and buffer size relationship. currently not constant
+    // probably not right
+    onAudioBufferTick();
+
+    // Finally we allow core1 to calculate an additional buffer
+    sem_release(&core1_audio);
   }
 }
 

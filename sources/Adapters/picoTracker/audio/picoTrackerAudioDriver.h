@@ -4,9 +4,8 @@
 #include "Foundation/T_Singleton.h"
 #include "Services/Audio/AudioDriver.h"
 #include "System/Process/Process.h"
-#include "pico/sync.h"
 
-#define MINI_BLANK_SIZE 128
+#define MINI_BLANK_SIZE 128 // Samples
 
 class picoTrackerAudioDriver : public AudioDriver {
 public:
@@ -32,14 +31,11 @@ public:
 
 private:
   static picoTrackerAudioDriver *instance_;
-  //  static semaphore_t *sem_;
 
   AudioSettings settings_;
   static char miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
   int volume_;
   int ticksBeforeMidi_;
   uint32_t startTime_;
-
-  bool lastBufferGood_;
 };
 #endif
