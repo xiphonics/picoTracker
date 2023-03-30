@@ -79,7 +79,6 @@ AppWindow::AppWindow(I_GUIWindowImp &imp):GUIWindow(imp)  {
 	_instrumentView=0 ;
 	_tableView=0 ;
 	_nullView=0 ;
-	_mixerView=0 ;
 	_grooveView=0 ;
 	_closeProject=0 ;
 	_lastA=0 ;
@@ -337,9 +336,6 @@ void AppWindow::LoadProject(const Path &p)  {
 	_grooveView=new GrooveView((*this),_viewData) ;
 	_grooveView->AddObserver(*this) ;
 
-	_mixerView=new MixerView((*this),_viewData) ;
-	_mixerView->AddObserver(*this) ;
-
 	_currentView=_songView ;
 	_currentView->OnFocus() ;
 
@@ -375,7 +371,6 @@ void AppWindow::CloseProject() {
 	SAFE_DELETE(_instrumentView) ;
 	SAFE_DELETE(_tableView);
   SAFE_DELETE(_grooveView);
-  SAFE_DELETE(_mixerView);
 
   UIController *controller=UIController::GetInstance() ;
 	controller->Reset() ;
@@ -506,9 +501,6 @@ void AppWindow::Update(Observable &o,I_ObservableData *d) {
 			case VT_GROOVE:
         _currentView=_grooveView ;
         break ;
-        /*			case VT_MIXER:
-                _currentView=_mixerView ;
-        */
       default:
         break ;
         
