@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <sstream>
 #include "System/Console/Trace.h"
 
 class Result {

@@ -10,10 +10,6 @@ Result::Result()
 Result::Result(const std::string &error)
     : error_(error), success_(false), checked_(false), child_(0) {}
 
-Result::Result(const std::ostringstream &error)
-    : error_(error.str()), success_(false), checked_(false), child_(0)
-      {}
-
 Result::Result(Result &cause, const std::string &error)
   : error_(error), success_(false), checked_(false),
       child_(new Result(cause)) {

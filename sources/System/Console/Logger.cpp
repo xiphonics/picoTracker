@@ -1,9 +1,8 @@
 #include "Logger.h"
-#include <iostream>
 
 void StdOutLogger::AddLine(const char *line)
 {
-	std::cout << line << std::endl ;
+	printf("%s\n", line);
 }
 
 // ----------------------------------------------
