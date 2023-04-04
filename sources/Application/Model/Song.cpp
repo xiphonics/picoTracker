@@ -10,11 +10,11 @@
 
 Song::Song():Persistent("SONG") {
 
-	data_=(unsigned char *)SYS_MALLOC(SONG_CHANNEL_COUNT*SONG_ROW_COUNT) ;
-	memset(data_,0xFF,SONG_CHANNEL_COUNT*SONG_ROW_COUNT) ;
-	
-	chain_=new Chain() ;   // Allocate chain datas
-	phrase_=new Phrase() ; // Allocate phrase datas
+  data_ = (unsigned char *)SYS_MALLOC(SONG_CHANNEL_COUNT * SONG_ROW_COUNT);
+  memset(data_, 0xFF, SONG_CHANNEL_COUNT * SONG_ROW_COUNT);
+
+  chain_ = new Chain();   // Allocate chain datas
+  phrase_ = new Phrase(); // Allocate phrase datas
 } ;
 
 Song::~Song() {
@@ -28,8 +28,8 @@ void Song::SaveContent(tinyxml2::XMLPrinter *printer) {
 	{
 		phrase_->param1_[i] = Swap16(phrase_->param1_[i]);
 		phrase_->param2_[i] = Swap16(phrase_->param2_[i]);
-	}	
-	saveHexBuffer(printer,"SONG",data_,SONG_ROW_COUNT*SONG_CHANNEL_COUNT) ;
+	}
+  saveHexBuffer(printer, "SONG", data_, SONG_ROW_COUNT * SONG_CHANNEL_COUNT);
   saveHexBuffer(printer, "CHAINS", chain_->data_, CHAIN_COUNT * 16);
   saveHexBuffer(printer, "TRANSPOSES", chain_->transpose_, CHAIN_COUNT * 16);
   saveHexBuffer(printer, "NOTES", phrase_->note_, PHRASE_COUNT * 16);
@@ -85,7 +85,7 @@ void Song::RestoreContent(PersistencyDocument *doc) {
 	// Restore chain & phrase allocation table
 
 	unsigned char *data=data_ ;
-	for (int i=0;i<256*SONG_CHANNEL_COUNT;i++) {
+	for (int i=0;i<SONG_ROW_COUNT*SONG_CHANNEL_COUNT;i++) {
 		if (*data!=0xFF) {
 			if (*data<0x80) {
 				chain_->SetUsed(*data) ;

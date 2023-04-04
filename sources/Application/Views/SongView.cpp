@@ -767,34 +767,34 @@ void SongView::DrawView() {
 	}
 
 // Draw title
-
 	SetColor(CD_NORMAL) ;
 
 	Player *player=Player::GetInstance() ;
-	
-	std::ostringstream os;
 
-	os << ((player->GetSequencerMode()==SM_SONG)?"Song":"Live") ;
-	os << " - " ;
-	os << songname_ ;
-	std::string buffer(os.str());
+  props.invert_ = true;
+  const char *buffer = ((player->GetSequencerMode() == SM_SONG) ? "Song" : "Live");
+  DrawString(pos._x, pos._y, buffer, props);
 
-	DrawString(pos._x,pos._y,buffer.c_str(),props) ;
-// Compute song grid location
+  props.invert_ = false;
+  std::string songname = songname_;
+  if (songname.length() > 20) {
+    songname = songname_.substr(0, 17) + "...";
+  }
+  DrawString(pos._x + 5, pos._y, songname.c_str(), props);
 
-	GUIPoint anchor=GetAnchor() ;
-	
-// Display row numbers
+  // Compute song grid location
+  GUIPoint anchor = GetAnchor();
 
-	SetColor(CD_HILITE1) ;
-	char row[3] ;
-	pos=anchor ;
-	pos._x-=3;
-	for (int j=0;j<View::songRowCount_;j++) {
-		char p=j+viewData_->songOffset_ ;
-		hex2char(p,row) ;
-		DrawString(pos._x,pos._y,row,props) ;
-		pos._y+=1 ;
+  // Display row numbers
+  SetColor(CD_HILITE1);
+  char row[3];
+  pos = anchor;
+  pos._x -= 3;
+  for (int j = 0; j < View::songRowCount_; j++) {
+    char p = j + viewData_->songOffset_;
+    hex2char(p, row);
+    DrawString(pos._x, pos._y, row, props);
+    pos._y += 1;
 	}
 
 
