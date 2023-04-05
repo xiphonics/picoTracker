@@ -125,7 +125,7 @@ RIFFClass::~RIFFClass(void)
   DestructRIFF();
 }
 
-DWORD MAKE_ID(char* riffID)
+DWORD MAKE_ID(const char* riffID)
 {
   DWORD retval;
   memcpy(&retval, riffID, 4);

@@ -197,7 +197,7 @@ class RIFFClass
 
     SHORT    initRiffTokensArray();
 
-    CHAR*  GetRIFFToken(WORD wCurToken)
+    const CHAR*  GetRIFFToken(WORD wCurToken)
 	      { return (RiffTokens[wCurToken]); }
 
 

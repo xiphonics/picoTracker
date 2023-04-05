@@ -14,7 +14,7 @@
 UnixDir::UnixDir(const char *path):I_Dir(path) {
 } ;
 
-void UnixDir::GetContent(char *mask) {
+void UnixDir::GetContent(const char *mask) {
 
 	Empty() ;
 
@@ -148,7 +148,7 @@ int UnixFile::Error() {
 UnixFileSystem::UnixFileSystem() {
 }
 
-I_File *UnixFileSystem::Open(const char *path,char *mode) {
+I_File *UnixFileSystem::Open(const char *path, const char *mode) {
 	char *rmode ;
 	switch(*mode) {
         case 'r':
@@ -194,9 +194,12 @@ Result UnixFileSystem::MakeDir(const char *path) {
 	int success = mkdir(path,S_IRWXU) ;
   if (success <0)
   {
-    std::ostringstream oss;
-    oss << "Could not create path " << path << " (errno:" << errno << ")";
-    return Result(oss.str());
+    std::string result = "Could not create path ";
+    result += path;
+    result += " (errno:";
+    result += errno;
+    result += ")";
+    return Result(result);
   }
   return Result::NoError;	
 } ;	
