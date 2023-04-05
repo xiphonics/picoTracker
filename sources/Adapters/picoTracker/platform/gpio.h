@@ -1,34 +1,27 @@
 #ifndef _PLATFORM_PICO_GPIO_H_
 #define _PLATFORM_PICO_GPIO_H_
 
-// Debug
-#define DEBUG_UART uart0
-#define DEBUG_BAUD_RATE
-#define DEBUG_TX 0
-#define DEBUG_RX 1
-
 // Display (SPI0)
-#define DISPLAY_SPI   spi0
-#define DISPLAY_RESET 2
-#define DISPLAY_DC    3
-#define DISPLAY_MISO  4
-#define DISPLAY_CS    5
-#define DISPLAY_SCK   6
-#define DISPLAY_MOSI  7
+#define DISPLAY_SPI   spi1
+#define DISPLAY_CS    21
+#define DISPLAY_RESET 22
+#define DISPLAY_SCK   26
+#define DISPLAY_MOSI  27
+#define DISPLAY_DC    28
 
 // Midi (UART1)
-#define MIDI_UART      uart1
+#define MIDI_UART      uart0
 #define MIDI_BAUD_RATE 31250
-#define MIDI_OUT_PIN   8
-#define MIDI_IN_PIN    9
+#define MIDI_OUT_PIN   0
+#define MIDI_IN_PIN    1
 
 // SD Card
 /* SPI (SPI1) */
-#define SD_SPI      spi1
-#define SD_SPI_SCK  10
-#define SD_SPI_MOSI 11
-#define SD_SPI_MISO 12
-#define SD_SPI_CS   15
+#define SD_SPI      spi0
+#define SD_SPI_SCK  2
+#define SD_SPI_MOSI 3
+#define SD_SPI_MISO 4
+#define SD_SPI_CS   7
 
 /* SDIO */
 #define SDIO_PIO     pio1
@@ -36,20 +29,23 @@
 #define SDIO_DATA_SM 1
 #define SDIO_DMA_CH  4
 #define SDIO_DMA_CHB 5
-#define SDIO_CLK     10
-#define SDIO_CMD     11
-#define SDIO_D0      12
-#define SDIO_D1      13
-#define SDIO_D2      14
-#define SDIO_D3      15
+#define SDIO_CLK     2
+#define SDIO_CMD     3
+#define SDIO_D0      4
+#define SDIO_D1      5
+#define SDIO_D2      6
+#define SDIO_D3      7
 
 // Input
-#define INPUT_COL1 16
-#define INPUT_COL2 17
-#define INPUT_COL3 18
-#define INPUT_ROW1 19
-#define INPUT_ROW2 20
-#define INPUT_ROW3 21
+#define INPUT_LEFT  8
+#define INPUT_DOWN  9
+#define INPUT_RIGHT 10
+#define INPUT_UP    11
+#define INPUT_LT    12
+#define INPUT_B     13
+#define INPUT_A     14
+#define INPUT_RT    15
+#define INPUT_PLAY  16
 
 // Sound
 // TODO: Check if this is necessary for i2s
@@ -59,9 +55,9 @@
 #define AUDIO_SM      0
 #define AUDIO_DMA     0
 #define AUDIO_DMA_IRQ 0
-#define AUDIO_MCLK
-#define AUDIO_BCLK    26 // BCLK and LRCLK HAVE to be consecutive
-#define AUDIO_LRCLK   27
-#define AUDIO_SDATA   28
+#define AUDIO_MCLK    17
+#define AUDIO_BCLK    18 // BCLK and LRCLK HAVE to be consecutive
+#define AUDIO_LRCLK   19
+#define AUDIO_SDATA   20
 
 #endif

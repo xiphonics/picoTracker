@@ -114,7 +114,6 @@ void platform_init() {
    int baudrate = spi_set_baudrate(DISPLAY_SPI, 75000 * 1000);
    printf("Display SPI Baudrate: %i\n", baudrate);
 
-   gpio_set_function(DISPLAY_MISO, GPIO_FUNC_SPI);
    gpio_set_function(DISPLAY_SCK, GPIO_FUNC_SPI);
    gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
 
@@ -141,6 +140,8 @@ void platform_init() {
    // AUDIO //
    ///////////
 
+   gpio_pull_down(AUDIO_MCLK);
+
    //////////
    // MIDI //
    //////////
@@ -155,23 +156,31 @@ void platform_init() {
    // INPUT //
    ///////////
 
-   gpio_init(INPUT_COL1);
-   gpio_set_dir(INPUT_COL1, GPIO_IN);
-   gpio_init(INPUT_COL2);
-   gpio_set_dir(INPUT_COL2, GPIO_IN);
-   gpio_init(INPUT_COL3);
-   gpio_set_dir(INPUT_COL3, GPIO_IN);
-   gpio_init(INPUT_ROW1);
-   gpio_set_dir(INPUT_ROW1, GPIO_IN);
-   gpio_init(INPUT_ROW2);
-   gpio_set_dir(INPUT_ROW2, GPIO_IN);
-   gpio_init(INPUT_ROW3);
-   gpio_set_dir(INPUT_ROW3, GPIO_IN);
-
-   gpio_pull_up(INPUT_COL1);
-   gpio_pull_up(INPUT_COL2);
-   gpio_pull_up(INPUT_COL3);
-   gpio_pull_down(INPUT_ROW1);
-   gpio_pull_down(INPUT_ROW2);
-   gpio_pull_down(INPUT_ROW3);
+   gpio_init(INPUT_UP);
+   gpio_set_dir(INPUT_UP, GPIO_IN);
+   gpio_pull_up(INPUT_UP);
+   gpio_init(INPUT_DOWN);
+   gpio_set_dir(INPUT_DOWN, GPIO_IN);
+   gpio_pull_up(INPUT_DOWN);
+   gpio_init(INPUT_LEFT);
+   gpio_set_dir(INPUT_LEFT, GPIO_IN);
+   gpio_pull_up(INPUT_LEFT);
+   gpio_init(INPUT_RIGHT);
+   gpio_set_dir(INPUT_RIGHT, GPIO_IN);
+   gpio_pull_up(INPUT_RIGHT);
+   gpio_init(INPUT_B);
+   gpio_set_dir(INPUT_B, GPIO_IN);
+   gpio_pull_up(INPUT_B);
+   gpio_init(INPUT_A);
+   gpio_set_dir(INPUT_A, GPIO_IN);
+   gpio_pull_up(INPUT_A);
+   gpio_init(INPUT_LT);
+   gpio_set_dir(INPUT_LT, GPIO_IN);
+   gpio_pull_up(INPUT_LT);
+   gpio_init(INPUT_RT);
+   gpio_set_dir(INPUT_RT, GPIO_IN);
+   gpio_pull_up(INPUT_RT);
+   gpio_init(INPUT_PLAY);
+   gpio_set_dir(INPUT_PLAY, GPIO_IN);
+   gpio_pull_up(INPUT_PLAY);
 }
