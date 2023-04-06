@@ -3,7 +3,11 @@
 #include "Adapters/picoTracker/audio/picoTrackerAudio.h"
 #include "Adapters/picoTracker/filesystem/picoTrackerFileSystem.h"
 #include "Adapters/picoTracker/gui/GUIFactory.h"
+#ifdef DUMMY_MIDI
+#include "Adapters/Dummy/Midi/DummyMidi.h"
+#else
 #include "Adapters/picoTracker/midi/picoTrackerMidiService.h"
+#endif
 #include "Application/Commands/NodeList.h"
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
@@ -61,7 +65,11 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   Audio::Install(new picoTrackerAudio(hint));
 
   // Install Midi
+#ifdef DUMMY_MIDI
+  MidiService::Install(new DummyMidi());
+#else
   MidiService::Install(new picoTrackerMidiService());
+#endif
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();

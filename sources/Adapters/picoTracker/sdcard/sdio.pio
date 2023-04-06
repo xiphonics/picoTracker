@@ -24,7 +24,7 @@
 .define CLKDIV 7
 .define D0 ((CLKDIV + 1) / 2 - 1)
 .define D1 (CLKDIV/2 - 1)
-.define SDIO_CLK_GPIO 10
+.define SDIO_CLK_GPIO 2
 
 ; State machine 0 is used to:
 ; - generate continuous clock on SDIO_CLK

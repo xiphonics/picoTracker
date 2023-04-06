@@ -13,6 +13,7 @@ target_link_libraries(platform_system INTERFACE system_system
                                       PUBLIC platform_filesystem
                                       PUBLIC platform_gui
                                       PUBLIC platform_display
+                                      PUBLIC dummy_midi
 )
 
 target_include_directories(platform_system PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -18,7 +18,7 @@ add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
 #add_definitions(-DPICO_DEBUG_MALLOC)
-add_definitions(-DPICOSTATS)
+# add_definitions(-DPICOSTATS)
 #add_definitions(-DALL_MALLOC)
 add_definitions(-DDISABLESF)
 # Enable SDIO - this setting affects code in SdFat library as well as the project
@@ -30,6 +30,8 @@ add_definitions(-DDISABLESF)
 # add_definitions(-DSD_STREAMING)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
+# Disable MIDI. Enable in order to use UART0 as stdio for debugging
+# add_definitions(-DDUMMY_MIDI)
 # Disable feedback for sample instruments. Due to low memory in the PICO
 # there is very low chance to bring this back
 add_definitions(-DDISABLE_FEEDBACK)
@@ -44,9 +46,7 @@ add_compile_options(
   -Werror
   -Wall
   -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
-#  -Wno-unused-function # we have some for the docs that aren't called
-#  -Wno-maybe-uninitialized
-  # SHOULD FIX LATER
+  # TODO: SHOULD FIX
   -Wno-int-to-pointer-cast
 )
 
@@ -76,26 +76,5 @@ target_compile_definitions(picoTracker PUBLIC
 #endif()
 
 # Debug output with USB uses +6K memory
-pico_enable_stdio_usb(${PROJECT_NAME} 1)
+pico_enable_stdio_usb(${PROJECT_NAME} 0)
 pico_enable_stdio_uart(${PROJECT_NAME} 0)
-
-# Debug build
-#set_target_properties(picoTracker PROPERTIES COMPILE_DEFINITIONS "DEBUG")
-
-#get_property(dirs1 TARGET application_model PROPERTY INCLUDE_DIRECTORIES)
-#get_property(dirs1 TARGET system_system PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-#get_property(dirs1 TARGET application_model PROPERTY LINK_DIRECTORIES)
-#get_property(dirs1 TARGET application_model PROPERTY IMPORTED_TARGETS)
-foreach(dir ${dirs1})
-  message(STATUS "Interface include directory for my_target: ${dir}")
-endforeach()
-macro(print_all_variables)
-    message(STATUS "print_all_variables------------------------------------------{")
-    get_cmake_property(_variableNames VARIABLES)
-    foreach (_variableName ${_variableNames})
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
-    message(STATUS "print_all_variables------------------------------------------}")
-endmacro()
-
-#print_all_variables()

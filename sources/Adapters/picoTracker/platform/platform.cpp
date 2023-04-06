@@ -145,12 +145,14 @@ void platform_init() {
    //////////
    // MIDI //
    //////////
+#ifndef DUMMY_MIDI
    gpio_set_function(MIDI_OUT_PIN, GPIO_FUNC_UART);
    gpio_set_function(MIDI_IN_PIN, GPIO_FUNC_UART);
 
    // Set up our UART with the required speed.
    baudrate = uart_init(MIDI_UART, MIDI_BAUD_RATE);
    printf("Init MIDI device with %i baud rate\n", baudrate);
+#endif
 
    ///////////
    // INPUT //
