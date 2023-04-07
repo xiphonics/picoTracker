@@ -3,11 +3,11 @@
 
 // Display (SPI0)
 #define DISPLAY_SPI   spi1
-#define DISPLAY_CS    21
+#define DISPLAY_DC    21
 #define DISPLAY_RESET 22
 #define DISPLAY_SCK   26
 #define DISPLAY_MOSI  27
-#define DISPLAY_DC    28
+#define DISPLAY_CS    28
 
 // Midi (UART1)
 #define MIDI_UART      uart0

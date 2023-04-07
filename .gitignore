@@ -1,16 +1,10 @@
-bin/**
 build/**
 build-opt/**
-projects/buildPSP/**
-tracks/**
 ref/**
 doxygen/html/**
 util/**
-sources/Adapters/PICO/data/**
 projects/buildOSX/**
 projects/lgpt
-samplelib/**
-lgpt_*
 lgpt.log
 
 # OSX

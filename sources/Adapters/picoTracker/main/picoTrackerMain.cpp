@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   picoTrackerSystem::Boot(argc, argv);
 
   GUICreateWindowParams params;
-  params.title = "littlegptracker";
+  params.title = "picoTracker";
 
   Application::GetInstance()->Init(params);
 
