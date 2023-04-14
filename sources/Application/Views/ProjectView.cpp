@@ -1,11 +1,12 @@
 #include "ProjectView.h"
-#include "BaseClasses/UIIntVarField.h"
-#include "BaseClasses/UIActionField.h"
-#include "BaseClasses/UITempoField.h"
 #include "Application/Persistency/PersistencyService.h"
-#include "System/System/System.h"
-#include "Services/Midi/MidiService.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "BaseClasses/UIActionField.h"
+#include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UITempoField.h"
+#include "Services/Midi/MidiService.h"
+#include "System/System/System.h"
+#include "hardware/watchdog.h"
 
 #define ACTION_PURGE MAKE_FOURCC('P','U','R','G')
 #define ACTION_SAVE  MAKE_FOURCC('S','A','V','E')
@@ -18,8 +19,11 @@
 
 static void LoadCallback(View &v,ModalView &dialog) {
 	if (dialog.GetReturnCode()==MBL_YES) {
-		((ProjectView &)v).OnLoadProject() ;
-	}
+    // TODO: Remove this hack. Due to memory leaks and other problems
+    // instead of going back, we perform a software reset
+    watchdog_reboot(0,0,0);
+    ((ProjectView &)v).OnLoadProject();
+  }
 } ;
 #ifndef NO_EXIT
 static void QuitCallback(View &v,ModalView &dialog) {
@@ -68,9 +72,8 @@ ProjectView::ProjectView(GUIWindow &w,ViewData *data):FieldView(w,data) {
 	T_SimpleList<UIField>::Insert(a1) ;
 
 	position._y+=2 ;
-	a1=new UIActionField("Load Song **DISABLED**",ACTION_LOAD,position) ;
-  // TODO: reenable this once we get rid of all memory leaks
-  //	a1->AddObserver(*this) ;
+	a1=new UIActionField("Load Song",ACTION_LOAD,position) ;
+  a1->AddObserver(*this) ;
 	T_SimpleList<UIField>::Insert(a1) ;
 
 	position._y+=1 ;
