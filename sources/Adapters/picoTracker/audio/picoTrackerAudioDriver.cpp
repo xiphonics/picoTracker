@@ -159,6 +159,7 @@ void picoTrackerAudioDriver::CloseDriver(){
   irq_remove_handler(DMA_IRQ_0 + AUDIO_DMA_IRQ, audio_i2s_dma_irq_handler);
   dma_channel_unclaim(AUDIO_DMA);
   pio_sm_unclaim(AUDIO_PIO, AUDIO_SM);
+  pio_clear_instruction_memory(AUDIO_PIO);
 };
 
 bool picoTrackerAudioDriver::StartDriver() {
