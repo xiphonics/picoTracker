@@ -24,12 +24,13 @@ ImportSampleDialog::ImportSampleDialog(View &view):ModalView(view) {
 		initStatic_=true ;
 	}
 	selected_=0 ;
-} ;
+  
+  sampleList_.SetOwnership(true);
+}
 
 ImportSampleDialog::~ImportSampleDialog() {
-  sampleList_.SetOwnership(true);
   sampleList_.Empty();
-} ;
+}
 
 void ImportSampleDialog::DrawView() {
 
@@ -163,14 +164,15 @@ void ImportSampleDialog::ProcessButtonMask(unsigned short mask,bool pressed) {
 			if (element->GetName()=="..") {
 				if (currentPath_.GetPath()==sampleLib_.GetPath()) {
 	//				EndModal(true) ;
-				} else {;
+				} else {
 					Path parent=element->GetParent().GetParent() ;
-					setCurrentFolder(&parent) ;
-				}
+          setCurrentFolder(&parent);
+        }
 			} else {
-				setCurrentFolder(element) ;
-			}
-			isDirty_=true ;
+        Path child(element->GetPath());
+        setCurrentFolder(&child);
+      }
+      isDirty_=true ;
 			return ;
 		}
 
@@ -187,12 +189,10 @@ void ImportSampleDialog::ProcessButtonMask(unsigned short mask,bool pressed) {
 				break ;
 		}
 	  } else {
-
 		  // R Modifier
-
-          	if (mask&EPBM_R) {
-	    	} else {
-                // No modifier
+      if (mask&EPBM_R) {
+      } else {
+        // No modifier
 				if (mask==EPBM_UP) warpToNextSample(-1) ;
 				if (mask==EPBM_DOWN) warpToNextSample(1) ;
 				if (mask==EPBM_LEFT) {
@@ -204,10 +204,10 @@ void ImportSampleDialog::ProcessButtonMask(unsigned short mask,bool pressed) {
 					selected_=(selected_+1)%3 ;
 					isDirty_=true ;
 				}
-		    }
+      }
 	  } 
 	}
-} ;
+}
 
 void ImportSampleDialog::setCurrentFolder(Path *path) {
 
@@ -217,8 +217,8 @@ void ImportSampleDialog::setCurrentFolder(Path *path) {
 	currentSample_=0 ;
 
 	currentPath_=Path(*path) ;
-	sampleList_.Empty() ;
-	if (path) {
+  sampleList_.Empty();
+  if (path) {
 		int count=0 ;
     std::unique_ptr<I_Dir> dir(FileSystem::GetInstance()->Open(path->GetPath().c_str())) ;	
 		if (dir) {
@@ -229,10 +229,12 @@ void ImportSampleDialog::setCurrentFolder(Path *path) {
 				Path &current=it->CurrentItem() ;
 		 		if (current.IsDirectory()) {
 					if (current.GetName().substr(0,1)!="." || current.GetName()=="..") {
-						Path *sample=new Path(current) ;
-						sampleList_.Insert(sample) ;
-						if (!formerPath.Compare(current)) {
-							currentSample_=count ;
+            printf("adding %s\n",
+                   current.GetName());
+            Path *sample = new Path(current);
+            sampleList_.Insert(sample);
+            if (!formerPath.Compare(current)) {
+              currentSample_ = count;
 						}
 						count++ ;
 					}
@@ -242,11 +244,14 @@ void ImportSampleDialog::setCurrentFolder(Path *path) {
 				Path &current=it->CurrentItem() ;
 		 		if (!current.IsDirectory()) {
 					if (current.Matches("*.wav") && current.GetName()[0]!='.') {
-						Path *sample=new Path(current) ;
-						sampleList_.Insert(sample) ;
+            printf("adding %s\n",
+                   current.GetName());
+
+            Path *sample = new Path(current);
+            sampleList_.Insert(sample);
 					}
 				};
 			}
 		}
 	}
-} ;
+}
