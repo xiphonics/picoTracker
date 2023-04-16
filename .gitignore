@@ -2,7 +2,6 @@ build/**
 build-opt/**
 ref/**
 doxygen/html/**
-util/**
 projects/buildOSX/**
 projects/lgpt
 lgpt.log
