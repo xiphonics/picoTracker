@@ -15,8 +15,14 @@
 #define SAMPLE_LIB "root:samplelib"
 
 #ifdef LOAD_IN_FLASH
-// We'll use Flash region from 0x10100000 - 0x10200000
-#define FLASH_TARGET_OFFSET (1024 * 1024)
+#include "hardware/flash.h"
+//#define FLASH_TARGET_OFFSET (1024 * 1024)
+// Use all flash available after binary for samples
+// WARNING! should be conscious to always ensure 1MB of free space
+extern char __flash_binary_end;
+#define FLASH_TARGET_OFFSET                                                    \
+  ((((uintptr_t)&__flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) + 1) * \
+      FLASH_SECTOR_SIZE
 //#define FLASH_LIMIT (2 * 1024 * 1024)
 
 int SamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
