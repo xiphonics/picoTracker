@@ -674,7 +674,7 @@ void TableView::DrawView() {
 
 	char title[20] ;
 	SetColor(CD_NORMAL) ;
-	sprintf(title,"Table %2.2x",viewData_->currentTable_) ;
+	sprintf(title,"Table %2.2X",viewData_->currentTable_) ;
 	DrawString(pos._x,pos._y,title,props) ;
 
 // Compute song grid location
@@ -828,11 +828,11 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
 	pos._y=anchor._y+lastPosition_[0] ;
 	DrawString(pos._x,pos._y," ",props) ;
 		
-	pos._x+=10 ;
+	pos._x+=9 ;
 	pos._y=anchor._y+lastPosition_[1] ;
 	DrawString(pos._x,pos._y," ",props) ;
 		
-	pos._x+=10 ;
+	pos._x+=9 ;
 	pos._y=anchor._y+lastPosition_[2] ;
 	DrawString(pos._x,pos._y," ",props) ;
 
@@ -855,11 +855,11 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
 		pos._y=anchor._y+lastPosition_[0] ;
 		DrawString(pos._x,pos._y,">",props) ;
 
-		pos._x+=10 ;
+		pos._x+=9 ;
 		pos._y=anchor._y+lastPosition_[1] ;
 		DrawString(pos._x,pos._y,">",props) ;
 
-		pos._x+=10 ;
+		pos._x+=9 ;
 		pos._y=anchor._y+lastPosition_[2] ;
 		DrawString(pos._x,pos._y,">",props) ;
 

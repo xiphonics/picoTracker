@@ -203,27 +203,33 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask,bool pressed) {
 #endif
 		}
 	  } else {
-
 		  // R Modifier
-
-          	if (mask&EPBM_R) {
-	    	} else {
-                // No modifier
+      if (mask&EPBM_R) {
+      } else {
+        // No modifier
 				if (mask==EPBM_UP) warpToNextProject(-1) ;
 				if (mask==EPBM_DOWN) warpToNextProject(1) ;
 				if (mask==EPBM_LEFT) {
 					selected_-- ;
-					if (selected_<0) selected_+=3 ;
-					isDirty_=true ;
-				}
+#ifdef NO_EXIT
+          if (selected_ < 0) selected_ += 2;
+#else
+          if (selected_ < 0) selected_ += 3;
+#endif
+          isDirty_ = true;
+        }
 				if (mask==EPBM_RIGHT) {
-					selected_=(selected_+1)%3 ;
-					isDirty_=true ;
-				}
-		    }
-	  } 
+#ifdef NO_EXIT
+          selected_ = (selected_ + 1) % 2;
+#else
+          selected_ = (selected_ + 1) % 3;
+#endif
+          isDirty_ = true;
+        }
+      }
+	  }
 	}
-};
+}
 
 void SelectProjectDialog::warpToNextProject(int amount) {
 
