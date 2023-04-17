@@ -93,7 +93,7 @@ void ili9341_init() {
 
   // memory access control
   ili9341_set_command(ILI9341_MADCTL);
-  ili9341_command_param(0x48);
+  ili9341_command_param(0x88);
 
   // pixel format
   ili9341_set_command(ILI9341_PIXFMT);
