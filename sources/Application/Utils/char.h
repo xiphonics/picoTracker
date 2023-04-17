@@ -75,7 +75,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "CHNL");
     break;
   case 2:
-    strcpy(s, "CSH"); // CSH
+    strcpy(s, "CSH"); // CRSH
     break;
   case 3:
     strcpy(s, "CRSV");
@@ -186,7 +186,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "MCC"); // MDCC
     break;
   case 39:
-    strcpy(s, "MPG"); // MDPG
+    strcpy(s, "MPC"); // MDPG
     break;
   case 40:
     strcpy(s, "MIDI");
@@ -213,7 +213,7 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "PRGI");
     break;
   case 48:
-    strcpy(s, "PCH"); // PTCH
+    strcpy(s, "PSL"); // PTCH
     break;
   case 49:
     strcpy(s, "PURG");
