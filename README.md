@@ -14,17 +14,15 @@ picoTracker is a low cost DIY hardware device based on a modified version of [Li
 
 ## Limitations
 * Will probably struggle with 8 song channels playing at the same time in most cases. I modified the source to parametrically reduce the total songs, but didn't want to make the decision of supporting only 6 songs or so just yet. There is still room for improvement by either multithreading or increasing CPU frequency.
-* Cannot load LGPT projects (thou it shouldn't be too hard to do, for projects that fit the specs above).
-* Samples are played copied to flash upon load and played from there. Since flash has to be shared with program code, only 1MB is available for it.
-* Instrument count is also pretty low due to memory constraints.
+* Cannot load LGPT projects (thou I wrote an ugly script to convert projects).
+* Samples are played copied to flash upon load and played from there. Since flash has to be shared with program code, only 1MB is available for it. (in reality the available space as of this version is closer to 1.6MB, but this may change in the future as program code grows)
+* Instrument count is also pretty low due to memory constraints. 16 Sample and 16 MIDI instruments.
 * Sample instrument feedback feature has been removed due to memory constraints.
 * Sample fonts support has been removed to save some memory (thou it could be added back).
 
+
 ## Known issues
-* Loading samples into project will leak memory
-  * Workaround: load all necessary samples, save, restart machine and reload project
-* Loading a project will also leak memory. Not a problem in normal operation, but it means we cannot currently quit a project and load a new one
-  * Workaround: Have you tried turning it off and on again?
+* Loading a project will leak memory. Current workaround is to do a full system reset upon project exit (done automatically).
 
 ## TODO/Improvements
 * Fix memory leak issues and modernize code
@@ -32,6 +30,7 @@ picoTracker is a low cost DIY hardware device based on a modified version of [Li
 * Create custom PCB
 * Improve SDIO performance and explore further playing samples from SD
 * Further memory savings and bring back some features/instruments
+* Improve performance/make instrument rendering multithreading
 
 ## BUILD
 Head over to the [Build Guide](docs/BUILD.md)
