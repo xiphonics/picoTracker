@@ -7,10 +7,12 @@
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
 #include "hardware/watchdog.h"
+#include "pico/bootrom.h"
 
 #define ACTION_PURGE MAKE_FOURCC('P','U','R','G')
 #define ACTION_SAVE  MAKE_FOURCC('S','A','V','E')
 #define ACTION_LOAD MAKE_FOURCC('L', 'O', 'A', 'D')
+#define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
 #ifndef NO_EXIT
 #define ACTION_QUIT MAKE_FOURCC('Q', 'U', 'I', 'T')
 #endif
@@ -24,7 +26,14 @@ static void LoadCallback(View &v,ModalView &dialog) {
     watchdog_reboot(0,0,0);
     ((ProjectView &)v).OnLoadProject();
   }
-} ;
+};
+
+static void BootselCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    reset_usb_boot(0, 0);
+  }
+};
+
 #ifndef NO_EXIT
 static void QuitCallback(View &v,ModalView &dialog) {
 	if (dialog.GetReturnCode()==MBL_YES) {
@@ -86,6 +95,11 @@ ProjectView::ProjectView(GUIWindow &w,ViewData *data):FieldView(w,data) {
 	position._y+=2 ;
 	UIIntVarField *f3=new UIIntVarField(position,*v,"midi: %s",0,MidiService::GetInstance()->Size(),1,1) ;
 	T_SimpleList<UIField>::Insert(f3) ;
+
+  position._y += 2;
+  a1 = new UIActionField("Update firmware", ACTION_BOOTSEL, position);
+  a1->AddObserver(*this);
+  T_SimpleList<UIField>::Insert(a1);
 
 #ifndef NO_EXIT
 	position._y+=2 ;
@@ -179,7 +193,7 @@ void ProjectView::Update(Observable &,I_ObservableData *data) {
 		case ACTION_LOAD:
 		{
 			if (!player->IsRunning()) {
-				MessageBox *mb=new MessageBox(*this,"Load song and lose changes ?",MBBF_YES|MBBF_NO) ;
+				MessageBox *mb=new MessageBox(*this,"Load song and lose changes?",MBBF_YES|MBBF_NO) ;
 				DoModal(mb,LoadCallback) ;
 			} else {
 				MessageBox *mb=new MessageBox(*this,"Not while playing",MBBF_OK) ;
@@ -187,6 +201,20 @@ void ProjectView::Update(Observable &,I_ObservableData *data) {
 			}
 			break ;
 		}
+  case ACTION_BOOTSEL: {
+    if (!player->IsRunning()) {
+      MessageBox *mb =
+        new MessageBox(*this, "Reboot and lose changes?",
+                       MBBF_YES | MBBF_NO);
+      DoModal(mb, BootselCallback);
+    } else {
+      MessageBox *mb =
+        new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
+    }
+    break;
+  }
+
 #ifndef NO_EXIT
 		case ACTION_QUIT:
 		{

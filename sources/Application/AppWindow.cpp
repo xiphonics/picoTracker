@@ -23,10 +23,10 @@ unsigned char AppWindow::_charScreenProp[1200];
 unsigned char AppWindow::_preScreen[1200];
 unsigned char AppWindow::_preScreenProp[1200];
 
-GUIColor AppWindow::backgroundColor_(0xF1,0xF1,0x96, 0) ;
-GUIColor AppWindow::normalColor_(0x77,0x6B,0x56, 1) ;
-GUIColor AppWindow::highlightColor_(0xA8, 0x16, 0x16, 2);
-GUIColor AppWindow::highlight2Color_(0x8E, 0xA0, 0x4A, 3);
+GUIColor AppWindow::backgroundColor_(0x0F,0x0F,0x0F, 0) ;
+GUIColor AppWindow::normalColor_(0xAD,0xAD,0xAD, 1) ;
+GUIColor AppWindow::highlightColor_(0x84, 0x6F, 0x94, 2);
+GUIColor AppWindow::highlight2Color_(0x6B, 0x31, 0x6B, 3);
 GUIColor AppWindow::cursorColor_(0x77,0x6B,0x56, 4) ;
 GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 5);
 

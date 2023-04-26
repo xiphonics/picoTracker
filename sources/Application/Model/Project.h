@@ -15,8 +15,8 @@
 #define VAR_MIDIDEVICE  MAKE_FOURCC('M','I','D','I')
 #define VAR_TRANSPOSE  MAKE_FOURCC('T','R','S','P')
 
-#define PROJECT_NUMBER "0.9"
-#define PROJECT_RELEASE "b"
+#define PROJECT_NUMBER "1.0"
+#define PROJECT_RELEASE "r"
 #define BUILD_COUNT "001"
 
 #define MAX_TAP 3
