@@ -140,7 +140,7 @@ void platform_init() {
    // AUDIO //
    ///////////
 
-   gpio_pull_down(AUDIO_MCLK);
+   //   gpio_pull_down(AUDIO_MCLK);
 
    //////////
    // MIDI //

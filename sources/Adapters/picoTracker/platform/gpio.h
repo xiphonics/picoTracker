@@ -3,11 +3,11 @@
 
 // Display (SPI0)
 #define DISPLAY_SPI   spi1
+#define DISPLAY_CS    20
 #define DISPLAY_DC    21
 #define DISPLAY_RESET 22
 #define DISPLAY_SCK   26
 #define DISPLAY_MOSI  27
-#define DISPLAY_CS    28
 
 // Midi (UART1)
 #define MIDI_UART      uart0
@@ -55,9 +55,9 @@
 #define AUDIO_SM      0
 #define AUDIO_DMA     0
 #define AUDIO_DMA_IRQ 0
-#define AUDIO_MCLK    17
+#define AUDIO_SDATA   17
 #define AUDIO_BCLK    18 // BCLK and LRCLK HAVE to be consecutive
 #define AUDIO_LRCLK   19
-#define AUDIO_SDATA   20
+//#define AUDIO_MCLK    23
 
 #endif
