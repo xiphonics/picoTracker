@@ -11,6 +11,7 @@
 
 // Midi (UART1)
 #define MIDI_UART      uart0
+#define MIDI_UART_IRQ  UART0_IRQ
 #define MIDI_BAUD_RATE 31250
 #define MIDI_OUT_PIN   0
 #define MIDI_IN_PIN    1

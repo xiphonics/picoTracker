@@ -1,6 +1,7 @@
 add_library(platform_midi
   picoTrackerMidiService.h picoTrackerMidiService.cpp
-  picoTrackerMidiDevice.h picoTrackerMidiDevice.cpp
+  picoTrackerMidiOutDevice.h picoTrackerMidiOutDevice.cpp
+  picoTrackerMidiInDevice.h picoTrackerMidiInDevice.cpp
 )
 
 target_link_libraries(platform_midi PUBLIC pico_stdlib

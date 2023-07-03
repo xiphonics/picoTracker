@@ -1,5 +1,5 @@
-#ifndef _PICOTRACKERMIDIDEVICE_H_
-#define _PICOTRACKERMIDIDEVICE_H_
+#ifndef _PICOTRACKERMIDIOUTDEVICE_H_
+#define _PICOTRACKERMIDIOUTDEVICE_H_
 
 #include "Services/Midi/MidiOutDevice.h"
 

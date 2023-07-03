@@ -1,6 +1,7 @@
 
 #include "picoTrackerMidiService.h"
-#include "picoTrackerMidiDevice.h"
+#include "picoTrackerMidiInDevice.h"
+#include "picoTrackerMidiOutDevice.h"
 
 picoTrackerMidiService::picoTrackerMidiService(){};
 
@@ -11,5 +12,6 @@ void picoTrackerMidiService::buildDriverList() { // Here we just loop over
   // Midi out and create a midi device
   // for each of them.
 
+  inList_.Insert(new picoTrackerMidiInDevice("MIDI IN 1"));
   Insert(new picoTrackerMidiOutDevice("MIDI OUT 1"));
 };
