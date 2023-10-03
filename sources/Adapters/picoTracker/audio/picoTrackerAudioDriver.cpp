@@ -1,5 +1,5 @@
 #include "picoTrackerAudioDriver.h"
-#include "Adapters/picoTracker/Utils/utils.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Adapters/picoTracker/platform/platform.h"
 #include "Application/Model/Config.h"
 #include "Services/Midi/MidiService.h"
