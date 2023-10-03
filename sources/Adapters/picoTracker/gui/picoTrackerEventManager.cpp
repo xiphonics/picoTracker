@@ -1,6 +1,6 @@
 #include "picoTrackerEventManager.h"
-#include "Adapters/picoTracker/System/input.h"
-#include "Adapters/picoTracker/Utils/utils.h"
+#include "Adapters/picoTracker/system/input.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Application.h"
 #include "picoTrackerGUIWindowImp.h"
 

@@ -1,4 +1,4 @@
-#include "Adapters/picoTracker/System/picoTrackerSystem.h"
+#include "Adapters/picoTracker/system/picoTrackerSystem.h"
 #include "Application/Application.h"
 #include "hardware/clocks.h"
 #include "hardware/pll.h"

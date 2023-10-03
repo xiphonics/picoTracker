@@ -1,7 +1,7 @@
 #include "picoTrackerFileSystem.h"
 #include "Adapters/picoTracker/sdcard/sdcard.h"
 #include "Application/Utils/wildcard.h"
-#include "system/Console/Trace.h"
+#include "System/Console/Trace.h"
 
 picoTrackerDir::picoTrackerDir(const char *path) : I_Dir(path){};
 
