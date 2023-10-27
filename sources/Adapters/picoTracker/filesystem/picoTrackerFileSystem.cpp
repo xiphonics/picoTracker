@@ -20,10 +20,12 @@ void picoTrackerDir::GetContent(const char *mask) {
     return;
   }
 
+  int count = 0;
+
   FsBaseFile entry;
-  while (entry.openNext(&dir, O_READ)) {
-    char current[128];
-    entry.getName(current, 128);
+  while (entry.openNext(&dir, O_READ) && count <= PICO_MAX_FILE_COUNT) {    
+    char current[PICO_MAX_FILENAME_LEN];
+    entry.getName(current, PICO_MAX_FILENAME_LEN);
     char *c = current;
     while (*c) {
       *c = tolower(*c);
@@ -31,7 +33,7 @@ void picoTrackerDir::GetContent(const char *mask) {
     }
 
     if (wildcardfit(mask, current)) {
-      entry.getName(current, 128);
+      entry.getName(current, PICO_MAX_FILENAME_LEN);
       std::string fullpath = path_;
       if (path_[strlen(path_) - 1] != '/') {
         fullpath += "/";
@@ -40,6 +42,7 @@ void picoTrackerDir::GetContent(const char *mask) {
       Path *path = new Path(fullpath.c_str());
       Insert(path);
     }
+    count++;
   }
   // Insert a parent dir path given that FatFS doesn't provide it
   Path cur(this->path_);

@@ -76,6 +76,10 @@ void ImportSampleDialog::DrawView() {
 			}
 			if (!current.IsDirectory()) {
 				strcpy(buffer,p.c_str()) ;
+                // temporary UI to show temporary dir file count limit reached
+                if (count == PICO_MAX_FILE_COUNT) {
+                    strcpy(buffer, "[*MAX FILES LIMIT*]");
+                }
 			} else {
 				buffer[0]='[' ;
 				strcpy(buffer+1,p.c_str()) ;

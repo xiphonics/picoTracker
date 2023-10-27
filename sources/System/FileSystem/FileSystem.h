@@ -12,6 +12,10 @@
 
 #define MAX_FILENAME_SIZE 256
 
+// temporary limits due to limited ram on RP2040  
+#define PICO_MAX_FILENAME_LEN 32
+#define PICO_MAX_FILE_COUNT 25
+
 enum FileType {
 	FT_UNKNOWN,
 	FT_FILE,
