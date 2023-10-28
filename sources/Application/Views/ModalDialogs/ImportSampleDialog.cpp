@@ -75,12 +75,18 @@ void ImportSampleDialog::DrawView() {
 				props.invert_=false ;
 			}
 			if (!current.IsDirectory()) {
-				strcpy(buffer,p.c_str()) ;
+				strcpy(buffer,p.c_str()) ;                
 			} else {
 				buffer[0]='[' ;
 				strcpy(buffer+1,p.c_str()) ;
 				strcat(buffer,"]") ;
 			}
+		#ifdef PICO_BUILD 
+			// temporary UI to show temporary dir file count limit reached
+            if (count == (PICO_MAX_FILE_COUNT + 1)) {
+                strcpy(buffer, "[*MAX FILES LIMIT*]");
+            }
+		#endif
 			buffer[LIST_WIDTH-1]=0 ;
 			DrawString(x,y,buffer,props) ;
 			y+=1 ;
