@@ -23,7 +23,12 @@ void picoTrackerDir::GetContent(const char *mask) {
   int count = 0;
 
   FsBaseFile entry;
-  while (entry.openNext(&dir, O_READ) && count <= PICO_MAX_FILE_COUNT) {    
+  while (entry.openNext(&dir, O_READ)) {
+    if (count == (PICO_MAX_FILE_COUNT + 1)) {
+      Path *fakePath = new Path("___.wav");
+      Insert(fakePath);
+      break;
+    }    
     char current[PICO_MAX_FILENAME_LEN];
     entry.getName(current, PICO_MAX_FILENAME_LEN);
     char *c = current;
