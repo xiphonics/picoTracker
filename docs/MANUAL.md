@@ -13,7 +13,7 @@ Under the `util` folder there is a command line tool named `lgptconvert.py` that
 
 ## Importing Samples
 
-picoTracker copies samples from the SD card into Flash memory for playing, this limits the amount of samples space to 1MB on pico based picoTracker or 16MB on a "portable model" picoTracker. It supports 8 or 16 Bit wav files, any sampling frequency, mono or stereo. 8bit samples are converted to 16bit at load time for compatibility with the engine (you can save space in storage but not in RAM, keep this in mind when choosing samples).
+picoTracker copies samples from the SD card into Flash memory for playing, this limits the amount of samples space to the available flash space *minus* the space taken by the firmware itself, which is currently approximately 1MB. It supports 8 or 16 Bit wav files, any sampling frequency, mono or stereo. 8bit samples are converted to 16bit at load time for compatibility with the engine (you can save space in storage but not in RAM, keep this in mind when choosing samples).
 
 Samples are saved into a `samples` subfolder in each individual project folder. Samples will be placed there when importing using the Instrument Sample Import dialog. They could be copied manually into the project directory in the SD from a computer, but be mindfull of the storage space used, all samples in the `samples` directory of the project will be loaded upon project loading, whether they are assigned to an instrument or not. The safest way is to place any samples into the `samplelib` directory and then load them into projects from the UI.
 
