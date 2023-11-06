@@ -38,6 +38,9 @@ void __isr __time_critical_func(audio_i2s_dma_irq_handler)() {
 void picoTrackerAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 
 void AudioThread() {
+  // Allow core0 to pause this core when writing to flash
+  // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
+  multicore_lockout_victim_init();
   while (true) {
     sem_acquire_blocking(&core1_audio);
     picoTrackerAudioDriver::BufferNeeded();

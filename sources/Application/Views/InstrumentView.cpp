@@ -257,28 +257,33 @@ void InstrumentView::ProcessButtonMask(unsigned short mask,bool pressed) {
 
 	isDirty_=false ;
 
-	if (viewMode_==VM_NEW) {
+  Player *player = Player::GetInstance();
+
+  if (viewMode_==VM_NEW) {
 		if (mask==EPBM_A) {
 			UIIntVarField *field=(UIIntVarField *)GetFocus() ;
 			Variable &v=field->GetVariable() ;
 			switch(v.GetID()) {
 				case SIP_SAMPLE:
-				 {
-                    // First check if the samplelib exists
-
-					 Path sampleLib(SamplePool::GetInstance()->GetSampleLib()) ;
-					 if (FileSystem::GetInstance()->GetFileType(sampleLib.GetPath().c_str())!=FT_DIR) {
-						 MessageBox *mb=new MessageBox(*this,"Can't access the samplelib",MBBF_OK) ;
-						 DoModal(mb) ;
-					 } else { ;
-						// Go to import sample
-
-						 ImportSampleDialog *isd=new ImportSampleDialog(*this) ;
-						 DoModal(isd) ;
-					}
-					break ;
-				 }
-				case SIP_TABLE:
+          {
+            if (!player->IsRunning()) {
+              // First check if the samplelib exists
+              Path sampleLib(SamplePool::GetInstance()->GetSampleLib()) ;
+              if (FileSystem::GetInstance()->GetFileType(sampleLib.GetPath().c_str())!=FT_DIR) {
+                MessageBox *mb=new MessageBox(*this,"Can't access the samplelib",MBBF_OK) ;
+                DoModal(mb) ;
+              } else { ;
+                // Go to import sample
+                ImportSampleDialog *isd=new ImportSampleDialog(*this) ;
+                DoModal(isd) ;
+              }
+            } else {
+              MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+              DoModal(mb);
+            }
+            break;
+          }
+      case SIP_TABLE:
 				 {
 					int next=TableHolder::GetInstance()->GetNext() ;
 					if (next!=NO_MORE_TABLE) {
@@ -318,7 +323,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask,bool pressed) {
 
 	FieldView::ProcessButtonMask(mask) ;
 	
-	Player *player=Player::GetInstance() ;
 	// B Modifier
 
 	if (mask&EPBM_B) {         
