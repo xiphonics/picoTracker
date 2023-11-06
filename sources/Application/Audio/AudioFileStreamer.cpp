@@ -71,21 +71,33 @@ bool AudioFileStreamer::Render(fixed *buffer,int samplecount) {
 		mode_=AFSM_STOPPED ;
 		memset(buffer,0,2*samplecount*sizeof(fixed)) ;
 	}
-	wav_->GetBuffer(position_,count) ;
-	fixed *dst=buffer ;
-	short *src=(short *)wav_->GetSampleBuffer(-1) ;
-	int channel=wav_->GetChannelCount(-1) ;
 
- // I might need to do sample interpolation here
+  fixed *dst = buffer;
+  int channel = wav_->GetChannelCount(-1);
 
-	for (int i=0;i<count;i++) {
-		fixed v=*dst++=i2fp((*src++)>>(1+shift_)) ;
-		if (channel==2) {
-			*dst++=i2fp((*src++)>>(1+shift_)) ;
-		} else {
-			*dst++=v ;
-		}
-	}
-	position_+=count ;
+  while (count > 0) {
+    // 64 bytes * 2 bytes resolution * 2 channels = 256
+    // which is the half the readBuffer size for files
+    // another half of such buffer is needed to expand to
+    // 16bits if sample is 8bit
+    // TODO: refactor this whole thing to make it less brittle
+    long bufferSize = count > 64?64:count;
+    wav_->GetBuffer(position_, bufferSize);
+    short *src=(short *)wav_->GetSampleBuffer(-1) ;
+
+    // I might need to do sample interpolation here
+
+    for (int i = 0; i < bufferSize; i++) {
+      fixed v=*dst++=i2fp((*src++)>>(1+shift_)) ;
+      if (channel==2) {
+        *dst++=i2fp((*src++)>>(1+shift_)) ;
+      } else {
+        *dst++=v ;
+      }
+    }
+    count -= bufferSize;
+    position_ += bufferSize;
+  }
+
 	return true ;
 }

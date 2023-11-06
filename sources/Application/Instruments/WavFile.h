@@ -28,7 +28,6 @@ protected:
 	long readBlock(long position,long count) ;
 private:
 	I_File *file_ ;  // File
-	void *readBuffer_ ; // Temp read buffer
 	int readBufferSize_; // Read buffer size
 	short *samples_ ; // sample buffer size (16 bits)
 	int sampleBufferSize_ ;
@@ -40,5 +39,6 @@ private:
 
   static int bufferChunkSize_ ;
 	static bool initChunkSize_ ;
+  static unsigned char readBuffer_[512];
 } ;
 #endif

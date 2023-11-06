@@ -1,6 +1,7 @@
 #include "ImportSampleDialog.h"
-#include "Application/Instruments/SamplePool.h"
 #include "Application/Instruments/SampleInstrument.h"
+#include "Application/Instruments/SamplePool.h"
+#include "pico/multicore.h"
 #include <memory>
 
 #define LIST_SIZE 15
@@ -132,14 +133,26 @@ void ImportSampleDialog::preview(Path &element) {
 void ImportSampleDialog::import(Path &element) {
 
 	SamplePool *pool=SamplePool::GetInstance() ;
-	int sampleID=pool->ImportSample(element) ;
-	if (sampleID>=0) {
-		I_Instrument *instr=viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_) ;
-		if (instr->GetType()==IT_SAMPLE) {
-			SampleInstrument *sinstr=(SampleInstrument *)instr ;
-			sinstr->AssignSample(sampleID) ;
-			toInstr_=viewData_->project_->GetInstrumentBank()->GetNext() ;
-		};
+
+#ifdef PICO_BUILD
+  // Pause core1 in order to be able to write to flash and ensure core1 is
+  // not reading from it, it also disables IRQs on it
+  // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
+  multicore_lockout_start_blocking();
+#endif
+  int sampleID = pool->ImportSample(element);
+#ifdef PICO_BUILD
+  multicore_lockout_end_blocking();
+#endif
+
+  if (sampleID >= 0) {
+    I_Instrument *instr =
+      viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_);
+    if (instr->GetType() == IT_SAMPLE) {
+      SampleInstrument *sinstr = (SampleInstrument *)instr;
+      sinstr->AssignSample(sampleID);
+      toInstr_ = viewData_->project_->GetInstrumentBank()->GetNext();
+    };
 	} else {
 		Trace::Error("failed to import sample") ;
 	};
