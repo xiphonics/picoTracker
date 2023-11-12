@@ -3,6 +3,127 @@
 #include "Application/Utils/wildcard.h"
 #include "System/Console/Trace.h"
 
+#include <string>
+
+// Max filename is actually 256 per FAT std
+static const int MAX_FILENAME_LEN = 128;
+
+picoTrackerPagedDir::picoTrackerPagedDir(const char *path)
+    : path_{std::string(path)} {
+  // Initial size allocation for file and subdir entries per each dir
+  // these act as "soft limits" since while the Vector objects will allocate
+  // more room if the initially allocated space is used up, this will likely 
+  // exhaust available RAM per my testing as of making this change
+  fileIndexes_.reserve(354);
+  subdirIndexes_.reserve(96);
+};
+
+void picoTrackerPagedDir::GetContent(const char *mask) {
+  Trace::Log("PAGEDFILESYSTEM", "GetContent path:%s mask:%s", path_.c_str(),
+             mask);
+  fileIndexes_.clear();
+  subdirIndexes_.clear();
+  FsBaseFile dir;
+
+  if (!dir.open(path_.c_str())) {
+    Trace::Error("PagedDir GetContent Failed to open %s", path_.c_str());
+    return;
+  }
+
+  if (!dir.isDir()) {
+    Trace::Error("Path:%s is not a directory", path_.c_str());
+    return;
+  }
+
+  int count = 0;
+  FsBaseFile entry;
+  while (entry.openNext(&dir, O_READ)) {
+    char current[MAX_FILENAME_SIZE];
+    entry.getName(current, MAX_FILENAME_SIZE);
+
+    int fileIndex = entry.dirIndex();
+    if (entry.isDir()) {
+      subdirIndexes_.push_back(fileIndex);
+    } else if (wildcardfit(mask, current)) {
+      fileIndexes_.push_back(fileIndex);
+    }
+    count++;
+  }
+  Trace::Log("PAGEDFILESYSTEM", "scanned %d files", count);
+}
+
+std::string picoTrackerPagedDir::getFullName(int index) {
+  FsBaseFile dir;
+  if (!dir.open(path_.c_str())) {
+    Trace::Error("getFileList failed open:%s", path_.c_str());
+    return std::string("");
+  }
+  if (!dir.isDir()) {
+    Trace::Error("Path:%s is not a directory", path_.c_str());
+    return std::string("");
+  }
+  char filename[MAX_FILENAME_LEN];
+  FsBaseFile file;
+
+  if (!file.open(&dir, index, O_READ)) {
+    Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
+  }
+  file.getName(filename, MAX_FILENAME_LEN);
+  return std::string(filename);
+}
+
+void picoTrackerPagedDir::getFileList(int startOffset,
+                                      std::vector<FileListItem> *fileList) {
+  bool addedParentDirEntry = false;
+  FsBaseFile dir;
+
+  if (!dir.open(path_.c_str())) {
+    Trace::Error("getFileList failed open:%s", path_.c_str());
+    return;
+  }
+  if (!dir.isDir()) {
+    Trace::Error("Path:%s is not a directory", path_.c_str());
+    return;
+  }
+  static const int MAX_ITEMS = 15;
+  char current[MAX_FILENAME_LEN];
+  FsBaseFile file;
+
+  if (startOffset == 0 && (path_ != std::string(SAMPLE_LIB_PATH))) {
+    // Insert a parent dir path given that FatFS doesn't provide it
+    fileList->push_back(FileListItem("..", 0, true));
+    addedParentDirEntry = true;
+  }
+
+  unsigned int count = startOffset;
+  for (; count < subdirIndexes_.size() && (fileList->size() < MAX_ITEMS);
+       count++) {
+    int index = subdirIndexes_[count];
+    if (!file.open(&dir, index, O_READ)) {
+      Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
+    }
+    file.getName(current, MAX_FILENAME_LEN);
+    current[23] = 0; // truncate at 22 char length string
+    fileList->push_back(FileListItem(current, index, true));
+  }
+  for (; count < fileIndexes_.size() && (fileList->size() < MAX_ITEMS);
+       count++) {
+    int index = fileIndexes_[count];
+    if (!file.open(&dir, index, O_READ)) {
+      Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
+    }
+    file.getName(current, MAX_FILENAME_LEN);
+    current[25] = 0; // truncate at 24 char length string
+    fileList->push_back(FileListItem(current, index, false));
+  }
+
+  // +1 is for the synthezied Parent dir entry of ".."
+  fileCount_ = subdirIndexes_.size() + fileIndexes_.size() +
+               (addedParentDirEntry ? 1 : 0);
+}
+
+int picoTrackerPagedDir::size() { return fileCount_; }
+
 picoTrackerDir::picoTrackerDir(const char *path) : I_Dir(path){};
 
 void picoTrackerDir::GetContent(const char *mask) {
@@ -24,13 +145,8 @@ void picoTrackerDir::GetContent(const char *mask) {
 
   FsBaseFile entry;
   while (entry.openNext(&dir, O_READ)) {
-    if (count == (PICO_MAX_FILE_COUNT + 1)) {
-      Path *fakePath = new Path("___.wav");
-      Insert(fakePath);
-      break;
-    }    
-    char current[PICO_MAX_FILENAME_LEN];
-    entry.getName(current, PICO_MAX_FILENAME_LEN);
+    char current[MAX_FILENAME_SIZE];
+    entry.getName(current, MAX_FILENAME_SIZE);
     char *c = current;
     while (*c) {
       *c = tolower(*c);
@@ -38,7 +154,7 @@ void picoTrackerDir::GetContent(const char *mask) {
     }
 
     if (wildcardfit(mask, current)) {
-      entry.getName(current, PICO_MAX_FILENAME_LEN);
+      entry.getName(current, MAX_FILENAME_SIZE);
       std::string fullpath = path_;
       if (path_[strlen(path_) - 1] != '/') {
         fullpath += "/";
@@ -176,3 +292,7 @@ FileType picoTrackerFileSystem::GetFileType(const char *path) {
   file.close();
   return filetype;
 };
+
+I_PagedDir *picoTrackerFileSystem::OpenPaged(const char *path) {
+  return new picoTrackerPagedDir{path};
+}

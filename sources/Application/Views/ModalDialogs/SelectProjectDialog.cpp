@@ -12,10 +12,7 @@
 #ifndef NO_EXIT
 static const char *buttonText[3] = {"Load", "New", "Exit"};
 #else
-static const char *buttonText[2]= {
-	"Load",
-	"New"
-} ;
+static const char *buttonText[2] = {"Load", "New"};
 #endif
 
 Path SelectProjectDialog::lastFolder_("root:");
@@ -199,7 +196,7 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
     } else {
       // R Modifier
-      if (mask&EPBM_R) {
+      if (mask & EPBM_R) {
       } else {
         // No modifier
         if (mask == EPBM_UP)
@@ -209,9 +206,11 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (mask == EPBM_LEFT) {
           selected_--;
 #ifdef NO_EXIT
-          if (selected_ < 0) selected_ += 2;
+          if (selected_ < 0)
+            selected_ += 2;
 #else
-          if (selected_ < 0) selected_ += 3;
+          if (selected_ < 0)
+            selected_ += 3;
 #endif
           isDirty_ = true;
         }
@@ -250,7 +249,6 @@ void SelectProjectDialog::warpToNextProject(int amount) {
 Path SelectProjectDialog::GetSelection() { return selection_; }
 
 Result SelectProjectDialog::OnNewProject(std::string &name) {
-
   Path path = currentPath_.Descend(name);
   Trace::Log("TMP", "creating project at %s", path.GetPath().c_str());
   selection_ = path;
@@ -279,16 +277,12 @@ void SelectProjectDialog::setCurrentFolder(Path &path) {
   I_Dir *dir = FileSystem::GetInstance()->Open(currentPath_.GetPath().c_str());
 
   if (dir) {
-
     // Get all lgpt something
-
     dir->GetContent("*");
     dir->Sort();
-
     IteratorPtr<Path> it(dir->GetIterator());
     for (it->Begin(); !it->IsDone(); it->Next()) {
       Path &path = it->CurrentItem();
-
       if (path.IsDirectory()) {
         std::string name = path.GetName();
         if (name[0] != '.' || name[1] == '.') {
@@ -299,7 +293,6 @@ void SelectProjectDialog::setCurrentFolder(Path &path) {
     }
     delete (dir);
   }
-
   // reset & redraw screen
   topIndex_ = 0;
   currentProject_ = 0;

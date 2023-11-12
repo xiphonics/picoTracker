@@ -163,3 +163,8 @@ const char *Path::Alias::GetPath() { return path_.c_str(); }
 void Path::Alias::SetAliasName(const char *alias) { alias_ = alias; };
 
 void Path::Alias::SetPath(const char *path) { path_ = path; };
+
+I_PagedDir::I_PagedDir(){};
+I_PagedDir::~I_PagedDir(){};
+
+I_PagedDir::I_PagedDir(const char *path){};

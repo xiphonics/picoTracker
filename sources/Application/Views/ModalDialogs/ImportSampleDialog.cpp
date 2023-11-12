@@ -28,19 +28,22 @@ ImportSampleDialog::ImportSampleDialog(View &view) : ModalView(view) {
 ImportSampleDialog::~ImportSampleDialog() { sampleList_.Empty(); }
 
 void ImportSampleDialog::DrawView() {
-
   SetWindow(LIST_WIDTH, LIST_SIZE + 3);
 
   GUITextProperties props;
 
   // Draw title
 
-  //	char title[40] ;
+#ifdef SHOW_MEM_USAGE
+  char title[40];
 
   SetColor(CD_NORMAL);
 
-  //	sprintf(title,"Sample Import from %s",currentPath_.GetName()) ;
-  //	w_.DrawString(title,pos,props) ;
+  sprintf(title, "MEM [%d]", System::GetInstance()->GetMemoryUsage());
+  GUIPoint pos = GUIPoint(0, 0);
+  w_.DrawString(title, pos, props);
+
+#endif
 
   // Draw samples
 
@@ -76,15 +79,9 @@ void ImportSampleDialog::DrawView() {
         strcpy(buffer + 1, p.c_str());
         strcat(buffer, "]");
       }
-#ifdef PICO_BUILD 
-			// temporary UI to show temporary dir file count limit reached
-            if (count == (PICO_MAX_FILE_COUNT + 1)) {
-                strcpy(buffer, "[*MAX FILES LIMIT*]");
-            }
-		#endif
-            buffer[LIST_WIDTH - 1] = 0;
-            DrawString(x, y, buffer, props);
-            y += 1;
+      buffer[LIST_WIDTH - 1] = 0;
+      DrawString(x, y, buffer, props);
+      y += 1;
     }
     count++;
   };
@@ -143,7 +140,7 @@ void ImportSampleDialog::import(Path &element) {
 
   if (sampleID >= 0) {
     I_Instrument *instr =
-      viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_);
+        viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_);
     if (instr->GetType() == IT_SAMPLE) {
       SampleInstrument *sinstr = (SampleInstrument *)instr;
       sinstr->AssignSample(sampleID);
@@ -173,57 +170,57 @@ void ImportSampleDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
       int count = 0;
       Path *element = 0;
       for (it->Begin(); !it->IsDone(); it->Next()) {
-                if (count++ == currentSample_) {
-                  element = &it->CurrentItem();
-                }
+        if (count++ == currentSample_) {
+          element = &it->CurrentItem();
+        }
       }
 
       if ((selected_ != 2) && (element->IsDirectory())) {
-                if (element->GetName() == "..") {
-                  if (currentPath_.GetPath() == sampleLib_.GetPath()) {
-                    //				EndModal(true) ;
-                  } else {
-                    Path parent = element->GetParent().GetParent();
-                    setCurrentFolder(&parent);
-                  }
-                } else {
-                  Path child(element->GetPath());
-                  setCurrentFolder(&child);
-                }
-                isDirty_ = true;
-                return;
+        if (element->GetName() == "..") {
+          if (currentPath_.GetPath() == sampleLib_.GetPath()) {
+            //				EndModal(true) ;
+          } else {
+            Path parent = element->GetParent().GetParent();
+            setCurrentFolder(&parent);
+          }
+        } else {
+          Path child(element->GetPath());
+          setCurrentFolder(&child);
+        }
+        isDirty_ = true;
+        return;
       }
 
       switch (selected_) {
       case 0: // preview
-                preview(*element);
-                break;
+        preview(*element);
+        break;
       case 1: // import
-                import(*element);
-                break;
+        import(*element);
+        break;
       case 2: // Exit ;
-                EndModal(0);
-                break;
+        EndModal(0);
+        break;
       }
     } else {
       // R Modifier
-      if (mask&EPBM_R) {
+      if (mask & EPBM_R) {
       } else {
         // No modifier
-                if (mask == EPBM_UP)
-                  warpToNextSample(-1);
-                if (mask == EPBM_DOWN)
-                  warpToNextSample(1);
-                if (mask == EPBM_LEFT) {
-                  selected_ -= 1;
-                  if (selected_ < 0)
-                    selected_ += 3;
-                  isDirty_ = true;
-                }
-                if (mask == EPBM_RIGHT) {
-                  selected_ = (selected_ + 1) % 3;
-                  isDirty_ = true;
-                }
+        if (mask == EPBM_UP)
+          warpToNextSample(-1);
+        if (mask == EPBM_DOWN)
+          warpToNextSample(1);
+        if (mask == EPBM_LEFT) {
+          selected_ -= 1;
+          if (selected_ < 0)
+            selected_ += 3;
+          isDirty_ = true;
+        }
+        if (mask == EPBM_RIGHT) {
+          selected_ = (selected_ + 1) % 3;
+          isDirty_ = true;
+        }
       }
     }
   }
@@ -247,30 +244,28 @@ void ImportSampleDialog::setCurrentFolder(Path *path) {
       dir->Sort();
       IteratorPtr<Path> it(dir->GetIterator());
       for (it->Begin(); !it->IsDone(); it->Next()) {
-                Path &current = it->CurrentItem();
-                if (current.IsDirectory()) {
-                  if (current.GetName().substr(0, 1) != "." ||
-                      current.GetName() == "..") {
-                    printf("adding %s\n", current.GetName());
-                    Path *sample = new Path(current);
-                    sampleList_.Insert(sample);
-                    if (!formerPath.Compare(current)) {
-                      currentSample_ = count;
-                    }
-                    count++;
-                  }
-                }
+        Path &current = it->CurrentItem();
+        if (current.IsDirectory()) {
+          if (current.GetName().substr(0, 1) != "." ||
+              current.GetName() == "..") {
+            ;
+            Path *sample = new Path(current);
+            sampleList_.Insert(sample);
+            if (!formerPath.Compare(current)) {
+              currentSample_ = count;
+            }
+            count++;
+          }
+        }
       }
       for (it->Begin(); !it->IsDone(); it->Next()) {
-                Path &current = it->CurrentItem();
-                if (!current.IsDirectory()) {
-                  if (current.Matches("*.wav") && current.GetName()[0] != '.') {
-                    printf("adding %s\n", current.GetName());
-
-                    Path *sample = new Path(current);
-                    sampleList_.Insert(sample);
-                  }
-                };
+        Path &current = it->CurrentItem();
+        if (!current.IsDirectory()) {
+          if (current.Matches("*.wav") && current.GetName()[0] != '.') {
+            Path *sample = new Path(current);
+            sampleList_.Insert(sample);
+          }
+        };
       }
     }
   }
