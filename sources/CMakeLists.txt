@@ -17,9 +17,10 @@ set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
-#add_definitions(-DPICO_DEBUG_MALLOC)
+# add_definitions(-DPICO_DEBUG_MALLOC)
 # add_definitions(-DPICOSTATS)
-#add_definitions(-DALL_MALLOC)
+# add_definitions(-DALL_MALLOC)
+add_definitions(-DSHOW_MEM_USAGE)
 add_definitions(-DDISABLESF)
 # Enable SDIO - this setting affects code in SdFat library as well as the project
 # This consumes ~7k+ RAM and has some performance problems ATM
@@ -31,7 +32,7 @@ add_definitions(-DDISABLESF)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
 # Disable MIDI. Enable in order to use UART0 as stdio for debugging
-# add_definitions(-DDUMMY_MIDI)
+add_definitions(-DDUMMY_MIDI)
 # Disable feedback for sample instruments. Due to low memory in the PICO
 # there is very low chance to bring this back
 add_definitions(-DDISABLE_FEEDBACK)
@@ -76,7 +77,7 @@ target_compile_definitions(picoTracker PUBLIC
 #endif()
 
 # Debug output with USB uses +6K memory
-pico_enable_stdio_usb(${PROJECT_NAME} 0)
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
 pico_enable_stdio_uart(${PROJECT_NAME} 0)
 
 # This is the default, but better to make it explicit

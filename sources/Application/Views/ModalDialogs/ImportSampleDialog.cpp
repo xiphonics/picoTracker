@@ -41,12 +41,16 @@ void ImportSampleDialog::DrawView() {
 
 // Draw title
 
-//	char title[40] ;
+#ifdef SHOW_MEM_USAGE
+	char title[40] ;
 
 	SetColor(CD_NORMAL) ;
 
-//	sprintf(title,"Sample Import from %s",currentPath_.GetName()) ;
-//	w_.DrawString(title,pos,props) ;
+	sprintf(title,"MEM [%d]", System::GetInstance()->GetMemoryUsage()) ;
+	GUIPoint pos = GUIPoint(0, 0);
+	w_.DrawString(title, pos, props);
+
+#endif
 
 // Draw samples
 
