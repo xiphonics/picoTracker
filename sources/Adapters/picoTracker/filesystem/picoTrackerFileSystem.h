@@ -5,6 +5,7 @@
 #include "System/FileSystem/FileSystem.h"
 #include <stdio.h>
 #include <string.h>
+#include <vector.h>
 
 class picoTrackerFile : public I_File {
 public:
@@ -41,4 +42,19 @@ public:
 private:
   SdFs SD_;
 };
+
+// This holds a list of int "indexes" that match strings, stored in alphabetically
+// sorted order.
+struct SortedIndexList {
+public:
+  SortedIndexList();
+
+  void Add(const char *name, index);
+
+private:
+  std:vector<int> indexes_;
+  std:string lastInserted
+
+}
+
 #endif
