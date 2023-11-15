@@ -101,8 +101,17 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
 
 // M8 style mapping
 static GUIEventPadButtonType eventMapping[10] = {
-    EPBT_LEFT, EPBT_DOWN, EPBT_RIGHT, EPBT_UP,   EPBT_R  ,
-    EPBT_A,    EPBT_B,    EPBT_START,  EPBT_SELECT  , EPBT_L };
+    EPBT_LEFT, // SW1
+    EPBT_DOWN,  // SW2
+    EPBT_RIGHT, // SW3
+    EPBT_UP, // SW4
+    EPBT_R ,  // SW5
+    EPBT_A,  // SW6
+    EPBT_B,  // SW7
+    EPBT_START, // SW8
+    EPBT_L , // SW9
+    EPBT_SELECT// No SW
+};
 
 void picoTrackerGUIWindowImp::ProcessButtonChange(uint16_t changeMask,
                                                   uint16_t buttonMask) {
