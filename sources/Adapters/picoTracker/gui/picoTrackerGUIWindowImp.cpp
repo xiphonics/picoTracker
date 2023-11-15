@@ -107,9 +107,9 @@ static GUIEventPadButtonType eventMapping[10] = {
     EPBT_UP, // SW4
     EPBT_R ,  // SW5
     EPBT_A,  // SW6
-    EPBT_B,  // SW7
+    EPBT_L,  // SW7
     EPBT_START, // SW8
-    EPBT_L , // SW9
+    EPBT_B , // SW9
     EPBT_SELECT// No SW
 };
 
