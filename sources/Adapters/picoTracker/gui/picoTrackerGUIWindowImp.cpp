@@ -12,11 +12,47 @@
 
 #define to_rgb565(color) ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) | (color._b >> 3)
 
+// classic picotracker mapping
+static GUIEventPadButtonType eventMappingPico[10] = {
+    EPBT_LEFT, // SW1
+    EPBT_DOWN,  // SW2
+    EPBT_RIGHT, // SW3
+    EPBT_UP, // SW4 
+    EPBT_L, // SW5
+    EPBT_B, // SW6
+    EPBT_A, // SW7
+    EPBT_R, // SW8
+    EPBT_START, // SW9
+    EPBT_SELECT // No SW
+};
+
+// M8 style mapping
+static GUIEventPadButtonType eventMappingM8[10] = {
+    EPBT_LEFT, // SW1
+    EPBT_DOWN,  // SW2
+    EPBT_RIGHT, // SW3
+    EPBT_UP, // SW4
+    EPBT_R ,  // SW5
+    EPBT_A,  // SW6
+    EPBT_L,  // SW7
+    EPBT_START, // SW8
+    EPBT_B , // SW9
+    EPBT_SELECT// No SW
+};
+
+static GUIEventPadButtonType *eventMapping = eventMappingPico;
+
 picoTrackerGUIWindowImp *instance_;
 
 picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   mode0_init();
   instance_ = this;
+
+  Config *config = Config::GetInstance();
+  const char *keymapStyle = config->GetValue("KEYMAPSTYLE");
+  if (strcasecmp("M8",keymapStyle) == 0) {
+    eventMapping = eventMappingM8;
+  }
 };
 
 picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}
@@ -94,9 +130,6 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
   }
 }
 
-static GUIEventPadButtonType eventMapping[10] = {
-    EPBT_LEFT, EPBT_DOWN, EPBT_RIGHT, EPBT_UP,    EPBT_L,
-    EPBT_B,    EPBT_A,    EPBT_R,     EPBT_START, EPBT_SELECT};
 
 void picoTrackerGUIWindowImp::ProcessButtonChange(uint16_t changeMask,
                                                   uint16_t buttonMask) {
