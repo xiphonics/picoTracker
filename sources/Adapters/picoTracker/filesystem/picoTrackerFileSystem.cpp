@@ -44,13 +44,8 @@ void picoTrackerDir::GetContent(const char *mask) {
 
   FsBaseFile entry;
   while (entry.openNext(&dir, O_READ)) {
-    if (count == (PICO_MAX_FILE_COUNT + 1)) {
-      Path *fakePath = new Path("___.wav");
-      Insert(fakePath);
-      break;
-    }    
-    char current[PICO_MAX_FILENAME_LEN];
-    entry.getName(current, PICO_MAX_FILENAME_LEN);
+    char current[MAX_FILENAME_SIZE];
+    entry.getName(current, MAX_FILENAME_SIZE);
     char *c = current;
     while (*c) {
       *c = tolower(*c);
@@ -58,7 +53,7 @@ void picoTrackerDir::GetContent(const char *mask) {
     }
 
     if (wildcardfit(mask, current)) {
-      entry.getName(current, PICO_MAX_FILENAME_LEN);
+      entry.getName(current, MAX_FILENAME_SIZE);
       std::string fullpath = path_;
       if (path_[strlen(path_) - 1] != '/') {
         fullpath += "/";
