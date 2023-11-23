@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <vector>
 
 #define MAX_FILENAME_SIZE 256
 
@@ -81,8 +82,8 @@ class I_File {
 public:
 	virtual ~I_File() {} ;
 	virtual int Read(void *ptr, int size, int nmemb)=0;
-  virtual int GetC() = 0;
-  virtual int Write(const void *ptr,int size, int nmemb)=0;
+	virtual int GetC() = 0;
+	virtual int Write(const void *ptr,int size, int nmemb)=0;
 	virtual void Printf(const char *format,...)=0 ;
 	virtual void Seek(long offset,int whence)=0 ;
 	virtual long Tell()=0 ;
@@ -103,10 +104,21 @@ protected:
    char *path_ ;
 } ;
 
+class I_PagedDir {
+public:
+  I_PagedDir();
+  I_PagedDir(const char *path);
+  virtual ~I_PagedDir();
+  virtual void GetContent(const char *mask) =0;
+  virtual void getFileList(int startIndex, std::vector<std::string>& fileFlist)= 0;
+
+};
+
 class FileSystem: public T_Factory<FileSystem> {
 public:
 	virtual I_File *Open(const char *path, const char *mode)=0;
 	virtual I_Dir *Open(const char *path)=0 ;
+	virtual I_PagedDir *OpenPaged(const char *path)=0;
 	virtual Result MakeDir(const char *path)=0 ;
 	virtual void Delete(const char *)=0 ;
 	virtual FileType GetFileType(const char *path)=0 ;

@@ -5,8 +5,19 @@
 #include "Foundation/T_SimpleList.h"
 #include "System/FileSystem/FileSystem.h"
 #include <string>
+#include <vector>
 
-class PagedImportSampleDialog:public ModalView {
+const static char *sampleLib_ = "/samplelib";
+
+
+struct FileListItem {
+public:
+	const char* name;
+	bool IsDirectory;
+};
+
+
+class PagedImportSampleDialog : public ModalView {
 public:
 	PagedImportSampleDialog(View &view) ;
 	virtual ~PagedImportSampleDialog() ;
@@ -22,17 +33,14 @@ protected:
 	void import(Path &element) ;
 	void preview(Path &element) ;
 private:
-	T_SimpleList<Path> sampleList_ ;
+	const std::vector<FileListItem> fileList_ {};
 	int currentSample_ ;
 	int topIndex_ ;
 	int toInstr_ ;
 	int selected_ ;
-	static bool initStatic_ ;
-	static Path sampleLib_ ;
-	static Path currentPath_ ;
+	Path currentPath_ { "/samplelib"};
 
 } ;
-
 
 #endif
 

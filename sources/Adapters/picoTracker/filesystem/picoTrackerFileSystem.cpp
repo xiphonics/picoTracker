@@ -3,7 +3,27 @@
 #include "Application/Utils/wildcard.h"
 #include "System/Console/Trace.h"
 
+#include <string>
+
+picoTrackerPagedDir::picoTrackerPagedDir(const char *path) : path_ { std::string(path) }{
+  fileIndexes_.reserve(256);
+  subdirIndexes_.reserve(32);
+};
+
+void picoTrackerPagedDir::GetContent(const char *mask) {
+  Trace::Log("FILESYSTEM", "GetContent %s with mask %s", path_, mask);
+  fileIndexes_.clear();
+  subdirIndexes_.clear();
+  FsBaseFile dir;
+}
+
+void picoTrackerPagedDir::getFileList(int startIndex, std::vector<std::string>& fileFlist) {
+  
+}
+
 picoTrackerDir::picoTrackerDir(const char *path) : I_Dir(path){};
+
+
 
 void picoTrackerDir::GetContent(const char *mask) {
   Trace::Log("FILESYSTEM", "GetContent %s with mask %s", path_, mask);
@@ -176,3 +196,7 @@ FileType picoTrackerFileSystem::GetFileType(const char *path) {
   file.close();
   return filetype;
 };
+
+I_PagedDir *picoTrackerFileSystem::OpenPaged(const char *path) {
+  return new picoTrackerPagedDir { path };
+}

@@ -254,20 +254,19 @@ Path SelectProjectDialog::GetSelection() {
 }
 
 Result SelectProjectDialog::OnNewProject(std::string &name) {
-
 	Path path = currentPath_.Descend(name);
-  Trace::Log("TMP","creating project at %s",path.GetPath().c_str());
+	Trace::Log("TMP","creating project at %s",path.GetPath().c_str());
 	selection_=path ;
 	Result result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str()) ;
-  RETURN_IF_FAILED_MESSAGE(result,"Failed to create project dir");
+	RETURN_IF_FAILED_MESSAGE(result,"Failed to create project dir");
 
-  path= path.Descend("samples");
-  Trace::Log("TMP","creating samples dir at %s",path.GetPath().c_str());
+	path= path.Descend("samples");
+	Trace::Log("TMP","creating samples dir at %s",path.GetPath().c_str());
 	result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str()) ;
-  RETURN_IF_FAILED_MESSAGE(result,"Failed to create samples dir");
+	RETURN_IF_FAILED_MESSAGE(result,"Failed to create samples dir");
 
 	EndModal(1) ;
-  return Result::NoError;
+	return Result::NoError;
 } ;
 
 //copy-paste-mutilate'd from ImportSampleDialog
@@ -282,32 +281,27 @@ void SelectProjectDialog::setCurrentFolder(Path &path) {
 
 	I_Dir *dir=FileSystem::GetInstance()->Open(currentPath_.GetPath().c_str()) ;
 
-  if (dir) 
-  {
-
+	if (dir) 
+	{
 		// Get all lgpt something
-
 		dir->GetContent("*");
-    dir->Sort();
-      
+		// dir->Sort();
 		IteratorPtr<Path> it(dir->GetIterator()) ;
 		for(it->Begin();!it->IsDone();it->Next())
-    {
+		{
 			Path &path=it->CurrentItem() ;
-
 			if (path.IsDirectory())
-      {
+			{
 				std::string name=path.GetName() ;
 				if (name[0] != '.' || name[1]== '.')
-        {
+				{
 					Path *p=new Path(path) ;
 					content_.Insert(p) ;
 				}
-      }
+			}
 		}
 		delete (dir) ;
-  }
-
+	}
 	//reset & redraw screen
 	topIndex_=0 ;
 	currentProject_=0 ;
