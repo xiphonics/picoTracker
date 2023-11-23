@@ -20,6 +20,18 @@ enum FileType {
 	FT_DIR
 } ;
 
+struct FileListItem {
+public:
+	FileListItem(const char* name, int idx, bool isDir) : name { std::string(name) }, index { idx }, isDirectory { isDir } {};
+
+	~FileListItem() { Trace::Log("FileListItem","destruct"); };
+
+	std::string name;
+	int index;
+	bool isDirectory;
+};
+
+
 class Path {
 public:
 	Path() ;
@@ -107,7 +119,7 @@ public:
   I_PagedDir(const char *path);
   virtual ~I_PagedDir();
   virtual void GetContent(const char *mask) =0;
-  virtual void getFileList(int startIndex, std::vector<std::string>& fileFlist)= 0;
+  virtual void getFileList(int startIndex, std::vector<FileListItem> *fileList)= 0;
 
 };
 

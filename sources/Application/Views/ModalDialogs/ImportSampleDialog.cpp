@@ -31,10 +31,11 @@ ImportSampleDialog::ImportSampleDialog(View &view):ModalView(view) {
 
 ImportSampleDialog::~ImportSampleDialog() {
   sampleList_.Empty();
+  printf("IMportDialog destruct called");
 }
 
 void ImportSampleDialog::DrawView() {
-
+	printf("IMportDialog drawView");
 	SetWindow(LIST_WIDTH,LIST_SIZE+3) ;
 
 	GUITextProperties props ;

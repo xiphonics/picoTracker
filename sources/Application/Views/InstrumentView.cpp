@@ -9,6 +9,7 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/ImportSampleDialog.h"
+#include "ModalDialogs/PagedImportSampleDialog.h"
 #include "Application/Model/Config.h"
 
 InstrumentView::InstrumentView(GUIWindow &w,ViewData *data):FieldView(w,data) {
@@ -274,7 +275,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask,bool pressed) {
                 DoModal(mb) ;
               } else { ;
                 // Go to import sample
-                ImportSampleDialog *isd=new ImportSampleDialog(*this) ;
+                // ImportSampleDialog *isd=new ImportSampleDialog(*this) ;
+                PagedImportSampleDialog *isd = new PagedImportSampleDialog(*this) ;
                 DoModal(isd) ;
               }
             } else {
@@ -448,7 +450,7 @@ void InstrumentView::DrawView() {
 } ;
 
 void InstrumentView::OnFocus() {
-    onInstrumentChange() ; 
+    onInstrumentChange() ;
 }
 
 

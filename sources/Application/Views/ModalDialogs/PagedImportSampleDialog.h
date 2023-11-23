@@ -1,5 +1,5 @@
-#ifndef _IMPORT_SAMPLE_DIALOG_H_
-#define _IMPORT_SAMPLE_DIALOG_H_
+#ifndef _PAGED_IMPORT_SAMPLE_DIALOG_H_
+#define _PAGED_IMPORT_SAMPLE_DIALOG_H_
 
 #include "Application/Views/BaseClasses/ModalView.h"
 #include "Foundation/T_SimpleList.h"
@@ -7,14 +7,6 @@
 #include <string>
 #include <vector>
 
-const static char *sampleLib_ = "/samplelib";
-
-
-struct FileListItem {
-public:
-	const char* name;
-	bool IsDirectory;
-};
 
 
 class PagedImportSampleDialog : public ModalView {
@@ -33,13 +25,13 @@ protected:
 	void import(Path &element) ;
 	void preview(Path &element) ;
 private:
-	const std::vector<FileListItem> fileList_ {};
+	std::vector<FileListItem> *fileList_;
 	int currentSample_ ;
 	int topIndex_ ;
 	int toInstr_ ;
 	int selected_ ;
 	Path currentPath_ { "/samplelib"};
-
+	I_PagedDir *currentDir_;
 } ;
 
 #endif

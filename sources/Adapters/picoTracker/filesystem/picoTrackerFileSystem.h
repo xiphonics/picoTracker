@@ -34,11 +34,11 @@ class picoTrackerPagedDir : public I_PagedDir {
 public:
   picoTrackerPagedDir(const char *path);
   virtual ~picoTrackerPagedDir(){};
-  virtual void GetContent(const char *mask);
-  void getFileList(int startIndex, std::vector<std::string>& fileFlist);
+  void GetContent(const char *mask);
+  void getFileList(int startIndex, std::vector<FileListItem> *fileList);
 
 private:
-  const std::string& path_;
+  const std::string path_;
   std::vector<int> fileIndexes_ {};
   std::vector<int> subdirIndexes_ {};
 };

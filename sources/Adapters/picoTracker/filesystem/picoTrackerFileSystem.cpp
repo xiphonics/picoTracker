@@ -8,22 +8,87 @@
 picoTrackerPagedDir::picoTrackerPagedDir(const char *path) : path_ { std::string(path) }{
   fileIndexes_.reserve(256);
   subdirIndexes_.reserve(32);
+  Trace::Log("PagedDir", "new picotrackerPageddir:%s", path_.c_str());
 };
 
 void picoTrackerPagedDir::GetContent(const char *mask) {
-  Trace::Log("FILESYSTEM", "GetContent %s with mask %s", path_, mask);
+  Trace::Log("PAGEDFILESYSTEM", "Paged GetContent %s with mask %s", path_, mask);
   fileIndexes_.clear();
   subdirIndexes_.clear();
   FsBaseFile dir;
+
+  if (!dir.open(path_.c_str())) {
+    Trace::Error("Failed to open %s", path_);
+    return;
+  }
+
+  if (!dir.isDir()) {
+    Trace::Error("Path \"%s\" is not a directory", path_);
+    return;
+  }
+
+  int count = 0;
+
+  FsBaseFile entry;
+  while (entry.openNext(&dir, O_READ)) {
+    char current[MAX_FILENAME_SIZE];
+    entry.getName(current, MAX_FILENAME_SIZE);
+
+    int fileIndex = entry.dirIndex();
+    if (entry.isDir()) {
+      subdirIndexes_.push_back(fileIndex);
+      Trace::Log("PAGEDFILESYSTEM", "[%d] readdir:%s", fileIndex, current);
+    } else {
+      fileIndexes_.push_back(fileIndex);
+      Trace::Log("PAGEDFILESYSTEM", "[%d] readfile:%s", fileIndex, current);
+    }
+    count++;
+  }
+  Trace::Log("PAGEDFILESYSTEM", "scanned %d files", count);
 }
 
-void picoTrackerPagedDir::getFileList(int startIndex, std::vector<std::string>& fileFlist) {
-  
+void picoTrackerPagedDir::getFileList(int startIndex, std::vector<FileListItem> *fileList) {
+  Trace::Log("PAGEDFILESYSTEM", "getfile List path:%s", path_.c_str());
+  Trace::Log("PAGEDFILESYSTEM", "getfile List dirs:%d files:%d", subdirIndexes_.size(), fileIndexes_.size());
+  FsBaseFile dir;
+  if (!dir.open(path_.c_str())) {
+    Trace::Error("getFileList failed open:%s", path_.c_str());
+    return;
+  }
+  if (!dir.isDir()) {
+    Trace::Error("Path \"%s\" is not a directory", path_);
+    return;
+  }
+
+  char current[32];
+  FsBaseFile file;
+  for(auto index : subdirIndexes_) {
+    Trace::Log("PAGEDFILESYSTEM", "getdir at dir:%d Index %d", dir, index);
+    
+    file.open(&dir, index, O_READ);
+    
+    file.getName(current, 32);
+
+    auto fi = FileListItem(current, index, true);
+    fileList->push_back(fi);
+
+    Trace::Log("PAGEDFILESYSTEM", "gotdir name:%s", current);
+  }
+  for(auto index : fileIndexes_) {
+    Trace::Log("PAGEDFILESYSTEM", "getfile at Index %d", index);
+    file.open(&dir, index, O_READ);
+    file.getName(current, 32);
+
+    fileList->push_back(FileListItem(current, index, false));
+
+    Trace::Log("PAGEDFILESYSTEM", "gotfilename:%s", current);
+  }
 }
+
+
+// ====
 
 picoTrackerDir::picoTrackerDir(const char *path) : I_Dir(path){};
-
-
 
 void picoTrackerDir::GetContent(const char *mask) {
   Trace::Log("FILESYSTEM", "GetContent %s with mask %s", path_, mask);
