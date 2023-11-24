@@ -17,17 +17,16 @@ static const char *buttonText[3]= {
 
 PagedImportSampleDialog::PagedImportSampleDialog(View &view):ModalView(view) {
 	selected_ = 0 ;
-	fileList_ = new std::vector<FileListItem> {} ;
-	fileList_->reserve(15);
-	Trace::Log("PAGEDIMPORTDIALOG", "samplelib is:%s", sampleLib_);
+	fileList_.reserve(15);
+	Trace::Log("PAGEDIMPORT", "samplelib is:%s", sampleLib_);
 }
 
 PagedImportSampleDialog::~PagedImportSampleDialog() {
-	Trace::Log("PAGEDIMPORTDIALOG", "Destruct ===");
+	Trace::Log("PAGEDIMPORT", "Destruct ===");
 }
 
 void PagedImportSampleDialog::DrawView() {
-	Trace::Log("PagedImport","PagedImportDialog drawView");
+	Trace::Log("PAGEDIMPORT","DrawView topIdx:%d", topIndex_);
 
 	SetWindow(LIST_WIDTH,LIST_SIZE+3) ;
 	GUITextProperties props ;
@@ -48,20 +47,20 @@ void PagedImportSampleDialog::DrawView() {
 	int y= 1;
 	if (currentSample_ < topIndex_) {
 		topIndex_ = currentSample_;
+		fileList_.clear();
+		currentDir_->getFileList(topIndex_, &fileList_);
+		Trace::Log("PAGEDIMPORT", "getfile PREV List size: %d", fileList_.size());
 	}
 	if (currentSample_>= topIndex_+LIST_SIZE) {
-		topIndex_=currentSample_;
+		topIndex_ = currentSample_;
+		fileList_.clear();
+		currentDir_->getFileList(topIndex_, &fileList_);
+		Trace::Log("PAGEDIMPORT", "getfile NEXT List size: %d", fileList_.size());
 	}
 
-	fileList_->clear();
-
-	currentDir_->getFileList(topIndex_, fileList_);
-	Trace::Log("PagedImport", "getfile List size: %d", fileList_->size());
-
-
 	int count = 0;
-	char buffer[64];
-	for(FileListItem current : *fileList_) {
+	char buffer[LIST_WIDTH+1];
+	for(FileListItem current : fileList_) {
 		if ((count >= topIndex_) && (count < topIndex_ + LIST_SIZE)) {
 			if (count==currentSample_) {
 				SetColor(CD_HILITE2);
@@ -71,14 +70,12 @@ void PagedImportSampleDialog::DrawView() {
 				props.invert_ = false;
 			}
 			if (!current.isDirectory) {
-				strcpy(buffer, current.name.c_str());
+				strncpy(buffer, current.name.c_str(), LIST_WIDTH);
 			} else {
 				buffer[0]='[' ;
-				strcpy(buffer + 1, current.name.c_str());
+				strncpy(buffer + 1, current.name.c_str(), LIST_WIDTH - 2);
 				strcat(buffer,"]");
 			}
-			// now "truncate" the buffer to LIST_WIDTH
-			buffer[LIST_WIDTH - 1] = 0;
 			DrawString(x, y, buffer, props);
 			y += 1;
 		}
@@ -90,6 +87,7 @@ void PagedImportSampleDialog::DrawView() {
 
 	SetColor(CD_NORMAL) ;
 
+//Draw buttons
 	for (int i = 0; i < 3; i++) {
 		const char *text=buttonText[i];
 		x=(offset*(i+1)-strlen(text)/2) - 2;
@@ -100,11 +98,11 @@ void PagedImportSampleDialog::DrawView() {
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {
 
-	currentSample_+=direction ;
-	int size= fileList_->size() ; 
-	if (currentSample_<0) currentSample_+=size ;
-	if (currentSample_>=size) currentSample_-=size ;
-	isDirty_=true ;
+	currentSample_ += direction;
+	int size = fileList_.size(); 
+	if (currentSample_ < 0) currentSample_ += size;
+	if (currentSample_ >= size) currentSample_ -= size;
+	isDirty_ = true;
 }
 
 void PagedImportSampleDialog::OnPlayerUpdate(PlayerEventType ,unsigned int currentTick) {
@@ -159,31 +157,29 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask, bool presse
 	} else {
 		// A modifier
 		if (mask&EPBM_A) {
-			// FileListItem selected = fileList_[selected_];
-			// Trace::Log("PagedImport", "selected:%s", selected.name);
+			FileListItem currentItem = fileList_[currentSample_];
+			Trace::Log("PagedImport", "[%d] selected:%s", currentSample_, currentItem.name.c_str());
 
-			// if (selected.IsDirectory) {
-			// 	if (selected.name == std::string("..")) {
-			// 		if (currentPath_.GetPath() == std::string(sampleLib_)) {
-			// 			// if already at root of samplelib do nothing
-			// 		} else {
-			// 			Path parent = currentPath_.GetParent();
-			// 			setCurrentFolder(&parent);
-			// 		}
-			// 	} else {
-			// 		Path childDir = currentPath_.Descend(std::string(selected.name));
-			// 		setCurrentFolder(&childDir);
-			// 	}
-			// 	isDirty_=true ;
-			// 	return ;
-			// }
-			// auto fullPathStr = std::string(currentPath_.GetPath());
-			// fullPathStr += "/";
-			// fullPathStr += selected.name;
-			// auto fullPath = Path { fullPathStr };
-
-			auto fullPath = Path { "test" };
-
+			if ((selected_ !=2 ) && currentItem.isDirectory) {
+				if (currentItem.name == std::string("..")) {
+					if (currentPath_.GetPath() == std::string(sampleLib_)) {
+						Trace::Log("PAGEDIMPORT", "already at root of samplelib nothing to do");
+					} else {
+						Path parent = currentPath_.GetParent();
+						setCurrentFolder(&parent);
+					}
+				} else {
+					Path childDirPath =	currentPath_.Descend(std::string(currentItem.name));
+					setCurrentFolder(&childDirPath);
+				}
+				isDirty_ = true;
+				return;
+			}
+			auto fullPathStr = std::string(currentPath_.GetPath());
+			fullPathStr += "/";
+			fullPathStr += currentItem.name;
+			auto fullPath = Path { fullPathStr };
+			
 			switch(selected_) {
 				case 0: // preview
 					preview(fullPath);
@@ -217,20 +213,24 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask, bool presse
 }
 
 void PagedImportSampleDialog::setCurrentFolder(Path *path) {
+	Trace::Log("PAGEDIMPORT", "set Current Folder:%s", path->GetPath().c_str());
 	Path formerPath(currentPath_);
 	topIndex_= 0;
 	currentSample_= 0;
 	currentPath_ = Path(*path) ;
-	auto result = fileList_->empty();
-	if (!result) {
-		Trace::Log("PagedImport", "couldn't clear fileList buffer");
-	}
+	fileList_.clear();
 	if (path) {
 		currentDir_ = FileSystem::GetInstance()->OpenPaged(path->GetPath().c_str());
 		//TODO: show "Loading..." mesg in UI
-		Trace::Log("PagedImport", "Loading...");
+		Trace::Log("PAGEDIMPORT", "Loading...");
 		currentDir_->GetContent("*.wav");
 		//TODO: hide "Loading..." mesg in UI
-		Trace::Log("PagedImport", "Finished Loading");
+		Trace::Log("PAGEDIMPORT", "Finished Loading");
 	}
+
+	// load first page of file/subdirs
+	fileList_.clear();	
+	currentDir_->getFileList(topIndex_, &fileList_);
+	Trace::Log("PAGEDIMPORT", "getfile First List size: %d", fileList_.size());
+
 }

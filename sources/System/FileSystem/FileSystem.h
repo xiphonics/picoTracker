@@ -22,7 +22,9 @@ enum FileType {
 
 struct FileListItem {
 public:
-	FileListItem(const char* name, int idx, bool isDir) : name { std::string(name) }, index { idx }, isDirectory { isDir } {};
+	// truncate to 22 or 24 chars depending on if dir as they need surronding "[]"
+	FileListItem(const char* name, int idx, bool isDir) : 
+		name { std::string(name)}, index { idx }, isDirectory { isDir } {};
 
 	~FileListItem() { Trace::Log("FileListItem","destruct"); };
 

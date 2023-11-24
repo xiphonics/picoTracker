@@ -25,7 +25,7 @@ protected:
 	void import(Path &element) ;
 	void preview(Path &element) ;
 private:
-	std::vector<FileListItem> *fileList_;
+	std::vector<FileListItem> fileList_ {};
 	int currentSample_ ;
 	int topIndex_ ;
 	int toInstr_ ;
