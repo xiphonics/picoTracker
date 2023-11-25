@@ -117,12 +117,15 @@ protected:
 
 class I_PagedDir {
 public:
-  I_PagedDir();
-  I_PagedDir(const char *path);
-  virtual ~I_PagedDir();
-  virtual void GetContent(const char *mask) =0;
-  virtual void getFileList(int startIndex, std::vector<FileListItem> *fileList)= 0;
+	I_PagedDir();
+	I_PagedDir(const char *path);
+	virtual ~I_PagedDir();
+	virtual void GetContent(const char *mask) = 0;
+	virtual void getFileList(int startIndex, std::vector<FileListItem> *fileList) = 0;
+	virtual int size() = 0;
 
+protected:
+  unsigned int fileCount_ = 0;
 };
 
 class FileSystem: public T_Factory<FileSystem> {

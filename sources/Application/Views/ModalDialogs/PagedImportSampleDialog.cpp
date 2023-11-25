@@ -26,7 +26,7 @@ PagedImportSampleDialog::~PagedImportSampleDialog() {
 }
 
 void PagedImportSampleDialog::DrawView() {
-	Trace::Log("PAGEDIMPORT","DrawView topIdx:%d", topIndex_);
+	Trace::Log("PAGEDIMPORT","DrawView current:%d topIdx:%d",currentSample_ ,topIndex_);
 
 	SetWindow(LIST_WIDTH,LIST_SIZE+3) ;
 	GUITextProperties props ;
@@ -45,24 +45,11 @@ void PagedImportSampleDialog::DrawView() {
 // Draw samples
 	int x= 1;
 	int y= 1;
-	if (currentSample_ < topIndex_) {
-		topIndex_ = currentSample_;
-		fileList_.clear();
-		currentDir_->getFileList(topIndex_, &fileList_);
-		Trace::Log("PAGEDIMPORT", "getfile PREV List size: %d", fileList_.size());
-	}
-	if (currentSample_>= topIndex_+LIST_SIZE) {
-		topIndex_ = currentSample_;
-		fileList_.clear();
-		currentDir_->getFileList(topIndex_, &fileList_);
-		Trace::Log("PAGEDIMPORT", "getfile NEXT List size: %d", fileList_.size());
-	}
 
 	int count = 0;
 	char buffer[LIST_WIDTH+1];
 	for(FileListItem current : fileList_) {
-		if ((count >= topIndex_) && (count < topIndex_ + LIST_SIZE)) {
-			if (count==currentSample_) {
+			if (count == (currentSample_ % LIST_SIZE)) {
 				SetColor(CD_HILITE2);
 				props.invert_=true;
 			} else {
@@ -72,17 +59,17 @@ void PagedImportSampleDialog::DrawView() {
 			if (!current.isDirectory) {
 				strncpy(buffer, current.name.c_str(), LIST_WIDTH);
 			} else {
-				buffer[0]='[' ;
+				buffer[0]='[';
 				strncpy(buffer + 1, current.name.c_str(), LIST_WIDTH - 2);
 				strcat(buffer,"]");
 			}
+			buffer[LIST_WIDTH] = 0; // make sure if truncated the filename we have trailing null
 			DrawString(x, y, buffer, props);
 			y += 1;
-		}
 		count++;
 	} ;
 
-	y = LIST_SIZE+2;
+	y = LIST_SIZE + 2;
 	int offset = 7;
 
 	SetColor(CD_NORMAL) ;
@@ -97,11 +84,33 @@ void PagedImportSampleDialog::DrawView() {
 } ;
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {
-
+	Trace::Log("PAGEDIMPORT", "warpToNextSample current:%d top:%d", currentSample_, topIndex_);
 	currentSample_ += direction;
-	int size = fileList_.size(); 
-	if (currentSample_ < 0) currentSample_ += size;
-	if (currentSample_ >= size) currentSample_ -= size;
+	int size = currentDir_->size(); 
+	
+	// wrap around from first to last or vice versa
+	if (currentSample_ < 0) {
+		topIndex_ = (size % LIST_SIZE) * LIST_SIZE;
+		currentSample_ += size;
+	}
+	if (currentSample_ >= size) {
+		currentSample_ -= 0;
+		topIndex_ = 0;
+	}
+
+	if ((currentSample_ < topIndex_) && (topIndex_ != 0)) {
+		topIndex_ -= LIST_SIZE;
+		fileList_.clear();
+		currentDir_->getFileList(topIndex_, &fileList_);
+		Trace::Log("PAGEDIMPORT", "getfile PREV List current:%d top:%d", currentSample_, topIndex_);
+	}
+	if ((currentSample_ >= (topIndex_ + LIST_SIZE)) && ((topIndex_ + LIST_SIZE) < size)) {
+		topIndex_ += LIST_SIZE;
+		fileList_.clear();
+		currentDir_->getFileList(topIndex_, &fileList_);
+		Trace::Log("PAGEDIMPORT", "getfile NEXT List current:%d top:", currentSample_, topIndex_);
+	}
+
 	isDirty_ = true;
 }
 

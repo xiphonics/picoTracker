@@ -36,6 +36,7 @@ public:
   virtual ~picoTrackerPagedDir(){};
   void GetContent(const char *mask);
   void getFileList(int startIndex, std::vector<FileListItem> *fileList);
+  int size();
 
 private:
   const std::string path_;

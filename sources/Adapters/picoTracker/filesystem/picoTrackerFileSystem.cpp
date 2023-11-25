@@ -7,7 +7,7 @@
 
 picoTrackerPagedDir::picoTrackerPagedDir(const char *path) : path_ { std::string(path) }{
   fileIndexes_.reserve(256);
-  subdirIndexes_.reserve(128);
+  subdirIndexes_.reserve(96);
   Trace::Log("PAGEDDIR", "NEW:%s", path_.c_str());
 };
 
@@ -90,6 +90,13 @@ void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem>
     Trace::Log("PAGEDFILESYSTEM", "gotfilename:%s", current);
     count++;
   }
+
+  fileCount_ = subdirIndexes_.size() + fileIndexes_.size();
+   Trace::Log("PAGEDFILESYSTEM", "fileCount:%d", fileCount_);
+}
+
+int picoTrackerPagedDir::size() {
+  return fileCount_;
 }
 
 picoTrackerDir::picoTrackerDir(const char *path) : I_Dir(path){};
@@ -264,3 +271,4 @@ FileType picoTrackerFileSystem::GetFileType(const char *path) {
 I_PagedDir *picoTrackerFileSystem::OpenPaged(const char *path) {
   return new picoTrackerPagedDir { path };
 }
+
