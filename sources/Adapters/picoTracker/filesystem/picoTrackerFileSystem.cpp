@@ -37,7 +37,7 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
     if (entry.isDir()) {
       subdirIndexes_.push_back(fileIndex);
       Trace::Log("PAGEDFILESYSTEM", "[%d] readdir:%s", fileIndex, current);
-    } else {
+    } else if (wildcardfit(mask, current)) {
       fileIndexes_.push_back(fileIndex);
       Trace::Log("PAGEDFILESYSTEM", "[%d] readfile:%s", fileIndex, current);
     }
