@@ -86,12 +86,13 @@ void PagedImportSampleDialog::DrawView() {
 void PagedImportSampleDialog::warpToNextSample(int direction) {
 	Trace::Log("PAGEDIMPORT", "warpToNextSample curr:%d top:%d direc:%d", currentSample_, topIndex_, direction);
 	currentSample_ += direction;
-	int size = currentDir_->size(); 
+	int size = currentDir_->size();
+	Trace::Log("PAGEDIMPORT", "warpToNextSample size:%d", size);
 	bool needPage = false;
 
 	// wrap around from first entry to last entry or vice versa
 	if (currentSample_ < 0) {
-		topIndex_ = (size % LIST_SIZE) * LIST_SIZE;
+		topIndex_ = (size / LIST_SIZE) * LIST_SIZE;
 		currentSample_ = size - 1; //goto last entry
 		needPage = true;
 	}
