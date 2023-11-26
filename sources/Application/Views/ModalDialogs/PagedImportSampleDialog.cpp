@@ -96,7 +96,7 @@ void PagedImportSampleDialog::warpToNextSample(int direction) {
 		currentSample_ = size - 1; //goto last entry
 		needPage = true;
 	}
-	if (currentSample_ >= size) {
+	if (currentSample_ > size) {
 		currentSample_ = 0;
 		topIndex_ = 0;
 		needPage = true;

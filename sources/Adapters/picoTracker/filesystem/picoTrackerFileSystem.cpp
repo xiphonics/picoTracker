@@ -61,7 +61,8 @@ void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem>
   }
   static const int MAX_ITEMS = 15;
   // Max filename is actually 256 per FAT std 
-  char current[64];
+  static const int MAX_FILENAME_LEN = 128;
+  char current[MAX_FILENAME_LEN];
   FsBaseFile file;
 
 	if (startOffset == 0 && (path_ != std::string("/samplelib"))) {
@@ -73,8 +74,11 @@ void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem>
   for(; count < subdirIndexes_.size() && (fileList->size() < MAX_ITEMS); count++) {
     int index = subdirIndexes_[count];
     Trace::Log("PAGEDFILESYSTEM", "getdir at dir:%d Index %d", dir, index);
-    file.open(&dir, index, O_READ);
-    file.getName(current, 256);
+    if (!file.open(&dir, index, O_READ)) {
+      Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
+    }
+    int len = file.getName(current, MAX_FILENAME_LEN);
+    Trace::Log("PAGEDFILESYSTEM", "dir getName at Index %d length:%d", index, len);
     current[23] = 0; //truncate at 22 char length string
     fileList->push_back(FileListItem(current, index, true));
     Trace::Log("PAGEDFILESYSTEM", "gotdir name:%s", current);
@@ -82,13 +86,14 @@ void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem>
   for(; count < fileIndexes_.size() && (fileList->size() < MAX_ITEMS); count++) {
     int index = fileIndexes_[count];
     Trace::Log("PAGEDFILESYSTEM", "getfile at Index %d", index);
-    file.open(&dir, index, O_READ);
-    file.getName(current, 256);
+    if (!file.open(&dir, index, O_READ)){
+      Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
+    }
+    int len = file.getName(current, MAX_FILENAME_LEN);
+    Trace::Log("PAGEDFILESYSTEM", "file getName at Index %d length:%d", index, len);
     current[25] = 0; //truncate at 24 char length string
     fileList->push_back(FileListItem(current, index, false));
-
     Trace::Log("PAGEDFILESYSTEM", "gotfilename:%s", current);
-    count++;
   }
 
   fileCount_ = subdirIndexes_.size() + fileIndexes_.size();
