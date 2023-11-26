@@ -9,7 +9,7 @@
 static const int MAX_FILENAME_LEN = 128;
 
 picoTrackerPagedDir::picoTrackerPagedDir(const char *path) : path_ { std::string(path) }{
-  fileIndexes_.reserve(256);
+  fileIndexes_.reserve(354);
   subdirIndexes_.reserve(96);
   Trace::Log("PAGEDDIR", "NEW:%s", path_.c_str());
 };
