@@ -239,6 +239,10 @@ void PagedImportSampleDialog::setCurrentFolder(Path *path) {
 	currentPath_ = Path(*path) ;
 	fileList_.clear();
 	if (path) {
+		// make sure we free mem from existing currentDir instance
+		if (currentDir_ != NULL) {
+			delete currentDir_;
+		}
 		currentDir_ = FileSystem::GetInstance()->OpenPaged(path->GetPath().c_str());
 		//TODO: show "Loading..." mesg in UI
 		Trace::Log("PAGEDIMPORT", "Loading...");

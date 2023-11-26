@@ -31,7 +31,7 @@ private:
 	int toInstr_ ;
 	int selected_ ;
 	Path currentPath_ { "/samplelib"};
-	I_PagedDir *currentDir_;
+	I_PagedDir *currentDir_ {};
 } ;
 
 #endif

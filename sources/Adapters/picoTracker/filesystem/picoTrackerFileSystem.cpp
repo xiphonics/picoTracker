@@ -75,7 +75,7 @@ void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem>
     Trace::Log("PAGEDFILESYSTEM", "getdir at dir:%d Index %d", dir, index);
     file.open(&dir, index, O_READ);
     file.getName(current, 256);
-    current[23] = 0;
+    current[23] = 0; //truncate at 22 char length string
     fileList->push_back(FileListItem(current, index, true));
     Trace::Log("PAGEDFILESYSTEM", "gotdir name:%s", current);
   }
@@ -84,7 +84,7 @@ void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem>
     Trace::Log("PAGEDFILESYSTEM", "getfile at Index %d", index);
     file.open(&dir, index, O_READ);
     file.getName(current, 256);
-    current[25] = 0;
+    current[25] = 0; //truncate at 24 char length string
     fileList->push_back(FileListItem(current, index, false));
 
     Trace::Log("PAGEDFILESYSTEM", "gotfilename:%s", current);

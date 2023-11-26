@@ -33,7 +33,7 @@ public:
 class picoTrackerPagedDir : public I_PagedDir {
 public:
   picoTrackerPagedDir(const char *path);
-  virtual ~picoTrackerPagedDir(){};
+  virtual ~picoTrackerPagedDir(){ Trace::Log("PAGEDDIR", "Destruct:%s", path_.c_str()); };
   void GetContent(const char *mask);
   void getFileList(int startIndex, std::vector<FileListItem> *fileList);
   int size();
