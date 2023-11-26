@@ -84,31 +84,41 @@ void PagedImportSampleDialog::DrawView() {
 } ;
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {
-	Trace::Log("PAGEDIMPORT", "warpToNextSample current:%d top:%d", currentSample_, topIndex_);
+	Trace::Log("PAGEDIMPORT", "warpToNextSample curr:%d top:%d direc:%d", currentSample_, topIndex_, direction);
 	currentSample_ += direction;
 	int size = currentDir_->size(); 
-	
-	// wrap around from first to last or vice versa
+	bool needPage = false;
+
+	// wrap around from first entry to last entry or vice versa
 	if (currentSample_ < 0) {
 		topIndex_ = (size % LIST_SIZE) * LIST_SIZE;
-		currentSample_ += size;
+		currentSample_ = size - 1; //goto last entry
+		needPage = true;
 	}
 	if (currentSample_ >= size) {
-		currentSample_ -= 0;
+		currentSample_ = 0;
 		topIndex_ = 0;
+		needPage = true;
 	}
-
-	if ((currentSample_ < topIndex_) && (topIndex_ != 0)) {
-		topIndex_ -= LIST_SIZE;
-		fileList_.clear();
-		currentDir_->getFileList(topIndex_, &fileList_);
-		Trace::Log("PAGEDIMPORT", "getfile PREV List current:%d top:%d", currentSample_, topIndex_);
-	}
+	
+	// if we have scrolled off the bottom, page the file list down if not at end of the list
 	if ((currentSample_ >= (topIndex_ + LIST_SIZE)) && ((topIndex_ + LIST_SIZE) < size)) {
 		topIndex_ += LIST_SIZE;
+		needPage = true;
+		Trace::Log("PAGEDIMPORT", "getfile NEXT List current:%d top:%d", currentSample_, topIndex_);
+	}
+
+	// if we have scrolled off the top, page the file list up if not already at very top of the list
+	if (currentSample_ < topIndex_ && topIndex_ != 0) {
+		topIndex_ -= LIST_SIZE;
+		needPage = true;
+		Trace::Log("PAGEDIMPORT", "getfile PREV List current:%d top:%d", currentSample_, topIndex_);
+	}
+	
+	// need to fetch a new page of the file list of current directory
+	if (needPage) {
 		fileList_.clear();
 		currentDir_->getFileList(topIndex_, &fileList_);
-		Trace::Log("PAGEDIMPORT", "getfile NEXT List current:%d top:", currentSample_, topIndex_);
 	}
 
 	isDirty_ = true;
