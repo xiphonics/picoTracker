@@ -207,6 +207,10 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask, bool presse
 					import(fullPath) ;
 					break ;
 				case 2: // Exit ;
+					// make sure we free mem from existing currentDir instance
+					if (currentDir_ != NULL) {
+						delete currentDir_;
+					}
 					EndModal(0) ;
 					break ;
 			}
@@ -252,7 +256,7 @@ void PagedImportSampleDialog::setCurrentFolder(Path *path) {
 	}
 
 	// load first page of file/subdirs
-	fileList_.clear();	
+	fileList_.clear();
 	currentDir_->getFileList(topIndex_, &fileList_);
 	Trace::Log("PAGEDIMPORT", "getfile First List size: %d", fileList_.size());
 
