@@ -90,13 +90,14 @@ void PagedImportSampleDialog::warpToNextSample(int direction) {
 	Trace::Log("PAGEDIMPORT", "warpToNextSample size:%d", size);
 	bool needPage = false;
 
-	// wrap around from first entry to last entry or vice versa
+	// wrap around from first entry to last entry
 	if (currentSample_ < 0) {
 		topIndex_ = (size / LIST_SIZE) * LIST_SIZE;
 		currentSample_ = size - 1; //goto last entry
 		needPage = true;
 	}
-	if (currentSample_ > size) {
+	// wrap around from last entry to first entry
+	if (currentSample_ >= size) {
 		currentSample_ = 0;
 		topIndex_ = 0;
 		needPage = true;
@@ -189,7 +190,8 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask, bool presse
 						setCurrentFolder(&parent);
 					}
 				} else {
-					Path childDirPath =	currentPath_.Descend(std::string(currentItem.name));
+					auto fullName = currentDir_->getFullName(currentItem.index);
+					Path childDirPath =	currentPath_.Descend(fullName);
 					setCurrentFolder(&childDirPath);
 				}
 				isDirty_ = true;

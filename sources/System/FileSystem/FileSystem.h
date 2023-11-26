@@ -121,6 +121,7 @@ public:
 	I_PagedDir(const char *path);
 	virtual ~I_PagedDir();
 	virtual void GetContent(const char *mask) = 0;
+	virtual std::string getFullName(int index) = 0;
 	virtual void getFileList(int startIndex, std::vector<FileListItem> *fileList) = 0;
 	virtual int size() = 0;
 
