@@ -178,8 +178,9 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask, bool presse
 	} else {
 		// A modifier
 		if (mask&EPBM_A) {
-			FileListItem currentItem = fileList_[currentSample_];
-			Trace::Log("PagedImport", "[%d] selected:%s", currentSample_, currentItem.name.c_str());
+			// make sure to index into the fileList with the offset from topIndex!
+			FileListItem currentItem = fileList_[currentSample_ - topIndex_];
+			Trace::Log("PagedImport", "[%d] currItem:%s", currentSample_, currentItem.name.c_str());
 
 			if ((selected_ !=2 ) && currentItem.isDirectory) {
 				if (currentItem.name == std::string("..")) {

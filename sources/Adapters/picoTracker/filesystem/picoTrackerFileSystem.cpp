@@ -67,6 +67,7 @@ std::string picoTrackerPagedDir::getFullName(int index) {
     Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
   }
   file.getName(filename, MAX_FILENAME_LEN);
+  Trace::Log("PAGEDFILESYSTEM", "got FULLname:%s", "filename");
   return std::string(filename);
 }
 
