@@ -11,7 +11,6 @@ static const int MAX_FILENAME_LEN = 128;
 picoTrackerPagedDir::picoTrackerPagedDir(const char *path) : path_ { std::string(path) }{
   fileIndexes_.reserve(354);
   subdirIndexes_.reserve(96);
-  Trace::Log("PAGEDDIR", "NEW:%s", path_.c_str());
 };
 
 void picoTrackerPagedDir::GetContent(const char *mask) {
@@ -39,14 +38,11 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
     int fileIndex = entry.dirIndex();
     if (entry.isDir()) {
       subdirIndexes_.push_back(fileIndex);
-      Trace::Log("PAGEDFILESYSTEM", "[%d] readdir:%s", fileIndex, current);
     } else if (wildcardfit(mask, current)) {
       fileIndexes_.push_back(fileIndex);
-      Trace::Log("PAGEDFILESYSTEM", "[%d] readfile:%s", fileIndex, current);
     }
     count++;
   }
- 
   Trace::Log("PAGEDFILESYSTEM", "scanned %d files", count);
 }
 
@@ -67,14 +63,10 @@ std::string picoTrackerPagedDir::getFullName(int index) {
     Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
   }
   file.getName(filename, MAX_FILENAME_LEN);
-  Trace::Log("PAGEDFILESYSTEM", "got FULLname:%s", "filename");
   return std::string(filename);
 }
 
 void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem> *fileList) {
-  Trace::Log("PAGEDFILESYSTEM", "getfile List path:%s", path_.c_str());
-  Trace::Log("PAGEDFILESYSTEM", "getfile List dirs:%d files:%d", subdirIndexes_.size(), fileIndexes_.size());
-  
   bool addedParentDirEntry = false;
   FsBaseFile dir;
 
@@ -99,32 +91,25 @@ void picoTrackerPagedDir::getFileList(int startOffset, std::vector<FileListItem>
   unsigned int count = startOffset;
   for(; count < subdirIndexes_.size() && (fileList->size() < MAX_ITEMS); count++) {
     int index = subdirIndexes_[count];
-    Trace::Log("PAGEDFILESYSTEM", "getdir at dir:%d Index %d", dir, index);
     if (!file.open(&dir, index, O_READ)) {
       Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
     }
-    int len = file.getName(current, MAX_FILENAME_LEN);
-    Trace::Log("PAGEDFILESYSTEM", "dir getName at Index %d length:%d", index, len);
+    file.getName(current, MAX_FILENAME_LEN);
     current[23] = 0; //truncate at 22 char length string
     fileList->push_back(FileListItem(current, index, true));
-    Trace::Log("PAGEDFILESYSTEM", "gotdir name:%s", current);
   }
   for(; count < fileIndexes_.size() && (fileList->size() < MAX_ITEMS); count++) {
     int index = fileIndexes_[count];
-    Trace::Log("PAGEDFILESYSTEM", "getfile at Index %d", index);
     if (!file.open(&dir, index, O_READ)){
       Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
     }
-    int len = file.getName(current, MAX_FILENAME_LEN);
-    Trace::Log("PAGEDFILESYSTEM", "file getName at Index %d length:%d", index, len);
+    file.getName(current, MAX_FILENAME_LEN);
     current[25] = 0; //truncate at 24 char length string
     fileList->push_back(FileListItem(current, index, false));
-    Trace::Log("PAGEDFILESYSTEM", "gotfilename:%s", current);
   }
 
   // +1 is for the synthezied Parent dir entry of ".."
   fileCount_ = subdirIndexes_.size() + fileIndexes_.size() + (addedParentDirEntry ? 1 : 0);
-  Trace::Log("PAGEDFILESYSTEM", "fileCount:%d", fileCount_);
 }
 
 int picoTrackerPagedDir::size() {

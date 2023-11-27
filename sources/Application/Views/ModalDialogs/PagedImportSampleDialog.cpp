@@ -84,10 +84,8 @@ void PagedImportSampleDialog::DrawView() {
 } ;
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {
-	Trace::Log("PAGEDIMPORT", "warpToNextSample curr:%d top:%d direc:%d", currentSample_, topIndex_, direction);
 	currentSample_ += direction;
 	int size = currentDir_->size();
-	Trace::Log("PAGEDIMPORT", "warpToNextSample size:%d", size);
 	bool needPage = false;
 
 	// wrap around from first entry to last entry
@@ -107,14 +105,12 @@ void PagedImportSampleDialog::warpToNextSample(int direction) {
 	if ((currentSample_ >= (topIndex_ + LIST_SIZE)) && ((topIndex_ + LIST_SIZE) < size)) {
 		topIndex_ += LIST_SIZE;
 		needPage = true;
-		Trace::Log("PAGEDIMPORT", "getfile NEXT List current:%d top:%d", currentSample_, topIndex_);
 	}
 
 	// if we have scrolled off the top, page the file list up if not already at very top of the list
 	if (currentSample_ < topIndex_ && topIndex_ != 0) {
 		topIndex_ -= LIST_SIZE;
 		needPage = true;
-		Trace::Log("PAGEDIMPORT", "getfile PREV List current:%d top:%d", currentSample_, topIndex_);
 	}
 	
 	// need to fetch a new page of the file list of current directory
@@ -180,8 +176,7 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask, bool presse
 		if (mask&EPBM_A) {
 			// make sure to index into the fileList with the offset from topIndex!
 			FileListItem currentItem = fileList_[currentSample_ - topIndex_];
-			Trace::Log("PagedImport", "[%d] currItem:%s", currentSample_, currentItem.name.c_str());
-
+			
 			if ((selected_ !=2 ) && currentItem.isDirectory) {
 				if (currentItem.name == std::string("..")) {
 					if (currentPath_.GetPath() == std::string(sampleLib_)) {
@@ -262,6 +257,4 @@ void PagedImportSampleDialog::setCurrentFolder(Path *path) {
 	// load first page of file/subdirs
 	fileList_.clear();
 	currentDir_->getFileList(topIndex_, &fileList_);
-	Trace::Log("PAGEDIMPORT", "getfile First List size: %d", fileList_.size());
-
 }
