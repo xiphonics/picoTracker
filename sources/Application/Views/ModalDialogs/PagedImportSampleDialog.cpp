@@ -48,7 +48,7 @@ void PagedImportSampleDialog::DrawView() {
 
 	int count = 0;
 	char buffer[LIST_WIDTH+1];
-	for(FileListItem current : fileList_) {
+	for(const FileListItem &current : fileList_) {
 			if (count == (currentSample_ % LIST_SIZE)) {
 				SetColor(CD_HILITE2);
 				props.invert_=true;
