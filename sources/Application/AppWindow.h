@@ -14,6 +14,7 @@
 #include "Application/Views/NullView.h"
 #include "Application/Views/GrooveView.h"
 #include "Application/Views/ViewData.h"
+#include "Application/Views/MixerView.h"
 #include "System/io/Status.h"
 #include "System/Process/SysMutex.h"
 
@@ -73,6 +74,7 @@ private:
 	InstrumentView *_instrumentView ;
 	TableView *_tableView ;
 	GrooveView *_grooveView ;
+	MixerView *_mixerView ;
 	NullView *_nullView ;
 
 	Path _root ;

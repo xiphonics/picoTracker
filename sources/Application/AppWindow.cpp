@@ -78,6 +78,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp):GUIWindow(imp)  {
 	_projectView=0 ;
 	_instrumentView=0 ;
 	_tableView=0 ;
+	_mixerView=0 ;
 	_nullView=0 ;
 	_grooveView=0 ;
 	_closeProject=0 ;
@@ -324,17 +325,20 @@ void AppWindow::LoadProject(const Path &p)  {
   _phraseView=new PhraseView((*this),_viewData) ;
 	_phraseView->AddObserver((*this)) ;
 
-  _projectView=new ProjectView((*this),_viewData) ;
+	_projectView=new ProjectView((*this),_viewData) ;
 	_projectView->AddObserver((*this)) ;
 
-  _instrumentView=new InstrumentView((*this),_viewData) ;
+	_instrumentView=new InstrumentView((*this),_viewData) ;
 	_instrumentView->AddObserver((*this)) ;
 
-  _tableView=new TableView((*this),_viewData) ;
+	_tableView=new TableView((*this),_viewData) ;
 	_tableView->AddObserver((*this)) ;
 
 	_grooveView=new GrooveView((*this),_viewData) ;
 	_grooveView->AddObserver(*this) ;
+
+	_mixerView=new MixerView((*this),_viewData) ;
+	_mixerView->AddObserver(*this) ;
 
 	_currentView=_songView ;
 	_currentView->OnFocus() ;
@@ -370,7 +374,8 @@ void AppWindow::CloseProject() {
 	SAFE_DELETE(_projectView) ;
 	SAFE_DELETE(_instrumentView) ;
 	SAFE_DELETE(_tableView);
-  SAFE_DELETE(_grooveView);
+	SAFE_DELETE(_mixerView);
+	SAFE_DELETE(_grooveView);
 
   UIController *controller=UIController::GetInstance() ;
 	controller->Reset() ;
@@ -476,6 +481,7 @@ void AppWindow::Update(Observable &o,I_ObservableData *d) {
       if (_currentView) {
         _currentView->LooseFocus() ;
       }
+	  Trace::Log("APPWIN", "Changeview:%d", *vt);
       switch (*vt) {
 			case VT_SONG:
         _currentView=_songView ;
@@ -500,6 +506,9 @@ void AppWindow::Update(Observable &o,I_ObservableData *d) {
         break ;
 			case VT_GROOVE:
         _currentView=_grooveView ;
+        break ;
+			case VT_MIXER:
+        _currentView=_mixerView ;
         break ;
       default:
         break ;

@@ -4,6 +4,7 @@ add_library(application_views
   GrooveView.h GrooveView.cpp
   InstrumentView.h InstrumentView.cpp
   ListSelectView.h ListSelectView.cpp
+  MixerView.h MixerView.cpp
   NullView.h NullView.cpp
   PhraseView.h PhraseView.cpp
   ProjectView.h ProjectView.cpp
