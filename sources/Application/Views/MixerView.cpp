@@ -6,8 +6,6 @@
 #include <sstream>
 
 MixerView::MixerView(GUIWindow &w,ViewData *viewData):View(w,viewData) {
-	clipboard_.active_=false ;
-	clipboard_.data_=0 ;
 	invertBatt_=false;
 }
 
@@ -19,11 +17,6 @@ void MixerView::onStart() {
 	Player *player=Player::GetInstance() ;
 	unsigned char from=viewData_->songX_ ;
 	unsigned char to=from ;
-	//if (clipboard_.active_) {
-	//	GUIRect r=getSelectionRect();
-	//	from=r.Left() ;
-	//	to=r.Right() ;
-	//}
 	player->OnStartButton(PM_SONG,from,false,to) ;
 } ;
 
@@ -61,30 +54,10 @@ void MixerView::ProcessButtonMask(unsigned short mask,bool pressed) {
 	//	return ;
 	//} ;
 	//
-	
-	if (clipboard_.active_) {
-		viewMode_=VM_SELECTION ;
-	} ;
-	// Process selection related keys
-	
-	if (viewMode_==VM_SELECTION) {
-        if (clipboard_.active_==false) {
-            clipboard_.active_=true ;
-            clipboard_.x_=viewData_->songX_ ;
-            clipboard_.y_=viewData_->songY_ ;
-            clipboard_.offset_=viewData_->songOffset_ ;
-			saveX_=clipboard_.x_ ;
-			saveY_=clipboard_.y_ ;
-			saveOffset_=clipboard_.offset_ ;
-        }
-        processSelectionButtonMask(mask) ;
-    } else {
-	   
-       // Switch back to normal mode
 
-        viewMode_=VM_NORMAL ;
-        processNormalButtonMask(mask) ;
-    }
+	viewMode_=VM_NORMAL ;
+	processNormalButtonMask(mask) ;
+    
 } ;
 
 
@@ -199,7 +172,6 @@ void MixerView::DrawView() {
 	DrawString(pos._x,pos._y,buffer.c_str(),props) ;
 
 	// Now draw busses
-
 	pos=anchor ;
 	short dx=3;
 
@@ -226,7 +198,7 @@ void MixerView::DrawView() {
 	} ;
 } ;
 
-void MixerView::OnPlayerUpdate(PlayerEventType ,unsigned int tick) {
+void MixerView::OnPlayerUpdate(PlayerEventType type,unsigned int tick) {
 
 	Player *player=Player::GetInstance() ;
 
@@ -251,10 +223,10 @@ void MixerView::OnPlayerUpdate(PlayerEventType ,unsigned int tick) {
     } else {
            DrawString(pos._x,pos._y,"----",props); 
     }
-	char strbuffer[10] ;
+	char strbuffer[12] ;
 
 	pos._y+=1 ;
-	sprintf(strbuffer,"%3.3d%%",player->GetPlayedBufferPercentage()) ; 
+	sprintf(strbuffer,"P:%3.3d%%",player->GetPlayedBufferPercentage()) ; 
 	DrawString(pos._x,pos._y,strbuffer,props) ;
 
     System *sys=System::GetInstance() ;
@@ -269,7 +241,7 @@ void MixerView::OnPlayerUpdate(PlayerEventType ,unsigned int tick) {
 		props.invert_=invertBatt_ ;
 
 	    pos._y+=1 ;
-    	sprintf(strbuffer,"%3.3d",batt) ; 
+    	sprintf(strbuffer,"%B:3.3d", batt) ; 
 	    DrawString(pos._x,pos._y,strbuffer,props) ;
     }
 	SetColor(CD_NORMAL) ;
