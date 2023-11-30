@@ -58,14 +58,13 @@ bool AudioMixer::Render(fixed *buffer,int samplecount) {
          }
      }
 
-//  Aplply volume
-
-	 if (gotData) {
+	//  Apply volume
+	if (gotData) {
 		fixed *c=buffer ;
 		if (volume_!=i2fp(1)) {
 			for (int i=0;i<samplecount*2;i++) {
 				fixed v = fp_mul(*c,volume_) ;
-        *c++= v;
+				*c++= v;
 			}
 		}
 	 }

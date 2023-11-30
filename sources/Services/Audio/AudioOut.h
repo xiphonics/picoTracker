@@ -28,6 +28,9 @@ public:
 
    virtual bool Clipped()=0 ;
 
+   virtual short GetLastAvgL() = 0;
+	virtual short GetLastAvgR() = 0;
+
    virtual int GetPlayedBufferPercentage()=0 ;
 
 	virtual std::string GetAudioAPI()=0 ;

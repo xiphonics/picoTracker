@@ -22,6 +22,9 @@ public:
 
        virtual bool Clipped() ;
 
+	   virtual short GetLastAvgL();
+	   virtual short GetLastAvgR();
+
 	   virtual int GetPlayedBufferPercentage() ;
 
        AudioDriver *GetDriver() ;
@@ -45,6 +48,8 @@ private:
         AudioDriver *driver_ ;
        	bool clipped_ ;
        	bool hasSound_ ;
+		short lastAvgVolumeL_ = 0;
+		short lastAvgVolumeR_  = 0;
 
 	    static fixed primarySoundBuffer_[MIX_BUFFER_SIZE];
 	    static short mixBuffer_[MIX_BUFFER_SIZE];

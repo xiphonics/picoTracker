@@ -28,6 +28,9 @@ public:
 
 	virtual bool Clipped() { return false ; } ;
 
+	virtual short GetLastAvgL() { return 0; };
+	virtual short GetLastAvgR() { return 0; };
+
 	virtual int GetPlayedBufferPercentage() { return 0; } ;
 
 	void SendPulse() ;

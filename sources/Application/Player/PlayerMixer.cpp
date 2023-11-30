@@ -94,6 +94,13 @@ I_Instrument *PlayerMixer::GetLastInstrument(int channel) {
 	return lastInstrument_[channel] ;
 } ;
 
+short PlayerMixer::GetAudioLevelL() {
+	return avgL_;
+}
+
+short PlayerMixer::GetAudioLevelR() {
+	return avgR_;
+}
 
 bool PlayerMixer::Clipped() {
      return clipped_ ;
@@ -117,6 +124,8 @@ void PlayerMixer::Update(Observable &o,I_ObservableData *d) {
 	 MixerService *ms=MixerService::GetInstance() ;
      ms->SetMasterVolume(project_->GetMasterVolume()) ;
      clipped_=ms->Clipped() ;
+	avgL_ = ms->GetAudioAvgL();
+	avgR_ = ms->GetAudioAvgR();
 } ;
 
 

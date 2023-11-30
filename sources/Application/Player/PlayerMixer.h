@@ -45,6 +45,9 @@ public:
 
 	bool Clipped() ;
 
+	short GetAudioLevelL();
+	short GetAudioLevelR();
+
 	void Update(Observable &o,I_ObservableData *d) ;
 	int GetPlayedBufferPercentage() ;   
 
@@ -63,6 +66,8 @@ private:
 
 	Project *project_ ;
 	bool clipped_ ;
+	short avgL_;
+	short avgR_;
 	
     I_Instrument *lastInstrument_[SONG_CHANNEL_COUNT] ;
 	bool isChannelPlaying_[SONG_CHANNEL_COUNT] ;

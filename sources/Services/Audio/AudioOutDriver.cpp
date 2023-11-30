@@ -41,6 +41,15 @@ bool AudioOutDriver::Clipped() {
      return clipped_ ;
 } ;
 
+short AudioOutDriver::GetLastAvgL() {
+	return lastAvgVolumeL_;
+};
+
+short AudioOutDriver::GetLastAvgR() {
+	return lastAvgVolumeR_;
+};
+
+
 void AudioOutDriver::Trigger() {
   prepareMixBuffers() ;
   hasSound_=AudioMixer::Render(primarySoundBuffer_,sampleCount_) ;
@@ -76,6 +85,9 @@ void AudioOutDriver::clipToMix() {
 		fixed f_32767=i2fp(32767) ;
 		fixed f_m32768=i2fp(-32768) ;
 
+		short sampleVal = 0;
+		short peakL = 0;
+		short peakR = 0;
 		for (int i=0;i<sampleCount_;i++) {
             // Left
 			v=*p++ ;
@@ -89,6 +101,11 @@ void AudioOutDriver::clipToMix() {
 			*s1=short(fp2i(v)) ;
 			s1+=offset ;
 
+			sampleVal = short(fp2i(v)) ;
+			if (sampleVal >= peakL) {
+				peakL = sampleVal;
+			}
+
             // Right
 			v=*p++ ;
 			if (v>f_32767) {
@@ -100,7 +117,16 @@ void AudioOutDriver::clipToMix() {
 			}
 			*s2=short(fp2i(v)) ;
 			s2+=offset;
+
+			sampleVal = short(fp2i(v)) ;
+			if (sampleVal >= peakR) {
+				peakR = sampleVal;
+			}
+
 		} ;
+		lastAvgVolumeL_ = peakL;
+		lastAvgVolumeR_ = peakR;
+		peakL = peakR = 0;
 	}     
 } ;
 
