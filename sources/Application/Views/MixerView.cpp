@@ -180,14 +180,17 @@ void MixerView::DrawView() {
 			 props.invert_=true;
 			 SetColor(CD_HILITE2) ;
 		}
+
 		int bus=Mixer::GetInstance()->GetBus(i) ;
 		hex2char(bus,hex) ;
+		
+
 		DrawString(pos._x,pos._y,hex,props) ;
 		pos._x+=dx ;	
 		if (i==viewData_->mixerCol_) {
 			 props.invert_=false;
 			 SetColor(CD_NORMAL) ;
-		}
+		}		
 	}; 
 	
     drawMap() ;
@@ -252,6 +255,28 @@ void MixerView::OnPlayerUpdate(PlayerEventType type,unsigned int tick) {
 	sprintf(strbuffer,"%2.2d:%2.2d",mi,se) ; 
 	pos._y+=1 ;	
 	DrawString(pos._x,pos._y,strbuffer,props) ;
+
+
+	char lBarsStr[17];
+	char rBarsStr[17];
+	pos=anchor;
+	pos._y += 8;	
+	auto playerLevels = player->GetLevels();
+	short lBars = playerLevels->Left / 1024;
+	short rBars = playerLevels->Right / 1024;
+
+	for (int i = 0; i < 16; i++) {
+		(lBars > i) ? lBarsStr[i] = '*' : lBarsStr[i] = '.';
+		(rBars > i) ? rBarsStr[i] = '*' : rBarsStr[i] = '.';
+	}
+
+	lBarsStr[16] = 0;
+	rBarsStr[16] = 0;
+
+	// sprintf(levels, "L:%d|%d", playerLevels->Left, playerLevels->Right);
+	delete playerLevels;
+	DrawString(pos._x, pos._y, lBarsStr , props) ;
+	DrawString(pos._x, pos._y + 1, rBarsStr , props) ;
 
     drawNotes() ;
 
