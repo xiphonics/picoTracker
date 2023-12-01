@@ -2,8 +2,6 @@
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
 #include <string>
-#include <iostream>
-#include <sstream>
 
 MixerView::MixerView(GUIWindow &w,ViewData *viewData):View(w,viewData) {
 	invertBatt_=false;
@@ -163,14 +161,11 @@ void MixerView::DrawView() {
 
 	Player *player=Player::GetInstance() ;
 	
-	std::ostringstream os;
-
-	os << ((player->GetSequencerMode()==SM_SONG)?"Song":"Live") ;
-
-	std::string buffer(os.str());
-
-	DrawString(pos._x,pos._y,buffer.c_str(),props) ;
-
+	props.invert_ = true;
+	const char *buffer = ((player->GetSequencerMode() == SM_SONG) ? "Song" : "Live");
+	DrawString(pos._x, pos._y, buffer, props);
+  	props.invert_ = false;
+	
 	// Now draw busses
 	pos=anchor ;
 	short dx=3;
