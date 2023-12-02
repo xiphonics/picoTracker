@@ -14,6 +14,7 @@ public:
   virtual bool Render(fixed *buffer, int samplecount);
   bool Start(const Path &);
   void Stop();
+  bool IsPlaying();
 
 protected:
   AudioFileStreamerMode mode_;

@@ -62,6 +62,7 @@ public:
                      unsigned char chainPos);
   void OnSongStartButton(unsigned int from, unsigned int to, bool requestStop,
                          bool forceImmediate);
+  bool IsPlaying();
 
   bool IsRunning();
   bool Clipped();
