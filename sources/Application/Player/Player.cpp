@@ -1139,7 +1139,10 @@ PlayerEventType PlayerEvent::GetType() { return type_; };
 unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
 void Player::StartStreaming(const Path &path) { mixer_->StartStreaming(path); }
+
 void Player::StopStreaming() { mixer_->StopStreaming(); }
+
+bool Player::IsPlaying() { return mixer_->IsPlaying(); }
 
 std::string Player::GetAudioAPI() {
   AudioOut *out = mixer_->GetAudioOut();

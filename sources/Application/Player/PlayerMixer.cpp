@@ -147,6 +147,10 @@ void PlayerMixer::StartStreaming(const Path &path) {
 
 void PlayerMixer::StopStreaming() { fileStreamer_.Stop(); };
 
+bool PlayerMixer::IsPlaying() {
+	return fileStreamer_.IsPlaying();
+}
+
 void PlayerMixer::OnPlayerStart() {
   MixerService *ms = MixerService::GetInstance();
   ms->OnPlayerStart();

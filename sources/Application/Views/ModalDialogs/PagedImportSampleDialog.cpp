@@ -131,7 +131,13 @@ void PagedImportSampleDialog::OnFocus() {
 };
 
 void PagedImportSampleDialog::preview(Path &element) {
-  Player::GetInstance()->StartStreaming(element);
+  if (Player::GetInstance()->IsPlaying()) {
+    printf("playing so stop");
+    Player::GetInstance()->StopStreaming();
+  } else {
+    printf("not playing so start");
+    Player::GetInstance()->StartStreaming(element);
+  }
 }
 
 void PagedImportSampleDialog::import(Path &element) {

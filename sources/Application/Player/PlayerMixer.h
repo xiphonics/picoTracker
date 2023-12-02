@@ -22,6 +22,7 @@ public:
 
   bool Start();
   void Stop();
+  bool IsPlaying();
   bool Init(Project *project);
   void Close();
 
