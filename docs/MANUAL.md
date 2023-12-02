@@ -298,16 +298,25 @@ TODO: screencap
 
 ## Sample Import Screen
 
-Accessible by hitting A,A on the “sample” parameter in the Instrument Screen.
-The samples of the library have to be located in a folder samplelib at the same level as the song folders (lgpt-xxxx). you can either put your samples in that directory or in sub-directories, allowing you to have some basic way of sorting the library. For example:
+Accessible by hitting A,A on the “sample:” parameter in the Instrument Screen.
+
+The samples of the library **must** to be located in a folder named `samplelib` at the top-level of the sdcard (lgpt-xxxx). You can either put your samples in that directory or in sub-directories of it, allowing you to have a basic way of sorting the library. 
+
+Note: subdirectories will be sorted before files, but otherwise the files will be listed in an undetermined order (ie. not necessarily alphabetical order).
+
+For example:
 
 TODO: screencap
 
 When entering the import screen, the current folder is the library root folder “samplelib”. All sample in that folder are listed.
-Use Up/Down to select a sample and 'A' to load it
-B+Left/Right to rotates between all sub directories.
+
+Use Up/Down to select a sample and the Play button to start/stop preview playback of the sample.
+RT+Play to import the currently selected sample and RT+Left to exit out of the Import Dialog back to the Instrument Screen.
+
+Note: While there is no fixed limit for the number of files per subdirectory, exceding 96 subdirectories and/or 354 files per directory is likely to cause picotracker to potentially crash. Also please note that while FAT formatted sdcards can support upto 256 characters per filename, Picotracker only supports upto 128 and with only ASCII characters.
 
 ## Midi Instrument Screen
+
 TODO: screencap
 
 A midi instrument has the following settings:

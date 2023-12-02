@@ -7,10 +7,7 @@
 #define LIST_SIZE 15
 #define LIST_WIDTH 24
 
-static const char *buttonText[3] = {"Listen", "Import", "Exit"};
-
 PagedImportSampleDialog::PagedImportSampleDialog(View &view) : ModalView(view) {
-  selected_ = 0;
   fileList_.reserve(15);
   Trace::Log("PAGEDIMPORT", "samplelib is:%s", SAMPLE_LIB_PATH);
 }
@@ -65,18 +62,7 @@ void PagedImportSampleDialog::DrawView() {
     count++;
   };
 
-  y = LIST_SIZE + 2;
-  int offset = 7;
-
   SetColor(CD_NORMAL);
-
-  // Draw buttons
-  for (int i = 0; i < 3; i++) {
-    const char *text = buttonText[i];
-    x = (offset * (i + 1) - strlen(text) / 2) - 2;
-    props.invert_ = (i == selected_) ? true : false;
-    DrawString(x, y, text, props);
-  }
 };
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {
@@ -132,10 +118,8 @@ void PagedImportSampleDialog::OnFocus() {
 
 void PagedImportSampleDialog::preview(Path &element) {
   if (Player::GetInstance()->IsPlaying()) {
-    printf("playing so stop");
     Player::GetInstance()->StopStreaming();
   } else {
-    printf("not playing so start");
     Player::GetInstance()->StartStreaming(element);
   }
 }
@@ -174,8 +158,29 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
 
   if (!pressed)
     return;
+  // make sure to index into the fileList with the offset from topIndex!
+  FileListItem currentItem = fileList_[currentSample_ - topIndex_];
 
-  if (mask & EPBM_B) {
+  auto fullPathStr = std::string(currentPath_.GetPath());
+  fullPathStr += "/";
+  fullPathStr += currentItem.name;
+  auto fullPath = Path{fullPathStr};
+
+  if (mask & EPBM_START) {
+    if (mask & EPBM_R) {
+      printf("SHIFT play - import");
+      import(fullPath);
+    } else {
+      printf("plain play preview");
+      preview(fullPath);
+    }
+  } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
+    // make sure we free mem from existing currentDir instance
+    if (currentDir_ != NULL) {
+      delete currentDir_;
+    }
+    EndModal(0);
+  } else if (mask & EPBM_B) {
     if (mask & EPBM_UP)
       warpToNextSample(-LIST_SIZE);
     if (mask & EPBM_DOWN)
@@ -183,10 +188,7 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
   } else {
     // A modifier
     if (mask & EPBM_A) {
-      // make sure to index into the fileList with the offset from topIndex!
-      FileListItem currentItem = fileList_[currentSample_ - topIndex_];
-
-      if ((selected_ != 2) && currentItem.isDirectory) {
+      if (currentItem.isDirectory) {
         if (currentItem.name == std::string("..")) {
           if (currentPath_.GetPath() == std::string(SAMPLE_LIB_PATH)) {
             Trace::Log("PAGEDIMPORT",
@@ -203,47 +205,13 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
         isDirty_ = true;
         return;
       }
-      auto fullPathStr = std::string(currentPath_.GetPath());
-      fullPathStr += "/";
-      fullPathStr += currentItem.name;
-      auto fullPath = Path{fullPathStr};
-
-      switch (selected_) {
-      case 0: // preview
-        preview(fullPath);
-        break;
-      case 1: // import
-        import(fullPath);
-        break;
-      case 2: // Exit ;
-        // make sure we free mem from existing currentDir instance
-        if (currentDir_ != NULL) {
-          delete currentDir_;
-        }
-        EndModal(0);
-        break;
-      }
-    } else {
-      // R Modifier
-      if (mask & EPBM_R) {
-      } else {
-        // No modifier
-        if (mask == EPBM_UP)
-          warpToNextSample(-1);
-        if (mask == EPBM_DOWN)
-          warpToNextSample(1);
-        if (mask == EPBM_LEFT) {
-          selected_ -= 1;
-          if (selected_ < 0)
-            selected_ += 3;
-          isDirty_ = true;
-        }
-        if (mask == EPBM_RIGHT) {
-          selected_ = (selected_ + 1) % 3;
-          isDirty_ = true;
-        }
-      }
     }
+    // handle moving up and down the file list
+    if (mask & EPBM_UP) {
+      warpToNextSample(-1);
+    } else if (mask & EPBM_DOWN) {
+      warpToNextSample(1);
+    }  
   }
 }
 
