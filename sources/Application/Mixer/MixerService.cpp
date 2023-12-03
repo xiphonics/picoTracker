@@ -168,12 +168,12 @@ bool MixerService::Clipped() {
      return out_->Clipped() ;
 } ;
 
-int MixerService::GetAudioAvgL() {
-    return out_->GetLastAvgL() ;
+int MixerService::GetAudioPeakL() {
+    return out_->GetLastPeakL() ;
 } ;
 
-int MixerService::GetAudioAvgR() {
-    return out_->GetLastAvgR() ;
+int MixerService::GetAudioPeakR() {
+    return out_->GetLastPeakR() ;
 } ;
 
 void MixerService::SetMasterVolume(int vol) {

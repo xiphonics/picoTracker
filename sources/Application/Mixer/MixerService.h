@@ -51,8 +51,8 @@ public:
 	void SetMasterVolume(int) ;
 	int GetPlayedBufferPercentage() ;
 
-	int GetAudioAvgL();
-	int GetAudioAvgR();
+	int GetAudioPeakL();
+	int GetAudioPeakR();
 	
 	virtual void Execute(FourCC id,float value) ;
 

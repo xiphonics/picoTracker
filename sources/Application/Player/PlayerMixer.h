@@ -66,8 +66,8 @@ private:
 
 	Project *project_ ;
 	bool clipped_ ;
-	short avgL_;
-	short avgR_;
+	short peakL_;
+	short peakR_;
 	
     I_Instrument *lastInstrument_[SONG_CHANNEL_COUNT] ;
 	bool isChannelPlaying_[SONG_CHANNEL_COUNT] ;

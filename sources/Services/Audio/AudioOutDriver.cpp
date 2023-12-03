@@ -41,12 +41,12 @@ bool AudioOutDriver::Clipped() {
      return clipped_ ;
 } ;
 
-short AudioOutDriver::GetLastAvgL() {
-	return lastAvgVolumeL_;
+short AudioOutDriver::GetLastPeakL() {
+	return lastPeakVolumeL_;
 };
 
-short AudioOutDriver::GetLastAvgR() {
-	return lastAvgVolumeR_;
+short AudioOutDriver::GetLastPeakR() {
+	return lastPeakVolumeR_;
 };
 
 
@@ -124,8 +124,8 @@ void AudioOutDriver::clipToMix() {
 			}
 
 		} ;
-		lastAvgVolumeL_ = peakL;
-		lastAvgVolumeR_ = peakR;
+		lastPeakVolumeL_ = peakL;
+		lastPeakVolumeR_ = peakR;
 		peakL = peakR = 0;
 	}     
 } ;
