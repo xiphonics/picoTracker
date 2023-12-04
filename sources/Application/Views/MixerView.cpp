@@ -210,10 +210,10 @@ void MixerView::OnPlayerUpdate(PlayerEventType type,unsigned int tick) {
 
     if (View::miniLayout_) {
       pos._y=0 ;
-      pos._x=25 ;
+      pos._x=23 ;
     } else {
       pos=anchor ;
-      pos._x+=25 ;
+      pos._x+=23 ;
     }
     
 	if (player->Clipped()) {
@@ -239,7 +239,7 @@ void MixerView::OnPlayerUpdate(PlayerEventType type,unsigned int tick) {
 		props.invert_=invertBatt_ ;
 
 	    pos._y+=1 ;
-    	sprintf(strbuffer,"%B:3.3d", batt) ; 
+    	sprintf(strbuffer,"%B:3.3d%", batt) ; 
 	    DrawString(pos._x,pos._y,strbuffer,props) ;
     }
 	SetColor(CD_NORMAL) ;
@@ -251,27 +251,26 @@ void MixerView::OnPlayerUpdate(PlayerEventType type,unsigned int tick) {
 	pos._y+=1 ;	
 	DrawString(pos._x,pos._y,strbuffer,props) ;
 
-
-	char lBarsStr[17];
-	char rBarsStr[17];
-	pos=anchor;
-	pos._y += 8;	
+	pos._x = 29;
+	pos._y = 22;
 	auto playerLevels = player->GetLevels();
 	short lBars = playerLevels->Left / 1024;
 	short rBars = playerLevels->Right / 1024;
 
 	for (int i = 0; i < 16; i++) {
-		(lBars > i) ? lBarsStr[i] = '*' : lBarsStr[i] = '.';
-		(rBars > i) ? rBarsStr[i] = '*' : rBarsStr[i] = '.';
+		if (lBars > i) {
+			DrawString(pos._x, pos._y, "=" , props) ;
+		} else {
+			DrawString(pos._x, pos._y, " " , props) ;
+		}
+		if (rBars > i) {
+			DrawString(pos._x+1, pos._y, "=" , props) ;
+		} else {
+			DrawString(pos._x+1, pos._y, " " , props) ;
+		}
+		pos._y -= 1;
 	}
-
-	lBarsStr[16] = 0;
-	rBarsStr[16] = 0;
-
-	// sprintf(levels, "L:%d|%d", playerLevels->Left, playerLevels->Right);
 	delete playerLevels;
-	DrawString(pos._x, pos._y, lBarsStr , props) ;
-	DrawString(pos._x, pos._y + 1, rBarsStr , props) ;
 
     drawNotes() ;
 

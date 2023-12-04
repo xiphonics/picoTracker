@@ -226,3 +226,7 @@ void View::DrawString(int x,int y,const char *txt,GUITextProperties &props) {
 	w_.DrawString(txt,pos,props) ;
 } ;
 
+void View::DrawChar(int x,int y,const char c,GUITextProperties &props) {
+	GUIPoint pos(x,y) ;
+	w_.DrawChar(c, pos, props) ;
+} ;
