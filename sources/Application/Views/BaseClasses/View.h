@@ -135,6 +135,9 @@ protected:
 
     void drawMap() ;
     void drawNotes() ;
+
+	void drawMasterVuMeter(Player *player, GUIPoint pos, GUITextProperties props);
+
 public: // temp hack for modl windo constructors
 	GUIWindow &w_ ;
 	ViewData *viewData_ ;

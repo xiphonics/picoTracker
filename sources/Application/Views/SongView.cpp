@@ -994,6 +994,9 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType,unsigned int tick) {
 		pos._y+=1 ;	
 		DrawString(pos._x,pos._y,strbuffer,props) ;
 	}
+
+	drawMasterVuMeter(player, pos, props);
+
 	drawNotes() ;
 } ;
 
