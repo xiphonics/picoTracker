@@ -1,75 +1,71 @@
 #include "Table.h"
-#include "System/System/System.h"
 #include "Application/Instruments/CommandList.h"
 #include "Application/Utils/HexBuffers.h"
 #include "Application/Utils/char.h"
 #include "Song.h"
+#include "System/System/System.h"
 
-Table::Table() {
-	Reset() ;
-} ;
+Table::Table() { Reset(); };
 
 void Table::Reset() {
-	SYS_MEMSET(cmd1_,'-',sizeof(cmd1_[0])*TABLE_STEPS) ;
-	SYS_MEMSET(param1_,0,sizeof(param1_[0])*TABLE_STEPS) ;
-	SYS_MEMSET(cmd2_,'-',sizeof(cmd2_[0])*TABLE_STEPS) ;
-	SYS_MEMSET(param2_,0,sizeof(param2_[0])*TABLE_STEPS) ;
-	SYS_MEMSET(cmd3_,'-',sizeof(cmd3_[0])*TABLE_STEPS) ;
-	SYS_MEMSET(param3_,0,sizeof(param3_[0])*TABLE_STEPS) ;
-} ;
+  SYS_MEMSET(cmd1_, '-', sizeof(cmd1_[0]) * TABLE_STEPS);
+  SYS_MEMSET(param1_, 0, sizeof(param1_[0]) * TABLE_STEPS);
+  SYS_MEMSET(cmd2_, '-', sizeof(cmd2_[0]) * TABLE_STEPS);
+  SYS_MEMSET(param2_, 0, sizeof(param2_[0]) * TABLE_STEPS);
+  SYS_MEMSET(cmd3_, '-', sizeof(cmd3_[0]) * TABLE_STEPS);
+  SYS_MEMSET(param3_, 0, sizeof(param3_[0]) * TABLE_STEPS);
+};
 
 void Table::Copy(const Table &other) {
-	SYS_MEMCPY(cmd1_,other.cmd1_,sizeof(cmd1_[0])*TABLE_STEPS) ;
-	SYS_MEMCPY(param1_,other.param1_,sizeof(param1_[0])*TABLE_STEPS) ;
-	SYS_MEMCPY(cmd2_,other.cmd2_,sizeof(cmd2_[0])*TABLE_STEPS) ;
-	SYS_MEMCPY(param2_,other.param2_,sizeof(param2_[0])*TABLE_STEPS) ;
-	SYS_MEMCPY(cmd3_,other.cmd3_,sizeof(cmd3_[0])*TABLE_STEPS) ;
-	SYS_MEMCPY(param3_,other.param3_,sizeof(param3_[0])*TABLE_STEPS) ;
-} ;
+  SYS_MEMCPY(cmd1_, other.cmd1_, sizeof(cmd1_[0]) * TABLE_STEPS);
+  SYS_MEMCPY(param1_, other.param1_, sizeof(param1_[0]) * TABLE_STEPS);
+  SYS_MEMCPY(cmd2_, other.cmd2_, sizeof(cmd2_[0]) * TABLE_STEPS);
+  SYS_MEMCPY(param2_, other.param2_, sizeof(param2_[0]) * TABLE_STEPS);
+  SYS_MEMCPY(cmd3_, other.cmd3_, sizeof(cmd3_[0]) * TABLE_STEPS);
+  SYS_MEMCPY(param3_, other.param3_, sizeof(param3_[0]) * TABLE_STEPS);
+};
 
 bool Table::IsEmpty() {
 
-	for (int i=0;i<TABLE_STEPS;i++) {
-		if (cmd1_[i]!=I_CMD_NONE) {
-			return false ;
-		} ;
-		if (cmd2_[i]!=I_CMD_NONE) {
-			return false ;
-		} ;
-		if (cmd3_[i]!=I_CMD_NONE) {
-			return false ;
-		} ;
-		if (param1_[i]!=0) {
-			return false ;
-		} ;
-		if (param2_[i]!=0) {
-			return false ;
-		} ;
-		if (param3_[i]!=0) {
-			return false ;
-		} ;
-	}
-	return true ;
+  for (int i = 0; i < TABLE_STEPS; i++) {
+    if (cmd1_[i] != I_CMD_NONE) {
+      return false;
+    };
+    if (cmd2_[i] != I_CMD_NONE) {
+      return false;
+    };
+    if (cmd3_[i] != I_CMD_NONE) {
+      return false;
+    };
+    if (param1_[i] != 0) {
+      return false;
+    };
+    if (param2_[i] != 0) {
+      return false;
+    };
+    if (param3_[i] != 0) {
+      return false;
+    };
+  }
+  return true;
 }
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 
-TableHolder::TableHolder():Persistent("TABLES") {
-	Reset() ;
-}
+TableHolder::TableHolder() : Persistent("TABLES") { Reset(); }
 
-void TableHolder::Reset()  {
-	for (int i=0;i<SONG_CHANNEL_COUNT;i++) {
-		table_[i].Reset() ;
-	}
-	for (int i=0;i<TABLE_COUNT;i++) {
-		allocation_[i]=false ;
-	} ;
-} ;
+void TableHolder::Reset() {
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    table_[i].Reset();
+  }
+  for (int i = 0; i < TABLE_COUNT; i++) {
+    allocation_[i] = false;
+  };
+};
 
 Table &TableHolder::GetTable(int table) {
-	NAssert((table>=0)&&(table<TABLE_COUNT)) ;
-	return table_[table] ;
+  NAssert((table >= 0) && (table < TABLE_COUNT));
+  return table_[table];
 }
 
 void TableHolder::SaveContent(tinyxml2::XMLPrinter *printer) {
@@ -157,28 +153,28 @@ void TableHolder::RestoreContent(PersistencyDocument *doc) {
 }
 
 void TableHolder::SetUsed(int i) {
-	if (i>=TABLE_COUNT) {
-		NAssert(i<128) ;
-	}
-	allocation_[i]=true ;
-} ;
+  if (i >= TABLE_COUNT) {
+    NAssert(i < 128);
+  }
+  allocation_[i] = true;
+};
 
 int TableHolder::GetNext() {
-	for (int i=0;i<TABLE_COUNT;i++) {
-		if (!allocation_[i]) {
-			if (table_[i].IsEmpty()) {
-				allocation_[i]=true ;
-				return i ;
-			}
-		} ;
-	} ;
-	return NO_MORE_TABLE ;
-} ;
+  for (int i = 0; i < TABLE_COUNT; i++) {
+    if (!allocation_[i]) {
+      if (table_[i].IsEmpty()) {
+        allocation_[i] = true;
+        return i;
+      }
+    };
+  };
+  return NO_MORE_TABLE;
+};
 
 int TableHolder::Clone(int table) {
-	int target=GetNext() ;
-	if (target!=NO_MORE_TABLE) {
-		table_[target].Copy(table_[table]) ;
-	} ;
-	return target ;
-} ;
+  int target = GetNext();
+  if (target != NO_MORE_TABLE) {
+    table_[target].Copy(table_[table]);
+  };
+  return target;
+};

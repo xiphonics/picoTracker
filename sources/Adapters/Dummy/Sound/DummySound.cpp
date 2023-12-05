@@ -1,36 +1,20 @@
 
 #include "DummySound.h"
 
-bool DummySound::Init() {
+bool DummySound::Init() { return true; };
 
-   return true ;
-} ; 
+void DummySound::Close(){
 
+};
 
-void DummySound::Close() {
+bool DummySound::Start() { return 1; };
 
-} ;
+void DummySound::Stop(){};
 
-bool DummySound::Start() {
-	return 1 ;
-} ; 
+// length here is in bytes
 
-void DummySound::Stop() {
-} ;
+void DummySound::QueueBuffer(char *buffer, int len) {}
 
+int DummySound::GetPlayedBufferPercentage() { return 0; };
 
- // length here is in bytes
- 
-void DummySound::QueueBuffer(char *buffer,int len) {
-
-}
-
-
-int DummySound::GetPlayedBufferPercentage() {
-	return 0 ;
-} ;
-
-int DummySound::GetSampleRate(){
-	return 44100 ;
-} ;
-
+int DummySound::GetSampleRate() { return 44100; };

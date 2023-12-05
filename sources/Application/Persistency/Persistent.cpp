@@ -1,15 +1,16 @@
 #include "Persistent.h"
 #include "Foundation/Types/Types.h"
 
-Persistent::Persistent(const char *nodeName):SubService(MAKE_FOURCC('S','V','P','S')) {
-	nodeName_=nodeName ;
-} ;
+Persistent::Persistent(const char *nodeName)
+    : SubService(MAKE_FOURCC('S', 'V', 'P', 'S')) {
+  nodeName_ = nodeName;
+};
 
 void Persistent::Save(tinyxml2::XMLPrinter *printer) {
   printer->OpenElement(nodeName_);
 	SaveContent(printer) ;
   printer->CloseElement();
-} ;
+};
 
 bool Persistent::Restore(PersistencyDocument *doc) {
   if (!strcmp(doc->ElemName(), nodeName_)) {

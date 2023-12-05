@@ -3,15 +3,15 @@
 
 #include "Services/Audio/AudioDriver.h"
 
-class DummyAudioDriver: public AudioDriver {
+class DummyAudioDriver : public AudioDriver {
 public:
-     // Sound implementation
-	virtual bool InitDriver() ; 
-	virtual void CloseDriver();
-	virtual bool StartDriver() ; 
-	virtual void StopDriver();
-	virtual int GetPlayedBufferPercentage() ;
-	virtual int GetSampleRate() ;
-	virtual bool Interlaced() { return true ; } ;
-} ;
+  // Sound implementation
+  virtual bool InitDriver();
+  virtual void CloseDriver();
+  virtual bool StartDriver();
+  virtual void StopDriver();
+  virtual int GetPlayedBufferPercentage();
+  virtual int GetSampleRate();
+  virtual bool Interlaced() { return true; };
+};
 #endif

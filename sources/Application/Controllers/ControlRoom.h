@@ -5,18 +5,17 @@
 #include "Foundation/T_Singleton.h"
 #include "Services/Controllers/ControlNode.h"
 
-
-class ControlRoom:public T_Singleton<ControlRoom>,public ControlNode {
+class ControlRoom : public T_Singleton<ControlRoom>, public ControlNode {
 public:
-	ControlRoom() ;
-	~ControlRoom() ;
+  ControlRoom();
+  ~ControlRoom();
 
-	bool Init() ;
-	void Close() ;
+  bool Init();
+  void Close();
 
-	bool Attach(const char *nodeUrl,const char *controllerUrl) ;
-	AssignableControlNode *GetControlNode(const std::string url) ;
+  bool Attach(const char *nodeUrl, const char *controllerUrl);
+  AssignableControlNode *GetControlNode(const std::string url);
 
-	void Dump() ;
-} ;
+  void Dump();
+};
 #endif

@@ -23,32 +23,31 @@
 //
 // }
 
-template <class Item>
-class IteratorPtr {
+template <class Item> class IteratorPtr {
 public:
+  // Constructor: we wrap a regular iterator
 
-	// Constructor: we wrap a regular iterator
+  IteratorPtr(I_Iterator<Item> *i) : _i(i){};
 
-	IteratorPtr(I_Iterator<Item>* i): _i(i) {} ;
+  // Destructor: we make sure the iterator is deleted
 
-	// Destructor: we make sure the iterator is deleted
+  ~IteratorPtr() { delete _i; };
 
-	~IteratorPtr() { delete _i ; } ;
+  // We declare the pointer operation so that client code
+  // is readable as a regular iterator
 
-	// We declare the pointer operation so that client code
-	// is readable as a regular iterator
+  I_Iterator<Item> *operator->() { return _i; };
+  I_Iterator<Item> &operator*() { return *_i; };
 
-	I_Iterator<Item>* operator->() { return _i ; } ;
-	I_Iterator<Item>& operator*() { return *_i ; }  ;
-
-	// Since we don't want to share the iterators, we prevent
-	// copy and assignment
+  // Since we don't want to share the iterators, we prevent
+  // copy and assignment
 
 private:
-	IteratorPtr(const IteratorPtr&) ;
-	IteratorPtr& operator=(const IteratorPtr &) ;
+  IteratorPtr(const IteratorPtr &);
+  IteratorPtr &operator=(const IteratorPtr &);
+
 private:
-	I_Iterator<Item>* _i ;
-} ;
+  I_Iterator<Item> *_i;
+};
 
 #endif

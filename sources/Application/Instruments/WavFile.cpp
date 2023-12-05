@@ -14,259 +14,246 @@
 #define FLASH_LIMIT (2 * 1024 * 1024)
 #endif
 
-int WavFile::bufferChunkSize_=-1 ;
-bool WavFile::initChunkSize_=true ;
+int WavFile::bufferChunkSize_ = -1;
+bool WavFile::initChunkSize_ = true;
 unsigned char WavFile::readBuffer_[512];
 
-short Swap16 (short from)
-{
+short Swap16(short from) {
 #ifdef __ppc__
-	short result;
-	((char*)&result)[0] = ((char*)&from)[1];
-	((char*)&result)[1] = ((char*)&from)[0];
-	return  result;
+  short result;
+  ((char *)&result)[0] = ((char *)&from)[1];
+  ((char *)&result)[1] = ((char *)&from)[0];
+  return result;
 #else
-	return from;
-#endif	
+  return from;
+#endif
 }
 
-int Swap32 (int from)
-{
+int Swap32(int from) {
 #ifdef __ppc__
-	int result;
-	((char*)&result)[0] = ((char*)&from)[3];
-	((char*)&result)[1] = ((char*)&from)[2];
-	((char*)&result)[2] = ((char*)&from)[1];
-	((char*)&result)[3] = ((char*)&from)[0];			 
-	return  result;
+  int result;
+  ((char *)&result)[0] = ((char *)&from)[3];
+  ((char *)&result)[1] = ((char *)&from)[2];
+  ((char *)&result)[2] = ((char *)&from)[1];
+  ((char *)&result)[3] = ((char *)&from)[0];
+  return result;
 #else
-	return from;
-#endif 	
+  return from;
+#endif
 }
-
 
 WavFile::WavFile(I_File *file) {
-	if (initChunkSize_) {
-		const char *size=Config::GetInstance()->GetValue("SAMPLELOADCHUNKSIZE") ;
-		if (size) {
-			bufferChunkSize_=atoi(size) ;
-		}
-		initChunkSize_=false;
-	}
-	samples_=0 ;
-	size_=0 ;
-	readBufferSize_=0 ;
-	sampleBufferSize_=0 ;
-	file_=file ;
-} ;
+  if (initChunkSize_) {
+    const char *size = Config::GetInstance()->GetValue("SAMPLELOADCHUNKSIZE");
+    if (size) {
+      bufferChunkSize_ = atoi(size);
+    }
+    initChunkSize_ = false;
+  }
+  samples_ = 0;
+  size_ = 0;
+  readBufferSize_ = 0;
+  sampleBufferSize_ = 0;
+  file_ = file;
+};
 
 WavFile::~WavFile() {
-	if (file_) {
-		file_->Close() ;
-		delete file_ ;
-	}
+  if (file_) {
+    file_->Close();
+    delete file_;
+  }
 #ifndef LOAD_IN_FLASH
   SAFE_FREE(samples_) ;
 #endif
-} ;
+};
 
 WavFile *WavFile::Open(const char *path) {
 
-    // open file
+  // open file
 
-	FileSystem *fs=FileSystem::GetInstance() ;
-	I_File *file=fs->Open(path,"r") ;
-	
-	if (!file) return 0 ;
+  FileSystem *fs = FileSystem::GetInstance();
+  I_File *file = fs->Open(path, "r");
 
-	WavFile *wav=new WavFile(file) ;
+  if (!file)
+    return 0;
 
-        
-        // Get data
-        
-/*        file->Seek(0,SEEK_SET) ;
-        file->Read(fileBuffer,filesize,1) ;
-        uchar *ptr=fileBuffer ;*/
-        
-//Trace::Dump("Loading sample from %s",path) ;
+  WavFile *wav = new WavFile(file);
 
-	long position=0 ;
+  // Get data
 
-	// Read 'RIFF'
+  /*        file->Seek(0,SEEK_SET) ;
+          file->Read(fileBuffer,filesize,1) ;
+          uchar *ptr=fileBuffer ;*/
 
-	unsigned int chunk ;
+  // Trace::Dump("Loading sample from %s",path) ;
 
-	position+=wav->readBlock(position,4) ;
-	memcpy(&chunk,wav->readBuffer_,4) ;
-	chunk = Swap32(chunk);
-		
-	if (chunk!=0x46464952) {
-		Trace::Error("Bad RIFF format %x",chunk) ;
-		delete(wav) ;
-		return 0 ;
-	}
+  long position = 0;
 
+  // Read 'RIFF'
 
-	// Read size
+  unsigned int chunk;
 
-	unsigned int size ;
-	position+=wav->readBlock(position,4) ;
-	memcpy(&size,wav->readBuffer_,4) ;
-	size = Swap32(size);
+  position += wav->readBlock(position, 4);
+  memcpy(&chunk, wav->readBuffer_, 4);
+  chunk = Swap32(chunk);
 
-	// Read WAVE
+  if (chunk != 0x46464952) {
+    Trace::Error("Bad RIFF format %x", chunk);
+    delete (wav);
+    return 0;
+  }
 
-	position+=wav->readBlock(position,4) ;
-	memcpy(&chunk,wav->readBuffer_,4) ;
-	chunk = Swap32(chunk);
+  // Read size
 
-	if (chunk!=0x45564157) {
-		Trace::Error("Bad WAV format") ;
-		delete wav ;
-		return 0 ;
-	}
+  unsigned int size;
+  position += wav->readBlock(position, 4);
+  memcpy(&size, wav->readBuffer_, 4);
+  size = Swap32(size);
 
-		// Read fmt
+  // Read WAVE
 
-	position+=wav->readBlock(position,4) ;
-	memcpy(&chunk,wav->readBuffer_,4) ;
-	chunk = Swap32(chunk);
-		
-	if (chunk!=0x20746D66) {
-		Trace::Error("Bad WAV/fmt format") ;
-		delete wav ;
-		return 0 ;
-	}
+  position += wav->readBlock(position, 4);
+  memcpy(&chunk, wav->readBuffer_, 4);
+  chunk = Swap32(chunk);
 
-	// Read subchunk size
+  if (chunk != 0x45564157) {
+    Trace::Error("Bad WAV format");
+    delete wav;
+    return 0;
+  }
 
-	position+=wav->readBlock(position,4) ;
-	memcpy(&size,wav->readBuffer_,4) ;
-	size = Swap32(size);
+  // Read fmt
 
-	if (size<16) {
-		Trace::Error("Bad fmt size format") ;
-		delete wav ;
-		return 0 ;
-	}
-	int offset=size-16 ;
+  position += wav->readBlock(position, 4);
+  memcpy(&chunk, wav->readBuffer_, 4);
+  chunk = Swap32(chunk);
 
-	// Read compression
+  if (chunk != 0x20746D66) {
+    Trace::Error("Bad WAV/fmt format");
+    delete wav;
+    return 0;
+  }
 
-	unsigned short comp ;
-	position+=wav->readBlock(position,2) ;
-	memcpy(&comp,wav->readBuffer_,2) ;
-	comp = Swap16(comp);
+  // Read subchunk size
 
-	if (comp!=1) {
-		Trace::Error("Unsupported compression") ;
-		delete wav ;
-		return 0 ;
-	}
+  position += wav->readBlock(position, 4);
+  memcpy(&size, wav->readBuffer_, 4);
+  size = Swap32(size);
 
-	// Read NumChannels (mono/Stereo)
+  if (size < 16) {
+    Trace::Error("Bad fmt size format");
+    delete wav;
+    return 0;
+  }
+  int offset = size - 16;
 
-	unsigned short nChannels ;
-	position+=wav->readBlock(position,2) ;
-	memcpy(&nChannels,wav->readBuffer_,2) ;
-	nChannels = Swap16(nChannels);
+  // Read compression
 
-	// Read Sample rate 
+  unsigned short comp;
+  position += wav->readBlock(position, 2);
+  memcpy(&comp, wav->readBuffer_, 2);
+  comp = Swap16(comp);
 
-	unsigned int sampleRate ;
+  if (comp != 1) {
+    Trace::Error("Unsupported compression");
+    delete wav;
+    return 0;
+  }
 
-	position+=wav->readBlock(position,4) ;
-	memcpy(&sampleRate,wav->readBuffer_,4) ;
-	sampleRate = Swap32(sampleRate);
+  // Read NumChannels (mono/Stereo)
 
-	// Skip byteRate & blockalign
+  unsigned short nChannels;
+  position += wav->readBlock(position, 2);
+  memcpy(&nChannels, wav->readBuffer_, 2);
+  nChannels = Swap16(nChannels);
 
-	position+=6 ;
+  // Read Sample rate
 
-	short bitPerSample ;
-	position+=wav->readBlock(position,2) ;
-	memcpy(&bitPerSample,wav->readBuffer_,2) ;
-	bitPerSample = Swap16(bitPerSample);
-		
-	if ((bitPerSample!=16)&&(bitPerSample!=8)) {
-		Trace::Error("Only 8/16 bit supported") ;
-		delete wav ;
-		return 0 ;
-	} ;
-	bitPerSample/=8 ;
-	wav->bytePerSample_=bitPerSample ;
+  unsigned int sampleRate;
 
-	// some bad files have bigger chunks
+  position += wav->readBlock(position, 4);
+  memcpy(&sampleRate, wav->readBuffer_, 4);
+  sampleRate = Swap32(sampleRate);
 
-	if (offset) {
-		position+=offset ;
-	}
+  // Skip byteRate & blockalign
 
-	// read data subchunk header
-	//Trace::Dump("data subch") ;
+  position += 6;
 
-	position+=wav->readBlock(position,4) ;
-	memcpy(&chunk,wav->readBuffer_,4) ;
-	chunk = Swap32(chunk);
-	
+  short bitPerSample;
+  position += wav->readBlock(position, 2);
+  memcpy(&bitPerSample, wav->readBuffer_, 2);
+  bitPerSample = Swap16(bitPerSample);
 
-	while (chunk!=0x61746164) {
-		position+=wav->readBlock(position,4) ;
-		memcpy(&size,wav->readBuffer_,4) ;
-		size = Swap32(size);
+  if ((bitPerSample != 16) && (bitPerSample != 8)) {
+    Trace::Error("Only 8/16 bit supported");
+    delete wav;
+    return 0;
+  };
+  bitPerSample /= 8;
+  wav->bytePerSample_ = bitPerSample;
 
-		position+=size ;
-		position+=wav->readBlock(position,4) ;
-		memcpy(&chunk,wav->readBuffer_,4) ;
-		chunk = Swap32(chunk);
-	}
+  // some bad files have bigger chunks
 
-        wav->sampleRate_=sampleRate ;
-       	wav->channelCount_=nChannels ;
+  if (offset) {
+    position += offset;
+  }
 
-	// Read data size in byte
+  // read data subchunk header
+  // Trace::Dump("data subch") ;
 
-	position+=wav->readBlock(position,4) ;
-	memcpy(&size,wav->readBuffer_,4) ;
-	size = Swap32(size);
+  position += wav->readBlock(position, 4);
+  memcpy(&chunk, wav->readBuffer_, 4);
+  chunk = Swap32(chunk);
 
-	wav->size_=size/nChannels/bitPerSample ; // Size in samples (stereo/16bits)
+  while (chunk != 0x61746164) {
+    position += wav->readBlock(position, 4);
+    memcpy(&size, wav->readBuffer_, 4);
+    size = Swap32(size);
 
-	wav->dataPosition_=position ;
+    position += size;
+    position += wav->readBlock(position, 4);
+    memcpy(&chunk, wav->readBuffer_, 4);
+    chunk = Swap32(chunk);
+  }
 
-	return wav ;
-} ; 
+  wav->sampleRate_ = sampleRate;
+  wav->channelCount_ = nChannels;
 
-void *WavFile::GetSampleBuffer(int note) {
-	return samples_ ;
-} ;
+  // Read data size in byte
 
-int WavFile::GetSize(int note) {
-	return size_ ;
-} ;
+  position += wav->readBlock(position, 4);
+  memcpy(&size, wav->readBuffer_, 4);
+  size = Swap32(size);
 
-int WavFile::GetChannelCount(int note) {
-    return channelCount_ ;
-} ;
+  wav->size_ =
+      size / nChannels / bitPerSample; // Size in samples (stereo/16bits)
 
-int WavFile::GetSampleRate(int note) {
-    return sampleRate_ ;
-} ;
+  wav->dataPosition_ = position;
 
-long WavFile::readBlock(long start,long size) {
+  return wav;
+};
+
+void *WavFile::GetSampleBuffer(int note) { return samples_; };
+
+int WavFile::GetSize(int note) { return size_; };
+
+int WavFile::GetChannelCount(int note) { return channelCount_; };
+
+int WavFile::GetSampleRate(int note) { return sampleRate_; };
+
+long WavFile::readBlock(long start, long size) {
   // Read buffer is a fixed size, nothing should be requested bigger than this
   // TODO: remove size option and work with what we have
   assert((unsigned long)size < FLASH_PAGE_SIZE);
-	if (size>readBufferSize_) {
-		readBufferSize_=size ;
-	}
+  if (size > readBufferSize_) {
+    readBufferSize_ = size;
+  }
   file_->Seek(start,SEEK_SET) ;
   file_->Read(readBuffer_,size,1) ;
-	return size ;
-} ;
+  return size;
+};
 
-
-bool WavFile::GetBuffer(long start,long size) {
+bool WavFile::GetBuffer(long start, long size) {
   // TODO: Many of the calculations in this function don't make any
   // sense anymore, refactor
   // 64 bits is the maximum size we can read without overflowing
@@ -274,51 +261,50 @@ bool WavFile::GetBuffer(long start,long size) {
   assert((unsigned long)size < FLASH_PAGE_SIZE / 2);
   samples_ = (short *)readBuffer_;
 
-	// compute the file buffer size we need to read
+  // compute the file buffer size we need to read
 
-	int bufferSize=size*channelCount_*bytePerSample_ ;
-	int bufferStart=dataPosition_+start*channelCount_*bytePerSample_ ;
+  int bufferSize = size * channelCount_ * bytePerSample_;
+  int bufferStart = dataPosition_ + start * channelCount_ * bytePerSample_;
 
-	// Read the buffer but in small chunk to let the system breathe
-	// if the files are big
+  // Read the buffer but in small chunk to let the system breathe
+  // if the files are big
 
-	int count=bufferSize ;
-	int offset=0 ;
-	char *ptr=(char *)samples_ ;
-	int readSize =
-   (bufferChunkSize_>0) 
-   ? bufferChunkSize_
-   : count>4096?4096:count;
+  int count = bufferSize;
+  int offset = 0;
+  char *ptr = (char *)samples_;
+  int readSize = (bufferChunkSize_ > 0) ? bufferChunkSize_
+                 : count > 4096         ? 4096
+                                        : count;
 
-	while (count>0) {
-		readSize=(count>readSize)?readSize:count ;
-		readBlock(bufferStart,readSize) ;
-		memcpy(ptr+offset,readBuffer_,readSize) ;
-		bufferStart+=readSize ;
-		count-=readSize ;
-		offset+=readSize ;
-		if (bufferChunkSize_>0) TimeService::GetInstance()->Sleep(1) ;
-	}
+  while (count > 0) {
+    readSize = (count > readSize) ? readSize : count;
+    readBlock(bufferStart, readSize);
+    memcpy(ptr + offset, readBuffer_, readSize);
+    bufferStart += readSize;
+    count -= readSize;
+    offset += readSize;
+    if (bufferChunkSize_ > 0)
+      TimeService::GetInstance()->Sleep(1);
+  }
 
+  // expand 8 bit data if needed
 
-        // expand 8 bit data if needed
-
-	unsigned char *src=(unsigned char *)samples_ ;
-	short *dst=samples_ ;
-	for (int i=size-1;i>=0;i--) {
-		if (bytePerSample_==1) {
-			dst[i]=(src[i]-128)*256 ;
-		} else {
-			*dst=Swap16(*dst) ;
-			dst++ ;
-			if (channelCount_>1) {
-				*dst=Swap16(*dst) ;
-				dst++ ;
-			}
-		}
-	} 
-	return true ;
-} ;
+  unsigned char *src = (unsigned char *)samples_;
+  short *dst = samples_;
+  for (int i = size - 1; i >= 0; i--) {
+    if (bytePerSample_ == 1) {
+      dst[i] = (src[i] - 128) * 256;
+    } else {
+      *dst = Swap16(*dst);
+      dst++;
+      if (channelCount_ > 1) {
+        *dst = Swap16(*dst);
+        dst++;
+      }
+    }
+  }
+  return true;
+};
 
 #ifdef LOAD_IN_FLASH
 bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset) {
@@ -421,11 +407,9 @@ bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset) {
 #endif
 
 void WavFile::Close() {
-	file_->Close() ;
-	SAFE_DELETE(file_) ;
-	readBufferSize_=0 ;
-} ;
+  file_->Close();
+  SAFE_DELETE(file_);
+  readBufferSize_ = 0;
+};
 
-int WavFile::GetRootNote(int note) {
-	return 60 ;
-} 
+int WavFile::GetRootNote(int note) { return 60; }

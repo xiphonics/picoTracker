@@ -8,28 +8,28 @@
 #define CONSOLE_WIDTH 40
 #define CONSOLE_HEIGHT 25
 
-class ConsoleView: public View,public Trace {
+class ConsoleView : public View, public Trace {
 public:
-	ConsoleView(GUIWindow &w,ViewData *viewData) ;
+  ConsoleView(GUIWindow &w, ViewData *viewData);
 
-	// View implementation
+  // View implementation
 
-	virtual void ProcessButtonMask(unsigned short mask,bool pressed);
-	virtual void DrawView() ;
-	virtual void OnPlayerUpdate(PlayerEventType,unsigned int) {} ;
-	virtual void OnFocus() {} ;
+  virtual void ProcessButtonMask(unsigned short mask, bool pressed);
+  virtual void DrawView();
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
+  virtual void OnFocus(){};
 
-	// Trace Implementation
+  // Trace Implementation
 
-	virtual void AddBuffer(char *buffer) ;
+  virtual void AddBuffer(char *buffer);
 
-	// Additional
+  // Additional
 
-	bool IsDirty() ;
+  bool IsDirty();
 
 private:
-	char lines_[CONSOLE_HEIGHT][CONSOLE_WIDTH] ;
-	int currentLine_ ;
-} ;
+  char lines_[CONSOLE_HEIGHT][CONSOLE_WIDTH];
+  int currentLine_;
+};
 
 #endif

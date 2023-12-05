@@ -8,7 +8,7 @@
 
 class GUICreateWindowParams {
 public:
-	const char *title ;
-} ;
+  const char *title;
+};
 
 #endif

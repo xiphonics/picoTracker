@@ -5,16 +5,16 @@
 
 #define MAX_BUTTON 25
 
-class ButtonControllerSource: public ControllerSource {
+class ButtonControllerSource : public ControllerSource {
 public:
-	ButtonControllerSource(const char *name) ;
-	virtual ~ButtonControllerSource() ;
-	virtual Channel *GetChannel(const char *url) ;
-	virtual bool IsRunning() { return true ; } ;
-	void SetButton(int button,bool value) ;
+  ButtonControllerSource(const char *name);
+  virtual ~ButtonControllerSource();
+  virtual Channel *GetChannel(const char *url);
+  virtual bool IsRunning() { return true; };
+  void SetButton(int button, bool value);
+
 private:
-	Channel channel_[MAX_BUTTON] ;
-} ;
+  Channel channel_[MAX_BUTTON];
+};
 
 #endif
-

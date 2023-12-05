@@ -5,16 +5,15 @@
 
 class I_Singleton {
 public:
-	virtual ~I_Singleton() {} ;
-} ;
+  virtual ~I_Singleton(){};
+};
 
-class SingletonRegistry: public T_SimpleList<I_Singleton> {
+class SingletonRegistry : public T_SimpleList<I_Singleton> {
 public:
-	static SingletonRegistry *GetInstance() ;
+  static SingletonRegistry *GetInstance();
 
-	SingletonRegistry() ;
-	~SingletonRegistry() ;
-
-} ;
+  SingletonRegistry();
+  ~SingletonRegistry();
+};
 
 #endif

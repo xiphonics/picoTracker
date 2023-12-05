@@ -1,9 +1,9 @@
 #ifndef _SONG_H_
 #define _SONG_H_
 
+#include "Application/Persistency/Persistent.h"
 #include "Chain.h"
 #include "Phrase.h"
-#include "Application/Persistency/Persistent.h"
 
 #ifndef PICOBUILD
 #define SONG_CHANNEL_COUNT 8
@@ -19,19 +19,20 @@
 #define MAX_MIDIINSTRUMENT_COUNT 0x10
 #endif
 
-#define MAX_INSTRUMENT_COUNT (MAX_SAMPLEINSTRUMENT_COUNT+MAX_MIDIINSTRUMENT_COUNT)
+#define MAX_INSTRUMENT_COUNT                                                   \
+  (MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT)
 
-class Song:Persistent {
+class Song : Persistent {
 public:
-	Song() ;
-	~Song() ;
+  Song();
+  ~Song();
 
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
   unsigned char *data_;
-	Chain *chain_ ;
-	Phrase *phrase_ ;
-} ;
+  Chain *chain_;
+  Phrase *phrase_;
+};
 
 #endif

@@ -5,31 +5,30 @@
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
-
-class ProjectView: public FieldView,public I_Observer {
+class ProjectView : public FieldView, public I_Observer {
 public:
-	ProjectView(GUIWindow &w,ViewData *data) ;
-	virtual ~ProjectView() ;
+  ProjectView(GUIWindow &w, ViewData *data);
+  virtual ~ProjectView();
 
-	virtual void ProcessButtonMask(unsigned short mask,bool pressed) ;
-	virtual void DrawView() ;
-	virtual void OnPlayerUpdate(PlayerEventType,unsigned int) {} ;
-	virtual void OnFocus() {} ;
+  virtual void ProcessButtonMask(unsigned short mask, bool pressed);
+  virtual void DrawView();
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
+  virtual void OnFocus(){};
 
-	// Observer for action callback
+  // Observer for action callback
 
-	void Update(Observable &,I_ObservableData *) ;
+  void Update(Observable &, I_ObservableData *);
 
-	void OnLoadProject() ;
-	void OnPurgeInstruments(bool removeFromDisk) ;
-	void OnQuit() ;
+  void OnLoadProject();
+  void OnPurgeInstruments(bool removeFromDisk);
+  void OnQuit();
 
 protected:
 private:
-	Project *project_ ;
-// Debug
-	unsigned long lastTick_ ;
-	unsigned long lastClock_ ;
-	UIField *tempoField_ ;
-} ;
+  Project *project_;
+  // Debug
+  unsigned long lastTick_;
+  unsigned long lastClock_;
+  UIField *tempoField_;
+};
 #endif

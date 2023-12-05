@@ -6,48 +6,47 @@
 #include "AudioOut.h"
 #include "Foundation/Observable.h"
 
-class AudioDriver ;
+class AudioDriver;
 
-class AudioOutDriver: public AudioOut,protected I_Observer {
+class AudioOutDriver : public AudioOut, protected I_Observer {
 public:
-       AudioOutDriver(AudioDriver &) ;
-       virtual ~AudioOutDriver() ;
- 
-       virtual bool Init() ;
-       virtual void Close() ;
-       virtual bool Start() ;
-       virtual void Stop() ;
- 
-       virtual void Trigger() ;
+  AudioOutDriver(AudioDriver &);
+  virtual ~AudioOutDriver();
 
-       virtual bool Clipped() ;
+  virtual bool Init();
+  virtual void Close();
+  virtual bool Start();
+  virtual void Stop();
 
-	   virtual int GetPlayedBufferPercentage() ;
+  virtual void Trigger();
 
-       AudioDriver *GetDriver() ;
+  virtual bool Clipped();
 
-		virtual std::string GetAudioAPI() ;
-		virtual std::string GetAudioDevice() ;
-		virtual int GetAudioBufferSize() ;
-		virtual int GetAudioRequestedBufferSize() ;
-		virtual int GetAudioPreBufferCount() ;
-		virtual double GetStreamTime() ;
+  virtual int GetPlayedBufferPercentage();
+
+  AudioDriver *GetDriver();
+
+  virtual std::string GetAudioAPI();
+  virtual std::string GetAudioDevice();
+  virtual int GetAudioBufferSize();
+  virtual int GetAudioRequestedBufferSize();
+  virtual int GetAudioPreBufferCount();
+  virtual double GetStreamTime();
 
 protected:
+  virtual void Update(Observable &o, I_ObservableData *d);
 
-		virtual void Update(Observable &o,I_ObservableData *d) ;
- 
-       void prepareMixBuffers() ;
-       void mixToPrimary() ;
-	   void clipToMix() ;
+  void prepareMixBuffers();
+  void mixToPrimary();
+  void clipToMix();
 
 private:
-        AudioDriver *driver_ ;
-       	bool clipped_ ;
-       	bool hasSound_ ;
+  AudioDriver *driver_;
+  bool clipped_;
+  bool hasSound_;
 
-	    static fixed primarySoundBuffer_[MIX_BUFFER_SIZE];
-	    static short mixBuffer_[MIX_BUFFER_SIZE];
-	    int sampleCount_ ;
-} ;
+  static fixed primarySoundBuffer_[MIX_BUFFER_SIZE];
+  static short mixBuffer_[MIX_BUFFER_SIZE];
+  int sampleCount_;
+};
 #endif

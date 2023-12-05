@@ -15,30 +15,27 @@ some useful abstract info:
 
 #include "Application/Utils/fixed.h"
 
-typedef enum 
-{
-	FLT_LOWPASS,		//only lowpass is implemented so far
-	FLT_HIGHPASS,
-	FLT_BANDPASS,
-	FLT_NOTCH,
-}filterType_t;
+typedef enum {
+  FLT_LOWPASS, // only lowpass is implemented so far
+  FLT_HIGHPASS,
+  FLT_BANDPASS,
+  FLT_NOTCH,
+} filterType_t;
 
-
-typedef struct
-{
-	fixed height[2];
-	fixed speed[2];
-	fixed hipdelay[2] ;
-	filterType_t type;
-	fixed parm1,parm2;
-  fixed freq,reso;
-	fixed dirt ;
-	fixed mix ;
+typedef struct {
+  fixed height[2];
+  fixed speed[2];
+  fixed hipdelay[2];
+  filterType_t type;
+  fixed parm1, parm2;
+  fixed freq, reso;
+  fixed dirt;
+  fixed mix;
 } filter_t;
 
-void set_filter(int channel, filterType_t type, fixed parm1, fixed parm2,int mix,bool bassyMapping);
+void set_filter(int channel, filterType_t type, fixed parm1, fixed parm2,
+                int mix, bool bassyMapping);
 
-void init_filters(void) ;
+void init_filters(void);
 
-
-filter_t *get_filter(int channel) ;
+filter_t *get_filter(int channel);

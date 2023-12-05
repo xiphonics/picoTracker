@@ -1,29 +1,16 @@
 
 #include "DummyAudioDriver.h"
 
-bool DummyAudioDriver::InitDriver() {
+bool DummyAudioDriver::InitDriver() { return true; };
 
-   return true ;
-} ; 
+void DummyAudioDriver::CloseDriver(){
 
+};
 
-void DummyAudioDriver::CloseDriver() {
+bool DummyAudioDriver::StartDriver() { return 1; };
 
-} ;
+void DummyAudioDriver::StopDriver(){};
 
-bool DummyAudioDriver::StartDriver() {
-	return 1 ;
-} ; 
+int DummyAudioDriver::GetPlayedBufferPercentage() { return 0; };
 
-void DummyAudioDriver::StopDriver() {
-} ;
-
-
-int DummyAudioDriver::GetPlayedBufferPercentage() {
-	return 0 ;
-} ;
-
-int DummyAudioDriver::GetSampleRate(){
-	return 44100 ;
-} ;
-
+int DummyAudioDriver::GetSampleRate() { return 44100; };

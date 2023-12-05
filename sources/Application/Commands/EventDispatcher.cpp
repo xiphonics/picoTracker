@@ -1,46 +1,45 @@
 #include "EventDispatcher.h"
-#include "System/Console/Trace.h"
 #include "Application/Model/Config.h"
+#include "System/Console/Trace.h"
 
-int EventDispatcher::keyRepeat_=30 ;
-int EventDispatcher::keyDelay_=500 ;
+int EventDispatcher::keyRepeat_ = 30;
+int EventDispatcher::keyDelay_ = 500;
 
 EventDispatcher::EventDispatcher() {
-	window_=0;
-	eventMask_=0 ;
+  window_ = 0;
+  eventMask_ = 0;
 
-	// Read config file key repeat
+  // Read config file key repeat
 
-	Config *config=Config::GetInstance() ;
-	const char *s=config->GetValue("KEYDELAY") ;
-	if (s) {
-		keyDelay_=atoi(s) ;
-	}
+  Config *config = Config::GetInstance();
+  const char *s = config->GetValue("KEYDELAY");
+  if (s) {
+    keyDelay_ = atoi(s);
+  }
 
-	s=config->GetValue("KEYREPEAT") ;
-	if (s) {
-		keyRepeat_=atoi(s) ;
-	}
+  s = config->GetValue("KEYREPEAT");
+  if (s) {
+    keyRepeat_ = atoi(s);
+  }
 
-	repeatMask_=0 ;
-	repeatMask_|=(1<<EPBT_LEFT) ;
-	repeatMask_|=(1<<EPBT_RIGHT) ;
-	repeatMask_|=(1<<EPBT_UP) ;
-	repeatMask_|=(1<<EPBT_DOWN) ;
+  repeatMask_ = 0;
+  repeatMask_ |= (1 << EPBT_LEFT);
+  repeatMask_ |= (1 << EPBT_RIGHT);
+  repeatMask_ |= (1 << EPBT_UP);
+  repeatMask_ |= (1 << EPBT_DOWN);
 
-	timer_=TimerService::GetInstance()->CreateTimer() ;
-	timer_->AddObserver(*this) ;
-
-} ;
+  timer_ = TimerService::GetInstance()->CreateTimer();
+  timer_->AddObserver(*this);
+};
 
 EventDispatcher::~EventDispatcher() {
-	timer_->RemoveObserver(*this) ;
-	SAFE_DELETE(timer_) ;
-} ;
+  timer_->RemoveObserver(*this);
+  SAFE_DELETE(timer_);
+};
 
-void EventDispatcher::Execute(FourCC id,float value) {
+void EventDispatcher::Execute(FourCC id, float value) {
 
-	if (window_) {
+  if (window_) {
     GUIEventPadButtonType mapping = EPBT_INVALID;
     switch (id) {
     case TRIG_EVENT_A:
@@ -71,62 +70,59 @@ void EventDispatcher::Execute(FourCC id,float value) {
       mapping = EPBT_START;
       break;
       //	EPBT_SELECT
-		}
+    }
 
-		// Compute mask and repeat if needed
+    // Compute mask and repeat if needed
 
-		if (value>0.5) {
-			eventMask_|=(1<<mapping) ;
-		} else {
-			eventMask_^=(1<<mapping) ;
-		}
+    if (value > 0.5) {
+      eventMask_ |= (1 << mapping);
+    } else {
+      eventMask_ ^= (1 << mapping);
+    }
 
-		// Dispatch event to window
+    // Dispatch event to window
 
-		unsigned long now=System::GetInstance()->GetClock();
-		GUIEventType type=(value>0.5)? ET_PADBUTTONDOWN:ET_PADBUTTONUP ;
-		GUIEvent event(mapping,type,now,0,0,0) ;
-		window_->DispatchEvent(event) ;
+    unsigned long now = System::GetInstance()->GetClock();
+    GUIEventType type = (value > 0.5) ? ET_PADBUTTONDOWN : ET_PADBUTTONUP;
+    GUIEvent event(mapping, type, now, 0, 0, 0);
+    window_->DispatchEvent(event);
 
-
-		if (eventMask_&repeatMask_) {
-			timer_->SetPeriod(float(keyDelay_)) ;
-			timer_->Start() ;
-		} else {
-			timer_->Stop() ;
-		}
-	} ;
+    if (eventMask_ & repeatMask_) {
+      timer_->SetPeriod(float(keyDelay_));
+      timer_->Start();
+    } else {
+      timer_->Stop();
+    }
+  };
 };
 
-void EventDispatcher::SetWindow(GUIWindow *window) {
-	window_=window ;
-} ;
+void EventDispatcher::SetWindow(GUIWindow *window) { window_ = window; };
 
 unsigned int EventDispatcher::OnTimerTick() {
 
-	unsigned sendMask=(eventMask_&repeatMask_) ;
-	unsigned long now=System::GetInstance()->GetClock();
+  unsigned sendMask = (eventMask_ & repeatMask_);
+  unsigned long now = System::GetInstance()->GetClock();
 
-	if (sendMask) {
-		int current=0 ;
-		while (sendMask) {
-			if (sendMask&1) {
-				GUIEvent event(current,ET_PADBUTTONDOWN,now,0,0,0) ;
-				window_->DispatchEvent(event) ;
-			}
-			sendMask>>=1 ;
-			current++ ;
-		}		
-		return keyRepeat_ ;
-	}
-	return 0 ;
-} ;
+  if (sendMask) {
+    int current = 0;
+    while (sendMask) {
+      if (sendMask & 1) {
+        GUIEvent event(current, ET_PADBUTTONDOWN, now, 0, 0, 0);
+        window_->DispatchEvent(event);
+      }
+      sendMask >>= 1;
+      current++;
+    }
+    return keyRepeat_;
+  }
+  return 0;
+};
 
-void EventDispatcher::Update(Observable &o,I_ObservableData *d) {
-	unsigned int tick=OnTimerTick() ;
-	if (tick) {
-		timer_->SetPeriod(float(tick)) ;
-	} else {
-		timer_->Stop() ;
-	};
-} ;
+void EventDispatcher::Update(Observable &o, I_ObservableData *d) {
+  unsigned int tick = OnTimerTick();
+  if (tick) {
+    timer_->SetPeriod(float(tick));
+  } else {
+    timer_->Stop();
+  };
+};

@@ -3,12 +3,13 @@
 
 class I_Action {
 public:
-	I_Action(char *name);
-	virtual ~I_Action() ;
-	char *GetName() ;
-	virtual void Do()=0 ;
+  I_Action(char *name);
+  virtual ~I_Action();
+  char *GetName();
+  virtual void Do() = 0;
+
 private:
-	char *name_ ;
-} ;
+  char *name_;
+};
 
 #endif

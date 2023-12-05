@@ -1,73 +1,71 @@
 #include "SoundFontManager.h"
-#include "System/System/System.h"
 #include "System/FileSystem/FileSystem.h"
+#include "System/System/System.h"
 
-SoundFontManager::SoundFontManager() {
-} ;
+SoundFontManager::SoundFontManager(){};
 
-SoundFontManager::~SoundFontManager() {
-} ;
+SoundFontManager::~SoundFontManager(){};
 
 void SoundFontManager::Reset() {
-	std::vector<void *>::iterator it=sampleData_.begin() ;
-	while (it!=sampleData_.end()) {
-		SAFE_FREE(*it) ;
-		it=sampleData_.erase(it) ;
-	} ;
-} ;
+  std::vector<void *>::iterator it = sampleData_.begin();
+  while (it != sampleData_.end()) {
+    SAFE_FREE(*it);
+    it = sampleData_.erase(it);
+  };
+};
 
 sfBankID SoundFontManager::LoadBank(const char *path) {
 
-	sfBankID id=sfReadSFBFile((char *)path) ; 
-	if (id==-1) {
-		return -1 ;
-	} 
-	// open the file
+  sfBankID id = sfReadSFBFile((char *)path);
+  if (id == -1) {
+    return -1;
+  }
+  // open the file
 
-	I_File *fin=FileSystem::GetInstance()->Open(path,"r") ;
-	if (!fin) {
-		return false;
-	}
+  I_File *fin = FileSystem::GetInstance()->Open(path, "r");
+  if (!fin) {
+    return false;
+  }
 
-	// Grab the sample offset
+  // Grab the sample offset
 
-	long offset=sfGetSMPLOffset(id) ;
+  long offset = sfGetSMPLOffset(id);
 
-	// Grab the sample headerzz
+  // Grab the sample headerzz
 
-	WORD headerCount=0 ;
-	SFSAMPLEHDRPTR  &headers=sfGetSampHdrs(id,&headerCount ); 
+  WORD headerCount = 0;
+  SFSAMPLEHDRPTR &headers = sfGetSampHdrs(id, &headerCount);
 
-	// Loop on every sample, load them and adapt the pointers
+  // Loop on every sample, load them and adapt the pointers
 
-	for (int i=0;i<headerCount;i++) {
+  for (int i = 0; i < headerCount; i++) {
 
-		sfSampleHdr &current=headers[i] ;
+    sfSampleHdr &current = headers[i];
 
-		long from=current.dwStart*2+offset ;
-		long to=current.dwEnd*2+offset ;
-		
-		int byteSize=to-from ;
+    long from = current.dwStart * 2 + offset;
+    long to = current.dwEnd * 2 + offset;
 
-		void *buffer=malloc(byteSize) ;
+    int byteSize = to - from;
 
-		if (buffer) {
-			fin->Seek(from,SEEK_SET) ;
-			fin->Read(buffer,byteSize,1) ;
-		}
+    void *buffer = malloc(byteSize);
 
-		// now adapt the headers so the start is the memory point
-		// and all others are sample offset
+    if (buffer) {
+      fin->Seek(from, SEEK_SET);
+      fin->Read(buffer, byteSize, 1);
+    }
 
-		current.dwEnd=(current.dwEnd-current.dwStart) ;
-		current.dwStartloop=(current.dwStartloop-current.dwStart) ;
-		current.dwEndloop=(current.dwEndloop-current.dwStart) ;
-		current.dwStart=(DWORD)buffer ;
+    // now adapt the headers so the start is the memory point
+    // and all others are sample offset
 
-		sampleData_.push_back(buffer) ;
-	}
-	fin->Close() ;
-	SAFE_DELETE(fin) ;
+    current.dwEnd = (current.dwEnd - current.dwStart);
+    current.dwStartloop = (current.dwStartloop - current.dwStart);
+    current.dwEndloop = (current.dwEndloop - current.dwStart);
+    current.dwStart = (DWORD)buffer;
 
-	return id ;
-} ;
+    sampleData_.push_back(buffer);
+  }
+  fin->Close();
+  SAFE_DELETE(fin);
+
+  return id;
+};

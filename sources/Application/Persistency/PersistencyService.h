@@ -6,11 +6,12 @@
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
 
-class PersistencyService: public Service,public T_Singleton<PersistencyService> {
+class PersistencyService : public Service,
+                           public T_Singleton<PersistencyService> {
 public:
-	PersistencyService() ;
-	void Save() ;
-	bool Load() ;
-} ;
+  PersistencyService();
+  void Save();
+  bool Load();
+};
 
 #endif

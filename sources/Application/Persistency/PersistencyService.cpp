@@ -1,14 +1,14 @@
 #include "PersistencyService.h"
+#include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
-#include "Foundation/Types/Types.h"
 
-PersistencyService::PersistencyService():Service(MAKE_FOURCC('S','V','P','S')) {
-} ;
+PersistencyService::PersistencyService()
+    : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
 
 void PersistencyService::Save() {
 
-	Path filename("project:lgptsav.dat") ;
+  Path filename("project:lgptsav.dat");
   I_File *fp = FileSystem::GetInstance()->Open(filename.GetPath().c_str(), "w");
   printf("File: %s\n", filename.GetPath().c_str());
   if (!fp) {
@@ -18,13 +18,13 @@ void PersistencyService::Save() {
 
   printer.OpenElement("PICOTRACKER");
 
-	// Loop on all registered service
-	// accumulating XML flow	
-	IteratorPtr<SubService> it(GetIterator()) ;
-	for (it->Begin();!it->IsDone();it->Next()) {
-		Persistent *currentItem=(Persistent *)&it->CurrentItem() ;
-		currentItem->Save(&printer);
-	} ;
+  // Loop on all registered service
+  // accumulating XML flow
+  IteratorPtr<SubService> it(GetIterator());
+  for (it->Begin(); !it->IsDone(); it->Next()) {
+    Persistent *currentItem = (Persistent *)&it->CurrentItem();
+    currentItem->Save(&printer);
+  };
 
   printer.CloseElement();
 

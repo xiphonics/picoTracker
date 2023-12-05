@@ -7,26 +7,24 @@
 // only one available at the time
 //
 
-template <class Item>
-class T_Factory {
+template <class Item> class T_Factory {
 protected:
-	virtual ~T_Factory<Item>() {} ;
-public :
+  virtual ~T_Factory<Item>(){};
 
-    // Install the factory to use
+public:
+  // Install the factory to use
 
-	static void Install(Item *) ;
+  static void Install(Item *);
 
-	// Get the currently installed factory
+  // Get the currently installed factory
 
-	static Item *GetInstance() ;
+  static Item *GetInstance();
 
 protected:
+  // The static instance of the singleton
 
-	// The static instance of the singleton
-
-	static Item * instance_ ;
-} ;
+  static Item *instance_;
+};
 
 #include "T_Factory.cpp"
 

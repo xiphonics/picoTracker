@@ -3,23 +3,20 @@
 
 #include "UIField.h"
 
-class UIStaticField: public UIField {
+class UIStaticField : public UIField {
 
 public:
+  UIStaticField(GUIPoint &position, const char *string);
+  virtual ~UIStaticField(){};
+  virtual void Draw(GUIWindow &w, int offset = 0);
+  virtual void ProcessArrow(unsigned short mask);
+  virtual void OnClick(){};
 
-	UIStaticField(GUIPoint &position,const char *string) ;
-	virtual ~UIStaticField() {} ;
-	virtual void Draw(GUIWindow &w, int offset=0) ;
-	virtual void ProcessArrow(unsigned short mask) ;
-	virtual void OnClick() {} ;
-
-	virtual bool IsStatic() ;
-
-protected:
+  virtual bool IsStatic();
 
 protected:
-	const char *string_ ;
-
-} ;
+protected:
+  const char *string_;
+};
 
 #endif

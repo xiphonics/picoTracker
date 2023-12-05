@@ -4,10 +4,10 @@
 
 #include "Foundation/T_Factory.h"
 
-class Status: public T_Factory<Status>  {
+class Status : public T_Factory<Status> {
 public:
-	virtual void Print(char *)=0 ;
-	static void Set(const char *fmt, ...) ;
-} ;
+  virtual void Print(char *) = 0;
+  static void Set(const char *fmt, ...);
+};
 
 #endif

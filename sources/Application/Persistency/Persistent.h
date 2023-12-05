@@ -5,10 +5,10 @@
 #include "Externals/TinyXML2/tinyxml2.h"
 #include "Foundation/Services/SubService.h"
 
-class Persistent:SubService {
+class Persistent : SubService {
 public:
-	Persistent(const char *nodeName) ;
-	void Save(tinyxml2::XMLPrinter *printer) ;
+  Persistent(const char *nodeName);
+  void Save(tinyxml2::XMLPrinter *printer);
   bool Restore(PersistencyDocument *doc);
 
 protected:
@@ -16,7 +16,7 @@ protected:
   virtual void RestoreContent(PersistencyDocument *doc) = 0;
 
 private:
-	const char *nodeName_ ;
-} ;
+  const char *nodeName_;
+};
 
 #endif

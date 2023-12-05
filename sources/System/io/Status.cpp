@@ -1,20 +1,20 @@
 #include "Status.h"
-#include <stdio.h>
 #include <stdarg.h>
-//#include <windows.h>
+#include <stdio.h>
+// #include <windows.h>
 
 void Status::Set(const char *fmt, ...) {
 
-	Status *status=Status::GetInstance() ;
-	if (!status) return ;
+  Status *status = Status::GetInstance();
+  if (!status)
+    return;
 
-     char buffer[128] ;
-     va_list args;
-     va_start(args,fmt);
+  char buffer[128];
+  va_list args;
+  va_start(args, fmt);
 
-     vsprintf(buffer,fmt,args ); 
-     status->Print(buffer) ; 
+  vsprintf(buffer, fmt, args);
+  status->Print(buffer);
 
-     va_end(args);
-
+  va_end(args);
 }

@@ -1,37 +1,33 @@
 
 #include "InstrumentBank.h"
+#include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
-#include "Application/Instruments/MidiInstrument.h"
-#include "System/io/Status.h"
-#include "Application/Utils/char.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Utils/char.h"
 #include "Filters.h"
+#include "System/io/Status.h"
 
-const char *InstrumentTypeData[]= {
-	"Sample",
-	"Midi"
-} ;
-
+const char *InstrumentTypeData[] = {"Sample", "Midi"};
 
 // Contain all instrument definition
 
-InstrumentBank::InstrumentBank():Persistent("INSTRUMENTBANK") {
+InstrumentBank::InstrumentBank() : Persistent("INSTRUMENTBANK") {
 
-   	for (int i=0;i<MAX_SAMPLEINSTRUMENT_COUNT;i++) {
-      Trace::Debug("Loading sample instrument: %i", i);
-      SampleInstrument *s = new SampleInstrument();
-      instrument_[i] = s;
-    }
-	for (int i=0;i<MAX_MIDIINSTRUMENT_COUNT;i++) {
+  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
+    Trace::Debug("Loading sample instrument: %i", i);
+    SampleInstrument *s = new SampleInstrument();
+    instrument_[i] = s;
+  }
+  for (int i = 0; i < MAX_MIDIINSTRUMENT_COUNT; i++) {
     Trace::Debug("Loading MIDI instrument: %i", i);
     MidiInstrument *s = new MidiInstrument();
     s->SetChannel(i);
     instrument_[MAX_SAMPLEINSTRUMENT_COUNT + i] = s;
   }
   Status::Set("All instrument loaded") ;
-} ;
+};
 
 //
 // Assigns default instruments value for new project
@@ -39,58 +35,54 @@ InstrumentBank::InstrumentBank():Persistent("INSTRUMENTBANK") {
 
 void InstrumentBank::AssignDefaults() {
 
-	SamplePool *pool=SamplePool::GetInstance() ;
-   	for (int i=0;i<MAX_SAMPLEINSTRUMENT_COUNT;i++) {
-		SampleInstrument *s=(SampleInstrument*)instrument_[i] ;
-		if (i<pool->GetNameListSize()) {
-	        s->AssignSample(i) ;
-		} else {
-			s->AssignSample(-1) ;
-		} 
-    } ;
-} ;
+  SamplePool *pool = SamplePool::GetInstance();
+  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
+    SampleInstrument *s = (SampleInstrument *)instrument_[i];
+    if (i < pool->GetNameListSize()) {
+      s->AssignSample(i);
+    } else {
+      s->AssignSample(-1);
+    }
+  };
+};
 
 InstrumentBank::~InstrumentBank() {
-	for (int i=0;i<MAX_INSTRUMENT_COUNT;i++) {
-		delete instrument_[i] ;
-	}	
-} ;
+  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
+    delete instrument_[i];
+  }
+};
 
-I_Instrument *InstrumentBank::GetInstrument(int i) {
-	return instrument_[i] ;
-} ;
+I_Instrument *InstrumentBank::GetInstrument(int i) { return instrument_[i]; };
 
 void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
-	char hex[3] ;
-	for (int i=0;i<MAX_INSTRUMENT_COUNT;i++) {
+  char hex[3];
+  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
 
-		I_Instrument *instr=instrument_[i] ;
-		if (!instr->IsEmpty()) {
-      printer->OpenElement("INSTRUMENT") ;
-			hex2char(i,hex) ;
+    I_Instrument *instr = instrument_[i];
+    if (!instr->IsEmpty()) {
+      printer->OpenElement("INSTRUMENT");
+      hex2char(i, hex);
       printer->PushAttribute("ID",hex) ;
 			printer->PushAttribute("TYPE",InstrumentTypeData[instr->GetType()]) ;
 
-			IteratorPtr<Variable> it(instr->GetIterator()) ;
-			for (it->Begin();!it->IsDone();it->Next()) {
-				Variable &v=it->CurrentItem() ;
-				printer->OpenElement("PARAM") ;
-        printer->PushAttribute("NAME",v.GetName()) ;
-				printer->PushAttribute("VALUE",v.GetString()) ;
-        printer->CloseElement(); // PARAM
-			}
-      printer->CloseElement(); // INSTRUMENT
-		}
-	}
-} ;
+                        IteratorPtr<Variable> it(instr->GetIterator());
+                        for (it->Begin(); !it->IsDone(); it->Next()) {
+                          Variable &v = it->CurrentItem();
+                          printer->OpenElement("PARAM");
+                          printer->PushAttribute("NAME", v.GetName());
+                          printer->PushAttribute("VALUE", v.GetString());
+                          printer->CloseElement(); // PARAM
+                        }
+                        printer->CloseElement(); // INSTRUMENT
+    }
+  }
+};
 
 void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
 
-  if (doc->version_ < 130)
-  {
-    if (Config::GetInstance()->GetValue("LEGACYDOWNSAMPLING") != NULL)
-    {
-      SampleInstrument::EnableDownsamplingLegacy();
+  if (doc->version_ < 130) {
+    if (Config::GetInstance()->GetValue("LEGACYDOWNSAMPLING") != NULL) {
+                        SampleInstrument::EnableDownsamplingLegacy();
     }
   }
   bool elem = doc->FirstChild();
@@ -126,19 +118,19 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
         it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE : IT_MIDI;
       };
       if (id < MAX_INSTRUMENT_COUNT) {
-        I_Instrument *instr=instrument_[id] ;
-				if (instr->GetType()!=it) {
-					delete instr ;
-					switch (it) {
+        I_Instrument *instr = instrument_[id];
+        if (instr->GetType() != it) {
+          delete instr;
+          switch (it) {
           case IT_SAMPLE:
             instr=new SampleInstrument() ;
             break ;
           case IT_MIDI:
             instr=new MidiInstrument() ;
             break ;
-					}
-					instrument_[id]=instr ;
-				} ;
+          }
+          instrument_[id] = instr;
+        };
 
         bool subelem = doc->FirstChild();
         while (subelem) {
@@ -175,82 +167,79 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           subelem = doc->NextSibling();
         }
         if (doc->version_<38) {
-					Variable *cvl=instr->FindVariable(SIP_CRUSHVOL) ;
-					Variable *vol=instr->FindVariable(SIP_VOLUME);
-					Variable *crs=instr->FindVariable(SIP_CRUSH) ;
-					if ((vol)&&(cvl)&&(crs)) {
-						if (crs->GetInt()!=16) {
-							int temp=vol->GetInt() ;
-							vol->SetInt(cvl->GetInt()) ;
-							cvl->SetInt(temp) ;
-						}
-					};
+          Variable *cvl = instr->FindVariable(SIP_CRUSHVOL);
+          Variable *vol = instr->FindVariable(SIP_VOLUME);
+          Variable *crs = instr->FindVariable(SIP_CRUSH);
+          if ((vol) && (cvl) && (crs)) {
+            if (crs->GetInt() != 16) {
+              int temp = vol->GetInt();
+              vol->SetInt(cvl->GetInt());
+              cvl->SetInt(temp);
+            }
+          };
         }
-			}
+      }
     }
     elem = doc->NextSibling();
   };
 };
 
 void InstrumentBank::Init() {
-	for (int i=0;i<MAX_INSTRUMENT_COUNT;i++) {
-		instrument_[i]->Init() ;
-	}
+  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
+    instrument_[i]->Init();
+  }
 }
 
 unsigned short InstrumentBank::GetNext() {
-	for (int i=0;i<MAX_SAMPLEINSTRUMENT_COUNT;i++) {
-		SampleInstrument *si=(SampleInstrument *)instrument_[i] ;
-		Variable *sample=si->FindVariable(SIP_SAMPLE) ;
-		if (sample) {
-			if (sample->GetInt()==-1) {
-				return i ;
-			}
-		}
-	}
-	return NO_MORE_INSTRUMENT ;
-} ;
+  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
+    SampleInstrument *si = (SampleInstrument *)instrument_[i];
+    Variable *sample = si->FindVariable(SIP_SAMPLE);
+    if (sample) {
+      if (sample->GetInt() == -1) {
+        return i;
+      }
+    }
+  }
+  return NO_MORE_INSTRUMENT;
+};
 
 unsigned short InstrumentBank::Clone(unsigned short i) {
-	// can't clone midi instruments
+  // can't clone midi instruments
 
-	unsigned short next=GetNext() ;
-	if (next==NO_MORE_INSTRUMENT) 
-  {
-		return NO_MORE_INSTRUMENT ;
-	}
+  unsigned short next = GetNext();
+  if (next == NO_MORE_INSTRUMENT) {
+    return NO_MORE_INSTRUMENT;
+  }
 
-	I_Instrument *src=instrument_[i] ;
-	I_Instrument *dst=instrument_[next] ;
+  I_Instrument *src = instrument_[i];
+  I_Instrument *dst = instrument_[next];
 
-  if (src == dst)
-  {
-		return NO_MORE_INSTRUMENT ;
-	}
+  if (src == dst) {
+    return NO_MORE_INSTRUMENT;
+  }
 
-	delete dst ;
-  
-	if (src->GetType()==IT_SAMPLE) {
-		dst=new SampleInstrument() ;
-	} else {
-		dst=new MidiInstrument() ;
-	}
-	instrument_[next]=dst ;
-	IteratorPtr<Variable> it(src->GetIterator()) ;
-	for (it->Begin();!it->IsDone();it->Next()) {
-		Variable &srcV=it->CurrentItem() ;
-		Variable *dstV=dst->FindVariable(srcV.GetID()) ;
-		if (dstV) {
-			dstV->CopyFrom(srcV) ;
-		}
-	}
-	return next ;
+  delete dst;
 
+  if (src->GetType() == IT_SAMPLE) {
+    dst = new SampleInstrument();
+  } else {
+    dst = new MidiInstrument();
+  }
+  instrument_[next] = dst;
+  IteratorPtr<Variable> it(src->GetIterator());
+  for (it->Begin(); !it->IsDone(); it->Next()) {
+    Variable &srcV = it->CurrentItem();
+    Variable *dstV = dst->FindVariable(srcV.GetID());
+    if (dstV) {
+      dstV->CopyFrom(srcV);
+    }
+  }
+  return next;
 }
 
 void InstrumentBank::OnStart() {
-	for (int i=0;i<MAX_INSTRUMENT_COUNT;i++) {
-		instrument_[i]->OnStart() ;
-	}
-	init_filters() ;
-} ;
+  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
+    instrument_[i]->OnStart();
+  }
+  init_filters();
+};

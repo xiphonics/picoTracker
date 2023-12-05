@@ -3,13 +3,12 @@
 
 #include "UIIntVarField.h"
 
-class UISortedVarList: public UIIntVarField {
+class UISortedVarList : public UIIntVarField {
 
 public:
-
-	UISortedVarList(GUIPoint &position,Variable &v,const char *format) ;
-	virtual ~UISortedVarList() {} ;
-	virtual void ProcessArrow(unsigned short mask) ;
-} ;
+  UISortedVarList(GUIPoint &position, Variable &v, const char *format);
+  virtual ~UISortedVarList(){};
+  virtual void ProcessArrow(unsigned short mask);
+};
 
 #endif

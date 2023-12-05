@@ -5,16 +5,16 @@
 
 #define MAX_KEY 400
 
-class KeyboardControllerSource: public ControllerSource {
+class KeyboardControllerSource : public ControllerSource {
 public:
-	KeyboardControllerSource(const char *name) ;
-	virtual ~KeyboardControllerSource() ;
-	virtual Channel *GetChannel(const char *url) ;
-	virtual bool IsRunning() { return true ; } ;
-	void SetKey(int key,bool value) ;
+  KeyboardControllerSource(const char *name);
+  virtual ~KeyboardControllerSource();
+  virtual Channel *GetChannel(const char *url);
+  virtual bool IsRunning() { return true; };
+  void SetKey(int key, bool value);
+
 private:
-	Channel *channel_[MAX_KEY] ;
-} ;
+  Channel *channel_[MAX_KEY];
+};
 
 #endif
-

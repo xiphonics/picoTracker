@@ -11,20 +11,18 @@
 
 class Chain {
 public:
-	Chain() ;
-	~Chain() ;
-	unsigned short GetNext() ;
-	bool IsUsed(unsigned char i) { return isUsed_[i] ; } ;
-	void SetUsed(unsigned char c) ;
-	void ClearAllocation() ;
+  Chain();
+  ~Chain();
+  unsigned short GetNext();
+  bool IsUsed(unsigned char i) { return isUsed_[i]; };
+  void SetUsed(unsigned char c);
+  void ClearAllocation();
 
-	unsigned char *data_ ;
-	unsigned char *transpose_ ;
+  unsigned char *data_;
+  unsigned char *transpose_;
 
-	
 private:
-	bool isUsed_[CHAIN_COUNT] ;
-
-} ;
+  bool isUsed_[CHAIN_COUNT];
+};
 
 #endif

@@ -4,20 +4,23 @@
 #include "MidiChannel.h"
 #include "MidiInDevice.h"
 
-#include <string>
 #include <map>
+#include <string>
 
-typedef std::map<std::string,Channel *> tChannelMap ;
+typedef std::map<std::string, Channel *> tChannelMap;
 
-class MidiInMerger: public Observable, public ControllerSource,public T_SimpleList<MidiInDevice> {
+class MidiInMerger : public Observable,
+                     public ControllerSource,
+                     public T_SimpleList<MidiInDevice> {
 public:
-	MidiInMerger() ;
-	~MidiInMerger() ;
-	virtual bool IsRunning() { return true ; } ;
-protected:
-	virtual Channel *GetChannel(const char *name) ;
-private:
-	tChannelMap channels_ ;
+  MidiInMerger();
+  ~MidiInMerger();
+  virtual bool IsRunning() { return true; };
 
-} ;
+protected:
+  virtual Channel *GetChannel(const char *name);
+
+private:
+  tChannelMap channels_;
+};
 #endif

@@ -6,33 +6,31 @@
 #include "System/FileSystem/FileSystem.h"
 #include <string>
 
-class ImportSampleDialog:public ModalView {
+class ImportSampleDialog : public ModalView {
 public:
-	ImportSampleDialog(View &view) ;
-	virtual ~ImportSampleDialog() ;
+  ImportSampleDialog(View &view);
+  virtual ~ImportSampleDialog();
 
-	virtual void DrawView() ;
-	virtual void OnPlayerUpdate(PlayerEventType ,unsigned int currentTick) ;
-	virtual void OnFocus() ;
-	virtual void ProcessButtonMask(unsigned short mask,bool pressed) ;
+  virtual void DrawView();
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick);
+  virtual void OnFocus();
+  virtual void ProcessButtonMask(unsigned short mask, bool pressed);
 
 protected:
-	void setCurrentFolder(Path *path) ;
-	void warpToNextSample(int dir) ;
-	void import(Path &element) ;
-	void preview(Path &element) ;
+  void setCurrentFolder(Path *path);
+  void warpToNextSample(int dir);
+  void import(Path &element);
+  void preview(Path &element);
+
 private:
-	T_SimpleList<Path> sampleList_ ;
-	int currentSample_ ;
-	int topIndex_ ;
-	int toInstr_ ;
-	int selected_ ;
-	static bool initStatic_ ;
-	static Path sampleLib_ ;
-	static Path currentPath_ ;
-
-} ;
-
+  T_SimpleList<Path> sampleList_;
+  int currentSample_;
+  int topIndex_;
+  int toInstr_;
+  int selected_;
+  static bool initStatic_;
+  static Path sampleLib_;
+  static Path currentPath_;
+};
 
 #endif
-

@@ -12,23 +12,22 @@
 
 class Phrase {
 public:
-	Phrase() ;
-	~Phrase() ;
-	unsigned short GetNext() ;
-	bool IsUsed(uchar i) { return isUsed_[i] ; } ;
-	void SetUsed(uchar c) ;
-	void ClearAllocation() ;
+  Phrase();
+  ~Phrase();
+  unsigned short GetNext();
+  bool IsUsed(uchar i) { return isUsed_[i]; };
+  void SetUsed(uchar c);
+  void ClearAllocation();
 
-	uchar *note_ ;
-	uchar *instr_ ;
-	FourCC *cmd1_ ;
-	ushort *param1_ ;
-	FourCC *cmd2_ ;
-	ushort *param2_ ;
-	
+  uchar *note_;
+  uchar *instr_;
+  FourCC *cmd1_;
+  ushort *param1_;
+  FourCC *cmd2_;
+  ushort *param2_;
+
 private:
-	bool isUsed_[PHRASE_COUNT] ;
-
-} ;
+  bool isUsed_[PHRASE_COUNT];
+};
 
 #endif

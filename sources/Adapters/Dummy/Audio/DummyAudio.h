@@ -3,11 +3,11 @@
 
 #include "Services/Audio/Audio.h"
 
-class DummyAudio: public Audio {
+class DummyAudio : public Audio {
 public:
-       DummyAudio() ;
-       ~DummyAudio() ;
-       virtual void Init() ;
-       virtual void Close() ;
+  DummyAudio();
+  ~DummyAudio();
+  virtual void Init();
+  virtual void Close();
 };
 #endif

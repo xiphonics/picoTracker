@@ -3,11 +3,10 @@
 
 #include "Services/Midi/MidiService.h"
 
-class DummyMidi: public MidiService {
+class DummyMidi : public MidiService {
 public:
-	DummyMidi()  ;
-	~DummyMidi()  ;
-	virtual void buildDriverList() ;
-	
-} ;
+  DummyMidi();
+  ~DummyMidi();
+  virtual void buildDriverList();
+};
 #endif

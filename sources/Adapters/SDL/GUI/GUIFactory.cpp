@@ -1,18 +1,15 @@
 #include "GUIFactory.h"
-#include "SDLGUIWindowImp.h"
 #include "SDLEventManager.h"
+#include "SDLGUIWindowImp.h"
 #ifndef _USE_NCURSES_
 
-
-GUIFactory::GUIFactory() {
-} ;
-
+GUIFactory::GUIFactory(){};
 
 I_GUIWindowImp &GUIFactory::CreateWindowImp(GUICreateWindowParams &p) {
-	return *(new SDLGUIWindowImp(p)) ;
+  return *(new SDLGUIWindowImp(p));
 }
 
 EventManager *GUIFactory::GetEventManager() {
-	return SDLEventManager::GetInstance() ;
+  return SDLEventManager::GetInstance();
 }
 #endif

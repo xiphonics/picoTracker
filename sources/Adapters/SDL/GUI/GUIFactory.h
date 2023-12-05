@@ -5,14 +5,13 @@
 
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 
-class GUIFactory: public I_GUIWindowFactory {
+class GUIFactory : public I_GUIWindowFactory {
 
 public:
-	GUIFactory() ;
-	virtual I_GUIWindowImp &CreateWindowImp(GUICreateWindowParams &) ;
-	virtual EventManager *GetEventManager() ;
-
-} ;
+  GUIFactory();
+  virtual I_GUIWindowImp &CreateWindowImp(GUICreateWindowParams &);
+  virtual EventManager *GetEventManager();
+};
 
 #endif
 #endif

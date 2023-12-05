@@ -52,62 +52,62 @@ WavFileWriter::WavFileWriter(const char *path)
   };
 };
 
-WavFileWriter::~WavFileWriter() {
-	Close();
-}
+WavFileWriter::~WavFileWriter() { Close(); }
 
-void WavFileWriter::AddBuffer(fixed *bufferIn,int size) {
+void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
 
-	if (!file_) return ;
+  if (!file_)
+    return;
 
-	// allocate a short buffer for transfer
+  // allocate a short buffer for transfer
 
-	if (size>bufferSize_) {
-		SAFE_FREE(buffer_) ;
-		buffer_=(short *)malloc(size*2*sizeof(short)) ;
-		bufferSize_=size ;
-	} ;
+  if (size > bufferSize_) {
+    SAFE_FREE(buffer_);
+    buffer_ = (short *)malloc(size * 2 * sizeof(short));
+    bufferSize_ = size;
+  };
 
-	if (!buffer_) return ;
+  if (!buffer_)
+    return;
 
-	short *s=buffer_ ;
-	fixed *p=bufferIn ;
+  short *s = buffer_;
+  fixed *p = bufferIn;
 
-	fixed v;
-	fixed f_32767=i2fp(32767) ;
-	fixed f_m32768=i2fp(-32768) ;
+  fixed v;
+  fixed f_32767 = i2fp(32767);
+  fixed f_m32768 = i2fp(-32768);
 
-	for (int i=0;i<size*2;i++) {
-        // Left
-		v=*p++  ;
-		if (v>f_32767) {
-			v=f_32767 ;
-		} else if (v<f_m32768) {
-			v=f_m32768 ;
-		}
-		*s++=short(fp2i(v)) ;
-	} ;
-	file_->Write(buffer_,2,size*2) ;
-	sampleCount_+=size ;
-} ;
+  for (int i = 0; i < size * 2; i++) {
+    // Left
+    v = *p++;
+    if (v > f_32767) {
+      v = f_32767;
+    } else if (v < f_m32768) {
+      v = f_m32768;
+    }
+    *s++ = short(fp2i(v));
+  };
+  file_->Write(buffer_, 2, size * 2);
+  sampleCount_ += size;
+};
 
 void WavFileWriter::Close() {
 
-	if (!file_) return ;
+  if (!file_)
+    return;
 
-	size_t len=file_->Tell() ;
-	len=Swap32(len-8) ;
-	file_->Seek(4,SEEK_SET) ;
-	file_->Write(&len,4,1) ;
+  size_t len = file_->Tell();
+  len = Swap32(len - 8);
+  file_->Seek(4, SEEK_SET);
+  file_->Write(&len, 4, 1);
 
-	file_->Seek(40,SEEK_SET) ;
-	sampleCount_=Swap32(sampleCount_*4) ;
-	file_->Write(&sampleCount_,4,1) ;
+  file_->Seek(40, SEEK_SET);
+  sampleCount_ = Swap32(sampleCount_ * 4);
+  file_->Write(&sampleCount_, 4, 1);
 
-	file_->Seek(0,SEEK_END) ;
+  file_->Seek(0, SEEK_END);
 
-	file_->Close() ;
-	SAFE_DELETE(file_) ;
-	SAFE_FREE(buffer_) ;
-
-} ;
+  file_->Close();
+  SAFE_DELETE(file_);
+  SAFE_FREE(buffer_);
+};

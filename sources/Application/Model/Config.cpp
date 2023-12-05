@@ -3,10 +3,9 @@
 #include "System/FileSystem/FileSystem.h"
 #include <cstring>
 
-Config::Config() 
-{
-	Path path("bin:config.xml") ;
-	Trace::Log("CONFIG","Got config path=%s",path.GetPath().c_str()) ;
+Config::Config() {
+  Path path("bin:config.xml");
+  Trace::Log("CONFIG", "Got config path=%s", path.GetPath().c_str());
   PersistencyDocument doc;
   if (!doc.Load(path.GetPath())) {
     Trace::Log("CONFIG", "No config.xml");
@@ -48,43 +47,37 @@ Config::Config()
 
 //------------------------------------------------------------------------------
 
-Config::~Config()
-{
-}
-
+Config::~Config() {}
 
 //------------------------------------------------------------------------------
 
-const char *Config::GetValue(const char *key) 
-{
-	Variable *v=FindVariable(key) ;
-	if (v) {
-		Trace::Log("CONFIG","Got value for %s=%s",key,v->GetString()) ;
-	}
-	return v?v->GetString():0 ;
-} ;
-
+const char *Config::GetValue(const char *key) {
+  Variable *v = FindVariable(key);
+  if (v) {
+    Trace::Log("CONFIG", "Got value for %s=%s", key, v->GetString());
+  }
+  return v ? v->GetString() : 0;
+};
 
 //------------------------------------------------------------------------------
 
-void Config::ProcessArguments(int argc,char **argv) 
-{
-	for (int i=1;i<argc;i++) {
-		char *pos ;
-		char *arg=argv[i] ;
-		while (*arg=='-') arg++ ;
-		if ((pos=strchr(arg,'='))!=0) {
-			*pos=0 ;
-			Variable *v=FindVariable(arg) ;
-			if (v) {
-				v->SetString(pos+1) ;
-			} else {
-				Variable *v=new Variable(arg,0,pos+1) ;
-				Insert(v) ;
-			}
-		}
-	}
-} ;
-
+void Config::ProcessArguments(int argc, char **argv) {
+  for (int i = 1; i < argc; i++) {
+    char *pos;
+    char *arg = argv[i];
+    while (*arg == '-')
+      arg++;
+    if ((pos = strchr(arg, '=')) != 0) {
+      *pos = 0;
+      Variable *v = FindVariable(arg);
+      if (v) {
+        v->SetString(pos + 1);
+      } else {
+        Variable *v = new Variable(arg, 0, pos + 1);
+        Insert(v);
+      }
+    }
+  }
+};
 
 //------------------------------------------------------------------------------

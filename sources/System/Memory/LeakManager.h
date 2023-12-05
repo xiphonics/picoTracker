@@ -6,22 +6,25 @@
 
 class LeakElement {
 public:
-	LeakElement(void *e) { _e=e ; } ;
-	void *GetElement() { return _e ; } ;
+  LeakElement(void *e) { _e = e; };
+  void *GetElement() { return _e; };
+
 private:
-	void *_e ;
-} ;
+  void *_e;
+};
 
 class LeakManager {
 public:
-	LeakManager() ;
-	~LeakManager() ;
+  LeakManager();
+  ~LeakManager();
+
 public:
-	static LeakManager &GetInstance() ;
-	void AddElement(void *e) ;
-	void RemoveElement(void *e) ;
+  static LeakManager &GetInstance();
+  void AddElement(void *e);
+  void RemoveElement(void *e);
+
 private:
-	T_SimpleList<LeakElement> _list ;
-	static LeakManager _instance ;
-} ;
+  T_SimpleList<LeakElement> _list;
+  static LeakManager _instance;
+};
 #endif

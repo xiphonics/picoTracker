@@ -3,9 +3,9 @@
 
 #include "Services/Audio/AudioMixer.h"
 
-class MixBus: public AudioMixer {
+class MixBus : public AudioMixer {
 public:
-	MixBus():AudioMixer("bus") {} ;
-	virtual ~MixBus() {} ;
-} ;
+  MixBus() : AudioMixer("bus"){};
+  virtual ~MixBus(){};
+};
 #endif

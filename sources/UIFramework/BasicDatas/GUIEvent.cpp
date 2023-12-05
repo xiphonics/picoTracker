@@ -16,18 +16,12 @@ GUIEvent::GUIEvent(long value, GUIEventType type, long when, bool ctrl,
 
 // Position accessor
 
-void GUIEvent::SetPosition(GUIPoint &point) {
-	_position=point ;
-}
+void GUIEvent::SetPosition(GUIPoint &point) { _position = point; }
 
 // Position accessor
 
-GUIPoint GUIEvent::GetPosition() {
-	return _position ;
-}
+GUIPoint GUIEvent::GetPosition() { return _position; }
 
 // Type accessor
 
-GUIEventType GUIEvent::GetType() {
-	return _type ;
-}
+GUIEventType GUIEvent::GetType() { return _type; }

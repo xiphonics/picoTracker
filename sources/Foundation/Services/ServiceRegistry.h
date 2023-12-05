@@ -6,12 +6,13 @@
 #include "Service.h"
 #include "SubService.h"
 
-class ServiceRegistry: public T_Singleton<ServiceRegistry> {
+class ServiceRegistry : public T_Singleton<ServiceRegistry> {
 public:
-	void Register(Service *) ;
-	void Register(SubService *) ;
-	void Unregister(SubService *) ;
+  void Register(Service *);
+  void Register(SubService *);
+  void Unregister(SubService *);
+
 protected:
-    T_SimpleList<Service> services_ ;
-} ;
+  T_SimpleList<Service> services_;
+};
 #endif
