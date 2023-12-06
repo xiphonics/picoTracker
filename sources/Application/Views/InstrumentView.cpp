@@ -8,6 +8,7 @@
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "ModalDialogs/ImportSampleDialog.h"
+#include "ModalDialogs/PagedImportSampleDialog.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/System/System.h"
 
@@ -48,11 +49,11 @@ void InstrumentView::onInstrumentChange() {
 
   switch (it) {
   case IT_MIDI:
-    fillMidiParameters() ;
-    break ;
+    fillMidiParameters();
+    break;
   case IT_SAMPLE:
-    fillSampleParameters() ;
-    break ;
+    fillSampleParameters();
+    break;
   };
 
   SetFocus(T_SimpleList<UIField>::GetFirst());
@@ -199,8 +200,9 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(SIP_TABLE);
-  f1 = new UIIntVarOffField(position, *v, "table: %2.2X", 0x00, TABLE_COUNT - 1, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1) ;
+  f1 = new UIIntVarOffField(position, *v, "table: %2.2X", 0x00, TABLE_COUNT - 1,
+                            1, 0x10);
+  T_SimpleList<UIField>::Insert(f1);
 };
 
 void InstrumentView::fillMidiParameters() {
@@ -278,7 +280,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
           } else {
             ;
             // Go to import sample
-            ImportSampleDialog *isd = new ImportSampleDialog(*this);
+            // ImportSampleDialog *isd = new ImportSampleDialog(*this);
+            PagedImportSampleDialog *isd = new PagedImportSampleDialog(*this);
             DoModal(isd);
           }
         } else {

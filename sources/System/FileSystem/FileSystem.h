@@ -9,14 +9,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <vector>
 
 #define MAX_FILENAME_SIZE 256
 
-// temporary limits due to limited ram on RP2040  
-#define PICO_MAX_FILENAME_LEN 32
-#define PICO_MAX_FILE_COUNT 25
+#define SAMPLE_LIB_PATH "/samplelib"
 
 enum FileType { FT_UNKNOWN, FT_FILE, FT_DIR };
+
+struct FileListItem {
+public:
+  // truncate to 22 or 24 chars depending on if dir as they need surronding "[]"
+  FileListItem(const char *name, int idx, bool isDir)
+      : name{std::string(name)}, index{idx}, isDirectory{isDir} {};
+
+  ~FileListItem() { Trace::Log("FileListItem", "destruct"); };
+
+  std::string name;
+  int index;
+  bool isDirectory;
+};
 
 class Path {
 public:
@@ -80,7 +92,7 @@ public:
   virtual ~I_File(){};
   virtual int Read(void *ptr, int size, int nmemb) = 0;
   virtual int GetC() = 0;
-  virtual int Write(const void *ptr,int size, int nmemb)=0;
+  virtual int Write(const void *ptr, int size, int nmemb) = 0;
   virtual void Printf(const char *format, ...) = 0;
   virtual void Seek(long offset, int whence) = 0;
   virtual long Tell() = 0;
@@ -105,10 +117,26 @@ protected:
   char *path_;
 };
 
+class I_PagedDir {
+public:
+  I_PagedDir();
+  I_PagedDir(const char *path);
+  virtual ~I_PagedDir();
+  virtual void GetContent(const char *mask) = 0;
+  virtual std::string getFullName(int index) = 0;
+  virtual void getFileList(int startIndex,
+                           std::vector<FileListItem> *fileList) = 0;
+  virtual int size() = 0;
+
+protected:
+  unsigned int fileCount_ = 0;
+};
+
 class FileSystem : public T_Factory<FileSystem> {
 public:
   virtual I_File *Open(const char *path, const char *mode) = 0;
   virtual I_Dir *Open(const char *path) = 0;
+  virtual I_PagedDir *OpenPaged(const char *path) = 0;
   virtual Result MakeDir(const char *path) = 0;
   virtual void Delete(const char *) = 0;
   virtual FileType GetFileType(const char *path) = 0;

@@ -52,6 +52,7 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   const char *keymapStyle = config->GetValue("KEYMAPSTYLE");
   if (strcasecmp("M8",keymapStyle) == 0) {
     eventMapping = eventMappingM8;
+    Trace::Log("GUIWINDOWIMP", "Using M8 keymap");
   }
 };
 
