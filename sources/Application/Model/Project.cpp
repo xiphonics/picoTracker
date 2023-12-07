@@ -4,6 +4,7 @@
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Player/SyncMaster.h"
+#include "Scale.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Groove.h"
 #include "Services/Midi/MidiService.h"
@@ -24,6 +25,9 @@ Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
   this->Insert(wrap);
   Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
   this->Insert(transpose);
+  Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales, 0);
+  this->Insert(scale);
+  scale->SetInt(0);
 
   // Reload the midi device list
 
@@ -54,6 +58,12 @@ Project::~Project() {
   delete song_;
   delete instrumentBank_;
 };
+
+int Project::GetScale() {
+  Variable *v = FindVariable(VAR_SCALE);
+  NAssert(v);
+  return v->GetInt();
+}
 
 int Project::GetTempo() {
   Variable *v = FindVariable(VAR_TEMPO);
