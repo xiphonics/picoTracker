@@ -75,6 +75,10 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   T_SimpleList<UIField>::Insert(f2);
 
   v = project_->FindVariable(VAR_SCALE);
+  // if scale name is not found, set the default chromatic scale
+  if (v->GetInt() < 0) {
+    v->SetInt(0);
+  }
   position._y += 1;
   UIIntVarField *f3 =
       new UIIntVarField(position, *v, "scale: %s", 0, numScales - 1, 1, 10);

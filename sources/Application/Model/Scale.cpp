@@ -3,7 +3,7 @@
 // Source of scales in original release:
 // https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/PitchConstellations.svg/1280px-PitchConstellations.svg.png
 
-const int numScales = 44;
+//const int numScales = 44;
 
 const char *scaleNames[numScales] = {
   "None (Chromatic)",

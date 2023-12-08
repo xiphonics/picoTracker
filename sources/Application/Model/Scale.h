@@ -1,8 +1,8 @@
 #ifndef SCALE_VIEW_H
 #define SCALE_VIEW_H
 
-extern const int numScales;
-extern const char *scaleNames[44];
-extern const bool scaleSteps[44][12];
+const int numScales = 44;
+extern const char *scaleNames[numScales];
+extern const bool scaleSteps[numScales][12];
 
 #endif
