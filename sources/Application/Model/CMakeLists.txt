@@ -5,6 +5,7 @@ add_library(application_model
   Mixer.h Mixer.cpp
   Phrase.h Phrase.cpp
   Project.h Project.cpp
+  Scale.h Scale.cpp
   Song.h Song.cpp
   Table.h Table.cpp
   )

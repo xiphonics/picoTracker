@@ -1,6 +1,7 @@
 #include "ProjectView.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Model/Scale.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
@@ -23,7 +24,7 @@ static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     // TODO: Remove this hack. Due to memory leaks and other problems
     // instead of going back, we perform a software reset
-    watchdog_reboot(0,0,0);
+    watchdog_reboot(0, 0, 0);
     ((ProjectView &)v).OnLoadProject();
   }
 };
@@ -73,6 +74,16 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
       new UIIntVarField(position, *v, "transpose: %3.2d", -48, 48, 0x1, 0xC);
   T_SimpleList<UIField>::Insert(f2);
 
+  v = project_->FindVariable(VAR_SCALE);
+  // if scale name is not found, set the default chromatic scale
+  if (v->GetInt() < 0) {
+    v->SetInt(0);
+  }
+  position._y += 1;
+  UIIntVarField *f3 =
+      new UIIntVarField(position, *v, "scale: %s", 0, numScales - 1, 1, 10);
+  T_SimpleList<UIField>::Insert(f3);
+
   position._y += 2;
   UIActionField *a1 =
       new UIActionField("Compact Sequencer", ACTION_PURGE, position);
@@ -98,9 +109,9 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   v = project_->FindVariable(VAR_MIDIDEVICE);
   NAssert(v);
   position._y += 2;
-  UIIntVarField *f3 = new UIIntVarField(
+  UIIntVarField *f4 = new UIIntVarField(
       position, *v, "midi: %s", 0, MidiService::GetInstance()->Size(), 1, 1);
-  T_SimpleList<UIField>::Insert(f3);
+  T_SimpleList<UIField>::Insert(f4);
 
   position._y += 2;
   a1 = new UIActionField("Update firmware", ACTION_BOOTSEL, position);
@@ -212,12 +223,10 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   case ACTION_BOOTSEL: {
     if (!player->IsRunning()) {
       MessageBox *mb =
-        new MessageBox(*this, "Reboot and lose changes?",
-                       MBBF_YES | MBBF_NO);
+          new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
       DoModal(mb, BootselCallback);
     } else {
-      MessageBox *mb =
-        new MessageBox(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     break;

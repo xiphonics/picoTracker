@@ -1,5 +1,6 @@
 #include "PhraseView.h"
 #include "Application/Instruments/CommandList.h"
+#include "Application/Model/Scale.h"
 #include "Application/Model/Table.h"
 #include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
@@ -197,6 +198,12 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   }
   if ((c) && (*c != 0xFF)) {
     int offset = offsets_[col_ + xOffset][direction];
+
+    // Add/remove from offset to match selected scale
+    int scale = viewData_->project_->GetScale();
+    while (!scaleSteps[scale][(*c + offset) % 12]) {
+      offset > 0 ? offset++ : offset--;
+    }
 
     updateData(c, offset, limit, wrap);
     switch (col_ + xOffset) {
