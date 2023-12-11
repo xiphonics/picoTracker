@@ -173,10 +173,6 @@ bool picoTrackerAudioDriver::StartDriver() {
     sem_release(&core1_audio);
   }
 
-  // Set MIDI delay
-  // TODO: placeholder, check what's the right value
-  ticksBeforeMidi_ = 4;
-
   picoTracker_sound_pause(0);
   startTime_ = millis();
 
@@ -192,11 +188,7 @@ void picoTrackerAudioDriver::OnChunkDone() {
   if (isPlaying_) {
 
     // Process MIDI
-    if (ticksBeforeMidi_) {
-      ticksBeforeMidi_--;
-    } else {
-      MidiService::GetInstance()->Flush();
-    }
+    MidiService::GetInstance()->Flush();
 
     // We got an IRQ so we know we finished playing from poolPlayPosition_
     // We mark it as empty and inspect the next buffer, if the buffer is not empty,

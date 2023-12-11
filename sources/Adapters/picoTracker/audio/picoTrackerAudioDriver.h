@@ -35,7 +35,6 @@ private:
   AudioSettings settings_;
   static char miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
   int volume_;
-  int ticksBeforeMidi_;
   uint32_t startTime_;
 };
 #endif
