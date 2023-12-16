@@ -709,17 +709,10 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             }
             break;
           case SILM_LOOP_PINGPONG:
-             if (rp->position_ <= rp->rendLoopStart_) {
+             if (rp->position_ <= rp->rendLoopStart_ || input <= loopPosition) {
                rpReverse = !rpReverse;
                fpSpeed = -fpSpeed;
-               // if (rp->rendLoopEnd_<rp->position_) { // Doesn't work
-               //  input=loopPosition ; // Only this breaks backwards loop
-               // } else {
-               //  input=lastSample+100; // ???
-               // }
                input=loopPosition ; // OK forward loop, regular backwards loop,
-               // input=(short*)fpPos ; // Nope illegal
-               // input=lastSample ; // First loop OK, the rest broken
                rp->couldClick_=SHOULD_KILL_CLICKS;
              }
              break;
