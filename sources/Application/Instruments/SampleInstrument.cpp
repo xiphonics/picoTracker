@@ -225,6 +225,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   switch (loopmode) {
   case SILM_ONESHOT:
   case SILM_LOOP:
+  case SILM_LOOP_PINGPONG:
 
     // Compute speed factor
     // if instrument sampled below 44.1Khz, should
@@ -410,6 +411,7 @@ void SampleInstrument::updateFeedback(renderParams *rp) {
     case SILM_ONESHOT:
     case SILM_LOOP:
     case SILM_SLICE:
+    case SILM_LOOP_PINGPONG:
     case SILM_LOOPSYNC:
       rp->feedbackMode_ = FB_ADD;
       if (offset < 0x80) {
@@ -664,6 +666,14 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               fpSpeed = rp->speed_;
             }
             break;
+          case SILM_LOOP_PINGPONG:
+             if (rp->position_ >= rp->rendLoopEnd_) {
+             // if (loopPosition >= lastSample) {
+               rpReverse = !rpReverse;
+               fpSpeed = -fpSpeed;
+               rp->couldClick_=SHOULD_KILL_CLICKS ;
+             }
+             break;
             /*						case SILM_OSCFINE:
                                                             {
                                                                     int
@@ -698,6 +708,21 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               fpSpeed = rp->speed_;
             }
             break;
+          case SILM_LOOP_PINGPONG:
+             if (rp->position_ <= rp->rendLoopStart_) {
+               rpReverse = !rpReverse;
+               fpSpeed = -fpSpeed;
+               // if (rp->rendLoopEnd_<rp->position_) { // Doesn't work
+               //  input=loopPosition ; // Only this breaks backwards loop
+               // } else {
+               //  input=lastSample+100; // ???
+               // }
+               input=loopPosition ; // OK forward loop, regular backwards loop,
+               // input=(short*)fpPos ; // Nope illegal
+               // input=lastSample ; // First loop OK, the rest broken
+               rp->couldClick_=SHOULD_KILL_CLICKS;
+             }
+             break;
             /*						case SILM_OSCFINE:
                                                             {
                                                                     int
