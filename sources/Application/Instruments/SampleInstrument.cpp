@@ -412,6 +412,7 @@ void SampleInstrument::updateFeedback(renderParams *rp) {
     case SILM_LOOP:
     case SILM_SLICE:
     case SILM_LOOP_PINGPONG:
+    case SILM_SLICE:
     case SILM_LOOPSYNC:
       rp->feedbackMode_ = FB_ADD;
       if (offset < 0x80) {
