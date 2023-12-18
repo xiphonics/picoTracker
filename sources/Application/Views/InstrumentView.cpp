@@ -157,9 +157,13 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(SIP_LOOPMODE);
-  intVarField_.emplace_back(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1,
-                            1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  f1 = new UIIntVarField(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1, 1);
+  T_SimpleList<UIField>::Insert(f1);
+  position._y += 1;
+
+  v = instrument->FindVariable(SIP_SLICES) ;
+  f1 = new UIIntVarField(position, *v, "slices: %2.2X", 1, 0xFF, 1, 0x10) ;
+  T_SimpleList<UIField>::Insert(f1) ;
 
   if(!strcmp( v->GetString(), "slicer")) {
     isDirty_ = true;
