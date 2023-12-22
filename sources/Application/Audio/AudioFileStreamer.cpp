@@ -28,7 +28,7 @@ void AudioFileStreamer::Stop() {
   Trace::Debug("Streaming stopped");
 };
 
-bool AudioFileStreamer::IsPlaying() { return mode_ == AFSM_PLAYING; }
+bool AudioFileStreamer::IsPlaying() { return (mode_ == AFSM_PLAYING); }
 
 bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 

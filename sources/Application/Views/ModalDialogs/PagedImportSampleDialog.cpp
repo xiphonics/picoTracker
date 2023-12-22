@@ -166,12 +166,12 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
   fullPathStr += currentItem.name;
   auto fullPath = Path{fullPathStr};
 
-  if (mask & EPBM_START) {
-    if (mask & EPBM_R) {
-      printf("SHIFT play - import");
+  if (mask & EPBM_R) {
+    if (mask & EPBM_START) {
+      Trace::Log("PAGEDIMPORT", "SHIFT play - import");
       import(fullPath);
     } else {
-      printf("plain play preview");
+      Trace::Log("PAGEDIMPORT","plain play preview");
       preview(fullPath);
     }
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
