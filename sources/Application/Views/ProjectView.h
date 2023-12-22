@@ -20,6 +20,7 @@ public:
   void Update(Observable &, I_ObservableData *);
 
   void OnLoadProject();
+  void OnSaveAsProject(char * data);
   void OnPurgeInstruments(bool removeFromDisk);
   void OnQuit();
 
