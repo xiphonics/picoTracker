@@ -162,41 +162,41 @@ void Path::Alias::SetAliasName(const char *alias) { alias_ = alias; };
 
 void Path::Alias::SetPath(const char *path) { path_ = path; };
 
-int FileSystemService::Copy(const Path &src,const Path &dst)
-{
-  int  bufsize = 4096;
-  char buffer[bufsize];
-  int  count = 0;
-  int  nbwrite = -1;
+int FileSystemService::Copy(const Path &src, const Path &dst) {
+  const char LOG_TAG[] = "FSS::Copy";
+  const int bufferSize = 1024;
+  char *buffer = new char[bufferSize];
+  int count = 0;
+  int numFilesWritten = -1;
 
-  FileSystem * fs = FileSystem::GetInstance() ;
-  I_File     * isrc = fs->Open(src.GetPath().c_str(), "r");
-  I_File     * idst = fs->Open(dst.GetPath().c_str(), "w");
+  FileSystem *fs = FileSystem::GetInstance();
+  I_File *source = fs->Open(src.GetPath().c_str(), "r");
+  I_File *destination = fs->Open(dst.GetPath().c_str(), "w");
 
-  Trace::Log("FS","FileSystemService::Copy %s to %s",
-  src.GetPath().c_str(), dst.GetPath().c_str());
-  if (isrc){
-    Trace::Log("FS","src open ok");
+  Trace::Log(LOG_TAG, "Copy %s to %s", src.GetPath().c_str(),
+             dst.GetPath().c_str());
+  if (source) {
+    Trace::Log(LOG_TAG, "src ok %s", src.GetPath().c_str());
   } else {
-    Trace::Log("FS","src open fail");
-    return nbwrite;
+    Trace::Log(LOG_TAG, "src fail %s", src.GetPath().c_str());
+    return numFilesWritten;
   }
-  if (idst) {
-    Trace::Log("FS","dst open ok");
+  if (destination) {
+    Trace::Log(LOG_TAG, "dst ok %s", dst.GetPath().c_str());
   } else {
-    Trace::Log("FS","dst open fail");
-    return nbwrite;
+    Trace::Log(LOG_TAG, "dst fail %s", dst.GetPath().c_str());
+    return numFilesWritten;
   }
 
-  while ((count = isrc->Read(buffer, sizeof(char), bufsize)))
-    {
-      idst->Write(buffer,sizeof(char),count);
-      nbwrite++;
-    }
+  while ((count = source->Read(buffer, sizeof(char), bufferSize))) {
+    destination->Write(buffer, sizeof(char), count);
+    numFilesWritten++;
+  }
 
-  isrc->Close();
-  idst->Close();
-  return nbwrite;
+  source->Close();
+  destination->Close();
+  delete[] buffer;
+  return numFilesWritten;
 }
 
 I_PagedDir::I_PagedDir(){};

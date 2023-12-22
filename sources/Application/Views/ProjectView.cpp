@@ -4,7 +4,6 @@
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/ModalDialogs/NewProjectDialog.h"
 #include "Application/Views/ModalDialogs/SelectProjectDialog.h"
-#include "Application/Model/Scale.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
@@ -23,62 +22,83 @@
 #define ACTION_PURGE_INSTRUMENT MAKE_FOURCC('P', 'R', 'G', 'I')
 #define ACTION_TEMPO_CHANGED MAKE_FOURCC('T', 'E', 'M', 'P')
 
-static void SaveAsProjectCallback(View &v, ModalView &dialog) {
-    FileSystemService FSS;
-    NewProjectDialog &npd = (NewProjectDialog &)dialog;
+void ProjectView::Toast(const char *text) {
+  MessageBox *mb = new MessageBox(*this, text, MBBF_OK);
+  DoModal(mb);
+}
 
-    if (dialog.GetReturnCode()>0) {
-		std::string str_dstprjdir;
-		std::string str_dstsmpdir;
-    std::string up = "../";
-    str_dstprjdir = up + npd.GetName();
-    str_dstsmpdir = up + npd.GetName() + "/samples/";
- 
- 		Path path_dstprjdir = Path(str_dstprjdir);
- 		Path path_dstsmpdir = Path(str_dstsmpdir);
- 		Path path_srcprjdir("project:");
- 		Path path_srcsmpdir("project:samples");
- 
- 		Path path_srclgptdatsav = path_srcprjdir.GetPath() + "/lgptsav.dat";
- 		Path path_dstlgptdatsav = path_dstprjdir.GetPath() + "/lgptsav.dat";
- 
- 		if (path_dstprjdir.Exists()) {
-      Trace::Log("ProjectView", "Dst Dir '%s' Exist == true",
- 			path_dstprjdir.GetPath().c_str());
-    }
- 		else {
- 			Result result = FileSystem::GetInstance()->MakeDir(path_dstprjdir.GetPath().c_str());
- 			if (result.Failed()) {
- 				Trace::Log("ProjectView", "Failed to create dir '%s'", path_dstprjdir.GetPath().c_str());
- 				return;
- 			};
-      result = FileSystem::GetInstance()->MakeDir(path_dstsmpdir.GetPath().c_str()) ;
+static void SaveAsProjectCallback(View &v, ModalView &dialog) {
+  FileSystemService FSS;
+  NewProjectDialog &npd = (NewProjectDialog &)dialog;
+  Trace::Log("ProjectView", "Dialog result: %d", dialog.GetReturnCode());
+
+  if (dialog.GetReturnCode() > 0) {
+    std::string strDestProject;
+    std::string strDestSamples;
+
+    Path root("root:");
+    strDestProject = root.GetName() + npd.GetName();
+    strDestSamples = strDestProject + "/samples/";
+
+    Path pathDestProject = Path(strDestProject);
+    Path pathDestSamples = Path(strDestSamples);
+    Path pathSourceProject("project:");
+    Path pathSourceSamples("project:samples");
+
+    Path pathSourceSave = pathSourceProject.GetPath() + "lgptsav.dat";
+    Path pathDestSav = pathDestProject.GetPath() + "/lgptsav.dat";
+    if (pathDestProject.Exists()) {
+      const char *errMsg =
+          ("Project '" + pathDestProject.GetPath() + "' already exists")
+              .c_str();
+      Trace::Log("ProjectView", errMsg);
+    } else {
+      Result result =
+          FileSystem::GetInstance()->MakeDir(pathDestProject.GetPath().c_str());
       if (result.Failed()) {
-        Trace::Log("ProjectView", "Failed to create sample dir '%s'", path_dstprjdir.GetPath().c_str());
+        const char *errMsg =
+            ("Failed to create dir '" + pathDestProject.GetPath() + "'")
+                .c_str();
+        Trace::Log("ProjectView", errMsg);
         return;
       };
-  
-      FSS.Copy(path_srclgptdatsav,path_dstlgptdatsav);
-  
-      I_Dir *idir_srcsmpdir=FileSystem::GetInstance()->Open(path_srcsmpdir.GetPath().c_str());
-      if (idir_srcsmpdir) {
-          idir_srcsmpdir->GetContent("*");
-          idir_srcsmpdir->Sort();
-          IteratorPtr<Path>it(idir_srcsmpdir->GetIterator());
-          for (it->Begin();!it->IsDone();it->Next()) {
-            Path &current=it->CurrentItem();
-            if (current.IsFile())
-            {
-              Path dstfile = Path((str_dstsmpdir+current.GetName()).c_str());
-              Path srcfile = Path(current.GetPath());
-              FSS.Copy(srcfile.GetPath(),dstfile.GetPath());
-            }
+      result =
+          FileSystem::GetInstance()->MakeDir(pathDestSamples.GetPath().c_str());
+      if (result.Failed()) {
+        const char *errMsg =
+            ("Failed to create sample dir '" + pathDestProject.GetPath() + "'")
+                .c_str();
+        Trace::Log("ProjectView", errMsg);
+        return;
+      };
+
+      FSS.Copy(pathSourceSave, pathDestSav);
+
+      I_Dir *fileList =
+          FileSystem::GetInstance()->Open(pathSourceSamples.GetPath().c_str());
+      if (fileList) {
+        fileList->GetContent("*");
+        for (fileList->Begin(); !fileList->IsDone(); fileList->Next()) {
+          Path &current = fileList->CurrentItem();
+          if (current.IsFile()) {
+            Path dstfile = Path((strDestSamples + current.GetName()).c_str());
+            Path srcfile = Path(current.GetPath());
+            FSS.Copy(srcfile.GetPath(), dstfile.GetPath());
+            Trace::Log("ProjectView", "OK copy %s", srcfile.GetPath().c_str());
           }
         }
-        ((ProjectView &)v).OnSaveAsProject((char*)str_dstprjdir.c_str());
+      }
+      if (dialog.GetReturnCode() == 1) {
+#ifdef PICOBUILD
+        // TODO: Remove this hack. Due to memory leaks and other problems
+        // instead of going back, we perform a software reset
+        watchdog_reboot(0, 0, 0);
+#endif
+        ((ProjectView &)v).OnSaveAsProject((char *)strDestProject.c_str());
+      }
     }
-   }
- }
+  }
+}
 
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
@@ -148,11 +168,6 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 1;
-  a1 = new UIActionField("Save Song As", ACTION_SAVE_AS, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
-
-  position._y += 1;
   a1 = new UIActionField("Compact Instruments", ACTION_PURGE_INSTRUMENT,
                          position);
   a1->AddObserver(*this);
@@ -165,6 +180,11 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 1;
   a1 = new UIActionField("Save Song", ACTION_SAVE, position);
+  a1->AddObserver(*this);
+  fieldList_.insert(fieldList_.end(), a1);
+
+  position._y += 1;
+  a1 = new UIActionField("Save Song As", ACTION_SAVE_AS, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
@@ -246,48 +266,49 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   Player *player = Player::GetInstance();
 
   switch (fourcc) {
-    case ACTION_PURGE:
-      project_->Purge();
-      break;
-    case ACTION_PURGE_INSTRUMENT: {
-      MessageBox *mb = new MessageBox(*this, "Purge unused samples from disk ?",
+  case ACTION_PURGE:
+    project_->Purge();
+    break;
+  case ACTION_PURGE_INSTRUMENT: {
+    MessageBox *mb = new MessageBox(*this, "Purge unused samples from disk ?",
+                                    MBBF_YES | MBBF_NO);
+    DoModal(mb, PurgeCallback);
+    break;
+  }
+  case ACTION_SAVE: {
+    if (!player->IsRunning()) {
+      PersistencyService *service = PersistencyService::GetInstance();
+      service->Save();
+    } else {
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
+    }
+    break;
+  }
+  case ACTION_LOAD: {
+    if (!player->IsRunning()) {
+      MessageBox *mb = new MessageBox(*this, "Load song and lose changes?",
                                       MBBF_YES | MBBF_NO);
-      DoModal(mb, PurgeCallback);
-      break;
+      DoModal(mb, LoadCallback);
+    } else {
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
     }
-    case ACTION_SAVE: {
-      if (!player->IsRunning()) {
-        PersistencyService *service = PersistencyService::GetInstance();
-        service->Save();
-      } else {
-        MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
-        DoModal(mb);
-      }
-      break;
+    break;
+  }
+  case ACTION_SAVE_AS: {
+    Toast("enter case");
+    if (!player->IsRunning()) {
+      PersistencyService *service = PersistencyService::GetInstance();
+      service->Save();
+      NewProjectDialog *mb = new NewProjectDialog(*this);
+      DoModal(mb, SaveAsProjectCallback);
+    } else {
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
     }
-    case ACTION_LOAD: {
-      if (!player->IsRunning()) {
-        MessageBox *mb = new MessageBox(*this, "Load song and lose changes?",
-                                        MBBF_YES | MBBF_NO);
-        DoModal(mb, LoadCallback);
-      } else {
-        MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
-        DoModal(mb);
-      }
-      break;
-    }
-    case ACTION_SAVE_AS: {
-      if (!player->IsRunning()) {
-        PersistencyService *service = PersistencyService::GetInstance();
-        service->Save();
-        NewProjectDialog *mb = new NewProjectDialog(*this);
-        DoModal(mb, SaveAsProjectCallback);
-      } else {
-        MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
-        DoModal(mb);
-      }
-      break;
-    }
+    break;
+  }
 #ifdef PICOBUILD
   case ACTION_BOOTSEL: {
     if (!player->IsRunning()) {
@@ -301,11 +322,11 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   }
 #endif
-    case ACTION_TEMPO_CHANGED:
-      break;
-    default:
-      NInvalid;
-      break;
+  case ACTION_TEMPO_CHANGED:
+    break;
+  default:
+    NInvalid;
+    break;
   };
   focus->Draw(w_);
   isDirty_ = true;
@@ -321,11 +342,11 @@ void ProjectView::OnLoadProject() {
   NotifyObservers(&ve);
 };
 
-void ProjectView::OnSaveAsProject(char * data) {
-        ViewEvent ve(VET_SAVEAS_PROJECT,data) ;
-	SetChanged();
-	NotifyObservers(&ve) ;
-} ;
+void ProjectView::OnSaveAsProject(char *data) {
+  ViewEvent ve(VET_SAVEAS_PROJECT, data);
+  SetChanged();
+  NotifyObservers(&ve);
+};
 
 void ProjectView::OnQuit() {
   ViewEvent ve(VET_QUIT_APP);
