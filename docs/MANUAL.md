@@ -311,7 +311,7 @@ TODO: screencap
 When entering the import screen, the current folder is the library root folder `samplelib`. All samples (`.wav` files) in that folder are listed.
 
 Use Up/Down to select a sample and the Play button to start/stop preview playback of the sample.
-RT+Play to import the currently selected sample and RT+Left to exit out of the Import Dialog back to the Instrument Screen.
+LT+Play to import the currently selected sample and RT+Left to exit out of the Import Dialog back to the Instrument Screen.
 
 Note: While there is no fixed limit for the number of files per sub-directory, exceding 96 sub-directories and/or 354 files per directory is likely to cause picotracker to potentially crash. Also please note that while FAT formatted sdcards can support upto *256* characters per filename, Picotracker only supports upto **128** and with only **ASCII** characters.
 
