@@ -162,6 +162,43 @@ void Path::Alias::SetAliasName(const char *alias) { alias_ = alias; };
 
 void Path::Alias::SetPath(const char *path) { path_ = path; };
 
+int FileSystemService::Copy(const Path &src,const Path &dst)
+{
+  int  bufsize = 4096;
+  char buffer[bufsize];
+  int  count = 0;
+  int  nbwrite = -1;
+
+  FileSystem * fs = FileSystem::GetInstance() ;
+  I_File     * isrc = fs->Open(src.GetPath().c_str(), "r");
+  I_File     * idst = fs->Open(dst.GetPath().c_str(), "w");
+
+  Trace::Log("FS","FileSystemService::Copy %s to %s",
+  src.GetPath().c_str(), dst.GetPath().c_str());
+  if (isrc){
+    Trace::Log("FS","src open ok");
+  } else {
+    Trace::Log("FS","src open fail");
+    return nbwrite;
+  }
+  if (idst) {
+    Trace::Log("FS","dst open ok");
+  } else {
+    Trace::Log("FS","dst open fail");
+    return nbwrite;
+  }
+
+  while ((count = isrc->Read(buffer, sizeof(char), bufsize)))
+    {
+      idst->Write(buffer,sizeof(char),count);
+      nbwrite++;
+    }
+
+  isrc->Close();
+  idst->Close();
+  return nbwrite;
+}
+
 I_PagedDir::I_PagedDir(){};
 I_PagedDir::~I_PagedDir(){};
 

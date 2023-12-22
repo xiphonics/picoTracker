@@ -149,4 +149,9 @@ public:
 
 #define FS_FOPEN(a, b) FileSystem::GetInstance()->Open(a, b)
 
+class FileSystemService {
+ public:
+  int Copy(const Path &src, const Path &dst);
+};
+
 #endif

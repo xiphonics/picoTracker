@@ -80,11 +80,13 @@ private:
 
   bool _isDirty;
   bool _closeProject;
+  bool _loadAfterSaveAsProject;
   bool _shouldQuit;
   unsigned short _mask;
   unsigned long _lastA;
   unsigned long _lastB;
   char _statusLine[80];
+	char _newProjectToLoad[80];
 
   static unsigned char _charScreen[SCREEN_CHARS];
   static unsigned char _charScreenProp[SCREEN_CHARS];

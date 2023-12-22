@@ -229,12 +229,16 @@ Result SelectProjectDialog::OnNewProject(std::string &name) {
   Trace::Log("TMP", "creating project at %s", path.GetPath().c_str());
   selection_ = path;
   Result result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str());
-  RETURN_IF_FAILED_MESSAGE(result, "Failed to create project dir");
+  std::string buf("Failed to create project dir for ");
+  buf.append(path.GetPath().c_str());
+  RETURN_IF_FAILED_MESSAGE(result, buf);
 
   path = path.Descend("samples");
   Trace::Log("TMP", "creating samples dir at %s", path.GetPath().c_str());
   result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str());
-  RETURN_IF_FAILED_MESSAGE(result, "Failed to create samples dir");
+  buf = "Failed to create samples dir for ";
+  buf.append(path.GetPath().c_str());
+  RETURN_IF_FAILED_MESSAGE(result, buf);
 
   EndModal(1);
   return Result::NoError;
