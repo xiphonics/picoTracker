@@ -5,6 +5,8 @@
 
 #include <string>
 
+#define MAGIC_PARENT_DIR_INDEX_MARKER 99999
+
 // Max filename is actually 256 per FAT std
 static const int MAX_FILENAME_LEN = 128;
 
@@ -12,7 +14,7 @@ picoTrackerPagedDir::picoTrackerPagedDir(const char *path)
     : path_{std::string(path)} {
   // Initial size allocation for file and subdir entries per each dir
   // these act as "soft limits" since while the Vector objects will allocate
-  // more room if the initially allocated space is used up, this will likely 
+  // more room if the initially allocated space is used up, this will likely
   // exhaust available RAM per my testing as of making this change
   fileIndexes_.reserve(354);
   subdirIndexes_.reserve(96);
@@ -37,6 +39,10 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
 
   int count = 0;
   FsBaseFile entry;
+
+  // Insert a parent dir path given that FatFS doesn't provide it
+  subdirIndexes_.push_back(MAGIC_PARENT_DIR_INDEX_MARKER);
+
   while (entry.openNext(&dir, O_READ)) {
     char current[MAX_FILENAME_SIZE];
     entry.getName(current, MAX_FILENAME_SIZE);
@@ -49,10 +55,15 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
     }
     count++;
   }
+  fileCount_ = subdirIndexes_.size() + fileIndexes_.size();
   Trace::Log("PAGEDFILESYSTEM", "scanned %d files", count);
 }
 
 std::string picoTrackerPagedDir::getFullName(int index) {
+  if (index == MAGIC_PARENT_DIR_INDEX_MARKER) {
+    return "..";
+  }
+
   FsBaseFile dir;
   if (!dir.open(path_.c_str())) {
     Trace::Error("getFileList failed open:%s", path_.c_str());
@@ -74,7 +85,6 @@ std::string picoTrackerPagedDir::getFullName(int index) {
 
 void picoTrackerPagedDir::getFileList(int startOffset,
                                       std::vector<FileListItem> *fileList) {
-  bool addedParentDirEntry = false;
   FsBaseFile dir;
 
   if (!dir.open(path_.c_str())) {
@@ -88,21 +98,21 @@ void picoTrackerPagedDir::getFileList(int startOffset,
   char current[MAX_FILENAME_LEN];
   FsBaseFile file;
 
-  if (startOffset == 0 && (path_ != std::string(SAMPLE_LIB_PATH))) {
-    // Insert a parent dir path given that FatFS doesn't provide it
-    fileList->push_back(FileListItem("..", 0, true));
-    addedParentDirEntry = true;
-  }
-
   unsigned int count = startOffset;
   for (; count < subdirIndexes_.size() && (fileList->size() < PAGED_PAGE_SIZE);
        count++) {
     int index = subdirIndexes_[count];
-    if (!file.open(&dir, index, O_READ)) {
-      Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
+    
+    // add synthetic entry for the parent directory
+    if (startOffset == 0 && count == 0) {
+      strcpy(current, "..");
+    } else {
+      if (!file.open(&dir, index, O_READ)) {
+        Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d", index);
+      }
+      file.getName(current, MAX_FILENAME_LEN);
+      current[23] = 0; // truncate at 22 char length string
     }
-    file.getName(current, MAX_FILENAME_LEN);
-    current[23] = 0; // truncate at 22 char length string
     fileList->push_back(FileListItem(current, index, true));
   }
   for (; count < fileIndexes_.size() && (fileList->size() < PAGED_PAGE_SIZE);
@@ -115,10 +125,6 @@ void picoTrackerPagedDir::getFileList(int startOffset,
     current[25] = 0; // truncate at 24 char length string
     fileList->push_back(FileListItem(current, index, false));
   }
-
-  // +1 is for the synthezied Parent dir entry of ".."
-  fileCount_ = subdirIndexes_.size() + fileIndexes_.size() +
-               (addedParentDirEntry ? 1 : 0);
 }
 
 int picoTrackerPagedDir::size() { return fileCount_; }
