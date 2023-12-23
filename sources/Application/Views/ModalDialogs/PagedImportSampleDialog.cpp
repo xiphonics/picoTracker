@@ -119,8 +119,13 @@ void PagedImportSampleDialog::OnFocus() {
 void PagedImportSampleDialog::preview(Path &element) {
   if (Player::GetInstance()->IsPlaying()) {
     Player::GetInstance()->StopStreaming();
+    if (currentSample_ != previewPlayingIndex_) {
+      previewPlayingIndex_ = currentSample_;
+      Player::GetInstance()->StartStreaming(element);
+    }
   } else {
     Player::GetInstance()->StartStreaming(element);
+    previewPlayingIndex_ = currentSample_;
   }
 }
 
