@@ -4,11 +4,11 @@
 #include "pico/multicore.h"
 #include <memory>
 
-#define LIST_SIZE 15
+#define LIST_SIZE PAGED_PAGE_SIZE
 #define LIST_WIDTH 24
 
 PagedImportSampleDialog::PagedImportSampleDialog(View &view) : ModalView(view) {
-  fileList_.reserve(15);
+  fileList_.reserve(LIST_SIZE);
   Trace::Log("PAGEDIMPORT", "samplelib is:%s", SAMPLE_LIB_PATH);
 }
 
@@ -20,7 +20,7 @@ void PagedImportSampleDialog::DrawView() {
   Trace::Log("PAGEDIMPORT", "DrawView current:%d topIdx:%d", currentSample_,
              topIndex_);
 
-  SetWindow(LIST_WIDTH, LIST_SIZE + 3);
+  SetWindow(LIST_WIDTH, LIST_SIZE);
   GUITextProperties props;
 
 // Draw title
@@ -35,8 +35,8 @@ void PagedImportSampleDialog::DrawView() {
 
 #endif
   // Draw samples
-  int x = 1;
-  int y = 1;
+  int x = 0;
+  int y = 0;
 
   int count = 0;
   char buffer[LIST_WIDTH + 1];
