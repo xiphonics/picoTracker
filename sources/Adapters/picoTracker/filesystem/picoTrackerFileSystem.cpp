@@ -85,7 +85,6 @@ void picoTrackerPagedDir::getFileList(int startOffset,
     Trace::Error("Path:%s is not a directory", path_.c_str());
     return;
   }
-  static const int MAX_ITEMS = 15;
   char current[MAX_FILENAME_LEN];
   FsBaseFile file;
 
@@ -96,7 +95,7 @@ void picoTrackerPagedDir::getFileList(int startOffset,
   }
 
   unsigned int count = startOffset;
-  for (; count < subdirIndexes_.size() && (fileList->size() < MAX_ITEMS);
+  for (; count < subdirIndexes_.size() && (fileList->size() < PAGED_PAGE_SIZE);
        count++) {
     int index = subdirIndexes_[count];
     if (!file.open(&dir, index, O_READ)) {
@@ -106,7 +105,7 @@ void picoTrackerPagedDir::getFileList(int startOffset,
     current[23] = 0; // truncate at 22 char length string
     fileList->push_back(FileListItem(current, index, true));
   }
-  for (; count < fileIndexes_.size() && (fileList->size() < MAX_ITEMS);
+  for (; count < fileIndexes_.size() && (fileList->size() < PAGED_PAGE_SIZE);
        count++) {
     int index = fileIndexes_[count];
     if (!file.open(&dir, index, O_READ)) {

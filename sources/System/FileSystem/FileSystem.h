@@ -15,6 +15,8 @@
 
 #define SAMPLE_LIB_PATH "/samplelib"
 
+#define PAGED_PAGE_SIZE 18
+
 enum FileType { FT_UNKNOWN, FT_FILE, FT_DIR };
 
 struct FileListItem {
