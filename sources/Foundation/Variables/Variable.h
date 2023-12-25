@@ -16,12 +16,12 @@ public:
   Variable(const char *name, FourCC id, float value = 0.0f);
   Variable(const char *name, FourCC id, bool value = false);
   Variable(const char *name, FourCC id, const char *value = nullptr);
-  Variable(const char *name, FourCC id, const char *const *list, int index = -1);
+  Variable(const char *name, FourCC id, const char *const *list, int8_t size = -1, int8_t index = -1);
 
   virtual ~Variable();
 
   FourCC GetID();
-  const char *GetName();
+  char *GetName();
 
   Type GetType();
   void SetInt(int value, bool notify = true);
@@ -46,12 +46,28 @@ protected:
   Type type_;
 
   union {
-    int int_;
+    uint8_t int_;
     float float_;
     bool bool_;
-    int index_;
+    uint8_t index_;
   } value_;
 
-  const char *const *list_;
+  union {
+    uint8_t int_;
+    float float_;
+    bool bool_;
+    uint8_t index_;
+  } defaultValue_;
+
+  char stringValue_[40];
+  char stringDefaultValue_[40];
+
+  uint8_t listSize_;
+
+  char string_[40];
+
+  union {
+    const char *const *char_;
+  } list_;
 };
 #endif

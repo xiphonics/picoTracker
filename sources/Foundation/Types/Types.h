@@ -14,7 +14,7 @@
 
 typedef uint8_t FourCC;
 typedef uint16_t ushort;
-typedef uint32_t uint;
+typedef unsigned int uint;
 typedef unsigned char uchar;
 
 // TODO: this is a lazy drop in replacement (alongside changes in

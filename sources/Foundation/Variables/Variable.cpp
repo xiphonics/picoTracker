@@ -7,7 +7,8 @@
 #include <string.h>
 
 Variable::Variable(const char *name, FourCC id, float value) {
-  name_ = name;
+  strcpy(name_, name);
+  name_[39] = '\0';
   id_ = id;
   value_.float_ = value;
   defaultValue_.float_ = value;
@@ -15,7 +16,8 @@ Variable::Variable(const char *name, FourCC id, float value) {
 };
 
 Variable::Variable(const char *name, FourCC id, int value) {
-  name_ = name;
+  strcpy(name_, name);
+  name_[39] = '\0';
   id_ = id;
   value_.int_ = value;
   defaultValue_.int_ = value;
@@ -23,7 +25,8 @@ Variable::Variable(const char *name, FourCC id, int value) {
 };
 
 Variable::Variable(const char *name, FourCC id, bool value) {
-  name_ = name;
+  strcpy(name_, name);
+  name_[39] = '\0';
   id_ = id;
   value_.bool_ = value;
   defaultValue_.bool_ = value;
@@ -31,16 +34,20 @@ Variable::Variable(const char *name, FourCC id, bool value) {
 };
 
 Variable::Variable(const char *name, FourCC id, const char *value) {
-  name_ = name;
+  strcpy(name_, name);
+  name_[39] = '\0';
   id_ = id;
-  stringValue_ = value;
-  stringDefaultValue_ = value;
+  strcpy(stringValue_, value);
+  stringValue_[39] = '\0';
+  strcpy(stringDefaultValue_, value);
+  stringDefaultValue_[39] = '\0';
   type_ = STRING;
 };
 
 Variable::Variable(const char *name, FourCC id, const char *const *list,
-                   int size, int index) {
-  name_ = name;
+                   int8_t size, int8_t index) {
+  strcpy(name_, name);
+  name_[39] = '\0';
   id_ = id;
   list_.char_ = list;
   listSize_ = size;
@@ -55,7 +62,7 @@ Variable::Type Variable::GetType() { return type_; };
 
 FourCC Variable::GetID() { return id_; };
 
-const char *Variable::GetName() { return name_.c_str(); };
+char *Variable::GetName() { return name_; };
 
 void Variable::SetFloat(float value, bool notify) {
   switch (type_) {
@@ -73,7 +80,8 @@ void Variable::SetFloat(float value, bool notify) {
     break;
   case STRING:
     sprintf(string_, "%f", value);
-    stringValue_ = string_;
+    strcpy(stringValue_, string_);
+    stringValue_[39] = '\0';
     break;
   };
   if (notify) {
@@ -97,7 +105,8 @@ void Variable::SetInt(int value, bool notify) {
     break;
   case STRING:
     sprintf(string_, "%d", value);
-    stringValue_ = string_;
+    strcpy(stringValue_, string_);
+    stringValue_[39] = '\0';
     break;
   };
   if (notify) {
@@ -120,7 +129,7 @@ void Variable::SetBool(bool value, bool notify) {
     value_.index_ = int(value);
     break;
   case STRING:
-    stringValue_ = (value) ? "true" : "false";
+    strcpy(stringValue_, (value) ? "true" : "false");
     break;
   };
   if (notify) {
@@ -139,7 +148,7 @@ float Variable::GetFloat() {
   case CHAR_LIST:
     return float(value_.index_);
   case STRING:
-    return float(atof(stringValue_.c_str()));
+    return float(atof(stringValue_));
   };
   return 0.0f;
 };
@@ -155,7 +164,7 @@ int Variable::GetInt() {
   case CHAR_LIST:
     return value_.index_;
   case STRING:
-    return atoi(stringValue_.c_str());
+    return atoi(stringValue_);
   };
   return 0;
 };
@@ -189,7 +198,7 @@ void Variable::SetString(const char *string, bool notify) {
     value_.bool_ = (!strcmp("false", string) ? false : true);
     break;
   case STRING:
-    stringValue_ = string;
+    strcpy(stringValue_, string);
     break;
   case CHAR_LIST:
     value_.index_ = -1;
@@ -235,7 +244,7 @@ const char *Variable::GetString() {
     }
     break;
   case STRING:
-    return stringValue_.c_str();
+    return stringValue_;
   };
   return string_;
 };
@@ -275,7 +284,7 @@ void Variable::Reset() {
     value_.index_ = defaultValue_.index_;
     break;
   case STRING:
-    stringValue_ = stringDefaultValue_;
+    strcpy(stringValue_, stringDefaultValue_);
     break;
   }
 }
