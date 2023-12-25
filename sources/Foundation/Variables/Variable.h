@@ -16,7 +16,8 @@ public:
   Variable(const char *name, FourCC id, float value = 0.0f);
   Variable(const char *name, FourCC id, bool value = false);
   Variable(const char *name, FourCC id, const char *value = nullptr);
-  Variable(const char *name, FourCC id, const char *const *list, int8_t size = -1, int8_t index = -1);
+  Variable(const char *name, FourCC id, const char *const *list, int8_t size = -1,
+           int8_t index = -1);
 
   virtual ~Variable();
 

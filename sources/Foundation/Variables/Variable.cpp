@@ -8,7 +8,6 @@
 
 Variable::Variable(const char *name, FourCC id, float value) {
   strcpy(name_, name);
-  name_[39] = '\0';
   id_ = id;
   value_.float_ = value;
   defaultValue_.float_ = value;
@@ -17,7 +16,6 @@ Variable::Variable(const char *name, FourCC id, float value) {
 
 Variable::Variable(const char *name, FourCC id, int value) {
   strcpy(name_, name);
-  name_[39] = '\0';
   id_ = id;
   value_.int_ = value;
   defaultValue_.int_ = value;
@@ -26,7 +24,6 @@ Variable::Variable(const char *name, FourCC id, int value) {
 
 Variable::Variable(const char *name, FourCC id, bool value) {
   strcpy(name_, name);
-  name_[39] = '\0';
   id_ = id;
   value_.bool_ = value;
   defaultValue_.bool_ = value;
@@ -35,19 +32,15 @@ Variable::Variable(const char *name, FourCC id, bool value) {
 
 Variable::Variable(const char *name, FourCC id, const char *value) {
   strcpy(name_, name);
-  name_[39] = '\0';
   id_ = id;
   strcpy(stringValue_, value);
-  stringValue_[39] = '\0';
   strcpy(stringDefaultValue_, value);
-  stringDefaultValue_[39] = '\0';
   type_ = STRING;
 };
 
 Variable::Variable(const char *name, FourCC id, const char *const *list,
                    int8_t size, int8_t index) {
   strcpy(name_, name);
-  name_[39] = '\0';
   id_ = id;
   list_.char_ = list;
   listSize_ = size;
@@ -81,7 +74,6 @@ void Variable::SetFloat(float value, bool notify) {
   case STRING:
     sprintf(string_, "%f", value);
     strcpy(stringValue_, string_);
-    stringValue_[39] = '\0';
     break;
   };
   if (notify) {
@@ -106,7 +98,6 @@ void Variable::SetInt(int value, bool notify) {
   case STRING:
     sprintf(string_, "%d", value);
     strcpy(stringValue_, string_);
-    stringValue_[39] = '\0';
     break;
   };
   if (notify) {
