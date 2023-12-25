@@ -15,9 +15,8 @@ public:
   Variable(const char *name, FourCC id, int value = 0);
   Variable(const char *name, FourCC id, float value = 0.0f);
   Variable(const char *name, FourCC id, bool value = false);
-  Variable(const char *name, FourCC id, const char *value = 0);
-  Variable(const char *name, FourCC id, const char *const *list, int size,
-           int index = -1);
+  Variable(const char *name, FourCC id, const char *value = nullptr);
+  Variable(const char *name, FourCC id, const char *const *list, int index = -1);
 
   virtual ~Variable();
 
@@ -42,7 +41,7 @@ public:
 protected:
   virtual void onChange(){};
 
-  std::string name_;
+  char name_[40];
   FourCC id_;
   Type type_;
 
@@ -53,22 +52,6 @@ protected:
     int index_;
   } value_;
 
-  union {
-    int int_;
-    float float_;
-    bool bool_;
-    int index_;
-  } defaultValue_;
-
-  union {
-    const char *const *char_;
-  } list_;
-
-  std::string stringValue_;
-  std::string stringDefaultValue_;
-
-  int listSize_;
-
-  char string_[40];
+  const char *const *list_;
 };
 #endif

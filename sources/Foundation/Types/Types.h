@@ -12,10 +12,9 @@
 #define strcasecmp _stricmp
 #endif
 
-// typedef unsigned int FourCC ;
-typedef unsigned char FourCC;
-typedef unsigned short ushort;
-typedef unsigned int uint;
+typedef uint8_t FourCC;
+typedef uint16_t ushort;
+typedef uint32_t uint;
 typedef unsigned char uchar;
 
 // TODO: this is a lazy drop in replacement (alongside changes in
