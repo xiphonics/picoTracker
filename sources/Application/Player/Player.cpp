@@ -855,7 +855,7 @@ void Player::playCursorPosition(int channel) {
             }
           }
         } else {
-          NAssert(0);
+          Trace::Error("Note outside range: %02x", (unsigned int)note);
         }
       }
     }
