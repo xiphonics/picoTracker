@@ -5,7 +5,7 @@
 
 #include <string>
 
-#define MAGIC_PARENT_DIR_INDEX_MARKER 99999
+#define MAGIC_PARENT_DIR_INDEX_MARKER -1
 
 // Max filename is actually 256 per FAT std
 static const int MAX_FILENAME_LEN = 128;
