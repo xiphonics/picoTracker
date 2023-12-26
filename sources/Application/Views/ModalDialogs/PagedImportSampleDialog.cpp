@@ -4,11 +4,10 @@
 #include "pico/multicore.h"
 #include <memory>
 
-#define LIST_SIZE PAGED_PAGE_SIZE
 #define LIST_WIDTH 24
 
 PagedImportSampleDialog::PagedImportSampleDialog(View &view) : ModalView(view) {
-  fileList_.reserve(LIST_SIZE);
+  fileList_.reserve(PAGED_PAGE_SIZE);
   Trace::Log("PAGEDIMPORT", "samplelib is:%s", SAMPLE_LIB_PATH);
 }
 
@@ -20,7 +19,7 @@ void PagedImportSampleDialog::DrawView() {
   Trace::Log("PAGEDIMPORT", "DrawView current:%d topIdx:%d", currentSample_,
              topIndex_);
 
-  SetWindow(LIST_WIDTH, LIST_SIZE);
+  SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
   GUITextProperties props;
 
 // Draw title
@@ -41,7 +40,7 @@ void PagedImportSampleDialog::DrawView() {
   int count = 0;
   char buffer[LIST_WIDTH + 1];
   for (const FileListItem &current : fileList_) {
-    if (count == (currentSample_ % LIST_SIZE)) {
+    if (count == (currentSample_ % PAGED_PAGE_SIZE)) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
     } else {
@@ -72,7 +71,7 @@ void PagedImportSampleDialog::warpToNextSample(int direction) {
 
   // wrap around from first entry to last entry
   if (currentSample_ < 0) {
-    topIndex_ = (size / LIST_SIZE) * LIST_SIZE;
+    topIndex_ = (size / PAGED_PAGE_SIZE) * PAGED_PAGE_SIZE;
     currentSample_ = size - 1; // goto last entry
     needPage = true;
   }
@@ -85,16 +84,16 @@ void PagedImportSampleDialog::warpToNextSample(int direction) {
 
   // if we have scrolled off the bottom, page the file list down if not at end
   // of the list
-  if ((currentSample_ >= (topIndex_ + LIST_SIZE)) &&
-      ((topIndex_ + LIST_SIZE) < size)) {
-    topIndex_ += LIST_SIZE;
+  if ((currentSample_ >= (topIndex_ + PAGED_PAGE_SIZE)) &&
+      ((topIndex_ + PAGED_PAGE_SIZE) < size)) {
+    topIndex_ += PAGED_PAGE_SIZE;
     needPage = true;
   }
 
   // if we have scrolled off the top, page the file list up if not already at
   // very top of the list
   if (currentSample_ < topIndex_ && topIndex_ != 0) {
-    topIndex_ -= LIST_SIZE;
+    topIndex_ -= PAGED_PAGE_SIZE;
     needPage = true;
   }
 
@@ -187,9 +186,9 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
     EndModal(0);
   } else if (mask & EPBM_B) {
     if (mask & EPBM_UP)
-      warpToNextSample(-LIST_SIZE);
+      warpToNextSample(-PAGED_PAGE_SIZE);
     if (mask & EPBM_DOWN)
-      warpToNextSample(LIST_SIZE);
+      warpToNextSample(PAGED_PAGE_SIZE);
   } else {
     // A modifier
     if (mask & EPBM_A) {
