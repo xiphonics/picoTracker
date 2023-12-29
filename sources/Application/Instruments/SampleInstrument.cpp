@@ -668,10 +668,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             break;
           case SILM_LOOP_PINGPONG:
              if (rp->position_ >= rp->rendLoopEnd_) {
-             // if (loopPosition >= lastSample) {
-               rpReverse = !rpReverse;
-               fpSpeed = -fpSpeed;
-               rp->couldClick_=SHOULD_KILL_CLICKS ;
+                rpReverse = !rpReverse;
+                fpSpeed = -fpSpeed;
              }
              break;
             /*						case SILM_OSCFINE:
@@ -713,7 +711,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
                rpReverse = !rpReverse;
                fpSpeed = -fpSpeed;
                input=loopPosition ; // OK forward loop, regular backwards loop,
-               rp->couldClick_=SHOULD_KILL_CLICKS;
              }
              break;
             /*						case SILM_OSCFINE:
