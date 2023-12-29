@@ -70,7 +70,7 @@ target_compile_definitions(picoTracker PUBLIC
   PICO_CORE1_STACK_SIZE=4096 # Safe value. 2K seems to be enough. Is it for all use cases?
   PICO_USE_STACK_GUARDS
   # workaround for slow init crystal on some boards see: https://github.com/raspberrypi/pico-sdk/pull/457
-  PICO_XOSC_STARTUP_DELAY_MULTIPLIER=8
+  PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 )
 
 #if (SD_SDIO)
