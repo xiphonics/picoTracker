@@ -648,10 +648,17 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             }
             break;
           case SILM_LOOP_PINGPONG:
-             if (rp->position_ >= rp->rendLoopEnd_) {
-                rpReverse = !rpReverse;
-                fpSpeed = -fpSpeed;
-             }
+             if ((loopPosition > lastSample)) {
+                if (input <= lastSample || input >= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              } else {
+                if (input>=lastSample || input <= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              }
              break;
             /*						case SILM_OSCFINE:
                                                             {
@@ -687,11 +694,17 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             }
             break;
           case SILM_LOOP_PINGPONG:
-             if (rp->position_ <= rp->rendLoopStart_ || input <= loopPosition) {
-               rpReverse = !rpReverse;
-               fpSpeed = -fpSpeed;
-               input=loopPosition ; // OK forward loop, regular backwards loop,
-             }
+             if ((loopPosition > lastSample)) {
+                if (input <= lastSample || input >= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              } else {
+                if (input>=lastSample || input <= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              }
              break;
             /*						case SILM_OSCFINE:
                                                             {
