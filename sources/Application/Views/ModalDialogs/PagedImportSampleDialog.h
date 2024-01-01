@@ -28,7 +28,7 @@ private:
   int currentSample_;
   int topIndex_ = 0;
   int toInstr_;
-  int selected_;
+  int previewPlayingIndex_ = 0;
   Path currentPath_{SAMPLE_LIB_PATH};
   I_PagedDir *currentDir_{};
 };
