@@ -222,6 +222,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   switch (loopmode) {
   case SILM_ONESHOT:
   case SILM_LOOP:
+  case SILM_LOOP_PINGPONG:
 
     // Compute speed factor
     // if instrument sampled below 44.1Khz, should
@@ -392,6 +393,7 @@ void SampleInstrument::updateFeedback(renderParams *rp) {
     switch (loopMode) {
     case SILM_ONESHOT:
     case SILM_LOOP:
+    case SILM_LOOP_PINGPONG:
     case SILM_LOOPSYNC:
       rp->feedbackMode_ = FB_ADD;
       if (offset < 0x80) {
@@ -645,6 +647,19 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               fpSpeed = rp->speed_;
             }
             break;
+          case SILM_LOOP_PINGPONG:
+             if ((loopPosition > lastSample)) {
+                if (input <= lastSample || input >= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              } else {
+                if (input>=lastSample || input <= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              }
+             break;
             /*						case SILM_OSCFINE:
                                                             {
                                                                     int
@@ -678,6 +693,19 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               fpSpeed = rp->speed_;
             }
             break;
+          case SILM_LOOP_PINGPONG:
+             if ((loopPosition > lastSample)) {
+                if (input <= lastSample || input >= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              } else {
+                if (input>=lastSample || input <= loopPosition) {
+                  rpReverse = !rpReverse;
+                  fpSpeed = -fpSpeed;
+                }
+              }
+             break;
             /*						case SILM_OSCFINE:
                                                             {
                                                                     int

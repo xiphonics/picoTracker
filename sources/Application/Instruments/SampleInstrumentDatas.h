@@ -1,6 +1,6 @@
 #define SEMITONE_FREQ_INTERVAL 1.0594630943592952645618252949461F
 
-const char *loopTypes[SILM_LAST] = {"none", "loop", "oscillator",
+const char *loopTypes[SILM_LAST] = {"none", "loop", "pingpong", "oscillator",
                                     //	"oscillator fine",
                                     "looper sync"};
 
