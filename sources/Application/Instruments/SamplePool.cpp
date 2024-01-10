@@ -27,7 +27,23 @@ extern char __flash_binary_end;
 
 int SamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
 int SamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
+int SamplePool::flashLimit_ = 2 * 1024 * 1024; // default 2mb for the Raspberry Pi Pico
+
+// From the SDK, values are not defined in the header file
+#define FLASH_RUID_DUMMY_BYTES 4
+#define FLASH_RUID_DATA_BYTES 8
+#define FLASH_RUID_TOTAL_BYTES                                                 \
+  (1 + FLASH_RUID_DUMMY_BYTES + FLASH_RUID_DATA_BYTES)
+
 #endif
+
+uint storage_get_flash_capacity() {
+  uint8_t txbuf[FLASH_RUID_TOTAL_BYTES] = {0x9f};
+  uint8_t rxbuf[FLASH_RUID_TOTAL_BYTES] = {0};
+  flash_do_cmd(txbuf, rxbuf, FLASH_RUID_TOTAL_BYTES);
+
+  return 1 << rxbuf[3];
+}
 
 SamplePool::SamplePool() {
   for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
@@ -35,6 +51,8 @@ SamplePool::SamplePool() {
     wav_[i] = NULL;
   };
   count_ = 0;
+  flashLimit_ = storage_get_flash_capacity();
+  Trace::Debug("Flash size is %i bytes", flashLimit_);
 };
 
 SamplePool::~SamplePool() {
@@ -148,7 +166,7 @@ bool SamplePool::loadSample(const char *path) {
     strcpy(names_[count_], name.c_str());
     count_++;
 #ifdef LOAD_IN_FLASH
-    wave->LoadInFlash(flashEraseOffset_, flashWriteOffset_);
+    wave->LoadInFlash(flashEraseOffset_, flashWriteOffset_, flashLimit_);
 #else
     wave->GetBuffer(0, wave->GetSize(-1));
 #endif
