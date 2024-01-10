@@ -9,9 +9,6 @@
 #ifdef LOAD_IN_FLASH
 #include "hardware/flash.h"
 #include "hardware/sync.h"
-
-// Raspberry pi pico has 2MB of Flash
-#define FLASH_LIMIT (2 * 1024 * 1024)
 #endif
 
 int WavFile::bufferChunkSize_ = -1;
@@ -307,7 +304,7 @@ bool WavFile::GetBuffer(long start, long size) {
 };
 
 #ifdef LOAD_IN_FLASH
-bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset) {
+bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset, int &flashLimit) {
 
   // Size needed in flash before accounting for page size
   int FlashBaseBufferSize = 2 * channelCount_ * size_;
@@ -317,8 +314,8 @@ bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset) {
   int FlashPageBufferSize =
     ((FlashBaseBufferSize / FLASH_PAGE_SIZE) + ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) * FLASH_PAGE_SIZE;
 
-  if (flashWriteOffset + FlashPageBufferSize > FLASH_LIMIT) {
-    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)", FlashPageBufferSize, FLASH_LIMIT - flashWriteOffset);
+  if (flashWriteOffset + FlashPageBufferSize > flashLimit) {
+    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)", FlashPageBufferSize, flashLimit - flashWriteOffset);
     return false;
   }
 

@@ -39,6 +39,7 @@ protected:
 #ifdef LOAD_IN_FLASH
   static int flashEraseOffset_;
   static int flashWriteOffset_;
+  static int flashLimit_;
 #endif
 };
 
