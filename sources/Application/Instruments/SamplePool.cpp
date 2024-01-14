@@ -37,6 +37,7 @@ int SamplePool::flashLimit_ = 2 * 1024 * 1024; // default 2mb for the Raspberry 
 
 #endif
 
+#ifdef PICOBUILD
 uint storage_get_flash_capacity() {
   uint8_t txbuf[FLASH_RUID_TOTAL_BYTES] = {0x9f};
   uint8_t rxbuf[FLASH_RUID_TOTAL_BYTES] = {0};
@@ -44,6 +45,7 @@ uint storage_get_flash_capacity() {
 
   return 1 << rxbuf[3];
 }
+#endif
 
 SamplePool::SamplePool() {
   for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
@@ -51,8 +53,10 @@ SamplePool::SamplePool() {
     wav_[i] = NULL;
   };
   count_ = 0;
+#ifdef PICOBUILD
   flashLimit_ = storage_get_flash_capacity();
   Trace::Debug("Flash size is %i bytes", flashLimit_);
+#endif
 };
 
 SamplePool::~SamplePool() {
