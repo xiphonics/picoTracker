@@ -10,7 +10,7 @@ Result::Result(const std::string &error)
     : error_(error), success_(false), checked_(false), child_(0) {}
 
 Result::Result(Result &cause, const std::string &error)
-  : error_(error), success_(false), checked_(false),
+    : error_(error), success_(false), checked_(false),
       child_(new Result(cause)) {
   child_->checked_ = true;
   cause.checked_ = true;

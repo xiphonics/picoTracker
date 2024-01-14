@@ -1,8 +1,8 @@
 #include "picoTrackerSystem.h"
-#include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #include "Adapters/picoTracker/audio/picoTrackerAudio.h"
 #include "Adapters/picoTracker/filesystem/picoTrackerFileSystem.h"
 #include "Adapters/picoTracker/gui/GUIFactory.h"
+#include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #ifdef DUMMY_MIDI
 #include "Adapters/Dummy/Midi/DummyMidi.h"
 #else
@@ -150,9 +150,7 @@ void *picoTrackerSystem::Malloc(unsigned size) {
   return ptr;
 }
 
-void picoTrackerSystem::Free(void *ptr) {
-  free(ptr);
-}
+void picoTrackerSystem::Free(void *ptr) { free(ptr); }
 
 void picoTrackerSystem::Memset(void *addr, char val, int size) {
   memset(addr, val, size);

@@ -26,7 +26,7 @@ InstrumentBank::InstrumentBank() : Persistent("INSTRUMENTBANK") {
     s->SetChannel(i);
     instrument_[MAX_SAMPLEINSTRUMENT_COUNT + i] = s;
   }
-  Status::Set("All instrument loaded") ;
+  Status::Set("All instrument loaded");
 };
 
 //
@@ -62,18 +62,18 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
     if (!instr->IsEmpty()) {
       printer->OpenElement("INSTRUMENT");
       hex2char(i, hex);
-      printer->PushAttribute("ID",hex) ;
-			printer->PushAttribute("TYPE",InstrumentTypeData[instr->GetType()]) ;
+      printer->PushAttribute("ID", hex);
+      printer->PushAttribute("TYPE", InstrumentTypeData[instr->GetType()]);
 
-                        IteratorPtr<Variable> it(instr->GetIterator());
-                        for (it->Begin(); !it->IsDone(); it->Next()) {
-                          Variable &v = it->CurrentItem();
-                          printer->OpenElement("PARAM");
-                          printer->PushAttribute("NAME", v.GetName());
-                          printer->PushAttribute("VALUE", v.GetString());
-                          printer->CloseElement(); // PARAM
-                        }
-                        printer->CloseElement(); // INSTRUMENT
+      IteratorPtr<Variable> it(instr->GetIterator());
+      for (it->Begin(); !it->IsDone(); it->Next()) {
+        Variable &v = it->CurrentItem();
+        printer->OpenElement("PARAM");
+        printer->PushAttribute("NAME", v.GetName());
+        printer->PushAttribute("VALUE", v.GetString());
+        printer->CloseElement(); // PARAM
+      }
+      printer->CloseElement(); // INSTRUMENT
     }
   }
 };
@@ -82,7 +82,7 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
 
   if (doc->version_ < 130) {
     if (Config::GetInstance()->GetValue("LEGACYDOWNSAMPLING") != NULL) {
-                        SampleInstrument::EnableDownsamplingLegacy();
+      SampleInstrument::EnableDownsamplingLegacy();
     }
   }
   bool elem = doc->FirstChild();
@@ -97,7 +97,7 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
         if (!strcmp(doc->attrname_, "ID")) {
           unsigned char b1 = (c2h__(doc->attrval_[0])) << 4;
           unsigned char b2 = c2h__(doc->attrval_[1]);
-          id = b1 + b2;    
+          id = b1 + b2;
         }
         if (!strcmp(doc->attrname_, "TYPE")) {
           instype = doc->attrval_;
@@ -113,8 +113,7 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
             break;
           }
         }
-      }
-      else {
+      } else {
         it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE : IT_MIDI;
       };
       if (id < MAX_INSTRUMENT_COUNT) {
@@ -123,11 +122,11 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           delete instr;
           switch (it) {
           case IT_SAMPLE:
-            instr=new SampleInstrument() ;
-            break ;
+            instr = new SampleInstrument();
+            break;
           case IT_MIDI:
-            instr=new MidiInstrument() ;
-            break ;
+            instr = new MidiInstrument();
+            break;
           }
           instrument_[id] = instr;
         };
@@ -156,7 +155,7 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
               strcpy(value, "scream");
             }
           }
-          
+
           IteratorPtr<Variable> it(instr->GetIterator());
           for (it->Begin(); !it->IsDone(); it->Next()) {
             Variable &v = it->CurrentItem();
@@ -166,7 +165,7 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           }
           subelem = doc->NextSibling();
         }
-        if (doc->version_<38) {
+        if (doc->version_ < 38) {
           Variable *cvl = instr->FindVariable(SIP_CRUSHVOL);
           Variable *vol = instr->FindVariable(SIP_VOLUME);
           Variable *crs = instr->FindVariable(SIP_CRUSH);

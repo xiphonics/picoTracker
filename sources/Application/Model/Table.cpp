@@ -100,7 +100,7 @@ void TableHolder::RestoreContent(PersistencyDocument *doc) {
   bool elem = doc->FirstChild();
   while (elem) {
     // Check it is a table
-    if (!strcmp(doc->ElemName(),"TABLE")) {
+    if (!strcmp(doc->ElemName(), "TABLE")) {
       // Get the table ID
       unsigned char id = '\0';
       bool attr = doc->NextAttribute();
@@ -115,38 +115,37 @@ void TableHolder::RestoreContent(PersistencyDocument *doc) {
         attr = doc->NextAttribute();
       }
 
-      Table &table=table_[id];
+      Table &table = table_[id];
 
       bool subelem = doc->FirstChild();
       while (subelem) {
-        if (!strcmp("CMD1",doc->ElemName())) {
-          restoreHexBuffer(doc,(unsigned char *)table.cmd1_) ;
-        } ;
-        if (!strcmp("PARAM1",doc->ElemName())) {
-          restoreHexBuffer(doc,(unsigned char *)table.param1_) ;
-        } ;
-        if (!strcmp("CMD2",doc->ElemName())) {
-          restoreHexBuffer(doc,(unsigned char *)table.cmd2_) ;
-        } ;
-        if (!strcmp("PARAM2",doc->ElemName())) {
-          restoreHexBuffer(doc,(unsigned char *)table.param2_) ;
-        } ;
-        if (!strcmp("CMD3",doc->ElemName())) {
-          restoreHexBuffer(doc,(unsigned char *)table.cmd3_) ;
-        } ;
-        if (!strcmp("PARAM3",doc->ElemName())) {
-          restoreHexBuffer(doc,(unsigned char *)table.param3_) ;
-        } ;
+        if (!strcmp("CMD1", doc->ElemName())) {
+          restoreHexBuffer(doc, (unsigned char *)table.cmd1_);
+        };
+        if (!strcmp("PARAM1", doc->ElemName())) {
+          restoreHexBuffer(doc, (unsigned char *)table.param1_);
+        };
+        if (!strcmp("CMD2", doc->ElemName())) {
+          restoreHexBuffer(doc, (unsigned char *)table.cmd2_);
+        };
+        if (!strcmp("PARAM2", doc->ElemName())) {
+          restoreHexBuffer(doc, (unsigned char *)table.param2_);
+        };
+        if (!strcmp("CMD3", doc->ElemName())) {
+          restoreHexBuffer(doc, (unsigned char *)table.cmd3_);
+        };
+        if (!strcmp("PARAM3", doc->ElemName())) {
+          restoreHexBuffer(doc, (unsigned char *)table.param3_);
+        };
 
-        for (int i=0; i<16; i++)
-          {
-            table.param1_[i] = Swap16(table.param1_[i]);
-            table.param2_[i] = Swap16(table.param2_[i]);
-            table.param3_[i] = Swap16(table.param3_[i]);
-          }
+        for (int i = 0; i < 16; i++) {
+          table.param1_[i] = Swap16(table.param1_[i]);
+          table.param2_[i] = Swap16(table.param2_[i]);
+          table.param3_[i] = Swap16(table.param3_[i]);
+        }
         subelem = doc->NextSibling();
       }
-      allocation_[id]=!table.IsEmpty() ;
+      allocation_[id] = !table.IsEmpty();
     }
     elem = doc->NextSibling();
   }

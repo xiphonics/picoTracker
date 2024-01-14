@@ -102,7 +102,7 @@ void picoTrackerPagedDir::getFileList(int startOffset,
   for (; count < subdirIndexes_.size() && (fileList->size() < PAGED_PAGE_SIZE);
        count++) {
     int index = subdirIndexes_[count];
-    
+
     // add synthetic entry for the parent directory
     if (startOffset == 0 && count == 0) {
       strcpy(current, "..");

@@ -40,7 +40,7 @@ void Groove::GetChannelData(int channel, int *groove, int *position) {
 };
 
 void Groove::SaveContent(tinyxml2::XMLPrinter *printer) {
-	 saveHexBuffer(printer,"DATA",(unsigned char *)data_,16*MAX_GROOVES) ;
+  saveHexBuffer(printer, "DATA", (unsigned char *)data_, 16 * MAX_GROOVES);
 };
 
 void Groove::RestoreContent(PersistencyDocument *doc) {

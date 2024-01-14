@@ -303,11 +303,11 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // Initialize feedback data
   memset(feedback_[channel], 0, FB_BUFFER_LENGTH * 2 * sizeof(fixed));
 
-  rp->feedbackIn_=0 ;
-  rp->feedbackMode_=FB_NONE ;
+  rp->feedbackIn_ = 0;
+  rp->feedbackMode_ = FB_NONE;
 
-  rp->baseFbTun_=rp->fbTun_=fl2fp(fbTune_->GetInt()/255.0f) ;
-  rp->baseFbMix_=rp->fbMix_=fl2fp(fbMix_->GetInt()/255.0f) ;
+  rp->baseFbTun_ = rp->fbTun_ = fl2fp(fbTune_->GetInt() / 255.0f);
+  rp->baseFbMix_ = rp->fbMix_ = fl2fp(fbMix_->GetInt() / 255.0f);
 #endif
 
   // If we do a clean start (there was a instr number on the line)
@@ -648,18 +648,18 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             }
             break;
           case SILM_LOOP_PINGPONG:
-             if ((loopPosition > lastSample)) {
-                if (input <= lastSample || input >= loopPosition) {
-                  rpReverse = !rpReverse;
-                  fpSpeed = -fpSpeed;
-                }
-              } else {
-                if (input>=lastSample || input <= loopPosition) {
-                  rpReverse = !rpReverse;
-                  fpSpeed = -fpSpeed;
-                }
+            if ((loopPosition > lastSample)) {
+              if (input <= lastSample || input >= loopPosition) {
+                rpReverse = !rpReverse;
+                fpSpeed = -fpSpeed;
               }
-             break;
+            } else {
+              if (input >= lastSample || input <= loopPosition) {
+                rpReverse = !rpReverse;
+                fpSpeed = -fpSpeed;
+              }
+            }
+            break;
             /*						case SILM_OSCFINE:
                                                             {
                                                                     int
@@ -694,18 +694,18 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             }
             break;
           case SILM_LOOP_PINGPONG:
-             if ((loopPosition > lastSample)) {
-                if (input <= lastSample || input >= loopPosition) {
-                  rpReverse = !rpReverse;
-                  fpSpeed = -fpSpeed;
-                }
-              } else {
-                if (input>=lastSample || input <= loopPosition) {
-                  rpReverse = !rpReverse;
-                  fpSpeed = -fpSpeed;
-                }
+            if ((loopPosition > lastSample)) {
+              if (input <= lastSample || input >= loopPosition) {
+                rpReverse = !rpReverse;
+                fpSpeed = -fpSpeed;
               }
-             break;
+            } else {
+              if (input >= lastSample || input <= loopPosition) {
+                rpReverse = !rpReverse;
+                fpSpeed = -fpSpeed;
+              }
+            }
+            break;
             /*						case SILM_OSCFINE:
                                                             {
                                                                     int
@@ -762,10 +762,10 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
 #ifndef DISABLE_FEEDBACK
             rp->feedbackIn_ = (feedbackIn - feedback_[channel]) / 2;
-                                                
-            updateFeedback(rp) ;
-            feedbackPick=feedback_[channel]+rp->feedbackOut_*2 ;
-            feedbackEta=fp_mul(rp->fbMix_,fl2fp(4.0f));
+
+            updateFeedback(rp);
+            feedbackPick = feedback_[channel] + rp->feedbackOut_ * 2;
+            feedbackEta = fp_mul(rp->fbMix_, fl2fp(4.0f));
 #endif
             volfactor = fp_mul(rp->volume_, volscale);
             pan = fp2i(rp->pan_);
@@ -964,8 +964,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 #ifndef DISABLE_FEEDBACK
     // Update feedback position
 
-    rp->feedbackIn_=(feedbackIn-feedbackStart)/2 ;
-    rp->feedbackOut_=(feedbackPick-feedbackStart)/2 ;
+    rp->feedbackIn_ = (feedbackIn - feedbackStart) / 2;
+    rp->feedbackOut_ = (feedbackPick - feedbackStart) / 2;
 #endif
     somethingToMix = true;
   }

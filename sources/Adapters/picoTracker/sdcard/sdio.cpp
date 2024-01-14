@@ -431,9 +431,8 @@ static void sdio_verify_rx_checksums(uint32_t maxcount) {
     if (checksum != expected) {
       g_sdio.checksum_errors++;
       if (g_sdio.checksum_errors == 1) {
-        Trace::Debug
-        ("SDIO checksum error in reception: block ", blockidx, " calculated ",
-         checksum, " expected ", expected);
+        Trace::Debug("SDIO checksum error in reception: block ", blockidx,
+                     " calculated ", checksum, " expected ", expected);
       }
     }
   }

@@ -2,7 +2,7 @@
 #include "System/Console/Trace.h"
 
 WavFileWriter::WavFileWriter(const char *path)
-  : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
+    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
   Path filePath(path);
   file_ = FileSystem::GetInstance()->Open(filePath.GetPath().c_str(), "wb");
   if (file_) {

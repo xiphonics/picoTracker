@@ -94,7 +94,7 @@ protected:
   void doTickUpdate(int channel);
   void doKRateUpdate(int channel);
 #ifndef DISABLE_FEEDBACK
-  void updateFeedback(renderParams *rp) ;
+  void updateFeedback(renderParams *rp);
 #endif
 private:
   SoundSource *source_;
@@ -106,7 +106,7 @@ private:
   static signed char lastMidiNote_[SONG_CHANNEL_COUNT];
   static fixed lastSample_[SONG_CHANNEL_COUNT][2];
 #ifndef DISABLE_FEEDBACK
-  static fixed feedback_[SONG_CHANNEL_COUNT][FB_BUFFER_LENGTH*2] ;
+  static fixed feedback_[SONG_CHANNEL_COUNT][FB_BUFFER_LENGTH * 2];
 #endif
   Variable *volume_;
   Variable *crush_;
@@ -119,8 +119,8 @@ private:
   Variable *fineTune_;
   Variable *drive_;
 #ifndef DISABLE_FEEDBACK
-  Variable *fbMix_ ;
-  Variable *fbTune_ ;
+  Variable *fbMix_;
+  Variable *fbTune_;
 #endif
   WatchedVariable *start_;
   WatchedVariable *loopStart_;

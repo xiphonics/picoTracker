@@ -61,7 +61,7 @@ void ViewData::checkSongBoundaries() {
   if (songOffset_ > SONG_ROW_COUNT - View::songRowCount_) {
     songOffset_ = SONG_ROW_COUNT - View::songRowCount_;
   }
-  if (songOffset_<0) {
+  if (songOffset_ < 0) {
     songOffset_ = 0;
   }
 }

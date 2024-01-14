@@ -16,9 +16,9 @@
 
 struct AudioBufferData {
   char buffer_[MAX_SAMPLE_COUNT * 2 * sizeof(short)];
-  int size_ ;
+  int size_;
   bool empty_;
-  void *driverData_ ;
+  void *driverData_;
 };
 
 class AudioDriver : public Observable {
@@ -67,7 +67,7 @@ protected:
   bool isPlaying_;
   static AudioBufferData pool_[SOUND_BUFFER_COUNT];
   int poolQueuePosition_;
-  int poolPlayPosition_ ;
+  int poolPlayPosition_;
   int bufferPos_;
   int bufferSize_;
   bool hasData_;
