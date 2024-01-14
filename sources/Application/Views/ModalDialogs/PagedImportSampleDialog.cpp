@@ -177,7 +177,7 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
       Trace::Log("PAGEDIMPORT", "SHIFT play - import");
       import(fullPath);
     } else {
-      Trace::Log("PAGEDIMPORT","plain play preview");
+      Trace::Log("PAGEDIMPORT", "plain play preview");
       preview(fullPath);
     }
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
@@ -217,7 +217,7 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
       warpToNextSample(-1);
     } else if (mask & EPBM_DOWN) {
       warpToNextSample(1);
-    }  
+    }
   }
 }
 

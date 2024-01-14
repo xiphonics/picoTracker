@@ -803,7 +803,8 @@ void SongView::DrawView() {
   Player *player = Player::GetInstance();
 
   props.invert_ = true;
-  const char *buffer = ((player->GetSequencerMode() == SM_SONG) ? "Song" : "Live");
+  const char *buffer =
+      ((player->GetSequencerMode() == SM_SONG) ? "Song" : "Live");
   DrawString(pos._x, pos._y, buffer, props);
 
   props.invert_ = false;

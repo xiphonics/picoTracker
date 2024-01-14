@@ -4,9 +4,9 @@
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Player/SyncMaster.h"
-#include "Scale.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Groove.h"
+#include "Scale.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
@@ -181,7 +181,7 @@ void Project::Purge() {
         *data = 0xFF;
         *data2 = 0xFF;
         *cmd1 = I_CMD_NONE;
-        *param1=0 ;
+        *param1 = 0;
         *cmd2 = I_CMD_NONE;
         *param2 = 0;
       }
@@ -264,14 +264,15 @@ void Project::RestoreContent(PersistencyDocument *doc) {
   int tableRatio = 0;
   while (attr) {
     if (!strcmp(doc->attrname_, "VERSION")) {
-      doc->version_ = int(atof(doc->attrval_)*100);
+      doc->version_ = int(atof(doc->attrval_) * 100);
     }
     if (!strcmp(doc->attrname_, "TABLERATIO")) {
       tableRatio = atoi(doc->attrval_);
     }
     attr = doc->NextAttribute();
   }
-  if (!tableRatio) tableRatio = (doc->version_ <= 32)?2:1;
+  if (!tableRatio)
+    tableRatio = (doc->version_ <= 32) ? 2 : 1;
   SyncMaster::GetInstance()->SetTableRatio(tableRatio);
 
   // Now loop on all variables
@@ -280,7 +281,7 @@ void Project::RestoreContent(PersistencyDocument *doc) {
     bool attr = doc->NextAttribute();
     char name[24];
     char value[24];
-    while(attr) {
+    while (attr) {
       if (!strcmp(doc->attrname_, "NAME")) {
         strcpy(name, doc->attrval_);
       }
@@ -289,7 +290,7 @@ void Project::RestoreContent(PersistencyDocument *doc) {
       }
       attr = doc->NextAttribute();
     }
-    Variable *v=FindVariable(name);
+    Variable *v = FindVariable(name);
     if (v) {
       v->SetString(value);
     }
@@ -313,8 +314,8 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   for (it->Begin(); !it->IsDone(); it->Next()) {
     printer->OpenElement("PARAMETER");
     Variable v = it->CurrentItem();
-    printer->PushAttribute("NAME",v.GetName()) ;
-		printer->PushAttribute("VALUE",v.GetString()) ;
+    printer->PushAttribute("NAME", v.GetName());
+    printer->PushAttribute("VALUE", v.GetString());
     printer->CloseElement();
   }
 };

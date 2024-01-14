@@ -20,7 +20,8 @@ public:
   virtual int GetRootNote(int note);
   bool GetBuffer(long start, long sampleCount); // values in smples
 #ifdef LOAD_IN_FLASH
-  bool LoadInFlash(int &flashEraseOffset, int &flashWriteOffset, int &flashLimit);
+  bool LoadInFlash(int &flashEraseOffset, int &flashWriteOffset,
+                   int &flashLimit);
 #endif
   void Close();
   virtual bool IsMulti() { return false; };

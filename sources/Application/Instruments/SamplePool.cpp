@@ -27,7 +27,8 @@ extern char __flash_binary_end;
 
 int SamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
 int SamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
-int SamplePool::flashLimit_ = 2 * 1024 * 1024; // default 2mb for the Raspberry Pi Pico
+int SamplePool::flashLimit_ =
+    2 * 1024 * 1024; // default 2mb for the Raspberry Pi Pico
 
 // From the SDK, values are not defined in the header file
 #define FLASH_RUID_DUMMY_BYTES 4
@@ -117,15 +118,15 @@ void SamplePool::Load() {
 #ifndef DISABLESF
   // now, let's look at soundfonts
 
-  dir->GetContent("*.sf2") ;
-  IteratorPtr<Path> it2(dir->GetIterator()) ;
+  dir->GetContent("*.sf2");
+  IteratorPtr<Path> it2(dir->GetIterator());
 
   for (it2->Begin(); !it2->IsDone(); it2->Next()) {
     Path &path = it2->CurrentItem();
     loadSoundFont(path.GetPath().c_str());
   };
 #endif
-  delete dir ;
+  delete dir;
 
   // now sort the samples
 

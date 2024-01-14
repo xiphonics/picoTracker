@@ -239,7 +239,7 @@ void LogSpeedRamp::UpdateSRP(struct RUParams &rup) {
     return;
   rup.speedOffset_ = fp_mul(rup.speedOffset_, current_);
   //	Trace::Debug("Log: current=%f,offset
-  //now=%f",fp2fl(current_),fp2fl(rup.speedOffset_)) ;
+  // now=%f",fp2fl(current_),fp2fl(rup.speedOffset_)) ;
 };
 
 //

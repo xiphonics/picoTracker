@@ -23,11 +23,11 @@ unsigned char AppWindow::_charScreenProp[1200];
 unsigned char AppWindow::_preScreen[1200];
 unsigned char AppWindow::_preScreenProp[1200];
 
-GUIColor AppWindow::backgroundColor_(0x0F,0x0F,0x0F, 0) ;
-GUIColor AppWindow::normalColor_(0xAD,0xAD,0xAD, 1) ;
+GUIColor AppWindow::backgroundColor_(0x0F, 0x0F, 0x0F, 0);
+GUIColor AppWindow::normalColor_(0xAD, 0xAD, 0xAD, 1);
 GUIColor AppWindow::highlightColor_(0x84, 0x6F, 0x94, 2);
 GUIColor AppWindow::highlight2Color_(0x6B, 0x31, 0x6B, 3);
-GUIColor AppWindow::cursorColor_(0x77,0x6B,0x56, 4) ;
+GUIColor AppWindow::cursorColor_(0x77, 0x6B, 0x56, 4);
 GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 5);
 
 int AppWindow::charWidth_ = 8;
@@ -46,18 +46,19 @@ static void ProjectSelectCallback(View &v, ModalView &dialog) {
   }
 };
 
-void AppWindow::defineColor(const char *colorName,GUIColor &color, int paletteIndex) {
+void AppWindow::defineColor(const char *colorName, GUIColor &color,
+                            int paletteIndex) {
 
-  Config *config=Config::GetInstance();
-  const char *value=config->GetValue(colorName);
+  Config *config = Config::GetInstance();
+  const char *value = config->GetValue(colorName);
   if (value) {
     unsigned char r;
-    char2hex(value,&r);
+    char2hex(value, &r);
     unsigned char g;
-    char2hex(value+2,&g);
+    char2hex(value + 2, &g);
     unsigned char b;
-    char2hex(value+4,&b);
-    color=GUIColor(r,g,b, paletteIndex);
+    char2hex(value + 4, &b);
+    color = GUIColor(r, g, b, paletteIndex);
   }
 }
 
@@ -93,12 +94,12 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   // Init midi services
   MidiService::GetInstance()->Init();
 
-  defineColor("BACKGROUND",backgroundColor_, 0);
-  defineColor("FOREGROUND",normalColor_, 1);
-  cursorColor_=normalColor_;
-  defineColor("HICOLOR1",highlightColor_, 2);
-  defineColor("HICOLOR2",highlight2Color_, 3);
-  defineColor("CURSORCOLOR",cursorColor_, 4);
+  defineColor("BACKGROUND", backgroundColor_, 0);
+  defineColor("FOREGROUND", normalColor_, 1);
+  cursorColor_ = normalColor_;
+  defineColor("HICOLOR1", highlightColor_, 2);
+  defineColor("HICOLOR2", highlight2Color_, 3);
+  defineColor("CURSORCOLOR", cursorColor_, 4);
 
   GUIWindow::Clear(backgroundColor_);
 

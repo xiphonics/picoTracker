@@ -8,8 +8,8 @@
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "ModalDialogs/ImportSampleDialog.h"
-#include "ModalDialogs/PagedImportSampleDialog.h"
 #include "ModalDialogs/MessageBox.h"
+#include "ModalDialogs/PagedImportSampleDialog.h"
 #include "System/System/System.h"
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)

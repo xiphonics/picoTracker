@@ -8,7 +8,7 @@ Persistent::Persistent(const char *nodeName)
 
 void Persistent::Save(tinyxml2::XMLPrinter *printer) {
   printer->OpenElement(nodeName_);
-	SaveContent(printer) ;
+  SaveContent(printer);
   printer->CloseElement();
 };
 

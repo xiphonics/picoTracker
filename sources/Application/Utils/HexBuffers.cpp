@@ -4,7 +4,8 @@
 
 #define XML_CUT_LENGTH 64
 
-void prepareHexChunk(tinyxml2::XMLPrinter *printer, unsigned char *datasrc, int len) {
+void prepareHexChunk(tinyxml2::XMLPrinter *printer, unsigned char *datasrc,
+                     int len) {
 
   bool singleValue = true;
   int singleValueData = -1;

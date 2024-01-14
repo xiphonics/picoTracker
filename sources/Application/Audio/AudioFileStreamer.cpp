@@ -78,18 +78,18 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     // another half of such buffer is needed to expand to
     // 16bits if sample is 8bit
     // TODO: refactor this whole thing to make it less brittle
-    long bufferSize = count > 64?64:count;
+    long bufferSize = count > 64 ? 64 : count;
     wav_->GetBuffer(position_, bufferSize);
-    short *src=(short *)wav_->GetSampleBuffer(-1) ;
+    short *src = (short *)wav_->GetSampleBuffer(-1);
 
     // I might need to do sample interpolation here
 
     for (int i = 0; i < bufferSize; i++) {
-      fixed v=*dst++=i2fp((*src++)>>(1+shift_)) ;
-      if (channel==2) {
-        *dst++=i2fp((*src++)>>(1+shift_)) ;
+      fixed v = *dst++ = i2fp((*src++) >> (1 + shift_));
+      if (channel == 2) {
+        *dst++ = i2fp((*src++) >> (1 + shift_));
       } else {
-        *dst++=v ;
+        *dst++ = v;
       }
     }
     count -= bufferSize;

@@ -1,6 +1,6 @@
 #include "picoTrackerAudioDriver.h"
-#include "Adapters/picoTracker/utils/utils.h"
 #include "Adapters/picoTracker/platform/platform.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Model/Config.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
@@ -51,8 +51,9 @@ void picoTrackerAudioDriver::BufferNeeded() {
   // Audio tick processes MIDI among other things
   // TODO: understand tick and buffer size relationship. currently not constant
   // probably not right
-  // TODO: This could (should?) go into the main thread. If done tho, we geat a deadlock
-  // in malloc mutex due to malloc being called from core1 and isr simultaneously
+  // TODO: This could (should?) go into the main thread. If done tho, we geat a
+  // deadlock in malloc mutex due to malloc being called from core1 and isr
+  // simultaneously
   instance_->onAudioBufferTick();
 
   instance_->OnNewBufferNeeded();
@@ -95,21 +96,21 @@ bool picoTrackerAudioDriver::InitDriver() {
 
   // Claim and configure DMA
   dma_channel_claim(AUDIO_DMA);
-  dma_channel_config dma_config =
-      dma_channel_get_default_config(AUDIO_DMA);
+  dma_channel_config dma_config = dma_channel_get_default_config(AUDIO_DMA);
 
   channel_config_set_dreq(&dma_config, DREQ_PIO0_TX0 + AUDIO_SM);
   channel_config_set_transfer_data_size(&dma_config, DMA_SIZE_32);
   channel_config_set_read_increment(&dma_config, true);
   dma_channel_configure(AUDIO_DMA, &dma_config,
                         &AUDIO_PIO->txf[AUDIO_SM], // dest
-                        NULL,                               // src
-                        0,                                  // count
-                        false                               // trigger
+                        NULL,                      // src
+                        0,                         // count
+                        false                      // trigger
   );
 
   // Add our own callback func to run after the i2s irq func (priority 0x80)
-  irq_set_exclusive_handler(DMA_IRQ_0 + AUDIO_DMA_IRQ, audio_i2s_dma_irq_handler);
+  irq_set_exclusive_handler(DMA_IRQ_0 + AUDIO_DMA_IRQ,
+                            audio_i2s_dma_irq_handler);
   dma_irqn_set_channel_enabled(AUDIO_DMA_IRQ, AUDIO_DMA, true);
 
   // Set PIO frequency
@@ -126,8 +127,7 @@ bool picoTrackerAudioDriver::InitDriver() {
 
   // Enable audio
   irq_set_enabled(DMA_IRQ_0 + AUDIO_DMA_IRQ, true);
-  dma_channel_transfer_from_buffer_now(AUDIO_DMA, miniBlank_,
-                                       MINI_BLANK_SIZE);
+  dma_channel_transfer_from_buffer_now(AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
   pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, true);
 
   // Set Audio render thread on core1
@@ -153,12 +153,11 @@ void picoTrackerAudioDriver::SetVolume(int v) {
 
 int picoTrackerAudioDriver::GetVolume() { return volume_; };
 
-void picoTrackerAudioDriver::CloseDriver(){
+void picoTrackerAudioDriver::CloseDriver() {
 
   pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, false);
   irq_set_enabled(DMA_IRQ_0 + AUDIO_DMA_IRQ, false);
-  dma_irqn_set_channel_enabled(AUDIO_DMA_IRQ, AUDIO_DMA,
-                               false);
+  dma_irqn_set_channel_enabled(AUDIO_DMA_IRQ, AUDIO_DMA, false);
   irq_remove_handler(DMA_IRQ_0 + AUDIO_DMA_IRQ, audio_i2s_dma_irq_handler);
   dma_channel_unclaim(AUDIO_DMA);
   pio_sm_unclaim(AUDIO_PIO, AUDIO_SM);
@@ -191,20 +190,21 @@ void picoTrackerAudioDriver::OnChunkDone() {
     MidiService::GetInstance()->Flush();
 
     // We got an IRQ so we know we finished playing from poolPlayPosition_
-    // We mark it as empty and inspect the next buffer, if the buffer is not empty,
-    // it means thread 2 finished processing that buffer and there are no underruns
-    // Otherwise, we send a small blank buffer and wait for the other thread to finish
+    // We mark it as empty and inspect the next buffer, if the buffer is not
+    // empty, it means thread 2 finished processing that buffer and there are no
+    // underruns Otherwise, we send a small blank buffer and wait for the other
+    // thread to finish
     pool_[poolPlayPosition_].empty_ = true;
 
     int next = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
     if (pool_[next].empty_) {
-      dma_channel_transfer_from_buffer_now(
-          AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
+      dma_channel_transfer_from_buffer_now(AUDIO_DMA, miniBlank_,
+                                           MINI_BLANK_SIZE);
     } else {
       poolPlayPosition_ = next;
-      dma_channel_transfer_from_buffer_now(
-          AUDIO_DMA, pool_[poolPlayPosition_].buffer_,
-          pool_[poolPlayPosition_].size_ / 4);
+      dma_channel_transfer_from_buffer_now(AUDIO_DMA,
+                                           pool_[poolPlayPosition_].buffer_,
+                                           pool_[poolPlayPosition_].size_ / 4);
     }
 
     // Finally we allow core1 to calculate an additional buffer
@@ -214,7 +214,7 @@ void picoTrackerAudioDriver::OnChunkDone() {
 
 int picoTrackerAudioDriver::GetPlayedBufferPercentage() {
   //	return
-  //100-(bufferSize_-bufferPos_-fragSize_)*100/(bufferSize_-fragSize_);
+  // 100-(bufferSize_-bufferPos_-fragSize_)*100/(bufferSize_-fragSize_);
   // TODO: Do this right
   return 0;
 };
