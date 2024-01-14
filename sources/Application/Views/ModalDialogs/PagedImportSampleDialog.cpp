@@ -1,7 +1,9 @@
 #include "PagedImportSampleDialog.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#ifdef PICOBUILD
 #include "pico/multicore.h"
+#endif
 #include <memory>
 
 #define LIST_WIDTH 24
@@ -132,14 +134,14 @@ void PagedImportSampleDialog::import(Path &element) {
 
   SamplePool *pool = SamplePool::GetInstance();
 
-#ifdef PICO_BUILD
+#ifdef PICOBUILD
   // Pause core1 in order to be able to write to flash and ensure core1 is
   // not reading from it, it also disables IRQs on it
   // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
   multicore_lockout_start_blocking();
 #endif
   int sampleID = pool->ImportSample(element);
-#ifdef PICO_BUILD
+#ifdef PICOBUILD
   multicore_lockout_end_blocking();
 #endif
 

@@ -138,7 +138,9 @@ class FileSystem : public T_Factory<FileSystem> {
 public:
   virtual I_File *Open(const char *path, const char *mode) = 0;
   virtual I_Dir *Open(const char *path) = 0;
+#ifdef PICOBUILD
   virtual I_PagedDir *OpenPaged(const char *path) = 0;
+#endif
   virtual Result MakeDir(const char *path) = 0;
   virtual void Delete(const char *) = 0;
   virtual FileType GetFileType(const char *path) = 0;

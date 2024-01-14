@@ -241,7 +241,9 @@ int WavFile::GetSampleRate(int note) { return sampleRate_; };
 long WavFile::readBlock(long start, long size) {
   // Read buffer is a fixed size, nothing should be requested bigger than this
   // TODO: remove size option and work with what we have
+#ifdef PICOBUILD
   assert((unsigned long)size < FLASH_PAGE_SIZE);
+#endif
   if (size > readBufferSize_) {
     readBufferSize_ = size;
   }
@@ -255,7 +257,9 @@ bool WavFile::GetBuffer(long start, long size) {
   // sense anymore, refactor
   // 64 bits is the maximum size we can read without overflowing
   // readBuffer_ in the worst case scenario
+#ifdef PICOBUILD
   assert((unsigned long)size < FLASH_PAGE_SIZE / 2);
+#endif
   samples_ = (short *)readBuffer_;
 
   // compute the file buffer size we need to read

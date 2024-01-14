@@ -117,7 +117,7 @@ COMMONFILES		:=	Logger.o Trace.o Result.o Status.o Config.o \
 					MessageBox.o \
 					GrooveView.o UINoteVarField.o UIBigHexVarField.o \
 					SRPUpdaters.o UIStaticField.o \
-					Song.o Chain.o Phrase.o Project.o \
+					Song.o Chain.o Phrase.o Project.o Scale.o \
 					char.o n_assert.o fixed.o wildcard.o \
 					SyncMaster.o TablePlayback.o Player.o \
 					Table.o TableView.o\

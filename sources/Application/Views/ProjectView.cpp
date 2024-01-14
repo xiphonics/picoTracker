@@ -7,8 +7,10 @@
 #include "BaseClasses/UITempoField.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
+#ifdef PICOBUILD
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
+#endif
 
 #define ACTION_PURGE MAKE_FOURCC('P', 'U', 'R', 'G')
 #define ACTION_SAVE MAKE_FOURCC('S', 'A', 'V', 'E')
@@ -22,18 +24,22 @@
 
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
+#ifdef PICOBUILD
     // TODO: Remove this hack. Due to memory leaks and other problems
     // instead of going back, we perform a software reset
     watchdog_reboot(0, 0, 0);
+#endif
     ((ProjectView &)v).OnLoadProject();
   }
 };
 
+#ifdef PICOBUILD
 static void BootselCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     reset_usb_boot(0, 0);
   }
 };
+#endif
 
 #ifndef NO_EXIT
 static void QuitCallback(View &v, ModalView &dialog) {
@@ -220,6 +226,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   }
+#ifdef PICOBUILD
   case ACTION_BOOTSEL: {
     if (!player->IsRunning()) {
       MessageBox *mb =
@@ -231,6 +238,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   }
+#endif
 
 #ifndef NO_EXIT
   case ACTION_QUIT: {
