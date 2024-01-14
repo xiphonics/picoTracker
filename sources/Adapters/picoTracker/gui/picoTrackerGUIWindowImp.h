@@ -1,9 +1,9 @@
 #ifndef PICOTRACKERWINDOWIMP_H_
 #define PICOTRACKERWINDOWIMP_H_
 
-#include "picoTrackerEventQueue.h"
-#include "UIFramework/Interfaces/I_GUIWindowImp.h"
 #include "Adapters/picoTracker/display/mode0.h"
+#include "UIFramework/Interfaces/I_GUIWindowImp.h"
+#include "picoTrackerEventQueue.h"
 #include <string>
 
 class picoTrackerGUIWindowImp : public I_GUIWindowImp {

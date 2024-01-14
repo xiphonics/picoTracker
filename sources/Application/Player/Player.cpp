@@ -1031,45 +1031,46 @@ void Player::moveToNextPhrase(int channel, int hop) {
 
 void Player::moveToNextChain(int channel, int hop) {
 
-  // if there's unplaying channels queue they should be started 
+  // if there's unplaying channels queue they should be started
   // once all position have been updated
 
   triggerLiveChains_ = true;
 
-  bool searchNext=true ;
-  int nextPos=0 ;
-  int chainPosition=0 ;
+  bool searchNext = true;
+  int nextPos = 0;
+  int chainPosition = 0;
 
   // Hop here ?
 
   // See if current channel has been queued to play something
   // in normal mode
 
-  if (mode_==PM_LIVE) {
+  if (mode_ == PM_LIVE) {
     switch (liveQueueingMode_[channel]) {
 
     case QM_CHAINSTART:
     case QM_PHRASESTART:
 
-      if (findPlayable(&(liveQueuePosition_[channel]),channel,liveQueueChainPosition_[channel])) {
-        nextPos=liveQueuePosition_[channel] ; 
-        searchNext=false ;
-        liveQueueingMode_[channel]=QM_NONE ;
-        chainPosition=liveQueueChainPosition_[channel] ;
+      if (findPlayable(&(liveQueuePosition_[channel]), channel,
+                       liveQueueChainPosition_[channel])) {
+        nextPos = liveQueuePosition_[channel];
+        searchNext = false;
+        liveQueueingMode_[channel] = QM_NONE;
+        chainPosition = liveQueueChainPosition_[channel];
       } else {
-        liveQueueingMode_[channel]=QM_NONE ;
+        liveQueueingMode_[channel] = QM_NONE;
       }
-      break ;
+      break;
 
     case QM_CHAINSTOP:
     case QM_PHRASESTOP:
-      mixer_->StopChannel(channel) ;
-      liveQueueingMode_[channel]=QM_NONE ;
-      return ;
+      mixer_->StopChannel(channel);
+      liveQueueingMode_[channel] = QM_NONE;
+      return;
 
     case QM_TICKSTART:
     case QM_NONE:
-      break ;
+      break;
     }
   }
 

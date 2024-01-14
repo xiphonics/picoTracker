@@ -26,29 +26,29 @@ void ModalView::SetWindow(int width, int height) {
 
   if (width > 28) {
     width = 28;
-  } ;
-	if (height>20) {
-		height=20 ;
-  } ;
+  };
+  if (height > 20) {
+    height = 20;
+  };
 
-        left_=16-width/2 ;
-	top_=8-height/2 ;
-        if (top_ < 2) {
-                top_ = 2;
-        }
-        ClearRect(-1, -1, width + 2, height + 2);
+  left_ = 16 - width / 2;
+  top_ = 8 - height / 2;
+  if (top_ < 2) {
+    top_ = 2;
+  }
+  ClearRect(-1, -1, width + 2, height + 2);
 
-        SetColor(CD_HILITE2);
-        GUITextProperties props;
-        props.invert_ = true;
-        char line[41];
-        memset(line, ' ', 40);
-        line[width + 4] = 0;
-        DrawString(-2, -2, line, props);
-        DrawString(-2, height + 1, line, props);
-        line[1] = 0;
-        for (int i = 0; i < height + 2; i++) {
-                DrawString(-2, i - 1, line, props);
-                DrawString(width + 1, i - 1, line, props);
-        }
+  SetColor(CD_HILITE2);
+  GUITextProperties props;
+  props.invert_ = true;
+  char line[41];
+  memset(line, ' ', 40);
+  line[width + 4] = 0;
+  DrawString(-2, -2, line, props);
+  DrawString(-2, height + 1, line, props);
+  line[1] = 0;
+  for (int i = 0; i < height + 2; i++) {
+    DrawString(-2, i - 1, line, props);
+    DrawString(width + 1, i - 1, line, props);
+  }
 };

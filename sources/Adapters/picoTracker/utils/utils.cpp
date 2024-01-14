@@ -24,7 +24,7 @@ uint32_t measure_free_mem(void) {
   for (int j = i; j >= 0; j--) {
     free(buff[j]);
   }
-  
+
   printf("MAX memory free in heap: %i\n", max * 1000);
   /*
     buff = malloc(80000);

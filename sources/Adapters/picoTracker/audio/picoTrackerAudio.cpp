@@ -1,10 +1,12 @@
 
 #include "picoTrackerAudio.h"
-#include "picoTrackerAudioDriver.h"
 #include "Services/Audio/AudioOutDriver.h"
 #include "System/Console/Trace.h"
+#include "picoTrackerAudioDriver.h"
 
-picoTrackerAudio::picoTrackerAudio(AudioSettings &hints) : Audio(hints) { hints_ = hints; }
+picoTrackerAudio::picoTrackerAudio(AudioSettings &hints) : Audio(hints) {
+  hints_ = hints;
+}
 
 picoTrackerAudio::~picoTrackerAudio() {}
 

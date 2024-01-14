@@ -88,6 +88,6 @@ private:
   int _size;
 };
 
-#include "T_SimpleListIterator.h"
 #include "T_SimpleList.cpp" // Include the implementation file.
+#include "T_SimpleListIterator.h"
 #endif

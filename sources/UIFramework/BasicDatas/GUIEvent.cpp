@@ -6,13 +6,13 @@
 
 GUIEvent::GUIEvent(GUIPoint &point, GUIEventType type, long when, bool ctrl,
                    bool shift, bool btn)
-  : _position(point), _type(type), _value(0),  _when(when),
-      _ctrl(ctrl), _shift(shift), _btn(btn){};
+    : _position(point), _type(type), _value(0), _when(when), _ctrl(ctrl),
+      _shift(shift), _btn(btn){};
 
 GUIEvent::GUIEvent(long value, GUIEventType type, long when, bool ctrl,
                    bool shift, bool btn)
-    : _position(), _type(type), _value(value), _when(when),
-      _ctrl(ctrl), _shift(shift), _btn(btn){};
+    : _position(), _type(type), _value(value), _when(when), _ctrl(ctrl),
+      _shift(shift), _btn(btn){};
 
 // Position accessor
 

@@ -12,7 +12,8 @@ void PersistencyService::Save() {
   I_File *fp = FileSystem::GetInstance()->Open(filename.GetPath().c_str(), "w");
   printf("File: %s\n", filename.GetPath().c_str());
   if (!fp) {
-    Trace::Error("Could not open file for writing: %s", filename.GetPath().c_str());
+    Trace::Error("Could not open file for writing: %s",
+                 filename.GetPath().c_str());
   }
   tinyxml2::XMLPrinter printer(fp);
 
@@ -35,7 +36,8 @@ void PersistencyService::Save() {
 bool PersistencyService::Load() {
   Path filename("project:lgptsav.dat");
   PersistencyDocument doc;
-  if (!doc.Load(filename.GetPath())) return false;
+  if (!doc.Load(filename.GetPath()))
+    return false;
 
   bool elem = doc.FirstChild(); // advance to first child
   if (!elem || strcmp(doc.ElemName(), "PICOTRACKER")) {

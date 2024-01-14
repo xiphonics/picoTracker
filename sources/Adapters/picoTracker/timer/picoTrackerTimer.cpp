@@ -1,7 +1,7 @@
+#include "picoTrackerTimer.h"
 #include "System/Console/Trace.h"
 #include "System/Console/n_assert.h"
 #include "System/System/System.h"
-#include "picoTrackerTimer.h"
 
 int64_t picoTrackerTimerCallback(int32_t interval, void *param) {
   picoTrackerTimer *timer = (picoTrackerTimer *)param;

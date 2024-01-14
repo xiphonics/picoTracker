@@ -60,7 +60,7 @@ WavFile::~WavFile() {
     delete file_;
   }
 #ifndef LOAD_IN_FLASH
-  SAFE_FREE(samples_) ;
+  SAFE_FREE(samples_);
 #endif
 };
 
@@ -247,8 +247,8 @@ long WavFile::readBlock(long start, long size) {
   if (size > readBufferSize_) {
     readBufferSize_ = size;
   }
-  file_->Seek(start,SEEK_SET) ;
-  file_->Read(readBuffer_,size,1) ;
+  file_->Seek(start, SEEK_SET);
+  file_->Read(readBuffer_, size, 1);
   return size;
 };
 
@@ -308,18 +308,21 @@ bool WavFile::GetBuffer(long start, long size) {
 };
 
 #ifdef LOAD_IN_FLASH
-bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset, int &flashLimit) {
+bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset,
+                          int &flashLimit) {
 
   // Size needed in flash before accounting for page size
   int FlashBaseBufferSize = 2 * channelCount_ * size_;
   // Store the size of samples
   sampleBufferSize_ = FlashBaseBufferSize;
   // Size actually occupied in flash
-  int FlashPageBufferSize =
-    ((FlashBaseBufferSize / FLASH_PAGE_SIZE) + ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) * FLASH_PAGE_SIZE;
+  int FlashPageBufferSize = ((FlashBaseBufferSize / FLASH_PAGE_SIZE) +
+                             ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) *
+                            FLASH_PAGE_SIZE;
 
   if (flashWriteOffset + FlashPageBufferSize > flashLimit) {
-    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)", FlashPageBufferSize, flashLimit - flashWriteOffset);
+    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)",
+                 FlashPageBufferSize, flashLimit - flashWriteOffset);
     return false;
   }
 
@@ -335,10 +338,10 @@ bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset, int &fla
   // additional ones
   if (FlashPageBufferSize > (flashEraseOffset - flashWriteOffset)) {
     int additionalData =
-        FlashPageBufferSize - flashEraseOffset +
-      flashWriteOffset;
-    int sectorsToErase =
-      ((additionalData / FLASH_SECTOR_SIZE) + ((additionalData % FLASH_SECTOR_SIZE) != 0)) * FLASH_SECTOR_SIZE;
+        FlashPageBufferSize - flashEraseOffset + flashWriteOffset;
+    int sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
+                          ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
+                         FLASH_SECTOR_SIZE;
     Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
                  sectorsToErase, flashEraseOffset,
                  flashEraseOffset + sectorsToErase);
@@ -362,7 +365,7 @@ bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset, int &fla
 
   while (count > 0) {
     readSize = (count > readSize) ? readSize : count;
-    
+
     file_->Seek(bufferStart, SEEK_SET);
     file_->Read(readBuffer_, readSize, 1);
 
@@ -386,19 +389,20 @@ bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset, int &fla
     // Write size will be either 256 (which is the flash page size) or 512
     int writeSize = (bytePerSample_ == 1) ? readSize * 2 : readSize;
     // Adjust to page size
-    writeSize = ((writeSize / FLASH_PAGE_SIZE) +
-                 ((writeSize % FLASH_PAGE_SIZE) != 0)) * FLASH_PAGE_SIZE;
+    writeSize =
+        ((writeSize / FLASH_PAGE_SIZE) + ((writeSize % FLASH_PAGE_SIZE) != 0)) *
+        FLASH_PAGE_SIZE;
 
     // There will be trash at the end, but sampleBufferSize_ gives me the
     // bounds
-    Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X", writeSize,
-                 flashWriteOffset + offset,
+    Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
+                 writeSize, flashWriteOffset + offset,
                  flashWriteOffset + offset + writeSize);
-      flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
-                          writeSize);
-      bufferStart += readSize;
-      count -= readSize;
-      flashWriteOffset += writeSize;
+    flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
+                        writeSize);
+    bufferStart += readSize;
+    count -= readSize;
+    flashWriteOffset += writeSize;
   }
 
   // Lastly we restore the IRQs

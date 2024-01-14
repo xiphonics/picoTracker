@@ -25,9 +25,9 @@ Config::Config() {
         strcmp(doc.ElemName(), "FOREGROUND") &&
         strcmp(doc.ElemName(), "HICOLOR1") &&
         strcmp(doc.ElemName(), "HICOLOR2") &&
-        strcmp(doc.ElemName(), "KEYMAPSTYLE") 
-      ) {
-      Trace::Log("CONFIG", "Found unknown config parameter \"%s\", skipping...", doc.ElemName());
+        strcmp(doc.ElemName(), "KEYMAPSTYLE")) {
+      Trace::Log("CONFIG", "Found unknown config parameter \"%s\", skipping...",
+                 doc.ElemName());
       validElem = false;
     }
     bool hasAttr = doc.NextAttribute();

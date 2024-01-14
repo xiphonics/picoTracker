@@ -1,9 +1,9 @@
+#include "Adapters/picoTracker/platform/platform.h"
 #include "Adapters/picoTracker/system/picoTrackerSystem.h"
 #include "Application/Application.h"
 #include "hardware/clocks.h"
 #include "hardware/pll.h"
 #include "pico/stdlib.h"
-#include "Adapters/picoTracker/platform/platform.h"
 
 int main(int argc, char *argv[]) {
 

@@ -29,9 +29,9 @@ bool AudioDriver::Start() {
 
   isPlaying_ = true;
 
-  poolQueuePosition_=0 ;
-  poolPlayPosition_=0 ;
-  hasData_=false ;
+  poolQueuePosition_ = 0;
+  poolPlayPosition_ = 0;
+  hasData_ = false;
 
   return StartDriver();
 };

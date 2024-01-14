@@ -146,35 +146,35 @@ void SDLAudioDriver::OnChunkDone(Uint8 *stream, int len) {
   while (bufferSize_ - bufferPos_ < len) {
 
     // First move remaining bytes at the front
-    memcpy(mainBuffer_,mainBuffer_+bufferPos_,bufferSize_-bufferPos_) ;
+    memcpy(mainBuffer_, mainBuffer_ + bufferPos_, bufferSize_ - bufferPos_);
 
     // then get next queued buffer and copy data from it
     if (pool_[poolPlayPosition_].empty_) {
-      SYS_MEMCPY(mainBuffer_+bufferSize_-bufferPos_, miniBlank_,len);
-      bufferSize_=bufferSize_-bufferPos_+len ;
-      bufferPos_=0 ;
+      SYS_MEMCPY(mainBuffer_ + bufferSize_ - bufferPos_, miniBlank_, len);
+      bufferSize_ = bufferSize_ - bufferPos_ + len;
+      bufferPos_ = 0;
     } else {
       memcpy(mainBuffer_ + bufferSize_ - bufferPos_,
              pool_[poolPlayPosition_].buffer_, pool_[poolPlayPosition_].size_);
 
       // Adapt buffer variables
-      bufferSize_=bufferSize_-bufferPos_+pool_[poolPlayPosition_].size_ ;
-      bufferPos_=0 ;
+      bufferSize_ = bufferSize_ - bufferPos_ + pool_[poolPlayPosition_].size_;
+      bufferPos_ = 0;
 
       pool_[poolPlayPosition_].empty_ = true;
-      poolPlayPosition_=(poolPlayPosition_+1)%SOUND_BUFFER_COUNT ;
-      if (thread_) thread_->Notify() ;
-
+      poolPlayPosition_ = (poolPlayPosition_ + 1) % SOUND_BUFFER_COUNT;
+      if (thread_)
+        thread_->Notify();
     }
   }
   // Now dump audio to the device
-  SYS_MEMCPY(stream,(short *)(mainBuffer_+bufferPos_), len); 
+  SYS_MEMCPY(stream, (short *)(mainBuffer_ + bufferPos_), len);
   onAudioBufferTick();
-  bufferPos_+=len ;
+  bufferPos_ += len;
 }
 
 int SDLAudioDriver::GetPlayedBufferPercentage() {
   //	return
-  //100-(bufferSize_-bufferPos_-fragSize_)*100/(bufferSize_-fragSize_) ;
+  // 100-(bufferSize_-bufferPos_-fragSize_)*100/(bufferSize_-fragSize_) ;
   return 0;
 };

@@ -1,7 +1,7 @@
 #include "ProjectView.h"
+#include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
-#include "Application/Model/Scale.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"

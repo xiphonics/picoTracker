@@ -4,8 +4,8 @@
 #include "Application/Persistency/PersistencyDocument.h"
 #include "Externals/TinyXML2/tinyxml2.h"
 
-void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName, unsigned char *src,
-                   unsigned len);
+void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
+                   unsigned char *src, unsigned len);
 void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
                    unsigned short *src, unsigned len);
 void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,

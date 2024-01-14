@@ -31,10 +31,14 @@ Phrase::~Phrase() {
     SYS_FREE(note_);
   if (instr_)
     SYS_FREE(instr_);
-  if (cmd1_) SYS_FREE(cmd1_);
-  if (param1_) SYS_FREE(param1_);
-  if (cmd2_) SYS_FREE(cmd2_);
-  if (param2_) SYS_FREE(param2_);
+  if (cmd1_)
+    SYS_FREE(cmd1_);
+  if (param1_)
+    SYS_FREE(param1_);
+  if (cmd2_)
+    SYS_FREE(cmd2_);
+  if (param2_)
+    SYS_FREE(param2_);
 };
 
 unsigned short Phrase::GetNext() {

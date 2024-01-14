@@ -10,34 +10,36 @@
 #include "UIFramework/BasicDatas/GUIEvent.h"
 #include <string>
 
-#define to_rgb565(color) ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) | (color._b >> 3)
+#define to_rgb565(color)                                                       \
+  ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
+      (color._b >> 3)
 
 // classic picotracker mapping
 static GUIEventPadButtonType eventMappingPico[10] = {
-    EPBT_LEFT, // SW1
+    EPBT_LEFT,  // SW1
     EPBT_DOWN,  // SW2
     EPBT_RIGHT, // SW3
-    EPBT_UP, // SW4 
-    EPBT_L, // SW5
-    EPBT_B, // SW6
-    EPBT_A, // SW7
-    EPBT_R, // SW8
+    EPBT_UP,    // SW4
+    EPBT_L,     // SW5
+    EPBT_B,     // SW6
+    EPBT_A,     // SW7
+    EPBT_R,     // SW8
     EPBT_START, // SW9
     EPBT_SELECT // No SW
 };
 
 // M8 style mapping
 static GUIEventPadButtonType eventMappingM8[10] = {
-    EPBT_LEFT, // SW1
+    EPBT_LEFT,  // SW1
     EPBT_DOWN,  // SW2
     EPBT_RIGHT, // SW3
-    EPBT_UP, // SW4
-    EPBT_R ,  // SW5
-    EPBT_A,  // SW6
-    EPBT_L,  // SW7
+    EPBT_UP,    // SW4
+    EPBT_R,     // SW5
+    EPBT_A,     // SW6
+    EPBT_L,     // SW7
     EPBT_START, // SW8
-    EPBT_B , // SW9
-    EPBT_SELECT// No SW
+    EPBT_B,     // SW9
+    EPBT_SELECT // No SW
 };
 
 static GUIEventPadButtonType *eventMapping = eventMappingPico;
@@ -50,7 +52,7 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
 
   Config *config = Config::GetInstance();
   const char *keymapStyle = config->GetValue("KEYMAPSTYLE");
-  if (strcasecmp("M8",keymapStyle) == 0) {
+  if (strcasecmp("M8", keymapStyle) == 0) {
     eventMapping = eventMappingM8;
     Trace::Log("GUIWINDOWIMP", "Using M8 keymap");
   }
@@ -60,7 +62,8 @@ picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}
 
 void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
                                        GUITextProperties &p) {
-  //  Trace::Debug("Draw char \"%c\" at pos x:%ld (%ld), y:%ld (%ld) - invert: %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
+  //  Trace::Debug("Draw char \"%c\" at pos x:%ld (%ld), y:%ld (%ld) - invert:
+  //  %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
 
   uint8_t x = pos._x / 8;
   uint8_t y = pos._y / 8;
@@ -130,7 +133,6 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
     break;
   }
 }
-
 
 void picoTrackerGUIWindowImp::ProcessButtonChange(uint16_t changeMask,
                                                   uint16_t buttonMask) {

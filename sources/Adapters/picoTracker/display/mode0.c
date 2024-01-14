@@ -87,19 +87,19 @@ void mode0_write(const char *str, int len, bool invert) {
   }
 }
 
-
 void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
 
   int remainder = height;
   while (remainder) {
-    int sub_height = (remainder > BUFFER_CHARS) ? BUFFER_CHARS:remainder;
+    int sub_height = (remainder > BUFFER_CHARS) ? BUFFER_CHARS : remainder;
     int sub_y = y + height - remainder;
     remainder -= sub_height;
     mode0_draw_sub_region(x, sub_y, width, sub_height);
   }
 }
 
-inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
+                                  uint8_t height) {
   assert(height <= BUFFER_CHARS);
 
   uint16_t screen_x = x * CHAR_WIDTH;
@@ -142,7 +142,8 @@ inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width, uint8_t h
         }
       }
     }
-    ili9341_write_data_continuous(buffer, CHAR_WIDTH * screen_height * sizeof(int16_t));
+    ili9341_write_data_continuous(buffer,
+                                  CHAR_WIDTH * screen_height * sizeof(int16_t));
   }
   ili9341_stop_writing();
 }
