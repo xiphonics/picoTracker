@@ -3,6 +3,8 @@
 // T_SimpleList implementation
 //
 
+#include "System/Console/n_assert.h"
+
 // Constructor
 
 template <class Item>
