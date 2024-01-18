@@ -28,7 +28,6 @@ picoTracker is a project that aims to provide a low cost open source and DIY har
 ## TODO/Improvements/Wishlist
 - [ ] Fix memory leak issues and modernize code
 - [ ] Add new synth instruments (C64 SID WIP)
-- [ ] Create custom PCB
 - [ ] Improve SDIO performance and explore further playing samples from SD
 - [ ] Further memory savings and bring back some features/instruments
 - [ ] Improve performance/make instrument rendering multithreading
@@ -38,7 +37,10 @@ picoTracker is a project that aims to provide a low cost open source and DIY har
 - [ ] USB MIDI
 
 ## BUILD (WIP)
-Head over to the [Build Guide](docs/BUILD.md)
+
+Head over to the [Picotracker Portable Build Guide](docs/BUILD-portable.md)
+
+Head over to the [Build Guide for the original prototype](docs/BUILD.md)
 
 ## MANUAL
 Head over to the [Manual](docs/MANUAL.md)
@@ -47,4 +49,4 @@ Head over to the [Manual](docs/MANUAL.md)
 Head over to the [Developer Guide](docs/DEV.md)
 
 ## Want to know more
-I posted an article about the development of the picoTracker at [democloid.com](http://democloid.com/2023/04/20/picoTracker.html)
+I posted an article about the development of the picoTracker at [democloid.com](http://democloid.com/2023/04/20/picoTracker.html) and one about the [portable version](https://democloid.com/2023/06/22/picoTrackerPortable.html).
