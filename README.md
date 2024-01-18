@@ -17,10 +17,10 @@ picoTracker is a project that aims to provide a low cost open source and DIY har
 ## Limitations
 * Will probably struggle with 8 song channels playing at the same time in most cases. I modified the source to parametrically reduce the total songs, but didn't want to make the decision of supporting only 6 songs or so just yet. There is still room for improvement by either multithreading or increasing CPU frequency.
 * Cannot load LGPT projects (thou I wrote an ugly script to convert projects).
-* Samples are played copied to flash upon load and played from there. Since flash has to be shared with program code, only 1MB is available for it. (in reality the available space as of this version is closer to 1.6MB, but this may change in the future as program code grows)
+* Samples are played copied to flash upon load and played from there. Since flash has to be shared with program code, only 1MB is available for it when using the Raspberry Pi Pico, or up to 15MB when using other boards or custom hardware (i.e: the [PicoTracker](https://github.com/democloid/picoTracker-pcb)  official hardware).
 * Instrument count is also pretty low due to memory constraints. 16 Sample and 16 MIDI instruments.
 * Sample instrument feedback feature has been removed due to memory constraints.
-* Sample fonts support has been removed to save some memory (thou it could be added back).
+* Sample fonts support has been removed to save some memory.
 
 ## Known issues
 * Loading a project will leak memory. Current workaround is to do a full system reset upon project exit (done automatically).
@@ -31,16 +31,18 @@ picoTracker is a project that aims to provide a low cost open source and DIY har
 - [ ] Improve SDIO performance and explore further playing samples from SD
 - [ ] Further memory savings and bring back some features/instruments
 - [ ] Improve performance/make instrument rendering multithreading
-- [ ] Add output effects via potentially another Pico, maybe using [pico-dsp](https://github.com/playduck/pico-dsp) or similar
 - [ ] USB mass storage for writing samples into SD
 - [ ] MIDI In
 - [ ] USB MIDI
 
-## BUILD (WIP)
+## BUILD
 
 Head over to the [Picotracker Portable Build Guide](docs/BUILD-portable.md)
 
 Head over to the [Build Guide for the original prototype](docs/BUILD.md)
+
+## Remixes
+* @ijnekenamay has created a [custom PCB](https://github.com/ijnekenamay/picotracker_alt-pcb/) for the project using mostly off the shelf components
 
 ## MANUAL
 Head over to the [Manual](docs/MANUAL.md)
