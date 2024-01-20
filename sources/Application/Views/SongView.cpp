@@ -4,6 +4,7 @@
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include "UIController.h"
+#include "ViewData.h"
 #include <stdlib.h>
 #include <string>
 
@@ -945,7 +946,8 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
       if (eventType != PET_STOP) {
         if (viewData_->currentPlayChain_[i] != 0xFF) {
           int y = viewData_->songPlayPos_[i] - viewData_->songOffset_;
-          if (y >= 0 && y < View::songRowCount_) {
+          if (y >= 0 && y < View::songRowCount_ &&
+              viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + y;
             if (!player->IsChannelMuted(i)) {
               DrawString(pos._x, pos._y, ">", props);

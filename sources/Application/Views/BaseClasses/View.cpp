@@ -144,7 +144,7 @@ void View::drawNotes() {
       } else {
         SetColor(CD_HILITE1);
       }
-      if (player->IsRunning()) {
+      if (player->IsRunning() && viewData_->playMode_ != PM_AUDITION) {
         DrawString(pos._x, pos._y, player->GetPlayedNote(i),
                    props); // row for the note values
         pos._y++;

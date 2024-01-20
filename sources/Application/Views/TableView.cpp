@@ -2,6 +2,7 @@
 #include "Application/Instruments/CommandList.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
+#include "ViewData.h"
 
 #define FCC_EDIT MAKE_FOURCC('T', 'B', 'E', 'D')
 
@@ -861,7 +862,7 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   Table *playbackTable = tpb.GetTable();
   // Table we're viewing
   Table &viewTable = th->GetTable(viewData_->currentTable_);
-  if (playbackTable == &viewTable) {
+  if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
 
     lastPosition_[0] = tpb.GetPlaybackPosition(0);
     lastPosition_[1] = tpb.GetPlaybackPosition(1);

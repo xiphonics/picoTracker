@@ -36,6 +36,7 @@ protected:
   void cutSelection();
   void pasteClipboard();
 
+  void stopAudition();
   void unMuteAll();
   void toggleMute();
   void switchSoloMode();
