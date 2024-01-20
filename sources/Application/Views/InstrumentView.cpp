@@ -82,7 +82,7 @@ void InstrumentView::fillSampleParameters() {
   position._y -= 1;
   Variable *v = instrument->FindVariable(SIP_SAMPLE);
   SamplePool *sp = SamplePool::GetInstance();
-  UIIntVarField *f1 = new UIIntVarField(position, *v, "sample: %s", 0,
+  UIIntVarField *f1 = new UIIntVarField(position, *v, "sample: %.13s", 0,
                                         sp->GetNameListSize() - 1, 1, 0x10);
   T_SimpleList<UIField>::Insert(f1);
   f1->SetFocus();
