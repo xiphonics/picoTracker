@@ -26,7 +26,7 @@ Trace::Logger *Trace::SetLogger(Trace::Logger &logger) {
 
 //------------------------------------------------------------------------------
 
-void Trace::VLog(const char *category, const char *fmt, const va_list &args) {
+void Trace::VLog(const char *category, const char *fmt, va_list &args) {
   char buffer[256];
   sprintf(buffer, "[%s] ", category);
 
