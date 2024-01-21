@@ -1,9 +1,9 @@
 
 include $(PWD)/osx_rules
 
-CFLAGS  := -O3 -DCPP_MEMORY -w -I$(PWD)/../sources -I/opt/homebrew/include
+CFLAGS  := -O3 -DCPP_MEMORY -w -I$(PWD)/../sources -I$(shell brew --prefix sdl12-compat)/include
 # DEBUG BUILD (use this to debug with lldb)
-#CFLAGS	:= -g -O0 -DCPP_MEMORY -Wall -I$(PWD)/../sources -I/opt/homebrew/Cellar/sdl12-compat/1.2.60/include/ -D_DEBUG -DDEBUG
+#CFLAGS	:= -g -O0 -DCPP_MEMORY -Wall -I$(PWD)/../sources -I$(shell brew --prefix sdl12-compat)/include/ -D_DEBUG -DDEBUG
 
 CXXFLAGS:= $(CFLAGS) -std=c++17
 
