@@ -2,6 +2,7 @@
 #include "Application/Instruments/CommandList.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
+#include "Application/Utils/HelpLegend.h"
 
 #define FCC_EDIT MAKE_FOURCC('T', 'B', 'E', 'D')
 
@@ -730,6 +731,14 @@ void TableView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 0, j, true);
     pos._y++;
+    if (j==row_ && (col_ == 0 || col_ == 1)) {
+			GUIPoint location = GetTitlePosition() ;
+			location._x += 12 ;
+			std::string* cmdstr = getHelpLegend(buffer);
+			DrawString(location._x, location._y+0, cmdstr[0].c_str(), props);
+			DrawString(location._x, location._y+1, cmdstr[1].c_str(), props);
+			DrawString(location._x, location._y+2, cmdstr[2].c_str(), props);
+		}
   }
 
   // Draw commands params 1
@@ -765,6 +774,14 @@ void TableView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 2, j, true);
     pos._y++;
+		if (j==row_ && (col_ == 2 || col_ == 3)) {
+			GUIPoint location = GetTitlePosition() ;
+			location._x += 12 ;
+			std::string* cmdstr = getHelpLegend(buffer);
+			DrawString(location._x, location._y+0, cmdstr[0].c_str(), props);
+			DrawString(location._x, location._y+1, cmdstr[1].c_str(), props);
+			DrawString(location._x, location._y+2, cmdstr[2].c_str(), props);
+		}
   }
 
   // Draw commands params
@@ -800,6 +817,14 @@ void TableView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 4, j, true);
     pos._y++;
+		if (j==row_ && (col_ == 4 || col_ == 5)) {
+			GUIPoint location = GetTitlePosition() ;
+			location._x += 12 ;
+			std::string* cmdstr = getHelpLegend(buffer);
+			DrawString(location._x, location._y+0, cmdstr[0].c_str(), props);
+			DrawString(location._x, location._y+1, cmdstr[1].c_str(), props);
+			DrawString(location._x, location._y+2, cmdstr[2].c_str(), props);
+		}
   }
 
   // Draw commands params 3
