@@ -1,12 +1,12 @@
-#ifndef _HELP_LEGEND_H_
-#define _HELP_LEGEND_H_
+#include <cstdio>
+#include <cstring>
 
-static inline const char (*getHelpLegend(const char *fx))[3] {
-  static char result[3][25];
+static inline const char (*getHelpLegend(const char *fx))[30] {
+  static char result[3][30];
   strcpy(result[0], fx);
   strcpy(result[2], "bb at speed aa");
   if (strcmp(fx, "KIL") == 0) {
-    strcat(result[0], "stop playing after");
+    strcat(result[0], ", KILl: stop playing after");
     strcpy(result[1], "aa ticks");
     result[2][0] = '\0';
   } else if (strcmp(fx, "LOF") == 0) {
@@ -94,7 +94,5 @@ static inline const char (*getHelpLegend(const char *fx))[3] {
     result[1][0] = '\0';
     result[2][0] = '\0';
   }
-  return reinterpret_cast<const char(*)[3]>(result);
+  return result;
 }
-
-#endif //_HELP_LEGEND_H_
