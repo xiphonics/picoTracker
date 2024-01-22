@@ -2,6 +2,7 @@
 #include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
+#include "ViewData.h"
 
 ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
   updatingPhrase_ = false;
@@ -756,7 +757,8 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
       if (player->IsChannelPlaying(i)) {
-        if (viewData_->currentPlayChain_[i] == viewData_->currentChain_) {
+        if (viewData_->currentPlayChain_[i] == viewData_->currentChain_ &&
+            viewData_->playMode_ != PM_AUDITION) {
           pos._y = anchor._y + viewData_->chainPlayPos_[i];
           if (!player->IsChannelMuted(i)) {
             DrawString(pos._x, pos._y, ">", props);
