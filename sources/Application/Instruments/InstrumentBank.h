@@ -4,6 +4,7 @@
 #include "Application/Instruments/I_Instrument.h"
 #include "Application/Model/Song.h"
 #include "Application/Persistency/Persistent.h"
+#include "MacroInstrument.h"
 #include "MidiInstrument.h"
 #include "OpalInstrument.h"
 #include "SIDInstrument.h"
@@ -65,6 +66,7 @@ private:
   SIDInstrument di4;
   SIDInstrument di5;
   OpalInstrument oi0;
+  MacroInstrument bi0;
 };
 
 #endif

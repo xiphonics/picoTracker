@@ -4,6 +4,7 @@ add_library(application_instruments
   I_Instrument.h
   I_SRPUpdater.h
   InstrumentBank.h InstrumentBank.cpp
+  MacroInstrument.h MacroInstrument.cpp
   MidiInstrument.h MidiInstrument.cpp
   OpalInstrument.h OpalInstrument.cpp
   SRPUpdaters.h SRPUpdaters.cpp
@@ -27,6 +28,8 @@ target_link_libraries(application_instruments PUBLIC foundation_services
                                               PUBLIC hardware_flash
                                               PUBLIC crsid
                                               PUBLIC opal
+                                              PUBLIC braids
+                                              PUBLIC pico_rand
 )
 
 target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
