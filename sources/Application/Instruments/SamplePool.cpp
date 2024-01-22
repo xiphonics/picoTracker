@@ -196,6 +196,8 @@ int SamplePool::ImportSample(Path &path) {
   dpath += path.GetName();
   Path dstPath(dpath.c_str());
 
+  Status::Set("Importing %s", path.GetName().c_str());
+
   // Opens files
 
   I_File *fin = FileSystem::GetInstance()->Open(path.GetPath().c_str(), "r");
