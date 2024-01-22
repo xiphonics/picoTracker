@@ -5,7 +5,7 @@
 #include "Application/Model/Project.h"
 #include "System/Console/Trace.h"
 
-enum PlayMode { PM_SONG, PM_CHAIN, PM_PHRASE, PM_LIVE };
+enum PlayMode { PM_SONG, PM_CHAIN, PM_PHRASE, PM_LIVE, PM_AUDITION };
 
 class ViewData {
 
@@ -80,5 +80,6 @@ public:
                                               // channel
   int phrasePlayPos_[SONG_CHANNEL_COUNT]; // .Play position in phrase for each
                                           // channel
+  int phraseCurPos_;                      // current UI cursor row position
 };
 #endif
