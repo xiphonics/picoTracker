@@ -541,29 +541,27 @@ void Player::Update(Observable &o, I_ObservableData *d) {
     }
 
     // Do we need to kill a voice?
-    if (viewData_->playMode_ != PM_AUDITION) {
-      if (sync->TableSlice()) {
-        for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-          bool stopped = false;
-          if (timeToLive_[i] > 0) {
-            if (--timeToLive_[i] == 0) {
-              mixer_->StopInstrument(i);
-              stopped = true;
-            }
+    if (sync->TableSlice()) {
+      for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+        bool stopped = false;
+        if (timeToLive_[i] > 0) {
+          if (--timeToLive_[i] == 0) {
+            mixer_->StopInstrument(i);
+            stopped = true;
           }
-          if (!stopped) {
-            if (instrRetrigger[i] >= 0) {
-              int note = mixer_->GetChannelNote(i);
-              I_Instrument *instr = mixer_->GetInstrument(i);
-              if ((note != 0xFF) && (instr != 0)) {
-                note += (instrRetrigger[i] > 80) ? instrRetrigger[i] - 256
-                                                 : instrRetrigger[i];
-                while (note > 127) {
-                  note -= 12;
-                };
-                mixer_->StopInstrument(i);
-                mixer_->StartInstrument(i, instr, note, false);
+        }
+        if (!stopped) {
+          if (instrRetrigger[i] >= 0) {
+            int note = mixer_->GetChannelNote(i);
+            I_Instrument *instr = mixer_->GetInstrument(i);
+            if ((note != 0xFF) && (instr != 0)) {
+              note += (instrRetrigger[i] > 80) ? instrRetrigger[i] - 256
+                                               : instrRetrigger[i];
+              while (note > 127) {
+                note -= 12;
               };
+              mixer_->StopInstrument(i);
+              mixer_->StartInstrument(i, instr, note, false);
             };
           };
         }

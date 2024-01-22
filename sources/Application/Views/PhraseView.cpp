@@ -799,15 +799,18 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       warpInChain(-1);
     if (mask & EPBM_DOWN)
       warpInChain(1);
-    if (mask & EPBM_A)
+    if (mask & EPBM_A) {
+      stopAudition();
       cutPosition();
+    }
     if (mask & EPBM_L) {
       viewMode_ = VM_CLONE;
     };
     if (mask & EPBM_R)
       toggleMute();
-    if (mask == EPBM_B)
+    if (mask == EPBM_B) {
       stopAudition();
+    }
   } else {
 
     // A Modifer
@@ -829,17 +832,17 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         pasteLast();
         if ((col_ == 1) || (col_ == 3) || (col_ == 5))
           viewMode_ = VM_NEW;
-      }
-      if (col_ == 0 || col_ == 1) {
-        if (player->IsRunning()) {
-          if ((viewData_->playMode_ == PM_AUDITION)) {
-            player->Stop();
+        if (col_ == 0 || col_ == 1) {
+          if (player->IsRunning()) {
+            if ((viewData_->playMode_ == PM_AUDITION)) {
+              player->Stop();
+              player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                                    viewData_->chainRow_);
+            }
+          } else {
             player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
                                   viewData_->chainRow_);
           }
-        } else {
-          player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                                viewData_->chainRow_);
         }
       }
     } else {
