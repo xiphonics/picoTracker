@@ -1,115 +1,100 @@
 #ifndef _HELP_LEGEND_H_
 #define _HELP_LEGEND_H_
 
-#include <stdlib.h>
-#include <string.h>
-#include <string>
-
-class HelpLegend {
-public:
-  static inline std::string *getHelpLegend(char *fx);
-};
-
-static inline std::string *getHelpLegend(char *fx) {
-  std::string *result = new std::string[3];
-  result[0].assign(fx);
-  result[2].assign("bb at speed aa");
-  if (strcmp(fx, "KILL") == 0) {
-    result[0].append(", stop playing after");
-    result[1].assign("aa ticks");
-    result[2].assign("");
-  } else if (strcmp(fx, "LPOF") == 0) {
-    result[0].append(", LooP OFset: Shift both");
-    result[1].assign("the loop start & loop ");
-    result[2].assign("end values aaaa digits");
-  } else if (strcmp(fx, "ARPG") == 0) {
-    result[0].append(", ARPeGgio: Cycle");
-    result[1].assign("through relative pitches");
-    result[2].assign("from original pitch");
-  } else if (strcmp(fx, "VOLM") == 0) {
-    result[0].append(", VOLuMe:aabb");
-    result[1].assign("approach volume");
-  } else if (strcmp(fx, "PTCH") == 0) {
-    result[0].append(", PiTCH:aabb");
-    result[1].assign("approach pitch");
-  } else if (strcmp(fx, "HOP ") == 0) {
-    result[0].append(":aabb");
-    result[1].assign("hop to bb");
-    result[2].assign("aa times");
-  } else if (strcmp(fx, "LEGA") == 0) {
-    result[0].append(", LEGAto: slide from");
-    result[1].assign("previous note to pitch");
-  } else if (strcmp(fx, "RTRG") == 0) {
-    result[0].append(", ReTRiG: retrigger loop");
-    result[1].assign("from current position over");
-    result[2].assign("bb ticks at speed aa");
-  } else if (strcmp(fx, "TMPO") == 0) {
-    result[0].append(", TeMPO:--bb");
-    result[1].assign("sets the tempo to hex");
-    result[2].assign("value bb");
-  } else if (strcmp(fx, "MDCC") == 0) {
-    result[0].append(", MiDiCC:aabb");
-    result[1].assign("CC message aa");
-    result[2].assign("value bb");
-  } else if (strcmp(fx, "MDPG") == 0) {
-    result[0].append(", MiDi ProGram Change");
-    result[1].assign("send program change bb");
-    result[2].assign("to current channel");
-  } else if (strcmp(fx, "PLOF") == 0) {
-    result[0].append(", PLay OFfset:aabb");
-    result[1].assign("jump abs to aa or");
-    result[2].assign("move rel bb chunks");
-  } else if (strcmp(fx, "FLTR") == 0) {
-    result[0].append(", FiLTeR:aabb");
-    result[1].assign("cutoff aa");
-    result[2].assign("resonance bb");
-  } else if (strcmp(fx, "TABL") == 0) {
-    result[0].append(", TABLe:--bb");
-    result[1].assign("trigger table bb");
-    result[2].assign("");
-  } else if (strcmp(fx, "CRSH") == 0) {
-    result[0].append(", CRuSH:aa-b");
-    result[1].assign("drive aa");
-    result[2].assign("crush -b");
-  } else if (strcmp(fx, "FCUT") == 0) {
-    result[0].append(", FilterCUToff:aabb");
-    result[1].assign("set cutoff to");
-  } else if (strcmp(fx, "FRES") == 0) {
-    result[0].append(", FilterRESonance:aabb");
-    result[1].assign("set resonance to");
-  } else if (strcmp(fx, "PAN ") == 0) {
-    result[0].append(", PAN:aabb");
-    result[1].assign("pan to value");
-  } else if (strcmp(fx, "GROV") == 0) {
-    result[0].append(", GROoVe:--bb");
-    result[1].assign("trigger groove bb");
-    result[2].assign("");
-  } else if (strcmp(fx, "IRTG") == 0) {
-    result[0].append(", InstrumentReTriG:aabb");
-    result[1].assign("retrig and transpose to");
-  } else if (strcmp(fx, "PFIN") == 0) {
-    result[0].append(", PitchFINetune:aabb");
-    result[1].assign("fine tune to ");
-  } else if (strcmp(fx, "DLAY") == 0) {
-    result[0].append(", DeLAY:--bb");
-    result[1].assign("delay bb tics");
-    result[2].assign("");
-  } else if (strcmp(fx, "FBMX") == 0) {
-    result[0].append(", FeedBack MiX:aabb");
-    result[1].assign("feedback mix to");
-  } else if (strcmp(fx, "FBTN") == 0) {
-    result[0].append(", FeedBack TuNe:aabb");
-    result[1].assign("feedback tune to");
-  } else if (strcmp(fx, "STOP") == 0) {
-    result[0].append(" playing song");
-    result[1].assign("immediately");
-    result[2].assign("");
+static inline const char (*getHelpLegend(const char *fx))[3] {
+  static char result[3][25];
+  strcpy(result[0], fx);
+  strcpy(result[2], "bb at speed aa");
+  if (strcmp(fx, "KIL") == 0) {
+    strcat(result[0], "stop playing after");
+    strcpy(result[1], "aa ticks");
+    result[2][0] = '\0';
+  } else if (strcmp(fx, "LOF") == 0) {
+    strcat(result[0], ", Loop OFset: Shift both");
+    strcpy(result[1], "the loop start & loop ");
+    strcpy(result[2], "end values aaaa digits");
+  } else if (strcmp(fx, "ARP") == 0) {
+    strcat(result[0], ", ARPeggio: Cycle");
+    strcpy(result[1], "through relative pitches");
+    strcpy(result[2], "from original pitch");
+  } else if (strcmp(fx, "VOL") == 0) {
+    strcat(result[0], ", VOLume:aabb");
+    strcpy(result[1], "approach volume");
+  } else if (strcmp(fx, "PSL") == 0) {
+    strcat(result[0], ", Pitch SLide:aabb");
+    strcpy(result[1], "approach pitch");
+  } else if (strcmp(fx, "HOP") == 0) {
+    strcat(result[0], ":aabb");
+    strcpy(result[1], "hop to bb");
+    strcpy(result[2], "aa times");
+  } else if (strcmp(fx, "LEG") == 0) {
+    strcat(result[0], ", LEGato: slide from");
+    strcpy(result[1], "previous note to pitch");
+  } else if (strcmp(fx, "RTG") == 0) {
+    strcat(result[0], ", ReTriG: retrigger loop");
+    strcpy(result[1], "from current position over");
+    strcpy(result[2], "bb ticks at speed aa");
+  } else if (strcmp(fx, "TPO") == 0) {
+    strcat(result[0], ", TemPO:--bb");
+    strcpy(result[1], "sets the tempo to hex");
+    strcpy(result[2], "value bb");
+  } else if (strcmp(fx, "MCC") == 0) {
+    strcat(result[0], ", MidiCC:aabb");
+    strcpy(result[1], "CC message aa");
+    strcpy(result[2], "value bb");
+  } else if (strcmp(fx, "MPC") == 0) {
+    strcat(result[0], ", Midi Program Change");
+    strcpy(result[1], "send program change bb");
+    strcpy(result[2], "to current channel");
+  } else if (strcmp(fx, "POF") == 0) {
+    strcat(result[0], ", Play OFfset:aabb");
+    strcpy(result[1], "jump abs to aa or");
+    strcpy(result[2], "move rel bb chunks");
+  } else if (strcmp(fx, "FLT") == 0) {
+    strcat(result[0], ", FiLTer&Resonance:aabb");
+    strcpy(result[1], "cutoff aa");
+    strcpy(result[2], "resonance bb");
+  } else if (strcmp(fx, "TBL") == 0) {
+    strcat(result[0], ", TaBLe:--bb");
+    strcpy(result[1], "trigger table bb");
+    result[2][0] = '\0';
+  } else if (strcmp(fx, "CSH") == 0) {
+    strcat(result[0], ", bitCruSH:aa-b");
+    strcpy(result[1], "drive aa");
+    strcpy(result[2], "crush -b");
+  } else if (strcmp(fx, "FCT") == 0) {
+    strcat(result[0], ", FilterCuToff:aabb");
+    strcpy(result[1], "set cutoff to");
+  } else if (strcmp(fx, "FRS") == 0) {
+    strcat(result[0], ", FilterReSonance:aabb");
+    strcpy(result[1], "set resonance to");
+  } else if (strcmp(fx, "PAN") == 0) {
+    strcat(result[0], ", PAN:aabb");
+    strcpy(result[1], "pan to value");
+  } else if (strcmp(fx, "GRV") == 0) {
+    strcat(result[0], ", GRooVe:--bb");
+    strcpy(result[1], "trigger groove bb");
+    result[2][0] = '\0';
+  } else if (strcmp(fx, "IRT") == 0) {
+    strcat(result[0], ", InstrumentReTrig:aabb");
+    strcpy(result[1], "retrig and transpose to");
+  } else if (strcmp(fx, "PFT") == 0) {
+    strcat(result[0], ", PitchFineTune:aabb");
+    strcpy(result[1], "fine tune to ");
+  } else if (strcmp(fx, "DLY") == 0) {
+    strcat(result[0], ", DeLaY:--bb");
+    strcpy(result[1], "delay bb tics");
+    result[2][0] = '\0';
+  } else if (strcmp(fx, "STP") == 0) {
+    strcat(result[0], ", SToP playing song");
+    strcpy(result[1], "immediately");
+    result[2][0] = '\0';
   } else {
-    result[0].assign("");
-    result[1].assign("");
-    result[2].assign("");
+    result[0][0] = '\0';
+    result[1][0] = '\0';
+    result[2][0] = '\0';
   }
-  return result;
+  return reinterpret_cast<const char(*)[3]>(result);
 }
 
 #endif //_HELP_LEGEND_H_

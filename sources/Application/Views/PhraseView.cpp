@@ -1130,13 +1130,8 @@ void PhraseView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 2, j, true);
     pos._y++;
-    if (j == row_ && (col_ == 2 || col_ == 3)) {
-      GUIPoint location = GetTitlePosition();
-      location._x += 12;
-      std::string *cmdstr = getHelpLegend(buffer);
-      DrawString(location._x, location._y + 0, cmdstr[0].c_str(), props);
-      DrawString(location._x, location._y + 1, cmdstr[1].c_str(), props);
-      DrawString(location._x, location._y + 2, cmdstr[2].c_str(), props);
+    if (j == row_ && (col_ == 1 || col_ == 3)) {
+      printHelpLegend(buffer, props);
     }
   }
 
@@ -1180,12 +1175,7 @@ void PhraseView::DrawView() {
     setTextProps(props, 4, j, true);
     pos._y++;
     if (j == row_ && (col_ == 4 || col_ == 5)) {
-      GUIPoint location = GetTitlePosition();
-      location._x += 12;
-      std::string *cmdstr = getHelpLegend(buffer);
-      DrawString(location._x, location._y + 0, cmdstr[0].c_str(), props);
-      DrawString(location._x, location._y + 1, cmdstr[1].c_str(), props);
-      DrawString(location._x, location._y + 2, cmdstr[2].c_str(), props);
+      printHelpLegend(buffer, props);
     }
   }
 
@@ -1297,3 +1287,10 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
       }
   */
 };
+
+void PhraseView::printHelpLegend(char *buffer, GUITextProperties props) {
+  auto cmdstr = getHelpLegend(buffer);
+  DrawString(0, 0, cmdstr[0], props);
+  DrawString(0, 1, cmdstr[1], props);
+  DrawString(0, 2, cmdstr[2], props);
+}

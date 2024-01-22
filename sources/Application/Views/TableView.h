@@ -46,6 +46,7 @@ private:
 
   Variable cmdEdit_;
   UIBigHexVarField *cmdEditField_;
+  void printHelpLegend(char *buffer, GUITextProperties props);
 
   struct clipboard {
     bool active_;

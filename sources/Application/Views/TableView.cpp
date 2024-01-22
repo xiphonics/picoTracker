@@ -732,12 +732,7 @@ void TableView::DrawView() {
     setTextProps(props, 0, j, true);
     pos._y++;
     if (j == row_ && (col_ == 0 || col_ == 1)) {
-      GUIPoint location = GetTitlePosition();
-      location._x += 12;
-      std::string *cmdstr = getHelpLegend(buffer);
-      DrawString(location._x, location._y + 0, cmdstr[0].c_str(), props);
-      DrawString(location._x, location._y + 1, cmdstr[1].c_str(), props);
-      DrawString(location._x, location._y + 2, cmdstr[2].c_str(), props);
+      printHelpLegend(buffer, props);
     }
   }
 
@@ -775,12 +770,7 @@ void TableView::DrawView() {
     setTextProps(props, 2, j, true);
     pos._y++;
     if (j == row_ && (col_ == 2 || col_ == 3)) {
-      GUIPoint location = GetTitlePosition();
-      location._x += 12;
-      std::string *cmdstr = getHelpLegend(buffer);
-      DrawString(location._x, location._y + 0, cmdstr[0].c_str(), props);
-      DrawString(location._x, location._y + 1, cmdstr[1].c_str(), props);
-      DrawString(location._x, location._y + 2, cmdstr[2].c_str(), props);
+      printHelpLegend(buffer, props);
     }
   }
 
@@ -818,12 +808,7 @@ void TableView::DrawView() {
     setTextProps(props, 4, j, true);
     pos._y++;
     if (j == row_ && (col_ == 4 || col_ == 5)) {
-      GUIPoint location = GetTitlePosition();
-      location._x += 12;
-      std::string *cmdstr = getHelpLegend(buffer);
-      DrawString(location._x, location._y + 0, cmdstr[0].c_str(), props);
-      DrawString(location._x, location._y + 1, cmdstr[1].c_str(), props);
-      DrawString(location._x, location._y + 2, cmdstr[2].c_str(), props);
+      printHelpLegend(buffer, props);
     }
   }
 
@@ -905,4 +890,11 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     DrawString(pos._x, pos._y, ">", props);
   };
   drawNotes();
+}
+
+void TableView::printHelpLegend(char *buffer, GUITextProperties props) {
+  auto cmdstr = getHelpLegend(buffer);
+  DrawString(0, 0, cmdstr[0], props);
+  DrawString(0, 1, cmdstr[1], props);
+  DrawString(0, 2, cmdstr[2], props);
 }
