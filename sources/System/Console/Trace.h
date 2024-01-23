@@ -30,7 +30,7 @@ public:
   Trace::Logger *SetLogger(Trace::Logger &);
 
 protected:
-  static void VLog(const char *category, const char *fmt, const va_list &args);
+  static void VLog(const char *category, const char *fmt, va_list &args);
 
 private:
   Trace::Logger *logger_;

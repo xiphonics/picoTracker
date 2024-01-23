@@ -26,7 +26,7 @@ OSXDIRS := .\
 				../sources/Adapters/OSX/OSXMain \
 				../sources/Adapters/Unix/Process \
 				../sources/System/Process \
-        ../sources/Adapters/SDL/Audio \
+				../sources/Adapters/SDL/Audio \
 				../sources/Adapters/OSX/OSXSystem \
 				../sources/Adapters/SDL/Timer\
 				../sources/Adapters/SDL/GUI \
@@ -65,7 +65,7 @@ COMMONDIRS	:=	../sources/System/Console \
 				../sources/Externals/Soundfont \
 				../sources/Externals/TinyXML \
 				../sources/Externals/TinyXML2 \
-	      ../sources/Externals/yxml \
+				../sources/Externals/yxml \
 
 #---------------------------------------------------------------------------------
 # files definition
