@@ -160,6 +160,16 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
     updateSongPos(playPos, currentChannel, currentChainPos);
   } break;
 
+  case PM_AUDITION: {
+    int currentChannel = viewData_->songX_;
+    mixer_->StartChannel(currentChannel);
+
+    int currentChainPos = viewData_->chainRow_;
+    int currentPhrasePos = viewData_->phraseCurPos_;
+    // uses hop for PhrasePos
+    updateSongPos(playPos, currentChannel, currentChainPos, currentPhrasePos);
+  } break;
+
   default:
     NInvalid;
     break;
@@ -289,7 +299,7 @@ void Player::OnStartButton(PlayMode origin, unsigned int from,
 
     // If sequencer not running, start otherwise stop
 
-    if (isRunning_) {
+    if (isRunning_ && viewData_->playMode_ != PM_AUDITION) {
       Stop();
     } else {
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -313,7 +323,7 @@ void Player::OnSongStartButton(unsigned int from, unsigned int to,
 
     // If sequencer not running, start otherwise stop
 
-    if (isRunning_) {
+    if (isRunning_ && viewData_->playMode_ != PM_AUDITION) {
       if (!forceImmediate) {
         Stop();
       } else {
@@ -493,7 +503,9 @@ void Player::Update(Observable &o, I_ObservableData *d) {
         };
         retrigAllImmediate_ = false;
       }
-      moveToNextStep();
+      // Don't advance in audition mode
+      if (viewData_->playMode_ != PM_AUDITION)
+        moveToNextStep();
       if (triggerLiveChains_) {
         triggerLiveChains();
       };
@@ -508,15 +520,14 @@ void Player::Update(Observable &o, I_ObservableData *d) {
     }
 
     // Process commands in current phrase
-
-    ProcessCommands();
+    if (viewData_->playMode_ != PM_AUDITION)
+      ProcessCommands();
 
     // Initialise retrigger table
     int instrRetrigger[SONG_CHANNEL_COUNT];
     memset(instrRetrigger, -1, SONG_CHANNEL_COUNT * sizeof(int));
 
     // Process any table commands now
-
     for (int channel = 0; channel < SONG_CHANNEL_COUNT; channel++) {
       TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
       if (!tpb.GetAutomation()) {
@@ -529,8 +540,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
       }
     }
 
-    // Do we need to kill a voice ?
-
+    // Do we need to kill a voice?
     if (sync->TableSlice()) {
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
         bool stopped = false;
@@ -554,7 +564,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
               mixer_->StartInstrument(i, instr, note, false);
             };
           };
-        };
+        }
       }
     }
 

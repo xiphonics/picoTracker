@@ -2,6 +2,7 @@
 #include "GrooveView.h"
 #include "Application/Model/Groove.h"
 #include "Application/Utils/char.h"
+#include "ViewData.h"
 
 GrooveView::GrooveView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
   position_ = 0;
@@ -208,7 +209,8 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
 
   gr->GetChannelData(channel, &groove, &groovepos);
 
-  if (groove == viewData_->currentGroove_) {
+  if (groove == viewData_->currentGroove_ &&
+      viewData_->playMode_ != PM_AUDITION) {
     lastPosition_ = groovepos;
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_;
