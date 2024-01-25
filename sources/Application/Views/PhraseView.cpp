@@ -1292,4 +1292,4 @@ void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
   char **helpLegend = getHelpLegend(command);
   DrawString(5, 0, helpLegend[0], props);
   DrawString(5, 1, helpLegend[1], props);
-  }
+}
