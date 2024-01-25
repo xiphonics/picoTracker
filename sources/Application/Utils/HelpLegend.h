@@ -1,98 +1,98 @@
 #include <cstdio>
 #include <cstring>
 
-static inline const char (*getHelpLegend(const char *fx))[30] {
-  static char result[3][30];
-  strcpy(result[0], fx);
-  strcpy(result[2], "bb at speed aa");
-  if (strcmp(fx, "KIL") == 0) {
-    strcat(result[0], ", KILl: stop playing after");
-    strcpy(result[1], "aa ticks");
-    result[2][0] = '\0';
-  } else if (strcmp(fx, "LOF") == 0) {
-    strcat(result[0], ", Loop OFset: Shift both");
-    strcpy(result[1], "the loop start & loop ");
-    strcpy(result[2], "end values aaaa digits");
-  } else if (strcmp(fx, "ARP") == 0) {
-    strcat(result[0], ", ARPeggio: Cycle");
-    strcpy(result[1], "through relative pitches");
-    strcpy(result[2], "from original pitch");
-  } else if (strcmp(fx, "VOL") == 0) {
-    strcat(result[0], ", VOLume:aabb");
-    strcpy(result[1], "approach volume");
-  } else if (strcmp(fx, "PSL") == 0) {
-    strcat(result[0], ", Pitch SLide:aabb");
-    strcpy(result[1], "approach pitch");
-  } else if (strcmp(fx, "HOP") == 0) {
-    strcat(result[0], ":aabb");
-    strcpy(result[1], "hop to bb");
-    strcpy(result[2], "aa times");
-  } else if (strcmp(fx, "LEG") == 0) {
-    strcat(result[0], ", LEGato: slide from");
-    strcpy(result[1], "previous note to pitch");
-  } else if (strcmp(fx, "RTG") == 0) {
-    strcat(result[0], ", ReTriG: retrigger loop");
-    strcpy(result[1], "from current position over");
-    strcpy(result[2], "bb ticks at speed aa");
-  } else if (strcmp(fx, "TPO") == 0) {
-    strcat(result[0], ", TemPO:--bb");
-    strcpy(result[1], "sets the tempo to hex");
-    strcpy(result[2], "value bb");
-  } else if (strcmp(fx, "MCC") == 0) {
-    strcat(result[0], ", MidiCC:aabb");
-    strcpy(result[1], "CC message aa");
-    strcpy(result[2], "value bb");
-  } else if (strcmp(fx, "MPC") == 0) {
-    strcat(result[0], ", Midi Program Change");
-    strcpy(result[1], "send program change bb");
-    strcpy(result[2], "to current channel");
-  } else if (strcmp(fx, "POF") == 0) {
-    strcat(result[0], ", Play OFfset:aabb");
-    strcpy(result[1], "jump abs to aa or");
-    strcpy(result[2], "move rel bb chunks");
-  } else if (strcmp(fx, "FLT") == 0) {
-    strcat(result[0], ", FiLTer&Resonance:aabb");
-    strcpy(result[1], "cutoff aa");
-    strcpy(result[2], "resonance bb");
-  } else if (strcmp(fx, "TBL") == 0) {
-    strcat(result[0], ", TaBLe:--bb");
-    strcpy(result[1], "trigger table bb");
-    result[2][0] = '\0';
-  } else if (strcmp(fx, "CSH") == 0) {
-    strcat(result[0], ", bitCruSH:aa-b");
-    strcpy(result[1], "drive aa");
-    strcpy(result[2], "crush -b");
-  } else if (strcmp(fx, "FCT") == 0) {
-    strcat(result[0], ", FilterCuToff:aabb");
-    strcpy(result[1], "set cutoff to");
-  } else if (strcmp(fx, "FRS") == 0) {
-    strcat(result[0], ", FilterReSonance:aabb");
-    strcpy(result[1], "set resonance to");
-  } else if (strcmp(fx, "PAN") == 0) {
-    strcat(result[0], ", PAN:aabb");
-    strcpy(result[1], "pan to value");
-  } else if (strcmp(fx, "GRV") == 0) {
-    strcat(result[0], ", GRooVe:--bb");
-    strcpy(result[1], "trigger groove bb");
-    result[2][0] = '\0';
-  } else if (strcmp(fx, "IRT") == 0) {
-    strcat(result[0], ", InstrumentReTrig:aabb");
-    strcpy(result[1], "retrig and transpose to");
-  } else if (strcmp(fx, "PFT") == 0) {
-    strcat(result[0], ", PitchFineTune:aabb");
-    strcpy(result[1], "fine tune to ");
-  } else if (strcmp(fx, "DLY") == 0) {
-    strcat(result[0], ", DeLaY:--bb");
-    strcpy(result[1], "delay bb tics");
-    result[2][0] = '\0';
-  } else if (strcmp(fx, "STP") == 0) {
-    strcat(result[0], ", SToP playing song");
-    strcpy(result[1], "immediately");
-    result[2][0] = '\0';
-  } else {
-    result[0][0] = '\0';
-    result[1][0] = '\0';
-    result[2][0] = '\0';
-  }
+static char** getHelpLegend(FourCC command) {
+  static char* result[2];
+  result[1] = (char*)("bb at speed aa");
+  switch (command)
+  {
+    case 1:
+      result[0] = (char*)("KILl: stop playing after");
+      result[1] = (char*)("aa ticks");
+      break;
+    case 2:
+      result[0] = (char*)("Loop OFset: Shift both loop");
+      result[1] = (char*)("start & end values aaaa");
+      break;
+    case 3:
+      result[0] = (char*)("ARPeggio: Cycle through");
+      result[1] = (char*)("relative pitches");
+      break;
+    case 4:
+      result[0] = (char*)("VOLume:aabb, reach volume");
+      break;
+    case 5:
+      result[0] = (char*)("Pitch SLide:aabb, reach pitch");
+      break;
+    case 6:
+      result[0] = (char*)("HOP:aabb, hop to bb");
+      result[1] = (char*)("aa times");
+      break;
+    case 7:
+      result[0] = (char*)("LEGato:aabb, slide");
+      result[1] = (char*)("to pitch bb at speed aa");
+      break;
+    case 8:
+      result[0] = (char*)("ReTriG:aabb retrigger loop");
+      result[1] = (char*)("over bb ticks at speed aa");
+      break;
+    case 9:
+      result[0] = (char*)("TemPO:--bb, set tempo to hex");
+      result[1] = (char*)("value bb");
+      break;
+    case 10:
+      result[0] = (char*)("MidiCC:aabb, CC message aa");
+      result[1] = (char*)("value bb");
+      break;
+    case 11:
+      result[0] = (char*)("Midi Program Change send");
+      result[1] = (char*)("program change bb");
+      break;
+    case 12:
+      result[0] = (char*)("Play OFfset:aabb, jump abs");
+      result[1] = (char*)("to aa or move rel bb chunks");
+      break;
+    case 13:
+      result[0] = (char*)("FiLTer&Res:aabb, cutoff aa");
+      result[1] = (char*)("resonance bb");
+      break;
+    case 14:
+      result[0] = (char*)("TaBLe:--bb, trigger table bb");
+      result[1] = (char*)("");
+      break;
+    case 15:
+      result[0] = (char*)("bitCruSH:aa-b, drive aa");
+      result[1] = (char*)("crush -b");
+      break;
+    case 16:
+      result[0] = (char*)("FilterCuToff:aabb, cutoff to");
+      break;
+    case 17:
+      result[0] = (char*)("PAN:aabb, pan to value");
+      break;
+    case 18:
+      result[0] = (char*)("GRooVe:--bb, set groove bb");
+      result[1] = (char*)("");
+      break;
+    case 19:
+      result[0] = (char*)("InstrumentReTrig:aabb, retrig");
+      result[1] = (char*)("& transpose to aa at speed bb");
+      break;
+    case 20:
+      result[0] = (char*)("PitchFineTune:aabb, tune to");
+      break;
+    case 21:
+      result[0] = (char*)("DeLaY:--bb, delay bb tics");
+      result[1] = (char*)("");
+      break;
+    case 22:
+      result[0] = (char*)("SToP playing song immediately");
+      result[1] = (char*)("");
+      break;
+    default:
+      result[0] = result[1] = (char*)("");
+      break;
+    }
   return result;
 }
+

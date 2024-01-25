@@ -1130,8 +1130,8 @@ void PhraseView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 2, j, true);
     pos._y++;
-    if (j == row_ && (col_ == 1 || col_ == 3)) {
-      printHelpLegend(buffer, props);
+    if (j == row_ && (col_ == 2 || col_ == 3)) {
+      printHelpLegend(command, props);
     }
   }
 
@@ -1175,7 +1175,7 @@ void PhraseView::DrawView() {
     setTextProps(props, 4, j, true);
     pos._y++;
     if (j == row_ && (col_ == 4 || col_ == 5)) {
-      printHelpLegend(buffer, props);
+      printHelpLegend(command, props);
     }
   }
 
@@ -1288,9 +1288,8 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   */
 };
 
-void PhraseView::printHelpLegend(char *buffer, GUITextProperties props) {
-  auto cmdstr = getHelpLegend(buffer);
-  DrawString(0, 0, cmdstr[0], props);
-  DrawString(0, 1, cmdstr[1], props);
-  DrawString(0, 2, cmdstr[2], props);
-}
+void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
+  char **helpLegend = getHelpLegend(command);
+  DrawString(5, 0, helpLegend[0], props);
+  DrawString(5, 1, helpLegend[1], props);
+  }
