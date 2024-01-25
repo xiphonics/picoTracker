@@ -159,9 +159,6 @@ bool SamplePool::loadSample(const char *path) {
   if (count_ == MAX_PIG_SAMPLES)
     return false;
 
-  Path sPath(path);
-  Status::Set("Loading %s", sPath.GetName().c_str());
-
   Path wavPath(path);
   WavFile *wave = WavFile::Open(path);
   if (wave) {
@@ -195,6 +192,8 @@ int SamplePool::ImportSample(Path &path) {
   std::string dpath = "samples:";
   dpath += path.GetName();
   Path dstPath(dpath.c_str());
+
+  Status::Set("Loading %s", path.GetName().c_str());
 
   // Opens files
 
