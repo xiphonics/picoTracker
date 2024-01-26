@@ -168,7 +168,10 @@ bool SamplePool::loadSample(const char *path) {
     wav_[count_] = wave;
     std::string name = wavPath.GetName();
     // Drop file extension
-    name.resize(name.length() - 4);
+    size_t index = name.find_last_of(".");
+    if (index < name.length() && index > 0) {
+      name.resize(index);
+    }
     names_[count_] = (char *)SYS_MALLOC(name.length() + 1);
     strcpy(names_[count_], name.c_str());
     count_++;
