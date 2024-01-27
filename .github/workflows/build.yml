@@ -13,16 +13,9 @@ jobs:
     - name: checkout
       uses: actions/checkout@v4
 
-    - name: Checkout pico-sdk
-      uses: actions/checkout@v4
-      with:
-        repository: raspberrypi/pico-sdk
-        path: sources/Externals/pico-sdk
-
-        # TODO: Probably use this instead
-        #    - name: Checkout submodules (pico-sdk)
-        #      working-directory: ${{github.workspace}}
-        #      run: git submodule update --init
+    - name: Checkout submodules (pico-sdk)
+      working-directory: ${{github.workspace}}
+      run: git submodule update --init --recursive
 
     - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
