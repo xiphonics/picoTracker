@@ -336,6 +336,23 @@ inline void fourCC2char(const FourCC f, char *s) {
     break;
   case 92:
     strcpy(s, "GOF"); // I_CMD_GTOF
+  case 93:
+    strcpy(s, "SHPE");
+    break;
+  case 94:
+    strcpy(s, "TIMB");
+    break;
+  case 95:
+    strcpy(s, "COLR");
+    break;
+  case 96:
+    strcpy(s, "ATCK");
+    break;
+  case 97:
+    strcpy(s, "DECY");
+    break;
+  case 98:
+    strcpy(s, "SIGN");
     break;
   }
 };

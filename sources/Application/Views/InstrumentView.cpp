@@ -99,19 +99,34 @@ void InstrumentView::fillMacroParameters() {
   //	position._y+=View::fieldSpaceHeight_;
   position._y += 1;
   Variable *v = instrument->FindVariable(BIP_SHAPE);
-  UIIntVarField *f1 = new UIIntVarField(position, *v, "shape: %s", 0,
-                                        braids::MACRO_OSC_SHAPE_LAST - 2, 1, 1);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "shape: %s", 0,
+                            braids::MACRO_OSC_SHAPE_LAST - 2, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(BIP_TIMBRE);
-  f1 = new UIIntVarField(position, *v, "timbre: %4.4X", 0, 0x7F, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "timbre: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(BIP_COLOR);
-  f1 = new UIIntVarField(position, *v, "color: %4.4X", 0, 0x7F, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "color: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_ATTACK);
+  intVarField_.emplace_back(position, *v, "attack: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_DECAY);
+  intVarField_.emplace_back(position, *v, "decay: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_SIGNATURE);
+  intVarField_.emplace_back(position, *v, "signature: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 }
 
 void InstrumentView::fillSampleParameters() {

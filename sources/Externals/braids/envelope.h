@@ -26,11 +26,11 @@
 #define BRAIDS_ENVELOPE_H_
 
 // #include "stmlib/stmlib.h"
-#include "pico/stdlib.h"
+// #include "pico/stdlib.h"
 
 #include "dsp.h"
 
-#include "Externals/braids/resources.h"
+#include "resources.h"
 
 namespace braids {
 

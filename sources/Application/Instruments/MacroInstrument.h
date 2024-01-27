@@ -2,6 +2,7 @@
 #define _MACRO_INSTRUMENT_H_
 
 #include "I_Instrument.h"
+#include "pico/stdlib.h"
 
 #include "Application/Model/Song.h"
 #include "Externals/braids/envelope.h"
@@ -18,8 +19,9 @@
 #define BIP_COLOR MAKE_FOURCC('C', 'O', 'L', 'R')
 #define BIP_ATTACK MAKE_FOURCC('A', 'T', 'C', 'K')
 #define BIP_DECAY MAKE_FOURCC('D', 'E', 'C', 'Y')
-#define BIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
-#define BIP_CRUSH MAKE_FOURCC('C', 'R', 'S', 'H')
+#define BIP_SIGNATURE MAKE_FOURCC('S', 'I', 'G', 'N')
+// #define BIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
+// #define BIP_CRUSH MAKE_FOURCC('C', 'R', 'S', 'H')
 
 class MacroInstrument : public I_Instrument, I_Observer {
 
@@ -35,8 +37,8 @@ public:
   virtual bool IsEmpty();
 
   virtual InstrumentType GetType() { return IT_MACRO; };
-  virtual const char *GetName(); // returns sample name until real
-                                 // namer is implemented
+  virtual etl::string<24> GetName(); // returns sample name until real
+                                     // namer is implemented
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
   virtual void Purge();
   virtual int GetTable();
@@ -52,14 +54,24 @@ public:
 
 protected:
 private:
+  bool running_;
+
   braids::MacroOscillator osc_;
   braids::Envelope envelope_;
   braids::Quantizer quantizer_;
   braids::SignatureWaveshaper ws_;
   braids::VcoJitterSource jitter_source_;
 
-  braids::MacroOscillatorShape shape_;
+  braids::MacroOscillatorShape osc_shape_;
+
+  Variable shape_;
+  Variable timbre_;
+  Variable color_;
+  Variable attack_;
+  Variable decay_;
+  Variable signature_;
+
   uint16_t gain_lp_;
-  static uint8_t sync_samples_[4096];
+  uint16_t remain_;
 };
 #endif

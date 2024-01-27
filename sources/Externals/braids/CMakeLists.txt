@@ -7,10 +7,10 @@ add_library(braids
   excitation.h
   svf.h
   parameter_interpolation.h
+  envelope.h
   dsp.h
   macros.h
   random.h random.cc
-  envelope.h
   quantizer.h quantizer.cc
   signature_waveshaper.h
   vco_jitter_source.h
