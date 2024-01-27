@@ -1,6 +1,7 @@
 #include "TableView.h"
 #include "Application/Instruments/CommandList.h"
 #include "Application/Player/TablePlayback.h"
+#include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
 #include "ViewData.h"
 
@@ -731,6 +732,9 @@ void TableView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 0, j, true);
     pos._y++;
+    if (j == row_ && (col_ == 0 || col_ == 1)) {
+      printHelpLegend(command, props);
+    }
   }
 
   // Draw commands params 1
@@ -766,6 +770,9 @@ void TableView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 2, j, true);
     pos._y++;
+    if (j == row_ && (col_ == 2 || col_ == 3)) {
+      printHelpLegend(command, props);
+    }
   }
 
   // Draw commands params
@@ -801,6 +808,9 @@ void TableView::DrawView() {
     DrawString(pos._x, pos._y, buffer, props);
     setTextProps(props, 4, j, true);
     pos._y++;
+    if (j == row_ && (col_ == 4 || col_ == 5)) {
+      printHelpLegend(command, props);
+    }
   }
 
   // Draw commands params 3
@@ -881,4 +891,10 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     DrawString(pos._x, pos._y, ">", props);
   };
   drawNotes();
+}
+
+void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
+  char **helpLegend = getHelpLegend(command);
+  DrawString(5, 0, helpLegend[0], props);
+  DrawString(5, 1, helpLegend[1], props);
 }
