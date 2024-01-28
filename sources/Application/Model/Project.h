@@ -3,11 +3,11 @@
 
 #include "Application/Instruments/InstrumentBank.h"
 #include "Application/Persistency/Persistent.h"
+#include "BuildNumber.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/VariableContainer.h"
 #include "Song.h"
-#include "BuildNumber.h"
 
 #define VAR_TEMPO MAKE_FOURCC('T', 'M', 'P', 'O')
 #define VAR_MASTERVOL MAKE_FOURCC('M', 'S', 'T', 'R')
