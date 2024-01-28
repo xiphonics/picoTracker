@@ -55,4 +55,8 @@ jobs:
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
+    - uses: actions/upload-artifact@v4
+      with:
+        name: picoTracker-uf2
+        path: ${{github.workspace}}/build/Adapters/picoTracker/main/picoTracker.uf2 
 
