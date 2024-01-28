@@ -118,7 +118,7 @@ bool picoTrackerAudioDriver::InitDriver() {
   int sample_freq = 44100;
   // This number is exactly 20000 for our 220.5MHz core freq
   uint32_t divider =
-      system_clock_frequency * 4 / sample_freq; // avoid arithmetic overflow
+      system_clock_frequency * 2 / sample_freq; // avoid arithmetic overflow
   pio_sm_set_clkdiv_int_frac(AUDIO_PIO, AUDIO_SM, divider >> 8u,
                              divider & 0xffu);
 
