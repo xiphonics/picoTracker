@@ -37,59 +37,63 @@
 ; front of the real 16bit sample data and then fills in after the real data the remaining required
 ; number of bits to get to 32 in total. We can't *just* blindly preface 0 bits at the start of the 
 ; real data on the i2s output because the data in i2s is twos-complement so we need to preserve the
-; real datas MSB on the i2s output bitstream so the i2s bitstream becomes:
-; MSB+0-bits-padding+Real-Data+0-bits-backfill
+; real data's MSB on the i2s output bitstream so the i2s bitstream becomes:
+; MSB+0-bits-padding+RealData+0-bits-Backfill
 
 
 .program audio_i2s
 .side_set 2
 
-                    ;        /--- LRCLK
-                    ;        |/-- BCLK
-bitloop1:           ;        ||
-    out pins, 1       side 0b10
-    jmp x-- bitloop1  side 0b11
+.define DATA_LOOP_COUNT 13 ; 13 because we do 2 `out`'s on the OSR data outside the loop for a total of 16bits
+.define OFFSET_COUNT 3 ; number of bits+1 to offset from MSB to lower the output volume
+.define BACKFILL_COUNT 10 ; number of bits+1 to fill in loop at end of OSR data to get to 32bits in total output per channel
 
-    out pins, 1       side 0b10 ; get the LSB of the real sample data from the OSR
-    set y, 10         side 0b11 ; now how many bits+1 of zeros we will backfill after LSB
+                            ;      /--- LRCLK
+                            ;      |/-- BCLK
+bitloop1:                   ;      ||
+    out pins, 1             side 0b10
+    jmp x-- bitloop1        side 0b11
+
+    out pins, 1             side 0b10 ; get the LSB of the real sample data from the OSR
+    set y, BACKFILL_COUNT   side 0b11 ; now how many bits+1 of zeros we will backfill after LSB
 
  backfill1:   
-    set pins, 0       side 0b10
-    jmp y-- backfill1 side 0b11
+    set pins, 0             side 0b10
+    jmp y-- backfill1       side 0b11
 
-    set pins, 0       side 0b00
-    set x, 13         side 0b01
+    set pins, 0             side 0b00
+    set x, DATA_LOOP_COUNT  side 0b01
 
-    out pins, 1       side 0b00 ; twos complement so need to keep most significant Bit of real sample data
-    set y, 3          side 0b01 ; now how many bits+1 of zeros we will pad from MSB
+    out pins, 1             side 0b00 ; twos complement so need to keep most significant Bit of real sample data
+    set y, OFFSET_COUNT     side 0b01 ; now how many bits+1 of zeros we will pad from MSB
 
 padloop1:
-    set pins, 0       side 0b00
-    jmp y-- padloop1  side 0b01
+    set pins, 0             side 0b00
+    jmp y-- padloop1        side 0b01
 
 bitloop0:
-    out pins, 1       side 0b00
-    jmp x-- bitloop0  side 0b01
+    out pins, 1             side 0b00
+    jmp x-- bitloop0        side 0b01
 
-    out pins, 1       side 0b00
-    set y, 10         side 0b01 ; now how many bits+1 of zeros we will backfill after LSB
+    out pins, 1             side 0b00
+    set y, BACKFILL_COUNT   side 0b01 ; now how many bits+1 of zeros we will backfill after LSB
 
   backfill0:   
-    set pins, 0       side 0b00
-    jmp y-- backfill0 side 0b01
+    set pins, 0             side 0b00
+    jmp y-- backfill0       side 0b01
 
-    set pins, 0       side 0b10
+    set pins, 0             side 0b10
 
 ;----
 public entry_point:
-    set x, 13         side 0b11
+    set x, DATA_LOOP_COUNT  side 0b11
 
-    out pins, 1       side 0b10 ; twos complement so need to keep most significant Bit of real sample data
-    set y, 3          side 0b11 ; now how many bits+1 of zeros we will pad from MSB
+    out pins, 1             side 0b10 ; twos complement so need to keep most significant Bit of real sample data
+    set y, OFFSET_COUNT     side 0b11 ; now how many bits+1 of zeros we will pad from MSB
 
 padloop0:
-    set pins, 0       side 0b10
-    jmp y-- padloop0  side 0b11
+    set pins, 0             side 0b10
+    jmp y-- padloop0        side 0b11
      
 
 % c-sdk {
