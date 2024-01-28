@@ -28,6 +28,9 @@
 ; This has been modified from the standard i2s PIO program from RPI by adding a fixed amount
 ; of bits of offset from the MSB to lower the volume on picoTracker hardware that has very 
 ; high output gain on its audio output socket.
+; The current value of 4 bits of offset was selected based on testing with several pairs of headphones
+; and IEMs to allow for comfortable volume for me at master volume of 140.
+;
 ; The modifications bare a little bit of explanation:
 ; The I2S output bitstream word length has been changed to 32bit BUT the input data has been
 ; untouched, so what the modified PIO code below does is insert a fixed amount of 0 bits at the
