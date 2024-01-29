@@ -196,6 +196,17 @@ int SamplePool::ImportSample(Path &path) {
   dpath += path.GetName();
   Path dstPath(dpath.c_str());
 
+  // Checking if sample already exists in sample list
+  std::string name = path.GetName();
+  size_t index = name.find_last_of(".");
+  name = name.substr(0, index);
+  for (int i = 0; i < count_; i++) {
+    if (std::strcmp(name.c_str(), names_[i]) == 0) {
+      Status::Set("Sample already imported");
+      return -1;
+    }
+  }
+
   Status::Set("Loading %s", path.GetName().c_str());
 
   // Opens files
