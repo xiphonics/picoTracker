@@ -1354,10 +1354,13 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   };
 };
 
-const char *SampleInstrument::GetName() {
+std::string SampleInstrument::GetName() {
 
   Variable *v = FindVariable(SIP_SAMPLE);
-  return v->GetString();
+  std::string name = v->GetString();
+  // Drop file extension
+  size_t index = name.find_last_of(".");
+  return name.substr(0, index);
 };
 
 void SampleInstrument::Purge() {

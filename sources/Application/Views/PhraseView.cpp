@@ -1134,7 +1134,7 @@ void PhraseView::DrawView() {
         location._x += 12;
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(d);
-        sprintf(instrumentName, "%.15s", instr->GetName());
+        sprintf(instrumentName, "%.15s", instr->GetName().c_str());
         instrLine += instrumentName;
         DrawString(location._x, location._y, instrLine.c_str(), props);
       }

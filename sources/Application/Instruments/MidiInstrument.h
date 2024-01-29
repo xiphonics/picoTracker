@@ -40,7 +40,7 @@ public:
 
   virtual InstrumentType GetType() { return IT_MIDI; };
 
-  virtual const char *GetName();
+  virtual std::string GetName();
 
   virtual void OnStart();
 

@@ -40,7 +40,7 @@ public:
 
   virtual InstrumentType GetType() = 0;
 
-  virtual const char *GetName() = 0;
+  virtual std::string GetName() = 0;
 
   virtual void ProcessCommand(int channel, FourCC cc, ushort value) = 0;
 
