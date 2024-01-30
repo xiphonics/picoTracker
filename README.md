@@ -47,7 +47,12 @@ Head over to the [Build Guide for the original prototype](docs/BUILD.md)
 ## MANUAL
 Head over to the [Manual](docs/MANUAL.md)
 
+## Get involved!
+
+You can join the fun by following our [contributing guide](docs/CONTRIBUTING.md). 
+
 ## Development
+
 Head over to the [Developer Guide](docs/DEV.md)
 
 ## Want to know more
