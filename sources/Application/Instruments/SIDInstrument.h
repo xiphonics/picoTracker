@@ -4,25 +4,45 @@
 #include "Externals/cRSID/SID.h"
 #include "I_Instrument.h"
 
+enum SIDInstrumentWaveform {
+  DWF_NONE = 0,
+  DWF_TRI,
+  DWF_SAW,
+  DWF_TRI_SAW,
+  DWF_SQ,
+  DWF_TRI_SQ,
+  DWF_SAW_SQ,
+  DWF_TRI_SAW_SQ,
+  DWF_NOISE,
+  DWF_LAST
+};
+enum SIDInstrumentFilterMode { DFM_LP = 0, DFM_BP, DFM_HP, DFM_LAST };
+
 #define DIP_V1PW MAKE_FOURCC('D', '1', 'P', 'W')
 #define DIP_V1WF MAKE_FOURCC('D', '1', 'W', 'F')
 #define DIP_V1SYNC MAKE_FOURCC('D', '1', 'S', 'Y')
 #define DIP_V1GATE MAKE_FOURCC('D', '1', 'G', 'T')
+#define DIP_V1RING MAKE_FOURCC('D', '1', 'R', 'N')
 #define DIP_V1ADSR MAKE_FOURCC('D', '1', 'A', 'D')
-#define DIP_V1FILTERON MAKE_FOURCC('D', '1', 'F', 'O')
-#define DIP_V2FREQOFF MAKE_FOURCC('D', '2', 'F', 'O')
+#define DIP_V1FON MAKE_FOURCC('D', '1', 'F', 'O')
+
 #define DIP_V2PW MAKE_FOURCC('D', '2', 'P', 'W')
 #define DIP_V2WF MAKE_FOURCC('D', '2', 'W', 'F')
 #define DIP_V2SYNC MAKE_FOURCC('D', '2', 'S', 'Y')
 #define DIP_V2GATE MAKE_FOURCC('D', '2', 'G', 'T')
+#define DIP_V2RING MAKE_FOURCC('D', '2', 'R', 'N')
 #define DIP_V2ADSR MAKE_FOURCC('D', '2', 'A', 'D')
 #define DIP_V2FON MAKE_FOURCC('D', '2', 'F', 'O')
-#define DIP_V3FREQOFF MAKE_FOURCC('D', '3', 'F', 'O')
+
 #define DIP_V3PW MAKE_FOURCC('D', '3', 'P', 'W')
 #define DIP_V3WF MAKE_FOURCC('D', '3', 'W', 'F')
+#define DIP_V3SYNC MAKE_FOURCC('D', '3', 'S', 'Y')
 #define DIP_V3GATE MAKE_FOURCC('D', '3', 'G', 'T')
+#define DIP_V3RING MAKE_FOURCC('D', '3', 'R', 'N')
 #define DIP_V3ADSR MAKE_FOURCC('D', '3', 'A', 'D')
 #define DIP_V3FON MAKE_FOURCC('D', '3', 'F', 'O')
+#define DIP_V3OFF MAKE_FOURCC('D', '3', 'O', 'F')
+
 #define DIP_FILTCUT MAKE_FOURCC('D', 'F', 'C', 'T')
 #define DIP_RES MAKE_FOURCC('D', 'R', 'E', 'S')
 #define DIP_FMODE MAKE_FOURCC('D', 'F', 'M', 'D')
@@ -30,7 +50,6 @@
 
 #define DIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
 #define DIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
-
 
 static const unsigned short sid_notes[96] = {
     0x0112, 0x0123, 0x0134, 0x0146, 0x015A, 0x016E, 0x0184, 0x018B, 0x01B3,
@@ -45,8 +64,7 @@ static const unsigned short sid_notes[96] = {
     0x7358, 0x7A34, 0x8178, 0x892B, 0x9153, 0x99F7, 0xA31F, 0xACD2, 0xB719,
     0xC1FC, 0xCD85, 0xD9BD, 0xE6B0, 0xF467, 0xFFFF}; // last one is 0x1F2F0
 
-class SIDInstrument
-    : public I_Instrument {
+class SIDInstrument : public I_Instrument {
 
 public:
   SIDInstrument();
@@ -67,7 +85,7 @@ public:
 
   virtual bool IsEmpty() { return false; };
 
-  virtual InstrumentType GetType() { return IT_MIDI; };
+  virtual InstrumentType GetType() { return IT_SID; };
 
   virtual const char *GetName();
 
@@ -91,7 +109,37 @@ private:
   //  bool first_[SONG_CHANNEL_COUNT];
   //  reSID::SID sid_;
   //  reSID::cycle_count delta_t_;
-  cRSID *sid_;
+  cRSID sid_;
+
+  Variable v1pw_;
+  Variable v1wf_;
+  Variable v1sync_;
+  Variable v1gate_;
+  Variable v1ring_;
+  Variable v1adsr_;
+  Variable v1fon_;
+
+  Variable v2pw_;
+  Variable v2wf_;
+  Variable v2sync_;
+  Variable v2gate_;
+  Variable v2ring_;
+  Variable v2adsr_;
+  Variable v2fon_;
+
+  Variable v3pw_;
+  Variable v3wf_;
+  Variable v3sync_;
+  Variable v3gate_;
+  Variable v3ring_;
+  Variable v3adsr_;
+  Variable v3fon_;
+  Variable v3off_;
+
+  Variable fltcut_;
+  Variable fltres_;
+  Variable fltmode_;
+  Variable vol_;
 };
 
 #endif

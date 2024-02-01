@@ -8,6 +8,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/char.h"
 #include "Filters.h"
+#include "MidiInstrument.h"
 #include "SIDInstrument.h"
 #include "System/io/Status.h"
 

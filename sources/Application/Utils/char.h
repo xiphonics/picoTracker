@@ -271,6 +271,84 @@ inline void fourCC2char(const FourCC f, char *s) {
   case 70:
     strcpy(s, "WRAP");
     break;
+  case 70:
+    strcpy(s, "D1PW");
+    break;
+  case 71:
+    strcpy(s, "D1WF");
+    break;
+  case 72:
+    strcpy(s, "D1SY");
+    break;
+  case 73:
+    strcpy(s, "D1GT");
+    break;
+  case 74:
+    strcpy(s, "D1RN");
+    break;
+  case 75:
+    strcpy(s, "D1AD");
+    break;
+  case 76:
+    strcpy(s, "D1FO");
+    break;
+  case 77:
+    strcpy(s, "D2PW");
+    break;
+  case 78:
+    strcpy(s, "D2WF");
+    break;
+  case 79:
+    strcpy(s, "D2SY");
+    break;
+  case 80:
+    strcpy(s, "D2GT");
+    break;
+  case 81:
+    strcpy(s, "D2RN");
+    break;
+  case 82:
+    strcpy(s, "D2AD");
+    break;
+  case 83:
+    strcpy(s, "D2FO");
+    break;
+  case 84:
+    strcpy(s, "D3PW");
+    break;
+  case 85:
+    strcpy(s, "D3WF");
+    break;
+  case 86:
+    strcpy(s, "D3SY");
+    break;
+  case 87:
+    strcpy(s, "D3GT");
+    break;
+  case 88:
+    strcpy(s, "D3RN");
+    break;
+  case 89:
+    strcpy(s, "D3AD");
+    break;
+  case 90:
+    strcpy(s, "D3FO");
+    break;
+  case 91:
+    strcpy(s, "D3OF");
+    break;
+  case 92:
+    strcpy(s, "DFCT");
+    break;
+  case 93:
+    strcpy(s, "DRES");
+    break;
+  case 94:
+    strcpy(s, "DFMD");
+    break;
+  case 95:
+    strcpy(s, "DVOL");
+    break;
   }
 };
 #endif
