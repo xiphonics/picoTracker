@@ -3,6 +3,7 @@
 
 #include "Application/Instruments/InstrumentBank.h"
 #include "Application/Persistency/Persistent.h"
+#include "BuildNumber.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/VariableContainer.h"
@@ -17,7 +18,7 @@
 
 #define PROJECT_NUMBER "1.0"
 #define PROJECT_RELEASE "r"
-#define BUILD_COUNT "003"
+// BUILD_COUNT define comes from BuildNumber.h
 
 #define MAX_TAP 3
 
