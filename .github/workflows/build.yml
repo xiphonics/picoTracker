@@ -40,6 +40,12 @@ jobs:
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: PICO_SDK_PATH=../sources/Externals/pico-sdk PICO_TOOLCHAIN_PATH=${{steps.arm-none-eabi-gcc-action.outputs.path}} cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
+    - name: Set Build Number
+      shell: bash
+      env:
+          GH_RUN_NUMBER: ${{ github.run_number }}
+      run: echo "#define BUILD_COUNT \"$GH_RUN_NUMBER\"" > sources/Application/Model/BuildNumber.h
+
     - name: Get core count
       id: core_count
       run : cat /proc/cpuinfo  | grep processor | wc -l
@@ -49,4 +55,8 @@ jobs:
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
+    - uses: actions/upload-artifact@v4
+      with:
+        name: picoTracker-uf2
+        path: ${{github.workspace}}/build/Adapters/picoTracker/main/picoTracker.uf2 
 
