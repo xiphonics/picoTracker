@@ -895,6 +895,6 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
 void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
   char **helpLegend = getHelpLegend(command);
-  DrawString(5, 0, helpLegend[0], props);
+  DrawString(0, 0, helpLegend[0], props);
   DrawString(5, 1, helpLegend[1], props);
 }
