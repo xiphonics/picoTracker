@@ -37,9 +37,7 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
   FsBaseFile entry;
 
   // Insert a parent dir path given that FatFS doesn't provide it
-  PathIndex pi;
-  pi.index = 0;
-  pi.type = ParentDirIndex;
+  PathIndex pi = {0, ParentDirIndex};
   fileIndexes_.push_back(pi);
 
   while (entry.openNext(&dir, O_READ)) {
