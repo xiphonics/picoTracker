@@ -94,6 +94,8 @@ void SamplePool::Load() {
 
   Path sampleDir("samples:");
 
+  // Opens project sample directory
+
   I_Dir *dir = FileSystem::GetInstance()->Open(sampleDir.GetPath().c_str());
   if (!dir) {
     return;
@@ -105,9 +107,15 @@ void SamplePool::Load() {
   IteratorPtr<Path> it(dir->GetIterator());
   count_ = 0;
 
+  // Loading all samples in project directory until max samples reached
+
   for (it->Begin(); !it->IsDone(); it->Next()) {
     Path &path = it->CurrentItem();
-    //		Trace::Dump("Got sample name '%s'",name) ;
+
+    // Showing loading message per sample here as we are
+    // loading project from disk
+
+    Status::Set("Loading %s", path.GetName().c_str());
     loadSample(path.GetPath().c_str());
     if (count_ == MAX_PIG_SAMPLES) {
       Trace::Error("Warning maximum sample count reached");
@@ -187,16 +195,19 @@ int SamplePool::ImportSample(Path &path) {
   if (count_ == MAX_PIG_SAMPLES)
     return -1;
 
-  // construct target path
-
+  // Construct project sample path
   std::string dpath = "samples:";
   dpath += path.GetName();
   Path dstPath(dpath.c_str());
 
+  // Show loading message here
+  // as we are copying file from samplelib
+  // to project directory and then loading
+  // into memory
+
   Status::Set("Loading %s", path.GetName().c_str());
 
-  // Opens files
-
+  // Opens sample file to grab size
   I_File *fin = FileSystem::GetInstance()->Open(path.GetPath().c_str(), "r");
   if (!fin) {
     Trace::Error("Failed to open input file %s", path.GetPath().c_str());
@@ -214,8 +225,7 @@ int SamplePool::ImportSample(Path &path) {
     return -1;
   };
 
-  // copy file to current project
-
+  // Copy file across to the project first
   char buffer[IMPORT_CHUNK_SIZE];
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
@@ -229,8 +239,7 @@ int SamplePool::ImportSample(Path &path) {
   delete (fin);
   delete (fout);
 
-  // now load the sample
-
+  // Now load the sample into memory
   bool status = loadSample(dstPath.GetPath().c_str());
 
   SetChanged();
