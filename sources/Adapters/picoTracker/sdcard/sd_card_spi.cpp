@@ -32,10 +32,12 @@ public:
   }
 
   void activate() {
+    #if SHOW_SPI_DEBUG
     uint baudrate = spi_init(SD_SPI, m_sckfreq);
-    if (false) {
-      Trace::Log("SDCARD", "SD SPI baudrate: %i\n", baudrate);
-    }
+    Trace::Log("SDCARD", "SD SPI baudrate: %i\n", baudrate);
+    #else
+    spi_init(SD_SPI, m_sckfreq);
+    #endif
     spi_set_format(SD_SPI, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
   }
 
