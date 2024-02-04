@@ -52,13 +52,15 @@ int picoTrackerEventManager::MainLoop() {
   while (!finished_) {
     loops++;
     ProcessInputEvent();
-    picoTrackerEvent *event = queue->Pop(true);
-    if (event) {
+    //    picoTrackerEvent *event = queue->Pop(true);
+    if (!queue->empty()) {
+      picoTrackerEvent event;
+      queue->pop_into(event);
       events++;
       redrawing_ = true;
-      picoTrackerGUIWindowImp::ProcessEvent(*event);
-      delete event;
-      queue->Empty(); // Avoid duplicates redraw
+      picoTrackerGUIWindowImp::ProcessEvent(event);
+      //      delete event;
+      queue->clear(); // Avoid duplicates redraw
       redrawing_ = false;
     }
 #ifdef PICOSTATS

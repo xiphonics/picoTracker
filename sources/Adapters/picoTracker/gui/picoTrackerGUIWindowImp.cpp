@@ -110,9 +110,9 @@ void picoTrackerGUIWindowImp::Unlock(){};
 void picoTrackerGUIWindowImp::Flush() { mode0_draw_changed(); };
 
 void picoTrackerGUIWindowImp::Invalidate() {
-  picoTrackerEvent *event = new picoTrackerEvent();
-  event->type_ = PICO_REDRAW;
-  picoTrackerEventQueue::GetInstance()->Push(*event);
+  //  picoTrackerEvent *event = new picoTrackerEvent();
+  //  event->type_ = PICO_REDRAW;
+  picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent());
 };
 
 void picoTrackerGUIWindowImp::PushEvent(GUIEvent &event) {

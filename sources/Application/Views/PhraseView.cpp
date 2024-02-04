@@ -7,8 +7,8 @@
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
+#include <etl/string.h>
 #include <stdlib.h>
-#include <string.h>
 
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
@@ -1128,7 +1128,7 @@ void PhraseView::DrawView() {
       DrawString(pos._x, pos._y, buffer, props);
       if (j == row_) {
         sprintf(buffer, "I%2.2x: ", d);
-        std::string instrLine = buffer;
+        etl::string<32> instrLine = buffer;
         setTextProps(props, 1, j, true);
         GUIPoint location = GetTitlePosition();
         location._x += 12;

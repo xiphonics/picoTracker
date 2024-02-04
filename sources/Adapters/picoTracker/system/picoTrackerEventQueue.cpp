@@ -1,4 +1,4 @@
 #include "picoTrackerEventQueue.h"
 
-picoTrackerEventQueue::picoTrackerEventQueue()
-    : T_Stack<picoTrackerEvent>(true) {}
+picoTrackerEventQueue::picoTrackerEventQueue(){};
+//    : T_Stack<picoTrackerEvent>(true) {}
