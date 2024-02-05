@@ -300,8 +300,6 @@ void Project::RestoreContent(PersistencyDocument *doc) {
 
 void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
 
-  Status::Set("Saving project");
-
   // store project version
   printer->PushAttribute("VERSION", PROJECT_NUMBER);
 
