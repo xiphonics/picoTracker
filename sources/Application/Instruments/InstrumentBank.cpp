@@ -65,13 +65,13 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
       printer->PushAttribute("ID", hex);
       printer->PushAttribute("TYPE", InstrumentTypeData[instr->GetType()]);
 
-      IteratorPtr<Variable> it(instr->GetIterator());
-      for (it->Begin(); !it->IsDone(); it->Next()) {
-        Variable &v = it->CurrentItem();
+      auto it = instr->begin();
+      for (size_t j = 0; j < instr->size(); j++) {
         printer->OpenElement("PARAM");
-        printer->PushAttribute("NAME", v.GetName());
-        printer->PushAttribute("VALUE", v.GetString());
+        printer->PushAttribute("NAME", (*it)->GetName());
+        printer->PushAttribute("VALUE", (*it)->GetString());
         printer->CloseElement(); // PARAM
+        it++;
       }
       printer->CloseElement(); // INSTRUMENT
     }
@@ -156,12 +156,12 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
             }
           }
 
-          IteratorPtr<Variable> it(instr->GetIterator());
-          for (it->Begin(); !it->IsDone(); it->Next()) {
-            Variable &v = it->CurrentItem();
-            if (!strcmp(v.GetName(), name)) {
-              v.SetString(value);
+          auto it = instr->begin();
+          for (size_t i = 0; i < instr->size(); i++) {
+            if (!strcmp((*it)->GetName(), name)) {
+              (*it)->SetString(value);
             };
+            it++;
           }
           subelem = doc->NextSibling();
         }
@@ -225,13 +225,13 @@ unsigned short InstrumentBank::Clone(unsigned short i) {
     dst = new MidiInstrument();
   }
   instrument_[next] = dst;
-  IteratorPtr<Variable> it(src->GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Variable &srcV = it->CurrentItem();
-    Variable *dstV = dst->FindVariable(srcV.GetID());
+  auto it = src->begin();
+  for (size_t i = 0; i < src->size(); i++) {
+    Variable *dstV = dst->FindVariable((*it)->GetID());
     if (dstV) {
-      dstV->CopyFrom(srcV);
+      dstV->CopyFrom(**it);
     }
+    it++;
   }
   return next;
 }

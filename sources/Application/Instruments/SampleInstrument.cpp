@@ -40,67 +40,67 @@ SampleInstrument::SampleInstrument() {
 
   // Initialize exported variables
   WatchedVariable *wv = new SampleVariable("sample", SIP_SAMPLE);
-  Insert(wv);
+  insert(end(), wv);
   wv->AddObserver(*this);
 
   volume_ = new Variable("volume", SIP_VOLUME, 0x80);
-  Insert(volume_);
+  insert(end(), volume_);
 
   interpolation_ =
       new Variable("interpol", SIP_INTERPOLATION, interpolationTypes, 2, 0);
-  Insert(interpolation_);
+  insert(end(), interpolation_);
 
   crush_ = new Variable("crush", SIP_CRUSH, 16);
-  Insert(crush_);
+  insert(end(), crush_);
 
   drive_ = new Variable("crushdrive", SIP_CRUSHVOL, 0xFF);
-  Insert(drive_);
+  insert(end(), drive_);
 
   downsample_ = new Variable("downsample", SIP_DOWNSMPL, 0);
-  Insert(downsample_);
+  insert(end(), downsample_);
 
   rootNote_ = new Variable("root note", SIP_ROOTNOTE, 60);
-  Insert(rootNote_);
+  insert(end(), rootNote_);
 
   fineTune_ = new Variable("fine tune", SIP_FINETUNE, 0x7F);
-  Insert(fineTune_);
+  insert(end(), fineTune_);
 
   pan_ = new Variable("pan", SIP_PAN, 0x7F);
-  Insert(pan_);
+  insert(end(), pan_);
 
   cutoff_ = new Variable("filter cut", SIP_FILTCUTOFF, 0xFF);
-  Insert(cutoff_);
+  insert(end(), cutoff_);
 
   reso_ = new Variable("filter res", SIP_FILTRESO, 0x00);
-  Insert(reso_);
+  insert(end(), reso_);
 
   filterMix_ = new Variable("filter type", SIP_FILTMIX, 0x00);
-  Insert(filterMix_);
+  insert(end(), filterMix_);
 
   filterMode_ = new Variable("filter mode", SIP_FILTMODE, filterMode, 3, 0);
-  Insert(filterMode_);
+  insert(end(), filterMode_);
 
   start_ = new WatchedVariable("start", SIP_START, 0);
-  Insert(start_);
+  insert(end(), start_);
   start_->AddObserver(*this);
 
   loopMode_ = new Variable("loopmode", SIP_LOOPMODE, loopTypes, SILM_LAST, 0);
-  Insert(loopMode_);
+  insert(end(), loopMode_);
   loopMode_->SetInt(0);
 
   loopStart_ = new WatchedVariable("loopstart", SIP_LOOPSTART, 0);
-  Insert(loopStart_);
+  insert(end(), loopStart_);
   loopStart_->AddObserver(*this);
 
   loopEnd_ = new WatchedVariable("end", SIP_END, 0);
-  Insert(loopEnd_);
+  insert(end(), loopEnd_);
   loopEnd_->AddObserver(*this);
 
   table_ = new Variable("table", SIP_TABLE, -1);
-  Insert(table_);
+  insert(end(), table_);
 
   tableAuto_ = new Variable("table automation", SIP_TABLEAUTO, false);
-  Insert(tableAuto_);
+  insert(end(), tableAuto_);
 
   // Initalize instrument's voices update list
 
@@ -1172,10 +1172,10 @@ const char *SampleInstrument::GetName() {
 };
 
 void SampleInstrument::Purge() {
-  IteratorPtr<Variable> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Variable &v = it->CurrentItem();
-    v.Reset();
+  auto it = begin();
+  for (size_t i = 0; i < size(); i++) {
+    (*it)->Reset();
+    it++;
   }
   source_ = NULL;
   /*    Variable *v=FindVariable(SIP_SAMPLE) ;

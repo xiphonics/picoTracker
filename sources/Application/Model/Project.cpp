@@ -18,15 +18,15 @@
 Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
 
   WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
-  this->Insert(tempo);
+  this->insert(end(), tempo);
   Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
-  this->Insert(masterVolume);
+  this->insert(end(), masterVolume);
   Variable *wrap = new Variable("wrap", VAR_WRAP, false);
-  this->Insert(wrap);
+  this->insert(end(), wrap);
   Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
-  this->Insert(transpose);
+  this->insert(end(), transpose);
   Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales, 0);
-  this->Insert(scale);
+  this->insert(end(), scale);
   scale->SetInt(0);
 
   // Reload the midi device list
@@ -35,7 +35,7 @@ Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
 
   WatchedVariable *midi = new WatchedVariable(
       "midi", VAR_MIDIDEVICE, midiDeviceList_, midiDeviceListSize_);
-  this->Insert(midi);
+  this->insert(end(), midi);
   midi->AddObserver(*this);
 
   song_ = new Song();
@@ -310,13 +310,13 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   }
 
   // save all of the project's parameters
-  IteratorPtr<Variable> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
+  auto it = begin();
+  for (size_t i = 0; i < size(); i++) {
     printer->OpenElement("PARAMETER");
-    Variable v = it->CurrentItem();
-    printer->PushAttribute("NAME", v.GetName());
-    printer->PushAttribute("VALUE", v.GetString());
+    printer->PushAttribute("NAME", (*it)->GetName());
+    printer->PushAttribute("VALUE", (*it)->GetString());
     printer->CloseElement();
+    it++;
   }
 };
 

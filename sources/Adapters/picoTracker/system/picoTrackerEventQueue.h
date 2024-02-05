@@ -1,7 +1,7 @@
 #ifndef _PICOTRACKEREVENTQUEUE_H_
 #define _PICOTRACKEREVENTQUEUE_H_
 
-#include "../../../Externals/etl/include/etl/stack.h"
+#include "Externals/etl/include/etl/stack.h"
 #include "Foundation/T_Singleton.h"
 #include "Foundation/T_Stack.h"
 
