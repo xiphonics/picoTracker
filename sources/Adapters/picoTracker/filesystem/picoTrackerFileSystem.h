@@ -7,6 +7,17 @@
 #include <string.h>
 #include <vector>
 
+enum PathIndexTypes {
+  ParentDirIndex,
+  DirIndex,
+  FileIndex,
+};
+
+struct PathIndex {
+  unsigned short index;
+  char type;
+};
+
 class picoTrackerFile : public I_File {
 public:
   picoTrackerFile(FsBaseFile file);
@@ -43,8 +54,7 @@ public:
 
 private:
   const std::string path_;
-  std::vector<int> fileIndexes_{};
-  std::vector<int> subdirIndexes_{};
+  std::vector<PathIndex> fileIndexes_{};
 };
 
 class picoTrackerFileSystem : public FileSystem {
