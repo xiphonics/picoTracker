@@ -21,6 +21,7 @@ add_definitions(-DPICOBUILD)
 # add_definitions(-DPICOSTATS)
 # add_definitions(-DALL_MALLOC)
 # add_definitions(-DSHOW_MEM_USAGE)
+# add_definitions(-DSHOW_SPI_DEBUG)
 add_definitions(-DDISABLESF)
 # Enable SDIO - this setting affects code in SdFat library as well as the project
 # This consumes ~7k+ RAM and has some performance problems ATM
