@@ -107,7 +107,7 @@ void SamplePool::Load() {
 
   for (it->Begin(); !it->IsDone(); it->Next()) {
     Path &path = it->CurrentItem();
-    //		Trace::Dump("Got sample name '%s'",name) ;
+    Status::Set("Loading %s", path.GetName().c_str());
     loadSample(path.GetPath().c_str());
     if (count_ == MAX_PIG_SAMPLES) {
       Trace::Error("Warning maximum sample count reached");
