@@ -141,8 +141,12 @@ int picoTrackerSystem::GetBatteryLevel() {
   if (beatCount != lastBeatCount_) {
     adc_capture(sample_buf, N_SAMPLES);
 
-    printf("BATTERY: %d", sample_buf[0]);
-    lastBattLevel_ = sample_buf[0];
+    printf("ADC READING: %d", sample_buf[0]);
+    int adc_reading = sample_buf[0];
+    int adc_voltage = adc_reading * 0.8; //0.8mV per unit of ADC
+
+    lastBattLevel_ =  adc_voltage * 2; //because picoTracker use voltage divider for voltage on ADC pin
+    printf("BATTERY: %d", lastBattLevel_);
 
     lastBeatCount_ = beatCount;
   }
