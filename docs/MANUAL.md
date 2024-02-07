@@ -24,18 +24,21 @@ The `samplelib` folder at the root of the SD card is where picoTracker will look
 
 ## config.xml
 
-A `config.xml` file can be placed on the root of the SD card. The only configuration options right now are the interface colors and setting the keymap "style". 
+A `config.xml` file can be placed on the root of the SD card. The only configuration options right now are the interface colors, setting the keymap "style" and setting the sound output for easy listening or loud.
 
 This is an example config file:
 ```
 <CONFIG>
     <BACKGROUND value="0F0F0F" />
     <FOREGROUND value="ADADAD" /> <!-- text and cursor in cursor -->
-	<HICOLOR1 value="846F94" /> <!-- row count in song screen -->
-	<HICOLOR2 value="6B316B" /> <!-- cursor-->
+    <HICOLOR1 value="846F94" /> <!-- row count in song screen -->
+    <HICOLOR2 value="6B316B" /> <!-- cursor-->
     <KEYMAPSTYLE value="M8" /> <!-- use M8 style keymap layout -->
+    <SOUNDOUTPUT value="LINEOUT" /> <!-- use louder lineout driver for greater volume from the sound output jack -->
 </CONFIG>
 ```
+
+With sound output, any value other than "LINEOUT" (including not being specified) for the `SOUNDOUTPUT` setting will have the effect of selecting the default "Headphone" output which is lower for a safer listening experience.
 
 The "M8 style" keymap is as shown below:
 

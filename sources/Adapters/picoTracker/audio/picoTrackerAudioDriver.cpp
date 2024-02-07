@@ -5,6 +5,7 @@
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
 #include "audio_i2s.pio.h"
+#include "audio_lineout_i2s.pio.h"
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
@@ -16,6 +17,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+static bool lineOutOutput = false;
 
 char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
 
@@ -29,6 +32,13 @@ void picoTracker_sound_pause(int yes) { picoTracker_sound_pausei = yes; }
 // This calls comes after the call to the same function name in the pico audio
 // driver
 void __isr __time_critical_func(audio_i2s_dma_irq_handler)() {
+  if (dma_irqn_get_channel_status(AUDIO_DMA_IRQ, AUDIO_DMA)) {
+    dma_irqn_acknowledge_channel(AUDIO_DMA_IRQ, AUDIO_DMA);
+    picoTrackerAudioDriver::IRQHandler();
+  }
+}
+
+void __isr __time_critical_func(audio_lineout_i2s_dma_irq_handler)() {
   if (dma_irqn_get_channel_status(AUDIO_DMA_IRQ, AUDIO_DMA)) {
     dma_irqn_acknowledge_channel(AUDIO_DMA_IRQ, AUDIO_DMA);
     picoTrackerAudioDriver::IRQHandler();
@@ -72,6 +82,11 @@ bool picoTrackerAudioDriver::InitDriver() {
   instance_ = this;
 
   // pico audio init
+  Config *config = Config::GetInstance();
+  const char *soundOutput = config->GetValue("SOUNDOUTPUT");
+  if (strcasecmp("LINEOUT", soundOutput) == 0) {
+    lineOutOutput = true;
+  }
 
   // TODO: check what is this
   // i2s settings
@@ -90,9 +105,17 @@ bool picoTrackerAudioDriver::InitDriver() {
   // Claim and configure PIO0
   pio_sm_claim(AUDIO_PIO, AUDIO_SM);
 
-  uint offset = pio_add_program(AUDIO_PIO, &audio_i2s_program);
+  uint offset =
+      pio_add_program(AUDIO_PIO, lineOutOutput ? &audio_lineout_i2s_program
+                                               : &audio_i2s_program);
 
-  audio_i2s_program_init(AUDIO_PIO, AUDIO_SM, offset, AUDIO_SDATA, AUDIO_BCLK);
+  if (lineOutOutput) {
+    audio_lineout_i2s_program_init(AUDIO_PIO, AUDIO_SM, offset, AUDIO_SDATA,
+                                   AUDIO_BCLK);
+  } else {
+    audio_i2s_program_init(AUDIO_PIO, AUDIO_SM, offset, AUDIO_SDATA,
+                           AUDIO_BCLK);
+  }
 
   // Claim and configure DMA
   dma_channel_claim(AUDIO_DMA);
@@ -110,15 +133,17 @@ bool picoTrackerAudioDriver::InitDriver() {
 
   // Add our own callback func to run after the i2s irq func (priority 0x80)
   irq_set_exclusive_handler(DMA_IRQ_0 + AUDIO_DMA_IRQ,
-                            audio_i2s_dma_irq_handler);
+                            lineOutOutput ? audio_lineout_i2s_dma_irq_handler
+                                          : audio_i2s_dma_irq_handler);
   dma_irqn_set_channel_enabled(AUDIO_DMA_IRQ, AUDIO_DMA, true);
 
   // Set PIO frequency
   uint32_t system_clock_frequency = clock_get_hz(clk_sys);
   int sample_freq = 44100;
-  // This number is exactly 10000 for our 220.5MHz core freq
-  uint32_t divider =
-      system_clock_frequency * 2 / sample_freq; // avoid arithmetic overflow
+  // This number is exactly 10000 (headphone) / 20000 (lineout) for our 220.5MHz
+  // core freq
+  uint32_t divider = system_clock_frequency * (lineOutOutput ? 4 : 2) /
+                     sample_freq; // avoid arithmetic overflow
   pio_sm_set_clkdiv_int_frac(AUDIO_PIO, AUDIO_SM, divider >> 8u,
                              divider & 0xffu);
 
@@ -136,7 +161,6 @@ bool picoTrackerAudioDriver::InitDriver() {
   sem_init(&core1_audio, 0, SOUND_BUFFER_COUNT - 1);
 
   volume_ = 65;
-  Config *config = Config::GetInstance();
   const char *volume = config->GetValue("VOLUME");
 
   if (volume) {
@@ -158,7 +182,9 @@ void picoTrackerAudioDriver::CloseDriver() {
   pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, false);
   irq_set_enabled(DMA_IRQ_0 + AUDIO_DMA_IRQ, false);
   dma_irqn_set_channel_enabled(AUDIO_DMA_IRQ, AUDIO_DMA, false);
-  irq_remove_handler(DMA_IRQ_0 + AUDIO_DMA_IRQ, audio_i2s_dma_irq_handler);
+  irq_remove_handler(DMA_IRQ_0 + AUDIO_DMA_IRQ,
+                     lineOutOutput ? audio_lineout_i2s_dma_irq_handler
+                                   : audio_i2s_dma_irq_handler);
   dma_channel_unclaim(AUDIO_DMA);
   pio_sm_unclaim(AUDIO_PIO, AUDIO_SM);
   pio_clear_instruction_memory(AUDIO_PIO);

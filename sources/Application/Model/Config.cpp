@@ -25,7 +25,8 @@ Config::Config() {
         strcmp(doc.ElemName(), "FOREGROUND") &&
         strcmp(doc.ElemName(), "HICOLOR1") &&
         strcmp(doc.ElemName(), "HICOLOR2") &&
-        strcmp(doc.ElemName(), "KEYMAPSTYLE")) {
+        strcmp(doc.ElemName(), "KEYMAPSTYLE") &&
+        strcmp(doc.ElemName(), "SOUNDOUTPUT")) {
       Trace::Log("CONFIG", "Found unknown config parameter \"%s\", skipping...",
                  doc.ElemName());
       validElem = false;
