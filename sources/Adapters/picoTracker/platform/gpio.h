@@ -9,6 +9,9 @@
 #define DISPLAY_SCK 26
 #define DISPLAY_MOSI 27
 
+// BATT ADC
+#define BATT_VOLTAGE_IN_PIN 29
+
 // Midi (UART1)
 #define MIDI_UART uart0
 #define MIDI_BAUD_RATE 31250

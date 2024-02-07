@@ -24,15 +24,14 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "pico/stdlib.h"
+#include "hardware/gpio.h"
+#include "hardware/adc.h"
+
 EventManager *picoTrackerSystem::eventManager_ = NULL;
 bool picoTrackerSystem::invert_ = false;
 int picoTrackerSystem::lastBattLevel_ = 100;
 unsigned int picoTrackerSystem::lastBeatCount_ = 0;
-
-static FILE *devbatt_;
-static char *strval;
-static size_t n;
-static size_t t;
 
 int picoTrackerSystem::MainLoop() {
 
@@ -97,12 +96,17 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   eventManager_->MapAppButton("left", APP_BUTTON_LEFT);
   eventManager_->MapAppButton("down", APP_BUTTON_DOWN);
   eventManager_->MapAppButton("up", APP_BUTTON_UP);
+
+  adc_init();
+  //TODO: use BATT_VOLTAGE_IN_PIN from platform/gpio.h instead of hardcoding pin number here
+  gpio_set_dir(29, GPIO_IN);
+  printf("ADC INIT DONE\n");
+
   //  mode0_print("boot successful");
 };
 
 void picoTrackerSystem::Shutdown() {
   delete Audio::GetInstance();
-  fclose(devbatt_);
 };
 
 static int secbase;
@@ -118,27 +122,34 @@ unsigned long picoTrackerSystem::GetClock() {
   return long((tp.tv_sec - secbase) * 1000 + tp.tv_usec / 1000.0);
 }
 
+#define N_SAMPLES 1
+uint16_t sample_buf[N_SAMPLES];
+
+void __not_in_flash_func(adc_capture)(uint16_t *buf, size_t count) {
+    adc_fifo_setup(true, false, 0, false, false);
+    adc_run(true);
+    for (size_t i = 0; i < count; i = i + 1)
+        buf[i] = adc_fifo_get_blocking();
+    adc_run(false);
+    adc_fifo_drain();
+}
+
 int picoTrackerSystem::GetBatteryLevel() {
 
-  if (0) {
-    unsigned int beatCount = SyncMaster::GetInstance()->GetBeatCount();
-    if (beatCount != lastBeatCount_) {
-      unsigned short currentval = 0;
-      fseek(devbatt_, 0, SEEK_SET);
-      fread(strval, t, n, devbatt_);
-      currentval = atoi(strval);
-      if (currentval > 4000)
-        currentval = 4000;
-      if (currentval < 3000)
-        currentval = 3000;
-      lastBattLevel_ = ((currentval - 3000) / 10);
-      lastBeatCount_ = beatCount;
-    }
-  } else {
-    lastBattLevel_ = -1;
+  int lastBattLevel_ = -1;
+  unsigned int beatCount = SyncMaster::GetInstance()->GetBeatCount();
+  if (beatCount != lastBeatCount_) {
+    adc_capture(sample_buf, N_SAMPLES);
+
+    printf("BATTERY: %d", sample_buf[0]);
+    lastBattLevel_ = sample_buf[0];
+
+    lastBeatCount_ = beatCount;
   }
+  
   return lastBattLevel_;
-};
+}
+
 
 void picoTrackerSystem::Sleep(int millisec) {
   //	if (millisec>0)
