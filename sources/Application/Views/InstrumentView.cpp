@@ -3,10 +3,6 @@
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
-#include "BaseClasses/UIBigHexVarField.h"
-#include "BaseClasses/UIIntVarOffField.h"
-#include "BaseClasses/UINoteVarField.h"
-#include "BaseClasses/UIStaticField.h"
 #include "ModalDialogs/ImportSampleDialog.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/PagedImportSampleDialog.h"
@@ -43,10 +39,15 @@ void InstrumentView::onInstrumentChange() {
   if (current_ != old) {
     current_->RemoveObserver(*this);
   };
-  T_SimpleList<UIField>::Empty();
+
+  fieldList_.clear();
+  intVarField_.clear();
+  noteVarField_.clear();
+  staticField_.clear();
+  bigHexVarField_.clear();
+  intVarOffField_.clear();
 
   InstrumentType it = getInstrumentType();
-
   switch (it) {
   case IT_MIDI:
     fillMidiParameters();
@@ -56,14 +57,15 @@ void InstrumentView::onInstrumentChange() {
     break;
   };
 
-  SetFocus(T_SimpleList<UIField>::GetFirst());
-  IteratorPtr<UIField> it2(T_SimpleList<UIField>::GetIterator());
-  for (it2->Begin(); !it2->IsDone(); it2->Next()) {
-    UIIntVarField &field = (UIIntVarField &)it2->CurrentItem();
+  SetFocus(*fieldList_.begin());
+  auto it2 = fieldList_.begin();
+  for (size_t i = 0; i < fieldList_.size(); i++) {
+    UIIntVarField &field = (UIIntVarField &)(**it2);
     if (field.GetVariableID() == lastFocusID_) {
       SetFocus(&field);
       break;
     }
+    it2++;
   };
   if (current_ != old) {
     current_->AddObserver(*this);
@@ -78,114 +80,130 @@ void InstrumentView::fillSampleParameters() {
   SampleInstrument *instrument = (SampleInstrument *)instr;
   GUIPoint position = GetAnchor();
 
-  //	position._y+=View::fieldSpaceHeight_;
+  //   position._y+=View::fieldSpaceHeight_;
   position._y -= 1;
   Variable *v = instrument->FindVariable(SIP_SAMPLE);
   SamplePool *sp = SamplePool::GetInstance();
-  UIIntVarField *f1 = new UIIntVarField(position, *v, "sample: %.19s", 0,
-                                        sp->GetNameListSize() - 1, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
-  f1->SetFocus();
+  intVarField_.emplace_back(UIIntVarField(position, *v, "sample: %.19s", 0,
+                                          sp->GetNameListSize() - 1, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).SetFocus();
 
   position._y += 2;
   v = instrument->FindVariable(SIP_VOLUME);
-  f1 = new UIIntVarField(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_PAN);
-  f1 = new UIIntVarField(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_ROOTNOTE);
-  f1 = new UINoteVarField(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C);
-  T_SimpleList<UIField>::Insert(f1);
+  noteVarField_.emplace_back(
+      UINoteVarField(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C));
+  fieldList_.insert(fieldList_.end(), &(*noteVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_FINETUNE);
-  f1 = new UIIntVarField(position, *v, "detune: %2.2X", 0, 255, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "detune: %2.2X", 0, 255, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_CRUSHVOL);
-  f1 = new UIIntVarField(position, *v, "drive: %2.2X", 0, 0xFF, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "drive: %2.2X", 0, 0xFF, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_CRUSH);
-  f1 = new UIIntVarField(position, *v, "crush: %d", 1, 0x10, 1, 4);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "crush: %d", 1, 0x10, 1, 4));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_DOWNSMPL);
-  f1 = new UIIntVarField(position, *v, "downsample: %d", 0, 8, 1, 4);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "downsample: %d", 0, 8, 1, 4));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
-  UIStaticField *sf = new UIStaticField(position, "flt cut/res:");
-  T_SimpleList<UIField>::Insert(sf);
+  staticField_.emplace_back(UIStaticField(position, "flt cut/res:"));
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._x += 13;
   v = instrument->FindVariable(SIP_FILTCUTOFF);
-  f1 = new UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._x += 3;
   v = instrument->FindVariable(SIP_FILTRESO);
-  f1 = new UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
   position._x -= 16;
 
   position._y += 1;
   v = instrument->FindVariable(SIP_FILTMIX);
-  f1 = new UIIntVarField(position, *v, "type: %2.2X", 0, 0xFF, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "type: %2.2X", 0, 0xFF, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_FILTMODE);
-  f1 = new UIIntVarField(position, *v, "Mode: %s", 0, 2, 1, 1);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "Mode: %s", 0, 2, 1, 1));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
   v = instrument->FindVariable(SIP_INTERPOLATION);
-  f1 = new UIIntVarField(position, *v, "interpolation: %s", 0, 1, 1, 1);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "interpolation: %s", 0, 1, 1, 1));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_LOOPMODE);
-  f1 = new UIIntVarField(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1, 1);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1, 1));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_START);
-  f1 = new UIBigHexVarField(position, *v, 7, "start: %7.7X", 0,
-                            instrument->GetSampleSize() - 1, 16);
-  T_SimpleList<UIField>::Insert(f1);
+  bigHexVarField_.emplace_back(UIBigHexVarField(
+      position, *v, 7, "start: %7.7X", 0, instrument->GetSampleSize() - 1, 16));
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_LOOPSTART);
-  f1 = new UIBigHexVarField(position, *v, 7, "loop start: %7.7X", 0,
-                            instrument->GetSampleSize() - 1, 16);
-  T_SimpleList<UIField>::Insert(f1);
+  bigHexVarField_.emplace_back(
+      UIBigHexVarField(position, *v, 7, "loop start: %7.7X", 0,
+                       instrument->GetSampleSize() - 1, 16));
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_END);
-  f1 = new UIBigHexVarField(position, *v, 7, "loop end: %7.7X", 0,
-                            instrument->GetSampleSize() - 1, 16);
-  T_SimpleList<UIField>::Insert(f1);
+  bigHexVarField_.emplace_back(
+      UIBigHexVarField(position, *v, 7, "loop end: %7.7X", 0,
+                       instrument->GetSampleSize() - 1, 16));
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   v = instrument->FindVariable(SIP_TABLEAUTO);
   position._y += 2;
-  UIIntVarField *f2 =
-      new UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1);
-  T_SimpleList<UIField>::Insert(f2);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_TABLE);
-  f1 = new UIIntVarOffField(position, *v, "table: %2.2X", 0x00, TABLE_COUNT - 1,
-                            1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarOffField_.emplace_back(UIIntVarOffField(
+      position, *v, "table: %2.2X", 0x00, TABLE_COUNT - 1, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
 
 void InstrumentView::fillMidiParameters() {
@@ -197,31 +215,34 @@ void InstrumentView::fillMidiParameters() {
   GUIPoint position = GetAnchor();
 
   Variable *v = instrument->FindVariable(MIP_CHANNEL);
-  UIIntVarField *f1 =
-      new UIIntVarField(position, *v, "channel: %2.2d", 0, 0x0F, 1, 0x04, 1);
-  T_SimpleList<UIField>::Insert(f1);
-  f1->SetFocus();
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "channel: %2.2d", 0, 0x0F, 1, 0x04, 1));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).SetFocus();
 
   position._y += 1;
   v = instrument->FindVariable(MIP_VOLUME);
-  f1 = new UIIntVarField(position, *v, "volume: %2.2X", 0, 0xFF, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "volume: %2.2X", 0, 0xFF, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(MIP_NOTELENGTH);
-  f1 = new UIIntVarField(position, *v, "length: %2.2X", 0, 0xFF, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "length: %2.2X", 0, 0xFF, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  v = instrument->FindVariable(MIP_TABLEAUTO);
   position._y += 2;
-  UIIntVarField *f2 =
-      new UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1);
-  T_SimpleList<UIField>::Insert(f2);
+  v = instrument->FindVariable(MIP_TABLEAUTO);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(MIP_TABLE);
-  f1 = new UIIntVarOffField(position, *v, "table: %2.2X", 0, 0x7F, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
+  intVarOffField_.emplace_back(
+      UIIntVarOffField(position, *v, "table: %2.2X", 0, 0x7F, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
 
 void InstrumentView::warpToNext(int offset) {
@@ -329,7 +350,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       warpToNext(+16);
     if (mask & EPBM_A) { // Allow cut instrument
       if (getInstrumentType() == IT_SAMPLE) {
-        if (GetFocus() == T_SimpleList<UIField>::GetFirst()) {
+        if (GetFocus() == *fieldList_.begin()) {
           int i = viewData_->currentInstrument_;
           InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
           I_Instrument *instr = bank->GetInstrument(i);
@@ -341,7 +362,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
 
       // Check if on table
-      if (GetFocus() == T_SimpleList<UIField>::GetLast()) {
+      if (GetFocus() == *fieldList_.rbegin()) {
         int i = viewData_->currentInstrument_;
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(i);

@@ -8,13 +8,6 @@ UIActionField::UIActionField(const char *name, unsigned int fourcc,
   fourcc_ = fourcc;
 };
 
-UIActionField::UIActionField(std::string name, unsigned int fourcc,
-                             GUIPoint &position)
-    : UIField(position) {
-  name_ = name;
-  fourcc_ = fourcc;
-};
-
 UIActionField::~UIActionField(){
 
 };
@@ -30,7 +23,7 @@ void UIActionField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
 
-  w.DrawString(name_.c_str(), position, props);
+  w.DrawString(name_, position, props);
 };
 
 void UIActionField::OnClick() {
@@ -38,4 +31,4 @@ void UIActionField::OnClick() {
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
-const char *UIActionField::GetString() { return name_.c_str(); };
+const char *UIActionField::GetString() { return name_; };

@@ -7,7 +7,7 @@
 class UIActionField : public UIField, public Observable {
 public:
   UIActionField(const char *name, unsigned int fourcc, GUIPoint &position);
-  UIActionField(std::string name, unsigned int fourcc, GUIPoint &position);
+
   virtual ~UIActionField();
   virtual void Draw(GUIWindow &w, int offset = 0);
   virtual void ProcessArrow(unsigned short mask){};
@@ -15,7 +15,7 @@ public:
   const char *GetString();
 
 protected:
-  std::string name_;
+  const char *name_;
   unsigned int fourcc_;
 };
 #endif
