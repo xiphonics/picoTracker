@@ -998,9 +998,6 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 
   char strbuffer[10];
-  pos._y+=1 ;
-  sprintf(strbuffer,"%3.3d%%",player->GetPlayedBufferPercentage()) ;
-  DrawString(pos._x,pos._y,strbuffer,props) ;
 
   System *sys=System::GetInstance();
   float batt = sys->GetBatteryLevel() / 1000.0;
@@ -1009,13 +1006,14 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
       SetColor(CD_HILITE2);
       invertBatt_ = !invertBatt_;
     } else {
+      SetColor(CD_HILITE1);
       invertBatt_ = false;
     }
     props.invert_ = invertBatt_;
 
     pos._y += 1;
 
-    sprintf(strbuffer, "%3.1fV", batt);
+    sprintf(strbuffer, "%.1fV ", batt);
     DrawString(pos._x, pos._y, strbuffer, props) ;
   }
   
