@@ -998,26 +998,26 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 
   char strbuffer[10];
-  
   pos._y+=1 ;
-        sprintf(strbuffer,"%3.3d%%",player->GetPlayedBufferPercentage()) ;
-        DrawString(pos._x,pos._y,strbuffer,props) ;
+  sprintf(strbuffer,"%3.3d%%",player->GetPlayedBufferPercentage()) ;
+  DrawString(pos._x,pos._y,strbuffer,props) ;
 
-    System *sys=System::GetInstance() ;
-    int batt=sys->GetBatteryLevel() ;
-    if (batt>=0) {
-                if (batt<90) {
-                        SetColor(CD_HILITE2) ;
-                        invertBatt_=!invertBatt_ ;
-                } else {
-                        invertBatt_=false ;
-                } ;
-                props.invert_=invertBatt_ ;
-
-            pos._y+=1 ;
-        sprintf(strbuffer,"%3.3d",batt) ;
-            DrawString(pos._x,pos._y,strbuffer,props) ;
+  System *sys=System::GetInstance();
+  float batt = sys->GetBatteryLevel() / 1000.0;
+  if (batt >= 0) {
+    if (batt < 3.4) {
+      SetColor(CD_HILITE2);
+      invertBatt_ = !invertBatt_;
+    } else {
+      invertBatt_ = false;
     }
+    props.invert_ = invertBatt_;
+
+    pos._y += 1;
+
+    sprintf(strbuffer, "%3.1fV", batt);
+    DrawString(pos._x, pos._y, strbuffer, props) ;
+  }
   
   if (eventType != PET_STOP) {
     SetColor(CD_NORMAL);
@@ -1029,5 +1029,6 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     pos._y += 1;
     DrawString(pos._x, pos._y, strbuffer, props);
   }
+
   drawNotes();
 };
