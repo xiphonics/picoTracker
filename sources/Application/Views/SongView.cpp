@@ -998,11 +998,11 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   char strbuffer[10];
 
-  System *sys=System::GetInstance();
+  System *sys = System::GetInstance();
   float batt = sys->GetBatteryLevel() / 1000.0;
   pos._y += 1;
   drawBattery(batt, pos, props);
-  
+
   if (eventType != PET_STOP) {
     SetColor(CD_NORMAL);
     props.invert_ = false;
@@ -1016,4 +1016,3 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   drawNotes();
 };
-
