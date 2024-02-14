@@ -25,7 +25,6 @@ SongView::SongView(GUIWindow &w, ViewData *viewData, const char *song)
   }
   clipboard_.active_ = false;
   clipboard_.data_ = 0;
-  invertBatt_ = false;
 }
 
 /****************
@@ -1001,21 +1000,8 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   System *sys=System::GetInstance();
   float batt = sys->GetBatteryLevel() / 1000.0;
-  if (batt >= 0) {
-    if (batt < 3.4) {
-      SetColor(CD_HILITE2);
-      invertBatt_ = !invertBatt_;
-    } else {
-      SetColor(CD_HILITE1);
-      invertBatt_ = false;
-    }
-    props.invert_ = invertBatt_;
-
-    pos._y += 1;
-
-    sprintf(strbuffer, "%.1fV ", batt);
-    DrawString(pos._x, pos._y, strbuffer, props) ;
-  }
+  pos._y += 1;
+  drawBattery(batt, pos, props);
   
   if (eventType != PET_STOP) {
     SetColor(CD_NORMAL);
@@ -1030,3 +1016,4 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   drawNotes();
 };
+
