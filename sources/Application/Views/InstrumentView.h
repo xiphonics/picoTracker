@@ -14,6 +14,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
+  virtual void OnClockTick(){};
 
 protected:
   void warpToNext(int offset);

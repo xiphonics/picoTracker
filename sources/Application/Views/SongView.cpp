@@ -980,8 +980,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   SetColor(CD_NORMAL);
 
-  // Draw clipping indicator & CPU usage
-
+  // Draw clipping indicator
   if (View::miniLayout_) {
     pos._y = 0;
     pos._x = 25;
@@ -990,6 +989,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     pos._x = 26;
   }
 
+  pos._y += 1; // make space for batt guage which is on top line
   if (player->Clipped()) {
     DrawString(pos._x, pos._y, "clip", props);
   } else {
@@ -997,11 +997,6 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 
   char strbuffer[10];
-
-  System *sys = System::GetInstance();
-  float batt = sys->GetBatteryLevel() / 1000.0;
-  pos._y += 1;
-  drawBattery(batt, pos, props);
 
   if (eventType != PET_STOP) {
     SetColor(CD_NORMAL);
@@ -1015,4 +1010,18 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 
   drawNotes();
+};
+
+void SongView::OnClockTick() {
+  // update batt gauge on every clock tick (~1Hz)
+  GUIPoint anchor = GetAnchor();
+  GUIPoint pos = anchor;
+  GUITextProperties props;
+  pos._y = 0;
+  pos._x = 26;
+
+  System *sys = System::GetInstance();
+  float batt = sys->GetBatteryLevel() / 1000.0;
+  drawBattery(batt, pos, props);
+  w_.Flush();
 };

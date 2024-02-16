@@ -54,6 +54,8 @@ void GUIWindow::Unlock() { _imp->Unlock(); }
 
 void GUIWindow::Update() { onUpdate(); }
 
+void GUIWindow::ClockTick() { onClockTick(); }
+
 I_GUIGraphics *GUIWindow::GetGraphics() { return this; }
 
 I_GUIGraphics *GUIWindow::GetDC() { return this; }

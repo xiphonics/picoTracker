@@ -12,6 +12,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
+  virtual void OnClockTick(){};
 
 protected:
   void updateCursorValue(int val, bool sync = false);

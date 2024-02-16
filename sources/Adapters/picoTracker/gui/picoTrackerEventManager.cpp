@@ -54,15 +54,20 @@ int picoTrackerEventManager::MainLoop() {
       queue->Empty(); // Avoid duplicates redraw
       redrawing_ = false;
     }
+
+    if (loops == (3 * 1000000)) {
 #ifdef PICOSTATS
-    if (loops == 100000) {
       printf("Usage %.1f% CPU\n", ((float)events / loops) * 100);
+      // measure_freqs();
+      measure_free_mem();
+#endif
       events = 0;
       loops = 0;
-      //      measure_freqs();
-      measure_free_mem();
+      event = new picoTrackerEvent();
+      event->type_ = PICO_CLOCK;
+      picoTrackerGUIWindowImp::ProcessEvent(*event);
+      delete event;
     }
-#endif
   }
   // TODO: HW Shutdown
   return 0;
