@@ -133,10 +133,9 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
     break;
   case PICO_CLOCK:
     instance_->_window->ClockTick();
-    break;  
+    break;
   }
 }
-
 
 void picoTrackerGUIWindowImp::ProcessButtonChange(uint16_t changeMask,
                                                   uint16_t buttonMask) {
