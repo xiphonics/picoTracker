@@ -457,9 +457,7 @@ void AppWindow::onUpdate() {
   Flush();
 };
 
-void AppWindow::onClockTick() {
-  _currentView->OnClockTick();
-}
+void AppWindow::onClockTick() { _currentView->OnClockTick(); }
 
 void AppWindow::LayoutChildren(){};
 
