@@ -17,9 +17,10 @@ Application::Application() {
 
 void Application::initMidiInput()
 {
-  const char *preferedDevice=Config::GetInstance()->GetValue("MIDICTRLDEVICE");
+  //  const char *preferedDevice=Config::GetInstance()->GetValue("MIDICTRLDEVICE");
 
-  IteratorPtr<MidiInDevice>it(MidiService::GetInstance()->GetInIterator()) ;
+  const char *preferedDevice = "MIDI IN 1";
+  IteratorPtr<MidiInDevice> it(MidiService::GetInstance()->GetInIterator());
   for(it->Begin();!it->IsDone();it->Next())
   {
     MidiInDevice &in=it->CurrentItem() ;
