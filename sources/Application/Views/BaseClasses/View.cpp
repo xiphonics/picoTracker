@@ -224,12 +224,8 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 
 void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
   if (voltage >= 0) {
-    if (voltage <= 3.4) {
-      SetColor(CD_HILITE2); // TODO: change to CD_ERROR once its available
-    } else {
-      SetColor(CD_HILITE1);
-    }
-
+    SetColor(CD_INFO);
+    
     char *battText;
     if (voltage > 4.0) {
       battText = (char *)"[++F]";
@@ -239,8 +235,10 @@ void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
     } else if (voltage > 3.5) {
       battText = (char *)"[++ ]";
     } else if (voltage > 3.4) {
+      SetColor(CD_WARN);
       battText = (char *)"[+  ]";
     } else {
+      SetColor(CD_ERROR);
       battText = (char *)"[   ]";
     }
 
