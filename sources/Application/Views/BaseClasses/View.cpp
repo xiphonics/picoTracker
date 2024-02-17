@@ -225,7 +225,7 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
   if (voltage >= 0) {
     SetColor(CD_INFO);
-    
+
     char *battText;
     if (voltage > 4.0) {
       battText = (char *)"[++F]";
