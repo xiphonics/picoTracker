@@ -97,12 +97,16 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   // Init midi services
   MidiService::GetInstance()->Init();
 
+  // now assign custom colors if they have been set in the config.xml
   defineColor("BACKGROUND", backgroundColor_, 0);
   defineColor("FOREGROUND", normalColor_, 1);
   cursorColor_ = normalColor_;
   defineColor("HICOLOR1", highlightColor_, 2);
   defineColor("HICOLOR2", highlight2Color_, 3);
   defineColor("CURSORCOLOR", cursorColor_, 4);
+  defineColor("INFOCOLOR", infoColor_, 5);
+  defineColor("WARNCOLOR", warnColor_, 6);
+  defineColor("ERRORCOLOR", errorColor_, 7);
 
   GUIWindow::Clear(backgroundColor_);
 
@@ -241,10 +245,10 @@ void AppWindow::Flush() {
             break;
           case CD_WARN:
             gcolor = warnColor_;
-            break;    
+            break;
           case CD_ERROR:
             gcolor = errorColor_;
-            break;  
+            break;
 
           default:
             NAssert(0);
