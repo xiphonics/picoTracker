@@ -30,7 +30,7 @@ public:
   const char *GetSampleLib();
 #ifdef LOAD_IN_FLASH
   int flashUsage();
-#endif  
+#endif
 
 protected:
   bool loadSample(const char *path);

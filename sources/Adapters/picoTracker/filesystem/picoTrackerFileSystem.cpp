@@ -62,7 +62,7 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
              fileCount_);
 }
 
-int32_t picoTrackerPagedDir::getFileSize(int index){
+int32_t picoTrackerPagedDir::getFileSize(int index) {
   if (fileIndexes_[index].type == ParentDirIndex) {
     Trace::Error("parentdir index, no filesize");
     return 0;
@@ -80,7 +80,8 @@ int32_t picoTrackerPagedDir::getFileSize(int index){
   FsBaseFile file;
 
   if (!file.open(&dir, index, O_READ)) {
-    Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d for getSize", index);
+    Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d for getSize",
+                 index);
     return 0;
   }
 

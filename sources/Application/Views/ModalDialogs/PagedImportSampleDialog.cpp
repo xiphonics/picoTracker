@@ -69,7 +69,7 @@ void PagedImportSampleDialog::DrawView() {
   SamplePool *pool = SamplePool::GetInstance();
   char statusbar[33];
   SetColor(CD_NORMAL);
-  
+
   int charsAdded = 0;
   // get filesize of currently highlighted file
   FileListItem currentItem = fileList_[currentSample_ - topIndex_];
@@ -79,9 +79,9 @@ void PagedImportSampleDialog::DrawView() {
     charsAdded = sprintf(statusbar, "FILE:%s ", fileSizeStr);
     delete fileSizeStr;
   }
-  
+
   auto usage = humanMemorySize(pool->flashUsage());
-  sprintf(statusbar+charsAdded, "FREE:[%s]", usage);
+  sprintf(statusbar + charsAdded, "FREE:[%s]", usage);
   delete usage;
   GUIPoint pos = GUIPoint(2, 23);
   w_.DrawString(statusbar, pos, props);
