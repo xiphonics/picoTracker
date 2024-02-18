@@ -9,8 +9,8 @@ char *humanMemorySize(uint32_t bytes) {
   const char *const sizeNames[] = {"B", "KB", "MB", "GB"};
 
   uint32_t i = (uint32_t)floor(log(bytes) / log(1024));
-  double humanSize = bytes / pow(1024, i);
-  snprintf(result, sizeof(char) * 20, "%g %s", humanSize, sizeNames[i]);
+  float humanSize = bytes / pow(1024, i);
+  snprintf(result, sizeof(char) * 12, "%.1f%s", humanSize, sizeNames[i]);
 
   return result;
 }
