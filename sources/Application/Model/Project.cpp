@@ -15,7 +15,8 @@
 
 #include <math.h>
 
-Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
+Project::Project()
+    : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0) {
 
   WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
   this->insert(end(), tempo);
@@ -38,7 +39,6 @@ Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
   this->insert(end(), midi);
   midi->AddObserver(*this);
 
-  song_ = new Song();
   instrumentBank_ = new InstrumentBank();
 
   // look if we can find a sav file
@@ -54,10 +54,7 @@ Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
   Status::Set("About to load project");
 };
 
-Project::~Project() {
-  delete song_;
-  delete instrumentBank_;
-};
+Project::~Project() { delete instrumentBank_; };
 
 int Project::GetScale() {
   Variable *v = FindVariable(VAR_SCALE);
@@ -134,26 +131,26 @@ void Project::Update(Observable &o, I_ObservableData *d) {
 
 void Project::Purge() {
 
-  song_->chain_->ClearAllocation();
-  song_->phrase_->ClearAllocation();
+  song_.chain_.ClearAllocation();
+  song_.phrase_.ClearAllocation();
 
-  unsigned char *data = song_->data_;
+  unsigned char *data = song_.data_;
   for (int i = 0; i < 256 * SONG_CHANNEL_COUNT; i++) {
     if (*data != 0xFF) {
-      song_->chain_->SetUsed(*data);
+      song_.chain_.SetUsed(*data);
     }
     data++;
   }
 
-  data = song_->chain_->data_;
-  unsigned char *data2 = song_->chain_->transpose_;
+  data = song_.chain_.data_;
+  unsigned char *data2 = song_.chain_.transpose_;
 
   for (int i = 0; i < CHAIN_COUNT; i++) {
 
-    if (song_->chain_->IsUsed(i)) {
+    if (song_.chain_.IsUsed(i)) {
       for (int j = 0; j < 16; j++) {
         if (*data != 0xFF) {
-          song_->phrase_->SetUsed(*data);
+          song_.phrase_.SetUsed(*data);
         }
         data++;
         data2++;
@@ -167,17 +164,17 @@ void Project::Purge() {
     }
   }
 
-  data = song_->phrase_->note_;
-  data2 = song_->phrase_->instr_;
+  data = song_.phrase_.note_;
+  data2 = song_.phrase_.instr_;
 
-  FourCC *cmd1 = song_->phrase_->cmd1_;
-  ushort *param1 = song_->phrase_->param1_;
-  FourCC *cmd2 = song_->phrase_->cmd2_;
-  ushort *param2 = song_->phrase_->param2_;
+  FourCC *cmd1 = song_.phrase_.cmd1_;
+  ushort *param1 = song_.phrase_.param1_;
+  FourCC *cmd2 = song_.phrase_.cmd2_;
+  ushort *param2 = song_.phrase_.param2_;
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
-      if (!song_->phrase_->IsUsed(i)) {
+      if (!song_.phrase_.IsUsed(i)) {
         *data = 0xFF;
         *data2 = 0xFF;
         *cmd1 = I_CMD_NONE;
@@ -202,7 +199,7 @@ void Project::PurgeInstruments(bool removeFromDisk) {
     used[i] = false;
   }
 
-  unsigned char *data = song_->phrase_->instr_;
+  unsigned char *data = song_.phrase_.instr_;
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {

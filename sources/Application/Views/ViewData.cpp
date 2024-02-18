@@ -4,7 +4,7 @@
 ViewData::ViewData(Project *project) {
 
   project_ = project;
-  song_ = project->song_;
+  song_ = &(project->song_);
   currentChain_ = 0;
   currentPhrase_ = 0;
   songX_ = 0;
@@ -78,12 +78,12 @@ unsigned char ViewData::UpdateChainCursorValue(int offset, int dx, int dy) {
 
   switch (chainCol_ + dx) {
   case 0:
-    c = song_->chain_->data_ + (16 * currentChain_ + chainRow_ + dy);
+    c = song_->chain_.data_ + (16 * currentChain_ + chainRow_ + dy);
     limit = CHAIN_COUNT - 1;
     wrap = false;
     break;
   case 1:
-    c = song_->chain_->transpose_ + (16 * currentChain_ + chainRow_ + dy);
+    c = song_->chain_.transpose_ + (16 * currentChain_ + chainRow_ + dy);
     limit = 0xFF;
     wrap = true;
     break;
@@ -106,10 +106,10 @@ void ViewData::UpdateChainCursor(int dx, int dy) {
 }
 
 void ViewData::SetChainPhrase(unsigned char value) {
-  unsigned char *c = song_->chain_->data_ + (16 * currentChain_ + chainRow_);
+  unsigned char *c = song_->chain_.data_ + (16 * currentChain_ + chainRow_);
   *c = value;
 }
 
 unsigned char *ViewData::GetCurrentChainPointer() {
-  return song_->chain_->data_ + (16 * currentChain_ + chainRow_);
+  return song_->chain_.data_ + (16 * currentChain_ + chainRow_);
 };

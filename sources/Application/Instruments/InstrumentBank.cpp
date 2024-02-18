@@ -13,19 +13,61 @@ const char *InstrumentTypeData[] = {"Sample", "Midi"};
 
 // Contain all instrument definition
 
-InstrumentBank::InstrumentBank() : Persistent("INSTRUMENTBANK") {
+InstrumentBank::InstrumentBank()
+    : Persistent("INSTRUMENTBANK"), si0(), si1(), si2(), si3(), si4(), si5(),
+      si6(), si7(), si8(), si9(), si10(), si11(), si12(), si13(), si14(),
+      si15(), mi0(), mi1(), mi2(), mi3(), mi4(), mi5(), mi6(), mi7(), mi8(),
+      mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15() {
 
-  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
-    Trace::Debug("Loading sample instrument: %i", i);
-    SampleInstrument *s = new SampleInstrument();
-    instrument_[i] = s;
-  }
-  for (int i = 0; i < MAX_MIDIINSTRUMENT_COUNT; i++) {
-    Trace::Debug("Loading MIDI instrument: %i", i);
-    MidiInstrument *s = new MidiInstrument();
-    s->SetChannel(i);
-    instrument_[MAX_SAMPLEINSTRUMENT_COUNT + i] = s;
-  }
+  instrument_[0] = &si0;
+  instrument_[1] = &si1;
+  instrument_[2] = &si2;
+  instrument_[3] = &si3;
+  instrument_[4] = &si4;
+  instrument_[5] = &si5;
+  instrument_[6] = &si6;
+  instrument_[7] = &si7;
+  instrument_[8] = &si8;
+  instrument_[9] = &si9;
+  instrument_[10] = &si10;
+  instrument_[11] = &si11;
+  instrument_[12] = &si12;
+  instrument_[13] = &si13;
+  instrument_[14] = &si14;
+  instrument_[15] = &si15;
+  mi0.SetChannel(0);
+  instrument_[16] = &mi0;
+  mi1.SetChannel(1);
+  instrument_[17] = &mi1;
+  mi2.SetChannel(2);
+  instrument_[18] = &mi2;
+  mi3.SetChannel(3);
+  instrument_[19] = &mi3;
+  mi4.SetChannel(4);
+  instrument_[20] = &mi4;
+  mi5.SetChannel(5);
+  instrument_[21] = &mi5;
+  mi6.SetChannel(6);
+  instrument_[22] = &mi6;
+  mi7.SetChannel(7);
+  instrument_[23] = &mi7;
+  mi8.SetChannel(8);
+  instrument_[24] = &mi8;
+  mi9.SetChannel(9);
+  instrument_[25] = &mi9;
+  mi10.SetChannel(10);
+  instrument_[26] = &mi10;
+  mi11.SetChannel(11);
+  instrument_[27] = &mi11;
+  mi12.SetChannel(12);
+  instrument_[28] = &mi12;
+  mi13.SetChannel(13);
+  instrument_[29] = &mi13;
+  mi14.SetChannel(14);
+  instrument_[30] = &mi14;
+  mi15.SetChannel(15);
+  instrument_[31] = &mi15;
+
   Status::Set("All instrument loaded");
 };
 

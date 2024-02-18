@@ -8,21 +8,25 @@
 Table::Table() { Reset(); };
 
 void Table::Reset() {
-  SYS_MEMSET(cmd1_, '-', sizeof(cmd1_[0]) * TABLE_STEPS);
-  SYS_MEMSET(param1_, 0, sizeof(param1_[0]) * TABLE_STEPS);
-  SYS_MEMSET(cmd2_, '-', sizeof(cmd2_[0]) * TABLE_STEPS);
-  SYS_MEMSET(param2_, 0, sizeof(param2_[0]) * TABLE_STEPS);
-  SYS_MEMSET(cmd3_, '-', sizeof(cmd3_[0]) * TABLE_STEPS);
-  SYS_MEMSET(param3_, 0, sizeof(param3_[0]) * TABLE_STEPS);
+  for (int i = 0; i < TABLE_STEPS; i++) {
+    cmd1_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    param1_[i] = 0;
+    cmd2_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    param2_[i] = 0;
+    cmd3_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    param3_[i] = 0;
+  }
 };
 
 void Table::Copy(const Table &other) {
-  SYS_MEMCPY(cmd1_, other.cmd1_, sizeof(cmd1_[0]) * TABLE_STEPS);
-  SYS_MEMCPY(param1_, other.param1_, sizeof(param1_[0]) * TABLE_STEPS);
-  SYS_MEMCPY(cmd2_, other.cmd2_, sizeof(cmd2_[0]) * TABLE_STEPS);
-  SYS_MEMCPY(param2_, other.param2_, sizeof(param2_[0]) * TABLE_STEPS);
-  SYS_MEMCPY(cmd3_, other.cmd3_, sizeof(cmd3_[0]) * TABLE_STEPS);
-  SYS_MEMCPY(param3_, other.param3_, sizeof(param3_[0]) * TABLE_STEPS);
+  for (int i = 0; i < TABLE_STEPS; i++) {
+    cmd1_[i] = *other.cmd1_;
+    param1_[i] = *other.param1_;
+    cmd2_[i] = *other.cmd2_;
+    param2_[i] = *other.param2_;
+    cmd3_[i] = *other.cmd3_;
+    param3_[i] = *other.param3_;
+  }
 };
 
 bool Table::IsEmpty() {

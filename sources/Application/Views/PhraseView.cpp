@@ -14,7 +14,7 @@ short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
     : View(w, viewData), cmdEdit_("edit", FCC_EDIT, 0) {
-  phrase_ = viewData_->song_->phrase_;
+  phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
   GUIPoint pos(0, 10);
   cmdEditField_ =
@@ -401,22 +401,22 @@ void PhraseView::fillClipboardData() {
   // Copy the data
 
   uchar *src1 =
-      viewData_->song_->phrase_->note_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.note_ + 16 * viewData_->currentPhrase_;
   uchar *dst1 = clipboard_.note_;
   uchar *src2 =
-      viewData_->song_->phrase_->instr_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.instr_ + 16 * viewData_->currentPhrase_;
   uchar *dst2 = clipboard_.instr_;
   uchar *src3 =
-      viewData_->song_->phrase_->cmd1_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.cmd1_ + 16 * viewData_->currentPhrase_;
   uchar *dst3 = clipboard_.cmd1_;
   ushort *src4 =
-      viewData_->song_->phrase_->param1_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.param1_ + 16 * viewData_->currentPhrase_;
   ushort *dst4 = clipboard_.param1_;
   uchar *src5 =
-      viewData_->song_->phrase_->cmd2_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.cmd2_ + 16 * viewData_->currentPhrase_;
   uchar *dst5 = clipboard_.cmd2_;
   ushort *src6 =
-      viewData_->song_->phrase_->param2_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.param2_ + 16 * viewData_->currentPhrase_;
   ushort *dst6 = clipboard_.param2_;
 
   for (int i = 0; i < clipboard_.height_; i++) {
@@ -509,17 +509,17 @@ void PhraseView::cutSelection() {
   // Loop over selection col, row & clear data inside it
 
   uchar *dst1 =
-      viewData_->song_->phrase_->note_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.note_ + 16 * viewData_->currentPhrase_;
   uchar *dst2 =
-      viewData_->song_->phrase_->instr_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.instr_ + 16 * viewData_->currentPhrase_;
   uchar *dst3 =
-      viewData_->song_->phrase_->cmd1_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.cmd1_ + 16 * viewData_->currentPhrase_;
   ushort *dst4 =
-      viewData_->song_->phrase_->param1_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.param1_ + 16 * viewData_->currentPhrase_;
   uchar *dst5 =
-      viewData_->song_->phrase_->cmd2_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.cmd2_ + 16 * viewData_->currentPhrase_;
   ushort *dst6 =
-      viewData_->song_->phrase_->param2_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.param2_ + 16 * viewData_->currentPhrase_;
 
   for (int i = 0; i < clipboard_.width_; i++) {
     for (int j = 0; j < clipboard_.height_; j++) {
@@ -571,22 +571,22 @@ void PhraseView::pasteClipboard() {
       }
     */
   uchar *dst1 =
-      viewData_->song_->phrase_->note_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.note_ + 16 * viewData_->currentPhrase_;
   uchar *src1 = clipboard_.note_;
   uchar *dst2 =
-      viewData_->song_->phrase_->instr_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.instr_ + 16 * viewData_->currentPhrase_;
   uchar *src2 = clipboard_.instr_;
   uchar *dst3 =
-      viewData_->song_->phrase_->cmd1_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.cmd1_ + 16 * viewData_->currentPhrase_;
   uchar *src3 = clipboard_.cmd1_;
   ushort *dst4 =
-      viewData_->song_->phrase_->param1_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.param1_ + 16 * viewData_->currentPhrase_;
   ushort *src4 = clipboard_.param1_;
   uchar *dst5 =
-      viewData_->song_->phrase_->cmd2_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.cmd2_ + 16 * viewData_->currentPhrase_;
   uchar *src5 = clipboard_.cmd2_;
   ushort *dst6 =
-      viewData_->song_->phrase_->param2_ + 16 * viewData_->currentPhrase_;
+      viewData_->song_->phrase_.param2_ + 16 * viewData_->currentPhrase_;
   ushort *src6 = clipboard_.param2_;
 
   for (int i = 0; i < clipboard_.width_; i++) {

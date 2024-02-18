@@ -14,12 +14,12 @@ public:
   void SetUsed(uchar c);
   void ClearAllocation();
 
-  uchar *note_;
-  uchar *instr_;
-  FourCC *cmd1_;
-  ushort *param1_;
-  FourCC *cmd2_;
-  ushort *param2_;
+  uchar note_[PHRASE_COUNT * 16];
+  uchar instr_[PHRASE_COUNT * 16];
+  FourCC cmd1_[PHRASE_COUNT * 16];
+  ushort param1_[PHRASE_COUNT * 16];
+  FourCC cmd2_[PHRASE_COUNT * 16];
+  ushort param2_[PHRASE_COUNT * 16];
 
 private:
   bool isUsed_[PHRASE_COUNT];

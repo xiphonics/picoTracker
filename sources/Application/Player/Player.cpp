@@ -408,7 +408,7 @@ bool Player::isPlayable(int row, int col, int chainPos) {
 
   uchar *chain = viewData_->song_->data_ + SONG_CHANNEL_COUNT * row + col;
   if (*chain != 0xFF) {
-    uchar data = viewData_->song_->chain_->data_[16 * (*chain) + chainPos];
+    uchar data = viewData_->song_->chain_.data_[16 * (*chain) + chainPos];
     return (data != 0xFF);
   }
   return false;
@@ -420,7 +420,7 @@ bool Player::findPlayable(uchar *row, int col, uchar chainPos) {
 
   uchar *chain = viewData_->song_->data_ + SONG_CHANNEL_COUNT * (*row) + col;
   if (*chain != 0xFF) {
-    uchar data = viewData_->song_->chain_->data_[16 * (*chain) + chainPos];
+    uchar data = viewData_->song_->chain_.data_[16 * (*chain) + chainPos];
     return (data != 0xFF);
   }
 
@@ -455,7 +455,7 @@ bool Player::findPlayable(uchar *row, int col, uchar chainPos) {
   chain = viewData_->song_->data_ + SONG_CHANNEL_COUNT * (*row) + col;
   uchar data = 0xFF;
   if (*chain != 0xFF) {
-    data = viewData_->song_->chain_->data_[16 * (*chain) + chainPos];
+    data = viewData_->song_->chain_.data_[16 * (*chain) + chainPos];
   }
   return (data != 0xFF);
 }
@@ -602,8 +602,8 @@ void Player::ProcessCommands() {
       if (phrase != 0xFF) {
         if (gs->TriggerChannel(i)) { // If groove says it is time to play
           int pos = viewData_->phrasePlayPos_[i];
-          FourCC cc = viewData_->song_->phrase_->cmd1_[phrase * 16 + pos];
-          ushort param = viewData_->song_->phrase_->param1_[phrase * 16 + pos];
+          FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
+          ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
 
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
@@ -619,8 +619,8 @@ void Player::ProcessCommands() {
 
           // Now process second command row
 
-          cc = viewData_->song_->phrase_->cmd2_[phrase * 16 + pos];
-          param = viewData_->song_->phrase_->param2_[phrase * 16 + pos];
+          cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
+          param = viewData_->song_->phrase_.param2_[phrase * 16 + pos];
 
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
@@ -749,7 +749,7 @@ void Player::updateChainPos(int pos, int channel, int hop) {
   unsigned char chain = viewData_->currentPlayChain_[channel];
   if (chain != 0xFF) {
     viewData_->chainPlayPos_[channel] = pos;
-    unsigned char *data = viewData_->song_->chain_->data_ + (16 * chain + pos);
+    unsigned char *data = viewData_->song_->chain_.data_ + (16 * chain + pos);
     viewData_->currentPlayPhrase_[channel] = *data;
     if (*data == 0xFF) { // This could happen if starting in song mode on a row
                          // where a chain contains no phrase
@@ -778,15 +778,15 @@ void Player::updatePhrasePos(int pos, int channel) {
 
   // Check both param colum 1 & 2
 
-  FourCC cc = viewData_->song_->phrase_->cmd1_[phrase * 16 + pos];
+  FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
   if (cc == I_CMD_DLAY) {
-    ushort param = viewData_->song_->phrase_->param1_[phrase * 16 + pos];
+    ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
 
-  cc = viewData_->song_->phrase_->cmd2_[phrase * 16 + pos];
+  cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
   if (cc == I_CMD_DLAY) {
-    ushort param = viewData_->song_->phrase_->param1_[phrase * 16 + pos];
+    ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
 }
@@ -801,7 +801,7 @@ void Player::playCursorPosition(int channel) {
   if (currentPhrase != 0xFF) {
 
     Song *song = viewData_->song_;
-    Phrase *phrase = song->phrase_;
+    Phrase *phrase = &(song->phrase_);
     unsigned char note = phrase->note_[16 * currentPhrase + pos];
     unsigned char instr = phrase->instr_[16 * currentPhrase + pos];
 
@@ -836,7 +836,7 @@ void Player::playCursorPosition(int channel) {
         int chain = viewData_->currentPlayChain_[channel];
         int chainPos = viewData_->chainPlayPos_[channel];
         unsigned char *trsp =
-            viewData_->song_->chain_->transpose_ + (16 * chain + chainPos);
+            viewData_->song_->chain_.transpose_ + (16 * chain + chainPos);
         note += *trsp;
         note += project_->GetTranspose();
         instrumentOnChannel_[channel][0] =
@@ -886,13 +886,13 @@ void Player::playCursorPosition(int channel) {
 int Player::getChannelHop(int channel, int pos) {
 
   int phrase = viewData_->currentPlayPhrase_[channel];
-  FourCC cc = viewData_->song_->phrase_->cmd1_[phrase * 16 + pos];
+  FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
   if (cc == I_CMD_HOP) {
-    return (viewData_->song_->phrase_->param1_[phrase * 16 + pos]) & 0xF;
+    return (viewData_->song_->phrase_.param1_[phrase * 16 + pos]) & 0xF;
   }
-  cc = viewData_->song_->phrase_->cmd2_[phrase * 16 + pos];
+  cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
   if (cc == I_CMD_HOP) {
-    return (viewData_->song_->phrase_->param2_[phrase * 16 + pos]) & 0xF;
+    return (viewData_->song_->phrase_.param2_[phrase * 16 + pos]) & 0xF;
   }
   return -1;
 }
@@ -1015,7 +1015,7 @@ void Player::moveToNextPhrase(int channel, int hop) {
 
   bool canContinue = (pos < 16);
   if (canContinue) {
-    unsigned char *data = viewData_->song_->chain_->data_ + (16 * chain + pos);
+    unsigned char *data = viewData_->song_->chain_.data_ + (16 * chain + pos);
     canContinue = (*data != 0xFF);
   }
 
@@ -1093,7 +1093,7 @@ void Player::moveToNextChain(int channel, int hop) {
     bool loopBack = (*data == 0xFF);
     // Check if first step of chain contains somethin, if not we loop back
     if (!loopBack) {
-      unsigned char step = viewData_->song_->chain_->data_[*data * 16];
+      unsigned char step = viewData_->song_->chain_.data_[*data * 16];
       loopBack = (step == 0xFF);
     };
     if (loopBack) {
@@ -1103,7 +1103,7 @@ void Player::moveToNextChain(int channel, int hop) {
         if (*data == 0xFF) { // we stop searching if there's a blank
           break;
         } else { // Or if first phrase of chain is empty
-          if (viewData_->song_->chain_->data_[(*data) * 16] == 0xFF) {
+          if (viewData_->song_->chain_.data_[(*data) * 16] == 0xFF) {
             break;
           }
         }

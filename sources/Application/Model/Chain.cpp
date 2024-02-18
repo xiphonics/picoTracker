@@ -5,22 +5,16 @@
 
 Chain::Chain() {
 
-  int size = CHAIN_COUNT * 16;
-  data_ = (unsigned char *)SYS_MALLOC(size);
-  memset(data_, 0xFF, size);
-  transpose_ = (unsigned char *)SYS_MALLOC(size);
-  memset(transpose_, 0x00, size);
+  for (int i = 0; i < CHAIN_COUNT * 16; i++) {
+    data_[i] = 0xFF;
+    transpose_[i] = 0x00;
+  }
   for (int i = 0; i < CHAIN_COUNT; i++) {
     isUsed_[i] = false;
   }
 };
 
-Chain::~Chain() {
-  if (data_)
-    SYS_FREE(data_);
-  if (transpose_)
-    SYS_FREE(transpose_);
-};
+Chain::~Chain(){};
 
 unsigned short Chain::GetNext() {
   for (int i = 0; i < CHAIN_COUNT; i++) {
