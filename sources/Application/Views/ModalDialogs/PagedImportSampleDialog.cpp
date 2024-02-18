@@ -21,12 +21,13 @@ void PagedImportSampleDialog::DrawView() {
   Trace::Log("PAGEDIMPORT", "DrawView current:%d topIdx:%d", currentSample_,
              topIndex_);
 
-  SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
+  // SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
+  SetWindow(30, 22);
   GUITextProperties props;
 
 // Draw title
 #ifdef SHOW_MEM_USAGE
-  char title[40];
+  char title[33];
 
   SetColor(CD_NORMAL);
 
@@ -63,7 +64,12 @@ void PagedImportSampleDialog::DrawView() {
     count++;
   };
 
+  SamplePool *pool = SamplePool::GetInstance();
+  char statusbar[33];
   SetColor(CD_NORMAL);
+  sprintf(statusbar, "FLASH: [%d]", pool->flashUsage());
+  GUIPoint pos = GUIPoint(0, 23);
+  w_.DrawString(statusbar, pos, props);
 };
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {
