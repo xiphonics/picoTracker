@@ -4,13 +4,10 @@
 
 // The result of the function must be freed
 // ref: https://stackoverflow.com/a/77278639/85472
-char *humanMemorySize(uint32_t bytes) {
-  char *result = (char *)malloc(sizeof(char) * 20);
+void humanMemorySize(uint32_t bytes, char *output) {
   const char *const sizeNames[] = {"B", "KB", "MB", "GB"};
 
   uint32_t i = (uint32_t)floor(log(bytes) / log(1024));
   float humanSize = bytes / pow(1024, i);
-  snprintf(result, sizeof(char) * 12, "%.1f%s", humanSize, sizeNames[i]);
-
-  return result;
+  snprintf(output, sizeof(char) * 12, "%.1f%s", humanSize, sizeNames[i]);
 }

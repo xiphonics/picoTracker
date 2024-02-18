@@ -74,15 +74,14 @@ void PagedImportSampleDialog::DrawView() {
   // get filesize of currently highlighted file
   FileListItem currentItem = fileList_[currentSample_ - topIndex_];
   auto fileSize = currentDir_->getFileSize(currentItem.index);
+  char *unitsFormatted = (char *)malloc(sizeof(char) * 10);
   if (fileSize > 0) {
-    auto fileSizeStr = humanMemorySize(fileSize);
-    charsAdded = sprintf(statusbar, "FILE:%s ", fileSizeStr);
-    delete fileSizeStr;
+    humanMemorySize(fileSize, unitsFormatted);
+    charsAdded = sprintf(statusbar, "FILE:%s ", unitsFormatted);
   }
 
-  auto usage = humanMemorySize(pool->flashUsage());
-  sprintf(statusbar + charsAdded, "FREE:[%s]", usage);
-  delete usage;
+  humanMemorySize(pool->flashUsage(), unitsFormatted);
+  sprintf(statusbar + charsAdded, "FREE:[%s]", unitsFormatted);
   GUIPoint pos = GUIPoint(2, 23);
   w_.DrawString(statusbar, pos, props);
 };
