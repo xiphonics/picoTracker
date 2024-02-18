@@ -1,6 +1,8 @@
 #include "PagedImportSampleDialog.h"
+#include "Adapters/picoTracker/utils/stringutils.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+
 #ifdef PICOBUILD
 #include "pico/multicore.h"
 #endif
@@ -57,8 +59,8 @@ void PagedImportSampleDialog::DrawView() {
       strncpy(buffer + 1, current.name.c_str(), LIST_WIDTH - 2);
       strcat(buffer, "]");
     }
-    buffer[LIST_WIDTH] =
-        0; // make sure if truncated the filename we have trailing null
+    // make sure if truncated the filename we have trailing null
+    buffer[LIST_WIDTH] = 0;
     DrawString(x, y, buffer, props);
     y += 1;
     count++;
@@ -67,7 +69,9 @@ void PagedImportSampleDialog::DrawView() {
   SamplePool *pool = SamplePool::GetInstance();
   char statusbar[33];
   SetColor(CD_NORMAL);
-  sprintf(statusbar, "FLASH: [%d]", pool->flashUsage());
+  auto usage = humanMemorySize(pool->flashUsage());
+  sprintf(statusbar, "FREE: [%s]", usage);
+  delete usage;
   GUIPoint pos = GUIPoint(0, 23);
   w_.DrawString(statusbar, pos, props);
 };
