@@ -44,7 +44,7 @@ protected: // GUIWindow implementation
   virtual void LayoutChildren();
   virtual void Flush();
   virtual void Redraw();
-  virtual void onClockTick();
+  virtual void AnimationUpdate();
 
   // override draw string to avoid going too far off
   // the screen.

@@ -14,7 +14,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
-  virtual void OnClockTick(){};
+  virtual void AnimationUpdate(){};
 
   // Observer for action callback
 

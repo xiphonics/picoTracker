@@ -457,7 +457,7 @@ void AppWindow::onUpdate() {
   Flush();
 };
 
-void AppWindow::onClockTick() { _currentView->OnClockTick(); }
+void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
 
 void AppWindow::LayoutChildren(){};
 

@@ -13,7 +13,7 @@ public:
   virtual void DrawView();
   virtual void OnFocus();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
-  virtual void OnClockTick(){};
+  virtual void AnimationUpdate(){};
 
   void SetContent(T_SimpleList<Path> &);
 

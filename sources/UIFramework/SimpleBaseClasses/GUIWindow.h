@@ -40,7 +40,7 @@ public: // I_GUIGraphics implementation
   virtual void Update();
   virtual void ClockTick();
   virtual void onUpdate() = 0;
-  virtual void onClockTick() = 0;
+  virtual void AnimationUpdate() = 0;
   //	virtual void Save() ;
   //	virtual void Restore() ;
   void PushEvent(GUIEvent &event);

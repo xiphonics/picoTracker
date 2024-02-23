@@ -1020,7 +1020,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   drawNotes();
 };
 
-void SongView::OnClockTick() {
+void SongView::AnimationUpdate() {
   // redraw batt gauge on every clock tick (~1Hz) even when not playing
   // and not redrawing due to user cursor navigation
   GUIPoint anchor = GetAnchor();
