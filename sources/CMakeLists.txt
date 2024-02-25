@@ -11,8 +11,6 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
-
 # Make this a picoTracker build within the project
 add_definitions(-DPICOBUILD)
 
@@ -22,24 +20,15 @@ add_definitions(-DPICOBUILD)
 # add_definitions(-DALL_MALLOC)
 # add_definitions(-DSHOW_MEM_USAGE)
 # add_definitions(-DSHOW_SPI_DEBUG)
-add_definitions(-DDISABLESF)
 # Enable SDIO - this setting affects code in SdFat library as well as the project
 # This consumes ~7k+ RAM and has some performance problems ATM
 # Also enable HAS_SDIO_CLASS in SdFatConfig.h
 # Switching to this mode may require full pico reset (why?)
 # add_definitions(-DSD_SDIO)
-# Enable Streaming from SD, bad performance for the moment
-# add_definitions(-DSD_STREAMING)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
 # Disable MIDI. Enable in order to use UART0 as stdio for debugging
 # add_definitions(-DDUMMY_MIDI)
-# Disable feedback for sample instruments. Due to low memory in the PICO
-# there is very low chance to bring this back
-add_definitions(-DDISABLE_FEEDBACK)
-# Disable exit dialogs. Eventually this could send device to dormant mode
-# but probably unnecessary since it's easier and safe to just turn off
-add_definitions(-DNO_EXIT)
 
 # Initialize the SDK
 pico_sdk_init()
@@ -48,6 +37,9 @@ add_compile_options(
   -Werror
   -Wall
   -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+  -fstack-usage
+  -fcallgraph-info=su # include above info in callgraph
+  -Wstack-usage=1536 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
   # TODO: SHOULD FIX
   -Wno-int-to-pointer-cast
 )
@@ -61,7 +53,6 @@ add_subdirectory(Services)
 add_subdirectory(Foundation)
 
 set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
-
 
 target_compile_definitions(picoTracker PUBLIC
 #	PICO_HEAP_SIZE=204800

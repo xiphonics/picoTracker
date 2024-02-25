@@ -147,23 +147,6 @@ void InstrumentView::fillSampleParameters() {
   f1 = new UIIntVarField(position, *v, "Mode: %s", 0, 2, 1, 1);
   T_SimpleList<UIField>::Insert(f1);
 
-#ifndef DISABLE_FEEDBACK
-  position._y += 2;
-  sf = new UIStaticField(position, "fb tune/mix: ");
-  T_SimpleList<UIField>::Insert(sf);
-
-  v = instrument->FindVariable(SIP_FBTUNE);
-  position._x += 13;
-  f1 = new UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0x10);
-  T_SimpleList<UIField>::Insert(f1);
-
-  position._x += 3;
-  v = instrument->FindVariable(SIP_FBMIX);
-  f1 = new UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0X10);
-  T_SimpleList<UIField>::Insert(f1);
-
-  position._x -= 16;
-#endif
   position._y += 2;
   v = instrument->FindVariable(SIP_INTERPOLATION);
   f1 = new UIIntVarField(position, *v, "interpolation: %s", 0, 1, 1, 1);
