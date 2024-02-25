@@ -6,8 +6,6 @@
 #include "SRPUpdaters.h"
 #include <vector>
 
-enum FeedbackMode { FB_NONE, FB_ADD, FB_SUB };
-
 struct renderParams {
 
   void *sampleBuffer_; // wavdata
@@ -45,9 +43,6 @@ struct renderParams {
   fixed fbTun_;
   fixed fbMix_;
 
-  int feedbackIn_;  // Position in ring buffer where start of feedback is
-  int feedbackOut_; // Position in ring buffer where we 'pick' the samples
-  FeedbackMode feedbackMode_;
   unsigned char crush_; // crush
   unsigned char drive_; // crush drive
 

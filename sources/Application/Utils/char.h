@@ -118,12 +118,6 @@ inline void fourCC2char(const FourCC f, char *s) {
   case 16:
     strcpy(s, "FBAM");
     break;
-  case 17:
-    strcpy(s, "FBMX");
-    break;
-  case 18:
-    strcpy(s, "FBTN");
-    break;
   case 19:
     strcpy(s, "FBTU");
     break;
@@ -216,9 +210,6 @@ inline void fourCC2char(const FourCC f, char *s) {
     break;
   case 49:
     strcpy(s, "PURG");
-    break;
-  case 50:
-    strcpy(s, "QUIT");
     break;
   case 51:
     strcpy(s, "ROOT");

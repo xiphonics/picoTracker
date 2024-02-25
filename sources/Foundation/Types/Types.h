@@ -75,12 +75,6 @@ inline constexpr FourCC MAKE_FOURCC(char ch0, char ch1, char ch2, char ch3) {
   case 'F' | 'B' << 8 | 'A' << 16 | 'M' << 24:
     return 16;
     break;
-  case 'F' | 'B' << 8 | 'M' << 16 | 'X' << 24:
-    return 17;
-    break;
-  case 'F' | 'B' << 8 | 'T' << 16 | 'N' << 24:
-    return 18;
-    break;
   case 'F' | 'B' << 8 | 'T' << 16 | 'U' << 24:
     return 19;
     break;
@@ -175,9 +169,6 @@ inline constexpr FourCC MAKE_FOURCC(char ch0, char ch1, char ch2, char ch3) {
   case 'P' | 'U' << 8 | 'R' << 16 | 'G' << 24:
     return 49;
     break;
-  case 'Q' | 'U' << 8 | 'I' << 16 | 'T' << 24:
-    return 50;
-    break;
   case 'R' | 'O' << 8 | 'O' << 16 | 'T' << 24:
     return 51;
     break;
@@ -239,10 +230,5 @@ inline constexpr FourCC MAKE_FOURCC(char ch0, char ch1, char ch2, char ch3) {
     return 255;
   }
 }
-
-#ifndef PICOBUILD
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) < (b) ? (a) : (b))
-#endif
 
 #endif

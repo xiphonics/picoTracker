@@ -18,10 +18,6 @@
 #include "Application/Player/SyncMaster.h"
 #include "SampleInstrumentDatas.h"
 
-#ifndef DISABLE_FEEDBACK
-fixed SampleInstrument::feedback_[SONG_CHANNEL_COUNT][FB_BUFFER_LENGTH * 2];
-#endif
-
 bool SampleInstrument::useDirtyDownsampling_ = false;
 
 #define SHOULD_KILL_CLICKS false
@@ -108,14 +104,6 @@ SampleInstrument::SampleInstrument() {
 
   tableAuto_ = new Variable("table automation", SIP_TABLEAUTO, false);
   Insert(tableAuto_);
-
-#ifndef DISABLE_FEEDBACK
-  fbTune_ = new Variable("feedback tune", SIP_FBTUNE, 0xB0);
-  Insert(fbTune_);
-
-  fbMix_ = new Variable("feedback mix", SIP_FBMIX, 0x00);
-  Insert(fbMix_);
-#endif
 
   // Initalize instrument's voices update list
 
@@ -315,17 +303,6 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // We allow processing
 
   rp->finished_ = false;
-
-#ifndef DISABLE_FEEDBACK
-  // Initialize feedback data
-  memset(feedback_[channel], 0, FB_BUFFER_LENGTH * 2 * sizeof(fixed));
-
-  rp->feedbackIn_ = 0;
-  rp->feedbackMode_ = FB_NONE;
-
-  rp->baseFbTun_ = rp->fbTun_ = fl2fp(fbTune_->GetInt() / 255.0f);
-  rp->baseFbMix_ = rp->fbMix_ = fl2fp(fbMix_->GetInt() / 255.0f);
-#endif
 
   // If we do a clean start (there was a instr number on the line)
 
@@ -602,32 +579,10 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     fixed zerofive = fl2fp(0.5f);
 
-#ifndef DISABLE_FEEDBACK
-    // Get feedback pointer position & boundary
-
-    fixed *feedbackIn = feedback_[channel] + rp->feedbackIn_ * 2;
-    fixed *feedbackStart = feedback_[channel];
-    fixed *feedbackEnd = feedback_[channel] + FB_BUFFER_LENGTH * 2;
-
-    // Update feedback data if necessary
-
-    updateFeedback(rp);
-
-    fixed *feedbackPick = feedback_[channel] + rp->feedbackOut_ * 2;
-    fixed feedbackEta = fp_mul(rp->fbMix_, fl2fp(4.0f));
-
-    fixed f_32767 = i2fp(32767 / 4);
-    fixed f_m32768 = i2fp(-32768 / 4);
-#endif
-
     // try to speed up access using pointers rather than structure access
 
     bool rpReverse = rp->reverse_;
     int rpKrateCount = rp->krateCount_;
-
-#ifndef DISABLE_FEEDBACK
-    FeedbackMode rpFeedbackMode = rp->feedbackMode_;
-#endif
 
     fixed *fltSpeed = flt->speed;
     fixed *fltHeight = flt->height;
@@ -780,13 +735,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
                        bassyFilter);
             filtering = (rp->cutoff_ < i2fp(1)) || (rp->reso_ > i2fp(0));
 
-#ifndef DISABLE_FEEDBACK
-            rp->feedbackIn_ = (feedbackIn - feedback_[channel]) / 2;
-
-            updateFeedback(rp);
-            feedbackPick = feedback_[channel] + rp->feedbackOut_ * 2;
-            feedbackEta = fp_mul(rp->fbMix_, fl2fp(4.0f));
-#endif
             volfactor = fp_mul(rp->volume_, volscale);
             pan = fp2i(rp->pan_);
 
@@ -851,39 +799,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             break;
           }
 
-#ifndef DISABLE_FEEDBACK
-          // apply feedback mix
-
-          switch (rpFeedbackMode) {
-          case FB_NONE:
-
-            feedbackPick++;
-            break;
-
-          case FB_ADD:
-
-            s2 = *feedbackPick++;
-            if (s2 > f_32767)
-              s2 = f_32767;
-            if (s2 < f_m32768)
-              s2 = f_m32768;
-            s2 = fp_mul(s2, feedbackEta);
-            s1 = fp_add(s1, s2);
-            break;
-
-          case FB_SUB:
-
-            s2 = *feedbackPick++;
-            if (s2 > f_32767)
-              s2 = f_32767;
-            if (s2 < f_m32768)
-              s2 = f_m32768;
-            s2 = fp_mul(s2, feedbackEta);
-            s1 = fp_sub(s1, s2);
-            break;
-          }
-#endif
-
           // crush predrive
 
           s2 = fp_mul(s1, fpcrushvol);
@@ -918,7 +833,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
             *fltSpeedPtr =
                 fp_mul(*fltSpeedPtr, fltParm2); // mul by res, it's some kind of
-                                                // inertia. caution to feedback
+                                                // inertia.
             /*HOG:5*/ *fltSpeedPtr = fp_add(
                 *fltSpeedPtr,
                 fp_mul(difr, fltParm1)); // mul by cutoff, less cutoff = no
@@ -937,14 +852,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
         if (channelCount == 1) {
           t2 = s2;
-          //					feedbackPick++ ;
         }
-
-#ifndef DISABLE_FEEDBACK
-        if (feedbackPick >= feedbackEnd) {
-          feedbackPick = feedbackStart;
-        };
-#endif
 
         // introduce panning & vol - store result
 
@@ -953,15 +861,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
         *result++ = s2;
         *result++ = t2;
-
-#ifndef DISABLE_FEEDBACK
-        *feedbackIn++ = s2;
-        *feedbackIn++ = t2;
-
-        if (feedbackIn >= feedbackEnd) {
-          feedbackIn = feedbackStart;
-        };
-#endif
 
         // Computes new pos for next input sample
         // fpPos is always relative to 'input' pointer
@@ -981,12 +880,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     rp->position_ =
         (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
 
-#ifndef DISABLE_FEEDBACK
-    // Update feedback position
-
-    rp->feedbackIn_ = (feedbackIn - feedbackStart) / 2;
-    rp->feedbackOut_ = (feedbackPick - feedbackStart) / 2;
-#endif
     somethingToMix = true;
   }
 
@@ -1193,45 +1086,6 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       rp->activeUpdaters_.push_back(&rp->resRamp_);
     }
   } break;
-
-    // Feedback mix
-    /*
-              case I_CMD_FBMX:
-                      {
-                              float target=float(value&0xFF)/255.0f ;
-                              float speed=float(value>>8) ;
-              float start=fp2fl(rp->fbMix_) ;
-                              float baseMix=fp2fl(rp->baseFbMix_) ;
-                              int
-       sampleCount=int(4*SyncMaster::GetInstance()->GetTickSampleCount()) ;
-                              speed=(speed==0)?0:fabs(target-start)*KRATE_SAMPLE_COUNT/float(speed)/sampleCount
-       ; rp->fbMixRamp_.SetData(target-baseMix,speed,start-baseMix) ; if
-       (!rp->fbMixRamp_.Enabled()) { rp->fbMixRamp_.Enable() ;
-                                      rp->activeUpdaters_.push_back(&rp->fbMixRamp_)
-       ;
-                              }
-                      }
-                      break ;
-
-              // Feedback tune
-
-              case I_CMD_FBTN:
-                      {
-                              float target=float(value&0xFF)/255.0f ;
-                              float speed=float(value>>8) ;
-              float start=fp2fl(rp->fbTun_) ;
-                              float baseTune=fp2fl(rp->baseFbTun_) ;
-                              int
-       sampleCount=int(4*SyncMaster::GetInstance()->GetTickSampleCount()) ;
-                              speed=(speed==0)?0:fabs(target-start)*KRATE_SAMPLE_COUNT/float(speed)/sampleCount
-       ; rp->fbTunRamp_.SetData(target-baseTune,speed,start-baseTune) ; if
-       (!rp->fbTunRamp_.Enabled()) { rp->fbTunRamp_.Enable() ;
-                                      rp->activeUpdaters_.push_back(&rp->fbTunRamp_)
-       ;
-                              }
-                      }
-                      break ;
-    */
   case I_CMD_PTCH: {
     int pitch = (char)(value & 0xFF); // number of semi tones
     float speed = float(value >> 8);  // get speed parameter
