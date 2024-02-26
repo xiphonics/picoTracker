@@ -110,9 +110,14 @@ void picoTrackerGUIWindowImp::Unlock(){};
 void picoTrackerGUIWindowImp::Flush() { mode0_draw_changed(); };
 
 void picoTrackerGUIWindowImp::Invalidate() {
-  //  picoTrackerEvent *event = new picoTrackerEvent();
-  //  event->type_ = PICO_REDRAW;
-  picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent());
+  // TODO: better logic here if we want to use more event types, we don't care
+  // to drop since we only have one event type
+  if (!picoTrackerEventQueue::GetInstance()->full()) {
+    picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent());
+
+  } else {
+    Trace::Log("EVENT QUEUE", "full");
+  }
 };
 
 void picoTrackerGUIWindowImp::PushEvent(GUIEvent &event) {

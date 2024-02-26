@@ -3,6 +3,7 @@
 // #include "hardware/dma.h"
 #include "hardware/gpio.h"
 // #include "hardware/irq.h"
+#include "etl_profile.h"
 #include "hardware/pll.h"
 #include "hardware/spi.h"
 #include "hardware/structs/clocks.h"
