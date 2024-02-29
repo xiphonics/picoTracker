@@ -45,10 +45,6 @@ enum SampleInstrumentLoopMode {
 #define SIP_FBTUNE MAKE_FOURCC('F', 'B', 'T', 'U')
 #define SIP_FBMIX MAKE_FOURCC('F', 'B', 'M', 'X')
 
-#ifndef DISABLE_FEEDBACK
-#define FB_BUFFER_LENGTH 3500 // (in samples)
-#endif
-
 class SampleInstrument : public I_Instrument, I_Observer {
 
 public:
@@ -93,9 +89,7 @@ protected:
   void updateInstrumentData(bool search);
   void doTickUpdate(int channel);
   void doKRateUpdate(int channel);
-#ifndef DISABLE_FEEDBACK
-  void updateFeedback(renderParams *rp);
-#endif
+
 private:
   SoundSource *source_;
   struct renderParams renderParams_[SONG_CHANNEL_COUNT];
@@ -105,9 +99,6 @@ private:
 
   static signed char lastMidiNote_[SONG_CHANNEL_COUNT];
   static fixed lastSample_[SONG_CHANNEL_COUNT][2];
-#ifndef DISABLE_FEEDBACK
-  static fixed feedback_[SONG_CHANNEL_COUNT][FB_BUFFER_LENGTH * 2];
-#endif
   Variable *volume_;
   Variable *crush_;
   Variable *cutoff_;
@@ -118,10 +109,6 @@ private:
   Variable *rootNote_;
   Variable *fineTune_;
   Variable *drive_;
-#ifndef DISABLE_FEEDBACK
-  Variable *fbMix_;
-  Variable *fbTune_;
-#endif
   WatchedVariable *start_;
   WatchedVariable *loopStart_;
   WatchedVariable *loopEnd_;

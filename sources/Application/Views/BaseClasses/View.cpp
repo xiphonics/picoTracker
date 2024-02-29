@@ -244,7 +244,6 @@ void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
       battText = (char *)"[   ]";
     }
 
-    // printf("%.1fV %s", voltage, battText);
     DrawString(pos._x, pos._y, battText, props);
   }
 }

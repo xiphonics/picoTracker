@@ -2,13 +2,8 @@
 #define _PHRASE_H_
 
 #include "Foundation/Types/Types.h"
-#ifndef PICOBUILD
-#define PHRASE_COUNT 0xFF
-#define NO_MORE_PHRASE 0x100
-#else
 #define PHRASE_COUNT 0x80
 #define NO_MORE_PHRASE 0x81
-#endif
 
 class Phrase {
 public:

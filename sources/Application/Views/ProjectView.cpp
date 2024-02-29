@@ -16,9 +16,6 @@
 #define ACTION_SAVE MAKE_FOURCC('S', 'A', 'V', 'E')
 #define ACTION_LOAD MAKE_FOURCC('L', 'O', 'A', 'D')
 #define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
-#ifndef NO_EXIT
-#define ACTION_QUIT MAKE_FOURCC('Q', 'U', 'I', 'T')
-#endif
 #define ACTION_PURGE_INSTRUMENT MAKE_FOURCC('P', 'R', 'G', 'I')
 #define ACTION_TEMPO_CHANGED MAKE_FOURCC('T', 'E', 'M', 'P')
 
@@ -41,13 +38,6 @@ static void BootselCallback(View &v, ModalView &dialog) {
 };
 #endif
 
-#ifndef NO_EXIT
-static void QuitCallback(View &v, ModalView &dialog) {
-  if (dialog.GetReturnCode() == MBL_YES) {
-    ((ProjectView &)v).OnQuit();
-  }
-};
-#endif
 static void PurgeCallback(View &v, ModalView &dialog) {
   ((ProjectView &)v).OnPurgeInstruments(dialog.GetReturnCode() == MBL_YES);
 };
@@ -123,13 +113,6 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   a1 = new UIActionField("Update firmware", ACTION_BOOTSEL, position);
   a1->AddObserver(*this);
   T_SimpleList<UIField>::Insert(a1);
-
-#ifndef NO_EXIT
-  position._y += 2;
-  a1 = new UIActionField("Exit", ACTION_QUIT, position);
-  a1->AddObserver(*this);
-  T_SimpleList<UIField>::Insert(a1);
-#endif
 }
 
 ProjectView::~ProjectView() {}
@@ -240,20 +223,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   }
 #endif
 
-#ifndef NO_EXIT
-  case ACTION_QUIT: {
-    if (!player->IsRunning()) {
-      MessageBox *mb =
-          new MessageBox(*this, "Quit and lose faith ?", MBBF_YES | MBBF_NO);
-      DoModal(mb, QuitCallback);
-    } else {
-      MessageBox *mb =
-          new MessageBox(*this, "Duh ! Not while playing", MBBF_OK);
-      DoModal(mb);
-    }
-    break;
-  }
-#endif
   case ACTION_TEMPO_CHANGED:
     break;
   default:

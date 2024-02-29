@@ -11,9 +11,6 @@ add_library(application_instruments
   SamplePool.h SamplePool.cpp
   SampleRenderingParams.h
   SampleVariable.h SampleVariable.cpp
-  SoundFontManager.h SoundFontManager.cpp
-  SoundFontPreset.h SoundFontPreset.cpp
-  SoundFontSample.h SoundFontSample.cpp
   SoundSource.h SoundSource.cpp
   WavFile.h WavFile.cpp
   WavFileWriter.h WavFileWriter.cpp
