@@ -9,6 +9,7 @@ enum picoTrackerEventType {
   //  PICO_KEYUP,
   //  PICO_QUIT,
   PICO_REDRAW,
+  PICO_CLOCK,
   //  PICO_USEREVENT
 };
 

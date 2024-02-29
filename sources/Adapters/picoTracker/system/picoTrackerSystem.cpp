@@ -127,18 +127,13 @@ unsigned long picoTrackerSystem::GetClock() {
 }
 
 int picoTrackerSystem::GetBatteryLevel() {
-
   int lastBattLevel_ = -1;
-  unsigned int beatCount = SyncMaster::GetInstance()->GetBeatCount();
-  if (beatCount != lastBeatCount_) {
-    u_int16_t adc_reading = adc_read(); // raw voltage from ADC
 
-    int adc_voltage = adc_reading * 0.8; // 0.8mV per unit of ADC
-    // *2 because picoTracker use voltage divider for voltage on ADC pin
-    lastBattLevel_ = adc_voltage * 2;
-    lastBeatCount_ = beatCount;
-  }
+  u_int16_t adc_reading = adc_read(); // raw voltage from ADC
 
+  int adc_voltage = adc_reading * 0.8; // 0.8mV per unit of ADC
+  // *2 because picoTracker use voltage divider for voltage on ADC pin
+  lastBattLevel_ = adc_voltage * 2;
   return lastBattLevel_;
 }
 

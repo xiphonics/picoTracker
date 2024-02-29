@@ -131,6 +131,9 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
     instance_->_window->Update();
     //        gp_setFramebuffer(instance_->framebuffer_[instance_->currentBuffer_],1);
     break;
+  case PICO_CLOCK:
+    instance_->_window->ClockTick();
+    break;
   }
 }
 

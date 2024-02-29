@@ -17,8 +17,15 @@ repeating_timer_t picoTrackerEventManager::timer_ = repeating_timer_t();
 
 uint16_t gTime_ = 0;
 
+picoTrackerEventQueue *queue;
+
 bool timerHandler(repeating_timer_t *rt) {
   gTime_++;
+  if (gTime_ % 1000 == 0) {
+    auto event = new picoTrackerEvent();
+    event->type_ = PICO_CLOCK;
+    queue->Push(*event);
+  }
   return true;
 }
 
@@ -39,7 +46,7 @@ bool picoTrackerEventManager::Init() {
 }
 
 int picoTrackerEventManager::MainLoop() {
-  picoTrackerEventQueue *queue = picoTrackerEventQueue::GetInstance();
+  queue = picoTrackerEventQueue::GetInstance();
   int loops = 0;
   int events = 0;
   while (!finished_) {

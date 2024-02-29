@@ -15,6 +15,7 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick);
   virtual void OnFocus();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
+  virtual void AnimationUpdate(){};
 
 protected:
   void setCurrentFolder(Path *path);
