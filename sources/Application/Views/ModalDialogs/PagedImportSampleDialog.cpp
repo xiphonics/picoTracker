@@ -69,7 +69,7 @@ void PagedImportSampleDialog::DrawView() {
 
   SamplePool *pool = SamplePool::GetInstance();
   etl::string<33> statusbar;
-  statusbar.initialize_free_space(); 
+  statusbar.initialize_free_space();
 
   SetColor(CD_NORMAL);
 
@@ -88,7 +88,8 @@ void PagedImportSampleDialog::DrawView() {
   humanMemorySize(pool->flashUsage(), unitsFormatted.data());
   unitsFormatted.trim_to_terminator();
 
-  statusbar.uninitialized_resize(statusbar.max_size()); // Make the string as big as it can be.
+  statusbar.uninitialized_resize(
+      statusbar.max_size()); // Make the string as big as it can be.
   statusbar.trim_to_terminator();
 
   sprintf(statusbar.data_end(), "FREE:[%s]", unitsFormatted.data());
