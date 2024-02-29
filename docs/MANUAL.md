@@ -32,7 +32,12 @@ This is an example config file:
     <BACKGROUND value="0F0F0F" />
     <FOREGROUND value="ADADAD" /> <!-- text and cursor in cursor -->
 	<HICOLOR1 value="846F94" /> <!-- row count in song screen -->
-	<HICOLOR2 value="6B316B" /> <!-- cursor-->
+	<HICOLOR2 value="6B316B" />  <!-- inverted highlight, eg. "Song" screen label -->
+    <INFOCOLOR value="33EE33"> <!-- information displays eg. used for battery gauge ok level -->
+    <WARNCOLOR value="11EE22"> <!-- warning displays eg. battery gauge low level -->
+    <ERRORCOLOR value="FF1111"> <!-- error displays eg. battery gauge critical level -->
+    <CURSORCOLOR value="224400">  <!-- ?? -->
+    <CONSOLECOLOR value="99FFAA"> <!-- ?? -->
     <KEYMAPSTYLE value="M8" /> <!-- use M8 style keymap layout -->
 </CONFIG>
 ```
