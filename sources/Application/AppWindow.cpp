@@ -29,6 +29,9 @@ GUIColor AppWindow::highlightColor_(0x84, 0x6F, 0x94, 2);
 GUIColor AppWindow::highlight2Color_(0x6B, 0x31, 0x6B, 3);
 GUIColor AppWindow::cursorColor_(0x77, 0x6B, 0x56, 4);
 GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 5);
+GUIColor AppWindow::infoColor_(0x29, 0xEE, 0x3D, 6);
+GUIColor AppWindow::warnColor_(0xEF, 0xFA, 0x52, 7);
+GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
 
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
@@ -94,12 +97,16 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   // Init midi services
   MidiService::GetInstance()->Init();
 
+  // now assign custom colors if they have been set in the config.xml
   defineColor("BACKGROUND", backgroundColor_, 0);
   defineColor("FOREGROUND", normalColor_, 1);
   cursorColor_ = normalColor_;
   defineColor("HICOLOR1", highlightColor_, 2);
   defineColor("HICOLOR2", highlight2Color_, 3);
   defineColor("CURSORCOLOR", cursorColor_, 4);
+  defineColor("INFOCOLOR", infoColor_, 5);
+  defineColor("WARNCOLOR", warnColor_, 6);
+  defineColor("ERRORCOLOR", errorColor_, 7);
 
   GUIWindow::Clear(backgroundColor_);
 
@@ -232,6 +239,15 @@ void AppWindow::Flush() {
             break;
           case CD_CURSOR:
             gcolor = cursorColor_;
+            break;
+          case CD_INFO:
+            gcolor = infoColor_;
+            break;
+          case CD_WARN:
+            gcolor = warnColor_;
+            break;
+          case CD_ERROR:
+            gcolor = errorColor_;
             break;
 
           default:

@@ -96,6 +96,9 @@ private:
   static GUIColor highlightColor_;
   static GUIColor consoleColor_;
   static GUIColor cursorColor_;
+  static GUIColor infoColor_;
+  static GUIColor warnColor_;
+  static GUIColor errorColor_;
 
   ColorDefinition colorIndex_;
 
