@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// The result of the function must be freed
 // ref: https://stackoverflow.com/a/77278639/85472
 void humanMemorySize(uint32_t bytes, char *output) {
   const char *const sizeNames[] = {"B", "KB", "MB", "GB"};

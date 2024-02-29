@@ -2,6 +2,7 @@
 #include "Adapters/picoTracker/utils/stringutils.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Externals/etl/include/etl/string.h"
 
 #ifdef PICOBUILD
 #include "pico/multicore.h"
@@ -67,23 +68,32 @@ void PagedImportSampleDialog::DrawView() {
   };
 
   SamplePool *pool = SamplePool::GetInstance();
-  char statusbar[33];
+  etl::string<33> statusbar;
+  statusbar.initialize_free_space(); 
+
   SetColor(CD_NORMAL);
 
-  int charsAdded = 0;
   // get filesize of currently highlighted file
   FileListItem currentItem = fileList_[currentSample_ - topIndex_];
   auto fileSize = currentDir_->getFileSize(currentItem.index);
-  char *unitsFormatted = (char *)malloc(sizeof(char) * 10);
+  etl::string<10> unitsFormatted("");
+  unitsFormatted.initialize_free_space();
   if (fileSize > 0) {
-    humanMemorySize(fileSize, unitsFormatted);
-    charsAdded = sprintf(statusbar, "FILE:%s ", unitsFormatted);
+    humanMemorySize(fileSize, unitsFormatted.data());
+    unitsFormatted.trim_to_terminator();
+    sprintf(statusbar.data(), "FILE:%s ", unitsFormatted.data());
   }
+  unitsFormatted.clear();
 
-  humanMemorySize(pool->flashUsage(), unitsFormatted);
-  sprintf(statusbar + charsAdded, "FREE:[%s]", unitsFormatted);
+  humanMemorySize(pool->flashUsage(), unitsFormatted.data());
+  unitsFormatted.trim_to_terminator();
+
+  statusbar.uninitialized_resize(statusbar.max_size()); // Make the string as big as it can be.
+  statusbar.trim_to_terminator();
+
+  sprintf(statusbar.data_end(), "FREE:[%s]", unitsFormatted.data());
   GUIPoint pos = GUIPoint(2, 23);
-  w_.DrawString(statusbar, pos, props);
+  w_.DrawString(statusbar.data(), pos, props);
 };
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {
