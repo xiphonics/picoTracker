@@ -457,6 +457,8 @@ void AppWindow::onUpdate() {
   Flush();
 };
 
+void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
+
 void AppWindow::LayoutChildren(){};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {

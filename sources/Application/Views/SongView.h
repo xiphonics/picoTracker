@@ -16,6 +16,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
+  virtual void AnimationUpdate();
 
 protected:
   void processNormalButtonMask(unsigned int mask);
