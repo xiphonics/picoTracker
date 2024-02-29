@@ -123,7 +123,7 @@ AppWindow::~AppWindow() { MidiService::GetInstance()->Close(); }
 void AppWindow::DrawString(const char *string, GUIPoint &pos,
                            GUITextProperties &props, bool force) {
 
-  // we know we don't have mode than 40 chars
+  // we know we don't have more than 40 chars
 
   char buffer[41];
   int len = strlen(string);

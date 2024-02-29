@@ -14,7 +14,12 @@ target_link_libraries(platform_system INTERFACE system_system
                                       PUBLIC platform_gui
                                       PUBLIC platform_display
                                       PUBLIC dummy_midi
+                                      PUBLIC pico_stdlib
+                                      PUBLIC hardware_gpio
+                                      PUBLIC hardware_adc
+
 )
+
 
 target_include_directories(platform_system PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
