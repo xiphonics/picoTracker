@@ -10,7 +10,7 @@
 #define DISPLAY_MOSI 27
 
 // BATT ADC
-#define BATT_VOLTAGE_IN_PIN 29
+#define BATT_VOLTAGE_IN 29
 
 // Midi (UART1)
 #define MIDI_UART uart0
