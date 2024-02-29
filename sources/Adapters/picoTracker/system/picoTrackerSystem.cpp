@@ -132,7 +132,6 @@ int picoTrackerSystem::GetBatteryLevel() {
   unsigned int beatCount = SyncMaster::GetInstance()->GetBeatCount();
   if (beatCount != lastBeatCount_) {
     u_int16_t adc_reading = adc_read(); // raw voltage from ADC
-    // printf("ADC READING: %d ", adc_reading);
 
     int adc_voltage = adc_reading * 0.8; // 0.8mV per unit of ADC
     // *2 because picoTracker use voltage divider for voltage on ADC pin
