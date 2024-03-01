@@ -8,6 +8,7 @@ add_library(application_views_modaldialogs
 
 target_link_libraries(application_views_modaldialogs PUBLIC application_views_baseclasses
                                                      PUBLIC pico_multicore
+                                                     PUBLIC platform_utils
   
 )
 

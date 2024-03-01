@@ -28,6 +28,9 @@ public:
   int ImportSample(Path &path);
   void PurgeSample(int i);
   const char *GetSampleLib();
+#ifdef LOAD_IN_FLASH
+  int flashUsage();
+#endif
 
 protected:
   bool loadSample(const char *path);
