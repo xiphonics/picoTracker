@@ -1,5 +1,6 @@
 add_library(platform_utils
   utils.h utils.cpp
+  stringutils.h stringutils.cpp
 )
 
 target_link_libraries(platform_utils PUBLIC pico_stdlib
