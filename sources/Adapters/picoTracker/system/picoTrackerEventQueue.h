@@ -6,6 +6,7 @@
 #include "Foundation/T_Stack.h"
 
 enum picoTrackerEventType {
+  PICO_NONE,
   //  PICO_KEYDOWN,
   //  PICO_KEYUP,
   //  PICO_QUIT,
@@ -16,6 +17,8 @@ enum picoTrackerEventType {
 
 class picoTrackerEvent {
 public:
+  picoTrackerEvent(picoTrackerEventType type) : type_(type) {}
+
   picoTrackerEventType type_;
 };
 

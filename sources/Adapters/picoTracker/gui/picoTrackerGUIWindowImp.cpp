@@ -113,7 +113,7 @@ void picoTrackerGUIWindowImp::Invalidate() {
   // TODO: better logic here if we want to use more event types, we don't care
   // to drop since we only have one event type
   if (!picoTrackerEventQueue::GetInstance()->full()) {
-    picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent());
+    picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent(PICO_REDRAW));
 
   } else {
     Trace::Log("EVENT QUEUE", "full");
@@ -138,6 +138,8 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
     break;
   case PICO_CLOCK:
     instance_->_window->ClockTick();
+    break;
+  case PICO_NONE:
     break;
   }
 }

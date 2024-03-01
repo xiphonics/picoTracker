@@ -22,9 +22,11 @@ picoTrackerEventQueue *queue;
 bool timerHandler(repeating_timer_t *rt) {
   gTime_++;
   if (gTime_ % 1000 == 0) {
-    auto event = new picoTrackerEvent();
-    event->type_ = PICO_CLOCK;
-    queue->Push(*event);
+    //    auto event = new picoTrackerEvent();
+    //    event->type_ = PICO_CLOCK;
+    if (!queue->full()) {
+      queue->push(picoTrackerEvent(PICO_CLOCK));
+    }
   }
   return true;
 }
@@ -53,7 +55,7 @@ int picoTrackerEventManager::MainLoop() {
     loops++;
     ProcessInputEvent();
     if (!queue->empty()) {
-      picoTrackerEvent event;
+      picoTrackerEvent event(PICO_NONE);
       queue->pop_into(event);
       events++;
       redrawing_ = true;
