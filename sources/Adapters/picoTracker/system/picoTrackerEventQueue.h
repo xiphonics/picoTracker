@@ -1,10 +1,12 @@
 #ifndef _PICOTRACKEREVENTQUEUE_H_
 #define _PICOTRACKEREVENTQUEUE_H_
 
+#include "Externals/etl/include/etl/stack.h"
 #include "Foundation/T_Singleton.h"
 #include "Foundation/T_Stack.h"
 
 enum picoTrackerEventType {
+  PICO_NONE,
   //  PICO_KEYDOWN,
   //  PICO_KEYUP,
   //  PICO_QUIT,
@@ -15,11 +17,13 @@ enum picoTrackerEventType {
 
 class picoTrackerEvent {
 public:
+  picoTrackerEvent(picoTrackerEventType type) : type_(type) {}
+
   picoTrackerEventType type_;
 };
 
 class picoTrackerEventQueue : public T_Singleton<picoTrackerEventQueue>,
-                              public T_Stack<picoTrackerEvent> {
+                              public etl::stack<picoTrackerEvent, 5> {
 public:
   picoTrackerEventQueue();
 };

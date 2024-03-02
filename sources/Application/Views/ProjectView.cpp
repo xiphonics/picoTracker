@@ -54,7 +54,7 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   Variable *v = project_->FindVariable(VAR_TEMPO);
   UITempoField *f = new UITempoField(ACTION_TEMPO_CHANGED, position, *v,
                                      "tempo: %d [%2.2x]  ", 60, 400, 1, 10);
-  T_SimpleList<UIField>::Insert(f);
+  fieldList_.insert(fieldList_.end(), f);
   f->AddObserver(*this);
   tempoField_ = f;
 
@@ -62,13 +62,13 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   position._y += 1;
   UIIntVarField *f1 =
       new UIIntVarField(position, *v, "master: %d", 10, 200, 1, 10);
-  T_SimpleList<UIField>::Insert(f1);
+  fieldList_.insert(fieldList_.end(), f1);
 
   v = project_->FindVariable(VAR_TRANSPOSE);
   position._y += 1;
   UIIntVarField *f2 =
       new UIIntVarField(position, *v, "transpose: %3.2d", -48, 48, 0x1, 0xC);
-  T_SimpleList<UIField>::Insert(f2);
+  fieldList_.insert(fieldList_.end(), f2);
 
   v = project_->FindVariable(VAR_SCALE);
   // if scale name is not found, set the default chromatic scale
@@ -78,41 +78,41 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   position._y += 1;
   UIIntVarField *f3 =
       new UIIntVarField(position, *v, "scale: %s", 0, numScales - 1, 1, 10);
-  T_SimpleList<UIField>::Insert(f3);
+  fieldList_.insert(fieldList_.end(), f3);
 
   position._y += 2;
   UIActionField *a1 =
       new UIActionField("Compact Sequencer", ACTION_PURGE, position);
   a1->AddObserver(*this);
-  T_SimpleList<UIField>::Insert(a1);
+  fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 1;
   a1 = new UIActionField("Compact Instruments", ACTION_PURGE_INSTRUMENT,
                          position);
   a1->AddObserver(*this);
-  T_SimpleList<UIField>::Insert(a1);
+  fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 2;
   a1 = new UIActionField("Load Song", ACTION_LOAD, position);
   a1->AddObserver(*this);
-  T_SimpleList<UIField>::Insert(a1);
+  fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 1;
   a1 = new UIActionField("Save Song", ACTION_SAVE, position);
   a1->AddObserver(*this);
-  T_SimpleList<UIField>::Insert(a1);
+  fieldList_.insert(fieldList_.end(), a1);
 
   v = project_->FindVariable(VAR_MIDIDEVICE);
   NAssert(v);
   position._y += 2;
   UIIntVarField *f4 = new UIIntVarField(
       position, *v, "midi: %s", 0, MidiService::GetInstance()->Size(), 1, 1);
-  T_SimpleList<UIField>::Insert(f4);
+  fieldList_.insert(fieldList_.end(), f4);
 
   position._y += 2;
   a1 = new UIActionField("Update firmware", ACTION_BOOTSEL, position);
   a1->AddObserver(*this);
-  T_SimpleList<UIField>::Insert(a1);
+  fieldList_.insert(fieldList_.end(), a1);
 }
 
 ProjectView::~ProjectView() {}

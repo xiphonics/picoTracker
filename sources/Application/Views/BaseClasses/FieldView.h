@@ -5,7 +5,7 @@
 #include "UIField.h"
 #include "View.h"
 
-class FieldView : public View, public T_SimpleList<UIField> {
+class FieldView : public View {
 public:
   FieldView(GUIWindow &w, ViewData *viewData);
 
@@ -18,8 +18,9 @@ public:
   int GetFocusIndex();
   void SetSize(int size);
 
+  etl::list<UIField *, 20> fieldList_; // adjust to maximum fields on one screen
+
 private:
-  T_SimpleList<UIField> fieldList_;
   UIField *focus_;
 };
 

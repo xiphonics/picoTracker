@@ -1,8 +1,8 @@
 #include "FieldView.h"
 #include "System/Console/Trace.h"
+#include "UIIntVarField.h"
 
-FieldView::FieldView(GUIWindow &w, ViewData *data)
-    : View(w, data), T_SimpleList<UIField>(true) {
+FieldView::FieldView(GUIWindow &w, ViewData *data) : View(w, data) {
   focus_ = 0;
 };
 
@@ -33,21 +33,20 @@ UIField *FieldView::GetFocus() { return focus_; };
 void FieldView::Redraw() {
 
   if (focus_ == 0) {
-    SetFocus(T_SimpleList<UIField>::GetFirst());
+    SetFocus(*fieldList_.begin());
   }
 
-  IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator());
-
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    UIField &current = it->CurrentItem();
-    current.Draw(w_);
+  auto it = fieldList_.begin();
+  for (size_t i = 0; i < fieldList_.size(); i++) {
+    (*it)->Draw(w_);
+    it++;
   };
 };
 
 void FieldView::ProcessButtonMask(unsigned short mask) {
 
   if (focus_ == 0) {
-    focus_ = T_SimpleList<UIField>::GetFirst();
+    focus_ = *fieldList_.begin();
     //  Empty field view, we don't have anything to do
     if (focus_ == 0)
       return;
@@ -114,29 +113,29 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
           UIField *next = 0;
           UIField *first = 0;
 
-          IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator());
-          for (it->Begin(); !it->IsDone(); it->Next()) {
-            UIField &current = it->CurrentItem();
-            if (!current.IsStatic()) {
+          auto it = fieldList_.begin();
+          for (size_t i = 0; i < fieldList_.size(); i++) {
+            if (!(*it)->IsStatic()) {
               if (first) {
-                if (current.GetPosition()._y < first->GetPosition()._y) {
-                  first = &current;
+                if ((*it)->GetPosition()._y < first->GetPosition()._y) {
+                  first = *it;
                 };
               } else {
-                first = &current;
+                first = *it;
               }
-              if (current.GetPosition()._y > focus_->GetPosition()._y) {
+              if ((*it)->GetPosition()._y > focus_->GetPosition()._y) {
                 if (next) {
-                  if (current.GetPosition()._y < next->GetPosition()._y) {
-                    next = &current;
+                  if ((*it)->GetPosition()._y < next->GetPosition()._y) {
+                    next = *it;
                   } else {
                     // if both target at same height
                   };
                 } else {
-                  next = &current;
+                  next = *it;
                 };
               };
             }
+            it++;
           }
           if (next == 0) {
             next = first;
@@ -153,29 +152,30 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
           UIField *prev = 0;
           UIField *last = 0;
 
-          IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator());
-          for (it->Begin(); !it->IsDone(); it->Next()) {
-            UIField &current = it->CurrentItem();
-            if (!current.IsStatic()) {
+          auto it = fieldList_.begin();
+          for (size_t i = 0; i < fieldList_.size(); i++) {
+
+            if (!(*it)->IsStatic()) {
               if (last) {
-                if (current.GetPosition()._y > last->GetPosition()._y) {
-                  last = &current;
+                if ((*it)->GetPosition()._y > last->GetPosition()._y) {
+                  last = *it;
                 };
               } else {
-                last = &current;
+                last = *it;
               }
-              if (current.GetPosition()._y < focus_->GetPosition()._y) {
+              if ((*it)->GetPosition()._y < focus_->GetPosition()._y) {
                 if (prev) {
-                  if (current.GetPosition()._y > prev->GetPosition()._y) {
-                    prev = &current;
+                  if ((*it)->GetPosition()._y > prev->GetPosition()._y) {
+                    prev = *it;
                   } else {
                     // if both target at same height
                   };
                 } else {
-                  prev = &current;
+                  prev = *it;
                 };
               };
             }
+            it++;
           }
           if (prev == 0) {
             prev = last;
@@ -191,30 +191,31 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
           UIField *next = 0;
           UIField *first = 0;
 
-          IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator());
-          for (it->Begin(); !it->IsDone(); it->Next()) {
-            UIField &current = it->CurrentItem();
-            if (!current.IsStatic() &&
-                (current.GetPosition()._y == focus_->GetPosition()._y)) {
+          auto it = fieldList_.begin();
+          for (size_t i = 0; i < fieldList_.size(); i++) {
+
+            if (!(*it)->IsStatic() &&
+                ((*it)->GetPosition()._y == focus_->GetPosition()._y)) {
               if (first) {
-                if (current.GetPosition()._x < first->GetPosition()._x) {
-                  first = &current;
+                if ((*it)->GetPosition()._x < first->GetPosition()._x) {
+                  first = *it;
                 };
               } else {
-                first = &current;
+                first = *it;
               }
-              if (current.GetPosition()._x > focus_->GetPosition()._x) {
+              if ((*it)->GetPosition()._x > focus_->GetPosition()._x) {
                 if (next) {
-                  if (current.GetPosition()._x < next->GetPosition()._x) {
-                    next = &current;
+                  if ((*it)->GetPosition()._x < next->GetPosition()._x) {
+                    next = *it;
                   } else {
                     // if both target at same height
                   };
                 } else {
-                  next = &current;
+                  next = *it;
                 };
               };
             }
+            it++;
           }
           if (next == 0) {
             next = first;
@@ -231,30 +232,31 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
           UIField *prev = 0;
           UIField *last = 0;
 
-          IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator());
-          for (it->Begin(); !it->IsDone(); it->Next()) {
-            UIField &current = it->CurrentItem();
-            if (!current.IsStatic() &&
-                (current.GetPosition()._y == focus_->GetPosition()._y)) {
+          auto it = fieldList_.begin();
+          for (size_t i = 0; i < fieldList_.size(); i++) {
+
+            if (!(*it)->IsStatic() &&
+                ((*it)->GetPosition()._y == focus_->GetPosition()._y)) {
               if (last) {
-                if (current.GetPosition()._x > last->GetPosition()._x) {
-                  last = &current;
+                if ((*it)->GetPosition()._x > last->GetPosition()._x) {
+                  last = *it;
                 };
               } else {
-                last = &current;
+                last = *it;
               }
-              if (current.GetPosition()._x < focus_->GetPosition()._x) {
+              if ((*it)->GetPosition()._x < focus_->GetPosition()._x) {
                 if (prev) {
-                  if (current.GetPosition()._x > prev->GetPosition()._x) {
-                    prev = &current;
+                  if ((*it)->GetPosition()._x > prev->GetPosition()._x) {
+                    prev = *it;
                   } else {
                     // if both target at same height
                   };
                 } else {
-                  prev = &current;
+                  prev = *it;
                 };
               };
             }
+            it++;
           }
           if (prev == 0) {
             prev = last;
@@ -273,12 +275,13 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
 int FieldView::GetFocusIndex() {
 
   int focusIndex = 0;
-  IteratorPtr<UIField> it(T_SimpleList<UIField>::GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    if (&(it->CurrentItem()) == focus_) {
+  auto it = fieldList_.begin();
+  for (size_t i = 0; i < fieldList_.size(); i++) {
+    if (*it == focus_) {
       break;
     };
     focusIndex++;
+    it++;
   };
   return focusIndex;
 }

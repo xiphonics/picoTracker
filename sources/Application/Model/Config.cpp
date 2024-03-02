@@ -40,7 +40,7 @@ Config::Config() {
       if (!strcmp(doc.attrname_, "value")) {
         if (validElem) {
           Variable *v = new Variable(doc.ElemName(), 0, doc.attrval_);
-          Insert(v);
+          insert(end(), v);
         }
       }
       hasAttr = doc.NextAttribute();
@@ -79,7 +79,7 @@ void Config::ProcessArguments(int argc, char **argv) {
         v->SetString(pos + 1);
       } else {
         Variable *v = new Variable(arg, 0, pos + 1);
-        Insert(v);
+        insert(end(), v);
       }
     }
   }

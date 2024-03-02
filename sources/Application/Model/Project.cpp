@@ -15,18 +15,19 @@
 
 #include <math.h>
 
-Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
+Project::Project()
+    : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0) {
 
   WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
-  this->Insert(tempo);
+  this->insert(end(), tempo);
   Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
-  this->Insert(masterVolume);
+  this->insert(end(), masterVolume);
   Variable *wrap = new Variable("wrap", VAR_WRAP, false);
-  this->Insert(wrap);
+  this->insert(end(), wrap);
   Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
-  this->Insert(transpose);
+  this->insert(end(), transpose);
   Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales, 0);
-  this->Insert(scale);
+  this->insert(end(), scale);
   scale->SetInt(0);
 
   // Reload the midi device list
@@ -35,10 +36,9 @@ Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
 
   WatchedVariable *midi = new WatchedVariable(
       "midi", VAR_MIDIDEVICE, midiDeviceList_, midiDeviceListSize_);
-  this->Insert(midi);
+  this->insert(end(), midi);
   midi->AddObserver(*this);
 
-  song_ = new Song();
   instrumentBank_ = new InstrumentBank();
 
   // look if we can find a sav file
@@ -54,10 +54,7 @@ Project::Project() : Persistent("PROJECT"), midiDeviceList_(0), tempoNudge_(0) {
   Status::Set("About to load project");
 };
 
-Project::~Project() {
-  delete song_;
-  delete instrumentBank_;
-};
+Project::~Project() { delete instrumentBank_; };
 
 int Project::GetScale() {
   Variable *v = FindVariable(VAR_SCALE);
@@ -134,26 +131,26 @@ void Project::Update(Observable &o, I_ObservableData *d) {
 
 void Project::Purge() {
 
-  song_->chain_->ClearAllocation();
-  song_->phrase_->ClearAllocation();
+  song_.chain_.ClearAllocation();
+  song_.phrase_.ClearAllocation();
 
-  unsigned char *data = song_->data_;
+  unsigned char *data = song_.data_;
   for (int i = 0; i < 256 * SONG_CHANNEL_COUNT; i++) {
     if (*data != 0xFF) {
-      song_->chain_->SetUsed(*data);
+      song_.chain_.SetUsed(*data);
     }
     data++;
   }
 
-  data = song_->chain_->data_;
-  unsigned char *data2 = song_->chain_->transpose_;
+  data = song_.chain_.data_;
+  unsigned char *data2 = song_.chain_.transpose_;
 
   for (int i = 0; i < CHAIN_COUNT; i++) {
 
-    if (song_->chain_->IsUsed(i)) {
+    if (song_.chain_.IsUsed(i)) {
       for (int j = 0; j < 16; j++) {
         if (*data != 0xFF) {
-          song_->phrase_->SetUsed(*data);
+          song_.phrase_.SetUsed(*data);
         }
         data++;
         data2++;
@@ -167,17 +164,17 @@ void Project::Purge() {
     }
   }
 
-  data = song_->phrase_->note_;
-  data2 = song_->phrase_->instr_;
+  data = song_.phrase_.note_;
+  data2 = song_.phrase_.instr_;
 
-  FourCC *cmd1 = song_->phrase_->cmd1_;
-  ushort *param1 = song_->phrase_->param1_;
-  FourCC *cmd2 = song_->phrase_->cmd2_;
-  ushort *param2 = song_->phrase_->param2_;
+  FourCC *cmd1 = song_.phrase_.cmd1_;
+  ushort *param1 = song_.phrase_.param1_;
+  FourCC *cmd2 = song_.phrase_.cmd2_;
+  ushort *param2 = song_.phrase_.param2_;
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
-      if (!song_->phrase_->IsUsed(i)) {
+      if (!song_.phrase_.IsUsed(i)) {
         *data = 0xFF;
         *data2 = 0xFF;
         *cmd1 = I_CMD_NONE;
@@ -202,7 +199,7 @@ void Project::PurgeInstruments(bool removeFromDisk) {
     used[i] = false;
   }
 
-  unsigned char *data = song_->phrase_->instr_;
+  unsigned char *data = song_.phrase_.instr_;
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
@@ -310,13 +307,13 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   }
 
   // save all of the project's parameters
-  IteratorPtr<Variable> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
+  auto it = begin();
+  for (size_t i = 0; i < size(); i++) {
     printer->OpenElement("PARAMETER");
-    Variable v = it->CurrentItem();
-    printer->PushAttribute("NAME", v.GetName());
-    printer->PushAttribute("VALUE", v.GetString());
+    printer->PushAttribute("NAME", (*it)->GetName());
+    printer->PushAttribute("VALUE", (*it)->GetString());
     printer->CloseElement();
+    it++;
   }
 };
 

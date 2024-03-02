@@ -120,7 +120,7 @@ void SongView::pasteLast() {
   unsigned char *c = viewData_->GetCurrentSongPointer();
   if (*c == 0xFF) {
     *c = lastChain_;
-    viewData_->song_->chain_->SetUsed(*c);
+    viewData_->song_->chain_.SetUsed(*c);
     isDirty_ = true;
   } else {
     lastChain_ = *c;
@@ -139,19 +139,19 @@ void SongView::clonePosition() {
   if (current == 255)
     return;
 
-  unsigned short next = viewData_->song_->chain_->GetNext();
+  unsigned short next = viewData_->song_->chain_.GetNext();
   if (next == NO_MORE_CHAIN)
     return;
 
-  unsigned char *src = viewData_->song_->chain_->data_ + 16 * current;
-  unsigned char *dst = viewData_->song_->chain_->data_ + 16 * next;
+  unsigned char *src = viewData_->song_->chain_.data_ + 16 * current;
+  unsigned char *dst = viewData_->song_->chain_.data_ + 16 * next;
 
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
   };
 
-  src = viewData_->song_->chain_->transpose_ + 16 * current;
-  dst = viewData_->song_->chain_->transpose_ + 16 * next;
+  src = viewData_->song_->chain_.transpose_ + 16 * current;
+  dst = viewData_->song_->chain_.transpose_ + 16 * next;
 
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
@@ -500,7 +500,7 @@ void SongView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_A) {
-      unsigned short next = viewData_->song_->chain_->GetNext();
+      unsigned short next = viewData_->song_->chain_.GetNext();
       if (next != NO_MORE_CHAIN) {
         setChain((unsigned char)next);
         isDirty_ = true;
@@ -678,7 +678,7 @@ void SongView::processNormalButtonMask(unsigned int mask) {
   if ((!(mask & EPBM_A)) && updatingChain_) {
     unsigned char *c = viewData_->song_->data_ + updateX_ +
                        SONG_CHANNEL_COUNT * (viewData_->songOffset_ + updateY_);
-    viewData_->song_->chain_->SetUsed(*c);
+    viewData_->song_->chain_.SetUsed(*c);
     updatingChain_ = false;
   }
 };
