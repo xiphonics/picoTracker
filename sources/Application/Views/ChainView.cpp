@@ -124,42 +124,42 @@ void ChainView::clonePosition() {
   if (current == 255)
     return;
 
-  unsigned short next = viewData_->song_->phrase_->GetNext();
+  unsigned short next = viewData_->song_->phrase_.GetNext();
   if (next == NO_MORE_PHRASE)
     return;
 
-  unsigned char *src = viewData_->song_->phrase_->note_ + 16 * current;
-  unsigned char *dst = viewData_->song_->phrase_->note_ + 16 * next;
+  unsigned char *src = viewData_->song_->phrase_.note_ + 16 * current;
+  unsigned char *dst = viewData_->song_->phrase_.note_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
   };
 
-  src = viewData_->song_->phrase_->instr_ + 16 * current;
-  dst = viewData_->song_->phrase_->instr_ + 16 * next;
+  src = viewData_->song_->phrase_.instr_ + 16 * current;
+  dst = viewData_->song_->phrase_.instr_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
   };
 
-  src = viewData_->song_->phrase_->cmd1_ + 16 * current;
-  dst = viewData_->song_->phrase_->cmd1_ + 16 * next;
+  src = viewData_->song_->phrase_.cmd1_ + 16 * current;
+  dst = viewData_->song_->phrase_.cmd1_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
   };
 
-  ushort *ssrc = viewData_->song_->phrase_->param1_ + 16 * current;
-  ushort *sdst = viewData_->song_->phrase_->param1_ + 16 * next;
+  ushort *ssrc = viewData_->song_->phrase_.param1_ + 16 * current;
+  ushort *sdst = viewData_->song_->phrase_.param1_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *sdst++ = *ssrc++;
   };
 
-  src = viewData_->song_->phrase_->cmd2_ + 16 * current;
-  dst = viewData_->song_->phrase_->cmd2_ + 16 * next;
+  src = viewData_->song_->phrase_.cmd2_ + 16 * current;
+  dst = viewData_->song_->phrase_.cmd2_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
   };
 
-  ssrc = viewData_->song_->phrase_->param2_ + 16 * current;
-  sdst = viewData_->song_->phrase_->param2_ + 16 * next;
+  ssrc = viewData_->song_->phrase_.param2_ + 16 * current;
+  sdst = viewData_->song_->phrase_.param2_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *sdst++ = *ssrc++;
   };
@@ -208,10 +208,10 @@ void ChainView::fillClipboardData() {
   // Copy the data
 
   unsigned char *src1 =
-      viewData_->song_->chain_->data_ + 16 * viewData_->currentChain_;
+      viewData_->song_->chain_.data_ + 16 * viewData_->currentChain_;
   unsigned char *dst1 = clipboard_.phrase_;
   unsigned char *src2 =
-      viewData_->song_->chain_->transpose_ + 16 * viewData_->currentChain_;
+      viewData_->song_->chain_.transpose_ + 16 * viewData_->currentChain_;
   unsigned char *dst2 = clipboard_.transpose_;
 
   for (int i = 0; i < clipboard_.height_; i++) {
@@ -285,9 +285,9 @@ void ChainView::cutSelection() {
   // Loop over selection col, row & clear data inside it
 
   unsigned char *dst1 =
-      viewData_->song_->chain_->data_ + 16 * viewData_->currentChain_;
+      viewData_->song_->chain_.data_ + 16 * viewData_->currentChain_;
   unsigned char *dst2 =
-      viewData_->song_->chain_->transpose_ + 16 * viewData_->currentChain_;
+      viewData_->song_->chain_.transpose_ + 16 * viewData_->currentChain_;
 
   for (int i = 0; i < clipboard_.width_; i++) {
     for (int j = 0; j < clipboard_.height_; j++) {
@@ -326,10 +326,10 @@ void ChainView::pasteClipboard() {
   }
 
   unsigned char *dst1 =
-      viewData_->song_->chain_->data_ + 16 * viewData_->currentChain_;
+      viewData_->song_->chain_.data_ + 16 * viewData_->currentChain_;
   unsigned char *src1 = clipboard_.phrase_;
   unsigned char *dst2 =
-      viewData_->song_->chain_->transpose_ + 16 * viewData_->currentChain_;
+      viewData_->song_->chain_.transpose_ + 16 * viewData_->currentChain_;
   unsigned char *src2 = clipboard_.transpose_;
 
   for (int i = 0; i < clipboard_.width_; i++) {
@@ -388,7 +388,7 @@ void ChainView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_A) {
-      unsigned short next = viewData_->song_->phrase_->GetNext();
+      unsigned short next = viewData_->song_->phrase_.GetNext();
       if (next != NO_MORE_PHRASE) {
         setPhrase((unsigned char)next);
         isDirty_ = true;
@@ -527,9 +527,9 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
     }
   }
   if ((!(mask & EPBM_A)) && updatingPhrase_) {
-    unsigned char *c = viewData_->song_->chain_->data_ +
+    unsigned char *c = viewData_->song_->chain_.data_ +
                        (16 * viewData_->currentChain_ + updateRow_);
-    viewData_->song_->phrase_->SetUsed(*c);
+    viewData_->song_->phrase_.SetUsed(*c);
     updatingPhrase_ = false;
   }
 };
@@ -690,7 +690,7 @@ void ChainView::DrawView() {
   pos = anchor;
 
   unsigned char *data =
-      viewData_->song_->chain_->data_ + (16 * viewData_->currentChain_);
+      viewData_->song_->chain_.data_ + (16 * viewData_->currentChain_);
 
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
@@ -710,7 +710,7 @@ void ChainView::DrawView() {
   pos = anchor;
   pos._x += 3;
 
-  data = viewData_->song_->chain_->transpose_ + (16 * viewData_->currentChain_);
+  data = viewData_->song_->chain_.transpose_ + (16 * viewData_->currentChain_);
 
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;

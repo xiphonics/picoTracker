@@ -22,9 +22,9 @@ public:
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
-  unsigned char *data_;
-  Chain *chain_;
-  Phrase *phrase_;
+  unsigned char data_[SONG_CHANNEL_COUNT * SONG_ROW_COUNT];
+  Chain chain_;
+  Phrase phrase_;
 };
 
 #endif

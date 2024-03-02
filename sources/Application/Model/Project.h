@@ -29,7 +29,7 @@ public:
   void Purge();
   void PurgeInstruments(bool removeFromDisk);
 
-  Song *song_;
+  Song song_;
 
   int GetMasterVolume();
   bool Wrap();

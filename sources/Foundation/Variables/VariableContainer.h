@@ -1,10 +1,11 @@
 #ifndef _VARIABLE_CONTAINER_H_
 #define _VARIABLE_CONTAINER_H_
 
+#include "Externals/etl/include/etl/list.h"
 #include "Foundation/T_SimpleList.h"
 #include "Variable.h"
 
-class VariableContainer : public T_SimpleList<Variable> {
+class VariableContainer : public etl::list<Variable *, 20> {
 public:
   VariableContainer();
   virtual ~VariableContainer();

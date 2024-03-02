@@ -13,8 +13,8 @@ public:
   void SetUsed(unsigned char c);
   void ClearAllocation();
 
-  unsigned char *data_;
-  unsigned char *transpose_;
+  unsigned char data_[CHAIN_COUNT * 16];
+  unsigned char transpose_[CHAIN_COUNT * 16];
 
 private:
   bool isUsed_[CHAIN_COUNT];

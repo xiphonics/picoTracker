@@ -14,15 +14,15 @@ MidiInstrument::MidiInstrument() {
   };
 
   Variable *v = new Variable("channel", MIP_CHANNEL, 0);
-  Insert(v);
+  insert(end(), v);
   v = new Variable("note length", MIP_NOTELENGTH, 0);
-  Insert(v);
+  insert(end(), v);
   v = new Variable("volume", MIP_VOLUME, 255);
-  Insert(v);
+  insert(end(), v);
   v = new Variable("table", MIP_TABLE, -1);
-  Insert(v);
+  insert(end(), v);
   v = new Variable("table automation", MIP_TABLEAUTO, false);
-  Insert(v);
+  insert(end(), v);
 }
 
 MidiInstrument::~MidiInstrument(){};
