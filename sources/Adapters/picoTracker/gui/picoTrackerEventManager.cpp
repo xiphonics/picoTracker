@@ -20,10 +20,9 @@ uint16_t gTime_ = 0;
 picoTrackerEventQueue *queue;
 
 bool timerHandler(repeating_timer_t *rt) {
+  queue = picoTrackerEventQueue::GetInstance();
   gTime_++;
   if (gTime_ % 1000 == 0) {
-    //    auto event = new picoTrackerEvent();
-    //    event->type_ = PICO_CLOCK;
     if (!queue->full()) {
       queue->push(picoTrackerEvent(PICO_CLOCK));
     }
