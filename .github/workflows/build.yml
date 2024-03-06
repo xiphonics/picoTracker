@@ -21,7 +21,7 @@ jobs:
       uses: carlosperate/arm-none-eabi-gcc-action@v1
       id: arm-none-eabi-gcc-action
       with:
-        release: 10.3-2021.07
+        release: 12.3.Rel1
     - run: arm-none-eabi-gcc --version
 
     - name: Create Build Environment
