@@ -308,8 +308,9 @@ bool WavFile::GetBuffer(long start, long size) {
 };
 
 #ifdef LOAD_IN_FLASH
-bool WavFile::LoadInFlash(int &flashEraseOffset, int &flashWriteOffset,
-                          int &flashLimit) {
+bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
+                                               int &flashWriteOffset,
+                                               int &flashLimit) {
 
   // Size needed in flash before accounting for page size
   int FlashBaseBufferSize = 2 * channelCount_ * size_;
