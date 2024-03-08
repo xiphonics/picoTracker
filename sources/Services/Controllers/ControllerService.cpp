@@ -52,9 +52,8 @@ Channel *ControllerService::GetChannel(const char *sourcePath) {
   // Now look for a device that matches name & class
   ControllerSource *source = 0;
 
-  IteratorPtr<ControllerSource> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    ControllerSource &cs = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    ControllerSource &cs = CurrentItem();
     if ((string(cs.GetClass()) == sourceclass) && (cs.IsRunning())) {
       if (deviceID-- == 0) {
         source = &cs;

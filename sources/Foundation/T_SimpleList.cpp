@@ -6,7 +6,6 @@
 #include "System/Console/n_assert.h"
 
 // Constructor
-
 template <class Item>
 T_SimpleList<Item>::T_SimpleList(bool isOwner) : I_List<Item>() {
   _isOwner = isOwner;
@@ -16,11 +15,9 @@ T_SimpleList<Item>::T_SimpleList(bool isOwner) : I_List<Item>() {
 }
 
 // Destructor
-
 template <class Item> T_SimpleList<Item>::~T_SimpleList() { Empty(); }
 
 // Inserts a new element at the end of the list
-
 template <class Item> void T_SimpleList<Item>::Insert(Item &item) {
   NAssert(!Contains(item));
   Node<Item> *n = new Node<Item>(item);
@@ -39,34 +36,18 @@ template <class Item> void T_SimpleList<Item>::Insert(Item &item) {
 
 // Inserts a new element at the end of the list (assumes the pointer is not
 // NULL)
-
 template <class Item> void T_SimpleList<Item>::Insert(Item *item) {
   NAssert(item != NULL);
   this->Insert(*item);
 }
 
 // Returns true if the list contains the specified item
-
 template <class Item> bool T_SimpleList<Item>::Contains(Item &item) {
   Node<Item> *node = findNode(item);
   return (node == NULL) ? false : true;
 }
 
-// Returns a standard iterator for the list
-
-template <class Item> I_Iterator<Item> *T_SimpleList<Item>::GetIterator() {
-  return new T_SimpleListIterator<Item>(*this);
-}
-
-// Returns a standard iterator for the list
-
-template <class Item>
-I_Iterator<Item> *T_SimpleList<Item>::GetIterator(bool reverse) {
-  return new T_SimpleListIterator<Item>(*this, reverse);
-}
-
 // Empties the list's content
-
 template <class Item> void T_SimpleList<Item>::Empty() { Empty(false); }
 
 template <class Item> void T_SimpleList<Item>::Empty(bool reverse) {
@@ -92,7 +73,6 @@ template <class Item> void T_SimpleList<Item>::Empty(bool reverse) {
 }
 
 // Removes the element associated to the specified item
-
 template <class Item> void T_SimpleList<Item>::Remove(Item &i) {
   Node<Item> *n = findNode(i);
   if (n != NULL) {
@@ -109,7 +89,6 @@ void T_SimpleList<Item>::Remove(Item &i, bool delContent) {
 }
 
 // Finds if a node contains the specified item
-
 template <typename Item> Node<Item> *T_SimpleList<Item>::findNode(Item &item) {
   Node<Item> *current = _first;
   while (current != NULL) {
@@ -122,12 +101,10 @@ template <typename Item> Node<Item> *T_SimpleList<Item>::findNode(Item &item) {
 }
 
 // Deletes a node and its content if the list has ownership
-
 template <class Item>
 void T_SimpleList<Item>::deleteNode(Node<Item> *n, bool isOwner) {
 
   // Rewire list
-
   if (n->prev != NULL) {
     n->prev->next = n->next;
   } else {
@@ -140,7 +117,6 @@ void T_SimpleList<Item>::deleteNode(Node<Item> *n, bool isOwner) {
   }
 
   // Destroy node data and content if owner
-
   if (isOwner) {
     Item &i = n->data;
     delete &i;
@@ -168,21 +144,10 @@ template <class Item> Item *T_SimpleList<Item>::GetFirst() {
 template <class Item>
 void T_SimpleList<Item>::SetContent(T_SimpleList<Item> &content) {
   Empty();
-  IteratorPtr<Item> it(content.GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Insert(it->CurrentItem());
+  for (Begin(); !IsDone(); Next()) {
+    Insert(CurrentItem());
   }
 }
-
-/*
-template <class Item>
-void T_SimpleList<Item>::GetContent(T_SimpleList<Item>&content) {
-        content.Empty() ;
-        IteratorPtr<USQEventControl> it(GetIterator()) ;
-        for (it->Begin();!it->IsDone();it->Next()) {
-                content.Insert(it->CurrentItem()) ;
-        }
-} */
 
 template <class Item> bool T_SimpleList<Item>::GetOwnership() {
   return _isOwner;
@@ -270,3 +235,19 @@ void T_SimpleList<Item>::exchange(Node<Item> *n1, Node<Item> *n2) {
     };
   }
 };
+
+template <class Item> void T_SimpleList<Item>::Begin() { _current = _first; }
+
+template <class Item> void T_SimpleList<Item>::Next() {
+  NAssert(!IsDone());
+  _current = _current->next;
+}
+
+template <class Item> bool T_SimpleList<Item>::IsDone() const {
+  return (_current == NULL);
+}
+
+template <class Item> Item &T_SimpleList<Item>::CurrentItem() const {
+  NAssert(!IsDone());
+  return _current->data;
+}

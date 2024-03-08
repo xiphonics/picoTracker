@@ -29,34 +29,22 @@ public:
   virtual ~I_List(){};
 
   // Inserts a new item
-
   virtual void Insert(Item &) = 0;
 
   // Inserts a new item
-
   virtual void Insert(Item *) = 0;
 
   // Removes an item
-
   virtual void Remove(Item &) = 0;
 
-  // Returns an iterator on the list content
-  // The iterator has to be deleted
-
-  virtual I_Iterator<Item> *GetIterator() = 0;
-
   // Returns true if the list contains the specified Item
-
   virtual bool Contains(Item &) = 0;
 
   // Empty the list content
-
   virtual void Empty() = 0;
 
 protected:
-  // This is an interface so we make sure client code cannot
-  // instanciate it.
-
+  // This is an interface so we make sure client code cannot instanciate it.
   I_List(){};
 };
 

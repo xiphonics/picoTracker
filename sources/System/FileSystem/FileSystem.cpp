@@ -129,9 +129,8 @@ Path Path::GetParent() {
 }
 
 void Path::SetAlias(const char *alias, const char *path) {
-  IteratorPtr<Alias> it(aliases_.GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Alias &current = it->CurrentItem();
+  for (aliases_.Begin(); !aliases_.IsDone(); aliases_.Next()) {
+    Alias &current = aliases_.CurrentItem();
     if (!strcmp(current.GetAliasName(), alias)) {
       current.SetPath(path);
       return;
@@ -142,9 +141,8 @@ void Path::SetAlias(const char *alias, const char *path) {
 };
 
 const char *Path::resolveAlias(const char *alias) {
-  IteratorPtr<Alias> it(aliases_.GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Alias &current = it->CurrentItem();
+  for (aliases_.Begin(); !aliases_.IsDone(); aliases_.Next()) {
+    Alias &current = aliases_.CurrentItem();
     if (!strcmp(current.GetAliasName(), alias)) {
       return current.GetPath();
     };

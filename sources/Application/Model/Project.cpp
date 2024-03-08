@@ -326,13 +326,13 @@ void Project::buildMidiDeviceList() {
   }
   midiDeviceListSize_ = MidiService::GetInstance()->Size();
   midiDeviceList_ = (char **)SYS_MALLOC(midiDeviceListSize_ * sizeof(char *));
-  IteratorPtr<MidiOutDevice> it(MidiService::GetInstance()->GetIterator());
-  it->Begin();
+  auto midiService = MidiService::GetInstance();
+  midiService->Begin();
   for (int i = 0; i < midiDeviceListSize_; i++) {
-    std::string deviceName = it->CurrentItem().GetName();
+    std::string deviceName = midiService->CurrentItem().GetName();
     midiDeviceList_[i] = (char *)malloc(sizeof(char *) * deviceName.size() + 1);
     strcpy(midiDeviceList_[i], deviceName.c_str());
-    it->Next();
+    midiService->Next();
   };
 };
 
