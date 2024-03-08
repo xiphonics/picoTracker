@@ -301,7 +301,8 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     rp->downsample_ = downsample_->GetInt();
 
     // Disable all active updaters for new voice
-    for (auto it = rp->updaters_.begin(); it != rp->updaters_.end(); it++) {
+    for (auto it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
+         it++) {
       I_SRPUpdater *current = *it;
       current->Disable();
     }
