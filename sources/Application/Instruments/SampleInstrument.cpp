@@ -28,6 +28,9 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 
 SampleInstrument::SampleInstrument() {
 
+  // Reserve Observer
+  ReserveObserver(1);
+
   // Initialize MIDI notes
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     SampleInstrument::lastMidiNote_[i] = -1;
