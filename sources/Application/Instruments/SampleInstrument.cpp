@@ -102,24 +102,7 @@ SampleInstrument::SampleInstrument() {
   tableAuto_ = new Variable("table automation", SIP_TABLEAUTO, false);
   insert(end(), tableAuto_);
 
-  // Initalize instrument's voices update list
-
-  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    renderParams *rp = renderParams_ + i;
-    rp->updaters_.push_back(&rp->volumeRamp_);
-    rp->updaters_.push_back(&rp->panner_);
-    rp->updaters_.push_back(&rp->cutRamp_);
-    rp->updaters_.push_back(&rp->resRamp_);
-    rp->updaters_.push_back(&rp->fbMixRamp_);
-    rp->updaters_.push_back(&rp->fbTunRamp_);
-    rp->updaters_.push_back(&rp->arp_);
-    rp->updaters_.push_back(&rp->speedRamp_);
-    rp->updaters_.push_back(&rp->legato_);
-    rp->updaters_.push_back(&rp->pfin_);
-  };
-
   // Reset table state
-
   tableState_.Reset();
 }
 
@@ -317,10 +300,10 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     rp->downsample_ = downsample_->GetInt();
 
     // Disable all updaters for new voice
-
     std::vector<I_SRPUpdater *>::iterator it;
 
-    for (it = rp->updaters_.begin(); it != rp->updaters_.end(); it++) {
+    for (it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
+         it++) {
       I_SRPUpdater *current = *it;
       current->Disable();
     }
@@ -1133,6 +1116,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       std::vector<I_SRPUpdater *>::iterator it = rp->activeUpdaters_.begin();
       while (it != rp->activeUpdaters_.end()) {
         if (*it == &rp->cutRamp_) {
+          (*it)->Disable();
           it = rp->activeUpdaters_.erase(it);
           break;
         }
@@ -1144,6 +1128,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       std::vector<I_SRPUpdater *>::iterator it = rp->activeUpdaters_.begin();
       while (it != rp->activeUpdaters_.end()) {
         if (*it == &rp->resRamp_) {
+          (*it)->Disable();
           it = rp->activeUpdaters_.erase(it);
           break;
         }

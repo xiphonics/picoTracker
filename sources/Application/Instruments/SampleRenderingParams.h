@@ -51,7 +51,6 @@ struct renderParams {
   fixed basePan_; // panning
   fixed pan_;
 
-  std::vector<I_SRPUpdater *> updaters_;
   std::vector<I_SRPUpdater *> activeUpdaters_;
 
   VolumeRamp volumeRamp_;
