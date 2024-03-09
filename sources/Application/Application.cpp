@@ -18,9 +18,10 @@ void Application::initMidiInput() {
   const char *preferedDevice =
       Config::GetInstance()->GetValue("MIDICTRLDEVICE");
 
-  IteratorPtr<MidiInDevice> it(MidiService::GetInstance()->GetInIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    MidiInDevice &in = it->CurrentItem();
+  auto midiInService = MidiService::GetInstance();
+  for (midiInService->InBegin(); !midiInService->InIsDone();
+       midiInService->InNext()) {
+    MidiInDevice &in = midiInService->InCurrentItem();
     if ((preferedDevice) &&
         (!strncmp(in.GetName(), preferedDevice, strlen(preferedDevice)))) {
       if (in.Init()) {

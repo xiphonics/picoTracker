@@ -28,6 +28,9 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 
 SampleInstrument::SampleInstrument() {
 
+  // Reserve Observer
+  ReserveObserver(1);
+
   // Initialize MIDI notes
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     SampleInstrument::lastMidiNote_[i] = -1;
@@ -325,23 +328,17 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     rp->reso_ = rp->baseFRes_ = fl2fp(reso_->GetInt() / 255.0f);
 
     // Init crush params
-
     rp->crush_ = crush_->GetInt();
     rp->drive_ = drive_->GetInt();
 
     // Init downsampling
-
     rp->downsample_ = downsample_->GetInt();
 
     // Disable all updaters for new voice
-
-    std::vector<I_SRPUpdater *>::iterator it;
-
-    for (it = rp->updaters_.begin(); it != rp->updaters_.end(); it++) {
+    for (auto it = rp->updaters_.begin(); it != rp->updaters_.end(); it++) {
       I_SRPUpdater *current = *it;
       current->Disable();
     }
-
     rp->activeUpdaters_.clear();
   }
   return true;
@@ -352,11 +349,8 @@ void SampleInstrument::Stop(int channel) { running_ = false; }
 void SampleInstrument::doTickUpdate(int channel) {
 
   // Process updaters
-
   renderParams *rp = renderParams_ + channel;
-  std::vector<I_SRPUpdater *>::iterator it;
-
-  for (it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
+  for (auto it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
        it++) {
     I_SRPUpdater *current = *it;
     current->Trigger(true);
@@ -366,9 +360,7 @@ void SampleInstrument::doTickUpdate(int channel) {
 void SampleInstrument::doKRateUpdate(int channel) {
 
   renderParams *rp = renderParams_ + channel;
-  std::vector<I_SRPUpdater *>::iterator it;
-
-  for (it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
+  for (auto it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
        it++) {
     I_SRPUpdater *current = *it;
     current->Trigger(false);
@@ -469,10 +461,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             0;
         rup.speedOffset_ = FP_ONE;
 
-        std::vector<I_SRPUpdater *>::iterator it;
-
-        for (it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
-             it++) {
+        for (auto it = rp->activeUpdaters_.begin();
+             it != rp->activeUpdaters_.end(); it++) {
           I_SRPUpdater *current = *it;
           current->UpdateSRP(rup);
         }
@@ -715,9 +705,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
                 rup.panOffset_ = rup.fbMixOffset_ = rup.fbTunOffset_ = 0;
             rup.speedOffset_ = FP_ONE;
 
-            std::vector<I_SRPUpdater *>::iterator it;
-
-            for (it = rp->activeUpdaters_.begin();
+            for (auto it = rp->activeUpdaters_.begin();
                  it != rp->activeUpdaters_.end(); it++) {
               I_SRPUpdater *current = *it;
               current->UpdateSRP(rup);
@@ -1193,7 +1181,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     rp->reso_ = rp->baseFRes_ = fl2fp(res);
     if (rp->cutRamp_.Enabled()) {
       rp->cutRamp_.Disable();
-      std::vector<I_SRPUpdater *>::iterator it = rp->activeUpdaters_.begin();
+      auto it = rp->activeUpdaters_.begin();
       while (it != rp->activeUpdaters_.end()) {
         if (*it == &rp->cutRamp_) {
           it = rp->activeUpdaters_.erase(it);
@@ -1204,7 +1192,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
     if (rp->resRamp_.Enabled()) {
       rp->resRamp_.Disable();
-      std::vector<I_SRPUpdater *>::iterator it = rp->activeUpdaters_.begin();
+      auto it = rp->activeUpdaters_.begin();
       while (it != rp->activeUpdaters_.end()) {
         if (*it == &rp->resRamp_) {
           it = rp->activeUpdaters_.erase(it);

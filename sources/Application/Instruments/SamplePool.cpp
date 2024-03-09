@@ -96,11 +96,9 @@ void SamplePool::Load() {
   // First, find all wav files
 
   dir->GetContent("*.wav");
-  IteratorPtr<Path> it(dir->GetIterator());
   count_ = 0;
-
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Path &path = it->CurrentItem();
+  for (dir->Begin(); !dir->IsDone(); dir->Next()) {
+    Path &path = dir->CurrentItem();
     Status::Set("Loading %s", path.GetName().c_str());
     loadSample(path.GetPath().c_str());
     if (count_ == MAX_PIG_SAMPLES) {

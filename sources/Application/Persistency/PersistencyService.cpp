@@ -21,9 +21,8 @@ void PersistencyService::Save() {
 
   // Loop on all registered service
   // accumulating XML flow
-  IteratorPtr<SubService> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Persistent *currentItem = (Persistent *)&it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    Persistent *currentItem = (Persistent *)&CurrentItem();
     currentItem->Save(&printer);
   };
 
@@ -47,9 +46,8 @@ bool PersistencyService::Load() {
 
   elem = doc.FirstChild();
   while (elem) {
-    IteratorPtr<SubService> it(GetIterator());
-    for (it->Begin(); !it->IsDone(); it->Next()) {
-      Persistent *currentItem = (Persistent *)&it->CurrentItem();
+    for (Begin(); !IsDone(); Next()) {
+      Persistent *currentItem = (Persistent *)&CurrentItem();
       if (currentItem->Restore(&doc)) {
         break;
       };

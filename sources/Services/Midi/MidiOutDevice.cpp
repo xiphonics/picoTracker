@@ -10,9 +10,8 @@ void MidiOutDevice::SetName(const char *name) { name_ = name; }
 
 void MidiOutDevice::SendQueue(T_SimpleList<MidiMessage> &queue) {
 
-  IteratorPtr<MidiMessage> it(queue.GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    MidiMessage msg = it->CurrentItem();
+  for (queue.Begin(); !queue.IsDone(); queue.Next()) {
+    MidiMessage msg = queue.CurrentItem();
     SendMessage(msg);
   };
 }

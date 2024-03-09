@@ -25,6 +25,7 @@ public:
   virtual ~Observable();
   void AddObserver(I_Observer &o);
   void RemoveObserver(I_Observer &o);
+  void ReserveObserver(int num);
   void RemoveAllObservers();
   int CountObservers();
 
