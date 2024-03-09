@@ -23,9 +23,8 @@ void picoTrackerAudio::Init() {
 };
 
 void picoTrackerAudio::Close() {
-  IteratorPtr<AudioOut> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    AudioOut &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    AudioOut &current = CurrentItem();
     current.Close();
   }
 };

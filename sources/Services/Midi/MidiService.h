@@ -27,7 +27,12 @@ public:
 
   void SelectDevice(const std::string &name);
 
-  I_Iterator<MidiInDevice> *GetInIterator();
+  // in iterator
+  // TODO: refactor this
+  void InBegin() { inList_.Begin(); };
+  void InNext() { inList_.Next(); };
+  bool InIsDone() { return inList_.IsDone(); };
+  MidiInDevice &InCurrentItem() { return inList_.CurrentItem(); };
 
   //! player notification
 

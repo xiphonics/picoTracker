@@ -6,9 +6,8 @@ MultiChannelAdapter::MultiChannelAdapter(const char *name, bool owner)
     : T_SimpleList<Channel>(owner), Channel(name){};
 
 MultiChannelAdapter::~MultiChannelAdapter() {
-  IteratorPtr<Channel> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Channel &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    Channel &current = CurrentItem();
     current.RemoveObserver(*this);
   };
 };
@@ -31,9 +30,8 @@ void MultiChannelAdapter::Update(Observable &o, I_ObservableData *d) {
   Channel &source = (Channel &)o;
 
   value_ = source.GetValue();
-  IteratorPtr<Channel> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Channel &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    Channel &current = CurrentItem();
     if (&current != &source) {
       current.SetValue(value_, false);
     };
@@ -45,9 +43,8 @@ void MultiChannelAdapter::Update(Observable &o, I_ObservableData *d) {
 void MultiChannelAdapter::SetValue(float value, bool notify) {
 
   value_ = value;
-  IteratorPtr<Channel> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Channel &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    Channel &current = CurrentItem();
     current.SetValue(value, false);
   };
   if (notify) {

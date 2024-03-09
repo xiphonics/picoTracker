@@ -30,8 +30,8 @@ bool PlayerMixer::Init(Project *project) {
     return false;
   }
 
-  AudioMixer *mixer = ms->GetMixBus(STREAM_MIX_BUS);
-  mixer->Insert(fileStreamer_);
+  AudioMixer *audioMixer = ms->GetMixBus(STREAM_MIX_BUS);
+  audioMixer->Insert(fileStreamer_);
 
   project_ = project;
 
@@ -42,6 +42,13 @@ bool PlayerMixer::Init(Project *project) {
   };
 
   clipped_ = false;
+
+  // Setup mixbus
+  Mixer *mixer = Mixer::GetInstance();
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    channel_[i]->SetMixBus(mixer->GetBus(i));
+  }
+
   return true;
 };
 
@@ -100,12 +107,6 @@ void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
   NotifyObservers();
 
   // Transfer the mixer data
-
-  Mixer *mixer = Mixer::GetInstance();
-
-  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    channel_[i]->SetMixBus(mixer->GetBus(i));
-  }
   //     out_->SetMasterVolume(project_->GetMasterVolume()) ;
   MixerService *ms = MixerService::GetInstance();
   ms->SetMasterVolume(project_->GetMasterVolume());

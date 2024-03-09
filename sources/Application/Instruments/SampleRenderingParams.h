@@ -2,9 +2,9 @@
 #ifndef _SAMPLE_RENDER_PARAMS_H_
 #define _SAMPLE_RENDER_PARAMS_H_
 
+#include "Externals/etl/include/etl/vector.h"
 #include "Foundation/Types/Types.h"
 #include "SRPUpdaters.h"
-#include <vector>
 
 struct renderParams {
 
@@ -51,7 +51,8 @@ struct renderParams {
   fixed basePan_; // panning
   fixed pan_;
 
-  std::vector<I_SRPUpdater *> activeUpdaters_;
+  // Size of these struct same as max number of updaters
+  etl::vector<I_SRPUpdater *, 10> activeUpdaters_;
 
   VolumeRamp volumeRamp_;
   Panner panner_;
