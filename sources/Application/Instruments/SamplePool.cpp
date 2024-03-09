@@ -177,10 +177,10 @@ int SamplePool::ImportSample(Path &path) {
   Path dstPath(dpath.c_str());
 
   // truncate long file names
-  // auto displayFileName = path.GetName().length() > 10 ?
-  // path.GetName().substr(0, 10).c_str() : path.GetName().c_str();
   auto fileNameDisplay = etl::string<80>();
-  fileNameDisplay.append(path.GetName().c_str());
+  fileNameDisplay.append(path.GetName().length() > 12
+                             ? path.GetName().substr(0, 12).c_str()
+                             : path.GetName().c_str());
 
   Status::Set("Loading %s", fileNameDisplay);
 
@@ -210,7 +210,7 @@ int SamplePool::ImportSample(Path &path) {
     fin->Read(buffer, 1, count);
     fout->Write(buffer, 1, count);
     size -= count;
-    Status::Set("Load remaining: %s, %d", fileNameDisplay.data(), size);
+    Status::Set("Loading:%s[%d]", fileNameDisplay.data(), size);
   };
 
   fin->Close();
