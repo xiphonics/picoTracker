@@ -51,9 +51,7 @@ struct renderParams {
   fixed basePan_; // panning
   fixed pan_;
 
-  // Size of these structs same as max number of updaters
-  // TODO: updaters_ may not be necessary and would save ~5kb to remove it
-  etl::vector<I_SRPUpdater *, 10> updaters_;
+  // Size of this struct same as max number of updaters
   etl::vector<I_SRPUpdater *, 10> activeUpdaters_;
 
   VolumeRamp volumeRamp_;
