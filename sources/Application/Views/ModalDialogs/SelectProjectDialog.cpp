@@ -52,12 +52,11 @@ void SelectProjectDialog::DrawView() {
     topIndex_ = currentProject_ - LIST_SIZE + 1;
   };
 
-  IteratorPtr<Path> it(content_.GetIterator());
   int count = 0;
   char buffer[256];
-  for (it->Begin(); !it->IsDone(); it->Next()) {
+  for (content_.Begin(); !content_.IsDone(); content_.Next()) {
     if ((count >= topIndex_) && (count < topIndex_ + LIST_SIZE)) {
-      Path &current = it->CurrentItem();
+      Path &current = content_.CurrentItem();
       std::string p = current.GetName();
 
       std::string firstFourChars = p.substr(0, 4);
@@ -140,10 +139,9 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
         int count = 0;
         Path *current = 0;
 
-        IteratorPtr<Path> it(content_.GetIterator());
-        for (it->Begin(); !it->IsDone(); it->Next()) {
+        for (content_.Begin(); !content_.IsDone(); content_.Next()) {
           if (count == currentProject_) {
-            current = &it->CurrentItem();
+            current = &content_.CurrentItem();
             break;
           }
           count++;
@@ -258,9 +256,8 @@ void SelectProjectDialog::setCurrentFolder(Path &path) {
     // Get all lgpt something
     dir->GetContent("*");
     dir->Sort();
-    IteratorPtr<Path> it(dir->GetIterator());
-    for (it->Begin(); !it->IsDone(); it->Next()) {
-      Path &path = it->CurrentItem();
+    for (dir->Begin(); !dir->IsDone(); dir->Next()) {
+      Path &path = dir->CurrentItem();
       if (path.IsDirectory()) {
         std::string name = path.GetName();
         if (name[0] != '.' || name[1] == '.') {

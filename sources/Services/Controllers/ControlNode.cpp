@@ -30,9 +30,8 @@ ControlNode *ControlNode::FindChild(const std::string &url, bool create) {
     node = suburl.substr(0, pos);
   }
 
-  IteratorPtr<ControlNode> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    ControlNode &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    ControlNode &current = CurrentItem();
     if (!strcmp(node.c_str(), current.name_.c_str())) {
       if (pos == string::npos) {
         return &current;
@@ -72,9 +71,8 @@ std::string ControlNode::GetPath() {
 };
 
 void ControlNode::Trigger() {
-  IteratorPtr<ControlNode> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    ControlNode &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    ControlNode &current = CurrentItem();
     current.Trigger();
   }
 };
@@ -84,9 +82,8 @@ void ControlNode::Dump(int level) {
   strcpy(levelst, "                  ");
   levelst[level] = 0;
   Trace::Debug("%s %s", levelst, name_.c_str());
-  IteratorPtr<ControlNode> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    ControlNode &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    ControlNode &current = CurrentItem();
     current.Dump(level + 1);
   };
 };

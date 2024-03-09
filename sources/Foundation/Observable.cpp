@@ -19,6 +19,7 @@ void Observable::RemoveObserver(I_Observer &o) {
     it++;
   }
 }
+void Observable::ReserveObserver(int num) { _list.reserve(num); };
 
 void Observable::RemoveAllObservers() {
   std::vector<I_Observer *>::iterator it = _list.begin();

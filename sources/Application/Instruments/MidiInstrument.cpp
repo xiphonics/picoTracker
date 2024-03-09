@@ -7,6 +7,9 @@ MidiService *MidiInstrument::svc_ = 0;
 
 MidiInstrument::MidiInstrument() {
 
+  // Reserve Observer
+  ReserveObserver(1);
+
   strcpy(name_, "0");
 
   if (svc_ == 0) {
