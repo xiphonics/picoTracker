@@ -3,6 +3,7 @@
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Externals/etl/include/etl/string.h"
+#include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 
 #ifdef PICOBUILD
 #include "pico/multicore.h"
@@ -171,7 +172,12 @@ void PagedImportSampleDialog::import(Path &element) {
   // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
   multicore_lockout_start_blocking();
 #endif
+
+  auto eventManager = I_GUIWindowFactory::GetInstance()->GetEventManager();
+  eventManager->PauseClock();
   int sampleID = pool->ImportSample(element);
+  eventManager->RunClock();
+
 #ifdef PICOBUILD
   multicore_lockout_end_blocking();
 #endif
