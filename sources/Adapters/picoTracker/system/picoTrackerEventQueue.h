@@ -1,19 +1,11 @@
 #ifndef _PICOTRACKEREVENTQUEUE_H_
 #define _PICOTRACKEREVENTQUEUE_H_
 
-#include "Externals/etl/include/etl/stack.h"
+#include "Externals/etl/include/etl/queue.h"
+#include "Externals/etl/include/etl/set.h"
 #include "Foundation/T_Singleton.h"
-#include "Foundation/T_Stack.h"
 
-enum picoTrackerEventType {
-  PICO_NONE,
-  //  PICO_KEYDOWN,
-  //  PICO_KEYUP,
-  //  PICO_QUIT,
-  PICO_REDRAW,
-  PICO_CLOCK,
-  //  PICO_USEREVENT
-};
+enum picoTrackerEventType { PICO_REDRAW, PICO_CLOCK, LAST };
 
 class picoTrackerEvent {
 public:
@@ -22,10 +14,18 @@ public:
   picoTrackerEventType type_;
 };
 
-class picoTrackerEventQueue : public T_Singleton<picoTrackerEventQueue>,
-                              public etl::stack<picoTrackerEvent, 5> {
+class picoTrackerEventQueue : public T_Singleton<picoTrackerEventQueue> {
 public:
   picoTrackerEventQueue();
+  void push(picoTrackerEvent event);
+  void pop_into(picoTrackerEvent &event);
+  bool empty();
+
+private:
+  etl::queue<picoTrackerEvent, picoTrackerEventType::LAST,
+             etl::memory_model::MEMORY_MODEL_SMALL>
+      queue_;
+  etl::set<picoTrackerEventType, picoTrackerEventType::LAST> queued_;
 };
 
 #endif
