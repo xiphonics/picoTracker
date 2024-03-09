@@ -1,12 +1,12 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Externals/etl/include/etl/string.h"
 #include "System/Console/Trace.h"
 #include "System/io/Status.h"
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-#include "Externals/etl/include/etl/string.h"
 
 #define SAMPLE_LIB "root:samplelib"
 
@@ -17,7 +17,8 @@
 //  WARNING! should be conscious to always ensure 1MB of free space
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
-  ((((uintptr_t)&__flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) + 1) * \
+  ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
+   1) *                                                                        \
       FLASH_SECTOR_SIZE
 // #define FLASH_LIMIT (2 * 1024 * 1024)
 
@@ -176,8 +177,9 @@ int SamplePool::ImportSample(Path &path) {
   Path dstPath(dpath.c_str());
 
   // truncate long file names
-  // auto displayFileName = path.GetName().length() > 10 ? path.GetName().substr(0, 10).c_str() : path.GetName().c_str();
-  auto fileNameDisplay = etl::string<80>(); 
+  // auto displayFileName = path.GetName().length() > 10 ?
+  // path.GetName().substr(0, 10).c_str() : path.GetName().c_str();
+  auto fileNameDisplay = etl::string<80>();
   fileNameDisplay.append(path.GetName().c_str());
 
   Status::Set("Loading %s", fileNameDisplay);
@@ -200,7 +202,6 @@ int SamplePool::ImportSample(Path &path) {
     delete (fin);
     return -1;
   };
-
 
   // copy file to current project
   char buffer[IMPORT_CHUNK_SIZE];
