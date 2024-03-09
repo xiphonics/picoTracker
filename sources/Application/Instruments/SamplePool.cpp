@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include "Externals/etl/include/etl/string.h"
 
 #define SAMPLE_LIB "root:samplelib"
 
@@ -174,7 +175,12 @@ int SamplePool::ImportSample(Path &path) {
   dpath += path.GetName();
   Path dstPath(dpath.c_str());
 
-  Status::Set("Loading %s", path.GetName().c_str());
+  // truncate long file names
+  // auto displayFileName = path.GetName().length() > 10 ? path.GetName().substr(0, 10).c_str() : path.GetName().c_str();
+  auto fileNameDisplay = etl::string<80>(); 
+  fileNameDisplay.append(path.GetName().c_str());
+
+  Status::Set("Loading %s", fileNameDisplay);
 
   // Opens files
 
@@ -195,14 +201,15 @@ int SamplePool::ImportSample(Path &path) {
     return -1;
   };
 
-  // copy file to current project
 
+  // copy file to current project
   char buffer[IMPORT_CHUNK_SIZE];
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
     fin->Read(buffer, 1, count);
     fout->Write(buffer, 1, count);
     size -= count;
+    Status::Set("Load remaining: %s, %d", fileNameDisplay.data(), size);
   };
 
   fin->Close();

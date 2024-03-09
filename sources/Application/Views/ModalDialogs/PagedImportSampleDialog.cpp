@@ -205,8 +205,9 @@ void PagedImportSampleDialog::ProcessButtonMask(unsigned short mask,
 
   if (mask & EPBM_START) {
     if (mask & EPBM_L) {
-      Trace::Log("PAGEDIMPORT", "SHIFT play - import");
+      Trace::Log("PAGEDIMPORT", "SHIFT play - starting import");
       import(fullPath);
+      Trace::Log("PAGEDIMPORT", "import done");
     } else {
       Trace::Log("PAGEDIMPORT", "plain play preview");
       preview(fullPath);

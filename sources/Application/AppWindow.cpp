@@ -92,6 +92,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   EventDispatcher *ed = EventDispatcher::GetInstance();
   ed->SetWindow(this);
 
+  // attach this AppWindow as the handler for Status messages
   Status::Install(this);
 
   // Init midi services
