@@ -14,6 +14,7 @@ unsigned int picoTrackerEventManager::keyRepeat_ = 25;
 unsigned int picoTrackerEventManager::keyDelay_ = 500;
 unsigned int picoTrackerEventManager::keyKill_ = 5;
 repeating_timer_t picoTrackerEventManager::timer_ = repeating_timer_t();
+bool picoTrackerEventManager::isClockRunning_ = true;
 
 uint16_t gTime_ = 0;
 
@@ -22,7 +23,7 @@ picoTrackerEventQueue *queue;
 bool timerHandler(repeating_timer_t *rt) {
   queue = picoTrackerEventQueue::GetInstance();
   gTime_++;
-  if (gTime_ % 1000 == 0) {
+  if (gTime_ % 1000 == 0 && picoTrackerEventManager::ClockRunning()) {
     if (!queue->full()) {
       queue->push(picoTrackerEvent(PICO_CLOCK));
     }

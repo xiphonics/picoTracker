@@ -36,7 +36,8 @@ public:
   virtual int GetKeyCode(const char *name) = 0;
   void MapAppButton(const char *mapping, AppButton button);
   void InstallMappings();
-
+  virtual void PauseClock() = 0;
+  virtual void RunClock()  = 0;
 protected:
   void mapConfigKey(AppButton button, const char *keyName);
 

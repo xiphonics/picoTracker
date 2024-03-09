@@ -17,6 +17,9 @@ public:
   virtual int MainLoop();
   virtual void PostQuitMessage();
   virtual int GetKeyCode(const char *name);
+  virtual void PauseClock() { isClockRunning_ = false; }
+  virtual void RunClock() { isClockRunning_ = true; }
+  static bool ClockRunning() { return isClockRunning_; }
 
 protected:
   static void ProcessInputEvent();
@@ -33,5 +36,6 @@ private:
   static bool isRepeating_;
   static unsigned long time_;
   KeyboardControllerSource *keyboardCS_;
+  static bool isClockRunning_;
 };
 #endif
