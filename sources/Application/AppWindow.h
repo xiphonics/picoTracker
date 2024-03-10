@@ -20,8 +20,9 @@
 #define PROP_INVERT 0x80
 #define CHAR_WIDTH 10
 #define CHAR_HEIGHT 10
-#define SCREEN_WIDTH 40
-#define SCREEN_HEIGHT 30
+#define SCREEN_WIDTH 32
+#define SCREEN_HEIGHT 24
+#define SCREEN_CHARS SCREEN_WIDTH *SCREEN_HEIGHT
 
 class AppWindow : public GUIWindow, I_Observer, Status {
 protected:
@@ -85,10 +86,10 @@ private:
   unsigned long _lastB;
   char _statusLine[80];
 
-  static unsigned char _charScreen[SCREEN_WIDTH * SCREEN_HEIGHT];
-  static unsigned char _charScreenProp[SCREEN_WIDTH * SCREEN_HEIGHT];
-  static unsigned char _preScreen[SCREEN_WIDTH * SCREEN_HEIGHT];
-  static unsigned char _preScreenProp[SCREEN_WIDTH * SCREEN_HEIGHT];
+  static unsigned char _charScreen[SCREEN_CHARS];
+  static unsigned char _charScreenProp[SCREEN_CHARS];
+  static unsigned char _preScreen[SCREEN_CHARS];
+  static unsigned char _preScreenProp[SCREEN_CHARS];
 
   static GUIColor backgroundColor_;
   static GUIColor normalColor_;
