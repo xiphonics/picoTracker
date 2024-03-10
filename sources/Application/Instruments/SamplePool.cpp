@@ -18,8 +18,7 @@
 //  WARNING! should be conscious to always ensure 1MB of free space
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
-  ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
-   1) *                                                                        \
+  ((((uintptr_t)&__flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) + 1) * \
       FLASH_SECTOR_SIZE
 // #define FLASH_LIMIT (2 * 1024 * 1024)
 

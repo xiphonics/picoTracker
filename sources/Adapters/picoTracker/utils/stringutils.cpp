@@ -16,14 +16,13 @@ void humanMemorySize(uint32_t bytes, char *output) {
 // ref: https://stackoverflow.com/a/36315819/85472
 #define PBSTR "||||||"
 #define PBWIDTH 6
-void printProgress(float percentage, char* buffer, bool showPercent) {
-    int val = (int) (percentage * 100);
-    int lpad = (int) (percentage * PBWIDTH);
-    int rpad = PBWIDTH - lpad;
-    if (showPercent) {
-        sprintf(buffer, "\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-    } else {
-        sprintf(buffer, "[%.*s%*s]\n", lpad, PBSTR, rpad, "");
-    }   
+void printProgress(float percentage, char *buffer, bool showPercent) {
+  int val = (int)(percentage * 100);
+  int lpad = (int)(percentage * PBWIDTH);
+  int rpad = PBWIDTH - lpad;
+  if (showPercent) {
+    sprintf(buffer, "\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+  } else {
+    sprintf(buffer, "[%.*s%*s]\n", lpad, PBSTR, rpad, "");
+  }
 }
-
