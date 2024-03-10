@@ -3,4 +3,6 @@
 
 void humanMemorySize(uint32_t bytes, char *buffer);
 
+void printProgress(float percentage, char* buffer, bool showPercent);
+
 #endif

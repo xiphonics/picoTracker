@@ -1,4 +1,5 @@
 #include "SamplePool.h"
+#include "Adapters/picoTracker/utils/stringutils.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Externals/etl/include/etl/string.h"
@@ -17,7 +18,8 @@
 //  WARNING! should be conscious to always ensure 1MB of free space
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
-  ((((uintptr_t)&__flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) + 1) * \
+  ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
+   1) *                                                                        \
       FLASH_SECTOR_SIZE
 // #define FLASH_LIMIT (2 * 1024 * 1024)
 
@@ -204,12 +206,15 @@ int SamplePool::ImportSample(Path &path) {
 
   // copy file to current project
   char buffer[IMPORT_CHUNK_SIZE];
+  int fileSize = size;
+  char progressbuffer[10];
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
     fin->Read(buffer, 1, count);
     fout->Write(buffer, 1, count);
     size -= count;
-    Status::Set("Loading:%s[%d]", fileNameDisplay.data(), size);
+    printProgress(((fileSize - size) / (float)fileSize), progressbuffer, false);
+    Status::Set("Copying:%s %s", fileNameDisplay.data(), progressbuffer);
   };
 
   fin->Close();
@@ -217,8 +222,8 @@ int SamplePool::ImportSample(Path &path) {
   delete (fin);
   delete (fout);
 
+  Status::Set("Loading to Flash:%s", fileNameDisplay.data());
   // now load the sample
-
   bool status = loadSample(dstPath.GetPath().c_str());
 
   SetChanged();
