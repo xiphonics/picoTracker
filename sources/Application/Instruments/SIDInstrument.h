@@ -87,7 +87,7 @@ public:
 
   virtual InstrumentType GetType() { return IT_SID; };
 
-  virtual const char *GetName();
+  virtual etl::string<24> GetName();
 
   virtual void OnStart();
 

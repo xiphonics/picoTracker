@@ -16,8 +16,8 @@ const char *InstrumentTypeData[] = {"Sample", "SID", "Midi"};
 
 // Contain all instrument definition
 
-InstrumentBank::InstrumentBank()
-    : Persistent("INSTRUMENTBANK"), si0(), si1(), si2(), si3(), si4(), si5(),
+InstrumentBank::InstrumentBank() : Persistent("INSTRUMENTBANK") {
+  /*, si0(), si1(), si2(), si3(), si4(), si5(),
       si6(), si7(), si8(), si9(), si10(), si11(), si12(), si13(), si14(),
       si15(), mi0(), mi1(), mi2(), mi3(), mi4(), mi5(), mi6(), mi7(), mi8(),
       mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15() {
@@ -70,7 +70,7 @@ InstrumentBank::InstrumentBank()
   instrument_[30] = &mi14;
   mi15.SetChannel(15);
   instrument_[31] = &mi15;
-
+  */
   for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
     Trace::Debug("Loading sample instrument: %i", i);
     SampleInstrument *s = new SampleInstrument();

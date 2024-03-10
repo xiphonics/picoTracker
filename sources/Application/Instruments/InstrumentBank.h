@@ -24,7 +24,7 @@ public:
 
 private:
   I_Instrument *instrument_[MAX_INSTRUMENT_COUNT];
-  SampleInstrument si0;
+  /*  SampleInstrument si0;
   SampleInstrument si1;
   SampleInstrument si2;
   SampleInstrument si3;
@@ -55,7 +55,7 @@ private:
   MidiInstrument mi12;
   MidiInstrument mi13;
   MidiInstrument mi14;
-  MidiInstrument mi15;
+  MidiInstrument mi15;*/
 };
 
 #endif

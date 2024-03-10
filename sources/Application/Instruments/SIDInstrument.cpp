@@ -32,47 +32,47 @@ SIDInstrument::SIDInstrument()
   strcpy(name_, "SID");
 
   Variable *v = new Variable("table", DIP_TABLE, -1);
-  Insert(v);
+  insert(end(), v);
   v = new Variable("table automation", DIP_TABLEAUTO, false);
-  Insert(v);
+  insert(end(), v);
 
-  Insert(v1pw_);
-  Insert(v1wf_);
-  Insert(v1sync_);
-  Insert(v1gate_);
-  Insert(v1ring_);
+  insert(end(), &v1pw_);
+  insert(end(), &v1wf_);
+  insert(end(), &v1sync_);
+  insert(end(), &v1gate_);
+  insert(end(), &v1ring_);
   //  v1adsr_ = new Variable("V1ADSR", DIP_V1ADSR,
   //                         0x2282); // TODO: What's a good default?
-  Insert(v1adsr_);
-  Insert(v1fon_);
-  Insert(v2pw_);
-  Insert(v2wf_);
-  Insert(v2sync_);
-  Insert(v2gate_);
-  Insert(v2ring_);
-  Insert(v2adsr_);
-  Insert(v2fon_);
+  insert(end(), &v1adsr_);
+  insert(end(), &v1fon_);
+  insert(end(), &v2pw_);
+  insert(end(), &v2wf_);
+  insert(end(), &v2sync_);
+  insert(end(), &v2gate_);
+  insert(end(), &v2ring_);
+  insert(end(), &v2adsr_);
+  insert(end(), &v2fon_);
 
-  Insert(v3pw_);
-  Insert(v3wf_);
-  Insert(v3sync_);
-  Insert(v3gate_);
-  Insert(v3ring_);
-  Insert(v3adsr_);
-  Insert(v3fon_);
-  Insert(v3off_);
+  insert(end(), &v3pw_);
+  insert(end(), &v3wf_);
+  insert(end(), &v3sync_);
+  insert(end(), &v3gate_);
+  insert(end(), &v3ring_);
+  insert(end(), &v3adsr_);
+  insert(end(), &v3fon_);
+  insert(end(), &v3off_);
 
   //  fltcut_ = new Variable("FILTCUT", DIP_FILTCUT,
   //                         0x1FF); // TODO: what's a
   //                         good default?
-  Insert(fltcut_);
-  Insert(fltres_);
+  insert(end(), &fltcut_);
+  insert(end(), &fltres_);
   //  fltmode_ = new Variable("FMODE", DIP_FMODE,
   //  sidFilterModeText, DFM_LAST,
   //                          0x0); // TODO: What's a
   //                          good default?
-  Insert(fltmode_);
-  Insert(vol_);
+  insert(end(), &fltmode_);
+  insert(end(), &vol_);
 }
 
 SIDInstrument::~SIDInstrument(){};
@@ -171,9 +171,9 @@ void SIDInstrument::Stop(int c) { playing_ = false; };
 
 bool SIDInstrument::Render(int channel, fixed *buffer, int size,
                            bool updateTick) {
-  //  int start = micros();
-  // clear the fixed point buffer
+  int start = micros();
 
+  // clear the fixed point buffer
   SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
   /*
   // TEMP
@@ -203,13 +203,12 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     // Have to calculate ASDRs somewhere here
     sid_.cRSID_emulateADSRs(1);
     int output = sid_.cRSID_emulateWaves();
-    buffer[2 * n] = (fixed)output * 65536;     // L
-    buffer[2 * n + 1] = (fixed)output * 65536; // R
+    buffer[2 * n] = (fixed)output << 15;     // L
+    buffer[2 * n + 1] = (fixed)output << 15; // R
   }
-  //  int time_taken = micros() - start;
-  //  Trace::Log("RENDER", "SID Render took %ius (%i%%
-  //  ts)", time_taken,
-  //             (time_taken * 44100) / size / 10000);
+  int time_taken = micros() - start;
+  Trace::Log("RENDER", "SID Render took %ius (%i%%ts)", time_taken,
+             (time_taken * 44100) / size / 10000);
   return true;
 };
 
@@ -219,7 +218,7 @@ bool SIDInstrument::IsInitialized() {
 
 void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value){};
 
-const char *SIDInstrument::GetName() { return name_; }
+etl::string<24> SIDInstrument::GetName() { return "SID"; }
 
 int SIDInstrument::GetTable() {
   Variable *v = FindVariable(DIP_TABLE);
