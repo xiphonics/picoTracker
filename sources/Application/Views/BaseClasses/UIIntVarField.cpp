@@ -40,7 +40,7 @@ void UIIntVarField::Draw(GUIWindow &w, int offset) {
   } break;
   case Variable::CHAR_LIST:
   case Variable::BOOL: {
-    const char *cvalue = src_.GetString();
+    const char *cvalue = src_.GetString().c_str();
     sprintf(buffer, format_, cvalue);
   } break;
 

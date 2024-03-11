@@ -1202,8 +1202,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   };
 };
 
-const char *SampleInstrument::GetName() {
-
+etl::string<24> SampleInstrument::GetName() {
   Variable *v = FindVariable(SIP_SAMPLE);
   return v->GetString();
 };

@@ -115,7 +115,8 @@ void Project::Update(Observable &o, I_ObservableData *d) {
   WatchedVariable &v = (WatchedVariable &)o;
   switch (v.GetID()) {
   case VAR_MIDIDEVICE:
-    MidiService::GetInstance()->SelectDevice(std::string(v.GetString()));
+    MidiService::GetInstance()->SelectDevice(
+        std::string(v.GetString().c_str()));
     /*           bool enabled=v.GetBool() ;
                Midi *midi=Midi::GetInstance() ;
                if (enabled) {
@@ -311,7 +312,7 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   for (size_t i = 0; i < size(); i++) {
     printer->OpenElement("PARAMETER");
     printer->PushAttribute("NAME", (*it)->GetName());
-    printer->PushAttribute("VALUE", (*it)->GetString());
+    printer->PushAttribute("VALUE", (*it)->GetString().c_str());
     printer->CloseElement();
     it++;
   }
