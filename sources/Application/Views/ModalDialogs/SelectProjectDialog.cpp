@@ -9,7 +9,11 @@
 #define LIST_SIZE 14
 #define LIST_WIDTH 26
 
+#ifndef NO_EXIT
+static const char *buttonText[3] = {"Load", "New", "Exit"};
+#else
 static const char *buttonText[2] = {"Load", "New"};
+#endif
 
 Path SelectProjectDialog::lastFolder_("root:");
 int SelectProjectDialog::lastProject_ = 0;
@@ -103,7 +107,11 @@ void SelectProjectDialog::DrawView() {
 
   SetColor(CD_NORMAL);
 
+#ifndef NO_EXIT
+  for (int i = 0; i < 3; i++) {
+#else
   for (int i = 0; i < 2; i++) {
+#endif
     const char *text = buttonText[i];
     x = offset * (i + 1) - strlen(text) / 2;
     props.invert_ = (i == selected_) ? true : false;
@@ -180,6 +188,11 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
         DoModal(npd, NewProjectCallback);
         break;
       }
+#ifndef NO_EXIT
+      case 2: // Exit ;
+        EndModal(0);
+        break;
+#endif
       }
     } else {
       // R Modifier
@@ -192,12 +205,21 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
           warpToNextProject(1);
         if (mask == EPBM_LEFT) {
           selected_--;
+#ifdef NO_EXIT
           if (selected_ < 0)
             selected_ += 2;
+#else
+          if (selected_ < 0)
+            selected_ += 3;
+#endif
           isDirty_ = true;
         }
         if (mask == EPBM_RIGHT) {
+#ifdef NO_EXIT
           selected_ = (selected_ + 1) % 2;
+#else
+          selected_ = (selected_ + 1) % 3;
+#endif
           isDirty_ = true;
         }
       }
@@ -249,6 +271,26 @@ void SelectProjectDialog::setCurrentFolder(Path &path) {
   selected_ = 0;
   currentPath_ = path;
   content_.Empty();
+
+  #ifdef PICOBUILD
+  FileSystemStatus st = FileSystem::GetInstance()->GetFSStatus();
+  if (st != FSOK) {
+    std::string msg;
+    switch(st) {
+      case FSNotPresent:          msg = "**SD not present"; break;
+      case FSPartitionNotPresent: msg = "**SD no partition"; break;
+      case FSUnknown:
+      default:  
+        msg = "**Filesystem status unknown"; 
+        break;
+    }
+    content_.Insert(new Path(msg));
+    // reset & redraw screen
+    topIndex_ = 0;
+    currentProject_ = 0;
+    isDirty_ = true;
+  }
+  #endif
 
   // Let's read all the directory in the root
 
