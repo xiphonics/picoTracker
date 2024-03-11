@@ -1,11 +1,11 @@
 #ifndef _I_INSTRUMENT_H_
 #define _I_INSTRUMENT_H_
 
+#include "Application/Player/TablePlayback.h"
 #include "Application/Utils/fixed.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/VariableContainer.h"
-
-#include "Application/Player/TablePlayback.h"
 
 enum InstrumentType { IT_SAMPLE = 0, IT_MIDI };
 
@@ -40,7 +40,7 @@ public:
 
   virtual InstrumentType GetType() = 0;
 
-  virtual const char *GetName() = 0;
+  virtual etl::string<24> GetName() = 0;
 
   virtual void ProcessCommand(int channel, FourCC cc, ushort value) = 0;
 

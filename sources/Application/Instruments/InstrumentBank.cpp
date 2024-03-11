@@ -111,7 +111,7 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
       for (size_t j = 0; j < instr->size(); j++) {
         printer->OpenElement("PARAM");
         printer->PushAttribute("NAME", (*it)->GetName());
-        printer->PushAttribute("VALUE", (*it)->GetString());
+        printer->PushAttribute("VALUE", (*it)->GetString().c_str());
         printer->CloseElement(); // PARAM
         it++;
       }
