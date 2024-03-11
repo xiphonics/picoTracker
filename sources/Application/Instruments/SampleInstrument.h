@@ -80,8 +80,8 @@ public:
   int GetVolume();
   void SetVolume(int);
   int GetSampleSize(int channel = -1);
-  virtual const char *GetName(); // returns sample name until real
-                                 // namer is implemented
+  virtual etl::string<24> GetName(); // returns sample name until real
+                                     // namer is implemented
 
   static void EnableDownsamplingLegacy();
 

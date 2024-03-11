@@ -25,8 +25,8 @@ public:
   virtual bool IsStatic();
 
 protected:
-  int x_;
-  int y_;
+  uint8_t x_;
+  uint8_t y_;
   bool focus_;
 };
 #endif
