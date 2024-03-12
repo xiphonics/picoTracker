@@ -53,7 +53,7 @@ add_compile_options(
 # EP added the below
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-overloaded-virtual>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-c++20-compat>)
-add_definitions(-DPICO_FLASH_SIZE_BYTES=16777216)
+#  add_definitions(-DPICO_FLASH_SIZE_BYTES=16777216)
 
 add_subdirectory(Adapters)
 add_subdirectory(UIFramework)
