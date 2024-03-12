@@ -8,10 +8,8 @@ const char *MidiOutDevice::GetName() { return name_.c_str(); };
 
 void MidiOutDevice::SetName(const char *name) { name_ = name; }
 
-void MidiOutDevice::SendQueue(T_SimpleList<MidiMessage> &queue) {
-
-  for (queue.Begin(); !queue.IsDone(); queue.Next()) {
-    MidiMessage msg = queue.CurrentItem();
+void MidiOutDevice::SendQueue(etl::vector<MidiMessage, 10> &queue) {
+  for (auto &msg : queue) {
     SendMessage(msg);
-  };
+  }
 }
