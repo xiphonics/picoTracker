@@ -15,9 +15,8 @@ Channel *MidiInMerger::GetChannel(const char *name) {
   // The map doesn't contain it so we need to create one
 
   MultiChannelAdapter *newC = 0;
-  IteratorPtr<MidiInDevice> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    MidiInDevice &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    MidiInDevice &current = CurrentItem();
     Channel *c = current.GetChannel(name);
     if (c) {
       if (!newC) {

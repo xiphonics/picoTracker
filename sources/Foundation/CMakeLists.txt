@@ -6,7 +6,6 @@ add_library(foundation
   SingletonRegistry.h SingletonRegistry.cpp
   T_Factory.h
   T_SimpleList.h
-  T_SimpleListIterator.h
   T_Singleton.h
   T_Stack.h
 )

@@ -25,38 +25,25 @@ struct Node // A node of the list. Provides space to keep the data and keep a
 template <class Item> class T_SimpleListIterator;
 
 template <class Item> class T_SimpleList : public I_List<Item> {
-
-  friend class T_SimpleListIterator<Item>; // For optimal speed, we befriend
-                                           // with the class's iterator
 public:
   // Constructor: allow to specify if we want the list to own its element or not
   // If it does, it calls its elements destructors when it is destroyed
-
   T_SimpleList(bool isOwner = false);
-
-  // Destructor
-
   virtual ~T_SimpleList();
 
   // I_List implementation
-
   virtual void Insert(Item &);
   virtual void Insert(Item *);
   virtual void Remove(Item &);
-  virtual I_Iterator<Item> *GetIterator();
   virtual bool Contains(Item &);
   virtual void Empty();
   virtual void Empty(bool reverse);
 
-  I_Iterator<Item> *GetIterator(bool reverse);
-
   // Additional
-
   Item *GetLast();
   Item *GetFirst();
   void Remove(Item &, bool shouldDelete);
   void SetContent(T_SimpleList<Item> &);
-  //	void GetContent(T_SimpleList<Item>&) ;
 
   bool GetOwnership();
   void SetOwnership(bool);
@@ -65,8 +52,13 @@ public:
 
   void Sort();
 
-  // Implementation function - keep away !
+  // iterator
+  virtual void Begin();
+  virtual void Next();
+  virtual bool IsDone() const;
+  virtual Item &CurrentItem() const;
 
+  // Implementation function - keep away !
 protected:
   Node<Item> *
   findNode(Item &); // Looks for the node that contains a given item
@@ -86,8 +78,9 @@ private:
       *_last; // Pointer to the last node of the list (or NULL if list is empty)
   bool _isOwner; // Keep track of the list's ownership on its elements
   int _size;
+  // iterator
+  Node<Item> *_current;
 };
 
 #include "T_SimpleList.cpp" // Include the implementation file.
-#include "T_SimpleListIterator.h"
 #endif

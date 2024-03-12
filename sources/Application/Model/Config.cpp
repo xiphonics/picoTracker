@@ -61,7 +61,7 @@ const char *Config::GetValue(const char *key) {
   if (v) {
     Trace::Log("CONFIG", "Got value for %s=%s", key, v->GetString());
   }
-  return v ? v->GetString() : 0;
+  return v ? v->GetString().c_str() : 0;
 };
 
 //------------------------------------------------------------------------------

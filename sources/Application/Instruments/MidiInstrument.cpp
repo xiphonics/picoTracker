@@ -1,5 +1,6 @@
 #include "MidiInstrument.h"
 #include "CommandList.h"
+#include "Externals/etl/include/etl/to_string.h"
 #include "System/Console/Trace.h"
 #include <string.h>
 
@@ -7,7 +8,8 @@ MidiService *MidiInstrument::svc_ = 0;
 
 MidiInstrument::MidiInstrument() {
 
-  strcpy(name_, "0");
+  // Reserve Observer
+  ReserveObserver(1);
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
@@ -172,10 +174,11 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }
 };
 
-const char *MidiInstrument::GetName() {
+etl::string<24> MidiInstrument::GetName() {
   Variable *v = FindVariable(MIP_CHANNEL);
-  sprintf(name_, "MIDI CH %2.2d", v->GetInt() + 1);
-  return name_;
+  etl::string<24> name = "MIDI CH ";
+  etl::to_string(v->GetInt() + 1, name, etl::format_spec().precision(0), true);
+  return name;
 }
 
 int MidiInstrument::GetTable() {

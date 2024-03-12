@@ -33,9 +33,8 @@ void AudioMixer::EnableRendering(bool enable) {
 bool AudioMixer::Render(fixed *buffer, int samplecount) {
 
   bool gotData = false;
-  IteratorPtr<AudioModule> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    AudioModule &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    AudioModule &current = CurrentItem();
     if (!gotData) {
       gotData = current.Render(buffer, samplecount);
     } else {
