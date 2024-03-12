@@ -115,7 +115,8 @@ void Project::Update(Observable &o, I_ObservableData *d) {
   WatchedVariable &v = (WatchedVariable &)o;
   switch (v.GetID()) {
   case VAR_MIDIDEVICE:
-    MidiService::GetInstance()->SelectDevice(std::string(v.GetString()));
+    MidiService::GetInstance()->SelectDevice(
+        std::string(v.GetString().c_str()));
     /*           bool enabled=v.GetBool() ;
                Midi *midi=Midi::GetInstance() ;
                if (enabled) {
@@ -311,7 +312,7 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   for (size_t i = 0; i < size(); i++) {
     printer->OpenElement("PARAMETER");
     printer->PushAttribute("NAME", (*it)->GetName());
-    printer->PushAttribute("VALUE", (*it)->GetString());
+    printer->PushAttribute("VALUE", (*it)->GetString().c_str());
     printer->CloseElement();
     it++;
   }
@@ -326,13 +327,13 @@ void Project::buildMidiDeviceList() {
   }
   midiDeviceListSize_ = MidiService::GetInstance()->Size();
   midiDeviceList_ = (char **)SYS_MALLOC(midiDeviceListSize_ * sizeof(char *));
-  IteratorPtr<MidiOutDevice> it(MidiService::GetInstance()->GetIterator());
-  it->Begin();
+  auto midiService = MidiService::GetInstance();
+  midiService->Begin();
   for (int i = 0; i < midiDeviceListSize_; i++) {
-    std::string deviceName = it->CurrentItem().GetName();
+    std::string deviceName = midiService->CurrentItem().GetName();
     midiDeviceList_[i] = (char *)malloc(sizeof(char *) * deviceName.size() + 1);
     strcpy(midiDeviceList_[i], deviceName.c_str());
-    it->Next();
+    midiService->Next();
   };
 };
 

@@ -20,13 +20,10 @@ uint16_t gTime_ = 0;
 picoTrackerEventQueue *queue;
 
 bool timerHandler(repeating_timer_t *rt) {
+  queue = picoTrackerEventQueue::GetInstance();
   gTime_++;
   if (gTime_ % 1000 == 0) {
-    //    auto event = new picoTrackerEvent();
-    //    event->type_ = PICO_CLOCK;
-    if (!queue->full()) {
-      queue->push(picoTrackerEvent(PICO_CLOCK));
-    }
+    queue->push(picoTrackerEvent(PICO_CLOCK));
   }
   return true;
 }
@@ -55,12 +52,11 @@ int picoTrackerEventManager::MainLoop() {
     loops++;
     ProcessInputEvent();
     if (!queue->empty()) {
-      picoTrackerEvent event(PICO_NONE);
+      picoTrackerEvent event(picoTrackerEventType::LAST);
       queue->pop_into(event);
       events++;
       redrawing_ = true;
       picoTrackerGUIWindowImp::ProcessEvent(event);
-      queue->clear(); // Avoid duplicates redraw
       redrawing_ = false;
     }
 #ifdef PICOSTATS

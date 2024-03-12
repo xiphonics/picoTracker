@@ -24,6 +24,6 @@ public:
   bool Enabled() { return enabled_; };
 
 protected:
-  bool enabled_;
+  bool enabled_ = false;
 };
 #endif

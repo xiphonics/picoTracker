@@ -1116,8 +1116,6 @@ void PhraseView::DrawView() {
   buffer[0] = 'I';
   buffer[3] = 0;
 
-  char instrumentName[15];
-
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
     setTextProps(props, 1, j, false);
@@ -1134,8 +1132,7 @@ void PhraseView::DrawView() {
         location._x += 12;
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(d);
-        sprintf(instrumentName, "%.15s", instr->GetName());
-        instrLine += instrumentName;
+        instrLine += instr->GetName();
         DrawString(location._x, location._y, instrLine.c_str(), props);
       }
     }

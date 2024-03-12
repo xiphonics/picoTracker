@@ -34,9 +34,8 @@ bool MidiService::Init() {
   buildDriverList();
   // Add a merger for the input
   merger_ = new MidiInMerger();
-  IteratorPtr<MidiInDevice> it(inList_.GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    MidiInDevice &current = it->CurrentItem();
+  for (inList_.Begin(); !inList_.IsDone(); inList_.Next()) {
+    MidiInDevice &current = inList_.CurrentItem();
     merger_->Insert(current);
   }
 
@@ -44,10 +43,6 @@ bool MidiService::Init() {
 };
 
 void MidiService::Close() { Stop(); };
-
-I_Iterator<MidiInDevice> *MidiService::GetInIterator() {
-  return inList_.GetIterator();
-};
 
 void MidiService::SelectDevice(const std::string &name) { deviceName_ = name; };
 
@@ -125,9 +120,8 @@ void MidiService::startDevice() {
 
   // look for the device
 
-  IteratorPtr<MidiOutDevice> it(GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    MidiOutDevice &current = it->CurrentItem();
+  for (Begin(); !IsDone(); Next()) {
+    MidiOutDevice &current = CurrentItem();
     if (!strcmp(deviceName_.c_str(), current.GetName())) {
       if (current.Init()) {
         if (current.Start()) {

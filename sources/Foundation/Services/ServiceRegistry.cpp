@@ -4,9 +4,8 @@
 void ServiceRegistry::Register(Service *s) { services_.Insert(s); };
 
 void ServiceRegistry::Register(SubService *s) {
-  IteratorPtr<Service> it(services_.GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Service &current = it->CurrentItem();
+  for (services_.Begin(); !services_.IsDone(); services_.Next()) {
+    Service &current = services_.CurrentItem();
     if (current.GetFourCC() == s->GetFourCC()) {
       current.Register(s);
     };
@@ -14,9 +13,8 @@ void ServiceRegistry::Register(SubService *s) {
 };
 
 void ServiceRegistry::Unregister(SubService *s) {
-  IteratorPtr<Service> it(services_.GetIterator());
-  for (it->Begin(); !it->IsDone(); it->Next()) {
-    Service &current = it->CurrentItem();
+  for (services_.Begin(); !services_.IsDone(); services_.Next()) {
+    Service &current = services_.CurrentItem();
     if (current.GetFourCC() == s->GetFourCC()) {
       current.Unregister(s);
     };

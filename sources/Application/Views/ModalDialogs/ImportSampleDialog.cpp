@@ -59,12 +59,11 @@ void ImportSampleDialog::DrawView() {
     topIndex_ = currentSample_;
   };
 
-  IteratorPtr<Path> it(sampleList_.GetIterator());
   int count = 0;
   char buffer[64];
-  for (it->Begin(); !it->IsDone(); it->Next()) {
+  for (sampleList_.Begin(); !sampleList_.IsDone(); sampleList_.Next()) {
     if ((count >= topIndex_) && (count < topIndex_ + LIST_SIZE)) {
-      Path &current = it->CurrentItem();
+      Path &current = sampleList_.CurrentItem();
       const std::string p = current.GetName();
 
       if (count == currentSample_) {
@@ -168,12 +167,11 @@ void ImportSampleDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
 
     // A modifier
     if (mask & EPBM_A) {
-      IteratorPtr<Path> it(sampleList_.GetIterator());
       int count = 0;
       Path *element = 0;
-      for (it->Begin(); !it->IsDone(); it->Next()) {
+      for (sampleList_.Begin(); !sampleList_.IsDone(); sampleList_.Next()) {
         if (count++ == currentSample_) {
-          element = &it->CurrentItem();
+          element = &sampleList_.CurrentItem();
         }
       }
 
@@ -244,9 +242,8 @@ void ImportSampleDialog::setCurrentFolder(Path *path) {
     if (dir) {
       dir->GetContent("*");
       dir->Sort();
-      IteratorPtr<Path> it(dir->GetIterator());
-      for (it->Begin(); !it->IsDone(); it->Next()) {
-        Path &current = it->CurrentItem();
+      for (dir->Begin(); !dir->IsDone(); dir->Next()) {
+        Path &current = dir->CurrentItem();
         if (current.IsDirectory()) {
           if (current.GetName().substr(0, 1) != "." ||
               current.GetName() == "..") {
@@ -260,8 +257,8 @@ void ImportSampleDialog::setCurrentFolder(Path *path) {
           }
         }
       }
-      for (it->Begin(); !it->IsDone(); it->Next()) {
-        Path &current = it->CurrentItem();
+      for (dir->Begin(); !dir->IsDone(); dir->Next()) {
+        Path &current = dir->CurrentItem();
         if (!current.IsDirectory()) {
           if (current.Matches("*.wav") && current.GetName()[0] != '.') {
             Path *sample = new Path(current);
