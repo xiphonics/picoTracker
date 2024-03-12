@@ -16,19 +16,24 @@
 #include <math.h>
 
 Project::Project()
-    : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0) {
+    : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0),
+      tempo_("tempo", VAR_TEMPO, 138),
+      masterVolume_("master", VAR_MASTERVOL, 100),
+      wrap_("wrap", VAR_WRAP, false), transpose_("transpose", VAR_TRANSPOSE, 0),
+      scale_("scale", VAR_SCALE, scaleNames, numScales, 0) {
 
-  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
-  this->insert(end(), tempo);
-  Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
-  this->insert(end(), masterVolume);
-  Variable *wrap = new Variable("wrap", VAR_WRAP, false);
-  this->insert(end(), wrap);
-  Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
-  this->insert(end(), transpose);
-  Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales, 0);
-  this->insert(end(), scale);
-  scale->SetInt(0);
+  //  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
+  this->insert(end(), &tempo_);
+  //  Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
+  this->insert(end(), &masterVolume_);
+  //  Variable *wrap = new Variable("wrap", VAR_WRAP, false);
+  this->insert(end(), &wrap_);
+  //  Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
+  this->insert(end(), &transpose_);
+  //  Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales,
+  //  0);
+  this->insert(end(), &scale_);
+  scale_.SetInt(0);
 
   // Reload the midi device list
 
@@ -39,7 +44,8 @@ Project::Project()
   this->insert(end(), midi);
   midi->AddObserver(*this);
 
-  instrumentBank_ = new InstrumentBank();
+  static char instrumentBankMemBuf[sizeof(InstrumentBank)];
+  instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
 
   // look if we can find a sav file
 

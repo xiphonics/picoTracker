@@ -110,11 +110,14 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
 
   GUIWindow::Clear(backgroundColor_);
 
-  _nullView = new NullView((*this), 0);
+  static char nullViewMemBuf[sizeof(NullView)];
+  _nullView = new (nullViewMemBuf) NullView((*this), 0);
   _currentView = _nullView;
   _nullView->SetDirty(true);
 
-  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
+  static char selectProjectMemBuf[sizeof(SelectProjectDialog)];
+  SelectProjectDialog *spd =
+      new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
   _currentView->DoModal(spd, ProjectSelectCallback);
 
   memset(_charScreen, ' ', SCREEN_CHARS);
@@ -295,7 +298,8 @@ void AppWindow::LoadProject(const Path &p) {
 
   pool->Load();
 
-  Project *project = new Project();
+  static char projectMemBuf[sizeof(Project)];
+  Project *project = new (projectMemBuf) Project();
 
   bool succeeded = persist->Load();
   if (!succeeded) {
@@ -313,8 +317,8 @@ void AppWindow::LoadProject(const Path &p) {
   ApplicationCommandDispatcher::GetInstance()->Init(project);
 
   // Create view data
-
-  _viewData = new ViewData(project);
+  static char viewDataMemBuf[sizeof(ViewData)];
+  _viewData = new (viewDataMemBuf) ViewData(project);
 
   // Create & observe the player
   Player *player = Player::GetInstance();
@@ -326,25 +330,34 @@ void AppWindow::LoadProject(const Path &p) {
   controller->Init(project, _viewData);
 
   // Create & observe all views
-  _songView = new SongView((*this), _viewData, _root.GetName().c_str());
+  static char songViewMemBuf[sizeof(SongView)];
+  _songView = new (songViewMemBuf)
+      SongView((*this), _viewData, _root.GetName().c_str());
   _songView->AddObserver((*this));
 
-  _chainView = new ChainView((*this), _viewData);
+  static char chainViewMemBuf[sizeof(ChainView)];
+  _chainView = new (chainViewMemBuf) ChainView((*this), _viewData);
   _chainView->AddObserver((*this));
 
-  _phraseView = new PhraseView((*this), _viewData);
+  static char phraseViewMemBuf[sizeof(PhraseView)];
+  _phraseView = new (phraseViewMemBuf) PhraseView((*this), _viewData);
   _phraseView->AddObserver((*this));
 
-  _projectView = new ProjectView((*this), _viewData);
+  static char projectViewMemBuf[sizeof(ProjectView)];
+  _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
 
-  _instrumentView = new InstrumentView((*this), _viewData);
+  static char instrumentViewMemBuf[sizeof(InstrumentView)];
+  _instrumentView =
+      new (instrumentViewMemBuf) InstrumentView((*this), _viewData);
   _instrumentView->AddObserver((*this));
 
-  _tableView = new TableView((*this), _viewData);
+  static char tableViewMemBuf[sizeof(TableView)];
+  _tableView = new (tableViewMemBuf) TableView((*this), _viewData);
   _tableView->AddObserver((*this));
 
-  _grooveView = new GrooveView((*this), _viewData);
+  static char grooveViewMemBuf[sizeof(GrooveView)];
+  _grooveView = new (grooveViewMemBuf) GrooveView((*this), _viewData);
   _grooveView->AddObserver(*this);
 
   _currentView = _songView;
@@ -399,7 +412,8 @@ void AppWindow::CloseProject() {
 AppWindow *AppWindow::Create(GUICreateWindowParams &params) {
   I_GUIWindowImp &imp =
       I_GUIWindowFactory::GetInstance()->CreateWindowImp(params);
-  AppWindow *w = new AppWindow(imp);
+  static char appWindowMemBuf[sizeof(AppWindow)];
+  AppWindow *w = new (appWindowMemBuf) AppWindow(imp);
   return w;
 };
 

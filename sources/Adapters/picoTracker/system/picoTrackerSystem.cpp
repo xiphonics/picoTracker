@@ -43,32 +43,41 @@ int picoTrackerSystem::MainLoop() {
 void picoTrackerSystem::Boot(int argc, char **argv) {
 
   // Install System
-  System::Install(new picoTrackerSystem());
+  static char systemMemBuf[sizeof(picoTrackerSystem)];
+  System::Install(new (systemMemBuf) picoTrackerSystem());
 
   // Install FileSystem
-  FileSystem::Install(new picoTrackerFileSystem());
+  static char fileSystemMemBuf[sizeof(picoTrackerFileSystem)];
+  FileSystem::Install(new (fileSystemMemBuf) picoTrackerFileSystem());
   Path::SetAlias("bin", "");
   Path::SetAlias("root", "");
 
-  Trace::GetInstance()->SetLogger(*(new StdOutLogger()));
+  static char loggerMemBuf[sizeof(StdOutLogger)];
+  Trace::GetInstance()->SetLogger(*(new (loggerMemBuf) StdOutLogger()));
 
   // Install GUI Factory
-  I_GUIWindowFactory::Install(new GUIFactory());
+  static char guiMemBuf[sizeof(GUIFactory)];
+  I_GUIWindowFactory::Install(new (guiMemBuf) GUIFactory());
 
   // Install Timers
-  TimerService::GetInstance()->Install(new picoTrackerTimerService());
+  static char timerMemBuf[sizeof(picoTrackerTimerService)];
+  TimerService::GetInstance()->Install(new (timerMemBuf)
+                                           picoTrackerTimerService());
 
   // Install Sound
   AudioSettings hint;
   hint.bufferSize_ = 1024;
   hint.preBufferCount_ = 8;
-  Audio::Install(new picoTrackerAudio(hint));
+  static char audioMemBuf[sizeof(picoTrackerAudio)];
+  Audio::Install(new (audioMemBuf) picoTrackerAudio(hint));
 
   // Install Midi
 #ifdef DUMMY_MIDI
-  MidiService::Install(new DummyMidi());
+  static char midiMemBuf[sizeof(DummyMidi)];
+  MidiService::Install(new (midiMemBuf) DummyMidi());
 #else
-  MidiService::Install(new picoTrackerMidiService());
+  static char midiMemBuf[sizeof(picoTrackerMidiService)];
+  MidiService::Install(new (midiMemBuf) picoTrackerMidiService());
 #endif
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();

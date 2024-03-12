@@ -28,7 +28,22 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 
 #define KRATE_SAMPLE_COUNT 100
 
-SampleInstrument::SampleInstrument() {
+SampleInstrument::SampleInstrument()
+    : volume_("volume", SIP_VOLUME, 0x80),
+      interpolation_("interpol", SIP_INTERPOLATION, interpolationTypes, 2, 0),
+      crush_("crush", SIP_CRUSH, 16), drive_("crushdrive", SIP_CRUSHVOL, 0xFF),
+      downsample_("downsample", SIP_DOWNSMPL, 0),
+      rootNote_("root note", SIP_ROOTNOTE, 60),
+      fineTune_("fine tune", SIP_FINETUNE, 0x7F), pan_("pan", SIP_PAN, 0x7F),
+      cutoff_("filter cut", SIP_FILTCUTOFF, 0xFF),
+      reso_("filter res", SIP_FILTRESO, 0x00),
+      filterMix_("filter type", SIP_FILTMIX, 0x00),
+      filterMode_("filter mode", SIP_FILTMODE, filterMode, 3, 0),
+      start_("start", SIP_START, 0),
+      loopMode_("loopmode", SIP_LOOPMODE, loopTypes, SILM_LAST, 0),
+      loopStart_("loopstart", SIP_LOOPSTART, 0), loopEnd_("end", SIP_END, 0),
+      table_("table", SIP_TABLE, -1),
+      tableAuto_("table automation", SIP_TABLEAUTO, false) {
 
   // Reserve Observer
   ReserveObserver(1);
@@ -48,66 +63,29 @@ SampleInstrument::SampleInstrument() {
   insert(end(), wv);
   wv->AddObserver(*this);
 
-  volume_ = new Variable("volume", SIP_VOLUME, 0x80);
-  insert(end(), volume_);
+  insert(end(), &volume_);
+  insert(end(), &interpolation_);
+  insert(end(), &crush_);
+  insert(end(), &drive_);
+  insert(end(), &downsample_);
+  insert(end(), &rootNote_);
+  insert(end(), &fineTune_);
+  insert(end(), &pan_);
+  insert(end(), &cutoff_);
+  insert(end(), &reso_);
+  insert(end(), &filterMix_);
+  insert(end(), &filterMode_);
+  insert(end(), &start_);
+  start_.AddObserver(*this);
+  insert(end(), &loopMode_);
+  loopMode_.SetInt(0);
+  insert(end(), &loopStart_);
+  loopStart_.AddObserver(*this);
+  insert(end(), &loopEnd_);
+  loopEnd_.AddObserver(*this);
+  insert(end(), &table_);
+  insert(end(), &tableAuto_);
 
-  interpolation_ =
-      new Variable("interpol", SIP_INTERPOLATION, interpolationTypes, 2, 0);
-  insert(end(), interpolation_);
-
-  crush_ = new Variable("crush", SIP_CRUSH, 16);
-  insert(end(), crush_);
-
-  drive_ = new Variable("crushdrive", SIP_CRUSHVOL, 0xFF);
-  insert(end(), drive_);
-
-  downsample_ = new Variable("downsample", SIP_DOWNSMPL, 0);
-  insert(end(), downsample_);
-
-  rootNote_ = new Variable("root note", SIP_ROOTNOTE, 60);
-  insert(end(), rootNote_);
-
-  fineTune_ = new Variable("fine tune", SIP_FINETUNE, 0x7F);
-  insert(end(), fineTune_);
-
-  pan_ = new Variable("pan", SIP_PAN, 0x7F);
-  insert(end(), pan_);
-
-  cutoff_ = new Variable("filter cut", SIP_FILTCUTOFF, 0xFF);
-  insert(end(), cutoff_);
-
-  reso_ = new Variable("filter res", SIP_FILTRESO, 0x00);
-  insert(end(), reso_);
-
-  filterMix_ = new Variable("filter type", SIP_FILTMIX, 0x00);
-  insert(end(), filterMix_);
-
-  filterMode_ = new Variable("filter mode", SIP_FILTMODE, filterMode, 3, 0);
-  insert(end(), filterMode_);
-
-  start_ = new WatchedVariable("start", SIP_START, 0);
-  insert(end(), start_);
-  start_->AddObserver(*this);
-
-  loopMode_ = new Variable("loopmode", SIP_LOOPMODE, loopTypes, SILM_LAST, 0);
-  insert(end(), loopMode_);
-  loopMode_->SetInt(0);
-
-  loopStart_ = new WatchedVariable("loopstart", SIP_LOOPSTART, 0);
-  insert(end(), loopStart_);
-  loopStart_->AddObserver(*this);
-
-  loopEnd_ = new WatchedVariable("end", SIP_END, 0);
-  insert(end(), loopEnd_);
-  loopEnd_->AddObserver(*this);
-
-  table_ = new Variable("table", SIP_TABLE, -1);
-  insert(end(), table_);
-
-  tableAuto_ = new Variable("table automation", SIP_TABLEAUTO, false);
-  insert(end(), tableAuto_);
-
-  // Reset table state
   tableState_.Reset();
 }
 
@@ -160,30 +138,30 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   rp->channelCount_ = source_->GetChannelCount(rp->midiNote_);
 
   int rootNote =
-      (rootNote_->GetInt() - 60) + source_->GetRootNote(rp->midiNote_);
+      (rootNote_.GetInt() - 60) + source_->GetRootNote(rp->midiNote_);
 
-  rp->volume_ = rp->baseVolume_ = i2fp(volume_->GetInt());
+  rp->volume_ = rp->baseVolume_ = i2fp(volume_.GetInt());
 
-  rp->pan_ = rp->basePan_ = i2fp(pan_->GetInt());
+  rp->pan_ = rp->basePan_ = i2fp(pan_.GetInt());
 
   if (!source_->IsMulti()) {
-    rp->rendLoopStart_ = loopStart_->GetInt();
-    rp->rendLoopEnd_ = loopEnd_->GetInt();
+    rp->rendLoopStart_ = loopStart_.GetInt();
+    rp->rendLoopEnd_ = loopEnd_.GetInt();
   } else {
     long start = source_->GetLoopStart(rp->midiNote_);
     if (start > 0) {
       rp->rendLoopStart_ =
           source_->GetLoopStart(rp->midiNote_); // hack at the moment
       rp->rendLoopEnd_ = source_->GetLoopEnd(rp->midiNote_);
-      loopMode_->SetInt(SILM_LOOP);
+      loopMode_.SetInt(SILM_LOOP);
     } else {
       rp->rendLoopStart_ = 0;                             // hack at the moment
       rp->rendLoopEnd_ = source_->GetSize(rp->midiNote_); // hack at the moment
-      loopMode_->SetInt(SILM_ONESHOT);
+      loopMode_.SetInt(SILM_ONESHOT);
     };
   }
   SampleInstrumentLoopMode loopmode =
-      (SampleInstrumentLoopMode)loopMode_->GetInt();
+      (SampleInstrumentLoopMode)loopMode_.GetInt();
 
   /*	 if (loopmode==SILM_OSCFINE) {
                   if (rp->rendLoopEnd_>source_->GetSize()-1) { // check for
@@ -204,7 +182,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     // if instrument sampled below 44.1Khz, should
     // travel slower in sample
 
-    rp->rendFirst_ = start_->GetInt();
+    rp->rendFirst_ = start_.GetInt();
     rp->position_ = float(rp->rendFirst_);
     rp->baseSpeed_ = fl2fp(source_->GetSampleRate(rp->midiNote_) / driverRate);
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);
@@ -256,7 +234,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
   // Compute octave & note difference from root
 
-  float fineTune = float(fineTune_->GetInt() - 0x7F);
+  float fineTune = float(fineTune_.GetInt() - 0x7F);
   fineTune /= float(0x80);
   int offset = midinote - rootNote;
   while (offset > 127) {
@@ -292,15 +270,15 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
     // Init filter params
 
-    rp->cutoff_ = rp->baseFCut_ = fl2fp(cutoff_->GetInt() / 255.0f);
-    rp->reso_ = rp->baseFRes_ = fl2fp(reso_->GetInt() / 255.0f);
+    rp->cutoff_ = rp->baseFCut_ = fl2fp(cutoff_.GetInt() / 255.0f);
+    rp->reso_ = rp->baseFRes_ = fl2fp(reso_.GetInt() / 255.0f);
 
     // Init crush params
-    rp->crush_ = crush_->GetInt();
-    rp->drive_ = drive_->GetInt();
+    rp->crush_ = crush_.GetInt();
+    rp->drive_ = drive_.GetInt();
 
     // Init downsampling
-    rp->downsample_ = downsample_->GetInt();
+    rp->downsample_ = downsample_.GetInt();
 
     // Disable all active updaters for new voice
     for (auto it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
@@ -360,8 +338,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     bool hasUpdaters = !(rp->activeUpdaters_.empty());
 
-    int filterMix = filterMix_->GetInt();
-    FilterMode filterMode = (FilterMode)filterMode_->GetInt();
+    int filterMix = filterMix_.GetInt();
+    FilterMode filterMode = (FilterMode)filterMode_.GetInt();
     bool filterBoost = (filterMode == FM_SCREAM);
     bool bassyFilter = (filterMode == FM_BASSY);
 
@@ -437,11 +415,11 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     // Loop mode
 
     SampleInstrumentLoopMode loopMode =
-        (SampleInstrumentLoopMode)loopMode_->GetInt();
+        (SampleInstrumentLoopMode)loopMode_.GetInt();
 
     // Interpolation
 
-    int interpol = interpolation_->GetInt();
+    int interpol = interpolation_.GetInt();
 
     // Get sound characteristics
 
@@ -1165,14 +1143,14 @@ bool SampleInstrument::IsEmpty() {
 };
 
 int SampleInstrument::GetTable() {
-  int result = table_->GetInt();
+  int result = table_.GetInt();
   if (result > TABLE_COUNT) {
     return VAR_OFF;
   }
   return result;
 };
 
-bool SampleInstrument::GetTableAutomation() { return tableAuto_->GetBool(); };
+bool SampleInstrument::GetTableAutomation() { return tableAuto_.GetBool(); };
 
 void SampleInstrument::GetTableState(TableSaveState &state) {
   memcpy(state.hopCount_, tableState_.hopCount_,
