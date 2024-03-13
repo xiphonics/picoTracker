@@ -84,93 +84,81 @@ void InstrumentView::fillSampleParameters() {
   position._y -= 1;
   Variable *v = instrument->FindVariable(SIP_SAMPLE);
   SamplePool *sp = SamplePool::GetInstance();
-  intVarField_.emplace_back(UIIntVarField(position, *v, "sample: %.19s", 0,
-                                          sp->GetNameListSize() - 1, 1, 0x10));
+  intVarField_.emplace_back(position, *v, "sample: %.19s", 0,
+                            sp->GetNameListSize() - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).SetFocus();
 
   position._y += 2;
   v = instrument->FindVariable(SIP_VOLUME);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10));
+  intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_PAN);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10));
+  intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_ROOTNOTE);
-  noteVarField_.emplace_back(
-      UINoteVarField(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C));
+  noteVarField_.emplace_back(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C);
   fieldList_.insert(fieldList_.end(), &(*noteVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_FINETUNE);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "detune: %2.2X", 0, 255, 1, 0x10));
+  intVarField_.emplace_back(position, *v, "detune: %2.2X", 0, 255, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_CRUSHVOL);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "drive: %2.2X", 0, 0xFF, 1, 0x10));
+  intVarField_.emplace_back(position, *v, "drive: %2.2X", 0, 0xFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_CRUSH);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "crush: %d", 1, 0x10, 1, 4));
+  intVarField_.emplace_back(position, *v, "crush: %d", 1, 0x10, 1, 4);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_DOWNSMPL);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "downsample: %d", 0, 8, 1, 4));
+  intVarField_.emplace_back(position, *v, "downsample: %d", 0, 8, 1, 4);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
-  staticField_.emplace_back(UIStaticField(position, "flt cut/res:"));
+  staticField_.emplace_back(position, "flt cut/res:");
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._x += 13;
   v = instrument->FindVariable(SIP_FILTCUTOFF);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0x10));
+  intVarField_.emplace_back(position, *v, "%2.2X", 0, 0xFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._x += 3;
   v = instrument->FindVariable(SIP_FILTRESO);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "%2.2X", 0, 0xFF, 1, 0x10));
+  intVarField_.emplace_back(position, *v, "%2.2X", 0, 0xFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._x -= 16;
 
   position._y += 1;
   v = instrument->FindVariable(SIP_FILTMIX);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "type: %2.2X", 0, 0xFF, 1, 0x10));
+  intVarField_.emplace_back(position, *v, "type: %2.2X", 0, 0xFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_FILTMODE);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "Mode: %s", 0, 2, 1, 1));
+  intVarField_.emplace_back(position, *v, "Mode: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
   v = instrument->FindVariable(SIP_INTERPOLATION);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "interpolation: %s", 0, 1, 1, 1));
+  intVarField_.emplace_back(position, *v, "interpolation: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_LOOPMODE);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1, 1));
+  intVarField_.emplace_back(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1,
+                            1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   if(!strcmp( v->GetString(), "slicer")) {
@@ -184,34 +172,31 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(SIP_START);
-  bigHexVarField_.emplace_back(UIBigHexVarField(
-      position, *v, 7, "start: %7.7X", 0, instrument->GetSampleSize() - 1, 16));
+  bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0,
+                               instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_LOOPSTART);
-  bigHexVarField_.emplace_back(
-      UIBigHexVarField(position, *v, 7, "loop start: %7.7X", 0,
-                       instrument->GetSampleSize() - 1, 16));
+  bigHexVarField_.emplace_back(position, *v, 7, "loop start: %7.7X", 0,
+                               instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_END);
-  bigHexVarField_.emplace_back(
-      UIBigHexVarField(position, *v, 7, "loop end: %7.7X", 0,
-                       instrument->GetSampleSize() - 1, 16));
+  bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
+                               instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   v = instrument->FindVariable(SIP_TABLEAUTO);
   position._y += 2;
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1));
+  intVarField_.emplace_back(position, *v, "automation: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(SIP_TABLE);
-  intVarOffField_.emplace_back(UIIntVarOffField(
-      position, *v, "table: %2.2X", 0x00, TABLE_COUNT - 1, 1, 0x10));
+  intVarOffField_.emplace_back(position, *v, "table: %2.2X", 0x00,
+                               TABLE_COUNT - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
 
