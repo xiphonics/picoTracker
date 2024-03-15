@@ -46,7 +46,7 @@ Head over to the [Build Guide for the original prototype](docs/BUILD.md)
 
 ## Experimental Features
 
-* There is a basic remote UI over USB available as a custom build (because enabling USB requires an extra 6kB of ram) that can be enabled using the `USB_REMOTE_UI` flag in the top level CMakeLists file. There is currently no documentation of the protocol except for in the [diff of the PR](#162).
+* There is a basic remote UI over USB available as a custom build (because enabling USB requires an extra 6kB of ram) that can be enabled using the `USB_REMOTE_UI` flag in the top level CMakeLists file. There is currently no documentation of the protocol except for in the [diff of the PR](#162). An [initial client app is also available](https://github.com/maks/picotracker_client) for testing.
 
 
 ## MANUAL
