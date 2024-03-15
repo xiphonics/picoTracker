@@ -69,6 +69,13 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   uint8_t y = pos._y / 8;
   mode0_set_cursor(x, y);
   mode0_putc(c, p.invert_);
+// ascii 0xFD as delimiter for start of Draw cmd message
+// x & y co-ords are sent with 32 offset to avoid sending non print chars
+// in the serial data
+#ifdef USB_REMOTE_UI
+  printf("%c%c%c%c%c%c%c", 0xFD, 0x01, c, x + 32, y + 32, p.invert_ ? 127 : 32,
+         0xFE);
+#endif
 }
 
 void picoTrackerGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
@@ -86,6 +93,10 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   mode0_color_t backgroundColor = GetColor(c);
   mode0_set_background(backgroundColor);
   mode0_clear(backgroundColor);
+#ifdef USB_REMOTE_UI
+  // ascii 0xFC as delimiter for start of Clear cmd message
+  printf("%c%c%c%c", 0xFD, 0x02, backgroundColor + 1, 0xFE);
+#endif
 };
 
 void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
@@ -101,6 +112,9 @@ mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   mode0_set_foreground(GetColor(c));
+#ifdef USB_REMOTE_UI
+  printf("%c%c%c%c", 0xFD, 0x03, GetColor(c) + 1, 0xFE);
+#endif
 };
 
 void picoTrackerGUIWindowImp::Lock(){};

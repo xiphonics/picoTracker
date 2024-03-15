@@ -37,7 +37,10 @@ add_definitions(-DDISABLE_FEEDBACK)
 add_definitions(-DNO_EXIT)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
-add_definitions(-DUSB_UI)
+#add_definitions(-DUSB_REMOTE_UI)
+
+
+
 
 # Initialize the SDK
 pico_sdk_init()
@@ -73,6 +76,7 @@ target_compile_definitions(picoTracker PUBLIC
   PICO_FLASH_SIZE_BYTES=16*1024*1024
   # workaround for slow init crystal on some boards see: https://github.com/raspberrypi/pico-sdk/pull/457
   PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
+  PICO_STDIO_USB_DEFAULT_CRLF=0
 )
 
 #if (SD_SDIO)

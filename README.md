@@ -44,6 +44,11 @@ Head over to the [Build Guide for the original prototype](docs/BUILD.md)
 ## Remixes
 * @ijnekenamay has created a [custom PCB](https://github.com/ijnekenamay/picotracker_alt-pcb/) for the project using mostly off the shelf components
 
+## Experimental Features
+
+* There is a basic remote UI over USB available as a custom build (because enabling USB requires an extra 6kB of ram) that can be enabled using the `USB_REMOTE_UI` flag in the top level CMakeLists file. There is currently no documentation of the protocol except for in the [diff of the PR]().
+
+
 ## MANUAL
 Head over to the [Manual](docs/MANUAL.md)
 
