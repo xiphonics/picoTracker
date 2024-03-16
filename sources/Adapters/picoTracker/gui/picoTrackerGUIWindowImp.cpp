@@ -70,9 +70,6 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   uint8_t y = pos._y / 8;
   mode0_set_cursor(x, y);
   mode0_putc(c, p.invert_);
-// ascii 0xFD as delimiter for start of Draw cmd message
-// x & y co-ords are sent with 32 offset to avoid sending non print chars
-// in the serial data
 #ifdef USB_REMOTE_UI
   printf("%c%c%c%c%c%c", REMOTE_UI_CMD_MARKER, DRAW_CMD, c, x + 32, y + 32,
          p.invert_ ? 127 : 32);
