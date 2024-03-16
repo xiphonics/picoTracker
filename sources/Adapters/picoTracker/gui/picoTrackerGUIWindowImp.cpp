@@ -8,6 +8,7 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Utils/char.h"
 #include "UIFramework/BasicDatas/GUIEvent.h"
+#include "picoRemoteUI.h"
 #include <string>
 
 #define to_rgb565(color)                                                       \
@@ -73,8 +74,8 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
 // x & y co-ords are sent with 32 offset to avoid sending non print chars
 // in the serial data
 #ifdef USB_REMOTE_UI
-  printf("%c%c%c%c%c%c%c", 0xFD, 0x01, c, x + 32, y + 32, p.invert_ ? 127 : 32,
-         0xFE);
+  printf("%c%c%c%c%c%c", REMOTE_UI_CMD_MARKER, DRAW_CMD, c, x + 32, y + 32,
+         p.invert_ ? 127 : 32);
 #endif
 }
 
@@ -94,8 +95,8 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   mode0_set_background(backgroundColor);
   mode0_clear(backgroundColor);
 #ifdef USB_REMOTE_UI
-  // ascii 0xFC as delimiter for start of Clear cmd message
-  printf("%c%c%c%c", 0xFD, 0x02, backgroundColor + 1, 0xFE);
+  printf("%c%c%c", REMOTE_UI_CMD_MARKER, CLEAR_CMD,
+         backgroundColor + UART_ASCII_OFFSET);
 #endif
 };
 
@@ -113,7 +114,8 @@ mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   mode0_set_foreground(GetColor(c));
 #ifdef USB_REMOTE_UI
-  printf("%c%c%c%c", 0xFD, 0x03, GetColor(c) + 1, 0xFE);
+  printf("%c%c%c", REMOTE_UI_CMD_MARKER, SETCOLOR_CMD,
+         GetColor(c) + UART_ASCII_OFFSET);
 #endif
 };
 

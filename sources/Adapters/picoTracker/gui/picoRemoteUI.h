@@ -1,0 +1,13 @@
+#ifdef USB_REMOTE_UI
+
+enum RemoteUICommand {
+  DRAW_CMD = 0x32,
+  CLEAR_CMD = 0x33,
+  SETCOLOR_CMD = 0x34,
+  SETPALETTE_CMD = 0x04
+};
+
+#define REMOTE_UI_CMD_MARKER 0xFD
+#define UART_ASCII_OFFSET 32
+
+#endif
