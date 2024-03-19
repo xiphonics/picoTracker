@@ -1,3 +1,6 @@
+#ifndef PICO_REMOTE_UI_H_
+#define PICO_REMOTE_UI_H_
+
 #ifdef USB_REMOTE_UI
 
 // The Remote UI protocol consists of sending ASCII messages over the USB serial
@@ -30,4 +33,5 @@ enum RemoteUICommand {
 #define REMOTE_UI_CMD_MARKER 0xFD
 #define UART_ASCII_OFFSET 32
 
+#endif
 #endif
