@@ -53,6 +53,13 @@ Note: any value other than "M8" (including not being specified) for the `KEYMAPS
 
 You can head over to the [Little Piggy Tracker Themer](http://poyo.co/lgpt) site to test different color schemes.
 
+
+## Ports
+
+The picture below shows the functions of the TRS ports on the picotracker:
+
+![picotracker TRS ports labled](img/picotracker-ports-1.png)
+
 ## Updating firmware
 You'll need to do this while powering the picoTracker via a USB connected to a PC. From the project menu select `Update firmware`. This will reboot the device into *BOOTSEL* mode, and you'll see the pico as a USB mass storage device. Just copy the UF2 firmware file into it.
 
