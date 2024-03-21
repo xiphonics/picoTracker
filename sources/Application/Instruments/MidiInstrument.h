@@ -62,6 +62,7 @@ private:
   bool playing_;
   bool retrig_;
   int retrigLoop_;
+  char velocity_;
   TableSaveState tableState_;
   bool first_[SONG_CHANNEL_COUNT];
 

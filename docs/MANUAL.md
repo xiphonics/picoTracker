@@ -499,6 +499,8 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 
 - to achieve sounds that grow in volume, make an instrument with volume 0 and then apply the VOL command
 
+*NOTE:* For MIDI instruments the VOL command sets the velocity for that step. Only 1 VOL command in the first FX column is supported for MIDI. Only bb is used for velocity, aa has no effect for MIDI instruments.
+
 # Rendering
 
 TBD
