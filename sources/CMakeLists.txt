@@ -37,7 +37,7 @@ add_definitions(-DDISABLE_FEEDBACK)
 add_definitions(-DNO_EXIT)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
-add_definitions(-DUSB_REMOTE_UI)
+# add_definitions(-DUSB_REMOTE_UI)
 
 
 

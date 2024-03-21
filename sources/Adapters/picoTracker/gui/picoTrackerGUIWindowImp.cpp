@@ -8,7 +8,9 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Utils/char.h"
 #include "UIFramework/BasicDatas/GUIEvent.h"
+#ifdef USB_REMOTE_UI
 #include "picoRemoteUI.h"
+#endif
 #include <string>
 
 #define to_rgb565(color)                                                       \
