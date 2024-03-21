@@ -40,7 +40,7 @@ public:
 
   virtual InstrumentType GetType() { return IT_MIDI; };
 
-  virtual const char *GetName();
+  virtual etl::string<24> GetName();
 
   virtual void OnStart();
 
@@ -56,8 +56,7 @@ public:
   void SetChannel(int i);
 
 private:
-  char name_[20]; // Instrument name
-  int lastNote_[SONG_CHANNEL_COUNT];
+  uint8_t lastNote_[SONG_CHANNEL_COUNT];
   int remainingTicks_;
   bool playing_;
   bool retrig_;

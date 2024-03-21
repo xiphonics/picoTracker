@@ -1,6 +1,7 @@
 #ifndef _VARIABLE_H_
 #define _VARIABLE_H_
 
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/Types/Types.h"
 
 #define VAR_OFF -1
@@ -30,19 +31,19 @@ public:
   void SetFloat(float value, bool notify = true);
   float GetFloat();
   void SetString(const char *string, bool notify = true);
-  const char *GetString();
+  etl::string<40> GetString();
   void SetBool(bool value, bool notify = true);
   bool GetBool();
   void CopyFrom(Variable &other);
   // Not very clean !
-  int GetListSize();
+  uint8_t GetListSize();
   const char *const *GetListPointer();
   void Reset();
 
 protected:
   virtual void onChange(){};
 
-  std::string name_;
+  const std::string name_;
   FourCC id_;
   Type type_;
 
@@ -65,10 +66,7 @@ protected:
   } list_;
 
   std::string stringValue_;
-  std::string stringDefaultValue_;
 
-  int listSize_;
-
-  char string_[40];
+  uint8_t listSize_;
 };
 #endif
