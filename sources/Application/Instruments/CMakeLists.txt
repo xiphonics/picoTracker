@@ -4,6 +4,7 @@ add_library(application_instruments
   I_Instrument.h
   I_SRPUpdater.h
   InstrumentBank.h InstrumentBank.cpp
+  PicoSynthInstrument.h PicoSynthInstrument.cpp
   MidiInstrument.h MidiInstrument.cpp
   SRPUpdaters.h SRPUpdaters.cpp
   SampleInstrument.h SampleInstrument.cpp

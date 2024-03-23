@@ -1,0 +1,11 @@
+add_library(picosynth
+picosynth/picosynth.cpp
+picosynth/picosynth.h
+)
+
+target_link_libraries(picosynth PUBLIC pico_stdlib
+)
+
+target_include_directories(picosynth PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+include_directories(${PROJECT_SOURCE_DIR})
