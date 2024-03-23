@@ -20,6 +20,9 @@ static char **getHelpLegend(FourCC command) {
   case I_CMD_VOLM:
     result[0] = (char *)("     VOLume:aabb, reach volume  ");
     break;
+  case I_CMD_VELM:
+    result[0] = (char *)("     VELocity:--bb, midi velocity ");
+    break;
   case I_CMD_PTCH:
     result[0] = (char *)("     Pitch SLide:aabb, to pitch ");
     break;

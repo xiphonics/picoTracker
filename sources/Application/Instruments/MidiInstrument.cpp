@@ -149,9 +149,17 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_VOLM: {
-    // VOLM cmds set velocity for MIDI steps
+  case I_CMD_VELM: {
+    // VELM cmds set velocity for MIDI steps
     velocity_ = int((value + 0.99) / 2);
+  }; break;
+
+  case I_CMD_VOLM: {
+    MidiMessage msg;
+    msg.status_ = MIDI_CC + mchannel;
+    msg.data1_ = 7;
+    msg.data2_ = int((value + 0.99) / 2);
+    svc_->QueueMessage(msg);
   }; break;
 
   case I_CMD_MDCC: {

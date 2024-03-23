@@ -500,6 +500,10 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 - TPO 0000 is safe and doesn't effect the tempo at all.
 - TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value
 
+## VEL --bb
+
+Set the velocity of the note being played on the current step for a MIDI instrument. This valid for MIDI instruments *only* and this command is not supported for use in tables.
+
 ## VOL aabb (VOLM in lgpt)
 
 **starting from the instrument's volume setting, approach volume bb at speed aa. 00 is the lowest volume and 00 is the fastest speed (instant).**

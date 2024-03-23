@@ -257,15 +257,18 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "TTAP");
     break;
   case 66:
-    strcpy(s, "VLDN");
+    strcpy(s, "VEL"); // VELM - midi velocity
     break;
   case 67:
-    strcpy(s, "VLUP");
+    strcpy(s, "VLDN");
     break;
   case 68:
-    strcpy(s, "VOL"); // VOLM
+    strcpy(s, "VLUP");
     break;
   case 69:
+    strcpy(s, "VOL"); // VOLM
+    break;
+  case 70:
     strcpy(s, "WRAP");
     break;
   }
