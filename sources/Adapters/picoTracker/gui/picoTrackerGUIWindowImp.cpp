@@ -8,6 +8,9 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Utils/char.h"
 #include "UIFramework/BasicDatas/GUIEvent.h"
+#ifdef USB_REMOTE_UI
+#include "picoRemoteUI.h"
+#endif
 #include <string>
 
 #define to_rgb565(color)                                                       \
@@ -69,6 +72,10 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   uint8_t y = pos._y / 8;
   mode0_set_cursor(x, y);
   mode0_putc(c, p.invert_);
+#ifdef USB_REMOTE_UI
+  printf("%c%c%c%c%c%c", REMOTE_UI_CMD_MARKER, DRAW_CMD, c, x + 32, y + 32,
+         p.invert_ ? 127 : 32);
+#endif
 }
 
 void picoTrackerGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
@@ -86,6 +93,10 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   mode0_color_t backgroundColor = GetColor(c);
   mode0_set_background(backgroundColor);
   mode0_clear(backgroundColor);
+#ifdef USB_REMOTE_UI
+  printf("%c%c%c", REMOTE_UI_CMD_MARKER, CLEAR_CMD,
+         backgroundColor + UART_ASCII_OFFSET);
+#endif
 };
 
 void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
@@ -101,6 +112,10 @@ mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   mode0_set_foreground(GetColor(c));
+#ifdef USB_REMOTE_UI
+  printf("%c%c%c", REMOTE_UI_CMD_MARKER, SETCOLOR_CMD,
+         GetColor(c) + UART_ASCII_OFFSET);
+#endif
 };
 
 void picoTrackerGUIWindowImp::Lock(){};
