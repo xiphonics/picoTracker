@@ -92,7 +92,7 @@ protected:
 
 private:
   SoundSource *source_;
-  struct renderParams renderParams_[SONG_CHANNEL_COUNT];
+  static struct renderParams renderParams_[SONG_CHANNEL_COUNT];
   bool running_;
   bool dirty_;
   TableSaveState tableState_;
