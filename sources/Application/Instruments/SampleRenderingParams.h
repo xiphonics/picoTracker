@@ -58,8 +58,6 @@ struct renderParams {
   Panner panner_;
   FCRamp cutRamp_;
   FRRamp resRamp_;
-  FBMixRamp fbMixRamp_;
-  FBTunRamp fbTunRamp_;
   LinSpeedRamp speedRamp_;
   LogSpeedRamp legato_;
   LogSpeedRamp pfin_;
