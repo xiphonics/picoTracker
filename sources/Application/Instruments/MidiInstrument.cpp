@@ -56,7 +56,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   v = FindVariable(MIP_VOLUME);
   msg.status_ = MIDI_CC + channel;
   msg.data1_ = 7;
-  msg.data2_ = int((v->GetInt() + 0.99) / 2);
+  msg.data2_ = floor(v->GetInt() / 2);
   svc_->QueueMessage(msg);
 
   // store initial velocity
@@ -151,14 +151,14 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case I_CMD_VELM: {
     // VELM cmds set velocity for MIDI steps
-    velocity_ = int((value + 0.99) / 2);
+    velocity_ = floor(value / 2);
   }; break;
 
   case I_CMD_VOLM: {
     MidiMessage msg;
     msg.status_ = MIDI_CC + mchannel;
     msg.data1_ = 7;
-    msg.data2_ = int((value + 0.99) / 2);
+    msg.data2_ = floor(value / 2);
     svc_->QueueMessage(msg);
   }; break;
 
