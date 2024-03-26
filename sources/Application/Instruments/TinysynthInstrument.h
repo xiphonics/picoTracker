@@ -10,16 +10,17 @@
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
 
-#define BIP_ATTACK MAKE_FOURCC('A', 'T', 'C', 'K')
-#define BIP_DECAY MAKE_FOURCC('D', 'E', 'C', 'Y')
-#define BIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
-#define BIP_CRUSH MAKE_FOURCC('C', 'R', 'S', 'H')
+#define TSIP_VOL1 MAKE_FOURCC('T', 'S', 'V', '1')
 
 class TinysynthInstrument : public I_Instrument, I_Observer {
 
 public:
   TinysynthInstrument();
   virtual ~TinysynthInstrument();
+
+private:
+  TinySynth tinysynth_;
+  bool playing_;
 };
 
 #endif
