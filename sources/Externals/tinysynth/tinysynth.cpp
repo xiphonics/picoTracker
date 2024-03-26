@@ -1,28 +1,19 @@
-#include "picosynth.h"
+#include "tinysynth.h"
 #include "fixed.h"
 #include "math.h"
 #include <cstdint>
 #include <stdio.h>
 #include <string.h>
 
-int16_t sine[LUT_SIZE] = {
-    0,      2057,   4106,   6139,   8148,   10125,  12062,  13951,  15785,
-    17557,  19259,  20886,  22430,  23886,  25247,  26509,  27666,  28713,
-    29648,  30465,  31163,  31737,  32186,  32508,  32702,  32767,  32702,
-    32508,  32186,  31737,  31163,  30465,  29648,  28713,  27666,  26509,
-    25247,  23886,  22430,  20886,  19259,  17557,  15785,  13951,  12062,
-    10125,  8148,   6139,   4106,   2057,   0,      -2057,  -4106,  -6139,
-    -8148,  -10125, -12062, -13951, -15785, -17557, -19259, -20886, -22430,
-    -23886, -25247, -26509, -27666, -28713, -29648, -30465, -31163, -31737,
-    -32186, -32508, -32702, -32767, -32702, -32508, -32186, -31737, -31163,
-    -30465, -29648, -28713, -27666, -26509, -25247, -23886, -22430, -20886,
-    -19259, -17557, -15785, -13951, -12062, -10125, -8148,  -6139,  -4106,
-    -2057,
-};
+const int16_t sine[LUT_SIZE] = {
+    0,    13,   26,   39,   51,   63,   74,   84,   94,   102,  109,  116,
+    120,  124,  126,  127,  126,  124,  120,  116,  109,  102,  94,   84,
+    74,   63,   51,   39,   26,   13,   0,    -13,  -26,  -39,  -51,  -63,
+    -74,  -84,  -94,  -102, -109, -116, -120, -124, -126, -127, -126, -124,
+    -120, -116, -109, -102, -94,  -84,  -74,  -63,  -51,  -39,  -26,  -13};
 
-int PicoSynth::generatePhaseSample(float phase_increment, float &phase_index,
+int TinySynth::generatePhaseSample(float phase_increment, float &phase_index,
                                    int vol) {
-  int result = 0;
   phase_index = phase_index;
   phase_index += phase_increment;
 
@@ -31,10 +22,8 @@ int PicoSynth::generatePhaseSample(float phase_increment, float &phase_index,
     phase_index = diff;
   }
 
-  result = sine[(int)phase_index];
-  int result_fp = i2fp(result);
-  auto res_fp = fp_mul(result_fp, vol);
-  return fp2i(res_fp);
+  int result = (int)sine[(int)phase_index] * vol >> 8;
+  return result;
 }
 
 // Calculate frequency from MIDI note value
@@ -44,19 +33,16 @@ float noteToFreq(char note) {
   return (a / 32) * pow(2, ((note - 9) / 12.0));
 }
 
-void PicoSynth::setEnvelopeConfig(char index, picosynth_env config) {
+void TinySynth::setEnvelopeConfig(char index, tinysynth_env config) {
   env[index] = config;
 }
 
-picosynth_env PicoSynth::getEnvelopeConfig(char index) { return env[index]; }
+tinysynth_env TinySynth::getEnvelopeConfig(char index) { return env[index]; }
 
-char env_update_count = 0;
-void PicoSynth::generateWaves(uint8_t *byte_stream, int len) {
+void TinySynth::generateWaves(uint8_t *byte_stream, int len) {
   int16_t *s_byte_stream;
 
-  if (env_update_count++ % 10) {
-    update_envelopes();
-  }
+  update_envelopes();
 
   // get correct phase increment for note depending on sample rate and LUT
   // length.
@@ -84,39 +70,32 @@ void PicoSynth::generateWaves(uint8_t *byte_stream, int len) {
   }
 }
 
-void PicoSynth::envelope_gate(bool on) {
+void TinySynth::envelope_gate(bool on) {
   char state = on ? 0 : 4;
   for (int h = 0; h < HARMONICS; h++) {
-    // retrigger any still playing envelopes
-    if (on && filt_state[h] != 6) {
-      filt[h] = 0;
-    }
     filt_state[h] = state;
   }
 }
 
-void PicoSynth::set_note(char note) { _note = note; }
+void TinySynth::set_note(char note) { _note = note; }
 
-char PicoSynth::get_note() { return _note; }
+char TinySynth::get_note() { return _note; }
 
-void PicoSynth::set_defaults() {
-  memset(env, 0, sizeof(env));
-  // memset(lfo, 0, sizeof(lfo));
-  // memset(special, 0, sizeof(special));
+void TinySynth::set_defaults() {
 
   for (int h = 0; h < HARMONICS; h++) {
-    env[h].attack = 0;
-    env[h].sustain = 4000;
-    env[h].release = 0;
+    env[h].attack = 100;
+    env[h].sustain = 255;
+    env[h].release = 80;
   }
   // sawtooth
-  // int saw_vol = 5000;
-  // env[0].amplitude = saw_vol;
-  // env[1].amplitude = saw_vol / 2;
-  // env[2].amplitude = saw_vol / 3;
-  // env[3].amplitude = saw_vol / 4;
-  // env[4].amplitude = saw_vol / 5;
-  // env[5].amplitude = saw_vol / 6;
+  int saw_vol = 240;
+  env[0].amplitude = saw_vol;
+  env[1].amplitude = saw_vol / 2;
+  env[2].amplitude = saw_vol / 3;
+  env[3].amplitude = saw_vol / 4;
+  env[4].amplitude = saw_vol / 5;
+  env[5].amplitude = saw_vol / 6;
 
   // Square
   // int square_vol = 4000;
@@ -125,9 +104,7 @@ void PicoSynth::set_defaults() {
   // env[4].amplitude = square_vol / 5;
 
   // Sine
-  env[0].amplitude = 15000;
-
-  envelope_gate(0);
+  // env[0].amplitude = 15000;
 }
 
 /*
@@ -146,7 +123,7 @@ void PicoSynth::set_defaults() {
  *
  * A standard adsr will go, states: 0, 2, 3, 4, 5
  */
-void PicoSynth::update_envelopes() {
+void TinySynth::update_envelopes() {
   u_char finished = 0;
   u_char playing = HARMONICS;
   int attack, decay, level, sustain, rel;
@@ -160,12 +137,12 @@ void PicoSynth::update_envelopes() {
    */
   for (char i = 0; i < HARMONICS; i++) {
     if (env[i].type < 2 && env[i].type)
-      // tremolo = 0;
-      if (filt_state[i] > 0 || env[i].type > 1) {
-        finished++;
-        if (filt_state[i] == 5 || env[i].type > 1)
-          playing--;
-      }
+      tremolo = 0;
+    if (filt_state[i] > 0 || env[i].type > 1) {
+      finished++;
+      if (filt_state[i] == 5 || env[i].type > 1)
+        playing--;
+    }
   }
 
   /*
@@ -173,7 +150,7 @@ void PicoSynth::update_envelopes() {
    * filt value represents the current volume of the oscillator.
    */
   for (u_char i = 0; i < HARMONICS; i++) {
-    level = env[i].amplitude;
+    level = env[i].amplitude << 8;
     if (level == 0) {
       filt_state[i] = 6;
       continue;
@@ -181,7 +158,7 @@ void PicoSynth::update_envelopes() {
     etype = (u_char)(env[i].type);
     attack = env[i].attack;
     decay = env[i].decay;
-    sustain = env[i].sustain;
+    sustain = level >> 8 * env[i].sustain;
     rel = env[i].release;
     switch (filt_state[i]) {
     case 0: // Attack
