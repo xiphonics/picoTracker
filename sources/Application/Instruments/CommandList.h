@@ -8,6 +8,7 @@
 #define I_CMD_KILL MAKE_FOURCC('K', 'I', 'L', 'L')
 #define I_CMD_LPOF MAKE_FOURCC('L', 'P', 'O', 'F')
 #define I_CMD_ARPG MAKE_FOURCC('A', 'R', 'P', 'G')
+#define I_CMD_VELM MAKE_FOURCC('V', 'E', 'L', 'M')
 #define I_CMD_VOLM MAKE_FOURCC('V', 'O', 'L', 'M')
 #define I_CMD_PTCH MAKE_FOURCC('P', 'T', 'C', 'H')
 #define I_CMD_HOP MAKE_FOURCC('H', 'O', 'P', ' ')

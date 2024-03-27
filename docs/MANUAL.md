@@ -53,6 +53,13 @@ Note: any value other than "M8" (including not being specified) for the `KEYMAPS
 
 You can head over to the [Little Piggy Tracker Themer](http://poyo.co/lgpt) site to test different color schemes.
 
+
+## Ports
+
+The picture below shows the functions of the TRS ports on the picotracker:
+
+![picotracker TRS ports labled](img/picotracker-ports-1.png)
+
 ## Updating firmware
 You'll need to do this while powering the picoTracker via a USB connected to a PC. From the project menu select `Update firmware`. This will reboot the device into *BOOTSEL* mode, and you'll see the pico as a USB mass storage device. Just copy the UF2 firmware file into it.
 
@@ -493,11 +500,17 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 - TPO 0000 is safe and doesn't effect the tempo at all.
 - TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value
 
+## VEL --bb
+
+Set the velocity of the note being played on the current step for a MIDI instrument. This valid for MIDI instruments *only* and this command is not supported for use in tables.
+
 ## VOL aabb (VOLM in lgpt)
 
 **starting from the instrument's volume setting, approach volume bb at speed aa. 00 is the lowest volume and 00 is the fastest speed (instant).**
 
 - to achieve sounds that grow in volume, make an instrument with volume 0 and then apply the VOL command
+
+*NOTE:* For MIDI instruments the VOL command sets the velocity for that step. Only 1 VOL command in the first FX column is supported for MIDI. Only bb is used for velocity, aa has no effect for MIDI instruments.
 
 # Rendering
 
