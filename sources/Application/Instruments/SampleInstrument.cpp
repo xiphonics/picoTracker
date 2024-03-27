@@ -20,6 +20,8 @@
 
 bool SampleInstrument::useDirtyDownsampling_ = false;
 
+renderParams SampleInstrument::renderParams_[SONG_CHANNEL_COUNT];
+
 #define SHOULD_KILL_CLICKS false
 
 signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
