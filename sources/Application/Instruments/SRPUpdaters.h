@@ -46,34 +46,6 @@ private:
   fixed speed_;
 };
 
-class FBMixRamp : public I_SRPUpdater {
-public:
-  FBMixRamp(){};
-  virtual ~FBMixRamp(){};
-  void SetData(float target, float speed, float start);
-  virtual void Trigger(bool tableTick);
-  virtual void UpdateSRP(struct RUParams &rup);
-
-private:
-  fixed current_;
-  fixed target_;
-  fixed speed_;
-};
-
-class FBTunRamp : public I_SRPUpdater {
-public:
-  FBTunRamp(){};
-  virtual ~FBTunRamp(){};
-  void SetData(float target, float speed, float start);
-  virtual void Trigger(bool tableTick);
-  virtual void UpdateSRP(struct RUParams &rup);
-
-private:
-  fixed current_;
-  fixed target_;
-  fixed speed_;
-};
-
 class LogSpeedRamp : public I_SRPUpdater {
 public:
   LogSpeedRamp(){};
