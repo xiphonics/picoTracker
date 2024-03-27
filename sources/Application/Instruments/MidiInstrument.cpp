@@ -52,14 +52,15 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   MidiMessage msg;
 
-  //	send volume
-
+  //	send volume initial volume for this midi channel
   v = FindVariable(MIP_VOLUME);
   msg.status_ = MIDI_CC + channel;
   msg.data1_ = 7;
-  msg.data2_ = int((v->GetInt() + 0.99) / 2);
+  msg.data2_ = floor(v->GetInt() / 2);
   svc_->QueueMessage(msg);
 
+  // store initial velocity
+  velocity_ = msg.data2_;
   playing_ = true;
   retrig_ = false;
 
@@ -99,7 +100,7 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
 
     msg.status_ = MIDI_NOTE_ON + mchannel;
     msg.data1_ = lastNote_[channel];
-    msg.data2_ = 0x7F;
+    msg.data2_ = velocity_;
     svc_->QueueMessage(msg);
 
     first_[channel] = false;
@@ -118,7 +119,7 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
         svc_->QueueMessage(msg);
         msg.status_ = MIDI_NOTE_ON + mchannel;
         msg.data1_ = lastNote_[channel];
-        msg.data2_ = 0x7F;
+        msg.data2_ = velocity_;
         svc_->QueueMessage(msg);
       };
     };
@@ -148,11 +149,16 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
+  case I_CMD_VELM: {
+    // VELM cmds set velocity for MIDI steps
+    velocity_ = floor(value / 2);
+  }; break;
+
   case I_CMD_VOLM: {
     MidiMessage msg;
     msg.status_ = MIDI_CC + mchannel;
     msg.data1_ = 7;
-    msg.data2_ = int((value + 0.99) / 2);
+    msg.data2_ = floor(value / 2);
     svc_->QueueMessage(msg);
   }; break;
 
