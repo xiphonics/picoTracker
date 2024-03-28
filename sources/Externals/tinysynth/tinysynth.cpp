@@ -1,5 +1,4 @@
 #include "tinysynth.h"
-#include "fixed.h"
 #include "math.h"
 #include <cstdint>
 #include <stdio.h>
@@ -33,13 +32,13 @@ float noteToFreq(char note) {
   return (a / 32) * pow(2, ((note - 9) / 12.0));
 }
 
-void TinySynth::setEnvelopeConfig(char index, tinysynth_env config) {
+void TinySynth::setEnvelopeConfig(int8_t index, tinysynth_env config) {
   env[index] = config;
 }
 
-tinysynth_env TinySynth::getEnvelopeConfig(char index) { return env[index]; }
+tinysynth_env TinySynth::getEnvelopeConfig(int8_t index) { return env[index]; }
 
-void TinySynth::generateWaves(uint8_t *byte_stream, int len) {
+void TinySynth::generateWaves(fixed *byte_stream, int len) {
   int16_t *s_byte_stream;
 
   update_envelopes();
@@ -135,7 +134,7 @@ void TinySynth::update_envelopes() {
    * finished their attack phase. Repeating envelopes don't
    * count towards a playing note as they repeat indefinitely.
    */
-  for (char i = 0; i < HARMONICS; i++) {
+  for (u_int8_t i = 0; i < HARMONICS; i++) {
     if (env[i].type < 2 && env[i].type)
       tremolo = 0;
     if (filt_state[i] > 0 || env[i].type > 1) {

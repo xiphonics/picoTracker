@@ -1,6 +1,7 @@
 #ifndef TINY_SYNTH_H
 #define TINY_SYNTH_H
 
+#include "fixed.h"
 #include <cstdint>
 #include <math.h>
 
@@ -27,11 +28,11 @@ class TinySynth {
 public:
   TinySynth() {}
 
-  void setEnvelopeConfig(char index, tinysynth_env config);
+  void setEnvelopeConfig(int8_t index, tinysynth_env config);
 
-  tinysynth_env getEnvelopeConfig(char index);
+  tinysynth_env getEnvelopeConfig(int8_t index);
 
-  void generateWaves(uint8_t *byte_stream, int len);
+  void generateWaves(fixed *byte_stream, int len);
 
   void update_envelopes();
 

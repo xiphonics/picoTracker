@@ -4,7 +4,6 @@ add_library(application_instruments
   I_Instrument.h
   I_SRPUpdater.h
   InstrumentBank.h InstrumentBank.cpp
-  TinysynthInstrument.h TinysynthInstrument.cpp
   MidiInstrument.h MidiInstrument.cpp
   SRPUpdaters.h SRPUpdaters.cpp
   SampleInstrument.h SampleInstrument.cpp
@@ -13,6 +12,7 @@ add_library(application_instruments
   SampleRenderingParams.h
   SampleVariable.h SampleVariable.cpp
   SoundSource.h SoundSource.cpp
+  TinysynthInstrument.h TinysynthInstrument.cpp
   WavFile.h WavFile.cpp
   WavFileWriter.h WavFileWriter.cpp
 )
@@ -24,6 +24,7 @@ target_link_libraries(application_instruments PUBLIC foundation_services
                                               PUBLIC hardware_flash
                                               PUBLIC pico_stdlib                            
                                               PUBLIC hardware_flash
+                                              PUBLIC tinysynth
 )
 
 target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

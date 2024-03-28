@@ -1,6 +1,7 @@
 add_library(tinysynth
-tinysynth/tinysynth.cpp
-tinysynth/tinysynth.h
+tinysynth.cpp
+tinysynth.h
+fixed.h
 )
 
 target_link_libraries(tinysynth PUBLIC pico_stdlib
