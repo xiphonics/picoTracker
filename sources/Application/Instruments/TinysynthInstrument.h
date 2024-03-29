@@ -46,7 +46,6 @@ public:
 
 private:
   TinySynth *tinysynth_;
-  bool playing_;
 };
 
 #endif

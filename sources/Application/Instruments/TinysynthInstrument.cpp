@@ -15,8 +15,9 @@ TinysynthInstrument::TinysynthInstrument() { tinysynth_ = new TinySynth(); }
 TinysynthInstrument::~TinysynthInstrument() {}
 
 bool TinysynthInstrument::Init() {
-  // TODO
-  return false;
+  // set tinysynth defaults
+  tinysynth_->set_defaults();
+  return true;
 }
 
 void TinysynthInstrument::OnStart() {
@@ -25,8 +26,7 @@ void TinysynthInstrument::OnStart() {
 
 bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
-  // set tinysynth defaults
-  tinysynth_->set_defaults();
+
   tinysynth_->set_note(midinote);
   tinysynth_->envelope_gate(true);
   return true;
@@ -80,8 +80,7 @@ void TinysynthInstrument::Update(Observable &o, I_ObservableData *d) {
 }
 
 bool TinysynthInstrument::IsInitialized() {
-  // TODO
-  return true;
+  return true; // Always initialised
 }
 
 bool TinysynthInstrument::IsEmpty() {

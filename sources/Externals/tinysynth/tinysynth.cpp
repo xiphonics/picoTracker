@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const int16_t sine[LUT_SIZE] = {
+const int8_t sine[LUT_SIZE] = {
     0,    13,   26,   39,   51,   63,   74,   84,   94,   102,  109,  116,
     120,  124,  126,  127,  126,  124,  120,  116,  109,  102,  94,   84,
     74,   63,   51,   39,   26,   13,   0,    -13,  -26,  -39,  -51,  -63,
@@ -60,8 +60,9 @@ void TinySynth::generateWaves(fixed *byte_stream, int len) {
     }
     // write sum of all harmonics into audio buffer
     // buffer is left&right samples interleaved
-    byte_stream[2 * i] = i2fp(fullResult);
-    byte_stream[2 * i + 1] = i2fp(fullResult);
+    auto fp_result = i2fp(fullResult / 8);
+    byte_stream[2 * i] = fp_result;
+    byte_stream[(2 * i) + 1] = fp_result;
   }
 }
 
@@ -79,18 +80,18 @@ char TinySynth::get_note() { return _note; }
 void TinySynth::set_defaults() {
 
   for (int h = 0; h < HARMONICS; h++) {
-    env[h].attack = 100;
-    env[h].sustain = 255;
-    env[h].release = 80;
+    env[h].attack = 0;
+    env[h].sustain = 30;
+    env[h].release = 20;
   }
   // sawtooth
-  // int saw_vol = 240;
-  // env[0].amplitude = saw_vol;
-  // env[1].amplitude = saw_vol / 2;
-  // env[2].amplitude = saw_vol / 3;
-  // env[3].amplitude = saw_vol / 4;
-  // env[4].amplitude = saw_vol / 5;
-  // env[5].amplitude = saw_vol / 6;
+  int saw_vol = 240;
+  env[0].amplitude = saw_vol;
+  env[1].amplitude = saw_vol / 2;
+  env[2].amplitude = saw_vol / 3;
+  env[3].amplitude = saw_vol / 4;
+  env[4].amplitude = saw_vol / 5;
+  env[5].amplitude = saw_vol / 6;
 
   // Square
   // int square_vol = 200;
@@ -99,7 +100,7 @@ void TinySynth::set_defaults() {
   // env[4].amplitude = square_vol / 5;
 
   // Sine
-  env[0].amplitude = 240;
+  // env[0].amplitude = 30;
 }
 
 /*
