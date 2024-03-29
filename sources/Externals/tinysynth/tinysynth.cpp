@@ -38,9 +38,7 @@ void TinySynth::setEnvelopeConfig(int8_t index, tinysynth_env config) {
 
 tinysynth_env TinySynth::getEnvelopeConfig(int8_t index) { return env[index]; }
 
-void TinySynth::generateWaves(int16_t *byte_stream, int len) {
-  int16_t *s_byte_stream;
-
+void TinySynth::generateWaves(fixed *byte_stream, int len) {
   update_envelopes();
 
   // get correct phase increment for note depending on sample rate and LUT
@@ -53,19 +51,17 @@ void TinySynth::generateWaves(int16_t *byte_stream, int len) {
       4 * baseNoteFreq, 5 * baseNoteFreq, 6 * baseNoteFreq,
   };
 
-  /* cast buffer as 16bit signed int */
-  s_byte_stream = (int16_t *)byte_stream;
-
   // generate samples
   for (int i = 0; i < len; i++) {
-
     int fullResult = 0;
     for (int h = 0; h < HARMONICS; h++) {
       fullResult +=
           generatePhaseSample(phase_increment[h], phase_int[h], filt[h]);
     }
     // write sum of all harmonics into audio buffer
-    s_byte_stream[i] = fullResult;
+    // buffer is left&right samples interleaved
+    byte_stream[2 * i] = i2fp(fullResult);
+    byte_stream[2 * i + 1] = i2fp(fullResult);
   }
 }
 

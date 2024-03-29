@@ -32,7 +32,7 @@ public:
 
   tinysynth_env getEnvelopeConfig(int8_t index);
 
-  void generateWaves(int16_t *byte_stream, int len);
+  void generateWaves(fixed *byte_stream, int len);
 
   void update_envelopes();
 
