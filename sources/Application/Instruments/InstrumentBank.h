@@ -6,6 +6,7 @@
 #include "Application/Persistency/Persistent.h"
 #include "MidiInstrument.h"
 #include "SampleInstrument.h"
+#include "TinysynthInstrument.h"
 
 #define NO_MORE_INSTRUMENT 0x100
 
@@ -55,7 +56,8 @@ private:
   MidiInstrument mi12;
   MidiInstrument mi13;
   MidiInstrument mi14;
-  MidiInstrument mi15;
+  // MidiInstrument mi15;
+  TinysynthInstrument tsi0;
 };
 
 #endif

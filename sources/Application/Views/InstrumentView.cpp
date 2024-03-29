@@ -55,6 +55,9 @@ void InstrumentView::onInstrumentChange() {
   case IT_SAMPLE:
     fillSampleParameters();
     break;
+  case IT_TINYSYNTH:
+    fillTinysynthParameters();
+    break;
   };
 
   SetFocus(*fieldList_.begin());
@@ -71,6 +74,16 @@ void InstrumentView::onInstrumentChange() {
     current_->AddObserver(*this);
   }
 };
+
+void InstrumentView::fillTinysynthParameters() {
+  // int i = viewData_->currentInstrument_;
+  // InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  // I_Instrument *instr = bank->GetInstrument(i);
+  // SampleInstrument *instrument = (SampleInstrument *)instr;
+  // GUIPoint position = GetAnchor();
+  // printf("%d,%d", instrument, position);
+  // TODO
+}
 
 void InstrumentView::fillSampleParameters() {
 

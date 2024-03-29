@@ -38,7 +38,7 @@ void TinySynth::setEnvelopeConfig(int8_t index, tinysynth_env config) {
 
 tinysynth_env TinySynth::getEnvelopeConfig(int8_t index) { return env[index]; }
 
-void TinySynth::generateWaves(fixed *byte_stream, int len) {
+void TinySynth::generateWaves(int16_t *byte_stream, int len) {
   int16_t *s_byte_stream;
 
   update_envelopes();
@@ -88,22 +88,22 @@ void TinySynth::set_defaults() {
     env[h].release = 80;
   }
   // sawtooth
-  int saw_vol = 240;
-  env[0].amplitude = saw_vol;
-  env[1].amplitude = saw_vol / 2;
-  env[2].amplitude = saw_vol / 3;
-  env[3].amplitude = saw_vol / 4;
-  env[4].amplitude = saw_vol / 5;
-  env[5].amplitude = saw_vol / 6;
+  // int saw_vol = 240;
+  // env[0].amplitude = saw_vol;
+  // env[1].amplitude = saw_vol / 2;
+  // env[2].amplitude = saw_vol / 3;
+  // env[3].amplitude = saw_vol / 4;
+  // env[4].amplitude = saw_vol / 5;
+  // env[5].amplitude = saw_vol / 6;
 
   // Square
-  // int square_vol = 4000;
+  // int square_vol = 200;
   // env[0].amplitude = square_vol;
   // env[2].amplitude = square_vol / 3;
   // env[4].amplitude = square_vol / 5;
 
   // Sine
-  // env[0].amplitude = 15000;
+  env[0].amplitude = 240;
 }
 
 /*

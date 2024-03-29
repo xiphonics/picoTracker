@@ -7,7 +7,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/VariableContainer.h"
 
-enum InstrumentType { IT_SAMPLE = 0, IT_MIDI };
+enum InstrumentType { IT_SAMPLE = 0, IT_MIDI, IT_TINYSYNTH };
 
 class I_Instrument : public VariableContainer, public Observable {
 

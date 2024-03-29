@@ -10,9 +10,7 @@
 #include "Foundation/Variables/WatchedVariable.h"
 #include "SoundSource.h"
 
-TinysynthInstrument::TinysynthInstrument() {
-  // tinysynth_ = new TinySynth();
-}
+TinysynthInstrument::TinysynthInstrument() { tinysynth_ = new TinySynth(); }
 
 TinysynthInstrument::~TinysynthInstrument() {}
 
@@ -27,10 +25,16 @@ void TinysynthInstrument::OnStart() {
 
 bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
+  // set tinysynth defaults
+  tinysynth_->set_defaults();
+  tinysynth_->set_note(64);
+  tinysynth_->envelope_gate(true);
   return true;
 }
 
-void TinysynthInstrument::Stop(int channel) {}
+void TinysynthInstrument::Stop(int channel) {
+  tinysynth_->envelope_gate(false);
+}
 // Size in samples
 bool TinysynthInstrument::Render(int channel, fixed *buffer, int size,
                                  bool updateTick) {
@@ -38,7 +42,13 @@ bool TinysynthInstrument::Render(int channel, fixed *buffer, int size,
   // clear the fixed point buffer
   SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
 
-  tinysynth_->generateWaves(buffer, size);
+  int16_t *render_buf = (int16_t *)malloc(size * 2);
+  tinysynth_->generateWaves(render_buf, size);
+  for (int i = 0; i < size; i++) {
+    buffer[i] = i2fp(render_buf[i]);
+    buffer[i + 1] = i2fp(render_buf[i]);
+  }
+  free(render_buf);
   return true;
 }
 
