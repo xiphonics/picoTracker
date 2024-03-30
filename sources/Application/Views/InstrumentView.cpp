@@ -76,13 +76,21 @@ void InstrumentView::onInstrumentChange() {
 };
 
 void InstrumentView::fillTinysynthParameters() {
-  // int i = viewData_->currentInstrument_;
-  // InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  // I_Instrument *instr = bank->GetInstrument(i);
-  // SampleInstrument *instrument = (SampleInstrument *)instr;
-  // GUIPoint position = GetAnchor();
-  // printf("%d,%d", instrument, position);
-  // TODO
+  printf("fill Tinysynth params\n");
+  int i = viewData_->currentInstrument_;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  I_Instrument *instr = bank->GetInstrument(i);
+  TinysynthInstrument *instrument = (TinysynthInstrument *)instr;
+  GUIPoint position = GetAnchor();
+  printf("TINY INSTRUMENT:%d,%d", instrument, position);
+
+  position._y -= 1;
+  Variable *v = instrument->FindVariable(TSIP_VOLUME);
+  intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  // cmdEditField_ =
+  //     new UIBigHexVarField(pos, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true);
 }
 
 void InstrumentView::fillSampleParameters() {

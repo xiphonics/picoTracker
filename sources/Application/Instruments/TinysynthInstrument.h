@@ -11,7 +11,8 @@
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
 
-#define TSIP_VOL1 MAKE_FOURCC('T', 'S', 'V', '1')
+#define TSIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
+#define TXIP_H1 MAKE_FOURCC('T', 'X', 'H', '1')
 
 class TinysynthInstrument : public I_Instrument, I_Observer {
 
@@ -30,13 +31,12 @@ public:
   // Engine playback  start callback
   virtual void OnStart();
 
-  virtual etl::string<24> GetName(); // returns sample name until real
-                                     // name is implemented
+  virtual etl::string<24> GetName();
 
   // I_Observer
   virtual void Update(Observable &o, I_ObservableData *d);
 
-  virtual InstrumentType GetType() { return IT_SAMPLE; };
+  virtual InstrumentType GetType() { return IT_TINYSYNTH; };
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
   virtual void Purge();
   virtual int GetTable();
@@ -45,7 +45,9 @@ public:
   virtual void SetTableState(TableSaveState &state);
 
 private:
+  bool running_;
   TinySynth *tinysynth_;
+  Variable *volume_;
 };
 
 #endif

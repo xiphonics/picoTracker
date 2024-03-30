@@ -10,11 +10,19 @@
 #include "Foundation/Variables/WatchedVariable.h"
 #include "SoundSource.h"
 
-TinysynthInstrument::TinysynthInstrument() { tinysynth_ = new TinySynth(); }
+TinysynthInstrument::TinysynthInstrument() {
+  volume_ = new Variable("volume", TSIP_VOLUME, 0x80);
+  insert(end(), volume_);
+
+  Variable *v = new Variable("harmonic1", TXIP_H1, 0);
+  insert(end(), v);
+}
 
 TinysynthInstrument::~TinysynthInstrument() {}
 
 bool TinysynthInstrument::Init() {
+  printf("Tinysynth Init!\n");
+  tinysynth_ = new TinySynth();
   // set tinysynth defaults
   tinysynth_->set_defaults();
   return true;
@@ -42,13 +50,14 @@ bool TinysynthInstrument::Render(int channel, fixed *buffer, int size,
   // clear the fixed point buffer
   SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
 
+  // TODO pass in instrument volume
   tinysynth_->generateWaves(buffer, size);
 
   return true;
 }
 
 void TinysynthInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
-  // TODO
+  // printf("Tinysynth Process CMD:%d ch:%d val:%d", cc, channel, value);
 }
 
 int TinysynthInstrument::GetTable() {

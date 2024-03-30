@@ -271,6 +271,9 @@ inline void fourCC2char(const FourCC f, char *s) {
   case 70:
     strcpy(s, "WRAP");
     break;
+  case 71:
+    strcpy(s, "TSH1");
+    break;
   }
 };
 #endif
