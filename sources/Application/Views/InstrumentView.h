@@ -39,10 +39,9 @@ private:
   etl::vector<UIIntVarField, 15> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 1> staticField_;
-  etl::vector<UIBigHexVarField, 3> bigHexVarField_;
+  etl::vector<UIBigHexVarField, 12> bigHexVarField_;
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
 
-  UIBigHexVarField *txH1EditField_;
-  UIBigHexVarField *txV1EditField_;
+  etl::vector<UIBigHexVarField, 12> tinySynthVarField_;
 };
 #endif

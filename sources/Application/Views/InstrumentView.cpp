@@ -102,14 +102,13 @@ void InstrumentView::fillTinysynthParameters() {
   position._x += 2;
 
   v = instrument->FindVariable(TXIP_H1);
-  txH1EditField_ =
-      new UIBigHexVarField(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
-  fieldList_.insert(fieldList_.end(), txH1EditField_);
+  tinySynthVarField_.emplace_back(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
 
   position._x += 6;
   v = instrument->FindVariable(TXIP_V1);
-  txV1EditField_ = new UIBigHexVarField(position, *v, 2, "%2.2X", 0, 0xFF, 16);
-  fieldList_.insert(fieldList_.end(), txV1EditField_);
+  tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
 
   position._x -= 8;
   position._y += 1;
