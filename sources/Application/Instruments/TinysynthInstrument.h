@@ -11,8 +11,9 @@
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
 
-#define TSIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
+#define TXIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
 #define TXIP_H1 MAKE_FOURCC('T', 'X', 'H', '1')
+#define TXIP_V1 MAKE_FOURCC('T', 'X', 'V', '1')
 
 class TinysynthInstrument : public I_Instrument, I_Observer {
 
@@ -48,6 +49,8 @@ private:
   bool running_;
   TinySynth *tinysynth_;
   Variable *volume_;
+  Variable *harmonic1adsr_;
+  Variable *harmonic1vol_;
 };
 
 #endif

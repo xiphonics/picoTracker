@@ -11,11 +11,14 @@
 #include "SoundSource.h"
 
 TinysynthInstrument::TinysynthInstrument() {
-  volume_ = new Variable("volume", TSIP_VOLUME, 0x80);
+  volume_ = new Variable("volume", TXIP_VOLUME, 0x80);
   insert(end(), volume_);
 
-  Variable *v = new Variable("harmonic1", TXIP_H1, 0);
-  insert(end(), v);
+  harmonic1adsr_ = new Variable("h1adsr", TXIP_H1, 0);
+  insert(end(), harmonic1adsr_);
+
+  harmonic1vol_ = new Variable("h1vol", TXIP_V1, 0);
+  insert(end(), harmonic1vol_);
 }
 
 TinysynthInstrument::~TinysynthInstrument() {}

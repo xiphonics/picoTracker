@@ -85,12 +85,37 @@ void InstrumentView::fillTinysynthParameters() {
   printf("TINY INSTRUMENT:%d,%d", instrument, position);
 
   position._y -= 1;
-  Variable *v = instrument->FindVariable(TSIP_VOLUME);
+  Variable *v = instrument->FindVariable(TXIP_VOLUME);
   intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  // cmdEditField_ =
-  //     new UIBigHexVarField(pos, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true);
+  position._y += 2;
+
+  staticField_.emplace_back(position, "H ADSR  VT");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._y += 1;
+
+  staticField_.emplace_back(position, "1");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._x += 2;
+
+  v = instrument->FindVariable(TXIP_H1);
+  txH1EditField_ =
+      new UIBigHexVarField(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
+  fieldList_.insert(fieldList_.end(), txH1EditField_);
+
+  position._x += 6;
+  v = instrument->FindVariable(TXIP_V1);
+  txV1EditField_ = new UIBigHexVarField(position, *v, 2, "%2.2X", 0, 0xFF, 16);
+  fieldList_.insert(fieldList_.end(), txV1EditField_);
+
+  position._x -= 8;
+  position._y += 1;
+
+  staticField_.emplace_back(position, "2");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 }
 
 void InstrumentView::fillSampleParameters() {

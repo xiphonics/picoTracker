@@ -41,5 +41,8 @@ private:
   etl::vector<UIStaticField, 1> staticField_;
   etl::vector<UIBigHexVarField, 3> bigHexVarField_;
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
+
+  UIBigHexVarField *txH1EditField_;
+  UIBigHexVarField *txV1EditField_;
 };
 #endif
