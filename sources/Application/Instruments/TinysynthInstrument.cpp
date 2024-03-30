@@ -51,7 +51,7 @@ bool TinysynthInstrument::Render(int channel, fixed *buffer, int size,
   SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
 
   // TODO pass in instrument volume
-  tinysynth_->generateWaves(buffer, size);
+  tinysynth_->generateWaves(buffer, size, volume_->GetInt());
 
   return true;
 }
