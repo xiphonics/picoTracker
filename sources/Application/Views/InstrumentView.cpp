@@ -110,11 +110,26 @@ void InstrumentView::fillTinysynthParameters() {
   tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
   fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
 
+  // == 1
+
   position._x -= 8;
   position._y += 1;
 
   staticField_.emplace_back(position, "2");
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._x += 2;
+
+  v = instrument->FindVariable(TXIP_H2);
+  tinySynthVarField_.emplace_back(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+
+  position._x += 6;
+  v = instrument->FindVariable(TXIP_V2);
+  tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+
+  // == 2
 }
 
 void InstrumentView::fillSampleParameters() {

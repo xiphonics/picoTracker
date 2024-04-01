@@ -19,6 +19,12 @@ TinysynthInstrument::TinysynthInstrument() {
 
   harmonic1vol_ = new Variable("h1vol", TXIP_V1, 0);
   insert(end(), harmonic1vol_);
+
+  harmonic2adsr_ = new Variable("h2adsr", TXIP_H2, 0);
+  insert(end(), harmonic1adsr_);
+
+  harmonic2vol_ = new Variable("h2vol", TXIP_V2, 0);
+  insert(end(), harmonic1vol_);
 }
 
 TinysynthInstrument::~TinysynthInstrument() {}
