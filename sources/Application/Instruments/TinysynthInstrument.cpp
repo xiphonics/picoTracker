@@ -44,6 +44,31 @@ void TinysynthInstrument::OnStart() {
 bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
 
+  for (int i = 0; i < HARMONICS; i++) {
+
+    tinysynth_env harmonic = {0, 0, 0, 0, 0, 0, 0};
+    if (i == 0) {
+      int adsrInt = harmonic1adsr_->GetInt();
+      int adsrVol = harmonic1vol_->GetInt();
+      harmonic.attack = (adsrInt >> 12) << 4;
+      harmonic.decay = ((adsrInt >> 8) & 0xF) << 4;
+      harmonic.sustain = ((adsrInt >> 4) & 0xF) << 4;
+      harmonic.release = (adsrInt & 0xF) << 4;
+      harmonic.amplitude = ((adsrVol >> 4) & 0xF) << 4;
+      harmonic.type = (adsrVol & 0xF) << 4;
+    }
+
+    printf("H1 Attack:%d ", harmonic.attack);
+    printf("H1 Decay:%d ", harmonic.decay);
+    printf("H1 Sustain:%d ", harmonic.sustain);
+    printf("H1 Release:%d ", harmonic.release);
+    printf("H1 Volume:%d ", harmonic.amplitude);
+    printf("H1 Type:%d ", harmonic.type);
+    printf("\n");
+
+    tinysynth_->setEnvelopeConfig(i, harmonic);
+  }
+
   tinysynth_->set_note(midinote);
   tinysynth_->envelope_gate(true);
   return true;
@@ -89,7 +114,7 @@ void TinysynthInstrument::Purge() {
 }
 
 etl::string<24> TinysynthInstrument::GetName() {
-  etl::string<24> name = "TINYSYNTH";
+  const etl::string<24> name = "TINYSYNTH";
   return name;
 };
 

@@ -82,7 +82,6 @@ void InstrumentView::fillTinysynthParameters() {
   I_Instrument *instr = bank->GetInstrument(i);
   TinysynthInstrument *instrument = (TinysynthInstrument *)instr;
   GUIPoint position = GetAnchor();
-  printf("TINY INSTRUMENT:%d,%d", instrument, position);
 
   position._y -= 1;
   Variable *v = instrument->FindVariable(TXIP_VOLUME);
