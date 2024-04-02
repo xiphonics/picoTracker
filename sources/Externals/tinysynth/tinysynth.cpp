@@ -122,11 +122,11 @@ void TinySynth::set_defaults() {
  * A standard adsr will go, states: 0, 2, 3, 4, 5
  */
 void TinySynth::update_envelopes() {
-  u_char finished = 0;
-  u_char playing = HARMONICS;
+  unsigned char finished = 0;
+  unsigned char playing = HARMONICS;
   int attack, decay, level, sustain, rel;
-  u_char etype;
-  u_char tremolo = 1;
+  unsigned char etype;
+  unsigned char tremolo = 1;
 
   /*
    * Work out which notes are still playing, and which have
