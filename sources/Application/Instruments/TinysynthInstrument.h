@@ -52,10 +52,8 @@ private:
   bool running_;
   TinySynth *tinysynth_;
   Variable *volume_;
-  Variable *harmonic1adsr_;
-  Variable *harmonic1vol_;
-  Variable *harmonic2adsr_;
-  Variable *harmonic2vol_;
+  Variable *harmonicadsr_[HARMONICS];
+  Variable *harmonicvol_[HARMONICS];
 };
 
 #endif

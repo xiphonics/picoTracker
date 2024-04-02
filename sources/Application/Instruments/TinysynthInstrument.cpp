@@ -14,17 +14,17 @@ TinysynthInstrument::TinysynthInstrument() {
   volume_ = new Variable("volume", TXIP_VOLUME, 0x80);
   insert(end(), volume_);
 
-  harmonic1adsr_ = new Variable("h1adsr", TXIP_H1, 0);
-  insert(end(), harmonic1adsr_);
+  harmonicadsr_[0] = new Variable("h1adsr", TXIP_H1, 0);
+  insert(end(), harmonicadsr_[0]);
 
-  harmonic1vol_ = new Variable("h1vol", TXIP_V1, 0);
-  insert(end(), harmonic1vol_);
+  harmonicvol_[0] = new Variable("h1vol", TXIP_V1, 0);
+  insert(end(), harmonicvol_[0]);
 
-  harmonic2adsr_ = new Variable("h2adsr", TXIP_H2, 0);
-  insert(end(), harmonic1adsr_);
+  harmonicadsr_[1] = new Variable("h2adsr", TXIP_H2, 0);
+  insert(end(), harmonicadsr_[1]);
 
-  harmonic2vol_ = new Variable("h2vol", TXIP_V2, 0);
-  insert(end(), harmonic1vol_);
+  harmonicvol_[1] = new Variable("h2vol", TXIP_V2, 0);
+  insert(end(), harmonicvol_[1]);
 }
 
 TinysynthInstrument::~TinysynthInstrument() {}
@@ -44,19 +44,18 @@ void TinysynthInstrument::OnStart() {
 bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
 
-  for (int i = 0; i < HARMONICS; i++) {
+  for (int i = 0; i < 1; i++) {
 
     tinysynth_env harmonic = {0, 0, 0, 0, 0, 0, 0};
-    if (i == 0) {
-      int adsrInt = harmonic1adsr_->GetInt();
-      int adsrVol = harmonic1vol_->GetInt();
-      harmonic.attack = (adsrInt >> 12) << 4;
-      harmonic.decay = ((adsrInt >> 8) & 0xF) << 4;
-      harmonic.sustain = ((adsrInt >> 4) & 0xF) << 4;
-      harmonic.release = (adsrInt & 0xF) << 4;
-      harmonic.amplitude = ((adsrVol >> 4) & 0xF) << 4;
-      harmonic.type = (adsrVol & 0xF) << 4;
-    }
+
+    int adsrInt = harmonicadsr_[i]->GetInt();
+    int adsrVol = harmonicvol_[i]->GetInt();
+    harmonic.attack = (adsrInt >> 12) << 4;
+    harmonic.decay = ((adsrInt >> 8) & 0xF) << 4;
+    harmonic.sustain = ((adsrInt >> 4) & 0xF) << 4;
+    harmonic.release = (adsrInt & 0xF) << 4;
+    harmonic.amplitude = ((adsrVol >> 4) & 0xF) << 4;
+    harmonic.type = (adsrVol & 0xF) << 4;
 
     printf("H1 Attack:%d ", harmonic.attack);
     printf("H1 Decay:%d ", harmonic.decay);
