@@ -13,18 +13,34 @@
 TinysynthInstrument::TinysynthInstrument() {
   volume_ = new Variable("volume", TXIP_VOLUME, 0x80);
   insert(end(), volume_);
+  lfo_ = new Variable("lfo", TXIP_LO, 0);
+  insert(end(), lfo_);
 
   harmonicadsr_[0] = new Variable("h1adsr", TXIP_H1, 0);
   insert(end(), harmonicadsr_[0]);
+  harmonicadsr_[1] = new Variable("h2adsr", TXIP_H2, 0);
+  insert(end(), harmonicadsr_[1]);
+  harmonicadsr_[2] = new Variable("h3adsr", TXIP_H3, 0);
+  insert(end(), harmonicadsr_[2]);
+  harmonicadsr_[3] = new Variable("h4adsr", TXIP_H4, 0);
+  insert(end(), harmonicadsr_[3]);
+  harmonicadsr_[4] = new Variable("h5adsr", TXIP_H5, 0);
+  insert(end(), harmonicadsr_[4]);
+  harmonicadsr_[5] = new Variable("h6adsr", TXIP_H6, 0);
+  insert(end(), harmonicadsr_[5]);
 
   harmonicvol_[0] = new Variable("h1vol", TXIP_V1, 0);
   insert(end(), harmonicvol_[0]);
-
-  harmonicadsr_[1] = new Variable("h2adsr", TXIP_H2, 0);
-  insert(end(), harmonicadsr_[1]);
-
   harmonicvol_[1] = new Variable("h2vol", TXIP_V2, 0);
   insert(end(), harmonicvol_[1]);
+  harmonicvol_[2] = new Variable("h3vol", TXIP_V3, 0);
+  insert(end(), harmonicvol_[2]);
+  harmonicvol_[3] = new Variable("h4vol", TXIP_V4, 0);
+  insert(end(), harmonicvol_[3]);
+  harmonicvol_[4] = new Variable("h5vol", TXIP_V5, 0);
+  insert(end(), harmonicvol_[4]);
+  harmonicvol_[5] = new Variable("h6vol", TXIP_V6, 0);
+  insert(end(), harmonicvol_[5]);
 }
 
 TinysynthInstrument::~TinysynthInstrument() {}
@@ -44,7 +60,7 @@ void TinysynthInstrument::OnStart() {
 bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
 
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < HARMONICS; i++) {
 
     tinysynth_env harmonic = {0, 0, 0, 0, 0, 0, 0};
 

@@ -108,7 +108,6 @@ void InstrumentView::fillTinysynthParameters() {
   v = instrument->FindVariable(TXIP_V1);
   tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
   fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
-
   // == 1
 
   position._x -= 8;
@@ -127,8 +126,86 @@ void InstrumentView::fillTinysynthParameters() {
   v = instrument->FindVariable(TXIP_V2);
   tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
   fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
-
   // == 2
+
+  position._x -= 8;
+  position._y += 1;
+
+  staticField_.emplace_back(position, "3");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._x += 2;
+
+  v = instrument->FindVariable(TXIP_H3);
+  tinySynthVarField_.emplace_back(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+
+  position._x += 6;
+  v = instrument->FindVariable(TXIP_V3);
+  tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+  // == 3
+
+  position._x -= 8;
+  position._y += 1;
+
+  staticField_.emplace_back(position, "4");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._x += 2;
+
+  v = instrument->FindVariable(TXIP_H4);
+  tinySynthVarField_.emplace_back(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+
+  position._x += 6;
+  v = instrument->FindVariable(TXIP_V4);
+  tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+  // == 4
+
+  position._x -= 8;
+  position._y += 1;
+
+  staticField_.emplace_back(position, "5");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._x += 2;
+
+  v = instrument->FindVariable(TXIP_H5);
+  tinySynthVarField_.emplace_back(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+
+  position._x += 6;
+  v = instrument->FindVariable(TXIP_V5);
+  tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+  // == 5
+
+  position._x -= 8;
+  position._y += 1;
+
+  staticField_.emplace_back(position, "6");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._x += 2;
+
+  v = instrument->FindVariable(TXIP_H6);
+  tinySynthVarField_.emplace_back(position, *v, 4, "%4.4X", 0, 0xFFFF - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+
+  position._x += 6;
+  v = instrument->FindVariable(TXIP_V6);
+  tinySynthVarField_.emplace_back(position, *v, 2, "%2.2X", 0, 0xFF, 16);
+  fieldList_.insert(fieldList_.end(), &(*tinySynthVarField_.rbegin()));
+  // == 6
+
+  position._x -= 8;
+  position._y += 2;
+
+  v = instrument->FindVariable(TXIP_LO);
+  intVarField_.emplace_back(position, *v, "LFO: %d [%2.2X]", 0, 255, 1, 10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 }
 
 void InstrumentView::fillSampleParameters() {

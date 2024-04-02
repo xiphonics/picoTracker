@@ -272,16 +272,43 @@ inline void fourCC2char(const FourCC f, char *s) {
     strcpy(s, "WRAP");
     break;
   case 71:
-    strcpy(s, "TSH1");
+    strcpy(s, "TXH1");
     break;
   case 72:
-    strcpy(s, "TSV1");
+    strcpy(s, "TXH2");
     break;
   case 73:
-    strcpy(s, "TSH2");
+    strcpy(s, "TXH3");
     break;
   case 74:
-    strcpy(s, "TSV2");
+    strcpy(s, "TXH4");
+    break;
+  case 75:
+    strcpy(s, "TXH5");
+    break;
+  case 76:
+    strcpy(s, "TXH6");
+    break;
+  case 77:
+    strcpy(s, "TXV1");
+    break;
+  case 78:
+    strcpy(s, "TXV2");
+    break;
+  case 79:
+    strcpy(s, "TXV3");
+    break;
+  case 80:
+    strcpy(s, "TXV4");
+    break;
+  case 81:
+    strcpy(s, "TXV5");
+    break;
+  case 82:
+    strcpy(s, "TXV6");
+    break;
+  case 83:
+    strcpy(s, "TXLO");
     break;
   }
 };

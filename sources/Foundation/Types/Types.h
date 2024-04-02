@@ -217,14 +217,41 @@ inline constexpr FourCC MAKE_FOURCC(char ch0, char ch1, char ch2, char ch3) {
   case 'T' | 'X' << 8 | 'H' << 16 | '1' << 24:
     return 71;
     break;
-  case 'T' | 'X' << 8 | 'V' << 16 | '1' << 24:
+  case 'T' | 'X' << 8 | 'H' << 16 | '2' << 24:
     return 72;
     break;
-  case 'T' | 'X' << 8 | 'H' << 16 | '2' << 24:
+  case 'T' | 'X' << 8 | 'H' << 16 | '3' << 24:
     return 73;
     break;
-  case 'T' | 'X' << 8 | 'V' << 16 | '2' << 24:
+  case 'T' | 'X' << 8 | 'H' << 16 | '4' << 24:
     return 74;
+    break;
+  case 'T' | 'X' << 8 | 'H' << 16 | '5' << 24:
+    return 75;
+    break;
+  case 'T' | 'X' << 8 | 'H' << 16 | '6' << 24:
+    return 76;
+    break;
+  case 'T' | 'X' << 8 | 'V' << 16 | '1' << 24:
+    return 77;
+    break;
+  case 'T' | 'X' << 8 | 'V' << 16 | '2' << 24:
+    return 78;
+    break;
+  case 'T' | 'X' << 8 | 'V' << 16 | '3' << 24:
+    return 79;
+    break;
+  case 'T' | 'X' << 8 | 'V' << 16 | '4' << 24:
+    return 80;
+    break;
+  case 'T' | 'X' << 8 | 'V' << 16 | '5' << 24:
+    return 81;
+    break;
+  case 'T' | 'X' << 8 | 'V' << 16 | '6' << 24:
+    return 82;
+    break;
+  case 'T' | 'X' << 8 | 'L' << 16 | 'O' << 24:
+    return 83;
     break;
   case 'V' | 'E' << 8 | 'L' << 16 | 'M' << 24:
     return 66;

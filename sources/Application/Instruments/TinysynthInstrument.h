@@ -14,9 +14,18 @@
 #define TXIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
 
 #define TXIP_H1 MAKE_FOURCC('T', 'X', 'H', '1')
-#define TXIP_V1 MAKE_FOURCC('T', 'X', 'V', '1')
 #define TXIP_H2 MAKE_FOURCC('T', 'X', 'H', '2')
+#define TXIP_H3 MAKE_FOURCC('T', 'X', 'H', '3')
+#define TXIP_H4 MAKE_FOURCC('T', 'X', 'H', '4')
+#define TXIP_H5 MAKE_FOURCC('T', 'X', 'H', '5')
+#define TXIP_H6 MAKE_FOURCC('T', 'X', 'H', '6')
+#define TXIP_V1 MAKE_FOURCC('T', 'X', 'V', '1')
 #define TXIP_V2 MAKE_FOURCC('T', 'X', 'V', '2')
+#define TXIP_V3 MAKE_FOURCC('T', 'X', 'V', '3')
+#define TXIP_V4 MAKE_FOURCC('T', 'X', 'V', '4')
+#define TXIP_V5 MAKE_FOURCC('T', 'X', 'V', '5')
+#define TXIP_V6 MAKE_FOURCC('T', 'X', 'V', '6')
+#define TXIP_LO MAKE_FOURCC('T', 'X', 'L', 'O') // LFO
 
 class TinysynthInstrument : public I_Instrument, I_Observer {
 
@@ -52,6 +61,7 @@ private:
   bool running_;
   TinySynth *tinysynth_;
   Variable *volume_;
+  Variable *lfo_;
   Variable *harmonicadsr_[HARMONICS];
   Variable *harmonicvol_[HARMONICS];
 };

@@ -43,6 +43,6 @@ private:
   etl::vector<UIBigHexVarField, 12> bigHexVarField_;
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
   // need lots of var fields for Tinysynth UI
-  etl::vector<UIBigHexVarField, 16> tinySynthVarField_;
+  etl::vector<UIBigHexVarField, 14> tinySynthVarField_;
 };
 #endif
