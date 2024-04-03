@@ -37,7 +37,7 @@ enum SampleInstrumentLoopMode {
 #define SIP_LOOPLEN MAKE_FOURCC('L', 'L', 'E', 'N')
 #define SIP_INTERPOLATION MAKE_FOURCC('I', 'N', 'T', 'P')
 #define SIP_SAMPLE MAKE_FOURCC('S', 'M', 'P', 'L')
-#define SIP_SLICES MAKE_FOURCC('S','L','C','S')
+#define SIP_SLICES MAKE_FOURCC('S', 'L', 'C', 'S')
 #define SIP_FILTMODE MAKE_FOURCC('F', 'I', 'M', 'O')
 #define SIP_FILTMIX MAKE_FOURCC('F', 'M', 'I', 'X')
 #define SIP_FILTCUTOFF MAKE_FOURCC('F', 'C', 'U', 'T')
