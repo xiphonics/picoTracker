@@ -35,7 +35,7 @@ private:
   FourCC lastFocusID_;
   I_Instrument *current_;
 
-  etl::vector<UIIntVarField, 15> intVarField_;
+  etl::vector<UIIntVarField, 16> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 1> staticField_;
   etl::vector<UIBigHexVarField, 3> bigHexVarField_;
