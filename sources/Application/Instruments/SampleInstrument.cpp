@@ -49,7 +49,8 @@ SampleInstrument::SampleInstrument()
       loopStart_(FourCC::SampleInstrumentLoopStart, 0),
       loopEnd_(FourCC::SampleInstrumentEnd, 0),
       table_(FourCC::SampleInstrumentTable, -1),
-      tableAuto_(FourCC::SampleInstrumentTableAutomation, false) {
+      tableAuto_(FourCC::SampleInstrumentTableAutomation, false),
+      slices_(FourCC::SampleInstrumentSlices, 16) {
 
   // Initialize MIDI notes
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -88,6 +89,7 @@ SampleInstrument::SampleInstrument()
   loopEnd_.AddObserver(*this);
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
+  variables_.insert(variables_.end(), &slices_);
 
   tableState_.Reset();
 }
@@ -230,6 +232,17 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     }
     break;
   }
+  case SILM_SLICE: {
+    int note = rp->midiNote_;
+    if (note > slices_->GetInt() - 1) break; // No sound outside of slice range
+    int slice = rp->rendLoopEnd_ / slices_->GetInt();
+
+    rp->position_ = float(note*slice);
+    rp->baseSpeed_ = fl2fp(source_->GetSampleRate(note)/driverRate) ;
+    rp->speed_ = rp->baseSpeed_;
+    rp->rendLoopEnd_ = (note+1)*slice;
+    break ;
+  }
   case SILM_LAST:
     NAssert(0);
     break;
@@ -240,6 +253,9 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   float fineTune = float(fineTune_.GetInt() - 0x7F);
   fineTune /= float(0x80);
   int offset = midinote - rootNote;
+  if (loopmode == SILM_SLICE) {
+    offset = rootNote - source_->GetRootNote(rp->midiNote_);
+  }
   while (offset > 127) {
     offset -= 12;
   }
@@ -502,6 +518,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         if (input >= lastSample /*-((loopMode==SILM_OSCFINE)?1:0)*/) {
           switch (loopMode) {
           case SILM_ONESHOT:
+          case SILM_SLICE:
             *rpFinished = true;
             break;
           case SILM_LOOP:
@@ -548,6 +565,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         if (input < lastSample) {
           switch (loopMode) {
           case SILM_ONESHOT:
+          case SILM_SLICE:
             *rpFinished = true;
             break;
           case SILM_LOOP:

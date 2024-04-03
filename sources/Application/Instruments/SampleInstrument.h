@@ -19,6 +19,7 @@ enum SampleInstrumentLoopMode {
   SILM_OSC,
   //	SILM_OSCFINE,
   SILM_LOOPSYNC,
+  SILM_SLICE,
   SILM_LAST
 };
 
@@ -101,6 +102,7 @@ private:
   WatchedVariable loopEnd_;
   Variable table_;
   Variable tableAuto_;
+  Variable slices_;
 
   static bool useDirtyDownsampling_;
 };
