@@ -234,14 +234,15 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   }
   case SILM_SLICE: {
     int note = rp->midiNote_;
-    if (note > slices_->GetInt() - 1) break; // No sound outside of slice range
+    if (note > slices_->GetInt() - 1)
+      break; // No sound outside of slice range
     int slice = rp->rendLoopEnd_ / slices_->GetInt();
 
-    rp->position_ = float(note*slice);
-    rp->baseSpeed_ = fl2fp(source_->GetSampleRate(note)/driverRate) ;
+    rp->position_ = float(note * slice);
+    rp->baseSpeed_ = fl2fp(source_->GetSampleRate(note) / driverRate);
     rp->speed_ = rp->baseSpeed_;
-    rp->rendLoopEnd_ = (note+1)*slice;
-    break ;
+    rp->rendLoopEnd_ = (note + 1) * slice;
+    break;
   }
   case SILM_LAST:
     NAssert(0);
