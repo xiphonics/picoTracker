@@ -245,3 +245,28 @@ void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
     DrawString(pos._x, pos._y, battText, props);
   }
 }
+
+void View::drawMasterVuMeter(Player *player, GUIPoint pos,
+                             GUITextProperties props) {
+  pos = GetAnchor();
+  pos._x += 24;
+  pos._y += 15;
+  auto playerLevels = player->GetLevels();
+  short lBars = playerLevels->Left / 1024;
+  short rBars = playerLevels->Right / 1024;
+
+  for (int i = 0; i < 16; i++) {
+    if (lBars > i) {
+      DrawString(pos._x, pos._y, "=", props);
+    } else {
+      DrawString(pos._x, pos._y, " ", props);
+    }
+    if (rBars > i) {
+      DrawString(pos._x + 1, pos._y, "=", props);
+    } else {
+      DrawString(pos._x + 1, pos._y, " ", props);
+    }
+    pos._y -= 1;
+  }
+  delete playerLevels;
+}

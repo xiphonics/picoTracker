@@ -1018,6 +1018,9 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 
   drawNotes();
+
+  // re-draw the VU meter
+  drawMasterVuMeter(player, pos, props);
 };
 
 void SongView::AnimationUpdate() {
