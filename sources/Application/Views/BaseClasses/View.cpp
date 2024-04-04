@@ -256,6 +256,7 @@ void View::drawMasterVuMeter(Player *player, GUIPoint pos,
   short rBars = playerLevels->Right / 1024;
 
   for (int i = 0; i < 16; i++) {
+    setVUMeterColor_(i);
     if (lBars > i) {
       DrawString(pos._x, pos._y, "=", props);
     } else {
@@ -269,4 +270,14 @@ void View::drawMasterVuMeter(Player *player, GUIPoint pos,
     pos._y -= 1;
   }
   delete playerLevels;
+}
+
+void View::setVUMeterColor_(int level) {
+  if (level > 13) {
+    SetColor(CD_ERROR);
+  } else if (level > 10) {
+    SetColor(CD_WARN);
+  } else {
+    SetColor(CD_INFO);
+  }
 }

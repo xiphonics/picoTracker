@@ -154,6 +154,7 @@ private:
   static bool initPrivate_;
   ModalView *modalView_;
   ModalViewCallback modalViewCallback_;
+  void setVUMeterColor_(int level);
 
 public:
   static int margin_;
