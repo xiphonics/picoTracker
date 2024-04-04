@@ -302,6 +302,7 @@ TODO: screencap
   - loop will start at zero and loop from loopstart to end.
   - looper sync will automatically tune a loop so that it plays exactly 16 bars. Use the root note to play twice faster/slower
   - oscillator is a special mode where the loop selection (from loopstart to end) is taken as oscillator data and automatically tuned. Experiment with different settings, do not forget 'root note' is your friend to tune the oscillator back in a useful range
+  - slicer will cut the sample into "slices" (displayed only in slice mode) amount of samples. Slices are mapped from C-2 (the lowest note) up to amount of slices. Example: slices == 4 will give you four slices mapped to C-2, C#-2, D-2, D#-2
 - **start:** start point of the sample regardless of if loop is enabled; in hex
 - **loop Start:** start point of the sample when loop is enabled; in hex
 - **loop End:** end point of the sample; in hex. You can play samples backwards by setting the end value lower than the start!
