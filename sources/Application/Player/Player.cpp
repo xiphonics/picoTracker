@@ -75,6 +75,10 @@ bool Player::IsChannelMuted(int channel) {
   return mixer_->IsChannelMuted(channel);
 };
 
+PlayerLevels *Player::GetLevels() {
+  return new PlayerLevels(mixer_->GetAudioLevelL(), mixer_->GetAudioLevelR());
+}
+
 void Player::Start(PlayMode mode, bool forceSongMode) {
 
   mixer_->Lock();

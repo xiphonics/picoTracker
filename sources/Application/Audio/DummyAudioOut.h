@@ -31,6 +31,9 @@ public:
 
   virtual int GetPlayedBufferPercentage() { return 0; };
 
+  virtual short GetLastPeakL() { return 0; };
+  virtual short GetLastPeakR() { return 0; };
+
   void SendPulse();
 
   virtual std::string GetAudioAPI();

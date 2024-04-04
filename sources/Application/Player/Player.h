@@ -21,6 +21,13 @@ enum QueueingMode {
   QM_TICKSTART
 };
 
+struct PlayerLevels {
+public:
+  const int Left;
+  const int Right;
+  PlayerLevels(int l, int r) : Left{l}, Right{r} {};
+};
+
 class PlayerEvent : public ViewEvent {
 public:
   PlayerEvent(PlayerEventType type, unsigned int tickCount = 0);
@@ -102,6 +109,9 @@ public:
   int GetAudioBufferSize();
   int GetAudioRequestedBufferSize();
   int GetAudioPreBufferCount();
+
+  // master out, last avg level while playing
+  PlayerLevels *GetLevels();
 
 protected:
   void updateSongPos(int position, int channel, int chainPos = 0, int hop = -1);

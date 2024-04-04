@@ -30,6 +30,9 @@ public:
 
   virtual int GetPlayedBufferPercentage() = 0;
 
+  virtual short GetLastPeakL() = 0;
+  virtual short GetLastPeakR() = 0;
+
   virtual std::string GetAudioAPI() = 0;
   virtual std::string GetAudioDevice() = 0;
   virtual int GetAudioBufferSize() = 0;
