@@ -249,7 +249,7 @@ void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
 void View::drawMasterVuMeter(Player *player, GUIPoint pos,
                              GUITextProperties props) {
   pos = GetAnchor();
-  pos._x += 24;
+  pos._x += 25;
   pos._y += 15;
   auto playerLevels = player->GetLevels();
   short lBars = playerLevels->Left / 1024;

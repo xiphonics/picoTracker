@@ -218,6 +218,10 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
   };
 
   drawNotes();
+
+  Player *player = Player::GetInstance();
+  //  re-draw the VU meter
+  drawMasterVuMeter(player, pos, props);
 };
 
 void GrooveView::OnFocus(){};

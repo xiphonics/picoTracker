@@ -1307,6 +1307,9 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   pos = anchor;
   pos._x += 200;
 
+  // re-draw the VU meter
+  drawMasterVuMeter(player, pos, props);
+
   /*	if (player->Clipped()) {
              w_.DrawString("clip",pos,props);
       } else {
