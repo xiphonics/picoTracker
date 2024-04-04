@@ -330,6 +330,13 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   FieldView::ProcessButtonMask(mask);
 
+  // A Modifier
+  if (mask & EPBM_A) {
+    FourCC varID = ((UIIntVarField *)GetFocus())->GetVariableID();
+    if (varID == SIP_LOOPMODE) { // Show or hide slices
+      onInstrumentChange();
+    }
+  }
   // B Modifier
 
   if (mask & EPBM_B) {
