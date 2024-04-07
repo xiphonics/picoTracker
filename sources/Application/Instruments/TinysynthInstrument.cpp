@@ -29,7 +29,9 @@ TinysynthInstrument::TinysynthInstrument() {
   harmonicadsr_[5] = new Variable("h6adsr", TXIP_H6, 0);
   insert(end(), harmonicadsr_[5]);
 
-  harmonicvol_[0] = new Variable("h1vol", TXIP_V1, 0);
+  // start user off with default basic sine wave sound
+  // 2 << 4 because the more sig digit is vol, lower one is type
+  harmonicvol_[0] = new Variable("h1vol", TXIP_V1, (2 << 4));
   insert(end(), harmonicvol_[0]);
   harmonicvol_[1] = new Variable("h2vol", TXIP_V2, 0);
   insert(end(), harmonicvol_[1]);
