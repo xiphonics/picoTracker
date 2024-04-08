@@ -64,6 +64,8 @@ private:
   Variable *lfo_;
   Variable *harmonicadsr_[HARMONICS];
   Variable *harmonicvol_[HARMONICS];
+  int remainingTicks_;
+  bool playing_;
 };
 
 #endif

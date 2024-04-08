@@ -154,10 +154,10 @@ void TinySynth::update_envelopes() {
       continue;
     }
     etype = (u_char)(env[i].type);
-    attack = env[i].attack;
+    attack = level / env[i].attack;
     decay = env[i].decay;
     sustain = level >> 8 * env[i].sustain;
-    rel = env[i].release;
+    rel = level / env[i].release;
     switch (filt_state[i]) {
     case 0: // Attack
       filt[i] += attack;
@@ -197,7 +197,7 @@ void TinySynth::update_envelopes() {
           filt_state[i] = 5;
         }
       } else {
-        // printf("%dREL[%d]\n", i, filt[i]);
+        // printf("%dREL:%d[%d]\n", i, rel, filt[i]);
         filt[i] -= rel;
         if (rel == 0 || filt[i] <= 0) {
           filt[i] = 0;

@@ -62,16 +62,20 @@ void TinysynthInstrument::OnStart() {
 bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
 
+  // map the 0-16 settings into actual 8bit value sent to the synth config
+  const static u_char env_vals_[16] = {0,  1,  2,  4,  8,   10,  20,  30,
+                                       40, 50, 60, 80, 100, 120, 140, 160};
+
   for (int i = 0; i < HARMONICS; i++) {
 
     tinysynth_env harmonic = {0, 0, 0, 0, 0, 0, 0};
 
     int adsrInt = harmonicadsr_[i]->GetInt();
     int adsrVol = harmonicvol_[i]->GetInt();
-    harmonic.attack = (adsrInt >> 12) << 4;
-    harmonic.decay = ((adsrInt >> 8) & 0xF) << 4;
-    harmonic.sustain = ((adsrInt >> 4) & 0xF) << 4;
-    harmonic.release = (adsrInt & 0xF) << 4;
+    harmonic.attack = env_vals_[(adsrInt >> 12)];
+    harmonic.decay = env_vals_[((adsrInt >> 8) & 0xF)];
+    harmonic.sustain = env_vals_[((adsrInt >> 4) & 0xF)];
+    harmonic.release = env_vals_[(adsrInt & 0xF)];
     harmonic.amplitude = ((adsrVol >> 4) & 0xF) << 4;
     harmonic.type = (adsrVol & 0xF) << 4;
 
@@ -88,10 +92,14 @@ bool TinysynthInstrument::Start(int channel, unsigned char midinote,
 
   tinysynth_->set_note(midinote);
   tinysynth_->envelope_gate(true);
+
+  // for now hard code with half a step duration
+  remainingTicks_ = 6;
   return true;
 }
 
 void TinysynthInstrument::Stop(int channel) {
+  printf("tinysynth Stop[%d]\n", channel);
   tinysynth_->envelope_gate(false);
 }
 // Size in samples
@@ -101,8 +109,12 @@ bool TinysynthInstrument::Render(int channel, fixed *buffer, int size,
   // clear the fixed point buffer
   SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
 
-  // TODO pass in instrument volume
   tinysynth_->generateWaves(buffer, size, volume_->GetInt());
+
+  // need to check if gate duration has finished
+  if (remainingTicks_-- == 0) {
+    tinysynth_->envelope_gate(false);
+  }
 
   return true;
 }
@@ -126,9 +138,7 @@ void TinysynthInstrument::SetTableState(TableSaveState &state) {
   // TODO
 }
 
-void TinysynthInstrument::Purge() {
-  // TODO
-}
+void TinysynthInstrument::Purge() { printf("Tinysynth Purge callback\n"); }
 
 etl::string<24> TinysynthInstrument::GetName() {
   const etl::string<24> name = "TINYSYNTH";
@@ -136,7 +146,7 @@ etl::string<24> TinysynthInstrument::GetName() {
 };
 
 void TinysynthInstrument::Update(Observable &o, I_ObservableData *d) {
-  // TODO
+  printf("Tinysynth Update callback\n");
 }
 
 bool TinysynthInstrument::IsInitialized() {
