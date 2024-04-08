@@ -147,13 +147,13 @@ void TinySynth::update_envelopes() {
    * Loop through the oscillators, and set their filt value. The
    * filt value represents the current volume of the oscillator.
    */
-  for (u_char i = 0; i < HARMONICS; i++) {
+  for (u_int8_t i = 0; i < HARMONICS; i++) {
     level = env[i].amplitude << 8;
     if (level == 0) {
       filt_state[i] = 6;
       continue;
     }
-    etype = (u_char)(env[i].type);
+    etype = (u_int8_t)(env[i].type);
     attack = level / env[i].attack;
     decay = env[i].decay;
     sustain = level >> 8 * env[i].sustain;
