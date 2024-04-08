@@ -485,6 +485,7 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
 
   case VET_SWITCH_VIEW: {
     ViewType *vt = (ViewType *)ve->GetData();
+    printf("AppWindow CHANGE VIEW:%d %d\n", &vt, _currentView);
     if (_currentView) {
       _currentView->LooseFocus();
     }

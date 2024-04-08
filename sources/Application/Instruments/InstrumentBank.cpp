@@ -17,7 +17,7 @@ InstrumentBank::InstrumentBank()
     : Persistent("INSTRUMENTBANK"), si0(), si1(), si2(), si3(), si4(), si5(),
       si6(), si7(), si8(), si9(), si10(), si11(), si12(), si13(), si14(),
       si15(), mi0(), mi1(), mi2(), mi3(), mi4(), mi5(), mi6(), mi7(), mi8(),
-      mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), tsi0() {
+      mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15(), tsi0() {
 
   instrument_[0] = &si0;
   instrument_[1] = &si1;
@@ -65,9 +65,9 @@ InstrumentBank::InstrumentBank()
   instrument_[29] = &mi13;
   mi14.SetChannel(14);
   instrument_[30] = &mi14;
-  // mi15.SetChannel(15);
-  // instrument_[31] = &mi15;
-  instrument_[31] = &tsi0;
+  mi15.SetChannel(15);
+  instrument_[31] = &mi15;
+  instrument_[32] = &tsi0;
 
   Status::Set("All instrument loaded");
 };

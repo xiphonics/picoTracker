@@ -27,7 +27,7 @@
 #define TXIP_V6 MAKE_FOURCC('T', 'X', 'V', '6')
 #define TXIP_LO MAKE_FOURCC('T', 'X', 'L', 'O') // LFO
 
-class TinysynthInstrument : public I_Instrument, I_Observer {
+class TinysynthInstrument : public I_Instrument {
 
 public:
   TinysynthInstrument();
@@ -45,9 +45,6 @@ public:
   virtual void OnStart();
 
   virtual etl::string<24> GetName();
-
-  // I_Observer
-  virtual void Update(Observable &o, I_ObservableData *d);
 
   virtual InstrumentType GetType() { return IT_TINYSYNTH; };
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);

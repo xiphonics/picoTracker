@@ -56,7 +56,7 @@ private:
   MidiInstrument mi12;
   MidiInstrument mi13;
   MidiInstrument mi14;
-  // MidiInstrument mi15;
+  MidiInstrument mi15;
   TinysynthInstrument tsi0;
 };
 

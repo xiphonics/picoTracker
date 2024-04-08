@@ -9,7 +9,7 @@
 #define SONG_ROW_COUNT 128
 
 #define MAX_SAMPLEINSTRUMENT_COUNT 0x10
-#define MAX_MIDIINSTRUMENT_COUNT 15
+#define MAX_MIDIINSTRUMENT_COUNT 0x10
 #define MAX_TINYSYNTH_INSTRUMENT_COUNT 0x01
 
 #define MAX_INSTRUMENT_COUNT                                                   \

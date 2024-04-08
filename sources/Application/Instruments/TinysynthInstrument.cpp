@@ -11,6 +11,9 @@
 #include "SoundSource.h"
 
 TinysynthInstrument::TinysynthInstrument() {
+  // Reserve Observer
+  ReserveObserver(1);
+
   volume_ = new Variable("volume", TXIP_VOLUME, 0x80);
   insert(end(), volume_);
   lfo_ = new Variable("lfo", TXIP_LO, 0);
@@ -144,10 +147,6 @@ etl::string<24> TinysynthInstrument::GetName() {
   const etl::string<24> name = "TINYSYNTH";
   return name;
 };
-
-void TinysynthInstrument::Update(Observable &o, I_ObservableData *d) {
-  printf("Tinysynth Update callback\n");
-}
 
 bool TinysynthInstrument::IsInitialized() {
   return true; // Always initialised

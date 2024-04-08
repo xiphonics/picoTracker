@@ -380,7 +380,6 @@ void InstrumentView::warpToNext(int offset) {
 };
 
 void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
-
   if (!pressed)
     return;
 
@@ -511,6 +510,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
       if (mask & EPBM_R) {
         if (mask & EPBM_LEFT) {
+          printf("GO Back to PhraseView!\n");
           ViewType vt = VT_PHRASE;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();
