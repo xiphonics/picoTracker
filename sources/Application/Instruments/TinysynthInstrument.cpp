@@ -79,12 +79,12 @@ bool TinysynthInstrument::Start(int channel, unsigned char midinote,
     harmonic.amplitude = ((adsrVol >> 4) & 0xF) << 4;
     harmonic.type = (adsrVol & 0xF) << 4;
 
-    printf("H1 Attack:%d ", harmonic.attack);
-    printf("H1 Decay:%d ", harmonic.decay);
-    printf("H1 Sustain:%d ", harmonic.sustain);
-    printf("H1 Release:%d ", harmonic.release);
-    printf("H1 Volume:%d ", harmonic.amplitude);
-    printf("H1 Type:%d ", harmonic.type);
+    printf("H%d Attack:%d ", i, harmonic.attack);
+    printf("H%d Decay:%d ", i, harmonic.decay);
+    printf("H%d Sustain:%d ", i, harmonic.sustain);
+    printf("H%d Release:%d ", i, harmonic.release);
+    printf("H%d Volume:%d ", i, harmonic.amplitude);
+    printf("H%d Type:%d ", i, harmonic.type);
     printf("\n");
 
     tinysynth_->setEnvelopeConfig(i, harmonic);
