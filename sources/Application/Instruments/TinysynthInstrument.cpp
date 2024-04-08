@@ -63,8 +63,8 @@ bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
 
   // map the 0-16 settings into actual 8bit value sent to the synth config
-  const static u_char env_vals_[16] = {0,  1,  2,  4,  8,   10,  20,  30,
-                                       40, 50, 60, 80, 100, 120, 140, 160};
+  const static uint8_t env_vals_[16] = {0,  1,  2,  4,  8,   10,  20,  30,
+                                        40, 50, 60, 80, 100, 120, 140, 160};
 
   for (int i = 0; i < HARMONICS; i++) {
 
