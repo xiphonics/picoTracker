@@ -55,12 +55,12 @@ bool TinysynthInstrument::Init() {
   tinysynth_ = new TinySynth();
   // set tinysynth defaults
   tinysynth_->set_defaults();
+
+  tableState_.Reset();
   return true;
 }
 
-void TinysynthInstrument::OnStart() {
-  // TODO
-}
+void TinysynthInstrument::OnStart() { tableState_.Reset(); }
 
 bool TinysynthInstrument::Start(int channel, unsigned char midinote,
                                 bool cleanstart) {
@@ -127,21 +127,26 @@ void TinysynthInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 }
 
 int TinysynthInstrument::GetTable() {
-  // TODO
-  return 0;
-}
-bool TinysynthInstrument::GetTableAutomation() {
-  // TODO
-  return false;
-}
-void TinysynthInstrument::GetTableState(TableSaveState &state) {
-  // TODO
-}
-void TinysynthInstrument::SetTableState(TableSaveState &state) {
-  // TODO
-}
+  Variable *v = FindVariable(MIP_TABLE);
+  return v->GetInt();
+};
 
-void TinysynthInstrument::Purge() { printf("Tinysynth Purge callback\n"); }
+bool TinysynthInstrument::GetTableAutomation() {
+  Variable *v = FindVariable(MIP_TABLEAUTO);
+  return v->GetBool();
+};
+
+void TinysynthInstrument::GetTableState(TableSaveState &state) {
+  memcpy(state.hopCount_, tableState_.hopCount_,
+         sizeof(uchar) * TABLE_STEPS * 3);
+  memcpy(state.position_, tableState_.position_, sizeof(int) * 3);
+};
+
+void TinysynthInstrument::SetTableState(TableSaveState &state) {
+  memcpy(tableState_.hopCount_, state.hopCount_,
+         sizeof(uchar) * TABLE_STEPS * 3);
+  memcpy(tableState_.position_, state.position_, sizeof(int) * 3);
+};
 
 etl::string<24> TinysynthInstrument::GetName() {
   const etl::string<24> name = "TINYSYNTH";
@@ -151,8 +156,3 @@ etl::string<24> TinysynthInstrument::GetName() {
 bool TinysynthInstrument::IsInitialized() {
   return true; // Always initialised
 }
-
-bool TinysynthInstrument::IsEmpty() {
-  // TODO
-  return false;
-};

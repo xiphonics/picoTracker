@@ -13,6 +13,9 @@
 
 #define TXIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
 
+#define MIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
+#define MIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
+
 #define TXIP_H1 MAKE_FOURCC('T', 'X', 'H', '1')
 #define TXIP_H2 MAKE_FOURCC('T', 'X', 'H', '2')
 #define TXIP_H3 MAKE_FOURCC('T', 'X', 'H', '3')
@@ -39,7 +42,10 @@ public:
   virtual void Stop(int channel);
   virtual bool Render(int channel, fixed *buffer, int size, bool updateTick);
   virtual bool IsInitialized();
-  virtual bool IsEmpty();
+
+  virtual bool IsEmpty() { return false; };
+
+  virtual void Purge(){};
 
   // Engine playback  start callback
   virtual void OnStart();
@@ -48,7 +54,6 @@ public:
 
   virtual InstrumentType GetType() { return IT_TINYSYNTH; };
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
-  virtual void Purge();
   virtual int GetTable();
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
@@ -63,6 +68,7 @@ private:
   Variable *harmonicvol_[HARMONICS];
   int remainingTicks_;
   bool playing_;
+  TableSaveState tableState_;
 };
 
 #endif
