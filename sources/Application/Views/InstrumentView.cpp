@@ -59,6 +59,9 @@ void InstrumentView::onInstrumentChange() {
   case IT_SAMPLE:
     fillSampleParameters();
     break;
+  case IT_OPAL:
+    fillOpalParameters();
+    break;
   };
 
   SetFocus(*fieldList_.begin());
@@ -358,6 +361,8 @@ void InstrumentView::fillMidiParameters() {
       UIIntVarOffField(position, *v, "table: %2.2X", 0, 0x7F, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
+
+void InstrumentView::fillOpalParameters(){};
 
 void InstrumentView::warpToNext(int offset) {
   int instrument = viewData_->currentInstrument_ + offset;

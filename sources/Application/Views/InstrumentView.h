@@ -28,6 +28,7 @@ protected:
   void fillSampleParameters();
   void fillSIDParameters();
   void fillMidiParameters();
+  void fillOpalParameters();
   InstrumentType getInstrumentType();
   void Update(Observable &o, I_ObservableData *d);
 

@@ -9,10 +9,11 @@
 #include "Application/Utils/char.h"
 #include "Filters.h"
 #include "MidiInstrument.h"
+#include "OpalInstrument.h"
 #include "SIDInstrument.h"
 #include "System/io/Status.h"
 
-const char *InstrumentTypeData[] = {"Sample", "SID", "Midi"};
+const char *InstrumentTypeData[] = {"Sample", "SID", "Midi", "SID", "Opal"};
 
 // Contain all instrument definition
 
@@ -21,7 +22,8 @@ InstrumentBank::InstrumentBank()
       si6(), si7(), si8(), si9(), si10(), si11(), si12(), si13(), si14(),
       si15(), mi0(), mi1(), mi2(), mi3(), mi4(), mi5(), mi6(), mi7(), mi8(),
       mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15(), di0(SID1, 0),
-      di1(SID1, 1), di2(SID1, 2), di3(SID2, 0), di4(SID2, 1), di5(SID2, 2) {
+      di1(SID1, 1), di2(SID1, 2), di3(SID2, 0), di4(SID2, 1), di5(SID2, 2),
+      oi0() {
 
   instrument_[0] = &si0;
   instrument_[1] = &si1;
@@ -77,6 +79,8 @@ InstrumentBank::InstrumentBank()
   instrument_[35] = &di3;
   instrument_[36] = &di4;
   instrument_[37] = &di5;
+  instrument_[38] = &oi0;
+
   Status::Set("All instrument loaded");
 };
 
@@ -185,6 +189,10 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
             break;
           case IT_MIDI:
             instr = new MidiInstrument();
+            break;
+
+          case IT_OPAL:
+            instr = new OpalInstrument();
             break;
           }
           instrument_[id] = instr;
