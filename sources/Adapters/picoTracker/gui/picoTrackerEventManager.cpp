@@ -19,6 +19,13 @@ uint16_t gTime_ = 0;
 
 picoTrackerEventQueue *queue;
 
+fixed picoTrackerEventManager::renderBuffer_[MAX_SAMPLE_COUNT * 2];
+fixed *picoTrackerEventManager::buffer;
+mutex_t picoTrackerEventManager::renderMtx;
+int picoTrackerEventManager::samplecount = 0;
+bool picoTrackerEventManager::gotData = false;
+AudioModule *picoTrackerEventManager::current = 0;
+
 bool timerHandler(repeating_timer_t *rt) {
   queue = picoTrackerEventQueue::GetInstance();
   gTime_++;
@@ -28,7 +35,7 @@ bool timerHandler(repeating_timer_t *rt) {
   return true;
 }
 
-picoTrackerEventManager::picoTrackerEventManager() {}
+picoTrackerEventManager::picoTrackerEventManager() { mutex_init(&renderMtx); }
 
 picoTrackerEventManager::~picoTrackerEventManager() {}
 
@@ -59,11 +66,9 @@ int picoTrackerEventManager::MainLoop() {
       picoTrackerGUIWindowImp::ProcessEvent(event);
       redrawing_ = false;
     }
+    renderAudio();
 #ifdef PICOSTATS
-    if (loops == 100000) {
-      printf("Usage %.1f% CPU\n", ((float)events / loops) * 100);
-      events = 0;
-      loops = 0;
+    if (loops == 1000000) {
       //      measure_freqs();
       measure_free_mem();
     }
@@ -71,6 +76,26 @@ int picoTrackerEventManager::MainLoop() {
   }
   // TODO: HW Shutdown
   return 0;
+}
+
+void picoTrackerEventManager::renderAudio() {
+  gotData = false;
+  if (current) {
+    if (current->Render(renderBuffer_, samplecount)) {
+      mutex_enter_blocking(&renderMtx);
+      fixed *dst = buffer;
+      fixed *src = renderBuffer_;
+      int count = samplecount * 2;
+      while (count--) {
+        *dst += *src;
+        dst++;
+        src++;
+      }
+      mutex_exit(&renderMtx);
+      gotData = true;
+    }
+    current = 0;
+  }
 }
 
 void picoTrackerEventManager::PostQuitMessage() {
