@@ -46,6 +46,7 @@ void InstrumentView::onInstrumentChange() {
   staticField_.clear();
   bigHexVarField_.clear();
   intVarOffField_.clear();
+  tinySynthVarField_.clear();
 
   InstrumentType it = getInstrumentType();
   switch (it) {
@@ -72,6 +73,7 @@ void InstrumentView::onInstrumentChange() {
   };
   if (current_ != old) {
     current_->AddObserver(*this);
+    printf("add observer:%d\n", current_);
   }
 };
 
@@ -328,7 +330,6 @@ void InstrumentView::fillSampleParameters() {
 };
 
 void InstrumentView::fillMidiParameters() {
-
   int i = viewData_->currentInstrument_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   I_Instrument *instr = bank->GetInstrument(i);

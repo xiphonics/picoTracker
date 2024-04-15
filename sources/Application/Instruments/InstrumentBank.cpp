@@ -155,7 +155,12 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           }
         }
       } else {
-        it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE : IT_MIDI;
+        // FIXME: this is getting out of hand as just ternary, need to use
+        // if/else
+        it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE
+             : (id < MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT)
+                 ? IT_MIDI
+                 : IT_TINYSYNTH;
       };
       if (id < MAX_INSTRUMENT_COUNT) {
         I_Instrument *instr = instrument_[id];
