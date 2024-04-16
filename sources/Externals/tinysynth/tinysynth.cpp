@@ -133,7 +133,7 @@ void TinySynth::update_envelopes() {
    * finished their attack phase. Repeating envelopes don't
    * count towards a playing note as they repeat indefinitely.
    */
-  for (u_int8_t i = 0; i < HARMONICS; i++) {
+  for (int8_t i = 0; i < HARMONICS; i++) {
     if (env[i].type < 2 && env[i].type)
       tremolo = 0;
     if (filt_state[i] > 0 || env[i].type > 1) {
