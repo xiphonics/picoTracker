@@ -107,13 +107,11 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
       printer->PushAttribute("ID", hex);
       printer->PushAttribute("TYPE", InstrumentTypeData[instr->GetType()]);
 
-      auto it = instr->begin();
-      for (size_t j = 0; j < instr->size(); j++) {
+      for (auto it = instr->begin(); it != instr->end(); it++) {
         printer->OpenElement("PARAM");
         printer->PushAttribute("NAME", (*it)->GetName());
         printer->PushAttribute("VALUE", (*it)->GetString().c_str());
         printer->CloseElement(); // PARAM
-        it++;
       }
       printer->CloseElement(); // INSTRUMENT
     }
@@ -198,12 +196,10 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
             }
           }
 
-          auto it = instr->begin();
-          for (size_t i = 0; i < instr->size(); i++) {
+          for (auto it = instr->begin(); it != instr->end(); it++) {
             if (!strcmp((*it)->GetName(), name)) {
               (*it)->SetString(value);
             };
-            it++;
           }
           subelem = doc->NextSibling();
         }
@@ -245,9 +241,8 @@ unsigned short InstrumentBank::GetNext() {
 };
 
 unsigned short InstrumentBank::Clone(unsigned short i) {
-  // can't clone midi instruments
-
   unsigned short next = GetNext();
+
   if (next == NO_MORE_INSTRUMENT) {
     return NO_MORE_INSTRUMENT;
   }
@@ -259,21 +254,17 @@ unsigned short InstrumentBank::Clone(unsigned short i) {
     return NO_MORE_INSTRUMENT;
   }
 
-  delete dst;
-
   if (src->GetType() == IT_SAMPLE) {
     dst = new SampleInstrument();
   } else {
     dst = new MidiInstrument();
   }
   instrument_[next] = dst;
-  auto it = src->begin();
-  for (size_t i = 0; i < src->size(); i++) {
+  for (auto it = src->begin(); it != src->end(); it++) {
     Variable *dstV = dst->FindVariable((*it)->GetID());
     if (dstV) {
       dstV->CopyFrom(**it);
     }
-    it++;
   }
   return next;
 }
