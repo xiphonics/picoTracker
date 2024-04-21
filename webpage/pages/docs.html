@@ -1,0 +1,428 @@
+<h1 id="picotracker-manual-wip-">picoTracker Manual (WIP)</h1>
+<h2 id="project-folders">Project folders</h2>
+<p>Project folders use the <code>lgpt</code> prefix, any folder with such a prefix will be treated as a project and it&#39;s project config file (if it exists) will be read. Projects in subfolders are supported but subfolders cannot be currently created within picoTracker. picoTracker will create all projects at the root of the SD card.</p>
+<p>picoTracker cannot directly load lgpt files because it doesn&#39;t support all the chains/phrases/tables/instruments as lgpt does and loading the files directly would cause a crash.</p>
+<h2 id="importing-lgpt-projects">Importing LGPT projects</h2>
+<p>Under the <code>util</code> folder there is a command line tool named <code>lgptconvert.py</code> that can be used to convert lgpt projects into picoTracker. This tool is pretty inneficient, it&#39;s code is ugly and written pretty lazily, but it <em>should</em> work for most projects. If the number of chains/phrases/tables/instruments in the original project doesn&#39;t fit picoTracker, it will not output a result (the tool will not verify the size of the <code>samples</code> directory). Otherwise an XML project file will be written to STDOUT. Output can be redirected to a file of your choice, but make sure that the resulting file is named <code>lgptsav.dat</code>.</p>
+<p><code>util % python3 lgptconvert.py lgptsav.dat</code></p>
+<h2 id="importing-samples">Importing Samples</h2>
+<p>picoTracker copies samples from the SD card into Flash memory for playing, this limits the amount of samples space to the available flash space <em>minus</em> the space taken by the firmware itself, which is currently approximately 1MB. It supports 8 or 16 Bit wav files, any sampling frequency, mono or stereo. 8bit samples are converted to 16bit at load time for compatibility with the engine (you can save space in storage but not in RAM, keep this in mind when choosing samples).</p>
+<p>Samples are saved into a <code>samples</code> subfolder in each individual project folder. Samples will be placed there when importing using the Instrument Sample Import dialog. They could be copied manually into the project directory in the SD from a computer, but be mindfull of the storage space used, all samples in the <code>samples</code> directory of the project will be loaded upon project loading, whether they are assigned to an instrument or not. The safest way is to place any samples into the <code>samplelib</code> directory and then load them into projects from the UI.</p>
+<p><strong>NOTE:</strong> Please be aware that due to a temporary issue with the current picoTracker firmware and limited RAM available, there is a <strong>limit</strong> of 25 sample files per subdirectory inside <code>samplelib</code>. Filenames are also temporarily limited to a maximum of 32 ASCII characters.</p>
+<h3 id="samplelib">samplelib</h3>
+<p>The <code>samplelib</code> folder at the root of the SD card is where picoTracker will look samples to import into projects. You can place as many samples as you&#39;d like here and in any directory hierarchy. Samples can be previewed before importing into projects.</p>
+<h2 id="config-xml">config.xml</h2>
+<p>A <code>config.xml</code> file can be placed on the root of the SD card. The only configuration options right now are the interface colors and setting the keymap &quot;style&quot;. </p>
+<p>This is an example config file:</p>
+<pre><code><span class="hljs-tag">&lt;<span class="hljs-name">CONFIG</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">BACKGROUND</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"0F0F0F"</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">FOREGROUND</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"ADADAD"</span> /&gt;</span> <span class="hljs-comment">&lt;!-- text and cursor in cursor --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">HICOLOR1</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"846F94"</span> /&gt;</span> <span class="hljs-comment">&lt;!-- row count in song screen --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">HICOLOR2</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"6B316B"</span> /&gt;</span>  <span class="hljs-comment">&lt;!-- inverted highlight, eg. "Song" screen label --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">INFOCOLOR</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"33EE33"</span>&gt;</span> <span class="hljs-comment">&lt;!-- information displays eg. used for battery gauge ok level --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">WARNCOLOR</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"11EE22"</span>&gt;</span> <span class="hljs-comment">&lt;!-- warning displays eg. battery gauge low level --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">ERRORCOLOR</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"FF1111"</span>&gt;</span> <span class="hljs-comment">&lt;!-- error displays eg. battery gauge critical level --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">CURSORCOLOR</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"224400"</span>&gt;</span>  <span class="hljs-comment">&lt;!-- ?? --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">CONSOLECOLOR</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"99FFAA"</span>&gt;</span> <span class="hljs-comment">&lt;!-- ?? --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">KEYMAPSTYLE</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"M8"</span> /&gt;</span> <span class="hljs-comment">&lt;!-- use M8 style keymap layout --&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">CONFIG</span>&gt;</span>
+</code></pre><p>The &quot;M8 style&quot; keymap is as shown below:</p>
+<p><img src="img/m8-style-keymap.png" alt="labeled photo of M8 style keymapping"></p>
+<p>Note: any value other than &quot;M8&quot; (including not being specified) for the <code>KEYMAPSTYLE</code> setting will have the effect of selecting the default &quot;Picotracker style&quot; keymap shown below:</p>
+<p><img src="img/pico-style-keymap.png" alt="labeled photo of Picotracker style keymapping"></p>
+<p>You can head over to the <a href="http://poyo.co/lgpt">Little Piggy Tracker Themer</a> site to test different color schemes.</p>
+<h2 id="ports">Ports</h2>
+<p>The picture below shows the functions of the TRS ports on the picotracker:</p>
+<p><img src="img/picotracker-ports-1.png" alt="picotracker TRS ports labled"></p>
+<h2 id="updating-firmware">Updating firmware</h2>
+<p>You&#39;ll need to do this while powering the picoTracker via a USB connected to a PC. From the project menu select <code>Update firmware</code>. This will reboot the device into <em>BOOTSEL</em> mode, and you&#39;ll see the pico as a USB mass storage device. Just copy the UF2 firmware file into it.</p>
+<h2 id="shutdown">Shutdown</h2>
+<p>You can just unplug the machine any time you want other than when saving a project (which is an extremely brief moment). Save your work first if you care about it.</p>
+<h1 id="controls-moves">Controls &amp; Moves</h1>
+<h2 id="key-map">Key Map</h2>
+<p><img src="img/keynames.jpg" alt="key names"></p>
+<p>The keyboard layout resembles a typical old console game controller</p>
+<ul>
+<li>Arrow keys: </li>
+<li>A and B:</li>
+<li>LT and RT: these are modifier keys for A, B and Arrow keys. They are designed to modify the opposite keys to their location, so LT will modify the Arrow keys and RT will modify A and B (there are exceptions).</li>
+<li>Play: play start/stop.</li>
+</ul>
+<h2 id="basic-editing-navigation">Basic Editing &amp; Navigation</h2>
+<ul>
+<li>ARROWs: In screen navigation.</li>
+<li>A: Insert Chain/Phrase/Note.</li>
+<li>A,A: Insert next unused Chain/Phrase/Instrument.</li>
+<li>RT+(B,A): Clone. This will overwrite the current Highlighted Item with a copy of itself using the next unused Item available.</li>
+<li>B+A: Cuts the current Highlighted Item .</li>
+<li>A+ARROWS: Updates Highlighted Item value.<ul>
+<li>A+UP/DOWN: +/- 0x10.</li>
+<li>A+RIGHT/LEFT: +/- 1.</li>
+</ul>
+</li>
+<li>B+ARROWS: Rapid Navigation.<ul>
+<li>B+UP/DOWN: Page up/down in Song Screen, Next/Previous Phrase in Current Chain in Phrase Screen. Navigation +/- 0x10 in Instrument/Table Screen.</li>
+<li>B+LEFT/RIGHT: Next/Previous Channel in Chain/Phrase Screen. Navigation +/- 1 in Instrument/Table Screen. Switch between Song and Live Modes in Song Screen.</li>
+</ul>
+</li>
+<li>LT+ARROWS: Navigate between the Screens.</li>
+<li>RT+UP/DOWN: Jump up/down to next populated row after a blank row (great for live mode entire row queuing!)</li>
+</ul>
+<h2 id="selections">Selections</h2>
+<p>a few ways to make a selection:</p>
+<ul>
+<li>RT+B: Starts selection mode with only the data at the cursor selected</li>
+<li>RT+B+B: Starts selection mode with the cursor&#39;s row selected</li>
+<li>RT+B+B+B: Starts selection mode with the entire screen selected</li>
+</ul>
+<p>once a selection is started you can do a few more things:</p>
+<ul>
+<li>ARROWS: will make an existing selection bigger or smaller</li>
+<li>B: copy selection to buffer, or</li>
+<li>RT+A: cut current selection</li>
+</ul>
+<p>And then:</p>
+<ul>
+<li>RT+A: paste the clipboard content at current location</li>
+</ul>
+<h2 id="playback-modes-and-controls">Playback Modes and Controls</h2>
+<p>There are two modes for playback, Song and Live. The controls in each mode differ slightly.
+You can switch between the modes by hitting B+LEFT/RIGHT in the Song screen.</p>
+<p><strong>Song Mode</strong></p>
+<pre><code><span class="hljs-symbol">START:</span>
+</code></pre><p>In the Song Screen: Starts/Stops song playback from the Highlighted Row. If one of the Row&#39;s Channel is marked <code>--</code>, LGPT will ignore that Channel entirely for the rest of the playback.
+In the Chain Screen: Starts/Stops playback from the Highlighted Step, soloing the Edited Chain.
+In the Phrase Screen: Starts/Stops playback from Step <code>00</code>, soloing the Edited Phrase.</p>
+<pre><code><span class="hljs-keyword">LT</span>+<span class="hljs-literal">START</span>:
+</code></pre><p>Starts song playback from the Edited Row in all screens.</p>
+<p><strong>Live Mode</strong></p>
+<pre><code><span class="hljs-symbol">START:</span>
+</code></pre><p>In the Song Screen: Queues from the Highlighted Channel Step.
+In the Chain Screen: Queues the Highlighted Phrase Step.
+In the Phrase Screen: Queues the Edited Chain Step from <code>00</code>.</p>
+<ul>
+<li>The Queued Item will be played as soon as the playing Chain on the Edited Channel reaches its last Step.</li>
+<li>If there is no playing Chain Step on the Edited Channel, the next Song Chain that reaches its last Step will trigger playback.</li>
+<li><p>Queued Items are shown with a blinking <code>&gt;</code>.</p>
+<p>  START[again]:</p>
+</li>
+</ul>
+<p>Pressing <code>START</code> a second time will queue the Item using Immediate Mode.</p>
+<ul>
+<li>The Queued Item will be played as soon as the playing Phrase on its Channel reaches the last Step.</li>
+<li><p>Immediate Mode Queued Items are shown with a fast blinking <code>&gt;</code>.</p>
+<p>  RT+START:</p>
+</li>
+</ul>
+<p>In the Song Screen: Queues all Channel Steps on the current Row.</p>
+<ul>
+<li>The Queued Items will be played as soon as the playing Chain on their Channel reaches its last Step.</li>
+<li><p>Queued Items are shown with a blinking <code>&gt;</code>.</p>
+<p>  RT+START[again]:</p>
+</li>
+</ul>
+<p>Pressing <code>START</code> a second time will queue the Items using Immediate Mode.</p>
+<ul>
+<li>The Queued Items will be played as soon as the playing Phrase on the their Channel reaches its last Step.</li>
+<li><p>Immediate Mode Queued Items are shown with a fast blinking <code>&gt;</code>.</p>
+<p>  LT+START:</p>
+</li>
+</ul>
+<p>In all Screens: Queues the Edited Channel Step to be stopped.</p>
+<ul>
+<li>The Queued Channel will be stopped as soon as its playing Chain reaches the last Step.</li>
+<li><p>Queued Items are shown with a blinking <code>_</code>.</p>
+<p>  LT+START[again]:</p>
+</li>
+</ul>
+<p>Pressing <code>START</code> a second time will queue the Items using Immediate Mode.</p>
+<ul>
+<li>The Queued Channel will be stopped as soon as its playing Phrase reaches the last Step.</li>
+<li>Immediate Mode Queued Items are shown with a fast blinking <code>_</code>.</li>
+</ul>
+<h2 id="muting">Muting</h2>
+<ul>
+<li>LT+B: Toggles mute/unmute of cursor channel<ul>
+<li>if LT is released before B, channel stays mutes</li>
+<li>if B is released before LT, channel goes back to original state</li>
+</ul>
+</li>
+<li>LT+A: Solo cursor channel<ul>
+<li>if LT is released before A, channel stays solo&#39;ed</li>
+<li>if A is released before LT, all channel go back to original state</li>
+</ul>
+</li>
+<li>LT+RT: restore full playback on all channels</li>
+<li>LT+A,LT+B can be used in conjunction with selections. If a selection is present the toggle mute/solo action is done on all channels present in the selection</li>
+</ul>
+<h1 id="screens">Screens</h1>
+<h2 id="screen-map">Screen Map</h2>
+<pre><code>   _-------_                       _-------_
+  |<span class="hljs-string">         </span>|<span class="hljs-string">                     </span>|<span class="hljs-string">         </span>|
+  |<span class="hljs-string">    P    </span>|<span class="hljs-string">                     </span>|<span class="hljs-string">    G    </span>|
+  |<span class="hljs-string">         </span>|<span class="hljs-string">                     </span>|<span class="hljs-string">         </span>|
+   project--                       groove---
+       ^                               ^
+       v                               v
+   _-------_       _-------_       _-------_       _-------_
+  |<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|
+  |<span class="hljs-string">    S    </span>|<span class="hljs-string"> &lt;-&gt; </span>|<span class="hljs-string">    C    </span>|<span class="hljs-string"> &lt;-&gt; </span>|<span class="hljs-string">    P    </span>|<span class="hljs-string"> &lt;-&gt; </span>|<span class="hljs-string">    I    </span>|
+  |<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|
+   song-----       chain----       phrase---       instrument
+                                       ^               ^
+                                       v               v
+                                   _-------_       _-------_
+                                  |<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|
+                                  |<span class="hljs-string">    T    </span>|<span class="hljs-string"> &lt;-&gt; </span>|<span class="hljs-string">    T    </span>|
+                                  |<span class="hljs-string">         </span>|<span class="hljs-string">     </span>|<span class="hljs-string">         </span>|
+                                   table----       table----
+</code></pre><p>To move from one screen to the other, press LT combined with the direction. To get to the chain screen, you need to have your cursor on a chain in the song. To get to the phrase screen, you need to have your cursor on a pattern in the chain screen.</p>
+<h2 id="selector-screen">Selector Screen</h2>
+<p>TODO: Screencap</p>
+<ul>
+<li>All the folders you have named as lgptWhatever will show up here.</li>
+<li>Up and Down to select a project, hit A to load the project.</li>
+<li>B+Up/Down will go Up/Down a whole page.</li>
+</ul>
+<h2 id="project-screen">Project Screen</h2>
+<p>TODO: screencap</p>
+<ul>
+<li><strong>Tempo:</strong>: Can be set between 60bpm [0x3c] and 400bpm [0x190]. Resolution aligned to LSDJ.</li>
+<li><strong>Master:</strong> Main volume goes from 10% to 200%.</li>
+<li><strong>Transpose:</strong> Live transposition of every triggered instruments.</li>
+<li><strong>Compact Sequencer:</strong> Free all unused chain/phrases.</li>
+<li><strong>Compact Instruments:</strong> All unused instruments get their sample set to (null), old parameter settings stick. A dialog offers to remove unused samples.</li>
+<li><strong>Load Song:</strong> Brings you back to the Selector Screen.</li>
+<li><strong>Save Song:</strong> Save the work you do, and save frequently! The cursor will disappear while the data is being written.</li>
+<li><strong>midi:</strong> Lists the picoTracker MIDI device, no external MIDI supported as of this writing.</li>
+</ul>
+<h2 id="song-screen">Song Screen</h2>
+<p>TODO: screencap</p>
+<ul>
+<li>Songs are made up of chains. Each hex number on the song screen grid is a chain. You can navigate to any of those chains by putting your cursor on one and hitting LT+Right.</li>
+<li>The top of the song screen displays if you are in SONG or LIVE mode (toggle with B+LT or B+RT) and the name of the project you are editing.</li>
+<li>On the bottom of the screen is the play-time visualizer. Each box correlates with the above columns in the song grid. When a sample is triggered in one of the columns, the note value of that trigger is displayed in the play-time visualizer.</li>
+<li>On the top right of the song screen we have some more play-time statistics. First there is the clip indicator which displays “—---” when your volume levels are ok and “clip” when you&#39;ve cleared the headroom and are chopping off the top of your samples. The bottom row of the play-time statistics is the amount of time which has passed since you pressed Play.</li>
+<li>You can make a new chain by hitting A,A on a blank space in the song screen grid.</li>
+<li>You can clone a chain by highlighting it with the cursor and pressing RT+(B,A).</li>
+<li>You can copy a chain or selection of chains by highlighting and pressing B.</li>
+<li>You can cut or delete a chain or selection of chains by highlighting and pressing B+A.</li>
+<li>Make a big selection by pressing RT+B, then Arrows around to highlight.</li>
+<li>Press RT+A to paste.</li>
+<li>You can jump the cursor to the next/previous chain in a column by pressing RT+DOWN/UP</li>
+</ul>
+<h2 id="chain-screen">Chain Screen</h2>
+<p>TODO: screencap</p>
+<ul>
+<li>The three columns of the phrase screen, from left to right: (red) row counter, phrase list, and transpose.</li>
+<li>Chains are made up of phrases. Each hex number in the second column represents a phrase.</li>
+<li>You can navigate to any of those phrases by putting your cursor on one and hitting LT+R.</li>
+<li>The rightmost column is transpose. If you use very high numbers like FF the phrase on that row will transpose down. Low numbers like 04 will cause the phrase on that row to transpose up.</li>
+<li>you can jump to previous / next chain on the row with with B+LEFT/RIGHT</li>
+<li>You can make a new phrase by hitting A,A on a blank space in the Chain screen.</li>
+<li>You can clone a phrase by highlighting it with the cursor and pressing RT+(B,A).</li>
+<li>You can copy a phrase/transposition/selection by highlighting and pressing B.</li>
+<li>You can cut or delete a phrase/transposition/selection by highlighting and pressing B+A.</li>
+<li>Make a big selection by pressing RT+B, then Arrows around to highlight.</li>
+<li>Press RT+A to paste.</li>
+</ul>
+<h2 id="phrase-screen">Phrase Screen</h2>
+<p>TODO: screencap</p>
+<ul>
+<li>The top of the phrase screen displays the .wav file loaded into the instrument under your cursor.</li>
+<li>The seven columns of the phrase screen, from left to right: row counter, note trigger, instrument selector, effect one, parameters for effect one, effect two, parameters for effect two.</li>
+<li>You can clone instruments and tables in the phrase screen: RT+(B,A) as usual. You can get a new table or instrument: A,A.</li>
+<li>If you copy/cut anything in the phrase screen, pasting will always put the data back in the same column (regardless if you&#39;ve moved the cursor to another column). so effects in column one are always pasted back there, and you can&#39;t accidentally paste a note into the effect column, etc.</li>
+<li>you can clone a MIDI instrument in the phrase screen by pressing RT+(B,A) on instrument number in phrase screen. Properly saved &amp; restored. You can&#39;t delete them once cloned (can&#39;t revert them to sample type).</li>
+<li>If no instrument is set when triggering a new note, tables are not stopped, running commands are not stopped and phase of oscillator instrument is not reset (allowing for clickless transition)</li>
+</ul>
+<h2 id="instrument-screen">Instrument Screen</h2>
+<p>TODO: screencap</p>
+<ul>
+<li><strong>sample:</strong> selects the .wav file to associate with the instrument. you can select the same sample in more than one instrument. if you tap A,A here it will take you to the Sample Import Screen (which lets you load new .WAV into your project).</li>
+<li><strong>volume:</strong></li>
+<li><strong>pan:</strong> pans the instrument left or right (0x7F is center)</li>
+<li><strong>root note</strong></li>
+<li><strong>detune</strong></li>
+<li><strong>drive:</strong> This is a volume modification before crush, and the instruments volume is after the crush.</li>
+<li><strong>crush:</strong> decrease bit resolution</li>
+<li><strong>downsample:</strong> decrease the bit rate, get those low frequency aliasing whines. each increase in this value will downsample the original sample by a factor of 2</li>
+<li><strong>cutoff:</strong> filter cutoff frequency</li>
+<li><strong>reso:</strong> filter resonance frequency</li>
+<li><strong>type:</strong> this is where it gets a little trickier. The filter now supports continuous change from low pass to high pass. set type to 00 for low pazz. FF for hi-pass and 7f for Band pass (or is it notch? n0s must check). all intermediate values morph in between them.</li>
+<li><p><strong>dist:</strong> filter distortion. for the moment we have none &amp; scream. i&#39;m planning on maybe add a third choice that would make the filter behave a little better when resonance is set very high in the old/default mode</p>
+</li>
+<li><p><strong>interpolation:</strong> Interpolation mode (&#39;linear&#39;/&#39;none&#39;): selects which interpolation mode is used when in between samples. linear interpols linearly while none takes the nearest neighbor. Use none when playing samples at low range to add some typical overtones.</p>
+</li>
+<li><strong>loop mode:</strong> selects the looping mode.<ul>
+<li>none will play sample from zero to end.</li>
+<li>loop will start at zero and loop from loopstart to end.</li>
+<li>looper sync will automatically tune a loop so that it plays exactly 16 bars. Use the root note to play twice faster/slower</li>
+<li>oscillator is a special mode where the loop selection (from loopstart to end) is taken as oscillator data and automatically tuned. Experiment with different settings, do not forget &#39;root note&#39; is your friend to tune the oscillator back in a useful range</li>
+</ul>
+</li>
+<li><strong>start:</strong> start point of the sample regardless of if loop is enabled; in hex</li>
+<li><strong>loop Start:</strong> start point of the sample when loop is enabled; in hex</li>
+<li><strong>loop End:</strong> end point of the sample; in hex. You can play samples backwards by setting the end value lower than the start!</li>
+<li><strong>automation:</strong> If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows cruise around real fast).</li>
+<li><strong>table:</strong> Select a table the instrument will always run. Clone a table here: RT+(B,A). Make a new table here: A,A.</li>
+</ul>
+<h2 id="sample-import-screen">Sample Import Screen</h2>
+<p>Accessible by hitting A,A on the “sample:” parameter in the Instrument Screen.</p>
+<p>All the samples that you may want to import into a project <strong>must</strong> be located in a folder named <code>samplelib</code> at the top-level of the sdcard. You can either put your samples in that directory or in sub-directories of it, allowing you to have a basic way of sorting your samples library. </p>
+<p>Note: sub-directories will be sorted before files, but otherwise the files will be listed in an unspecified order (ie. not necessarily alphabetical order).</p>
+<p>For example:</p>
+<p>TODO: screencap</p>
+<p>When entering the import screen, the current folder is the library root folder <code>samplelib</code>. All samples (<code>.wav</code> files) in that folder are listed.</p>
+<p>Use Up/Down to select a sample and the Play button to start/stop preview playback of the sample.
+LT+Play to import the currently selected sample and RT+Left to exit out of the Import Dialog back to the Instrument Screen.</p>
+<p>Note: While there is no fixed limit for the number of files per sub-directory, exceding 96 sub-directories and/or 354 files per directory is likely to cause picotracker to potentially crash. Also please note that while FAT formatted sdcards can support upto <em>256</em> characters per filename, Picotracker only supports upto <strong>128</strong> and with only <strong>ASCII</strong> characters.</p>
+<h2 id="midi-instrument-screen">Midi Instrument Screen</h2>
+<p>TODO: screencap</p>
+<p>A midi instrument has the following settings:</p>
+<ul>
+<li><strong>Channel</strong> - This can be set 0x80 to 0x8F which is midi channel 1-16 respectively</li>
+<li><strong>Volume</strong> - The volume any NOTE ON will be sent to your device. FF=127, 00=00</li>
+<li><strong>Length</strong> - Sets note gate length in number of ticks.</li>
+<li><strong>Automation</strong> - On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows cruise around real fast).</li>
+<li><strong>Table</strong>- As above, select a table the instrument will always run. Clone a table here: RT+(B,A). Make a new table here: A,A.</li>
+</ul>
+<h2 id="table-screen">Table Screen</h2>
+<p>TODO: screencap</p>
+<ul>
+<li>Hopping to self in table holds the step for x ticks. For example</li>
+</ul>
+<p>05 HOP 1005
+will hold step 5 for 10 ticks. Interesting for example after a VOL command to allow complex envelopes:
+00 VOL 0400 ; starts short volume decay to zero 01 HOP 1010 ; holds enough ticks for VOL to complete 02 VOL 0560 ; raise volume to 60 03 HOP 6003 ; hold for a long time to allow VOL to ; complete and hold volume to 60</p>
+<ul>
+<li>After Hopping count is reached, the table pointer moves directly to the line after</li>
+</ul>
+<p>the HOP rather than staying on the HOP line for one tick. Makes more sense.</p>
+<h2 id="groove-screen">Groove Screen</h2>
+<p>TODO: screencap</p>
+<p>Groove screen is located on top of the phrase screen. Groove lets you rock some swing to bust funky beats.
+To grasp groove you must first you must know what a tick is, and a tick is simply a constant measurement of time. By default, every row of a phrase (aka step) gets 6 ticks, that&#39;s why you see two sixes when you go to the groove screen. But say you change the first 6 to a 1. Now, every other step lasts for 1 tick (which is shorter than 6 ticks).
+To get a handle on this, try a groove of 1/F and watch the play arrow in a phrase. You&#39;ll notice the play arrow hanging around on the odd steps longer than the even ones. Then try a groove of 1/1/F and go back to the phrase screen. You&#39;ll see the play arrow hanging on every third step. Once you grasp how the groove screen effects the play arrow, you can move to more subtle values or keep the beat way freaked out!
+In the groove screen there is no copy paste (yet) but the following action exists:</p>
+<ul>
+<li>A: Adds a new step if not existing</li>
+<li>A+Left/Right: modifies current step value</li>
+<li>B+Arrows: modifies current edited groove</li>
+<li>B+A: Clear current step</li>
+</ul>
+<p>the GRV command (only active in the phrase screen) select the current groove</p>
+<h1 id="commands">Commands</h1>
+<p>There can be two commands on every row of the phrase screen. Commands which effect instruments can be run on any step of the instruments playback, including the step where the instrument is triggered.
+in vol; pitch and kill but the definition of the “time&#39; is slightly different for all command…</p>
+<h2 id="arp-abcd-arpg-in-lgpt-">ARP abcd (ARPG in lgpt)</h2>
+<p><strong>cycle through relative pitches a, b, c, and d (starting with original pitch, then up a semitones, b semitones and so forth). The cycle loops if there&#39;s only zero&#39;s past a given post</strong>
+Examples:
+ARP 3000: loops between original pitch and +3 semitones
+ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitones</p>
+<ul>
+<li>speed of arpeggiator is constant and can not be changed<h2 id="csh-aabb-crsh-in-lgpt-">CSH aabb (CRSH in lgpt)</h2>
+</li>
+</ul>
+<p><strong>aa = pre crush drive (from 1 to 0xFF, 00 is no change) &amp; bb = crush setting (from 0 to 0xF, 0x0 is 1 bit, 0xF is 16bit )</strong></p>
+<h2 id="dly-bb-dlay-in-lgpt-">DLY --bb (DLAY in lgpt)</h2>
+<p><strong>Delays the note to be played by bb tics</strong></p>
+<h2 id="fct-aabb-fcut-in-lgpt-">FCT aabb (FCUT in lgpt)</h2>
+<p><strong>adjust the filter cutoff to bb at speed aa</strong></p>
+<ul>
+<li>FCT 0080 will instantly set the filter cutoff to 50%</li>
+<li>FCT 1000 will close the filter entirely at speed 10<h2 id="flt-aabb-fltr-in-lgpt-">FLT aabb (FLTR in lgpt)</h2>
+</li>
+</ul>
+<p><strong>lowpass filter, set absolute frequency value for cutoff aa &amp; resonance bb</strong></p>
+<ul>
+<li>FLT 00FF is un-adultered sound<h2 id="frs-aabb-fres-in-lgpt-">FRS aabb (FRES in lgpt)</h2>
+</li>
+</ul>
+<p><strong>adjust the filter resonance to bb at speed aa</strong></p>
+<ul>
+<li>FRS 08FF will raise the resonance to screeching at speed 08</li>
+</ul>
+<h2 id="hop-aabb">HOP aabb</h2>
+<p><strong>play position will jump to the next phrase in a chain, jumping directly at position bb in the phrase.</strong></p>
+<ul>
+<li>hop is instant: instrument triggers and commands on the same row will be run.</li>
+<li>no effect on instruments</li>
+<li>in TABLES, cursor position will jump to row bb aa times, then pass thru the hop command and continue thru the rest of the table</li>
+</ul>
+<h2 id="irt-aabb-irtg-in-lgpt-">IRT aabb (IRTG in lgpt)</h2>
+<p>IRT stands for Instrument Retrigger and will retrigger the current instrument. It gives table the ability to work as progammable phrases that then can be triggered simply by changing tables.
+IRT –bb will retrigger the current instrument transposed by bb semi-tones. Note that each IRT transposition is cumulatively added. So a table with
+IRT 0001
+will keep going a semi tone up. Great for dubby echoes :)
+The retriggered instrument is NOT reset (as if you enter a note with no instrument number). The table (obviously) will continue to run and all running variable (filter,etc) won&#39;t be reset.
+This system is also pretty useful to implement temporary non 4/4 signature without having to switch grooves, since you have the ability to re-trigger the instrument at tick resolution
+don&#39;t forget trying to combine it with complex hop structure !</p>
+<h2 id="kil-bb-kill-in-lgpt-">KIL --bb (KILL in lgpt)</h2>
+<p><strong>instrument will stop playing after aa ticks.</strong></p>
+<h2 id="leg-aabb-lega-in-lgpt-">LEG aabb (LEGA in lgpt)</h2>
+<p><strong>performs an exponential pitch slide from previous note value to pitch bb at speed aa.</strong></p>
+<ul>
+<li>00 is the fastest speed for aa (instant, useless)</li>
+<li>bb values are relative: 00-7F are up, 80-FF are down, expressed in semi-tones</li>
+<li>if LEG is put on a row where a note is present and the pitch offset is 0 (e.g. <code>C4 I3 LEG 1000</code>) the slide will occur automatically from previous note to the current one at the given speed.</li>
+<li>If an instrument is not triggered on the same row as LEG, the command will re-trigger the previous instrument (unless the previous instrument is still playing).</li>
+<li>LEG does exponential pitch change (i;e. it goes at same speed through all octaves) while PITCH is linear</li>
+</ul>
+<h2 id="lof-aaaa-lpof-in-lgpt-">LOF aaaa (LPOF in lgpt)</h2>
+<p><strong>LooP OFset: Shift both the loop start &amp; loop end values aaaa digits</strong></p>
+<ul>
+<li>LOF 0001 adds one to both values, LOF FFFF removes one (so values &gt; 0x800 moves the loop backward)</li>
+<li>reset everytime you start a new note (same as volume, pitch)</li>
+<li>LOF is absolute</li>
+<li>you can&#39;t trigger a note with the LOF, it has to be executed after a sample is playing</li>
+<li>every time you trigger a sample LOF is set back to the instrument parameters<h2 id="mcc-aabb-mdcc-in-lgpt-">MCC aabb (MDCC in lgpt)</h2>
+</li>
+</ul>
+<p><strong>Sends a MIDI “continuous control” message. aa is the control number and bb is the value. It will be sent on the MIDI channel of the currently running instrument.</strong></p>
+<h2 id="mpc-bb-mdpg-in-lgpt-">MPC --bb (MDPG in lgpt)</h2>
+<p>sends a program change command on the current channel. 0000 is program change 1</p>
+<h2 id="pan-aabb">PAN aabb</h2>
+<p><strong>PAN aabb: where bb is the pan destination and aa is the speed to get there</strong></p>
+<h2 id="pft-aabb-pfin-in-lgpt-">PFT aabb (PFIN in lgpt)</h2>
+<p><strong>PitchFineTune: where bb is the width and aa is the speed to get there</strong></p>
+<ul>
+<li>Tunes the root note one semitone up (01-80) or down (FF-81)</li>
+<li>00 in bb returns the note to the root center</li>
+<li>00 is the fastest speed for aa</li>
+</ul>
+<h2 id="pof-aabb-plof-in-lgpt-">POF aabb (PLOF in lgpt)</h2>
+<p><strong>PlayOFfset virtually cuts any sample in 256 chunks. jump absolutely to chunk aa or relatively move forward/back bb chunks.</strong></p>
+<h2 id="psl-aabb-ptch-in-lgpt-">PSL aabb (PTCH in lgpt)</h2>
+<p><strong>PitchSLide performs a linear pitch slide from previous note value to pitch bb at speed aa</strong></p>
+<ul>
+<li>PSL is also time for the first two byte nibble</li>
+<li>PITCH is linear pitch change</li>
+</ul>
+<h2 id="rtg-aabb-rtrg-in-lgpt-">RTG aabb (RTRG in lgpt)</h2>
+<p><strong>retrigger the sound by looping the from current play position over a certain amount of ticks.</strong></p>
+<ul>
+<li>aa allows to move the loop forward of aa ticks each time the loop has been done (loop offest per retrigger)</li>
+<li>bb is the number of ticks used for the looping (speed of retrigger effect)</li>
+</ul>
+<p>RTG 0001: loop one tick from current play position
+RTG 0102: loop of two ticks but move the loop one tick every loop
+RTG 0101: does not do anything because after looping one tick, you move forward one tick and therefore go back to the current position :)</p>
+<h2 id="tbl-bb-tabl-in-lgpt-">TBL --bb (TABL in lgpt)</h2>
+<p><strong>triggers table bb</strong></p>
+<h2 id="tpo-bb-tmpo-in-lgpt-">TPO --bb (TMPO in lgpt)</h2>
+<p><strong>sets the tempo to hex value –bb.</strong></p>
+<ul>
+<li>TPO 0000 is safe and doesn&#39;t effect the tempo at all.</li>
+<li>TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value</li>
+</ul>
+<h2 id="vel-bb">VEL --bb</h2>
+<p>Set the velocity of the note being played on the current step for a MIDI instrument. This valid for MIDI instruments <em>only</em> and this command is not supported for use in tables.</p>
+<h2 id="vol-aabb-volm-in-lgpt-">VOL aabb (VOLM in lgpt)</h2>
+<p><strong>starting from the instrument&#39;s volume setting, approach volume bb at speed aa. 00 is the lowest volume and 00 is the fastest speed (instant).</strong></p>
+<ul>
+<li>to achieve sounds that grow in volume, make an instrument with volume 0 and then apply the VOL command</li>
+</ul>
+<p><em>NOTE:</em> For MIDI instruments the VOL command sets the velocity for that step. Only 1 VOL command in the first FX column is supported for MIDI. Only bb is used for velocity, aa has no effect for MIDI instruments.</p>
+<h1 id="rendering">Rendering</h1>
+<p>TBD</p>
