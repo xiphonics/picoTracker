@@ -16,22 +16,15 @@ add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
 #add_definitions(-DPICO_DEBUG_MALLOC)
-add_definitions(-DPICOSTATS)
+# add_definitions(-DPICOSTATS)
 # add_definitions(-DALL_MALLOC)
 # add_definitions(-DSHOW_MEM_USAGE)
-# add_definitions(-DSHOW_SPI_DEBUG)
 # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
 # add_definitions(-DSDIO_BENCH)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
 # Disable MIDI. Enable in order to use UART0 as stdio for debugging
 # add_definitions(-DDUMMY_MIDI)
-# Disable feedback for sample instruments. Due to low memory in the PICO
-# there is very low chance to bring this back
-add_definitions(-DDISABLE_FEEDBACK)
-# Disable exit dialogs. Eventually this could send device to dormant mode
-# but probably unnecessary since it's easier and safe to just turn off
-add_definitions(-DNO_EXIT)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
 # add_definitions(-DUSB_REMOTE_UI)

@@ -6,6 +6,7 @@
 #include "Application/Views/ConsoleView.h"
 #include "Application/Views/GrooveView.h"
 #include "Application/Views/InstrumentView.h"
+#include "Application/Views/MachineView.h"
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
 #include "Application/Views/ProjectView.h"
@@ -70,6 +71,7 @@ private:
   SongView *_songView;
   ChainView *_chainView;
   PhraseView *_phraseView;
+  MachineView *_machineView;
   ProjectView *_projectView;
   InstrumentView *_instrumentView;
   TableView *_tableView;

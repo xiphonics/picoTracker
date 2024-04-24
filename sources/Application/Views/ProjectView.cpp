@@ -5,6 +5,8 @@
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
+#include "BaseClasses/View.h"
+#include "BaseClasses/ViewEvent.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
 #ifdef PICOBUILD
@@ -108,11 +110,6 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   UIIntVarField *f4 = new UIIntVarField(
       position, *v, "midi: %s", 0, MidiService::GetInstance()->Size(), 1, 1);
   fieldList_.insert(fieldList_.end(), f4);
-
-  position._y += 2;
-  a1 = new UIActionField("Update firmware", ACTION_BOOTSEL, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
 }
 
 ProjectView::~ProjectView() {}
@@ -127,6 +124,12 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_R) {
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_SONG;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+    if (mask & EPBM_UP) {
+      ViewType vt = VT_MACHINE;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
