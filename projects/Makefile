@@ -75,7 +75,6 @@ COMMONDIRS	:=	../sources/System/Console \
 				../sources/Foundation/Variables \
 				../sources/Externals/Soundfont \
 				../sources/Externals/TinyXML \
-				../sources/Externals/TinyXML2 \
 				../sources/Externals/yxml \
 
 #---------------------------------------------------------------------------------
@@ -142,10 +141,8 @@ COMMONFILES		:=	Logger.o Trace.o Result.o Status.o Config.o \
 					MixerService.o PlayerMixer.o \
 					Service.o ServiceRegistry.o SubService.o \
 					Variable.o VariableContainer.o WatchedVariable.o \
-					SoundFontPreset.o SoundFontManager.o SoundFontSample.o \
-					ENAB.o HYDRA.o OMEGA.o RIFF.o SFDETECT.o SFLOOKUP.o SFNAV.o SFREADER.o WIN_MEM.o \
 					HexBuffers.o \
-		      yxml.o tinyxml2.o tinyxml2adapter.o \
+		      		yxml.o \
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output

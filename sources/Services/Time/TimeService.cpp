@@ -1,7 +1,7 @@
 #include "TimeService.h"
 #include "System/System/System.h"
 #ifndef PICOBUILD
-#include "SDL/SDL.h"
+#include "SDL2/SDL.h"
 #else
 #include "pico/stdlib.h"
 #endif

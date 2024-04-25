@@ -2,5 +2,5 @@
 
 #---------------------------------------------------------------------------------
 %.app: $(OFILES)
-	$(CXX) $(LDFLAGS) -arch $(shell uname -m) -o $@ $(OFILES) $(LIBS) $(shell pkg-config --cflags --libs sdl2)
+	$(CXX) $(LDFLAGS) -o $@ $(OFILES) $(LIBS) $(shell pkg-config --cflags --libs sdl2)
 	mv $@ ../lgpt

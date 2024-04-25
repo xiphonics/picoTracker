@@ -8,7 +8,7 @@
 #include "Services/Audio/AudioMixer.h"
 #include "Services/Audio/AudioOut.h"
 #ifndef PICOBUILD
-#include "SDL/SDL.h"
+#include "SDL2/SDL.h"
 #else
 #include "pico/mutex.h"
 #endif

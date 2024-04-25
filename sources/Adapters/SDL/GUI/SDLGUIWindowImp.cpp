@@ -94,7 +94,7 @@ SDLGUIWindowImp::SDLGUIWindowImp(GUICreateWindowParams &p) {
     windowed_ = false;
   }
 
-  int multFromSize = MIN(screenHeight / appHeight, screenWidth / appWidth);
+  int multFromSize = SDL_min(screenHeight / appHeight, screenWidth / appWidth);
 
   const char *mult = Config::GetInstance()->GetValue("SCREENMULT");
   if (mult) {
