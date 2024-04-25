@@ -1,0 +1,10 @@
+
+include $(PWD)/linux_rules
+
+CFLAGS  := -O3 -DCPP_MEMORY -w -I$(PWD)/../sources $(shell pkg-config --cflags --libs sdl2)
+# DEBUG BUILD (use this to debug with lldb)
+#CFLAGS	:= -g -O0 -DCPP_MEMORY -Wall -I$(PWD)/../sources $(shell pkg-config --cflags --libs sdl2) -D_DEBUG -DDEBUG
+
+CXXFLAGS:= $(CFLAGS) -std=c++17
+
+EXTENSION:= app

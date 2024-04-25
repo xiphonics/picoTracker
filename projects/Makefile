@@ -4,7 +4,7 @@
 .SUFFIXES:
 #---------------------------------------------------------------------------------
 
-PLATFORM:=  OSX
+PLATFORM:=  LINUX
 
 include $(PWD)/Makefile.$(PLATFORM)
 
@@ -23,6 +23,17 @@ ICON    :=  lgpt_icon.bmp
 #---------------------------------------------------------------------------------
 
 OSXDIRS := .\
+				../sources/Adapters/OSX/OSXMain \
+				../sources/Adapters/Unix/Process \
+				../sources/System/Process \
+				../sources/Adapters/SDL/Audio \
+				../sources/Adapters/OSX/OSXSystem \
+				../sources/Adapters/SDL/Timer\
+				../sources/Adapters/SDL/GUI \
+				../sources/Adapters/Unix/FileSystem \
+				../sources/Adapters/Dummy/Midi \
+
+LINUXDIRS := .\
 				../sources/Adapters/OSX/OSXMain \
 				../sources/Adapters/Unix/Process \
 				../sources/System/Process \

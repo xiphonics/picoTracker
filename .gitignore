@@ -33,3 +33,5 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+# build artifacts for Linux host lgpt build
+projects/buildLINUX
