@@ -43,6 +43,9 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
   while (entry.openNext(&dir, O_READ)) {
     char current[MAX_FILENAME_SIZE];
     entry.getName(current, MAX_FILENAME_SIZE);
+    // Ignore hidden files
+    if (current[0] == '.')
+      continue;
 
     pi.index = entry.dirIndex();
     if (entry.isDir()) {
@@ -122,8 +125,8 @@ void picoTrackerPagedDir::getFileList(int startOffset,
     }
     Trace::Log("PAGEDFILESYSTEM", "push file:%s|%d [%d]", current,
                indexEntry.index, indexEntry.type);
-    fileList->push_back(FileListItem(current, indexEntry.index,
-                                     (indexEntry.type != FileIndex)));
+    fileList->emplace_back(current, indexEntry.index,
+                           (indexEntry.type != FileIndex));
   }
 }
 
