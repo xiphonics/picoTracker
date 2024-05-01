@@ -1,9 +1,6 @@
 #include "PagedImportSampleDialog.h"
-#include "Adapters/picoTracker/utils/stringutils.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
-#include "Externals/etl/include/etl/string.h"
-
 #ifdef PICOBUILD
 #include "pico/multicore.h"
 #endif
@@ -24,13 +21,12 @@ void PagedImportSampleDialog::DrawView() {
   Trace::Log("PAGEDIMPORT", "DrawView current:%d topIdx:%d", currentSample_,
              topIndex_);
 
-  // SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
-  SetWindow(30, 22);
+  SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
   GUITextProperties props;
 
 // Draw title
 #ifdef SHOW_MEM_USAGE
-  char title[33];
+  char title[40];
 
   SetColor(CD_NORMAL);
 
@@ -60,41 +56,14 @@ void PagedImportSampleDialog::DrawView() {
       strncpy(buffer + 1, current.name.c_str(), LIST_WIDTH - 2);
       strcat(buffer, "]");
     }
-    // make sure if truncated the filename we have trailing null
-    buffer[LIST_WIDTH] = 0;
+    buffer[LIST_WIDTH] =
+        0; // make sure if truncated the filename we have trailing null
     DrawString(x, y, buffer, props);
     y += 1;
     count++;
   };
 
-  SamplePool *pool = SamplePool::GetInstance();
-  etl::string<33> statusbar;
-  statusbar.initialize_free_space();
-
   SetColor(CD_NORMAL);
-
-  // get filesize of currently highlighted file
-  FileListItem currentItem = fileList_[currentSample_ - topIndex_];
-  auto fileSize = currentDir_->getFileSize(currentItem.index);
-  etl::string<10> unitsFormatted("");
-  unitsFormatted.initialize_free_space();
-  if (fileSize > 0) {
-    humanMemorySize(fileSize, unitsFormatted.data());
-    unitsFormatted.trim_to_terminator();
-    sprintf(statusbar.data(), "FILE:%s ", unitsFormatted.data());
-  }
-  unitsFormatted.clear();
-
-  humanMemorySize(pool->flashUsage(), unitsFormatted.data());
-  unitsFormatted.trim_to_terminator();
-
-  statusbar.uninitialized_resize(
-      statusbar.max_size()); // Make the string as big as it can be.
-  statusbar.trim_to_terminator();
-
-  sprintf(statusbar.data_end(), "FREE:[%s]", unitsFormatted.data());
-  GUIPoint pos = GUIPoint(2, 23);
-  w_.DrawString(statusbar.data(), pos, props);
 };
 
 void PagedImportSampleDialog::warpToNextSample(int direction) {

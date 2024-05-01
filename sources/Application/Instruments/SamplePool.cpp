@@ -31,8 +31,6 @@ int SamplePool::flashLimit_ =
 #define FLASH_RUID_TOTAL_BYTES                                                 \
   (1 + FLASH_RUID_DUMMY_BYTES + FLASH_RUID_DATA_BYTES)
 
-int SamplePool::flashUsage() { return flashLimit_ - flashWriteOffset_; }
-
 #endif
 
 #ifdef PICOBUILD

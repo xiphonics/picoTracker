@@ -129,7 +129,6 @@ public:
   virtual void getFileList(int startIndex,
                            std::vector<FileListItem> *fileList) = 0;
   virtual int size() = 0;
-  virtual int32_t getFileSize(int index) = 0;
 
 protected:
   unsigned int fileCount_ = 0;

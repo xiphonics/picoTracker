@@ -51,7 +51,6 @@ public:
   std::string getFullName(int index);
   void getFileList(int startIndex, std::vector<FileListItem> *fileList);
   int size();
-  int32_t getFileSize(int index);
 
 private:
   const std::string path_;
