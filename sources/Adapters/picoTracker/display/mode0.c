@@ -134,7 +134,7 @@ inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
         uint16_t fg_color = palette[colors[idx] >> 4];
         uint16_t bg_color = palette[colors[idx] & 0xf];
 
-        const uint16_t *pixel_data = font8x8shift[character];
+        const uint16_t *pixel_data = font8x8square[character];
 
         // draw the character into the buffer
         for (int j = CHAR_HEIGHT - 1; j >= 0; j--) {
