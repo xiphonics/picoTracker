@@ -16,8 +16,12 @@
 #define VAR_TRANSPOSE MAKE_FOURCC('T', 'R', 'S', 'P')
 #define VAR_SCALE MAKE_FOURCC('S', 'C', 'A', 'L')
 
+#ifndef PROJECT_NUMBER
 #define PROJECT_NUMBER "1.0"
+#endif
+#ifndef PROJECT_RELEASE
 #define PROJECT_RELEASE "r"
+#endif
 // BUILD_COUNT define comes from BuildNumber.h
 
 #define MAX_TAP 3
