@@ -11,6 +11,24 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
+# Set default project number if not provided
+if(NOT DEFINED PROJECT_NUMBER)
+    set(PROJECT_NUMBER "1.0")
+endif()
+add_definitions(-DPROJECT_NUMBER="${PROJECT_NUMBER}")
+
+# Set default project release if not provided
+if(NOT DEFINED PROJECT_RELEASE)
+  set(PROJECT_RELEASE "r")
+endif()
+add_definitions(-DPROJECT_RELEASE="${PROJECT_RELEASE}")
+
+# Set default build count if not provided
+if(NOT DEFINED BUILD_COUNT)
+  set(BUILD_COUNT "003")
+endif()
+add_definitions(-DBUILD_COUNT="${BUILD_COUNT}")
+
 # Make this a picoTracker build within the project
 add_definitions(-DPICOBUILD)
 
