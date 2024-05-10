@@ -286,11 +286,7 @@ void AppWindow::LoadProject(const Path &p) {
 
   TablePlayback::Reset();
 
-  Path::SetAlias("project", _root.GetPath().c_str());
-  Path::SetAlias("samples", "project:samples");
-
   // Load the sample pool
-
   SamplePool *pool = SamplePool::GetInstance();
 
   pool->Load();
@@ -475,7 +471,7 @@ void AppWindow::onUpdate() {
 
 void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
 
-void AppWindow::LayoutChildren(){};
+void AppWindow::LayoutChildren() {};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
 

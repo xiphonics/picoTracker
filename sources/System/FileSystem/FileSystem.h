@@ -60,38 +60,18 @@ public:
 
   bool Matches(const char *pattern);
 
-  static void SetAlias(const char *alias, const char *path);
-
 protected:
-  static const char *resolveAlias(const char *alias);
   void getType();
-
-private:
-  class Alias {
-  public:
-    Alias(const char *alias, const char *path);
-    void SetPath(const char *);
-    const char *GetPath();
-    void SetAliasName(const char *);
-    const char *GetAliasName();
-
-  private:
-    std::string path_;
-    std::string alias_;
-  };
-
-  static T_SimpleList<Alias> aliases_;
 
 private:
   FileType type_;
   bool gotType_;
   char *path_;
-  mutable std::string fullPath_;
 };
 
 class I_File {
 public:
-  virtual ~I_File(){};
+  virtual ~I_File() {};
   virtual int Read(void *ptr, int size, int nmemb) = 0;
   virtual int GetC() = 0;
   virtual int Write(const void *ptr, int size, int nmemb) = 0;

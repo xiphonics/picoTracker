@@ -3,8 +3,6 @@
 #include "System/Console/Trace.h"
 #include <algorithm>
 
-T_SimpleList<Path::Alias> Path::aliases_(true);
-
 using namespace std;
 
 Path::Path() : type_(FT_UNKNOWN), gotType_(false) {
@@ -39,23 +37,10 @@ Path &Path::operator=(const Path &other) {
 Path::~Path() { SYS_FREE(path_); };
 
 std::string Path::GetPath() const {
-  std::string path = path_;
-  std::string::size_type pos;
-
-  bool search = true;
-  while ((search) && ((pos = path.find(":", 0)) != string::npos)) {
-    string aliasString = path.substr(0, pos);
-    const char *aliasPath = resolveAlias(aliasString.c_str());
-    string forward;
-    if (aliasPath) {
-      forward += string(aliasPath) + "/";
-      path = forward + path.substr(pos + 1);
-    } else {
-      search = false;
-    };
-  };
-  fullPath_ = path;
-  return fullPath_;
+  if (path_) {
+    return std::string(path_);
+  }
+  return "";
 };
 
 std::string Path::GetCanonicalPath() {
@@ -128,41 +113,7 @@ Path Path::GetParent() {
   return parent;
 }
 
-void Path::SetAlias(const char *alias, const char *path) {
-  for (aliases_.Begin(); !aliases_.IsDone(); aliases_.Next()) {
-    Alias &current = aliases_.CurrentItem();
-    if (!strcmp(current.GetAliasName(), alias)) {
-      current.SetPath(path);
-      return;
-    };
-  };
-  Alias *a = new Alias(alias, path);
-  aliases_.Insert(a);
-};
+I_PagedDir::I_PagedDir() {};
+I_PagedDir::~I_PagedDir() {};
 
-const char *Path::resolveAlias(const char *alias) {
-  for (aliases_.Begin(); !aliases_.IsDone(); aliases_.Next()) {
-    Alias &current = aliases_.CurrentItem();
-    if (!strcmp(current.GetAliasName(), alias)) {
-      return current.GetPath();
-    };
-  };
-  return 0;
-};
-Path::Alias::Alias(const char *alias, const char *path) {
-  alias_ = alias;
-  path_ = path;
-};
-
-const char *Path::Alias::GetAliasName() { return alias_.c_str(); };
-
-const char *Path::Alias::GetPath() { return path_.c_str(); }
-
-void Path::Alias::SetAliasName(const char *alias) { alias_ = alias; };
-
-void Path::Alias::SetPath(const char *path) { path_ = path; };
-
-I_PagedDir::I_PagedDir(){};
-I_PagedDir::~I_PagedDir(){};
-
-I_PagedDir::I_PagedDir(const char *path){};
+I_PagedDir::I_PagedDir(const char *path) {};

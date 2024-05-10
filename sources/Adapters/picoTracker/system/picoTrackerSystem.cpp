@@ -47,8 +47,6 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
 
   // Install FileSystem
   FileSystem::Install(new picoTrackerFileSystem());
-  Path::SetAlias("bin", "");
-  Path::SetAlias("root", "");
 
   Trace::GetInstance()->SetLogger(*(new StdOutLogger()));
 
