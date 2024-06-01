@@ -3,7 +3,6 @@ add_library(platform_sdcard
   sdio.pio
   sdio.h sdio.cpp
   sd_card_sdio.cpp
-  sd_card_spi.cpp
 )
 
 pico_generate_pio_header(platform_sdcard ${CMAKE_CURRENT_LIST_DIR}/sdio.pio)

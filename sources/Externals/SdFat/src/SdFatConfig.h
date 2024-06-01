@@ -49,7 +49,7 @@
 #define SPI_DRIVER_SELECT 3
 #define SD_CHIP_SELECT_MODE 2
 #define ENABLE_DEDICATED_SPI 1
-#define HAS_SDIO_CLASS 0
+#define HAS_SDIO_CLASS 1
 #define SS 0
 #define USE_LFN_HASH  # to avoid use of arduino millis()
 
