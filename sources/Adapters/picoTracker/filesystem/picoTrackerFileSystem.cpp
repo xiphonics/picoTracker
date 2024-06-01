@@ -43,6 +43,9 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
   while (entry.openNext(&dir, O_READ)) {
     char current[MAX_FILENAME_SIZE];
     entry.getName(current, MAX_FILENAME_SIZE);
+    // Ignore hidden files
+    if (current[0] == '.')
+      continue;
 
     pi.index = entry.dirIndex();
     if (entry.isDir()) {
@@ -60,32 +63,6 @@ void picoTrackerPagedDir::GetContent(const char *mask) {
   fileCount_ = fileIndexes_.size();
   Trace::Log("PAGEDFILESYSTEM", "scanned %d files add entries:", count,
              fileCount_);
-}
-
-int32_t picoTrackerPagedDir::getFileSize(int index) {
-  if (fileIndexes_[index].type == ParentDirIndex) {
-    Trace::Error("parentdir index, no filesize");
-    return 0;
-  }
-
-  FsBaseFile dir;
-  if (!dir.open(path_.c_str())) {
-    Trace::Error("getFileSize failed open:%s", path_.c_str());
-    return 0;
-  }
-  if (!dir.isDir()) {
-    Trace::Error("Path:%s is not a directory", path_.c_str());
-    return 0;
-  }
-  FsBaseFile file;
-
-  if (!file.open(&dir, index, O_READ)) {
-    Trace::Error("PAGEDFILESYSTEM Failed to getfile at Index %d for getSize",
-                 index);
-    return 0;
-  }
-
-  return file.fileSize();
 }
 
 std::string picoTrackerPagedDir::getFullName(int index) {
@@ -148,8 +125,8 @@ void picoTrackerPagedDir::getFileList(int startOffset,
     }
     Trace::Log("PAGEDFILESYSTEM", "push file:%s|%d [%d]", current,
                indexEntry.index, indexEntry.type);
-    fileList->push_back(FileListItem(current, indexEntry.index,
-                                     (indexEntry.type != FileIndex)));
+    fileList->emplace_back(current, indexEntry.index,
+                           (indexEntry.type != FileIndex));
   }
 }
 

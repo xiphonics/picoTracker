@@ -58,6 +58,13 @@ private:
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];
   unsigned int tempoTapCount_;
+
+  // variables
+  WatchedVariable tempo_;
+  Variable masterVolume_;
+  Variable wrap_;
+  Variable transpose_;
+  Variable scale_;
 };
 
 #endif

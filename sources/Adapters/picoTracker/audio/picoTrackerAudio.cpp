@@ -17,8 +17,11 @@ void picoTrackerAudio::Init() {
   settings.bufferSize_ = GetAudioBufferSize();
   settings.preBufferCount_ = GetAudioPreBufferCount();
 
-  picoTrackerAudioDriver *drv = new picoTrackerAudioDriver(settings);
-  AudioOutDriver *out = new AudioOutDriver(*drv);
+  static char audioDriver[sizeof(picoTrackerAudioDriver)];
+  picoTrackerAudioDriver *drv =
+      new (audioDriver) picoTrackerAudioDriver(settings);
+  static char audioOutDriver[sizeof(AudioOutDriver)];
+  AudioOutDriver *out = new (audioOutDriver) AudioOutDriver(*drv);
   Insert(out);
 };
 

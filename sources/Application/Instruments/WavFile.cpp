@@ -242,7 +242,7 @@ long WavFile::readBlock(long start, long size) {
   // Read buffer is a fixed size, nothing should be requested bigger than this
   // TODO: remove size option and work with what we have
 #ifdef PICOBUILD
-  assert((unsigned long)size < FLASH_PAGE_SIZE);
+  assert((unsigned long)size <= FLASH_PAGE_SIZE);
 #endif
   if (size > readBufferSize_) {
     readBufferSize_ = size;

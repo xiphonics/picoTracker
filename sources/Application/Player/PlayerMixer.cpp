@@ -18,8 +18,10 @@ PlayerMixer::PlayerMixer() {
     lastInstrument_[i] = 0;
   };
 
+  static char playerChannelMemBuf[sizeof(PlayerChannel) * SONG_CHANNEL_COUNT];
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    channel_[i] = new PlayerChannel(i);
+    channel_[i] =
+        new (playerChannelMemBuf + i * sizeof(PlayerChannel)) PlayerChannel(i);
   }
 }
 

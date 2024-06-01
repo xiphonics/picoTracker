@@ -2,6 +2,7 @@
 #ifndef _MIDI_SERVICE_H_
 #define _MIDI_SERVICE_H_
 
+#include "Externals/etl/include/etl/vector.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Factory.h"
 #include "MidiInDevice.h"
@@ -77,7 +78,7 @@ private:
   std::string deviceName_;
   MidiOutDevice *device_;
 
-  T_SimpleList<MidiMessage> *queues_[MIDI_MAX_BUFFERS];
+  etl::vector<MidiMessage, 10> *queues_[MIDI_MAX_BUFFERS];
   int currentPlayQueue_;
   int currentOutQueue_;
 

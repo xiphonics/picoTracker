@@ -119,7 +119,7 @@ protected:
   bool findPlayable(uchar *row, int col, uchar chainPos = 0);
 
 private:
-  PlayerMixer *mixer_;
+  PlayerMixer mixer_;
   ViewData *viewData_;
   Project *project_;
 

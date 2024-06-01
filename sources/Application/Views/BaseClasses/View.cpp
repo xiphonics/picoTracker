@@ -198,7 +198,7 @@ void View::ProcessButton(unsigned short mask, bool pressed) {
       if (modalViewCallback_) {
         modalViewCallback_(*this, *modalView_);
       }
-      SAFE_DELETE(modalView_);
+      //      SAFE_DELETE(modalView_);
       isDirty_ = true;
     }
   } else {
