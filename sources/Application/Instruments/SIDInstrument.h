@@ -4,6 +4,8 @@
 #include "Externals/cRSID/SID.h"
 #include "I_Instrument.h"
 
+enum SIDInstrumentInstance { SID1 = 1, SID2 };
+
 enum SIDInstrumentWaveform {
   DWF_NONE = 0,
   DWF_TRI,
@@ -18,35 +20,47 @@ enum SIDInstrumentWaveform {
 };
 enum SIDInstrumentFilterMode { DFM_LP = 0, DFM_BP, DFM_HP, DFM_LAST };
 
-#define DIP_V1PW MAKE_FOURCC('D', '1', 'P', 'W')
-#define DIP_V1WF MAKE_FOURCC('D', '1', 'W', 'F')
-#define DIP_V1SYNC MAKE_FOURCC('D', '1', 'S', 'Y')
-#define DIP_V1GATE MAKE_FOURCC('D', '1', 'G', 'T')
-#define DIP_V1RING MAKE_FOURCC('D', '1', 'R', 'N')
-#define DIP_V1ADSR MAKE_FOURCC('D', '1', 'A', 'D')
-#define DIP_V1FON MAKE_FOURCC('D', '1', 'F', 'O')
+#define DIP_VPW MAKE_FOURCC('D', 'P', 'W', ' ')
+#define DIP_VWF1                                                               \
+  MAKE_FOURCC('D', '1', 'W', 'F') // linked across instrument tripplets
+#define DIP_VWF2                                                               \
+  MAKE_FOURCC('D', '2', 'W', 'F') // linked across instrument tripplets
+#define DIP_VWF3                                                               \
+  MAKE_FOURCC('D', '3', 'W', 'F') // linked across instrument tripplets
+#define DIP_VSYNC MAKE_FOURCC('D', 'S', 'Y', 'N')
+#define DIP_VRING MAKE_FOURCC('D', 'R', 'N', 'G')
+#define DIP_VADSR MAKE_FOURCC('D', 'A', 'D', 'S')
+#define DIP_VFON MAKE_FOURCC('D', 'F', 'O', 'N')
 
-#define DIP_V2PW MAKE_FOURCC('D', '2', 'P', 'W')
-#define DIP_V2WF MAKE_FOURCC('D', '2', 'W', 'F')
-#define DIP_V2SYNC MAKE_FOURCC('D', '2', 'S', 'Y')
-#define DIP_V2GATE MAKE_FOURCC('D', '2', 'G', 'T')
-#define DIP_V2RING MAKE_FOURCC('D', '2', 'R', 'N')
-#define DIP_V2ADSR MAKE_FOURCC('D', '2', 'A', 'D')
-#define DIP_V2FON MAKE_FOURCC('D', '2', 'F', 'O')
+#define DIP_FILTCUT1                                                           \
+  MAKE_FOURCC('D', '1', 'F', 'C') // linked across instrument tripplets
+#define DIP_RES1                                                               \
+  MAKE_FOURCC('D', '1', 'R', 'S') // linked across instrument tripplets
+#define DIP_FMODE1                                                             \
+  MAKE_FOURCC('D', '1', 'F', 'M') // linked across instrument tripplets
+#define DIP_VOLUME1                                                            \
+  MAKE_FOURCC('D', '1', 'V', 'L') // linked across instrument tripplets
 
-#define DIP_V3PW MAKE_FOURCC('D', '3', 'P', 'W')
-#define DIP_V3WF MAKE_FOURCC('D', '3', 'W', 'F')
-#define DIP_V3SYNC MAKE_FOURCC('D', '3', 'S', 'Y')
-#define DIP_V3GATE MAKE_FOURCC('D', '3', 'G', 'T')
-#define DIP_V3RING MAKE_FOURCC('D', '3', 'R', 'N')
-#define DIP_V3ADSR MAKE_FOURCC('D', '3', 'A', 'D')
-#define DIP_V3FON MAKE_FOURCC('D', '3', 'F', 'O')
-#define DIP_V3OFF MAKE_FOURCC('D', '3', 'O', 'F')
+#define DIP_FILTCUT2                                                           \
+  MAKE_FOURCC('D', '2', 'F', 'C') // linked across instrument tripplets
+#define DIP_RES2                                                               \
+  MAKE_FOURCC('D', '2', 'R', 'S') // linked across instrument tripplets
+#define DIP_FMODE2                                                             \
+  MAKE_FOURCC('D', '2', 'F', 'M') // linked across instrument tripplets
+#define DIP_VOLUME2                                                            \
+  MAKE_FOURCC('D', '2', 'V', 'L') // linked across instrument tripplets
 
-#define DIP_FILTCUT MAKE_FOURCC('D', 'F', 'C', 'T')
-#define DIP_RES MAKE_FOURCC('D', 'R', 'E', 'S')
-#define DIP_FMODE MAKE_FOURCC('D', 'F', 'M', 'D')
-#define DIP_VOLUME MAKE_FOURCC('D', 'V', 'O', 'L')
+#define DIP_FILTCUT3                                                           \
+  MAKE_FOURCC('D', '3', 'F', 'C') // linked across instrument tripplets
+#define DIP_RES3                                                               \
+  MAKE_FOURCC('D', '3', 'R', 'S') // linked across instrument tripplets
+#define DIP_FMODE3                                                             \
+  MAKE_FOURCC('D', '3', 'F', 'M') // linked across instrument tripplets
+#define DIP_VOLUME3                                                            \
+  MAKE_FOURCC('D', '3', 'V', 'L') // linked across instrument tripplets
+
+#define DIP_3OFF                                                               \
+  MAKE_FOURCC('D', '3', 'O', 'F') // linked across instrument tripplets
 
 #define DIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
 #define DIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
@@ -67,7 +81,7 @@ static const unsigned short sid_notes[96] = {
 class SIDInstrument : public I_Instrument {
 
 public:
-  SIDInstrument();
+  SIDInstrument(SIDInstrumentInstance chip, int osc);
   virtual ~SIDInstrument();
 
   virtual bool Init();
@@ -98,48 +112,52 @@ public:
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
 
+  int GetChip() { return chip_; };
+  int GetOsc() { return osc_; };
+  void SetRender(bool render) { render_ = render; };
+
 private:
-  char name_[20]; // Instrument name
-  //  int lastNote_[SONG_CHANNEL_COUNT];
-  //  int remainingTicks_;
+  etl::string<24> name_;
+  SIDInstrumentInstance chip_; // SID1 or SID2
+  int osc_;                    // 0, 1 or 2
+  bool render_ = false;
+
   bool playing_;
+  bool gate_;
   //  bool retrig_;
   // int retrigLoop_;
   TableSaveState tableState_;
   //  bool first_[SONG_CHANNEL_COUNT];
   //  reSID::SID sid_;
   //  reSID::cycle_count delta_t_;
-  cRSID sid_;
+  static cRSID sid1_;
+  static cRSID sid2_;
+  cRSID *sid_;
+  static SIDInstrument *SID1RenderMaster;
+  static SIDInstrument *SID2RenderMaster;
+  //  static bool rendered1_;
 
-  Variable v1pw_;
-  Variable v1wf_;
-  Variable v1sync_;
-  Variable v1gate_;
-  Variable v1ring_;
-  Variable v1adsr_;
-  Variable v1fon_;
+  Variable vpw_;
+  static Variable vwf1_;
+  static Variable vwf2_;
+  Variable *vwf_;
+  Variable vsync_;
+  Variable vring_;
+  Variable vadsr_;
+  Variable vfon_;
 
-  Variable v2pw_;
-  Variable v2wf_;
-  Variable v2sync_;
-  Variable v2gate_;
-  Variable v2ring_;
-  Variable v2adsr_;
-  Variable v2fon_;
-
-  Variable v3pw_;
-  Variable v3wf_;
-  Variable v3sync_;
-  Variable v3gate_;
-  Variable v3ring_;
-  Variable v3adsr_;
-  Variable v3fon_;
-  Variable v3off_;
-
-  Variable fltcut_;
-  Variable fltres_;
-  Variable fltmode_;
-  Variable vol_;
+  static Variable fltcut1_;
+  static Variable fltcut2_;
+  Variable *fltcut_;
+  static Variable fltres1_;
+  static Variable fltres2_;
+  Variable *fltres_;
+  static Variable fltmode1_;
+  static Variable fltmode2_;
+  Variable *fltmode_;
+  static Variable vol1_;
+  static Variable vol2_;
+  Variable *vol_;
 };
 
 #endif

@@ -24,6 +24,7 @@
 #define I_CMD_FCUT MAKE_FOURCC('F', 'C', 'U', 'T')
 #define I_CMD_FRES MAKE_FOURCC('F', 'R', 'E', 'S')
 #define I_CMD_PAN_ MAKE_FOURCC('P', 'A', 'N', ' ')
+#define I_CMD_GTOF MAKE_FOURCC('G', 'T', 'O', 'F')
 #define I_CMD_GROV MAKE_FOURCC('G', 'R', 'O', 'V')
 #define I_CMD_FBTU MAKE_FOURCC('F', 'B', 'T', 'U')
 #define I_CMD_FBAM MAKE_FOURCC('F', 'B', 'A', 'M')
