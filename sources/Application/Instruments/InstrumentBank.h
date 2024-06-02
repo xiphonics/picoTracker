@@ -5,6 +5,7 @@
 #include "Application/Model/Song.h"
 #include "Application/Persistency/Persistent.h"
 #include "MidiInstrument.h"
+#include "SIDInstrument.h"
 #include "SampleInstrument.h"
 
 #define NO_MORE_INSTRUMENT 0x100
@@ -56,6 +57,12 @@ private:
   MidiInstrument mi13;
   MidiInstrument mi14;
   MidiInstrument mi15;
+  SIDInstrument di0;
+  SIDInstrument di1;
+  SIDInstrument di2;
+  SIDInstrument di3;
+  SIDInstrument di4;
+  SIDInstrument di5;
 };
 
 #endif

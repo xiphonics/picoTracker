@@ -5,7 +5,7 @@
 #include "Foundation/T_SimpleList.h"
 #include "Variable.h"
 
-class VariableContainer : public etl::list<Variable *, 20> {
+class VariableContainer : public etl::list<Variable *, 30> {
 public:
   VariableContainer();
   virtual ~VariableContainer();

@@ -1,5 +1,6 @@
 #include "InstrumentView.h"
 #include "Application/Instruments/MidiInstrument.h"
+#include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
@@ -51,6 +52,9 @@ void InstrumentView::onInstrumentChange() {
   switch (it) {
   case IT_MIDI:
     fillMidiParameters();
+    break;
+  case IT_SID:
+    fillSIDParameters();
     break;
   case IT_SAMPLE:
     fillSampleParameters();
@@ -189,6 +193,131 @@ void InstrumentView::fillSampleParameters() {
   intVarOffField_.emplace_back(position, *v, "table: %2.2X", 0x00,
                                TABLE_COUNT - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
+};
+
+void InstrumentView::fillSIDParameters() {
+
+  int i = viewData_->currentInstrument_;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  I_Instrument *instr = bank->GetInstrument(i);
+  SIDInstrument *instrument = (SIDInstrument *)instr;
+  GUIPoint position = GetAnchor();
+
+  position._y += 1;
+  staticField_.emplace_back(position, instr->GetName().c_str());
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  //	position._y+=2 ;
+  position._y += 2;
+  Variable *v = instrument->FindVariable(DIP_VPW);
+  //  UIIntVarField *f1 =
+  //      new UIIntVarField(position, *v, "V1PW: %2.2X", 0, 0xFFF, 1, 0x10);
+  //  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "VPW: %2.2X", 0, 0xFFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).SetFocus();
+
+  position._y += 1;
+  switch (instrument->GetChip()) {
+  case SID1:
+    v = instrument->FindVariable(DIP_VWF1);
+    break;
+  case SID2:
+    v = instrument->FindVariable(DIP_VWF2);
+    break;
+  }
+
+  // Only support independent waveforms for the moment
+  //  f1 = new UIIntVarField(position, *v, "V1 WF: %s", 0, DWF_LAST - 1, 1,
+  //  1); T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "WF: %s", 0, DWF_LAST - 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_VSYNC);
+  // f1 = new UIIntVarField(position, *v, "V1 Sync: %s", 0, 1, 1, 1);
+  // T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "Sync: %s", 0, 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_VRING);
+  // f1 = new UIIntVarField(position, *v, "V1 RING: %s", 0, 1, 1, 1);
+  // T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "RING: %s", 0, 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_VADSR);
+  // f1 = new UIIntVarField(position, *v, "V1 ADSR: %4.4X", 0, 0xFFFF, 1,
+  // 0x10); T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "ADSR: %4.4X", 0, 0xFFFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(DIP_VFON);
+  // f1 = new UIIntVarField(position, *v, "V1 filter: %s", 0, 1, 1, 1);
+  // T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "filter: %s", 0, 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 2;
+  switch (instrument->GetChip()) {
+  case SID1:
+    v = instrument->FindVariable(DIP_FILTCUT1);
+    break;
+  case SID2:
+    v = instrument->FindVariable(DIP_FILTCUT2);
+    break;
+  }
+  // f1 = new UIIntVarField(position, *v, "Flt cut: %1.1X", 0, 0x7FF, 1,
+  // 0x10); T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "Flt cut: %1.1X", 0, 0x7FF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  switch (instrument->GetChip()) {
+  case SID1:
+    v = instrument->FindVariable(DIP_RES1);
+    break;
+  case SID2:
+    v = instrument->FindVariable(DIP_RES2);
+    break;
+  }
+  // f1 = new UIIntVarField(position, *v, "Flt Res: %1.1X", 0, 0xF, 1, 1);
+  // T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "Flt Res: %1.1X", 0, 0xF, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  switch (instrument->GetChip()) {
+  case SID1:
+    v = instrument->FindVariable(DIP_FMODE1);
+    break;
+  case SID2:
+    v = instrument->FindVariable(DIP_FMODE2);
+    break;
+  }
+  // f1 = new UIIntVarField(position, *v, "Flt mode: %s", 0, DFM_LAST - 1, 1,
+  // 1);
+  //  T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "Flt mode: %s", 0, DFM_LAST - 1, 1,
+                            1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  switch (instrument->GetChip()) {
+  case SID1:
+    v = instrument->FindVariable(DIP_VOLUME1);
+    break;
+  case SID2:
+    v = instrument->FindVariable(DIP_VOLUME2);
+    break;
+  }
+  // f1 = new UIIntVarField(position, *v, "Volume: %1.1X", 0, 0xF, 1, 1);
+  //   T_SimpleList<UIField>::Insert(f1);
+  intVarField_.emplace_back(position, *v, "Volume: %1.1X", 0, 0xF, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 };
 
 void InstrumentView::fillMidiParameters() {

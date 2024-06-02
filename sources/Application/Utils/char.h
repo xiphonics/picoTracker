@@ -271,6 +271,72 @@ inline void fourCC2char(const FourCC f, char *s) {
   case 70:
     strcpy(s, "WRAP");
     break;
+  case 71:
+    strcpy(s, "DPW ");
+    break;
+  case 72:
+    strcpy(s, "D1WF");
+    break;
+  case 73:
+    strcpy(s, "D2WF");
+    break;
+  case 74:
+    strcpy(s, "D3WF");
+    break;
+  case 75:
+    strcpy(s, "DSYN");
+    break;
+  case 76:
+    strcpy(s, "DRNG");
+    break;
+  case 77:
+    strcpy(s, "DADS");
+    break;
+  case 78:
+    strcpy(s, "DFON");
+    break;
+  case 79:
+    strcpy(s, "D1FC");
+    break;
+  case 80:
+    strcpy(s, "D1RS");
+    break;
+  case 81:
+    strcpy(s, "D1FM");
+    break;
+  case 82:
+    strcpy(s, "D1VL");
+    break;
+  case 83:
+    strcpy(s, "D2FC");
+    break;
+  case 84:
+    strcpy(s, "D2RS");
+    break;
+  case 85:
+    strcpy(s, "D2FM");
+    break;
+  case 86:
+    strcpy(s, "D2VL");
+    break;
+  case 87:
+    strcpy(s, "D3FC");
+    break;
+  case 88:
+    strcpy(s, "D3RS");
+    break;
+  case 89:
+    strcpy(s, "D3FM");
+    break;
+  case 90:
+    strcpy(s, "D3VL");
+    break;
+  case 91:
+    strcpy(s, "D3OF");
+    break;
+  case 92:
+    strcpy(s, "GOF"); // I_CMD_GTOF
+    break;
   }
 };
 #endif

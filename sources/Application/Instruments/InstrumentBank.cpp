@@ -1,15 +1,18 @@
 
 #include "InstrumentBank.h"
 #include "Application/Instruments/MidiInstrument.h"
+#include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/char.h"
 #include "Filters.h"
+#include "MidiInstrument.h"
+#include "SIDInstrument.h"
 #include "System/io/Status.h"
 
-const char *InstrumentTypeData[] = {"Sample", "Midi"};
+const char *InstrumentTypeData[] = {"Sample", "SID", "Midi"};
 
 // Contain all instrument definition
 
@@ -17,7 +20,8 @@ InstrumentBank::InstrumentBank()
     : Persistent("INSTRUMENTBANK"), si0(), si1(), si2(), si3(), si4(), si5(),
       si6(), si7(), si8(), si9(), si10(), si11(), si12(), si13(), si14(),
       si15(), mi0(), mi1(), mi2(), mi3(), mi4(), mi5(), mi6(), mi7(), mi8(),
-      mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15() {
+      mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15(), di0(SID1, 0),
+      di1(SID1, 1), di2(SID1, 2), di3(SID2, 0), di4(SID2, 1), di5(SID2, 2) {
 
   instrument_[0] = &si0;
   instrument_[1] = &si1;
@@ -67,7 +71,12 @@ InstrumentBank::InstrumentBank()
   instrument_[30] = &mi14;
   mi15.SetChannel(15);
   instrument_[31] = &mi15;
-
+  instrument_[32] = &di0;
+  instrument_[33] = &di1;
+  instrument_[34] = &di2;
+  instrument_[35] = &di3;
+  instrument_[36] = &di4;
+  instrument_[37] = &di5;
   Status::Set("All instrument loaded");
 };
 
@@ -154,15 +163,25 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           }
         }
       } else {
-        it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE : IT_MIDI;
+        if (id < MAX_SAMPLEINSTRUMENT_COUNT) {
+          it = IT_SAMPLE;
+        } else if (id < MAX_SAMPLEINSTRUMENT_COUNT + MAX_SIDINSTRUMENT_COUNT) {
+          it = IT_SID;
+        } else {
+          it = IT_MIDI;
+        }
       };
       if (id < MAX_INSTRUMENT_COUNT) {
         I_Instrument *instr = instrument_[id];
         if (instr->GetType() != it) {
           delete instr;
+          printf("We shouldn't be here!!!!");
           switch (it) {
           case IT_SAMPLE:
             instr = new SampleInstrument();
+            break;
+          case IT_SID:
+            instr = new SIDInstrument(SID1, 0);
             break;
           case IT_MIDI:
             instr = new MidiInstrument();

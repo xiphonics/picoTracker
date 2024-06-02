@@ -26,6 +26,7 @@ protected:
   void warpToNext(int offset);
   void onInstrumentChange();
   void fillSampleParameters();
+  void fillSIDParameters();
   void fillMidiParameters();
   InstrumentType getInstrumentType();
   void Update(Observable &o, I_ObservableData *d);
@@ -35,7 +36,7 @@ private:
   FourCC lastFocusID_;
   I_Instrument *current_;
 
-  etl::vector<UIIntVarField, 15> intVarField_;
+  etl::vector<UIIntVarField, 26> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 1> staticField_;
   etl::vector<UIBigHexVarField, 3> bigHexVarField_;

@@ -11,6 +11,7 @@ add_library(application_instruments
   SamplePool.h SamplePool.cpp
   SampleRenderingParams.h
   SampleVariable.h SampleVariable.cpp
+  SIDInstrument.h SIDInstrument.cpp
   SoundSource.h SoundSource.cpp
   WavFile.h WavFile.cpp
   WavFileWriter.h WavFileWriter.cpp
@@ -23,6 +24,7 @@ target_link_libraries(application_instruments PUBLIC foundation_services
                                               PUBLIC hardware_flash
                                               PUBLIC pico_stdlib                            
                                               PUBLIC hardware_flash
+                                              PUBLIC crsid
 )
 
 target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
