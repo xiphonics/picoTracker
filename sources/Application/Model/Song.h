@@ -19,12 +19,12 @@
 #define MAX_SAMPLEINSTRUMENT_COUNT 0x10
 #define MAX_SIDINSTRUMENT_COUNT 0x6
 #define MAX_MIDIINSTRUMENT_COUNT 0x10
+#define MAX_OPALINSTRUMENT_COUNT 0x01
 #endif
 
 #define MAX_INSTRUMENT_COUNT                                                   \
   (MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT +                     \
-   MAX_SIDINSTRUMENT_COUNT)
-
+   MAX_SIDINSTRUMENT_COUNT + MAX_OPALINSTRUMENT_COUNT)
 class Song : Persistent {
 public:
   Song();
