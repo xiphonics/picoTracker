@@ -13,8 +13,8 @@ enum InstrumentType { IT_SAMPLE = 0, IT_MIDI, IT_SID, IT_OPAL };
 
 class I_Instrument : public VariableContainer, public Observable {
 public:
-  I_Instrument() {};
-  virtual ~I_Instrument() {};
+  I_Instrument(){};
+  virtual ~I_Instrument(){};
 
   // Initialisation routine
 
