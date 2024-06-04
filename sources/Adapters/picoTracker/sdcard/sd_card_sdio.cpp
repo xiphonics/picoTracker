@@ -6,8 +6,6 @@
 #include <SdFat.h>
 #include <hardware/gpio.h>
 
-#ifdef SD_SDIO
-
 static uint32_t g_sdio_ocr; // Operating condition register from card
 static uint32_t g_sdio_rca; // Relative card address
 static cid_t g_sdio_cid;
@@ -427,5 +425,3 @@ void sdCsWrite(SdCsPin_t pin, bool level) {}
 
 // SDIO configuration for main program
 SdioConfig g_sd_sdio_config(DMA_SDIO);
-
-#endif

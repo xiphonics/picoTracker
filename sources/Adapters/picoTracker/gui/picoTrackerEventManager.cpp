@@ -48,6 +48,10 @@ int picoTrackerEventManager::MainLoop() {
   queue = picoTrackerEventQueue::GetInstance();
   int loops = 0;
   int events = 0;
+#ifdef SDIO_BENCH
+  // Perform a benchmark of SD card on startup
+  sd_bench();
+#endif
   while (!finished_) {
     loops++;
     ProcessInputEvent();
