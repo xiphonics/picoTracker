@@ -3,7 +3,11 @@
 #include "System/FileSystem/FileSystem.h"
 #include <cstring>
 
-Config::Config() {
+const char *lineOutOptions[3] = {"Line level", "HP High", "HP Low"};
+
+Config::Config() : lineOut_("lineout", VAR_LINEOUT, lineOutOptions, 3, 0) {
+  this->insert(end(), &lineOut_);
+
   Path path("bin:config.xml");
   Trace::Log("CONFIG", "Got config path=%s", path.GetPath().c_str());
   PersistencyDocument doc;

@@ -78,6 +78,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _songView = 0;
   _chainView = 0;
   _phraseView = 0;
+  _machineView = 0;
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
@@ -343,6 +344,10 @@ void AppWindow::LoadProject(const Path &p) {
   _phraseView = new (phraseViewMemBuf) PhraseView((*this), _viewData);
   _phraseView->AddObserver((*this));
 
+  static char machineViewMemBuf[sizeof(MachineView)];
+  _machineView = new (machineViewMemBuf) MachineView((*this), _viewData);
+  _machineView->AddObserver((*this));
+
   static char projectViewMemBuf[sizeof(ProjectView)];
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
@@ -392,6 +397,7 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_songView);
   SAFE_DELETE(_chainView);
   SAFE_DELETE(_phraseView);
+  SAFE_DELETE(_machineView);
   SAFE_DELETE(_projectView);
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
@@ -489,7 +495,7 @@ void AppWindow::onUpdate() {
 
 void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
 
-void AppWindow::LayoutChildren(){};
+void AppWindow::LayoutChildren() {};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
 
@@ -511,6 +517,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_PHRASE:
       _currentView = _phraseView;
+      break;
+    case VT_MACHINE:
+      _currentView = _machineView;
       break;
     case VT_PROJECT:
       _currentView = _projectView;

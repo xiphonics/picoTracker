@@ -989,14 +989,8 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   SetColor(CD_NORMAL);
 
   // Draw clipping indicator
-  if (View::miniLayout_) {
-    pos._y = 0;
-    pos._x = 25;
-  } else {
-    pos = 0;
-    pos._x = 26;
-  }
-
+  pos = 0;
+  pos._x = 26;
   pos._y += 1; // make space for batt guage which is on top line
   if (player->Clipped()) {
     DrawString(pos._x, pos._y, "clip", props);

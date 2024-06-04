@@ -3,6 +3,7 @@ add_library(application_views
   ConsoleView.h ConsoleView.cpp
   GrooveView.h GrooveView.cpp
   InstrumentView.h InstrumentView.cpp
+  MachineView.h MachineView.cpp
   NullView.h NullView.cpp
   PhraseView.h PhraseView.cpp
   ProjectView.h ProjectView.cpp

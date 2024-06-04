@@ -31,6 +31,7 @@ enum ViewType {
   VT_CHAIN,
   VT_PHRASE,
   VT_PROJECT,
+  VT_MACHINE,
   VT_INSTRUMENT,
   VT_TABLE,  // Table screen under phrase
   VT_TABLE2, // Table screen under instrument
@@ -156,7 +157,6 @@ private:
 public:
   static int margin_;
   static int songRowCount_;
-  static bool miniLayout_;
 };
 
 #endif

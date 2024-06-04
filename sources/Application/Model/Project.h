@@ -16,7 +16,7 @@
 #define VAR_TRANSPOSE MAKE_FOURCC('T', 'R', 'S', 'P')
 #define VAR_SCALE MAKE_FOURCC('S', 'C', 'A', 'L')
 
-#define PROJECT_NUMBER "1.0"
+#define PROJECT_NUMBER "1.99"
 #define PROJECT_RELEASE "r"
 // BUILD_COUNT define comes from BuildNumber.h
 
