@@ -10,7 +10,8 @@ add_library(application_model
   Table.h Table.cpp
   )
 
-target_link_libraries(application_model PUBLIC system_system
+target_link_libraries(application_model PUBLIC pico_stdlib
+                                        PUBLIC system_system
                                         PUBLIC foundation_variables
 )
 

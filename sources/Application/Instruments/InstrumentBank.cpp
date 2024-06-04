@@ -1,5 +1,6 @@
 
 #include "InstrumentBank.h"
+#include "Application/Instruments/MacroInstrument.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -23,7 +24,7 @@ InstrumentBank::InstrumentBank()
       si15(), mi0(), mi1(), mi2(), mi3(), mi4(), mi5(), mi6(), mi7(), mi8(),
       mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15(), di0(SID1, 0),
       di1(SID1, 1), di2(SID1, 2), di3(SID2, 0), di4(SID2, 1), di5(SID2, 2),
-      oi0() {
+      oi0(), bi0() {
 
   instrument_[0] = &si0;
   instrument_[1] = &si1;
@@ -80,6 +81,7 @@ InstrumentBank::InstrumentBank()
   instrument_[36] = &di4;
   instrument_[37] = &di5;
   instrument_[38] = &oi0;
+  instrument_[39] = &bi0;
 
   Status::Set("All instrument loaded");
 };
@@ -186,6 +188,8 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
             break;
           case IT_SID:
             instr = new SIDInstrument(SID1, 0);
+          case IT_MACRO:
+            instr = new MacroInstrument();
             break;
           case IT_MIDI:
             instr = new MidiInstrument();

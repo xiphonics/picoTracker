@@ -54,7 +54,10 @@ add_compile_options(
   -Wstack-usage=1272 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
   # TODO: SHOULD FIX
   -Wno-int-to-pointer-cast
+
+  # braids
   -Wno-unused-variable
+  -Wno-array-bounds
 )
 
 add_subdirectory(Adapters)

@@ -1,9 +1,16 @@
 #include "InstrumentView.h"
+#include "Application/Instruments/MacroInstrument.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
+#include "BaseClasses/UIBigHexVarField.h"
+#include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UIIntVarOffField.h"
+#include "BaseClasses/UINoteVarField.h"
+#include "BaseClasses/UIStaticField.h"
+#include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/ImportSampleDialog.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/PagedImportSampleDialog.h"
@@ -50,6 +57,9 @@ void InstrumentView::onInstrumentChange() {
 
   InstrumentType it = getInstrumentType();
   switch (it) {
+  case IT_MACRO:
+    fillMacroParameters();
+    break;
   case IT_MIDI:
     fillMidiParameters();
     break;
@@ -78,6 +88,46 @@ void InstrumentView::onInstrumentChange() {
     current_->AddObserver(*this);
   }
 };
+
+void InstrumentView::fillMacroParameters() {
+  int i = viewData_->currentInstrument_;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  I_Instrument *instr = bank->GetInstrument(i);
+  MacroInstrument *instrument = (MacroInstrument *)instr;
+  GUIPoint position = GetAnchor();
+
+  //	position._y+=View::fieldSpaceHeight_;
+  position._y += 1;
+  Variable *v = instrument->FindVariable(BIP_SHAPE);
+  intVarField_.emplace_back(position, *v, "shape: %s", 0,
+                            braids::MACRO_OSC_SHAPE_LAST - 2, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_TIMBRE);
+  intVarField_.emplace_back(position, *v, "timbre: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_COLOR);
+  intVarField_.emplace_back(position, *v, "color: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_ATTACK);
+  intVarField_.emplace_back(position, *v, "attack: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_DECAY);
+  intVarField_.emplace_back(position, *v, "decay: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(BIP_SIGNATURE);
+  intVarField_.emplace_back(position, *v, "signature: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+}
 
 void InstrumentView::fillSampleParameters() {
 
@@ -362,7 +412,7 @@ void InstrumentView::fillMidiParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
 
-void InstrumentView::fillOpalParameters(){};
+void InstrumentView::fillOpalParameters() {};
 
 void InstrumentView::warpToNext(int offset) {
   int instrument = viewData_->currentInstrument_ + offset;
