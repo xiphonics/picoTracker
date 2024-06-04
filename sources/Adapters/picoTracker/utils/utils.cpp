@@ -26,7 +26,6 @@ uint32_t measure_free_mem(void) {
     free(buff[j]);
   }
 
-
   printf("MAX memory free in heap: %i\n", max * 1000);
   /*
     buff = malloc(80000);
@@ -63,6 +62,7 @@ void measure_freqs(void) {
   // Can't measure clk_ref / xosc as it is the ref
 }
 
+#ifdef SDIO_BENCH
 #define SD_CONFIG SdioConfig(FIFO_SDIO)
 
 void cidDmp(SdFs *sd) {
@@ -71,12 +71,12 @@ void cidDmp(SdFs *sd) {
     printf("E: readCID failed\n");
   }
   printf("\nManufacturer ID: %#04x\n", int(cid.mid));
-  printf("OEM ID: %s%s\n",cid.oid[0],cid.oid[1]);
+  printf("OEM ID: %s%s\n", cid.oid[0], cid.oid[1]);
   printf("Product: %s\n", cid.pnm);
-  
+
   printf("\nRevision: %i.%i\n", cid.prvN(), cid.prvM());
-  printf("Serial number: %#10x\n",cid.psn());
-  printf("Manufacturing date: %i/%i\n\n",cid.mdtMonth(), cid.mdtYear());
+  printf("Serial number: %#10x\n", cid.psn());
+  printf("Manufacturing date: %i/%i\n\n", cid.mdtMonth(), cid.mdtYear());
 }
 
 void sd_bench() {
@@ -136,7 +136,7 @@ void sd_bench() {
     printf("Type is FAT %i\n", int(sd.fatType()));
   }
 
-  printf("Card size: %i\n", sd.card()->sectorCount()*512E-9);
+  printf("Card size: %i\n", sd.card()->sectorCount() * 512E-9);
   printf(" GB (GB = 1E9 bytes)\n");
 
   cidDmp(&sd);
@@ -151,16 +151,16 @@ void sd_bench() {
     for (size_t i = 0; i < (BUF_SIZE - 2); i++) {
       buf[i] = 'A' + (i % 26);
     }
-    buf[BUF_SIZE-2] = '\r';
+    buf[BUF_SIZE - 2] = '\r';
   }
-  buf[BUF_SIZE-1] = '\n';
+  buf[BUF_SIZE - 1] = '\n';
 
   printf("FILE_SIZE_MB = %i\n", FILE_SIZE_MB);
   printf("BUF_SIZE = %i bytes\n", BUF_SIZE);
   printf("\nStarting write test, please wait.\n");
 
   // do write test
-  uint32_t n = FILE_SIZE/BUF_SIZE;
+  uint32_t n = FILE_SIZE / BUF_SIZE;
   printf("write speed and latency\n");
   printf("speed,max,min,avg\n");
   printf("KB/Sec,usec,usec,usec\n");
@@ -198,7 +198,7 @@ void sd_bench() {
     file.sync();
     t = millis() - t;
     s = file.fileSize();
-    printf("%i,%i,%i,%i\n", s/t, maxLatency, minLatency, totalLatency/n);
+    printf("%i,%i,%i,%i\n", s / t, maxLatency, minLatency, totalLatency / n);
   }
   printf("\nStarting read test, please wait.\n");
   printf("\nread speed and latency\n");
@@ -214,7 +214,7 @@ void sd_bench() {
     skipLatency = SKIP_FIRST_LATENCY;
     t = millis();
     for (uint32_t i = 0; i < n; i++) {
-      buf[BUF_SIZE-1] = 0;
+      buf[BUF_SIZE - 1] = 0;
       uint32_t m = micros();
       int32_t nr = file.read(buf, BUF_SIZE);
       if (nr != BUF_SIZE) {
@@ -222,7 +222,7 @@ void sd_bench() {
       }
       m = micros() - m;
       totalLatency += m;
-      if (buf[BUF_SIZE-1] != '\n') {
+      if (buf[BUF_SIZE - 1] != '\n') {
 
         printf("E: data check error\n");
       }
@@ -239,10 +239,10 @@ void sd_bench() {
     }
     s = file.fileSize();
     t = millis() - t;
-    printf("%i,%i,%i,%i\n", s/t, maxLatency, minLatency, totalLatency/n);
+    printf("%i,%i,%i,%i\n", s / t, maxLatency, minLatency, totalLatency / n);
   }
   printf("\nDone\n");
   file.close();
   sd.end();
-
 }
+#endif
