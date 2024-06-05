@@ -16,7 +16,7 @@ add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
 #add_definitions(-DPICO_DEBUG_MALLOC)
-# add_definitions(-DPICOSTATS)
+add_definitions(-DPICOSTATS)
 # add_definitions(-DALL_MALLOC)
 # add_definitions(-DSHOW_MEM_USAGE)
 # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
@@ -28,9 +28,8 @@ add_definitions(-DLOAD_IN_FLASH)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
 # add_definitions(-DUSB_REMOTE_UI)
-
-
-
+# Enable DSP support. Will be automatically detected in the future
+# add_definitions(-DENABLE_DSP)
 
 # Initialize the SDK
 pico_sdk_init()
@@ -57,6 +56,7 @@ add_subdirectory(Application)
 add_subdirectory(Externals)
 add_subdirectory(Services)
 add_subdirectory(Foundation)
+add_subdirectory(DSP)
 
 set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
 
