@@ -117,21 +117,11 @@ void MidiService::flushOutQueue() {
 }
 
 void MidiService::startDevice() {
-
-  // look for the device
-
-  for (Begin(); !IsDone(); Next()) {
-    MidiOutDevice &current = CurrentItem();
-    if (!strcmp(deviceName_.c_str(), current.GetName())) {
-      if (current.Init()) {
-        if (current.Start()) {
-          device_ = &current;
-        } else {
-          current.Close();
-        }
-      }
-      break;
-    }
+  // the pico just has a single Midi Out device
+  device_ = GetFirst();
+  if (device_ != nullptr) {
+    device_->Init();
+    device_->Start();
   }
 };
 
@@ -146,9 +136,14 @@ void MidiService::stopDevice() {
 void MidiService::OnPlayerStart() {
 
   if (deviceName_.size() != 0) {
+    // printf("ReStart Midi DEVICE NAME:%s", deviceName_.c_str());
     stopDevice();
     startDevice();
-    deviceName_ = "";
+    deviceName_ = "MIDI OUT 1";
+  } else {
+    // printf("Start Default Pico Midi out device");
+    startDevice();
+    deviceName_ = "MIDI OUT 1";
   }
 
   if (sendSync_) {
