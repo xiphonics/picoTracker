@@ -7,8 +7,8 @@ picoTrackerMidiService::picoTrackerMidiService(){};
 picoTrackerMidiService::~picoTrackerMidiService(){};
 
 void picoTrackerMidiService::buildDriverList() {
-  // create the one and only MIDI out device on the pico
-  // the MidiService parent class will fish out this as the first item
-  // of the list
+  // create just the TRS MIDI out device on the pico for now and
+  // the MidiService parent class will fish out this out of the list that
+  // implemented by this class
   Insert(new picoTrackerMidiOutDevice("MIDI OUT 1"));
 };
