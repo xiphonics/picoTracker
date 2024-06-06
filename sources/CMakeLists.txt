@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
+set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
 # Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -16,7 +17,7 @@ add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
 #add_definitions(-DPICO_DEBUG_MALLOC)
-add_definitions(-DPICOSTATS)
+# add_definitions(-DPICOSTATS)
 # add_definitions(-DALL_MALLOC)
 # add_definitions(-DSHOW_MEM_USAGE)
 # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
