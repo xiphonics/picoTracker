@@ -117,11 +117,19 @@ void MidiService::flushOutQueue() {
 }
 
 void MidiService::startDevice() {
-  // the pico just has a single Midi Out device
-  device_ = GetFirst();
-  if (device_ != nullptr) {
-    device_->Init();
-    device_->Start();
+  // loop through and init+start all midi devices
+  for (Begin(); !IsDone(); Next()) {
+    MidiOutDevice &current = CurrentItem();
+    if (!strcmp(deviceName_.c_str(), current.GetName())) {
+      if (current.Init()) {
+        if (current.Start()) {
+          device_ = &current;
+        } else {
+          current.Close();
+        }
+      }
+      break;
+    }
   }
 };
 
