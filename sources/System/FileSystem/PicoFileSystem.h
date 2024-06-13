@@ -1,5 +1,5 @@
-#ifndef _FILESYSTEM_H_
-#define _FILESYSTEM_H_
+#ifndef _PICO_FILESYSTEM_H_
+#define _PICO_FILESYSTEM_H_
 
 #include "Adapters/picoTracker/sdcard/sdcard.h"
 #include "Application/Utils/wildcard.h"
@@ -8,16 +8,17 @@
 #include "Foundation/T_Factory.h"
 #include "System/Console/Trace.h"
 
-enum FileType { FT_UNKNOWN, FT_FILE, FT_DIR };
+enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 
-class PicoFileSystem : public T_Factory<PicoFileSystem> {
+class PicoFileSystem : public T_Singleton<PicoFileSystem> {
 public:
   PicoFileSystem();
+  bool chRootDir();
   bool chdir(const char *path);
   bool read(int index, void *data);
   void list(etl::array<int, 256> *fileIndexes);
   void getFileName(int index, char *name, int length);
-  FileType getFileType(int index);
+  PicoFileType getFileType(int index);
 
 private:
   SdFs sd;

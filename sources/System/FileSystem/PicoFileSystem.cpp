@@ -16,7 +16,7 @@ PicoFileSystem::PicoFileSystem() {
   }
   // Try to mount the whole card as FAT (without partition table)
   if (static_cast<FsVolume *>(&sd)->begin(sd.card(), true, 0)) {
-    Trace::Log("FILESYSTEM",
+    Trace::Log("PICOFILESYSTEM",
                "Mounted SD Card FAT Filesystem without partition table");
     return;
   }
@@ -25,6 +25,11 @@ PicoFileSystem::PicoFileSystem() {
   if (!cwd.open("/")) {
     Trace::Error("dir.open failed");
   }
+}
+
+bool PicoFileSystem::chRootDir() {
+  Trace::Log("PICOFILESYSTEM", "chdir Root");
+  return sd.chdir();
 }
 
 bool PicoFileSystem::chdir(const char *name) {
