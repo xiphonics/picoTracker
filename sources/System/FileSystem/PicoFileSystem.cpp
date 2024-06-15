@@ -37,6 +37,16 @@ bool PicoFileSystem::chdir(const char *name) {
   return sd.chdir(name);
 }
 
+PicoFileType PicoFileSystem::getFileType(int index) {
+  Trace::Log("PICOFILESYSTEM", "get file type for:%d", index);
+  if (!cwd.openCwd()) {
+    Trace::Error("Failed to open cwd");
+    return PFT_UNKNOWN;
+  }
+  // TODO: check file type using sdfat api
+  return PFT_UNKNOWN;
+}
+
 void PicoFileSystem::list(etl::array<int, 256> *fileIndexes) {
   fileIndexes->erase_range(fileIndexes->front(), fileIndexes->back());
 
