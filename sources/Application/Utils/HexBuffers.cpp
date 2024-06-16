@@ -75,7 +75,7 @@ void restoreHexBuffer(PersistencyDocument *doc, unsigned char *destination) {
   while (child) {
     bool hasAttr = doc->NextAttribute();
     if (hasAttr) {
-      int data;
+      int data = 0;
       int length = 0;
       bool gotData = false;
       while (hasAttr) {

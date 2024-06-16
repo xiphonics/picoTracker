@@ -160,7 +160,7 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
         hasAttr = doc->NextAttribute();
       }
 
-      InstrumentType it;
+      InstrumentType it = IT_SAMPLE;
       if (instype) {
         for (uint i = 0; i < sizeof(InstrumentTypeData); i++) {
           if (!strcmp(instype, InstrumentTypeData[i])) {
