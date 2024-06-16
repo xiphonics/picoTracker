@@ -27,7 +27,7 @@ private:
   short topIndex_;
   short currentIndex_;
   short selected_;
-  etl::array<int, 256> fileIndexList_;
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 
 #endif

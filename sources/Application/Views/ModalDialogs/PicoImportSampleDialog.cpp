@@ -5,7 +5,7 @@
 #include <memory>
 
 #define LIST_WIDTH 24
-#define SAMPLE_LIB "samplelib"
+#define SAMPLE_LIB "/samplelib"
 
 PicoImportSampleDialog::PicoImportSampleDialog(View &view) : ModalView(view) {
   Trace::Log("PICOSAMPLEIMPORT", "samplelib is:%s", SAMPLE_LIB);
@@ -23,6 +23,8 @@ void PicoImportSampleDialog::DrawView() {
   GUITextProperties props;
 
   auto picoFS = PicoFileSystem::GetInstance();
+
+  picoFS->list(&fileIndexList_);
 
   // Draw samples
   int x = 0;
@@ -103,8 +105,12 @@ void PicoImportSampleDialog::OnPlayerUpdate(PlayerEventType,
 
 void PicoImportSampleDialog::OnFocus() {
   auto picoFS = PicoFileSystem::GetInstance();
-  picoFS->chRootDir();
-  picoFS->chdir(SAMPLE_LIB);
+
+  if (!picoFS->chdir(SAMPLE_LIB)) {
+    Trace::Error("FAILED to chdir to /samplelib");
+  } else {
+    Trace::Log("PICOIMPORTSAMPLEDIALOG", "chdir to /samplelib");
+  }
 };
 
 void PicoImportSampleDialog::preview(Path &element) {
