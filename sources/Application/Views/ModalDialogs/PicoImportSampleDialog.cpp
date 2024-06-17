@@ -9,6 +9,7 @@
 
 PicoImportSampleDialog::PicoImportSampleDialog(View &view) : ModalView(view) {
   Trace::Log("PICOSAMPLEIMPORT", "samplelib is:%s", SAMPLE_LIB);
+  fileIndexList_.fill(0);
 }
 
 PicoImportSampleDialog::~PicoImportSampleDialog() {
@@ -30,74 +31,63 @@ void PicoImportSampleDialog::DrawView() {
   int x = 0;
   int y = 0;
 
-  int count = 0;
   char buffer[LIST_WIDTH + 1];
-  for (const int &current : fileIndexList_) {
-    if (count == (currentIndex_ % PAGED_PAGE_SIZE)) {
+  for (size_t i = topIndex_;
+       i < topIndex_ + PAGED_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+    if (i == (currentIndex_ % PAGED_PAGE_SIZE)) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
     } else {
       SetColor(CD_NORMAL);
       props.invert_ = false;
     }
-    if (picoFS->getFileType(current) != PFT_DIR) {
-      picoFS->getFileName(current, buffer, LIST_WIDTH);
+
+    memset(buffer, '\0', sizeof(buffer));
+    unsigned fileIndex = fileIndexList_[i];
+
+    if (picoFS->getFileType(fileIndex) != PFT_DIR) {
+      picoFS->getFileName(fileIndex, buffer, LIST_WIDTH);
     } else {
       buffer[0] = '[';
-      picoFS->getFileName(current, buffer, LIST_WIDTH - 2);
+      picoFS->getFileName(fileIndex, buffer + 1, LIST_WIDTH - 2);
       strcat(buffer, "]");
     }
     // make sure if truncated the filename we have trailing null
     buffer[LIST_WIDTH] = 0;
     DrawString(x, y, buffer, props);
     y += 1;
-    count++;
   };
 
   SetColor(CD_NORMAL);
 };
 
 void PicoImportSampleDialog::warpToNextSample(int direction) {
-  // currentSample_ += direction;
-  // int size = currentDir_->size();
-  // bool needPage = false;
+  currentIndex_ += direction;
 
-  // // wrap around from first entry to last entry
-  // if (currentSample_ < 0) {
-  //   topIndex_ = (size / PAGED_PAGE_SIZE) * PAGED_PAGE_SIZE;
-  //   currentSample_ = size - 1; // goto last entry
-  //   needPage = true;
-  // }
-  // // wrap around from last entry to first entry
-  // if (currentSample_ >= size) {
-  //   currentSample_ = 0;
-  //   topIndex_ = 0;
-  //   needPage = true;
-  // }
+  // wrap around from first entry to last entry
+  if (currentIndex_ < 0) {
+    topIndex_ = fileIndexList_.size() - PAGED_PAGE_SIZE;
+    currentIndex_ = fileIndexList_.size() - 1; // goto last entry
+  }
+  // wrap around from last entry to first entry
+  if (currentIndex_ >= fileIndexList_.size()) {
+    currentIndex_ = 0;
+    topIndex_ = 0;
+  }
 
-  // // if we have scrolled off the bottom, page the file list down if not at
-  // end
-  // // of the list
-  // if ((currentSample_ >= (topIndex_ + PAGED_PAGE_SIZE)) &&
-  //     ((topIndex_ + PAGED_PAGE_SIZE) < size)) {
-  //   topIndex_ += PAGED_PAGE_SIZE;
-  //   needPage = true;
-  // }
+  // if we have scrolled off the bottom, page the file list down if not at end
+  // of the list
+  if ((currentIndex_ >= (topIndex_ + PAGED_PAGE_SIZE)) &&
+      ((topIndex_ + PAGED_PAGE_SIZE) < fileIndexList_.size())) {
+    topIndex_ += PAGED_PAGE_SIZE;
+  }
 
-  // // if we have scrolled off the top, page the file list up if not already at
-  // // very top of the list
-  // if (currentSample_ < topIndex_ && topIndex_ != 0) {
-  //   topIndex_ -= PAGED_PAGE_SIZE;
-  //   needPage = true;
-  // }
-
-  // // need to fetch a new page of the file list of current directory
-  // if (needPage) {
-  //   fileList_.clear();
-  //   currentDir_->getFileList(topIndex_, &fileList_);
-  // }
-
-  // isDirty_ = true;
+  // if we have scrolled off the top, page the file list up if not already at
+  // very top of the list
+  if (currentIndex_ < topIndex_ && topIndex_ != 0) {
+    topIndex_ -= PAGED_PAGE_SIZE;
+  }
+  isDirty_ = true;
 }
 
 void PicoImportSampleDialog::OnPlayerUpdate(PlayerEventType,
@@ -105,6 +95,8 @@ void PicoImportSampleDialog::OnPlayerUpdate(PlayerEventType,
 
 void PicoImportSampleDialog::OnFocus() {
   auto picoFS = PicoFileSystem::GetInstance();
+
+  toInstr_ = viewData_->currentInstrument_;
 
   if (!picoFS->chdir(SAMPLE_LIB)) {
     Trace::Error("FAILED to chdir to /samplelib");
@@ -158,64 +150,48 @@ void PicoImportSampleDialog::import(Path &element) {
 
 void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
                                                bool pressed) {
+  if (!pressed)
+    return;
 
-  //   if (!pressed)
-  //     return;
-  //   // make sure to index into the fileList with the offset from topIndex!
-  //   FileListItem currentItem = fileList_[currentSample_ - topIndex_];
-
-  //   auto fullPathStr = std::string(currentPath_.GetPath());
-  //   fullPathStr += "/";
-  //   fullPathStr += currentItem.name;
-  //   auto fullPath = Path{fullPathStr};
-
-  //   if (mask & EPBM_START) {
-  //     if (mask & EPBM_L) {
-  //       Trace::Log("PAGEDIMPORT", "SHIFT play - import");
-  //       import(fullPath);
-  //     } else {
-  //       Trace::Log("PAGEDIMPORT", "plain play preview");
-  //       preview(fullPath);
-  //     }
-  //   } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
-  //     // make sure we free mem from existing currentDir instance
-  //     if (currentDir_ != NULL) {
-  //       delete currentDir_;
-  //     }
-  //     EndModal(0);
-  //   } else if (mask & EPBM_B) {
-  //     if (mask & EPBM_UP)
-  //       warpToNextSample(-PAGED_PAGE_SIZE);
-  //     if (mask & EPBM_DOWN)
-  //       warpToNextSample(PAGED_PAGE_SIZE);
-  //   } else {
-  //     // A modifier
-  //     if (mask & EPBM_A) {
-  //       if (currentItem.isDirectory) {
-  //         if (currentItem.name == std::string("..")) {
-  //           if (currentPath_.GetPath() == std::string(SAMPLE_LIB_PATH)) {
-  //             Trace::Log("PAGEDIMPORT",
-  //                        "already at root of samplelib nothing to do");
-  //           } else {
-  //             Path parent = currentPath_.GetParent();
-  //             setCurrentFolder(&parent);
-  //           }
-  //         } else {
-  //           auto fullName = currentDir_->getFullName(currentItem.index);
-  //           Path childDirPath = currentPath_.Descend(fullName);
-  //           setCurrentFolder(&childDirPath);
-  //         }
-  //         isDirty_ = true;
-  //         return;
-  //       }
-  //     }
-  //     // handle moving up and down the file list
-  //     if (mask & EPBM_UP) {
-  //       warpToNextSample(-1);
-  //     } else if (mask & EPBM_DOWN) {
-  //       warpToNextSample(1);
-  //     }
-  //   }
+  if (mask & EPBM_START) {
+    if (mask & EPBM_L) {
+      Trace::Log("PICOIMPORT", "SHIFT play - import");
+      // import(fullPath);
+    } else {
+      Trace::Log("PICOIMPORT", "plain play preview");
+      // preview(fullPath);
+    }
+    // handle moving up and down the file list
+  } else if (mask & EPBM_UP) {
+    warpToNextSample(-1);
+    printf("up");
+  } else if (mask & EPBM_DOWN) {
+    warpToNextSample(1);
+    printf("down");
+  } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
+    EndModal(0);
+  } else {
+    // A modifier
+    if (mask & EPBM_A) {
+      // if (currentItem.isDirectory) {
+      //   if (currentItem.name == std::string("..")) {
+      //     if (currentPath_.GetPath() == std::string(SAMPLE_LIB_PATH)) {
+      //       Trace::Log("PAGEDIMPORT",
+      //                  "already at root of samplelib nothing to do");
+      //     } else {
+      //       Path parent = currentPath_.GetParent();
+      //       setCurrentFolder(&parent);
+      //     }
+      //   } else {
+      //     auto fullName = currentDir_->getFullName(currentItem.index);
+      //     Path childDirPath = currentPath_.Descend(fullName);
+      //     setCurrentFolder(&childDirPath);
+      //   }
+      //   isDirty_ = true;
+      //   return;
+      // }
+    }
+  }
 }
 
 void PicoImportSampleDialog::setCurrentFolder(Path *path) {

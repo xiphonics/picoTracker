@@ -24,9 +24,10 @@ protected:
   void preview(Path &element);
 
 private:
-  short topIndex_;
-  short currentIndex_;
-  short selected_;
+  size_t topIndex_ = 0;
+  size_t currentIndex_ = 0;
+  short selected_ = 0;
+  int toInstr_ = 0;
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 

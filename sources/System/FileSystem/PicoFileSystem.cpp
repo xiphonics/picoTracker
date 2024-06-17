@@ -18,20 +18,11 @@ PicoFileSystem::PicoFileSystem() {
                "Mounted SD Card FAT Filesystem without partition table");
     return;
   }
-
-  FsFile cwd;
-  // Open root directory
-  if (!cwd.open("/")) {
-    Trace::Error("Root dir.open failed");
-  } else {
-    cwd.close();
-  }
 }
 
 bool PicoFileSystem::chdir(const char *name) {
   Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
-  auto res = sd.chdir(name);
-  sd.chvol();
+  auto res = sd.vol()->chdir(name);
   File cwd;
   char buf[128];
   cwd.openCwd();
@@ -81,7 +72,6 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes) {
       fileIndexes->push_back(index);
       entry.getName(buffer, PFILENAME_SIZE);
       count++;
-      printf("idx:%d file:%s\n", index, buffer);
     } else {
       entry.getName(buffer, PFILENAME_SIZE);
       Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", buffer);
@@ -99,8 +89,11 @@ void PicoFileSystem::getFileName(int index, char *name, int length) {
     cwd.getName(dirname, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd:%s", dirname);
     return;
+  } else {
+    cwd.getName(dirname, PFILENAME_SIZE);
+    Trace::Log("opened cwd:%s", dirname);
   }
-  FsBaseFile entry;
+  FsFile entry;
   entry.open(index);
   entry.getName(name, length);
 }
