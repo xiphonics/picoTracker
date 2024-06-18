@@ -336,7 +336,7 @@ bool FatFile::open(FatFile* dirFile, FatLfn_t* fname, oflag_t oflag) {
       }
     }
     // skip empty slot or '.' or '..'
-    if (dir->name[0] == FAT_NAME_DELETED || dir->name[0] == '.') {
+    if (dir->name[0] == FAT_NAME_DELETED) {
       lfnOrd = 0;
     } else if (isFatLongName(dir)) {
       ldir = reinterpret_cast<DirLfn_t*>(dir);

@@ -31,10 +31,12 @@ void PicoImportSampleDialog::DrawView() {
   int x = 0;
   int y = 0;
 
-  char buffer[LIST_WIDTH + 1];
+  // need to use fullsize buffer as sdfat doesnt truncate if filename longer
+  // than buffer but instead returns empty string  in buffer :-(
+  char buffer[PFILENAME_SIZE];
   for (size_t i = topIndex_;
        i < topIndex_ + PAGED_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
-    if (i == (currentIndex_ % PAGED_PAGE_SIZE)) {
+    if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
     } else {
@@ -46,13 +48,13 @@ void PicoImportSampleDialog::DrawView() {
     unsigned fileIndex = fileIndexList_[i];
 
     if (picoFS->getFileType(fileIndex) != PFT_DIR) {
-      picoFS->getFileName(fileIndex, buffer, LIST_WIDTH);
+      picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
     } else {
       buffer[0] = '[';
-      picoFS->getFileName(fileIndex, buffer + 1, LIST_WIDTH - 2);
-      strcat(buffer, "]");
+      picoFS->getFileName(fileIndex, buffer + 1, PFILENAME_SIZE);
+      buffer[LIST_WIDTH - 2] = ']';
     }
-    // make sure if truncated the filename we have trailing null
+    // make sure truncate to list width the filename with trailing null
     buffer[LIST_WIDTH] = 0;
     DrawString(x, y, buffer, props);
     y += 1;
@@ -64,28 +66,25 @@ void PicoImportSampleDialog::DrawView() {
 void PicoImportSampleDialog::warpToNextSample(int direction) {
   currentIndex_ += direction;
 
-  // wrap around from first entry to last entry
   if (currentIndex_ < 0) {
-    topIndex_ = fileIndexList_.size() - PAGED_PAGE_SIZE;
-    currentIndex_ = fileIndexList_.size() - 1; // goto last entry
+    topIndex_ = currentIndex_ = 0;
   }
-  // wrap around from last entry to first entry
   if (currentIndex_ >= fileIndexList_.size()) {
-    currentIndex_ = 0;
-    topIndex_ = 0;
+    currentIndex_ = fileIndexList_.size() - 1;
+    topIndex_ = currentIndex_ - PAGED_PAGE_SIZE;
   }
 
   // if we have scrolled off the bottom, page the file list down if not at end
   // of the list
   if ((currentIndex_ >= (topIndex_ + PAGED_PAGE_SIZE)) &&
       ((topIndex_ + PAGED_PAGE_SIZE) < fileIndexList_.size())) {
-    topIndex_ += PAGED_PAGE_SIZE;
+    topIndex_++;
   }
 
   // if we have scrolled off the top, page the file list up if not already at
   // very top of the list
-  if (currentIndex_ < topIndex_ && topIndex_ != 0) {
-    topIndex_ -= PAGED_PAGE_SIZE;
+  if (currentIndex_ < topIndex_) {
+    topIndex_ = currentIndex_;
   }
   isDirty_ = true;
 }
@@ -173,23 +172,29 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
   } else {
     // A modifier
     if (mask & EPBM_A) {
-      // if (currentItem.isDirectory) {
-      //   if (currentItem.name == std::string("..")) {
-      //     if (currentPath_.GetPath() == std::string(SAMPLE_LIB_PATH)) {
-      //       Trace::Log("PAGEDIMPORT",
-      //                  "already at root of samplelib nothing to do");
-      //     } else {
-      //       Path parent = currentPath_.GetParent();
-      //       setCurrentFolder(&parent);
-      //     }
-      //   } else {
-      //     auto fullName = currentDir_->getFullName(currentItem.index);
-      //     Path childDirPath = currentPath_.Descend(fullName);
-      //     setCurrentFolder(&childDirPath);
-      //   }
-      //   isDirty_ = true;
-      //   return;
-      // }
+      auto picoFS = PicoFileSystem::GetInstance();
+      unsigned fileIndex = fileIndexList_[currentIndex_];
+      char name[PFILENAME_SIZE];
+      picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
+      if (picoFS->getFileType(fileIndex) == PFT_DIR) {
+        picoFS->chdir(name);
+
+        // if (currentItem.name == std::string("..")) {
+        //   if (currentPath_.GetPath() == std::string(SAMPLE_LIB_PATH)) {
+        //     Trace::Log("PAGEDIMPORT",
+        //                "already at root of samplelib nothing to do");
+        //   } else {
+        //     Path parent = currentPath_.GetParent();
+        //     setCurrentFolder(&parent);
+        //   }
+        // } else {
+        //   auto fullName = currentDir_->getFullName(currentItem.index);
+        //   Path childDirPath = currentPath_.Descend(fullName);
+        //   setCurrentFolder(&childDirPath);
+        // }
+        isDirty_ = true;
+        return;
+      }
     }
   }
 }

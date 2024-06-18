@@ -22,6 +22,8 @@ PicoFileSystem::PicoFileSystem() {
 
 bool PicoFileSystem::chdir(const char *name) {
   Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
+
+  sd.chvol();
   auto res = sd.vol()->chdir(name);
   File cwd;
   char buf[128];
@@ -33,8 +35,11 @@ bool PicoFileSystem::chdir(const char *name) {
 }
 
 PicoFileType PicoFileSystem::getFileType(int index) {
-  Trace::Log("PICOFILESYSTEM", "get file type for:%d", index);
-  FsFile cwd;
+  //   if (index == 0) { // special case for "..""
+  //     return PFT_DIR;
+  //   }
+  //   Trace::Log("PICOFILESYSTEM", "get file type for:%d", index);
+  FsBaseFile cwd;
   if (!cwd.openCwd()) {
     char name[PFILENAME_SIZE];
     Trace::Error("Failed to open cwd: %s", name);
@@ -43,6 +48,7 @@ PicoFileType PicoFileSystem::getFileType(int index) {
   FsBaseFile entry;
   entry.open(index);
   auto isDir = entry.isDirectory();
+  entry.close();
   return isDir ? PFT_DIR : PFT_FILE;
 }
 
@@ -63,14 +69,19 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes) {
     return;
   }
 
-  FsBaseFile entry;
+  File entry;
   int count = 0;
+
+  // add fake entry for ".."
+  //   fileIndexes->push_back(0);
+
   // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
   while (entry.openNext(&cwd, O_READ) && (count < PFILENAME_SIZE)) {
     uint32_t index = entry.dirIndex();
     if (!entry.isHidden()) {
       fileIndexes->push_back(index);
       entry.getName(buffer, PFILENAME_SIZE);
+      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {
       entry.getName(buffer, PFILENAME_SIZE);
@@ -78,22 +89,27 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes) {
     }
     entry.close();
   }
+  cwd.close();
   Trace::Log("PICOFILESYSTEM", "scanned: %d, added file indexes:%d", count,
              fileIndexes->size());
 }
 
 void PicoFileSystem::getFileName(int index, char *name, int length) {
+  //   if (index == 0) {
+  //     strcpy(name, "..");
+  //     return;
+  //   }
+
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
     cwd.getName(dirname, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd:%s", dirname);
     return;
-  } else {
-    cwd.getName(dirname, PFILENAME_SIZE);
-    Trace::Log("opened cwd:%s", dirname);
   }
   FsFile entry;
   entry.open(index);
   entry.getName(name, length);
+  entry.close();
+  cwd.close();
 }

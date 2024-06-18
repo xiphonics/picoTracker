@@ -23,7 +23,7 @@ public:
   PicoFileType getFileType(int index);
 
 private:
-  SdFat sd;
+  SdFs sd;
 };
 
 #endif

@@ -24,13 +24,24 @@
  */
 #define DBG_FILE "FatVolume.cpp"
 #include "../common/DebugMacros.h"
+#include "FatFile.h"
 #include "FatLib.h"
 #include <stdio.h>
 FatVolume* FatVolume::m_cwv = nullptr;
 //------------------------------------------------------------------------------
 bool FatVolume::chdir(const char *path) {
   FatFile dir;
-  if (!dir.open(vwd(), path, O_RDONLY)) {
+  char buf[128];
+  if (path[0] == '.' && path[1] == '.') {
+    m_vwd.rewind();
+    // need to do it twice: once for "." , then again for ".."
+    m_vwd.readDirCache(true);
+    m_vwd.readDirCache(true);
+    if (!dir.openCachedEntry(&m_vwd, 1, O_READ, 0)) {
+      // printf("Failed OPEN Parent");
+    }
+  } else if (!dir.open(vwd(), path, O_RDONLY)) {
+    // printf("chdir FAILED OPEN:%s", path);
     DBG_FAIL_MACRO;
     goto fail;
   }
@@ -38,12 +49,11 @@ bool FatVolume::chdir(const char *path) {
     DBG_FAIL_MACRO;
     goto fail;
   }
-  // this is not the   FatVolume::cwv() so need to use that to set the vwd
+  // this is not the  FatVolume::cwv() so need to use that to set the vwd
   // in latest version 2.3.2 of SDFat this is fixed by using newly added copy
   // constructor:
   // https://github.com/greiman/SdFat/blob/052d38e2c6ed64d862d8867b32e37f36b8c065ec/src/FatLib/FatVolume.cpp#L40-L41
-
-  // m_vwd = dir;
+  m_vwd = dir;
   FatVolume::cwv()->m_vwd = dir;
   return true;
 
