@@ -30,15 +30,10 @@ bool PicoFileSystem::chdir(const char *name) {
   cwd.openCwd();
   cwd.getName(buf, 128);
   cwd.close();
-  printf("====AFTER chdir:%s\n", buf);
   return res;
 }
 
 PicoFileType PicoFileSystem::getFileType(int index) {
-  //   if (index == 0) { // special case for "..""
-  //     return PFT_DIR;
-  //   }
-  //   Trace::Log("PICOFILESYSTEM", "get file type for:%d", index);
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
     char name[PFILENAME_SIZE];
@@ -72,19 +67,17 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes) {
   File entry;
   int count = 0;
 
-  // add fake entry for ".."
-  //   fileIndexes->push_back(0);
-
   // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
   while (entry.openNext(&cwd, O_READ) && (count < PFILENAME_SIZE)) {
     uint32_t index = entry.dirIndex();
-    if (!entry.isHidden()) {
+    entry.getName(buffer, PFILENAME_SIZE);
+
+    // skip hidden & "."
+    if (!entry.isHidden() && entry.dirIndex() != 0) {
       fileIndexes->push_back(index);
-      entry.getName(buffer, PFILENAME_SIZE);
       Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {
-      entry.getName(buffer, PFILENAME_SIZE);
       Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", buffer);
     }
     entry.close();
@@ -95,11 +88,6 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes) {
 }
 
 void PicoFileSystem::getFileName(int index, char *name, int length) {
-  //   if (index == 0) {
-  //     strcpy(name, "..");
-  //     return;
-  //   }
-
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
