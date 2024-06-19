@@ -25,8 +25,6 @@ void PicoImportSampleDialog::DrawView() {
 
   auto picoFS = PicoFileSystem::GetInstance();
 
-  picoFS->list(&fileIndexList_);
-
   // Draw samples
   int x = 0;
   int y = 0;
@@ -101,6 +99,10 @@ void PicoImportSampleDialog::OnFocus() {
     Trace::Error("FAILED to chdir to /samplelib");
   } else {
     Trace::Log("PICOIMPORTSAMPLEDIALOG", "chdir to /samplelib");
+
+    // fetch list of new subdir we have gone into
+    auto picoFS = PicoFileSystem::GetInstance();
+    picoFS->list(&fileIndexList_);
   }
 };
 
@@ -184,14 +186,13 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
           // +1 to skip leading "/" in samplelib path name
           // if (strcmp(SAMPLE_LIB + 1, currentDirname)) {
           //   Trace::Log("PICOIMPORT", "at samplelib root: %s", name);
-          // } else {
-          picoFS->chdir(name);
-          currentIndex_ = 0;
-          // }
-        } else {
-          picoFS->chdir(name);
-          currentIndex_ = 0;
+          //}
         }
+        picoFS->chdir(name);
+        currentIndex_ = 0;
+        // now update list of file indexes in this new dir
+        picoFS->list(&fileIndexList_);
+
         isDirty_ = true;
       }
     }
