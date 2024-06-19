@@ -49,9 +49,8 @@ void PicoImportSampleDialog::DrawView() {
     if (picoFS->getFileType(fileIndex) != PFT_DIR) {
       picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
     } else {
-      buffer[0] = '[';
+      buffer[0] = '/';
       picoFS->getFileName(fileIndex, buffer + 1, PFILENAME_SIZE);
-      buffer[LIST_WIDTH - 2] = ']';
     }
     // make sure truncate to list width the filename with trailing null
     buffer[LIST_WIDTH] = 0;
@@ -164,10 +163,8 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
     // handle moving up and down the file list
   } else if (mask & EPBM_UP) {
     warpToNextSample(true);
-    printf("up");
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
-    printf("down");
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
     EndModal(0);
     return;
