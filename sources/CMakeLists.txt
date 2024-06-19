@@ -24,7 +24,7 @@ add_definitions(-DPICOBUILD)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
 # Disable MIDI. Enable in order to use UART0 as stdio for debugging
-# add_definitions(-DDUMMY_MIDI)
+add_definitions(-DDUMMY_MIDI)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
 # add_definitions(-DUSB_REMOTE_UI)
@@ -75,7 +75,7 @@ target_compile_definitions(picoTracker PUBLIC
 
 # Debug output with USB uses +6K memory
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
 
 # This is the default, but better to make it explicit
 pico_set_float_implementation(${PROJECT_NAME} pico)

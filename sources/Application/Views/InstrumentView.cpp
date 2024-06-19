@@ -13,7 +13,8 @@
 #include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/ImportSampleDialog.h"
 #include "ModalDialogs/MessageBox.h"
-#include "ModalDialogs/PicoImportSampleDialog.h"
+// #include "ModalDialogs/PicoImportSampleDialog.h"
+#include "ModalDialogs/PagedImportSampleDialog.h"
 #include "System/System/System.h"
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
@@ -454,9 +455,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
             ;
             // Go to import sample
 #ifdef PICOBUILD
-            // PagedImportSampleDialog *isd = new
-            // PagedImportSampleDialog(*this);
-            PicoImportSampleDialog *isd = new PicoImportSampleDialog(*this);
+            PagedImportSampleDialog *isd = new PagedImportSampleDialog(*this);
+            // PicoImportSampleDialog *isd = new PicoImportSampleDialog(*this);
 #else
             ImportSampleDialog *isd = new ImportSampleDialog(*this);
 #endif

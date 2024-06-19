@@ -13,7 +13,7 @@
 
 #define MAX_FILENAME_SIZE 256
 
-#define SAMPLE_LIB_PATH "/samplelib"
+#define SAMPLE_LIB_PATH "samplelib"
 
 #define PAGED_PAGE_SIZE 18
 

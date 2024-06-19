@@ -169,6 +169,7 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
     printf("down");
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
     EndModal(0);
+    return;
   } else {
     // A modifier
     if (mask & EPBM_A) {
@@ -177,23 +178,21 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
       char name[PFILENAME_SIZE];
       picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
       if (picoFS->getFileType(fileIndex) == PFT_DIR) {
-        picoFS->chdir(name);
+        if (name[0] == '.' && name[1] == '.') {
+          // TODO: check for being in top of samplelib root dir
 
-        // if (currentItem.name == std::string("..")) {
-        //   if (currentPath_.GetPath() == std::string(SAMPLE_LIB_PATH)) {
-        //     Trace::Log("PAGEDIMPORT",
-        //                "already at root of samplelib nothing to do");
-        //   } else {
-        //     Path parent = currentPath_.GetParent();
-        //     setCurrentFolder(&parent);
-        //   }
-        // } else {
-        //   auto fullName = currentDir_->getFullName(currentItem.index);
-        //   Path childDirPath = currentPath_.Descend(fullName);
-        //   setCurrentFolder(&childDirPath);
-        // }
+          // +1 to skip leading "/" in samplelib path name
+          // if (strcmp(SAMPLE_LIB + 1, currentDirname)) {
+          //   Trace::Log("PICOIMPORT", "at samplelib root: %s", name);
+          // } else {
+          picoFS->chdir(name);
+          currentIndex_ = 0;
+          // }
+        } else {
+          picoFS->chdir(name);
+          currentIndex_ = 0;
+        }
         isDirty_ = true;
-        return;
       }
     }
   }
