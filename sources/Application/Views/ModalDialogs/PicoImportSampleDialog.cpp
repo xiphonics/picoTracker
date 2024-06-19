@@ -17,8 +17,9 @@ PicoImportSampleDialog::~PicoImportSampleDialog() {
 }
 
 void PicoImportSampleDialog::DrawView() {
-  Trace::Log("PICOSAMPLEIMPORT", "DrawView current:%d topIdx:%d", currentIndex_,
-             topIndex_);
+  // Trace::Log("PICOSAMPLEIMPORT", "DrawView current:%d topIdx:%d",
+  // currentIndex_,
+  //            topIndex_);
 
   SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
   GUITextProperties props;
@@ -61,28 +62,26 @@ void PicoImportSampleDialog::DrawView() {
   SetColor(CD_NORMAL);
 };
 
-void PicoImportSampleDialog::warpToNextSample(int direction) {
-  currentIndex_ += direction;
+void PicoImportSampleDialog::warpToNextSample(bool goUp) {
 
-  if (currentIndex_ < 0) {
-    topIndex_ = currentIndex_ = 0;
-  }
-  if (currentIndex_ >= fileIndexList_.size()) {
-    currentIndex_ = fileIndexList_.size() - 1;
-    topIndex_ = currentIndex_ - PAGED_PAGE_SIZE;
-  }
-
-  // if we have scrolled off the bottom, page the file list down if not at end
-  // of the list
-  if ((currentIndex_ >= (topIndex_ + PAGED_PAGE_SIZE)) &&
-      ((topIndex_ + PAGED_PAGE_SIZE) < fileIndexList_.size())) {
-    topIndex_++;
-  }
-
-  // if we have scrolled off the top, page the file list up if not already at
-  // very top of the list
-  if (currentIndex_ < topIndex_) {
-    topIndex_ = currentIndex_;
+  if (goUp) {
+    if (currentIndex_ > 0) {
+      currentIndex_--;
+      // if we have scrolled off the top, page the file list up if not
+      // already at  very top of the list
+      if (currentIndex_ < topIndex_) {
+        topIndex_ = currentIndex_;
+      }
+    }
+  } else {
+    if (currentIndex_ < fileIndexList_.size() - 1) {
+      currentIndex_++;
+      // if we have scrolled off the bottom, page the file list down if not
+      // at end of the list
+      if (currentIndex_ >= (topIndex_ + PAGED_PAGE_SIZE)) {
+        topIndex_++;
+      }
+    }
   }
   isDirty_ = true;
 }
@@ -164,10 +163,10 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
     }
     // handle moving up and down the file list
   } else if (mask & EPBM_UP) {
-    warpToNextSample(-1);
+    warpToNextSample(true);
     printf("up");
   } else if (mask & EPBM_DOWN) {
-    warpToNextSample(1);
+    warpToNextSample(false);
     printf("down");
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
     EndModal(0);

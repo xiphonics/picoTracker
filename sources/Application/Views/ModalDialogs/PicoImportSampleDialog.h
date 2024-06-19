@@ -19,7 +19,7 @@ public:
 
 protected:
   void setCurrentFolder(Path *path);
-  void warpToNextSample(int dir);
+  void warpToNextSample(bool goUp);
   void import(Path &element);
   void preview(Path &element);
 
