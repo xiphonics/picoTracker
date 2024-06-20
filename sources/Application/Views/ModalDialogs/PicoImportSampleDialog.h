@@ -21,11 +21,12 @@ protected:
   void setCurrentFolder(PicoFileSystem *picoFS, const char *name);
   void warpToNextSample(bool goUp);
   void import(Path &element);
-  void preview(Path &element);
+  void preview(char *name);
 
 private:
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
+  size_t previewPlayingIndex_ = 0;
   short selected_ = 0;
   int toInstr_ = 0;
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;

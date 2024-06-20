@@ -8,13 +8,14 @@ AudioFileStreamer::AudioFileStreamer() {
   shift_ = 1;
   mode_ = AFSM_STOPPED;
   newPath_ = false;
+  name_ = nullptr;
 };
 
 AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
 
-bool AudioFileStreamer::Start(const Path &path) {
-  Trace::Debug("Starting to stream %s", path.GetPath().c_str());
-  path_ = path;
+bool AudioFileStreamer::Start(char *name) {
+  Trace::Debug("Starting to stream %s", name);
+  name_ = name;
   const char *shift = Config::GetInstance()->GetValue("PRELISTENATTENUATION");
   shift_ = (shift) ? atoi(shift) : 1;
   Trace::Debug("Streaming shift is %d", shift_);
@@ -49,9 +50,9 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   // new look if we need to load the file
 
   if (!wav_) {
-    wav_ = WavFile::Open(path_.GetPath().c_str());
+    wav_ = WavFile::Open(name_);
     if (!wav_) {
-      Trace::Error("Failed to open streaming of %s", path_.GetPath().c_str());
+      Trace::Error("Failed to open streaming of %s", name_);
       mode_ = AFSM_STOPPED;
       return false;
     }

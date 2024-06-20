@@ -13,9 +13,27 @@
 
 enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 
+class PI_File {
+public:
+  PI_File(FsBaseFile file);
+  ~PI_File(){};
+  int Read(void *ptr, int size, int nmemb);
+  // int GetC();
+  // int Write(const void *ptr, int size, int nmemb) = 0;
+  // void Printf(const char *format, ...) = 0;
+  void Seek(long offset, int whence);
+  // long Tell();
+  void Close();
+  // int Error();
+
+private:
+  FsBaseFile file_;
+};
+
 class PicoFileSystem : public T_Singleton<PicoFileSystem> {
 public:
   PicoFileSystem();
+  PI_File *Open(const char *name, const char *mode);
   bool chdir(const char *path);
   bool read(int index, void *data);
   void list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,

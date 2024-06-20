@@ -20,6 +20,32 @@ PicoFileSystem::PicoFileSystem() {
   }
 }
 
+PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
+  Trace::Log("FILESYSTEM", "Open file %s, mode: %s", name, mode);
+  oflag_t rmode;
+  switch (*mode) {
+  case 'r':
+    rmode = O_RDONLY;
+    break;
+  case 'w':
+    rmode = O_WRONLY | O_CREAT | O_TRUNC;
+    break;
+  default:
+    rmode = O_RDONLY;
+    Trace::Error("Invalid mode: %s [%d]", mode, rmode);
+    return 0;
+  }
+  FsBaseFile cwd;
+  cwd.openCwd();
+  PI_File *wFile = 0;
+  if (cwd.open(name, rmode)) {
+    wFile = new PI_File(cwd);
+  } else {
+    Trace::Error("Cannot open file:%s", name);
+  }
+  return wFile;
+}
+
 bool PicoFileSystem::chdir(const char *name) {
   Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
 
@@ -140,3 +166,27 @@ void PicoFileSystem::tolowercase(char *temp) {
     s++;
   }
 }
+
+PI_File::PI_File(FsBaseFile file) { file_ = file; };
+
+int PI_File::Read(void *ptr, int size, int nmemb) {
+  return file_.read(ptr, size * nmemb);
+}
+
+void PI_File::Seek(long offset, int whence) {
+  switch (whence) {
+  case SEEK_SET:
+    file_.seek(offset);
+    break;
+  case SEEK_CUR:
+    file_.seekCur(offset);
+    break;
+  case SEEK_END:
+    file_.seekEnd(offset);
+    break;
+  default:
+    Trace::Error("Invalid seek whence: %s", whence);
+  }
+}
+
+void PI_File::Close() { file_.close(); }

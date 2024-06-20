@@ -96,17 +96,17 @@ void PicoImportSampleDialog::OnFocus() {
   setCurrentFolder(picoFS, SAMPLE_LIB);
 };
 
-void PicoImportSampleDialog::preview(Path &element) {
-  // if (Player::GetInstance()->IsPlaying()) {
-  //   Player::GetInstance()->StopStreaming();
-  //   if (currentSample_ != previewPlayingIndex_) {
-  //     previewPlayingIndex_ = currentSample_;
-  //     Player::GetInstance()->StartStreaming(element);
-  //   }
-  // } else {
-  //   Player::GetInstance()->StartStreaming(element);
-  //   previewPlayingIndex_ = currentSample_;
-  // }
+void PicoImportSampleDialog::preview(char *name) {
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+    if (currentIndex_ != previewPlayingIndex_) {
+      previewPlayingIndex_ = currentIndex_;
+      Player::GetInstance()->StartStreaming(name);
+    }
+  } else {
+    Player::GetInstance()->StartStreaming(name);
+    previewPlayingIndex_ = currentIndex_;
+  }
 }
 
 void PicoImportSampleDialog::import(Path &element){
@@ -146,12 +146,17 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
     return;
 
   if (mask & EPBM_START) {
+    auto picoFS = PicoFileSystem::GetInstance();
+    char name[PFILENAME_SIZE];
+    unsigned fileIndex = fileIndexList_[currentIndex_];
+    picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
+
     if (mask & EPBM_L) {
       Trace::Log("PICOIMPORT", "SHIFT play - import");
       // import(fullPath);
     } else {
       Trace::Log("PICOIMPORT", "plain play preview");
-      // preview(fullPath);
+      preview(name);
     }
     // handle moving up and down the file list
   } else if (mask & EPBM_UP) {

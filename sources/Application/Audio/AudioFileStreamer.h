@@ -12,13 +12,13 @@ public:
   AudioFileStreamer();
   virtual ~AudioFileStreamer();
   virtual bool Render(fixed *buffer, int samplecount);
-  bool Start(const Path &);
+  bool Start(char *name);
   void Stop();
   bool IsPlaying();
 
 protected:
   AudioFileStreamerMode mode_;
-  Path path_;
+  char *name_;
   bool newPath_;
   WavFile *wav_;
   int position_;

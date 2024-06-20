@@ -1,6 +1,4 @@
 add_library(application_views_modaldialogs
-  ImportSampleDialog.h ImportSampleDialog.cpp
-  PagedImportSampleDialog.h PagedImportSampleDialog.cpp
   PicoImportSampleDialog.h PicoImportSampleDialog.cpp
   MessageBox.h MessageBox.cpp
   NewProjectDialog.h NewProjectDialog.cpp

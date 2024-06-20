@@ -304,3 +304,4 @@ FileType picoTrackerFileSystem::GetFileType(const char *path) {
 I_PagedDir *picoTrackerFileSystem::OpenPaged(const char *path) {
   return new picoTrackerPagedDir{path};
 }
+
