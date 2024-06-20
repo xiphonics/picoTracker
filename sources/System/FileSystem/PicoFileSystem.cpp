@@ -82,7 +82,7 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
         (!entry.isHidden() && matchesFilter)) {
       fileIndexes->push_back(index);
-      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
+      // Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {
       Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", buffer);

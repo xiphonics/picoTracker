@@ -177,7 +177,7 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
 
 void PicoImportSampleDialog::setCurrentFolder(PicoFileSystem *picoFS,
                                               const char *name) {
-  Trace::Log("PICOIMPORT", "set Current Folder:%s");
+  // Trace::Log("PICOIMPORT", "set Current Folder:%s");
   if (!picoFS->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
   }
