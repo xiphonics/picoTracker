@@ -93,15 +93,7 @@ void PicoImportSampleDialog::OnFocus() {
 
   toInstr_ = viewData_->currentInstrument_;
 
-  if (!picoFS->chdir(SAMPLE_LIB)) {
-    Trace::Error("FAILED to chdir to /samplelib");
-  } else {
-    Trace::Log("PICOIMPORTSAMPLEDIALOG", "chdir to /samplelib");
-
-    // fetch list of new subdir we have gone into
-    auto picoFS = PicoFileSystem::GetInstance();
-    picoFS->list(&fileIndexList_);
-  }
+  setCurrentFolder(picoFS, SAMPLE_LIB);
 };
 
 void PicoImportSampleDialog::preview(Path &element) {
@@ -184,38 +176,20 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
           //   Trace::Log("PICOIMPORT", "at samplelib root: %s", name);
           //}
         }
-        picoFS->chdir(name);
-        currentIndex_ = 0;
-        // now update list of file indexes in this new dir
-        picoFS->list(&fileIndexList_);
-
+        setCurrentFolder(picoFS, name);
         isDirty_ = true;
       }
     }
   }
 }
 
-void PicoImportSampleDialog::setCurrentFolder(Path *path) {
-  //   Trace::Log("PAGEDIMPORT", "set Current Folder:%s",
-  //   path->GetPath().c_str()); Path formerPath(currentPath_); topIndex_ = 0;
-  //   currentSample_ = 0;
-  //   currentPath_ = Path(*path);
-  //   fileList_.clear();
-  //   if (path) {
-  //     // make sure we free mem from existing currentDir instance
-  //     if (currentDir_ != NULL) {
-  //       delete currentDir_;
-  //     }
-  //     currentDir_ =
-  //     FileSystem::GetInstance()->OpenPaged(path->GetPath().c_str());
-  //     // TODO: show "Loading..." mesg in UI
-  //     Trace::Log("PAGEDIMPORT", "Loading...");
-  //     currentDir_->GetContent("*.wav");
-  //     // TODO: hide "Loading..." mesg in UI
-  //     Trace::Log("PAGEDIMPORT", "Finished Loading");
-  //   }
-
-  //   // load first page of file/subdirs
-  //   fileList_.clear();
-  //   currentDir_->getFileList(topIndex_, &fileList_);
+void PicoImportSampleDialog::setCurrentFolder(PicoFileSystem *picoFS,
+                                              const char *name) {
+  Trace::Log("PAGEDIMPORT", "set Current Folder:%s");
+  if (!picoFS->chdir(name)) {
+    Trace::Error("FAILED to chdir to %s", name);
+  }
+  currentIndex_ = 0;
+  // now update list of file indexes in this new dir
+  picoFS->list(&fileIndexList_);
 }

@@ -18,7 +18,7 @@ public:
   virtual void AnimationUpdate() {};
 
 protected:
-  void setCurrentFolder(Path *path);
+  void setCurrentFolder(PicoFileSystem *picoFS, const char *name);
   void warpToNextSample(bool goUp);
   void import(Path &element);
   void preview(Path &element);
