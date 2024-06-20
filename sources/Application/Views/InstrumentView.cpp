@@ -454,13 +454,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
           } else {
             ;
             // Go to import sample
-#ifdef PICOBUILD
-            // PagedImportSampleDialog *isd = new
-            // PagedImportSampleDialog(*this);
             PicoImportSampleDialog *isd = new PicoImportSampleDialog(*this);
-#else
-            ImportSampleDialog *isd = new ImportSampleDialog(*this);
-#endif
             DoModal(isd);
           }
         } else {

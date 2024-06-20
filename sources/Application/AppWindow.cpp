@@ -116,9 +116,17 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _currentView = _nullView;
   _nullView->SetDirty(true);
 
-  static char selectProjectMemBuf[sizeof(SelectProjectDialog)];
-  SelectProjectDialog *spd =
-      new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
+  // For now need to keep using dynamic mem alloc here  instead of
+  // doing the static alloc trick as the View class
+  // depends on being able to delete the assigned modal obj and then will
+  // free it there as thats the way it tracks when the modal is no longer
+  // visible on screen
+
+  // static char selectProjectMemBuf[sizeof(SelectProjectDialog)];
+  // SelectProjectDialog *spd =
+  //     new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
+
+  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
   _currentView->DoModal(spd, ProjectSelectCallback);
 
   memset(_charScreen, ' ', SCREEN_CHARS);
