@@ -170,11 +170,6 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
       if (picoFS->getFileType(fileIndex) == PFT_DIR) {
         if (name[0] == '.' && name[1] == '.') {
           // TODO: check for being in top of samplelib root dir
-
-          // +1 to skip leading "/" in samplelib path name
-          // if (strcmp(SAMPLE_LIB + 1, currentDirname)) {
-          //   Trace::Log("PICOIMPORT", "at samplelib root: %s", name);
-          //}
         }
         setCurrentFolder(picoFS, name);
         isDirty_ = true;
@@ -191,5 +186,5 @@ void PicoImportSampleDialog::setCurrentFolder(PicoFileSystem *picoFS,
   }
   currentIndex_ = 0;
   // now update list of file indexes in this new dir
-  picoFS->list(&fileIndexList_);
+  picoFS->list(&fileIndexList_, ".wav");
 }
