@@ -76,6 +76,7 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
     // skip hidden & "."
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
+      tolowercase(buffer);
       matchesFilter = (strstr(buffer, filter) != NULL);
     }
     // filter out "." and files that dont match filter if a filter is given
@@ -131,4 +132,13 @@ bool PicoFileSystem::isParentRoot() {
   up.close();
   cwd.close();
   return result;
+}
+
+void PicoFileSystem::tolowercase(char *temp) {
+  // Convert to upper case
+  char *s = temp;
+  while (*s) {
+    *s = tolower((unsigned char)*s);
+    s++;
+  }
 }

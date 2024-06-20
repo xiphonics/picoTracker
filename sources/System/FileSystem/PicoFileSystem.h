@@ -26,6 +26,7 @@ public:
 
 private:
   SdFs sd;
+  void tolowercase(char *temp);
 };
 
 #endif
