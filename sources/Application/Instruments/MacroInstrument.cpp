@@ -43,7 +43,7 @@ bool MacroInstrument::Init() {
   return true;
 }
 
-void MacroInstrument::OnStart() { /* tableState_.Reset();*/ };
+void MacroInstrument::OnStart(){/* tableState_.Reset();*/};
 
 bool MacroInstrument::Start(int channel, unsigned char midinote,
                             bool cleanstart) {
@@ -126,16 +126,16 @@ bool MacroInstrument::IsInitialized() { /*return (source_ != 0); */
   return true;
 };
 
-void MacroInstrument::Update(Observable &o, I_ObservableData *d) {};
+void MacroInstrument::Update(Observable &o, I_ObservableData *d){};
 
-void MacroInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {};
+void MacroInstrument::ProcessCommand(int channel, FourCC cc, ushort value){};
 
 etl::string<24> MacroInstrument::GetName() {
   Variable *v = FindVariable(BIP_SHAPE);
   return v->GetString();
 };
 
-void MacroInstrument::Purge() {};
+void MacroInstrument::Purge(){};
 
 bool MacroInstrument::IsEmpty() { return false; };
 
@@ -145,6 +145,6 @@ bool MacroInstrument::GetTableAutomation() { /*return tableAuto_->GetBool();*/
   return false;
 };
 
-void MacroInstrument::GetTableState(TableSaveState &state) {};
+void MacroInstrument::GetTableState(TableSaveState &state){};
 
-void MacroInstrument::SetTableState(TableSaveState &state) {};
+void MacroInstrument::SetTableState(TableSaveState &state){};

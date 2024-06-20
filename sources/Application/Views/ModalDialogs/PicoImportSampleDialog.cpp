@@ -86,7 +86,7 @@ void PicoImportSampleDialog::warpToNextSample(bool goUp) {
 }
 
 void PicoImportSampleDialog::OnPlayerUpdate(PlayerEventType,
-                                            unsigned int currentTick) {};
+                                            unsigned int currentTick){};
 
 void PicoImportSampleDialog::OnFocus() {
   auto picoFS = PicoFileSystem::GetInstance();
@@ -109,34 +109,35 @@ void PicoImportSampleDialog::preview(Path &element) {
   // }
 }
 
-void PicoImportSampleDialog::import(Path &element) {
+void PicoImportSampleDialog::import(Path &element){
 
-  //   SamplePool *pool = SamplePool::GetInstance();
+    //   SamplePool *pool = SamplePool::GetInstance();
 
-  // #ifdef PICOBUILD
-  //   // Pause core1 in order to be able to write to flash and ensure core1 is
-  //   // not reading from it, it also disables IRQs on it
-  //   //
-  //   https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
-  //   multicore_lockout_start_blocking();
-  // #endif
-  //   int sampleID = pool->ImportSample(element);
-  // #ifdef PICOBUILD
-  //   multicore_lockout_end_blocking();
-  // #endif
+    // #ifdef PICOBUILD
+    //   // Pause core1 in order to be able to write to flash and ensure core1
+    //   is
+    //   // not reading from it, it also disables IRQs on it
+    //   //
+    //   https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
+    //   multicore_lockout_start_blocking();
+    // #endif
+    //   int sampleID = pool->ImportSample(element);
+    // #ifdef PICOBUILD
+    //   multicore_lockout_end_blocking();
+    // #endif
 
-  //   if (sampleID >= 0) {
-  //     I_Instrument *instr =
-  //         viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_);
-  //     if (instr->GetType() == IT_SAMPLE) {
-  //       SampleInstrument *sinstr = (SampleInstrument *)instr;
-  //       sinstr->AssignSample(sampleID);
-  //       toInstr_ = viewData_->project_->GetInstrumentBank()->GetNext();
-  //     };
-  //   } else {
-  //     Trace::Error("failed to import sample");
-  //   };
-  //   isDirty_ = true;
+    //   if (sampleID >= 0) {
+    //     I_Instrument *instr =
+    //         viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_);
+    //     if (instr->GetType() == IT_SAMPLE) {
+    //       SampleInstrument *sinstr = (SampleInstrument *)instr;
+    //       sinstr->AssignSample(sampleID);
+    //       toInstr_ = viewData_->project_->GetInstrumentBank()->GetNext();
+    //     };
+    //   } else {
+    //     Trace::Error("failed to import sample");
+    //   };
+    //   isDirty_ = true;
 };
 
 void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,

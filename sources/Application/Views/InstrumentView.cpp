@@ -413,7 +413,7 @@ void InstrumentView::fillMidiParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
 
-void InstrumentView::fillOpalParameters() {};
+void InstrumentView::fillOpalParameters(){};
 
 void InstrumentView::warpToNext(int offset) {
   int instrument = viewData_->currentInstrument_ + offset;
