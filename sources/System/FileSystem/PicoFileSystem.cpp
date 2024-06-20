@@ -126,8 +126,6 @@ bool PicoFileSystem::isParentRoot() {
   // check the index=1 entry, aka ".." if its firstSector  matches
   // the root dirs firstSector, ie they are the same dir
   bool result = root.firstSector() == up.firstSector();
-  printf("ROOT:%d", result);
-
   root.close();
   up.close();
   cwd.close();
