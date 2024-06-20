@@ -108,3 +108,27 @@ void PicoFileSystem::getFileName(int index, char *name, int length) {
   entry.close();
   cwd.close();
 }
+
+bool PicoFileSystem::isParentRoot() {
+  FsFile cwd;
+  char dirname[PFILENAME_SIZE];
+  if (!cwd.openCwd()) {
+    cwd.getName(dirname, PFILENAME_SIZE);
+    Trace::Error("Failed to open cwd:%s", dirname);
+    return false;
+  }
+
+  FsFile root;
+  root.openRoot(sd.vol());
+  FsFile up;
+  up.open(1);
+  // check the index=1 entry, aka ".." if its firstSector  matches
+  // the root dirs firstSector, ie they are the same dir
+  bool result = root.firstSector() == up.firstSector();
+  printf("ROOT:%d", result);
+
+  root.close();
+  up.close();
+  cwd.close();
+  return result;
+}

@@ -22,6 +22,7 @@ public:
             const char *filter);
   void getFileName(int index, char *name, int length);
   PicoFileType getFileType(int index);
+  bool isParentRoot();
 
 private:
   SdFs sd;
