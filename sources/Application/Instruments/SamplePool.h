@@ -9,6 +9,8 @@
 
 #define MAX_PIG_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
 
+#define PROJECT_SAMPLES_DIR "samples"
+
 enum SamplePoolEventType { SPET_INSERT, SPET_DELETE };
 
 struct SamplePoolEvent : public I_ObservableData {
@@ -25,9 +27,9 @@ public:
   SoundSource *GetSource(int i);
   char **GetNameList();
   int GetNameListSize();
-  int ImportSample(Path &path);
+  int ImportSample(char *name);
   void PurgeSample(int i);
-  const char *GetSampleLib();
+  void SetProjectName(const char *name) { strcpy(projectName_, name); }
 
 protected:
   bool loadSample(const char *path);
@@ -35,6 +37,9 @@ protected:
   int count_;
   char *names_[MAX_PIG_SAMPLES];
   SoundSource *wav_[MAX_PIG_SAMPLES];
+
+private:
+  char projectName_[64];
 
 #ifdef LOAD_IN_FLASH
   static int flashEraseOffset_;

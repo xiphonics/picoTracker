@@ -158,6 +158,10 @@ bool PicoFileSystem::isParentRoot() {
   return result;
 }
 
+void PicoFileSystem::DeleteFile(const char *path) { sd.remove(path); }
+
+bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
+
 void PicoFileSystem::tolowercase(char *temp) {
   // Convert to upper case
   char *s = temp;
@@ -188,5 +192,17 @@ void PI_File::Seek(long offset, int whence) {
     Trace::Error("Invalid seek whence: %s", whence);
   }
 }
+
+void PI_File::DeleteFile() { file_.remove(); }
+
+int PI_File::GetC() { return file_.read(); }
+
+int PI_File::Write(const void *ptr, int size, int nmemb) {
+  return file_.write(ptr, size * nmemb);
+}
+
+long PI_File::Tell() { return file_.curPosition(); }
+
+int PI_File::Error() { return file_.getError(); }
 
 void PI_File::Close() { file_.close(); }

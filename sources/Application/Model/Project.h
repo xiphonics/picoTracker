@@ -20,6 +20,8 @@
 #define PROJECT_RELEASE "r"
 // BUILD_COUNT define comes from BuildNumber.h
 
+#define MAX_PROJECT_NAME_LEN 64
+
 #define MAX_TAP 3
 
 class Project : public Persistent, public VariableContainer, I_Observer {
@@ -58,6 +60,7 @@ private:
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];
   unsigned int tempoTapCount_;
+  char *name[MAX_PROJECT_NAME_LEN];
 
   // variables
   WatchedVariable tempo_;

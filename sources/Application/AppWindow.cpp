@@ -288,9 +288,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const Path &p) {
-
-  _root = p;
+void AppWindow::LoadProject(const char *name) {
 
   _closeProject = false;
 
@@ -298,13 +296,10 @@ void AppWindow::LoadProject(const Path &p) {
 
   TablePlayback::Reset();
 
-  Path::SetAlias("project", _root.GetPath().c_str());
-  Path::SetAlias("samples", "project:samples");
-
   // Load the sample pool
-
   SamplePool *pool = SamplePool::GetInstance();
-
+  PicoFileSystem *picoFS = PicoFileSystem::GetInstance();
+  picoFS->chdir(name);
   pool->Load();
 
   static char projectMemBuf[sizeof(Project)];
@@ -340,8 +335,7 @@ void AppWindow::LoadProject(const Path &p) {
 
   // Create & observe all views
   static char songViewMemBuf[sizeof(SongView)];
-  _songView = new (songViewMemBuf)
-      SongView((*this), _viewData, _root.GetName().c_str());
+  _songView = new (songViewMemBuf) SongView((*this), _viewData, name);
   _songView->AddObserver((*this));
 
   static char chainViewMemBuf[sizeof(ChainView)];

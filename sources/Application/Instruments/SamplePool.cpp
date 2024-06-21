@@ -2,12 +2,11 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/PicoFileSystem.h"
 #include "System/io/Status.h"
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-
-#define SAMPLE_LIB "root:samplelib"
 
 #ifdef LOAD_IN_FLASH
 #include "hardware/flash.h"
@@ -62,12 +61,6 @@ SamplePool::~SamplePool() {
   };
 };
 
-const char *SamplePool::GetSampleLib() {
-  Config *config = Config::GetInstance();
-  const char *lib = config->GetValue("SAMPLELIB");
-  return lib ? lib : SAMPLE_LIB;
-}
-
 void SamplePool::Reset() {
   count_ = 0;
   for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
@@ -83,32 +76,24 @@ void SamplePool::Reset() {
 };
 
 void SamplePool::Load() {
-
-  Path sampleDir("samples:");
-
-  I_Dir *dir = FileSystem::GetInstance()->Open(sampleDir.GetPath().c_str());
-  if (!dir) {
-    return;
-  }
+  auto picoFS = PicoFileSystem::GetInstance();
+  picoFS->chdir(PROJECT_SAMPLES_DIR);
 
   // First, find all wav files
-
-  dir->GetContent("*.wav");
-  count_ = 0;
-  for (dir->Begin(); !dir->IsDone(); dir->Next()) {
-    Path &path = dir->CurrentItem();
-    Status::Set("Loading %s", path.GetName().c_str());
-    loadSample(path.GetPath().c_str());
-    if (count_ == MAX_PIG_SAMPLES) {
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
+  picoFS->list(&fileIndexes, ".wav");
+  char name[PFILENAME_SIZE];
+  for (size_t i = 0; i < fileIndexes.size(); i++) {
+    picoFS->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
+    Status::Set("Loading %s", name);
+    // loadSample(path.GetPath().c_str());
+    if (i == MAX_PIG_SAMPLES) {
       Trace::Error("Warning maximum sample count reached");
       break;
     };
   };
 
-  delete dir;
-
   // now sort the samples
-
   int rest = count_;
   while (rest > 0) {
     int index = 0;
@@ -161,32 +146,30 @@ bool SamplePool::loadSample(const char *path) {
 
 #define IMPORT_CHUNK_SIZE 1000
 
-int SamplePool::ImportSample(Path &path) {
+int SamplePool::ImportSample(char *name) {
 
-  if (count_ == MAX_PIG_SAMPLES)
+  if (count_ == MAX_PIG_SAMPLES) {
     return -1;
+  }
 
-  // construct target path
-
-  std::string dpath = "samples:";
-  dpath += path.GetName();
-  Path dstPath(dpath.c_str());
-
-  Status::Set("Loading %s", path.GetName().c_str());
-
-  // Opens files
-
-  I_File *fin = FileSystem::GetInstance()->Open(path.GetPath().c_str(), "r");
+  // Opens file - we assume that have already chdir() into the correct dir
+  // that contains the sample file
+  auto picoFS = PicoFileSystem::GetInstance();
+  PI_File *fin = picoFS->Open(name, "r");
   if (!fin) {
-    Trace::Error("Failed to open input file %s", path.GetPath().c_str());
+    Trace::Error("Failed to open sample input file %s", name);
     return -1;
   };
   fin->Seek(0, SEEK_END);
   long size = fin->Tell();
   fin->Seek(0, SEEK_SET);
 
-  I_File *fout =
-      FileSystem::GetInstance()->Open(dstPath.GetPath().c_str(), "w");
+  Status::Set("Loading %s->", name);
+  // chdir into output dir
+  picoFS->chdir("/projects");
+  picoFS->chdir(projectName_);
+
+  PI_File *fout = PicoFileSystem::GetInstance()->Open(name, "w");
   if (!fout) {
     fin->Close();
     delete (fin);
@@ -194,7 +177,6 @@ int SamplePool::ImportSample(Path &path) {
   };
 
   // copy file to current project
-
   char buffer[IMPORT_CHUNK_SIZE];
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
@@ -209,8 +191,7 @@ int SamplePool::ImportSample(Path &path) {
   delete (fout);
 
   // now load the sample
-
-  bool status = loadSample(dstPath.GetPath().c_str());
+  bool status = loadSample(name);
 
   SetChanged();
   SamplePoolEvent ev;
@@ -221,19 +202,19 @@ int SamplePool::ImportSample(Path &path) {
 };
 
 void SamplePool::PurgeSample(int i) {
+  auto picoFS = PicoFileSystem::GetInstance();
 
-  // construct the path of the sample to delete
+  etl::string<256> delPath("/projects/");
+  delPath.append(projectName_);
+  delPath.append("/samples/");
+  delPath.append(names_[i]);
 
-  std::string wavPath = "samples:";
-  wavPath += names_[i];
-  Path path(wavPath.c_str());
+  // delete file
+  PicoFileSystem::GetInstance()->DeleteFile(delPath.c_str());
   // delete wav
   SAFE_DELETE(wav_[i]);
   // delete name entry
   SAFE_DELETE(names_[i]);
-
-  // delete file
-  FileSystem::GetInstance()->Delete(path.GetPath().c_str());
 
   // shift all entries from deleted to end
   for (int j = i; j < count_ - 1; j++) {

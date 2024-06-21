@@ -32,7 +32,7 @@ protected:
 
 public:
   static AppWindow *Create(GUICreateWindowParams &);
-  void LoadProject(const Path &path);
+  void LoadProject(const char *name);
   void CloseProject();
 
   virtual void Clear(bool all = false);
@@ -77,8 +77,6 @@ private:
   TableView *_tableView;
   GrooveView *_grooveView;
   NullView *_nullView;
-
-  Path _root;
 
   bool _isDirty;
   bool _closeProject;

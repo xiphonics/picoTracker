@@ -11,7 +11,7 @@
 
 static const char *buttonText[2] = {"Load", "New"};
 
-Path SelectProjectDialog::lastFolder_("root:");
+Path SelectProjectDialog::lastFolder_("/projects");
 int SelectProjectDialog::lastProject_ = 0;
 
 static void NewProjectCallback(View &v, ModalView &dialog) {
