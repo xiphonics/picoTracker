@@ -157,20 +157,25 @@ int SamplePool::ImportSample(char *name) {
   auto picoFS = PicoFileSystem::GetInstance();
   PI_File *fin = picoFS->Open(name, "r");
   if (!fin) {
-    Trace::Error("Failed to open sample input file %s", name);
+    Trace::Error("Failed to open sample input file:%s\n", name);
     return -1;
   };
   fin->Seek(0, SEEK_END);
   long size = fin->Tell();
   fin->Seek(0, SEEK_SET);
 
+  // TODO: need to truncate sample file names to something like 64chars
+  //  so that we dont overflow this temp string
+  etl::string<128> projectSamplePath("/projects/");
+  projectSamplePath.append(projectName_);
+  projectSamplePath.append("/samples/");
+  projectSamplePath.append(name);
   Status::Set("Loading %s->", name);
-  // chdir into output dir
-  picoFS->chdir("/projects");
-  picoFS->chdir(projectName_);
 
-  PI_File *fout = PicoFileSystem::GetInstance()->Open(name, "w");
+  PI_File *fout =
+      PicoFileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
+    Trace::Error("Failed to open sample project file:%s\n", projectSamplePath);
     fin->Close();
     delete (fin);
     return -1;

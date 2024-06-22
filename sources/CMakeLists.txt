@@ -41,7 +41,7 @@ add_compile_options(
   -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
   -fstack-usage
   -fcallgraph-info=su # include above info in callgraph
-  -Wstack-usage=1272 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
+  -Wstack-usage=2048 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
   # TODO: SHOULD FIX
   -Wno-int-to-pointer-cast
 

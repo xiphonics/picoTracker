@@ -43,7 +43,7 @@ static void ProjectSelectCallback(View &v, ModalView &dialog) {
   SelectProjectDialog &spd = (SelectProjectDialog &)dialog;
   if (dialog.GetReturnCode() > 0) {
     Path selected = spd.GetSelection();
-    instance->LoadProject(selected.GetPath().c_str());
+    instance->LoadProject(selected.GetName().c_str());
   } else {
     System::GetInstance()->PostQuitMessage();
   }
@@ -298,7 +298,10 @@ void AppWindow::LoadProject(const char *name) {
 
   // Load the sample pool
   SamplePool *pool = SamplePool::GetInstance();
+  pool->SetProjectName(name);
+
   PicoFileSystem *picoFS = PicoFileSystem::GetInstance();
+  picoFS->chdir("/projects");
   picoFS->chdir(name);
   pool->Load();
 
