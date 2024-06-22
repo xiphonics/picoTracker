@@ -3,10 +3,12 @@ add_library(system_filesystem
   PicoFileSystem.h PicoFileSystem.cpp
 )
 
-target_link_libraries(system_filesystem PUBLIC application_utils
+target_link_libraries(system_filesystem 
+                                          PUBLIC application_utils
                                           PUBLIC system_errors
                                           PUBLIC sdfat
                                           PUBLIC platform_sdcard
+                                          PUBLIC etl
 )
 
 
