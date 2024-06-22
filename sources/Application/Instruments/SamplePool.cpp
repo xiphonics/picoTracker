@@ -77,6 +77,8 @@ void SamplePool::Reset() {
 
 void SamplePool::Load() {
   auto picoFS = PicoFileSystem::GetInstance();
+  picoFS->chdir("/projects");
+  picoFS->chdir(projectName_);
   picoFS->chdir(PROJECT_SAMPLES_DIR);
 
   // First, find all wav files
@@ -85,8 +87,10 @@ void SamplePool::Load() {
   char name[PFILENAME_SIZE];
   for (size_t i = 0; i < fileIndexes.size(); i++) {
     picoFS->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
-    Status::Set("Loading %s", name);
-    // loadSample(path.GetPath().c_str());
+    if (picoFS->getFileType(fileIndexes[i]) == PFT_FILE) {
+      Status::Set("Loading:%s\n", name);
+      loadSample(name);
+    }
     if (i == MAX_PIG_SAMPLES) {
       Trace::Error("Warning maximum sample count reached");
       break;
@@ -209,6 +213,7 @@ int SamplePool::ImportSample(char *name) {
 void SamplePool::PurgeSample(int i) {
   auto picoFS = PicoFileSystem::GetInstance();
 
+  // TODO use define constants for these strings
   etl::string<256> delPath("/projects/");
   delPath.append(projectName_);
   delPath.append("/samples/");

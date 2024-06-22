@@ -299,10 +299,7 @@ void AppWindow::LoadProject(const char *name) {
   // Load the sample pool
   SamplePool *pool = SamplePool::GetInstance();
   pool->SetProjectName(name);
-
-  PicoFileSystem *picoFS = PicoFileSystem::GetInstance();
-  picoFS->chdir("/projects");
-  picoFS->chdir(name);
+  // load the projects samples
   pool->Load();
 
   static char projectMemBuf[sizeof(Project)];

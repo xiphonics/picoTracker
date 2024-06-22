@@ -103,13 +103,14 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
       tolowercase(buffer);
-      matchesFilter = (strstr(buffer, filter) != NULL);
+      matchesFilter = (strstr(buffer, filter) != nullptr);
+      printf("FILTER: %s=%s [%d]\n", buffer, filter, matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
         (!entry.isHidden() && matchesFilter)) {
       fileIndexes->push_back(index);
-      // Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
+      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {
       Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", buffer);
@@ -165,7 +166,7 @@ bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
 void PicoFileSystem::tolowercase(char *temp) {
   // Convert to upper case
   char *s = temp;
-  while (*s) {
+  while (*s != '\0') {
     *s = tolower((unsigned char)*s);
     s++;
   }
