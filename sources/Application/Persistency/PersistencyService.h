@@ -11,7 +11,13 @@ class PersistencyService : public Service,
 public:
   PersistencyService();
   void Save();
-  bool Load();
+  bool Load(const char *projectName);
+
+  // TODO: we need to centralise keeping the project name in a single
+  //  service but for now we just hack to keep the project name cached
+  //  here when loading so that we have it when we come to do Save()
+private:
+  char projectName_[64];
 };
 
 #endif
