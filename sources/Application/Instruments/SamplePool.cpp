@@ -122,18 +122,16 @@ char **SamplePool::GetNameList() { return names_; };
 
 int SamplePool::GetNameListSize() { return count_; };
 
-bool SamplePool::loadSample(const char *path) {
+bool SamplePool::loadSample(const char *name) {
 
   if (count_ == MAX_PIG_SAMPLES)
     return false;
 
-  Path wavPath(path);
-  WavFile *wave = WavFile::Open(path);
+  WavFile *wave = WavFile::Open(name);
   if (wave) {
     wav_[count_] = wave;
-    const std::string name = wavPath.GetName();
-    names_[count_] = (char *)SYS_MALLOC(name.length() + 1);
-    strcpy(names_[count_], name.c_str());
+    names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
+    strcpy(names_[count_], name);
     count_++;
 #ifdef LOAD_IN_FLASH
     wave->LoadInFlash(flashEraseOffset_, flashWriteOffset_, flashLimit_);
@@ -143,7 +141,7 @@ bool SamplePool::loadSample(const char *path) {
     wave->Close();
     return true;
   } else {
-    Trace::Error("Failed to load samples %s", wavPath.GetName().c_str());
+    Trace::Error("Failed to load sample:%s\n", name);
     return false;
   }
 }
@@ -194,13 +192,13 @@ int SamplePool::ImportSample(char *name) {
     size -= count;
   };
 
+  // now load the sample into memory/flash
+  bool status = loadSample(name);
+
   fin->Close();
   fout->Close();
   delete (fin);
   delete (fout);
-
-  // now load the sample
-  bool status = loadSample(name);
 
   SetChanged();
   SamplePoolEvent ev;

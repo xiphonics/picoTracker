@@ -32,7 +32,7 @@ public:
   void SetProjectName(const char *name) { strcpy(projectName_, name); }
 
 protected:
-  bool loadSample(const char *path);
+  bool loadSample(const char *name);
   bool loadSoundFont(const char *path);
   int count_;
   char *names_[MAX_PIG_SAMPLES];
