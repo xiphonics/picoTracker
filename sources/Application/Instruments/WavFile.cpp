@@ -396,9 +396,10 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
 
     // There will be trash at the end, but sampleBufferSize_ gives me the
     // bounds
-    Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
-                 writeSize, flashWriteOffset + offset,
-                 flashWriteOffset + offset + writeSize);
+    // Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
+    //  writeSize, flashWriteOffset + offset,
+    //  flashWriteOffset + offset + writeSize);
+
     flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
                         writeSize);
     bufferStart += readSize;
