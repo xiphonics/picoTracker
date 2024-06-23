@@ -230,7 +230,7 @@ Result SelectProjectDialog::OnNewProject(const char *name) {
 
   selection_ = name;
 
-  etl::string<256> path("/projects/");
+  etl::string<MAX_PROJECT_NAME_LENGTH + PFILENAME_SIZE + 20> path("/projects/");
   path.append(name);
 
   bool res = PicoFileSystem::GetInstance()->makeDir(path.c_str());
