@@ -1,10 +1,9 @@
 #ifndef _NEW_PROJECT_DIALOG_H_
 #define _NEW_PROJECT_DIALOG_H_
 
+#include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/BaseClasses/ModalView.h"
 #include <string>
-
-#define MAX_NAME_LENGTH 12
 
 class NewProjectDialog : public ModalView {
 public:
@@ -17,12 +16,12 @@ public:
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void AnimationUpdate(){};
 
-  std::string GetName();
+  etl::string<MAX_PROJECT_NAME_LENGTH> GetName();
 
 private:
   int selected_;
   int lastChar_;
-  char name_[MAX_NAME_LENGTH + 1];
+  char name_[MAX_PROJECT_NAME_LENGTH + 1];
   int currentChar_;
 };
 

@@ -6,6 +6,8 @@
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
 
+#define MAX_PROJECT_NAME_LENGTH 12
+
 class PersistencyService : public Service,
                            public T_Singleton<PersistencyService> {
 public:
@@ -17,7 +19,7 @@ public:
   //  service but for now we just hack to keep the project name cached
   //  here when loading so that we have it when we come to do Save()
 private:
-  char projectName_[64];
+  char projectName_[MAX_PROJECT_NAME_LENGTH];
 };
 
 #endif

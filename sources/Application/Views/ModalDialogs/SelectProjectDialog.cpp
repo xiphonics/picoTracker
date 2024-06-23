@@ -18,9 +18,9 @@ static void NewProjectCallback(View &v, ModalView &dialog) {
 
   NewProjectDialog &npd = (NewProjectDialog &)dialog;
   if (dialog.GetReturnCode() > 0) {
-    std::string selected = npd.GetName();
+    etl::string selected = npd.GetName();
     SelectProjectDialog &spd = (SelectProjectDialog &)v;
-    Result result = spd.OnNewProject(selected);
+    Result result = spd.OnNewProject(selected.c_str());
     if (result.Failed()) {
       Trace::Error(result.GetDescription().c_str());
     }
@@ -224,16 +224,23 @@ void SelectProjectDialog::warpToNextProject(int amount) {
 
 Path SelectProjectDialog::GetSelection() { return selection_; }
 
-Result SelectProjectDialog::OnNewProject(std::string &name) {
-  Path path = currentPath_.Descend(name);
-  Trace::Log("TMP", "creating project at %s", path.GetPath().c_str());
-  selection_ = path;
-  Result result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str());
+Result SelectProjectDialog::OnNewProject(const char *name) {
+
+  Trace::Log("SELECTPROJDIALOG", "creating project:%s", name);
+
+  selection_ = name;
+
+  etl::string<256> path("/projects/");
+  path.append(name);
+
+  bool res = PicoFileSystem::GetInstance()->makeDir(path.c_str());
+  auto result = res ? Result::NoError : Result("");
   RETURN_IF_FAILED_MESSAGE(result, "Failed to create project dir");
 
-  path = path.Descend("samples");
-  Trace::Log("TMP", "creating samples dir at %s", path.GetPath().c_str());
-  result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str());
+  path.append("/samples");
+  Trace::Log("SELECTPROJDIALOG", "creating samples dir at %s", path.c_str());
+  res = PicoFileSystem::GetInstance()->makeDir(path.c_str());
+  result = res ? Result::NoError : Result("");
   RETURN_IF_FAILED_MESSAGE(result, "Failed to create samples dir");
 
   EndModal(1);
@@ -249,7 +256,6 @@ void SelectProjectDialog::setCurrentFolder(Path &path) {
   content_.Empty();
 
   // Let's read all the directory in the root
-
   I_Dir *dir = FileSystem::GetInstance()->Open(currentPath_.GetPath().c_str());
 
   if (dir) {

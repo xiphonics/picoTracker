@@ -163,6 +163,8 @@ void PicoFileSystem::DeleteFile(const char *path) { sd.remove(path); }
 
 bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
 
+bool PicoFileSystem::makeDir(const char *path) { return sd.mkdir(path); }
+
 void PicoFileSystem::tolowercase(char *temp) {
   // Convert to upper case
   char *s = temp;

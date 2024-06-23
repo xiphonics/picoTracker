@@ -3,6 +3,7 @@
 #define _SAMPLE_POOL_H_
 
 #include "Application/Model/Song.h"
+#include "Application/Persistency/PersistencyService.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "WavFile.h"
@@ -39,7 +40,7 @@ protected:
   SoundSource *wav_[MAX_PIG_SAMPLES];
 
 private:
-  char projectName_[64];
+  char projectName_[MAX_PROJECT_NAME_LENGTH];
 
 #ifdef LOAD_IN_FLASH
   static int flashEraseOffset_;

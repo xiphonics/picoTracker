@@ -16,7 +16,7 @@ public:
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void AnimationUpdate(){};
 
-  Result OnNewProject(std::string &name);
+  Result OnNewProject(const char *name);
 
   Path GetSelection();
 

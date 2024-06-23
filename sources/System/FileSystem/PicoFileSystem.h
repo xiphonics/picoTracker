@@ -43,6 +43,7 @@ public:
   bool isParentRoot();
   void DeleteFile(const char *name);
   bool exists(const char *path);
+  bool makeDir(const char *path);
 
 private:
   SdFs sd;
