@@ -6,7 +6,7 @@
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
 
-#define MAX_PROJECT_NAME_LENGTH 24
+#define MAX_PROJECT_NAME_LENGTH 20
 
 class PersistencyService : public Service,
                            public T_Singleton<PersistencyService> {
