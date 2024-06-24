@@ -18,13 +18,13 @@ public:
   PI_File(FsBaseFile file);
   ~PI_File(){};
   int Read(void *ptr, int size, int nmemb);
-  // int GetC();
-  // int Write(const void *ptr, int size, int nmemb) = 0;
-  // void Printf(const char *format, ...) = 0;
+  int GetC();
+  int Write(const void *ptr, int size, int nmemb);
   void Seek(long offset, int whence);
-  // long Tell();
+  long Tell();
   void Close();
-  // int Error();
+  void DeleteFile();
+  int Error();
 
 private:
   FsBaseFile file_;
@@ -37,10 +37,13 @@ public:
   bool chdir(const char *path);
   bool read(int index, void *data);
   void list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
-            const char *filter);
+            const char *filter, bool subDirOnly);
   void getFileName(int index, char *name, int length);
   PicoFileType getFileType(int index);
   bool isParentRoot();
+  void DeleteFile(const char *name);
+  bool exists(const char *path);
+  bool makeDir(const char *path);
 
 private:
   SdFs sd;

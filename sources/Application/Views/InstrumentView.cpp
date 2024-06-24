@@ -11,10 +11,8 @@
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "Externals/braids/macro_oscillator.h"
-#include "ModalDialogs/ImportSampleDialog.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/PicoImportSampleDialog.h"
-// #include "ModalDialogs/PagedImportSampleDialog.h"
 #include "System/System/System.h"
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
@@ -445,14 +443,14 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       case SIP_SAMPLE: {
         if (!player->IsRunning()) {
           // First check if the samplelib exists
-          Path sampleLib(SamplePool::GetInstance()->GetSampleLib());
-          if (FileSystem::GetInstance()->GetFileType(
-                  sampleLib.GetPath().c_str()) != FT_DIR) {
+          bool samplelibExists =
+              PicoFileSystem::GetInstance()->exists(SAMPLE_LIB);
+
+          if (!samplelibExists) {
             MessageBox *mb =
                 new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
             DoModal(mb);
           } else {
-            ;
             // Go to import sample
             PicoImportSampleDialog *isd = new PicoImportSampleDialog(*this);
             DoModal(isd);

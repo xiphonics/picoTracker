@@ -2,6 +2,7 @@
 #include "Application/Player/SyncMaster.h" // Should be installable
 #include "Services/Audio/AudioDriver.h"
 #include "Services/Time/TimeService.h"
+#include "System/System/System.h"
 
 // static bool threadon=false ;
 

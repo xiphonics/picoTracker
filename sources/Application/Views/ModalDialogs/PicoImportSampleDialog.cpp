@@ -5,7 +5,7 @@
 #include <memory>
 
 #define LIST_WIDTH 24
-#define SAMPLE_LIB "/samplelib"
+#define LIST_PAGE_SIZE 18
 
 PicoImportSampleDialog::PicoImportSampleDialog(View &view) : ModalView(view) {
   Trace::Log("PICOSAMPLEIMPORT", "samplelib is:%s", SAMPLE_LIB);
@@ -21,7 +21,7 @@ void PicoImportSampleDialog::DrawView() {
   // currentIndex_,
   //            topIndex_);
 
-  SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
+  SetWindow(LIST_WIDTH, LIST_PAGE_SIZE);
   GUITextProperties props;
 
   auto picoFS = PicoFileSystem::GetInstance();
@@ -34,7 +34,7 @@ void PicoImportSampleDialog::DrawView() {
   // than buffer but instead returns empty string  in buffer :-(
   char buffer[PFILENAME_SIZE];
   for (size_t i = topIndex_;
-       i < topIndex_ + PAGED_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -77,7 +77,7 @@ void PicoImportSampleDialog::warpToNextSample(bool goUp) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
-      if (currentIndex_ >= (topIndex_ + PAGED_PAGE_SIZE)) {
+      if (currentIndex_ >= (topIndex_ + LIST_PAGE_SIZE)) {
         topIndex_++;
       }
     }
@@ -109,35 +109,29 @@ void PicoImportSampleDialog::preview(char *name) {
   }
 }
 
-void PicoImportSampleDialog::import(Path &element){
+void PicoImportSampleDialog::import(char *name) {
 
-    //   SamplePool *pool = SamplePool::GetInstance();
+  SamplePool *pool = SamplePool::GetInstance();
 
-    // #ifdef PICOBUILD
-    //   // Pause core1 in order to be able to write to flash and ensure core1
-    //   is
-    //   // not reading from it, it also disables IRQs on it
-    //   //
-    //   https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
-    //   multicore_lockout_start_blocking();
-    // #endif
-    //   int sampleID = pool->ImportSample(element);
-    // #ifdef PICOBUILD
-    //   multicore_lockout_end_blocking();
-    // #endif
+  // Pause core1 in order to be able to write to flash and ensure core1 is
+  // not reading from it, it also disables IRQs on it
+  // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
+  multicore_lockout_start_blocking();
+  int sampleID = pool->ImportSample(name);
+  multicore_lockout_end_blocking();
 
-    //   if (sampleID >= 0) {
-    //     I_Instrument *instr =
-    //         viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_);
-    //     if (instr->GetType() == IT_SAMPLE) {
-    //       SampleInstrument *sinstr = (SampleInstrument *)instr;
-    //       sinstr->AssignSample(sampleID);
-    //       toInstr_ = viewData_->project_->GetInstrumentBank()->GetNext();
-    //     };
-    //   } else {
-    //     Trace::Error("failed to import sample");
-    //   };
-    //   isDirty_ = true;
+  if (sampleID >= 0) {
+    I_Instrument *instr =
+        viewData_->project_->GetInstrumentBank()->GetInstrument(toInstr_);
+    if (instr->GetType() == IT_SAMPLE) {
+      SampleInstrument *sinstr = (SampleInstrument *)instr;
+      sinstr->AssignSample(sampleID);
+      toInstr_ = viewData_->project_->GetInstrumentBank()->GetNext();
+    };
+  } else {
+    Trace::Error("failed to import sample");
+  };
+  isDirty_ = true;
 };
 
 void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
@@ -153,7 +147,7 @@ void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
 
     if (mask & EPBM_L) {
       Trace::Log("PICOIMPORT", "SHIFT play - import");
-      // import(fullPath);
+      import(name);
     } else {
       Trace::Log("PICOIMPORT", "plain play preview");
       preview(name);
@@ -189,7 +183,7 @@ void PicoImportSampleDialog::setCurrentFolder(PicoFileSystem *picoFS,
   }
   currentIndex_ = 0;
   // now update list of file indexes in this new dir
-  picoFS->list(&fileIndexList_, ".wav");
+  picoFS->list(&fileIndexList_, ".wav", false);
 
   bool isSampleLIbDir = picoFS->isParentRoot();
   if (isSampleLIbDir && !fileIndexList_.empty()) {

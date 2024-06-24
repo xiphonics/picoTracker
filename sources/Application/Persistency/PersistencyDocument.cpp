@@ -6,8 +6,8 @@ PersistencyDocument::PersistencyDocument() {
   r_ = YXML_OK; // initialize to ok value
 }
 
-bool PersistencyDocument::Load(const std::string &filename) {
-  fp_ = FileSystem::GetInstance()->Open(filename.c_str(), "r");
+bool PersistencyDocument::Load(const char *filename) {
+  fp_ = PicoFileSystem::GetInstance()->Open(filename, "r");
   if (fp_)
     return true;
   return false;

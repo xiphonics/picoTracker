@@ -9,7 +9,7 @@ void prepareHexChunk(tinyxml2::XMLPrinter *printer, unsigned char *datasrc,
 
   bool singleValue = true;
   int singleValueData = -1;
-  unsigned char hexBuffer[XML_CUT_LENGTH * 2 + 1];
+  unsigned char hexBuffer[XML_CUT_LENGTH * 2 + 1] = "";
   std::string buffer;
 
   char *hex = (char *)hexBuffer;

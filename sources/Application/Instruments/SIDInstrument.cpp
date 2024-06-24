@@ -3,6 +3,7 @@
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "System/Console/Trace.h"
+#include "System/System/System.h"
 #include <string.h>
 
 const char *sidWaveformText[DWF_LAST] = {"----", "T---", "-S--", "TS--", "--Q-",

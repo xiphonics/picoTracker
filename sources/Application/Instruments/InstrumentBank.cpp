@@ -169,19 +169,30 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           }
         }
       } else {
+        // order in instrument_ array is: sampler, midi, sidi, opal,macro
         if (id < MAX_SAMPLEINSTRUMENT_COUNT) {
           it = IT_SAMPLE;
-        } else if (id < MAX_SAMPLEINSTRUMENT_COUNT + MAX_SIDINSTRUMENT_COUNT) {
-          it = IT_SID;
-        } else {
+        } else if (id < MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT) {
           it = IT_MIDI;
+        } else if (id < MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT +
+                            MAX_SIDINSTRUMENT_COUNT) {
+          it = IT_SID;
+        } else if (id < MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT +
+                            MAX_SIDINSTRUMENT_COUNT +
+                            MAX_OPALINSTRUMENT_COUNT) {
+          it = IT_OPAL;
+        } else {
+          it = IT_MACRO;
         }
       };
       if (id < MAX_INSTRUMENT_COUNT) {
         I_Instrument *instr = instrument_[id];
         if (instr->GetType() != it) {
-          delete instr;
           printf("We shouldn't be here!!!!");
+          printf("[%d] INSTR:%d IT:%d\n", id, instr->GetType(), it);
+          printf("OVERRIDING INSTR TYPE to:%d @ %d\n", instr->GetType(), id);
+          it = instr->GetType();
+          // delete instr;
           switch (it) {
           case IT_SAMPLE:
             instr = new SampleInstrument();
@@ -194,7 +205,6 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           case IT_MIDI:
             instr = new MidiInstrument();
             break;
-
           case IT_OPAL:
             instr = new OpalInstrument();
             break;

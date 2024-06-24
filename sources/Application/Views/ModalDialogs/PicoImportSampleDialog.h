@@ -6,6 +6,8 @@
 #include "System/FileSystem/PicoFileSystem.h"
 #include <string>
 
+#define SAMPLE_LIB "/samplelib"
+
 class PicoImportSampleDialog : public ModalView {
 public:
   PicoImportSampleDialog(View &view);
@@ -20,7 +22,7 @@ public:
 protected:
   void setCurrentFolder(PicoFileSystem *picoFS, const char *name);
   void warpToNextSample(bool goUp);
-  void import(Path &element);
+  void import(char *name);
   void preview(char *name);
 
 private:

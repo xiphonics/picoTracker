@@ -74,7 +74,7 @@ PicoFileType PicoFileSystem::getFileType(int index) {
 }
 
 void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
-                          const char *filter) {
+                          const char *filter, bool subDirOnly) {
   fileIndexes->clear();
 
   File cwd;
@@ -99,17 +99,24 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
     uint32_t index = entry.dirIndex();
     entry.getName(buffer, PFILENAME_SIZE);
 
-    // skip hidden & "."
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
       tolowercase(buffer);
-      matchesFilter = (strstr(buffer, filter) != NULL);
+      matchesFilter = (strstr(buffer, filter) != nullptr);
+      Trace::Log("PICOFILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
+                 matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
         (!entry.isHidden() && matchesFilter)) {
-      fileIndexes->push_back(index);
-      // Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
+      if (subDirOnly) {
+        if (entry.isDirectory()) {
+          fileIndexes->push_back(index);
+        }
+      } else {
+        fileIndexes->push_back(index);
+      }
+      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {
       Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", buffer);
@@ -158,10 +165,16 @@ bool PicoFileSystem::isParentRoot() {
   return result;
 }
 
+void PicoFileSystem::DeleteFile(const char *path) { sd.remove(path); }
+
+bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
+
+bool PicoFileSystem::makeDir(const char *path) { return sd.mkdir(path); }
+
 void PicoFileSystem::tolowercase(char *temp) {
   // Convert to upper case
   char *s = temp;
-  while (*s) {
+  while (*s != '\0') {
     *s = tolower((unsigned char)*s);
     s++;
   }
@@ -188,5 +201,17 @@ void PI_File::Seek(long offset, int whence) {
     Trace::Error("Invalid seek whence: %s", whence);
   }
 }
+
+void PI_File::DeleteFile() { file_.remove(); }
+
+int PI_File::GetC() { return file_.read(); }
+
+int PI_File::Write(const void *ptr, int size, int nmemb) {
+  return file_.write(ptr, size * nmemb);
+}
+
+long PI_File::Tell() { return file_.curPosition(); }
+
+int PI_File::Error() { return file_.getError(); }
 
 void PI_File::Close() { file_.close(); }
