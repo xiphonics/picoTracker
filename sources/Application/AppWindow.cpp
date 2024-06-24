@@ -42,8 +42,7 @@ static void ProjectSelectCallback(View &v, ModalView &dialog) {
 
   SelectProjectDialog &spd = (SelectProjectDialog &)dialog;
   if (dialog.GetReturnCode() > 0) {
-    Path selected = spd.GetSelection();
-    instance->LoadProject(selected.GetName().c_str());
+    instance->LoadProject(spd.GetSelection());
   } else {
     System::GetInstance()->PostQuitMessage();
   }

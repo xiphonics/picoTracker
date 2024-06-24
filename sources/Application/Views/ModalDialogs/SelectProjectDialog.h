@@ -18,21 +18,20 @@ public:
 
   Result OnNewProject(const char *name);
 
-  Path GetSelection();
+  const char *GetSelection() { return selection_; }
 
 protected:
-  void warpToNextProject(int amount);
-  void setCurrentFolder(Path &path);
+  void warpToNextProject(bool goUp);
+  void setCurrentFolder();
 
 private:
-  T_SimpleList<Path> content_;
-  int topIndex_;
+  size_t topIndex_ = 0;
+  size_t currentIndex_ = 0;
   int currentProject_;
   int selected_;
-  Path currentPath_;
-  Path selection_;
-  static Path lastFolder_;
+  char selection_[MAX_PROJECT_NAME_LENGTH];
   static int lastProject_;
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 
 #endif

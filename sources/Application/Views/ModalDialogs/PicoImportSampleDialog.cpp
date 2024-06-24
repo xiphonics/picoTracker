@@ -182,7 +182,7 @@ void PicoImportSampleDialog::setCurrentFolder(PicoFileSystem *picoFS,
   }
   currentIndex_ = 0;
   // now update list of file indexes in this new dir
-  picoFS->list(&fileIndexList_, ".wav");
+  picoFS->list(&fileIndexList_, ".wav", false);
 
   bool isSampleLIbDir = picoFS->isParentRoot();
   if (isSampleLIbDir && !fileIndexList_.empty()) {

@@ -83,7 +83,7 @@ void SamplePool::Load() {
 
   // First, find all wav files
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
-  picoFS->list(&fileIndexes, ".wav");
+  picoFS->list(&fileIndexes, ".wav", false);
   char name[PFILENAME_SIZE];
   for (size_t i = 0; i < fileIndexes.size(); i++) {
     picoFS->getFileName(fileIndexes[i], name, PFILENAME_SIZE);

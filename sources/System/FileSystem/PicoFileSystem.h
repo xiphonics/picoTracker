@@ -37,7 +37,7 @@ public:
   bool chdir(const char *path);
   bool read(int index, void *data);
   void list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
-            const char *filter);
+            const char *filter, bool subDirOnly);
   void getFileName(int index, char *name, int length);
   PicoFileType getFileType(int index);
   bool isParentRoot();

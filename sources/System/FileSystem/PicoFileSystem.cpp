@@ -74,7 +74,7 @@ PicoFileType PicoFileSystem::getFileType(int index) {
 }
 
 void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
-                          const char *filter) {
+                          const char *filter, bool subDirOnly) {
   fileIndexes->clear();
 
   File cwd;
@@ -99,17 +99,23 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
     uint32_t index = entry.dirIndex();
     entry.getName(buffer, PFILENAME_SIZE);
 
-    // skip hidden & "."
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
       tolowercase(buffer);
       matchesFilter = (strstr(buffer, filter) != nullptr);
-      printf("FILTER: %s=%s [%d]\n", buffer, filter, matchesFilter);
+      Trace::Log("PICOFILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
+                 matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
         (!entry.isHidden() && matchesFilter)) {
-      fileIndexes->push_back(index);
+      if (subDirOnly) {
+        if (entry.isDirectory()) {
+          fileIndexes->push_back(index);
+        }
+      } else {
+        fileIndexes->push_back(index);
+      }
       Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {

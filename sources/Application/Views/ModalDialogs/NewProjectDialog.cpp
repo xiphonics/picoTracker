@@ -22,7 +22,7 @@ void NewProjectDialog::DrawView() {
   int len = MAX_PROJECT_NAME_LENGTH + 5;
   int x = (DIALOG_WIDTH - len) / 2;
 
-  DrawString(x, 2, "lgpt_", props);
+  DrawString(x, 2, "", props);
 
   char buffer[2];
   buffer[1] = 0;
@@ -146,7 +146,7 @@ etl::string<MAX_PROJECT_NAME_LENGTH> NewProjectDialog::GetName() {
       break;
     }
   }
-  etl::string<MAX_PROJECT_NAME_LENGTH> name = "lgpt_";
+  etl::string<MAX_PROJECT_NAME_LENGTH> name = "";
   name.append(name_);
   return name;
 }
