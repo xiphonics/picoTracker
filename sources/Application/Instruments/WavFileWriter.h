@@ -2,7 +2,7 @@
 #define _WAV_FILE_WRITER_H_
 
 #include "Application/Utils/fixed.h"
-#include "System/FileSystem/FileSystem.h"
+#include "System/FileSystem/PicoFileSystem.h"
 
 class WavFileWriter {
 public:
@@ -15,6 +15,6 @@ private:
   int sampleCount_;
   short *buffer_;
   int bufferSize_;
-  I_File *file_;
+  PI_File *file_;
 };
 #endif

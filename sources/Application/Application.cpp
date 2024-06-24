@@ -37,10 +37,6 @@ void Application::initMidiInput() {
 }
 
 bool Application::Init(GUICreateWindowParams &params) {
-  const char *root = Config::GetInstance()->GetValue("ROOTFOLDER");
-  if (root) {
-    Path::SetAlias("root", root);
-  };
   window_ = AppWindow::Create(params);
   PersistencyService::GetInstance();
   Audio *audio = Audio::GetInstance();

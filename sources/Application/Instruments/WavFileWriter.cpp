@@ -1,14 +1,13 @@
 #include "WavFileWriter.h"
 #include "System/Console/Trace.h"
+#include "System/System/System.h"
 
 WavFileWriter::WavFileWriter(const char *path)
     : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
-  Path filePath(path);
-  file_ = FileSystem::GetInstance()->Open(filePath.GetPath().c_str(), "wb");
+  file_ = PicoFileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
 
     // RIFF chunk
-
     unsigned int chunk;
     chunk = Swap32(0x46464952);
     file_->Write(&chunk, 1, 4);
@@ -17,7 +16,6 @@ WavFileWriter::WavFileWriter(const char *path)
     file_->Write(&size, 1, 4);
 
     // WAVE chunk
-
     chunk = Swap32(0x45564157);
     file_->Write(&chunk, 1, 4);
     chunk = Swap32(0x20746D66);

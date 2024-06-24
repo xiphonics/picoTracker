@@ -5,6 +5,7 @@
 #include <memory>
 
 #define LIST_WIDTH 24
+#define LIST_PAGE_SIZE 18
 
 PicoImportSampleDialog::PicoImportSampleDialog(View &view) : ModalView(view) {
   Trace::Log("PICOSAMPLEIMPORT", "samplelib is:%s", SAMPLE_LIB);
@@ -20,7 +21,7 @@ void PicoImportSampleDialog::DrawView() {
   // currentIndex_,
   //            topIndex_);
 
-  SetWindow(LIST_WIDTH, PAGED_PAGE_SIZE);
+  SetWindow(LIST_WIDTH, LIST_PAGE_SIZE);
   GUITextProperties props;
 
   auto picoFS = PicoFileSystem::GetInstance();
@@ -33,7 +34,7 @@ void PicoImportSampleDialog::DrawView() {
   // than buffer but instead returns empty string  in buffer :-(
   char buffer[PFILENAME_SIZE];
   for (size_t i = topIndex_;
-       i < topIndex_ + PAGED_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -76,7 +77,7 @@ void PicoImportSampleDialog::warpToNextSample(bool goUp) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
-      if (currentIndex_ >= (topIndex_ + PAGED_PAGE_SIZE)) {
+      if (currentIndex_ >= (topIndex_ + LIST_PAGE_SIZE)) {
         topIndex_++;
       }
     }

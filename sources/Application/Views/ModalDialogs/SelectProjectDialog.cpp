@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#define LIST_SIZE 14
+#define LIST_PAGE_SIZE 14
 #define LIST_WIDTH 26
 
 static const char *buttonText[2] = {"Load", "New"};
@@ -35,7 +35,7 @@ void SelectProjectDialog::DrawView() {
 
   int offset = LIST_WIDTH / 3;
   // Draw projects
-  SetWindow(LIST_WIDTH, LIST_SIZE);
+  SetWindow(LIST_WIDTH, LIST_PAGE_SIZE);
   GUITextProperties props;
 
   auto picoFS = PicoFileSystem::GetInstance();
@@ -47,7 +47,7 @@ void SelectProjectDialog::DrawView() {
   // than buffer but instead returns empty string  in buffer :-(
   char buffer[PFILENAME_SIZE];
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -161,7 +161,7 @@ void SelectProjectDialog::warpToNextProject(bool goUp) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
-      if (currentIndex_ >= (topIndex_ + LIST_SIZE)) {
+      if (currentIndex_ >= (topIndex_ + LIST_PAGE_SIZE)) {
         topIndex_++;
       }
     }

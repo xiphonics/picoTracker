@@ -1,5 +1,4 @@
 add_library(system_filesystem
-  FileSystem.h FileSystem.cpp
   PicoFileSystem.h PicoFileSystem.cpp
 )
 

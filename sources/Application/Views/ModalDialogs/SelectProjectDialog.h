@@ -3,7 +3,6 @@
 
 #include "Application/Views/BaseClasses/ModalView.h"
 #include "System/Errors/Result.h"
-#include "System/FileSystem/FileSystem.h"
 
 class SelectProjectDialog : public ModalView {
 public:
