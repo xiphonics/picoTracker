@@ -537,6 +537,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     case VT_GROOVE:
       _currentView = _grooveView;
       break;
+    case VT_IMPORT:
+      _currentView = _importView;
+      break;
     default:
       break;
     }

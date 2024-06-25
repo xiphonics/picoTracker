@@ -1,14 +1,14 @@
-#include "FileView.h"
+#include "ImportView.h"
 
-FileView::FileView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
+ImportView::ImportView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
 
-FileView::~FileView() {}
+ImportView::~ImportView() {}
 
-void FileView::ProcessButtonMask(unsigned short mask, bool pressed) {
+void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
 };
 
-void FileView::DrawView() {
+void ImportView::DrawView() {
 
   Clear();
 
@@ -24,8 +24,8 @@ void FileView::DrawView() {
   DrawString(pos._x, pos._y, buildString, props);
 };
 
-void FileView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
+void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
 
 };
 
-void FileView::OnFocus() {};
+void ImportView::OnFocus() {};
