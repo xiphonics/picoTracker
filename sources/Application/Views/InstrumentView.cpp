@@ -5,6 +5,7 @@
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
+#include "Application/Views/ImportView.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIIntVarOffField.h"
@@ -12,7 +13,6 @@
 #include "BaseClasses/UIStaticField.h"
 #include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/MessageBox.h"
-#include "ModalDialogs/PicoImportSampleDialog.h"
 #include "System/System/System.h"
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
@@ -452,8 +452,10 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
             DoModal(mb);
           } else {
             // Go to import sample
-            PicoImportSampleDialog *isd = new PicoImportSampleDialog(*this);
-            DoModal(isd);
+            ViewType vt = VT_IMPORT;
+            ViewEvent ve(VET_SWITCH_VIEW, &vt);
+            SetChanged();
+            NotifyObservers(&ve);
           }
         } else {
           MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
