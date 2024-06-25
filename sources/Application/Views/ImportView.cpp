@@ -58,17 +58,22 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
 void ImportView::DrawView() {
   Clear();
-  // Trace::Log("PICOSAMPLEIMPORT", "DrawView current:%d topIdx:%d",
-  // currentIndex_,
-  //            topIndex_);
 
   GUITextProperties props;
+  GUIPoint pos = GetTitlePosition();
 
   auto picoFS = PicoFileSystem::GetInstance();
 
+  // Draw title
+  const char *title = "Import Sample";
+  SetColor(CD_INFO);
+  DrawString(pos._x + 1, pos._y, title, props);
+
+  SetColor(CD_NORMAL);
+
   // Draw samples
-  int x = 0;
-  int y = 0;
+  int x = 1;
+  int y = pos._y + 2;
 
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string  in buffer :-(
@@ -99,17 +104,6 @@ void ImportView::DrawView() {
   };
 
   SetColor(CD_NORMAL);
-
-  // GUITextProperties props;
-  // SetColor(CD_HILITE2);
-
-  // char buildString[80];
-  // sprintf(buildString, "picoTracker build %s%s_%s", PROJECT_NUMBER,
-  //         PROJECT_RELEASE, BUILD_COUNT);
-  // GUIPoint pos;
-  // pos._y = 22;
-  // pos._x = (32 - strlen(buildString)) / 2;
-  // DrawString(pos._x, pos._y, buildString, props);
 };
 
 void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
