@@ -1,6 +1,7 @@
 add_library(application_views
   ChainView.h ChainView.cpp
   ConsoleView.h ConsoleView.cpp
+  FileView.h FileView.cpp
   GrooveView.h GrooveView.cpp
   InstrumentView.h InstrumentView.cpp
   MachineView.h MachineView.cpp
