@@ -353,6 +353,10 @@ void AppWindow::LoadProject(const char *name) {
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
 
+  static char importViewMemBuf[sizeof(ImportView)];
+  _importView = new (importViewMemBuf) ImportView((*this), _viewData);
+  _importView->AddObserver((*this));
+
   static char instrumentViewMemBuf[sizeof(InstrumentView)];
   _instrumentView =
       new (instrumentViewMemBuf) InstrumentView((*this), _viewData);

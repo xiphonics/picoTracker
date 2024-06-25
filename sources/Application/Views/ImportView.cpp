@@ -5,7 +5,13 @@ ImportView::ImportView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
 ImportView::~ImportView() {}
 
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
-
+  if (mask & EPBM_LEFT) {
+    // Go to import sample
+    ViewType vt = VT_INSTRUMENT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+  }
 };
 
 void ImportView::DrawView() {
