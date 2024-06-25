@@ -20,6 +20,7 @@ target_link_libraries(application_views PUBLIC application_views_baseclasses
                                         PUBLIC etl
                                         PUBLIC sdfat
                                         PUBLIC platform_sdcard
+                                        PUBLIC pico_multicore
 )
 
 target_include_directories(application_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
