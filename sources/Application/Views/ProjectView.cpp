@@ -5,6 +5,7 @@
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
+#include "BaseClasses/UITextField.h"
 #include "BaseClasses/View.h"
 #include "BaseClasses/ViewEvent.h"
 #include "Services/Midi/MidiService.h"
@@ -95,6 +96,13 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 2;
+  char nameBuffer[MAX_PROJECT_NAME_LENGTH + 1];
+  // temp hack
+  strcpy(nameBuffer, "test proj");
+  UITextField *t1 = new UITextField(nameBuffer, position);
+  fieldList_.insert(fieldList_.end(), t1);
+
+  position._y += 1;
   a1 = new UIActionField("Load Song", ACTION_LOAD, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
@@ -151,7 +159,6 @@ void ProjectView::DrawView() {
   GUIPoint pos = GetTitlePosition();
 
   // Draw title
-
   char projectString[80];
   sprintf(projectString, "Project - Build %s%s_%s", PROJECT_NUMBER,
           PROJECT_RELEASE, BUILD_COUNT);

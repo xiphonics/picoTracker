@@ -31,5 +31,6 @@ private:
   unsigned long lastTick_;
   unsigned long lastClock_;
   UIField *tempoField_;
+  UIField *nameField_;
 };
 #endif

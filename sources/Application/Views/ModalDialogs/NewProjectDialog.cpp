@@ -31,8 +31,8 @@ void NewProjectDialog::DrawView() {
     buffer[0] = name_[i];
     DrawString(x + 5 + i, 2, buffer, props);
   }
-  // Draw buttons
 
+  // Draw buttons
   SetColor(CD_NORMAL);
   props.invert_ = false;
 
