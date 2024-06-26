@@ -580,14 +580,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
           NotifyObservers(&ve);
         }
 
-        if (mask & EPBM_RIGHT) {
-          // Go to import sample
-          ViewType vt = VT_IMPORT;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
         if (mask & EPBM_START) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
                                 viewData_->chainRow_);
