@@ -201,7 +201,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   case ACTION_SAVE:
     if (!player->IsRunning()) {
       PersistencyService *service = PersistencyService::GetInstance();
-      service->Save();
+      char projName[MAX_PROJECT_NAME_LENGTH];
+      project_->GetProjectName(projName);
+      service->Save(projName);
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);

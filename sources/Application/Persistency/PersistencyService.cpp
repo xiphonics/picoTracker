@@ -7,9 +7,9 @@
 PersistencyService::PersistencyService()
     : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
 
-void PersistencyService::Save() {
+void PersistencyService::Save(const char *projectName) {
   etl::string<128> projectFilePath("/projects/");
-  projectFilePath.append(projectName_);
+  projectFilePath.append(projectName);
   projectFilePath.append("/lgptsav.dat");
 
   PI_File *fp =
@@ -40,8 +40,6 @@ bool PersistencyService::Load(const char *projectName) {
   etl::string<128> projectFilePath("/projects/");
   projectFilePath.append(projectName);
   projectFilePath.append("/lgptsav.dat");
-
-  strcpy(projectName_, projectName);
 
   PersistencyDocument doc;
   if (!doc.Load(projectFilePath.c_str()))
