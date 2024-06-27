@@ -6,19 +6,18 @@
 
 class UITextField : public UIField, public Observable {
 public:
-  UITextField(char *name, GUIPoint &position);
+  UITextField(Variable *v, GUIPoint &position);
 
   virtual ~UITextField();
   void Draw(GUIWindow &w, int offset = 0);
   void ProcessArrow(unsigned short mask);
   void OnClick();
-  const char *GetString();
+  etl::string<40> GetString();
 
 private:
   int selected_;
   int lastChar_;
-  char name_[24];
   int currentChar_ = 0;
-  int len_ = 0;
+  Variable *src_;
 };
 #endif

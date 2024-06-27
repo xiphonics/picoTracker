@@ -96,10 +96,9 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 2;
-  char nameBuffer[MAX_PROJECT_NAME_LENGTH + 1];
-  // temp hack
-  strcpy(nameBuffer, "test proj");
-  UITextField *t1 = new UITextField(nameBuffer, position);
+
+  v = project_->FindVariable(VAR_PROJECTNAME);
+  UITextField *t1 = new UITextField(v, position);
   fieldList_.insert(fieldList_.end(), t1);
 
   position._y += 1;

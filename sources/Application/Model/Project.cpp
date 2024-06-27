@@ -14,12 +14,13 @@
 
 #include <math.h>
 
-Project::Project()
+Project::Project(const char *name)
     : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0),
       tempo_("tempo", VAR_TEMPO, 138),
       masterVolume_("master", VAR_MASTERVOL, 100),
       wrap_("wrap", VAR_WRAP, false), transpose_("transpose", VAR_TRANSPOSE, 0),
-      scale_("scale", VAR_SCALE, scaleNames, numScales, 0) {
+      scale_("scale", VAR_SCALE, scaleNames, numScales, 0),
+      projectName_("projectname", VAR_PROJECTNAME, name) {
 
   //  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
   this->insert(end(), &tempo_);
@@ -33,9 +34,9 @@ Project::Project()
   //  0);
   this->insert(end(), &scale_);
   scale_.SetInt(0);
+  this->insert(end(), &projectName_);
 
   // Reload the midi device list
-
   buildMidiDeviceList();
 
   WatchedVariable *midi = new WatchedVariable(
@@ -79,6 +80,11 @@ int Project::GetMasterVolume() {
   NAssert(v);
   return v->GetInt();
 };
+
+void Project::GetProjectName(char *name) {
+  Variable *v = FindVariable(VAR_PROJECTNAME);
+  stpcpy(name, v->GetString().c_str());
+}
 
 void Project::NudgeTempo(int value) { tempoNudge_ += value; };
 

@@ -302,7 +302,7 @@ void AppWindow::LoadProject(const char *name) {
   pool->Load();
 
   static char projectMemBuf[sizeof(Project)];
-  Project *project = new (projectMemBuf) Project();
+  Project *project = new (projectMemBuf) Project(name);
 
   bool succeeded = persist->Load(name);
   if (!succeeded) {
