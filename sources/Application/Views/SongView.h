@@ -8,7 +8,7 @@ class SongView;
 
 class SongView : public View {
 public:
-  SongView(GUIWindow &w, ViewData *viewData, const char *song);
+  SongView(GUIWindow &w, ViewData *viewData);
   ~SongView();
 
   // View implementation
@@ -77,7 +77,6 @@ private:
   int saveX_;
   int saveY_;
   int saveOffset_;
-  std::string songname_;
   bool invertBatt_;
   bool needClear_;
 };

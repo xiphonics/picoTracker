@@ -334,7 +334,7 @@ void AppWindow::LoadProject(const char *name) {
 
   // Create & observe all views
   static char songViewMemBuf[sizeof(SongView)];
-  _songView = new (songViewMemBuf) SongView((*this), _viewData, name);
+  _songView = new (songViewMemBuf) SongView((*this), _viewData);
   _songView->AddObserver((*this));
 
   static char chainViewMemBuf[sizeof(ChainView)];
