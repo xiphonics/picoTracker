@@ -83,7 +83,7 @@ int Project::GetMasterVolume() {
 
 void Project::GetProjectName(char *name) {
   Variable *v = FindVariable(VAR_PROJECTNAME);
-  stpcpy(name, v->GetString().c_str());
+  strcpy(name, v->GetString().c_str());
 }
 
 void Project::NudgeTempo(int value) { tempoNudge_ += value; };
@@ -255,12 +255,12 @@ void Project::PurgeInstruments(bool removeFromDisk) {
     }
 
     // Now effectively purge all unused sample from disk
-
     int purged = 0;
     SamplePool *sp = SamplePool::GetInstance();
     for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
       if ((!iUsed[i]) && (sp->GetSource(i - purged))) {
-        sp->PurgeSample(i - purged);
+        char projName[MAX_PROJECT_NAME_LENGTH];
+        sp->PurgeSample(i - purged, projectName_.GetString().c_str());
         purged++;
       };
     };

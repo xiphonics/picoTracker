@@ -21,16 +21,15 @@ struct SamplePoolEvent : public I_ObservableData {
 
 class SamplePool : public T_Singleton<SamplePool>, public Observable {
 public:
-  void Load();
+  void Load(const char *projectName);
   SamplePool();
   void Reset();
   ~SamplePool();
   SoundSource *GetSource(int i);
   char **GetNameList();
   int GetNameListSize();
-  int ImportSample(char *name);
-  void PurgeSample(int i);
-  void SetProjectName(const char *name) { strcpy(projectName_, name); }
+  int ImportSample(char *name, const char *projectName);
+  void PurgeSample(int i, const char *projectName);
 
 protected:
   bool loadSample(const char *name);
@@ -40,8 +39,6 @@ protected:
   SoundSource *wav_[MAX_PIG_SAMPLES];
 
 private:
-  char projectName_[MAX_PROJECT_NAME_LENGTH];
-
 #ifdef LOAD_IN_FLASH
   static int flashEraseOffset_;
   static int flashWriteOffset_;

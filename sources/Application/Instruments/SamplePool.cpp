@@ -75,10 +75,10 @@ void SamplePool::Reset() {
 #endif
 };
 
-void SamplePool::Load() {
+void SamplePool::Load(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
   picoFS->chdir("/projects");
-  picoFS->chdir(projectName_);
+  picoFS->chdir(projectName);
   picoFS->chdir(PROJECT_SAMPLES_DIR);
 
   // First, find all wav files
@@ -148,7 +148,7 @@ bool SamplePool::loadSample(const char *name) {
 
 #define IMPORT_CHUNK_SIZE 1000
 
-int SamplePool::ImportSample(char *name) {
+int SamplePool::ImportSample(char *name, const char *projectName) {
 
   if (count_ == MAX_PIG_SAMPLES) {
     return -1;
@@ -169,7 +169,7 @@ int SamplePool::ImportSample(char *name) {
   // TODO: need to truncate sample file names to something like 64chars
   //  so that we dont overflow this temp string
   etl::string<128> projectSamplePath("/projects/");
-  projectSamplePath.append(projectName_);
+  projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
   projectSamplePath.append(name);
   Status::Set("Loading %s->", name);
@@ -208,12 +208,12 @@ int SamplePool::ImportSample(char *name) {
   return status ? (count_ - 1) : -1;
 };
 
-void SamplePool::PurgeSample(int i) {
+void SamplePool::PurgeSample(int i, const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
 
   // TODO use define constants for these strings
   etl::string<256> delPath("/projects/");
-  delPath.append(projectName_);
+  delPath.append(projectName);
   delPath.append("/samples/");
   delPath.append(names_[i]);
 

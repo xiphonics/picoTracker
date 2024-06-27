@@ -12,6 +12,8 @@ void PersistencyService::Save(const char *projectName) {
   projectFilePath.append(projectName);
   projectFilePath.append("/lgptsav.dat");
 
+  // TODO: Check if proj dir exists:
+
   PI_File *fp =
       PicoFileSystem::GetInstance()->Open(projectFilePath.c_str(), "w");
   printf("Save Proj File: %s\n", projectFilePath.c_str());

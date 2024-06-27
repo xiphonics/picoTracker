@@ -287,7 +287,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const char *name) {
+void AppWindow::LoadProject(const char *projectName) {
 
   _closeProject = false;
 
@@ -297,14 +297,13 @@ void AppWindow::LoadProject(const char *name) {
 
   // Load the sample pool
   SamplePool *pool = SamplePool::GetInstance();
-  pool->SetProjectName(name);
   // load the projects samples
-  pool->Load();
+  pool->Load(projectName);
 
   static char projectMemBuf[sizeof(Project)];
-  Project *project = new (projectMemBuf) Project(name);
+  Project *project = new (projectMemBuf) Project(projectName);
 
-  bool succeeded = persist->Load(name);
+  bool succeeded = persist->Load(projectName);
   if (!succeeded) {
     project->GetInstrumentBank()->AssignDefaults();
   };
