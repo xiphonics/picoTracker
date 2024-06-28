@@ -2,18 +2,22 @@
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
+#include <etl/string.h>
 
 PersistencyService::PersistencyService()
     : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
 
 void PersistencyService::Save() {
+  etl::string<128> projectFilePath("/projects/");
+  projectFilePath.append(projectName_);
+  projectFilePath.append("/lgptsav.dat");
 
-  Path filename("project:lgptsav.dat");
-  I_File *fp = FileSystem::GetInstance()->Open(filename.GetPath().c_str(), "w");
-  printf("File: %s\n", filename.GetPath().c_str());
+  PI_File *fp =
+      PicoFileSystem::GetInstance()->Open(projectFilePath.c_str(), "w");
+  printf("Save Proj File: %s\n", projectFilePath.c_str());
   if (!fp) {
     Trace::Error("Could not open file for writing: %s",
-                 filename.GetPath().c_str());
+                 projectFilePath.c_str());
   }
   tinyxml2::XMLPrinter printer(fp);
 
@@ -32,10 +36,15 @@ void PersistencyService::Save() {
   delete (fp);
 };
 
-bool PersistencyService::Load() {
-  Path filename("project:lgptsav.dat");
+bool PersistencyService::Load(const char *projectName) {
+  etl::string<128> projectFilePath("/projects/");
+  projectFilePath.append(projectName);
+  projectFilePath.append("/lgptsav.dat");
+
+  strcpy(projectName_, projectName);
+
   PersistencyDocument doc;
-  if (!doc.Load(filename.GetPath()))
+  if (!doc.Load(projectFilePath.c_str()))
     return false;
 
   bool elem = doc.FirstChild(); // advance to first child

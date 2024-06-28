@@ -2,6 +2,7 @@
 #include "Application/Instruments/CommandList.h"
 #include "Application/Utils/HexBuffers.h"
 #include "Phrase.h"
+#include "System/System/System.h"
 #include "System/io/Status.h"
 #include "Table.h"
 #include <assert.h>

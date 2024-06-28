@@ -17,6 +17,8 @@ target_link_libraries(application_views PUBLIC application_views_baseclasses
                                         PUBLIC application_instruments
                                         PUBLIC hardware_watchdog
                                         PUBLIC etl
+                                        PUBLIC sdfat
+                                        PUBLIC platform_sdcard
 )
 
 target_include_directories(application_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

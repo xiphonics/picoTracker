@@ -30,6 +30,8 @@ target_link_libraries(application_instruments PUBLIC foundation_services
                                               PUBLIC opal
                                               PUBLIC braids
                                               PUBLIC pico_rand
+                                              PUBLIC sdfat
+                                              PUBLIC platform_sdcard
 )
 
 target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

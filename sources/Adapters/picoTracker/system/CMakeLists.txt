@@ -10,7 +10,6 @@ target_link_libraries(platform_system INTERFACE system_system
                                       PUBLIC platform_audio
                                       PUBLIC services_audio
                                       PUBLIC platform_midi
-                                      PUBLIC platform_filesystem
                                       PUBLIC platform_gui
                                       PUBLIC platform_display
                                       PUBLIC dummy_midi

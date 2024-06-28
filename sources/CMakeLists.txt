@@ -25,7 +25,7 @@ add_definitions(-DPICOBUILD)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
 # Disable MIDI. Enable in order to use UART0 as stdio for debugging
-# add_definitions(-DDUMMY_MIDI)
+add_definitions(-DDUMMY_MIDI)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
 # add_definitions(-DUSB_REMOTE_UI)
@@ -41,7 +41,7 @@ add_compile_options(
   -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
   -fstack-usage
   -fcallgraph-info=su # include above info in callgraph
-  -Wstack-usage=1272 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
+  -Wstack-usage=2048 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
   # TODO: SHOULD FIX
   -Wno-int-to-pointer-cast
 
@@ -71,12 +71,14 @@ target_compile_definitions(picoTracker PUBLIC
   PICO_FLASH_SIZE_BYTES=16*1024*1024
   # workaround for slow init crystal on some boards see: https://github.com/raspberrypi/pico-sdk/pull/457
   PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
+  PICO_DEOPTIMIZED_DEBUG=1
+  CMAKE_BUILD_TYPE=Debug
   
 )
 
 # Debug output with USB uses +6K memory
-pico_enable_stdio_usb(${PROJECT_NAME} 0)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
 
 # This is the default, but better to make it explicit
 pico_set_float_implementation(${PROJECT_NAME} pico)

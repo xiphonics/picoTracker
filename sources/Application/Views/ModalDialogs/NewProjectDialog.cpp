@@ -19,14 +19,14 @@ void NewProjectDialog::DrawView() {
 
   // Draw string
 
-  int len = MAX_NAME_LENGTH + 5;
+  int len = MAX_PROJECT_NAME_LENGTH + 5;
   int x = (DIALOG_WIDTH - len) / 2;
 
-  DrawString(x, 2, "lgpt_", props);
+  DrawString(x, 2, "", props);
 
   char buffer[2];
   buffer[1] = 0;
-  for (int i = 0; i < MAX_NAME_LENGTH; i++) {
+  for (int i = 0; i < MAX_PROJECT_NAME_LENGTH; i++) {
     props.invert_ = ((i == currentChar_) && (selected_ == 0));
     buffer[0] = name_[i];
     DrawString(x + 5 + i, 2, buffer, props);
@@ -51,7 +51,7 @@ void NewProjectDialog::OnPlayerUpdate(PlayerEventType,
 
 void NewProjectDialog::OnFocus() {
   selected_ = currentChar_ = 0;
-  memset(name_, ' ', MAX_NAME_LENGTH + 1);
+  memset(name_, ' ', MAX_PROJECT_NAME_LENGTH + 1);
   lastChar_ = 'A';
 };
 
@@ -95,7 +95,6 @@ void NewProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
     } else {
 
       // R Modifier
-
       if (mask & EPBM_R) {
       } else {
         // No modifier
@@ -124,7 +123,7 @@ void NewProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (mask == EPBM_RIGHT) {
           switch (selected_) {
           case 0:
-            if (currentChar_ < MAX_NAME_LENGTH - 1)
+            if (currentChar_ < MAX_PROJECT_NAME_LENGTH - 1)
               currentChar_++;
             break;
           case 1:
@@ -139,15 +138,15 @@ void NewProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
   }
 };
 
-std::string NewProjectDialog::GetName() {
-  for (int i = MAX_NAME_LENGTH; i >= 0; i--) {
+etl::string<MAX_PROJECT_NAME_LENGTH> NewProjectDialog::GetName() {
+  for (int i = MAX_PROJECT_NAME_LENGTH; i >= 0; i--) {
     if (name_[i] == ' ') {
       name_[i] = 0;
     } else {
       break;
     }
   }
-  std::string name = "lgpt_";
-  name += name_;
+  etl::string<MAX_PROJECT_NAME_LENGTH> name = "";
+  name.append(name_);
   return name;
 }

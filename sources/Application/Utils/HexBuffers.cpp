@@ -9,7 +9,7 @@ void prepareHexChunk(tinyxml2::XMLPrinter *printer, unsigned char *datasrc,
 
   bool singleValue = true;
   int singleValueData = -1;
-  unsigned char hexBuffer[XML_CUT_LENGTH * 2 + 1];
+  unsigned char hexBuffer[XML_CUT_LENGTH * 2 + 1] = "";
   std::string buffer;
 
   char *hex = (char *)hexBuffer;
@@ -75,7 +75,7 @@ void restoreHexBuffer(PersistencyDocument *doc, unsigned char *destination) {
   while (child) {
     bool hasAttr = doc->NextAttribute();
     if (hasAttr) {
-      int data;
+      int data = 0;
       int length = 0;
       bool gotData = false;
       while (hasAttr) {

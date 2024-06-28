@@ -1,6 +1,5 @@
 #include "picoTrackerSystem.h"
 #include "Adapters/picoTracker/audio/picoTrackerAudio.h"
-#include "Adapters/picoTracker/filesystem/picoTrackerFileSystem.h"
 #include "Adapters/picoTracker/gui/GUIFactory.h"
 #include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #ifdef DUMMY_MIDI
@@ -45,12 +44,6 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   // Install System
   static char systemMemBuf[sizeof(picoTrackerSystem)];
   System::Install(new (systemMemBuf) picoTrackerSystem());
-
-  // Install FileSystem
-  static char fileSystemMemBuf[sizeof(picoTrackerFileSystem)];
-  FileSystem::Install(new (fileSystemMemBuf) picoTrackerFileSystem());
-  Path::SetAlias("bin", "");
-  Path::SetAlias("root", "");
 
   static char loggerMemBuf[sizeof(StdOutLogger)];
   Trace::GetInstance()->SetLogger(*(new (loggerMemBuf) StdOutLogger()));

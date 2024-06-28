@@ -2,6 +2,7 @@
 #define _PROJECT_H_
 
 #include "Application/Instruments/InstrumentBank.h"
+#include "Application/Persistency/PersistencyService.h"
 #include "Application/Persistency/Persistent.h"
 #include "BuildNumber.h"
 #include "Foundation/Observable.h"
@@ -58,6 +59,7 @@ private:
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];
   unsigned int tempoTapCount_;
+  char *name[MAX_PROJECT_NAME_LENGTH];
 
   // variables
   WatchedVariable tempo_;

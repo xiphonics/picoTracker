@@ -70,7 +70,7 @@ public:
   void ProcessCommands();
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
 
-  void StartStreaming(const Path &path);
+  void StartStreaming(char *name);
   void StopStreaming();
 
   // Channel data

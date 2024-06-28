@@ -42,8 +42,7 @@ static void ProjectSelectCallback(View &v, ModalView &dialog) {
 
   SelectProjectDialog &spd = (SelectProjectDialog &)dialog;
   if (dialog.GetReturnCode() > 0) {
-    Path selected = spd.GetSelection();
-    instance->LoadProject(selected.GetPath().c_str());
+    instance->LoadProject(spd.GetSelection());
   } else {
     System::GetInstance()->PostQuitMessage();
   }
@@ -116,9 +115,17 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _currentView = _nullView;
   _nullView->SetDirty(true);
 
-  static char selectProjectMemBuf[sizeof(SelectProjectDialog)];
-  SelectProjectDialog *spd =
-      new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
+  // For now need to keep using dynamic mem alloc here  instead of
+  // doing the static alloc trick as the View class
+  // depends on being able to delete the assigned modal obj and then will
+  // free it there as thats the way it tracks when the modal is no longer
+  // visible on screen
+
+  // static char selectProjectMemBuf[sizeof(SelectProjectDialog)];
+  // SelectProjectDialog *spd =
+  //     new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
+
+  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
   _currentView->DoModal(spd, ProjectSelectCallback);
 
   memset(_charScreen, ' ', SCREEN_CHARS);
@@ -280,9 +287,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const Path &p) {
-
-  _root = p;
+void AppWindow::LoadProject(const char *name) {
 
   _closeProject = false;
 
@@ -290,19 +295,16 @@ void AppWindow::LoadProject(const Path &p) {
 
   TablePlayback::Reset();
 
-  Path::SetAlias("project", _root.GetPath().c_str());
-  Path::SetAlias("samples", "project:samples");
-
   // Load the sample pool
-
   SamplePool *pool = SamplePool::GetInstance();
-
+  pool->SetProjectName(name);
+  // load the projects samples
   pool->Load();
 
   static char projectMemBuf[sizeof(Project)];
   Project *project = new (projectMemBuf) Project();
 
-  bool succeeded = persist->Load();
+  bool succeeded = persist->Load(name);
   if (!succeeded) {
     project->GetInstrumentBank()->AssignDefaults();
   };
@@ -332,8 +334,7 @@ void AppWindow::LoadProject(const Path &p) {
 
   // Create & observe all views
   static char songViewMemBuf[sizeof(SongView)];
-  _songView = new (songViewMemBuf)
-      SongView((*this), _viewData, _root.GetName().c_str());
+  _songView = new (songViewMemBuf) SongView((*this), _viewData, name);
   _songView->AddObserver((*this));
 
   static char chainViewMemBuf[sizeof(ChainView)];
@@ -495,7 +496,7 @@ void AppWindow::onUpdate() {
 
 void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
 
-void AppWindow::LayoutChildren() {};
+void AppWindow::LayoutChildren(){};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
 

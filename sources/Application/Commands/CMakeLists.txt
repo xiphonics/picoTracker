@@ -5,7 +5,10 @@ add_library(application_commands
   NodeList.h
 )
 
-target_link_libraries(application_commands PUBLIC system_process)
+target_link_libraries(application_commands PUBLIC system_process
+                                        PUBLIC sdfat
+                                        PUBLIC platform_sdcard
+)
 
 target_include_directories(application_commands PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

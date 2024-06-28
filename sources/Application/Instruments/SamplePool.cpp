@@ -2,12 +2,13 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/PicoFileSystem.h"
 #include "System/io/Status.h"
 #include <stdlib.h>
 #include <string.h>
 #include <string>
 
-#define SAMPLE_LIB "root:samplelib"
+#define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
 #ifdef LOAD_IN_FLASH
 #include "hardware/flash.h"
@@ -62,12 +63,6 @@ SamplePool::~SamplePool() {
   };
 };
 
-const char *SamplePool::GetSampleLib() {
-  Config *config = Config::GetInstance();
-  const char *lib = config->GetValue("SAMPLELIB");
-  return lib ? lib : SAMPLE_LIB;
-}
-
 void SamplePool::Reset() {
   count_ = 0;
   for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
@@ -83,32 +78,28 @@ void SamplePool::Reset() {
 };
 
 void SamplePool::Load() {
-
-  Path sampleDir("samples:");
-
-  I_Dir *dir = FileSystem::GetInstance()->Open(sampleDir.GetPath().c_str());
-  if (!dir) {
-    return;
-  }
+  auto picoFS = PicoFileSystem::GetInstance();
+  picoFS->chdir("/projects");
+  picoFS->chdir(projectName_);
+  picoFS->chdir(PROJECT_SAMPLES_DIR);
 
   // First, find all wav files
-
-  dir->GetContent("*.wav");
-  count_ = 0;
-  for (dir->Begin(); !dir->IsDone(); dir->Next()) {
-    Path &path = dir->CurrentItem();
-    Status::Set("Loading %s", path.GetName().c_str());
-    loadSample(path.GetPath().c_str());
-    if (count_ == MAX_PIG_SAMPLES) {
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
+  picoFS->list(&fileIndexes, ".wav", false);
+  char name[PFILENAME_SIZE];
+  for (size_t i = 0; i < fileIndexes.size(); i++) {
+    picoFS->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
+    if (picoFS->getFileType(fileIndexes[i]) == PFT_FILE) {
+      Status::Set("Loading:%s\n", name);
+      loadSample(name);
+    }
+    if (i == MAX_PIG_SAMPLES) {
       Trace::Error("Warning maximum sample count reached");
       break;
     };
   };
 
-  delete dir;
-
   // now sort the samples
-
   int rest = count_;
   while (rest > 0) {
     int index = 0;
@@ -133,18 +124,16 @@ char **SamplePool::GetNameList() { return names_; };
 
 int SamplePool::GetNameListSize() { return count_; };
 
-bool SamplePool::loadSample(const char *path) {
+bool SamplePool::loadSample(const char *name) {
 
   if (count_ == MAX_PIG_SAMPLES)
     return false;
 
-  Path wavPath(path);
-  WavFile *wave = WavFile::Open(path);
+  WavFile *wave = WavFile::Open(name);
   if (wave) {
     wav_[count_] = wave;
-    const std::string name = wavPath.GetName();
-    names_[count_] = (char *)SYS_MALLOC(name.length() + 1);
-    strcpy(names_[count_], name.c_str());
+    names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
+    strcpy(names_[count_], name);
     count_++;
 #ifdef LOAD_IN_FLASH
     wave->LoadInFlash(flashEraseOffset_, flashWriteOffset_, flashLimit_);
@@ -154,47 +143,47 @@ bool SamplePool::loadSample(const char *path) {
     wave->Close();
     return true;
   } else {
-    Trace::Error("Failed to load samples %s", wavPath.GetName().c_str());
+    Trace::Error("Failed to load sample:%s\n", name);
     return false;
   }
 }
 
 #define IMPORT_CHUNK_SIZE 1000
 
-int SamplePool::ImportSample(Path &path) {
+int SamplePool::ImportSample(char *name) {
 
-  if (count_ == MAX_PIG_SAMPLES)
+  if (count_ == MAX_PIG_SAMPLES) {
     return -1;
+  }
 
-  // construct target path
-
-  std::string dpath = "samples:";
-  dpath += path.GetName();
-  Path dstPath(dpath.c_str());
-
-  Status::Set("Loading %s", path.GetName().c_str());
-
-  // Opens files
-
-  I_File *fin = FileSystem::GetInstance()->Open(path.GetPath().c_str(), "r");
+  // Opens file - we assume that have already chdir() into the correct dir
+  // that contains the sample file
+  auto picoFS = PicoFileSystem::GetInstance();
+  PI_File *fin = picoFS->Open(name, "r");
   if (!fin) {
-    Trace::Error("Failed to open input file %s", path.GetPath().c_str());
+    Trace::Error("Failed to open sample input file:%s\n", name);
     return -1;
   };
   fin->Seek(0, SEEK_END);
   long size = fin->Tell();
   fin->Seek(0, SEEK_SET);
 
-  I_File *fout =
-      FileSystem::GetInstance()->Open(dstPath.GetPath().c_str(), "w");
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> projectSamplePath("/projects/");
+  projectSamplePath.append(projectName_);
+  projectSamplePath.append("/samples/");
+  projectSamplePath.append(name);
+  Status::Set("Loading %s->", name);
+
+  PI_File *fout =
+      PicoFileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
+    Trace::Error("Failed to open sample project file:%s\n", projectSamplePath);
     fin->Close();
     delete (fin);
     return -1;
   };
 
   // copy file to current project
-
   char buffer[IMPORT_CHUNK_SIZE];
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
@@ -203,14 +192,13 @@ int SamplePool::ImportSample(Path &path) {
     size -= count;
   };
 
+  // now load the sample into memory/flash
+  bool status = loadSample(name);
+
   fin->Close();
   fout->Close();
   delete (fin);
   delete (fout);
-
-  // now load the sample
-
-  bool status = loadSample(dstPath.GetPath().c_str());
 
   SetChanged();
   SamplePoolEvent ev;
@@ -221,19 +209,20 @@ int SamplePool::ImportSample(Path &path) {
 };
 
 void SamplePool::PurgeSample(int i) {
+  auto picoFS = PicoFileSystem::GetInstance();
 
-  // construct the path of the sample to delete
+  // TODO use define constants for these strings
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> delPath("/projects/");
+  delPath.append(projectName_);
+  delPath.append("/samples/");
+  delPath.append(names_[i]);
 
-  std::string wavPath = "samples:";
-  wavPath += names_[i];
-  Path path(wavPath.c_str());
+  // delete file
+  PicoFileSystem::GetInstance()->DeleteFile(delPath.c_str());
   // delete wav
   SAFE_DELETE(wav_[i]);
   // delete name entry
   SAFE_DELETE(names_[i]);
-
-  // delete file
-  FileSystem::GetInstance()->Delete(path.GetPath().c_str());
 
   // shift all entries from deleted to end
   for (int j = i; j < count_ - 1; j++) {

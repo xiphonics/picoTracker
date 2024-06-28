@@ -6,99 +6,69 @@
 
 #include <algorithm>
 
-#define LIST_SIZE 14
+#define LIST_PAGE_SIZE 14
 #define LIST_WIDTH 26
 
 static const char *buttonText[2] = {"Load", "New"};
 
-Path SelectProjectDialog::lastFolder_("root:");
 int SelectProjectDialog::lastProject_ = 0;
 
 static void NewProjectCallback(View &v, ModalView &dialog) {
 
   NewProjectDialog &npd = (NewProjectDialog &)dialog;
   if (dialog.GetReturnCode() > 0) {
-    std::string selected = npd.GetName();
+    etl::string selected = npd.GetName();
     SelectProjectDialog &spd = (SelectProjectDialog &)v;
-    Result result = spd.OnNewProject(selected);
+    Result result = spd.OnNewProject(selected.c_str());
     if (result.Failed()) {
       Trace::Error(result.GetDescription().c_str());
     }
   }
 };
 
-SelectProjectDialog::SelectProjectDialog(View &view)
-    : ModalView(view), content_(true) {}
+SelectProjectDialog::SelectProjectDialog(View &view) : ModalView(view) {}
 
 SelectProjectDialog::~SelectProjectDialog() {}
 
 void SelectProjectDialog::DrawView() {
-
-  SetWindow(LIST_WIDTH, LIST_SIZE + 3);
-
-  GUITextProperties props;
-
   SetColor(CD_NORMAL);
 
-  // Draw projects
-
-  int x = 1;
-  int y = 1;
-
-  if (currentProject_ < topIndex_) {
-    topIndex_ = currentProject_;
-  };
-  if (currentProject_ >= topIndex_ + LIST_SIZE) {
-    topIndex_ = currentProject_ - LIST_SIZE + 1;
-  };
-
-  int count = 0;
-  char buffer[256];
-  for (content_.Begin(); !content_.IsDone(); content_.Next()) {
-    if ((count >= topIndex_) && (count < topIndex_ + LIST_SIZE)) {
-      Path &current = content_.CurrentItem();
-      std::string p = current.GetName();
-
-      std::string firstFourChars = p.substr(0, 4);
-      std::transform(firstFourChars.begin(), firstFourChars.end(),
-                     firstFourChars.begin(), ::tolower);
-      if (firstFourChars == "lgpt" && p.size() > 4) {
-        int namestart = 4;
-        // skip _ if needed
-        if ((!isalnum(p[4])) && (p.size() > 4)) {
-          namestart++;
-        }
-        std::string t = p;
-        p = " ";
-        p += t.substr(namestart);
-      } else {
-        std::string t = p;
-        p = "[";
-        p += t;
-        p += "]";
-      };
-
-      if (count == currentProject_) {
-        SetColor(CD_HILITE2);
-        props.invert_ = true;
-      } else {
-        SetColor(CD_NORMAL);
-        props.invert_ = false;
-      }
-      strcpy(buffer, p.c_str());
-      buffer[LIST_WIDTH - 1] = 0;
-      DrawString(x, y, buffer, props);
-      y += 1;
-    }
-    count++;
-  };
-
-  y = LIST_SIZE + 2;
-#ifndef NO_EXIT
-  int offset = LIST_WIDTH / 4;
-#else
   int offset = LIST_WIDTH / 3;
-#endif
+  // Draw projects
+  SetWindow(LIST_WIDTH, LIST_PAGE_SIZE);
+  GUITextProperties props;
+
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  int x = 0;
+  int y = 0;
+
+  // need to use fullsize buffer as sdfat doesnt truncate if filename longer
+  // than buffer but instead returns empty string  in buffer :-(
+  char buffer[PFILENAME_SIZE];
+  for (size_t i = topIndex_;
+       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+    if (i == currentIndex_) {
+      SetColor(CD_HILITE2);
+      props.invert_ = true;
+    } else {
+      SetColor(CD_NORMAL);
+      props.invert_ = false;
+    }
+
+    memset(buffer, '\0', sizeof(buffer));
+    unsigned fileIndex = fileIndexList_[i];
+
+    if (picoFS->getFileType(fileIndex) != PFT_DIR) {
+      picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
+    } else {
+      picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
+    }
+    // make sure truncate to list width the filename with trailing null
+    buffer[LIST_WIDTH] = 0;
+    DrawString(x, y, buffer, props);
+    y += 1;
+  };
 
   SetColor(CD_NORMAL);
 
@@ -114,8 +84,7 @@ void SelectProjectDialog::OnPlayerUpdate(PlayerEventType,
                                          unsigned int currentTick){};
 
 void SelectProjectDialog::OnFocus() {
-
-  setCurrentFolder(lastFolder_);
+  setCurrentFolder();
   currentProject_ = lastProject_;
 };
 
@@ -125,51 +94,24 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (mask & EPBM_B) {
     if (mask & EPBM_UP)
-      warpToNextProject(-LIST_SIZE);
+      warpToNextProject(true);
     if (mask & EPBM_DOWN)
-      warpToNextProject(LIST_SIZE);
+      warpToNextProject(false);
   } else {
-
     // A modifier
     if (mask & EPBM_A) {
       switch (selected_) {
       case 0: // load
       {
-        // locate folder user had selected when they hit a
-        int count = 0;
-        Path *current = 0;
+        // all subdirs in /project are expected to be projects
+        unsigned fileIndex = fileIndexList_[currentIndex_];
+        char name[PFILENAME_SIZE];
+        auto picoFS = PicoFileSystem::GetInstance();
+        picoFS->getFileName(fileIndex, selection_, PFILENAME_SIZE);
 
-        for (content_.Begin(); !content_.IsDone(); content_.Next()) {
-          if (count == currentProject_) {
-            current = &content_.CurrentItem();
-            break;
-          }
-          count++;
-        }
+        // load the project
+        EndModal(1);
 
-        // check if folder is a project, indicated by 'lgpt' being the first 4
-        // characters of the folder name
-        std::string name = current->GetName();
-        std::string firstFourChars = name.substr(0, 4);
-        std::transform(firstFourChars.begin(), firstFourChars.end(),
-                       firstFourChars.begin(), ::tolower);
-        if (firstFourChars == "lgpt") {
-          // ugly hack to make the "name" include subdirectories
-          // we pass along everything past the root dir
-          selection_ = *current;
-          lastFolder_ = currentPath_;
-          lastProject_ = currentProject_;
-          // load the project
-          EndModal(1);
-        } else {
-          if (current->GetName() == "..") {
-            Path parent = currentPath_.GetParent();
-            setCurrentFolder(parent);
-          } else {
-            Path newdir = *current;
-            setCurrentFolder(newdir);
-          }
-        }
         break;
       }
       case 1: // new
@@ -185,9 +127,9 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
       } else {
         // No modifier
         if (mask == EPBM_UP)
-          warpToNextProject(-1);
+          warpToNextProject(true);
         if (mask == EPBM_DOWN)
-          warpToNextProject(1);
+          warpToNextProject(false);
         if (mask == EPBM_LEFT) {
           selected_--;
           if (selected_ < 0)
@@ -203,37 +145,47 @@ void SelectProjectDialog::ProcessButtonMask(unsigned short mask, bool pressed) {
   }
 }
 
-void SelectProjectDialog::warpToNextProject(int amount) {
+void SelectProjectDialog::warpToNextProject(bool goUp) {
 
-  int offset = currentProject_ - topIndex_;
-  int size = content_.Size();
-  currentProject_ += amount;
-  if (currentProject_ < 0)
-    currentProject_ += size;
-  if (currentProject_ >= size)
-    currentProject_ -= size;
-
-  if ((amount > 1) || (amount < -1)) {
-    topIndex_ = currentProject_ - offset;
-    if (topIndex_ < 0) {
-      topIndex_ = 0;
-    };
+  if (goUp) {
+    if (currentIndex_ > 0) {
+      currentIndex_--;
+      // if we have scrolled off the top, page the file list up if not
+      // already at  very top of the list
+      if (currentIndex_ < topIndex_) {
+        topIndex_ = currentIndex_;
+      }
+    }
+  } else {
+    if (currentIndex_ < fileIndexList_.size() - 1) {
+      currentIndex_++;
+      // if we have scrolled off the bottom, page the file list down if not
+      // at end of the list
+      if (currentIndex_ >= (topIndex_ + LIST_PAGE_SIZE)) {
+        topIndex_++;
+      }
+    }
   }
   isDirty_ = true;
 }
 
-Path SelectProjectDialog::GetSelection() { return selection_; }
+Result SelectProjectDialog::OnNewProject(const char *name) {
 
-Result SelectProjectDialog::OnNewProject(std::string &name) {
-  Path path = currentPath_.Descend(name);
-  Trace::Log("TMP", "creating project at %s", path.GetPath().c_str());
-  selection_ = path;
-  Result result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str());
+  Trace::Log("SELECTPROJDIALOG", "creating project:%s", name);
+
+  strcpy(selection_, name);
+
+  etl::string<MAX_PROJECT_NAME_LENGTH + PFILENAME_SIZE + 20> path("/projects/");
+  path.append(name);
+
+  bool res = PicoFileSystem::GetInstance()->makeDir(path.c_str());
+  auto result = res ? Result::NoError : Result("");
   RETURN_IF_FAILED_MESSAGE(result, "Failed to create project dir");
 
-  path = path.Descend("samples");
-  Trace::Log("TMP", "creating samples dir at %s", path.GetPath().c_str());
-  result = FileSystem::GetInstance()->MakeDir(path.GetPath().c_str());
+  path.append("/samples");
+  Trace::Log("SELECTPROJDIALOG", "creating samples dir at %s", path.c_str());
+  res = PicoFileSystem::GetInstance()->makeDir(path.c_str());
+  result = res ? Result::NoError : Result("");
   RETURN_IF_FAILED_MESSAGE(result, "Failed to create samples dir");
 
   EndModal(1);
@@ -241,33 +193,21 @@ Result SelectProjectDialog::OnNewProject(std::string &name) {
 };
 
 // copy-paste-mutilate'd from ImportSampleDialog
-void SelectProjectDialog::setCurrentFolder(Path &path) {
+void SelectProjectDialog::setCurrentFolder() {
+  auto picoFS = PicoFileSystem::GetInstance();
+  picoFS->chdir("/projects");
 
   // get ready
   selected_ = 0;
-  currentPath_ = path;
-  content_.Empty();
+  fileIndexList_.clear();
 
-  // Let's read all the directory in the root
+  // Let's read all the directory in the project dir
+  picoFS->list(&fileIndexList_, NULL, true);
 
-  I_Dir *dir = FileSystem::GetInstance()->Open(currentPath_.GetPath().c_str());
+  // temp hack,  filter out "." & ".."
+  fileIndexList_.erase(fileIndexList_.begin());
+  fileIndexList_.erase(fileIndexList_.begin());
 
-  if (dir) {
-    // Get all lgpt something
-    dir->GetContent("*");
-    dir->Sort();
-    for (dir->Begin(); !dir->IsDone(); dir->Next()) {
-      Path &path = dir->CurrentItem();
-      if (path.IsDirectory()) {
-        std::string name = path.GetName();
-        if (name[0] != '.' || name[1] == '.') {
-          Path *p = new Path(path);
-          content_.Insert(p);
-        }
-      }
-    }
-    delete (dir);
-  }
   // reset & redraw screen
   topIndex_ = 0;
   currentProject_ = 0;
