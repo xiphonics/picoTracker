@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
+set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
 # Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -28,9 +29,8 @@ add_definitions(-DDUMMY_MIDI)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
 # add_definitions(-DUSB_REMOTE_UI)
-
-
-
+# Enable DSP support. Will be automatically detected in the future
+# add_definitions(-DENABLE_DSP)
 
 # Initialize the SDK
 pico_sdk_init()
@@ -57,6 +57,7 @@ add_subdirectory(Application)
 add_subdirectory(Externals)
 add_subdirectory(Services)
 add_subdirectory(Foundation)
+add_subdirectory(DSP)
 
 set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
 

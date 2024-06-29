@@ -8,6 +8,8 @@
 #include <string.h>
 #include <string>
 
+#define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
+
 #ifdef LOAD_IN_FLASH
 #include "hardware/flash.h"
 // #define FLASH_TARGET_OFFSET (1024 * 1024)
@@ -15,7 +17,8 @@
 //  WARNING! should be conscious to always ensure 1MB of free space
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
-  ((((uintptr_t)&__flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) + 1) * \
+  ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
+   1) *                                                                        \
       FLASH_SECTOR_SIZE
 // #define FLASH_LIMIT (2 * 1024 * 1024)
 
@@ -166,9 +169,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   long size = fin->Tell();
   fin->Seek(0, SEEK_SET);
 
-  // TODO: need to truncate sample file names to something like 64chars
-  //  so that we dont overflow this temp string
-  etl::string<128> projectSamplePath("/projects/");
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> projectSamplePath("/projects/");
   projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
   projectSamplePath.append(name);
@@ -212,7 +213,7 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
 
   // TODO use define constants for these strings
-  etl::string<256> delPath("/projects/");
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> delPath("/projects/");
   delPath.append(projectName);
   delPath.append("/samples/");
   delPath.append(names_[i]);

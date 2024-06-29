@@ -17,7 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
+// mini blank buffer for underrun, initialized to 0
+const char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 *
+                                              sizeof(short)] = {0};
 
 picoTrackerAudioDriver *picoTrackerAudioDriver::instance_ = NULL;
 semaphore_t core1_audio;
@@ -121,9 +123,6 @@ bool picoTrackerAudioDriver::InitDriver() {
       system_clock_frequency * 2 / sample_freq; // avoid arithmetic overflow
   pio_sm_set_clkdiv_int_frac(AUDIO_PIO, AUDIO_SM, divider >> 8u,
                              divider & 0xffu);
-
-  // Create mini blank buffer for underrun
-  memset(miniBlank_, 0, MINI_BLANK_SIZE * 2 * sizeof(short));
 
   // Enable audio
   irq_set_enabled(DMA_IRQ_0 + AUDIO_DMA_IRQ, true);

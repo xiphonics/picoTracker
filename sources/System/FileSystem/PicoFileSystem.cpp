@@ -52,7 +52,7 @@ bool PicoFileSystem::chdir(const char *name) {
   sd.chvol();
   auto res = sd.vol()->chdir(name);
   File cwd;
-  char buf[128];
+  char buf[PFILENAME_SIZE];
   cwd.openCwd();
   cwd.getName(buf, 128);
   cwd.close();
