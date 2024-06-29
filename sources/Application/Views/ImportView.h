@@ -1,22 +1,22 @@
-#ifndef _PICO_IMPORT_SAMPLE_DIALOG_H_
-#define _PICO_IMPORT_SAMPLE_DIALOG_H_
+#ifndef _IMPORT_VIEW_H_
+#define _IMPORT_VIEW_H_
 
-#include "Application/Views/BaseClasses/ModalView.h"
+#include "BaseClasses/View.h"
 #include "Foundation/T_SimpleList.h"
 #include "System/FileSystem/PicoFileSystem.h"
+#include "ViewData.h"
 #include <string>
 
 #define SAMPLE_LIB "/samplelib"
 
-class PicoImportSampleDialog : public ModalView {
+class ImportView : public View {
 public:
-  PicoImportSampleDialog(View &view);
-  virtual ~PicoImportSampleDialog();
-
-  virtual void DrawView();
-  virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick);
-  virtual void OnFocus();
+  ImportView(GUIWindow &w, ViewData *viewData);
+  ~ImportView();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
+  virtual void DrawView();
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
+  virtual void OnFocus();
   virtual void AnimationUpdate(){};
 
 protected:
@@ -33,5 +33,4 @@ private:
   int toInstr_ = 0;
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
-
 #endif

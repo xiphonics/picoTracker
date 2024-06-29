@@ -2,6 +2,7 @@ add_library(application_views
   ChainView.h ChainView.cpp
   ConsoleView.h ConsoleView.cpp
   GrooveView.h GrooveView.cpp
+  ImportView.h ImportView.cpp
   InstrumentView.h InstrumentView.cpp
   MachineView.h MachineView.cpp
   NullView.h NullView.cpp
@@ -19,6 +20,7 @@ target_link_libraries(application_views PUBLIC application_views_baseclasses
                                         PUBLIC etl
                                         PUBLIC sdfat
                                         PUBLIC platform_sdcard
+                                        PUBLIC pico_multicore
 )
 
 target_include_directories(application_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

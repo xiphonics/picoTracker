@@ -5,6 +5,7 @@
 #include "Application/Views/ChainView.h"
 #include "Application/Views/ConsoleView.h"
 #include "Application/Views/GrooveView.h"
+#include "Application/Views/ImportView.h"
 #include "Application/Views/InstrumentView.h"
 #include "Application/Views/MachineView.h"
 #include "Application/Views/NullView.h"
@@ -76,6 +77,7 @@ private:
   InstrumentView *_instrumentView;
   TableView *_tableView;
   GrooveView *_grooveView;
+  ImportView *_importView;
   NullView *_nullView;
 
   bool _isDirty;

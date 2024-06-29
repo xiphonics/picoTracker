@@ -1,4 +1,5 @@
-#include "PicoImportSampleDialog.h"
+#include "ImportView.h"
+
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "pico/multicore.h"
@@ -7,28 +8,72 @@
 #define LIST_WIDTH 24
 #define LIST_PAGE_SIZE 18
 
-PicoImportSampleDialog::PicoImportSampleDialog(View &view) : ModalView(view) {
-  Trace::Log("PICOSAMPLEIMPORT", "samplelib is:%s", SAMPLE_LIB);
-  fileIndexList_.fill(0);
-}
+ImportView::ImportView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
 
-PicoImportSampleDialog::~PicoImportSampleDialog() {
-  Trace::Log("PICOSAMPLEIMPORT", "Destruct ===");
-}
+ImportView::~ImportView() {}
 
-void PicoImportSampleDialog::DrawView() {
-  // Trace::Log("PICOSAMPLEIMPORT", "DrawView current:%d topIdx:%d",
-  // currentIndex_,
-  //            topIndex_);
+void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
+  if (!pressed)
+    return;
 
-  SetWindow(LIST_WIDTH, LIST_PAGE_SIZE);
+  if (mask & EPBM_START) {
+    auto picoFS = PicoFileSystem::GetInstance();
+    char name[PFILENAME_SIZE];
+    unsigned fileIndex = fileIndexList_[currentIndex_];
+    picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
+
+    if (mask & EPBM_L) {
+      Trace::Log("PICOIMPORT", "SHIFT play - import");
+      import(name);
+    } else {
+      Trace::Log("PICOIMPORT", "plain play preview");
+      preview(name);
+    }
+    // handle moving up and down the file list
+  } else if (mask & EPBM_UP) {
+    warpToNextSample(true);
+  } else if (mask & EPBM_DOWN) {
+    warpToNextSample(false);
+  } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
+    // Go to back "left" to instrument screen
+    ViewType vt = VT_INSTRUMENT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+    return;
+  } else {
+    // A modifier
+    if (mask & EPBM_A) {
+      auto picoFS = PicoFileSystem::GetInstance();
+      unsigned fileIndex = fileIndexList_[currentIndex_];
+      char name[PFILENAME_SIZE];
+      picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
+      if (picoFS->getFileType(fileIndex) == PFT_DIR) {
+        setCurrentFolder(picoFS, name);
+        isDirty_ = true;
+      }
+    }
+  }
+};
+
+void ImportView::DrawView() {
+  Clear();
+
   GUITextProperties props;
+  GUIPoint pos = GetTitlePosition();
 
   auto picoFS = PicoFileSystem::GetInstance();
 
+  // Draw title
+  const char *title = "Import Sample";
+  SetColor(CD_INFO);
+  DrawString(pos._x + 1, pos._y, title, props);
+
+  SetColor(CD_NORMAL);
+
   // Draw samples
-  int x = 0;
-  int y = 0;
+  int x = 1;
+  int y = pos._y + 2;
 
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string  in buffer :-(
@@ -61,8 +106,19 @@ void PicoImportSampleDialog::DrawView() {
   SetColor(CD_NORMAL);
 };
 
-void PicoImportSampleDialog::warpToNextSample(bool goUp) {
+void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){
 
+};
+
+void ImportView::OnFocus() {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  toInstr_ = viewData_->currentInstrument_;
+
+  setCurrentFolder(picoFS, SAMPLE_LIB);
+};
+
+void ImportView::warpToNextSample(bool goUp) {
   if (goUp) {
     if (currentIndex_ > 0) {
       currentIndex_--;
@@ -85,18 +141,7 @@ void PicoImportSampleDialog::warpToNextSample(bool goUp) {
   isDirty_ = true;
 }
 
-void PicoImportSampleDialog::OnPlayerUpdate(PlayerEventType,
-                                            unsigned int currentTick){};
-
-void PicoImportSampleDialog::OnFocus() {
-  auto picoFS = PicoFileSystem::GetInstance();
-
-  toInstr_ = viewData_->currentInstrument_;
-
-  setCurrentFolder(picoFS, SAMPLE_LIB);
-};
-
-void PicoImportSampleDialog::preview(char *name) {
+void ImportView::preview(char *name) {
   if (Player::GetInstance()->IsPlaying()) {
     Player::GetInstance()->StopStreaming();
     if (currentIndex_ != previewPlayingIndex_) {
@@ -109,8 +154,7 @@ void PicoImportSampleDialog::preview(char *name) {
   }
 }
 
-void PicoImportSampleDialog::import(char *name) {
-
+void ImportView::import(char *name) {
   SamplePool *pool = SamplePool::GetInstance();
 
   // Pause core1 in order to be able to write to flash and ensure core1 is
@@ -134,49 +178,7 @@ void PicoImportSampleDialog::import(char *name) {
   isDirty_ = true;
 };
 
-void PicoImportSampleDialog::ProcessButtonMask(unsigned short mask,
-                                               bool pressed) {
-  if (!pressed)
-    return;
-
-  if (mask & EPBM_START) {
-    auto picoFS = PicoFileSystem::GetInstance();
-    char name[PFILENAME_SIZE];
-    unsigned fileIndex = fileIndexList_[currentIndex_];
-    picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-    if (mask & EPBM_L) {
-      Trace::Log("PICOIMPORT", "SHIFT play - import");
-      import(name);
-    } else {
-      Trace::Log("PICOIMPORT", "plain play preview");
-      preview(name);
-    }
-    // handle moving up and down the file list
-  } else if (mask & EPBM_UP) {
-    warpToNextSample(true);
-  } else if (mask & EPBM_DOWN) {
-    warpToNextSample(false);
-  } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
-    EndModal(0);
-    return;
-  } else {
-    // A modifier
-    if (mask & EPBM_A) {
-      auto picoFS = PicoFileSystem::GetInstance();
-      unsigned fileIndex = fileIndexList_[currentIndex_];
-      char name[PFILENAME_SIZE];
-      picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
-      if (picoFS->getFileType(fileIndex) == PFT_DIR) {
-        setCurrentFolder(picoFS, name);
-        isDirty_ = true;
-      }
-    }
-  }
-}
-
-void PicoImportSampleDialog::setCurrentFolder(PicoFileSystem *picoFS,
-                                              const char *name) {
+void ImportView::setCurrentFolder(PicoFileSystem *picoFS, const char *name) {
   // Trace::Log("PICOIMPORT", "set Current Folder:%s");
   if (!picoFS->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
