@@ -10,18 +10,25 @@ PersistencyService::PersistencyService()
 void PersistencyService::Save(const char *projectName) {
   etl::string<128> projectFilePath("/projects/");
   projectFilePath.append(projectName);
-  projectFilePath.append("/lgptsav.dat");
 
   // TODO: Check if proj dir exists:
+  auto picoFS = PicoFileSystem::GetInstance();
+  if (!picoFS->exists(projectFilePath.c_str())) {
+    // need to first create project dir
+    picoFS->makeDir(projectFilePath.c_str());
+  }
+  projectFilePath.append("/lgptsav.dat");
 
-  PI_File *fp =
-      PicoFileSystem::GetInstance()->Open(projectFilePath.c_str(), "w");
-  printf("Save Proj File: %s\n", projectFilePath.c_str());
+  PI_File *fp = picoFS->Open(projectFilePath.c_str(), "w");
   if (!fp) {
     Trace::Error("Could not open file for writing: %s",
                  projectFilePath.c_str());
   }
+  Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s\n",
+             projectFilePath.c_str());
   tinyxml2::XMLPrinter printer(fp);
+  Trace::Log("PERSISTENCYSERVICE", "Saved Proj File: %s\n",
+             projectFilePath.c_str());
 
   printer.OpenElement("PICOTRACKER");
 
