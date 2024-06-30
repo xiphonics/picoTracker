@@ -32,7 +32,6 @@ void UITextField::Draw(GUIWindow &w, int offset) {
 };
 
 void UITextField::OnClick() {
-  SetChanged();
   // NotifyObservers((I_ObservableData *)fourcc_);
 };
 
@@ -45,10 +44,14 @@ void UITextField::ProcessArrow(unsigned short mask) {
   case EPBM_UP:
     name[currentChar_] += 1;
     lastChar_ = name[currentChar_];
+    SetChanged();
+    src_->SetString(name, true);
     break;
   case EPBM_DOWN:
     name[currentChar_] -= 1;
     lastChar_ = name[currentChar_];
+    SetChanged();
+    src_->SetString(name, true);
     break;
   case EPBM_LEFT:
     if (currentChar_ > 0) {
@@ -61,7 +64,6 @@ void UITextField::ProcessArrow(unsigned short mask) {
     }
     break;
   };
-  src_->SetString(name, true);
 };
 
 etl::string<40> UITextField::GetString() { return src_->GetString(); };
