@@ -12,7 +12,7 @@ class PersistencyService : public Service,
                            public T_Singleton<PersistencyService> {
 public:
   PersistencyService();
-  void Save(const char * projectName);
+  void Save(const char *projectName);
   bool Load(const char *projectName);
 };
 
