@@ -11,6 +11,8 @@
 enum PersistencyResult {
   PERSIST_PROJECT_EXISTS,
   PERSIST_SAVED,
+  PERSIST_LOAD_FAILED,
+  PERSIST_LOADED,
 };
 
 class PersistencyService : public Service,
@@ -18,7 +20,7 @@ class PersistencyService : public Service,
 public:
   PersistencyService();
   PersistencyResult Save(const char *projectName, bool saveAs);
-  bool Load(const char *projectName);
+  PersistencyResult Load(const char *projectName);
 };
 
 #endif

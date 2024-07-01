@@ -303,7 +303,7 @@ void AppWindow::LoadProject(const char *projectName) {
   static char projectMemBuf[sizeof(Project)];
   Project *project = new (projectMemBuf) Project(projectName);
 
-  bool succeeded = persist->Load(projectName);
+  bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
     project->GetInstrumentBank()->AssignDefaults();
   };

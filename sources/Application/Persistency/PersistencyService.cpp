@@ -51,19 +51,19 @@ PersistencyResult PersistencyService::Save(const char *projectName,
   return PERSIST_SAVED;
 };
 
-bool PersistencyService::Load(const char *projectName) {
+PersistencyResult PersistencyService::Load(const char *projectName) {
   etl::string<128> projectFilePath("/projects/");
   projectFilePath.append(projectName);
   projectFilePath.append("/lgptsav.dat");
 
   PersistencyDocument doc;
   if (!doc.Load(projectFilePath.c_str()))
-    return false;
+    return PERSIST_LOAD_FAILED;
 
   bool elem = doc.FirstChild(); // advance to first child
   if (!elem || strcmp(doc.ElemName(), "PICOTRACKER")) {
     Trace::Error("could not find master node");
-    return false;
+    return PERSIST_LOAD_FAILED;
   }
 
   elem = doc.FirstChild();
@@ -76,5 +76,5 @@ bool PersistencyService::Load(const char *projectName) {
     }
     elem = doc.NextSibling();
   }
-  return true;
+  return PERSIST_LOADED;
 };
