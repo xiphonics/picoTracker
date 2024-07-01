@@ -31,8 +31,8 @@ void UITextField::Draw(GUIWindow &w, int offset) {
   }
 };
 
-void UITextField::OnClick() {
-  // NotifyObservers((I_ObservableData *)fourcc_);
+void UITextField::OnClick(){
+    // NotifyObservers((I_ObservableData *)fourcc_);
 };
 
 void UITextField::ProcessArrow(unsigned short mask) {
