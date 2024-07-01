@@ -199,13 +199,17 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   }
   case ACTION_SAVE:
     if (!player->IsRunning()) {
-
       bool isNewProjectName = nameField_->HasChanged();
 
-      PersistencyService *service = PersistencyService::GetInstance();
+      PersistencyService *persist = PersistencyService::GetInstance();
       char projName[MAX_PROJECT_NAME_LENGTH];
       project_->GetProjectName(projName);
-      service->Save(projName, isNewProjectName);
+      auto saveResult = persist->Save(projName, isNewProjectName);
+      if (saveResult == PERSIST_PROJECT_EXISTS) {
+        MessageBox *mb =
+            new MessageBox(*this, "Project name already exists", MBBF_OK);
+        DoModal(mb);
+      }
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
