@@ -7,15 +7,20 @@
 PersistencyService::PersistencyService()
     : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
 
-void PersistencyService::Save(const char *projectName) {
+PersistencyResult PersistencyService::Save(const char *projectName,
+                                           bool saveAs) {
   etl::string<128> projectFilePath("/projects/");
   projectFilePath.append(projectName);
 
-  // TODO: Check if proj dir exists:
   auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->exists(projectFilePath.c_str())) {
-    // need to first create project dir
-    picoFS->makeDir(projectFilePath.c_str());
+  if (saveAs) {
+    // need to first check no existing proj with the new name
+    if (picoFS->exists(projectFilePath.c_str())) {
+      return PERSIST_PROJECT_EXISTS;
+    } else {
+      // need to first create project dir
+      picoFS->makeDir(projectFilePath.c_str());
+    }
   }
   projectFilePath.append("/lgptsav.dat");
 
@@ -43,6 +48,7 @@ void PersistencyService::Save(const char *projectName) {
 
   fp->Close();
   delete (fp);
+  return PERSIST_SAVED;
 };
 
 bool PersistencyService::Load(const char *projectName) {

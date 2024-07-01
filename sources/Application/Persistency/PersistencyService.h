@@ -8,11 +8,16 @@
 
 #define MAX_PROJECT_NAME_LENGTH 16
 
+enum PersistencyResult {
+  PERSIST_PROJECT_EXISTS,
+  PERSIST_SAVED,
+};
+
 class PersistencyService : public Service,
                            public T_Singleton<PersistencyService> {
 public:
   PersistencyService();
-  void Save(const char *projectName);
+  PersistencyResult Save(const char *projectName, bool saveAs);
   bool Load(const char *projectName);
 };
 

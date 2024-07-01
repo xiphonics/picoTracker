@@ -5,7 +5,6 @@
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
-#include "BaseClasses/UITextField.h"
 #include "BaseClasses/View.h"
 #include "BaseClasses/ViewEvent.h"
 #include "Services/Midi/MidiService.h"
@@ -200,10 +199,13 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   }
   case ACTION_SAVE:
     if (!player->IsRunning()) {
+
+      bool isNewProjectName = nameField_->HasChanged();
+
       PersistencyService *service = PersistencyService::GetInstance();
       char projName[MAX_PROJECT_NAME_LENGTH];
       project_->GetProjectName(projName);
-      service->Save(projName);
+      service->Save(projName, isNewProjectName);
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);

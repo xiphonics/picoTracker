@@ -2,6 +2,7 @@
 #define _PROJECT_VIEW_H_
 
 #include "BaseClasses/FieldView.h"
+#include "BaseClasses/UITextField.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
@@ -31,6 +32,6 @@ private:
   unsigned long lastTick_;
   unsigned long lastClock_;
   UIField *tempoField_;
-  UIField *nameField_;
+  UITextField *nameField_;
 };
 #endif
