@@ -8,6 +8,7 @@ add_library(application_views
   NullView.h NullView.cpp
   PhraseView.h PhraseView.cpp
   ProjectView.h ProjectView.cpp
+  SelectProjectView.h SelectProjectView.cpp
   SongView.h SongView.cpp
   TableView.h TableView.cpp
   UIController.h UIController.cpp

@@ -36,8 +36,6 @@ GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
 
-// #define _FORCE_SDL_EVENT_
-
 static void ProjectSelectCallback(View &v, ModalView &dialog) {
 
   SelectProjectDialog &spd = (SelectProjectDialog &)dialog;
@@ -369,6 +367,11 @@ void AppWindow::LoadProject(const char *projectName) {
   _grooveView = new (grooveViewMemBuf) GrooveView((*this), _viewData);
   _grooveView->AddObserver(*this);
 
+  static char selectProjectViewMemBuf[sizeof(SelectProjectView)];
+  _selectProjectView =
+      new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
+  _selectProjectView->AddObserver((*this));
+
   _currentView = _songView;
   _currentView->OnFocus();
 
@@ -542,6 +545,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_IMPORT:
       _currentView = _importView;
+      break;
+    case VT_SELECTPROJECT:
+      _currentView = _selectProjectView;
       break;
     default:
       break;

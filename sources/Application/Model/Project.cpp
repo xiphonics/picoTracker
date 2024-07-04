@@ -86,6 +86,11 @@ void Project::GetProjectName(char *name) {
   strcpy(name, v->GetString().c_str());
 }
 
+void Project::SetProjectName(char *name) {
+  Variable *v = FindVariable(VAR_PROJECTNAME);
+  v->SetString(name, true);
+}
+
 void Project::NudgeTempo(int value) { tempoNudge_ += value; };
 
 void Project::Trigger() {

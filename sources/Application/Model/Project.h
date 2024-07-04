@@ -41,6 +41,7 @@ public:
   int GetTempo(); // Takes nudging into account
   int GetTranspose();
   void GetProjectName(char *name);
+  void SetProjectName(char *name);
 
   void Trigger();
 

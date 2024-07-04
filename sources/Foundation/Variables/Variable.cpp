@@ -184,7 +184,7 @@ void Variable::SetString(const char *string, bool notify) {
     value_.bool_ = (!strcmp("false", string) ? false : true);
     break;
   case STRING:
-    stringValue_ = string;
+    stringValue_ = std::string(string);
     break;
   case CHAR_LIST:
     value_.index_ = -1;

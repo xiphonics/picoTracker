@@ -26,9 +26,16 @@ static void LoadCallback(View &v, ModalView &dialog) {
 #ifdef PICOBUILD
     // TODO: Remove this hack. Due to memory leaks and other problems
     // instead of going back, we perform a software reset
-    watchdog_reboot(0, 0, 0);
+    // watchdog_reboot(0, 0, 0);
 #endif
-    ((ProjectView &)v).OnLoadProject();
+    // TODO: remove on pT as we do a reboot above
+    // ((ProjectView &)v).OnLoadProject();
+
+    // Go to select project screen
+    ViewType vt = VT_SELECTPROJECT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    ((ProjectView &)v).SetChanged();
+    ((ProjectView &)v).NotifyObservers(&ve);
   }
 };
 

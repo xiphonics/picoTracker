@@ -26,6 +26,8 @@ public:
   void OnQuit();
 
 protected:
+  void LoadProjectCallback(View &v, ModalView &dialog);
+
 private:
   Project *project_;
   // Debug

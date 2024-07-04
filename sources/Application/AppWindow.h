@@ -11,6 +11,7 @@
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
 #include "Application/Views/ProjectView.h"
+#include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
 #include "Application/Views/ViewData.h"
@@ -78,6 +79,7 @@ private:
   TableView *_tableView;
   GrooveView *_grooveView;
   ImportView *_importView;
+  SelectProjectView *_selectProjectView;
   NullView *_nullView;
 
   bool _isDirty;
