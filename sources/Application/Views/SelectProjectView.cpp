@@ -63,7 +63,7 @@ void SelectProjectView::DrawView() {
 };
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
-                                       unsigned int currentTick) {};
+                                       unsigned int currentTick){};
 
 void SelectProjectView::OnFocus() { setCurrentFolder(); };
 

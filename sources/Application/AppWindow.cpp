@@ -491,7 +491,7 @@ void AppWindow::onUpdate() {
 
 void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
 
-void AppWindow::LayoutChildren() {};
+void AppWindow::LayoutChildren(){};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
 
