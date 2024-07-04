@@ -21,12 +21,8 @@ public:
 
   void Update(Observable &, I_ObservableData *);
 
-  void OnLoadProject();
   void OnPurgeInstruments(bool removeFromDisk);
   void OnQuit();
-
-protected:
-  void LoadProjectCallback(View &v, ModalView &dialog);
 
 private:
   Project *project_;

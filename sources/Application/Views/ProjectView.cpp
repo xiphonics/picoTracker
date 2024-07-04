@@ -252,12 +252,6 @@ void ProjectView::OnPurgeInstruments(bool removeFromDisk) {
   project_->PurgeInstruments(removeFromDisk);
 };
 
-void ProjectView::OnLoadProject() {
-  ViewEvent ve(VET_QUIT_PROJECT);
-  SetChanged();
-  NotifyObservers(&ve);
-};
-
 void ProjectView::OnQuit() {
   ViewEvent ve(VET_QUIT_APP);
   SetChanged();
