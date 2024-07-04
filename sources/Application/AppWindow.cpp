@@ -7,7 +7,6 @@
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
-#include "Application/Views/ModalDialogs/SelectProjectDialog.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Player/Player.h"
 #include "Services/Midi/MidiService.h"
@@ -35,16 +34,6 @@ GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
 
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
-
-static void ProjectSelectCallback(View &v, ModalView &dialog) {
-
-  SelectProjectDialog &spd = (SelectProjectDialog &)dialog;
-  if (dialog.GetReturnCode() > 0) {
-    instance->LoadProject(spd.GetSelection());
-  } else {
-    System::GetInstance()->PostQuitMessage();
-  }
-};
 
 void AppWindow::defineColor(const char *colorName, GUIColor &color,
                             int paletteIndex) {
@@ -112,19 +101,6 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _nullView = new (nullViewMemBuf) NullView((*this), 0);
   _currentView = _nullView;
   _nullView->SetDirty(true);
-
-  // For now need to keep using dynamic mem alloc here  instead of
-  // doing the static alloc trick as the View class
-  // depends on being able to delete the assigned modal obj and then will
-  // free it there as thats the way it tracks when the modal is no longer
-  // visible on screen
-
-  // static char selectProjectMemBuf[sizeof(SelectProjectDialog)];
-  // SelectProjectDialog *spd =
-  //     new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
-
-  // SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
-  // _currentView->DoModal(spd, ProjectSelectCallback);
 
   char projectName[MAX_PROJECT_NAME_LENGTH];
   auto picoFS = PicoFileSystem::GetInstance();
@@ -428,9 +404,6 @@ void AppWindow::CloseProject() {
 
   _currentView = _nullView;
   _nullView->SetDirty(true);
-
-  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
-  _currentView->DoModal(spd, ProjectSelectCallback);
 };
 
 AppWindow *AppWindow::Create(GUICreateWindowParams &params) {
