@@ -84,12 +84,13 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       auto picoFS = PicoFileSystem::GetInstance();
       picoFS->getFileName(fileIndex, selection_, PFILENAME_SIZE);
 
-      printf("LOAD PROJ! %s \n", selection_);
-      // TODO:
+      Trace::Log("SELECTPROJECTVIEW", "Select Project:%s \n", selection_);
       // save new proj name into flash to be picked to be loaded up after reboot
-
+      auto current = picoFS->Open("/.current", "w");
+      current->Write(selection_, 1, strlen(selection_));
+      current->Close();
+      // now reboot!
       watchdog_reboot(0, 0, 0);
-
       return;
     } else {
       // R Modifier

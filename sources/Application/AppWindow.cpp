@@ -123,8 +123,19 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   // SelectProjectDialog *spd =
   //     new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
 
-  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
-  _currentView->DoModal(spd, ProjectSelectCallback);
+  // SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
+  // _currentView->DoModal(spd, ProjectSelectCallback);
+
+  char projectName[MAX_PROJECT_NAME_LENGTH];
+  auto picoFS = PicoFileSystem::GetInstance();
+  // save new proj name into flash to be picked to be loaded up after reboot
+  auto current = picoFS->Open("/.current", "r");
+  int len = current->Read(projectName, 1, MAX_PROJECT_NAME_LENGTH - 1);
+  current->Close();
+  projectName[len] = '\0';
+  Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s \n", len, projectName);
+
+  LoadProject(projectName);
 
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_preScreen, ' ', SCREEN_CHARS);
