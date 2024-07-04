@@ -85,7 +85,7 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       picoFS->getFileName(fileIndex, selection_, PFILENAME_SIZE);
 
       Trace::Log("SELECTPROJECTVIEW", "Select Project:%s \n", selection_);
-      // save new proj name into flash to be picked to be loaded up after reboot
+      // save new proj name to be picked to be loaded up after reboot
       auto current = picoFS->Open("/.current", "w");
       current->Write(selection_, 1, strlen(selection_));
       current->Close();

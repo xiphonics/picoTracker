@@ -104,12 +104,17 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
 
   char projectName[MAX_PROJECT_NAME_LENGTH];
   auto picoFS = PicoFileSystem::GetInstance();
-  // save new proj name into flash to be picked to be loaded up after reboot
-  auto current = picoFS->Open("/.current", "r");
-  int len = current->Read(projectName, 1, MAX_PROJECT_NAME_LENGTH - 1);
-  current->Close();
-  projectName[len] = '\0';
-  Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s \n", len, projectName);
+  // read new proj name after reboot
+  if (picoFS->exists("/.current")) {
+    auto current = picoFS->Open("/.current", "r");
+    int len = current->Read(projectName, 1, MAX_PROJECT_NAME_LENGTH - 1);
+    current->Close();
+    projectName[len] = '\0';
+    Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s \n", len,
+               projectName);
+  } else {
+    strcpy(projectName, "new_project");
+  }
 
   LoadProject(projectName);
 
