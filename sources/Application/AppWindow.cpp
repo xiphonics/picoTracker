@@ -102,21 +102,18 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _currentView = _nullView;
   _nullView->SetDirty(true);
 
-  char projectName[MAX_PROJECT_NAME_LENGTH];
   auto picoFS = PicoFileSystem::GetInstance();
   // read new proj name after reboot
   if (picoFS->exists("/.current")) {
     auto current = picoFS->Open("/.current", "r");
-    int len = current->Read(projectName, 1, MAX_PROJECT_NAME_LENGTH - 1);
+    int len = current->Read(projectName_, 1, MAX_PROJECT_NAME_LENGTH - 1);
     current->Close();
-    projectName[len] = '\0';
-    Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s \n", len,
-               projectName);
+    projectName_[len] = '\0';
+    Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s\n", len,
+               projectName_);
   } else {
-    strcpy(projectName, "new_project");
+    strcpy(projectName_, "new_project");
   }
-
-  LoadProject(projectName);
 
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_preScreen, ' ', SCREEN_CHARS);
@@ -124,6 +121,12 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   memset(_preScreenProp, 0, SCREEN_CHARS);
 
   Redraw();
+
+  // there is some sort of race that if we call LoadProject() from here directly
+  // causes audio init to fail, so instead set this flag which will then cause
+  // LoadProject() to be called from within the next time that AnimationUpdate()
+  // is called
+  loadProject_ = true;
 };
 
 AppWindow::~AppWindow() { MidiService::GetInstance()->Close(); }
@@ -489,9 +492,15 @@ void AppWindow::onUpdate() {
   Flush();
 };
 
-void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
+void AppWindow::AnimationUpdate() {
+  if (loadProject_) {
+    LoadProject(projectName_);
+    loadProject_ = false;
+  }
+  _currentView->AnimationUpdate();
+}
 
-void AppWindow::LayoutChildren(){};
+void AppWindow::LayoutChildren() {};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
 

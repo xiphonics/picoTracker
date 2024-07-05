@@ -42,6 +42,8 @@ public:
   virtual void SetColor(ColorDefinition cd);
   void SetDirty();
 
+  char projectName_[MAX_PROJECT_NAME_LENGTH];
+
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);
   virtual void onUpdate();
@@ -111,6 +113,8 @@ private:
   static int charHeight_;
 
   SysMutex drawMutex_;
+
+  bool loadProject_ = false;
 };
 
 #endif
