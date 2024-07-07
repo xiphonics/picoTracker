@@ -11,6 +11,7 @@
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
 #include "Application/Views/ProjectView.h"
+#include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
 #include "Application/Views/ViewData.h"
@@ -40,6 +41,8 @@ public:
   virtual void ClearRect(GUIRect &rect);
   virtual void SetColor(ColorDefinition cd);
   void SetDirty();
+
+  char projectName_[MAX_PROJECT_NAME_LENGTH];
 
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);
@@ -78,6 +81,7 @@ private:
   TableView *_tableView;
   GrooveView *_grooveView;
   ImportView *_importView;
+  SelectProjectView *_selectProjectView;
   NullView *_nullView;
 
   bool _isDirty;
@@ -109,6 +113,8 @@ private:
   static int charHeight_;
 
   SysMutex drawMutex_;
+
+  bool loadProject_ = false;
 };
 
 #endif

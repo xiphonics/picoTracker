@@ -37,7 +37,8 @@ enum ViewType {
   VT_TABLE2, // Table screen under instrument
   VT_GROOVE,
   VT_MIXER,
-  VT_IMPORT // Sample file import
+  VT_IMPORT,       // Sample file import
+  VT_SELECTPROJECT // Select project
 };
 
 enum ViewMode {

@@ -14,12 +14,13 @@
 
 #include <math.h>
 
-Project::Project()
+Project::Project(const char *name)
     : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0),
       tempo_("tempo", VAR_TEMPO, 138),
       masterVolume_("master", VAR_MASTERVOL, 100),
       wrap_("wrap", VAR_WRAP, false), transpose_("transpose", VAR_TRANSPOSE, 0),
-      scale_("scale", VAR_SCALE, scaleNames, numScales, 0) {
+      scale_("scale", VAR_SCALE, scaleNames, numScales, 0),
+      projectName_("projectname", VAR_PROJECTNAME, name) {
 
   //  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
   this->insert(end(), &tempo_);
@@ -33,9 +34,9 @@ Project::Project()
   //  0);
   this->insert(end(), &scale_);
   scale_.SetInt(0);
+  this->insert(end(), &projectName_);
 
   // Reload the midi device list
-
   buildMidiDeviceList();
 
   WatchedVariable *midi = new WatchedVariable(
@@ -79,6 +80,16 @@ int Project::GetMasterVolume() {
   NAssert(v);
   return v->GetInt();
 };
+
+void Project::GetProjectName(char *name) {
+  Variable *v = FindVariable(VAR_PROJECTNAME);
+  strcpy(name, v->GetString().c_str());
+}
+
+void Project::SetProjectName(char *name) {
+  Variable *v = FindVariable(VAR_PROJECTNAME);
+  v->SetString(name, true);
+}
 
 void Project::NudgeTempo(int value) { tempoNudge_ += value; };
 
@@ -249,12 +260,12 @@ void Project::PurgeInstruments(bool removeFromDisk) {
     }
 
     // Now effectively purge all unused sample from disk
-
     int purged = 0;
     SamplePool *sp = SamplePool::GetInstance();
     for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
       if ((!iUsed[i]) && (sp->GetSource(i - purged))) {
-        sp->PurgeSample(i - purged);
+        char projName[MAX_PROJECT_NAME_LENGTH];
+        sp->PurgeSample(i - purged, projectName_.GetString().c_str());
         purged++;
       };
     };

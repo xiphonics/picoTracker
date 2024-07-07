@@ -23,12 +23,10 @@
 
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-#ifdef PICOBUILD
-    // TODO: Remove this hack. Due to memory leaks and other problems
-    // instead of going back, we perform a software reset
-    watchdog_reboot(0, 0, 0);
-#endif
-    ((ProjectView &)v).OnLoadProject();
+    ViewType vt = VT_SELECTPROJECT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    ((ProjectView &)v).SetChanged();
+    ((ProjectView &)v).NotifyObservers(&ve);
   }
 };
 
@@ -95,6 +93,12 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 2;
+
+  v = project_->FindVariable(VAR_PROJECTNAME);
+  UITextField *t1 = new UITextField(v, position);
+  fieldList_.insert(fieldList_.end(), t1);
+
+  position._y += 1;
   a1 = new UIActionField("Load Song", ACTION_LOAD, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
@@ -151,7 +155,6 @@ void ProjectView::DrawView() {
   GUIPoint pos = GetTitlePosition();
 
   // Draw title
-
   char projectString[80];
   sprintf(projectString, "Project - Build %s%s_%s", PROJECT_NUMBER,
           PROJECT_RELEASE, BUILD_COUNT);
@@ -194,8 +197,17 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   }
   case ACTION_SAVE:
     if (!player->IsRunning()) {
-      PersistencyService *service = PersistencyService::GetInstance();
-      service->Save();
+      bool isNewProjectName = nameField_->HasChanged();
+
+      PersistencyService *persist = PersistencyService::GetInstance();
+      char projName[MAX_PROJECT_NAME_LENGTH];
+      project_->GetProjectName(projName);
+      auto saveResult = persist->Save(projName, isNewProjectName);
+      if (saveResult == PERSIST_PROJECT_EXISTS) {
+        MessageBox *mb =
+            new MessageBox(*this, "Project name already exists", MBBF_OK);
+        DoModal(mb);
+      }
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
@@ -238,12 +250,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 
 void ProjectView::OnPurgeInstruments(bool removeFromDisk) {
   project_->PurgeInstruments(removeFromDisk);
-};
-
-void ProjectView::OnLoadProject() {
-  ViewEvent ve(VET_QUIT_PROJECT);
-  SetChanged();
-  NotifyObservers(&ve);
 };
 
 void ProjectView::OnQuit() {

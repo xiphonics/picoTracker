@@ -12,12 +12,10 @@
  Constructor
  ****************/
 
-SongView::SongView(GUIWindow &w, ViewData *viewData, const char *song)
-    : View(w, viewData) {
+SongView::SongView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
 
   updatingChain_ = false;
   lastChain_ = 0;
-  songname_ = song;
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     this->lastPlayedPosition_[i] = 0;
@@ -808,11 +806,11 @@ void SongView::DrawView() {
   DrawString(pos._x, pos._y, buffer, props);
 
   props.invert_ = false;
-  std::string songname = songname_;
-  if (songname.length() > 20) {
-    songname = songname_.substr(0, 17) + "...";
-  }
-  DrawString(pos._x + 5, pos._y, songname.c_str(), props);
+
+  Variable *v = viewData_->project_->FindVariable(VAR_PROJECTNAME);
+
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
+  DrawString(pos._x + 5, pos._y, projectName.c_str(), props);
 
   // Compute song grid location
   GUIPoint anchor = GetAnchor();

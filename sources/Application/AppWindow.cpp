@@ -7,7 +7,6 @@
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
-#include "Application/Views/ModalDialogs/SelectProjectDialog.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Player/Player.h"
 #include "Services/Midi/MidiService.h"
@@ -35,18 +34,6 @@ GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
 
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
-
-// #define _FORCE_SDL_EVENT_
-
-static void ProjectSelectCallback(View &v, ModalView &dialog) {
-
-  SelectProjectDialog &spd = (SelectProjectDialog &)dialog;
-  if (dialog.GetReturnCode() > 0) {
-    instance->LoadProject(spd.GetSelection());
-  } else {
-    System::GetInstance()->PostQuitMessage();
-  }
-};
 
 void AppWindow::defineColor(const char *colorName, GUIColor &color,
                             int paletteIndex) {
@@ -115,18 +102,18 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _currentView = _nullView;
   _nullView->SetDirty(true);
 
-  // For now need to keep using dynamic mem alloc here  instead of
-  // doing the static alloc trick as the View class
-  // depends on being able to delete the assigned modal obj and then will
-  // free it there as thats the way it tracks when the modal is no longer
-  // visible on screen
-
-  // static char selectProjectMemBuf[sizeof(SelectProjectDialog)];
-  // SelectProjectDialog *spd =
-  //     new (selectProjectMemBuf) SelectProjectDialog(*_currentView);
-
-  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
-  _currentView->DoModal(spd, ProjectSelectCallback);
+  auto picoFS = PicoFileSystem::GetInstance();
+  // read new proj name after reboot
+  if (picoFS->exists("/.current")) {
+    auto current = picoFS->Open("/.current", "r");
+    int len = current->Read(projectName_, 1, MAX_PROJECT_NAME_LENGTH - 1);
+    current->Close();
+    projectName_[len] = '\0';
+    Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s\n", len,
+               projectName_);
+  } else {
+    strcpy(projectName_, "new_project");
+  }
 
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_preScreen, ' ', SCREEN_CHARS);
@@ -134,6 +121,12 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   memset(_preScreenProp, 0, SCREEN_CHARS);
 
   Redraw();
+
+  // there is some sort of race that if we call LoadProject() from here directly
+  // causes audio init to fail, so instead set this flag which will then cause
+  // LoadProject() to be called from within the next time that AnimationUpdate()
+  // is called
+  loadProject_ = true;
 };
 
 AppWindow::~AppWindow() { MidiService::GetInstance()->Close(); }
@@ -287,7 +280,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const char *name) {
+void AppWindow::LoadProject(const char *projectName) {
 
   _closeProject = false;
 
@@ -297,14 +290,13 @@ void AppWindow::LoadProject(const char *name) {
 
   // Load the sample pool
   SamplePool *pool = SamplePool::GetInstance();
-  pool->SetProjectName(name);
   // load the projects samples
-  pool->Load();
+  pool->Load(projectName);
 
   static char projectMemBuf[sizeof(Project)];
-  Project *project = new (projectMemBuf) Project();
+  Project *project = new (projectMemBuf) Project(projectName);
 
-  bool succeeded = persist->Load(name);
+  bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
     project->GetInstrumentBank()->AssignDefaults();
   };
@@ -334,7 +326,7 @@ void AppWindow::LoadProject(const char *name) {
 
   // Create & observe all views
   static char songViewMemBuf[sizeof(SongView)];
-  _songView = new (songViewMemBuf) SongView((*this), _viewData, name);
+  _songView = new (songViewMemBuf) SongView((*this), _viewData);
   _songView->AddObserver((*this));
 
   static char chainViewMemBuf[sizeof(ChainView)];
@@ -369,6 +361,11 @@ void AppWindow::LoadProject(const char *name) {
   static char grooveViewMemBuf[sizeof(GrooveView)];
   _grooveView = new (grooveViewMemBuf) GrooveView((*this), _viewData);
   _grooveView->AddObserver(*this);
+
+  static char selectProjectViewMemBuf[sizeof(SelectProjectView)];
+  _selectProjectView =
+      new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
+  _selectProjectView->AddObserver((*this));
 
   _currentView = _songView;
   _currentView->OnFocus();
@@ -415,9 +412,6 @@ void AppWindow::CloseProject() {
 
   _currentView = _nullView;
   _nullView->SetDirty(true);
-
-  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
-  _currentView->DoModal(spd, ProjectSelectCallback);
 };
 
 AppWindow *AppWindow::Create(GUICreateWindowParams &params) {
@@ -498,7 +492,13 @@ void AppWindow::onUpdate() {
   Flush();
 };
 
-void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
+void AppWindow::AnimationUpdate() {
+  if (loadProject_) {
+    LoadProject(projectName_);
+    loadProject_ = false;
+  }
+  _currentView->AnimationUpdate();
+}
 
 void AppWindow::LayoutChildren(){};
 
@@ -543,6 +543,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_IMPORT:
       _currentView = _importView;
+      break;
+    case VT_SELECTPROJECT:
+      _currentView = _selectProjectView;
       break;
     default:
       break;

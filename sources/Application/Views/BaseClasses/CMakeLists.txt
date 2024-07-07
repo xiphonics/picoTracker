@@ -12,6 +12,7 @@ add_library(application_views_baseclasses
   UISortedVarList.h UISortedVarList.cpp
   UIStaticField.h UIStaticField.cpp
   UITempoField.h UITempoField.cpp
+  UITextField.h UITextField.cpp
   View.h View.cpp
   ViewEvent.h ViewEvent.cpp
 )

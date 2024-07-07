@@ -161,7 +161,9 @@ void ImportView::import(char *name) {
   // not reading from it, it also disables IRQs on it
   // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
   multicore_lockout_start_blocking();
-  int sampleID = pool->ImportSample(name);
+  char projName[MAX_PROJECT_NAME_LENGTH];
+  viewData_->project_->GetProjectName(projName);
+  int sampleID = pool->ImportSample(name, projName);
   multicore_lockout_end_blocking();
 
   if (sampleID >= 0) {

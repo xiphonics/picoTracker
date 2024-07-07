@@ -16,6 +16,7 @@
 #define VAR_MIDIDEVICE MAKE_FOURCC('M', 'I', 'D', 'I')
 #define VAR_TRANSPOSE MAKE_FOURCC('T', 'R', 'S', 'P')
 #define VAR_SCALE MAKE_FOURCC('S', 'C', 'A', 'L')
+#define VAR_PROJECTNAME MAKE_FOURCC('P', 'N', 'A', 'M')
 
 #define PROJECT_NUMBER "1.99"
 #define PROJECT_RELEASE "r"
@@ -25,7 +26,7 @@
 
 class Project : public Persistent, public VariableContainer, I_Observer {
 public:
-  Project();
+  Project(const char *name);
   ~Project();
   void Purge();
   void PurgeInstruments(bool removeFromDisk);
@@ -39,6 +40,8 @@ public:
   int GetScale();
   int GetTempo(); // Takes nudging into account
   int GetTranspose();
+  void GetProjectName(char *name);
+  void SetProjectName(char *name);
 
   void Trigger();
 
@@ -67,6 +70,7 @@ private:
   Variable wrap_;
   Variable transpose_;
   Variable scale_;
+  Variable projectName_;
 };
 
 #endif

@@ -7,19 +7,33 @@
 PersistencyService::PersistencyService()
     : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
 
-void PersistencyService::Save() {
+PersistencyResult PersistencyService::Save(const char *projectName,
+                                           bool saveAs) {
   etl::string<128> projectFilePath("/projects/");
-  projectFilePath.append(projectName_);
+  projectFilePath.append(projectName);
+
+  auto picoFS = PicoFileSystem::GetInstance();
+  if (saveAs) {
+    // need to first check no existing proj with the new name
+    if (picoFS->exists(projectFilePath.c_str())) {
+      return PERSIST_PROJECT_EXISTS;
+    } else {
+      // need to first create project dir
+      picoFS->makeDir(projectFilePath.c_str());
+    }
+  }
   projectFilePath.append("/lgptsav.dat");
 
-  PI_File *fp =
-      PicoFileSystem::GetInstance()->Open(projectFilePath.c_str(), "w");
-  printf("Save Proj File: %s\n", projectFilePath.c_str());
+  PI_File *fp = picoFS->Open(projectFilePath.c_str(), "w");
   if (!fp) {
     Trace::Error("Could not open file for writing: %s",
                  projectFilePath.c_str());
   }
+  Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s\n",
+             projectFilePath.c_str());
   tinyxml2::XMLPrinter printer(fp);
+  Trace::Log("PERSISTENCYSERVICE", "Saved Proj File: %s\n",
+             projectFilePath.c_str());
 
   printer.OpenElement("PICOTRACKER");
 
@@ -34,23 +48,22 @@ void PersistencyService::Save() {
 
   fp->Close();
   delete (fp);
+  return PERSIST_SAVED;
 };
 
-bool PersistencyService::Load(const char *projectName) {
+PersistencyResult PersistencyService::Load(const char *projectName) {
   etl::string<128> projectFilePath("/projects/");
   projectFilePath.append(projectName);
   projectFilePath.append("/lgptsav.dat");
 
-  strcpy(projectName_, projectName);
-
   PersistencyDocument doc;
   if (!doc.Load(projectFilePath.c_str()))
-    return false;
+    return PERSIST_LOAD_FAILED;
 
   bool elem = doc.FirstChild(); // advance to first child
   if (!elem || strcmp(doc.ElemName(), "PICOTRACKER")) {
     Trace::Error("could not find master node");
-    return false;
+    return PERSIST_LOAD_FAILED;
   }
 
   elem = doc.FirstChild();
@@ -63,5 +76,5 @@ bool PersistencyService::Load(const char *projectName) {
     }
     elem = doc.NextSibling();
   }
-  return true;
+  return PERSIST_LOADED;
 };
