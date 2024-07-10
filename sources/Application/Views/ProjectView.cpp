@@ -99,14 +99,9 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // save existing fields horizontal alignment
   int xalign = position._x;
 
-  // make space for the "project:" label done in Draw()
-  position._x += 9;
   v = project_->FindVariable(VAR_PROJECTNAME);
-  UITextField *t1 = new UITextField(v, position);
+  UITextField *t1 = new UITextField(v, position, "project: ");
   fieldList_.insert(fieldList_.end(), t1);
-
-  // restore column alignment for new line
-  position._x = xalign;
 
   position._y += 1;
   a1 = new UIActionField("Load", ACTION_LOAD, position);
@@ -177,9 +172,6 @@ void ProjectView::DrawView() {
 
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
-
-  // label for the load/save/random buttons
-  DrawString(5, 11, "project:", props);
 
   FieldView::Redraw();
   drawMap();
