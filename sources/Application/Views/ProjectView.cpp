@@ -96,24 +96,33 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 2;
 
+  // save existing fields horizontal alignment
+  int xalign = position._x;
+
+  // make space for the "project:" label done in Draw()
+  position._x += 9;
   v = project_->FindVariable(VAR_PROJECTNAME);
   UITextField *t1 = new UITextField(v, position);
   fieldList_.insert(fieldList_.end(), t1);
 
+  // restore column alignment for new line
+  position._x = xalign;
+
   position._y += 1;
-  a1 = new UIActionField("Load Song", ACTION_LOAD, position);
+  a1 = new UIActionField("Load", ACTION_LOAD, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
-  position._y += 1;
-  a1 = new UIActionField("Save Song", ACTION_SAVE, position);
+  position._x += 5;
+  a1 = new UIActionField("Save", ACTION_SAVE, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
-  position._y += 1;
+  position._x += 5;
   a1 = new UIActionField("Random", ACTION_RANDOM_NAME, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
+  position._x = xalign;
 
   v = project_->FindVariable(VAR_MIDIDEVICE);
   NAssert(v);
@@ -168,6 +177,9 @@ void ProjectView::DrawView() {
 
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
+
+  // label for the load/save/random buttons
+  DrawString(5, 11, "project:", props);
 
   FieldView::Redraw();
   drawMap();
