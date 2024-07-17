@@ -2,8 +2,10 @@
 #include "Application/AppWindow.h"
 #include "View.h"
 
-UITextField::UITextField(Variable *v, GUIPoint &position)
-    : UIField(position), src_(v){};
+UITextField::UITextField(Variable *v, GUIPoint &position, const char *name)
+    : UIField(position), src_(v) {
+  name_ = name;
+};
 
 UITextField::~UITextField(){};
 
@@ -12,6 +14,9 @@ void UITextField::Draw(GUIWindow &w, int offset) {
   GUITextProperties props;
   GUIPoint position = GetPosition();
   position._y += offset;
+
+  w.DrawString(name_, position, props);
+  position._x += strlen(name_);
 
   ((AppWindow &)w).SetColor(CD_INFO);
 

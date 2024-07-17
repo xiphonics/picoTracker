@@ -6,7 +6,7 @@
 
 class UITextField : public UIField, public Observable {
 public:
-  UITextField(Variable *v, GUIPoint &position);
+  UITextField(Variable *v, GUIPoint &position, const char *name);
 
   virtual ~UITextField();
   void Draw(GUIWindow &w, int offset = 0);
@@ -19,5 +19,6 @@ private:
   int lastChar_;
   int currentChar_ = 0;
   Variable *src_;
+  const char *name_;
 };
 #endif

@@ -96,24 +96,28 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 2;
 
+  // save existing fields horizontal alignment
+  int xalign = position._x;
+
   v = project_->FindVariable(VAR_PROJECTNAME);
-  UITextField *t1 = new UITextField(v, position);
+  UITextField *t1 = new UITextField(v, position, "project: ");
   fieldList_.insert(fieldList_.end(), t1);
 
   position._y += 1;
-  a1 = new UIActionField("Load Song", ACTION_LOAD, position);
+  a1 = new UIActionField("Load", ACTION_LOAD, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
-  position._y += 1;
-  a1 = new UIActionField("Save Song", ACTION_SAVE, position);
+  position._x += 5;
+  a1 = new UIActionField("Save", ACTION_SAVE, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
-  position._y += 1;
+  position._x += 5;
   a1 = new UIActionField("Random", ACTION_RANDOM_NAME, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
+  position._x = xalign;
 
   v = project_->FindVariable(VAR_MIDIDEVICE);
   NAssert(v);
