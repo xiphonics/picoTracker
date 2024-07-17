@@ -1,6 +1,7 @@
 #include "ProjectView.h"
 #include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Utils/randomnames.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
@@ -20,6 +21,7 @@
 #define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
 #define ACTION_PURGE_INSTRUMENT MAKE_FOURCC('P', 'R', 'G', 'I')
 #define ACTION_TEMPO_CHANGED MAKE_FOURCC('T', 'E', 'M', 'P')
+#define ACTION_RANDOM_NAME MAKE_FOURCC('R', 'N', 'D', 'P')
 
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
@@ -105,6 +107,11 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 1;
   a1 = new UIActionField("Save Song", ACTION_SAVE, position);
+  a1->AddObserver(*this);
+  fieldList_.insert(fieldList_.end(), a1);
+
+  position._y += 1;
+  a1 = new UIActionField("Random", ACTION_RANDOM_NAME, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
@@ -195,6 +202,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     DoModal(mb, PurgeCallback);
     break;
   }
+  case ACTION_RANDOM_NAME:
+    char name[12];
+    getRandomName(name);
+    printf("random:%s", name);
+    project_->SetProjectName(name);
+    break;
   case ACTION_SAVE:
     if (!player->IsRunning()) {
       bool isNewProjectName = nameField_->HasChanged();
