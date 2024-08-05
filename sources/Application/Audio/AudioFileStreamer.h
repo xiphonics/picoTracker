@@ -17,7 +17,7 @@ public:
 
 protected:
   AudioFileStreamerMode mode_;
-  char *name_;
+  char name_[128];
   bool newPath_;
   WavFile *wav_;
   int position_;

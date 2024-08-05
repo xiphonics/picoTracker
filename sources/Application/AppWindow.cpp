@@ -109,10 +109,38 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
     int len = current->Read(projectName_, 1, MAX_PROJECT_NAME_LENGTH - 1);
     current->Close();
     projectName_[len] = '\0';
-    Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s\n", len,
+    Trace::Log("APPWINDOW", "read [%d] load proj name: %s\n", len,
                projectName_);
   } else {
     strcpy(projectName_, "new_project");
+    // check if new_project exists and if not create it
+    // check if "new_project" dir exists and if it does then keeping
+    // checking for existing names by appending a number until it finds one
+    // that doesn't exist or we get to "99"
+    Trace::Log("APPWINDOW", "new proj\n");
+    short count = 1;
+    char countStr[4];
+    sprintf(countStr, "%02d", count);
+    strcat(projectName_, countStr);
+
+    while (picoFS->exists(projectName_) && count < 100) {
+      count++;
+      sprintf(countStr, "%02d", count);
+      strcat(projectName_, countStr);
+    }
+    if (count < 100) {
+      // create  project
+      auto res = PersistencyService::GetInstance()->Save(projectName_, true);
+      if (res != PERSIST_PROJECT_EXISTS) {
+        Trace::Log("APPWINDOW", "created new proj: %s\n", projectName_);
+      } else {
+        Trace::Log("APPWINDOW",
+                   "failed to create new proj already exists: %s\n",
+                   projectName_);
+      }
+    } else {
+      Trace::Error("appwindow failed to create new proj ranout of numbers\n");
+    }
   }
 
   memset(_charScreen, ' ', SCREEN_CHARS);

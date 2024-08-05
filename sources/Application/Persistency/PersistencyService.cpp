@@ -20,13 +20,19 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     } else {
       // need to first create project dir
       picoFS->makeDir(projectFilePath.c_str());
+      // also create samples sub dir
+      etl::string<128> samplesPath(projectFilePath);
+      samplesPath.append("/samples");
+      picoFS->makeDir(samplesPath.c_str());
+      Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n",
+                 samplesPath.c_str());
     }
   }
   projectFilePath.append("/lgptsav.dat");
 
   PI_File *fp = picoFS->Open(projectFilePath.c_str(), "w");
   if (!fp) {
-    Trace::Error("Could not open file for writing: %s",
+    Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  projectFilePath.c_str());
   }
   Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s\n",
