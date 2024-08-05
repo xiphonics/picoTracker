@@ -55,6 +55,7 @@ bool PicoFileSystem::chdir(const char *name) {
   char buf[PFILENAME_SIZE];
   cwd.openCwd();
   cwd.getName(buf, 128);
+  printf("new CWD:%s\n", buf);
   cwd.close();
   return res;
 }

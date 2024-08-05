@@ -1,4 +1,5 @@
 #include "PersistencyService.h"
+#include "../Instruments/SamplePool.h"
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
@@ -22,7 +23,8 @@ PersistencyResult PersistencyService::Save(const char *projectName,
       picoFS->makeDir(projectFilePath.c_str());
       // also create samples sub dir
       etl::string<128> samplesPath(projectFilePath);
-      samplesPath.append("/samples");
+      samplesPath.append("/");
+      samplesPath.append(PROJECT_SAMPLES_DIR);
       picoFS->makeDir(samplesPath.c_str());
       Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n",
                  samplesPath.c_str());
