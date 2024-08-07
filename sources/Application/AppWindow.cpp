@@ -113,33 +113,14 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
                projectName_);
   } else {
     strcpy(projectName_, "new_project");
-    // check if new_project exists and if not create it
-    // check if "new_project" dir exists and if it does then keeping
-    // checking for existing names by appending a number until it finds one
-    // that doesn't exist or we get to "99"
-    Trace::Log("APPWINDOW", "new proj\n");
-    short count = 1;
-    char countStr[4];
-    sprintf(countStr, "%02d", count);
-    strcat(projectName_, countStr);
-
-    while (picoFS->exists(projectName_) && count < 100) {
-      count++;
-      sprintf(countStr, "%02d", count);
-      strcat(projectName_, countStr);
-    }
-    if (count < 100) {
-      // create  project
-      auto res = PersistencyService::GetInstance()->Save(projectName_, true);
-      if (res != PERSIST_PROJECT_EXISTS) {
-        Trace::Log("APPWINDOW", "created new proj: %s\n", projectName_);
-      } else {
-        Trace::Log("APPWINDOW",
-                   "failed to create new proj already exists: %s\n",
-                   projectName_);
-      }
+    Trace::Log("APPWINDOW", "create new project\n");
+    // create  project
+    auto res = PersistencyService::GetInstance()->Save(projectName_, true);
+    if (res != PERSIST_PROJECT_EXISTS) {
+      Trace::Log("APPWINDOW", "created new proj: %s\n", projectName_);
     } else {
-      Trace::Error("appwindow failed to create new proj ranout of numbers\n");
+      Trace::Log("APPWINDOW", "failed to create new proj already exists: %s\n",
+                 projectName_);
     }
   }
 
@@ -528,7 +509,7 @@ void AppWindow::AnimationUpdate() {
   _currentView->AnimationUpdate();
 }
 
-void AppWindow::LayoutChildren(){};
+void AppWindow::LayoutChildren() {};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
 

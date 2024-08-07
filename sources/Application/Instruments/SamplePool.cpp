@@ -79,16 +79,11 @@ void SamplePool::Reset() {
 
 void SamplePool::Load(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->chdir("/projects")) {
-    Trace::Error("Warning maximum sample count reached");
+  if (!picoFS->chdir("/projects") || !picoFS->chdir(projectName) ||
+      !picoFS->chdir(PROJECT_SAMPLES_DIR)) {
+    Trace::Error("Failed to chdir into /projects/%s/%s", projectName,
+                 PROJECT_SAMPLES_DIR);
   }
-  if (!picoFS->chdir(projectName)) {
-    Trace::Error("Warning maximum sample count reached");
-  }
-  if (!picoFS->chdir(PROJECT_SAMPLES_DIR)) {
-    Trace::Error("Warning maximum sample count reached");
-  }
-
   // First, find all wav files
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   picoFS->list(&fileIndexes, ".wav", false);
