@@ -79,10 +79,11 @@ void SamplePool::Reset() {
 
 void SamplePool::Load(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
-  picoFS->chdir("/projects");
-  picoFS->chdir(projectName);
-  picoFS->chdir(PROJECT_SAMPLES_DIR);
-
+  if (!picoFS->chdir("/projects") || !picoFS->chdir(projectName) ||
+      !picoFS->chdir(PROJECT_SAMPLES_DIR)) {
+    Trace::Error("Failed to chdir into /projects/%s/%s", projectName,
+                 PROJECT_SAMPLES_DIR);
+  }
   // First, find all wav files
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   picoFS->list(&fileIndexes, ".wav", false);
@@ -91,6 +92,7 @@ void SamplePool::Load(const char *projectName) {
     picoFS->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
     if (picoFS->getFileType(fileIndexes[i]) == PFT_FILE) {
       Status::Set("Loading:%s\n", name);
+      Trace::Debug("Loading:%s", name);
       loadSample(name);
     }
     if (i == MAX_PIG_SAMPLES) {

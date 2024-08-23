@@ -65,9 +65,9 @@ WavFile::~WavFile() {
 };
 
 WavFile *WavFile::Open(const char *name) {
+  Trace::Log("WAVFILE", "wave open from %s", name);
 
   // open file
-
   PicoFileSystem *fs = PicoFileSystem::GetInstance();
   PI_File *file = fs->Open(name, "r");
 
@@ -87,7 +87,6 @@ WavFile *WavFile::Open(const char *name) {
   long position = 0;
 
   // Read 'RIFF'
-
   unsigned int chunk;
 
   position += wav->readBlock(position, 4);
@@ -101,14 +100,12 @@ WavFile *WavFile::Open(const char *name) {
   }
 
   // Read size
-
   unsigned int size;
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
   size = Swap32(size);
 
   // Read WAVE
-
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
   chunk = Swap32(chunk);
@@ -120,7 +117,6 @@ WavFile *WavFile::Open(const char *name) {
   }
 
   // Read fmt
-
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
   chunk = Swap32(chunk);
@@ -132,7 +128,6 @@ WavFile *WavFile::Open(const char *name) {
   }
 
   // Read subchunk size
-
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
   size = Swap32(size);
@@ -145,7 +140,6 @@ WavFile *WavFile::Open(const char *name) {
   int offset = size - 16;
 
   // Read compression
-
   unsigned short comp;
   position += wav->readBlock(position, 2);
   memcpy(&comp, wav->readBuffer_, 2);
@@ -158,14 +152,12 @@ WavFile *WavFile::Open(const char *name) {
   }
 
   // Read NumChannels (mono/Stereo)
-
   unsigned short nChannels;
   position += wav->readBlock(position, 2);
   memcpy(&nChannels, wav->readBuffer_, 2);
   nChannels = Swap16(nChannels);
 
   // Read Sample rate
-
   unsigned int sampleRate;
 
   position += wav->readBlock(position, 4);
@@ -173,7 +165,6 @@ WavFile *WavFile::Open(const char *name) {
   sampleRate = Swap32(sampleRate);
 
   // Skip byteRate & blockalign
-
   position += 6;
 
   short bitPerSample;
@@ -190,7 +181,6 @@ WavFile *WavFile::Open(const char *name) {
   wav->bytePerSample_ = bitPerSample;
 
   // some bad files have bigger chunks
-
   if (offset) {
     position += offset;
   }

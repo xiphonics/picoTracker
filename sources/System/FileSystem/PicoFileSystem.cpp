@@ -21,7 +21,7 @@ PicoFileSystem::PicoFileSystem() {
 }
 
 PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
-  Trace::Log("FILESYSTEM", "Open file %s, mode: %s", name, mode);
+  Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   oflag_t rmode;
   switch (*mode) {
   case 'r':
@@ -41,7 +41,7 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
   if (cwd.open(name, rmode)) {
     wFile = new PI_File(cwd);
   } else {
-    Trace::Error("Cannot open file:%s", name);
+    Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
   }
   return wFile;
 }
@@ -55,6 +55,7 @@ bool PicoFileSystem::chdir(const char *name) {
   char buf[PFILENAME_SIZE];
   cwd.openCwd();
   cwd.getName(buf, 128);
+  Trace::Log("PICOFILESYSTEM", "new CWD:%s\n", buf);
   cwd.close();
   return res;
 }

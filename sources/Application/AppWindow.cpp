@@ -109,10 +109,19 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
     int len = current->Read(projectName_, 1, MAX_PROJECT_NAME_LENGTH - 1);
     current->Close();
     projectName_[len] = '\0';
-    Trace::Log("APPWINDOW", "READ [%d] LOAD PROJ NAME: %s\n", len,
+    Trace::Log("APPWINDOW", "read [%d] load proj name: %s\n", len,
                projectName_);
   } else {
     strcpy(projectName_, "new_project");
+    Trace::Log("APPWINDOW", "create new project\n");
+    // create  project
+    auto res = PersistencyService::GetInstance()->Save(projectName_, true);
+    if (res != PERSIST_PROJECT_EXISTS) {
+      Trace::Log("APPWINDOW", "created new proj: %s\n", projectName_);
+    } else {
+      Trace::Log("APPWINDOW", "failed to create new proj already exists: %s\n",
+                 projectName_);
+    }
   }
 
   memset(_charScreen, ' ', SCREEN_CHARS);
