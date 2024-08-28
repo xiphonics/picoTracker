@@ -64,6 +64,7 @@ PicoFileType PicoFileSystem::getFileType(int index) {
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
     char name[PFILENAME_SIZE];
+    cwd.getName(name, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd: %s", name);
     return PFT_UNKNOWN;
   }
@@ -80,6 +81,8 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
 
   File cwd;
   if (!cwd.openCwd()) {
+    char name[PFILENAME_SIZE];
+    cwd.getName(name, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd");
     return;
   }
@@ -171,6 +174,21 @@ void PicoFileSystem::DeleteFile(const char *path) { sd.remove(path); }
 bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
 
 bool PicoFileSystem::makeDir(const char *path) { return sd.mkdir(path); }
+
+uint64_t PicoFileSystem::getFileSize(const int index) { 
+  FsBaseFile cwd;
+  FsBaseFile entry;
+  if (!entry.open(index)) {
+    char name[PFILENAME_SIZE];
+    cwd.getName(name, PFILENAME_SIZE);
+    Trace::Error("Failed to open file: %d", index);
+  }
+  auto size = entry.fileSize();
+  if (size == 0) {
+    size = entry.fileSize();
+  }
+  return size;
+}
 
 void PicoFileSystem::tolowercase(char *temp) {
   // Convert to upper case

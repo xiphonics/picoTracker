@@ -103,6 +103,17 @@ void ImportView::DrawView() {
     y += 1;
   };
 
+  SetColor(CD_HILITE2);
+  props.invert_ = true;
+  y = 0;
+  auto currentFileIndex = fileIndexList_[currentIndex_];
+  if (picoFS->getFileType(currentFileIndex) == PFT_FILE) {
+    auto filesize = picoFS->getFileSize(currentFileIndex);
+    sprintf(buffer, "[size: %d]", filesize);
+    x = 32 - strlen(buffer) + 1;
+    DrawString(x, y, buffer, props);
+  } 
+
   SetColor(CD_NORMAL);
 };
 

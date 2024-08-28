@@ -44,6 +44,7 @@ public:
   void DeleteFile(const char *name);
   bool exists(const char *path);
   bool makeDir(const char *path);
+  uint64_t getFileSize(int index);
 
 private:
   SdFs sd;
