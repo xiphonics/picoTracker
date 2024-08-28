@@ -175,7 +175,7 @@ bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
 
 bool PicoFileSystem::makeDir(const char *path) { return sd.mkdir(path); }
 
-uint64_t PicoFileSystem::getFileSize(const int index) { 
+uint64_t PicoFileSystem::getFileSize(const int index) {
   FsBaseFile cwd;
   FsBaseFile entry;
   if (!entry.open(index)) {

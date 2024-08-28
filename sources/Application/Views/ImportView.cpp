@@ -112,12 +112,12 @@ void ImportView::DrawView() {
     sprintf(buffer, "[size: %d]", filesize);
     x = 32 - strlen(buffer) + 1;
     DrawString(x, y, buffer, props);
-  } 
+  }
 
   SetColor(CD_NORMAL);
 };
 
-void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){
+void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
 
 };
 
