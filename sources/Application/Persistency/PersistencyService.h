@@ -8,6 +8,9 @@
 
 #define MAX_PROJECT_NAME_LENGTH 16
 
+#define PROJECTS_DIR "/projects"
+#define PROJECT_SAMPLES_DIR "samples"
+
 enum PersistencyResult {
   PERSIST_PROJECT_EXISTS,
   PERSIST_SAVED,
