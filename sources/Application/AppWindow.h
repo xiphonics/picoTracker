@@ -33,7 +33,7 @@ protected:
   virtual ~AppWindow();
 
 public:
-  static AppWindow *Create(GUICreateWindowParams &);
+  static AppWindow *Create(GUICreateWindowParams &, const char *projectName);
   void LoadProject(const char *name);
   void CloseProject();
 

@@ -15,6 +15,7 @@ public:
 
 protected:
   void initMidiInput();
+  void initProject(char* projectName);
 
 private:
   GUIWindow *window_;

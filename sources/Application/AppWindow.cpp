@@ -102,28 +102,6 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _currentView = _nullView;
   _nullView->SetDirty(true);
 
-  auto picoFS = PicoFileSystem::GetInstance();
-  // read new proj name after reboot
-  if (picoFS->exists("/.current")) {
-    auto current = picoFS->Open("/.current", "r");
-    int len = current->Read(projectName_, 1, MAX_PROJECT_NAME_LENGTH - 1);
-    current->Close();
-    projectName_[len] = '\0';
-    Trace::Log("APPWINDOW", "read [%d] load proj name: %s\n", len,
-               projectName_);
-  } else {
-    strcpy(projectName_, "new_project");
-    Trace::Log("APPWINDOW", "create new project\n");
-    // create  project
-    auto res = PersistencyService::GetInstance()->Save(projectName_, true);
-    if (res != PERSIST_PROJECT_EXISTS) {
-      Trace::Log("APPWINDOW", "created new proj: %s\n", projectName_);
-    } else {
-      Trace::Log("APPWINDOW", "failed to create new proj already exists: %s\n",
-                 projectName_);
-    }
-  }
-
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_preScreen, ' ', SCREEN_CHARS);
   memset(_charScreenProp, 0, SCREEN_CHARS);
@@ -423,11 +401,12 @@ void AppWindow::CloseProject() {
   _nullView->SetDirty(true);
 };
 
-AppWindow *AppWindow::Create(GUICreateWindowParams &params) {
+AppWindow *AppWindow::Create(GUICreateWindowParams &params, const char* projectName) {
   I_GUIWindowImp &imp =
       I_GUIWindowFactory::GetInstance()->CreateWindowImp(params);
   static char appWindowMemBuf[sizeof(AppWindow)];
   AppWindow *w = new (appWindowMemBuf) AppWindow(imp);
+  strcpy(w->projectName_, projectName);
   return w;
 };
 
