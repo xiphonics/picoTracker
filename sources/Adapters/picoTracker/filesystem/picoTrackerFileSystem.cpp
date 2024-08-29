@@ -219,27 +219,33 @@ void picoTrackerFile::Close() { file_.close(); }
 
 int picoTrackerFile::Error() { return file_.getError(); }
 
+
 picoTrackerFileSystem::picoTrackerFileSystem() {
 
+  SDstatus_ = FSUnknown;
   // Check for the common case, FAT filesystem as first partition
   Trace::Log("FILESYSTEM", "Try to mount SD Card");
-  if (SD_.begin(SD_CONFIG)) {
+    if (SD_.begin(SD_CONFIG)) {
     Trace::Log("FILESYSTEM",
                "Mounted SD Card FAT Filesystem from first partition");
+    SDstatus_ = FSOK; 
     return;
   }
 
   // Do we have any kind of card?
   if (!SD_.card() || SD_.sdErrorCode() != 0) {
-    Trace::Log("FILESYSTEM", "No SD Card present");
+    Trace::Log("FILESYSTEM", "No SD Card present %d %d", SD_.card(), SD_.sdErrorCode());
+    SDstatus_ = FSNotPresent;
     return;
   }
   // Try to mount the whole card as FAT (without partition table)
   if (static_cast<FsVolume *>(&SD_)->begin(SD_.card(), true, 0)) {
     Trace::Log("FILESYSTEM",
                "Mounted SD Card FAT Filesystem without partition table");
+    SDstatus_ = FSOK;
     return;
   }
+  SDstatus_ = FSPartitionNotPresent;
 }
 
 I_File *picoTrackerFileSystem::Open(const char *path, const char *mode) {
@@ -303,4 +309,8 @@ FileType picoTrackerFileSystem::GetFileType(const char *path) {
 
 I_PagedDir *picoTrackerFileSystem::OpenPaged(const char *path) {
   return new picoTrackerPagedDir{path};
+}
+
+FileSystemStatus picoTrackerFileSystem::GetFSStatus() {
+  return SDstatus_;
 }

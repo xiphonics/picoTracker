@@ -63,12 +63,14 @@ public:
   virtual I_File *Open(const char *path, const char *mode);
   virtual I_Dir *Open(const char *path);
   virtual I_PagedDir *OpenPaged(const char *path);
+  virtual FileSystemStatus GetFSStatus();
   virtual FileType GetFileType(const char *path);
   virtual Result MakeDir(const char *path);
   virtual void Delete(const char *){};
 
 private:
   SdFs SD_;
+  FileSystemStatus SDstatus_;
 };
 
 #endif

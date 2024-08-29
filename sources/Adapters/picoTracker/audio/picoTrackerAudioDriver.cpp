@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "picoTrackerAudioDriver.h"
 #include "Adapters/picoTracker/platform/platform.h"
 #include "Adapters/picoTracker/utils/utils.h"

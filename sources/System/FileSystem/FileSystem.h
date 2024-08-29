@@ -18,6 +18,9 @@
 #define PAGED_PAGE_SIZE 18
 
 enum FileType { FT_UNKNOWN, FT_FILE, FT_DIR };
+#ifdef PICOBUILD
+enum FileSystemStatus { FSOK, FSNotPresent, FSPartitionNotPresent, FSUnknown };
+#endif
 
 struct FileListItem {
 public:
@@ -140,6 +143,7 @@ public:
   virtual I_Dir *Open(const char *path) = 0;
 #ifdef PICOBUILD
   virtual I_PagedDir *OpenPaged(const char *path) = 0;
+  virtual FileSystemStatus GetFSStatus() = 0;
 #endif
   virtual Result MakeDir(const char *path) = 0;
   virtual void Delete(const char *) = 0;

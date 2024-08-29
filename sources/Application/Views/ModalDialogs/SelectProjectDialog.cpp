@@ -248,6 +248,26 @@ void SelectProjectDialog::setCurrentFolder(Path &path) {
   currentPath_ = path;
   content_.Empty();
 
+  #ifdef PICOBUILD
+  FileSystemStatus st = FileSystem::GetInstance()->GetFSStatus();
+  if (st != FSOK) {
+    std::string msg;
+    switch(st) {
+      case FSNotPresent:          msg = "**SD not present"; break;
+      case FSPartitionNotPresent: msg = "**SD no partition"; break;
+      case FSUnknown:
+      default:  
+        msg = "**Filesystem status unknown"; 
+        break;
+    }
+    content_.Insert(new Path(msg));
+    // reset & redraw screen
+    topIndex_ = 0;
+    currentProject_ = 0;
+    isDirty_ = true;
+  }
+  #endif
+
   // Let's read all the directory in the root
 
   I_Dir *dir = FileSystem::GetInstance()->Open(currentPath_.GetPath().c_str());
