@@ -118,7 +118,7 @@ void ImportView::DrawView() {
 };
 
 void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
-
+  // NA
 };
 
 void ImportView::OnFocus() {
