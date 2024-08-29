@@ -61,3 +61,7 @@ Replace ```localhost``` with whatever your host running OpenOCD is
 
 This command should load your code into the pico, reset it and run the program. You can go ahead now and use any GDB functionality you may like, or not use it at all other than to load and run your code.
 
+
+## Github Actions CI
+
+The actions CI workflows include a check for the projects specific code formatting style and building the firmware image. It may be useful to run these actions on a local machine, in which case the [act](https://nektosact.com/installation/index.html) could be useful. Note to use `act` you nee to have docker already installed as well.
