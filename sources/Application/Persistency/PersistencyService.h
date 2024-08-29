@@ -10,6 +10,9 @@
 
 #define PROJECTS_DIR "/projects"
 #define PROJECT_SAMPLES_DIR "samples"
+#define SAMPLES_LIB_DIR "/samples"
+#define INSTRUMENTS_DIR "/instruments"
+#define RENDERS_DIR "/renders"
 
 enum PersistencyResult {
   PERSIST_PROJECT_EXISTS,

@@ -3,6 +3,7 @@
 
 #include "Foundation/T_Singleton.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
+#include "System/FileSystem/PicoFileSystem.h"
 
 class Application : public T_Singleton<Application> {
 
@@ -16,12 +17,12 @@ public:
 protected:
   void initMidiInput();
   void initProject(char* projectName);
+  void ensurePTDirsExist();
 
 private:
   GUIWindow *window_;
-
-private:
   static Application *instance_;
+  void createIfNotExists(PicoFileSystem* picoFS, const char* path);
 };
 
 #endif
