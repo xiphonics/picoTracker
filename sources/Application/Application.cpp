@@ -40,7 +40,7 @@ bool Application::Init(GUICreateWindowParams &params) {
   PersistencyService::GetInstance();
 
   ensurePTDirsExist();
-  
+
   char projectName[MAX_PROJECT_NAME_LENGTH];
   initProject(projectName);
 
@@ -52,7 +52,7 @@ bool Application::Init(GUICreateWindowParams &params) {
   return true;
 };
 
-void Application::initProject(char* projectName) {
+void Application::initProject(char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
   // read new proj name after reboot
   if (picoFS->exists("/.current")) {
@@ -70,8 +70,8 @@ void Application::initProject(char* projectName) {
     if (res != PERSIST_PROJECT_EXISTS) {
       Trace::Log("APPLICATION", "created new proj: %s\n", projectName);
     } else {
-      Trace::Log("APPLICATION", "failed to create new proj already exists: %s\n",
-                 projectName);
+      Trace::Log("APPLICATION",
+                 "failed to create new proj already exists: %s\n", projectName);
     }
   }
 }
@@ -90,7 +90,7 @@ void Application::ensurePTDirsExist() {
   createIfNotExists(picoFS, RENDERS_DIR);
 }
 
-void Application::createIfNotExists(PicoFileSystem* picoFS, const char* path) {
+void Application::createIfNotExists(PicoFileSystem *picoFS, const char *path) {
   if (!picoFS->exists(path)) {
     picoFS->makeDir(path);
     Trace::Log("APPLICATION", "created %s std dir\n", path);

@@ -401,7 +401,8 @@ void AppWindow::CloseProject() {
   _nullView->SetDirty(true);
 };
 
-AppWindow *AppWindow::Create(GUICreateWindowParams &params, const char* projectName) {
+AppWindow *AppWindow::Create(GUICreateWindowParams &params,
+                             const char *projectName) {
   I_GUIWindowImp &imp =
       I_GUIWindowFactory::GetInstance()->CreateWindowImp(params);
   static char appWindowMemBuf[sizeof(AppWindow)];
@@ -488,7 +489,7 @@ void AppWindow::AnimationUpdate() {
   _currentView->AnimationUpdate();
 }
 
-void AppWindow::LayoutChildren(){};
+void AppWindow::LayoutChildren() {};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
 
