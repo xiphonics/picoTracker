@@ -138,7 +138,7 @@ void SelectProjectView::warpToNextProject(bool goUp) {
 
 void SelectProjectView::setCurrentFolder() {
   auto picoFS = PicoFileSystem::GetInstance();
-  picoFS->chdir("/projects");
+  picoFS->chdir(PROJECTS_DIR);
 
   // get ready
   fileIndexList_.clear();

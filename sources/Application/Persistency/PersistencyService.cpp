@@ -10,7 +10,8 @@ PersistencyService::PersistencyService()
 
 PersistencyResult PersistencyService::Save(const char *projectName,
                                            bool saveAs) {
-  etl::string<128> projectFilePath("/projects/");
+  etl::string<128> projectFilePath(PROJECTS_DIR);
+  projectFilePath.append("/");
   projectFilePath.append(projectName);
 
   auto picoFS = PicoFileSystem::GetInstance();
@@ -60,7 +61,8 @@ PersistencyResult PersistencyService::Save(const char *projectName,
 };
 
 PersistencyResult PersistencyService::Load(const char *projectName) {
-  etl::string<128> projectFilePath("/projects/");
+  etl::string<128> projectFilePath(PROJECTS_DIR);
+  projectFilePath.append("/");
   projectFilePath.append(projectName);
   projectFilePath.append("/lgptsav.dat");
 

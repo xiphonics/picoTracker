@@ -10,8 +10,6 @@
 
 #define MAX_PIG_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
 
-#define PROJECT_SAMPLES_DIR "samples"
-
 enum SamplePoolEventType { SPET_INSERT, SPET_DELETE };
 
 struct SamplePoolEvent : public I_ObservableData {

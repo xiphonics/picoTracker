@@ -80,9 +80,9 @@ void SamplePool::Reset() {
 
 void SamplePool::Load(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->chdir("/projects") || !picoFS->chdir(projectName) ||
+  if (!picoFS->chdir(PROJECTS_DIR) || !picoFS->chdir(projectName) ||
       !picoFS->chdir(PROJECT_SAMPLES_DIR)) {
-    Trace::Error("Failed to chdir into /projects/%s/%s", projectName,
+    Trace::Error("Failed to chdir into %s/%s/%s", PROJECTS_DIR, projectName,
                  PROJECT_SAMPLES_DIR);
   }
   // First, find all wav files
