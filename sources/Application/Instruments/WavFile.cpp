@@ -238,7 +238,7 @@ long WavFile::readBlock(long start, long size) {
     readBufferSize_ = size;
   }
   file_->Seek(start, SEEK_SET);
-  file_->Read(readBuffer_, size, 1);
+  file_->Read(readBuffer_, size);
   return size;
 };
 
@@ -358,7 +358,7 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
     readSize = (count > readSize) ? readSize : count;
 
     file_->Seek(bufferStart, SEEK_SET);
-    file_->Read(readBuffer_, readSize, 1);
+    file_->Read(readBuffer_, readSize);
 
     // Have to expand 8 bit data (if needed) before writing to flash
     unsigned char *src = (unsigned char *)readBuffer_;

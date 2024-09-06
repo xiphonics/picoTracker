@@ -31,6 +31,8 @@ add_definitions(-DDUMMY_MIDI)
 # add_definitions(-DUSB_REMOTE_UI)
 # Enable DSP support. Will be automatically detected in the future
 # add_definitions(-DENABLE_DSP)
+# enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
+add_definitions(-DSERIAL_REPL)
 
 # Initialize the SDK
 pico_sdk_init()

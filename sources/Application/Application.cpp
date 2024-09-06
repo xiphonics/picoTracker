@@ -52,17 +52,17 @@ bool Application::Init(GUICreateWindowParams &params) {
   return true;
 };
 
+// returns the current project name in the passed in char buffer
 void Application::initProject(char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
   // read new proj name after reboot
-  if (picoFS->exists("/.current")) {
-    auto current = picoFS->Open("/.current", "r");
-    int len = current->Read(projectName, 1, MAX_PROJECT_NAME_LENGTH - 1);
-    current->Close();
-    projectName[len] = '\0';
-    Trace::Log("APPLICATION", "read [%d] load proj name: %s\n", len,
-               projectName);
-  } else {
+  if (PersistencyService::GetInstance()->LoadCurrentProjectName(projectName) !=
+      PERSIST_LOAD_FAILED) {
+    if (PersistencyService::GetInstance()->Load(projectName) ==
+        PERSIST_LOAD_FAILED) {
+      Trace::Error("failed to load CURRENT proj: %s\n", projectName);
+    }
+  } else { // need to create a new project and open it as no previously open
+           // project state exists
     strcpy(projectName, "new_project");
     Trace::Log("APPLICATION", "create new project\n");
     // create  project

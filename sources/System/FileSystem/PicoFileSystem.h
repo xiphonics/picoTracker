@@ -17,13 +17,13 @@ class PI_File {
 public:
   PI_File(FsBaseFile file);
   ~PI_File(){};
-  int Read(void *ptr, int size, int nmemb);
+  int Read(void *ptr, int size);
   int GetC();
   int Write(const void *ptr, int size, int nmemb);
   void Seek(long offset, int whence);
   long Tell();
   void Close();
-  void DeleteFile();
+  bool DeleteFile();
   int Error();
 
 private:
@@ -41,7 +41,7 @@ public:
   void getFileName(int index, char *name, int length);
   PicoFileType getFileType(int index);
   bool isParentRoot();
-  void DeleteFile(const char *name);
+  bool DeleteFile(const char *name);
   bool exists(const char *path);
   bool makeDir(const char *path);
   uint64_t getFileSize(int index);

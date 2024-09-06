@@ -224,6 +224,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
         MessageBox *mb =
             new MessageBox(*this, "Project name already exists", MBBF_OK);
         DoModal(mb);
+      } else {
+        // all good so now persist the new project name in project state
+        persist->SaveProjectState(projName);
       }
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);

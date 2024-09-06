@@ -169,7 +169,7 @@ bool PicoFileSystem::isParentRoot() {
   return result;
 }
 
-void PicoFileSystem::DeleteFile(const char *path) { sd.remove(path); }
+bool PicoFileSystem::DeleteFile(const char *path) { return sd.remove(path); }
 
 bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
 
@@ -201,9 +201,21 @@ void PicoFileSystem::tolowercase(char *temp) {
 
 PI_File::PI_File(FsBaseFile file) { file_ = file; };
 
-int PI_File::Read(void *ptr, int size, int nmemb) {
-  return file_.read(ptr, size * nmemb);
-}
+/**
+ * Read data from a file starting at the current position.
+ *
+ * \param[out] buf Pointer to the location that will receive the data.
+ *
+ * \param[in] size Maximum number of bytes to read.
+ *
+ * \return For success read() returns the number of bytes read.
+ * A value less than \a count, including zero, will be returned
+ * if end of file is reached.
+ * If an error occurs, read() returns -1.  Possible errors include
+ * read() called before a file has been opened, corrupt file system
+ * or an I/O error occurred.
+ */
+int PI_File::Read(void *ptr, int size) { return file_.read(ptr, size); }
 
 void PI_File::Seek(long offset, int whence) {
   switch (whence) {
@@ -221,7 +233,7 @@ void PI_File::Seek(long offset, int whence) {
   }
 }
 
-void PI_File::DeleteFile() { file_.remove(); }
+bool PI_File::DeleteFile() { return file_.remove(); }
 
 int PI_File::GetC() { return file_.read(); }
 

@@ -27,6 +27,8 @@ public:
   PersistencyService();
   PersistencyResult Save(const char *projectName, bool saveAs);
   PersistencyResult Load(const char *projectName);
+  PersistencyResult LoadCurrentProjectName(char *projectName);
+  PersistencyResult SaveProjectState(const char *projectName);
 };
 
 #endif

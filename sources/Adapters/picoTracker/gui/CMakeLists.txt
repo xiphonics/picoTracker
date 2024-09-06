@@ -2,6 +2,7 @@ add_library(platform_gui
   GUIFactory.h GUIFactory.cpp
   picoTrackerGUIWindowImp.h picoTrackerGUIWindowImp.cpp
   picoTrackerEventManager.h picoTrackerEventManager.cpp
+  SerialDebugUI.h SerialDebugUI.cpp
 )
 
 target_link_libraries(platform_gui PUBLIC uiframework_simplebaseclasses

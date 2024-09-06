@@ -190,7 +190,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   char buffer[IMPORT_CHUNK_SIZE];
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
-    fin->Read(buffer, 1, count);
+    fin->Read(buffer, count);
     fout->Write(buffer, 1, count);
     size -= count;
   };

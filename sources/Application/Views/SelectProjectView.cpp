@@ -79,16 +79,15 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else {
     // A modifier
     if (mask & EPBM_A) {
-      // all subdirs in /project are expected to be projects
+      // all subdirs directly inside /project are expected to be projects
       unsigned fileIndex = fileIndexList_[currentIndex_];
       auto picoFS = PicoFileSystem::GetInstance();
       picoFS->getFileName(fileIndex, selection_, PFILENAME_SIZE);
-
       Trace::Log("SELECTPROJECTVIEW", "Select Project:%s \n", selection_);
-      // save new proj name to be picked to be loaded up after reboot
-      auto current = picoFS->Open("/.current", "w");
-      current->Write(selection_, 1, strlen(selection_));
-      current->Close();
+      // save newly opened projectname, it will be used to load the project file
+      // on device boots following the reboot below
+      PersistencyService::GetInstance()->SaveProjectState(selection_);
+
       // now reboot!
       watchdog_reboot(0, 0, 0);
       return;

@@ -19,7 +19,7 @@
 #endif
 #define fputs(a, b) b->Write(a, 1, strlen(a))
 #define fputc(a,b) b->Write(&a,1,1)
-#define fread(a,b,c,d)  d->Read(a,b,c)
+#define fread(a, b, c, d) d->Read(a, b)
 #define fwrite(a,b,c,d) d->Write(a,b,c)
 #define fgetc(a) a->GetC()
 #define ferror(a) a->Error()

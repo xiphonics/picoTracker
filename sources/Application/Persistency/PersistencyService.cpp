@@ -5,6 +5,8 @@
 #include "System/Console/Trace.h"
 #include <etl/string.h>
 
+#define PROJECT_STATE_FILE "/.current"
+
 PersistencyService::PersistencyService()
     : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
 
@@ -88,3 +90,28 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
   }
   return PERSIST_LOADED;
 };
+
+PersistencyResult
+PersistencyService::LoadCurrentProjectName(char *projectName) {
+  auto picoFS = PicoFileSystem::GetInstance();
+  if (picoFS->exists(PROJECT_STATE_FILE)) {
+    auto current = picoFS->Open(PROJECT_STATE_FILE, "r");
+    int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH - 1);
+    current->Close();
+    projectName[len] = '\0';
+    Trace::Log("APPLICATION", "read [%d] load proj name: %s\n", len,
+               projectName);
+    return PERSIST_LOADED;
+  } else {
+    return PERSIST_LOAD_FAILED;
+  }
+}
+
+PersistencyResult
+PersistencyService::SaveProjectState(const char *projectName) {
+  auto picoFS = PicoFileSystem::GetInstance();
+  auto current = picoFS->Open(PROJECT_STATE_FILE, "w");
+  current->Write(projectName, 1, strlen(projectName));
+  current->Close();
+  return PERSIST_SAVED;
+}
