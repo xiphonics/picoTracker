@@ -31,20 +31,6 @@ static GUIEventPadButtonType eventMappingPico[10] = {
     EPBT_SELECT // No SW
 };
 
-// M8 style mapping
-static GUIEventPadButtonType eventMappingM8[10] = {
-    EPBT_LEFT,  // SW1
-    EPBT_DOWN,  // SW2
-    EPBT_RIGHT, // SW3
-    EPBT_UP,    // SW4
-    EPBT_R,     // SW5
-    EPBT_A,     // SW6
-    EPBT_L,     // SW7
-    EPBT_START, // SW8
-    EPBT_B,     // SW9
-    EPBT_SELECT // No SW
-};
-
 static GUIEventPadButtonType *eventMapping = eventMappingPico;
 
 picoTrackerGUIWindowImp *instance_;
@@ -54,11 +40,6 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   instance_ = this;
 
   Config *config = Config::GetInstance();
-  const char *keymapStyle = config->GetValue("KEYMAPSTYLE");
-  if (strcasecmp("M8", keymapStyle) == 0) {
-    eventMapping = eventMappingM8;
-    Trace::Log("GUIWINDOWIMP", "Using M8 keymap");
-  }
 };
 
 picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}

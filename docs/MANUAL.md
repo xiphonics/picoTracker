@@ -38,21 +38,10 @@ This is an example config file:
     <ERRORCOLOR value="FF1111"> <!-- error displays eg. battery gauge critical level -->
     <CURSORCOLOR value="224400">  <!-- ?? -->
     <CONSOLECOLOR value="99FFAA"> <!-- ?? -->
-    <KEYMAPSTYLE value="M8" /> <!-- use M8 style keymap layout -->
 </CONFIG>
 ```
 
-The "M8 style" keymap is as shown below:
-
-![labeled photo of M8 style keymapping](img/m8-style-keymap.png)
-
-Note: any value other than "M8" (including not being specified) for the `KEYMAPSTYLE` setting will have the effect of selecting the default "Picotracker style" keymap shown below:
-
-![labeled photo of Picotracker style keymapping](img/pico-style-keymap.png)
-
-
 You can head over to the [Little Piggy Tracker Themer](http://poyo.co/lgpt) site to test different color schemes.
-
 
 ## Ports
 
@@ -70,7 +59,7 @@ You can just unplug the machine any time you want other than when saving a proje
 
 ## Key Map
 
-![key names](img/keynames.jpg)
+![labeled photo of Picotracker keymapping](img/pico-style-keymap.png)
 
 The keyboard layout resembles a typical old console game controller
 

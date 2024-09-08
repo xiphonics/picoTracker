@@ -30,8 +30,7 @@ Config::Config() : lineOut_("lineout", VAR_LINEOUT, lineOutOptions, 3, 0) {
         strcmp(doc.ElemName(), "CURSORCOLOR") &&
         strcmp(doc.ElemName(), "INFOCOLOR") &&
         strcmp(doc.ElemName(), "WARNCOLOR") &&
-        strcmp(doc.ElemName(), "ERRORCOLOR") &&
-        strcmp(doc.ElemName(), "KEYMAPSTYLE")) {
+        strcmp(doc.ElemName(), "ERRORCOLOR")) {
       Trace::Log("CONFIG", "Found unknown config parameter \"%s\", skipping...",
                  doc.ElemName());
       validElem = false;
