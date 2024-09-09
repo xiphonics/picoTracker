@@ -63,17 +63,16 @@ bool Application::initProject(char *projectName) {
       Trace::Error("failed to load CURRENT proj: %s\n", projectName);
     }
     return false;
-  } else { // need to create a new project and open it as no previously open
-           // project state exists
-    strcpy(projectName, "new_project");
+  } else {
+    // need to create a new project and open it as no previously open
+    // project state exists
+    strcpy(projectName, UNNAMED_PROJECT_NAME); // default project name
     Trace::Log("APPLICATION", "create new project\n");
     // create  project
-    auto res = PersistencyService::GetInstance()->Save(projectName, true);
-    if (res == PERSIST_SAVED) {
-      Trace::Log("APPLICATION", "created new proj: %s\n", projectName);
-    } else {
-      Trace::Log("APPLICATION",
-                 "failed to create new proj already exists: %s\n", projectName);
+    if (PersistencyService::GetInstance()->CreateProject() != PERSIST_SAVED) {
+      Trace::Log("APPLICATION", "FAILED to create new project !!");
+      // TODO: show user some sort of error message and how to recover from
+      // this?
     }
     return true;
   }

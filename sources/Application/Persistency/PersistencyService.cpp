@@ -10,6 +10,12 @@
 PersistencyService::PersistencyService()
     : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
 
+PersistencyResult PersistencyService::CreateProject() {
+  Trace::Log("APPLICATION", "create new project\n");
+  // create  project
+  return PersistencyService::GetInstance()->Save(UNNAMED_PROJECT_NAME, true);
+};
+
 PersistencyResult PersistencyService::Save(const char *projectName,
                                            bool saveAs) {
   etl::string<128> projectFilePath(PROJECTS_DIR);

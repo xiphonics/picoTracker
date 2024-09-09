@@ -354,6 +354,15 @@ inline void fourCC2char(const FourCC f, char *s) {
   case 98:
     strcpy(s, "SIGN");
     break;
+  case 99:
+    strcpy(s, "PANM");
+    break;
+  case 100:
+    strcpy(s, "RNDP");
+    break;
+  case 101:
+    strcpy(s, "NEWP");
+    break;
   }
 };
 #endif

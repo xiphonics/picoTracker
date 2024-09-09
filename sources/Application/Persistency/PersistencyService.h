@@ -20,6 +20,8 @@ enum PersistencyResult {
   PERSIST_LOADED,
 };
 
+#define UNNAMED_PROJECT_NAME ".untitled"
+
 class PersistencyService : public Service,
                            public T_Singleton<PersistencyService> {
 public:
@@ -28,6 +30,7 @@ public:
   PersistencyResult Load(const char *projectName);
   PersistencyResult LoadCurrentProjectName(char *projectName);
   PersistencyResult SaveProjectState(const char *projectName);
+  PersistencyResult CreateProject();
   bool Exists(const char *projectName);
 };
 

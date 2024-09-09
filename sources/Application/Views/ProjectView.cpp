@@ -22,6 +22,8 @@
 #define ACTION_PURGE_INSTRUMENT MAKE_FOURCC('P', 'R', 'G', 'I')
 #define ACTION_TEMPO_CHANGED MAKE_FOURCC('T', 'E', 'M', 'P')
 #define ACTION_RANDOM_NAME MAKE_FOURCC('R', 'N', 'D', 'P')
+#define ACTION_NEW_PROJECT MAKE_FOURCC('N', 'E', 'W', 'P')
+
 #define ACTION_PROJECT_RENAME MAKE_FOURCC('P', 'R', 'N', 'M')
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
@@ -29,6 +31,15 @@ static void LoadCallback(View &v, ModalView &dialog) {
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
     ((ProjectView &)v).SetChanged();
     ((ProjectView &)v).NotifyObservers(&ve);
+  }
+};
+
+static void CreateNewProjectCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    PersistencyService::GetInstance()->SaveProjectState(UNNAMED_PROJECT_NAME);
+
+    // now reboot!
+    watchdog_reboot(0, 0, 0);
   }
 };
 
@@ -138,6 +149,11 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), a1);
 
   position._x += 5;
+  a1 = new UIActionField("New", ACTION_NEW_PROJECT, position);
+  a1->AddObserver(*this);
+  fieldList_.insert(fieldList_.end(), a1);
+
+  position._x += 5;
   a1 = new UIActionField("Random", ACTION_RANDOM_NAME, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
@@ -242,6 +258,13 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       PersistencyService *persist = PersistencyService::GetInstance();
       char projName[MAX_PROJECT_NAME_LENGTH];
       project_->GetProjectName(projName);
+
+      if (strcmp(projName, UNNAMED_PROJECT_NAME) == 0) {
+        MessageBox *mb =
+            new MessageBox(*this, "Please name the project first", MBBF_OK);
+        DoModal(mb);
+        return;
+      }
       if (saveAsFlag_) {
         // first need to check if project with this name already exists
         if (persist->Exists(projName)) {
@@ -282,6 +305,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
+    break;
+  }
+  case ACTION_NEW_PROJECT: {
+    MessageBox *mb = new MessageBox(*this, "New project and lose changes?",
+                                    MBBF_YES | MBBF_NO);
+    DoModal(mb, CreateNewProjectCallback);
     break;
   }
 #ifdef PICOBUILD
