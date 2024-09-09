@@ -283,6 +283,13 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
         }
         saveAsFlag_ = false; // clear flag after saving
       } else {
+        if (persist->Save(projName, saveAsFlag_) != PERSIST_SAVED) {
+          Trace::Error("failed to save project state");
+          MessageBox *mb =
+              new MessageBox(*this, "Error saving Project", MBBF_OK);
+          DoModal(mb);
+          return;
+        }
         // all good so now persist the new project name in project state
         persist->SaveProjectState(projName);
       }

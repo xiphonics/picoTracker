@@ -6,6 +6,7 @@
 
 #define LIST_PAGE_SIZE 14
 #define LIST_WIDTH 26
+#define INVALID_PROJECT_NAME "INVALID NAME"
 
 SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
     : View(w, viewData) {}
@@ -32,9 +33,7 @@ void SelectProjectView::DrawView() {
   int x = 1;
   int y = pos._y + 2;
 
-  // need to use fullsize buffer as sdfat doesnt truncate if filename longer
-  // than buffer but instead returns empty string  in buffer :-(
-  char buffer[PFILENAME_SIZE];
+  char buffer[MAX_PROJECT_NAME_LENGTH + 1];
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
@@ -48,13 +47,14 @@ void SelectProjectView::DrawView() {
     memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
 
-    if (picoFS->getFileType(fileIndex) != PFT_DIR) {
-      picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
-    } else {
-      picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
+    if (picoFS->getFileType(fileIndex) == PFT_DIR) {
+      picoFS->getFileName(fileIndex, buffer, MAX_PROJECT_NAME_LENGTH + 1);
     }
-    // make sure truncate to list width the filename with trailing null
-    buffer[LIST_WIDTH] = 0;
+    // SDFat lib doesnt truncate if filename longer than buffer as per docs but
+    // instead returns empty string in buffer
+    if (strlen(buffer) == 0) {
+      strcpy(buffer, INVALID_PROJECT_NAME);
+    }
     DrawString(x, y, buffer, props);
     y += 1;
   };
@@ -82,7 +82,13 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // all subdirs directly inside /project are expected to be projects
       unsigned fileIndex = fileIndexList_[currentIndex_];
       auto picoFS = PicoFileSystem::GetInstance();
-      picoFS->getFileName(fileIndex, selection_, PFILENAME_SIZE);
+      picoFS->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
+      if (strlen(selection_) == 0) {
+        Trace::Log("SELECTPROJECTVIEW",
+                   "skipping too long project name on Index:%d", fileIndex);
+        return;
+      }
+
       Trace::Log("SELECTPROJECTVIEW", "Select Project:%s \n", selection_);
       // save newly opened projectname, it will be used to load the project file
       // on device boots following the reboot below
