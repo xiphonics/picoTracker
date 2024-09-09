@@ -35,8 +35,9 @@ void MessageBox::DrawView() {
   int y = 0;
   int x = (width - size) / 2;
   GUITextProperties props;
-  SetColor(CD_NORMAL);
+  SetColor(CD_ERROR);
   DrawString(x, y, message_.c_str(), props);
+  SetColor(CD_NORMAL);
 
   y = 2;
   int offset = width / (buttonCount_ + 1);

@@ -22,7 +22,7 @@
 #define ACTION_PURGE_INSTRUMENT MAKE_FOURCC('P', 'R', 'G', 'I')
 #define ACTION_TEMPO_CHANGED MAKE_FOURCC('T', 'E', 'M', 'P')
 #define ACTION_RANDOM_NAME MAKE_FOURCC('R', 'N', 'D', 'P')
-
+#define ACTION_PROJECT_RENAME MAKE_FOURCC('P', 'R', 'N', 'M')
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     ViewType vt = VT_SELECTPROJECT;
@@ -39,6 +39,29 @@ static void BootselCallback(View &v, ModalView &dialog) {
   }
 };
 #endif
+
+static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
+  bool cancelOverwrite = dialog.GetReturnCode() == MBL_CANCEL;
+  if (cancelOverwrite) {
+    return;
+  }
+
+  PersistencyService *persist = PersistencyService::GetInstance();
+  const char *projName = ((ProjectView &)v).getProjectName().c_str();
+  if (persist->Save(projName, true) != PERSIST_SAVED) {
+    Trace::Error("failed to save project");
+    MessageBox *mb = new MessageBox(
+        ((ProjectView &)v), "failed to save project", MBBF_OK | MBBF_CANCEL);
+    ((ProjectView &)v).DoModal(mb, SaveAsOverwriteCallback);
+    return;
+  }
+  if (persist->SaveProjectState(projName) != PERSIST_SAVED) {
+    Trace::Error("Failed to save project state");
+  } else {
+    Trace::Log("PROJECTVIEW-STATIC", "OVERWROTE:%s", projName);
+    ((ProjectView &)v).clearSaveAsFlag(); // clear flag after saving
+  }
+}
 
 static void PurgeCallback(View &v, ModalView &dialog) {
   ((ProjectView &)v).OnPurgeInstruments(dialog.GetReturnCode() == MBL_YES);
@@ -100,8 +123,9 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   int xalign = position._x;
 
   v = project_->FindVariable(VAR_PROJECTNAME);
-  UITextField *t1 = new UITextField(v, position, "project: ");
-  fieldList_.insert(fieldList_.end(), t1);
+  nameField_ = new UITextField(v, position, "project: ", ACTION_PROJECT_RENAME);
+  nameField_->AddObserver(*this);
+  fieldList_.insert(fieldList_.end(), nameField_);
 
   position._y += 1;
   a1 = new UIActionField("Load", ACTION_LOAD, position);
@@ -211,19 +235,30 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     getRandomName(name);
     printf("random:%s", name);
     project_->SetProjectName(name);
+    saveAsFlag_ = true;
     break;
   case ACTION_SAVE:
     if (!player->IsRunning()) {
-      bool isNewProjectName = nameField_->HasChanged();
-
       PersistencyService *persist = PersistencyService::GetInstance();
       char projName[MAX_PROJECT_NAME_LENGTH];
       project_->GetProjectName(projName);
-      auto saveResult = persist->Save(projName, isNewProjectName);
-      if (saveResult == PERSIST_PROJECT_EXISTS) {
-        MessageBox *mb =
-            new MessageBox(*this, "Project name already exists", MBBF_OK);
-        DoModal(mb);
+      if (saveAsFlag_) {
+        // first need to check if project with this name already exists
+        if (persist->Exists(projName)) {
+          Trace::Error("project already exists ask user to confirm overwrite");
+          MessageBox *mb = new MessageBox(*this, "Overwrite EXISTING project?",
+                                          MBBF_OK | MBBF_CANCEL);
+          DoModal(mb, SaveAsOverwriteCallback);
+          return;
+        }
+        if (persist->Save(projName, saveAsFlag_) != PERSIST_SAVED) {
+          Trace::Error("failed to save project state");
+          MessageBox *mb =
+              new MessageBox(*this, "Error saving Project", MBBF_OK);
+          DoModal(mb);
+          return;
+        }
+        saveAsFlag_ = false; // clear flag after saving
       } else {
         // all good so now persist the new project name in project state
         persist->SaveProjectState(projName);
@@ -232,6 +267,11 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
+    break;
+  case ACTION_PROJECT_RENAME:
+    Trace::Log("PROJECTVIEW", "Project renamed! prev name:%s",
+               nameField_->GetString().c_str());
+    saveAsFlag_ = true;
     break;
   case ACTION_LOAD: {
     if (!player->IsRunning()) {

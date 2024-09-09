@@ -16,7 +16,7 @@ public:
 
 protected:
   void initMidiInput();
-  void initProject(char *projectName);
+  bool initProject(char *projectName);
   void ensurePTDirsExist();
 
 private:

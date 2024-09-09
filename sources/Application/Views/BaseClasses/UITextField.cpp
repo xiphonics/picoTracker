@@ -2,9 +2,11 @@
 #include "Application/AppWindow.h"
 #include "View.h"
 
-UITextField::UITextField(Variable *v, GUIPoint &position, const char *name)
+UITextField::UITextField(Variable *v, GUIPoint &position, const char *name,
+                         unsigned int fourcc)
     : UIField(position), src_(v) {
   name_ = name;
+  fourcc_ = fourcc;
 };
 
 UITextField::~UITextField(){};
@@ -49,14 +51,16 @@ void UITextField::ProcessArrow(unsigned short mask) {
   case EPBM_UP:
     name[currentChar_] += 1;
     lastChar_ = name[currentChar_];
-    SetChanged();
     src_->SetString(name, true);
+    SetChanged();
+    NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_DOWN:
     name[currentChar_] -= 1;
     lastChar_ = name[currentChar_];
-    SetChanged();
     src_->SetString(name, true);
+    SetChanged();
+    NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_LEFT:
     if (currentChar_ > 0) {

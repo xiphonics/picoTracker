@@ -15,7 +15,6 @@
 #define RENDERS_DIR "/renders"
 
 enum PersistencyResult {
-  PERSIST_PROJECT_EXISTS,
   PERSIST_SAVED,
   PERSIST_LOAD_FAILED,
   PERSIST_LOADED,
@@ -29,6 +28,7 @@ public:
   PersistencyResult Load(const char *projectName);
   PersistencyResult LoadCurrentProjectName(char *projectName);
   PersistencyResult SaveProjectState(const char *projectName);
+  bool Exists(const char *projectName);
 };
 
 #endif

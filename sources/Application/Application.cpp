@@ -52,8 +52,9 @@ bool Application::Init(GUICreateWindowParams &params) {
   return true;
 };
 
-// returns the current project name in the passed in char buffer
-void Application::initProject(char *projectName) {
+// will put the current project name into the passed in char buffer projectName
+// will return true if a new project was created (vs loading prev open project)
+bool Application::initProject(char *projectName) {
   // read new proj name after reboot
   if (PersistencyService::GetInstance()->LoadCurrentProjectName(projectName) !=
       PERSIST_LOAD_FAILED) {
@@ -61,18 +62,20 @@ void Application::initProject(char *projectName) {
         PERSIST_LOAD_FAILED) {
       Trace::Error("failed to load CURRENT proj: %s\n", projectName);
     }
+    return false;
   } else { // need to create a new project and open it as no previously open
            // project state exists
     strcpy(projectName, "new_project");
     Trace::Log("APPLICATION", "create new project\n");
     // create  project
     auto res = PersistencyService::GetInstance()->Save(projectName, true);
-    if (res != PERSIST_PROJECT_EXISTS) {
+    if (res == PERSIST_SAVED) {
       Trace::Log("APPLICATION", "created new proj: %s\n", projectName);
     } else {
       Trace::Log("APPLICATION",
                  "failed to create new proj already exists: %s\n", projectName);
     }
+    return true;
   }
 }
 

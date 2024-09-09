@@ -17,22 +17,19 @@ PersistencyResult PersistencyService::Save(const char *projectName,
   projectFilePath.append(projectName);
 
   auto picoFS = PicoFileSystem::GetInstance();
-  if (saveAs) {
-    // need to first check no existing proj with the new name
-    if (picoFS->exists(projectFilePath.c_str())) {
-      return PERSIST_PROJECT_EXISTS;
-    } else {
-      // need to first create project dir
-      picoFS->makeDir(projectFilePath.c_str());
-      // also create samples sub dir
-      etl::string<128> samplesPath(projectFilePath);
-      samplesPath.append("/");
-      samplesPath.append(PROJECT_SAMPLES_DIR);
-      picoFS->makeDir(samplesPath.c_str());
-      Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n",
-                 samplesPath.c_str());
-    }
+
+  if (saveAs && !Exists(projectName)) {
+    // need to first create project dir
+    picoFS->makeDir(projectFilePath.c_str());
+    // also create samples sub dir
+    etl::string<128> samplesPath(projectFilePath);
+    samplesPath.append("/");
+    samplesPath.append(PROJECT_SAMPLES_DIR);
+    picoFS->makeDir(samplesPath.c_str());
+    Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n",
+               samplesPath.c_str());
   }
+
   projectFilePath.append("/lgptsav.dat");
 
   PI_File *fp = picoFS->Open(projectFilePath.c_str(), "w");
@@ -61,6 +58,16 @@ PersistencyResult PersistencyService::Save(const char *projectName,
   delete (fp);
   return PERSIST_SAVED;
 };
+
+// return true if existing proj with the given name already exists
+bool PersistencyService::Exists(const char *projectName) {
+  etl::string<128> projectFilePath(PROJECTS_DIR);
+  projectFilePath.append("/");
+  projectFilePath.append(projectName);
+
+  auto picoFS = PicoFileSystem::GetInstance();
+  return picoFS->exists(projectFilePath.c_str());
+}
 
 PersistencyResult PersistencyService::Load(const char *projectName) {
   etl::string<128> projectFilePath(PROJECTS_DIR);

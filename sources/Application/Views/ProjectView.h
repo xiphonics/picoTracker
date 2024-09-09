@@ -16,6 +16,8 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
   virtual void AnimationUpdate(){};
+  etl::string<40> getProjectName() { return nameField_->GetString(); };
+  void clearSaveAsFlag() { saveAsFlag_ = false; };
 
   // Observer for action callback
 
@@ -31,5 +33,6 @@ private:
   unsigned long lastClock_;
   UIField *tempoField_;
   UITextField *nameField_;
+  bool saveAsFlag_ = false;
 };
 #endif
