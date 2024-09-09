@@ -78,7 +78,7 @@ private:
   std::string deviceName_;
   MidiOutDevice *device_;
 
-  etl::vector<MidiMessage, 10> *queues_[MIDI_MAX_BUFFERS];
+  etl::array<etl::vector<MidiMessage, 10>, MIDI_MAX_BUFFERS> queues_;
   int currentPlayQueue_;
   int currentOutQueue_;
 

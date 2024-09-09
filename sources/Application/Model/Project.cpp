@@ -39,6 +39,13 @@ Project::Project(const char *name)
   // Reload the midi device list
   buildMidiDeviceList();
 
+  // For now just select the first MIDI device in the list as currently
+  // we only have 1 anyways
+  auto midiService = MidiService::GetInstance();
+  std::string deviceName = midiService->GetFirst()->GetName();
+  MidiService::GetInstance()->SelectDevice(deviceName);
+  Trace::Log("PROJECT", "selected midi:%s", deviceName.c_str());
+
   WatchedVariable *midi = new WatchedVariable(
       "midi", VAR_MIDIDEVICE, midiDeviceList_, midiDeviceListSize_);
   this->insert(end(), midi);
