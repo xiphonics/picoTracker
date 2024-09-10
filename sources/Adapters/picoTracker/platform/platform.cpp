@@ -4,7 +4,6 @@
 #include "hardware/gpio.h"
 // #include "hardware/irq.h"
 #include "DSP.h"
-#include "Externals/swdloader/swdloader.h"
 #include "etl_profile.h"
 #include "hardware/pll.h"
 #include "hardware/spi.h"
@@ -190,18 +189,4 @@ void platform_init() {
   gpio_init(INPUT_PLAY);
   gpio_set_dir(INPUT_PLAY, GPIO_IN);
   gpio_pull_up(INPUT_PLAY);
-
-#ifdef ENABLE_DSP
-  clock_gpio_init(DSP_CLOCK, CLOCKS_CLK_GPOUT1_CTRL_AUXSRC_VALUE_CLK_USB,
-                  4); // 12MHz
-  auto loader = CSWDLoader();
-  if (!loader.Initialize()) {
-    printf("Loader failed to initialize\n");
-  } else {
-    if (!loader.Load(DSP, DSP_len, RP2040_RAM_BASE)) {
-      printf("Firmware load error\n");
-    }
-  }
-  // Load DSP code
-#endif
 }

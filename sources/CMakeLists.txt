@@ -29,8 +29,6 @@ add_definitions(-DDUMMY_MIDI)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
 # add_definitions(-DUSB_REMOTE_UI)
-# Enable DSP support. Will be automatically detected in the future
-# add_definitions(-DENABLE_DSP)
 # enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
 add_definitions(-DSERIAL_REPL)
 
