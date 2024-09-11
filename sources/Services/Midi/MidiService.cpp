@@ -77,8 +77,8 @@ void MidiService::Trigger() {
 
 void MidiService::AdvancePlayQueue() {
   currentPlayQueue_ = (currentPlayQueue_ + 1) % MIDI_MAX_BUFFERS;
-  auto queue = queues_[currentPlayQueue_];
-  queue.clear();
+  auto queue = &queues_[currentPlayQueue_];
+  queue->clear();
 }
 
 void MidiService::Update(Observable &o, I_ObservableData *d) {
