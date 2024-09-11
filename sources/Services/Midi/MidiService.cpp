@@ -57,12 +57,8 @@ void MidiService::Stop() { stopDevice(); };
 
 void MidiService::QueueMessage(MidiMessage &m) {
   if (device_) {
-    //    T_SimpleList<MidiMessage> *queue = queues_[currentPlayQueue_];
-    //    MidiMessage *ms = new MidiMessage(m.status_, m.data1_, m.data2_);
-    //    queue->Insert(ms);
     auto queue = &queues_[currentPlayQueue_];
     queue->emplace_back(m.status_, m.data1_, m.data2_);
-    auto qsize = queue->size();
   }
 };
 
