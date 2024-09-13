@@ -65,3 +65,15 @@ This command should load your code into the pico, reset it and run the program. 
 ## Github Actions CI
 
 The actions CI workflows include a check for the projects specific code formatting style and building the firmware image. It may be useful to run these actions on a local machine, in which case the [act](https://nektosact.com/installation/index.html) could be useful. Note to use `act` you nee to have docker already installed as well.
+
+## MIDI Development
+
+### Debugging MIDI TRS (serial) output
+
+NOTE: The original design picoTracker shares the same UART for both serial output for debugging and TRS MIDI output so you **MUST** enable `DDUMMY_MIDI` and disable `pico_enable_stdio_uart` in the CMakeLists.txt file to use the UART for debugging!
+
+A helpful tool for debugging MIDI output is [ShowMIDI](https://github.com/gbevin/ShowMIDI) or for more low level debugging you may want to use a [BusPirate](http://dangerousprototypes.com/docs/Bus_Pirate).
+
+### USB MIDI output
+
+TODO

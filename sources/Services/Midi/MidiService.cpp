@@ -17,6 +17,10 @@ MidiService::MidiService()
   const char *delay = Config::GetInstance()->GetValue("MIDIDELAY");
   midiDelay_ = delay ? atoi(delay) : 1;
 
+  for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
+    queues_[i].clear();
+  }
+
   const char *sendSync = Config::GetInstance()->GetValue("MIDISENDSYNC");
   if (sendSync) {
     sendSync_ = (strcmp(sendSync, "YES") == 0);
@@ -53,10 +57,7 @@ void MidiService::Stop() { stopDevice(); };
 
 void MidiService::QueueMessage(MidiMessage &m) {
   if (device_) {
-    //    T_SimpleList<MidiMessage> *queue = queues_[currentPlayQueue_];
-    //    MidiMessage *ms = new MidiMessage(m.status_, m.data1_, m.data2_);
-    //    queue->Insert(ms);
-    auto *queue = queues_[currentPlayQueue_];
+    auto queue = &queues_[currentPlayQueue_];
     queue->emplace_back(m.status_, m.data1_, m.data2_);
   }
 };
@@ -76,7 +77,7 @@ void MidiService::Trigger() {
 
 void MidiService::AdvancePlayQueue() {
   currentPlayQueue_ = (currentPlayQueue_ + 1) % MIDI_MAX_BUFFERS;
-  auto *queue = queues_[currentPlayQueue_];
+  auto queue = &queues_[currentPlayQueue_];
   queue->clear();
 }
 
@@ -106,7 +107,7 @@ void MidiService::Flush() {
 void MidiService::flushOutQueue() {
   // Move queue positions
   currentOutQueue_ = (currentOutQueue_ + 1) % MIDI_MAX_BUFFERS;
-  auto *flushQueue = queues_[currentOutQueue_];
+  auto flushQueue = &queues_[currentOutQueue_];
 
   if (device_) {
     // Send whatever is on the out queue
@@ -118,7 +119,6 @@ void MidiService::flushOutQueue() {
 void MidiService::startDevice() {
 
   // look for the device
-
   for (Begin(); !IsDone(); Next()) {
     MidiOutDevice &current = CurrentItem();
     if (!strcmp(deviceName_.c_str(), current.GetName())) {

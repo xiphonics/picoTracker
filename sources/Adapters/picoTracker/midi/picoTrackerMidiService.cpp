@@ -6,10 +6,8 @@ picoTrackerMidiService::picoTrackerMidiService(){};
 
 picoTrackerMidiService::~picoTrackerMidiService(){};
 
-void picoTrackerMidiService::buildDriverList() { // Here we just loop over
-                                                 // existing
-  // Midi out and create a midi device
-  // for each of them.
-
+void picoTrackerMidiService::buildDriverList() {
+  // create a midi device for each of Midi Output device
+  // for now only 1 TRS midi output
   Insert(new picoTrackerMidiOutDevice("MIDI OUT 1"));
 };
