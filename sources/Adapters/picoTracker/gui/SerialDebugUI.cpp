@@ -1,4 +1,5 @@
 #include "SerialDebugUI.h"
+#include "Application/Model/Config.h"
 #include "System/FileSystem/PicoFileSystem.h"
 #include <Trace.h>
 #include <stdio.h>
@@ -45,6 +46,8 @@ void SerialDebugUI::dispatchCmd(char *input) {
     listFiles(arg);
   } else if (strcmp(cmd, "rm") == 0) {
     rmFile(arg);
+  } else if (strcmp(cmd, "save") == 0) {
+    saveConfig();
   } else if (strcmp(cmd, "help") == 0) {
     Trace::Log("SERIALDEBUG", "cat, ls, rm , help");
   } else {
@@ -100,4 +103,9 @@ void SerialDebugUI::rmFile(const char *path) {
   } else {
     printf("deleted:%s\n", path);
   }
+}
+
+void SerialDebugUI::saveConfig() {
+  Config *config = Config::GetInstance();
+  config->Save();
 }

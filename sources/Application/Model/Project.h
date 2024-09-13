@@ -49,6 +49,8 @@ public:
   virtual void Update(Observable &o, I_ObservableData *d);
 
   InstrumentBank *GetInstrumentBank();
+
+  // Persistent
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 

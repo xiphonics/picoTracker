@@ -8,7 +8,8 @@ add_library(services_midi
   MidiService.h MidiService.cpp
 )
 
-target_link_libraries(services_midi PUBLIC services_controllers
+target_link_libraries(services_midi PUBLIC services_controllers 
+  PRIVATE sdfat # need this due transitive dep on XML lib coming from the Config class dep
 )
 
 target_include_directories(services_midi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

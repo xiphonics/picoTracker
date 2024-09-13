@@ -11,6 +11,7 @@ public:
   void catFile(const char *path);
   void listFiles(const char *path);
   void rmFile(const char *path);
+  void saveConfig();
 
 private:
   int lp_ = 0;
