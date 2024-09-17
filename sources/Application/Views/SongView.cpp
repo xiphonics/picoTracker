@@ -3,6 +3,7 @@
 #include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
+#include "Application/Commands/ApplicationCommandDispatcher.h"
 #include "UIController.h"
 #include "ViewData.h"
 #include <stdlib.h>
@@ -654,6 +655,10 @@ void SongView::processNormalButtonMask(unsigned int mask) {
             jumpToNextSection(-1);
           if (mask & EPBM_START)
             startCurrentRow();
+          if (mask&EPBM_LEFT)
+            nudgeTempo(-1);
+          if (mask&EPBM_RIGHT)
+            nudgeTempo(1);
         } else {
 
           // No modifier
@@ -1034,3 +1039,15 @@ void SongView::AnimationUpdate() {
   drawBattery(batt, pos, props);
   w_.Flush();
 };
+
+void SongView::nudgeTempo(int direction) {
+  ApplicationCommandDispatcher *dispatcher=ApplicationCommandDispatcher::GetInstance();
+  switch(direction) {
+    case -1:
+      dispatcher->OnNudgeDown();
+      break;
+    case 1:
+      dispatcher->OnNudgeUp();
+      break;
+  }
+}

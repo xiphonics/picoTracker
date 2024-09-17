@@ -80,6 +80,7 @@ private:
   std::string songname_;
   bool invertBatt_;
   bool needClear_;
+  void nudgeTempo(int direction);
 };
 
 #endif
