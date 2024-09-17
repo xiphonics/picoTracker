@@ -15,8 +15,7 @@ AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
 bool AudioFileStreamer::Start(char *name) {
   Trace::Debug("Starting to stream:%s", name);
   strcpy(name_, name);
-  const char *shift = Config::GetInstance()->GetValue("PRELISTENATTENUATION");
-  shift_ = (shift) ? atoi(shift) : 1;
+  shift_ = Config::GetInstance()->GetValue("PRELISTENATTENUATION");
   Trace::Debug("Streaming shift is %d", shift_);
   newPath_ = true;
   mode_ = AFSM_PLAYING;

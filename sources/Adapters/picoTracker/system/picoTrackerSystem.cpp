@@ -78,11 +78,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
 
   bool invert = false;
   Config *config = Config::GetInstance();
-  const char *s = config->GetValue("INVERT");
-
-  if ((s) && (!strcmp(s, "YES"))) {
-    invert = true;
-  }
+  invert = config->GetValue("INVERT") > 0;
 
   if (!invert) {
     eventManager_->MapAppButton("left ctrl", APP_BUTTON_A);

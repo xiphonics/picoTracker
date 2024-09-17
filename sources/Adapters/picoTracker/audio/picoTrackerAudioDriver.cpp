@@ -136,12 +136,7 @@ bool picoTrackerAudioDriver::InitDriver() {
 
   volume_ = 65;
   Config *config = Config::GetInstance();
-  const char *volume = config->GetValue("VOLUME");
-
-  if (volume) {
-    volume_ = atoi(volume);
-  }
-
+  volume_ = config->GetValue("VOLUME");
   return true;
 };
 

@@ -184,7 +184,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       NotifyObservers(&ve);
     }
     if (mask & EPBM_UP) {
-      ViewType vt = VT_MACHINE;
+      ViewType vt = VT_DEVICE;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);

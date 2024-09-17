@@ -1,16 +1,17 @@
-#ifndef _MACHINE_VIEW_H_
-#define _MACHINE_VIEW_H_
+#ifndef _CONFIG_VIEW_H_
+#define _CONFIG_VIEW_H_
 
 #include "BaseClasses/FieldView.h"
 #include "BaseClasses/UIActionField.h"
+#include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
-class MachineView : public FieldView, public I_Observer {
+class DeviceView : public FieldView, public I_Observer {
 public:
-  MachineView(GUIWindow &w, ViewData *data);
-  virtual ~MachineView();
+  DeviceView(GUIWindow &w, ViewData *data);
+  virtual ~DeviceView();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
@@ -24,7 +25,8 @@ public:
 
 protected:
 private:
-  etl::vector<UIIntVarField, 1> intVarField_;
+  etl::vector<UIIntVarField, 3> intVarField_;
   etl::vector<UIActionField, 1> actionField_;
+  etl::vector<UIBigHexVarField, 9> bigHexVarField_;
 };
 #endif

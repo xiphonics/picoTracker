@@ -363,6 +363,42 @@ inline void fourCC2char(const FourCC f, char *s) {
   case 101:
     strcpy(s, "NEWP");
     break;
+  case 102:
+    strcpy(s, "PRNM");
+    break;
+  case 103:
+    strcpy(s, "FGCL");
+    break;
+  case 104:
+    strcpy(s, "BGCL");
+    break;
+  case 105:
+    strcpy(s, "H1CL");
+    break;
+  case 106:
+    strcpy(s, "H2CL");
+    break;
+  case 107:
+    strcpy(s, "CNCL");
+    break;
+  case 108:
+    strcpy(s, "CRCL");
+    break;
+  case 109:
+    strcpy(s, "IFCL");
+    break;
+  case 110:
+    strcpy(s, "WNCL");
+    break;
+  case 111:
+    strcpy(s, "ERCL");
+    break;
+  case 112:
+    strcpy(s, "MIDD");
+    break;
+  case 113:
+    strcpy(s, "MIDS");
+    break;
   }
 };
 #endif

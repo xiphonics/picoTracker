@@ -39,14 +39,12 @@ void AppWindow::defineColor(const char *colorName, GUIColor &color,
                             int paletteIndex) {
 
   Config *config = Config::GetInstance();
-  const char *value = config->GetValue(colorName);
-  if (value) {
-    unsigned char r;
-    char2hex(value, &r);
-    unsigned char g;
-    char2hex(value + 2, &g);
-    unsigned char b;
-    char2hex(value + 4, &b);
+  const int rgbValue = config->GetValue(colorName);
+  if (rgbValue) {
+    unsigned short r, g, b;
+    r = (rgbValue >> 16) & 0xFF;
+    g = (rgbValue >> 8) & 0xFF;
+    b = rgbValue & 0xFF;
     color = GUIColor(r, g, b, paletteIndex);
   }
 }
@@ -64,7 +62,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _songView = 0;
   _chainView = 0;
   _phraseView = 0;
-  _machineView = 0;
+  _deviceView = 0;
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
@@ -84,16 +82,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   // Init midi services
   MidiService::GetInstance()->Init();
 
-  // now assign custom colors if they have been set in the config.xml
-  defineColor("BACKGROUND", backgroundColor_, 0);
-  defineColor("FOREGROUND", normalColor_, 1);
-  cursorColor_ = normalColor_;
-  defineColor("HICOLOR1", highlightColor_, 2);
-  defineColor("HICOLOR2", highlight2Color_, 3);
-  defineColor("CURSORCOLOR", cursorColor_, 4);
-  defineColor("INFOCOLOR", infoColor_, 5);
-  defineColor("WARNCOLOR", warnColor_, 6);
-  defineColor("ERRORCOLOR", errorColor_, 7);
+  UpdateColorsFromConfig();
 
   GUIWindow::Clear(backgroundColor_);
 
@@ -324,9 +313,9 @@ void AppWindow::LoadProject(const char *projectName) {
   _phraseView = new (phraseViewMemBuf) PhraseView((*this), _viewData);
   _phraseView->AddObserver((*this));
 
-  static char machineViewMemBuf[sizeof(MachineView)];
-  _machineView = new (machineViewMemBuf) MachineView((*this), _viewData);
-  _machineView->AddObserver((*this));
+  static char deviceViewMemBuf[sizeof(DeviceView)];
+  _deviceView = new (deviceViewMemBuf) DeviceView((*this), _viewData);
+  _deviceView->AddObserver((*this));
 
   static char projectViewMemBuf[sizeof(ProjectView)];
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
@@ -386,7 +375,7 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_songView);
   SAFE_DELETE(_chainView);
   SAFE_DELETE(_phraseView);
-  SAFE_DELETE(_machineView);
+  SAFE_DELETE(_deviceView);
   SAFE_DELETE(_projectView);
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
@@ -412,6 +401,19 @@ AppWindow *AppWindow::Create(GUICreateWindowParams &params,
 };
 
 void AppWindow::SetDirty() { _isDirty = true; };
+
+void AppWindow::UpdateColorsFromConfig() {
+  // now assign custom colors if they have been set in the config.xml
+  defineColor("BACKGROUND", backgroundColor_, 0);
+  defineColor("FOREGROUND", normalColor_, 1);
+  cursorColor_ = normalColor_;
+  defineColor("HICOLOR1", highlightColor_, 2);
+  defineColor("HICOLOR2", highlight2Color_, 3);
+  defineColor("CURSORCOLOR", cursorColor_, 4);
+  defineColor("INFOCOLOR", infoColor_, 5);
+  defineColor("WARNCOLOR", warnColor_, 6);
+  defineColor("ERRORCOLOR", errorColor_, 7);
+};
 
 bool AppWindow::onEvent(GUIEvent &event) {
 
@@ -512,8 +514,8 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     case VT_PHRASE:
       _currentView = _phraseView;
       break;
-    case VT_MACHINE:
-      _currentView = _machineView;
+    case VT_DEVICE:
+      _currentView = _deviceView;
       break;
     case VT_PROJECT:
       _currentView = _projectView;

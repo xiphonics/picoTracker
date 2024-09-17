@@ -135,11 +135,6 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
 
 void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
 
-  if (doc->version_ < 130) {
-    if (Config::GetInstance()->GetValue("LEGACYDOWNSAMPLING") != NULL) {
-      SampleInstrument::EnableDownsamplingLegacy();
-    }
-  }
   bool elem = doc->FirstChild();
   while (elem) {
     // Check it is an instrument

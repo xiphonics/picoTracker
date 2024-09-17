@@ -8,14 +8,8 @@ Audio::Audio(AudioSettings &hints) : T_SimpleList<AudioOut>(true), settings_() {
   // be overriden through the config file
 
   Config *config = Config::GetInstance();
-  const char *v = config->GetValue("AUDIOAPI");
-  settings_.audioAPI_ = v ? v : hints.audioAPI_;
-  v = config->GetValue("AUDIODEVICE");
-  settings_.audioDevice_ = v ? v : hints.audioDevice_;
-  v = config->GetValue("AUDIOBUFFERSIZE");
-  settings_.bufferSize_ = v ? atoi(v) : hints.bufferSize_;
-  v = config->GetValue("AUDIOPREBUFFERCOUNT");
-  settings_.preBufferCount_ = v ? atoi(v) : hints.preBufferCount_;
+  settings_.audioAPI_ = hints.audioAPI_;
+  settings_.audioDevice_ = hints.audioDevice_;
 
   Trace::Log("AUDIO", "Audio object initialised with");
   Trace::Log("AUDIO", "Api:%s", settings_.audioAPI_.c_str());

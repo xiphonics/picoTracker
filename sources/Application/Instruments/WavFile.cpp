@@ -12,7 +12,6 @@
 #endif
 
 int WavFile::bufferChunkSize_ = -1;
-bool WavFile::initChunkSize_ = true;
 unsigned char WavFile::readBuffer_[512];
 
 short Swap16(short from) {
@@ -40,13 +39,6 @@ int Swap32(int from) {
 }
 
 WavFile::WavFile(PI_File *file) {
-  if (initChunkSize_) {
-    const char *size = Config::GetInstance()->GetValue("SAMPLELOADCHUNKSIZE");
-    if (size) {
-      bufferChunkSize_ = atoi(size);
-    }
-    initChunkSize_ = false;
-  }
   samples_ = 0;
   size_ = 0;
   readBufferSize_ = 0;

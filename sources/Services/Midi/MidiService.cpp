@@ -13,18 +13,10 @@
 MidiService::MidiService()
     : T_SimpleList<MidiOutDevice>(true), inList_(true), device_(0),
       sendSync_(true) {
-
-  const char *delay = Config::GetInstance()->GetValue("MIDIDELAY");
-  midiDelay_ = delay ? atoi(delay) : 1;
-
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
-
-  const char *sendSync = Config::GetInstance()->GetValue("MIDISENDSYNC");
-  if (sendSync) {
-    sendSync_ = (strcmp(sendSync, "YES") == 0);
-  }
+  sendSync_ = Config::GetInstance()->GetValue("MIDISENDSYNC") > 0;
 };
 
 MidiService::~MidiService() { Close(); };

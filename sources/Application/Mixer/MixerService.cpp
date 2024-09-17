@@ -10,21 +10,8 @@
 
 MixerService::MixerService() : out_(0), sync_(0) {
   mode_ = MSM_AUDIO;
-  const char *render = Config::GetInstance()->GetValue("RENDER");
-  if (render) {
-    if (!strcmp(render, "FILERT")) {
-      mode_ = MSM_FILERT;
-    };
-    if (!strcmp(render, "FILE")) {
-      mode_ = MSM_FILE;
-    };
-    if (!strcmp(render, "FILESPLIT")) {
-      mode_ = MSM_FILESPLIT;
-    };
-    if (!strcmp(render, "FILESPLITRT")) {
-      mode_ = MSM_FILESPLITRT;
-    };
-  };
+  // render value is saved as value of enum MixerServiceMode
+  mode_ = (MixerServiceMode)Config::GetInstance()->GetValue("RENDER");
 };
 
 MixerService::~MixerService(){};

@@ -94,8 +94,8 @@ void View::drawMap() {
     pos._y += 2;
     DrawString(pos._x, pos._y, "P", props);
     break;
-  case VT_MACHINE:
-    DrawString(pos._x, pos._y, "M", props);
+  case VT_DEVICE:
+    DrawString(pos._x, pos._y, "D", props);
     break;
   case VT_PROJECT:
     pos._y += 1;

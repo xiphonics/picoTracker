@@ -324,6 +324,39 @@ inline constexpr FourCC MAKE_FOURCC(char ch0, char ch1, char ch2, char ch3) {
   case 'P' | 'R' << 8 | 'N' << 16 | 'M' << 24:
     return 102;
     break;
+  case 'F' | 'G' << 8 | 'C' << 16 | 'L' << 24:
+    return 103;
+    break;
+  case 'B' | 'G' << 8 | 'C' << 16 | 'L' << 24:
+    return 104;
+    break;
+  case 'H' | '1' << 8 | 'C' << 16 | 'L' << 24:
+    return 105;
+    break;
+  case 'H' | '2' << 8 | 'C' << 16 | 'L' << 24:
+    return 106;
+    break;
+  case 'C' | 'N' << 8 | 'C' << 16 | 'L' << 24:
+    return 107;
+    break;
+  case 'C' | 'R' << 8 | 'C' << 16 | 'L' << 24:
+    return 108;
+    break;
+  case 'I' | 'F' << 8 | 'C' << 16 | 'L' << 24:
+    return 109;
+    break;
+  case 'W' | 'N' << 8 | 'C' << 16 | 'L' << 24:
+    return 110;
+    break;
+  case 'E' | 'R' << 8 | 'C' << 16 | 'L' << 24:
+    return 111;
+    break;
+  case 'M' | 'I' << 8 | 'D' << 16 | 'D' << 24:
+    return 112;
+    break;
+  case 'M' | 'I' << 8 | 'D' << 16 | 'S' << 24:
+    return 113;
+    break;
   default:
     return 255;
   }

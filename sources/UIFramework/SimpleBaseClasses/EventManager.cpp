@@ -27,13 +27,14 @@ void EventManager::MapAppButton(const char *mapping, AppButton button) {
 
 void EventManager::mapConfigKey(AppButton button, const char *keyname) {
 
-  Config *config = Config::GetInstance();
+  // Keymapping from config file disabled for now in picoTracker
 
+  // Config *config = Config::GetInstance();
   // Read the configuration file and look if we got a definition
-  const char *key = config->GetValue(keyname);
-  if (key) {
-    MapAppButton(key, button);
-  }
+  // const char *key = config->GetValue(keyname);
+  // if (key) {
+  //   MapAppButton(key, button);
+  // }
 }
 
 void EventManager::InstallMappings() {

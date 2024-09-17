@@ -15,24 +15,24 @@ Application *Application::instance_ = NULL;
 Application::Application() {}
 
 void Application::initMidiInput() {
-  const char *preferedDevice =
-      Config::GetInstance()->GetValue("MIDICTRLDEVICE");
+  int preferedDeviceID = Config::GetInstance()->GetValue("MIDICTRLDEVICE");
 
   auto midiInService = MidiService::GetInstance();
   for (midiInService->InBegin(); !midiInService->InIsDone();
        midiInService->InNext()) {
     MidiInDevice &in = midiInService->InCurrentItem();
-    if ((preferedDevice) &&
-        (!strncmp(in.GetName(), preferedDevice, strlen(preferedDevice)))) {
-      if (in.Init()) {
-        if (in.Start()) {
-          Trace::Log("MIDI", "Controlling activated for MIDI interface %s",
-                     in.GetName());
-        } else {
-          in.Close();
-        }
-      }
-    }
+    // TODO: fix midi device selection to be by device int ID not name string
+
+    // if (!strncmp(in.GetName(), preferedDevice, strlen(preferedDevice))) {
+    //   if (in.Init()) {
+    //     if (in.Start()) {
+    //       Trace::Log("MIDI", "Controlling activated for MIDI interface %s",
+    //                  in.GetName());
+    //     } else {
+    //       in.Close();
+    //     }
+    //   }
+    // }
   }
 }
 
