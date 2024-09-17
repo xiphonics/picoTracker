@@ -76,7 +76,7 @@ int Project::GetMasterVolume() {
 };
 
 void Project::NudgeTempo(int value) {
-  if((GetTempo() + tempoNudge_) > 0)
+  if ((GetTempo() + tempoNudge_) > 0)
     tempoNudge_ += value;
 };
 
