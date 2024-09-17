@@ -93,6 +93,7 @@ The keyboard layout resembles a typical old console game controller
   - B+LEFT/RIGHT: Next/Previous Channel in Chain/Phrase Screen. Navigation +/- 1 in Instrument/Table Screen. Switch between Song and Live Modes in Song Screen.
 - RT+ARROWS: Navigate between the Screens.
 - LT+UP/DOWN: Jump up/down to next populated row after a blank row (great for live mode entire row queuing!)
+- LT+LEFT/RIGHT: (Song view) Nudge backward/forward (great for live mode using multiple devices!)
 
 ## Selections
 
@@ -227,7 +228,7 @@ TODO: Screencap
 
 TODO: screencap
 
-- **Tempo:**: Can be set between 60bpm [0x3c] and 400bpm [0x190]. Resolution aligned to LSDJ.
+- **Tempo:**: Can be set between 60bpm [0x3c] and 400bpm [0x190]. Resolution aligned to LSDJ. Nudge back/forward by hovering over tempo, holding B+LEFT/RIGHT
 - **Master:** Main volume goes from 10% to 200%.
 - **Transpose:** Live transposition of every triggered instruments.
 - **Compact Sequencer:** Free all unused chain/phrases.
