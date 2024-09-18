@@ -33,54 +33,81 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   bigHexVarField_.emplace_back(position, *v, 6, "Foreground: %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_NORMAL, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_BG_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "Background: %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_BACKGROUND, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_HI1_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "HiColor1:   %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_HILITE1, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_HI2_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "HiColor2:   %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_HILITE2, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_CONSOLE_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "Console:    %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_CONSOLE, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_CURSOR_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "Cursor:     %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_CURSOR, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_INFO_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "Info:       %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_INFO, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_WARN_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "Warn:       %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_WARN, position);
 
   position._y += 1;
   v = config->FindVariable(VAR_ERROR_COLOR);
   bigHexVarField_.emplace_back(position, *v, 6, "Error:      %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_ERROR, position);
 
   v = config->FindVariable(VAR_MIDI_DEVICE);
   position._y += 2;
@@ -148,7 +175,6 @@ void DeviceView::DrawView() {
 };
 
 void DeviceView::Update(Observable &, I_ObservableData *data) {
-
   if (!hasFocus_) {
     return;
   }
@@ -176,7 +202,18 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     break;
   }
   case VAR_FG_COLOR:
-    printf("FG colour update:%d", data);
+  case VAR_BG_COLOR:
+  case VAR_HI1_COLOR:
+  case VAR_HI2_COLOR:
+  case VAR_CONSOLE_COLOR:
+  case VAR_CURSOR_COLOR:
+  case VAR_INFO_COLOR:
+  case VAR_WARN_COLOR:
+  case VAR_ERROR_COLOR:
+    printf("Color updated!");
+    ((AppWindow &)w_).UpdateColorsFromConfig();
+    ((AppWindow &)w_).Clear(true);
+    w_.Update();
     break;
 
   default:
@@ -186,3 +223,9 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   focus->Draw(w_);
   isDirty_ = true;
 };
+
+void DeviceView::addSwatchField(ColorDefinition color, GUIPoint position) {
+  position._x -= 5;
+  swatchField_.emplace_back(position, color);
+  fieldList_.insert(fieldList_.end(), &(*swatchField_.rbegin()));
+}

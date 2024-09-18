@@ -13,6 +13,7 @@ add_library(application_views_baseclasses
   UIStaticField.h UIStaticField.cpp
   UITempoField.h UITempoField.cpp
   UITextField.h UITextField.cpp
+  UISwatchField.h UISwatchField.cpp
   View.h View.cpp
   ViewEvent.h ViewEvent.cpp
 )

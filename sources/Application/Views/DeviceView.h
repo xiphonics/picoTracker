@@ -1,10 +1,11 @@
-#ifndef _CONFIG_VIEW_H_
-#define _CONFIG_VIEW_H_
+#ifndef _DEVICE_VIEW_H_
+#define _DEVICE_VIEW_H_
 
 #include "BaseClasses/FieldView.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UISwatchField.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
@@ -25,8 +26,11 @@ public:
 
 protected:
 private:
+  void addSwatchField(ColorDefinition color, GUIPoint position);
+
   etl::vector<UIIntVarField, 3> intVarField_;
   etl::vector<UIActionField, 1> actionField_;
   etl::vector<UIBigHexVarField, 9> bigHexVarField_;
+  etl::vector<UISwatchField, 9> swatchField_;
 };
 #endif

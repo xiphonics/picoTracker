@@ -35,11 +35,11 @@ GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
 
-void AppWindow::defineColor(const char *colorName, GUIColor &color,
+void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
                             int paletteIndex) {
 
   Config *config = Config::GetInstance();
-  const int rgbValue = config->GetValue(colorName);
+  const int rgbValue = config->FindVariable(colorCode)->GetInt();
   if (rgbValue) {
     unsigned short r, g, b;
     r = (rgbValue >> 16) & 0xFF;
@@ -403,16 +403,16 @@ AppWindow *AppWindow::Create(GUICreateWindowParams &params,
 void AppWindow::SetDirty() { _isDirty = true; };
 
 void AppWindow::UpdateColorsFromConfig() {
-  // now assign custom colors if they have been set in the config.xml
-  defineColor("BACKGROUND", backgroundColor_, 0);
-  defineColor("FOREGROUND", normalColor_, 1);
+  // now assign custom colors if they have been set device config
+  defineColor(VAR_BG_COLOR, backgroundColor_, 0);
+  defineColor(VAR_FG_COLOR, normalColor_, 1);
   cursorColor_ = normalColor_;
-  defineColor("HICOLOR1", highlightColor_, 2);
-  defineColor("HICOLOR2", highlight2Color_, 3);
-  defineColor("CURSORCOLOR", cursorColor_, 4);
-  defineColor("INFOCOLOR", infoColor_, 5);
-  defineColor("WARNCOLOR", warnColor_, 6);
-  defineColor("ERRORCOLOR", errorColor_, 7);
+  defineColor(VAR_HI1_COLOR, highlightColor_, 2);
+  defineColor(VAR_HI2_COLOR, highlight2Color_, 3);
+  defineColor(VAR_CURSOR_COLOR, cursorColor_, 4);
+  defineColor(VAR_INFO_COLOR, infoColor_, 5);
+  defineColor(VAR_WARN_COLOR, warnColor_, 6);
+  defineColor(VAR_ERROR_COLOR, errorColor_, 7);
 };
 
 bool AppWindow::onEvent(GUIEvent &event) {
