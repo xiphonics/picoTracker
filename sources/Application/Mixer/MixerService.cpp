@@ -9,11 +9,12 @@
 
 MixerService::MixerService() : out_(0), sync_(0) {
   mode_ = MSM_AUDIO;
+
   // render value is saved as value of enum MixerServiceMode
   mode_ = (MixerServiceMode)Config::GetInstance()->GetValue("RENDER");
 };
 
-MixerService::~MixerService() {};
+MixerService::~MixerService(){};
 
 bool MixerService::Init() {
 
