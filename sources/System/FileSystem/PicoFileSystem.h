@@ -15,7 +15,7 @@ enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 class PI_File {
 public:
   PI_File(FsBaseFile file);
-  ~PI_File() {};
+  ~PI_File(){};
   int Read(void *ptr, int size);
   int GetC();
   int Write(const void *ptr, int size, int nmemb);
