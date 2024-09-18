@@ -21,7 +21,6 @@ add_library(application_instruments
 
 target_link_libraries(application_instruments PUBLIC foundation_services
                                               PUBLIC system_io
-#                                              PUBLIC soundfont
                                               PUBLIC pico_stdlib
                                               PUBLIC hardware_flash
                                               PUBLIC pico_stdlib                            
@@ -32,6 +31,7 @@ target_link_libraries(application_instruments PUBLIC foundation_services
                                               PUBLIC pico_rand
                                               PUBLIC sdfat
                                               PUBLIC platform_sdcard
+                                              PUBLIC services_time
 )
 
 target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

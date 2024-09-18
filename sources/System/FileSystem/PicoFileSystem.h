@@ -2,7 +2,6 @@
 #define _PICO_FILESYSTEM_H_
 
 #include "Adapters/picoTracker/sdcard/sdcard.h"
-#include "Application/Utils/wildcard.h"
 #include "Externals/SdFat/src/SdFat.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
@@ -16,7 +15,7 @@ enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 class PI_File {
 public:
   PI_File(FsBaseFile file);
-  ~PI_File(){};
+  ~PI_File() {};
   int Read(void *ptr, int size);
   int GetC();
   int Write(const void *ptr, int size, int nmemb);

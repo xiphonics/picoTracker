@@ -63,7 +63,4 @@
 #define AUDIO_LRCLK 19
 // #define AUDIO_MCLK    23
 
-#define DSP_CLOCK 23
-#define DSP_SWIO 28
-#define DSP_SWCLK 29
 #endif
