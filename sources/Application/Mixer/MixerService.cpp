@@ -1,5 +1,4 @@
 #include "MixerService.h"
-#include "Application/Audio/DummyAudioOut.h"
 #include "Application/Model/Config.h"
 #include "Application/Model/Mixer.h"
 #include "Services/Audio/Audio.h"
@@ -10,6 +9,7 @@
 
 MixerService::MixerService() : out_(0), sync_(0) {
   mode_ = MSM_AUDIO;
+
   // render value is saved as value of enum MixerServiceMode
   mode_ = (MixerServiceMode)Config::GetInstance()->GetValue("RENDER");
 };
@@ -25,7 +25,7 @@ bool MixerService::Init() {
   switch (mode_) {
   case MSM_FILE:
   case MSM_FILESPLIT:
-    out_ = new DummyAudioOut();
+    // This is where dummy audio was initialized for the file rendering use case
     break;
   default:
     Audio *audio = Audio::GetInstance();

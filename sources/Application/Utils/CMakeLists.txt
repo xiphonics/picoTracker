@@ -1,9 +1,7 @@
 add_library(application_utils
   HexBuffers.h HexBuffers.cpp
-  StringTokenizer.h
   char.h char.cpp
   fixed.h fixed.cpp
-  wildcard.h wildcard.cpp
   randomnames.h
 )
 

@@ -2,7 +2,6 @@
 #define _PICO_FILESYSTEM_H_
 
 #include "Adapters/picoTracker/sdcard/sdcard.h"
-#include "Application/Utils/wildcard.h"
 #include "Externals/SdFat/src/SdFat.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"

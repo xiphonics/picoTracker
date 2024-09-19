@@ -1,6 +1,5 @@
 add_library(application_audio
   AudioFileStreamer.h AudioFileStreamer.cpp
-  DummyAudioOut.h DummyAudioOut.cpp
 )
 
 target_link_libraries(application_audio PUBLIC system_process
