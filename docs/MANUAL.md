@@ -477,6 +477,7 @@ sends a program change command on the current channel. 0000 is program change 1
 **PitchSLide performs a linear pitch slide from previous note value to pitch bb at speed aa**
 - PSL is also time for the first two byte nibble
 - PITCH is linear pitch change
+For MIDI instruments, this plays as portomento the next note (ie. starts the next note *before* stopping this one)
 
 ## RTG aabb (RTRG in lgpt)
 

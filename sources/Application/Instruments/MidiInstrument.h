@@ -60,6 +60,8 @@ private:
   int remainingTicks_;
   bool playing_;
   bool retrig_;
+  bool porto_;
+  char porto_pending_[SONG_CHANNEL_COUNT];
   int retrigLoop_;
   char velocity_ = 127;
   TableSaveState tableState_;
