@@ -404,15 +404,15 @@ void AppWindow::SetDirty() { _isDirty = true; };
 
 void AppWindow::UpdateColorsFromConfig() {
   // now assign custom colors if they have been set device config
-  defineColor(VAR_BG_COLOR, backgroundColor_, 0);
-  defineColor(VAR_FG_COLOR, normalColor_, 1);
+  defineColor(FourCC::VarBGColor, backgroundColor_, 0);
+  defineColor(FourCC::VarFGColor, normalColor_, 1);
   cursorColor_ = normalColor_;
-  defineColor(VAR_HI1_COLOR, highlightColor_, 2);
-  defineColor(VAR_HI2_COLOR, highlight2Color_, 3);
-  defineColor(VAR_CURSOR_COLOR, cursorColor_, 4);
-  defineColor(VAR_INFO_COLOR, infoColor_, 5);
-  defineColor(VAR_WARN_COLOR, warnColor_, 6);
-  defineColor(VAR_ERROR_COLOR, errorColor_, 7);
+  defineColor(FourCC::VarHI1Color, highlightColor_, 2);
+  defineColor(FourCC::VarHI2Color, highlight2Color_, 3);
+  defineColor(FourCC::VarCursorColor, cursorColor_, 4);
+  defineColor(FourCC::VarInfoColor, infoColor_, 5);
+  defineColor(FourCC::VarWarnColor, warnColor_, 6);
+  defineColor(FourCC::VarErrorColor, errorColor_, 7);
 };
 
 bool AppWindow::onEvent(GUIEvent &event) {

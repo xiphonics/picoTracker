@@ -22,28 +22,6 @@ enum SampleInstrumentLoopMode {
 };
 
 #define NO_SAMPLE (-1)
-#define SIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
-#define SIP_CRUSH MAKE_FOURCC('C', 'R', 'S', 'H')
-#define SIP_CRUSHVOL MAKE_FOURCC('C', 'R', 'S', 'V')
-#define SIP_DOWNSMPL MAKE_FOURCC('D', 'S', 'P', 'L')
-#define SIP_ROOTNOTE MAKE_FOURCC('R', 'O', 'O', 'T')
-#define SIP_FINETUNE MAKE_FOURCC('F', 'N', 'T', 'N')
-#define SIP_PAN MAKE_FOURCC('P', 'A', 'N', '_')
-#define SIP_START MAKE_FOURCC('S', 'T', 'R', 'T')
-#define SIP_END MAKE_FOURCC('E', 'N', 'D', '_')
-#define SIP_LOOPMODE MAKE_FOURCC('L', 'M', 'O', 'D')
-#define SIP_LOOPSTART MAKE_FOURCC('L', 'S', 'T', 'A')
-#define SIP_LOOPLEN MAKE_FOURCC('L', 'L', 'E', 'N')
-#define SIP_INTERPOLATION MAKE_FOURCC('I', 'N', 'T', 'P')
-#define SIP_SAMPLE MAKE_FOURCC('S', 'M', 'P', 'L')
-#define SIP_FILTMODE MAKE_FOURCC('F', 'I', 'M', 'O')
-#define SIP_FILTMIX MAKE_FOURCC('F', 'M', 'I', 'X')
-#define SIP_FILTCUTOFF MAKE_FOURCC('F', 'C', 'U', 'T')
-#define SIP_FILTRESO MAKE_FOURCC('F', 'R', 'E', 'S')
-#define SIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
-#define SIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
-#define SIP_FBTUNE MAKE_FOURCC('F', 'B', 'T', 'U')
-#define SIP_FBMIX MAKE_FOURCC('F', 'B', 'M', 'X')
 
 class SampleInstrument : public I_Instrument, I_Observer {
 

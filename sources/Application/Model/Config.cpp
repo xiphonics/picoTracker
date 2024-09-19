@@ -28,7 +28,8 @@ static const etl::flat_map validParameters{
     etl::pair{ParamString("MIDISYNC"), 0x1},
 };
 
-Config::Config() : lineOut_("lineout", VAR_LINEOUT, lineOutOptions, 3, 0) {
+Config::Config()
+    : lineOut_("lineout", FourCC::VarLineOut, lineOutOptions, 3, 0) {
   PersistencyDocument doc;
 
   if (!doc.Load(CONFIG_FILE_PATH)) {
@@ -122,31 +123,31 @@ void Config::processParams(const char *name, int value) {
     lineOut_.SetInt(value);
     insert(end(), &lineOut_);
   } else {
-    auto fourcc = 0;
+    auto fourcc = FourCC::Default;
     // TODO: need to be able to assign fourcc based on name of element from the
     // Xml config
     if (!strcmp(name, "FOREGROUND")) {
-      fourcc = VAR_FG_COLOR;
+      fourcc = FourCC::VarFGColor;
     } else if (!strcmp(name, "BACKGROUND")) {
-      fourcc = VAR_BG_COLOR;
+      fourcc = FourCC::VarBGColor;
     } else if (!strcmp(name, "HICOLOR1")) {
-      fourcc = VAR_HI1_COLOR;
+      fourcc = FourCC::VarHI1Color;
     } else if (!strcmp(name, "HICOLOR2")) {
-      fourcc = VAR_HI2_COLOR;
+      fourcc = FourCC::VarHI2Color;
     } else if (!strcmp(name, "CONSOLECOLOR")) {
-      fourcc = VAR_CONSOLE_COLOR;
+      fourcc = FourCC::VarConsoleColor;
     } else if (!strcmp(name, "CURSORCOLOR")) {
-      fourcc = VAR_CURSOR_COLOR;
+      fourcc = FourCC::VarCursorColor;
     } else if (!strcmp(name, "INFOCOLOR")) {
-      fourcc = VAR_INFO_COLOR;
+      fourcc = FourCC::VarInfoColor;
     } else if (!strcmp(name, "WARNCOLOR")) {
-      fourcc = VAR_WARN_COLOR;
+      fourcc = FourCC::VarWarnColor;
     } else if (!strcmp(name, "ERRORCOLOR")) {
-      fourcc = VAR_ERROR_COLOR;
+      fourcc = FourCC::VarErrorColor;
     } else if (!strcmp(name, "MIDIDEVICE")) {
-      fourcc = VAR_MIDI_DEVICE;
+      fourcc = FourCC::VarMidiDevice;
     } else if (!strcmp(name, "MIDISYNC")) {
-      fourcc = VAR_MIDI_SYNC;
+      fourcc = FourCC::VarMidiSync;
     }
     Variable *v = new Variable(name, fourcc, value);
     insert(end(), v);

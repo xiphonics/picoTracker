@@ -35,24 +35,24 @@ CommandDispatcher::~CommandDispatcher(){};
 bool CommandDispatcher::Init() {
 
   MixerService *ms = MixerService::GetInstance();
-  mapTrigger(TRIG_VOLUME_INCREASE, URL_VOLUME_INCREASE, *ms);
-  mapTrigger(TRIG_VOLUME_DECREASE, URL_VOLUME_DECREASE, *ms);
+  mapTrigger(FourCC::TrigVolumeIncrease, URL_VOLUME_INCREASE, *ms);
+  mapTrigger(FourCC::TrigVolumeDecrease, URL_VOLUME_DECREASE, *ms);
 
   EventDispatcher *ed = EventDispatcher::GetInstance();
-  mapTrigger(TRIG_EVENT_A, URL_EVENT_A, *ed);
-  mapTrigger(TRIG_EVENT_B, URL_EVENT_B, *ed);
-  mapTrigger(TRIG_EVENT_UP, URL_EVENT_UP, *ed);
-  mapTrigger(TRIG_EVENT_DOWN, URL_EVENT_DOWN, *ed);
-  mapTrigger(TRIG_EVENT_LEFT, URL_EVENT_LEFT, *ed);
-  mapTrigger(TRIG_EVENT_RIGHT, URL_EVENT_RIGHT, *ed);
-  mapTrigger(TRIG_EVENT_LSHOULDER, URL_EVENT_LSHOULDER, *ed);
-  mapTrigger(TRIG_EVENT_RSHOULDER, URL_EVENT_RSHOULDER, *ed);
-  mapTrigger(TRIG_EVENT_START, URL_EVENT_START, *ed);
+  mapTrigger(FourCC::TrigEventEnter, URL_EVENT_A, *ed);
+  mapTrigger(FourCC::TrigEventEdit, URL_EVENT_B, *ed);
+  mapTrigger(FourCC::TrigEventUp, URL_EVENT_UP, *ed);
+  mapTrigger(FourCC::TrigEventDown, URL_EVENT_DOWN, *ed);
+  mapTrigger(FourCC::TrigEventLeft, URL_EVENT_LEFT, *ed);
+  mapTrigger(FourCC::TrigEventRight, URL_EVENT_RIGHT, *ed);
+  mapTrigger(FourCC::TrigEventAlt, URL_EVENT_LSHOULDER, *ed);
+  mapTrigger(FourCC::TrigEventNav, URL_EVENT_RSHOULDER, *ed);
+  mapTrigger(FourCC::TrigEventPlay, URL_EVENT_START, *ed);
 
   ApplicationCommandDispatcher *acd =
       ApplicationCommandDispatcher::GetInstance();
-  mapTrigger(TRIG_TEMPO_TAP, URL_TEMPO_TAP, *acd);
-  mapTrigger(TRIG_SEQ_QUEUE_ROW, URL_QUEUE_ROW, *acd);
+  mapTrigger(FourCC::TrigTempoTap, URL_TEMPO_TAP, *acd);
+  mapTrigger(FourCC::TrigSeqQueueRow, URL_QUEUE_ROW, *acd);
 
   //	ControlRoom::GetInstance()->Dump() ;
   return true;

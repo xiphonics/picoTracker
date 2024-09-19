@@ -807,7 +807,7 @@ void SongView::DrawView() {
 
   props.invert_ = false;
 
-  Variable *v = viewData_->project_->FindVariable(VAR_PROJECTNAME);
+  Variable *v = viewData_->project_->FindVariable(FourCC::VarProjectName);
 
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
   DrawString(pos._x + 5, pos._y, projectName.c_str(), props);

@@ -16,11 +16,12 @@
 
 Project::Project(const char *name)
     : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0),
-      tempo_("tempo", VAR_TEMPO, 138),
-      masterVolume_("master", VAR_MASTERVOL, 100),
-      wrap_("wrap", VAR_WRAP, false), transpose_("transpose", VAR_TRANSPOSE, 0),
-      scale_("scale", VAR_SCALE, scaleNames, numScales, 0),
-      projectName_("projectname", VAR_PROJECTNAME, name) {
+      tempo_("tempo", FourCC::VarTempo, 138),
+      masterVolume_("master", FourCC::VarMasterVolume, 100),
+      wrap_("wrap", FourCC::VarWrap, false),
+      transpose_("transpose", FourCC::VarTranspose, 0),
+      scale_("scale", FourCC::VarScale, scaleNames, numScales, 0),
+      projectName_("projectname", FourCC::VarProjectName, name) {
 
   //  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
   this->insert(end(), &tempo_);
@@ -47,7 +48,7 @@ Project::Project(const char *name)
   Trace::Log("PROJECT", "selected midi:%s", deviceName.c_str());
 
   WatchedVariable *midi = new WatchedVariable(
-      "midi", VAR_MIDIDEVICE, midiDeviceList_, midiDeviceListSize_);
+      "midi", FourCC::VarMidiDevice, midiDeviceList_, midiDeviceListSize_);
   this->insert(end(), midi);
   midi->AddObserver(*this);
 
@@ -70,31 +71,31 @@ Project::Project(const char *name)
 Project::~Project() { delete instrumentBank_; };
 
 int Project::GetScale() {
-  Variable *v = FindVariable(VAR_SCALE);
+  Variable *v = FindVariable(FourCC::VarScale);
   NAssert(v);
   return v->GetInt();
 }
 
 int Project::GetTempo() {
-  Variable *v = FindVariable(VAR_TEMPO);
+  Variable *v = FindVariable(FourCC::VarTempo);
   NAssert(v);
   int tempo = v->GetInt() + tempoNudge_;
   return tempo;
 };
 
 int Project::GetMasterVolume() {
-  Variable *v = FindVariable(VAR_MASTERVOL);
+  Variable *v = FindVariable(FourCC::VarMasterVolume);
   NAssert(v);
   return v->GetInt();
 };
 
 void Project::GetProjectName(char *name) {
-  Variable *v = FindVariable(VAR_PROJECTNAME);
+  Variable *v = FindVariable(FourCC::VarProjectName);
   strcpy(name, v->GetString().c_str());
 }
 
 void Project::SetProjectName(char *name) {
-  Variable *v = FindVariable(VAR_PROJECTNAME);
+  Variable *v = FindVariable(FourCC::VarProjectName);
   v->SetString(name, true);
 }
 
@@ -111,7 +112,7 @@ void Project::Trigger() {
 };
 
 int Project::GetTranspose() {
-  Variable *v = FindVariable(VAR_TRANSPOSE);
+  Variable *v = FindVariable(FourCC::VarTranspose);
   NAssert(v);
   int result = v->GetInt();
   if (result > 0x80) {
@@ -121,7 +122,7 @@ int Project::GetTranspose() {
 };
 
 bool Project::Wrap() {
-  Variable *v = FindVariable(VAR_WRAP);
+  Variable *v = FindVariable(FourCC::VarWrap);
   NAssert(v);
   return v->GetBool();
 };
@@ -137,7 +138,7 @@ InstrumentBank *Project::GetInstrumentBank() { return instrumentBank_; };
 void Project::Update(Observable &o, I_ObservableData *d) {
   WatchedVariable &v = (WatchedVariable &)o;
   switch (v.GetID()) {
-  case VAR_MIDIDEVICE:
+  case FourCC::VarMidiDevice:
     MidiService::GetInstance()->SelectDevice(
         std::string(v.GetString().c_str()));
     /*           bool enabled=v.GetBool() ;
@@ -201,9 +202,9 @@ void Project::Purge() {
       if (!song_.phrase_.IsUsed(i)) {
         *data = 0xFF;
         *data2 = 0xFF;
-        *cmd1 = I_CMD_NONE;
+        *cmd1 = FourCC::InstrumentCommandNone;
         *param1 = 0;
-        *cmd2 = I_CMD_NONE;
+        *cmd2 = FourCC::InstrumentCommandNone;
         *param2 = 0;
       }
       data++;
@@ -378,7 +379,7 @@ void Project::OnTempoTap() {
       }
       int tempo =
           int(60000 * (tempoTapCount_ - 1) / (float)(now - lastTap_[0]));
-      Variable *v = FindVariable(VAR_TEMPO);
+      Variable *v = FindVariable(FourCC::VarTempo);
       v->SetInt(tempo);
     } else {
       tempoTapCount_ = 1;

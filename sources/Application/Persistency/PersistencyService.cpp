@@ -8,7 +8,7 @@
 #define PROJECT_STATE_FILE "/.current"
 
 PersistencyService::PersistencyService()
-    : Service(MAKE_FOURCC('S', 'V', 'P', 'S')){};
+    : Service(FourCC::ServicePersistency){};
 
 PersistencyResult PersistencyService::CreateProject() {
   Trace::Log("APPLICATION", "create new project\n");

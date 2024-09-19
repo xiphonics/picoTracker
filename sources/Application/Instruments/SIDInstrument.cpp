@@ -16,25 +16,34 @@ cRSID SIDInstrument::sid2_(6581, false, 44100);
 SIDInstrument *SIDInstrument::SID2RenderMaster = 0;
 // bool SIDInstrument::rendered1_ = false;
 
-Variable SIDInstrument::vwf1_("VWF1", DIP_VWF1, sidWaveformText, DWF_LAST, 0x1);
-Variable SIDInstrument::vwf2_("VWF2", DIP_VWF2, sidWaveformText, DWF_LAST, 0x1);
+Variable SIDInstrument::vwf1_("VWF1", FourCC::SIDInstrument1Waveform,
+                              sidWaveformText, DWF_LAST, 0x1);
+Variable SIDInstrument::vwf2_("VWF2", FourCC::SIDInstrument2Waveform,
+                              sidWaveformText, DWF_LAST, 0x1);
 
-Variable SIDInstrument::fltcut1_("FILTCUT1", DIP_FILTCUT1, 0x1FF);
-Variable SIDInstrument::fltres1_("RES1", DIP_RES1, 0x0);
-Variable SIDInstrument::fltmode1_("FMODE1", DIP_FMODE1, sidFilterModeText,
-                                  DFM_LAST, 0x0);
-Variable SIDInstrument::vol1_("DIP_VOLUME1", DIP_VOLUME1, 0xF);
+Variable SIDInstrument::fltcut1_("FILTCUT1", FourCC::SIDInstrument1FilterCut,
+                                 0x1FF);
+Variable SIDInstrument::fltres1_("RES1", FourCC::SIDInstrument1FilterResonance,
+                                 0x0);
+Variable SIDInstrument::fltmode1_("FMODE1", FourCC::SIDInstrument1FilterMode,
+                                  sidFilterModeText, DFM_LAST, 0x0);
+Variable SIDInstrument::vol1_("DIP_VOLUME1", FourCC::SIDInstrument1Volume, 0xF);
 
-Variable SIDInstrument::fltcut2_("FILTCUT2", DIP_FILTCUT2, 0x1FF);
-Variable SIDInstrument::fltres2_("RES2", DIP_RES2, 0x0);
-Variable SIDInstrument::fltmode2_("FMODE2", DIP_FMODE2, sidFilterModeText,
-                                  DFM_LAST, 0x0);
-Variable SIDInstrument::vol2_("DIP_VOLUME2", DIP_VOLUME2, 0xF);
+Variable SIDInstrument::fltcut2_("FILTCUT2", FourCC::SIDInstrument2FilterCut,
+                                 0x1FF);
+Variable SIDInstrument::fltres2_("RES2", FourCC::SIDInstrument2FilterResonance,
+                                 0x0);
+Variable SIDInstrument::fltmode2_("FMODE2", FourCC::SIDInstrument2FilterMode,
+                                  sidFilterModeText, DFM_LAST, 0x0);
+Variable SIDInstrument::vol2_("DIP_VOLUME2", FourCC::SIDInstrument2Volume, 0xF);
 
 SIDInstrument::SIDInstrument(SIDInstrumentInstance chip, int osc)
-    : chip_(chip), osc_(osc), vpw_("VPW", DIP_VPW, 0x800),
-      vsync_("VSYNC", DIP_VSYNC, false), vring_("VRING", DIP_VRING, false),
-      vadsr_("VADSR", DIP_VADSR, 0x2282), vfon_("VFON", DIP_VFON, false) {
+    : chip_(chip), osc_(osc),
+      vpw_("VPW", FourCC::SIDInstrumentPulseWidth, 0x800),
+      vsync_("VSYNC", FourCC::SIDInstrumentVSync, false),
+      vring_("VRING", FourCC::SIDInstrumentRingModulator, false),
+      vadsr_("VADSR", FourCC::SIDInstrumentADSR, 0x2282),
+      vfon_("VFON", FourCC::SIDInstrumentFilterOn, false) {
 
   name_ = "SID #";
   etl::string<1> num;
@@ -45,9 +54,10 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip, int osc)
   etl::to_string(osc_, num, format);
   name_ += num;
 
-  Variable *v = new Variable("table", DIP_TABLE, -1);
+  Variable *v = new Variable("table", FourCC::SIDInstrumentTable, -1);
   insert(end(), v);
-  v = new Variable("table automation", DIP_TABLEAUTO, false);
+  v = new Variable("table automation", FourCC::SIDInstrumentTableAutomation,
+                   false);
   insert(end(), v);
 
   insert(end(), &vpw_);
@@ -253,7 +263,7 @@ bool SIDInstrument::IsInitialized() {
 
 void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
-  case I_CMD_GTOF:
+  case FourCC::InstrumentCommandGateOff:
     sid_->Register[4 + osc_ * 7] &= ~1; // Set gate bit off
     break;
   }
@@ -262,12 +272,12 @@ void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 etl::string<24> SIDInstrument::GetName() { return name_; }
 
 int SIDInstrument::GetTable() {
-  Variable *v = FindVariable(DIP_TABLE);
+  Variable *v = FindVariable(FourCC::SIDInstrumentTable);
   return v->GetInt();
 };
 
 bool SIDInstrument::GetTableAutomation() {
-  Variable *v = FindVariable(DIP_TABLEAUTO);
+  Variable *v = FindVariable(FourCC::SIDInstrumentTableAutomation);
   return v->GetBool();
 };
 

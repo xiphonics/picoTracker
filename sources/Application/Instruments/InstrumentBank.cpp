@@ -240,9 +240,10 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           subelem = doc->NextSibling();
         }
         if (doc->version_ < 38) {
-          Variable *cvl = instr->FindVariable(SIP_CRUSHVOL);
-          Variable *vol = instr->FindVariable(SIP_VOLUME);
-          Variable *crs = instr->FindVariable(SIP_CRUSH);
+          Variable *cvl =
+              instr->FindVariable(FourCC::SampleInstrumentCrushVolume);
+          Variable *vol = instr->FindVariable(FourCC::SampleInstrumentVolume);
+          Variable *crs = instr->FindVariable(FourCC::SampleInstrumentCrush);
           if ((vol) && (cvl) && (crs)) {
             if (crs->GetInt() != 16) {
               int temp = vol->GetInt();
@@ -266,7 +267,7 @@ void InstrumentBank::Init() {
 unsigned short InstrumentBank::GetNext() {
   for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
     SampleInstrument *si = (SampleInstrument *)instrument_[i];
-    Variable *sample = si->FindVariable(SIP_SAMPLE);
+    Variable *sample = si->FindVariable(FourCC::SampleInstrumentSample);
     if (sample) {
       if (sample->GetInt() == -1) {
         return i;

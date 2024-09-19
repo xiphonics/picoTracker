@@ -12,11 +12,13 @@
 #include <assert.h>
 
 MacroInstrument::MacroInstrument()
-    : shape_("shape", BIP_SHAPE, braids::algo_values,
+    : shape_("shape", FourCC::MacroInstrumentShape, braids::algo_values,
              braids::MACRO_OSC_SHAPE_LAST - 2, 0),
-      timbre_("timbre", BIP_TIMBRE, 0x7f), color_("color", BIP_COLOR, 0x7f),
-      attack_("Attack", BIP_ATTACK, 0), decay_("Decay", BIP_DECAY, 0x05),
-      signature_("Signature", BIP_SIGNATURE, 0) {
+      timbre_("timbre", FourCC::MacroInstrmentTimbre, 0x7f),
+      color_("color", FourCC::MacroInstrumentColor, 0x7f),
+      attack_("Attack", FourCC::MacroInstrumentAttack, 0),
+      decay_("Decay", FourCC::MacroInstrumentDecay, 0x05),
+      signature_("Signature", FourCC::MacroInstrumentSignature, 0) {
 
   running_ = false;
 
@@ -47,7 +49,7 @@ void MacroInstrument::OnStart(){/* tableState_.Reset();*/};
 
 bool MacroInstrument::Start(int channel, unsigned char midinote,
                             bool cleanstart) {
-  Variable *vShape = FindVariable(BIP_SHAPE);
+  Variable *vShape = FindVariable(FourCC::MacroInstrumentShape);
   osc_shape_ = static_cast<braids::MacroOscillatorShape>(vShape->GetInt());
 
   running_ = true;
@@ -131,7 +133,7 @@ void MacroInstrument::Update(Observable &o, I_ObservableData *d){};
 void MacroInstrument::ProcessCommand(int channel, FourCC cc, ushort value){};
 
 etl::string<24> MacroInstrument::GetName() {
-  Variable *v = FindVariable(BIP_SHAPE);
+  Variable *v = FindVariable(FourCC::MacroInstrumentShape);
   return v->GetString();
 };
 

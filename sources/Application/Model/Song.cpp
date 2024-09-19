@@ -114,11 +114,11 @@ void Song::RestoreContent(PersistencyDocument *doc) {
       if (*data != 0xFF) {
         phrase_.SetUsed(i);
       }
-      if (*table1 == I_CMD_TABL) {
+      if (*table1 == FourCC::InstrumentCommandTable) {
         *param1 &= 0x7F;
         th->SetUsed((*param1));
       };
-      if (*table2 == I_CMD_TABL) {
+      if (*table2 == FourCC::InstrumentCommandTable) {
         *param2 &= 0x7F;
         th->SetUsed((*param2));
       };

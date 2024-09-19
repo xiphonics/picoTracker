@@ -5,26 +5,6 @@
 #include "Externals/opal/opal.h"
 #include "I_Instrument.h"
 
-#define OIP_MODE MAKE_FOURCC('O', 'M', 'D', 'E')      // 2-op/4-op
-#define OIP_FEEDBACK MAKE_FOURCC('O', 'F', 'B', 'C')  // feedback
-#define OIP_ALGO MAKE_FOURCC('O', 'A', 'L', 'G')      // Algo
-#define OIP_ADSR1 MAKE_FOURCC('O', '1', 'A', 'D')     // ADSR
-#define OIP_WAVEFORM1 MAKE_FOURCC('O', '1', 'W', 'F') // Waveform
-#define OIP_OUTPUT1 MAKE_FOURCC('O', '1', 'L', 'V')   // Output level
-#define OIP_SCALE1 MAKE_FOURCC('O', '1', 'K', 'S')    // Key scale
-#define OIP_ADSR2 MAKE_FOURCC('O', '2', 'A', 'D')     // ADSR
-#define OIP_WAVEFORM2 MAKE_FOURCC('O', '2', 'W', 'F') // Waveform
-#define OIP_OUTPUT2 MAKE_FOURCC('O', '2', 'L', 'V')   // Output level
-#define OIP_SCALE2 MAKE_FOURCC('O', '2', 'K', 'S')    // Key scale
-#define OIP_ADSR3 MAKE_FOURCC('O', '3', 'A', 'D')     // ADSR
-#define OIP_WAVEFORM3 MAKE_FOURCC('O', '3', 'W', 'F') // Waveform
-#define OIP_OUTPUT3 MAKE_FOURCC('O', '3', 'L', 'V')   // Output level
-#define OIP_SCALE3 MAKE_FOURCC('O', '3', 'K', 'S')    // Key scale
-#define OIP_ADSR4 MAKE_FOURCC('O', '4', 'A', 'D')     // ADSR
-#define OIP_WAVEFORM4 MAKE_FOURCC('O', '4', 'W', 'F') // Waveform
-#define OIP_OUTPUT4 MAKE_FOURCC('O', '4', 'L', 'V')   // Output level
-#define OIP_SCALE4 MAKE_FOURCC('O', '4', 'K', 'S')    // Key scale
-
 class OpalInstrument : public I_Instrument {
 
 public:

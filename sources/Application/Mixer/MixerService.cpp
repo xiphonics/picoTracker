@@ -185,11 +185,11 @@ void MixerService::Execute(FourCC id, float value) {
     Audio *audio = Audio::GetInstance();
     int volume = audio->GetMixerVolume();
     switch (id) {
-    case TRIG_VOLUME_INCREASE:
+    case FourCC::TrigVolumeIncrease:
       if (volume < 100)
         volume += 1;
       break;
-    case TRIG_VOLUME_DECREASE:
+    case FourCC::TrigVolumeDecrease:
       if (volume > 0)
         volume -= 1;
       break;

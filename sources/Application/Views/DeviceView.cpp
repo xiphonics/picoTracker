@@ -29,7 +29,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   auto config = Config::GetInstance();
 
   position._y += 1;
-  Variable *v = config->FindVariable(VAR_FG_COLOR);
+  Variable *v = config->FindVariable(FourCC::VarFGColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Foreground: %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -38,7 +38,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_NORMAL, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_BG_COLOR);
+  v = config->FindVariable(FourCC::VarBGColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Background: %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -47,7 +47,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_BACKGROUND, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_HI1_COLOR);
+  v = config->FindVariable(FourCC::VarHI1Color);
   bigHexVarField_.emplace_back(position, *v, 6, "HiColor1:   %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -56,7 +56,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_HILITE1, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_HI2_COLOR);
+  v = config->FindVariable(FourCC::VarHI2Color);
   bigHexVarField_.emplace_back(position, *v, 6, "HiColor2:   %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -65,7 +65,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_HILITE2, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_CONSOLE_COLOR);
+  v = config->FindVariable(FourCC::VarConsoleColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Console:    %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -74,7 +74,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_CONSOLE, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_CURSOR_COLOR);
+  v = config->FindVariable(FourCC::VarCursorColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Cursor:     %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -83,7 +83,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_CURSOR, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_INFO_COLOR);
+  v = config->FindVariable(FourCC::VarInfoColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Info:       %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -92,7 +92,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_INFO, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_WARN_COLOR);
+  v = config->FindVariable(FourCC::VarWarnColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Warn:       %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -101,7 +101,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   addSwatchField(CD_WARN, position);
 
   position._y += 1;
-  v = config->FindVariable(VAR_ERROR_COLOR);
+  v = config->FindVariable(FourCC::VarErrorColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Error:      %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -109,23 +109,24 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   addSwatchField(CD_ERROR, position);
 
-  v = config->FindVariable(VAR_MIDI_DEVICE);
+  v = config->FindVariable(FourCC::VarMidiDevice);
   position._y += 2;
   intVarField_.emplace_back(position, *v, "MIDI device: %s", 0, 0, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  v = config->FindVariable(VAR_MIDI_SYNC);
+  v = config->FindVariable(FourCC::VarMidiSync);
   position._y += 1;
   intVarField_.emplace_back(position, *v, "MIDI sync: %s", 0, 0, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
-  v = config->FindVariable(VAR_LINEOUT);
+  v = config->FindVariable(FourCC::VarLineOut);
   intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
-  actionField_.emplace_back("Update firmware", ACTION_BOOTSEL, position);
+  actionField_.emplace_back("Update firmware", FourCC::ActionBootSelect,
+                            position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 }
@@ -190,7 +191,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   Player *player = Player::GetInstance();
 
   switch (fourcc) {
-  case ACTION_BOOTSEL: {
+  case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
       MessageBox *mb =
           new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
@@ -201,15 +202,15 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   }
-  case VAR_FG_COLOR:
-  case VAR_BG_COLOR:
-  case VAR_HI1_COLOR:
-  case VAR_HI2_COLOR:
-  case VAR_CONSOLE_COLOR:
-  case VAR_CURSOR_COLOR:
-  case VAR_INFO_COLOR:
-  case VAR_WARN_COLOR:
-  case VAR_ERROR_COLOR:
+  case FourCC::VarFGColor:
+  case FourCC::VarBGColor:
+  case FourCC::VarHI1Color:
+  case FourCC::VarHI2Color:
+  case FourCC::VarConsoleColor:
+  case FourCC::VarCursorColor:
+  case FourCC::VarInfoColor:
+  case FourCC::VarWarnColor:
+  case FourCC::VarErrorColor:
     printf("Color updated!");
     ((AppWindow &)w_).UpdateColorsFromConfig();
     ((AppWindow &)w_).Clear(true);

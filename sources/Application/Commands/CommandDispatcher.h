@@ -27,7 +27,7 @@ protected:
 
 private:
   AssignableControlNode *node_;
-  int id_;
+  FourCC id_;
   CommandExecuter &executer_;
 };
 

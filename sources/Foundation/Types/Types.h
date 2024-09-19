@@ -1,365 +1,184 @@
 #ifndef _APP_TYPES_H_
 #define _APP_TYPES_H_
 
+#include "Externals/etl/include/etl/enum_type.h"
 #include <stdint.h>
 
-// #define FOURCC(i) (((i&0xff000000)>>24) | ((i&0x00ff0000)>>8) |
-// ((i&0x0000ff00)<<8) | ((i&0x000000ff)<<24)) #ifdef __ppc__ #define
-// MAKE_FOURCC(ch0,ch1,ch2,ch3) (ch3 | ch2<<8 | ch1<<16 | ch0<<24) #else #define
-// MAKE_FOURCC(ch0,ch1,ch2,ch3) (ch0 | ch1<<8 | ch2<<16 | ch3<<24) #endif
+struct FourCC {
+  // While the names of the FourCC codes can be changed, their values CANNOT.
+  // Values are used as is in save files, so any changes would cause save files
+  // to break.
+  enum enum_type {
+    InstrumentCommandArpeggiator = 0,          // ARPG
+    InstrumentCommandCrush = 2,                // CRSH dup
+    InstrumentCommandDelay = 4,                // DLAY
+    InstrumentCommandFilterCut = 20,           // FCUT
+    InstrumentCommandLowPassFilter = 22,       // FLTR
+    InstrumentCommandFilterResonance = 25,     // FRES
+    InstrumentCommandGateOff = 92,             // GTOF
+    InstrumentCommandGroove = 26,              // GROV
+    InstrumentCommandHop = 27,                 // HOP
+    InstrumentCommandRetrigger = 52,           // RTRG
+    InstrumentCommandInstrumentRetrigger = 29, // IRTG
+    InstrumentCommandKill = 30,                // KILL
+    InstrumentCommandLegato = 31,              // LEGA
+    InstrumentCommandLoopOfset = 36,           // LPOF
+    InstrumentCommandMidiCC = 38,              // MDCC
+    InstrumentCommandMidiPC = 39,              // MDPG,
+    InstrumentCommandPan = 42,                 // PAN
+    InstrumentCommandPitchFineTune = 44,       // PFIN
+    InstrumentCommandPlayOfset = 46,           // PLOF
+    InstrumentCommandPitchSlide = 48,          // PTCH
+    InstrumentCommandStop = 55,                // STOP
+    InstrumentCommandTable = 58,               // TABL dup
+    InstrumentCommandTempo = 62,               // TMPO
+    InstrumentCommandVelocity = 66,            // VELM
+    InstrumentCommandVolume = 69,              // VOLM dup
+    InstrumentCommandNone = 45,                // ----
 
-#ifdef WIN32
-#define strcasecmp _stricmp
-#endif
+    SampleInstrumentCrushVolume = 3,
+    SampleInstrumentVolume = 69, // dup
+    SampleInstrumentCrush = 2,   // dup
+    SampleInstrumentSample = 54,
+    SampleInstrumentInterpolation = 28,
+    SampleInstrumentDownsample = 5,
+    SampleInstrumentRootNote = 51,
+    SampleInstrumentFineTune = 24,
+    SampleInstrumentPan = 43,
+    SampleInstrumentFilterCutOff = 22,
+    SampleInstrumentFilterResonance = 25,
+    SampleInstrumentFilterType = 23,
+    SampleInstrumentFilterMode = 21,
+    SampleInstrumentStart = 56,
+    SampleInstrumentLoopMode = 34,
+    SampleInstrumentLoopStart = 37,
+    SampleInstrumentEnd = 6,
+    SampleInstrumentTable = 58,           // dup
+    SampleInstrumentTableAutomation = 60, // dup
 
-// typedef unsigned int FourCC ;
-typedef unsigned char FourCC;
+    MacroInstrumentShape = 93,
+    MacroInstrmentTimbre = 94,
+    MacroInstrumentColor = 95,
+    MacroInstrumentAttack = 96,
+    MacroInstrumentDecay = 97,
+    MacroInstrumentSignature = 98,
+
+    MidiInstrumentChannel = 1,
+    MidiInstrumentNoteLength = 32,
+    MidiInstrumentVolume = 69,
+    MidiInstrumentTable = 58,           // dup
+    MidiInstrumentTableAutomation = 60, // dup
+
+    SIDInstrument1Waveform = 72,
+    SIDInstrument2Waveform = 73,
+    SIDInstrument3Waveform = 74,
+    SIDInstrument1FilterCut = 79,
+    SIDInstrument2FilterCut = 83,
+    SIDInstrument3FilterCut = 87,
+    SIDInstrument1FilterResonance = 80,
+    SIDInstrument2FilterResonance = 84,
+    SIDInstrument3FilterResonance = 88,
+    SIDInstrument1FilterMode = 81,
+    SIDInstrument2FilterMode = 85,
+    SIDInstrument3FilterMode = 89,
+    SIDInstrument1Volume = 82,
+    SIDInstrument2Volume = 86,
+    SIDInstrument3Volume = 90,
+    SIDInstrumentPulseWidth = 71,
+    SIDInstrumentVSync = 75,
+    SIDInstrumentRingModulator = 76,
+    SIDInstrumentADSR = 77,
+    SIDInstrumentFilterOn = 78,
+    SIDInstrumentVoice3Off = 91,
+    SIDInstrumentTable = 58,           // dup
+    SIDInstrumentTableAutomation = 60, // dup
+
+    ServicePersistency = 57,
+
+    TrigTempoTap = 65,
+    TrigSeqQueueRow = 64,
+    TrigVolumeIncrease = 68,
+    TrigVolumeDecrease = 67,
+    TrigEventEnter = 7,
+    TrigEventEdit = 8,
+    TrigEventLeft = 10,
+    TrigEventRight = 13,
+    TrigEventUp = 15,
+    TrigEventDown = 9,
+    TrigEventAlt = 11,
+    TrigEventNav = 12,
+    TrigEventPlay = 14,
+
+    VarTempo = 62,
+    VarMasterVolume = 41,
+    VarWrap = 70,
+    VarTranspose = 63,
+    VarScale = 16,
+    VarProjectName = 99,
+    VarMidiDevice = 40,
+    VarLineOut = 17,
+    VarFGColor = 103,
+    VarBGColor = 104,
+    VarHI1Color = 105,
+    VarHI2Color = 106,
+    VarConsoleColor = 107,
+    VarCursorColor = 108,
+    VarInfoColor = 109,
+    VarWarnColor = 110,
+    VarErrorColor = 111,
+    VarMidiSync = 112,
+
+    ActionTempoChanged = 61,
+    ActionPurge = 49,
+    ActionPurgeInstrument = 47,
+    ActionProjectRename = 102,
+    ActionLoad = 35,
+    ActionSave = 53,
+    ActionNewProject = 101,
+    ActionRandomName = 100,
+    ActionBootSelect = 18,
+    ActionEdit = 59,
+
+    // Free: 19, 33
+    Default = 255, // "    "
+  };
+  ETL_DECLARE_ENUM_TYPE(FourCC, char)
+  // Not all enums need reflection. Only cases where we need reflection is the
+  // FourCC codes that need to be converted to text in order to display on
+  // screen
+  ETL_ENUM_TYPE(InstrumentCommandArpeggiator, "ARP")
+  ETL_ENUM_TYPE(InstrumentCommandCrush, "CSH")
+  ETL_ENUM_TYPE(InstrumentCommandKill, "KIL")
+  ETL_ENUM_TYPE(InstrumentCommandLoopOfset, "LOF")
+  ETL_ENUM_TYPE(InstrumentCommandVelocity, "VEL")
+  ETL_ENUM_TYPE(InstrumentCommandVolume, "VOL")
+  ETL_ENUM_TYPE(InstrumentCommandPitchSlide, "PSL")
+  ETL_ENUM_TYPE(InstrumentCommandHop, "HOP")
+  ETL_ENUM_TYPE(InstrumentCommandLegato, "LEG")
+  ETL_ENUM_TYPE(InstrumentCommandRetrigger, "RTG")
+  ETL_ENUM_TYPE(InstrumentCommandTempo, "TPO")
+  ETL_ENUM_TYPE(InstrumentCommandMidiCC, "MCC")
+  ETL_ENUM_TYPE(InstrumentCommandMidiPC, "MPC")
+  ETL_ENUM_TYPE(InstrumentCommandPlayOfset, "POF")
+  ETL_ENUM_TYPE(InstrumentCommandLowPassFilter, "FLT")
+  ETL_ENUM_TYPE(InstrumentCommandTable, "TBL")
+  ETL_ENUM_TYPE(InstrumentCommandFilterCut, "FCT")
+  ETL_ENUM_TYPE(InstrumentCommandFilterResonance, "FRS")
+  ETL_ENUM_TYPE(InstrumentCommandPan, "PAN")
+  ETL_ENUM_TYPE(InstrumentCommandGateOff, "GOF")
+  ETL_ENUM_TYPE(InstrumentCommandGroove, "GRV")
+  ETL_ENUM_TYPE(InstrumentCommandStop, "STP")
+  ETL_ENUM_TYPE(InstrumentCommandNone, "---")
+  ETL_ENUM_TYPE(InstrumentCommandPitchFineTune, "PFT")
+  ETL_ENUM_TYPE(InstrumentCommandDelay, "DLY")
+  ETL_ENUM_TYPE(InstrumentCommandInstrumentRetrigger, "IRT")
+
+  ETL_ENUM_TYPE(Default, "   ")
+  ETL_END_ENUM_TYPE
+};
+
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned char uchar;
-
-// TODO: this is a lazy drop in replacement (alongside changes in
-// Application/Utils/char.h) for the FourCC type using 1 byte instead of 4
-// There's probably a better way to do this with more refactoring
-inline constexpr FourCC MAKE_FOURCC(char ch0, char ch1, char ch2, char ch3) {
-  uint32_t fourcc = ch0 | ch1 << 8 | ch2 << 16 | ch3 << 24;
-  switch (fourcc) {
-  case 'A' | 'R' << 8 | 'P' << 16 | 'G' << 24:
-    return 0;
-    break;
-  case 'C' | 'H' << 8 | 'N' << 16 | 'L' << 24:
-    return 1;
-    break;
-  case 'C' | 'R' << 8 | 'S' << 16 | 'H' << 24:
-    return 2;
-    break;
-  case 'C' | 'R' << 8 | 'S' << 16 | 'V' << 24:
-    return 3;
-    break;
-  case 'D' | 'L' << 8 | 'A' << 16 | 'Y' << 24:
-    return 4;
-    break;
-  case 'D' | 'S' << 8 | 'P' << 16 | 'L' << 24:
-    return 5;
-    break;
-  case 'E' | 'N' << 8 | 'D' << 16 | '_' << 24:
-    return 6;
-    break;
-  case 'E' | 'V' << 8 | 'A' << 16 | '_' << 24:
-    return 7;
-    break;
-  case 'E' | 'V' << 8 | 'B' << 16 | '_' << 24:
-    return 8;
-    break;
-  case 'E' | 'V' << 8 | 'D' << 16 | 'N' << 24:
-    return 9;
-    break;
-  case 'E' | 'V' << 8 | 'L' << 16 | 'F' << 24:
-    return 10;
-    break;
-  case 'E' | 'V' << 8 | 'L' << 16 | 'S' << 24:
-    return 11;
-    break;
-  case 'E' | 'V' << 8 | 'R' << 16 | 'S' << 24:
-    return 12;
-    break;
-  case 'E' | 'V' << 8 | 'R' << 16 | 'T' << 24:
-    return 13;
-    break;
-  case 'E' | 'V' << 8 | 'S' << 16 | 'T' << 24:
-    return 14;
-    break;
-  case 'E' | 'V' << 8 | 'U' << 16 | 'P' << 24:
-    return 15;
-    break;
-  case 'F' | 'B' << 8 | 'A' << 16 | 'M' << 24:
-    return 16;
-    break;
-  case 'F' | 'B' << 8 | 'T' << 16 | 'U' << 24:
-    return 19;
-    break;
-  case 'F' | 'C' << 8 | 'U' << 16 | 'T' << 24:
-    return 20;
-    break;
-  case 'F' | 'I' << 8 | 'M' << 16 | 'O' << 24:
-    return 21;
-    break;
-  case 'F' | 'L' << 8 | 'T' << 16 | 'R' << 24:
-    return 22;
-    break;
-  case 'F' | 'M' << 8 | 'I' << 16 | 'X' << 24:
-    return 23;
-    break;
-  case 'F' | 'N' << 8 | 'T' << 16 | 'N' << 24:
-    return 24;
-    break;
-  case 'F' | 'R' << 8 | 'E' << 16 | 'S' << 24:
-    return 25;
-    break;
-  case 'G' | 'R' << 8 | 'O' << 16 | 'V' << 24:
-    return 26;
-    break;
-  case 'H' | 'O' << 8 | 'P' << 16 | ' ' << 24:
-    return 27;
-    break;
-  case 'I' | 'N' << 8 | 'T' << 16 | 'P' << 24:
-    return 28;
-    break;
-  case 'I' | 'R' << 8 | 'T' << 16 | 'G' << 24:
-    return 29;
-    break;
-  case 'K' | 'I' << 8 | 'L' << 16 | 'L' << 24:
-    return 30;
-    break;
-  case 'L' | 'E' << 8 | 'G' << 16 | 'A' << 24:
-    return 31;
-    break;
-  case 'L' | 'E' << 8 | 'N' << 16 | 'G' << 24:
-    return 32;
-    break;
-  case 'L' | 'L' << 8 | 'E' << 16 | 'N' << 24:
-    return 33;
-    break;
-  case 'L' | 'M' << 8 | 'O' << 16 | 'D' << 24:
-    return 34;
-    break;
-  case 'L' | 'O' << 8 | 'A' << 16 | 'D' << 24:
-    return 35;
-    break;
-  case 'L' | 'P' << 8 | 'O' << 16 | 'F' << 24:
-    return 36;
-    break;
-  case 'L' | 'S' << 8 | 'T' << 16 | 'A' << 24:
-    return 37;
-    break;
-  case 'M' | 'D' << 8 | 'C' << 16 | 'C' << 24:
-    return 38;
-    break;
-  case 'M' | 'D' << 8 | 'P' << 16 | 'G' << 24:
-    return 39;
-    break;
-  case 'M' | 'I' << 8 | 'D' << 16 | 'I' << 24:
-    return 40;
-    break;
-  case 'M' | 'S' << 8 | 'T' << 16 | 'R' << 24:
-    return 41;
-    break;
-  case 'P' | 'A' << 8 | 'N' << 16 | ' ' << 24:
-    return 42;
-    break;
-  case 'P' | 'A' << 8 | 'N' << 16 | '_' << 24:
-    return 43;
-    break;
-  case 'P' | 'F' << 8 | 'I' << 16 | 'N' << 24:
-    return 44;
-    break;
-  case '-' | '-' << 8 | '-' << 16 | '-' << 24:
-    // arbitrary, original char to be used for "blank" is "-" (0x2D)
-    return 45;
-    break;
-  case 'P' | 'L' << 8 | 'O' << 16 | 'F' << 24:
-    return 46;
-    break;
-  case 'P' | 'R' << 8 | 'G' << 16 | 'I' << 24:
-    return 47;
-    break;
-  case 'P' | 'T' << 8 | 'C' << 16 | 'H' << 24:
-    return 48;
-    break;
-  case 'P' | 'U' << 8 | 'R' << 16 | 'G' << 24:
-    return 49;
-    break;
-  case 'R' | 'O' << 8 | 'O' << 16 | 'T' << 24:
-    return 51;
-    break;
-  case 'R' | 'T' << 8 | 'R' << 16 | 'G' << 24:
-    return 52;
-    break;
-  case 'S' | 'A' << 8 | 'V' << 16 | 'E' << 24:
-    return 53;
-    break;
-  case 'S' | 'M' << 8 | 'P' << 16 | 'L' << 24:
-    return 54;
-    break;
-  case 'S' | 'T' << 8 | 'O' << 16 | 'P' << 24:
-    return 55;
-    break;
-  case 'S' | 'T' << 8 | 'R' << 16 | 'T' << 24:
-    return 56;
-    break;
-  case 'S' | 'V' << 8 | 'P' << 16 | 'S' << 24:
-    return 57;
-    break;
-  case 'T' | 'A' << 8 | 'B' << 16 | 'L' << 24:
-    return 58;
-    break;
-  case 'T' | 'B' << 8 | 'E' << 16 | 'D' << 24:
-    return 59;
-    break;
-  case 'T' | 'B' << 8 | 'L' << 16 | 'A' << 24:
-    return 60;
-    break;
-  case 'T' | 'E' << 8 | 'M' << 16 | 'P' << 24:
-    return 61;
-    break;
-  case 'T' | 'M' << 8 | 'P' << 16 | 'O' << 24:
-    return 62;
-    break;
-  case 'T' | 'R' << 8 | 'S' << 16 | 'P' << 24:
-    return 63;
-    break;
-  case 'T' | 'S' << 8 | 'Q' << 16 | 'R' << 24:
-    return 64;
-    break;
-  case 'T' | 'T' << 8 | 'A' << 16 | 'P' << 24:
-    return 65;
-    break;
-  case 'V' | 'E' << 8 | 'L' << 16 | 'M' << 24:
-    return 66;
-    break;
-  case 'V' | 'L' << 8 | 'D' << 16 | 'N' << 24:
-    return 67;
-    break;
-  case 'V' | 'L' << 8 | 'U' << 16 | 'P' << 24:
-    return 68;
-    break;
-  case 'V' | 'O' << 8 | 'L' << 16 | 'M' << 24:
-    return 69;
-    break;
-  case 'W' | 'R' << 8 | 'A' << 16 | 'P' << 24:
-    return 70;
-    break;
-  case 'D' | 'P' << 8 | 'W' << 16 | ' ' << 24:
-    return 71;
-    break;
-  case 'D' | '1' << 8 | 'W' << 16 | 'F' << 24:
-    return 72;
-    break;
-  case 'D' | '2' << 8 | 'W' << 16 | 'F' << 24:
-    return 73;
-    break;
-  case 'D' | '3' << 8 | 'W' << 16 | 'F' << 24:
-    return 74;
-    break;
-  case 'D' | 'S' << 8 | 'Y' << 16 | 'N' << 24:
-    return 75;
-    break;
-  case 'D' | 'R' << 8 | 'N' << 16 | 'G' << 24:
-    return 76;
-    break;
-  case 'D' | 'A' << 8 | 'D' << 16 | 'S' << 24:
-    return 77;
-    break;
-  case 'D' | 'F' << 8 | 'O' << 16 | 'N' << 24:
-    return 78;
-    break;
-  case 'D' | '1' << 8 | 'F' << 16 | 'C' << 24:
-    return 79;
-    break;
-  case 'D' | '1' << 8 | 'R' << 16 | 'S' << 24:
-    return 80;
-    break;
-  case 'D' | '1' << 8 | 'F' << 16 | 'M' << 24:
-    return 81;
-    break;
-  case 'D' | '1' << 8 | 'V' << 16 | 'L' << 24:
-    return 82;
-    break;
-  case 'D' | '2' << 8 | 'F' << 16 | 'C' << 24:
-    return 83;
-    break;
-  case 'D' | '2' << 8 | 'R' << 16 | 'S' << 24:
-    return 84;
-    break;
-  case 'D' | '2' << 8 | 'F' << 16 | 'M' << 24:
-    return 85;
-    break;
-  case 'D' | '2' << 8 | 'V' << 16 | 'L' << 24:
-    return 86;
-    break;
-  case 'D' | '3' << 8 | 'F' << 16 | 'C' << 24:
-    return 87;
-    break;
-  case 'D' | '3' << 8 | 'R' << 16 | 'S' << 24:
-    return 88;
-    break;
-  case 'D' | '3' << 8 | 'F' << 16 | 'M' << 24:
-    return 89;
-    break;
-  case 'D' | '3' << 8 | 'V' << 16 | 'L' << 24:
-    return 90;
-    break;
-  case 'D' | '3' << 8 | 'O' << 16 | 'F' << 24:
-    return 91;
-    break;
-  case 'G' | 'T' << 8 | 'O' << 16 | 'F' << 24:
-    return 92;
-  case 'S' | 'H' << 8 | 'P' << 16 | 'E' << 24:
-    return 93;
-    break;
-  case 'T' | 'I' << 8 | 'M' << 16 | 'B' << 24:
-    return 94;
-    break;
-  case 'C' | 'O' << 8 | 'L' << 16 | 'R' << 24:
-    return 95;
-    break;
-  case 'A' | 'T' << 8 | 'C' << 16 | 'K' << 24:
-    return 96;
-    break;
-  case 'D' | 'E' << 8 | 'C' << 16 | 'Y' << 24:
-    return 97;
-    break;
-  case 'S' | 'I' << 8 | 'G' << 16 | 'N' << 24:
-    return 98;
-    break;
-  case 'P' | 'N' << 8 | 'A' << 16 | 'M' << 24:
-    return 99;
-    break;
-  case 'R' | 'N' << 8 | 'D' << 16 | 'P' << 24:
-    return 100;
-    break;
-  case 'N' | 'E' << 8 | 'W' << 16 | 'P' << 24:
-    return 101;
-    break;
-  case 'P' | 'R' << 8 | 'N' << 16 | 'M' << 24:
-    return 102;
-    break;
-  case 'F' | 'G' << 8 | 'C' << 16 | 'L' << 24:
-    return 103;
-    break;
-  case 'B' | 'G' << 8 | 'C' << 16 | 'L' << 24:
-    return 104;
-    break;
-  case 'H' | '1' << 8 | 'C' << 16 | 'L' << 24:
-    return 105;
-    break;
-  case 'H' | '2' << 8 | 'C' << 16 | 'L' << 24:
-    return 106;
-    break;
-  case 'C' | 'N' << 8 | 'C' << 16 | 'L' << 24:
-    return 107;
-    break;
-  case 'C' | 'R' << 8 | 'C' << 16 | 'L' << 24:
-    return 108;
-    break;
-  case 'I' | 'F' << 8 | 'C' << 16 | 'L' << 24:
-    return 109;
-    break;
-  case 'W' | 'N' << 8 | 'C' << 16 | 'L' << 24:
-    return 110;
-    break;
-  case 'E' | 'R' << 8 | 'C' << 16 | 'L' << 24:
-    return 111;
-    break;
-  case 'M' | 'I' << 8 | 'D' << 16 | 'D' << 24:
-    return 112;
-    break;
-  case 'M' | 'I' << 8 | 'D' << 16 | 'S' << 24:
-    return 113;
-    break;
-  default:
-    return 255;
-  }
-}
 
 #endif

@@ -609,7 +609,7 @@ void Player::ProcessCommands() {
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
 
-          if (cc != I_CMD_NONE) {
+          if (cc != FourCC::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
               I_Instrument *instrument = mixer_.GetInstrument(i);
               if (instrument) {
@@ -626,7 +626,7 @@ void Player::ProcessCommands() {
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
 
-          if (cc != I_CMD_NONE) {
+          if (cc != FourCC::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
               I_Instrument *instrument = mixer_.GetInstrument(i);
               if (instrument) {
@@ -645,22 +645,22 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
   I_Instrument *instr = mixer_.GetInstrument(channel);
 
   switch (cmd) {
-  case I_CMD_KILL:
+  case FourCC::InstrumentCommandKill:
     if (instr) {
       int timeToLive = (param & 0xFF);
       timeToLive_[channel] = timeToLive + 1;
     }
     return true;
-  case I_CMD_TMPO:
+  case FourCC::InstrumentCommandTempo:
     if ((param < 400) && (param > 40)) {
-      Variable *v = project_->FindVariable(VAR_TEMPO);
+      Variable *v = project_->FindVariable(FourCC::VarTempo);
       v->SetInt(param);
       SyncMaster *sync = SyncMaster::GetInstance();
       sync->SetTempo(project_->GetTempo());
     }
     return true;
     break;
-  case I_CMD_TABL: {
+  case FourCC::InstrumentCommandTable: {
     TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
     param = param & 0x7F;
@@ -669,7 +669,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     return true;
     break;
   }
-  case I_CMD_GROV: {
+  case FourCC::InstrumentCommandGroove: {
     Groove *gr = Groove::GetInstance();
     bool all = (param & 0xFF00) != 0;
     param = param & 0xFF;
@@ -681,7 +681,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
       gr->SetGroove(channel, param);
     }
   } break;
-  case I_CMD_STOP: {
+  case FourCC::InstrumentCommandStop: {
     switch (GetSequencerMode()) {
     case SM_SONG:
       Stop();
@@ -780,13 +780,13 @@ void Player::updatePhrasePos(int pos, int channel) {
   // Check both param colum 1 & 2
 
   FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == I_CMD_DLAY) {
+  if (cc == FourCC::InstrumentCommandDelay) {
     ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
 
   cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == I_CMD_DLAY) {
+  if (cc == FourCC::InstrumentCommandDelay) {
     ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
@@ -888,11 +888,11 @@ int Player::getChannelHop(int channel, int pos) {
 
   int phrase = viewData_->currentPlayPhrase_[channel];
   FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == I_CMD_HOP) {
+  if (cc == FourCC::InstrumentCommandHop) {
     return (viewData_->song_->phrase_.param1_[phrase * 16 + pos]) & 0xF;
   }
   cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == I_CMD_HOP) {
+  if (cc == FourCC::InstrumentCommandHop) {
     return (viewData_->song_->phrase_.param2_[phrase * 16 + pos]) & 0xF;
   }
   return -1;

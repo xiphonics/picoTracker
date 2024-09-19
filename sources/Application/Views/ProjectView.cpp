@@ -15,16 +15,6 @@
 #include "pico/bootrom.h"
 #endif
 
-#define ACTION_PURGE MAKE_FOURCC('P', 'U', 'R', 'G')
-#define ACTION_SAVE MAKE_FOURCC('S', 'A', 'V', 'E')
-#define ACTION_LOAD MAKE_FOURCC('L', 'O', 'A', 'D')
-#define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
-#define ACTION_PURGE_INSTRUMENT MAKE_FOURCC('P', 'R', 'G', 'I')
-#define ACTION_TEMPO_CHANGED MAKE_FOURCC('T', 'E', 'M', 'P')
-#define ACTION_RANDOM_NAME MAKE_FOURCC('R', 'N', 'D', 'P')
-#define ACTION_NEW_PROJECT MAKE_FOURCC('N', 'E', 'W', 'P')
-
-#define ACTION_PROJECT_RENAME MAKE_FOURCC('P', 'R', 'N', 'M')
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     ViewType vt = VT_SELECTPROJECT;
@@ -87,26 +77,26 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   GUIPoint position = GetAnchor();
 
-  Variable *v = project_->FindVariable(VAR_TEMPO);
-  UITempoField *f = new UITempoField(ACTION_TEMPO_CHANGED, position, *v,
+  Variable *v = project_->FindVariable(FourCC::VarTempo);
+  UITempoField *f = new UITempoField(FourCC::ActionTempoChanged, position, *v,
                                      "tempo: %d [%2.2x]  ", 60, 400, 1, 10);
   fieldList_.insert(fieldList_.end(), f);
   f->AddObserver(*this);
   tempoField_ = f;
 
-  v = project_->FindVariable(VAR_MASTERVOL);
+  v = project_->FindVariable(FourCC::VarMasterVolume);
   position._y += 1;
   UIIntVarField *f1 =
       new UIIntVarField(position, *v, "master: %d", 10, 200, 1, 10);
   fieldList_.insert(fieldList_.end(), f1);
 
-  v = project_->FindVariable(VAR_TRANSPOSE);
+  v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
   UIIntVarField *f2 =
       new UIIntVarField(position, *v, "transpose: %3.2d", -48, 48, 0x1, 0xC);
   fieldList_.insert(fieldList_.end(), f2);
 
-  v = project_->FindVariable(VAR_SCALE);
+  v = project_->FindVariable(FourCC::VarScale);
   // if scale name is not found, set the default chromatic scale
   if (v->GetInt() < 0) {
     v->SetInt(0);
@@ -118,12 +108,12 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 2;
   UIActionField *a1 =
-      new UIActionField("Compact Sequencer", ACTION_PURGE, position);
+      new UIActionField("Compact Sequencer", FourCC::ActionPurge, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
   position._y += 1;
-  a1 = new UIActionField("Compact Instruments", ACTION_PURGE_INSTRUMENT,
+  a1 = new UIActionField("Compact Instruments", FourCC::ActionPurgeInstrument,
                          position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
@@ -133,33 +123,34 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // save existing fields horizontal alignment
   int xalign = position._x;
 
-  v = project_->FindVariable(VAR_PROJECTNAME);
-  nameField_ = new UITextField(v, position, "project: ", ACTION_PROJECT_RENAME);
+  v = project_->FindVariable(FourCC::VarProjectName);
+  nameField_ =
+      new UITextField(v, position, "project: ", FourCC::ActionProjectRename);
   nameField_->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), nameField_);
 
   position._y += 1;
-  a1 = new UIActionField("Load", ACTION_LOAD, position);
+  a1 = new UIActionField("Load", FourCC::ActionLoad, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
   position._x += 5;
-  a1 = new UIActionField("Save", ACTION_SAVE, position);
+  a1 = new UIActionField("Save", FourCC::ActionSave, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
   position._x += 5;
-  a1 = new UIActionField("New", ACTION_NEW_PROJECT, position);
+  a1 = new UIActionField("New", FourCC::ActionNewProject, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
   position._x += 5;
-  a1 = new UIActionField("Random", ACTION_RANDOM_NAME, position);
+  a1 = new UIActionField("Random", FourCC::ActionRandomName, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
   position._x = xalign;
 
-  v = project_->FindVariable(VAR_MIDIDEVICE);
+  v = project_->FindVariable(FourCC::VarMidiDevice);
   NAssert(v);
   position._y += 2;
   UIIntVarField *f4 = new UIIntVarField(
@@ -226,7 +217,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   uintptr_t fourcc = (uintptr_t)data;
 
   UIField *focus = GetFocus();
-  if (fourcc != ACTION_TEMPO_CHANGED) {
+  if (fourcc != FourCC::ActionTempoChanged) {
     focus->ClearFocus();
     focus->Draw(w_);
     w_.Flush();
@@ -237,23 +228,23 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   Player *player = Player::GetInstance();
 
   switch (fourcc) {
-  case ACTION_PURGE:
+  case FourCC::ActionPurge:
     project_->Purge();
     break;
-  case ACTION_PURGE_INSTRUMENT: {
+  case FourCC::ActionPurgeInstrument: {
     MessageBox *mb = new MessageBox(*this, "Purge unused samples from disk ?",
                                     MBBF_YES | MBBF_NO);
     DoModal(mb, PurgeCallback);
     break;
   }
-  case ACTION_RANDOM_NAME:
+  case FourCC::ActionRandomName:
     char name[12];
     getRandomName(name);
     printf("random:%s", name);
     project_->SetProjectName(name);
     saveAsFlag_ = true;
     break;
-  case ACTION_SAVE:
+  case FourCC::ActionSave:
     if (!player->IsRunning()) {
       PersistencyService *persist = PersistencyService::GetInstance();
       char projName[MAX_PROJECT_NAME_LENGTH];
@@ -298,12 +289,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       DoModal(mb);
     }
     break;
-  case ACTION_PROJECT_RENAME:
+  case FourCC::ActionProjectRename:
     Trace::Log("PROJECTVIEW", "Project renamed! prev name:%s",
                nameField_->GetString().c_str());
     saveAsFlag_ = true;
     break;
-  case ACTION_LOAD: {
+  case FourCC::ActionLoad: {
     if (!player->IsRunning()) {
       MessageBox *mb = new MessageBox(*this, "Load song and lose changes?",
                                       MBBF_YES | MBBF_NO);
@@ -314,14 +305,14 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   }
-  case ACTION_NEW_PROJECT: {
+  case FourCC::ActionNewProject: {
     MessageBox *mb = new MessageBox(*this, "New project and lose changes?",
                                     MBBF_YES | MBBF_NO);
     DoModal(mb, CreateNewProjectCallback);
     break;
   }
 #ifdef PICOBUILD
-  case ACTION_BOOTSEL: {
+  case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
       MessageBox *mb =
           new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
@@ -334,7 +325,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   }
 #endif
 
-  case ACTION_TEMPO_CHANGED:
+  case FourCC::ActionTempoChanged:
     break;
   default:
     NInvalid;

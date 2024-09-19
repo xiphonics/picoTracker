@@ -68,6 +68,11 @@ void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
   saveHexBuffer(printer, nodeName, (unsigned char *)src, len * sizeof(short));
 }
 
+void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
+                   FourCC *src, unsigned len) {
+  saveHexBuffer(printer, nodeName, (unsigned char *)src, len * sizeof(short));
+}
+
 void restoreHexBuffer(PersistencyDocument *doc, unsigned char *destination) {
   unsigned char *dst = destination;
 

@@ -14,15 +14,6 @@
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
 
-#define BIP_SHAPE MAKE_FOURCC('S', 'H', 'P', 'E')
-#define BIP_TIMBRE MAKE_FOURCC('T', 'I', 'M', 'B')
-#define BIP_COLOR MAKE_FOURCC('C', 'O', 'L', 'R')
-#define BIP_ATTACK MAKE_FOURCC('A', 'T', 'C', 'K')
-#define BIP_DECAY MAKE_FOURCC('D', 'E', 'C', 'Y')
-#define BIP_SIGNATURE MAKE_FOURCC('S', 'I', 'G', 'N')
-// #define BIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
-// #define BIP_CRUSH MAKE_FOURCC('C', 'R', 'S', 'H')
-
 class MacroInstrument : public I_Instrument, I_Observer {
 
 public:

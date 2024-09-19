@@ -20,51 +20,6 @@ enum SIDInstrumentWaveform {
 };
 enum SIDInstrumentFilterMode { DFM_LP = 0, DFM_BP, DFM_HP, DFM_LAST };
 
-#define DIP_VPW MAKE_FOURCC('D', 'P', 'W', ' ')
-#define DIP_VWF1                                                               \
-  MAKE_FOURCC('D', '1', 'W', 'F') // linked across instrument tripplets
-#define DIP_VWF2                                                               \
-  MAKE_FOURCC('D', '2', 'W', 'F') // linked across instrument tripplets
-#define DIP_VWF3                                                               \
-  MAKE_FOURCC('D', '3', 'W', 'F') // linked across instrument tripplets
-#define DIP_VSYNC MAKE_FOURCC('D', 'S', 'Y', 'N')
-#define DIP_VRING MAKE_FOURCC('D', 'R', 'N', 'G')
-#define DIP_VADSR MAKE_FOURCC('D', 'A', 'D', 'S')
-#define DIP_VFON MAKE_FOURCC('D', 'F', 'O', 'N')
-
-#define DIP_FILTCUT1                                                           \
-  MAKE_FOURCC('D', '1', 'F', 'C') // linked across instrument tripplets
-#define DIP_RES1                                                               \
-  MAKE_FOURCC('D', '1', 'R', 'S') // linked across instrument tripplets
-#define DIP_FMODE1                                                             \
-  MAKE_FOURCC('D', '1', 'F', 'M') // linked across instrument tripplets
-#define DIP_VOLUME1                                                            \
-  MAKE_FOURCC('D', '1', 'V', 'L') // linked across instrument tripplets
-
-#define DIP_FILTCUT2                                                           \
-  MAKE_FOURCC('D', '2', 'F', 'C') // linked across instrument tripplets
-#define DIP_RES2                                                               \
-  MAKE_FOURCC('D', '2', 'R', 'S') // linked across instrument tripplets
-#define DIP_FMODE2                                                             \
-  MAKE_FOURCC('D', '2', 'F', 'M') // linked across instrument tripplets
-#define DIP_VOLUME2                                                            \
-  MAKE_FOURCC('D', '2', 'V', 'L') // linked across instrument tripplets
-
-#define DIP_FILTCUT3                                                           \
-  MAKE_FOURCC('D', '3', 'F', 'C') // linked across instrument tripplets
-#define DIP_RES3                                                               \
-  MAKE_FOURCC('D', '3', 'R', 'S') // linked across instrument tripplets
-#define DIP_FMODE3                                                             \
-  MAKE_FOURCC('D', '3', 'F', 'M') // linked across instrument tripplets
-#define DIP_VOLUME3                                                            \
-  MAKE_FOURCC('D', '3', 'V', 'L') // linked across instrument tripplets
-
-#define DIP_3OFF                                                               \
-  MAKE_FOURCC('D', '3', 'O', 'F') // linked across instrument tripplets
-
-#define DIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
-#define DIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
-
 static const unsigned short sid_notes[96] = {
     0x0112, 0x0123, 0x0134, 0x0146, 0x015A, 0x016E, 0x0184, 0x018B, 0x01B3,
     0x01CD, 0x01E9, 0x0206, 0x0225, 0x0245, 0x0268, 0x028C, 0x02B3, 0x02DC,

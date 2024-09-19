@@ -29,21 +29,28 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 #define KRATE_SAMPLE_COUNT 100
 
 SampleInstrument::SampleInstrument()
-    : volume_("volume", SIP_VOLUME, 0x80),
-      interpolation_("interpol", SIP_INTERPOLATION, interpolationTypes, 2, 0),
-      crush_("crush", SIP_CRUSH, 16), drive_("crushdrive", SIP_CRUSHVOL, 0xFF),
-      downsample_("downsample", SIP_DOWNSMPL, 0),
-      rootNote_("root note", SIP_ROOTNOTE, 60),
-      fineTune_("fine tune", SIP_FINETUNE, 0x7F), pan_("pan", SIP_PAN, 0x7F),
-      cutoff_("filter cut", SIP_FILTCUTOFF, 0xFF),
-      reso_("filter res", SIP_FILTRESO, 0x00),
-      filterMix_("filter type", SIP_FILTMIX, 0x00),
-      filterMode_("filter mode", SIP_FILTMODE, filterMode, 3, 0),
-      start_("start", SIP_START, 0),
-      loopMode_("loopmode", SIP_LOOPMODE, loopTypes, SILM_LAST, 0),
-      loopStart_("loopstart", SIP_LOOPSTART, 0), loopEnd_("end", SIP_END, 0),
-      table_("table", SIP_TABLE, -1),
-      tableAuto_("table automation", SIP_TABLEAUTO, false) {
+    : volume_("volume", FourCC::SampleInstrumentVolume, 0x80),
+      interpolation_("interpol", FourCC::SampleInstrumentInterpolation,
+                     interpolationTypes, 2, 0),
+      crush_("crush", FourCC::SampleInstrumentCrush, 16),
+      drive_("crushdrive", FourCC::SampleInstrumentCrushVolume, 0xFF),
+      downsample_("downsample", FourCC::SampleInstrumentDownsample, 0),
+      rootNote_("root note", FourCC::SampleInstrumentRootNote, 60),
+      fineTune_("fine tune", FourCC::SampleInstrumentFineTune, 0x7F),
+      pan_("pan", FourCC::SampleInstrumentPan, 0x7F),
+      cutoff_("filter cut", FourCC::SampleInstrumentFilterCutOff, 0xFF),
+      reso_("filter res", FourCC::SampleInstrumentFilterResonance, 0x00),
+      filterMix_("filter type", FourCC::SampleInstrumentFilterType, 0x00),
+      filterMode_("filter mode", FourCC::SampleInstrumentFilterMode, filterMode,
+                  3, 0),
+      start_("start", FourCC::SampleInstrumentStart, 0),
+      loopMode_("loopmode", FourCC::SampleInstrumentLoopMode, loopTypes,
+                SILM_LAST, 0),
+      loopStart_("loopstart", FourCC::SampleInstrumentLoopStart, 0),
+      loopEnd_("end", FourCC::SampleInstrumentEnd, 0),
+      table_("table", FourCC::SampleInstrumentTable, -1),
+      tableAuto_("table automation", FourCC::SampleInstrumentTableAutomation,
+                 false) {
 
   // Reserve Observer
   ReserveObserver(1);
@@ -59,7 +66,8 @@ SampleInstrument::SampleInstrument()
   running_ = false;
 
   // Initialize exported variables
-  WatchedVariable *wv = new SampleVariable("sample", SIP_SAMPLE);
+  WatchedVariable *wv =
+      new SampleVariable("sample", FourCC::SampleInstrumentSample);
   insert(end(), wv);
   wv->AddObserver(*this);
 
@@ -94,7 +102,7 @@ SampleInstrument::~SampleInstrument() {}
 bool SampleInstrument::Init() {
 
   SamplePool *pool = SamplePool::GetInstance();
-  Variable *vSample = FindVariable(SIP_SAMPLE);
+  Variable *vSample = FindVariable(FourCC::SampleInstrumentSample);
   NAssert(vSample);
   int index = vSample->GetInt();
   source_ = (index >= 0) ? pool->GetSource(index) : 0;
@@ -777,22 +785,22 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
 void SampleInstrument::AssignSample(int i) {
 
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   v->SetInt(i);
 };
 
 int SampleInstrument::GetSampleIndex() {
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return v->GetInt();
 };
 
 void SampleInstrument::SetVolume(int volume) {
-  Variable *v = FindVariable(SIP_VOLUME);
+  Variable *v = FindVariable(FourCC::SampleInstrumentVolume);
   v->SetInt(volume);
 };
 
 int SampleInstrument::GetVolume() {
-  Variable *v = FindVariable(SIP_VOLUME);
+  Variable *v = FindVariable(FourCC::SampleInstrumentVolume);
   return v->GetInt();
 };
 
@@ -812,7 +820,7 @@ void SampleInstrument::updateInstrumentData(bool search) {
 
   // Get the source index
 
-  Variable *vSample = FindVariable(SIP_SAMPLE);
+  Variable *vSample = FindVariable(FourCC::SampleInstrumentSample);
   int index = vSample->GetInt();
   int instrSize = 0;
 
@@ -823,11 +831,11 @@ void SampleInstrument::updateInstrumentData(bool search) {
     }
   }
 
-  Variable *v = FindVariable(SIP_END);
+  Variable *v = FindVariable(FourCC::SampleInstrumentEnd);
   v->SetInt(instrSize);
-  v = FindVariable(SIP_LOOPSTART);
+  v = FindVariable(FourCC::SampleInstrumentLoopStart);
   v->SetInt(0);
-  v = FindVariable(SIP_START);
+  v = FindVariable(FourCC::SampleInstrumentStart);
   v->SetInt(0);
   dirty_ = false;
 };
@@ -837,7 +845,7 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
   FourCC id = v.GetID();
 
   switch (id) {
-  case SIP_SAMPLE: {
+  case FourCC::SampleInstrumentSample: {
     if (running_) {
       dirty_ = true; // we'll update later, when instrument gets re-triggered
     } else {
@@ -861,7 +869,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     return;
 
   switch (cc) {
-  case I_CMD_LPOF:
+  case FourCC::InstrumentCommandLoopOfset:
 
     if (value > 0x8000) {
       value = 0x10000 - value;
@@ -877,7 +885,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
     break;
 
-  case I_CMD_PLOF: {
+  case FourCC::InstrumentCommandPlayOfset: {
     if (!source_)
       return;
     int wavSize = source_->GetSize(rp->midiNote_);
@@ -899,7 +907,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     rp->couldClick_ = SHOULD_KILL_CLICKS;
   } break;
 
-  case I_CMD_ARPG: {
+  case FourCC::InstrumentCommandArpeggiator: {
     rp->arp_.SetData(value);
     if (!rp->arp_.Enabled()) {
       rp->arp_.Enable();
@@ -907,7 +915,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_VOLM: {
+  case FourCC::InstrumentCommandVolume: {
     float targetVolume = float(value & 0xFF);
     float speed = float(value >> 8);
     float startVolume = fp2fl(rp->volume_);
@@ -925,7 +933,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_PAN_: {
+  case FourCC::InstrumentCommandPan: {
     float targetPan = float(value & 0xFF);
     if (targetPan == 0xFF) {
       targetPan = 0xFE;
@@ -944,7 +952,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_FCUT: {
+  case FourCC::InstrumentCommandFilterCut: {
     float target = float(value & 0xFF) / 255.0f;
     float speed = float(value >> 8);
     float start = fp2fl(rp->cutoff_);
@@ -960,7 +968,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_FRES: {
+  case FourCC::InstrumentCommandFilterResonance: {
     float target = float(value & 0xFF) / 255.0f;
     float speed = float(value >> 8);
     float start = fp2fl(rp->reso_);
@@ -975,7 +983,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       rp->activeUpdaters_.push_back(&rp->resRamp_);
     }
   } break;
-  case I_CMD_PTCH: {
+  case FourCC::InstrumentCommandPitchSlide: {
     int pitch = (char)(value & 0xFF); // number of semi tones
     float speed = float(value >> 8);  // get speed parameter
     if (pitch > 127)
@@ -1001,7 +1009,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case I_CMD_LEGA: {
+  case FourCC::InstrumentCommandLegato: {
     int pitch = (char)(value & 0xFF); // number of semi tones
     float speed = float(value >> 8);  // get speed parameter
 
@@ -1034,7 +1042,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case I_CMD_PFIN: {
+  case FourCC::InstrumentCommandPitchFineTune: {
 
     float semi = (value & 0xFF) / float(0x80); // number of semi tones
     if (semi > 1)
@@ -1059,7 +1067,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case I_CMD_RTRG: {
+  case FourCC::InstrumentCommandRetrigger: {
     unsigned char loop = (value & 0xFF); // number of ticks before repeat
     unsigned char offset =
         (value >> 8); // number of ticks to offset at each repeat
@@ -1073,7 +1081,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       rp->retrig_ = false;
     }
   } break;
-  case I_CMD_FLTR: {
+  case FourCC::InstrumentCommandLowPassFilter: {
     float cut =
         (value >> 8) / 255.0f; // cutoff frequency (FF=all pass, 0=none pass)
     float res =
@@ -1106,7 +1114,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
 
   } break;
-  case I_CMD_CRSH: {
+  case FourCC::InstrumentCommandCrush: {
     unsigned char drive = (value >> 8);
     unsigned char crush = (value & 0x0F);
     if (drive > 0)
@@ -1120,7 +1128,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 };
 
 etl::string<24> SampleInstrument::GetName() {
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return v->GetString();
 };
 
@@ -1138,7 +1146,7 @@ void SampleInstrument::Purge() {
 };
 
 bool SampleInstrument::IsEmpty() {
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return (v->GetInt() == -1);
 };
 

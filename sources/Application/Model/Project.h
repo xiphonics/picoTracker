@@ -10,14 +10,6 @@
 #include "Foundation/Variables/VariableContainer.h"
 #include "Song.h"
 
-#define VAR_TEMPO MAKE_FOURCC('T', 'M', 'P', 'O')
-#define VAR_MASTERVOL MAKE_FOURCC('M', 'S', 'T', 'R')
-#define VAR_WRAP MAKE_FOURCC('W', 'R', 'A', 'P')
-#define VAR_MIDIDEVICE MAKE_FOURCC('M', 'I', 'D', 'I')
-#define VAR_TRANSPOSE MAKE_FOURCC('T', 'R', 'S', 'P')
-#define VAR_SCALE MAKE_FOURCC('S', 'C', 'A', 'L')
-#define VAR_PROJECTNAME MAKE_FOURCC('P', 'N', 'A', 'M')
-
 #define PROJECT_NUMBER "1.99"
 #define PROJECT_RELEASE "r"
 // BUILD_COUNT define comes from BuildNumber.h

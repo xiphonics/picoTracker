@@ -13,7 +13,7 @@
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_("edit", FCC_EDIT, 0) {
+    : View(w, viewData), cmdEdit_("edit", FourCC::ActionEdit, 0) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
   GUIPoint pos(0, 10);
@@ -24,7 +24,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   col_ = 0;
   lastNote_ = 60;
   lastInstr_ = 0;
-  lastCmd_ = I_CMD_NONE;
+  lastCmd_ = FourCC::InstrumentCommandNone;
   lastParam_ = 0;
 
   clipboard_.active_ = false;
@@ -253,8 +253,9 @@ void PhraseView::pasteLast() {
     }
     break;
   case 2:
-    c = phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_);
-    if (*c == I_CMD_NONE) {
+    c = (unsigned char *)phrase_->cmd1_ +
+        (16 * viewData_->currentPhrase_ + row_);
+    if (*c == FourCC::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -273,8 +274,9 @@ void PhraseView::pasteLast() {
     break;
 
   case 4:
-    c = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_);
-    if (*c == I_CMD_NONE) {
+    c = (unsigned char *)phrase_->cmd2_ +
+        (16 * viewData_->currentPhrase_ + row_);
+    if (*c == FourCC::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -406,14 +408,14 @@ void PhraseView::fillClipboardData() {
   uchar *src2 =
       viewData_->song_->phrase_.instr_ + 16 * viewData_->currentPhrase_;
   uchar *dst2 = clipboard_.instr_;
-  uchar *src3 =
-      viewData_->song_->phrase_.cmd1_ + 16 * viewData_->currentPhrase_;
+  uchar *src3 = (unsigned char *)viewData_->song_->phrase_.cmd1_ +
+                16 * viewData_->currentPhrase_;
   uchar *dst3 = clipboard_.cmd1_;
   ushort *src4 =
       viewData_->song_->phrase_.param1_ + 16 * viewData_->currentPhrase_;
   ushort *dst4 = clipboard_.param1_;
-  uchar *src5 =
-      viewData_->song_->phrase_.cmd2_ + 16 * viewData_->currentPhrase_;
+  uchar *src5 = (unsigned char *)viewData_->song_->phrase_.cmd2_ +
+                16 * viewData_->currentPhrase_;
   uchar *dst5 = clipboard_.cmd2_;
   ushort *src6 =
       viewData_->song_->phrase_.param2_ + 16 * viewData_->currentPhrase_;
@@ -512,12 +514,12 @@ void PhraseView::cutSelection() {
       viewData_->song_->phrase_.note_ + 16 * viewData_->currentPhrase_;
   uchar *dst2 =
       viewData_->song_->phrase_.instr_ + 16 * viewData_->currentPhrase_;
-  uchar *dst3 =
-      viewData_->song_->phrase_.cmd1_ + 16 * viewData_->currentPhrase_;
+  uchar *dst3 = (unsigned char *)viewData_->song_->phrase_.cmd1_ +
+                16 * viewData_->currentPhrase_;
   ushort *dst4 =
       viewData_->song_->phrase_.param1_ + 16 * viewData_->currentPhrase_;
-  uchar *dst5 =
-      viewData_->song_->phrase_.cmd2_ + 16 * viewData_->currentPhrase_;
+  uchar *dst5 = (unsigned char *)viewData_->song_->phrase_.cmd2_ +
+                16 * viewData_->currentPhrase_;
   ushort *dst6 =
       viewData_->song_->phrase_.param2_ + 16 * viewData_->currentPhrase_;
 
@@ -531,13 +533,13 @@ void PhraseView::cutSelection() {
         dst2[j + clipboard_.row_] = 0xFF;
         break;
       case 2:
-        dst3[j + clipboard_.row_] = I_CMD_NONE;
+        dst3[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
         break;
       case 3:
         dst4[j + clipboard_.row_] = 0x0000;
         break;
       case 4:
-        dst5[j + clipboard_.row_] = I_CMD_NONE;
+        dst5[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
         break;
       case 5:
         dst6[j + clipboard_.row_] = 0x0000;
@@ -576,14 +578,14 @@ void PhraseView::pasteClipboard() {
   uchar *dst2 =
       viewData_->song_->phrase_.instr_ + 16 * viewData_->currentPhrase_;
   uchar *src2 = clipboard_.instr_;
-  uchar *dst3 =
-      viewData_->song_->phrase_.cmd1_ + 16 * viewData_->currentPhrase_;
+  uchar *dst3 = (unsigned char *)viewData_->song_->phrase_.cmd1_ +
+                16 * viewData_->currentPhrase_;
   uchar *src3 = clipboard_.cmd1_;
   ushort *dst4 =
       viewData_->song_->phrase_.param1_ + 16 * viewData_->currentPhrase_;
   ushort *src4 = clipboard_.param1_;
-  uchar *dst5 =
-      viewData_->song_->phrase_.cmd2_ + 16 * viewData_->currentPhrase_;
+  uchar *dst5 = (unsigned char *)viewData_->song_->phrase_.cmd2_ +
+                16 * viewData_->currentPhrase_;
   uchar *src5 = clipboard_.cmd2_;
   ushort *dst6 =
       viewData_->song_->phrase_.param2_ + 16 * viewData_->currentPhrase_;
@@ -687,7 +689,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       } else {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                I_CMD_TABL) {
+                FourCC::SampleInstrumentTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -701,7 +703,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                I_CMD_TABL) {
+                FourCC::SampleInstrumentTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -734,7 +736,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       } else {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                I_CMD_TABL) {
+                FourCC::SampleInstrumentTable) {
           TableHolder *th = TableHolder::GetInstance();
           int current =
               *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_));
@@ -751,7 +753,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                I_CMD_TABL) {
+                FourCC::SampleInstrumentTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->Clone(
               *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
@@ -885,11 +887,11 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
           ushort *param =
               phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
 
-          if (*cmd != I_CMD_TABL) {
+          if (*cmd != FourCC::SampleInstrumentTable) {
             cmd = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_);
             param = phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
           }
-          if (*cmd == I_CMD_TABL) {
+          if (*cmd == FourCC::SampleInstrumentTable) {
             viewData_->currentTable_ = (*param) & (TABLE_COUNT - 1);
           }
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -1147,13 +1149,10 @@ void PhraseView::DrawView() {
 
   FourCC *f = phrase_->cmd1_ + (16 * viewData_->currentPhrase_);
 
-  buffer[4] = 0;
-
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
-    fourCC2char(command, buffer);
     setTextProps(props, 2, j, false);
-    DrawString(pos._x, pos._y, buffer, props);
+    DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 2, j, true);
     pos._y++;
     if (j == row_ && (col_ == 2 || col_ == 3)) {
@@ -1191,13 +1190,10 @@ void PhraseView::DrawView() {
 
   f = phrase_->cmd2_ + (16 * viewData_->currentPhrase_);
 
-  buffer[4] = 0;
-
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
-    fourCC2char(command, buffer);
     setTextProps(props, 4, j, false);
-    DrawString(pos._x, pos._y, buffer, props);
+    DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 4, j, true);
     pos._y++;
     if (j == row_ && (col_ == 4 || col_ == 5)) {

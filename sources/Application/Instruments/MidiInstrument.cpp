@@ -15,15 +15,16 @@ MidiInstrument::MidiInstrument() {
     svc_ = MidiService::GetInstance();
   };
 
-  Variable *v = new Variable("channel", MIP_CHANNEL, 0);
+  Variable *v = new Variable("channel", FourCC::MidiInstrumentChannel, 0);
   insert(end(), v);
-  v = new Variable("note length", MIP_NOTELENGTH, 0);
+  v = new Variable("note length", FourCC::MidiInstrumentNoteLength, 0);
   insert(end(), v);
-  v = new Variable("volume", MIP_VOLUME, 255);
+  v = new Variable("volume", FourCC::MidiInstrumentVolume, 255);
   insert(end(), v);
-  v = new Variable("table", MIP_TABLE, -1);
+  v = new Variable("table", FourCC::MidiInstrumentTable, -1);
   insert(end(), v);
-  v = new Variable("table automation", MIP_TABLEAUTO, false);
+  v = new Variable("table automation", FourCC::MidiInstrumentTableAutomation,
+                   false);
   insert(end(), v);
 }
 
@@ -41,10 +42,10 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   first_[c] = true;
   lastNote_[c] = note;
 
-  Variable *v = FindVariable(MIP_CHANNEL);
+  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int channel = v->GetInt();
 
-  v = FindVariable(MIP_NOTELENGTH);
+  v = FindVariable(FourCC::MidiInstrumentNoteLength);
   remainingTicks_ = v->GetInt();
   if (remainingTicks_ == 0) {
     remainingTicks_ = -1;
@@ -53,7 +54,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   MidiMessage msg;
 
   //	send volume initial volume for this midi channel
-  v = FindVariable(MIP_VOLUME);
+  v = FindVariable(FourCC::MidiInstrumentVolume);
   msg.status_ = MIDI_CC + channel;
   msg.data1_ = 7;
   msg.data2_ = floor(v->GetInt() / 2);
@@ -69,7 +70,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
 void MidiInstrument::Stop(int c) {
 
-  Variable *v = FindVariable(MIP_CHANNEL);
+  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int channel = v->GetInt();
 
   MidiMessage msg;
@@ -81,7 +82,7 @@ void MidiInstrument::Stop(int c) {
 };
 
 void MidiInstrument::SetChannel(int channel) {
-  Variable *v = FindVariable(MIP_CHANNEL);
+  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   v->SetInt(channel);
 };
 
@@ -90,7 +91,7 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
 
   // We do it here so we have the opportunity to send some command before
 
-  Variable *v = FindVariable(MIP_CHANNEL);
+  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int mchannel = v->GetInt();
   if (first_[channel]) {
 
@@ -133,12 +134,12 @@ bool MidiInstrument::IsInitialized() {
 
 void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
-  Variable *v = FindVariable(MIP_CHANNEL);
+  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int mchannel = v->GetInt();
 
   switch (cc) {
 
-  case I_CMD_RTRG: {
+  case FourCC::InstrumentCommandRetrigger: {
     unsigned char loop = (value & 0xFF); // number of ticks before repeat
     if (loop != 0) {
       retrig_ = true;
@@ -149,12 +150,12 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_VELM: {
+  case FourCC::InstrumentCommandVelocity: {
     // VELM cmds set velocity for MIDI steps
     velocity_ = floor(value / 2);
   }; break;
 
-  case I_CMD_VOLM: {
+  case FourCC::InstrumentCommandVolume: {
     MidiMessage msg;
     msg.status_ = MIDI_CC + mchannel;
     msg.data1_ = 7;
@@ -162,7 +163,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     svc_->QueueMessage(msg);
   }; break;
 
-  case I_CMD_MDCC: {
+  case FourCC::InstrumentCommandMidiCC: {
     MidiMessage msg;
     msg.status_ = MIDI_CC + mchannel;
     msg.data1_ = (value & 0x7F00) >> 8;
@@ -170,7 +171,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     svc_->QueueMessage(msg);
   }; break;
 
-  case I_CMD_MDPG: {
+  case FourCC::InstrumentCommandMidiPC: {
     MidiMessage msg;
     msg.status_ = MIDI_PRG + mchannel;
     msg.data1_ = (value & 0x7F);
@@ -181,19 +182,19 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 };
 
 etl::string<24> MidiInstrument::GetName() {
-  Variable *v = FindVariable(MIP_CHANNEL);
+  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   etl::string<24> name = "MIDI CH ";
   etl::to_string(v->GetInt() + 1, name, etl::format_spec().precision(0), true);
   return name;
 }
 
 int MidiInstrument::GetTable() {
-  Variable *v = FindVariable(MIP_TABLE);
+  Variable *v = FindVariable(FourCC::MidiInstrumentTable);
   return v->GetInt();
 };
 
 bool MidiInstrument::GetTableAutomation() {
-  Variable *v = FindVariable(MIP_TABLEAUTO);
+  Variable *v = FindVariable(FourCC::MidiInstrumentTableAutomation);
   return v->GetBool();
 };
 
