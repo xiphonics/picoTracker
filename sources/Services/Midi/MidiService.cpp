@@ -29,6 +29,8 @@ bool MidiService::Init() {
     MidiInDevice &current = inList_.CurrentItem();
     merger_->Insert(current);
   }
+
+#ifndef DUMMY_MIDI
   auto config = Config::GetInstance();
   auto midiDevVar =
       (WatchedVariable *)config->FindVariable(FourCC::VarMidiDevice);
@@ -44,6 +46,7 @@ bool MidiService::Init() {
   midiSyncVar->AddObserver(*this);
   auto sync = midiSyncVar->GetInt();
   sendSync_ = sync != 0;
+#endif
 
   return true;
 };
