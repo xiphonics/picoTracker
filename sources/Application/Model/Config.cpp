@@ -3,12 +3,18 @@
 #include "Externals/etl/include/etl/flat_map.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_utilities.h"
+#include "Services/Midi/MidiService.h"
 #include <stdlib.h>
 
 #define CONFIG_FILE_PATH "/.config.xml"
 #define CONFIG_VERSION_NUMBER 1
 
+#define MIDI_DEVICE_LEN 4
+
 static const char *lineOutOptions[3] = {"Line level", "HP High", "HP Low"};
+static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
+                                                      "TRS+USB"};
+static const char *midiSendSync[2] = {"Off", "Send"};
 
 // Param keys MUST fit in this length limit!
 typedef etl::string<12> ParamString;
@@ -25,11 +31,14 @@ static const etl::flat_map validParameters{
     etl::pair{ParamString("ERRORCOLOR"), 0xE84D15},
     etl::pair{ParamString("LINEOUT"), 0x2},
     etl::pair{ParamString("MIDIDEVICE"), 0x0},
-    etl::pair{ParamString("MIDISYNC"), 0x1},
+    etl::pair{ParamString("MIDISYNC"), 0x0},
 };
 
 Config::Config()
-    : lineOut_("lineout", FourCC::VarLineOut, lineOutOptions, 3, 0) {
+    : lineOut_("lineout", FourCC::VarLineOut, lineOutOptions, 3, 0),
+      midiDevice_("mididevice", FourCC::VarMidiDevice, midiDeviceList,
+                  MIDI_DEVICE_LEN),
+      midiSync_("midisync", FourCC::VarMidiSync, midiSendSync, 2, 0) {
   PersistencyDocument doc;
 
   if (!doc.Load(CONFIG_FILE_PATH)) {
@@ -95,9 +104,16 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
     etl::string<16> elemName = (*it)->GetName();
     to_upper_case(elemName);
     printer->OpenElement(elemName.c_str());
+    // these settings need to be saved as thier Int values not as String values
+    // hence we *dont* use GetString() !
     if (elemName.compare("LINEOUT") == 0) {
       printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
+    } else if (elemName.compare("MIDIDEVICE") == 0) {
+      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
+    } else if (elemName.compare("MIDISYNC") == 0) {
+      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
     } else {
+      // all other settings need to be saved as thier String values
       printer->PushAttribute("VALUE", (*it)->GetString().c_str());
     }
     printer->CloseElement();
@@ -122,6 +138,12 @@ void Config::processParams(const char *name, int value) {
   if (!strcmp(name, "LINEOUT")) {
     lineOut_.SetInt(value);
     insert(end(), &lineOut_);
+  } else if (!strcmp(name, "MIDIDEVICE")) {
+    midiDevice_.SetInt(value);
+    insert(end(), &midiDevice_);
+  } else if (!strcmp(name, "MIDISYNC")) {
+    midiSync_.SetInt(value);
+    insert(end(), &midiSync_);
   } else {
     auto fourcc = FourCC::Default;
     // TODO: need to be able to assign fourcc based on name of element from the

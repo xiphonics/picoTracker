@@ -46,13 +46,8 @@ public:
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
-protected:
-  void buildMidiDeviceList();
-
 private:
   InstrumentBank *instrumentBank_;
-  char **midiDeviceList_;
-  int midiDeviceListSize_;
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];
   unsigned int tempoTapCount_;

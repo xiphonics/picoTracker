@@ -10,9 +10,7 @@
 #undef SendMessage
 #endif
 
-MidiService::MidiService()
-    : T_SimpleList<MidiOutDevice>(true), inList_(true), device_(0),
-      sendSync_(true) {
+MidiService::MidiService() : inList_(true), device_(0), sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
@@ -22,7 +20,7 @@ MidiService::MidiService()
 MidiService::~MidiService() { Close(); };
 
 bool MidiService::Init() {
-  Empty();
+  outList_.Empty();
   inList_.Empty();
   buildDriverList();
   // Add a merger for the input
@@ -31,13 +29,26 @@ bool MidiService::Init() {
     MidiInDevice &current = inList_.CurrentItem();
     merger_->Insert(current);
   }
+  auto config = Config::GetInstance();
+  auto midiDevVar =
+      (WatchedVariable *)config->FindVariable(FourCC::VarMidiDevice);
+  midiDevVar->AddObserver(*this);
+  if (midiDevVar->GetInt() == 1) {
+    // for now just hardcode to first and only TRS device until we enable USB
+    device_ = outList_.GetFirst();
+    device_->Init();
+  }
+
+  auto midiSyncVar =
+      (WatchedVariable *)config->FindVariable(FourCC::VarMidiSync);
+  midiSyncVar->AddObserver(*this);
+  auto sync = midiSyncVar->GetInt();
+  sendSync_ = sync != 0;
 
   return true;
 };
 
 void MidiService::Close() { Stop(); };
-
-void MidiService::SelectDevice(const std::string &name) { deviceName_ = name; };
 
 bool MidiService::Start() {
   currentPlayQueue_ = 0;
@@ -78,6 +89,30 @@ void MidiService::Update(Observable &o, I_ObservableData *d) {
   if (event->type_ == AudioDriver::Event::ADET_DRIVERTICK) {
     onAudioTick();
   }
+  WatchedVariable &v = (WatchedVariable &)o;
+  switch (v.GetID()) {
+    // need braces inside case statements due to:
+    // https://stackoverflow.com/a/11578973/85472
+  case FourCC::VarMidiDevice: {
+    auto deviceID = v.GetInt();
+    // note deviceID has 0 == OFF
+    printf("midi device var changed:%d", deviceID);
+
+    if (deviceID == 0 && device_ != nullptr) {
+      device_->Stop();
+      device_->Close();
+      device_ = nullptr;
+    } else if (deviceID == 1) {
+      // for now just hardcode to first and only TRS device until we enable USB
+      device_ = outList_.GetFirst();
+      device_->Init();
+    }
+  } break;
+  case FourCC::VarMidiSync: {
+    auto sync = v.GetInt();
+    sendSync_ = sync != 0;
+  } break;
+  }
 }
 
 void MidiService::onAudioTick() {
@@ -109,10 +144,9 @@ void MidiService::flushOutQueue() {
 }
 
 void MidiService::startDevice() {
-
   // look for the device
-  for (Begin(); !IsDone(); Next()) {
-    MidiOutDevice &current = CurrentItem();
+  for (outList_.Begin(); !outList_.IsDone(); outList_.Next()) {
+    MidiOutDevice &current = outList_.CurrentItem();
     if (!strcmp(deviceName_.c_str(), current.GetName())) {
       if (current.Init()) {
         if (current.Start()) {

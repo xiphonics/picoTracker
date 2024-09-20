@@ -28,8 +28,32 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   auto config = Config::GetInstance();
 
+  Variable *v;
+
+  v = config->FindVariable(FourCC::VarMidiDevice);
+  // for now just hard 1 so that there are max 1 MIDI device, as only have OFF &
+  // TRS for now, once USB use MIDI_DEVICE_LEN
+  intVarField_.emplace_back(position, *v, "MIDI device: %s", 0, 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  ((WatchedVariable *)v)->AddObserver(*this);
+
   position._y += 1;
-  Variable *v = config->FindVariable(FourCC::VarFGColor);
+  v = config->FindVariable(FourCC::VarMidiSync);
+  // just hardcode max of 1, as only settings are "off" & "send"
+  intVarField_.emplace_back(position, *v, "MIDI sync: %s", 0, 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  ((WatchedVariable *)v)->AddObserver(*this);
+
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarLineOut);
+  intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, 2, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  // TODO: uncomment this addObserver once line out is implemented as
+  // watchedvariable
+  //  ((WatchedVariable *)v)->AddObserver(*this);
+
+  position._y += 2;
+  v = config->FindVariable(FourCC::VarFGColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Foreground: %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
@@ -44,7 +68,8 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  addSwatchField(CD_BACKGROUND, position);
+  // dont need background color swatch as it will always be invisible against
+  // background anyways
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarHI1Color);
@@ -108,21 +133,6 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
   addSwatchField(CD_ERROR, position);
-
-  v = config->FindVariable(FourCC::VarMidiDevice);
-  position._y += 2;
-  intVarField_.emplace_back(position, *v, "MIDI device: %s", 0, 0, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  v = config->FindVariable(FourCC::VarMidiSync);
-  position._y += 1;
-  intVarField_.emplace_back(position, *v, "MIDI sync: %s", 0, 0, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 2;
-  v = config->FindVariable(FourCC::VarLineOut);
-  intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, 2, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
   actionField_.emplace_back("Update firmware", FourCC::ActionBootSelect,
@@ -200,7 +210,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
-    break;
+    return;
   }
   case FourCC::VarFGColor:
   case FourCC::VarBGColor:
@@ -223,6 +233,10 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   };
   focus->Draw(w_);
   isDirty_ = true;
+
+  Trace::Log("DEVICEVIEW", "persist config changes!");
+  Config *config = Config::GetInstance();
+  config->Save();
 };
 
 void DeviceView::addSwatchField(ColorDefinition color, GUIPoint position) {

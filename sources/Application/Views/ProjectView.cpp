@@ -149,13 +149,6 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
   position._x = xalign;
-
-  v = project_->FindVariable(FourCC::VarMidiDevice);
-  NAssert(v);
-  position._y += 2;
-  UIIntVarField *f4 = new UIIntVarField(
-      position, *v, "midi: %s", 0, MidiService::GetInstance()->Size(), 1, 1);
-  fieldList_.insert(fieldList_.end(), f4);
 }
 
 ProjectView::~ProjectView() {}

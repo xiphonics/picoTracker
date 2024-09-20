@@ -15,7 +15,7 @@
 #include <math.h>
 
 Project::Project(const char *name)
-    : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0),
+    : Persistent("PROJECT"), song_(), tempoNudge_(0),
       tempo_("tempo", FourCC::VarTempo, 138),
       masterVolume_("master", FourCC::VarMasterVolume, 100),
       wrap_("wrap", FourCC::VarWrap, false),
@@ -36,21 +36,6 @@ Project::Project(const char *name)
   this->insert(end(), &scale_);
   scale_.SetInt(0);
   this->insert(end(), &projectName_);
-
-  // Reload the midi device list
-  buildMidiDeviceList();
-
-  // For now just select the first MIDI device in the list as currently
-  // we only have 1 anyways
-  auto midiService = MidiService::GetInstance();
-  std::string deviceName = midiService->GetFirst()->GetName();
-  MidiService::GetInstance()->SelectDevice(deviceName);
-  Trace::Log("PROJECT", "selected midi:%s", deviceName.c_str());
-
-  WatchedVariable *midi = new WatchedVariable(
-      "midi", FourCC::VarMidiDevice, midiDeviceList_, midiDeviceListSize_);
-  this->insert(end(), midi);
-  midi->AddObserver(*this);
 
   static char instrumentBankMemBuf[sizeof(InstrumentBank)];
   instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
@@ -129,29 +114,8 @@ bool Project::Wrap() {
 
 InstrumentBank *Project::GetInstrumentBank() { return instrumentBank_; };
 
-// bool Project::MidiEnabled() {
-//	Variable *v=FindVariable(VAR_MIDIENABLE) ;
-//	NAssert(v) ;
-//	return v->GetBool() ;
-// }
-
 void Project::Update(Observable &o, I_ObservableData *d) {
-  WatchedVariable &v = (WatchedVariable &)o;
-  switch (v.GetID()) {
-  case FourCC::VarMidiDevice:
-    MidiService::GetInstance()->SelectDevice(
-        std::string(v.GetString().c_str()));
-    /*           bool enabled=v.GetBool() ;
-               Midi *midi=Midi::GetInstance() ;
-               if (enabled) {
-                   midi->Init() ;
-               } else {
-                   midi->Stop() ;
-                   midi->Close() ;
-               }
-    */
-    break;
-  }
+  // Nothing to do here for now
 }
 
 void Project::Purge() {
@@ -340,25 +304,6 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
     printer->CloseElement();
     it++;
   }
-};
-
-void Project::buildMidiDeviceList() {
-  if (midiDeviceList_) {
-    for (int i = 0; i < midiDeviceListSize_; i++) {
-      SAFE_FREE(midiDeviceList_[i]);
-    }
-    SAFE_FREE(midiDeviceList_);
-  }
-  midiDeviceListSize_ = MidiService::GetInstance()->Size();
-  midiDeviceList_ = (char **)SYS_MALLOC(midiDeviceListSize_ * sizeof(char *));
-  auto midiService = MidiService::GetInstance();
-  midiService->Begin();
-  for (int i = 0; i < midiDeviceListSize_; i++) {
-    std::string deviceName = midiService->CurrentItem().GetName();
-    midiDeviceList_[i] = (char *)malloc(sizeof(char *) * deviceName.size() + 1);
-    strcpy(midiDeviceList_[i], deviceName.c_str());
-    midiService->Next();
-  };
 };
 
 void Project::OnTempoTap() {

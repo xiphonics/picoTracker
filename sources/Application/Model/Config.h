@@ -4,6 +4,7 @@
 #include "Application/Persistency/Persistent.h"
 #include "Foundation/T_Singleton.h"
 #include "Foundation/Variables/VariableContainer.h"
+#include "Foundation/Variables/WatchedVariable.h"
 #include "System/Console/Trace.h"
 
 class Config : public T_Singleton<Config>, public VariableContainer {
@@ -20,6 +21,8 @@ private:
   void useDefaultConfig();
 
   Variable lineOut_;
+  WatchedVariable midiDevice_;
+  WatchedVariable midiSync_;
 };
 
 #endif
