@@ -15,7 +15,8 @@ SerialDebugUI::SerialDebugUI(){};
 // string they entered up to pressing return
 bool SerialDebugUI::readSerialIn(char *buffer, short size) {
   char chr = getchar_timeout_us(0);
-  while (chr != ENDSTDIN) {
+  // in pico-sdk the char seemed to change from ENDSTDIN to 0xFE, no idea why
+  while (chr != ENDSTDIN && chr != 0xFE) {
     // echo char back on serial
     printf("%c", chr);
     buffer[lp_++] = chr;
