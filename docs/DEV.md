@@ -16,6 +16,11 @@ picoTracker/build % PICO_SDK_PATH=../sources/Externals/pico-sdk cmake ../sources
 picoTracker/build % make -j8
 ```
 
+You can also set a specific path that contains the toolchain (gcc etc) with:
+```
+PICO_SDK_PATH=../sources/Externals/pico-sdk cmake -DPICO_TOOLCHAIN_PATH=/path/to/your/arm-none-eabi-toolchain  ../sources
+```
+
 Subsequent builds just need the make command. If anything changed on the CMakeLists files, cmake will update itself.
 
 ## Building Debug version
