@@ -36,6 +36,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
+  etl::ilist<Variable *> *Variables() { return &variables_; };
 
   // Engine playback  start callback
   virtual void OnStart();
@@ -45,6 +46,8 @@ public:
 
 protected:
 private:
+  etl::list<Variable *, 6> variables_;
+
   bool running_;
 
   braids::MacroOscillator osc_;

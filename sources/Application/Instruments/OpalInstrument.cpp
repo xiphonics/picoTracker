@@ -2,10 +2,11 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
+#include "I_Instrument.h"
 #include "System/Console/Trace.h"
 #include <string.h>
 
-OpalInstrument::OpalInstrument() : opl_(44100) {
+OpalInstrument::OpalInstrument() : I_Instrument(&variables_), opl_(44100) {
 
   // Reserve Observer
   ReserveObserver(1);

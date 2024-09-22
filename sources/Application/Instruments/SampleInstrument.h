@@ -43,6 +43,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
+  etl::ilist<Variable *> *Variables() { return &variables_; };
 
   bool IsMulti();
 
@@ -69,6 +70,8 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
+  etl::list<Variable *, 18> variables_;
+
   SoundSource *source_;
   static struct renderParams renderParams_[SONG_CHANNEL_COUNT];
   bool running_;

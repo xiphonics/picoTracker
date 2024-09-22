@@ -6,7 +6,7 @@
 
 MidiService *MidiInstrument::svc_ = 0;
 
-MidiInstrument::MidiInstrument() {
+MidiInstrument::MidiInstrument() : I_Instrument(&variables_) {
 
   // Reserve Observer
   ReserveObserver(1);
@@ -16,16 +16,16 @@ MidiInstrument::MidiInstrument() {
   };
 
   Variable *v = new Variable("channel", FourCC::MidiInstrumentChannel, 0);
-  insert(end(), v);
+  variables_.insert(variables_.end(), v);
   v = new Variable("note length", FourCC::MidiInstrumentNoteLength, 0);
-  insert(end(), v);
+  variables_.insert(variables_.end(), v);
   v = new Variable("volume", FourCC::MidiInstrumentVolume, 255);
-  insert(end(), v);
+  variables_.insert(variables_.end(), v);
   v = new Variable("table", FourCC::MidiInstrumentTable, -1);
-  insert(end(), v);
+  variables_.insert(variables_.end(), v);
   v = new Variable("table automation", FourCC::MidiInstrumentTableAutomation,
                    false);
-  insert(end(), v);
+  variables_.insert(variables_.end(), v);
 }
 
 MidiInstrument::~MidiInstrument(){};

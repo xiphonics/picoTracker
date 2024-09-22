@@ -15,8 +15,8 @@
 #include <math.h>
 
 Project::Project(const char *name)
-    : Persistent("PROJECT"), song_(), tempoNudge_(0),
-      tempo_("tempo", FourCC::VarTempo, 138),
+    : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
+      tempoNudge_(0), tempo_("tempo", FourCC::VarTempo, 138),
       masterVolume_("master", FourCC::VarMasterVolume, 100),
       wrap_("wrap", FourCC::VarWrap, false),
       transpose_("transpose", FourCC::VarTranspose, 0),
@@ -24,18 +24,18 @@ Project::Project(const char *name)
       projectName_("projectname", FourCC::VarProjectName, name) {
 
   //  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
-  this->insert(end(), &tempo_);
+  this->variables_.insert(variables_.end(), &tempo_);
   //  Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
-  this->insert(end(), &masterVolume_);
+  this->variables_.insert(variables_.end(), &masterVolume_);
   //  Variable *wrap = new Variable("wrap", VAR_WRAP, false);
-  this->insert(end(), &wrap_);
+  this->variables_.insert(variables_.end(), &wrap_);
   //  Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
-  this->insert(end(), &transpose_);
+  this->variables_.insert(variables_.end(), &transpose_);
   //  Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales,
   //  0);
-  this->insert(end(), &scale_);
+  this->variables_.insert(variables_.end(), &scale_);
   scale_.SetInt(0);
-  this->insert(end(), &projectName_);
+  this->variables_.insert(variables_.end(), &projectName_);
 
   static char instrumentBankMemBuf[sizeof(InstrumentBank)];
   instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
@@ -296,8 +296,8 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   }
 
   // save all of the project's parameters
-  auto it = begin();
-  for (size_t i = 0; i < size(); i++) {
+  auto it = variables_.begin();
+  for (size_t i = 0; i < variables_.size(); i++) {
     printer->OpenElement("PARAMETER");
     printer->PushAttribute("NAME", (*it)->GetName());
     printer->PushAttribute("VALUE", (*it)->GetString().c_str());

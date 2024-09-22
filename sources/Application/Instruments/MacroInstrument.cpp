@@ -5,6 +5,7 @@
 #include "Application/Player/PlayerMixer.h" // For MIX_BUFFER_SIZE.. kick out pls
 #include "Application/Player/SyncMaster.h"
 #include "CommandList.h"
+#include "I_Instrument.h"
 #include "Services/Audio/Audio.h"
 #include "System/Console/Trace.h"
 #include "System/io/Status.h"
@@ -12,7 +13,8 @@
 #include <assert.h>
 
 MacroInstrument::MacroInstrument()
-    : shape_("shape", FourCC::MacroInstrumentShape, braids::algo_values,
+    : I_Instrument(&variables_),
+      shape_("shape", FourCC::MacroInstrumentShape, braids::algo_values,
              braids::MACRO_OSC_SHAPE_LAST - 2, 0),
       timbre_("timbre", FourCC::MacroInstrmentTimbre, 0x7f),
       color_("color", FourCC::MacroInstrumentColor, 0x7f),
@@ -22,12 +24,12 @@ MacroInstrument::MacroInstrument()
 
   running_ = false;
 
-  insert(end(), &shape_);
-  insert(end(), &timbre_);
-  insert(end(), &color_);
-  insert(end(), &attack_);
-  insert(end(), &decay_);
-  insert(end(), &signature_);
+  variables_.insert(variables_.end(), &shape_);
+  variables_.insert(variables_.end(), &timbre_);
+  variables_.insert(variables_.end(), &color_);
+  variables_.insert(variables_.end(), &attack_);
+  variables_.insert(variables_.end(), &decay_);
+  variables_.insert(variables_.end(), &signature_);
 }
 
 MacroInstrument::~MacroInstrument() {}

@@ -29,7 +29,8 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 #define KRATE_SAMPLE_COUNT 100
 
 SampleInstrument::SampleInstrument()
-    : volume_("volume", FourCC::SampleInstrumentVolume, 0x80),
+    : I_Instrument(&variables_),
+      volume_("volume", FourCC::SampleInstrumentVolume, 0x80),
       interpolation_("interpol", FourCC::SampleInstrumentInterpolation,
                      interpolationTypes, 2, 0),
       crush_("crush", FourCC::SampleInstrumentCrush, 16),
@@ -68,31 +69,31 @@ SampleInstrument::SampleInstrument()
   // Initialize exported variables
   WatchedVariable *wv =
       new SampleVariable("sample", FourCC::SampleInstrumentSample);
-  insert(end(), wv);
+  variables_.insert(variables_.end(), wv);
   wv->AddObserver(*this);
 
-  insert(end(), &volume_);
-  insert(end(), &interpolation_);
-  insert(end(), &crush_);
-  insert(end(), &drive_);
-  insert(end(), &downsample_);
-  insert(end(), &rootNote_);
-  insert(end(), &fineTune_);
-  insert(end(), &pan_);
-  insert(end(), &cutoff_);
-  insert(end(), &reso_);
-  insert(end(), &filterMix_);
-  insert(end(), &filterMode_);
-  insert(end(), &start_);
+  variables_.insert(variables_.end(), &volume_);
+  variables_.insert(variables_.end(), &interpolation_);
+  variables_.insert(variables_.end(), &crush_);
+  variables_.insert(variables_.end(), &drive_);
+  variables_.insert(variables_.end(), &downsample_);
+  variables_.insert(variables_.end(), &rootNote_);
+  variables_.insert(variables_.end(), &fineTune_);
+  variables_.insert(variables_.end(), &pan_);
+  variables_.insert(variables_.end(), &cutoff_);
+  variables_.insert(variables_.end(), &reso_);
+  variables_.insert(variables_.end(), &filterMix_);
+  variables_.insert(variables_.end(), &filterMode_);
+  variables_.insert(variables_.end(), &start_);
   start_.AddObserver(*this);
-  insert(end(), &loopMode_);
+  variables_.insert(variables_.end(), &loopMode_);
   loopMode_.SetInt(0);
-  insert(end(), &loopStart_);
+  variables_.insert(variables_.end(), &loopStart_);
   loopStart_.AddObserver(*this);
-  insert(end(), &loopEnd_);
+  variables_.insert(variables_.end(), &loopEnd_);
   loopEnd_.AddObserver(*this);
-  insert(end(), &table_);
-  insert(end(), &tableAuto_);
+  variables_.insert(variables_.end(), &table_);
+  variables_.insert(variables_.end(), &tableAuto_);
 
   tableState_.Reset();
 }
@@ -1133,8 +1134,8 @@ etl::string<24> SampleInstrument::GetName() {
 };
 
 void SampleInstrument::Purge() {
-  auto it = begin();
-  for (size_t i = 0; i < size(); i++) {
+  auto it = variables_.begin();
+  for (size_t i = 0; i < variables_.size(); i++) {
     (*it)->Reset();
     it++;
   }

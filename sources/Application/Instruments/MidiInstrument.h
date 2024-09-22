@@ -43,12 +43,14 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-
+  etl::ilist<Variable *> *Variables() { return &variables_; };
   // external parameter list
 
   void SetChannel(int i);
 
 private:
+  etl::list<Variable *, 5> variables_;
+
   uint8_t lastNote_[SONG_CHANNEL_COUNT];
   int remainingTicks_;
   bool playing_;

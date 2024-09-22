@@ -35,7 +35,8 @@ static const etl::flat_map validParameters{
 };
 
 Config::Config()
-    : lineOut_("lineout", FourCC::VarLineOut, lineOutOptions, 3, 0),
+    : VariableContainer(&variables_),
+      lineOut_("lineout", FourCC::VarLineOut, lineOutOptions, 3, 0),
       midiDevice_("mididevice", FourCC::VarMidiDevice, midiDeviceList,
                   MIDI_DEVICE_LEN),
       midiSync_("midisync", FourCC::VarMidiSync, midiSendSync, 2, 0) {
@@ -99,8 +100,8 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
   printer->PushAttribute("VERSION", CONFIG_VERSION_NUMBER);
 
   // save all of the config parameters
-  auto it = begin();
-  for (size_t i = 0; i < size(); i++) {
+  auto it = variables_.begin();
+  for (size_t i = 0; i < variables_.size(); i++) {
     etl::string<16> elemName = (*it)->GetName();
     to_upper_case(elemName);
     printer->OpenElement(elemName.c_str());
@@ -137,13 +138,13 @@ int Config::GetValue(const char *key) {
 void Config::processParams(const char *name, int value) {
   if (!strcmp(name, "LINEOUT")) {
     lineOut_.SetInt(value);
-    insert(end(), &lineOut_);
+    variables_.insert(variables_.end(), &lineOut_);
   } else if (!strcmp(name, "MIDIDEVICE")) {
     midiDevice_.SetInt(value);
-    insert(end(), &midiDevice_);
+    variables_.insert(variables_.end(), &midiDevice_);
   } else if (!strcmp(name, "MIDISYNC")) {
     midiSync_.SetInt(value);
-    insert(end(), &midiSync_);
+    variables_.insert(variables_.end(), &midiSync_);
   } else {
     auto fourcc = FourCC::Default;
     // TODO: need to be able to assign fourcc based on name of element from the
@@ -172,7 +173,7 @@ void Config::processParams(const char *name, int value) {
       fourcc = FourCC::VarMidiSync;
     }
     Variable *v = new Variable(name, fourcc, value);
-    insert(end(), v);
+    variables_.insert(variables_.end(), v);
   }
 }
 

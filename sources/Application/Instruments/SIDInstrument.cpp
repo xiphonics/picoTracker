@@ -2,6 +2,7 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
+#include "I_Instrument.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include <string.h>
@@ -38,7 +39,7 @@ Variable SIDInstrument::fltmode2_("FMODE2", FourCC::SIDInstrument2FilterMode,
 Variable SIDInstrument::vol2_("DIP_VOLUME2", FourCC::SIDInstrument2Volume, 0xF);
 
 SIDInstrument::SIDInstrument(SIDInstrumentInstance chip, int osc)
-    : chip_(chip), osc_(osc),
+    : I_Instrument(&variables_), chip_(chip), osc_(osc),
       vpw_("VPW", FourCC::SIDInstrumentPulseWidth, 0x800),
       vsync_("VSYNC", FourCC::SIDInstrumentVSync, false),
       vring_("VRING", FourCC::SIDInstrumentRingModulator, false),
@@ -55,40 +56,40 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip, int osc)
   name_ += num;
 
   Variable *v = new Variable("table", FourCC::SIDInstrumentTable, -1);
-  insert(end(), v);
+  variables_.insert(variables_.end(), v);
   v = new Variable("table automation", FourCC::SIDInstrumentTableAutomation,
                    false);
-  insert(end(), v);
+  variables_.insert(variables_.end(), v);
 
-  insert(end(), &vpw_);
-  insert(end(), &vwf1_);
-  insert(end(), &vsync_);
-  insert(end(), &vring_);
+  variables_.insert(variables_.end(), &vpw_);
+  variables_.insert(variables_.end(), &vwf1_);
+  variables_.insert(variables_.end(), &vsync_);
+  variables_.insert(variables_.end(), &vring_);
   //  v1adsr_ = new Variable("V1ADSR", DIP_V1ADSR,
   //                         0x2282); // TODO: What's a good default?
-  insert(end(), &vadsr_);
-  insert(end(), &vfon_);
+  variables_.insert(variables_.end(), &vadsr_);
+  variables_.insert(variables_.end(), &vfon_);
 
   //  fltcut_ = new Variable("FILTCUT", DIP_FILTCUT,
   //                         0x1FF); // TODO: what's a
   //                         good default?
-  insert(end(), &fltcut1_);
-  insert(end(), &fltres1_);
+  variables_.insert(variables_.end(), &fltcut1_);
+  variables_.insert(variables_.end(), &fltres1_);
   //  fltmode_ = new Variable("FMODE", DIP_FMODE,
   //  sidFilterModeText, DFM_LAST,
   //                          0x0); // TODO: What's a
   //                          good default?
-  insert(end(), &fltmode1_);
-  insert(end(), &vol1_);
+  variables_.insert(variables_.end(), &fltmode1_);
+  variables_.insert(variables_.end(), &vol1_);
 
-  insert(end(), &fltcut2_);
-  insert(end(), &fltres2_);
+  variables_.insert(variables_.end(), &fltcut2_);
+  variables_.insert(variables_.end(), &fltres2_);
   //  fltmode_ = new Variable("FMODE", DIP_FMODE,
   //  sidFilterModeText, DFM_LAST,
   //                          0x0); // TODO: What's a
   //                          good default?
-  insert(end(), &fltmode2_);
-  insert(end(), &vol2_);
+  variables_.insert(variables_.end(), &fltmode2_);
+  variables_.insert(variables_.end(), &vol2_);
 }
 
 SIDInstrument::~SIDInstrument(){};

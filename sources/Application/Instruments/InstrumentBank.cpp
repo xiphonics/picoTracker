@@ -122,7 +122,8 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
       printer->PushAttribute("ID", hex);
       printer->PushAttribute("TYPE", InstrumentTypeData[instr->GetType()]);
 
-      for (auto it = instr->begin(); it != instr->end(); it++) {
+      for (auto it = instr->Variables()->begin();
+           it != instr->Variables()->end(); it++) {
         printer->OpenElement("PARAM");
         printer->PushAttribute("NAME", (*it)->GetName());
         printer->PushAttribute("VALUE", (*it)->GetString().c_str());
@@ -232,7 +233,8 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
             }
           }
 
-          for (auto it = instr->begin(); it != instr->end(); it++) {
+          for (auto it = instr->Variables()->begin();
+               it != instr->Variables()->end(); it++) {
             if (!strcmp((*it)->GetName(), name)) {
               (*it)->SetString(value);
             };
@@ -297,7 +299,8 @@ unsigned short InstrumentBank::Clone(unsigned short i) {
     dst = new MidiInstrument();
   }
   instrument_[next] = dst;
-  for (auto it = src->begin(); it != src->end(); it++) {
+  for (auto it = src->Variables()->begin(); it != src->Variables()->end();
+       it++) {
     Variable *dstV = dst->FindVariable((*it)->GetID());
     if (dstV) {
       dstV->CopyFrom(**it);

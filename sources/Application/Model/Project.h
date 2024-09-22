@@ -47,6 +47,8 @@ public:
   virtual void RestoreContent(PersistencyDocument *doc);
 
 private:
+  etl::list<Variable *, 6> variables_;
+
   InstrumentBank *instrumentBank_;
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];

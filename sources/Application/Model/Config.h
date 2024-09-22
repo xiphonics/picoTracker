@@ -16,6 +16,8 @@ public:
   void Save();
 
 private:
+  etl::list<Variable *, 20> variables_;
+
   void SaveContent(tinyxml2::XMLPrinter *printer);
   void processParams(const char *name, int value);
   void useDefaultConfig();

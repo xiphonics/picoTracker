@@ -66,12 +66,15 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
+  etl::ilist<Variable *> *Variables() { return &variables_; };
 
   int GetChip() { return chip_; };
   int GetOsc() { return osc_; };
   void SetRender(bool render) { render_ = render; };
 
 private:
+  etl::list<Variable *, 16> variables_;
+
   etl::string<24> name_;
   SIDInstrumentInstance chip_; // SID1 or SID2
   int osc_;                    // 0, 1 or 2
