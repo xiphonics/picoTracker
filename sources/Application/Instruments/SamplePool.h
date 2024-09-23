@@ -37,6 +37,8 @@ protected:
   SoundSource *wav_[MAX_PIG_SAMPLES];
 
 private:
+  etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;
+
 #ifdef LOAD_IN_FLASH
   static int flashEraseOffset_;
   static int flashWriteOffset_;

@@ -45,7 +45,7 @@ uint storage_get_flash_capacity() {
 }
 #endif
 
-SamplePool::SamplePool() {
+SamplePool::SamplePool() : Observable(&observers_) {
   for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
     names_[i] = NULL;
     wav_[i] = NULL;

@@ -53,9 +53,6 @@ SampleInstrument::SampleInstrument()
       tableAuto_("table automation", FourCC::SampleInstrumentTableAutomation,
                  false) {
 
-  // Reserve Observer
-  ReserveObserver(1);
-
   // Initialize MIDI notes
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     SampleInstrument::lastMidiNote_[i] = -1;

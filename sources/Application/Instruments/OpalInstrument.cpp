@@ -6,11 +6,7 @@
 #include "System/Console/Trace.h"
 #include <string.h>
 
-OpalInstrument::OpalInstrument() : I_Instrument(&variables_), opl_(44100) {
-
-  // Reserve Observer
-  ReserveObserver(1);
-}
+OpalInstrument::OpalInstrument() : I_Instrument(&variables_), opl_(44100) {}
 
 OpalInstrument::~OpalInstrument(){};
 

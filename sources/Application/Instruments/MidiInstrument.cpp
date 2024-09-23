@@ -8,9 +8,6 @@ MidiService *MidiInstrument::svc_ = 0;
 
 MidiInstrument::MidiInstrument() : I_Instrument(&variables_) {
 
-  // Reserve Observer
-  ReserveObserver(1);
-
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
   };
