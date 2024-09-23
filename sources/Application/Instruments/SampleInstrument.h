@@ -70,7 +70,7 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
-  etl::list<Variable *, 18> variables_;
+  etl::list<Variable *, 19> variables_;
 
   SoundSource *source_;
   static struct renderParams renderParams_[SONG_CHANNEL_COUNT];
