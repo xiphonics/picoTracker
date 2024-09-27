@@ -22,7 +22,7 @@ private:
   void processParams(const char *name, int value);
   void useDefaultConfig();
 
-  Variable lineOut_;
+  WatchedVariable lineOut_;
   WatchedVariable midiDevice_;
   WatchedVariable midiSync_;
 };

@@ -48,9 +48,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   v = config->FindVariable(FourCC::VarLineOut);
   intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  // TODO: uncomment this addObserver once line out is implemented as
-  // watchedvariable
-  //  ((WatchedVariable *)v)->AddObserver(*this);
+  ((WatchedVariable *)v)->AddObserver(*this);
 
   position._y += 2;
   v = config->FindVariable(FourCC::VarFGColor);

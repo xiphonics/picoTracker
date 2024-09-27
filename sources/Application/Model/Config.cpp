@@ -11,7 +11,7 @@
 
 #define MIDI_DEVICE_LEN 4
 
-static const char *lineOutOptions[3] = {"Line level", "HP High", "HP Low"};
+static const char *lineOutOptions[3] = {"HP Low", "HP High", "Line Level"};
 static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
                                                       "TRS+USB"};
 static const char *midiSendSync[2] = {"Off", "Send"};
@@ -36,10 +36,10 @@ static const etl::flat_map validParameters{
 
 Config::Config()
     : VariableContainer(&variables_),
-      lineOut_("lineout", FourCC::VarLineOut, lineOutOptions, 3, 0),
-      midiDevice_("mididevice", FourCC::VarMidiDevice, midiDeviceList,
+      lineOut_("LINEOUT", FourCC::VarLineOut, lineOutOptions, 3, 0),
+      midiDevice_("MIDIDEVICE", FourCC::VarMidiDevice, midiDeviceList,
                   MIDI_DEVICE_LEN),
-      midiSync_("midisync", FourCC::VarMidiSync, midiSendSync, 2, 0) {
+      midiSync_("MIDISYNC", FourCC::VarMidiSync, midiSendSync, 2, 0) {
   PersistencyDocument doc;
 
   if (!doc.Load(CONFIG_FILE_PATH)) {
