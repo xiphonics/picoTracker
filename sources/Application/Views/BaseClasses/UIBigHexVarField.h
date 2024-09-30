@@ -4,7 +4,7 @@
 #include "Foundation/Observable.h"
 #include "UIIntVarField.h"
 
-class UIBigHexVarField : public UIIntVarField, public Observable {
+class UIBigHexVarField : public UIIntVarField {
 
 public:
   UIBigHexVarField(GUIPoint &position, Variable &v, int precision,

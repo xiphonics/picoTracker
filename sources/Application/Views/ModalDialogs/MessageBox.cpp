@@ -53,20 +53,18 @@ void MessageBox::DrawView() {
 void MessageBox::OnPlayerUpdate(PlayerEventType, unsigned int currentTick){};
 void MessageBox::OnFocus(){};
 void MessageBox::ProcessButtonMask(unsigned short mask, bool pressed) {
-  if (mask & EPBM_A) {
-    EndModal(button_[selected_]);
-  }
   if (mask & EPBM_LEFT) {
     selected_ = (selected_ + 1);
     if (selected_ >= buttonCount_) {
       selected_ = 0;
     }
-  }
-  if (mask & EPBM_RIGHT) {
+  } else if (mask & EPBM_RIGHT) {
     selected_ = (selected_ - 1);
     if (selected_ < 0) {
       selected_ = buttonCount_ - 1;
     }
+  } else if (mask & EPBM_A && pressed) {
+    EndModal(button_[selected_]);
   }
   isDirty_ = true;
 };

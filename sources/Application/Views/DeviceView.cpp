@@ -35,20 +35,20 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // TRS for now, once USB use MIDI_DEVICE_LEN
   intVarField_.emplace_back(position, *v, "MIDI device: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  ((WatchedVariable *)v)->AddObserver(*this);
+  (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarMidiSync);
   // just hardcode max of 1, as only settings are "off" & "send"
   intVarField_.emplace_back(position, *v, "MIDI sync: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  ((WatchedVariable *)v)->AddObserver(*this);
+  (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarLineOut);
   intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  ((WatchedVariable *)v)->AddObserver(*this);
+  (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 2;
   v = config->FindVariable(FourCC::VarFGColor);
@@ -224,6 +224,12 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     ((AppWindow &)w_).Clear(true);
     w_.Update();
     break;
+
+  case FourCC::VarLineOut: {
+    MessageBox *mb =
+        new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
+    DoModal(mb);
+  }
 
   default:
     NInvalid;

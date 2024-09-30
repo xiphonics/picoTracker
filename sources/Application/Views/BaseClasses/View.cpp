@@ -65,7 +65,7 @@ void View::drawMap() {
   char buffer[5];
   props.invert_ = false;
   // row1
-  sprintf(buffer, "M   ");
+  sprintf(buffer, "D   ");
   DrawString(pos._x, pos._y, buffer, props);
   pos._y++;
   // row2
