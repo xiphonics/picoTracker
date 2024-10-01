@@ -10,7 +10,7 @@
 #undef SendMessage
 #endif
 
-MidiService::MidiService() : inList_(true), device_(0), sendSync_(true) {
+MidiService::MidiService() : inList_(true), sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
@@ -20,9 +20,14 @@ MidiService::MidiService() : inList_(true), device_(0), sendSync_(true) {
 MidiService::~MidiService() { Close(); };
 
 bool MidiService::Init() {
-  outList_.Empty();
+  outList_.empty();
   inList_.Empty();
   buildDriverList();
+  // Init all the output midi devices
+  for (auto dev : outList_) {
+    dev->Init();
+  }
+
   // Add a merger for the input
   merger_ = new MidiInMerger();
   for (inList_.Begin(); !inList_.IsDone(); inList_.Next()) {
@@ -35,11 +40,9 @@ bool MidiService::Init() {
   auto midiDevVar =
       (WatchedVariable *)config->FindVariable(FourCC::VarMidiDevice);
   midiDevVar->AddObserver(*this);
-  if (midiDevVar->GetInt() == 1) {
-    // for now just hardcode to first and only TRS device until we enable USB
-    device_ = outList_.GetFirst();
-    device_->Init();
-  }
+
+  auto activeDeviceConfig = midiDevVar->GetInt();
+  updateActiveDevicesList(activeDeviceConfig);
 
   auto midiSyncVar =
       (WatchedVariable *)config->FindVariable(FourCC::VarMidiSync);
@@ -62,7 +65,7 @@ bool MidiService::Start() {
 void MidiService::Stop() { stopDevice(); };
 
 void MidiService::QueueMessage(MidiMessage &m) {
-  if (device_) {
+  if (!activeOutDevices_.empty()) {
     auto queue = &queues_[currentPlayQueue_];
     queue->emplace_back(m.status_, m.data1_, m.data2_);
   }
@@ -71,7 +74,7 @@ void MidiService::QueueMessage(MidiMessage &m) {
 void MidiService::Trigger() {
   AdvancePlayQueue();
 
-  if (device_ && sendSync_) {
+  if (!activeOutDevices_.empty() && sendSync_) {
     SyncMaster *sm = SyncMaster::GetInstance();
     if (sm->MidiSlice()) {
       MidiMessage msg;
@@ -97,19 +100,13 @@ void MidiService::Update(Observable &o, I_ObservableData *d) {
     // need braces inside case statements due to:
     // https://stackoverflow.com/a/11578973/85472
   case FourCC::VarMidiDevice: {
-    auto deviceID = v.GetInt();
+    auto activeDeviceConfig = v.GetInt();
     // note deviceID has 0 == OFF
-    printf("midi device var changed:%d", deviceID);
+    printf("midi device var changed:%d", activeDeviceConfig);
 
-    if (deviceID == 0 && device_ != nullptr) {
-      device_->Stop();
-      device_->Close();
-      device_ = nullptr;
-    } else if (deviceID == 1) {
-      // for now just hardcode to first and only TRS device until we enable USB
-      device_ = outList_.GetFirst();
-      device_->Init();
-    }
+    stopDevice();
+    updateActiveDevicesList(activeDeviceConfig);
+    startDevice();
   } break;
   case FourCC::VarMidiSync: {
     auto sync = v.GetInt();
@@ -139,55 +136,57 @@ void MidiService::flushOutQueue() {
   currentOutQueue_ = (currentOutQueue_ + 1) % MIDI_MAX_BUFFERS;
   auto flushQueue = &queues_[currentOutQueue_];
 
-  if (device_) {
-    // Send whatever is on the out queue
-    device_->SendQueue(*flushQueue);
+  for (auto dev : activeOutDevices_) {
+    dev->SendQueue(*flushQueue);
   }
   flushQueue->clear();
 }
 
+void MidiService::updateActiveDevicesList(unsigned short config) {
+  activeOutDevices_.clear();
+
+  switch (config) {
+  case 1:
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[0]);
+    break;
+  case 2:
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[1]);
+    break;
+  case 3:
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[0]);
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[1]);
+    break;
+  }
+}
+
 void MidiService::startDevice() {
   // look for the device
-  for (outList_.Begin(); !outList_.IsDone(); outList_.Next()) {
-    MidiOutDevice &current = outList_.CurrentItem();
-    if (!strcmp(deviceName_.c_str(), current.GetName())) {
-      if (current.Init()) {
-        if (current.Start()) {
-          device_ = &current;
-        } else {
-          current.Close();
-        }
-      }
-      break;
-    }
+  for (auto dev : activeOutDevices_) {
+    auto name = dev->GetName();
+    dev->Start();
   }
 };
 
 void MidiService::stopDevice() {
-  if (device_) {
-    device_->Stop();
-    device_->Close();
+  for (auto dev : outList_) {
+    dev->Stop();
   }
-  device_ = 0;
 };
 
 void MidiService::OnPlayerStart() {
-
-  if (deviceName_.size() != 0) {
+  for (auto dev : activeOutDevices_) {
     stopDevice();
     startDevice();
-    deviceName_ = "";
-  }
 
-  if (sendSync_) {
-    MidiMessage msg;
-    msg.status_ = 0xFA;
-    QueueMessage(msg);
+    if (sendSync_) {
+      MidiMessage msg;
+      msg.status_ = 0xFA;
+      QueueMessage(msg);
+    }
   }
 };
 
 void MidiService::OnPlayerStop() {
-
   if (sendSync_) {
     MidiMessage msg;
     msg.status_ = 0xFC;

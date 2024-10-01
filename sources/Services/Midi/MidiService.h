@@ -48,26 +48,26 @@ public:
 
 protected:
   T_SimpleList<MidiInDevice> inList_;
-  T_SimpleList<MidiOutDevice> outList_;
+  etl::vector<MidiOutDevice *, 2> outList_;
 
   virtual void Update(Observable &o, I_ObservableData *d);
   void onAudioTick();
 
-  //! start the selected midi device
+  // start the selected midi device
   void startDevice();
 
-  //! stop the selected midi device
+  // stop the selected midi device
   void stopDevice();
 
-  //! build the list of available drivers
+  // build the list of available drivers
   virtual void buildDriverList() = 0;
 
 private:
   void flushOutQueue();
+  void updateActiveDevicesList(unsigned short config);
 
 private:
-  std::string deviceName_;
-  MidiOutDevice *device_;
+  etl::vector<MidiOutDevice *, 2> activeOutDevices_;
 
   etl::array<etl::vector<MidiMessage, 10>, MIDI_MAX_BUFFERS> queues_;
 

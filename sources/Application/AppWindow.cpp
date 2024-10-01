@@ -274,7 +274,7 @@ void AppWindow::LoadProject(const char *projectName) {
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
-    project->GetInstrumentBank()->AssignDefaults();
+    Trace::Error("Failed to load project!!");
   };
 
   // Project

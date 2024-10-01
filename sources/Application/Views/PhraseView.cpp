@@ -674,10 +674,12 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask == EPBM_A) {
 
       // If note or I, we request a new instr
-
       if (col_ < 2) {
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        unsigned short next = bank->GetNext();
+        // default always to just Sample Instrument
+        auto nextId = ++(viewData_->currentInstrumentID_);
+        // New Instruments default to type NONE!
+        unsigned short next = bank->GetNextAndAssignID(IT_NONE, nextId);
         if (next != NO_MORE_INSTRUMENT) {
           unsigned char *c =
               phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
@@ -865,11 +867,11 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
           unsigned char *c =
               phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
           if (*c != 0xFF) {
-            viewData_->currentInstrument_ = *c;
+            viewData_->currentInstrumentID_ = *c;
           } else {
-            viewData_->currentInstrument_ = lastInstr_;
+            viewData_->currentInstrumentID_ = lastInstr_;
           }
-          if (viewData_->currentInstrument_ != 0xFF) {
+          if (viewData_->currentInstrumentID_ != 0xFF) {
             ViewType vt = VT_INSTRUMENT;
             ViewEvent ve(VET_SWITCH_VIEW, &vt);
             SetChanged();
@@ -987,9 +989,9 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
           unsigned char *c =
               phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
           if (*c != 0xFF) {
-            viewData_->currentInstrument_ = *c;
+            viewData_->currentInstrumentID_ = *c;
           } else {
-            viewData_->currentInstrument_ = lastInstr_;
+            viewData_->currentInstrumentID_ = lastInstr_;
           }
           ViewType vt = VT_INSTRUMENT;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);

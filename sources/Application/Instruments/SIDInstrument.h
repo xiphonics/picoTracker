@@ -36,7 +36,7 @@ static const unsigned short sid_notes[96] = {
 class SIDInstrument : public I_Instrument {
 
 public:
-  SIDInstrument(SIDInstrumentInstance chip, int osc);
+  SIDInstrument(SIDInstrumentInstance chip);
   virtual ~SIDInstrument();
 
   virtual bool Init();
@@ -68,8 +68,8 @@ public:
   virtual void SetTableState(TableSaveState &state);
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
-  int GetChip() { return chip_; };
-  int GetOsc() { return osc_; };
+  SIDInstrumentInstance GetChip() { return chip_; };
+  unsigned short GetOsc() { return osc_; };
   void SetRender(bool render) { render_ = render; };
 
 private:
@@ -77,7 +77,7 @@ private:
 
   etl::string<24> name_;
   SIDInstrumentInstance chip_; // SID1 or SID2
-  int osc_;                    // 0, 1 or 2
+  unsigned short osc_ = 0;     // 0, 1 or 2
   bool render_ = false;
 
   bool playing_;

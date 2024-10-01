@@ -3,6 +3,7 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Application.h"
 #include "picoTrackerGUIWindowImp.h"
+#include "usb_utils.h"
 
 bool picoTrackerEventManager::finished_ = false;
 bool picoTrackerEventManager::redrawing_ = false;
@@ -60,6 +61,10 @@ int picoTrackerEventManager::MainLoop() {
 #endif
   while (!finished_) {
     loops++;
+
+    // process usb interrupts, should this be done somewhere else??
+    handleUSBInterrupts();
+
     ProcessInputEvent();
     if (!queue->empty()) {
       picoTrackerEvent event(picoTrackerEventType::LAST);

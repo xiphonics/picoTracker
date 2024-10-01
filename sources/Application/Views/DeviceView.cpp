@@ -31,9 +31,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   Variable *v;
 
   v = config->FindVariable(FourCC::VarMidiDevice);
-  // for now just hard 1 so that there are max 1 MIDI device, as only have OFF &
-  // TRS for now, once USB use MIDI_DEVICE_LEN
-  intVarField_.emplace_back(position, *v, "MIDI device: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "MIDI device: %s", 0, 3, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 

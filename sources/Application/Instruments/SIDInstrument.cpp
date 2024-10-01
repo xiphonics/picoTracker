@@ -38,8 +38,8 @@ Variable SIDInstrument::fltmode2_("FMODE2", FourCC::SIDInstrument2FilterMode,
                                   sidFilterModeText, DFM_LAST, 0x0);
 Variable SIDInstrument::vol2_("DIP_VOLUME2", FourCC::SIDInstrument2Volume, 0xF);
 
-SIDInstrument::SIDInstrument(SIDInstrumentInstance chip, int osc)
-    : I_Instrument(&variables_), chip_(chip), osc_(osc),
+SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
+    : I_Instrument(&variables_), chip_(chip),
       vpw_("VPW", FourCC::SIDInstrumentPulseWidth, 0x800),
       vsync_("VSYNC", FourCC::SIDInstrumentVSync, false),
       vring_("VRING", FourCC::SIDInstrumentRingModulator, false),

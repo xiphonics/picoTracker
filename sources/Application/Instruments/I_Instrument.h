@@ -9,7 +9,10 @@
 
 #include "Application/Player/TablePlayback.h"
 
-enum InstrumentType { IT_SAMPLE = 0, IT_MIDI, IT_SID, IT_OPAL, IT_MACRO };
+enum InstrumentType { IT_NONE, IT_SAMPLE, IT_MIDI, IT_SID, IT_OPAL, IT_MACRO };
+static const char *InstrumentTypeNames[] = {
+    "NONE", "SAMPLE", "MIDI", "SID", "OPAL", "MACRO",
+};
 
 class I_Instrument : public VariableContainer, public Observable {
 public:

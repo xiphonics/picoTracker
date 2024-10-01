@@ -16,37 +16,67 @@
 #include "System/System/System.h"
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data) {
+    : FieldView(w, data),
+      instrumentType_("INSTRUMENTTYPE", FourCC::VarInstrumentType,
+                      InstrumentTypeNames, 5, 0) {
 
   project_ = data->project_;
-  lastFocusID_ = FourCC::Default;
-  current_ = 0;
-  onInstrumentChange();
+
+  GUIPoint position = GetAnchor();
+  position._y -= 2;
+  typeIntVarField_.emplace_back(position, *&instrumentType_, "Type: %s", 0, 4,
+                                1, 1);
+  fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
+  ((WatchedVariable *)&instrumentType_)->AddObserver(*this);
+  lastFocusID_ = FourCC::VarInstrumentType;
 }
 
 InstrumentView::~InstrumentView() {}
 
-InstrumentType InstrumentView::getInstrumentType() {
-  int i = viewData_->currentInstrument_;
+I_Instrument *InstrumentView::getInstrument() {
+  int id = viewData_->currentInstrumentID_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  I_Instrument *instrument = bank->GetInstrument(i);
-  return instrument->GetType();
+  return bank->GetInstrument(id);
 };
+
+void InstrumentView::onInstrumentTypeChange(InstrumentType nuInstrumentType) {
+  I_Instrument *old = getInstrument();
+  // TODO ask user confirm switch instrument type
+
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+
+  auto id = viewData_->currentInstrumentID_;
+  // release prev instrument back to available pool
+  if (old != nullptr) {
+    bank->releaseInstrument(viewData_->currentInstrumentID_);
+  }
+
+  // now assign new instrument type to the current instrument slot id
+  bank->GetNextAndAssignID((InstrumentType)nuInstrumentType, id);
+
+  currentType_ = nuInstrumentType;
+
+  refreshInstrumentFields(old);
+}
 
 void InstrumentView::onInstrumentChange() {
 
   ClearFocus();
 
-  I_Instrument *old = current_;
-
-  int i = viewData_->currentInstrument_;
+  I_Instrument *old = getInstrument();
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  current_ = bank->GetInstrument(i);
 
-  if (current_ != old) {
-    current_->RemoveObserver(*this);
+  if (getInstrument() != old) {
+    getInstrument()->RemoveObserver(*this);
   };
 
+  // update type field to match current instrument
+  ((WatchedVariable *)&instrumentType_)->SetInt(getInstrument()->GetType());
+
+  refreshInstrumentFields(old);
+};
+
+void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   fieldList_.clear();
   intVarField_.clear();
   noteVarField_.clear();
@@ -54,8 +84,15 @@ void InstrumentView::onInstrumentChange() {
   bigHexVarField_.clear();
   intVarOffField_.clear();
 
-  InstrumentType it = getInstrumentType();
+  // first put back the type field as its shown on *all* instrument types
+  fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
+  lastFocusID_ = FourCC::VarInstrumentType;
+
+  InstrumentType it = getInstrument()->GetType();
   switch (it) {
+  case IT_NONE:
+    fillNoneParameters();
+    break;
   case IT_MACRO:
     fillMacroParameters();
     break;
@@ -73,7 +110,6 @@ void InstrumentView::onInstrumentChange() {
     break;
   };
 
-  SetFocus(*fieldList_.begin());
   auto it2 = fieldList_.begin();
   for (size_t i = 0; i < fieldList_.size(); i++) {
     UIIntVarField &field = (UIIntVarField &)(**it2);
@@ -83,13 +119,15 @@ void InstrumentView::onInstrumentChange() {
     }
     it2++;
   };
-  if (current_ != old) {
-    current_->AddObserver(*this);
+  if (getInstrument() != old) {
+    getInstrument()->AddObserver(*this);
   }
-};
+}
+
+void InstrumentView::fillNoneParameters() {}
 
 void InstrumentView::fillMacroParameters() {
-  int i = viewData_->currentInstrument_;
+  int i = viewData_->currentInstrumentID_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   I_Instrument *instr = bank->GetInstrument(i);
   MacroInstrument *instrument = (MacroInstrument *)instr;
@@ -130,22 +168,19 @@ void InstrumentView::fillMacroParameters() {
 
 void InstrumentView::fillSampleParameters() {
 
-  int i = viewData_->currentInstrument_;
+  int i = viewData_->currentInstrumentID_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   I_Instrument *instr = bank->GetInstrument(i);
   SampleInstrument *instrument = (SampleInstrument *)instr;
-  GUIPoint position = GetAnchor();
 
-  //   position._y+=View::fieldSpaceHeight_;
-  position._y -= 1;
+  GUIPoint position = GetAnchor();
   Variable *v = instrument->FindVariable(FourCC::SampleInstrumentSample);
   SamplePool *sp = SamplePool::GetInstance();
   intVarField_.emplace_back(position, *v, "sample: %.19s", 0,
                             sp->GetNameListSize() - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  (*intVarField_.rbegin()).SetFocus();
 
-  position._y += 2;
+  position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentVolume);
   intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -249,7 +284,7 @@ void InstrumentView::fillSampleParameters() {
 
 void InstrumentView::fillSIDParameters() {
 
-  int i = viewData_->currentInstrument_;
+  int i = viewData_->currentInstrumentID_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   I_Instrument *instr = bank->GetInstrument(i);
   SIDInstrument *instrument = (SIDInstrument *)instr;
@@ -259,15 +294,10 @@ void InstrumentView::fillSIDParameters() {
   staticField_.emplace_back(position, instr->GetName().c_str());
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
-  //	position._y+=2 ;
   position._y += 2;
   Variable *v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
-  //  UIIntVarField *f1 =
-  //      new UIIntVarField(position, *v, "V1PW: %2.2X", 0, 0xFFF, 1, 0x10);
-  //  T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "VPW: %2.2X", 0, 0xFFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  (*intVarField_.rbegin()).SetFocus();
 
   position._y += 1;
   switch (instrument->GetChip()) {
@@ -280,36 +310,26 @@ void InstrumentView::fillSIDParameters() {
   }
 
   // Only support independent waveforms for the moment
-  //  f1 = new UIIntVarField(position, *v, "V1 WF: %s", 0, DWF_LAST - 1, 1,
-  //  1); T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "WF: %s", 0, DWF_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentVSync);
-  // f1 = new UIIntVarField(position, *v, "V1 Sync: %s", 0, 1, 1, 1);
-  // T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "Sync: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentRingModulator);
-  // f1 = new UIIntVarField(position, *v, "V1 RING: %s", 0, 1, 1, 1);
-  // T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "RING: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentADSR);
-  // f1 = new UIIntVarField(position, *v, "V1 ADSR: %4.4X", 0, 0xFFFF, 1,
-  // 0x10); T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "ADSR: %4.4X", 0, 0xFFFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentFilterOn);
-  // f1 = new UIIntVarField(position, *v, "V1 filter: %s", 0, 1, 1, 1);
-  // T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "filter: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -322,8 +342,6 @@ void InstrumentView::fillSIDParameters() {
     v = instrument->FindVariable(FourCC::SIDInstrument2FilterCut);
     break;
   }
-  // f1 = new UIIntVarField(position, *v, "Flt cut: %1.1X", 0, 0x7FF, 1,
-  // 0x10); T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "Flt cut: %1.1X", 0, 0x7FF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -336,8 +354,6 @@ void InstrumentView::fillSIDParameters() {
     v = instrument->FindVariable(FourCC::SIDInstrument2FilterResonance);
     break;
   }
-  // f1 = new UIIntVarField(position, *v, "Flt Res: %1.1X", 0, 0xF, 1, 1);
-  // T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "Flt Res: %1.1X", 0, 0xF, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -350,9 +366,6 @@ void InstrumentView::fillSIDParameters() {
     v = instrument->FindVariable(FourCC::SIDInstrument2FilterMode);
     break;
   }
-  // f1 = new UIIntVarField(position, *v, "Flt mode: %s", 0, DFM_LAST - 1, 1,
-  // 1);
-  //  T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "Flt mode: %s", 0, DFM_LAST - 1, 1,
                             1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -366,15 +379,13 @@ void InstrumentView::fillSIDParameters() {
     v = instrument->FindVariable(FourCC::SIDInstrument2Volume);
     break;
   }
-  // f1 = new UIIntVarField(position, *v, "Volume: %1.1X", 0, 0xF, 1, 1);
-  //   T_SimpleList<UIField>::Insert(f1);
   intVarField_.emplace_back(position, *v, "Volume: %1.1X", 0, 0xF, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 };
 
 void InstrumentView::fillMidiParameters() {
 
-  int i = viewData_->currentInstrument_;
+  int i = viewData_->currentInstrumentID_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   I_Instrument *instr = bank->GetInstrument(i);
   MidiInstrument *instrument = (MidiInstrument *)instr;
@@ -384,7 +395,6 @@ void InstrumentView::fillMidiParameters() {
   intVarField_.emplace_back(
       UIIntVarField(position, *v, "channel: %2.2d", 0, 0x0F, 1, 0x04, 1));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  (*intVarField_.rbegin()).SetFocus();
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentVolume);
@@ -411,17 +421,19 @@ void InstrumentView::fillMidiParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
 
-void InstrumentView::fillOpalParameters(){};
+void InstrumentView::fillOpalParameters(){
+
+};
 
 void InstrumentView::warpToNext(int offset) {
-  int instrument = viewData_->currentInstrument_ + offset;
+  int instrument = viewData_->currentInstrumentID_ + offset;
   if (instrument >= MAX_INSTRUMENT_COUNT) {
     instrument = instrument - MAX_INSTRUMENT_COUNT;
   };
   if (instrument < 0) {
     instrument = MAX_INSTRUMENT_COUNT + instrument;
   };
-  viewData_->currentInstrument_ = instrument;
+  viewData_->currentInstrumentID_ = instrument;
   onInstrumentChange();
   isDirty_ = true;
 };
@@ -515,9 +527,9 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_UP)
       warpToNext(+16);
     if (mask & EPBM_A) { // Allow cut instrument
-      if (getInstrumentType() == IT_SAMPLE) {
+      if (getInstrument()->GetType() == IT_SAMPLE) {
         if (GetFocus() == *fieldList_.begin()) {
-          int i = viewData_->currentInstrument_;
+          int i = viewData_->currentInstrumentID_;
           InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
           I_Instrument *instr = bank->GetInstrument(i);
           instr->Purge();
@@ -529,7 +541,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
       // Check if on table
       if (GetFocus() == *fieldList_.rbegin()) {
-        int i = viewData_->currentInstrument_;
+        int i = viewData_->currentInstrumentID_;
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(i);
         Variable *v = instr->FindVariable(FourCC::SampleInstrumentTable);
@@ -569,7 +581,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
           ViewType vt = VT_TABLE2;
 
-          int i = viewData_->currentInstrument_;
+          int i = viewData_->currentInstrumentID_;
           InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
           I_Instrument *instr = bank->GetInstrument(i);
           int table = instr->GetTable();
@@ -612,7 +624,7 @@ void InstrumentView::DrawView() {
 
   char title[20];
   SetColor(CD_NORMAL);
-  sprintf(title, "Instrument %2.2X", viewData_->currentInstrument_);
+  sprintf(title, "Instrument %2.2X", viewData_->currentInstrumentID_);
   DrawString(pos._x, pos._y, title, props);
 
   // Draw fields
@@ -621,8 +633,18 @@ void InstrumentView::DrawView() {
   drawMap();
 };
 
-void InstrumentView::OnFocus() { onInstrumentChange(); }
+void InstrumentView::OnFocus() {
+  Trace::Log("INSTRUMENTVIEW", "onFocus");
+  onInstrumentChange();
+}
 
 void InstrumentView::Update(Observable &o, I_ObservableData *d) {
-  onInstrumentChange();
+  auto possibleNuType = (InstrumentType)instrumentType_.GetInt();
+  Trace::Log("INSTRUMENTVIEW", "UPDATE type:%d\n", possibleNuType);
+  if (currentType_ != possibleNuType) {
+    onInstrumentTypeChange(possibleNuType);
+    Trace::Log("INSTRUMENTVIEW", "instrument type changed!!");
+  } else {
+    Trace::Log("INSTRUMENTVIEW", "no instrument type change found");
+  }
 }

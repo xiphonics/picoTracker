@@ -128,6 +128,8 @@ struct FourCC {
     VarErrorColor = 111,
     VarMidiSync = 112,
 
+    VarInstrumentType = 113,
+
     ActionTempoChanged = 61,
     ActionPurge = 49,
     ActionPurgeInstrument = 47,

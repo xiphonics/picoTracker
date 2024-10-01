@@ -274,9 +274,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
           DoModal(mb);
           return;
         }
-        // all good so now persist the new project name in project state
-        persist->SaveProjectState(projName);
       }
+      // all good so now persist the new project name in project state
+      persist->SaveProjectState(projName);
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);

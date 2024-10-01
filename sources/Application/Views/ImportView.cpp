@@ -122,7 +122,7 @@ void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){};
 void ImportView::OnFocus() {
   auto picoFS = PicoFileSystem::GetInstance();
 
-  toInstr_ = viewData_->currentInstrument_;
+  toInstr_ = viewData_->currentInstrumentID_;
 
   setCurrentFolder(picoFS, SAMPLE_LIB);
 };
@@ -181,7 +181,6 @@ void ImportView::import(char *name) {
     if (instr->GetType() == IT_SAMPLE) {
       SampleInstrument *sinstr = (SampleInstrument *)instr;
       sinstr->AssignSample(sampleID);
-      toInstr_ = viewData_->project_->GetInstrumentBank()->GetNext();
     };
   } else {
     Trace::Error("failed to import sample");

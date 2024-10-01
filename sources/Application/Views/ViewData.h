@@ -59,7 +59,7 @@ public:
   int currentChain_;  // .Current edited chain
   int currentPhrase_; // .Current edited phrase
 
-  int currentInstrument_; // .Current edited instrument
+  int currentInstrumentID_; // .Current edited instrument
 
   int currentTable_; // .Current edited table
 

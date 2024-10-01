@@ -30,15 +30,20 @@ protected:
   void fillSIDParameters();
   void fillMidiParameters();
   void fillOpalParameters();
-  InstrumentType getInstrumentType();
+  void fillNoneParameters();
+  I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
+  void onInstrumentTypeChange(InstrumentType nuInstrumentType);
+  void refreshInstrumentFields(const I_Instrument *old);
 
 private:
   Project *project_;
   FourCC lastFocusID_;
-  I_Instrument *current_;
+  WatchedVariable instrumentType_;
+  InstrumentType currentType_ = IT_NONE;
 
-  etl::vector<UIIntVarField, 26> intVarField_;
+  etl::vector<UIIntVarField, 1> typeIntVarField_;
+  etl::vector<UIIntVarField, 27> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 1> staticField_;
   etl::vector<UIBigHexVarField, 3> bigHexVarField_;

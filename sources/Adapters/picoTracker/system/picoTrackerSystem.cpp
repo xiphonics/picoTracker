@@ -57,14 +57,10 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   TimerService::GetInstance()->Install(new (timerMemBuf)
                                            picoTrackerTimerService());
 
-  // Install Sound
-  AudioSettings hint;
-  hint.bufferSize_ = 1024;
-  hint.preBufferCount_ = 8;
-  static char audioMemBuf[sizeof(picoTrackerAudio)];
-  Audio::Install(new (audioMemBuf) picoTrackerAudio(hint));
-
-  // Install Midi
+  // Install MIDI
+  // **NOTE**: MIDI install MUST happen before Audio install because it triggers
+  // reading config file and config file needs to have MidiService already
+  // installed in order to apply midi settings read from the config file
 #ifdef DUMMY_MIDI
   static char midiMemBuf[sizeof(DummyMidi)];
   MidiService::Install(new (midiMemBuf) DummyMidi());
@@ -72,6 +68,13 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   static char midiMemBuf[sizeof(picoTrackerMidiService)];
   MidiService::Install(new (midiMemBuf) picoTrackerMidiService());
 #endif
+
+  // Install Sound
+  AudioSettings hint;
+  hint.bufferSize_ = 1024;
+  hint.preBufferCount_ = 8;
+  static char audioMemBuf[sizeof(picoTrackerAudio)];
+  Audio::Install(new (audioMemBuf) picoTrackerAudio(hint));
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();

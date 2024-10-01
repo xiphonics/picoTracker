@@ -11,6 +11,7 @@ target_link_libraries(platform_gui PUBLIC uiframework_simplebaseclasses
                                    PUBLIC application
                                    PUBLIC platform_display
                                    PUBLIC platform_system
+                                   PUBLIC platform_usb
 )
 
 target_include_directories(platform_gui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
