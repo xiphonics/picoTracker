@@ -29,29 +29,25 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 #define KRATE_SAMPLE_COUNT 100
 
 SampleInstrument::SampleInstrument()
-    : I_Instrument(&variables_),
-      volume_("volume", FourCC::SampleInstrumentVolume, 0x80),
-      interpolation_("interpol", FourCC::SampleInstrumentInterpolation,
-                     interpolationTypes, 2, 0),
-      crush_("crush", FourCC::SampleInstrumentCrush, 16),
-      drive_("crushdrive", FourCC::SampleInstrumentCrushVolume, 0xFF),
-      downsample_("downsample", FourCC::SampleInstrumentDownsample, 0),
-      rootNote_("root note", FourCC::SampleInstrumentRootNote, 60),
-      fineTune_("fine tune", FourCC::SampleInstrumentFineTune, 0x7F),
-      pan_("pan", FourCC::SampleInstrumentPan, 0x7F),
-      cutoff_("filter cut", FourCC::SampleInstrumentFilterCutOff, 0xFF),
-      reso_("filter res", FourCC::SampleInstrumentFilterResonance, 0x00),
-      filterMix_("filter type", FourCC::SampleInstrumentFilterType, 0x00),
-      filterMode_("filter mode", FourCC::SampleInstrumentFilterMode, filterMode,
-                  3, 0),
-      start_("start", FourCC::SampleInstrumentStart, 0),
-      loopMode_("loopmode", FourCC::SampleInstrumentLoopMode, loopTypes,
-                SILM_LAST, 0),
-      loopStart_("loopstart", FourCC::SampleInstrumentLoopStart, 0),
-      loopEnd_("end", FourCC::SampleInstrumentEnd, 0),
-      table_("table", FourCC::SampleInstrumentTable, -1),
-      tableAuto_("table automation", FourCC::SampleInstrumentTableAutomation,
-                 false) {
+    : I_Instrument(&variables_), volume_(FourCC::SampleInstrumentVolume, 0x80),
+      interpolation_(FourCC::SampleInstrumentInterpolation, interpolationTypes,
+                     2, 0),
+      crush_(FourCC::SampleInstrumentCrush, 16),
+      drive_(FourCC::SampleInstrumentCrushVolume, 0xFF),
+      downsample_(FourCC::SampleInstrumentDownsample, 0),
+      rootNote_(FourCC::SampleInstrumentRootNote, 60),
+      fineTune_(FourCC::SampleInstrumentFineTune, 0x7F),
+      pan_(FourCC::SampleInstrumentPan, 0x7F),
+      cutoff_(FourCC::SampleInstrumentFilterCutOff, 0xFF),
+      reso_(FourCC::SampleInstrumentFilterResonance, 0x00),
+      filterMix_(FourCC::SampleInstrumentFilterType, 0x00),
+      filterMode_(FourCC::SampleInstrumentFilterMode, filterMode, 3, 0),
+      start_(FourCC::SampleInstrumentStart, 0),
+      loopMode_(FourCC::SampleInstrumentLoopMode, loopTypes, SILM_LAST, 0),
+      loopStart_(FourCC::SampleInstrumentLoopStart, 0),
+      loopEnd_(FourCC::SampleInstrumentEnd, 0),
+      table_(FourCC::SampleInstrumentTable, -1),
+      tableAuto_(FourCC::SampleInstrumentTableAutomation, false) {
 
   // Initialize MIDI notes
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -64,8 +60,7 @@ SampleInstrument::SampleInstrument()
   running_ = false;
 
   // Initialize exported variables
-  WatchedVariable *wv =
-      new SampleVariable("sample", FourCC::SampleInstrumentSample);
+  WatchedVariable *wv = new SampleVariable(FourCC::SampleInstrumentSample);
   variables_.insert(variables_.end(), wv);
   wv->AddObserver(*this);
 

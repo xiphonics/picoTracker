@@ -36,10 +36,9 @@ static const etl::flat_map validParameters{
 
 Config::Config()
     : VariableContainer(&variables_),
-      lineOut_("LINEOUT", FourCC::VarLineOut, lineOutOptions, 3, 0),
-      midiDevice_("MIDIDEVICE", FourCC::VarMidiDevice, midiDeviceList,
-                  MIDI_DEVICE_LEN),
-      midiSync_("MIDISYNC", FourCC::VarMidiSync, midiSendSync, 2, 0) {
+      lineOut_(FourCC::VarLineOut, lineOutOptions, 3, 0),
+      midiDevice_(FourCC::VarMidiDevice, midiDeviceList, MIDI_DEVICE_LEN),
+      midiSync_(FourCC::VarMidiSync, midiSendSync, 2, 0) {
   PersistencyDocument doc;
 
   if (!doc.Load(CONFIG_FILE_PATH)) {
@@ -149,30 +148,30 @@ void Config::processParams(const char *name, int value) {
     auto fourcc = FourCC::Default;
     // TODO: need to be able to assign fourcc based on name of element from the
     // Xml config
-    if (!strcmp(name, "FOREGROUND")) {
+    if (!strcmp(name, FourCC(FourCC::VarFGColor).c_str())) {
       fourcc = FourCC::VarFGColor;
-    } else if (!strcmp(name, "BACKGROUND")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarBGColor).c_str())) {
       fourcc = FourCC::VarBGColor;
-    } else if (!strcmp(name, "HICOLOR1")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarHI1Color).c_str())) {
       fourcc = FourCC::VarHI1Color;
-    } else if (!strcmp(name, "HICOLOR2")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarHI2Color).c_str())) {
       fourcc = FourCC::VarHI2Color;
-    } else if (!strcmp(name, "CONSOLECOLOR")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarConsoleColor).c_str())) {
       fourcc = FourCC::VarConsoleColor;
-    } else if (!strcmp(name, "CURSORCOLOR")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarCursorColor).c_str())) {
       fourcc = FourCC::VarCursorColor;
-    } else if (!strcmp(name, "INFOCOLOR")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarInfoColor).c_str())) {
       fourcc = FourCC::VarInfoColor;
-    } else if (!strcmp(name, "WARNCOLOR")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarWarnColor).c_str())) {
       fourcc = FourCC::VarWarnColor;
-    } else if (!strcmp(name, "ERRORCOLOR")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarErrorColor).c_str())) {
       fourcc = FourCC::VarErrorColor;
-    } else if (!strcmp(name, "MIDIDEVICE")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarMidiDevice).c_str())) {
       fourcc = FourCC::VarMidiDevice;
-    } else if (!strcmp(name, "MIDISYNC")) {
+    } else if (!strcmp(name, FourCC(FourCC::VarMidiSync).c_str())) {
       fourcc = FourCC::VarMidiSync;
     }
-    Variable *v = new Variable(name, fourcc, value);
+    Variable *v = new Variable(fourcc, value);
     variables_.insert(variables_.end(), v);
   }
 }

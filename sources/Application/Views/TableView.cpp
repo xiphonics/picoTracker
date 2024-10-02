@@ -6,7 +6,7 @@
 #include "ViewData.h"
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_("edit", FourCC::ActionEdit, 0) {
+    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);

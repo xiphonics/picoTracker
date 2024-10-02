@@ -14,13 +14,13 @@
 
 MacroInstrument::MacroInstrument()
     : I_Instrument(&variables_),
-      shape_("shape", FourCC::MacroInstrumentShape, braids::algo_values,
+      shape_(FourCC::MacroInstrumentShape, braids::algo_values,
              braids::MACRO_OSC_SHAPE_LAST - 2, 0),
-      timbre_("timbre", FourCC::MacroInstrmentTimbre, 0x7f),
-      color_("color", FourCC::MacroInstrumentColor, 0x7f),
-      attack_("Attack", FourCC::MacroInstrumentAttack, 0),
-      decay_("Decay", FourCC::MacroInstrumentDecay, 0x05),
-      signature_("Signature", FourCC::MacroInstrumentSignature, 0) {
+      timbre_(FourCC::MacroInstrmentTimbre, 0x7f),
+      color_(FourCC::MacroInstrumentColor, 0x7f),
+      attack_(FourCC::MacroInstrumentAttack, 0),
+      decay_(FourCC::MacroInstrumentDecay, 0x05),
+      signature_(FourCC::MacroInstrumentSignature, 0) {
 
   running_ = false;
 

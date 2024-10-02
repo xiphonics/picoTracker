@@ -13,7 +13,7 @@
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_("edit", FourCC::ActionEdit, 0) {
+    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
   GUIPoint pos(0, 10);

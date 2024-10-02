@@ -1,8 +1,7 @@
 #include "SampleVariable.h"
 #include "SamplePool.h"
 
-SampleVariable::SampleVariable(const char *name, FourCC id)
-    : WatchedVariable(name, id, 0, 0, -1) {
+SampleVariable::SampleVariable(FourCC id) : WatchedVariable(id, 0, 0, -1) {
   SamplePool *pool = SamplePool::GetInstance();
   list_.char_ = pool->GetNameList();
   listSize_ = pool->GetNameListSize();

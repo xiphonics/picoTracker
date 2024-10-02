@@ -17,34 +17,30 @@ cRSID SIDInstrument::sid2_(6581, false, 44100);
 SIDInstrument *SIDInstrument::SID2RenderMaster = 0;
 // bool SIDInstrument::rendered1_ = false;
 
-Variable SIDInstrument::vwf1_("VWF1", FourCC::SIDInstrument1Waveform,
-                              sidWaveformText, DWF_LAST, 0x1);
-Variable SIDInstrument::vwf2_("VWF2", FourCC::SIDInstrument2Waveform,
-                              sidWaveformText, DWF_LAST, 0x1);
+Variable SIDInstrument::vwf1_(FourCC::SIDInstrument1Waveform, sidWaveformText,
+                              DWF_LAST, 0x1);
+Variable SIDInstrument::vwf2_(FourCC::SIDInstrument2Waveform, sidWaveformText,
+                              DWF_LAST, 0x1);
 
-Variable SIDInstrument::fltcut1_("FILTCUT1", FourCC::SIDInstrument1FilterCut,
-                                 0x1FF);
-Variable SIDInstrument::fltres1_("RES1", FourCC::SIDInstrument1FilterResonance,
-                                 0x0);
-Variable SIDInstrument::fltmode1_("FMODE1", FourCC::SIDInstrument1FilterMode,
+Variable SIDInstrument::fltcut1_(FourCC::SIDInstrument1FilterCut, 0x1FF);
+Variable SIDInstrument::fltres1_(FourCC::SIDInstrument1FilterResonance, 0x0);
+Variable SIDInstrument::fltmode1_(FourCC::SIDInstrument1FilterMode,
                                   sidFilterModeText, DFM_LAST, 0x0);
-Variable SIDInstrument::vol1_("DIP_VOLUME1", FourCC::SIDInstrument1Volume, 0xF);
+Variable SIDInstrument::vol1_(FourCC::SIDInstrument1Volume, 0xF);
 
-Variable SIDInstrument::fltcut2_("FILTCUT2", FourCC::SIDInstrument2FilterCut,
-                                 0x1FF);
-Variable SIDInstrument::fltres2_("RES2", FourCC::SIDInstrument2FilterResonance,
-                                 0x0);
-Variable SIDInstrument::fltmode2_("FMODE2", FourCC::SIDInstrument2FilterMode,
+Variable SIDInstrument::fltcut2_(FourCC::SIDInstrument2FilterCut, 0x1FF);
+Variable SIDInstrument::fltres2_(FourCC::SIDInstrument2FilterResonance, 0x0);
+Variable SIDInstrument::fltmode2_(FourCC::SIDInstrument2FilterMode,
                                   sidFilterModeText, DFM_LAST, 0x0);
-Variable SIDInstrument::vol2_("DIP_VOLUME2", FourCC::SIDInstrument2Volume, 0xF);
+Variable SIDInstrument::vol2_(FourCC::SIDInstrument2Volume, 0xF);
 
 SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
     : I_Instrument(&variables_), chip_(chip),
-      vpw_("VPW", FourCC::SIDInstrumentPulseWidth, 0x800),
-      vsync_("VSYNC", FourCC::SIDInstrumentVSync, false),
-      vring_("VRING", FourCC::SIDInstrumentRingModulator, false),
-      vadsr_("VADSR", FourCC::SIDInstrumentADSR, 0x2282),
-      vfon_("VFON", FourCC::SIDInstrumentFilterOn, false) {
+      vpw_(FourCC::SIDInstrumentPulseWidth, 0x800),
+      vsync_(FourCC::SIDInstrumentVSync, false),
+      vring_(FourCC::SIDInstrumentRingModulator, false),
+      vadsr_(FourCC::SIDInstrumentADSR, 0x2282),
+      vfon_(FourCC::SIDInstrumentFilterOn, false) {
 
   name_ = "SID #";
   etl::string<1> num;
@@ -55,10 +51,9 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
   etl::to_string(osc_, num, format);
   name_ += num;
 
-  Variable *v = new Variable("table", FourCC::SIDInstrumentTable, -1);
+  Variable *v = new Variable(FourCC::SIDInstrumentTable, -1);
   variables_.insert(variables_.end(), v);
-  v = new Variable("table automation", FourCC::SIDInstrumentTableAutomation,
-                   false);
+  v = new Variable(FourCC::SIDInstrumentTableAutomation, false);
   variables_.insert(variables_.end(), v);
 
   variables_.insert(variables_.end(), &vpw_);

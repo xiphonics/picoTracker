@@ -10,7 +10,7 @@ struct FourCC {
   // to break.
   enum enum_type {
     InstrumentCommandArpeggiator = 0,          // ARPG
-    InstrumentCommandCrush = 2,                // CRSH dup
+    InstrumentCommandCrush = 2,                // CRSH
     InstrumentCommandDelay = 4,                // DLAY
     InstrumentCommandFilterCut = 20,           // FCUT
     InstrumentCommandLowPassFilter = 22,       // FLTR
@@ -24,37 +24,37 @@ struct FourCC {
     InstrumentCommandLegato = 31,              // LEGA
     InstrumentCommandLoopOfset = 36,           // LPOF
     InstrumentCommandMidiCC = 38,              // MDCC
-    InstrumentCommandMidiPC = 39,              // MDPG,
+    InstrumentCommandMidiPC = 39,              // MDPG
     InstrumentCommandPan = 42,                 // PAN
     InstrumentCommandPitchFineTune = 44,       // PFIN
     InstrumentCommandPlayOfset = 46,           // PLOF
     InstrumentCommandPitchSlide = 48,          // PTCH
     InstrumentCommandStop = 55,                // STOP
-    InstrumentCommandTable = 58,               // TABL dup
+    InstrumentCommandTable = 58,               // TABL
     InstrumentCommandTempo = 62,               // TMPO
     InstrumentCommandVelocity = 66,            // VELM
-    InstrumentCommandVolume = 69,              // VOLM dup
+    InstrumentCommandVolume = 69,              // VOLM
     InstrumentCommandNone = 45,                // ----
 
     SampleInstrumentCrushVolume = 3,
-    SampleInstrumentVolume = 69, // dup
-    SampleInstrumentCrush = 2,   // dup
+    SampleInstrumentVolume = 19,
+    SampleInstrumentCrush = 114,
     SampleInstrumentSample = 54,
     SampleInstrumentInterpolation = 28,
     SampleInstrumentDownsample = 5,
     SampleInstrumentRootNote = 51,
     SampleInstrumentFineTune = 24,
     SampleInstrumentPan = 43,
-    SampleInstrumentFilterCutOff = 22,
-    SampleInstrumentFilterResonance = 25,
+    SampleInstrumentFilterCutOff = 115,
+    SampleInstrumentFilterResonance = 116,
     SampleInstrumentFilterType = 23,
     SampleInstrumentFilterMode = 21,
     SampleInstrumentStart = 56,
     SampleInstrumentLoopMode = 34,
     SampleInstrumentLoopStart = 37,
     SampleInstrumentEnd = 6,
-    SampleInstrumentTable = 58,           // dup
-    SampleInstrumentTableAutomation = 60, // dup
+    SampleInstrumentTable = 117,
+    SampleInstrumentTableAutomation = 60,
 
     MacroInstrumentShape = 93,
     MacroInstrmentTimbre = 94,
@@ -65,9 +65,9 @@ struct FourCC {
 
     MidiInstrumentChannel = 1,
     MidiInstrumentNoteLength = 32,
-    MidiInstrumentVolume = 69,
-    MidiInstrumentTable = 58,           // dup
-    MidiInstrumentTableAutomation = 60, // dup
+    MidiInstrumentVolume = 118,
+    MidiInstrumentTable = 119,
+    MidiInstrumentTableAutomation = 120,
 
     SIDInstrument1Waveform = 72,
     SIDInstrument2Waveform = 73,
@@ -90,8 +90,8 @@ struct FourCC {
     SIDInstrumentADSR = 77,
     SIDInstrumentFilterOn = 78,
     SIDInstrumentVoice3Off = 91,
-    SIDInstrumentTable = 58,           // dup
-    SIDInstrumentTableAutomation = 60, // dup
+    SIDInstrumentTable = 121,
+    SIDInstrumentTableAutomation = 122,
 
     ServicePersistency = 57,
 
@@ -109,7 +109,7 @@ struct FourCC {
     TrigEventNav = 12,
     TrigEventPlay = 14,
 
-    VarTempo = 62,
+    VarTempo = 33,
     VarMasterVolume = 41,
     VarWrap = 70,
     VarTranspose = 63,
@@ -141,7 +141,6 @@ struct FourCC {
     ActionBootSelect = 18,
     ActionEdit = 59,
 
-    // Free: 19, 33
     Default = 255, // "    "
   };
   ETL_DECLARE_ENUM_TYPE(FourCC, char)
@@ -174,6 +173,76 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandPitchFineTune, "PFT")
   ETL_ENUM_TYPE(InstrumentCommandDelay, "DLY")
   ETL_ENUM_TYPE(InstrumentCommandInstrumentRetrigger, "IRT")
+
+  ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
+  ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
+  ETL_ENUM_TYPE(VarMidiSync, "MIDISYNC")
+  ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
+  ETL_ENUM_TYPE(MacroInstrmentTimbre, "timbre")
+  ETL_ENUM_TYPE(MacroInstrumentColor, "color")
+  ETL_ENUM_TYPE(MacroInstrumentAttack, "Attack")
+  ETL_ENUM_TYPE(MacroInstrumentDecay, "Decay")
+  ETL_ENUM_TYPE(MacroInstrumentSignature, "Signature")
+  ETL_ENUM_TYPE(SampleInstrumentSample, "sample")
+  ETL_ENUM_TYPE(SampleInstrumentVolume, "volume")
+  ETL_ENUM_TYPE(SampleInstrumentInterpolation, "interpol")
+  ETL_ENUM_TYPE(SampleInstrumentCrush, "crush")
+  ETL_ENUM_TYPE(SampleInstrumentCrushVolume, "crushdrive")
+  ETL_ENUM_TYPE(SampleInstrumentDownsample, "downsample")
+  ETL_ENUM_TYPE(SampleInstrumentRootNote, "root note")
+  ETL_ENUM_TYPE(SampleInstrumentFineTune, "fine tune")
+  ETL_ENUM_TYPE(SampleInstrumentPan, "pan")
+  ETL_ENUM_TYPE(SampleInstrumentFilterCutOff, "filter cut")
+  ETL_ENUM_TYPE(SampleInstrumentFilterResonance, "filter res")
+  ETL_ENUM_TYPE(SampleInstrumentFilterType, "filter type")
+  ETL_ENUM_TYPE(SampleInstrumentFilterMode, "filter mode")
+  ETL_ENUM_TYPE(SampleInstrumentStart, "start")
+  ETL_ENUM_TYPE(SampleInstrumentLoopMode, "loopmode")
+  ETL_ENUM_TYPE(SampleInstrumentLoopStart, "loopstart")
+  ETL_ENUM_TYPE(SampleInstrumentEnd, "end")
+  ETL_ENUM_TYPE(SampleInstrumentTable, "table")
+  ETL_ENUM_TYPE(SampleInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(MidiInstrumentChannel, "channel")
+  ETL_ENUM_TYPE(MidiInstrumentNoteLength, "note length")
+  ETL_ENUM_TYPE(MidiInstrumentVolume, "volume")
+  ETL_ENUM_TYPE(MidiInstrumentTable, "table")
+  ETL_ENUM_TYPE(MidiInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(SIDInstrument1Waveform, "VWF1")
+  ETL_ENUM_TYPE(SIDInstrument2Waveform, "VWF2")
+  ETL_ENUM_TYPE(SIDInstrument1FilterCut, "FILTCUT1")
+  ETL_ENUM_TYPE(SIDInstrument1FilterResonance, "RES1")
+  ETL_ENUM_TYPE(SIDInstrument1FilterMode, "FMODE1")
+  ETL_ENUM_TYPE(SIDInstrument1Volume, "DIP_VOLUME1")
+  ETL_ENUM_TYPE(SIDInstrument2FilterCut, "FILTCUT2")
+  ETL_ENUM_TYPE(SIDInstrument2FilterResonance, "RES2")
+  ETL_ENUM_TYPE(SIDInstrument2FilterMode, "FMODE2")
+  ETL_ENUM_TYPE(SIDInstrument2Volume, "DIP_VOLUME2")
+  ETL_ENUM_TYPE(SIDInstrumentPulseWidth, "VPW")
+  ETL_ENUM_TYPE(SIDInstrumentVSync, "VSYNC")
+  ETL_ENUM_TYPE(SIDInstrumentRingModulator, "VRING")
+  ETL_ENUM_TYPE(SIDInstrumentADSR, "VADSR")
+  ETL_ENUM_TYPE(SIDInstrumentFilterOn, "VFON")
+  ETL_ENUM_TYPE(SIDInstrumentTable, "table")
+  ETL_ENUM_TYPE(SIDInstrumentTableAutomation, "table automation")
+
+  ETL_ENUM_TYPE(VarFGColor, "FOREGROUND")
+  ETL_ENUM_TYPE(VarBGColor, "BACKGROUND")
+  ETL_ENUM_TYPE(VarHI1Color, "HICOLOR1")
+  ETL_ENUM_TYPE(VarHI2Color, "HICOLOR2")
+  ETL_ENUM_TYPE(VarConsoleColor, "CONSOLECOLOR")
+  ETL_ENUM_TYPE(VarCursorColor, "CURSORCOLOR")
+  ETL_ENUM_TYPE(VarInfoColor, "INFOCOLOR")
+  ETL_ENUM_TYPE(VarWarnColor, "WARNCOLOR")
+  ETL_ENUM_TYPE(VarErrorColor, "ERRORCOLOR")
+  ETL_ENUM_TYPE(VarTempo, "tempo")
+  ETL_ENUM_TYPE(VarMasterVolume, "master")
+  ETL_ENUM_TYPE(VarWrap, "wrap")
+  ETL_ENUM_TYPE(VarTranspose, "transpose")
+  ETL_ENUM_TYPE(VarScale, "scale")
+  ETL_ENUM_TYPE(VarProjectName, "projectname")
+  ETL_ENUM_TYPE(VarInstrumentType, "INSTRUMENTTYPE")
+
+  ETL_ENUM_TYPE(ActionEdit, "edit")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

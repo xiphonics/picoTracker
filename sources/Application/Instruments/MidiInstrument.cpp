@@ -12,16 +12,15 @@ MidiInstrument::MidiInstrument() : I_Instrument(&variables_) {
     svc_ = MidiService::GetInstance();
   };
 
-  Variable *v = new Variable("channel", FourCC::MidiInstrumentChannel, 0);
+  Variable *v = new Variable(FourCC::MidiInstrumentChannel, 0);
   variables_.insert(variables_.end(), v);
-  v = new Variable("note length", FourCC::MidiInstrumentNoteLength, 0);
+  v = new Variable(FourCC::MidiInstrumentNoteLength, 0);
   variables_.insert(variables_.end(), v);
-  v = new Variable("volume", FourCC::MidiInstrumentVolume, 255);
+  v = new Variable(FourCC::MidiInstrumentVolume, 255);
   variables_.insert(variables_.end(), v);
-  v = new Variable("table", FourCC::MidiInstrumentTable, -1);
+  v = new Variable(FourCC::MidiInstrumentTable, -1);
   variables_.insert(variables_.end(), v);
-  v = new Variable("table automation", FourCC::MidiInstrumentTableAutomation,
-                   false);
+  v = new Variable(FourCC::MidiInstrumentTableAutomation, false);
   variables_.insert(variables_.end(), v);
 }
 

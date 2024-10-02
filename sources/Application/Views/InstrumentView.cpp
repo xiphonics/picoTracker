@@ -17,8 +17,7 @@
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data),
-      instrumentType_("INSTRUMENTTYPE", FourCC::VarInstrumentType,
-                      InstrumentTypeNames, 5, 0) {
+      instrumentType_(FourCC::VarInstrumentType, InstrumentTypeNames, 5, 0) {
 
   project_ = data->project_;
 
