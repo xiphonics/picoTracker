@@ -40,7 +40,9 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
       vsync_(FourCC::SIDInstrumentVSync, false),
       vring_(FourCC::SIDInstrumentRingModulator, false),
       vadsr_(FourCC::SIDInstrumentADSR, 0x2282),
-      vfon_(FourCC::SIDInstrumentFilterOn, false) {
+      vfon_(FourCC::SIDInstrumentFilterOn, false),
+      table_(FourCC::SIDInstrumentTable, -1),
+      tableAuto_(FourCC::SIDInstrumentTableAutomation, false) {
 
   name_ = "SID #";
   etl::string<1> num;
@@ -51,11 +53,6 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
   etl::to_string(osc_, num, format);
   name_ += num;
 
-  Variable *v = new Variable(FourCC::SIDInstrumentTable, -1);
-  variables_.insert(variables_.end(), v);
-  v = new Variable(FourCC::SIDInstrumentTableAutomation, false);
-  variables_.insert(variables_.end(), v);
-
   variables_.insert(variables_.end(), &vpw_);
   variables_.insert(variables_.end(), &vwf1_);
   variables_.insert(variables_.end(), &vsync_);
@@ -64,6 +61,8 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
   //                         0x2282); // TODO: What's a good default?
   variables_.insert(variables_.end(), &vadsr_);
   variables_.insert(variables_.end(), &vfon_);
+  variables_.insert(variables_.end(), &table_);
+  variables_.insert(variables_.end(), &tableAuto_);
 
   //  fltcut_ = new Variable("FILTCUT", DIP_FILTCUT,
   //                         0x1FF); // TODO: what's a

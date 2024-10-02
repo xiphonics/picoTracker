@@ -29,7 +29,8 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 #define KRATE_SAMPLE_COUNT 100
 
 SampleInstrument::SampleInstrument()
-    : I_Instrument(&variables_), volume_(FourCC::SampleInstrumentVolume, 0x80),
+    : I_Instrument(&variables_), sample_(FourCC::SampleInstrumentSample),
+      volume_(FourCC::SampleInstrumentVolume, 0x80),
       interpolation_(FourCC::SampleInstrumentInterpolation, interpolationTypes,
                      2, 0),
       crush_(FourCC::SampleInstrumentCrush, 16),
@@ -60,9 +61,8 @@ SampleInstrument::SampleInstrument()
   running_ = false;
 
   // Initialize exported variables
-  WatchedVariable *wv = new SampleVariable(FourCC::SampleInstrumentSample);
-  variables_.insert(variables_.end(), wv);
-  wv->AddObserver(*this);
+  variables_.insert(variables_.end(), &sample_);
+  sample_.AddObserver(*this);
 
   variables_.insert(variables_.end(), &volume_);
   variables_.insert(variables_.end(), &interpolation_);

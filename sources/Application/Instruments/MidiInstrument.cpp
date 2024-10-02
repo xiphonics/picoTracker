@@ -6,22 +6,22 @@
 
 MidiService *MidiInstrument::svc_ = 0;
 
-MidiInstrument::MidiInstrument() : I_Instrument(&variables_) {
+MidiInstrument::MidiInstrument()
+    : I_Instrument(&variables_), channel_(FourCC::MidiInstrumentChannel, 0),
+      noteLen_(FourCC::MidiInstrumentNoteLength, 0),
+      volume_(FourCC::MidiInstrumentVolume, 255),
+      table_(FourCC::MidiInstrumentTable, -1),
+      tableAuto_(FourCC::MidiInstrumentTableAutomation, false) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
   };
 
-  Variable *v = new Variable(FourCC::MidiInstrumentChannel, 0);
-  variables_.insert(variables_.end(), v);
-  v = new Variable(FourCC::MidiInstrumentNoteLength, 0);
-  variables_.insert(variables_.end(), v);
-  v = new Variable(FourCC::MidiInstrumentVolume, 255);
-  variables_.insert(variables_.end(), v);
-  v = new Variable(FourCC::MidiInstrumentTable, -1);
-  variables_.insert(variables_.end(), v);
-  v = new Variable(FourCC::MidiInstrumentTableAutomation, false);
-  variables_.insert(variables_.end(), v);
+  variables_.insert(variables_.end(), &channel_);
+  variables_.insert(variables_.end(), &noteLen_);
+  variables_.insert(variables_.end(), &volume_);
+  variables_.insert(variables_.end(), &table_);
+  variables_.insert(variables_.end(), &tableAuto_);
 }
 
 MidiInstrument::~MidiInstrument(){};

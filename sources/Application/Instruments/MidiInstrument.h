@@ -60,6 +60,12 @@ private:
   TableSaveState tableState_;
   bool first_[SONG_CHANNEL_COUNT];
 
+  Variable channel_;
+  Variable noteLen_;
+  Variable volume_;
+  Variable table_;
+  Variable tableAuto_;
+
   static MidiService *svc_;
 };
 

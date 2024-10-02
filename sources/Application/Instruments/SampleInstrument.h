@@ -9,6 +9,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
+#include "SampleVariable.h"
 #include "SoundSource.h"
 
 enum SampleInstrumentLoopMode {
@@ -80,6 +81,7 @@ private:
 
   static signed char lastMidiNote_[SONG_CHANNEL_COUNT];
   static fixed lastSample_[SONG_CHANNEL_COUNT][2];
+  SampleVariable sample_;
   Variable volume_;
   Variable interpolation_;
   Variable crush_;

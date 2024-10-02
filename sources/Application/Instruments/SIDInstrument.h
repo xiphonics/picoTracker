@@ -103,6 +103,8 @@ private:
   Variable vring_;
   Variable vadsr_;
   Variable vfon_;
+  Variable table_;
+  Variable tableAuto_;
 
   static Variable fltcut1_;
   static Variable fltcut2_;
