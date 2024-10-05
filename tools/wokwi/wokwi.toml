@@ -1,0 +1,6 @@
+[wokwi]
+version = 1
+firmware = "build/Adapters/picoTracker/main/picoTracker.uf2"
+elf = "build/Adapters/picoTracker/main/picoTracker.elf"
+rfc2217ServerPort = 4000
+gdbServerPort=3333
