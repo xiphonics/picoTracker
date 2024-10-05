@@ -1,6 +1,5 @@
 add_library(application_commands
   ApplicationCommandDispatcher.h ApplicationCommandDispatcher.cpp
-  CommandDispatcher.h CommandDispatcher.cpp
   EventDispatcher.h EventDispatcher.cpp
   NodeList.h
 )

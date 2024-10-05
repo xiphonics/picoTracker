@@ -1,6 +1,5 @@
 #include "Application/Application.h"
 #include "Application/AppWindow.h"
-#include "Application/Commands/CommandDispatcher.h"
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
@@ -47,7 +46,7 @@ bool Application::Init(GUICreateWindowParams &params) {
   window_ = AppWindow::Create(params, projectName);
   Audio *audio = Audio::GetInstance();
   audio->Init();
-  CommandDispatcher::GetInstance()->Init();
+
   initMidiInput();
   return true;
 };
