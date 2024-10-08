@@ -48,7 +48,9 @@ void measure_freqs(void) {
   uint f_clk_peri = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_PERI);
   uint f_clk_usb = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_USB);
   uint f_clk_adc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_ADC);
+#if PICO_RP2040
   uint f_clk_rtc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_RTC);
+#endif
 
   printf("pll_sys  = %dkHz\n", f_pll_sys);
   printf("pll_usb  = %dkHz\n", f_pll_usb);
@@ -57,7 +59,9 @@ void measure_freqs(void) {
   printf("clk_peri = %dkHz\n", f_clk_peri);
   printf("clk_usb  = %dkHz\n", f_clk_usb);
   printf("clk_adc  = %dkHz\n", f_clk_adc);
+#if PICO_RP2040
   printf("clk_rtc  = %dkHz\n", f_clk_rtc);
+#endif
 
   // Can't measure clk_ref / xosc as it is the ref
 }

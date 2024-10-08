@@ -118,6 +118,13 @@ void platform_init() {
   gpio_set_function(DISPLAY_SCK, GPIO_FUNC_SPI);
   gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
 
+  // PWM
+  // TODO: actually do PWM and detect new hardware vs old where PWM is not
+  // available
+  gpio_init(DISPLAY_PWM);
+  gpio_set_dir(DISPLAY_PWM, GPIO_OUT);
+  gpio_put(DISPLAY_PWM, 1);
+
   // Chip select is active-low, so we'll initialise it to a driven-high state
   gpio_init(DISPLAY_CS);
   gpio_set_dir(DISPLAY_CS, GPIO_OUT);

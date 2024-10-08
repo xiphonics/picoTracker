@@ -24,6 +24,7 @@
 .define CLKDIV 7
 .define D0 ((CLKDIV + 1) / 2 - 1)
 .define D1 (CLKDIV/2 - 1)
+; TODO: match this to the right clock per platform (or do the right thing and derive from gpio.h defines)
 .define SDIO_CLK_GPIO 2
 
 ; State machine 0 is used to:

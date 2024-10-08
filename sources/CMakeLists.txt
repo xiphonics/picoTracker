@@ -8,7 +8,7 @@ project(picoTracker)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
+if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
@@ -16,7 +16,7 @@ endif()
 add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
-#add_definitions(-DPICO_DEBUG_MALLOC)
+# add_definitions(-DPICO_DEBUG_MALLOC)
 # add_definitions(-DPICOSTATS)
 # add_definitions(-DALL_MALLOC)
 # add_definitions(-DSHOW_MEM_USAGE)
@@ -30,7 +30,7 @@ add_definitions(-DLOAD_IN_FLASH)
 # below.
 # add_definitions(-DUSB_REMOTE_UI)
 # enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
-add_definitions(-DSERIAL_REPL)
+# add_definitions(-DSERIAL_REPL)
 
 # Initialize the SDK
 pico_sdk_init()
@@ -71,6 +71,20 @@ target_compile_definitions(picoTracker PUBLIC
   # workaround for slow init crystal on some boards see: https://github.com/raspberrypi/pico-sdk/pull/457
   PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 )
+
+if (PICO_RP2350)
+  target_compile_definitions(picoTracker PUBLIC
+    PICO_DEFAULT_UART=0
+    PICO_DEFAULT_UART_TX_PIN=30
+    PICO_DEFAULT_UART_RX_PIN=31
+  )
+else ()
+  target_compile_definitions(picoTracker PUBLIC
+    PICO_DEFAULT_UART=1
+    PICO_DEFAULT_UART_TX_PIN=24
+    PICO_DEFAULT_UART_RX_PIN=25
+  )
+endif()
 
 # Debug output with USB uses +6K memory
 pico_enable_stdio_usb(${PROJECT_NAME} 0)

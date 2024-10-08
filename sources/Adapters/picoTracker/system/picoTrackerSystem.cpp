@@ -99,6 +99,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   eventManager_->MapAppButton("down", APP_BUTTON_DOWN);
   eventManager_->MapAppButton("up", APP_BUTTON_UP);
 
+#if PICO_RP2040
   // init GPIO for use as ADC: hi-Z, no pullups, etc
   adc_gpio_init(BATT_VOLTAGE_IN);
 
@@ -108,8 +109,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   adc_select_input(3);
 
   Trace::Log("PICOTRACKERSYSTEM", "ADC INIT DONE\n");
-
-  //  mode0_print("boot successful");
+#endif
 };
 
 void picoTrackerSystem::Shutdown() { delete Audio::GetInstance(); };

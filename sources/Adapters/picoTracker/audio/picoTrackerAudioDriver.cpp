@@ -86,16 +86,6 @@ bool picoTrackerAudioDriver::InitDriver() {
   instance_ = this;
 
   // pico audio init
-
-  // TODO: check what is this
-  // i2s settings
-  // DCDC PSM control
-  // 0: PFM mode (best efficiency)
-  // 1: PWM mode (improved ripple)
-  gpio_init(PIN_DCDC_PSM_CTRL);
-  gpio_set_dir(PIN_DCDC_PSM_CTRL, GPIO_OUT);
-  gpio_put(PIN_DCDC_PSM_CTRL, 1); // PWM mode for less Audio noise
-
   // Setup GPIOs
   gpio_set_function(AUDIO_SDATA, GPIO_FUNC_PIO0);
   gpio_set_function(AUDIO_BCLK, GPIO_FUNC_PIO0);
