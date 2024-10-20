@@ -36,8 +36,12 @@ class Opal {
   // Various constants
   enum {
     OPL3SampleRate = 49716,
-    NumChannels = 18,
-    NumOperators = 36,
+
+    // picoTracker MOD: removing all but 1 channel and all but first 4 operators
+    NumChannels = 1,
+    NumOperators = 2,
+    // NumChannels = 18,
+    // NumOperators = 36,
 
     EnvOff = -1,
     EnvAtt,
@@ -151,6 +155,8 @@ class Opal {
     Channel *GetChannelPair() const { return ChannelPair; }
 
     void ComputeKeyScaleNumber();
+
+    bool OutputEnabled() { return LeftEnable || RightEnable; }
 
   protected:
     void ComputePhaseStep();

@@ -6,13 +6,64 @@
 #include "System/Console/Trace.h"
 #include <string.h>
 
-OpalInstrument::OpalInstrument() : I_Instrument(&variables_), opl_(44100) {}
+static const char *algorithms[6] = {"1+2",     "1*2",       "1+2+3+4",
+                                    "1*2+3*4", "1+(2*3*4)", "1+(2*3)+4"};
+
+static const char *waveShapes[8] = {"sine", "half", "abs", "puls",
+                                    "even", "ab-e", "sqr", "dsqr"};
+
+static const char *kslValues[4] = {"0", "1.5", "3", "6"};
+
+#define FREQ_BASE_REG 0xA0
+#define OCTAVE_BASE_REG 0xB0
+
+#define CHANNEL 0 // just hardcoding to channel 0 for now
+
+static const unsigned int noteFNumbers[] = {342, 363, 385, 408, 432, 458,
+                                            485, 514, 544, 577, 611, 647};
+
+OpalInstrument::OpalInstrument()
+    : I_Instrument(&variables_),
+      algorithm_(FourCC::OPALInstrumentAlgorithm, algorithms, 6, 0),
+      feedback_(FourCC::OPALInstrumentFeedback, 0),
+      deepTremeloVibrato_(FourCC::OPALInstrumentDeepTremeloVibrato, 0),
+      op1Level_(FourCC::OPALInstrumentOp1Level, 0),
+      op1Multiplier_(FourCC::OPALInstrumentOp1Multiplier, 0),
+      op1ADSR_(FourCC::OPALInstrumentOp1ADSR, 0),
+      op1WaveShape_(FourCC::OPALInstrumentOp1WaveShape, waveShapes, 8, 0),
+      op1TremVibSusKSR_(FourCC::OPALInstrumentOp1TremVibSusKSR, 0),
+      op1KeyScaleLevel_(FourCC::OPALInstrumentOp1KeyScaleLevel, kslValues, 4,
+                        0),
+      op2Level_(FourCC::OPALInstrumentOp2Level, 0),
+      op2Multiplier_(FourCC::OPALInstrumentOp2Multiplier, 0),
+      op2ADSR_(FourCC::OPALInstrumentOp2ADSR, 0),
+      op2WaveShape_(FourCC::OPALInstrumentOp2WaveShape, waveShapes, 8, 0),
+      op2TremVibSusKSR_(FourCC::OPALInstrumentOp2TremVibSusKSR, 0),
+      op2KeyScaleLevel_(FourCC::OPALInstrumentOp2KeyScaleLevel, kslValues, 4,
+                        0) {
+
+  variables_.insert(variables_.end(), &algorithm_);
+  variables_.insert(variables_.end(), &feedback_);
+  variables_.insert(variables_.end(), &deepTremeloVibrato_);
+  variables_.insert(variables_.end(), &op1Level_);
+  variables_.insert(variables_.end(), &op1Multiplier_);
+  variables_.insert(variables_.end(), &op1ADSR_);
+  variables_.insert(variables_.end(), &op1WaveShape_);
+  variables_.insert(variables_.end(), &op1KeyScaleLevel_);
+  variables_.insert(variables_.end(), &op1TremVibSusKSR_);
+  variables_.insert(variables_.end(), &op2Level_);
+  variables_.insert(variables_.end(), &op2Multiplier_);
+  variables_.insert(variables_.end(), &op2ADSR_);
+  variables_.insert(variables_.end(), &op2WaveShape_);
+  variables_.insert(variables_.end(), &op2KeyScaleLevel_);
+  variables_.insert(variables_.end(), &op2TremVibSusKSR_);
+}
 
 OpalInstrument::~OpalInstrument(){};
 
 bool OpalInstrument::Init() {
-  // Set chan 0 4-op
-  opl_.Port(0x104, 0x1);
+  // enable left/right only for 0 channel
+  opl_.Port(0xC0 + CHANNEL, 0x31);
 
   return true;
 };
@@ -22,69 +73,79 @@ void OpalInstrument::OnStart(){};
 bool OpalInstrument::Start(int c, unsigned char note, bool retrigger) {
   int start = micros();
 
+  // channel wide settings
+  // enable left/right output (D4, D5) & set algorithm D0
+  // for now only 2 op so just Additive or FM
+  opl_.Port(0xC0 + CHANNEL, 0x30 + algorithm_.GetInt());
+
+  // set note in OPAL
+  uint8_t block = note / 12;
+  u_int16_t fnum = noteFNumbers[note % 12];
+
+  // multiplier is only 4bits
+  uint8_t freqMultOp1 = (op1Multiplier_.GetInt() & 0xF);
+  uint8_t freqMultOp2 = (op2Multiplier_.GetInt() & 0xF);
+
+  uint8_t tremVibSusKSR1 = op1TremVibSusKSR_.GetInt();
+  uint8_t tremVibSusKSR2 = op2TremVibSusKSR_.GetInt();
+
+  uint8_t tvskmOp1 = (tremVibSusKSR1 << 4) + freqMultOp1;
+  uint8_t tvskmOp2 = (tremVibSusKSR2 << 4) + freqMultOp2;
+
+  uint8_t areg = fnum & 0xFF; // truncate to lowest 8 bytes
+  //           note on  block in D2,3,4  high 2 bits of fnum in D0,D1
+  uint8_t breg = 0x20 | (block << 2) | (fnum >> 8);
+
   // Frequency
-  opl_.Port(0xA0, 0xe7);
+  opl_.Port(FREQ_BASE_REG + CHANNEL, areg);
   // Note on, block, hi freq
-  opl_.Port(0xB0, 0x31);
+  opl_.Port(OCTAVE_BASE_REG + CHANNEL, breg);
   // Tremolo/Vibrato/Sustain/KSR/Multiplication
-  opl_.Port(0x20, 0x00);
-  opl_.Port(0x23, 0x01);
-  opl_.Port(0x28, 0x06);
-  opl_.Port(0x2B, 0x01);
+  opl_.Port(0x20 + CHANNEL, tvskmOp1);
+  opl_.Port(0x21 + CHANNEL, tvskmOp2);
+
+  // 0 = pure sine
+  uint8_t waveform1 = op1WaveShape_.GetInt();
+  uint8_t waveform2 = op2WaveShape_.GetInt();
+
+  uint8_t keyscale = (op1KeyScaleLevel_.GetInt() & 0x03);
+  // level is bottom 6 bits, keyscale top 2 bits
+  uint8_t keyscaleOutLvl1 = (keyscale << 6) & (op1Level_.GetInt() & 0x3F);
+  uint8_t keyscaleOutLvl2 = (keyscale << 6) & (op2Level_.GetInt() & 0x3F);
+
+  u_int16_t adsr1 = op1ADSR_.GetInt();
+  u_int16_t adsr2 = op2ADSR_.GetInt();
+
   // Waveform
-  opl_.Port(0xE0, 0x04);
-  opl_.Port(0xE3, 0x03);
-  opl_.Port(0xE8, 0x02);
-  opl_.Port(0xEB, 0x02);
+  opl_.Port(0xE0 + CHANNEL, waveform1);
+  opl_.Port(0xE1 + CHANNEL, waveform2);
+
   // Key Scale Level/Output Level
-  opl_.Port(0x40, 0x40);
-  opl_.Port(0x43, 0x12);
-  opl_.Port(0x48, 0x5c);
-  opl_.Port(0x4B, 0x02);
+  opl_.Port(0x40 + CHANNEL, keyscaleOutLvl1);
+  opl_.Port(0x41 + CHANNEL, keyscaleOutLvl2);
+
   // Attack Rate/Decay Rate
-  opl_.Port(0x60, 0x72);
-  opl_.Port(0x63, 0x71);
-  opl_.Port(0x68, 0x82);
-  opl_.Port(0x6B, 0xf0);
+  opl_.Port(0x60 + CHANNEL, adsr1 >> 8);
+  opl_.Port(0x61 + CHANNEL, adsr2 >> 8);
+
   // Sustain Level/Release Rate
-  opl_.Port(0x80, 0x86);
-  opl_.Port(0x83, 0x94);
-  opl_.Port(0x88, 0xbc);
-  opl_.Port(0x8B, 0xbc);
+  opl_.Port(0x80 + CHANNEL, (uint8_t)(adsr1 & 0x00FF));
+  opl_.Port(0x81 + CHANNEL, (uint8_t)(adsr2 & 0x00FF));
 
-  // enable left/right only for channel0
-  opl_.Port(0xc0, 0x37);
-  opl_.Port(0xc1, 0x00);
-  opl_.Port(0xc2, 0x00);
-  opl_.Port(0xc3, 0x00);
-  opl_.Port(0xc4, 0x00);
-  opl_.Port(0xc5, 0x00);
-  opl_.Port(0xc6, 0x00);
-  opl_.Port(0xc7, 0x00);
-  opl_.Port(0xc8, 0x00);
-  opl_.Port(0x1c0, 0x00);
-  opl_.Port(0x1c1, 0x00);
-  opl_.Port(0x1c2, 0x00);
-  opl_.Port(0x1c3, 0x00);
-  opl_.Port(0x1c4, 0x00);
-  opl_.Port(0x1c5, 0x00);
-  opl_.Port(0x1c6, 0x00);
-  opl_.Port(0x1c7, 0x00);
-  opl_.Port(0x1c8, 0x00);
-
-  printf("Start took: %i us\n", micros() - start);
+  // printf("Start took: %i us\n", micros() - start);
 
   return true;
 };
 
-void OpalInstrument::Stop(int c) { opl_.Port(0xB0, 0x11); };
+void OpalInstrument::Stop(int c) { opl_.Port(OCTAVE_BASE_REG, 0x11); };
 
 bool OpalInstrument::Render(int channel, fixed *buffer, int size,
 
                             bool updateTick) {
 
   int start = micros();
-  while (size--) {
+  int count = size;
+  while (count--) {
     int16_t l, r;
     opl_.Sample(&l, &r);
 
@@ -93,7 +154,7 @@ bool OpalInstrument::Render(int channel, fixed *buffer, int size,
     buffer += 2;
   }
   int took = micros() - start;
-  printf("Render took: %i (%i ts)\n", took, took * 441 / size / 10000);
+  // printf("Render took: %i (%i ts)[%i]\n", took, took * 441 / size / 10000);
   return true;
 };
 

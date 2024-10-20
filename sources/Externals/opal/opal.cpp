@@ -135,14 +135,19 @@ void Opal::Init(int sample_rate) {
       0, 1, 2, 6, 7, 8, 12, 13, 14, 18, 19, 20, 24, 25, 26, 30, 31, 32,
   };
 
-  for (int i = 0; i < NumChannels; i++) {
-    Channel *chan = &Chan[i];
-    int op = chan_ops[i];
-    if (i < 3 || (i >= 9 && i < 12))
-      chan->SetOperators(&Op[op], &Op[op + 3], &Op[op + 6], &Op[op + 9]);
-    else
-      chan->SetOperators(&Op[op], &Op[op + 3], 0, 0);
-  }
+  // picoTracker MOD: removing all but 1 channel and all but first 4 operators
+  // so need to comment out the real OPL3 channel-operator mapping and just use
+  // basic hard code one below
+  (&Chan[0])->SetOperators(&Op[0], &Op[1], 0, 0);
+
+  // for (int i = 0; i < NumChannels; i++) {
+  //   Channel *chan = &Chan[i];
+  //   int op = chan_ops[i];
+  //   if (i < 3 || (i >= 9 && i < 12))
+  //     chan->SetOperators(&Op[op], &Op[op + 3], &Op[op + 6], &Op[op + 9]);
+  //   else
+  //     chan->SetOperators(&Op[op], &Op[op + 3], 0, 0);
+  // }
 
   // Initialise the operator rate data.  We can't do this in the Operator
   // constructor as it relies on referencing the master and channel objects
@@ -415,15 +420,14 @@ void Opal::Output(int16_t &left, int16_t &right) {
   int32_t leftmix = 0, rightmix = 0;
 
   // Sum the output of each channel
-  //  for (int i = 0; i < NumChannels; i++) {
+  for (int i = 0; i < NumChannels; i++) {
 
-  int16_t chanleft, chanright;
-  //    Chan[i].Output(chanleft, chanright);
-  Chan[0].Output(chanleft, chanright);
+    int16_t chanleft, chanright;
+    Chan[i].Output(chanleft, chanright);
 
-  leftmix += chanleft;
-  rightmix += chanright;
-  //  }
+    leftmix += chanleft;
+    rightmix += chanright;
+  }
 
   // Clamp
   if (leftmix < -0x8000)

@@ -3,6 +3,7 @@
 
 #include "BaseClasses/FieldView.h"
 #include "BaseClasses/UIBigHexVarField.h"
+#include "BaseClasses/UIBitmaskVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
@@ -21,6 +22,7 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
   virtual void AnimationUpdate(){};
+  void onInstrumentTypeChange();
 
 protected:
   void warpToNext(int offset);
@@ -33,7 +35,6 @@ protected:
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
-  void onInstrumentTypeChange(InstrumentType nuInstrumentType);
   void refreshInstrumentFields(const I_Instrument *old);
 
 private:
@@ -43,10 +44,11 @@ private:
   InstrumentType currentType_ = IT_NONE;
 
   etl::vector<UIIntVarField, 1> typeIntVarField_;
-  etl::vector<UIIntVarField, 27> intVarField_;
+  etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 1> staticField_;
-  etl::vector<UIBigHexVarField, 3> bigHexVarField_;
+  etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
+  etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
 };
 #endif

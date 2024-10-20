@@ -14,6 +14,7 @@ add_library(application_views_baseclasses
   UITempoField.h UITempoField.cpp
   UITextField.h UITextField.cpp
   UISwatchField.h UISwatchField.cpp
+  UIBitmaskVarField.h UIBitmaskVarField.cpp
   View.h View.cpp
   ViewEvent.h ViewEvent.cpp
 )

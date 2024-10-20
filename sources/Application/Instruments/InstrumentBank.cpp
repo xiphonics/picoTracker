@@ -102,8 +102,8 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
         bool subelem = doc->FirstChild();
         while (subelem) {
           bool hasAttr = doc->NextAttribute();
-          char name[24];
-          char value[24];
+          char name[24] = "";
+          char value[24] = "";
           while (hasAttr) {
             if (!strcasecmp(doc->attrname_, "NAME")) {
               strcpy(name, doc->attrval_);
@@ -124,10 +124,10 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
             }
           }
 
-          for (auto it = instr->Variables()->begin();
-               it != instr->Variables()->end(); it++) {
-            if (!strcasecmp((*it)->GetName(), name)) {
-              (*it)->SetString(value);
+          auto vars = instr->Variables();
+          for (auto elem : *vars) {
+            if (!strcasecmp((elem)->GetName(), name)) {
+              (elem)->SetString(value);
             };
           }
           subelem = doc->NextSibling();

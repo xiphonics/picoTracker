@@ -29,7 +29,7 @@ public:
   unsigned short Clone(unsigned short i);
 
 private:
-  etl::vector<I_Instrument *, MAX_INSTRUMENT_COUNT> instruments_;
+  etl::array<I_Instrument *, MAX_INSTRUMENT_COUNT> instruments_;
   etl::pool<SampleInstrument, MAX_SAMPLEINSTRUMENT_COUNT> sampleInstrumentPool_;
   etl::pool<MidiInstrument, MAX_MIDIINSTRUMENT_COUNT> midiInstrumentPool_;
   etl::pool<SIDInstrument, MAX_SIDINSTRUMENT_COUNT> sidInstrumentPool_;

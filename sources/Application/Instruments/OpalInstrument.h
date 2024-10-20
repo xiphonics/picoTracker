@@ -40,10 +40,31 @@ public:
   virtual void SetTableState(TableSaveState &state);
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
-private:
-  etl::list<Variable *, 1> variables_;
+  void setChannel(u_char channel);
 
-  Opal opl_;
+private:
+  Opal opl_ = (44100);
+
+  etl::list<Variable *, 15> variables_;
+
+  Variable algorithm_;
+  Variable feedback_;
+  Variable deepTremeloVibrato_;
+
+  Variable op1Level_;
+  Variable op1Multiplier_;
+  Variable op1ADSR_;
+  Variable op1WaveShape_;
+  // Termelo(AM),Vibrato(VIB),SustainingVoice(EG),EnveloperScale(KSR)
+  Variable op1TremVibSusKSR_;
+  Variable op1KeyScaleLevel_;
+  Variable op2Level_;
+  Variable op2Multiplier_;
+  Variable op2ADSR_;
+  Variable op2WaveShape_;
+  // Termelo(AM),Vibrato(VIB),SustainingVoice(EG),EnveloperScale(KSR)
+  Variable op2TremVibSusKSR_;
+  Variable op2KeyScaleLevel_;
 };
 
 #endif

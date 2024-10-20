@@ -93,6 +93,25 @@ struct FourCC {
     SIDInstrumentTable = 121,
     SIDInstrumentTableAutomation = 122,
 
+    OPALInstrumentChannel = 123,
+    OPALInstrumentAlgorithm = 124,
+    OPALInstrumentFeedback = 125,
+    OPALInstrumentDeepTremeloVibrato = 126,
+
+    OPALInstrumentOp1Level = 127,
+    OPALInstrumentOp1Multiplier = 128,
+    OPALInstrumentOp1KeyScaleLevel = 130,
+    OPALInstrumentOp1ADSR = 131,
+    OPALInstrumentOp1WaveShape = 132,
+    OPALInstrumentOp1TremVibSusKSR = 133,
+
+    OPALInstrumentOp2Level = 134,
+    OPALInstrumentOp2Multiplier = 135,
+    OPALInstrumentOp2KeyScaleLevel = 136,
+    OPALInstrumentOp2ADSR = 137,
+    OPALInstrumentOp2WaveShape = 138,
+    OPALInstrumentOp2TremVibSusKSR = 139,
+
     ServicePersistency = 57,
 
     TrigTempoTap = 65,
@@ -224,6 +243,26 @@ struct FourCC {
   ETL_ENUM_TYPE(SIDInstrumentFilterOn, "VFON")
   ETL_ENUM_TYPE(SIDInstrumentTable, "table")
   ETL_ENUM_TYPE(SIDInstrumentTableAutomation, "table automation")
+
+  // channel variable not currently used by OPAL instruments but maybe in future
+  ETL_ENUM_TYPE(OPALInstrumentChannel, "CHANNEL")
+  ETL_ENUM_TYPE(OPALInstrumentAlgorithm, "ALGORITHM")
+  ETL_ENUM_TYPE(OPALInstrumentFeedback, "FEEDBACK")
+  ETL_ENUM_TYPE(OPALInstrumentDeepTremeloVibrato, "DEEPTREMELOVIBRATO")
+
+  ETL_ENUM_TYPE(OPALInstrumentOp1Level, "OP1LEVEL")
+  ETL_ENUM_TYPE(OPALInstrumentOp1Multiplier, "OP1MULTIPLIER")
+  ETL_ENUM_TYPE(OPALInstrumentOp1KeyScaleLevel, "OP1KEYSCALELEVEL")
+  ETL_ENUM_TYPE(OPALInstrumentOp1ADSR, "OP1ADSR")
+  ETL_ENUM_TYPE(OPALInstrumentOp1WaveShape, "OP1WAVESHAPE")
+  ETL_ENUM_TYPE(OPALInstrumentOp1TremVibSusKSR, "OP1TREMVIBSUSKSR")
+
+  ETL_ENUM_TYPE(OPALInstrumentOp2Level, "OP2LEVEL")
+  ETL_ENUM_TYPE(OPALInstrumentOp2Multiplier, "OP2MULTIPLIER")
+  ETL_ENUM_TYPE(OPALInstrumentOp2KeyScaleLevel, "OP2KEYSCALELEVEL")
+  ETL_ENUM_TYPE(OPALInstrumentOp2ADSR, "OP2ADSR")
+  ETL_ENUM_TYPE(OPALInstrumentOp2WaveShape, "OP2WAVESHAPE")
+  ETL_ENUM_TYPE(OPALInstrumentOp2TremVibSusKSR, "OP2TREMVIBSUSKSR")
 
   ETL_ENUM_TYPE(VarFGColor, "FOREGROUND")
   ETL_ENUM_TYPE(VarBGColor, "BACKGROUND")

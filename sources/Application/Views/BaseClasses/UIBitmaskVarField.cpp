@@ -1,17 +1,14 @@
-#include "UIBigHexVarField.h"
+#include "UIBitmaskVarField.h"
 #include "Application/AppWindow.h"
 
-UIBigHexVarField::UIBigHexVarField(GUIPoint &position, Variable &v,
-                                   int precision, const char *format, int min,
-                                   int max, int power, bool wrap)
-    : UIIntVarField(position, v, format, min, max, 0, 0) {
-  precision_ = precision - 1;
-  power_ = power;
-  position_ = 0;
-  wrap_ = wrap;
+UIBitmaskVarField::UIBitmaskVarField(GUIPoint &position, Variable &v,
+                                     const char *format, int len)
+    : UIIntVarField(position, v, format, 0, 0xffff, 0, 0, 0) {
+  len_ = len;
+  format_ = format;
 };
 
-void UIBigHexVarField::Draw(GUIWindow &w, int offset) {
+void UIBitmaskVarField::Draw(GUIWindow &w, int offset) {
 
   GUITextProperties props;
   GUIPoint position = GetPosition();
@@ -24,7 +21,7 @@ void UIBigHexVarField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
 
-  char buffer[80];
+  char buffer[20];
   int value = src_.GetInt();
   sprintf(buffer, format_, value);
   w.DrawString(buffer, position, props);
@@ -37,7 +34,7 @@ void UIBigHexVarField::Draw(GUIWindow &w, int offset) {
     };
   };
   if (percentPos >= 0) {
-    int offset = (precision_ - position_) + percentPos;
+    int offset = (len_ - position_) + percentPos;
     buffer[offset + 1] = 0;
     position._x += offset;
     ((AppWindow &)w).SetColor(CD_NORMAL);
@@ -45,17 +42,13 @@ void UIBigHexVarField::Draw(GUIWindow &w, int offset) {
   }
 };
 
-void UIBigHexVarField::ProcessArrow(unsigned short mask) {
+void UIBitmaskVarField::ProcessArrow(unsigned short mask) {
 
   int value = src_.GetInt();
-  int offset = 1;
-  for (unsigned int i = 0; i < position_; i++) {
-    offset *= power_;
-  }
 
   switch (mask) {
   case EPBM_LEFT:
-    if (position_ < precision_) {
+    if (position_ < len_) {
       position_++;
     };
     break;
@@ -65,19 +58,14 @@ void UIBigHexVarField::ProcessArrow(unsigned short mask) {
     };
     break;
   case EPBM_UP:
-    value += offset;
+    value = value ^ (1 << (position_ - 1));
     break;
 
   case EPBM_DOWN:
-    value -= offset;
+    value = value ^ (1 << (position_ - 1));
     break;
   };
-  if (value > max_) {
-    value = (wrap_) ? value - max_ + min_ - 1 : max_;
-  };
-  if (value < min_) {
-    value = (wrap_) ? max_ + (value - min_) + 1 : min_;
-  };
+
   src_.SetInt(value);
 
   SetChanged();
