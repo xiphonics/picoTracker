@@ -47,6 +47,8 @@ public:
 private:
   Opal opl_ = (44100);
 
+  uint8_t breg;
+
   etl::list<Variable *, 15> variables_;
 
   Variable algorithm_;
