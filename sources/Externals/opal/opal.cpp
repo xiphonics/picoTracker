@@ -247,6 +247,8 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
           // Let primary channel know it's controlling the secondary channel
           primary->SetChannelPair(secondary);
 
+          // Turn on the primary in channel in the pair
+          primary->SetEnable(true);
           // Turn off the second channel in the pair
           secondary->SetEnable(false);
 
@@ -256,7 +258,8 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
           // channel
           primary->SetChannelPair(0);
 
-          // Turn on the second channel in the pair
+          // Turn on the channels in the pair
+          primary->SetEnable(true);
           secondary->SetEnable(true);
         }
       }
@@ -428,7 +431,6 @@ void Opal::Output(int16_t &left, int16_t &right) {
     leftmix += chanleft;
     rightmix += chanright;
   }
-
   // Clamp
   if (leftmix < -0x8000)
     left = -0x8000;
@@ -480,9 +482,10 @@ Opal::Channel::Channel() {
   FeedbackShift = 0;
   ModulationType = 0;
   ChannelPair = 0;
+  // start with channel & channel audio out disabled
   Enable = true;
-  LeftEnable = true;
-  RightEnable = true;
+  LeftEnable = false;
+  RightEnable = false;
 }
 
 //==================================================================================================

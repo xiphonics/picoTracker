@@ -28,7 +28,7 @@ protected:
 private:
   void addSwatchField(ColorDefinition color, GUIPoint position);
 
-  etl::vector<UIIntVarField, 3> intVarField_;
+  etl::vector<UIIntVarField, 4> intVarField_;
   etl::vector<UIActionField, 1> actionField_;
   etl::vector<UIBigHexVarField, 9> bigHexVarField_;
   etl::vector<UISwatchField, 9> swatchField_;

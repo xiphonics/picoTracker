@@ -5,6 +5,8 @@
 #include "Externals/opal/opal.h"
 #include "I_Instrument.h"
 
+#define OPAL_MAX_CHANNELS 4
+
 class OpalInstrument : public I_Instrument {
 
 public:

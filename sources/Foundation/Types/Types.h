@@ -146,6 +146,7 @@ struct FourCC {
     VarWarnColor = 110,
     VarErrorColor = 111,
     VarMidiSync = 112,
+    VarRemoteUI = 140,
 
     VarInstrumentType = 113,
 
@@ -196,6 +197,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
   ETL_ENUM_TYPE(VarMidiSync, "MIDISYNC")
+  ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
   ETL_ENUM_TYPE(MacroInstrmentTimbre, "timbre")
   ETL_ENUM_TYPE(MacroInstrumentColor, "color")

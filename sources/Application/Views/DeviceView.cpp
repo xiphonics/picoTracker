@@ -48,6 +48,12 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarRemoteUI);
+  intVarField_.emplace_back(position, *v, "Remote UI: %s", 0, 2, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
   position._y += 2;
   v = config->FindVariable(FourCC::VarFGColor);
   bigHexVarField_.emplace_back(position, *v, 6, "Foreground: %6.6X", 0,

@@ -15,6 +15,7 @@ static const char *lineOutOptions[3] = {"HP Low", "HP High", "Line Level"};
 static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
                                                       "TRS+USB"};
 static const char *midiSendSync[2] = {"Off", "Send"};
+static const char *remoteUIOnOff[2] = {"Off", "On"};
 
 // Param keys MUST fit in this length limit!
 typedef etl::string<12> ParamString;
@@ -32,19 +33,28 @@ static const etl::flat_map validParameters{
     etl::pair{ParamString("LINEOUT"), 0x2},
     etl::pair{ParamString("MIDIDEVICE"), 0x0},
     etl::pair{ParamString("MIDISYNC"), 0x0},
+    etl::pair{ParamString("REMOTEUI"), 0x0},
 };
 
 Config::Config()
     : VariableContainer(&variables_),
       lineOut_(FourCC::VarLineOut, lineOutOptions, 3, 0),
       midiDevice_(FourCC::VarMidiDevice, midiDeviceList, MIDI_DEVICE_LEN),
-      midiSync_(FourCC::VarMidiSync, midiSendSync, 2, 0) {
+      midiSync_(FourCC::VarMidiSync, midiSendSync, 2, 0),
+      remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, 0) {
   PersistencyDocument doc;
+
+  // First always just apply all default settings values, these will then be
+  // overwritten by values read from config file but if there are any missing
+  // from config file, ie. new settings that that have been added to firmware
+  // since the version of the firmware that wrote the config file they will get
+  // default values
+  useDefaultConfig();
 
   if (!doc.Load(CONFIG_FILE_PATH)) {
     Trace::Error("CONFIG: Could not open file for reading: %s",
                  CONFIG_FILE_PATH);
-    useDefaultConfig();
+    Save(); // and write the defaults to SDCard
     return;
   }
 
@@ -52,7 +62,7 @@ Config::Config()
   if (!elem || strcmp(doc.ElemName(), "CONFIG")) {
     Trace::Log("CONFIG", "Bad config.xml format!");
     // TODO: need show user some UI that config file is invalid
-    useDefaultConfig();
+    Save(); // and write the defaults to SDCard
     return;
   }
   elem = doc.FirstChild(); // now get first child element of CONFIG
@@ -65,7 +75,7 @@ Config::Config()
     bool hasAttr = doc.NextAttribute();
     while (hasAttr) {
       if (!strcasecmp(doc.attrname_, "VALUE")) {
-        processParams(doc.ElemName(), atoi(doc.attrval_));
+        processParams(doc.ElemName(), atoi(doc.attrval_), false);
         Trace::Log("CONFIG", "Read Param:%s->[%s]", doc.ElemName(),
                    doc.attrval_);
       }
@@ -112,6 +122,8 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
       printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
     } else if (elemName.compare("MIDISYNC") == 0) {
       printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
+    } else if (elemName.compare("REMOTEUI") == 0) {
+      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
     } else {
       // all other settings need to be saved as thier String values
       printer->PushAttribute("VALUE", (*it)->GetString().c_str());
@@ -134,20 +146,31 @@ int Config::GetValue(const char *key) {
 };
 
 // need to handle some variable like LINEOUT separately
-void Config::processParams(const char *name, int value) {
+void Config::processParams(const char *name, int value, bool insert) {
   if (!strcmp(name, "LINEOUT")) {
     lineOut_.SetInt(value);
-    variables_.insert(variables_.end(), &lineOut_);
+    if (insert) {
+      variables_.insert(variables_.end(), &lineOut_);
+    }
   } else if (!strcmp(name, "MIDIDEVICE")) {
     midiDevice_.SetInt(value);
-    variables_.insert(variables_.end(), &midiDevice_);
+    if (insert) {
+      variables_.insert(variables_.end(), &midiDevice_);
+    }
   } else if (!strcmp(name, "MIDISYNC")) {
     midiSync_.SetInt(value);
-    variables_.insert(variables_.end(), &midiSync_);
+    if (insert) {
+      variables_.insert(variables_.end(), &midiSync_);
+    }
+  } else if (!strcmp(name, "REMOTEUI")) {
+    remoteUI_.SetInt(value);
+    if (insert) {
+      variables_.insert(variables_.end(), &remoteUI_);
+    }
   } else {
     auto fourcc = FourCC::Default;
-    // TODO: need to be able to assign fourcc based on name of element from the
-    // Xml config
+    // TODO: need to be able to assign fourcc based on name of element from
+    // the Xml config
     if (!strcmp(name, FourCC(FourCC::VarFGColor).c_str())) {
       fourcc = FourCC::VarFGColor;
     } else if (!strcmp(name, FourCC(FourCC::VarBGColor).c_str())) {
@@ -166,20 +189,19 @@ void Config::processParams(const char *name, int value) {
       fourcc = FourCC::VarWarnColor;
     } else if (!strcmp(name, FourCC(FourCC::VarErrorColor).c_str())) {
       fourcc = FourCC::VarErrorColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarMidiDevice).c_str())) {
-      fourcc = FourCC::VarMidiDevice;
-    } else if (!strcmp(name, FourCC(FourCC::VarMidiSync).c_str())) {
-      fourcc = FourCC::VarMidiSync;
     }
-    Variable *v = new Variable(fourcc, value);
-    variables_.insert(variables_.end(), v);
+    if (insert) {
+      Variable *v = new Variable(fourcc, value);
+      variables_.insert(variables_.end(), v);
+    } else {
+      FindVariable(fourcc)->SetInt(value);
+    }
   }
 }
 
 void Config::useDefaultConfig() {
   Trace::Log("CONFIG", "Setting DEFAULT values for config parameters");
   for (auto const &p : validParameters) {
-    processParams(p.first.c_str(), p.second);
+    processParams(p.first.c_str(), p.second, true);
   }
-  Save(); // and write the defaults to SDCard
 }

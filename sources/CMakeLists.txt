@@ -28,7 +28,9 @@ add_definitions(-DLOAD_IN_FLASH)
 # add_definitions(-DDUMMY_MIDI)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
-# add_definitions(-DUSB_REMOTE_UI)
+add_definitions(-DUSB_REMOTE_UI)
+#disabled for now as USB **input** is not yet fully implemented
+#add_definitions(USB_REMOTE_UI_INPUT)
 # enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
 # add_definitions(-DSERIAL_REPL)
 

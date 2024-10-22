@@ -16,15 +16,16 @@ public:
   void Save();
 
 private:
-  etl::list<Variable *, 20> variables_;
+  etl::list<Variable *, 21> variables_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
-  void processParams(const char *name, int value);
+  void processParams(const char *name, int value, bool insert);
   void useDefaultConfig();
 
   WatchedVariable lineOut_;
   WatchedVariable midiDevice_;
   WatchedVariable midiSync_;
+  WatchedVariable remoteUI_;
 };
 
 #endif
