@@ -16,7 +16,7 @@ public:
   void Save();
 
 private:
-  etl::list<Variable *, 21> variables_;
+  etl::list<Variable *, 22> variables_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
   void processParams(const char *name, int value, bool insert);
@@ -26,6 +26,7 @@ private:
   WatchedVariable midiDevice_;
   WatchedVariable midiSync_;
   WatchedVariable remoteUI_;
+  WatchedVariable uiFont_;
 };
 
 #endif

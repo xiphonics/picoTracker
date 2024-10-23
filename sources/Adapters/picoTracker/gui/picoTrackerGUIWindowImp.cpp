@@ -48,6 +48,11 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   remoteUIVar->AddObserver(*this);
   auto remoteui = remoteUIVar->GetInt();
   remoteUIEnabled_ = remoteui != 0;
+
+  auto uiFontVar = (WatchedVariable *)config->FindVariable(FourCC::VarUIFont);
+  // register to receive updates to remoteui setting
+  uiFontVar->AddObserver(*this);
+  mode0_set_font_index(uiFontVar->GetInt());
 };
 
 picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}
@@ -178,9 +183,13 @@ void picoTrackerGUIWindowImp::ProcessButtonChange(uint16_t changeMask,
 void picoTrackerGUIWindowImp::Update(Observable &o, I_ObservableData *d) {
   WatchedVariable &v = (WatchedVariable &)o;
   switch (v.GetID()) {
-  case FourCC::VarRemoteUI:
+  case FourCC::VarRemoteUI: {
     auto remoteui = v.GetInt();
     remoteUIEnabled_ = remoteui != 0;
-    break;
+  } break;
+  case FourCC::VarUIFont: {
+    auto uifont = v.GetInt();
+    mode0_set_font_index(uifont);
+  } break;
   }
 }

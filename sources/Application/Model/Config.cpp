@@ -17,8 +17,10 @@ static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
 static const char *midiSendSync[2] = {"Off", "Send"};
 static const char *remoteUIOnOff[2] = {"Off", "On"};
 
+static const char *fontOptions[2] = {"Standard", "Bold"};
+
 // Param keys MUST fit in this length limit!
-typedef etl::string<12> ParamString;
+typedef etl::string<13> ParamString;
 
 static const etl::flat_map validParameters{
     etl::pair{ParamString("BACKGROUND"), 0x0F0F0F},
@@ -34,6 +36,7 @@ static const etl::flat_map validParameters{
     etl::pair{ParamString("MIDIDEVICE"), 0x0},
     etl::pair{ParamString("MIDISYNC"), 0x0},
     etl::pair{ParamString("REMOTEUI"), 0x0},
+    etl::pair{ParamString("UIFONT"), 0x0},
 };
 
 Config::Config()
@@ -41,7 +44,8 @@ Config::Config()
       lineOut_(FourCC::VarLineOut, lineOutOptions, 3, 0),
       midiDevice_(FourCC::VarMidiDevice, midiDeviceList, MIDI_DEVICE_LEN),
       midiSync_(FourCC::VarMidiSync, midiSendSync, 2, 0),
-      remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, 0) {
+      remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, 0),
+      uiFont_(FourCC::VarUIFont, fontOptions, 2, 0) {
   PersistencyDocument doc;
 
   // First always just apply all default settings values, these will then be
@@ -124,6 +128,8 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
       printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
     } else if (elemName.compare("REMOTEUI") == 0) {
       printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
+    } else if (elemName.compare("UIFONT") == 0) {
+      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
     } else {
       // all other settings need to be saved as thier String values
       printer->PushAttribute("VALUE", (*it)->GetString().c_str());
@@ -166,6 +172,11 @@ void Config::processParams(const char *name, int value, bool insert) {
     remoteUI_.SetInt(value);
     if (insert) {
       variables_.insert(variables_.end(), &remoteUI_);
+    }
+  } else if (!strcmp(name, "UIFONT")) {
+    uiFont_.SetInt(value);
+    if (insert) {
+      variables_.insert(variables_.end(), &uiFont_);
     }
   } else {
     auto fourcc = FourCC::Default;

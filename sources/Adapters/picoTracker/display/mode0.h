@@ -45,6 +45,7 @@ void mode0_print(const char *s, bool invert);
 void mode0_write(const char *s, int len, bool invert);
 void mode0_putc(char c, bool invert);
 void mode0_set_palette_color(int idx, uint16_t rgb565_color);
+void mode0_set_font_index(uint8_t idx);
 
 #ifdef __cplusplus
 }
