@@ -1,5 +1,4 @@
 add_library(system_process
-  Process.h Process.cpp
   SysMutex.h SysMutex.cpp
 )
 

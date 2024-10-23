@@ -35,8 +35,9 @@ void MessageBox::DrawView() {
   int y = 0;
   int x = (width - size) / 2;
   GUITextProperties props;
-  SetColor(CD_NORMAL);
+  SetColor(CD_ERROR);
   DrawString(x, y, message_.c_str(), props);
+  SetColor(CD_NORMAL);
 
   y = 2;
   int offset = width / (buttonCount_ + 1);
@@ -52,20 +53,18 @@ void MessageBox::DrawView() {
 void MessageBox::OnPlayerUpdate(PlayerEventType, unsigned int currentTick){};
 void MessageBox::OnFocus(){};
 void MessageBox::ProcessButtonMask(unsigned short mask, bool pressed) {
-  if (mask & EPBM_A) {
-    EndModal(button_[selected_]);
-  }
   if (mask & EPBM_LEFT) {
     selected_ = (selected_ + 1);
     if (selected_ >= buttonCount_) {
       selected_ = 0;
     }
-  }
-  if (mask & EPBM_RIGHT) {
+  } else if (mask & EPBM_RIGHT) {
     selected_ = (selected_ - 1);
     if (selected_ < 0) {
       selected_ = buttonCount_ - 1;
     }
+  } else if (mask & EPBM_A && pressed) {
+    EndModal(button_[selected_]);
   }
   isDirty_ = true;
 };

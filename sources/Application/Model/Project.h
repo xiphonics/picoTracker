@@ -2,6 +2,7 @@
 #define _PROJECT_H_
 
 #include "Application/Instruments/InstrumentBank.h"
+#include "Application/Persistency/PersistencyService.h"
 #include "Application/Persistency/Persistent.h"
 #include "BuildNumber.h"
 #include "Foundation/Observable.h"
@@ -9,14 +10,7 @@
 #include "Foundation/Variables/VariableContainer.h"
 #include "Song.h"
 
-#define VAR_TEMPO MAKE_FOURCC('T', 'M', 'P', 'O')
-#define VAR_MASTERVOL MAKE_FOURCC('M', 'S', 'T', 'R')
-#define VAR_WRAP MAKE_FOURCC('W', 'R', 'A', 'P')
-#define VAR_MIDIDEVICE MAKE_FOURCC('M', 'I', 'D', 'I')
-#define VAR_TRANSPOSE MAKE_FOURCC('T', 'R', 'S', 'P')
-#define VAR_SCALE MAKE_FOURCC('S', 'C', 'A', 'L')
-
-#define PROJECT_NUMBER "1.0"
+#define PROJECT_NUMBER "1.99"
 #define PROJECT_RELEASE "r"
 // BUILD_COUNT define comes from BuildNumber.h
 
@@ -24,7 +18,7 @@
 
 class Project : public Persistent, public VariableContainer, I_Observer {
 public:
-  Project();
+  Project(const char *name);
   ~Project();
   void Purge();
   void PurgeInstruments(bool removeFromDisk);
@@ -38,6 +32,8 @@ public:
   int GetScale();
   int GetTempo(); // Takes nudging into account
   int GetTranspose();
+  void GetProjectName(char *name);
+  void SetProjectName(char *name);
 
   void Trigger();
 
@@ -45,19 +41,27 @@ public:
   virtual void Update(Observable &o, I_ObservableData *d);
 
   InstrumentBank *GetInstrumentBank();
+
+  // Persistent
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
-protected:
-  void buildMidiDeviceList();
-
 private:
+  etl::list<Variable *, 6> variables_;
+
   InstrumentBank *instrumentBank_;
-  char **midiDeviceList_;
-  int midiDeviceListSize_;
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];
   unsigned int tempoTapCount_;
+  char *name[MAX_PROJECT_NAME_LENGTH];
+
+  // variables
+  WatchedVariable tempo_;
+  Variable masterVolume_;
+  Variable wrap_;
+  Variable transpose_;
+  Variable scale_;
+  Variable projectName_;
 };
 
 #endif

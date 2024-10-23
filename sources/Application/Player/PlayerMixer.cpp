@@ -18,8 +18,10 @@ PlayerMixer::PlayerMixer() {
     lastInstrument_[i] = 0;
   };
 
+  static char playerChannelMemBuf[sizeof(PlayerChannel) * SONG_CHANNEL_COUNT];
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    channel_[i] = new PlayerChannel(i);
+    channel_[i] =
+        new (playerChannelMemBuf + i * sizeof(PlayerChannel)) PlayerChannel(i);
   }
 }
 
@@ -142,9 +144,7 @@ bool PlayerMixer::IsChannelMuted(int channel) {
   return channel_[channel]->IsMuted();
 }
 
-void PlayerMixer::StartStreaming(const Path &path) {
-  fileStreamer_.Start(path);
-};
+void PlayerMixer::StartStreaming(char *name) { fileStreamer_.Start(name); };
 
 void PlayerMixer::StopStreaming() { fileStreamer_.Stop(); };
 

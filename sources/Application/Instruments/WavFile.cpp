@@ -12,7 +12,6 @@
 #endif
 
 int WavFile::bufferChunkSize_ = -1;
-bool WavFile::initChunkSize_ = true;
 unsigned char WavFile::readBuffer_[512];
 
 short Swap16(short from) {
@@ -39,14 +38,7 @@ int Swap32(int from) {
 #endif
 }
 
-WavFile::WavFile(I_File *file) {
-  if (initChunkSize_) {
-    const char *size = Config::GetInstance()->GetValue("SAMPLELOADCHUNKSIZE");
-    if (size) {
-      bufferChunkSize_ = atoi(size);
-    }
-    initChunkSize_ = false;
-  }
+WavFile::WavFile(PI_File *file) {
   samples_ = 0;
   size_ = 0;
   readBufferSize_ = 0;
@@ -64,12 +56,12 @@ WavFile::~WavFile() {
 #endif
 };
 
-WavFile *WavFile::Open(const char *path) {
+WavFile *WavFile::Open(const char *name) {
+  Trace::Log("WAVFILE", "wave open from %s", name);
 
   // open file
-
-  FileSystem *fs = FileSystem::GetInstance();
-  I_File *file = fs->Open(path, "r");
+  PicoFileSystem *fs = PicoFileSystem::GetInstance();
+  PI_File *file = fs->Open(name, "r");
 
   if (!file)
     return 0;
@@ -87,7 +79,6 @@ WavFile *WavFile::Open(const char *path) {
   long position = 0;
 
   // Read 'RIFF'
-
   unsigned int chunk;
 
   position += wav->readBlock(position, 4);
@@ -101,14 +92,12 @@ WavFile *WavFile::Open(const char *path) {
   }
 
   // Read size
-
   unsigned int size;
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
   size = Swap32(size);
 
   // Read WAVE
-
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
   chunk = Swap32(chunk);
@@ -120,7 +109,6 @@ WavFile *WavFile::Open(const char *path) {
   }
 
   // Read fmt
-
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
   chunk = Swap32(chunk);
@@ -132,7 +120,6 @@ WavFile *WavFile::Open(const char *path) {
   }
 
   // Read subchunk size
-
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
   size = Swap32(size);
@@ -145,7 +132,6 @@ WavFile *WavFile::Open(const char *path) {
   int offset = size - 16;
 
   // Read compression
-
   unsigned short comp;
   position += wav->readBlock(position, 2);
   memcpy(&comp, wav->readBuffer_, 2);
@@ -158,14 +144,12 @@ WavFile *WavFile::Open(const char *path) {
   }
 
   // Read NumChannels (mono/Stereo)
-
   unsigned short nChannels;
   position += wav->readBlock(position, 2);
   memcpy(&nChannels, wav->readBuffer_, 2);
   nChannels = Swap16(nChannels);
 
   // Read Sample rate
-
   unsigned int sampleRate;
 
   position += wav->readBlock(position, 4);
@@ -173,7 +157,6 @@ WavFile *WavFile::Open(const char *path) {
   sampleRate = Swap32(sampleRate);
 
   // Skip byteRate & blockalign
-
   position += 6;
 
   short bitPerSample;
@@ -190,7 +173,6 @@ WavFile *WavFile::Open(const char *path) {
   wav->bytePerSample_ = bitPerSample;
 
   // some bad files have bigger chunks
-
   if (offset) {
     position += offset;
   }
@@ -248,7 +230,7 @@ long WavFile::readBlock(long start, long size) {
     readBufferSize_ = size;
   }
   file_->Seek(start, SEEK_SET);
-  file_->Read(readBuffer_, size, 1);
+  file_->Read(readBuffer_, size);
   return size;
 };
 
@@ -335,6 +317,13 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   // this time
   int irqs = save_and_disable_interrupts();
 
+// this is required due to strange issue with above interrupts disable causing a
+// crash without this delay but only in deoptimised debug builds
+#ifdef PICO_DEOPTIMIZED_DEBUG
+  for (int i = 0; i < 100000; i++) {
+  }
+#endif
+
   // If data doesn't fit in previously erased page, we'll have to erase
   // additional ones
   if (FlashPageBufferSize > (flashEraseOffset - flashWriteOffset)) {
@@ -368,7 +357,7 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
     readSize = (count > readSize) ? readSize : count;
 
     file_->Seek(bufferStart, SEEK_SET);
-    file_->Read(readBuffer_, readSize, 1);
+    file_->Read(readBuffer_, readSize);
 
     // Have to expand 8 bit data (if needed) before writing to flash
     unsigned char *src = (unsigned char *)readBuffer_;
@@ -396,9 +385,10 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
 
     // There will be trash at the end, but sampleBufferSize_ gives me the
     // bounds
-    Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
-                 writeSize, flashWriteOffset + offset,
-                 flashWriteOffset + offset + writeSize);
+    // Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
+    //  writeSize, flashWriteOffset + offset,
+    //  flashWriteOffset + offset + writeSize);
+
     flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
                         writeSize);
     bufferStart += readSize;

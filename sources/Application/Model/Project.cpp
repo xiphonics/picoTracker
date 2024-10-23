@@ -9,37 +9,35 @@
 #include "Scale.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
-#include "System/FileSystem/FileSystem.h"
 #include "System/io/Status.h"
 #include "Table.h"
 
 #include <math.h>
 
-Project::Project()
-    : Persistent("PROJECT"), song_(), midiDeviceList_(0), tempoNudge_(0) {
+Project::Project(const char *name)
+    : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
+      tempoNudge_(0), tempo_(FourCC::VarTempo, 138),
+      masterVolume_(FourCC::VarMasterVolume, 100),
+      wrap_(FourCC::VarWrap, false), transpose_(FourCC::VarTranspose, 0),
+      scale_(FourCC::VarScale, scaleNames, numScales, 0),
+      projectName_(FourCC::VarProjectName, name) {
 
-  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
-  this->insert(end(), tempo);
-  Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
-  this->insert(end(), masterVolume);
-  Variable *wrap = new Variable("wrap", VAR_WRAP, false);
-  this->insert(end(), wrap);
-  Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
-  this->insert(end(), transpose);
-  Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales, 0);
-  this->insert(end(), scale);
-  scale->SetInt(0);
+  //  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
+  this->variables_.insert(variables_.end(), &tempo_);
+  //  Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
+  this->variables_.insert(variables_.end(), &masterVolume_);
+  //  Variable *wrap = new Variable("wrap", VAR_WRAP, false);
+  this->variables_.insert(variables_.end(), &wrap_);
+  //  Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
+  this->variables_.insert(variables_.end(), &transpose_);
+  //  Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales,
+  //  0);
+  this->variables_.insert(variables_.end(), &scale_);
+  scale_.SetInt(0);
+  this->variables_.insert(variables_.end(), &projectName_);
 
-  // Reload the midi device list
-
-  buildMidiDeviceList();
-
-  WatchedVariable *midi = new WatchedVariable(
-      "midi", VAR_MIDIDEVICE, midiDeviceList_, midiDeviceListSize_);
-  this->insert(end(), midi);
-  midi->AddObserver(*this);
-
-  instrumentBank_ = new InstrumentBank();
+  static char instrumentBankMemBuf[sizeof(InstrumentBank)];
+  instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
 
   // look if we can find a sav file
 
@@ -57,23 +55,33 @@ Project::Project()
 Project::~Project() { delete instrumentBank_; };
 
 int Project::GetScale() {
-  Variable *v = FindVariable(VAR_SCALE);
+  Variable *v = FindVariable(FourCC::VarScale);
   NAssert(v);
   return v->GetInt();
 }
 
 int Project::GetTempo() {
-  Variable *v = FindVariable(VAR_TEMPO);
+  Variable *v = FindVariable(FourCC::VarTempo);
   NAssert(v);
   int tempo = v->GetInt() + tempoNudge_;
   return tempo;
 };
 
 int Project::GetMasterVolume() {
-  Variable *v = FindVariable(VAR_MASTERVOL);
+  Variable *v = FindVariable(FourCC::VarMasterVolume);
   NAssert(v);
   return v->GetInt();
 };
+
+void Project::GetProjectName(char *name) {
+  Variable *v = FindVariable(FourCC::VarProjectName);
+  strcpy(name, v->GetString().c_str());
+}
+
+void Project::SetProjectName(char *name) {
+  Variable *v = FindVariable(FourCC::VarProjectName);
+  v->SetString(name, true);
+}
 
 void Project::NudgeTempo(int value) { tempoNudge_ += value; };
 
@@ -88,7 +96,7 @@ void Project::Trigger() {
 };
 
 int Project::GetTranspose() {
-  Variable *v = FindVariable(VAR_TRANSPOSE);
+  Variable *v = FindVariable(FourCC::VarTranspose);
   NAssert(v);
   int result = v->GetInt();
   if (result > 0x80) {
@@ -98,36 +106,15 @@ int Project::GetTranspose() {
 };
 
 bool Project::Wrap() {
-  Variable *v = FindVariable(VAR_WRAP);
+  Variable *v = FindVariable(FourCC::VarWrap);
   NAssert(v);
   return v->GetBool();
 };
 
 InstrumentBank *Project::GetInstrumentBank() { return instrumentBank_; };
 
-// bool Project::MidiEnabled() {
-//	Variable *v=FindVariable(VAR_MIDIENABLE) ;
-//	NAssert(v) ;
-//	return v->GetBool() ;
-// }
-
 void Project::Update(Observable &o, I_ObservableData *d) {
-  WatchedVariable &v = (WatchedVariable &)o;
-  switch (v.GetID()) {
-  case VAR_MIDIDEVICE:
-    MidiService::GetInstance()->SelectDevice(
-        std::string(v.GetString().c_str()));
-    /*           bool enabled=v.GetBool() ;
-               Midi *midi=Midi::GetInstance() ;
-               if (enabled) {
-                   midi->Init() ;
-               } else {
-                   midi->Stop() ;
-                   midi->Close() ;
-               }
-    */
-    break;
-  }
+  // Nothing to do here for now
 }
 
 void Project::Purge() {
@@ -178,9 +165,9 @@ void Project::Purge() {
       if (!song_.phrase_.IsUsed(i)) {
         *data = 0xFF;
         *data2 = 0xFF;
-        *cmd1 = I_CMD_NONE;
+        *cmd1 = FourCC::InstrumentCommandNone;
         *param1 = 0;
-        *cmd2 = I_CMD_NONE;
+        *cmd2 = FourCC::InstrumentCommandNone;
         *param2 = 0;
       }
       data++;
@@ -244,12 +231,12 @@ void Project::PurgeInstruments(bool removeFromDisk) {
     }
 
     // Now effectively purge all unused sample from disk
-
     int purged = 0;
     SamplePool *sp = SamplePool::GetInstance();
     for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
       if ((!iUsed[i]) && (sp->GetSource(i - purged))) {
-        sp->PurgeSample(i - purged);
+        char projName[MAX_PROJECT_NAME_LENGTH];
+        sp->PurgeSample(i - purged, projectName_.GetString().c_str());
         purged++;
       };
     };
@@ -308,33 +295,14 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   }
 
   // save all of the project's parameters
-  auto it = begin();
-  for (size_t i = 0; i < size(); i++) {
+  auto it = variables_.begin();
+  for (size_t i = 0; i < variables_.size(); i++) {
     printer->OpenElement("PARAMETER");
     printer->PushAttribute("NAME", (*it)->GetName());
     printer->PushAttribute("VALUE", (*it)->GetString().c_str());
     printer->CloseElement();
     it++;
   }
-};
-
-void Project::buildMidiDeviceList() {
-  if (midiDeviceList_) {
-    for (int i = 0; i < midiDeviceListSize_; i++) {
-      SAFE_FREE(midiDeviceList_[i]);
-    }
-    SAFE_FREE(midiDeviceList_);
-  }
-  midiDeviceListSize_ = MidiService::GetInstance()->Size();
-  midiDeviceList_ = (char **)SYS_MALLOC(midiDeviceListSize_ * sizeof(char *));
-  auto midiService = MidiService::GetInstance();
-  midiService->Begin();
-  for (int i = 0; i < midiDeviceListSize_; i++) {
-    std::string deviceName = midiService->CurrentItem().GetName();
-    midiDeviceList_[i] = (char *)malloc(sizeof(char *) * deviceName.size() + 1);
-    strcpy(midiDeviceList_[i], deviceName.c_str());
-    midiService->Next();
-  };
 };
 
 void Project::OnTempoTap() {
@@ -355,7 +323,7 @@ void Project::OnTempoTap() {
       }
       int tempo =
           int(60000 * (tempoTapCount_ - 1) / (float)(now - lastTap_[0]));
-      Variable *v = FindVariable(VAR_TEMPO);
+      Variable *v = FindVariable(FourCC::VarTempo);
       v->SetInt(tempo);
     } else {
       tempoTapCount_ = 1;

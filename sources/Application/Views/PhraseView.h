@@ -6,8 +6,6 @@
 #include "BaseClasses/View.h"
 #include "ViewData.h"
 
-#define FCC_EDIT MAKE_FOURCC('V', 'O', 'L', 'M')
-
 class PhraseView : public View {
 
 public:

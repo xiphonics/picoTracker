@@ -13,12 +13,11 @@ public:
   enum Type { INT, FLOAT, BOOL, CHAR_LIST, STRING };
 
 public:
-  Variable(const char *name, FourCC id, int value = 0);
-  Variable(const char *name, FourCC id, float value = 0.0f);
-  Variable(const char *name, FourCC id, bool value = false);
-  Variable(const char *name, FourCC id, const char *value = 0);
-  Variable(const char *name, FourCC id, const char *const *list, int size,
-           int index = -1);
+  Variable(FourCC id, int value = 0);
+  Variable(FourCC id, float value = 0.0f);
+  Variable(FourCC id, bool value = false);
+  Variable(FourCC id, const char *value = 0);
+  Variable(FourCC id, const char *const *list, int size, int index = -1);
 
   virtual ~Variable();
 
@@ -43,7 +42,6 @@ public:
 protected:
   virtual void onChange(){};
 
-  const std::string name_;
   FourCC id_;
   Type type_;
 

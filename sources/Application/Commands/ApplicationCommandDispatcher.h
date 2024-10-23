@@ -2,8 +2,14 @@
 #define _APPLICATION_COMMAND_DISPATCHER_H_
 
 #include "Application/Model/Project.h"
-#include "CommandDispatcher.h"
 #include "Foundation/T_Singleton.h"
+
+class CommandExecuter {
+public:
+  CommandExecuter(){};
+  virtual ~CommandExecuter(){};
+  virtual void Execute(FourCC id, float value) = 0;
+};
 
 class ApplicationCommandDispatcher
     : public T_Singleton<ApplicationCommandDispatcher>,

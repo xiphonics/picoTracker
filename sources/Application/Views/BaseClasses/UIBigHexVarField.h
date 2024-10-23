@@ -1,6 +1,7 @@
 #ifndef _UI_BIG_HEX_VAR_FIELD_H_
 #define _UI_BIG_HEX_VAR_FIELD_H_
 
+#include "Foundation/Observable.h"
 #include "UIIntVarField.h"
 
 class UIBigHexVarField : public UIIntVarField {

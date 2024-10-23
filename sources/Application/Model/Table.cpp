@@ -9,11 +9,11 @@ Table::Table() { Reset(); };
 
 void Table::Reset() {
   for (int i = 0; i < TABLE_STEPS; i++) {
-    cmd1_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    cmd1_[i] = FourCC::InstrumentCommandNone;
     param1_[i] = 0;
-    cmd2_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    cmd2_[i] = FourCC::InstrumentCommandNone;
     param2_[i] = 0;
-    cmd3_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    cmd3_[i] = FourCC::InstrumentCommandNone;
     param3_[i] = 0;
   }
 };
@@ -32,13 +32,13 @@ void Table::Copy(const Table &other) {
 bool Table::IsEmpty() {
 
   for (int i = 0; i < TABLE_STEPS; i++) {
-    if (cmd1_[i] != I_CMD_NONE) {
+    if (cmd1_[i] != FourCC::InstrumentCommandNone) {
       return false;
     };
-    if (cmd2_[i] != I_CMD_NONE) {
+    if (cmd2_[i] != FourCC::InstrumentCommandNone) {
       return false;
     };
-    if (cmd3_[i] != I_CMD_NONE) {
+    if (cmd3_[i] != FourCC::InstrumentCommandNone) {
       return false;
     };
     if (param1_[i] != 0) {

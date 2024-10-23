@@ -5,11 +5,14 @@
 #include "Foundation/T_SimpleList.h"
 #include "Variable.h"
 
-class VariableContainer : public etl::list<Variable *, 20> {
+class VariableContainer {
 public:
-  VariableContainer();
+  VariableContainer(etl::ilist<Variable *> *list);
   virtual ~VariableContainer();
   Variable *FindVariable(FourCC id);
   Variable *FindVariable(const char *name);
+
+private:
+  etl::ilist<Variable *> *list_;
 };
 #endif

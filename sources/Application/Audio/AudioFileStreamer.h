@@ -3,7 +3,6 @@
 
 #include "Application/Instruments/WavFile.h"
 #include "Services/Audio/AudioModule.h"
-#include "System/FileSystem/FileSystem.h"
 
 enum AudioFileStreamerMode { AFSM_STOPPED, AFSM_PLAYING };
 
@@ -12,13 +11,13 @@ public:
   AudioFileStreamer();
   virtual ~AudioFileStreamer();
   virtual bool Render(fixed *buffer, int samplecount);
-  bool Start(const Path &);
+  bool Start(char *name);
   void Stop();
   bool IsPlaying();
 
 protected:
   AudioFileStreamerMode mode_;
-  Path path_;
+  char name_[128];
   bool newPath_;
   WavFile *wav_;
   int position_;

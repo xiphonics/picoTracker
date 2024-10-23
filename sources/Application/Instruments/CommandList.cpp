@@ -1,12 +1,32 @@
 
 #include "CommandList.h"
 
-static FourCC _all[] = {
-    I_CMD_NONE, I_CMD_ARPG, I_CMD_CRSH, I_CMD_DLAY, I_CMD_FCUT,
-    I_CMD_FLTR, I_CMD_FRES, I_CMD_GROV, I_CMD_HOP,  I_CMD_IRTG,
-    I_CMD_KILL, I_CMD_LEGA, I_CMD_LPOF, I_CMD_MDCC, I_CMD_MDPG,
-    I_CMD_PAN_, I_CMD_PFIN, I_CMD_PLOF, I_CMD_PTCH, I_CMD_RTRG,
-    I_CMD_STOP, I_CMD_TABL, I_CMD_TMPO, I_CMD_VELM, I_CMD_VOLM};
+static FourCC _all[] = {FourCC::InstrumentCommandNone,
+                        FourCC::InstrumentCommandArpeggiator,
+                        FourCC::InstrumentCommandCrush,
+                        FourCC::InstrumentCommandDelay,
+                        FourCC::InstrumentCommandFilterCut,
+                        FourCC::InstrumentCommandLowPassFilter,
+                        FourCC::InstrumentCommandFilterResonance,
+                        FourCC::InstrumentCommandGateOff,
+                        FourCC::InstrumentCommandGroove,
+                        FourCC::InstrumentCommandHop,
+                        FourCC::InstrumentCommandRetrigger,
+                        FourCC::InstrumentCommandInstrumentRetrigger,
+                        FourCC::InstrumentCommandKill,
+                        FourCC::InstrumentCommandLegato,
+                        FourCC::InstrumentCommandLoopOfset,
+                        FourCC::InstrumentCommandMidiCC,
+                        FourCC::InstrumentCommandMidiPC,
+                        FourCC::InstrumentCommandPan,
+                        FourCC::InstrumentCommandPitchFineTune,
+                        FourCC::InstrumentCommandPlayOfset,
+                        FourCC::InstrumentCommandPitchSlide,
+                        FourCC::InstrumentCommandStop,
+                        FourCC::InstrumentCommandTable,
+                        FourCC::InstrumentCommandTempo,
+                        FourCC::InstrumentCommandVelocity,
+                        FourCC::InstrumentCommandVolume};
 
 FourCC CommandList::GetNext(FourCC current) {
   for (uint i = 0; i < sizeof(_all) / sizeof(FourCC) - 1; i++) {
@@ -49,7 +69,7 @@ FourCC CommandList::GetPrevAlpha(FourCC current) {
 
   char letter = ((char *)&current)[0];
   bool found = false;
-  FourCC tReturn = 0xFF;
+  FourCC tReturn = FourCC::Default;
   uint count = sizeof(_all) / sizeof(FourCC);
 
   for (uint i = count - 1; i > 0; i--) {

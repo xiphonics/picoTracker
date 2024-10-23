@@ -668,7 +668,7 @@ bool FatFile::openNext(FatFile* dirFile, oflag_t oflag) {
       goto fail;
     }
     // skip empty slot or '.' or '..'
-    if (dir->name[0] == '.' || dir->name[0] == FAT_NAME_DELETED) {
+    if (dir->name[0] == FAT_NAME_DELETED) {
       lfnOrd = 0;
     } else if (isFatFileOrSubdir(dir)) {
       if (lfnOrd && checksum != lfnChecksum(dir->name)) {
@@ -892,7 +892,7 @@ int8_t FatFile::readDir(DirFat_t* dir) {
       return 0;
     }
     // skip empty entries and entry for .  and ..
-    if (dir->name[0] == FAT_NAME_DELETED || dir->name[0] == '.') {
+    if (dir->name[0] == FAT_NAME_DELETED) {
       continue;
     }
     // return if normal file or subdirectory
@@ -1077,7 +1077,7 @@ bool FatFile::rmdir() {
       break;
     }
     // skip empty slot, '.' or '..'
-    if (dir->name[0] == FAT_NAME_DELETED || dir->name[0] == '.') {
+    if (dir->name[0] == FAT_NAME_DELETED) {
       continue;
     }
     // error not empty
@@ -1122,7 +1122,7 @@ bool FatFile::rmRfStar() {
     }
 
     // skip empty slot or '.' or '..'
-    if (dir->name[0] == FAT_NAME_DELETED || dir->name[0] == '.') {
+    if (dir->name[0] == FAT_NAME_DELETED) {
       continue;
     }
 

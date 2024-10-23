@@ -3,12 +3,13 @@
 #define _WAV_FILE_H_
 
 #include "SoundSource.h"
-#include "System/FileSystem/FileSystem.h"
+#include "System/FileSystem/PicoFileSystem.h"
+#include "System/System/System.h"
 
 class WavFile : public SoundSource {
 
 protected: // Factory - see Load method
-  WavFile(I_File *file);
+  WavFile(PI_File *file);
 
 public:
   virtual ~WavFile();
@@ -30,7 +31,7 @@ protected:
   long readBlock(long position, long count);
 
 private:
-  I_File *file_;       // File
+  PI_File *file_;      // File
   int readBufferSize_; // Read buffer size
   short *samples_;     // sample buffer size (16 bits)
   int sampleBufferSize_;

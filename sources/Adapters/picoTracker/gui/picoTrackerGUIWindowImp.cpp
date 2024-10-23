@@ -31,20 +31,6 @@ static GUIEventPadButtonType eventMappingPico[10] = {
     EPBT_SELECT // No SW
 };
 
-// M8 style mapping
-static GUIEventPadButtonType eventMappingM8[10] = {
-    EPBT_LEFT,  // SW1
-    EPBT_DOWN,  // SW2
-    EPBT_RIGHT, // SW3
-    EPBT_UP,    // SW4
-    EPBT_R,     // SW5
-    EPBT_A,     // SW6
-    EPBT_L,     // SW7
-    EPBT_START, // SW8
-    EPBT_B,     // SW9
-    EPBT_SELECT // No SW
-};
-
 static GUIEventPadButtonType *eventMapping = eventMappingPico;
 
 picoTrackerGUIWindowImp *instance_;
@@ -54,11 +40,19 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   instance_ = this;
 
   Config *config = Config::GetInstance();
-  const char *keymapStyle = config->GetValue("KEYMAPSTYLE");
-  if (strcasecmp("M8", keymapStyle) == 0) {
-    eventMapping = eventMappingM8;
-    Trace::Log("GUIWINDOWIMP", "Using M8 keymap");
-  }
+
+  auto remoteUIVar =
+      (WatchedVariable *)config->FindVariable(FourCC::VarRemoteUI);
+
+  // register to receive updates to remoteui setting
+  remoteUIVar->AddObserver(*this);
+  auto remoteui = remoteUIVar->GetInt();
+  remoteUIEnabled_ = remoteui != 0;
+
+  auto uiFontVar = (WatchedVariable *)config->FindVariable(FourCC::VarUIFont);
+  // register to receive updates to remoteui setting
+  uiFontVar->AddObserver(*this);
+  mode0_set_font_index(uiFontVar->GetInt());
 };
 
 picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}
@@ -73,8 +67,16 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   mode0_set_cursor(x, y);
   mode0_putc(c, p.invert_);
 #ifdef USB_REMOTE_UI
-  printf("%c%c%c%c%c%c", REMOTE_UI_CMD_MARKER, DRAW_CMD, c, x + 32, y + 32,
-         p.invert_ ? 127 : 32);
+  if (remoteUIEnabled_) {
+    char remoteUIBuffer[6];
+    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[1] = DRAW_CMD;
+    remoteUIBuffer[2] = c;
+    remoteUIBuffer[3] = x + 32;
+    remoteUIBuffer[4] = y + 32;
+    remoteUIBuffer[5] = p.invert_ ? 127 : 32;
+    sendToUSBCDC(remoteUIBuffer, 6);
+  }
 #endif
 }
 
@@ -94,8 +96,13 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   mode0_set_background(backgroundColor);
   mode0_clear(backgroundColor);
 #ifdef USB_REMOTE_UI
-  printf("%c%c%c", REMOTE_UI_CMD_MARKER, CLEAR_CMD,
-         backgroundColor + UART_ASCII_OFFSET);
+  if (remoteUIEnabled_) {
+    char remoteUIBuffer[3];
+    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[1] = CLEAR_CMD;
+    remoteUIBuffer[2] = backgroundColor + UART_ASCII_OFFSET;
+    sendToUSBCDC(remoteUIBuffer, 3);
+  }
 #endif
 };
 
@@ -113,8 +120,13 @@ mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   mode0_set_foreground(GetColor(c));
 #ifdef USB_REMOTE_UI
-  printf("%c%c%c", REMOTE_UI_CMD_MARKER, SETCOLOR_CMD,
-         GetColor(c) + UART_ASCII_OFFSET);
+  if (remoteUIEnabled_) {
+    char remoteUIBuffer[3];
+    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[1] = SETCOLOR_CMD;
+    remoteUIBuffer[2] = GetColor(c) + UART_ASCII_OFFSET;
+    sendToUSBCDC(remoteUIBuffer, 3);
+  }
 #endif
 };
 
@@ -165,5 +177,19 @@ void picoTrackerGUIWindowImp::ProcessButtonChange(uint16_t changeMask,
       instance_->_window->DispatchEvent(event);
     }
     e = e << 1;
+  }
+}
+
+void picoTrackerGUIWindowImp::Update(Observable &o, I_ObservableData *d) {
+  WatchedVariable &v = (WatchedVariable &)o;
+  switch (v.GetID()) {
+  case FourCC::VarRemoteUI: {
+    auto remoteui = v.GetInt();
+    remoteUIEnabled_ = remoteui != 0;
+  } break;
+  case FourCC::VarUIFont: {
+    auto uifont = v.GetInt();
+    mode0_set_font_index(uifont);
+  } break;
   }
 }

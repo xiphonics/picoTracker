@@ -5,13 +5,11 @@
 
 using namespace std;
 
+// Set this to true to log MIDI events to stdout for debugging
 bool MidiInDevice::dumpEvents_ = false;
 
 MidiInDevice::MidiInDevice(const char *name)
     : ControllerSource("midi", name), T_Stack<MidiMessage>(true) {
-
-  const char *dumpIt = Config::GetInstance()->GetValue("DUMPEVENT");
-  dumpEvents_ = (dumpIt != 0);
 
   for (int channel = 0; channel < 16; channel++) {
     for (int i = 0; i < 128; i++) {
@@ -138,9 +136,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   case MidiMessage::MIDI_NOTE_ON: {
     int note = event.data1_ & 0x7F;
     int data = event.data2_ & 0x7F;
-    if (dumpEvents_) {
-      Trace::Log("EVENT", "midi:note:%d", note);
-    }
+    Trace::Log("EVENT", "midi:note:%d", note);
     if (noteChannel_[midiChannel][note] != 0) {
       treatNoteOn(noteChannel_[midiChannel][note], data);
     }

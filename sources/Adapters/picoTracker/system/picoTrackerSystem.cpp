@@ -1,6 +1,5 @@
 #include "picoTrackerSystem.h"
 #include "Adapters/picoTracker/audio/picoTrackerAudio.h"
-#include "Adapters/picoTracker/filesystem/picoTrackerFileSystem.h"
 #include "Adapters/picoTracker/gui/GUIFactory.h"
 #include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #ifdef DUMMY_MIDI
@@ -43,44 +42,46 @@ int picoTrackerSystem::MainLoop() {
 void picoTrackerSystem::Boot(int argc, char **argv) {
 
   // Install System
-  System::Install(new picoTrackerSystem());
+  static char systemMemBuf[sizeof(picoTrackerSystem)];
+  System::Install(new (systemMemBuf) picoTrackerSystem());
 
-  // Install FileSystem
-  FileSystem::Install(new picoTrackerFileSystem());
-  Path::SetAlias("bin", "");
-  Path::SetAlias("root", "");
-
-  Trace::GetInstance()->SetLogger(*(new StdOutLogger()));
+  static char loggerMemBuf[sizeof(StdOutLogger)];
+  Trace::GetInstance()->SetLogger(*(new (loggerMemBuf) StdOutLogger()));
 
   // Install GUI Factory
-  I_GUIWindowFactory::Install(new GUIFactory());
+  static char guiMemBuf[sizeof(GUIFactory)];
+  I_GUIWindowFactory::Install(new (guiMemBuf) GUIFactory());
 
   // Install Timers
-  TimerService::GetInstance()->Install(new picoTrackerTimerService());
+  static char timerMemBuf[sizeof(picoTrackerTimerService)];
+  TimerService::GetInstance()->Install(new (timerMemBuf)
+                                           picoTrackerTimerService());
+
+  // Install MIDI
+  // **NOTE**: MIDI install MUST happen before Audio install because it triggers
+  // reading config file and config file needs to have MidiService already
+  // installed in order to apply midi settings read from the config file
+#ifdef DUMMY_MIDI
+  static char midiMemBuf[sizeof(DummyMidi)];
+  MidiService::Install(new (midiMemBuf) DummyMidi());
+#else
+  static char midiMemBuf[sizeof(picoTrackerMidiService)];
+  MidiService::Install(new (midiMemBuf) picoTrackerMidiService());
+#endif
 
   // Install Sound
   AudioSettings hint;
   hint.bufferSize_ = 1024;
   hint.preBufferCount_ = 8;
-  Audio::Install(new picoTrackerAudio(hint));
-
-  // Install Midi
-#ifdef DUMMY_MIDI
-  MidiService::Install(new DummyMidi());
-#else
-  MidiService::Install(new picoTrackerMidiService());
-#endif
+  static char audioMemBuf[sizeof(picoTrackerAudio)];
+  Audio::Install(new (audioMemBuf) picoTrackerAudio(hint));
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
 
   bool invert = false;
   Config *config = Config::GetInstance();
-  const char *s = config->GetValue("INVERT");
-
-  if ((s) && (!strcmp(s, "YES"))) {
-    invert = true;
-  }
+  invert = config->GetValue("INVERT") > 0;
 
   if (!invert) {
     eventManager_->MapAppButton("left ctrl", APP_BUTTON_A);
@@ -98,6 +99,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   eventManager_->MapAppButton("down", APP_BUTTON_DOWN);
   eventManager_->MapAppButton("up", APP_BUTTON_UP);
 
+#if PICO_RP2040
   // init GPIO for use as ADC: hi-Z, no pullups, etc
   adc_gpio_init(BATT_VOLTAGE_IN);
 
@@ -107,8 +109,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   adc_select_input(3);
 
   Trace::Log("PICOTRACKERSYSTEM", "ADC INIT DONE\n");
-
-  //  mode0_print("boot successful");
+#endif
 };
 
 void picoTrackerSystem::Shutdown() { delete Audio::GetInstance(); };

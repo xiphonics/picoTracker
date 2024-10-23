@@ -2,7 +2,7 @@
 #include "Foundation/Types/Types.h"
 
 Persistent::Persistent(const char *nodeName)
-    : SubService(MAKE_FOURCC('S', 'V', 'P', 'S')) {
+    : SubService(FourCC::ServicePersistency) {
   nodeName_ = nodeName;
 };
 

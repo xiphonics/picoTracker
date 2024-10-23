@@ -7,11 +7,11 @@ ApplicationCommandDispatcher::~ApplicationCommandDispatcher(){};
 
 void ApplicationCommandDispatcher::Execute(FourCC id, float value) {
   switch (id) {
-  case TRIG_TEMPO_TAP:
+  case FourCC::TrigTempoTap:
     if (value > 0.5)
       OnTempoTap();
     break;
-  case TRIG_SEQ_QUEUE_ROW:
+  case FourCC::TrigSeqQueueRow:
     if (value > 0.5)
       OnQueueRow();
     break;

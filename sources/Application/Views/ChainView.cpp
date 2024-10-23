@@ -140,8 +140,8 @@ void ChainView::clonePosition() {
     *dst++ = *src++;
   };
 
-  src = viewData_->song_->phrase_.cmd1_ + 16 * current;
-  dst = viewData_->song_->phrase_.cmd1_ + 16 * next;
+  src = (unsigned char *)viewData_->song_->phrase_.cmd1_ + 16 * current;
+  dst = (unsigned char *)viewData_->song_->phrase_.cmd1_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
   };
@@ -152,8 +152,8 @@ void ChainView::clonePosition() {
     *sdst++ = *ssrc++;
   };
 
-  src = viewData_->song_->phrase_.cmd2_ + 16 * current;
-  dst = viewData_->song_->phrase_.cmd2_ + 16 * next;
+  src = (unsigned char *)viewData_->song_->phrase_.cmd2_ + 16 * current;
+  dst = (unsigned char *)viewData_->song_->phrase_.cmd2_ + 16 * next;
   for (int i = 0; i < 16; i++) {
     *dst++ = *src++;
   };

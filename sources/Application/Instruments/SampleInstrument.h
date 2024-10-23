@@ -9,6 +9,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
+#include "SampleVariable.h"
 #include "SoundSource.h"
 
 enum SampleInstrumentLoopMode {
@@ -22,28 +23,6 @@ enum SampleInstrumentLoopMode {
 };
 
 #define NO_SAMPLE (-1)
-#define SIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
-#define SIP_CRUSH MAKE_FOURCC('C', 'R', 'S', 'H')
-#define SIP_CRUSHVOL MAKE_FOURCC('C', 'R', 'S', 'V')
-#define SIP_DOWNSMPL MAKE_FOURCC('D', 'S', 'P', 'L')
-#define SIP_ROOTNOTE MAKE_FOURCC('R', 'O', 'O', 'T')
-#define SIP_FINETUNE MAKE_FOURCC('F', 'N', 'T', 'N')
-#define SIP_PAN MAKE_FOURCC('P', 'A', 'N', '_')
-#define SIP_START MAKE_FOURCC('S', 'T', 'R', 'T')
-#define SIP_END MAKE_FOURCC('E', 'N', 'D', '_')
-#define SIP_LOOPMODE MAKE_FOURCC('L', 'M', 'O', 'D')
-#define SIP_LOOPSTART MAKE_FOURCC('L', 'S', 'T', 'A')
-#define SIP_LOOPLEN MAKE_FOURCC('L', 'L', 'E', 'N')
-#define SIP_INTERPOLATION MAKE_FOURCC('I', 'N', 'T', 'P')
-#define SIP_SAMPLE MAKE_FOURCC('S', 'M', 'P', 'L')
-#define SIP_FILTMODE MAKE_FOURCC('F', 'I', 'M', 'O')
-#define SIP_FILTMIX MAKE_FOURCC('F', 'M', 'I', 'X')
-#define SIP_FILTCUTOFF MAKE_FOURCC('F', 'C', 'U', 'T')
-#define SIP_FILTRESO MAKE_FOURCC('F', 'R', 'E', 'S')
-#define SIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
-#define SIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
-#define SIP_FBTUNE MAKE_FOURCC('F', 'B', 'T', 'U')
-#define SIP_FBMIX MAKE_FOURCC('F', 'B', 'M', 'X')
 
 class SampleInstrument : public I_Instrument, I_Observer {
 
@@ -65,6 +44,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
+  etl::ilist<Variable *> *Variables() { return &variables_; };
 
   bool IsMulti();
 
@@ -91,6 +71,8 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
+  etl::list<Variable *, 19> variables_;
+
   SoundSource *source_;
   static struct renderParams renderParams_[SONG_CHANNEL_COUNT];
   bool running_;
@@ -99,24 +81,25 @@ private:
 
   static signed char lastMidiNote_[SONG_CHANNEL_COUNT];
   static fixed lastSample_[SONG_CHANNEL_COUNT][2];
-  Variable *volume_;
-  Variable *crush_;
-  Variable *cutoff_;
-  Variable *reso_;
-  Variable *table_;
-  Variable *tableAuto_;
-  Variable *downsample_;
-  Variable *rootNote_;
-  Variable *fineTune_;
-  Variable *drive_;
-  WatchedVariable *start_;
-  WatchedVariable *loopStart_;
-  WatchedVariable *loopEnd_;
-  Variable *filterMix_;
-  Variable *filterMode_;
-  Variable *pan_;
-  Variable *loopMode_;
-  Variable *interpolation_;
+  SampleVariable sample_;
+  Variable volume_;
+  Variable interpolation_;
+  Variable crush_;
+  Variable drive_;
+  Variable downsample_;
+  Variable rootNote_;
+  Variable fineTune_;
+  Variable pan_;
+  Variable cutoff_;
+  Variable reso_;
+  Variable filterMix_;
+  Variable filterMode_;
+  WatchedVariable start_;
+  Variable loopMode_;
+  WatchedVariable loopStart_;
+  WatchedVariable loopEnd_;
+  Variable table_;
+  Variable tableAuto_;
 
   static bool useDirtyDownsampling_;
 };

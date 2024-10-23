@@ -2,11 +2,12 @@
 #define PICOTRACKERWINDOWIMP_H_
 
 #include "Adapters/picoTracker/display/mode0.h"
+#include "Foundation/Observable.h"
 #include "UIFramework/Interfaces/I_GUIWindowImp.h"
 #include "picoTrackerEventQueue.h"
 #include <string>
 
-class picoTrackerGUIWindowImp : public I_GUIWindowImp {
+class picoTrackerGUIWindowImp : public I_GUIWindowImp, public I_Observer {
 
 public:
   picoTrackerGUIWindowImp(GUICreateWindowParams &p);
@@ -37,6 +38,9 @@ public: // I_GUIWindowImp implementation
 protected:
   static mode0_color_t GetColor(GUIColor &c);
 
+  virtual void Update(Observable &o, I_ObservableData *d);
+
 private:
+  bool remoteUIEnabled_ = 0;
 };
 #endif

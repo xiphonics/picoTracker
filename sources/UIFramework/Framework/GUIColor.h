@@ -19,5 +19,10 @@ public:
   }
   unsigned short _r, _g, _b;
   int _paletteIndex;
+
+  // Equality operator
+  bool operator==(const GUIColor &other) const {
+    return _r == other._r && _g == other._g && _b == other._b;
+  }
 };
 #endif

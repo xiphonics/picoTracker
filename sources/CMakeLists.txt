@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
+set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
 # Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -7,7 +8,7 @@ project(picoTracker)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
+if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
@@ -15,32 +16,23 @@ endif()
 add_definitions(-DPICOBUILD)
 
 # For debugging purposes, print all mallocs
-#add_definitions(-DPICO_DEBUG_MALLOC)
+# add_definitions(-DPICO_DEBUG_MALLOC)
 # add_definitions(-DPICOSTATS)
 # add_definitions(-DALL_MALLOC)
 # add_definitions(-DSHOW_MEM_USAGE)
-# add_definitions(-DSHOW_SPI_DEBUG)
-# Enable SDIO - this setting affects code in SdFat library as well as the project
-# This consumes ~7k+ RAM and has some performance problems ATM
-# Also enable HAS_SDIO_CLASS in SdFatConfig.h
-# Switching to this mode may require full pico reset (why?)
-# add_definitions(-DSD_SDIO)
+# Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
+# add_definitions(-DSDIO_BENCH)
 # Enable loading samples into Flash
 add_definitions(-DLOAD_IN_FLASH)
 # Disable MIDI. Enable in order to use UART0 as stdio for debugging
 # add_definitions(-DDUMMY_MIDI)
-# Disable feedback for sample instruments. Due to low memory in the PICO
-# there is very low chance to bring this back
-add_definitions(-DDISABLE_FEEDBACK)
-# Disable exit dialogs. Eventually this could send device to dormant mode
-# but probably unnecessary since it's easier and safe to just turn off
-add_definitions(-DNO_EXIT)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
-# add_definitions(-DUSB_REMOTE_UI)
-
-
-
+add_definitions(-DUSB_REMOTE_UI)
+#disabled for now as USB **input** is not yet fully implemented
+#add_definitions(USB_REMOTE_UI_INPUT)
+# enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
+# add_definitions(-DSERIAL_REPL)
 
 # Initialize the SDK
 pico_sdk_init()
@@ -51,9 +43,13 @@ add_compile_options(
   -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
   -fstack-usage
   -fcallgraph-info=su # include above info in callgraph
-  -Wstack-usage=1272 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
+  -Wstack-usage=2048 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
   # TODO: SHOULD FIX
   -Wno-int-to-pointer-cast
+
+  # braids
+  -Wno-unused-variable
+  -Wno-array-bounds
 )
 
 add_subdirectory(Adapters)
@@ -76,13 +72,21 @@ target_compile_definitions(picoTracker PUBLIC
   PICO_FLASH_SIZE_BYTES=16*1024*1024
   # workaround for slow init crystal on some boards see: https://github.com/raspberrypi/pico-sdk/pull/457
   PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
-  
 )
 
-#if (SD_SDIO)
-#MESSAGE(STATUS "SDIO enabled")
-#target_compile_definitions(picoTracker PUBLIC HAS_SDIO_CLASS=1)
-#endif()
+if (PICO_RP2350)
+  target_compile_definitions(picoTracker PUBLIC
+    PICO_DEFAULT_UART=0
+    PICO_DEFAULT_UART_TX_PIN=30
+    PICO_DEFAULT_UART_RX_PIN=31
+  )
+else ()
+  target_compile_definitions(picoTracker PUBLIC
+    PICO_DEFAULT_UART=1
+    PICO_DEFAULT_UART_TX_PIN=24
+    PICO_DEFAULT_UART_RX_PIN=25
+  )
+endif()
 
 # Debug output with USB uses +6K memory
 pico_enable_stdio_usb(${PROJECT_NAME} 0)

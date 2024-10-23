@@ -16,6 +16,11 @@ picoTracker/build % PICO_SDK_PATH=../sources/Externals/pico-sdk cmake ../sources
 picoTracker/build % make -j8
 ```
 
+You can also set a specific path that contains the toolchain (gcc etc) with:
+```
+PICO_SDK_PATH=../sources/Externals/pico-sdk cmake -DPICO_TOOLCHAIN_PATH=/path/to/your/arm-none-eabi-toolchain  ../sources
+```
+
 Subsequent builds just need the make command. If anything changed on the CMakeLists files, cmake will update itself.
 
 ## Building Debug version
@@ -61,3 +66,19 @@ Replace ```localhost``` with whatever your host running OpenOCD is
 
 This command should load your code into the pico, reset it and run the program. You can go ahead now and use any GDB functionality you may like, or not use it at all other than to load and run your code.
 
+
+## Github Actions CI
+
+The actions CI workflows include a check for the projects specific code formatting style and building the firmware image. It may be useful to run these actions on a local machine, in which case the [act](https://nektosact.com/installation/index.html) could be useful. Note to use `act` you nee to have docker already installed as well.
+
+## MIDI Development
+
+### Debugging MIDI TRS (serial) output
+
+NOTE: The original design picoTracker shares the same UART for both serial output for debugging and TRS MIDI output so you **MUST** enable `DDUMMY_MIDI` and disable `pico_enable_stdio_uart` in the CMakeLists.txt file to use the UART for debugging!
+
+A helpful tool for debugging MIDI output is [ShowMIDI](https://github.com/gbevin/ShowMIDI) or for more low level debugging you may want to use a [BusPirate](http://dangerousprototypes.com/docs/Bus_Pirate).
+
+### USB MIDI output
+
+TODO

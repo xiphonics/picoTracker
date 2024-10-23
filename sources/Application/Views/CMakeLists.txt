@@ -2,10 +2,13 @@ add_library(application_views
   ChainView.h ChainView.cpp
   ConsoleView.h ConsoleView.cpp
   GrooveView.h GrooveView.cpp
+  ImportView.h ImportView.cpp
   InstrumentView.h InstrumentView.cpp
+  DeviceView.h DeviceView.cpp
   NullView.h NullView.cpp
   PhraseView.h PhraseView.cpp
   ProjectView.h ProjectView.cpp
+  SelectProjectView.h SelectProjectView.cpp
   SongView.h SongView.cpp
   TableView.h TableView.cpp
   UIController.h UIController.cpp
@@ -16,6 +19,10 @@ target_link_libraries(application_views PUBLIC application_views_baseclasses
                                         PUBLIC application_instruments
                                         PUBLIC hardware_watchdog
                                         PUBLIC etl
+                                        PUBLIC sdfat
+                                        PUBLIC platform_sdcard
+                                        PUBLIC pico_multicore
+                                        PUBLIC application_utils
 )
 
 target_include_directories(application_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

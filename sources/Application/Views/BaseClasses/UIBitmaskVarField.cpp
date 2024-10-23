@@ -1,0 +1,73 @@
+#include "UIBitmaskVarField.h"
+#include "Application/AppWindow.h"
+
+UIBitmaskVarField::UIBitmaskVarField(GUIPoint &position, Variable &v,
+                                     const char *format, int len)
+    : UIIntVarField(position, v, format, 0, 0xffff, 0, 0, 0) {
+  len_ = len;
+  format_ = format;
+};
+
+void UIBitmaskVarField::Draw(GUIWindow &w, int offset) {
+
+  GUITextProperties props;
+  GUIPoint position = GetPosition();
+  position._y += offset;
+
+  if (focus_) {
+    ((AppWindow &)w).SetColor(CD_HILITE2);
+    props.invert_ = true;
+  } else {
+    ((AppWindow &)w).SetColor(CD_NORMAL);
+  }
+
+  char buffer[20];
+  int value = src_.GetInt();
+  sprintf(buffer, format_, value);
+  w.DrawString(buffer, position, props);
+
+  int percentPos = -1;
+  for (unsigned int i = 0; i < strlen(format_); i++) {
+    if (format_[i] == '%') {
+      percentPos = i;
+      break;
+    };
+  };
+  if (percentPos >= 0) {
+    int offset = (len_ - position_) + percentPos;
+    buffer[offset + 1] = 0;
+    position._x += offset;
+    ((AppWindow &)w).SetColor(CD_NORMAL);
+    w.DrawString(buffer + offset, position, props);
+  }
+};
+
+void UIBitmaskVarField::ProcessArrow(unsigned short mask) {
+
+  int value = src_.GetInt();
+
+  switch (mask) {
+  case EPBM_LEFT:
+    if (position_ < len_) {
+      position_++;
+    };
+    break;
+  case EPBM_RIGHT:
+    if (position_ > 0) {
+      position_--;
+    };
+    break;
+  case EPBM_UP:
+    value = value ^ (1 << (position_ - 1));
+    break;
+
+  case EPBM_DOWN:
+    value = value ^ (1 << (position_ - 1));
+    break;
+  };
+
+  src_.SetInt(value);
+
+  SetChanged();
+  NotifyObservers((I_ObservableData *)(char)src_.GetID());
+};

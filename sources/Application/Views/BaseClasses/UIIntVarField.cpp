@@ -75,6 +75,9 @@ void UIIntVarField::ProcessArrow(unsigned short mask) {
   }
 
   src_.SetInt(value);
+
+  SetChanged();
+  NotifyObservers((I_ObservableData *)(char)src_.GetID());
 };
 
 FourCC UIIntVarField::GetVariableID() { return src_.GetID(); };

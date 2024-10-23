@@ -105,7 +105,7 @@ bool TablePlayback::ProcessLocalCommand(int row, FourCC *commandList,
   // First process any positional command
 
   switch (command) {
-  case I_CMD_HOP: {
+  case FourCC::InstrumentCommandHop: {
     int count = param >> 8;
     if (hopCount_[position_[row]][row] == 0) {
       hopCount_[position_[row]][row] = count;
@@ -133,13 +133,13 @@ bool TablePlayback::ProcessLocalCommand(int row, FourCC *commandList,
   // Now process local command on possibly hopped row
 
   switch (command) {
-  case I_CMD_KILL:
+  case FourCC::InstrumentCommandKill:
     tpc.timeToLive_ = (param & 0xFF) + 1;
     break;
-  case I_CMD_IRTG:
+  case FourCC::InstrumentCommandInstrumentRetrigger:
     tpc.instrRetrigger_ = (param & 0xFF);
     break;
-  case I_CMD_GROV:
+  case FourCC::InstrumentCommandGroove:
     param = param & 0x1F;
     groove_.groove_ = (unsigned char)param;
     groove_.position_ = 0;
@@ -194,13 +194,16 @@ void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
 
       if (gs->UpdateGroove(groove_, true)) {
 
-        if ((table_->cmd1_[position_[0]] != I_CMD_HOP) || (!hopped_[0])) {
+        if ((table_->cmd1_[position_[0]] != FourCC::InstrumentCommandHop) ||
+            (!hopped_[0])) {
           position_[0] = (position_[0] + 1) % 16;
         }
-        if ((table_->cmd2_[position_[1]] != I_CMD_HOP) || (!hopped_[1])) {
+        if ((table_->cmd2_[position_[1]] != FourCC::InstrumentCommandHop) ||
+            (!hopped_[1])) {
           position_[1] = (position_[1] + 1) % 16;
         }
-        if ((table_->cmd3_[position_[2]] != I_CMD_HOP) || (!hopped_[2])) {
+        if ((table_->cmd3_[position_[2]] != FourCC::InstrumentCommandHop) ||
+            (!hopped_[2])) {
           position_[2] = (position_[2] + 1) % 16;
         }
 

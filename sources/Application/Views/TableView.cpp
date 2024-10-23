@@ -5,10 +5,8 @@
 #include "Application/Utils/char.h"
 #include "ViewData.h"
 
-#define FCC_EDIT MAKE_FOURCC('T', 'B', 'E', 'D')
-
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_("edit", FCC_EDIT, 0) {
+    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);
@@ -18,7 +16,7 @@ TableView::TableView(GUIWindow &w, ViewData *viewData)
   lastVol_ = 0;
   lastTick_ = 0;
   lastTsp_ = 0;
-  lastCmd_ = I_CMD_NONE;
+  lastCmd_ = FourCC::InstrumentCommandNone;
   lastParam_ = 0;
 
   clipboard_.active_ = false;
@@ -72,15 +70,15 @@ void TableView::fillClipboardData() {
 
   Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
 
-  uchar *src1 = table.cmd1_;
+  uchar *src1 = (unsigned char *)table.cmd1_;
   uchar *dst1 = clipboard_.cmd1_;
   ushort *src2 = table.param1_;
   ushort *dst2 = clipboard_.param1_;
-  uchar *src3 = table.cmd2_;
+  uchar *src3 = (unsigned char *)table.cmd2_;
   uchar *dst3 = clipboard_.cmd2_;
   ushort *src4 = table.param2_;
   ushort *dst4 = clipboard_.param2_;
-  uchar *src5 = table.cmd3_;
+  uchar *src5 = (unsigned char *)table.cmd3_;
   uchar *dst5 = clipboard_.cmd3_;
   ushort *src6 = table.param3_;
   ushort *dst6 = clipboard_.param3_;
@@ -144,30 +142,30 @@ void TableView::cutSelection() {
   // Loop over selection col, row & clear data inside it
 
   Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
-  uchar *dst1 = table.cmd1_;
+  uchar *dst1 = (unsigned char *)table.cmd1_;
   ushort *dst2 = table.param1_;
-  uchar *dst3 = table.cmd2_;
+  uchar *dst3 = (unsigned char *)table.cmd2_;
   ushort *dst4 = table.param2_;
-  uchar *dst5 = table.cmd3_;
+  uchar *dst5 = (unsigned char *)table.cmd3_;
   ushort *dst6 = table.param3_;
 
   for (int i = 0; i < clipboard_.width_; i++) {
     for (int j = 0; j < clipboard_.height_; j++) {
       switch (i + clipboard_.col_) {
       case 0:
-        dst1[j + clipboard_.row_] = I_CMD_NONE;
+        dst1[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
         break;
       case 1:
         dst2[j + clipboard_.row_] = 0x0000;
         break;
       case 2:
-        dst3[j + clipboard_.row_] = I_CMD_NONE;
+        dst3[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
         break;
       case 3:
         dst4[j + clipboard_.row_] = 0x0000;
         break;
       case 4:
-        dst5[j + clipboard_.row_] = I_CMD_NONE;
+        dst5[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
         break;
       case 5:
         dst6[j + clipboard_.row_] = 0x0000;
@@ -202,15 +200,15 @@ void TableView::pasteClipboard() {
     */
   Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
 
-  uchar *dst1 = table.cmd1_;
+  uchar *dst1 = (unsigned char *)table.cmd1_;
   uchar *src1 = clipboard_.cmd1_;
   ushort *dst2 = table.param1_;
   ushort *src2 = clipboard_.param1_;
-  uchar *dst3 = table.cmd2_;
+  uchar *dst3 = (unsigned char *)table.cmd2_;
   uchar *src3 = clipboard_.cmd2_;
   ushort *dst4 = table.param2_;
   ushort *src4 = clipboard_.param2_;
-  uchar *dst5 = table.cmd3_;
+  uchar *dst5 = (unsigned char *)table.cmd3_;
   uchar *src5 = clipboard_.cmd3_;
   ushort *dst6 = table.param3_;
   ushort *src6 = clipboard_.param3_;
@@ -444,8 +442,8 @@ void TableView::pasteLast() {
 
   switch (col_) {
   case 0:
-    c = table.cmd1_ + row_;
-    if (*c == I_CMD_NONE) {
+    c = (unsigned char *)table.cmd1_ + row_;
+    if (*c == FourCC::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -457,8 +455,8 @@ void TableView::pasteLast() {
     break;
 
   case 2:
-    c = table.cmd2_ + row_;
-    if (*c == I_CMD_NONE) {
+    c = (unsigned char *)table.cmd2_ + row_;
+    if (*c == FourCC::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -470,8 +468,8 @@ void TableView::pasteLast() {
     break;
 
   case 4:
-    c = table.cmd3_ + row_;
-    if (*c == I_CMD_NONE) {
+    c = (unsigned char *)table.cmd3_ + row_;
+    if (*c == FourCC::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -723,13 +721,10 @@ void TableView::DrawView() {
 
   FourCC *f = table.cmd1_;
 
-  buffer[4] = 0;
-
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
-    fourCC2char(command, buffer);
     setTextProps(props, 0, j, false);
-    DrawString(pos._x, pos._y, buffer, props);
+    DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 0, j, true);
     pos._y++;
     if (j == row_ && (col_ == 0 || col_ == 1)) {
@@ -761,13 +756,10 @@ void TableView::DrawView() {
 
   f = table.cmd2_;
 
-  buffer[4] = 0;
-
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
-    fourCC2char(command, buffer);
     setTextProps(props, 2, j, false);
-    DrawString(pos._x, pos._y, buffer, props);
+    DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 2, j, true);
     pos._y++;
     if (j == row_ && (col_ == 2 || col_ == 3)) {
@@ -799,13 +791,10 @@ void TableView::DrawView() {
 
   f = table.cmd3_;
 
-  buffer[4] = 0;
-
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
-    fourCC2char(command, buffer);
     setTextProps(props, 4, j, false);
-    DrawString(pos._x, pos._y, buffer, props);
+    DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 4, j, true);
     pos._y++;
     if (j == row_ && (col_ == 4 || col_ == 5)) {

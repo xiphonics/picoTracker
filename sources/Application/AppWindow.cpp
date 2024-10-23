@@ -7,7 +7,6 @@
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
-#include "Application/Views/ModalDialogs/SelectProjectDialog.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Player/Player.h"
 #include "Services/Midi/MidiService.h"
@@ -36,31 +35,16 @@ GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
 
-// #define _FORCE_SDL_EVENT_
-
-static void ProjectSelectCallback(View &v, ModalView &dialog) {
-
-  SelectProjectDialog &spd = (SelectProjectDialog &)dialog;
-  if (dialog.GetReturnCode() > 0) {
-    Path selected = spd.GetSelection();
-    instance->LoadProject(selected.GetPath().c_str());
-  } else {
-    System::GetInstance()->PostQuitMessage();
-  }
-};
-
-void AppWindow::defineColor(const char *colorName, GUIColor &color,
+void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
                             int paletteIndex) {
 
   Config *config = Config::GetInstance();
-  const char *value = config->GetValue(colorName);
-  if (value) {
-    unsigned char r;
-    char2hex(value, &r);
-    unsigned char g;
-    char2hex(value + 2, &g);
-    unsigned char b;
-    char2hex(value + 4, &b);
+  const int rgbValue = config->FindVariable(colorCode)->GetInt();
+  if (rgbValue) {
+    unsigned short r, g, b;
+    r = (rgbValue >> 16) & 0xFF;
+    g = (rgbValue >> 8) & 0xFF;
+    b = rgbValue & 0xFF;
     color = GUIColor(r, g, b, paletteIndex);
   }
 }
@@ -78,6 +62,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _songView = 0;
   _chainView = 0;
   _phraseView = 0;
+  _deviceView = 0;
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
@@ -97,25 +82,14 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   // Init midi services
   MidiService::GetInstance()->Init();
 
-  // now assign custom colors if they have been set in the config.xml
-  defineColor("BACKGROUND", backgroundColor_, 0);
-  defineColor("FOREGROUND", normalColor_, 1);
-  cursorColor_ = normalColor_;
-  defineColor("HICOLOR1", highlightColor_, 2);
-  defineColor("HICOLOR2", highlight2Color_, 3);
-  defineColor("CURSORCOLOR", cursorColor_, 4);
-  defineColor("INFOCOLOR", infoColor_, 5);
-  defineColor("WARNCOLOR", warnColor_, 6);
-  defineColor("ERRORCOLOR", errorColor_, 7);
+  UpdateColorsFromConfig();
 
   GUIWindow::Clear(backgroundColor_);
 
-  _nullView = new NullView((*this), 0);
+  static char nullViewMemBuf[sizeof(NullView)];
+  _nullView = new (nullViewMemBuf) NullView((*this), 0);
   _currentView = _nullView;
   _nullView->SetDirty(true);
-
-  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
-  _currentView->DoModal(spd, ProjectSelectCallback);
 
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_preScreen, ' ', SCREEN_CHARS);
@@ -123,6 +97,12 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   memset(_preScreenProp, 0, SCREEN_CHARS);
 
   Redraw();
+
+  // there is some sort of race that if we call LoadProject() from here directly
+  // causes audio init to fail, so instead set this flag which will then cause
+  // LoadProject() to be called from within the next time that AnimationUpdate()
+  // is called
+  loadProject_ = true;
 };
 
 AppWindow::~AppWindow() { MidiService::GetInstance()->Close(); }
@@ -276,9 +256,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const Path &p) {
-
-  _root = p;
+void AppWindow::LoadProject(const char *projectName) {
 
   _closeProject = false;
 
@@ -286,20 +264,17 @@ void AppWindow::LoadProject(const Path &p) {
 
   TablePlayback::Reset();
 
-  Path::SetAlias("project", _root.GetPath().c_str());
-  Path::SetAlias("samples", "project:samples");
-
   // Load the sample pool
-
   SamplePool *pool = SamplePool::GetInstance();
+  // load the projects samples
+  pool->Load(projectName);
 
-  pool->Load();
+  static char projectMemBuf[sizeof(Project)];
+  Project *project = new (projectMemBuf) Project(projectName);
 
-  Project *project = new Project();
-
-  bool succeeded = persist->Load();
+  bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
-    project->GetInstrumentBank()->AssignDefaults();
+    Trace::Error("Failed to load project!!");
   };
 
   // Project
@@ -313,8 +288,8 @@ void AppWindow::LoadProject(const Path &p) {
   ApplicationCommandDispatcher::GetInstance()->Init(project);
 
   // Create view data
-
-  _viewData = new ViewData(project);
+  static char viewDataMemBuf[sizeof(ViewData)];
+  _viewData = new (viewDataMemBuf) ViewData(project);
 
   // Create & observe the player
   Player *player = Player::GetInstance();
@@ -326,26 +301,47 @@ void AppWindow::LoadProject(const Path &p) {
   controller->Init(project, _viewData);
 
   // Create & observe all views
-  _songView = new SongView((*this), _viewData, _root.GetName().c_str());
+  static char songViewMemBuf[sizeof(SongView)];
+  _songView = new (songViewMemBuf) SongView((*this), _viewData);
   _songView->AddObserver((*this));
 
-  _chainView = new ChainView((*this), _viewData);
+  static char chainViewMemBuf[sizeof(ChainView)];
+  _chainView = new (chainViewMemBuf) ChainView((*this), _viewData);
   _chainView->AddObserver((*this));
 
-  _phraseView = new PhraseView((*this), _viewData);
+  static char phraseViewMemBuf[sizeof(PhraseView)];
+  _phraseView = new (phraseViewMemBuf) PhraseView((*this), _viewData);
   _phraseView->AddObserver((*this));
 
-  _projectView = new ProjectView((*this), _viewData);
+  static char deviceViewMemBuf[sizeof(DeviceView)];
+  _deviceView = new (deviceViewMemBuf) DeviceView((*this), _viewData);
+  _deviceView->AddObserver((*this));
+
+  static char projectViewMemBuf[sizeof(ProjectView)];
+  _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
 
-  _instrumentView = new InstrumentView((*this), _viewData);
+  static char importViewMemBuf[sizeof(ImportView)];
+  _importView = new (importViewMemBuf) ImportView((*this), _viewData);
+  _importView->AddObserver((*this));
+
+  static char instrumentViewMemBuf[sizeof(InstrumentView)];
+  _instrumentView =
+      new (instrumentViewMemBuf) InstrumentView((*this), _viewData);
   _instrumentView->AddObserver((*this));
 
-  _tableView = new TableView((*this), _viewData);
+  static char tableViewMemBuf[sizeof(TableView)];
+  _tableView = new (tableViewMemBuf) TableView((*this), _viewData);
   _tableView->AddObserver((*this));
 
-  _grooveView = new GrooveView((*this), _viewData);
+  static char grooveViewMemBuf[sizeof(GrooveView)];
+  _grooveView = new (grooveViewMemBuf) GrooveView((*this), _viewData);
   _grooveView->AddObserver(*this);
+
+  static char selectProjectViewMemBuf[sizeof(SelectProjectView)];
+  _selectProjectView =
+      new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
+  _selectProjectView->AddObserver((*this));
 
   _currentView = _songView;
   _currentView->OnFocus();
@@ -379,6 +375,7 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_songView);
   SAFE_DELETE(_chainView);
   SAFE_DELETE(_phraseView);
+  SAFE_DELETE(_deviceView);
   SAFE_DELETE(_projectView);
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
@@ -391,19 +388,32 @@ void AppWindow::CloseProject() {
 
   _currentView = _nullView;
   _nullView->SetDirty(true);
-
-  SelectProjectDialog *spd = new SelectProjectDialog(*_currentView);
-  _currentView->DoModal(spd, ProjectSelectCallback);
 };
 
-AppWindow *AppWindow::Create(GUICreateWindowParams &params) {
+AppWindow *AppWindow::Create(GUICreateWindowParams &params,
+                             const char *projectName) {
   I_GUIWindowImp &imp =
       I_GUIWindowFactory::GetInstance()->CreateWindowImp(params);
-  AppWindow *w = new AppWindow(imp);
+  static char appWindowMemBuf[sizeof(AppWindow)];
+  AppWindow *w = new (appWindowMemBuf) AppWindow(imp);
+  strcpy(w->projectName_, projectName);
   return w;
 };
 
 void AppWindow::SetDirty() { _isDirty = true; };
+
+void AppWindow::UpdateColorsFromConfig() {
+  // now assign custom colors if they have been set device config
+  defineColor(FourCC::VarBGColor, backgroundColor_, 0);
+  defineColor(FourCC::VarFGColor, normalColor_, 1);
+  cursorColor_ = normalColor_;
+  defineColor(FourCC::VarHI1Color, highlightColor_, 2);
+  defineColor(FourCC::VarHI2Color, highlight2Color_, 3);
+  defineColor(FourCC::VarCursorColor, cursorColor_, 4);
+  defineColor(FourCC::VarInfoColor, infoColor_, 5);
+  defineColor(FourCC::VarWarnColor, warnColor_, 6);
+  defineColor(FourCC::VarErrorColor, errorColor_, 7);
+};
 
 bool AppWindow::onEvent(GUIEvent &event) {
 
@@ -473,7 +483,13 @@ void AppWindow::onUpdate() {
   Flush();
 };
 
-void AppWindow::AnimationUpdate() { _currentView->AnimationUpdate(); }
+void AppWindow::AnimationUpdate() {
+  if (loadProject_) {
+    LoadProject(projectName_);
+    loadProject_ = false;
+  }
+  _currentView->AnimationUpdate();
+}
 
 void AppWindow::LayoutChildren(){};
 
@@ -498,6 +514,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     case VT_PHRASE:
       _currentView = _phraseView;
       break;
+    case VT_DEVICE:
+      _currentView = _deviceView;
+      break;
     case VT_PROJECT:
       _currentView = _projectView;
       break;
@@ -512,6 +531,12 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_GROOVE:
       _currentView = _grooveView;
+      break;
+    case VT_IMPORT:
+      _currentView = _importView;
+      break;
+    case VT_SELECTPROJECT:
+      _currentView = _selectProjectView;
       break;
     default:
       break;

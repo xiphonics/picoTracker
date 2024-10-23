@@ -3,6 +3,7 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Application.h"
 #include "picoTrackerGUIWindowImp.h"
+#include "usb_utils.h"
 
 bool picoTrackerEventManager::finished_ = false;
 bool picoTrackerEventManager::redrawing_ = false;
@@ -14,10 +15,16 @@ unsigned int picoTrackerEventManager::keyRepeat_ = 25;
 unsigned int picoTrackerEventManager::keyDelay_ = 500;
 unsigned int picoTrackerEventManager::keyKill_ = 5;
 repeating_timer_t picoTrackerEventManager::timer_ = repeating_timer_t();
+SerialDebugUI picoTrackerEventManager::serialDebugUI_ = SerialDebugUI();
 
 uint16_t gTime_ = 0;
 
 picoTrackerEventQueue *queue;
+
+#ifdef SERIAL_REPL
+#define INPUT_BUFFER_SIZE 80
+char inBuffer[INPUT_BUFFER_SIZE];
+#endif
 
 bool timerHandler(repeating_timer_t *rt) {
   queue = picoTrackerEventQueue::GetInstance();
@@ -48,8 +55,16 @@ int picoTrackerEventManager::MainLoop() {
   queue = picoTrackerEventQueue::GetInstance();
   int loops = 0;
   int events = 0;
+#ifdef SDIO_BENCH
+  // Perform a benchmark of SD card on startup
+  sd_bench();
+#endif
   while (!finished_) {
     loops++;
+
+    // process usb interrupts, should this be done somewhere else??
+    handleUSBInterrupts();
+
     ProcessInputEvent();
     if (!queue->empty()) {
       picoTrackerEvent event(picoTrackerEventType::LAST);
@@ -120,4 +135,8 @@ void picoTrackerEventManager::ProcessInputEvent() {
     //            Trace::Debug("%d: mask=%x",gTime_,sendMask) ;
     //                Trace::Debug("~Pe") ;
   }
+
+#ifdef SERIAL_REPL
+  serialDebugUI_.readSerialIn(inBuffer, INPUT_BUFFER_SIZE);
+#endif
 }

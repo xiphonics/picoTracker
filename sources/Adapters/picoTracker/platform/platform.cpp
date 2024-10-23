@@ -1,9 +1,7 @@
 #include "platform.h"
-#include "hardware/clocks.h"
-// #include "hardware/dma.h"
-#include "hardware/gpio.h"
-// #include "hardware/irq.h"
 #include "etl_profile.h"
+#include "hardware/clocks.h"
+#include "hardware/gpio.h"
 #include "hardware/pll.h"
 #include "hardware/spi.h"
 #include "hardware/structs/clocks.h"
@@ -11,6 +9,8 @@
 #include "hardware/vreg.h"
 #include "pico/stdlib.h"
 #include <cstdio>
+
+#define RP2040_RAM_BASE 0x20000000U
 
 void platform_init() {
   // Platform setup
@@ -117,6 +117,13 @@ void platform_init() {
 
   gpio_set_function(DISPLAY_SCK, GPIO_FUNC_SPI);
   gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
+
+  // PWM
+  // TODO: actually do PWM and detect new hardware vs old where PWM is not
+  // available
+  gpio_init(DISPLAY_PWM);
+  gpio_set_dir(DISPLAY_PWM, GPIO_OUT);
+  gpio_put(DISPLAY_PWM, 1);
 
   // Chip select is active-low, so we'll initialise it to a driven-high state
   gpio_init(DISPLAY_CS);

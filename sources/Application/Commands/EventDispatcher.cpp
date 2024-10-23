@@ -12,15 +12,8 @@ EventDispatcher::EventDispatcher() {
   // Read config file key repeat
 
   Config *config = Config::GetInstance();
-  const char *s = config->GetValue("KEYDELAY");
-  if (s) {
-    keyDelay_ = atoi(s);
-  }
-
-  s = config->GetValue("KEYREPEAT");
-  if (s) {
-    keyRepeat_ = atoi(s);
-  }
+  keyDelay_ = config->GetValue("KEYDELAY");
+  keyRepeat_ = config->GetValue("KEYREPEAT");
 
   repeatMask_ = 0;
   repeatMask_ |= (1 << EPBT_LEFT);
@@ -42,31 +35,31 @@ void EventDispatcher::Execute(FourCC id, float value) {
   if (window_) {
     GUIEventPadButtonType mapping = EPBT_INVALID;
     switch (id) {
-    case TRIG_EVENT_A:
+    case FourCC::TrigEventEnter:
       mapping = EPBT_A;
       break;
-    case TRIG_EVENT_B:
+    case FourCC::TrigEventEdit:
       mapping = EPBT_B;
       break;
-    case TRIG_EVENT_LEFT:
+    case FourCC::TrigEventLeft:
       mapping = EPBT_LEFT;
       break;
-    case TRIG_EVENT_RIGHT:
+    case FourCC::TrigEventRight:
       mapping = EPBT_RIGHT;
       break;
-    case TRIG_EVENT_UP:
+    case FourCC::TrigEventUp:
       mapping = EPBT_UP;
       break;
-    case TRIG_EVENT_DOWN:
+    case FourCC::TrigEventDown:
       mapping = EPBT_DOWN;
       break;
-    case TRIG_EVENT_LSHOULDER:
+    case FourCC::TrigEventAlt:
       mapping = EPBT_L;
       break;
-    case TRIG_EVENT_RSHOULDER:
+    case FourCC::TrigEventNav:
       mapping = EPBT_R;
       break;
-    case TRIG_EVENT_START:
+    case FourCC::TrigEventPlay:
       mapping = EPBT_START;
       break;
       //	EPBT_SELECT

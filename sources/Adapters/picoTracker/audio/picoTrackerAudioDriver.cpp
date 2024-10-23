@@ -17,7 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
+// mini blank buffer for underrun, initialized to 0
+const char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 *
+                                              sizeof(short)] = {0};
 
 picoTrackerAudioDriver *picoTrackerAudioDriver::instance_ = NULL;
 semaphore_t core1_audio;
@@ -68,20 +70,22 @@ picoTrackerAudioDriver::picoTrackerAudioDriver(AudioSettings &settings)
 
 picoTrackerAudioDriver::~picoTrackerAudioDriver() { picoTracker_exit = 1; }
 
+static uint16_t modified_audio_i2s_instructions[24];
+
+static struct pio_program modified_audio_i2s_program = {
+    .instructions = modified_audio_i2s_instructions,
+    .length = 24,
+    .origin = -1,
+    .pio_version = 0,
+#if PICO_PIO_VERSION > 0
+    .used_gpio_ranges = 0x0
+#endif
+};
+
 bool picoTrackerAudioDriver::InitDriver() {
   instance_ = this;
 
   // pico audio init
-
-  // TODO: check what is this
-  // i2s settings
-  // DCDC PSM control
-  // 0: PFM mode (best efficiency)
-  // 1: PWM mode (improved ripple)
-  gpio_init(PIN_DCDC_PSM_CTRL);
-  gpio_set_dir(PIN_DCDC_PSM_CTRL, GPIO_OUT);
-  gpio_put(PIN_DCDC_PSM_CTRL, 1); // PWM mode for less Audio noise
-
   // Setup GPIOs
   gpio_set_function(AUDIO_SDATA, GPIO_FUNC_PIO0);
   gpio_set_function(AUDIO_BCLK, GPIO_FUNC_PIO0);
@@ -90,7 +94,43 @@ bool picoTrackerAudioDriver::InitDriver() {
   // Claim and configure PIO0
   pio_sm_claim(AUDIO_PIO, AUDIO_SM);
 
-  uint offset = pio_add_program(AUDIO_PIO, &audio_i2s_program);
+  Config *config = Config::GetInstance();
+  auto audioLevel = config->GetValue("LINEOUT");
+  Trace::Log("pTAUDIODRIVER", "LINE LEVEL config:%d\n", audioLevel);
+  volume_ = 65;
+  volume_ = config->GetValue("VOLUME");
+
+  // Audio Level support in PIO code:
+  // need to modify the PIO instructions 9 and 21 to use the number of "offset"
+  // aka the OFFSET_COUNT const in the PIO asm code, its value is 3 for default
+  // "headphones level" bits required and then need to modify the PIO
+  // instructions 3 and 15 to use aka the BACKFILL_COUNT in the PIO asm code,
+  // its value is 10 for default "headphones level" the matching number of
+  // "backfill" number of bits required
+  memcpy(modified_audio_i2s_instructions, audio_i2s_program_instructions,
+         24 * 2);
+
+  // ---- HP High volume
+  if (audioLevel == 1) {
+    modified_audio_i2s_instructions[9] = 0xe843;
+    modified_audio_i2s_instructions[21] = 0xf843;
+
+    modified_audio_i2s_instructions[3] = 0xf84a;
+    modified_audio_i2s_instructions[15] = 0xe84a;
+  }
+
+  // ---- Line Level volume
+  if (audioLevel == 2) {
+    modified_audio_i2s_instructions[9] = 0xe841;
+    modified_audio_i2s_instructions[21] = 0xf841;
+
+    modified_audio_i2s_instructions[3] = 0xf84c;
+    modified_audio_i2s_instructions[15] = 0xe84c;
+  }
+
+  modified_audio_i2s_program.instructions = modified_audio_i2s_instructions;
+
+  uint offset = pio_add_program(AUDIO_PIO, &modified_audio_i2s_program);
 
   audio_i2s_program_init(AUDIO_PIO, AUDIO_SM, offset, AUDIO_SDATA, AUDIO_BCLK);
 
@@ -122,9 +162,6 @@ bool picoTrackerAudioDriver::InitDriver() {
   pio_sm_set_clkdiv_int_frac(AUDIO_PIO, AUDIO_SM, divider >> 8u,
                              divider & 0xffu);
 
-  // Create mini blank buffer for underrun
-  memset(miniBlank_, 0, MINI_BLANK_SIZE * 2 * sizeof(short));
-
   // Enable audio
   irq_set_enabled(DMA_IRQ_0 + AUDIO_DMA_IRQ, true);
   dma_channel_transfer_from_buffer_now(AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
@@ -134,14 +171,6 @@ bool picoTrackerAudioDriver::InitDriver() {
   multicore_reset_core1();
   multicore_launch_core1(AudioThread);
   sem_init(&core1_audio, 0, SOUND_BUFFER_COUNT - 1);
-
-  volume_ = 65;
-  Config *config = Config::GetInstance();
-  const char *volume = config->GetValue("VOLUME");
-
-  if (volume) {
-    volume_ = atoi(volume);
-  }
 
   return true;
 };

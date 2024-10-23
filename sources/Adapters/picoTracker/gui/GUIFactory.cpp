@@ -5,7 +5,8 @@
 GUIFactory::GUIFactory(){};
 
 I_GUIWindowImp &GUIFactory::CreateWindowImp(GUICreateWindowParams &p) {
-  return *(new picoTrackerGUIWindowImp(p));
+  static char guiImpMemBuf[sizeof(picoTrackerGUIWindowImp)];
+  return *(new (guiImpMemBuf) picoTrackerGUIWindowImp(p));
 }
 
 EventManager *GUIFactory::GetEventManager() {
