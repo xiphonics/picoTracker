@@ -24,6 +24,8 @@ static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint8_t colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint16_t buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
 
+static uint8_t ui_font_index = 0;
+
 // Using a bit array in order to save memory, there is a slight performance
 // hit in doing so vs a bool array
 static uint8_t changed[TEXT_HEIGHT * TEXT_WIDTH / 8] = {0};
@@ -51,6 +53,8 @@ void mode0_clear(mode0_color_t color) {
 void mode0_set_foreground(mode0_color_t color) { screen_fg_color = color; }
 
 void mode0_set_background(mode0_color_t color) { screen_bg_color = color; }
+
+void mode0_set_font_index(uint8_t idx) { ui_font_index = idx; }
 
 void mode0_set_cursor(uint8_t x, uint8_t y) {
   cursor_x = x;
@@ -134,11 +138,14 @@ inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
         uint16_t fg_color = palette[colors[idx] >> 4];
         uint16_t bg_color = palette[colors[idx] & 0xf];
 
-        const uint16_t *pixel_data = font8x8shift[character];
+        uint16_t const *pixel_data = (ui_font_index == 0)
+                                         ? FONT_HOURGLASS_BITMAP[character]
+                                         : FONT_YOU_SQUARED_BITMAP[character];
 
         // draw the character into the buffer
         for (int j = CHAR_HEIGHT - 1; j >= 0; j--) {
-          *buffer_idx++ = (pixel_data[j] & mask) ? fg_color : bg_color;
+          uint16_t pix = pixel_data[j];
+          *buffer_idx++ = (pix & mask) ? fg_color : bg_color;
         }
       }
     }
