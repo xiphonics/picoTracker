@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "author": "Uri Shaked",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-pi-pico",
+      "id": "pico",
+      "top": 217.65,
+      "left": -82.8,
+      "attrs": {
+        "env": "arduino-community"
+      }
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "lcd1",
+      "top": 165.5,
+      "left": 178,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-microsd-card",
+      "id": "sd1",
+      "top": 211.43,
+      "left": -268.73,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 495.8,
+      "left": -345.6,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn2",
+      "top": 553.4,
+      "left": -345.6,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn3",
+      "top": 553.4,
+      "left": -422.4,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn4",
+      "top": 553.4,
+      "left": -268.8,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn5",
+      "top": 620.6,
+      "left": -355.2,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn6",
+      "top": 620.6,
+      "left": -268.8,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn7",
+      "top": 495.8,
+      "left": -268.8,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn8",
+      "top": 495.8,
+      "left": -182.4,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn9",
+      "top": 553.4,
+      "left": -182.4,
+      "attrs": {
+        "color": "green"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "pico:GP0",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "pico:GP1",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "pico:GND.8",
+      "lcd1:GND",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "pico:3V3",
+      "lcd1:VCC",
+      "red",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "pico:GP27",
+      "lcd1:MOSI",
+      "violet",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:CS",
+      "pico:GP20",
+      "purple",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:RST",
+      "pico:GP22",
+      "gray",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:SCK",
+      "pico:GP26",
+      "orange",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:D/C",
+      "pico:GP21",
+      "blue",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pico:GP2",
+      "sd1:SCK",
+      "orange",
+      [
+        "h-48",
+        "v28.8",
+        "h9.6"
+      ]
+    ],
+    [
+      "pico:GP7",
+      "sd1:CS",
+      "#8f4814",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pico:GND.1",
+      "sd1:GND",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pico:3V3",
+      "sd1:VCC",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pico:GP4",
+      "sd1:DO",
+      "blue",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pico:GP3",
+      "sd1:DI",
+      "violet",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn1:2.r",
+      "pico:GND.4",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn1:1.l",
+      "pico:GP11",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn3:1.l",
+      "pico:GP8",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn2:1.l",
+      "pico:GP9",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn4:1.l",
+      "pico:GP10",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn1:2.r",
+      "btn3:1.r",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn1:2.r",
+      "btn2:1.r",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn1:2.r",
+      "btn5:1.r",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn1:2.r",
+      "btn6:1.r",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn1:2.r",
+      "btn7:2.r",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btn4:1.r",
+      "btn7:2.r",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "btn4:1.r",
+      "btn9:1.r",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "btn4:1.r",
+      "btn8:2.r",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "pico:GP16",
+      "btn7:1.l",
+      "green",
+      [
+        "v0"
+      ]
+    ]
+  ],
+  "dependencies": {}
+}

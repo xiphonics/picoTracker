@@ -1,6 +1,7 @@
 #ifndef _MIDIOUT_DEVICE_H_
 #define _MIDIOUT_DEVICE_H_
 
+#include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_SimpleList.h"
 #include "Foundation/Types/Types.h"
 #include "MidiMessage.h"
@@ -23,7 +24,7 @@ public:
           is to send every message one after the other using sendmessage
   */
 
-  virtual void SendQueue(T_SimpleList<MidiMessage> &queue);
+  virtual void SendQueue(etl::vector<MidiMessage, 10> &queue);
   virtual void SendMessage(MidiMessage &m) = 0;
 
 private:

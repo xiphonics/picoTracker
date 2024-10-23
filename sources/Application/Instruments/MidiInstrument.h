@@ -10,13 +10,6 @@
 #define MIDI_CC 0xB0
 #define MIDI_PRG 0xC0
 
-#define MIP_CHANNEL MAKE_FOURCC('C', 'H', 'N', 'L')
-#define MIP_NOTELENGTH MAKE_FOURCC('L', 'E', 'N', 'G')
-#define MIP_VOLUME MAKE_FOURCC('V', 'O', 'L', 'M')
-#define MIP_PAN MAKE_FOURCC('P', 'A', 'N', ' ')
-#define MIP_TABLE MAKE_FOURCC('T', 'A', 'B', 'L')
-#define MIP_TABLEAUTO MAKE_FOURCC('T', 'B', 'L', 'A')
-
 class MidiInstrument : public I_Instrument {
 
 public:
@@ -50,12 +43,14 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-
+  etl::ilist<Variable *> *Variables() { return &variables_; };
   // external parameter list
 
   void SetChannel(int i);
 
 private:
+  etl::list<Variable *, 5> variables_;
+
   uint8_t lastNote_[SONG_CHANNEL_COUNT];
   int remainingTicks_;
   bool playing_;
@@ -64,6 +59,12 @@ private:
   char velocity_ = 127;
   TableSaveState tableState_;
   bool first_[SONG_CHANNEL_COUNT];
+
+  Variable channel_;
+  Variable noteLen_;
+  Variable volume_;
+  Variable table_;
+  Variable tableAuto_;
 
   static MidiService *svc_;
 };

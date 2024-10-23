@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <vector>
+#include "Externals/etl/include/etl/vector.h"
 
 // Data to be passed from the observable to the observer
 
@@ -22,10 +22,10 @@ public:
 class Observable {
 public:
   Observable();
+  Observable(etl::ivector<I_Observer *> *list);
   virtual ~Observable();
   void AddObserver(I_Observer &o);
   void RemoveObserver(I_Observer &o);
-  void ReserveObserver(int num);
   void RemoveAllObservers();
   int CountObservers();
 
@@ -38,6 +38,7 @@ public:
   bool HasChanged();
 
 private:
-  std::vector<I_Observer *> _list;
+  etl::ivector<I_Observer *> *_list = NULL;
+  I_Observer *_variable = NULL;
   bool _hasChanged;
 };

@@ -1,113 +1,54 @@
 
 #include "InstrumentBank.h"
+#include "Application/Instruments/MacroInstrument.h"
 #include "Application/Instruments/MidiInstrument.h"
+#include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/char.h"
 #include "Filters.h"
+#include "MidiInstrument.h"
+#include "OpalInstrument.h"
+#include "SIDInstrument.h"
 #include "System/io/Status.h"
 
-const char *InstrumentTypeData[] = {"Sample", "Midi"};
-
 // Contain all instrument definition
-
 InstrumentBank::InstrumentBank()
-    : Persistent("INSTRUMENTBANK"), si0(), si1(), si2(), si3(), si4(), si5(),
-      si6(), si7(), si8(), si9(), si10(), si11(), si12(), si13(), si14(),
-      si15(), mi0(), mi1(), mi2(), mi3(), mi4(), mi5(), mi6(), mi7(), mi8(),
-      mi9(), mi10(), mi11(), mi12(), mi13(), mi14(), mi15() {
+    : Persistent("INSTRUMENTBANK"), sampleInstrumentPool_(),
+      midiInstrumentPool_(), sidInstrumentPool_(), opalInstrumentPool_(),
+      macroInstrumentPool_() {
 
-  instrument_[0] = &si0;
-  instrument_[1] = &si1;
-  instrument_[2] = &si2;
-  instrument_[3] = &si3;
-  instrument_[4] = &si4;
-  instrument_[5] = &si5;
-  instrument_[6] = &si6;
-  instrument_[7] = &si7;
-  instrument_[8] = &si8;
-  instrument_[9] = &si9;
-  instrument_[10] = &si10;
-  instrument_[11] = &si11;
-  instrument_[12] = &si12;
-  instrument_[13] = &si13;
-  instrument_[14] = &si14;
-  instrument_[15] = &si15;
-  mi0.SetChannel(0);
-  instrument_[16] = &mi0;
-  mi1.SetChannel(1);
-  instrument_[17] = &mi1;
-  mi2.SetChannel(2);
-  instrument_[18] = &mi2;
-  mi3.SetChannel(3);
-  instrument_[19] = &mi3;
-  mi4.SetChannel(4);
-  instrument_[20] = &mi4;
-  mi5.SetChannel(5);
-  instrument_[21] = &mi5;
-  mi6.SetChannel(6);
-  instrument_[22] = &mi6;
-  mi7.SetChannel(7);
-  instrument_[23] = &mi7;
-  mi8.SetChannel(8);
-  instrument_[24] = &mi8;
-  mi9.SetChannel(9);
-  instrument_[25] = &mi9;
-  mi10.SetChannel(10);
-  instrument_[26] = &mi10;
-  mi11.SetChannel(11);
-  instrument_[27] = &mi11;
-  mi12.SetChannel(12);
-  instrument_[28] = &mi12;
-  mi13.SetChannel(13);
-  instrument_[29] = &mi13;
-  mi14.SetChannel(14);
-  instrument_[30] = &mi14;
-  mi15.SetChannel(15);
-  instrument_[31] = &mi15;
+  for (size_t i = 0; i < instruments_.max_size(); i++) {
+    instruments_[i] = &none_;
+  }
 
-  Status::Set("All instrument loaded");
-};
-
-//
-// Assigns default instruments value for new project
-//
-
-void InstrumentBank::AssignDefaults() {
-
-  SamplePool *pool = SamplePool::GetInstance();
-  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
-    SampleInstrument *s = (SampleInstrument *)instrument_[i];
-    if (i < pool->GetNameListSize()) {
-      s->AssignSample(i);
-    } else {
-      s->AssignSample(-1);
-    }
-  };
+  Status::Set("All instruments preloaded");
 };
 
 InstrumentBank::~InstrumentBank() {
-  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
-    delete instrument_[i];
-  }
+  sampleInstrumentPool_.release_all();
+  midiInstrumentPool_.release_all();
+  sidInstrumentPool_.release_all();
+  opalInstrumentPool_.release_all();
+  macroInstrumentPool_.release_all();
 };
 
-I_Instrument *InstrumentBank::GetInstrument(int i) { return instrument_[i]; };
+I_Instrument *InstrumentBank::GetInstrument(int i) { return instruments_[i]; };
 
 void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
   char hex[3];
-  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
-
-    I_Instrument *instr = instrument_[i];
+  int i = 0;
+  for (auto &instr : instruments_) {
     if (!instr->IsEmpty()) {
       printer->OpenElement("INSTRUMENT");
-      hex2char(i, hex);
+      hex2char(i++, hex);
       printer->PushAttribute("ID", hex);
-      printer->PushAttribute("TYPE", InstrumentTypeData[instr->GetType()]);
+      printer->PushAttribute("TYPE", InstrumentTypeNames[instr->GetType()]);
 
-      for (auto it = instr->begin(); it != instr->end(); it++) {
+      for (auto it = instr->Variables()->begin();
+           it != instr->Variables()->end(); it++) {
         printer->OpenElement("PARAM");
         printer->PushAttribute("NAME", (*it)->GetName());
         printer->PushAttribute("VALUE", (*it)->GetString().c_str());
@@ -120,93 +61,82 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
 
 void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
 
-  if (doc->version_ < 130) {
-    if (Config::GetInstance()->GetValue("LEGACYDOWNSAMPLING") != NULL) {
-      SampleInstrument::EnableDownsamplingLegacy();
-    }
-  }
   bool elem = doc->FirstChild();
   while (elem) {
     // Check it is an instrument
-    if (!strcmp(doc->ElemName(), "INSTRUMENT")) {
+    if (!strcasecmp(doc->ElemName(), "INSTRUMENT")) {
       // Get the instrument ID
       unsigned char id = '\0';
       char *instype = NULL;
       bool hasAttr = doc->NextAttribute();
       while (hasAttr) {
-        if (!strcmp(doc->attrname_, "ID")) {
+        if (!strcasecmp(doc->attrname_, "ID")) {
           unsigned char b1 = (c2h__(doc->attrval_[0])) << 4;
           unsigned char b2 = c2h__(doc->attrval_[1]);
           id = b1 + b2;
+          Trace::Log("INSTRUMENTBANK", "instrument ID from xml:%d", id);
         }
-        if (!strcmp(doc->attrname_, "TYPE")) {
+        if (!strcasecmp(doc->attrname_, "TYPE")) {
           instype = doc->attrval_;
+          Trace::Log("INSTRUMENTBANK", "instrument type from xml:%s", instype);
         }
         hasAttr = doc->NextAttribute();
       }
 
-      InstrumentType it;
+      InstrumentType instrType = IT_SAMPLE; // default if no type in project XML
       if (instype) {
-        for (uint i = 0; i < sizeof(InstrumentTypeData); i++) {
-          if (!strcmp(instype, InstrumentTypeData[i])) {
-            it = (InstrumentType)i;
+        for (uint i = 0; i < sizeof(InstrumentTypeNames); i++) {
+          if (!strcasecmp(instype, InstrumentTypeNames[i])) {
+            instrType = (InstrumentType)i;
             break;
           }
         }
-      } else {
-        it = (id < MAX_SAMPLEINSTRUMENT_COUNT) ? IT_SAMPLE : IT_MIDI;
-      };
+      }
       if (id < MAX_INSTRUMENT_COUNT) {
-        I_Instrument *instr = instrument_[id];
-        if (instr->GetType() != it) {
-          delete instr;
-          switch (it) {
-          case IT_SAMPLE:
-            instr = new SampleInstrument();
-            break;
-          case IT_MIDI:
-            instr = new MidiInstrument();
-            break;
-          }
-          instrument_[id] = instr;
-        };
+        if (GetNextAndAssignID(instrType, id) == NO_MORE_INSTRUMENT) {
+          Trace::Error("Failed to allocate instrument type:%d", instrType);
+          // TODO: need to show user error message that proj file is invalid
+        }
+        I_Instrument *instr = instruments_[id];
 
         bool subelem = doc->FirstChild();
         while (subelem) {
           bool hasAttr = doc->NextAttribute();
-          char name[24];
-          char value[24];
+          char name[24] = "";
+          char value[24] = "";
           while (hasAttr) {
-            if (!strcmp(doc->attrname_, "NAME")) {
+            if (!strcasecmp(doc->attrname_, "NAME")) {
               strcpy(name, doc->attrval_);
             }
-            if (!strcmp(doc->attrname_, "VALUE")) {
+            if (!strcasecmp(doc->attrname_, "VALUE")) {
               strcpy(value, doc->attrval_);
             }
             hasAttr = doc->NextAttribute();
           }
 
           // Convert old filter dist to newer filter mode
-          if (!strcmp(name, "filter dist")) {
+          if (!strcasecmp(name, "filter dist")) {
             strcpy(name, "filter mode");
-            if (!strcmp(value, "none")) {
+            if (!strcasecmp(value, "none")) {
               strcpy(value, "original");
             } else {
               strcpy(value, "scream");
             }
           }
 
-          for (auto it = instr->begin(); it != instr->end(); it++) {
-            if (!strcmp((*it)->GetName(), name)) {
-              (*it)->SetString(value);
+          auto vars = instr->Variables();
+          for (auto elem : *vars) {
+            if (!strcasecmp((elem)->GetName(), name)) {
+              (elem)->SetString(value);
             };
           }
           subelem = doc->NextSibling();
         }
         if (doc->version_ < 38) {
-          Variable *cvl = instr->FindVariable(SIP_CRUSHVOL);
-          Variable *vol = instr->FindVariable(SIP_VOLUME);
-          Variable *crs = instr->FindVariable(SIP_CRUSH);
+          Variable *cvl =
+              instr->FindVariable(FourCC::SampleInstrumentCrushVolume);
+          Variable *vol = instr->FindVariable(FourCC::SampleInstrumentVolume);
+          Variable *crs = instr->FindVariable(FourCC::SampleInstrumentCrush);
           if ((vol) && (cvl) && (crs)) {
             if (crs->GetInt() != 16) {
               int temp = vol->GetInt();
@@ -221,46 +151,135 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
   };
 };
 
-void InstrumentBank::Init() {
-  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
-    instrument_[i]->Init();
-  }
-}
+void InstrumentBank::Init() {}
 
-unsigned short InstrumentBank::GetNext() {
-  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
-    SampleInstrument *si = (SampleInstrument *)instrument_[i];
-    Variable *sample = si->FindVariable(SIP_SAMPLE);
+// Get the next available instance of the given Instrument type from the pool of
+// unused Instruments and assign it to the given instrument "slot id"
+unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
+                                                  unsigned short id) {
+  switch (type) {
+  case IT_SAMPLE: {
+    SampleInstrument *si = sampleInstrumentPool_.create();
+    if (si == nullptr) {
+      Trace::Log("INSTRUMENTBANK", "Sample INSTRUMENT EXHAUSTED!");
+    }
+    // TODO: pool exhastion: show user UI message about it!
+    si->Init();
+
+    Variable *sample = si->FindVariable(FourCC::SampleInstrumentSample);
     if (sample) {
       if (sample->GetInt() == -1) {
-        return i;
+        instruments_[id] = si;
+      } else {
+        Trace::Log("INSTRUMENTBANK",
+                   "unexpected sample value for new instrument: %d",
+                   sample->GetInt());
       }
     }
+    return id;
+  } break;
+  case IT_MIDI: {
+    MidiInstrument *mi = midiInstrumentPool_.create();
+    if (mi == nullptr) {
+      printf("MIDI INSTRUMENT EXHAUSTED!!!!!!");
+    }
+    // TODO check for pool exhastion AND show user UI message about it!!!
+    mi->Init();
+    instruments_[id] = mi;
+    return id;
+  } break;
+  case IT_SID: {
+    // TODO need to figure out how to properly manage sid oc count
+    SIDInstrument *si = sidInstrumentPool_.create(SID1);
+    if (si == nullptr) {
+      printf("SID INSTRUMENT EXHAUSTED!!!!!!");
+    }
+    // TODO check for pool exhastion AND show user UI message about it!!!
+    si->Init();
+    instruments_[id] = si;
+    return id;
+  } break;
+  case IT_OPAL: {
+    OpalInstrument *oi = opalInstrumentPool_.create();
+    // TODO check for pool exhastion AND show user UI message about it!!!
+    if (oi == nullptr) {
+      printf("Opal INSTRUMENT EXHAUSTED!!!!!!");
+    }
+    oi->Init();
+    instruments_[id] = oi;
+    return id;
+  } break;
+  case IT_MACRO: {
+    MacroInstrument *mi = macroInstrumentPool_.create();
+    // TODO check for pool exhastion AND show user UI message about it!!!
+    if (mi == nullptr) {
+      printf("Macro INSTRUMENT EXHAUSTED!!!!!!");
+    }
+    mi->Init();
+    instruments_[id] = mi;
+    return id;
+  } break;
+  case IT_NONE:
+    instruments_[id] = &none_;
+    return id;
+  default:
+    break;
   }
+
   return NO_MORE_INSTRUMENT;
 };
 
+void InstrumentBank::releaseInstrument(unsigned short id) {
+  auto instrument = instruments_[id];
+
+  switch (instrument->GetType()) {
+  case IT_SAMPLE:
+    sampleInstrumentPool_.destroy(instrument);
+    break;
+  case IT_MIDI:
+    midiInstrumentPool_.destroy(instrument);
+    break;
+  case IT_SID:
+    sidInstrumentPool_.destroy(instrument);
+    break;
+  case IT_OPAL:
+    opalInstrumentPool_.destroy(instrument);
+    break;
+  case IT_MACRO:
+    macroInstrumentPool_.destroy(instrument);
+    break;
+  case IT_NONE:
+    // NA: None is a "singleton" so no need to release from pool
+    // BUT it can be assigned to any number of slots
+  default:
+    break;
+  }
+  instruments_[id] = &none_;
+}
+
 unsigned short InstrumentBank::Clone(unsigned short i) {
-  unsigned short next = GetNext();
+  I_Instrument *src = instruments_[i];
+
+  // TODO: NEED TO actually find the next available instrument slot, if there
+  // even is one
+  auto nextFreeInstrumentSlotId = i++;
+
+  unsigned short next =
+      GetNextAndAssignID(src->GetType(), nextFreeInstrumentSlotId);
 
   if (next == NO_MORE_INSTRUMENT) {
     return NO_MORE_INSTRUMENT;
   }
 
-  I_Instrument *src = instrument_[i];
-  I_Instrument *dst = instrument_[next];
+  I_Instrument *dst = instruments_[next];
 
+  // sanity check not trying to clone into itself
   if (src == dst) {
     return NO_MORE_INSTRUMENT;
   }
 
-  if (src->GetType() == IT_SAMPLE) {
-    dst = new SampleInstrument();
-  } else {
-    dst = new MidiInstrument();
-  }
-  instrument_[next] = dst;
-  for (auto it = src->begin(); it != src->end(); it++) {
+  for (auto it = src->Variables()->begin(); it != src->Variables()->end();
+       it++) {
     Variable *dstV = dst->FindVariable((*it)->GetID());
     if (dstV) {
       dstV->CopyFrom(**it);
@@ -270,8 +289,8 @@ unsigned short InstrumentBank::Clone(unsigned short i) {
 }
 
 void InstrumentBank::OnStart() {
-  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
-    instrument_[i]->OnStart();
+  for (auto &elem : instruments_) {
+    elem->OnStart();
   }
   init_filters();
 };

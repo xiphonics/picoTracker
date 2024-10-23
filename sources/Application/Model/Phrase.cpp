@@ -7,9 +7,9 @@ Phrase::Phrase() {
   for (int i = 0; i < PHRASE_COUNT * 16; i++) {
     note_[i] = 0xFF;
     instr_[i] = 0xFF;
-    cmd1_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    cmd1_[i] = FourCC::InstrumentCommandNone;
     param1_[i] = 0x00;
-    cmd2_[i] = MAKE_FOURCC('-', '-', '-', '-');
+    cmd2_[i] = FourCC::InstrumentCommandNone;
     param2_[i] = 0x00;
   }
   for (int i = 0; i < PHRASE_COUNT; i++) {

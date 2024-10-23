@@ -44,7 +44,7 @@ public:
 
   bool IsChannelPlaying(int channel);
 
-  void StartStreaming(const Path &);
+  void StartStreaming(char *name);
   void StopStreaming();
 
   bool Clipped();

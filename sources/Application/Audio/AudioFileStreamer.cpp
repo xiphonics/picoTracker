@@ -12,11 +12,10 @@ AudioFileStreamer::AudioFileStreamer() {
 
 AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
 
-bool AudioFileStreamer::Start(const Path &path) {
-  Trace::Debug("Starting to stream %s", path.GetPath().c_str());
-  path_ = path;
-  const char *shift = Config::GetInstance()->GetValue("PRELISTENATTENUATION");
-  shift_ = (shift) ? atoi(shift) : 1;
+bool AudioFileStreamer::Start(char *name) {
+  Trace::Debug("Starting to stream:%s", name);
+  strcpy(name_, name);
+  shift_ = Config::GetInstance()->GetValue("PRELISTENATTENUATION");
   Trace::Debug("Streaming shift is %d", shift_);
   newPath_ = true;
   mode_ = AFSM_PLAYING;
@@ -33,25 +32,23 @@ bool AudioFileStreamer::IsPlaying() { return (mode_ == AFSM_PLAYING); }
 bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 
   // See if we're playing
-
   if (mode_ == AFSM_STOPPED) {
     SAFE_DELETE(wav_);
     return false;
   }
 
   // Do we need to get a new file ?
-
   if (newPath_) {
     SAFE_DELETE(wav_);
     newPath_ = false;
   }
 
-  // new look if we need to load the file
-
+  // look if we need to load the file
   if (!wav_) {
-    wav_ = WavFile::Open(path_.GetPath().c_str());
+    Trace::Log("", "wave open:%s", name_);
+    wav_ = WavFile::Open(name_);
     if (!wav_) {
-      Trace::Error("Failed to open streaming of %s", path_.GetPath().c_str());
+      Trace::Error("Failed to open streaming of file:%s", name_);
       mode_ = AFSM_STOPPED;
       return false;
     }

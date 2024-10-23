@@ -12,11 +12,17 @@ add_library(application_views_baseclasses
   UISortedVarList.h UISortedVarList.cpp
   UIStaticField.h UIStaticField.cpp
   UITempoField.h UITempoField.cpp
+  UITextField.h UITextField.cpp
+  UISwatchField.h UISwatchField.cpp
+  UIBitmaskVarField.h UIBitmaskVarField.cpp
   View.h View.cpp
   ViewEvent.h ViewEvent.cpp
 )
 
-target_link_libraries(application_views_baseclasses PUBLIC pico_stdlib)
+target_link_libraries(application_views_baseclasses PUBLIC pico_stdlib
+                                          PUBLIC sdfat
+                                          PUBLIC platform_sdcard
+)
 
 target_include_directories(application_views_baseclasses PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

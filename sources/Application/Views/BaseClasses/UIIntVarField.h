@@ -4,7 +4,7 @@
 #include "Foundation/Variables/Variable.h"
 #include "UIField.h"
 
-class UIIntVarField : public UIField {
+class UIIntVarField : public UIField, public Observable {
 
 public:
   UIIntVarField(GUIPoint &position, Variable &v, const char *format, int min,

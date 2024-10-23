@@ -1,29 +1,17 @@
 #include "MixerService.h"
-#include "Application/Audio/DummyAudioOut.h"
 #include "Application/Model/Config.h"
 #include "Application/Model/Mixer.h"
 #include "Services/Audio/Audio.h"
 #include "Services/Audio/AudioDriver.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/System/System.h"
 
 MixerService::MixerService() : out_(0), sync_(0) {
   mode_ = MSM_AUDIO;
-  const char *render = Config::GetInstance()->GetValue("RENDER");
-  if (render) {
-    if (!strcmp(render, "FILERT")) {
-      mode_ = MSM_FILERT;
-    };
-    if (!strcmp(render, "FILE")) {
-      mode_ = MSM_FILE;
-    };
-    if (!strcmp(render, "FILESPLIT")) {
-      mode_ = MSM_FILESPLIT;
-    };
-    if (!strcmp(render, "FILESPLITRT")) {
-      mode_ = MSM_FILESPLITRT;
-    };
-  };
+
+  // render value is saved as value of enum MixerServiceMode
+  mode_ = (MixerServiceMode)Config::GetInstance()->GetValue("RENDER");
 };
 
 MixerService::~MixerService(){};
@@ -37,7 +25,7 @@ bool MixerService::Init() {
   switch (mode_) {
   case MSM_FILE:
   case MSM_FILESPLIT:
-    out_ = new DummyAudioOut();
+    // This is where dummy audio was initialized for the file rendering use case
     break;
   default:
     Audio *audio = Audio::GetInstance();
@@ -197,11 +185,11 @@ void MixerService::Execute(FourCC id, float value) {
     Audio *audio = Audio::GetInstance();
     int volume = audio->GetMixerVolume();
     switch (id) {
-    case TRIG_VOLUME_INCREASE:
+    case FourCC::TrigVolumeIncrease:
       if (volume < 100)
         volume += 1;
       break;
-    case TRIG_VOLUME_DECREASE:
+    case FourCC::TrigVolumeDecrease:
       if (volume > 0)
         volume -= 1;
       break;

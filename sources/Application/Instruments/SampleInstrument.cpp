@@ -28,10 +28,27 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 
 #define KRATE_SAMPLE_COUNT 100
 
-SampleInstrument::SampleInstrument() {
-
-  // Reserve Observer
-  ReserveObserver(1);
+SampleInstrument::SampleInstrument()
+    : I_Instrument(&variables_), sample_(FourCC::SampleInstrumentSample),
+      volume_(FourCC::SampleInstrumentVolume, 0x80),
+      interpolation_(FourCC::SampleInstrumentInterpolation, interpolationTypes,
+                     2, 0),
+      crush_(FourCC::SampleInstrumentCrush, 16),
+      drive_(FourCC::SampleInstrumentCrushVolume, 0xFF),
+      downsample_(FourCC::SampleInstrumentDownsample, 0),
+      rootNote_(FourCC::SampleInstrumentRootNote, 60),
+      fineTune_(FourCC::SampleInstrumentFineTune, 0x7F),
+      pan_(FourCC::SampleInstrumentPan, 0x7F),
+      cutoff_(FourCC::SampleInstrumentFilterCutOff, 0xFF),
+      reso_(FourCC::SampleInstrumentFilterResonance, 0x00),
+      filterMix_(FourCC::SampleInstrumentFilterType, 0x00),
+      filterMode_(FourCC::SampleInstrumentFilterMode, filterMode, 3, 0),
+      start_(FourCC::SampleInstrumentStart, 0),
+      loopMode_(FourCC::SampleInstrumentLoopMode, loopTypes, SILM_LAST, 0),
+      loopStart_(FourCC::SampleInstrumentLoopStart, 0),
+      loopEnd_(FourCC::SampleInstrumentEnd, 0),
+      table_(FourCC::SampleInstrumentTable, -1),
+      tableAuto_(FourCC::SampleInstrumentTableAutomation, false) {
 
   // Initialize MIDI notes
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -44,70 +61,32 @@ SampleInstrument::SampleInstrument() {
   running_ = false;
 
   // Initialize exported variables
-  WatchedVariable *wv = new SampleVariable("sample", SIP_SAMPLE);
-  insert(end(), wv);
-  wv->AddObserver(*this);
+  variables_.insert(variables_.end(), &sample_);
+  sample_.AddObserver(*this);
 
-  volume_ = new Variable("volume", SIP_VOLUME, 0x80);
-  insert(end(), volume_);
+  variables_.insert(variables_.end(), &volume_);
+  variables_.insert(variables_.end(), &interpolation_);
+  variables_.insert(variables_.end(), &crush_);
+  variables_.insert(variables_.end(), &drive_);
+  variables_.insert(variables_.end(), &downsample_);
+  variables_.insert(variables_.end(), &rootNote_);
+  variables_.insert(variables_.end(), &fineTune_);
+  variables_.insert(variables_.end(), &pan_);
+  variables_.insert(variables_.end(), &cutoff_);
+  variables_.insert(variables_.end(), &reso_);
+  variables_.insert(variables_.end(), &filterMix_);
+  variables_.insert(variables_.end(), &filterMode_);
+  variables_.insert(variables_.end(), &start_);
+  start_.AddObserver(*this);
+  variables_.insert(variables_.end(), &loopMode_);
+  loopMode_.SetInt(0);
+  variables_.insert(variables_.end(), &loopStart_);
+  loopStart_.AddObserver(*this);
+  variables_.insert(variables_.end(), &loopEnd_);
+  loopEnd_.AddObserver(*this);
+  variables_.insert(variables_.end(), &table_);
+  variables_.insert(variables_.end(), &tableAuto_);
 
-  interpolation_ =
-      new Variable("interpol", SIP_INTERPOLATION, interpolationTypes, 2, 0);
-  insert(end(), interpolation_);
-
-  crush_ = new Variable("crush", SIP_CRUSH, 16);
-  insert(end(), crush_);
-
-  drive_ = new Variable("crushdrive", SIP_CRUSHVOL, 0xFF);
-  insert(end(), drive_);
-
-  downsample_ = new Variable("downsample", SIP_DOWNSMPL, 0);
-  insert(end(), downsample_);
-
-  rootNote_ = new Variable("root note", SIP_ROOTNOTE, 60);
-  insert(end(), rootNote_);
-
-  fineTune_ = new Variable("fine tune", SIP_FINETUNE, 0x7F);
-  insert(end(), fineTune_);
-
-  pan_ = new Variable("pan", SIP_PAN, 0x7F);
-  insert(end(), pan_);
-
-  cutoff_ = new Variable("filter cut", SIP_FILTCUTOFF, 0xFF);
-  insert(end(), cutoff_);
-
-  reso_ = new Variable("filter res", SIP_FILTRESO, 0x00);
-  insert(end(), reso_);
-
-  filterMix_ = new Variable("filter type", SIP_FILTMIX, 0x00);
-  insert(end(), filterMix_);
-
-  filterMode_ = new Variable("filter mode", SIP_FILTMODE, filterMode, 3, 0);
-  insert(end(), filterMode_);
-
-  start_ = new WatchedVariable("start", SIP_START, 0);
-  insert(end(), start_);
-  start_->AddObserver(*this);
-
-  loopMode_ = new Variable("loopmode", SIP_LOOPMODE, loopTypes, SILM_LAST, 0);
-  insert(end(), loopMode_);
-  loopMode_->SetInt(0);
-
-  loopStart_ = new WatchedVariable("loopstart", SIP_LOOPSTART, 0);
-  insert(end(), loopStart_);
-  loopStart_->AddObserver(*this);
-
-  loopEnd_ = new WatchedVariable("end", SIP_END, 0);
-  insert(end(), loopEnd_);
-  loopEnd_->AddObserver(*this);
-
-  table_ = new Variable("table", SIP_TABLE, -1);
-  insert(end(), table_);
-
-  tableAuto_ = new Variable("table automation", SIP_TABLEAUTO, false);
-  insert(end(), tableAuto_);
-
-  // Reset table state
   tableState_.Reset();
 }
 
@@ -116,7 +95,7 @@ SampleInstrument::~SampleInstrument() {}
 bool SampleInstrument::Init() {
 
   SamplePool *pool = SamplePool::GetInstance();
-  Variable *vSample = FindVariable(SIP_SAMPLE);
+  Variable *vSample = FindVariable(FourCC::SampleInstrumentSample);
   NAssert(vSample);
   int index = vSample->GetInt();
   source_ = (index >= 0) ? pool->GetSource(index) : 0;
@@ -160,30 +139,30 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   rp->channelCount_ = source_->GetChannelCount(rp->midiNote_);
 
   int rootNote =
-      (rootNote_->GetInt() - 60) + source_->GetRootNote(rp->midiNote_);
+      (rootNote_.GetInt() - 60) + source_->GetRootNote(rp->midiNote_);
 
-  rp->volume_ = rp->baseVolume_ = i2fp(volume_->GetInt());
+  rp->volume_ = rp->baseVolume_ = i2fp(volume_.GetInt());
 
-  rp->pan_ = rp->basePan_ = i2fp(pan_->GetInt());
+  rp->pan_ = rp->basePan_ = i2fp(pan_.GetInt());
 
   if (!source_->IsMulti()) {
-    rp->rendLoopStart_ = loopStart_->GetInt();
-    rp->rendLoopEnd_ = loopEnd_->GetInt();
+    rp->rendLoopStart_ = loopStart_.GetInt();
+    rp->rendLoopEnd_ = loopEnd_.GetInt();
   } else {
     long start = source_->GetLoopStart(rp->midiNote_);
     if (start > 0) {
       rp->rendLoopStart_ =
           source_->GetLoopStart(rp->midiNote_); // hack at the moment
       rp->rendLoopEnd_ = source_->GetLoopEnd(rp->midiNote_);
-      loopMode_->SetInt(SILM_LOOP);
+      loopMode_.SetInt(SILM_LOOP);
     } else {
       rp->rendLoopStart_ = 0;                             // hack at the moment
       rp->rendLoopEnd_ = source_->GetSize(rp->midiNote_); // hack at the moment
-      loopMode_->SetInt(SILM_ONESHOT);
+      loopMode_.SetInt(SILM_ONESHOT);
     };
   }
   SampleInstrumentLoopMode loopmode =
-      (SampleInstrumentLoopMode)loopMode_->GetInt();
+      (SampleInstrumentLoopMode)loopMode_.GetInt();
 
   /*	 if (loopmode==SILM_OSCFINE) {
                   if (rp->rendLoopEnd_>source_->GetSize()-1) { // check for
@@ -204,7 +183,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     // if instrument sampled below 44.1Khz, should
     // travel slower in sample
 
-    rp->rendFirst_ = start_->GetInt();
+    rp->rendFirst_ = start_.GetInt();
     rp->position_ = float(rp->rendFirst_);
     rp->baseSpeed_ = fl2fp(source_->GetSampleRate(rp->midiNote_) / driverRate);
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);
@@ -256,7 +235,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
   // Compute octave & note difference from root
 
-  float fineTune = float(fineTune_->GetInt() - 0x7F);
+  float fineTune = float(fineTune_.GetInt() - 0x7F);
   fineTune /= float(0x80);
   int offset = midinote - rootNote;
   while (offset > 127) {
@@ -292,15 +271,15 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
     // Init filter params
 
-    rp->cutoff_ = rp->baseFCut_ = fl2fp(cutoff_->GetInt() / 255.0f);
-    rp->reso_ = rp->baseFRes_ = fl2fp(reso_->GetInt() / 255.0f);
+    rp->cutoff_ = rp->baseFCut_ = fl2fp(cutoff_.GetInt() / 255.0f);
+    rp->reso_ = rp->baseFRes_ = fl2fp(reso_.GetInt() / 255.0f);
 
     // Init crush params
-    rp->crush_ = crush_->GetInt();
-    rp->drive_ = drive_->GetInt();
+    rp->crush_ = crush_.GetInt();
+    rp->drive_ = drive_.GetInt();
 
     // Init downsampling
-    rp->downsample_ = downsample_->GetInt();
+    rp->downsample_ = downsample_.GetInt();
 
     // Disable all active updaters for new voice
     for (auto it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
@@ -360,8 +339,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     bool hasUpdaters = !(rp->activeUpdaters_.empty());
 
-    int filterMix = filterMix_->GetInt();
-    FilterMode filterMode = (FilterMode)filterMode_->GetInt();
+    int filterMix = filterMix_.GetInt();
+    FilterMode filterMode = (FilterMode)filterMode_.GetInt();
     bool filterBoost = (filterMode == FM_SCREAM);
     bool bassyFilter = (filterMode == FM_BASSY);
 
@@ -437,11 +416,11 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     // Loop mode
 
     SampleInstrumentLoopMode loopMode =
-        (SampleInstrumentLoopMode)loopMode_->GetInt();
+        (SampleInstrumentLoopMode)loopMode_.GetInt();
 
     // Interpolation
 
-    int interpol = interpolation_->GetInt();
+    int interpol = interpolation_.GetInt();
 
     // Get sound characteristics
 
@@ -799,22 +778,22 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
 void SampleInstrument::AssignSample(int i) {
 
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   v->SetInt(i);
 };
 
 int SampleInstrument::GetSampleIndex() {
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return v->GetInt();
 };
 
 void SampleInstrument::SetVolume(int volume) {
-  Variable *v = FindVariable(SIP_VOLUME);
+  Variable *v = FindVariable(FourCC::SampleInstrumentVolume);
   v->SetInt(volume);
 };
 
 int SampleInstrument::GetVolume() {
-  Variable *v = FindVariable(SIP_VOLUME);
+  Variable *v = FindVariable(FourCC::SampleInstrumentVolume);
   return v->GetInt();
 };
 
@@ -834,7 +813,7 @@ void SampleInstrument::updateInstrumentData(bool search) {
 
   // Get the source index
 
-  Variable *vSample = FindVariable(SIP_SAMPLE);
+  Variable *vSample = FindVariable(FourCC::SampleInstrumentSample);
   int index = vSample->GetInt();
   int instrSize = 0;
 
@@ -845,11 +824,11 @@ void SampleInstrument::updateInstrumentData(bool search) {
     }
   }
 
-  Variable *v = FindVariable(SIP_END);
+  Variable *v = FindVariable(FourCC::SampleInstrumentEnd);
   v->SetInt(instrSize);
-  v = FindVariable(SIP_LOOPSTART);
+  v = FindVariable(FourCC::SampleInstrumentLoopStart);
   v->SetInt(0);
-  v = FindVariable(SIP_START);
+  v = FindVariable(FourCC::SampleInstrumentStart);
   v->SetInt(0);
   dirty_ = false;
 };
@@ -859,7 +838,7 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
   FourCC id = v.GetID();
 
   switch (id) {
-  case SIP_SAMPLE: {
+  case FourCC::SampleInstrumentSample: {
     if (running_) {
       dirty_ = true; // we'll update later, when instrument gets re-triggered
     } else {
@@ -883,7 +862,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     return;
 
   switch (cc) {
-  case I_CMD_LPOF:
+  case FourCC::InstrumentCommandLoopOfset:
 
     if (value > 0x8000) {
       value = 0x10000 - value;
@@ -899,7 +878,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
     break;
 
-  case I_CMD_PLOF: {
+  case FourCC::InstrumentCommandPlayOfset: {
     if (!source_)
       return;
     int wavSize = source_->GetSize(rp->midiNote_);
@@ -921,7 +900,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     rp->couldClick_ = SHOULD_KILL_CLICKS;
   } break;
 
-  case I_CMD_ARPG: {
+  case FourCC::InstrumentCommandArpeggiator: {
     rp->arp_.SetData(value);
     if (!rp->arp_.Enabled()) {
       rp->arp_.Enable();
@@ -929,7 +908,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_VOLM: {
+  case FourCC::InstrumentCommandVolume: {
     float targetVolume = float(value & 0xFF);
     float speed = float(value >> 8);
     float startVolume = fp2fl(rp->volume_);
@@ -947,7 +926,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_PAN_: {
+  case FourCC::InstrumentCommandPan: {
     float targetPan = float(value & 0xFF);
     if (targetPan == 0xFF) {
       targetPan = 0xFE;
@@ -966,7 +945,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_FCUT: {
+  case FourCC::InstrumentCommandFilterCut: {
     float target = float(value & 0xFF) / 255.0f;
     float speed = float(value >> 8);
     float start = fp2fl(rp->cutoff_);
@@ -982,7 +961,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case I_CMD_FRES: {
+  case FourCC::InstrumentCommandFilterResonance: {
     float target = float(value & 0xFF) / 255.0f;
     float speed = float(value >> 8);
     float start = fp2fl(rp->reso_);
@@ -997,7 +976,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       rp->activeUpdaters_.push_back(&rp->resRamp_);
     }
   } break;
-  case I_CMD_PTCH: {
+  case FourCC::InstrumentCommandPitchSlide: {
     int pitch = (char)(value & 0xFF); // number of semi tones
     float speed = float(value >> 8);  // get speed parameter
     if (pitch > 127)
@@ -1023,7 +1002,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case I_CMD_LEGA: {
+  case FourCC::InstrumentCommandLegato: {
     int pitch = (char)(value & 0xFF); // number of semi tones
     float speed = float(value >> 8);  // get speed parameter
 
@@ -1056,7 +1035,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case I_CMD_PFIN: {
+  case FourCC::InstrumentCommandPitchFineTune: {
 
     float semi = (value & 0xFF) / float(0x80); // number of semi tones
     if (semi > 1)
@@ -1081,7 +1060,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case I_CMD_RTRG: {
+  case FourCC::InstrumentCommandRetrigger: {
     unsigned char loop = (value & 0xFF); // number of ticks before repeat
     unsigned char offset =
         (value >> 8); // number of ticks to offset at each repeat
@@ -1095,7 +1074,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       rp->retrig_ = false;
     }
   } break;
-  case I_CMD_FLTR: {
+  case FourCC::InstrumentCommandLowPassFilter: {
     float cut =
         (value >> 8) / 255.0f; // cutoff frequency (FF=all pass, 0=none pass)
     float res =
@@ -1128,7 +1107,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
 
   } break;
-  case I_CMD_CRSH: {
+  case FourCC::InstrumentCommandCrush: {
     unsigned char drive = (value >> 8);
     unsigned char crush = (value & 0x0F);
     if (drive > 0)
@@ -1142,13 +1121,13 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 };
 
 etl::string<24> SampleInstrument::GetName() {
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return v->GetString();
 };
 
 void SampleInstrument::Purge() {
-  auto it = begin();
-  for (size_t i = 0; i < size(); i++) {
+  auto it = variables_.begin();
+  for (size_t i = 0; i < variables_.size(); i++) {
     (*it)->Reset();
     it++;
   }
@@ -1160,19 +1139,19 @@ void SampleInstrument::Purge() {
 };
 
 bool SampleInstrument::IsEmpty() {
-  Variable *v = FindVariable(SIP_SAMPLE);
+  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return (v->GetInt() == -1);
 };
 
 int SampleInstrument::GetTable() {
-  int result = table_->GetInt();
+  int result = table_.GetInt();
   if (result > TABLE_COUNT) {
     return VAR_OFF;
   }
   return result;
 };
 
-bool SampleInstrument::GetTableAutomation() { return tableAuto_->GetBool(); };
+bool SampleInstrument::GetTableAutomation() { return tableAuto_.GetBool(); };
 
 void SampleInstrument::GetTableState(TableSaveState &state) {
   memcpy(state.hopCount_, tableState_.hopCount_,

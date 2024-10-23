@@ -45,8 +45,8 @@
 .side_set 2
 
 .define DATA_LOOP_COUNT 13 ; 13 because we do 2 `out`'s on the OSR data outside the loop for a total of 16bits
-.define OFFSET_COUNT 3 ; number of bits+1 to offset from MSB to lower the output volume
-.define BACKFILL_COUNT 10 ; number of bits+1 to fill in loop at end of OSR data to get to 32bits in total output per channel
+.define OFFSET_COUNT 6 ; number of bits+1 to offset from MSB to lower the output volume
+.define BACKFILL_COUNT 7 ; number of bits+1 to fill in loop at end of OSR data to get to 32bits in total output per channel
 
                             ;      /--- LRCLK
                             ;      |/-- BCLK

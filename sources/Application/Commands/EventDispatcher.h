@@ -2,7 +2,7 @@
 #define _EVENT_DISPATCHER_H_
 
 #include "Application/AppWindow.h"
-#include "CommandDispatcher.h"
+#include "ApplicationCommandDispatcher.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "System/Timer/Timer.h"

@@ -5,6 +5,7 @@
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/BaseClasses/ViewEvent.h"
+#include "PlayerMixer.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/n_assert.h"
 #include "System/System/System.h"
@@ -14,11 +15,10 @@
 
 // Private constructor - Singleton
 
-Player::Player() {
+Player::Player() : mixer_() {
 
   isRunning_ = false;
   viewData_ = 0;
-  mixer_ = new PlayerMixer();
 
   lastSongPos_ = 0;
   mode_ = PM_SONG;
@@ -35,7 +35,8 @@ Player::Player() {
 
 Player *Player::GetInstance() {
   if (instance_ == 0) {
-    instance_ = new Player();
+    static char playerMemBuf[sizeof(Player)];
+    instance_ = new (playerMemBuf) Player();
   }
   return instance_;
 }
@@ -45,39 +46,39 @@ bool Player::Init(Project *project, ViewData *viewData) {
   viewData_ = viewData;
   project_ = project;
 
-  if (!mixer_->Init(project)) {
+  if (!mixer_.Init(project)) {
     return false;
   }
 
-  mixer_->AddObserver((*this));
+  mixer_.AddObserver((*this));
   SyncMaster *sync = SyncMaster::GetInstance();
   sync->SetTempo(project_->GetTempo());
-  return mixer_->Start();
+  return mixer_.Start();
 }
 
 void Player::Reset() {
   viewData_ = 0;
   project_ = 0;
-  mixer_->RemoveObserver(*this);
+  mixer_.RemoveObserver(*this);
   Close();
 };
 
 void Player::Close() {
-  mixer_->Stop();
-  mixer_->Close();
+  mixer_.Stop();
+  mixer_.Close();
 };
 
 void Player::SetChannelMute(int channel, bool mute) {
-  mixer_->SetChannelMute(channel, mute);
+  mixer_.SetChannelMute(channel, mute);
 };
 
 bool Player::IsChannelMuted(int channel) {
-  return mixer_->IsChannelMuted(channel);
+  return mixer_.IsChannelMuted(channel);
 };
 
 void Player::Start(PlayMode mode, bool forceSongMode) {
 
-  mixer_->Lock();
+  mixer_.Lock();
 
   lastBeatCount_ = 0;
 
@@ -106,7 +107,7 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
   // Clear all channel based data
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    mixer_->StopChannel(i);
+    mixer_.StopChannel(i);
     timeToLive_[i] = 0;
     timeToStart_[i] = 0;
     TablePlayback &tpb = TablePlayback::GetTablePlayback(i);
@@ -126,7 +127,7 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;
 
-  mixer_->OnPlayerStart();
+  mixer_.OnPlayerStart();
 
   MidiService *ms = MidiService::GetInstance();
   ms->OnPlayerStart();
@@ -134,7 +135,7 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
   switch (viewData_->playMode_) {
   case PM_SONG: {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      mixer_->StartChannel(i);
+      mixer_.StartChannel(i);
       updateSongPos(playPos, i);
     }
   } break;
@@ -144,7 +145,7 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
       if ((liveQueueingMode_[i] == QM_CHAINSTART) ||
           (liveQueueingMode_[i] == QM_PHRASESTART) ||
           (liveQueueingMode_[i] == QM_TICKSTART)) {
-        mixer_->StartChannel(i);
+        mixer_.StartChannel(i);
         updateSongPos(liveQueuePosition_[i], i, liveQueueChainPosition_[i]);
         liveQueueingMode_[i] = QM_NONE;
       }
@@ -154,7 +155,7 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
   case PM_CHAIN:
   case PM_PHRASE: {
     int currentChannel = viewData_->songX_;
-    mixer_->StartChannel(currentChannel);
+    mixer_.StartChannel(currentChannel);
     ;
     int currentChainPos = viewData_->chainRow_;
     updateSongPos(playPos, currentChannel, currentChainPos);
@@ -162,7 +163,7 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
 
   case PM_AUDITION: {
     int currentChannel = viewData_->songX_;
-    mixer_->StartChannel(currentChannel);
+    mixer_.StartChannel(currentChannel);
 
     int currentChainPos = viewData_->chainRow_;
     int currentPhrasePos = viewData_->phraseCurPos_;
@@ -177,7 +178,7 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
 
   ProcessCommands();
 
-  startTime_ = mixer_->GetAudioOut()->GetStreamTime();
+  startTime_ = mixer_.GetAudioOut()->GetStreamTime();
 
   SetChanged();
   PlayerEvent pe(PET_START);
@@ -185,18 +186,18 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
 
   isRunning_ = true; // keep last !!!!
 
-  mixer_->Unlock();
+  mixer_.Unlock();
 }
 
 void Player::Stop() {
 
-  mixer_->Lock();
+  mixer_.Lock();
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    mixer_->StopChannel(i);
+    mixer_.StopChannel(i);
   }
   MidiService::GetInstance()->OnPlayerStop();
-  mixer_->OnPlayerStop();
+  mixer_.OnPlayerStop();
 
   SyncMaster::GetInstance()->Stop();
   isRunning_ = false;
@@ -204,20 +205,20 @@ void Player::Stop() {
   PlayerEvent pe(PET_STOP);
   NotifyObservers(&pe);
 
-  mixer_->Unlock();
+  mixer_.Unlock();
 }
 
 const char *Player::GetPlayedNote(int channel) {
-  return mixer_->GetPlayedNote(channel);
+  return mixer_.GetPlayedNote(channel);
 }
 
 const char *Player::GetPlayedOctive(int channel) {
-  return mixer_->GetPlayedOctive(channel);
+  return mixer_.GetPlayedOctive(channel);
 }
 
 const char *Player::GetPlayedInstrument(int channel) {
-  if ((mixer_->GetPlayedOctive(channel))[1] == ' ') {
-    return mixer_->GetPlayedOctive(channel);
+  if ((mixer_.GetPlayedOctive(channel))[1] == ' ') {
+    return mixer_.GetPlayedOctive(channel);
   } else {
     if (!IsChannelMuted(channel)) {
       return (char *)(&(instrumentOnChannel_[channel][0]));
@@ -285,7 +286,7 @@ void Player::SetSequencerMode(SequencerMode mode) {
 SequencerMode Player::GetSequencerMode() { return sequencerMode_; };
 
 bool Player::IsChannelPlaying(int channel) {
-  return mixer_->IsChannelPlaying(channel);
+  return mixer_.IsChannelPlaying(channel);
 };
 
 // Handles start button on any screen BUT the song screen
@@ -402,7 +403,7 @@ void Player::OnSongStartButton(unsigned int from, unsigned int to,
 
 bool Player::IsRunning() { return isRunning_; };
 
-bool Player::Clipped() { return mixer_->Clipped(); }
+bool Player::Clipped() { return mixer_.Clipped(); }
 
 bool Player::isPlayable(int row, int col, int chainPos) {
 
@@ -546,22 +547,22 @@ void Player::Update(Observable &o, I_ObservableData *d) {
         bool stopped = false;
         if (timeToLive_[i] > 0) {
           if (--timeToLive_[i] == 0) {
-            mixer_->StopInstrument(i);
+            mixer_.StopInstrument(i);
             stopped = true;
           }
         }
         if (!stopped) {
           if (instrRetrigger[i] >= 0) {
-            int note = mixer_->GetChannelNote(i);
-            I_Instrument *instr = mixer_->GetInstrument(i);
+            int note = mixer_.GetChannelNote(i);
+            I_Instrument *instr = mixer_.GetInstrument(i);
             if ((note != 0xFF) && (instr != 0)) {
               note += (instrRetrigger[i] > 80) ? instrRetrigger[i] - 256
                                                : instrRetrigger[i];
               while (note > 127) {
                 note -= 12;
               };
-              mixer_->StopInstrument(i);
-              mixer_->StartInstrument(i, instr, note, false);
+              mixer_.StopInstrument(i);
+              mixer_.StartInstrument(i, instr, note, false);
             };
           };
         }
@@ -594,7 +595,7 @@ void Player::ProcessCommands() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
 
-    if (mixer_->IsChannelPlaying(i)) {
+    if (mixer_.IsChannelPlaying(i)) {
 
       // check if there's any phrase playing
 
@@ -608,9 +609,9 @@ void Player::ProcessCommands() {
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
 
-          if (cc != I_CMD_NONE) {
+          if (cc != FourCC::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
-              I_Instrument *instrument = mixer_->GetInstrument(i);
+              I_Instrument *instrument = mixer_.GetInstrument(i);
               if (instrument) {
                 instrument->ProcessCommand(i, cc, param);
               }
@@ -625,9 +626,9 @@ void Player::ProcessCommands() {
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
 
-          if (cc != I_CMD_NONE) {
+          if (cc != FourCC::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
-              I_Instrument *instrument = mixer_->GetInstrument(i);
+              I_Instrument *instrument = mixer_.GetInstrument(i);
               if (instrument) {
                 instrument->ProcessCommand(i, cc, param);
               }
@@ -641,25 +642,25 @@ void Player::ProcessCommands() {
 
 bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
 
-  I_Instrument *instr = mixer_->GetInstrument(channel);
+  I_Instrument *instr = mixer_.GetInstrument(channel);
 
   switch (cmd) {
-  case I_CMD_KILL:
+  case FourCC::InstrumentCommandKill:
     if (instr) {
       int timeToLive = (param & 0xFF);
       timeToLive_[channel] = timeToLive + 1;
     }
     return true;
-  case I_CMD_TMPO:
+  case FourCC::InstrumentCommandTempo:
     if ((param < 400) && (param > 40)) {
-      Variable *v = project_->FindVariable(VAR_TEMPO);
+      Variable *v = project_->FindVariable(FourCC::VarTempo);
       v->SetInt(param);
       SyncMaster *sync = SyncMaster::GetInstance();
       sync->SetTempo(project_->GetTempo());
     }
     return true;
     break;
-  case I_CMD_TABL: {
+  case FourCC::InstrumentCommandTable: {
     TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
     param = param & 0x7F;
@@ -668,7 +669,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     return true;
     break;
   }
-  case I_CMD_GROV: {
+  case FourCC::InstrumentCommandGroove: {
     Groove *gr = Groove::GetInstance();
     bool all = (param & 0xFF00) != 0;
     param = param & 0xFF;
@@ -680,7 +681,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
       gr->SetGroove(channel, param);
     }
   } break;
-  case I_CMD_STOP: {
+  case FourCC::InstrumentCommandStop: {
     switch (GetSequencerMode()) {
     case SM_SONG:
       Stop();
@@ -688,7 +689,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     case SM_LIVE:
       //            QueueChannel(channel,QM_CHAINSTOP,0) ;
 
-      mixer_->StopChannel(channel);
+      mixer_.StopChannel(channel);
       liveQueueingMode_[channel] = QM_NONE;
       break;
     }
@@ -710,13 +711,13 @@ void Player::triggerLiveChains() {
 
   if (mode_ == PM_LIVE) {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      if (!(mixer_->IsChannelPlaying(i)) &&
+      if (!(mixer_.IsChannelPlaying(i)) &&
           ((liveQueueingMode_[i] == QM_CHAINSTART) ||
            (liveQueueingMode_[i] == QM_TICKSTART) ||
            (liveQueueingMode_[i] == QM_PHRASESTART))) {
         if (findPlayable(&(liveQueuePosition_[i]), i,
                          liveQueueChainPosition_[i])) {
-          mixer_->StartChannel(i);
+          mixer_.StartChannel(i);
           updateSongPos(liveQueuePosition_[i], i, liveQueueChainPosition_[i]);
         }
         liveQueueingMode_[i] = QM_NONE;
@@ -753,11 +754,11 @@ void Player::updateChainPos(int pos, int channel, int hop) {
     viewData_->currentPlayPhrase_[channel] = *data;
     if (*data == 0xFF) { // This could happen if starting in song mode on a row
                          // where a chain contains no phrase
-      mixer_->StopChannel(channel);
+      mixer_.StopChannel(channel);
     }
   } else {
     viewData_->currentPlayPhrase_[channel] = 0xFF;
-    mixer_->StopChannel(channel);
+    mixer_.StopChannel(channel);
   };
   updatePhrasePos((hop >= 0) ? hop : 0, channel);
 }
@@ -779,13 +780,13 @@ void Player::updatePhrasePos(int pos, int channel) {
   // Check both param colum 1 & 2
 
   FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == I_CMD_DLAY) {
+  if (cc == FourCC::InstrumentCommandDelay) {
     ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
 
   cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == I_CMD_DLAY) {
+  if (cc == FourCC::InstrumentCommandDelay) {
     ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
@@ -812,7 +813,7 @@ void Player::playCursorPosition(int channel) {
 
       // Stop instrument if playing
 
-      mixer_->StopInstrument(channel);
+      mixer_.StopInstrument(channel);
       InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
       // get instrument for next note
@@ -824,7 +825,7 @@ void Player::playCursorPosition(int channel) {
         instrument = bank->GetInstrument(instr);
         newInstrument = true;
       } else {
-        instrument = mixer_->GetLastInstrument(channel);
+        instrument = mixer_.GetLastInstrument(channel);
       }
 
       if (instrument == 0) {
@@ -848,7 +849,7 @@ void Player::playCursorPosition(int channel) {
         // Check if note is in acceptable midi range
 
         if (note < 128) {
-          mixer_->StartInstrument(channel, instrument, note, newInstrument);
+          mixer_.StartInstrument(channel, instrument, note, newInstrument);
           int instrTable = instrument->GetTable();
 
           // If an instrument number has been specified && instrument has table,
@@ -870,7 +871,7 @@ void Player::playCursorPosition(int channel) {
       }
     }
     if ((note != 0xFF) || (instr != 0xFF)) {
-      I_Instrument *instrument = mixer_->GetInstrument(channel);
+      I_Instrument *instrument = mixer_.GetInstrument(channel);
       if (instrument) {
         if (instrument->GetTableAutomation()) {
           TablePlayerChange tpc;
@@ -887,11 +888,11 @@ int Player::getChannelHop(int channel, int pos) {
 
   int phrase = viewData_->currentPlayPhrase_[channel];
   FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == I_CMD_HOP) {
+  if (cc == FourCC::InstrumentCommandHop) {
     return (viewData_->song_->phrase_.param1_[phrase * 16 + pos]) & 0xF;
   }
   cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == I_CMD_HOP) {
+  if (cc == FourCC::InstrumentCommandHop) {
     return (viewData_->song_->phrase_.param2_[phrase * 16 + pos]) & 0xF;
   }
   return -1;
@@ -931,7 +932,7 @@ void Player::moveToNextStep() {
 
     Groove *gs = Groove::GetInstance();
 
-    if (mixer_->IsChannelPlaying(i) && !liveTriggered) {
+    if (mixer_.IsChannelPlaying(i) && !liveTriggered) {
       playingChannel = true;
 
       if (gs->TriggerChannel(i)) { // If groove says it is time to play
@@ -994,7 +995,7 @@ void Player::moveToNextPhrase(int channel, int hop) {
       return;
       break;
     case QM_PHRASESTOP:
-      mixer_->StopChannel(channel);
+      mixer_.StopChannel(channel);
       liveQueueingMode_[channel] = QM_NONE;
       return;
     case QM_CHAINSTART:
@@ -1074,7 +1075,7 @@ void Player::moveToNextChain(int channel, int hop) {
 
     case QM_CHAINSTOP:
     case QM_PHRASESTOP:
-      mixer_->StopChannel(channel);
+      mixer_.StopChannel(channel);
       liveQueueingMode_[channel] = QM_NONE;
       return;
 
@@ -1120,12 +1121,12 @@ void Player::moveToNextChain(int channel, int hop) {
   if (isPlayable(nextPos, channel, chainPosition)) {
     updateSongPos(nextPos, channel, chainPosition, hop);
   } else {
-    mixer_->StopChannel(channel);
+    mixer_.StopChannel(channel);
   }
 };
 
 double Player::GetPlayTime() {
-  AudioOut *out = mixer_->GetAudioOut();
+  AudioOut *out = mixer_.GetAudioOut();
   double currentTime = out->GetStreamTime();
   return currentTime - startTime_;
 };
@@ -1134,7 +1135,7 @@ int Player::GetPlayedBufferPercentage() {
   unsigned int beatCount = SyncMaster::GetInstance()->GetBeatCount();
   if (beatCount != lastBeatCount_) {
     lastBeatCount_ = beatCount;
-    lastPercentage_ = mixer_->GetPlayedBufferPercentage();
+    lastPercentage_ = mixer_.GetPlayedBufferPercentage();
   }
   return lastPercentage_;
 };
@@ -1149,33 +1150,33 @@ PlayerEventType PlayerEvent::GetType() { return type_; };
 
 unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
-void Player::StartStreaming(const Path &path) { mixer_->StartStreaming(path); }
+void Player::StartStreaming(char *name) { mixer_.StartStreaming(name); }
 
-void Player::StopStreaming() { mixer_->StopStreaming(); }
+void Player::StopStreaming() { mixer_.StopStreaming(); }
 
-bool Player::IsPlaying() { return mixer_->IsPlaying(); }
+bool Player::IsPlaying() { return mixer_.IsPlaying(); }
 
 std::string Player::GetAudioAPI() {
-  AudioOut *out = mixer_->GetAudioOut();
+  AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioAPI() : "";
 };
 
 std::string Player::GetAudioDevice() {
-  AudioOut *out = mixer_->GetAudioOut();
+  AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioDevice() : "";
 };
 
 int Player::GetAudioBufferSize() {
-  AudioOut *out = mixer_->GetAudioOut();
+  AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioBufferSize() : 0;
 };
 
 int Player::GetAudioRequestedBufferSize() {
-  AudioOut *out = mixer_->GetAudioOut();
+  AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioRequestedBufferSize() : 0;
 }
 
 int Player::GetAudioPreBufferCount() {
-  AudioOut *out = mixer_->GetAudioOut();
+  AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioPreBufferCount() : 0;
 };

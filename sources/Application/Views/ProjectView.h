@@ -2,6 +2,7 @@
 #define _PROJECT_VIEW_H_
 
 #include "BaseClasses/FieldView.h"
+#include "BaseClasses/UITextField.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
@@ -15,21 +16,23 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
   virtual void AnimationUpdate(){};
+  etl::string<40> getProjectName() { return nameField_->GetString(); };
+  void clearSaveAsFlag() { saveAsFlag_ = false; };
 
   // Observer for action callback
 
   void Update(Observable &, I_ObservableData *);
 
-  void OnLoadProject();
   void OnPurgeInstruments(bool removeFromDisk);
   void OnQuit();
 
-protected:
 private:
   Project *project_;
   // Debug
   unsigned long lastTick_;
   unsigned long lastClock_;
   UIField *tempoField_;
+  UITextField *nameField_;
+  bool saveAsFlag_ = false;
 };
 #endif

@@ -10,28 +10,24 @@
 #undef SendMessage
 #endif
 
-MidiService::MidiService()
-    : T_SimpleList<MidiOutDevice>(true), inList_(true), device_(0),
-      sendSync_(true) {
+MidiService::MidiService() : inList_(true), sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
-    queues_[i] = new T_SimpleList<MidiMessage>(true);
+    queues_[i].clear();
   }
-
-  const char *delay = Config::GetInstance()->GetValue("MIDIDELAY");
-  midiDelay_ = delay ? atoi(delay) : 1;
-
-  const char *sendSync = Config::GetInstance()->GetValue("MIDISENDSYNC");
-  if (sendSync) {
-    sendSync_ = (strcmp(sendSync, "YES") == 0);
-  }
+  sendSync_ = Config::GetInstance()->GetValue("MIDISENDSYNC") > 0;
 };
 
 MidiService::~MidiService() { Close(); };
 
 bool MidiService::Init() {
-  Empty();
+  outList_.empty();
   inList_.Empty();
   buildDriverList();
+  // Init all the output midi devices
+  for (auto dev : outList_) {
+    dev->Init();
+  }
+
   // Add a merger for the input
   merger_ = new MidiInMerger();
   for (inList_.Begin(); !inList_.IsDone(); inList_.Next()) {
@@ -39,12 +35,26 @@ bool MidiService::Init() {
     merger_->Insert(current);
   }
 
+#ifndef DUMMY_MIDI
+  auto config = Config::GetInstance();
+  auto midiDevVar =
+      (WatchedVariable *)config->FindVariable(FourCC::VarMidiDevice);
+  midiDevVar->AddObserver(*this);
+
+  auto activeDeviceConfig = midiDevVar->GetInt();
+  updateActiveDevicesList(activeDeviceConfig);
+
+  auto midiSyncVar =
+      (WatchedVariable *)config->FindVariable(FourCC::VarMidiSync);
+  midiSyncVar->AddObserver(*this);
+  auto sync = midiSyncVar->GetInt();
+  sendSync_ = sync != 0;
+#endif
+
   return true;
 };
 
 void MidiService::Close() { Stop(); };
-
-void MidiService::SelectDevice(const std::string &name) { deviceName_ = name; };
 
 bool MidiService::Start() {
   currentPlayQueue_ = 0;
@@ -55,17 +65,16 @@ bool MidiService::Start() {
 void MidiService::Stop() { stopDevice(); };
 
 void MidiService::QueueMessage(MidiMessage &m) {
-  if (device_) {
-    T_SimpleList<MidiMessage> *queue = queues_[currentPlayQueue_];
-    MidiMessage *ms = new MidiMessage(m.status_, m.data1_, m.data2_);
-    queue->Insert(ms);
+  if (!activeOutDevices_.empty()) {
+    auto queue = &queues_[currentPlayQueue_];
+    queue->emplace_back(m.status_, m.data1_, m.data2_);
   }
 };
 
 void MidiService::Trigger() {
   AdvancePlayQueue();
 
-  if (device_ && sendSync_) {
+  if (!activeOutDevices_.empty() && sendSync_) {
     SyncMaster *sm = SyncMaster::GetInstance();
     if (sm->MidiSlice()) {
       MidiMessage msg;
@@ -77,14 +86,32 @@ void MidiService::Trigger() {
 
 void MidiService::AdvancePlayQueue() {
   currentPlayQueue_ = (currentPlayQueue_ + 1) % MIDI_MAX_BUFFERS;
-  T_SimpleList<MidiMessage> *queue = queues_[currentPlayQueue_];
-  queue->Empty();
+  auto queue = &queues_[currentPlayQueue_];
+  queue->clear();
 }
 
 void MidiService::Update(Observable &o, I_ObservableData *d) {
   AudioDriver::Event *event = (AudioDriver::Event *)d;
   if (event->type_ == AudioDriver::Event::ADET_DRIVERTICK) {
     onAudioTick();
+  }
+  WatchedVariable &v = (WatchedVariable &)o;
+  switch (v.GetID()) {
+    // need braces inside case statements due to:
+    // https://stackoverflow.com/a/11578973/85472
+  case FourCC::VarMidiDevice: {
+    auto activeDeviceConfig = v.GetInt();
+    // note deviceID has 0 == OFF
+    printf("midi device var changed:%d", activeDeviceConfig);
+
+    stopDevice();
+    updateActiveDevicesList(activeDeviceConfig);
+    startDevice();
+  } break;
+  case FourCC::VarMidiSync: {
+    auto sync = v.GetInt();
+    sendSync_ = sync != 0;
+  } break;
   }
 }
 
@@ -107,59 +134,59 @@ void MidiService::Flush() {
 void MidiService::flushOutQueue() {
   // Move queue positions
   currentOutQueue_ = (currentOutQueue_ + 1) % MIDI_MAX_BUFFERS;
-  T_SimpleList<MidiMessage> *flushQueue = queues_[currentOutQueue_];
+  auto flushQueue = &queues_[currentOutQueue_];
 
-  if (device_) {
-    // Send whatever is on the out queue
-    device_->SendQueue(*flushQueue);
+  for (auto dev : activeOutDevices_) {
+    dev->SendQueue(*flushQueue);
   }
-  flushQueue->Empty();
+  flushQueue->clear();
+}
+
+void MidiService::updateActiveDevicesList(unsigned short config) {
+  activeOutDevices_.clear();
+
+  switch (config) {
+  case 1:
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[0]);
+    break;
+  case 2:
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[1]);
+    break;
+  case 3:
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[0]);
+    activeOutDevices_.insert(activeOutDevices_.end(), outList_[1]);
+    break;
+  }
 }
 
 void MidiService::startDevice() {
-
   // look for the device
-
-  for (Begin(); !IsDone(); Next()) {
-    MidiOutDevice &current = CurrentItem();
-    if (!strcmp(deviceName_.c_str(), current.GetName())) {
-      if (current.Init()) {
-        if (current.Start()) {
-          device_ = &current;
-        } else {
-          current.Close();
-        }
-      }
-      break;
-    }
+  for (auto dev : activeOutDevices_) {
+    auto name = dev->GetName();
+    dev->Start();
   }
 };
 
 void MidiService::stopDevice() {
-  if (device_) {
-    device_->Stop();
-    device_->Close();
+  for (auto dev : outList_) {
+    dev->Stop();
   }
-  device_ = 0;
 };
 
 void MidiService::OnPlayerStart() {
-
-  if (deviceName_.size() != 0) {
+  for (auto dev : activeOutDevices_) {
     stopDevice();
     startDevice();
-    deviceName_ = "";
-  }
 
-  if (sendSync_) {
-    MidiMessage msg;
-    msg.status_ = 0xFA;
-    QueueMessage(msg);
+    if (sendSync_) {
+      MidiMessage msg;
+      msg.status_ = 0xFA;
+      QueueMessage(msg);
+    }
   }
 };
 
 void MidiService::OnPlayerStop() {
-
   if (sendSync_) {
     MidiMessage msg;
     msg.status_ = 0xFC;

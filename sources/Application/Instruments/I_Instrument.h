@@ -7,12 +7,16 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/VariableContainer.h"
 
-enum InstrumentType { IT_SAMPLE = 0, IT_MIDI };
+#include "Application/Player/TablePlayback.h"
+
+enum InstrumentType { IT_NONE, IT_SAMPLE, IT_MIDI, IT_SID, IT_OPAL, IT_MACRO };
+static const char *InstrumentTypeNames[] = {
+    "NONE", "SAMPLE", "MIDI", "SID", "OPAL", "MACRO",
+};
 
 class I_Instrument : public VariableContainer, public Observable {
-
 public:
-  I_Instrument(){};
+  I_Instrument(etl::ilist<Variable *> *list) : VariableContainer(list){};
   virtual ~I_Instrument(){};
 
   // Initialisation routine
@@ -51,5 +55,6 @@ public:
 
   virtual void GetTableState(TableSaveState &state) = 0;
   virtual void SetTableState(TableSaveState &state) = 0;
+  virtual etl::ilist<Variable *> *Variables() = 0;
 };
 #endif

@@ -4,9 +4,7 @@
 #include "Foundation/Observable.h"
 #include "UIIntVarField.h"
 
-class UITempoField : public UIIntVarField,
-                     public Observable,
-                     public I_Observer {
+class UITempoField : public UIIntVarField, public I_Observer {
 public:
   UITempoField(FourCC action, GUIPoint &position, Variable &variable,
                const char *format, int min, int max, int xOffset, int yOffset);

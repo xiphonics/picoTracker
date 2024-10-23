@@ -7,7 +7,7 @@
 
 class SampleVariable : public WatchedVariable, public I_Observer {
 public:
-  SampleVariable(const char *name, FourCC id);
+  SampleVariable(FourCC id);
   ~SampleVariable();
 
 protected:

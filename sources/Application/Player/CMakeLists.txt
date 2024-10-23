@@ -9,6 +9,8 @@ add_library(application_player
 target_link_libraries(application_player PUBLIC application_mixer
                                          PUBLIC application_audio
                                          PUBLIC application_model
+                                         PUBLIC sdfat
+                                         PUBLIC platform_sdcard
 )
 
 target_include_directories(application_player PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -70,7 +70,7 @@ public:
   void ProcessCommands();
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
 
-  void StartStreaming(const Path &path);
+  void StartStreaming(char *name);
   void StopStreaming();
 
   // Channel data
@@ -119,7 +119,7 @@ protected:
   bool findPlayable(uchar *row, int col, uchar chainPos = 0);
 
 private:
-  PlayerMixer *mixer_;
+  PlayerMixer mixer_;
   ViewData *viewData_;
   Project *project_;
 

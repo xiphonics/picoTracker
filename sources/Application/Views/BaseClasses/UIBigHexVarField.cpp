@@ -1,4 +1,3 @@
-
 #include "UIBigHexVarField.h"
 #include "Application/AppWindow.h"
 
@@ -80,4 +79,7 @@ void UIBigHexVarField::ProcessArrow(unsigned short mask) {
     value = (wrap_) ? max_ + (value - min_) + 1 : min_;
   };
   src_.SetInt(value);
+
+  SetChanged();
+  NotifyObservers((I_ObservableData *)(char)src_.GetID());
 };

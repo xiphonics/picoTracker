@@ -4,11 +4,14 @@
 
 #include "Application/Views/ChainView.h"
 #include "Application/Views/ConsoleView.h"
+#include "Application/Views/DeviceView.h"
 #include "Application/Views/GrooveView.h"
+#include "Application/Views/ImportView.h"
 #include "Application/Views/InstrumentView.h"
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
 #include "Application/Views/ProjectView.h"
+#include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
 #include "Application/Views/ViewData.h"
@@ -30,14 +33,17 @@ protected:
   virtual ~AppWindow();
 
 public:
-  static AppWindow *Create(GUICreateWindowParams &);
-  void LoadProject(const Path &path);
+  static AppWindow *Create(GUICreateWindowParams &, const char *projectName);
+  void LoadProject(const char *name);
   void CloseProject();
 
   virtual void Clear(bool all = false);
   virtual void ClearRect(GUIRect &rect);
   virtual void SetColor(ColorDefinition cd);
   void SetDirty();
+  void UpdateColorsFromConfig();
+
+  char projectName_[MAX_PROJECT_NAME_LENGTH];
 
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);
@@ -60,7 +66,7 @@ protected: // GUIWindow implementation
 
   virtual void Print(char *);
 
-  void defineColor(const char *colorName, GUIColor &color, int paletteIndex);
+  void defineColor(FourCC colorCode, GUIColor &color, int paletteIndex);
 
   void onQuitApp();
 
@@ -70,13 +76,14 @@ private:
   SongView *_songView;
   ChainView *_chainView;
   PhraseView *_phraseView;
+  DeviceView *_deviceView;
   ProjectView *_projectView;
   InstrumentView *_instrumentView;
   TableView *_tableView;
   GrooveView *_grooveView;
+  ImportView *_importView;
+  SelectProjectView *_selectProjectView;
   NullView *_nullView;
-
-  Path _root;
 
   bool _isDirty;
   bool _closeProject;
@@ -107,6 +114,8 @@ private:
   static int charHeight_;
 
   SysMutex drawMutex_;
+
+  bool loadProject_ = false;
 };
 
 #endif

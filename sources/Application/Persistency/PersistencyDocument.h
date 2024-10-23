@@ -2,12 +2,12 @@
 #define _PERSISTENCY_DOCUMENT_H_
 
 #include "Externals/yxml/yxml.h"
-#include "System/FileSystem/FileSystem.h"
+#include "System/FileSystem/PicoFileSystem.h"
 
 class PersistencyDocument {
 public:
   PersistencyDocument();
-  bool Load(const std::string &filename);
+  bool Load(const char *filename);
 
   bool FirstChild();
   bool NextSibling();
@@ -25,6 +25,6 @@ public:
 private:
   inline static char stack_[1024];
   inline static yxml_t state_[1];
-  I_File *fp_;
+  PI_File *fp_;
 };
 #endif

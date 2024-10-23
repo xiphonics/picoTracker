@@ -1,6 +1,7 @@
 [submodule "sources/Externals/pico-sdk"]
 	path = sources/Externals/pico-sdk
 	url = https://github.com/raspberrypi/pico-sdk.git
+	tag = 1.5.1
 [submodule "sources/Externals/etl"]
 	path = sources/Externals/etl
 	url = https://github.com/ETLCPP/etl.git

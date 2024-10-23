@@ -27,7 +27,7 @@ void UITempoField::OnBClick() {
 
 void UITempoField::Update(Observable &, I_ObservableData *data) {
   SetChanged();
-  NotifyObservers((I_ObservableData *)action_);
+  NotifyObservers((I_ObservableData *)(char)action_);
 }
 
 void UITempoField::ProcessArrow(unsigned short mask) {
