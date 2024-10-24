@@ -226,7 +226,7 @@ etl::string<40> Variable::GetString() {
     } else {
       return list_.char_[value_.index_];
     }
-    break;  
+    break;
   };
 
   return buf;
