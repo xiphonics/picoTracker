@@ -4,6 +4,7 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_utilities.h"
 #include "Services/Midi/MidiService.h"
+#include "Variable.h"
 #include <stdlib.h>
 
 #define CONFIG_FILE_PATH "/.config.xml"
@@ -120,15 +121,7 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
     printer->OpenElement(elemName.c_str());
     // these settings need to be saved as thier Int values not as String values
     // hence we *dont* use GetString() !
-    if (elemName.compare("LINEOUT") == 0) {
-      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
-    } else if (elemName.compare("MIDIDEVICE") == 0) {
-      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
-    } else if (elemName.compare("MIDISYNC") == 0) {
-      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
-    } else if (elemName.compare("REMOTEUI") == 0) {
-      printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
-    } else if (elemName.compare("UIFONT") == 0) {
+    if ((*it)->GetType() == Variable::CHAR_LIST) {
       printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
     } else {
       // all other settings need to be saved as thier String values

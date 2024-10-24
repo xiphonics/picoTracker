@@ -173,7 +173,6 @@ void Variable::SetString(const char *string, bool notify) {
   case FLOAT:
     value_.float_ = float(atof(string));
     break;
-  case CHAR_LIST:
   case INT:
     value_.int_ = atoi(string);
     break;
@@ -182,6 +181,24 @@ void Variable::SetString(const char *string, bool notify) {
     break;
   case STRING:
     stringValue_ = std::string(string);
+    break;
+  case CHAR_LIST:
+    value_.index_ = -1;
+    for (int i = 0; i < listSize_; i++) {
+      if (list_.char_[i]) {
+        const char *d = list_.char_[i];
+        const char *s = string;
+        while (*s != 0) {
+          if (tolower(*s++) != tolower(*d++)) {
+            break;
+          }
+        }
+        if (*s == 0) {
+          value_.index_ = i;
+          break;
+        }
+      }
+    };
     break;
   };
   if (notify) {
@@ -195,7 +212,6 @@ etl::string<40> Variable::GetString() {
   case FLOAT:
     sprintf(buf, "%f", value_.float_);
     break;
-  case CHAR_LIST:
   case INT:
     sprintf(buf, "%d", value_.int_);
     break;
@@ -204,6 +220,13 @@ etl::string<40> Variable::GetString() {
     break;
   case STRING:
     return stringValue_.c_str();
+  case CHAR_LIST:
+    if ((value_.index_ < 0) || (value_.index_ >= listSize_)) {
+      return "(null)";
+    } else {
+      return list_.char_[value_.index_];
+    }
+    break;
   };
 
   return buf;
