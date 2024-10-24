@@ -565,7 +565,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (!player->IsRunning()) {
           // First check if the samplelib exists
           bool samplelibExists =
-              PicoFileSystem::GetInstance()->exists(SAMPLE_LIB);
+              PicoFileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
           if (!samplelibExists) {
             MessageBox *mb =

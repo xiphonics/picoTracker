@@ -7,8 +7,6 @@
 #include "ViewData.h"
 #include <string>
 
-#define SAMPLE_LIB "/samplelib"
-
 class ImportView : public View {
 public:
   ImportView(GUIWindow &w, ViewData *viewData);

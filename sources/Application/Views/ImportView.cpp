@@ -124,7 +124,7 @@ void ImportView::OnFocus() {
 
   toInstr_ = viewData_->currentInstrumentID_;
 
-  setCurrentFolder(picoFS, SAMPLE_LIB);
+  setCurrentFolder(picoFS, SAMPLES_LIB_DIR);
 };
 
 void ImportView::warpToNextSample(bool goUp) {
