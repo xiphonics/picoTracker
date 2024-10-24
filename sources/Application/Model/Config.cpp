@@ -121,7 +121,7 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
     printer->OpenElement(elemName.c_str());
     // these settings need to be saved as thier Int values not as String values
     // hence we *dont* use GetString() !
-    if ((*it)->GetType() == Variable::CHAR_LIST || (*it)->GetType() == Variable::INT) {
+    if ((*it)->GetType() == Variable::CHAR_LIST) {
       printer->PushAttribute("VALUE", std::to_string((*it)->GetInt()).c_str());
     } else {
       // all other settings need to be saved as thier String values
