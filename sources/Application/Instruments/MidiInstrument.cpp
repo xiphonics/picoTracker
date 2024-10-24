@@ -60,18 +60,25 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   velocity_ = msg.data2_;
   playing_ = true;
   retrig_ = false;
+  porto_ = false;
 
   return true;
 };
 
 void MidiInstrument::Stop(int c) {
+  char note = lastNote_[c];
+  if (porto_) {
+    porto_ = false;
+    porto_pending_[c] = note;
+    return;
+  }
 
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int channel = v->GetInt();
 
   MidiMessage msg;
   msg.status_ = MIDI_NOTE_OFF + channel;
-  msg.data1_ = lastNote_[c];
+  msg.data1_ = note;
   msg.data2_ = 0x00;
   svc_->QueueMessage(msg);
   playing_ = false;
@@ -90,9 +97,7 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int mchannel = v->GetInt();
   if (first_[channel]) {
-
     // send note
-
     MidiMessage msg;
 
     msg.status_ = MIDI_NOTE_ON + mchannel;
@@ -101,6 +106,19 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
     svc_->QueueMessage(msg);
 
     first_[channel] = false;
+    if (porto_pending_[channel] > 0 &&
+        porto_pending_[channel] != lastNote_[channel]) {
+      // now we've started playing the current note, need to stop the pending
+      // protomento prev note, can't just use Stop() as it uses last_note
+      // directly
+      int channel = v->GetInt();
+      MidiMessage msg;
+      msg.status_ = MIDI_NOTE_OFF + channel;
+      msg.data1_ = porto_pending_[channel];
+      msg.data2_ = 0x00;
+      svc_->QueueMessage(msg);
+      porto_pending_[channel] = 0;
+    }
   }
   if (remainingTicks_ > 0) {
     remainingTicks_--;
@@ -174,6 +192,11 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     msg.data2_ = MidiMessage::UNUSED_BYTE;
     svc_->QueueMessage(msg);
   }; break;
+  case I_CMD_PTCH: {
+    // For MIDI this is portomento, ie, dont stop prev note before starting
+    // next one
+    porto_ = true;
+  } break;
   }
 };
 
