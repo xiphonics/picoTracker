@@ -52,11 +52,13 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   v = config->FindVariable(FourCC::VarRemoteUI);
   intVarField_.emplace_back(position, *v, "Remote UI: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 2;
   v = config->FindVariable(FourCC::VarUIFont);
   intVarField_.emplace_back(position, *v, "Font: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarFGColor);
