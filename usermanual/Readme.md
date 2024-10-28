@@ -29,7 +29,7 @@ To build the html output run:
 
 ### PDF
 
-TODO: instructions on building PDF with weasyprint.
+TODO: Instructions on building PDF with weasyprint.
 
 ## Acknowledgements
 

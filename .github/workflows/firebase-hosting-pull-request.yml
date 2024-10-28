@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir bin; curl -L "https://github.com/maks/picosite/releases/download/0.2.0/picosite-linux" -o "bin/picosite"; chmod +x bin/picosite
-      - run: ./build.sh
+      - run: mkdir usermanual/bin; curl -L "https://github.com/maks/picosite/releases/download/0.2.0/picosite-linux" -o "usermanual/bin/picosite"; chmod +x usermanual/bin/picosite
+      - run: ./usermanual/build.sh
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
