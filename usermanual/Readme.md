@@ -13,7 +13,7 @@ If you need to download to run picosite you download a release from GitHub, eg. 
 mkdir usermanual/bin; curl -L "https://github.com/maks/picosite/releases/download/0.2.0/picosite-linux" -o "usermanual/bin/picosite"; chmod +x usermanual/bin/picosite
 ```
 
-When run in preview mode, `picosite` will serve the website on the url:  http://localhost:8080 and will watch the site directory and its subdirectories for file changes and rebuild the output when it detects modifications to the files.
+When run in preview mode, `picosite` will serve the website on a url of: [http://localhost:8080](http://localhost:8080) and will watch the site directory and its subdirectories for file changes and rebuild the output when it detects modifications to the files.
 
 ## Building Outputs
 

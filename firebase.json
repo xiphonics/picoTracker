@@ -1,7 +1,7 @@
 {
   "hosting": {
     "target": "manual",
-    "public": "output",
+    "public": "usermanual/output",
     "ignore": [
       "firebase.json",
       "**/.*",
