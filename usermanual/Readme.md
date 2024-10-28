@@ -32,6 +32,10 @@ cd usermanual
 
 TODO: Instructions on building PDF with weasyprint.
 
+## CI
+
+CI will build a PR branch and deploy a preview of it with the url included afterwards as a message on the PR.
+
 ## Acknowledgements
 
 Thanks to @squiggythings [WaveTracker documentation website](https://github.com/squiggythings/wavetracker-site) for initial CSS design and example of how to use nice, clean semantic HTML.
