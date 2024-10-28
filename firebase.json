@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "target": "manual",
+    "public": "output",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
