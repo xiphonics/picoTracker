@@ -24,7 +24,8 @@ Uses picosite and weasyprint to generate HTML and PDF outputs from the markdown 
 
 To build the html output run:
 ```
-./usermanual/build.sh
+cd usermanual
+./build.sh
 ```
 
 ### PDF
