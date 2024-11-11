@@ -1,0 +1,16 @@
+{
+  "projects": {
+    "default": "xiphonics-web"
+  },
+  "targets": {
+    "xiphonics-web": {
+      "hosting": {
+        "manual": [
+          "picotracker-manual"
+        ]
+      }
+    }
+  },
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
+}
