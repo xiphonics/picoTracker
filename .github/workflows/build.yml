@@ -88,4 +88,4 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: picoTracker_st7789-uf2
-        path: ${{github.workspace}}/build_st7789/Adapters/picoTracker/main/picoTracker.uf2 
+        path: ${{github.workspace}}/build-st7789/Adapters/picoTracker/main/picoTracker.uf2 
