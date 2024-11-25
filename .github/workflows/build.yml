@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - sources/**
+      - .github/workflows/**
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
