@@ -53,7 +53,7 @@ jobs:
       id: core_count
       run : cat /proc/cpuinfo  | grep processor | wc -l
 
-    - name: Build
+    - name: Build ILI9341
       working-directory: ${{github.workspace}}/build-ili9341
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
@@ -81,7 +81,7 @@ jobs:
       run: PICO_SDK_PATH=../sources/Externals/pico-sdk PICO_TOOLCHAIN_PATH=${{steps.arm-none-eabi-gcc-action.outputs.path}} cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_LCD=LCD_ST7789 
   
     - name: Build ST7789
-      working-directory: ${{github.workspace}}/st7789
+      working-directory: ${{github.workspace}}/build-st7789
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE --parallel $(nproc) 
