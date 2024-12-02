@@ -25,6 +25,7 @@ public: // System implementation
   virtual void *Memcpy(void *s1, const void *s2, int n);
   virtual void PostQuitMessage();
   virtual unsigned int GetMemoryUsage();
+  virtual void GetDeviceId(char *id_out);
 
 private:
   static bool invert_;
@@ -32,5 +33,6 @@ private:
   static unsigned int lastBeatCount_;
   static EventManager *eventManager_;
   std::map<void *, unsigned> mmap_;
+  static uint64_t deviceId_;
 };
 #endif

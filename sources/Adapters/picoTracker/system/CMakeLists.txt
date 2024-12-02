@@ -19,6 +19,7 @@ target_link_libraries(platform_system INTERFACE system_system
                                       PUBLIC hardware_adc
                                       PUBLIC etl
                                       PUBLIC platform_usb
+                                      PUBLIC pico_unique_id
 )
 
 

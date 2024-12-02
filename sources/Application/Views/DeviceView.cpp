@@ -189,6 +189,20 @@ void DeviceView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
 
+  // draw Device ID on last line
+  pos._y = 23;
+  pos._x = 5; // offset to right to avoid screenmap
+
+  System *sys = System::GetInstance();
+  char id[17];
+  sys->GetDeviceId(id);
+  sprintf(projectString, "Device ID: %s", id);
+
+  SetColor(CD_INFO);
+  DrawString(pos._x, pos._y, projectString, props);
+
+  SetColor(CD_NORMAL);
+
   FieldView::Redraw();
   drawMap();
 };

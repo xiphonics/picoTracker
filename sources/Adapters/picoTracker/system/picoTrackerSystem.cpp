@@ -28,6 +28,7 @@
 #include "critical_error_message.h"
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
+#include "pico/unique_id.h"
 
 EventManager *picoTrackerSystem::eventManager_ = NULL;
 bool picoTrackerSystem::invert_ = false;
@@ -171,4 +172,24 @@ void picoTrackerSystem::PostQuitMessage() { eventManager_->PostQuitMessage(); }
 unsigned int picoTrackerSystem::GetMemoryUsage() {
   struct mallinfo m = mallinfo();
   return m.uordblks;
+}
+
+// id_out MUST be at least 16 bytes
+void picoTrackerSystem::GetDeviceId(char *id_out) {
+  // pico_unique_board_id_t board_id;
+  // pico_get_unique_board_id(&board_id);
+
+  // printf("Unique identifier:");
+  // for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; ++i) {
+  //   printf(" %02x", board_id.id[i]);
+  // }
+  // printf("\n");
+
+  // return board_id.id[0] | (board_id.id[1] << 8) | (board_id.id[2] << 16) |
+  //        (board_id.id[3] << 24) | (board_id.id[4] << 32) |
+  //        (board_id.id[5] << 40) | (board_id.id[6] << 48) |
+  //        (board_id.id[7] << 56);
+
+  pico_get_unique_board_id_string(id_out, 16);
+  printf("PICO ID: %s\n", id_out);
 }
