@@ -34,6 +34,15 @@ add_definitions(-DUSB_REMOTE_UI)
 # enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
 # add_definitions(-DSERIAL_REPL)
 
+# ST7789 controller based LCD instead of a ILI9341 controller
+# for CI builds this will be set via command line
+if(NOT USE_LCD)
+    set(USE_LCD LCD_ST7789)
+endif()
+message(USE_LCD="${USE_LCD}")
+add_compile_definitions(${USE_LCD})
+# add_compile_definitions(LCD_ST7789)
+
 # Initialize the SDK
 pico_sdk_init()
 
