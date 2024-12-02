@@ -21,7 +21,7 @@ void critical_error_message(const char *message) {
   int center = (32 - msglen) / 2;
   if (center > 0) {
     memset(&msgbuffer[1], ' ', center - 1);
-    strncpy(&msgbuffer[center], message, msglen);
+    memcpy(&msgbuffer[center], message, msglen);
     memset(&msgbuffer[center + msglen], ' ', 32 - center - msglen - 1);
     msgbuffer[0] = '#';
     msgbuffer[31] = '#';
