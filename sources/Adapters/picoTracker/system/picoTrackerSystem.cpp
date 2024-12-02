@@ -62,7 +62,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   auto picoFS = PicoFileSystem::GetInstance();
   if (!picoFS->chdir("/")) {
     Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
-    critical_error_message();
+    critical_error_message("SDCARD MISSING");
   }
 
   // Install MIDI

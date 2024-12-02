@@ -1,16 +1,10 @@
 #include "critical_error_message.h"
 #include "Adapters/picoTracker/display/mode0.h"
-
-const char msg_on[4][32] = {{"################################"},
-                            {"#       SDCARD NOT FOUND       #"},
-                            {"################################"}};
-const char msg_off[4][32] = {{"                                "},
-                             {"        SDCARD NOT FOUND        "},
-                             {"                                "}};
+#include <string.h>
 
 // show this message and basically crash, so only for critical errors where
 // we need to show user a message and cannot continue until a reboot
-void critical_error_message() {
+void critical_error_message(const char *message) {
   mode0_init();
 
   mode0_set_font_index(0);
@@ -21,24 +15,41 @@ void critical_error_message() {
   mode0_clear(MODE0_GURU_BG);
   mode0_set_foreground(MODE0_GURU_TXT);
 
+  int msglen = strlen(message) < 30 ? strlen(message) : 30;
+  char msgbuffer[32];
+
+  int center = (32 - msglen) / 2;
+  if (center > 0) {
+    memset(&msgbuffer[1], ' ', center - 1);
+    strncpy(&msgbuffer[center], message, msglen);
+    memset(&msgbuffer[center + msglen], ' ', 32 - center - msglen - 1);
+    msgbuffer[0] = '#';
+    msgbuffer[31] = '#';
+  }
   // halt
   for (;;) {
-    for (int y = 0; y < 4; y++) {
+    for (int y = 0; y < 3; y++) {
       for (int x = 0; x < 32; x++) {
         mode0_set_cursor(x, y + 10);
-        mode0_putc(msg_on[y][x], false);
+        if (y == 0 || y == 2) {
+          mode0_putc('#', false);
+        } else {
+          mode0_putc(msgbuffer[x], false);
+        }
       }
     }
     mode0_draw_changed();
 
     sleep_ms(1000);
-    for (int y = 0; y < 4; y++) {
-      for (int x = 0; x < 32; x++) {
-        mode0_set_cursor(x, y + 10);
-        mode0_putc(msg_off[y][x], false);
-      }
+    mode0_clear(MODE0_GURU_BG);
+
+    // draw just the message
+    for (int x = 1; x < 31; x++) {
+      mode0_set_cursor(x, 11);
+      mode0_putc(msgbuffer[x], false);
     }
+
     mode0_draw_changed();
     sleep_ms(1000);
-  };
+  }
 }
