@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include "Adapters/picoTracker/platform/platform.h"
+#include "critical_error_message.h"
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
 
@@ -56,6 +57,13 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   static char timerMemBuf[sizeof(picoTrackerTimerService)];
   TimerService::GetInstance()->Install(new (timerMemBuf)
                                            picoTrackerTimerService());
+
+  // First check for SDCard
+  auto picoFS = PicoFileSystem::GetInstance();
+  if (!picoFS->chdir("/")) {
+    Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
+    critical_error_message();
+  }
 
   // Install MIDI
   // **NOTE**: MIDI install MUST happen before Audio install because it triggers
