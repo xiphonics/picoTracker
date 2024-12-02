@@ -36,7 +36,9 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
     return 0;
   }
   FsBaseFile cwd;
-  cwd.openCwd();
+  if (!cwd.openCwd()) {
+    return nullptr;
+  }
   PI_File *wFile = 0;
   if (cwd.open(name, rmode)) {
     wFile = new PI_File(cwd);
@@ -245,4 +247,4 @@ long PI_File::Tell() { return file_.curPosition(); }
 
 int PI_File::Error() { return file_.getError(); }
 
-void PI_File::Close() { file_.close(); }
+bool PI_File::Close() { return file_.close(); }
