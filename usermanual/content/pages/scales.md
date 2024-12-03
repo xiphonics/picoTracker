@@ -4,7 +4,7 @@ template: page
 ---
 
 
-The following scales are available:
+The following scales are available and can be selected from the Scale menu in the Project screen:
 
 * None (Chromatic)
 * Acoustic

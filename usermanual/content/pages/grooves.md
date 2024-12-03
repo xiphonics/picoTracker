@@ -13,9 +13,9 @@ To get a handle on this, try a groove of 1/F and watch the play arrow in a phras
 
 In the groove screen there is no copy paste (yet) but the following actions are available:
 
-- `[EDIT]`: Adds a new step if not existing
-- `[EDIT]+[Left/Right]`: modifies current step value
-- `[ENTER]+[Arrows]`: modifies current edited groove
-- `[EDIT]+[ENTER]`: Clear current step
+- `EDIT`: Adds a new step if not existing
+- `EDIT`+`Left/Right`: modifies current step value
+- `ENTER`+`Arrows`: modifies current edited groove
+- `EDIT`+`ENTER`: Clear current step
 
 The GRV command (which is only active in the phrase screen) selects the current groove.
