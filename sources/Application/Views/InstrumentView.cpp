@@ -771,6 +771,9 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       MessageBox *mb = new MessageBox(
           *this, "Change Instrument & lose changes?", MBBF_YES | MBBF_NO);
       DoModal(mb, ChangeInstrumentTypeCallback);
+    } else {
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
     }
   }
   }
