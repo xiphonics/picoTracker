@@ -44,8 +44,14 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
       table_(FourCC::SIDInstrumentTable, -1),
       tableAuto_(FourCC::SIDInstrumentTableAutomation, false) {
 
-  sprintf(name_.data_end(), "SID #%.1d OSC #%.1d", (int)chip_, (int)osc_);
-  name_.trim_to_terminator();
+  name_ = "SID #";
+  etl::string<1> num;
+  etl::format_spec format;
+  etl::to_string((int)chip_, num, format);
+  name_ += num;
+  name_ += " OSC #";
+  etl::to_string(osc_, num, format);
+  name_ += num;
 
   variables_.insert(variables_.end(), &vpw_);
   variables_.insert(variables_.end(), &vwf1_);
