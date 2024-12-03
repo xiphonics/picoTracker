@@ -35,7 +35,7 @@ template: page
 
 ## Sample Import Screen
 
-You can enter the sample import file browser by hitting `[EDIT][EDIT]` (press the `[EDIT]` twice in quick succession) on the “sample:” field in the Instrument Screen.
+You can enter the sample import file browser by hitting `EDIT EDIT` (press the `EDIT` twice in quick succession) on the “sample:” field in the Instrument Screen.
 
 All the samples that you may want to import into a project **must** be located in a folder named `/samples` at the top-level of the sdcard. You can either put your samples in that directory or in sub-directories of it, allowing you to have a way of sorting your samples library. 
 
@@ -47,9 +47,9 @@ For example:
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
-Use the `[UP]` and `[DOWN]` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indciated with a `/` prefix. Press [EDIT] to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entery and pressing [ENTER]. Press [PLAY] to audition the currently selected sample wave file. To import the currently selected wave file press [ALT]+[PLAY]. 
+Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indciated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entery and pressing `ENTER`. Press `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`. 
 
-At any time, you can return to the instrument screen from the sample file browser by pressing [NAV]+[LEFT].
+At any time, you can return to the instrument screen from the sample file browser by pressing `NAV`+`LEFT`.
 
 *Note:* While there is no fixed limit for the number of sub-directory levels, there is a maximum of **256** files per directory. Also please note that while FAT formatted sdcards can support upto *256* characters per filename, picoTracker only supports upto **128** character file names and only with **ASCII** characters.
 
@@ -68,7 +68,7 @@ A MIDI instrument has the following settings:
 - **Volume** - The volume any NOTE ON will be sent to your device. FF=127, 00=00
 - **Length** - Sets note gate length in number of ticks.
 - **Automation** - On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows cruise around real fast).
-- **Table**- As above, select a table the instrument will always run. Clone a table here: `[NAV]+[EDIT][ENTER]`. Make a new table here: `[EDIT][EDIT]`
+- **Table**- As above, select a table the instrument will always run. Clone a table here: `NAV`+`EDIT ENTER`. Make a new table here: `EDIT EDIT`
 
 
 ## Synths
