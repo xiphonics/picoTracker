@@ -292,12 +292,15 @@ void InstrumentView::fillSIDParameters() {
 
   int i = viewData_->currentInstrumentID_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  I_Instrument *instr = bank->GetInstrument(i);
-  SIDInstrument *instrument = (SIDInstrument *)instr;
+  SIDInstrument *instrument = (SIDInstrument *)bank->GetInstrument(i);
   GUIPoint position = GetAnchor();
 
   position._y += 1;
-  staticField_.emplace_back(position, instr->GetName().c_str());
+  // work around because I can't figure out why the mem returned by c_str() is
+  // being overwritten somehow after first redraw
+  const char *s = instrument->GetName().c_str();
+  strcpy(sidName_, s);
+  staticField_.emplace_back(position, sidName_);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._y += 2;

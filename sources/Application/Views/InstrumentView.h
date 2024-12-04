@@ -43,10 +43,12 @@ private:
   WatchedVariable instrumentType_;
   InstrumentType currentType_ = IT_NONE;
 
+  char sidName_[24];
+
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
-  etl::vector<UIStaticField, 1> staticField_;
+  etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
