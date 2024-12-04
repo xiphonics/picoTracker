@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   Application::GetInstance()->Init(params);
 
   picoTrackerSystem::MainLoop();
-  printf("Finish main loop?\n");
+  // WE NEVER GET HERE
 
   picoTrackerSystem::Shutdown();
 }

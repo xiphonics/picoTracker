@@ -8,6 +8,8 @@
 #include "hardware/uart.h"
 #include "hardware/vreg.h"
 #include "pico/stdlib.h"
+#include <System/Console/Trace.h>
+#include <System/Console/nanoprintf.h>
 #include <cstdio>
 
 #define RP2040_RAM_BASE 0x20000000U
@@ -113,7 +115,7 @@ void platform_init() {
   // This example will use SPI0 at 0.5MHz.
   spi_init(DISPLAY_SPI, 500 * 1000);
   int baudrate = spi_set_baudrate(DISPLAY_SPI, 75000 * 1000);
-  printf("Display SPI Baudrate: %i\n", baudrate);
+  Trace::Log("PLATFORM", "SPI Baudrate: %i", baudrate);
 
   gpio_set_function(DISPLAY_SCK, GPIO_FUNC_SPI);
   gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
@@ -159,7 +161,7 @@ void platform_init() {
 
   // Set up our UART with the required speed.
   baudrate = uart_init(MIDI_UART, MIDI_BAUD_RATE);
-  printf("Init MIDI device with %i baud rate\n", baudrate);
+  Trace::Log("PLATFORM", "Init MIDI device with % i baud rate", baudrate);
 #endif
 
   ///////////

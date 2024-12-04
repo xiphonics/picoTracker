@@ -35,8 +35,6 @@ MacroInstrument::MacroInstrument()
 MacroInstrument::~MacroInstrument() {}
 
 bool MacroInstrument::Init() {
-  printf("init!\n");
-
   osc_.Init();
   // we shouldn't need a quantizer
   //  quantizer_.Init();

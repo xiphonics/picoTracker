@@ -230,7 +230,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   case FourCC::VarInfoColor:
   case FourCC::VarWarnColor:
   case FourCC::VarErrorColor:
-    printf("Color updated!");
+    Trace::Log("DEVICE", "Color updated!");
     ((AppWindow &)w_).UpdateColorsFromConfig();
     ((AppWindow &)w_).Clear(true);
     w_.Update();

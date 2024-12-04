@@ -76,7 +76,7 @@ int picoTrackerEventManager::MainLoop() {
     }
 #ifdef PICOSTATS
     if (loops == 100000) {
-      printf("Usage %.1f% CPU\n", ((float)events / loops) * 100);
+      Trace::Debug("Usage %.1f% CPU\n", ((float)events / loops) * 100);
       events = 0;
       loops = 0;
       //      measure_freqs();
