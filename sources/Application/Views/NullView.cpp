@@ -1,4 +1,6 @@
 #include "NullView.h"
+#include <Application/AppWindow.h>
+#include <nanoprintf.h>
 
 NullView::NullView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
 
@@ -15,9 +17,9 @@ void NullView::DrawView() {
   GUITextProperties props;
   SetColor(CD_HILITE2);
 
-  char buildString[80];
-  sprintf(buildString, "picoTracker build %s%s_%s", PROJECT_NUMBER,
-          PROJECT_RELEASE, BUILD_COUNT);
+  char buildString[SCREEN_WIDTH + 1];
+  npf_snprintf(buildString, sizeof(buildString), "picoTracker build %s%s_%s",
+               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
   GUIPoint pos;
   pos._y = 22;
   pos._x = (32 - strlen(buildString)) / 2;

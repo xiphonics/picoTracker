@@ -13,6 +13,7 @@
 #include "System/Console/Trace.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 #include "Views/UIController.h"
+#include <nanoprintf.h>
 #include <string.h>
 
 AppWindow *instance = 0;
@@ -600,9 +601,9 @@ void AppWindow::Print(char *line) {
   GUITextProperties props;
   SetColor(CD_NORMAL);
   DrawString(_statusLine, pos, props);
-  char buildString[80];
-  sprintf(buildString, "picoTracker build %s%s_%s", PROJECT_NUMBER,
-          PROJECT_RELEASE, BUILD_COUNT);
+  char buildString[SCREEN_WIDTH + 1];
+  npf_snprintf(buildString, sizeof(buildString), "picoTracker build %s%s_%s",
+               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
   pos._y = 22;
   pos._x = (32 - strlen(buildString)) / 2;
   DrawString(buildString, pos, props);

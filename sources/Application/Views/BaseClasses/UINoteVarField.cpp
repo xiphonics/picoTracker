@@ -2,6 +2,7 @@
 #include "UINoteVarField.h"
 #include "Application/AppWindow.h"
 #include "Application/Utils/char.h"
+#include <System/Console/nanoprintf.h>
 
 UINoteVarField::UINoteVarField(GUIPoint &position, Variable &v,
                                const char *format, int min, int max,
@@ -21,12 +22,12 @@ void UINoteVarField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
 
-  char buffer[80];
+  char buffer[MAX_FIELD_WIDTH + 1];
   char note[5];
 
   unsigned char pitch = src_.GetInt();
   note2char(pitch, note);
   note[4] = 0;
-  sprintf(buffer, format_, note);
+  npf_snprintf(buffer, sizeof(buffer), format_, note);
   w.DrawString(buffer, position, props);
 };

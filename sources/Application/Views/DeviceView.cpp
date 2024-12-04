@@ -11,6 +11,7 @@
 #include "System/System/System.h"
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
+#include <nanoprintf.h>
 
 #define MAX_COLOR_VALUE 0xFFFFFF
 
@@ -183,8 +184,8 @@ void DeviceView::DrawView() {
 
   // Draw title
   char projectString[SCREEN_WIDTH];
-  sprintf(projectString, "Device - Build %s%s_%s", PROJECT_NUMBER,
-          PROJECT_RELEASE, BUILD_COUNT);
+  npf_snprintf(projectString, sizeof(projectString), "Device - Build %s%s_%s",
+               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
 
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);

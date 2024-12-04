@@ -3,6 +3,7 @@
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
+#include <nanoprintf.h>
 
 ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
   updatingPhrase_ = false;
@@ -662,7 +663,7 @@ void ChainView::DrawView() {
 
   char title[20];
   SetColor(CD_NORMAL);
-  sprintf(title, "Chain %2.2x", viewData_->currentChain_);
+  npf_snprintf(title, sizeof(title), "Chain %2.2x", viewData_->currentChain_);
   DrawString(pos._x, pos._y, title, props);
 
   // Compute song grid location

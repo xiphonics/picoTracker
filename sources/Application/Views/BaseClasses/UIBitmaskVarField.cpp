@@ -1,5 +1,6 @@
 #include "UIBitmaskVarField.h"
 #include "Application/AppWindow.h"
+#include <System/Console/nanoprintf.h>
 
 UIBitmaskVarField::UIBitmaskVarField(GUIPoint &position, Variable &v,
                                      const char *format, int len)
@@ -21,9 +22,9 @@ void UIBitmaskVarField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
 
-  char buffer[20];
+  char buffer[MAX_FIELD_WIDTH + 1];
   int value = src_.GetInt();
-  sprintf(buffer, format_, value);
+  npf_snprintf(buffer, sizeof(buffer), format_, value);
   w.DrawString(buffer, position, props);
 
   int percentPos = -1;
