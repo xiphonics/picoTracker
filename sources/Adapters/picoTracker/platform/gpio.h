@@ -51,6 +51,8 @@
 #define MIDI_IN_PIN 1
 #endif
 
+#define DEBUG_UART uart1
+
 // SD Card
 /* SPI (SPI1) */
 // #define SD_SPI spi0
