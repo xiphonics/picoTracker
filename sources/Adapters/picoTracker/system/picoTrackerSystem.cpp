@@ -11,7 +11,6 @@
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
-#include "System/Console/Logger.h"
 #include "hardware/gpio.h"
 #include "input.h"
 #include <assert.h>
@@ -44,9 +43,6 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   // Install System
   static char systemMemBuf[sizeof(picoTrackerSystem)];
   System::Install(new (systemMemBuf) picoTrackerSystem());
-
-  static char loggerMemBuf[sizeof(StdOutLogger)];
-  Trace::GetInstance()->SetLogger(*(new (loggerMemBuf) StdOutLogger()));
 
   // Install GUI Factory
   static char guiMemBuf[sizeof(GUIFactory)];
