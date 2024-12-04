@@ -20,6 +20,8 @@ enum MessageBoxButtonFlag {
 class MessageBox : public ModalView {
 public:
   MessageBox(View &view, const char *message, int btnFlags = MBBF_OK);
+  MessageBox(View &view, const char *message, const char *message2,
+             int btnFlags = MBBF_OK);
   virtual ~MessageBox();
 
   virtual void DrawView();
@@ -29,7 +31,8 @@ public:
   virtual void AnimationUpdate(){};
 
 private:
-  std::string message_;
+  std::string message_ = "";
+  std::string message2_ = "";
   int button_[4];
   int buttonCount_;
   int selected_;

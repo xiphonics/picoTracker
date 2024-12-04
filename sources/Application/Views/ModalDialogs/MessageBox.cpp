@@ -1,4 +1,5 @@
 #include "MessageBox.h"
+#include <Application/AppWindow.h>
 
 static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
 
@@ -16,6 +17,22 @@ MessageBox::MessageBox(View &view, const char *message, int btnFlags)
   NAssert(buttonCount_ != 0);
 };
 
+// Constructor for 2 line message
+MessageBox::MessageBox(View &view, const char *message, const char *message2,
+                       int btnFlags)
+    : ModalView(view), message_(message), message2_(message2) {
+
+  buttonCount_ = 0;
+  for (int i = 0; i < MBL_LAST; i++) {
+    if (btnFlags & (1 << (i))) {
+      button_[buttonCount_] = i;
+      buttonCount_++;
+    }
+  }
+  selected_ = buttonCount_ - 1;
+  NAssert(buttonCount_ != 0);
+}
+
 MessageBox::~MessageBox(){};
 
 void MessageBox::DrawView() {
@@ -28,18 +45,22 @@ void MessageBox::DrawView() {
   int btnSize = 5;
   int width = buttonCount_ * (btnSize + 1) + 1;
   width = (size > width) ? size : width;
-  SetWindow(width, 3);
+  SetWindow(width, message2_.size() > 0 ? 4 : 3);
 
   // draw text
-
   int y = 0;
   int x = (width - size) / 2;
   GUITextProperties props;
   SetColor(CD_ERROR);
   DrawString(x, y, message_.c_str(), props);
+  if (message2_.size() > 0) {
+    y++;
+    DrawString(x, y, message2_.c_str(), props);
+  }
+
   SetColor(CD_NORMAL);
 
-  y = 2;
+  y += 2;
   int offset = width / (buttonCount_ + 1);
 
   for (int i = 0; i < buttonCount_; i++) {
