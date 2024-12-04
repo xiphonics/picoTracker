@@ -14,6 +14,7 @@
 #include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/System/System.h"
+#include <nanoprintf.h>
 
 static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
@@ -738,7 +739,8 @@ void InstrumentView::DrawView() {
 
   char title[20];
   SetColor(CD_NORMAL);
-  sprintf(title, "Instrument %2.2X", viewData_->currentInstrumentID_);
+  npf_snprintf(title, sizeof(title), "Instrument %2.2X",
+               viewData_->currentInstrumentID_);
   DrawString(pos._x, pos._y, title, props);
 
   // Draw fields

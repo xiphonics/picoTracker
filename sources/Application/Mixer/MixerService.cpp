@@ -6,6 +6,7 @@
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
+#include <nanoprintf.h>
 
 MixerService::MixerService() : out_(0), sync_(0) {
   mode_ = MSM_AUDIO;
@@ -56,8 +57,8 @@ bool MixerService::Init() {
     case MSM_FILESPLITRT:
     case MSM_FILESPLIT:
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        char buffer[1024];
-        sprintf(buffer, "project:channel%d.wav", i);
+        char buffer[18];
+        npf_snprintf(buffer, sizeof(buffer), "project:channel%d.wav", i);
         bus_[i].SetFileRenderer(buffer);
       }
       break;

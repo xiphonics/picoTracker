@@ -1,6 +1,7 @@
 
 #include "UIIntVarOffField.h"
 #include "Application/AppWindow.h"
+#include <System/Console/nanoprintf.h>
 
 UIIntVarOffField::UIIntVarOffField(GUIPoint &position, Variable &v,
                                    const char *format, int min, int max,
@@ -57,14 +58,14 @@ void UIIntVarOffField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
   Variable::Type type = src_.GetType();
-  char buffer[80];
+  char buffer[MAX_FIELD_WIDTH + 1];
   switch (type) {
   case Variable::INT: {
     int ivalue = src_.GetInt();
     if (ivalue != VAR_OFF) {
-      sprintf(buffer, format_, ivalue, ivalue);
+      npf_snprintf(buffer, sizeof(buffer), format_, ivalue, ivalue);
     } else {
-      char format[256];
+      char format[64];
       strcpy(format, format_);
       char *location = strchr(format, '%');
       if (location) {
@@ -79,9 +80,9 @@ void UIIntVarOffField::Draw(GUIWindow &w, int offset) {
         }
       }
       if (location) {
-        sprintf(buffer, format, "--");
+        npf_snprintf(buffer, sizeof(buffer), format, "--");
       } else {
-        sprintf(buffer, "++wtf++");
+        strcpy(buffer, "++wtf++");
       }
     }
   } break;

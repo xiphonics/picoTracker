@@ -181,7 +181,7 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
   case IT_MIDI: {
     MidiInstrument *mi = midiInstrumentPool_.create();
     if (mi == nullptr) {
-      printf("MIDI INSTRUMENT EXHAUSTED!!!!!!");
+      Trace::Error("MIDI INSTRUMENT EXHAUSTED!!!!!!");
     }
     // TODO check for pool exhastion AND show user UI message about it!!!
     mi->Init();
@@ -192,7 +192,7 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
     // TODO need to figure out how to properly manage sid oc count
     SIDInstrument *si = sidInstrumentPool_.create(SID1);
     if (si == nullptr) {
-      printf("SID INSTRUMENT EXHAUSTED!!!!!!");
+      Trace::Error("SID INSTRUMENT EXHAUSTED!!!!!!");
     }
     // TODO check for pool exhastion AND show user UI message about it!!!
     si->Init();
@@ -203,7 +203,7 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
     OpalInstrument *oi = opalInstrumentPool_.create();
     // TODO check for pool exhastion AND show user UI message about it!!!
     if (oi == nullptr) {
-      printf("Opal INSTRUMENT EXHAUSTED!!!!!!");
+      Trace::Error("Opal INSTRUMENT EXHAUSTED!!!!!!");
     }
     oi->Init();
     instruments_[id] = oi;
@@ -213,7 +213,7 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
     MacroInstrument *mi = macroInstrumentPool_.create();
     // TODO check for pool exhastion AND show user UI message about it!!!
     if (mi == nullptr) {
-      printf("Macro INSTRUMENT EXHAUSTED!!!!!!");
+      Trace::Error("Macro INSTRUMENT EXHAUSTED!!!!!!");
     }
     mi->Init();
     instruments_[id] = mi;

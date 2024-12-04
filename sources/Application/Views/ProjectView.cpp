@@ -14,6 +14,8 @@
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
 #endif
+#include <Application/AppWindow.h>
+#include <nanoprintf.h>
 
 static void LoadCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
@@ -190,9 +192,9 @@ void ProjectView::DrawView() {
   GUIPoint pos = GetTitlePosition();
 
   // Draw title
-  char projectString[80];
-  sprintf(projectString, "Project - Build %s%s_%s", PROJECT_NUMBER,
-          PROJECT_RELEASE, BUILD_COUNT);
+  char projectString[SCREEN_WIDTH + 1];
+  npf_snprintf(projectString, sizeof(projectString), "Project - Build %s%s_%s",
+               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
 
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);

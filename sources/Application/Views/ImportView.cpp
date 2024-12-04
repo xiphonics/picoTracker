@@ -4,6 +4,7 @@
 #include "Application/Instruments/SamplePool.h"
 #include "pico/multicore.h"
 #include <memory>
+#include <nanoprintf.h>
 
 #define LIST_WIDTH 24
 #define LIST_PAGE_SIZE 18
@@ -109,7 +110,7 @@ void ImportView::DrawView() {
   auto currentFileIndex = fileIndexList_[currentIndex_];
   if (picoFS->getFileType(currentFileIndex) == PFT_FILE) {
     auto filesize = picoFS->getFileSize(currentFileIndex);
-    sprintf(buffer, "[size: %d]", filesize);
+    npf_snprintf(buffer, sizeof(buffer), "[size: %d]", filesize);
     x = 32 - strlen(buffer) + 1;
     DrawString(x, y, buffer, props);
   }

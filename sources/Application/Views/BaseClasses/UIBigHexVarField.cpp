@@ -1,5 +1,6 @@
 #include "UIBigHexVarField.h"
 #include "Application/AppWindow.h"
+#include <System/Console/nanoprintf.h>
 
 UIBigHexVarField::UIBigHexVarField(GUIPoint &position, Variable &v,
                                    int precision, const char *format, int min,
@@ -24,9 +25,9 @@ void UIBigHexVarField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
 
-  char buffer[80];
+  char buffer[MAX_FIELD_WIDTH + 1];
   int value = src_.GetInt();
-  sprintf(buffer, format_, value);
+  npf_snprintf(buffer, sizeof(buffer), format_, value);
   w.DrawString(buffer, position, props);
 
   int percentPos = -1;

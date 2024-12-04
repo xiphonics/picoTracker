@@ -1,6 +1,7 @@
 #include "Variable.h"
 #include "System/Console/Trace.h"
 #include "System/Console/n_assert.h"
+#include <System/Console/nanoprintf.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +63,7 @@ void Variable::SetFloat(float value, bool notify) {
     break;
   case STRING:
     char buf[10];
-    sprintf(buf, "%f", value);
+    npf_snprintf(buf, sizeof(buf), "%f", value);
     stringValue_ = buf;
     break;
   };
@@ -87,7 +88,7 @@ void Variable::SetInt(int value, bool notify) {
     break;
   case STRING:
     char buf[10];
-    sprintf(buf, "%d", value);
+    npf_snprintf(buf, sizeof(buf), "%d", value);
     stringValue_ = buf;
     break;
   };
@@ -209,14 +210,16 @@ void Variable::SetString(const char *string, bool notify) {
 etl::string<40> Variable::GetString() {
   char buf[40];
   switch (type_) {
+  // !!! NOTE !!! we don't want to enable nanoprintf's float support so we just
+  // cast to int here because we don't really display floats anyway
   case FLOAT:
-    sprintf(buf, "%f", value_.float_);
+    npf_snprintf(buf, sizeof(buf), "%f", (int)value_.float_);
     break;
   case INT:
-    sprintf(buf, "%d", value_.int_);
+    npf_snprintf(buf, sizeof(buf), "%d", value_.int_);
     break;
   case BOOL:
-    strcpy(buf, value_.bool_ ? "true" : "false");
+    npf_snprintf(buf, sizeof(buf), "%s", value_.bool_ ? "true" : "false");
     break;
   case STRING:
     return stringValue_.c_str();

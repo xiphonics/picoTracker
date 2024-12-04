@@ -3,6 +3,7 @@
 #include "Application/AppWindow.h"
 #include "System/Console/Trace.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
+#include <System/Console/nanoprintf.h>
 
 #define abs(x) (x < 0 ? -x : x)
 
@@ -29,9 +30,9 @@ void UIIntField::Draw(GUIWindow &w) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
 
-  char buffer[80];
+  char buffer[MAX_FIELD_WIDTH + 1];
   int value = *src_;
-  sprintf(buffer, format_, value);
+  npf_snprintf(buffer, sizeof(buffer), format_, value);
   w.DrawString(buffer, position, props);
 };
 

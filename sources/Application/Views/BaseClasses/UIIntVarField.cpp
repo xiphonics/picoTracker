@@ -4,6 +4,7 @@
 #include "System/Console/Trace.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
 #include "UIIntVarField.h"
+#include <System/Console/nanoprintf.h>
 
 #define abs(x) (x < 0 ? -x : x)
 
@@ -32,16 +33,16 @@ void UIIntVarField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_NORMAL);
   }
   Variable::Type type = src_.GetType();
-  char buffer[80];
+  char buffer[MAX_FIELD_WIDTH + 1];
   switch (type) {
   case Variable::INT: {
     int ivalue = src_.GetInt() + displayOffset_;
-    sprintf(buffer, format_, ivalue, ivalue);
+    npf_snprintf(buffer, sizeof(buffer), format_, ivalue, ivalue);
   } break;
   case Variable::CHAR_LIST:
   case Variable::BOOL: {
     const char *cvalue = src_.GetString().c_str();
-    sprintf(buffer, format_, cvalue);
+    npf_snprintf(buffer, sizeof(buffer), format_, cvalue);
   } break;
 
   default:

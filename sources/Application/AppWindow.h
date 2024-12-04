@@ -26,6 +26,7 @@
 #define SCREEN_WIDTH 32
 #define SCREEN_HEIGHT 24
 #define SCREEN_CHARS SCREEN_WIDTH *SCREEN_HEIGHT
+#define MAX_FIELD_WIDTH 26
 
 class AppWindow : public GUIWindow, I_Observer, Status {
 protected:

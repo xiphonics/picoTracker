@@ -5,6 +5,7 @@
 #include "System/System/System.h"
 #include "UIController.h"
 #include "ViewData.h"
+#include <nanoprintf.h>
 #include <stdlib.h>
 #include <string>
 
@@ -1004,7 +1005,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     int time = int(player->GetPlayTime());
     int mi = time / 60;
     int se = time - mi * 60;
-    sprintf(strbuffer, "%2.2d:%2.2d", mi, se);
+    npf_snprintf(strbuffer, sizeof(strbuffer), "%2.2d:%2.2d", mi, se);
     pos._y += 1;
     DrawString(pos._x, pos._y, strbuffer, props);
   }
