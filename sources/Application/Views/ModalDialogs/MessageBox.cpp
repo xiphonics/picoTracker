@@ -4,7 +4,7 @@
 static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
 
 MessageBox::MessageBox(View &view, const char *message, int btnFlags)
-    : ModalView(view), message_(message) {
+    : ModalView(view), line1_(message) {
 
   buttonCount_ = 0;
   for (int i = 0; i < MBL_LAST; i++) {
@@ -18,9 +18,9 @@ MessageBox::MessageBox(View &view, const char *message, int btnFlags)
 };
 
 // Constructor for 2 line message
-MessageBox::MessageBox(View &view, const char *message, const char *message2,
-                       int btnFlags)
-    : ModalView(view), message_(message), message2_(message2) {
+MessageBox::MessageBox(View &view, const char *messageLine1,
+                       const char *messageLine2, int btnFlags)
+    : ModalView(view), line1_(messageLine1), line2_(messageLine2) {
 
   buttonCount_ = 0;
   for (int i = 0; i < MBL_LAST; i++) {
@@ -37,7 +37,7 @@ MessageBox::~MessageBox(){};
 
 void MessageBox::DrawView() {
   // message size
-  int size = message_.size();
+  int size = line1_.size();
 
   // compute space needed for buttons
   // and set window size
@@ -45,17 +45,17 @@ void MessageBox::DrawView() {
   int btnSize = 5;
   int width = buttonCount_ * (btnSize + 1) + 1;
   width = (size > width) ? size : width;
-  SetWindow(width, message2_.size() > 0 ? 4 : 3);
+  SetWindow(width, line2_.size() > 0 ? 4 : 3);
 
   // draw text
   int y = 0;
   int x = (width - size) / 2;
   GUITextProperties props;
   SetColor(CD_ERROR);
-  DrawString(x, y, message_.c_str(), props);
-  if (message2_.size() > 0) {
+  DrawString(x, y, line1_.c_str(), props);
+  if (line2_.size() > 0) {
     y++;
-    DrawString(x, y, message2_.c_str(), props);
+    DrawString(x, y, line2_.c_str(), props);
   }
 
   SetColor(CD_NORMAL);

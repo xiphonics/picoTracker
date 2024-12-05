@@ -7,6 +7,7 @@
 #ifdef MessageBox
 #undef MessageBox
 #endif
+#include <Application/AppWindow.h>
 
 enum MessageBoxList { MBL_OK = 0, MBL_YES, MBL_CANCEL, MBL_NO, MBL_LAST };
 
@@ -31,8 +32,8 @@ public:
   virtual void AnimationUpdate(){};
 
 private:
-  std::string message_ = "";
-  std::string message2_ = "";
+  etl::string<SCREEN_WIDTH - 2> line1_ = "";
+  etl::string<SCREEN_WIDTH - 2> line2_ = "";
   int button_[4];
   int buttonCount_;
   int selected_;
