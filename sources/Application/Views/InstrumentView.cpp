@@ -773,8 +773,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     // confirm user wants to change instrument type &lose changes
     Player *player = Player::GetInstance();
     if (!player->IsRunning()) {
-      MessageBox *mb = new MessageBox(
-          *this, "Change Instrument & lose changes?", MBBF_YES | MBBF_NO);
+      MessageBox *mb = new MessageBox(*this, "Change Instrument &",
+                                      "lose settings?", MBBF_YES | MBBF_NO);
       DoModal(mb, ChangeInstrumentTypeCallback);
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
