@@ -13,7 +13,7 @@ public:
   ~Config();
   int GetValue(const char *key);
   void ProcessArguments(int argc, char **argv);
-  void Save();
+  bool Save();
 
 private:
   etl::list<Variable *, 22> variables_;

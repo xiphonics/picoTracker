@@ -93,7 +93,7 @@ Config::Config()
 
 Config::~Config() {}
 
-void Config::Save() {
+bool Config::Save() {
   auto picoFS = PicoFileSystem::GetInstance();
   PI_File *fp = picoFS->Open(CONFIG_FILE_PATH, "w");
   if (!fp) {
@@ -105,7 +105,7 @@ void Config::Save() {
 
   SaveContent(&printer);
 
-  fp->Close();
+  return fp->Close();
 }
 
 void Config::SaveContent(tinyxml2::XMLPrinter *printer) {

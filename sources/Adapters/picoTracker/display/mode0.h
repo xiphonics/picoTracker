@@ -25,8 +25,8 @@ typedef enum {
   MODE0_GREEN,
   MODE0_YELLOW_GREEN,
   MODE0_BLUE,
-  MODE0_PICTON_BLUE,
-  MODE0_PALE_BLUE
+  MODE0_GURU_TXT,
+  MODE0_GURU_BG
 } mode0_color_t;
 
 void mode0_init();

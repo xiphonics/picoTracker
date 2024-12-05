@@ -199,7 +199,7 @@ void mode0_draw_changed() {
 }
 
 void mode0_draw_changed_simple() {
-  // This method is better (faster) for fewer characters chnaged
+  // This method is better (faster) for fewer characters changed
   for (int idx = 0; idx < TEXT_HEIGHT * TEXT_WIDTH; idx++) {
     if (TestBit(changed, idx)) {
       ClearBit(changed, idx);

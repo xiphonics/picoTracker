@@ -21,7 +21,7 @@ public:
   int Write(const void *ptr, int size, int nmemb);
   void Seek(long offset, int whence);
   long Tell();
-  void Close();
+  bool Close();
   bool DeleteFile();
   int Error();
 
