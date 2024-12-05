@@ -13,12 +13,7 @@
 #define NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS 1
 #include "nanoprintf.h"
 
-void pt_uart_putc(int c, void *context) {
-  uint8_t byte = (uint8_t)c;
-  // write directly to the UART instead of put_char() to save on extra function
-  // calls
-  uart_putc(DEBUG_UART, byte);
-}
+void pt_uart_putc(int c, void *context) { putchar(c); }
 
 Trace::Trace() {}
 
