@@ -7,7 +7,7 @@ The device screen allows you to manage settings for the picoTracker device hardw
 
 **Note:** the picoTracker saves its device settings to the SDCard so if you replace the sdcard in your picoTracker, the device configuration will reset to factory defaults.
 
-![screen capture of device screen](/image/device-screen-small.png)
+![screen capture of device screen](image/device-screen-small.png)
 
 ## MIDI
 

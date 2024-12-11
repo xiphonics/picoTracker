@@ -3,7 +3,7 @@ title: Grooves
 template: page
 ---
 
-![screen capture of groove screen](/image/groove-screen-small.png)
+![screen capture of groove screen](image/groove-screen-small.png)
 
 The groove screen is located on top of the phrase screen. Groove lets you rock some swing to bust funky beats.
 

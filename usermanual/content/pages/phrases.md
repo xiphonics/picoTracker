@@ -3,7 +3,7 @@ title: Phrase Screen
 template: page
 ---
 
-![screen capture of Phrase screen](/image/phrase-screen-small.png)
+![screen capture of Phrase screen](image/phrase-screen-small.png)
 
 - The top of the phrase screen displays the .wav file loaded into the instrument under your cursor.
 - The seven columns of the phrase screen, from left to right: row counter, note trigger, instrument selector, effect one, parameters for effect one, effect two, parameters for effect two.

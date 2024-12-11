@@ -5,7 +5,7 @@ template: page
 
 ## Sampler
 
-![screen capture of sampler screen](/image/sample-screen-small.png)
+![screen capture of sampler screen](image/sample-screen-small.png)
 
 - **sample:** selects the .wav file to associate with the instrument. you can select the same sample in more than one instrument. if you tap A,A here it will take you to the Sample Import Screen (which lets you load new .WAV into your project).
 - **volume:**
@@ -43,7 +43,7 @@ Note: sub-directories will be sorted before files, but otherwise the files will 
 
 For example:
 
-![screen capture of sample screen](/image/browser-files-screen-small.png)
+![screen capture of sample screen](image/browser-files-screen-small.png)
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
@@ -60,7 +60,7 @@ At any time, you can return to the instrument screen from the sample file browse
 
 ## Midi Instrument Screen
 
-![screen capture of MIDI instrument screen](/image/midi-screen-small.png)
+![screen capture of MIDI instrument screen](image/midi-screen-small.png)
 
 A MIDI instrument has the following settings:
 
@@ -75,7 +75,7 @@ A MIDI instrument has the following settings:
 
 ### SID
 
-![screen capture of SID instrument screen](/image/sid-screen-small.png)
+![screen capture of SID instrument screen](image/sid-screen-small.png)
 
 * **VPW:**
 * **WF:**
@@ -91,7 +91,7 @@ A MIDI instrument has the following settings:
 
 ### OPAL
 
-![screen capture of OPAL instrument screen](/image/opal-screen-small.png)
+![screen capture of OPAL instrument screen](image/opal-screen-small.png)
 
 The OPAL instrument is an emulation of the FM synth "retro soundcards" of the PC DOS era. Each "OPAL" instrument is made up of 2 FM operators that can be in configured for either standard 2 OP FM or in parallel as 2 additive oscillators. Each operator can have one of 8 different waveforms as shown below.
 
@@ -114,5 +114,5 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 * **TR/VB/SU/KSR:**  Tremelo, Vibrato, Sustain and Envelope Scaling (KSR)
 * **Keyscale:** Attenuates output level towards higher pitch: `1=3.0 dB/oct, 2=1.5 dB/oct, 3=6.0 dB/oct`
 
-![screen capture of OPAL instrument screen](/image/opal-waveforms-small.png)
+![screen capture of OPAL instrument screen](image/opal-waveforms-small.png)
 

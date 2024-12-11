@@ -3,7 +3,7 @@ title: Song Screen
 template: page
 ---
 
-![screen capture of song screen](/image/song-screen-small.png)
+![screen capture of song screen](image/song-screen-small.png)
 
 - Songs are made up of chains. Each hex number on the song screen grid is a chain. You can navigate to any of those chains by putting your cursor on one and hitting `ALT`+`RIGHT`.
 - The top of the song screen displays if you are in SONG or LIVE mode (toggle with `ENTER`+`LEFT`/`RIGHT`) and the name of the project you are editing.

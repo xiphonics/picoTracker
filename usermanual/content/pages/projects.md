@@ -3,7 +3,7 @@ title: Project Management
 template: page
 ---
 
-![screen capture of project screen](/image/project-screen-small.png)
+![screen capture of project screen](image/project-screen-small.png)
 
 On the project screen you change various settings of the current project, save the current project, rename it (including giving it a random new name) create a new blank project or go to the project browser screen to **load** an another existing project.
 
