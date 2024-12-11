@@ -3,7 +3,7 @@ title: Tables
 template: page
 ---
 
-![screen capture of table screen](/image/table-screen-small.png)
+![screen capture of table screen](image/table-screen-small.png)
 
 - Hopping to self in table holds the step for x ticks. For example
 

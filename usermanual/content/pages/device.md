@@ -7,16 +7,20 @@ The device screen allows you to manage settings for the picoTracker device hardw
 
 **Note:** the picoTracker saves its device settings to the SDCard so if you replace the sdcard in your picoTracker, the device configuration will reset to factory defaults.
 
-![screen capture of device screen](/image/device-screen-small.png)
+![screen capture of device screen](image/device-screen-small.png)
 
 ## MIDI
 
-- **MIDI device:** Lists the picoTracker MIDI interfaces available. Available options are: None, TRS, USB, TRS+USB
-- **MIDI sync:** Option to enable different settings for MIDI clock sync messages output.
+- **MIDI device:** Lists the picoTracker MIDI interfaces available. Available options are:
+    * None
+    * TRS
+    * USB
+    * TRS+USB
+- **MIDI sync:** Enable/disable MIDI clock sync messages being sent by the picoTracker.
 
 ## Line Out Mode (1st Edition RP2040 model only)
 
-On first edition picoTrackers, the audio output can be set to one of 3 amplification levels to make the audio level output more useful for Line Level output or Headphone output. The 3 possible settings are: 
+On the first edition picoTracker, the audio output can be set to one of 3 amplification levels to make the audio level output more useful for Line Level output or Headphone output. The 3 possible settings are: 
 * `HP Low`
 * `HP High`
 * `Line Level`
@@ -27,11 +31,13 @@ On first edition picoTrackers, the audio output can be set to one of 3 amplifica
 
 ## Remote UI
 
-This setting enables or disables sending commands to a computer attached via USB to the picoTracker running an a "remote UI" application that can mirror the display from the picoTracker.
+This setting enables or disables sending commands to a computer attached via USB to the picoTracker running a "remote UI" application that can mirror the display from the picoTracker.
+
+The [official picoTracker remote UI web application is available ](https://ui.xiphonics.com), it works only with Chromium based browsers.
 
 ## Font
 
-The font used for the picoTracker user interface. Choice of the "standard" or "bold" font.
+The font used for the picoTracker user interface. Choice of "standard" or "bold" fonts.
 
 ## Color Themes
 

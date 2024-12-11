@@ -3,7 +3,7 @@ title: Chain Screen
 template: page
 ---
 
-![screen capture of chain screen](/image/chain-screen-small.png)
+![screen capture of chain screen](image/chain-screen-small.png)
 
 - The three columns of the phrase screen, from left to right: (red) row counter, phrase list, and transpose.
 - Chains are made up of phrases. Each hex number in the second column represents a phrase.

@@ -10,7 +10,7 @@ The picoTracker user interface is made up of a series of screens, which are laye
 
 ### Screen Map
 
-![image of screen map](/image/screenmap.png)
+![image of screen map](image/screenmap.png)
 
 On bootup, the picoTracker will start on the Song screen of the last previously opened project.
 
