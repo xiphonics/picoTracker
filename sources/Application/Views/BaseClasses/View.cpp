@@ -234,9 +234,8 @@ void View::drawBattery(GUITextProperties &props) {
 
     char *battText;
     if (voltage > 4.0) {
-      battText = (char *)"[++F]";
-      // TODO: check for if charging and then show [+C]
-    } else if (voltage > 3.6) {
+      battText = (char *)"[CHG]";
+    } else if (voltage > 3.7) {
       battText = (char *)"[+++]";
     } else if (voltage > 3.5) {
       battText = (char *)"[++ ]";
