@@ -191,13 +191,15 @@ void ProjectView::DrawView() {
   GUITextProperties props;
   GUIPoint pos = GetTitlePosition();
 
-  // Draw title
-  char projectString[SCREEN_WIDTH + 1];
-  npf_snprintf(projectString, sizeof(projectString), "Project - Build %s%s_%s",
-               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
-
   SetColor(CD_NORMAL);
-  DrawString(pos._x, pos._y, projectString, props);
+
+  // Draw title
+  const char *title = "Project ";
+  DrawString(pos._x, pos._y, title, props);
+
+  Variable *v = viewData_->project_->FindVariable(FourCC::VarProjectName);
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
+  DrawString(pos._x + strlen(title), pos._y, projectName.c_str(), props);
 
   drawBattery(props);
 
