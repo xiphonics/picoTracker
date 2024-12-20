@@ -222,7 +222,13 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
   w_.DrawString(txt, pos, props);
 };
 
-void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
+void View::drawBattery(GUITextProperties &props) {
+  GUIPoint battpos = GetAnchor();
+  battpos._y = 0;
+  battpos._x = 26;
+  System *sys = System::GetInstance();
+  float voltage = sys->GetBatteryLevel() / 1000.0;
+
   if (voltage >= 0) {
     SetColor(CD_INFO);
 
@@ -242,6 +248,6 @@ void View::drawBattery(float voltage, GUIPoint &pos, GUITextProperties &props) {
       battText = (char *)"[   ]";
     }
 
-    DrawString(pos._x, pos._y, battText, props);
+    DrawString(battpos._x, battpos._y, battText, props);
   }
 }

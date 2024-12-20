@@ -816,14 +816,6 @@ void SongView::DrawView() {
   // Compute song grid location
   GUIPoint anchor = GetAnchor();
 
-  // draw battery gauge
-  GUIPoint battpos = GetAnchor();
-  battpos._y = 0;
-  battpos._x = 26;
-  System *sys = System::GetInstance();
-  float batt = sys->GetBatteryLevel() / 1000.0;
-  drawBattery(batt, battpos, props);
-
   // Display row numbers
   SetColor(CD_HILITE1);
   char row[3];
@@ -1016,14 +1008,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 void SongView::AnimationUpdate() {
   // redraw batt gauge on every clock tick (~1Hz) even when not playing
   // and not redrawing due to user cursor navigation
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos = anchor;
   GUITextProperties props;
-  pos._y = 0;
-  pos._x = 26;
-
-  System *sys = System::GetInstance();
-  float batt = sys->GetBatteryLevel() / 1000.0;
-  drawBattery(batt, pos, props);
+  drawBattery(props);
   w_.Flush();
 };
