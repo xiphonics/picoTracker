@@ -1,0 +1,20 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/FatLib/FatPartition.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/FatLib/FatPartition.h">
+<area shape="rect" id="Node000001" title="FatPartition class." alt="" coords="115,5,259,64"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,261,73,288"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="116,60,77,82,60,96,47,113,33,146,29,182,30,216,35,246,30,247,25,217,23,182,28,145,42,111,56,92,74,77,113,55"/>
+<area shape="rect" id="Node000003" href="$_fs_cache_8h.html" title="Common cache code for exFAT and FAT." alt="" coords="56,112,206,139"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="171,66,149,100,145,97,167,63"/>
+<area shape="rect" id="Node000004" href="$_sys_call_8h.html" title="SysCall class." alt="" coords="92,187,170,213"/>
+<area shape="poly" id="edge10_Node000001_Node000004" title=" " alt="" coords="209,64,224,100,226,120,220,140,201,163,178,181,174,177,198,160,215,137,220,120,219,101,204,66"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="280,112,435,139"/>
+<area shape="poly" id="edge9_Node000001_Node000008" title=" " alt="" coords="244,62,321,102,319,107,241,67"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="134,139,134,171,128,171,128,139"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="117,216,68,254,65,250,113,212"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="88,336,153,363"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="133,214,125,321,120,320,127,214"/>
+<area shape="rect" id="Node000006" href="$_sd_fat_config_8h.html" title="configuration definitions" alt="" coords="157,261,273,288"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="147,212,191,249,187,253,144,216"/>
+<area shape="poly" id="edge7_Node000006_Node000005" title=" " alt="" coords="200,291,150,329,147,324,197,286"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="177,336,253,363"/>
+<area shape="poly" id="edge8_Node000006_Node000007" title=" " alt="" coords="218,289,218,320,212,320,212,289"/>
+</map>

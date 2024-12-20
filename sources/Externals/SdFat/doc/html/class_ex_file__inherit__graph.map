@@ -1,0 +1,9 @@
+<map id="ExFile" name="ExFile">
+<area shape="rect" id="Node000001" title="exFAT file with Arduino Stream." alt="" coords="62,171,120,197"/>
+<area shape="rect" id="Node000002" href="$class_stream_file.html" title=" " alt="" coords="13,80,169,123"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="94,139,94,170,88,170,88,139"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,5,78,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="59,44,81,78,76,81,55,47"/>
+<area shape="rect" id="Node000004" href="$class_ex_fat_file.html" title="Basic file class." alt="" coords="102,5,179,32"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="127,47,106,81,101,78,122,44"/>
+</map>

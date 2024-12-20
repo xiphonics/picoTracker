@@ -1,0 +1,19 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/ExFatLib/ExFatPartition.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/ExFatLib/ExFatPartition.h">
+<area shape="rect" id="Node000001" title="ExFatPartition include file." alt="" coords="105,5,280,64"/>
+<area shape="rect" id="Node000002" href="$_fs_cache_8h.html" title="Common cache code for exFAT and FAT." alt="" coords="5,112,156,139"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="158,66,110,104,107,100,155,62"/>
+<area shape="rect" id="Node000003" href="$_sys_call_8h.html" title="SysCall class." alt="" coords="98,187,175,213"/>
+<area shape="poly" id="edge9_Node000001_Node000003" title=" " alt="" coords="190,65,170,140,154,174,149,172,165,138,185,64"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="230,112,385,139"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="231,62,280,100,277,104,228,66"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="92,138,120,173,116,176,88,141"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="32,261,100,288"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="126,216,90,252,87,248,122,212"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="104,336,169,363"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="139,214,139,320,134,320,134,214"/>
+<area shape="rect" id="Node000006" href="$_sd_fat_config_8h.html" title="configuration definitions" alt="" coords="174,261,289,288"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="155,212,204,250,201,254,151,216"/>
+<area shape="poly" id="edge6_Node000006_Node000005" title=" " alt="" coords="216,291,167,329,163,324,213,286"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="193,336,269,363"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="234,289,234,320,229,320,229,289"/>
+</map>

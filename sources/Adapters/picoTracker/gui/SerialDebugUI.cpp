@@ -1,7 +1,10 @@
 #include "SerialDebugUI.h"
 #include "Application/Model/Config.h"
 #include "System/FileSystem/PicoFileSystem.h"
+#include "hardware/uart.h"
+#include <Adapters/picoTracker/platform/gpio.h>
 #include <Trace.h>
+#include <nanoprintf.h>
 #include <stdio.h>
 
 #define ENDSTDIN 255
@@ -18,7 +21,7 @@ bool SerialDebugUI::readSerialIn(char *buffer, short size) {
   // in pico-sdk the char seemed to change from ENDSTDIN to 0xFE, no idea why
   while (chr != ENDSTDIN && chr != 0xFE) {
     // echo char back on serial
-    printf("%c", chr);
+    putchar(chr);
     buffer[lp_++] = chr;
     if (chr == CR || lp_ == size - 1) {
       buffer[lp_] = 0; // terminate the string
@@ -58,16 +61,16 @@ void SerialDebugUI::dispatchCmd(char *input) {
 
 void SerialDebugUI::catFile(const char *path) {
   auto picoFS = PicoFileSystem::GetInstance();
-  char contents[READ_BUFFER_SIZE + 1]; //+1 one to leave space for \0
+  uint8_t contents[READ_BUFFER_SIZE + 1]; //+1 one to leave space for \0
   if (picoFS->exists(path)) {
     auto current = picoFS->Open(path, "r");
     int len = 0;
     do {
       len = current->Read(contents, READ_BUFFER_SIZE);
       contents[len] = '\0';
-      printf("%s", contents);
+      uart_write_blocking(DEBUG_UART, contents, sizeof(contents));
     } while (len == READ_BUFFER_SIZE);
-    printf("\n");
+    uart_write_blocking(DEBUG_UART, (uint8_t *)"\n\r", 2);
     current->Close();
   } else {
     Trace::Log("SERIALDEBUG", "failed to cat file:%s", path);
@@ -102,7 +105,9 @@ void SerialDebugUI::rmFile(const char *path) {
   if (!picoFS->DeleteFile(path)) {
     Trace::Error("failed to delete file:%s", path);
   } else {
-    printf("deleted:%s\n", path);
+    char buf[128];
+    npf_snprintf(buf, sizeof(buf), "deleted:%s\n", path);
+    uart_write_blocking(DEBUG_UART, (uint8_t *)buf, sizeof(buf));
   }
 }
 

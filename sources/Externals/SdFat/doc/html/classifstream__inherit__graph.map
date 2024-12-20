@@ -1,0 +1,14 @@
+<map id="ifstream" name="ifstream">
+<area shape="rect" id="Node000001" title="file input stream." alt="" coords="95,229,162,256"/>
+<area shape="rect" id="Node000002" href="$classistream.html" title="Input Stream." alt="" coords="156,155,221,181"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="171,195,141,231,137,227,166,192"/>
+<area shape="rect" id="Node000003" href="$classios.html" title="Error and state information for all streams." alt="" coords="159,80,197,107"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="185,122,189,154,184,155,179,122"/>
+<area shape="rect" id="Node000005" href="$class_stream_base_class.html" title="base type for FAT and exFAT streams" alt="" coords="5,155,132,181"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="147,118,89,156,86,152,145,113"/>
+<area shape="rect" id="Node000004" href="$classios__base.html" title="Base class for all streams." alt="" coords="141,5,215,32"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="181,48,181,80,175,80,175,48"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="91,192,120,227,116,231,86,195"/>
+<area shape="rect" id="Node000006" href="$class_fat_file.html" title="Basic file class." alt="" coords="11,80,126,107"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="71,122,71,154,66,154,66,122"/>
+</map>

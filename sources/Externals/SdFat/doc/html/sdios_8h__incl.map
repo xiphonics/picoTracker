@@ -1,0 +1,35 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/sdios.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/sdios.h">
+<area shape="rect" id="Node000001" title="C++ IO Streams features." alt="" coords="204,5,344,64"/>
+<area shape="rect" id="Node000002" href="$_arduino_stream_8h.html" title="ArduinoInStream and ArduinoOutStream classes." alt="" coords="188,112,360,139"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="277,64,277,96,271,96,271,64"/>
+<area shape="rect" id="Node000012" href="$_stdio_stream_8h.html" title="StdioStream class." alt="" coords="5,112,164,139"/>
+<area shape="poly" id="edge13_Node000001_Node000012" title=" " alt="" coords="213,67,126,108,124,103,211,62"/>
+<area shape="rect" id="Node000015" href="$fstream_8h.html" title="iostreams for files." alt="" coords="384,112,513,139"/>
+<area shape="poly" id="edge17_Node000001_Node000015" title=" " alt="" coords="332,62,411,102,409,107,329,67"/>
+<area shape="rect" id="Node000003" href="$bufstream_8h.html" title="ibufstream and obufstream classes" alt="" coords="229,187,319,213"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="277,139,277,171,271,171,271,139"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="192,261,257,288"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="267,215,244,250,239,247,263,212"/>
+<area shape="rect" id="Node000005" href="$iostream_8h.html" title="iostream class" alt="" coords="281,261,363,288"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="284,212,307,247,303,250,280,215"/>
+<area shape="rect" id="Node000006" href="$istream_8h.html" title="istream class" alt="" coords="284,336,360,363"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="325,289,325,320,319,320,319,289"/>
+<area shape="rect" id="Node000011" href="$ostream_8h.html" title="ostream class" alt="" coords="181,336,260,363"/>
+<area shape="poly" id="edge11_Node000005_Node000011" title=" " alt="" coords="306,291,252,329,249,324,303,286"/>
+<area shape="rect" id="Node000007" href="$ios_8h.html" title="ios_base and ios classes" alt="" coords="196,411,245,437"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="306,365,252,403,249,399,303,361"/>
+<area shape="rect" id="Node000008" href="$_fs_lib_8h.html" title="FsLib include file." alt="" coords="164,485,277,512"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="223,438,223,470,218,470,218,438"/>
+<area shape="rect" id="Node000009" href="$_fs_file_8h.html" title="FsBaseFile include file." alt="" coords="150,560,219,587"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="217,514,200,547,195,545,212,511"/>
+<area shape="rect" id="Node000010" href="$_fs_volume_8h.html" title="FsVolume include file." alt="" coords="175,635,266,661"/>
+<area shape="poly" id="edge10_Node000008_Node000010" title=" " alt="" coords="226,512,232,546,234,587,229,620,224,619,229,587,227,546,221,513"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="193,586,210,619,205,622,188,588"/>
+<area shape="poly" id="edge12_Node000011_Node000007" title=" " alt="" coords="223,363,223,395,218,395,218,363"/>
+<area shape="poly" id="edge15_Node000012_Node000007" title=" " alt="" coords="74,141,51,174,45,193,47,213,76,271,116,323,158,366,194,399,191,403,154,370,112,326,72,273,42,214,40,192,46,171,70,138"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="141,187,204,213"/>
+<area shape="poly" id="edge14_Node000012_Node000013" title=" " alt="" coords="102,137,147,175,144,179,98,141"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="57,187,117,213"/>
+<area shape="poly" id="edge16_Node000012_Node000014" title=" " alt="" coords="88,139,89,171,83,171,82,139"/>
+<area shape="poly" id="edge18_Node000015_Node000005" title=" " alt="" coords="440,141,345,251,341,247,436,137"/>
+</map>

@@ -1,0 +1,24 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SdCard/SdioCard.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SdCard/SdioCard.h">
+<area shape="rect" id="Node000001" title="Classes for SDIO cards." alt="" coords="259,5,398,64"/>
+<area shape="rect" id="Node000002" href="$_sys_call_8h.html" title="SysCall class." alt="" coords="314,261,458,288"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="342,64,357,111,384,246,379,247,351,113,337,65"/>
+<area shape="rect" id="Node000007" href="$_sd_card_interface_8h.html" title="Abstract interface for an SD card." alt="" coords="217,112,342,139"/>
+<area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="315,66,296,100,291,97,310,63"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="170,336,237,363"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="355,291,251,332,249,327,353,286"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="270,411,334,437"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="381,290,319,399,314,396,377,287"/>
+<area shape="rect" id="Node000005" href="$_sd_fat_config_8h.html" title="configuration definitions" alt="" coords="364,336,480,363"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="395,287,411,321,407,323,390,290"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="402,365,337,405,335,400,400,361"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="384,411,460,437"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="425,363,425,395,419,395,419,363"/>
+<area shape="rect" id="Node000008" href="$_fs_block_device_interface_8h.html" title="FsBlockDeviceInterface include file." alt="" coords="5,261,239,288"/>
+<area shape="poly" id="edge8_Node000007_Node000008" title=" " alt="" coords="268,141,148,252,145,249,264,137"/>
+<area shape="rect" id="Node000009" href="$_sd_card_info_8h.html" title="Definitions for SD cards." alt="" coords="232,187,327,213"/>
+<area shape="poly" id="edge11_Node000007_Node000009" title=" " alt="" coords="282,139,282,171,277,171,277,139"/>
+<area shape="poly" id="edge9_Node000008_Node000003" title=" " alt="" coords="138,287,180,324,176,328,134,291"/>
+<area shape="poly" id="edge10_Node000008_Node000004" title=" " alt="" coords="127,288,137,324,147,343,160,361,181,378,206,392,255,410,254,415,203,397,178,383,156,365,142,346,132,325,121,289"/>
+<area shape="poly" id="edge13_Node000009_Node000002" title=" " alt="" coords="299,212,356,250,353,254,296,216"/>
+<area shape="poly" id="edge12_Node000009_Node000004" title=" " alt="" coords="283,214,302,395,297,396,278,214"/>
+</map>

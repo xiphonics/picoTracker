@@ -10,15 +10,16 @@ picoTracker is a project that aims to provide a low cost open source and DIY har
 * 32 tables
 * 16 Sample instruments
 * 16 MIDI instruments
-* 1MB sample memory
+* 3 SID instruments
+* 3 OPAL instruments
 * 8 or 16bit samples up to 44.1kHz, mono or stereo
 * 16bit/44.1kHz/Stereo audio output
 
 ## Limitations
 * Will probably struggle with 8 song channels playing at the same time in most cases. I modified the source to parametrically reduce the total songs, but didn't want to make the decision of supporting only 6 songs or so just yet. There is still room for improvement by either multithreading or increasing CPU frequency.
-* Cannot load LGPT projects (thou I wrote an ugly script to convert projects).
-* Samples are played copied to flash upon load and played from there. Since flash has to be shared with program code, only 1MB is available for it when using the Raspberry Pi Pico, or up to 15MB when using other boards or custom hardware (i.e: the [PicoTracker](https://github.com/democloid/picoTracker-pcb)  official hardware).
-* Instrument count is also pretty low due to memory constraints. 16 Sample and 16 MIDI instruments.
+* Cannot load LGPT projects (though I wrote an ugly script to convert projects).
+* Samples are played copied to flash upon load and played from there. Since flash has to be shared with program code, only 1MB is available for it when using the Raspberry Pi Pico, or up to 15MB when using other boards or custom hardware (i.e: the [PicoTracker](https://xiphonics.com)  official hardware).
+* Instrument count is also pretty low due to memory constraints. 16 Sample, 16 MIDI instruments, 3 SID, 3 OPAL instruments.
 * Sample instrument feedback feature has been removed due to memory constraints.
 * Sample fonts support has been removed to save some memory.
 
@@ -26,14 +27,14 @@ picoTracker is a project that aims to provide a low cost open source and DIY har
 * Loading a project will leak memory. Current workaround is to do a full system reset upon project exit (done automatically).
 
 ## TODO/Improvements/Wishlist
-- [ ] Fix memory leak issues and modernize code
-- [ ] Add new synth instruments (C64 SID WIP)
-- [ ] Improve SDIO performance and explore further playing samples from SD
-- [ ] Further memory savings and bring back some features/instruments
-- [ ] Improve performance/make instrument rendering multithreading
+- [X] Fix memory leak issues and modernize code
+- [X] Add new synth instruments (C64 SID WIP)
+- [X] Improve SDIO performance and explore further playing samples from SD
+- [X] Further memory savings and bring back some features/instruments
+- [X] Improve performance/make instrument rendering multithreading
 - [ ] USB mass storage for writing samples into SD
 - [ ] MIDI In
-- [ ] USB MIDI
+- [X] USB MIDI
 
 ## BUILD
 
@@ -50,15 +51,18 @@ Head over to the [Build Guide for the original prototype](docs/BUILD.md)
 
 
 ## MANUAL
-Head over to the [Manual](docs/MANUAL.md)
+Head over to the [User Manual](https://picotracker-manual.web.app/)
 
 ## Get involved!
 
 You can join the fun by following our [contributing guide](docs/CONTRIBUTING.md). 
+
+Join us on [Discord](https://discord.gg/6kYvqbegha)
 
 ## Development
 
 Head over to the [Developer Guide](docs/DEV.md)
 
 ## Want to know more
+
 I posted an article about the development of the picoTracker at [democloid.com](http://democloid.com/2023/04/20/picoTracker.html) and one about the [portable version](https://democloid.com/2023/06/22/picoTrackerPortable.html).

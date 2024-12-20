@@ -1,0 +1,14 @@
+<map id="iostream" name="iostream">
+<area shape="rect" id="Node000001" title="Input/Output stream." alt="" coords="47,229,119,256"/>
+<area shape="rect" id="Node000006" href="$classfstream.html" title="file input/output stream." alt="" coords="51,304,115,331"/>
+<area shape="poly" id="edge6_Node000001_Node000006" title=" " alt="" coords="86,272,86,304,80,304,80,272"/>
+<area shape="rect" id="Node000002" href="$classistream.html" title="Input Stream." alt="" coords="5,155,70,181"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="56,193,77,228,73,230,51,196"/>
+<area shape="rect" id="Node000003" href="$classios.html" title="Error and state information for all streams." alt="" coords="64,80,102,107"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="69,122,48,156,43,153,65,119"/>
+<area shape="rect" id="Node000005" href="$classostream.html" title="Output Stream." alt="" coords="94,155,162,181"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="101,119,123,153,118,156,97,122"/>
+<area shape="rect" id="Node000004" href="$classios__base.html" title="Base class for all streams." alt="" coords="46,5,120,32"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="86,48,86,80,80,80,80,48"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="114,196,93,230,88,228,110,193"/>
+</map>

@@ -3,7 +3,6 @@
 #define _TRACE_H_
 
 #include "Foundation/T_Singleton.h"
-#include <stdarg.h>
 
 class Trace : public T_Singleton<Trace> {
 public:

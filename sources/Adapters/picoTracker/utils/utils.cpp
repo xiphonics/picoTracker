@@ -1,8 +1,10 @@
 #include "utils.h"
+#include "Adapters/picoTracker/platform/platform.h"
 #include "Externals/SdFat/src/SdFat.h"
 #include "System/System/System.h"
 #include "hardware/clocks.h"
 #include "hardware/structs/clocks.h"
+#include <System/Console/Trace.h>
 #include <stdio.h>
 
 uint32_t millis(void) { return to_ms_since_boot(get_absolute_time()); }
@@ -26,11 +28,11 @@ uint32_t measure_free_mem(void) {
     free(buff[j]);
   }
 
-  printf("MAX memory free in heap: %i\n", max * 1000);
+  Trace::Debug("MAX memory free in heap: %i\n", max * 1000);
   /*
     buff = malloc(80000);
   if (buff) {
-    printf("MALLOC addr: %p %i - Mem free: %i\n", buff,
+    Trace::Debug("MALLOC addr: %p %i - Mem free: %i\n", buff,
            reinterpret_cast<uintptr_t>(buff),  0x20040000l -
                reinterpret_cast<uintptr_t>(buff));
     free(buff);
@@ -52,35 +54,34 @@ void measure_freqs(void) {
   uint f_clk_rtc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_RTC);
 #endif
 
-  printf("pll_sys  = %dkHz\n", f_pll_sys);
-  printf("pll_usb  = %dkHz\n", f_pll_usb);
-  printf("rosc     = %dkHz\n", f_rosc);
-  printf("clk_sys  = %dkHz\n", f_clk_sys);
-  printf("clk_peri = %dkHz\n", f_clk_peri);
-  printf("clk_usb  = %dkHz\n", f_clk_usb);
-  printf("clk_adc  = %dkHz\n", f_clk_adc);
+  Trace::Debug("pll_sys  = %dkHz\n", f_pll_sys);
+  Trace::Debug("pll_usb  = %dkHz\n", f_pll_usb);
+  Trace::Debug("rosc     = %dkHz\n", f_rosc);
+  Trace::Debug("clk_sys  = %dkHz\n", f_clk_sys);
+  Trace::Debug("clk_peri = %dkHz\n", f_clk_peri);
+  Trace::Debug("clk_usb  = %dkHz\n", f_clk_usb);
+  Trace::Debug("clk_adc  = %dkHz\n", f_clk_adc);
 #if PICO_RP2040
-  printf("clk_rtc  = %dkHz\n", f_clk_rtc);
+  Trace::Debug("clk_rtc  = %dkHz\n", f_clk_rtc);
 #endif
 
   // Can't measure clk_ref / xosc as it is the ref
 }
 
 #ifdef SDIO_BENCH
-#define SD_CONFIG SdioConfig(FIFO_SDIO)
 
 void cidDmp(SdFs *sd) {
   cid_t cid;
   if (!sd->card()->readCID(&cid)) {
-    printf("E: readCID failed\n");
+    Trace::Debug("E: readCID failed\n");
   }
-  printf("\nManufacturer ID: %#04x\n", int(cid.mid));
-  printf("OEM ID: %s%s\n", cid.oid[0], cid.oid[1]);
-  printf("Product: %s\n", cid.pnm);
+  Trace::Debug("\nManufacturer ID: %#04x\n", int(cid.mid));
+  Trace::Debug("OEM ID: %s%s\n", cid.oid[0], cid.oid[1]);
+  Trace::Debug("Product: %s\n", cid.pnm);
 
-  printf("\nRevision: %i.%i\n", cid.prvN(), cid.prvM());
-  printf("Serial number: %#10x\n", cid.psn());
-  printf("Manufacturing date: %i/%i\n\n", cid.mdtMonth(), cid.mdtYear());
+  Trace::Debug("\nRevision: %i.%i\n", cid.prvN(), cid.prvM());
+  Trace::Debug("Serial number: %#10x\n", cid.psn());
+  Trace::Debug("Manufacturing date: %i/%i\n\n", cid.mdtMonth(), cid.mdtYear());
 }
 
 void sd_bench() {
@@ -135,19 +136,19 @@ void sd_bench() {
     //    sd.initErrorHalt(&Serial);
   }
   if (sd.fatType() == FAT_TYPE_EXFAT) {
-    printf("Type is exFAT\n");
+    Trace::Debug("Type is exFAT\n");
   } else {
-    printf("Type is FAT %i\n", int(sd.fatType()));
+    Trace::Debug("Type is FAT %i\n", int(sd.fatType()));
   }
 
-  printf("Card size: %i\n", sd.card()->sectorCount() * 512E-9);
-  printf(" GB (GB = 1E9 bytes)\n");
+  Trace::Debug("Card size: %i\n", sd.card()->sectorCount() * 512E-9);
+  Trace::Debug(" GB (GB = 1E9 bytes)\n");
 
   cidDmp(&sd);
 
   // open or create file - truncate existing file.
   if (!file.open("bench.dat", O_RDWR | O_CREAT | O_TRUNC)) {
-    printf("E: open failed\n");
+    Trace::Debug("E: open failed\n");
   }
 
   // fill buf with known data
@@ -159,20 +160,20 @@ void sd_bench() {
   }
   buf[BUF_SIZE - 1] = '\n';
 
-  printf("FILE_SIZE_MB = %i\n", FILE_SIZE_MB);
-  printf("BUF_SIZE = %i bytes\n", BUF_SIZE);
-  printf("\nStarting write test, please wait.\n");
+  Trace::Debug("FILE_SIZE_MB = %i\n", FILE_SIZE_MB);
+  Trace::Debug("BUF_SIZE = %i bytes\n", BUF_SIZE);
+  Trace::Debug("\nStarting write test, please wait.\n");
 
   // do write test
   uint32_t n = FILE_SIZE / BUF_SIZE;
-  printf("write speed and latency\n");
-  printf("speed,max,min,avg\n");
-  printf("KB/Sec,usec,usec,usec\n");
+  Trace::Debug("write speed and latency\n");
+  Trace::Debug("speed,max,min,avg\n");
+  Trace::Debug("KB/Sec,usec,usec,usec\n");
   for (uint8_t nTest = 0; nTest < WRITE_COUNT; nTest++) {
     file.truncate(0);
     if (PRE_ALLOCATE) {
       if (!file.preAllocate(FILE_SIZE)) {
-        printf("E: preAllocate failed\n");
+        Trace::Debug("E: preAllocate failed\n");
       }
     }
     maxLatency = 0;
@@ -183,7 +184,7 @@ void sd_bench() {
     for (uint32_t i = 0; i < n; i++) {
       uint32_t m = micros();
       if (file.write(buf, BUF_SIZE) != BUF_SIZE) {
-        printf("E: write failed\n");
+        Trace::Debug("E: write failed\n");
       }
       m = micros() - m;
       totalLatency += m;
@@ -202,12 +203,12 @@ void sd_bench() {
     file.sync();
     t = millis() - t;
     s = file.fileSize();
-    printf("%i,%i,%i,%i\n", s / t, maxLatency, minLatency, totalLatency / n);
+    printf("%f,%f,%f,%f\n", (s / t), maxLatency, minLatency, totalLatency / n);
   }
-  printf("\nStarting read test, please wait.\n");
-  printf("\nread speed and latency\n");
-  printf("speed,max,min,avg\n");
-  printf("KB/Sec,usec,usec,usec\n");
+  Trace::Debug("\nStarting read test, please wait.\n");
+  Trace::Debug("\nread speed and latency\n");
+  Trace::Debug("speed,max,min,avg\n");
+  Trace::Debug("KB/Sec,usec,usec,usec\n");
 
   // do read test
   for (uint8_t nTest = 0; nTest < READ_COUNT; nTest++) {
@@ -222,13 +223,13 @@ void sd_bench() {
       uint32_t m = micros();
       int32_t nr = file.read(buf, BUF_SIZE);
       if (nr != BUF_SIZE) {
-        printf("E: read failed\n");
+        Trace::Debug("E: read failed\n");
       }
       m = micros() - m;
       totalLatency += m;
       if (buf[BUF_SIZE - 1] != '\n') {
 
-        printf("E: data check error\n");
+        Trace::Debug("E: data check error\n");
       }
       if (skipLatency) {
         skipLatency = false;
@@ -243,9 +244,9 @@ void sd_bench() {
     }
     s = file.fileSize();
     t = millis() - t;
-    printf("%i,%i,%i,%i\n", s / t, maxLatency, minLatency, totalLatency / n);
+    printf("%f,%f,%f,%f\n", s / t, maxLatency, minLatency, totalLatency / n);
   }
-  printf("\nDone\n");
+  Trace::Debug("\nDone\n");
   file.close();
   sd.end();
 }

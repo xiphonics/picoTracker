@@ -1,0 +1,33 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/FatLib/FatVolume.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/FatLib/FatVolume.h">
+<area shape="rect" id="Node000001" title="FatVolume class." alt="" coords="345,5,485,64"/>
+<area shape="rect" id="Node000002" href="$_fat_file_8h.html" title="FatFile class." alt="" coords="379,112,451,139"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="418,64,418,96,412,96,412,64"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="227,187,291,213"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="389,142,301,182,299,177,387,137"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="381,411,449,437"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="453,136,494,154,542,180,586,215,606,236,621,260,629,288,624,313,608,336,585,356,525,389,465,411,463,406,523,384,582,352,604,332,619,311,624,288,617,262,601,239,583,219,539,184,492,158,451,141"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="682,187,746,213"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="452,133,667,185,666,190,451,138"/>
+<area shape="rect" id="Node000006" href="$_fs_name_8h.html" title="FsName class." alt="" coords="5,261,153,288"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="404,141,362,178,304,216,236,243,169,261,167,255,235,237,302,211,359,174,401,137"/>
+<area shape="rect" id="Node000011" href="$_fat_partition_8h.html" title="FatPartition class." alt="" coords="365,187,465,213"/>
+<area shape="poly" id="edge13_Node000002_Node000011" title=" " alt="" coords="418,139,418,171,412,171,412,139"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="126,485,190,512"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="86,288,151,470,146,472,81,289"/>
+<area shape="rect" id="Node000008" href="$_sys_call_8h.html" title="SysCall class." alt="" coords="214,336,291,363"/>
+<area shape="poly" id="edge7_Node000006_Node000008" title=" " alt="" coords="110,286,209,327,207,332,108,291"/>
+<area shape="poly" id="edge8_Node000008_Node000004" title=" " alt="" coords="282,361,374,401,372,406,280,366"/>
+<area shape="poly" id="edge9_Node000008_Node000007" title=" " alt="" coords="234,365,209,385,185,412,172,442,164,471,159,470,167,440,181,409,205,382,231,361"/>
+<area shape="rect" id="Node000009" href="$_sd_fat_config_8h.html" title="configuration definitions" alt="" coords="195,411,310,437"/>
+<area shape="poly" id="edge10_Node000008_Node000009" title=" " alt="" coords="255,363,255,395,250,395,250,363"/>
+<area shape="poly" id="edge11_Node000009_Node000007" title=" " alt="" coords="237,440,188,478,184,474,234,436"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="214,485,291,512"/>
+<area shape="poly" id="edge12_Node000009_Node000010" title=" " alt="" coords="255,438,255,470,250,470,250,438"/>
+<area shape="poly" id="edge14_Node000011_Node000004" title=" " alt="" coords="418,214,418,396,412,396,412,214"/>
+<area shape="poly" id="edge18_Node000011_Node000008" title=" " alt="" coords="408,216,379,250,341,290,287,330,284,325,337,286,375,247,403,212"/>
+<area shape="rect" id="Node000012" href="$_fs_cache_8h.html" title="Common cache code for exFAT and FAT." alt="" coords="177,261,328,288"/>
+<area shape="poly" id="edge15_Node000011_Node000012" title=" " alt="" coords="388,216,296,257,294,252,386,211"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="452,261,607,288"/>
+<area shape="poly" id="edge17_Node000011_Node000013" title=" " alt="" coords="436,212,498,250,495,255,434,216"/>
+<area shape="poly" id="edge16_Node000012_Node000008" title=" " alt="" coords="255,289,255,320,250,320,250,289"/>
+</map>

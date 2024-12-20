@@ -1,0 +1,7 @@
+<map id="istream" name="istream">
+<area shape="rect" id="Node000001" title="Input Stream." alt="" coords="10,155,74,181"/>
+<area shape="rect" id="Node000002" href="$classios.html" title="Error and state information for all streams." alt="" coords="23,80,61,107"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="45,122,45,154,39,154,39,122"/>
+<area shape="rect" id="Node000003" href="$classios__base.html" title="Base class for all streams." alt="" coords="5,5,79,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="45,48,45,80,39,80,39,48"/>
+</map>

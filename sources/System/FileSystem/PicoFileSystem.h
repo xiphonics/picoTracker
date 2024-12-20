@@ -1,7 +1,7 @@
 #ifndef _PICO_FILESYSTEM_H_
 #define _PICO_FILESYSTEM_H_
 
-#include "Adapters/picoTracker/sdcard/sdcard.h"
+#include "Adapters/picoTracker/platform/platform.h"
 #include "Externals/SdFat/src/SdFat.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
@@ -21,7 +21,7 @@ public:
   int Write(const void *ptr, int size, int nmemb);
   void Seek(long offset, int whence);
   long Tell();
-  void Close();
+  bool Close();
   bool DeleteFile();
   int Error();
 

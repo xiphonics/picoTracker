@@ -11,7 +11,6 @@
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
-#include "System/Console/Logger.h"
 #include "hardware/gpio.h"
 #include "input.h"
 #include <assert.h>
@@ -25,6 +24,7 @@
 #include <unistd.h>
 
 #include "Adapters/picoTracker/platform/platform.h"
+#include "critical_error_message.h"
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
 
@@ -45,9 +45,6 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   static char systemMemBuf[sizeof(picoTrackerSystem)];
   System::Install(new (systemMemBuf) picoTrackerSystem());
 
-  static char loggerMemBuf[sizeof(StdOutLogger)];
-  Trace::GetInstance()->SetLogger(*(new (loggerMemBuf) StdOutLogger()));
-
   // Install GUI Factory
   static char guiMemBuf[sizeof(GUIFactory)];
   I_GUIWindowFactory::Install(new (guiMemBuf) GUIFactory());
@@ -56,6 +53,13 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   static char timerMemBuf[sizeof(picoTrackerTimerService)];
   TimerService::GetInstance()->Install(new (timerMemBuf)
                                            picoTrackerTimerService());
+
+  // First check for SDCard
+  auto picoFS = PicoFileSystem::GetInstance();
+  if (!picoFS->chdir("/")) {
+    Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
+    critical_error_message("SDCARD MISSING", 0x01);
+  }
 
   // Install MIDI
   // **NOTE**: MIDI install MUST happen before Audio install because it triggers
@@ -130,11 +134,11 @@ unsigned long picoTrackerSystem::GetClock() {
 int picoTrackerSystem::GetBatteryLevel() {
   int lastBattLevel_ = -1;
 
-  u_int16_t adc_reading = adc_read(); // raw voltage from ADC
+  //  u_int16_t adc_reading = adc_read(); // raw voltage from ADC
 
-  int adc_voltage = adc_reading * 0.8; // 0.8mV per unit of ADC
+  //  int adc_voltage = adc_reading * 0.8; // 0.8mV per unit of ADC
   // *2 because picoTracker use voltage divider for voltage on ADC pin
-  lastBattLevel_ = adc_voltage * 2;
+  //  lastBattLevel_ = adc_voltage * 2;
   return lastBattLevel_;
 }
 

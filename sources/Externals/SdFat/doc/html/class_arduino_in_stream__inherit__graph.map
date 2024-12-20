@@ -1,0 +1,11 @@
+<map id="ArduinoInStream" name="ArduinoInStream">
+<area shape="rect" id="Node000001" title="Input stream for Arduino Stream objects." alt="" coords="5,304,123,331"/>
+<area shape="rect" id="Node000002" href="$classibufstream.html" title="parse a char string" alt="" coords="23,229,105,256"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="67,272,67,304,61,304,61,272"/>
+<area shape="rect" id="Node000003" href="$classistream.html" title="Input Stream." alt="" coords="32,155,96,181"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="67,197,67,229,61,229,61,197"/>
+<area shape="rect" id="Node000004" href="$classios.html" title="Error and state information for all streams." alt="" coords="45,80,83,107"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="67,122,67,154,61,154,61,122"/>
+<area shape="rect" id="Node000005" href="$classios__base.html" title="Base class for all streams." alt="" coords="27,5,101,32"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="67,48,67,80,61,80,61,48"/>
+</map>

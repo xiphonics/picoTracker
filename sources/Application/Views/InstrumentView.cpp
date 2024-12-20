@@ -14,6 +14,7 @@
 #include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/System/System.h"
+#include <nanoprintf.h>
 
 static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
@@ -291,12 +292,15 @@ void InstrumentView::fillSIDParameters() {
 
   int i = viewData_->currentInstrumentID_;
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  I_Instrument *instr = bank->GetInstrument(i);
-  SIDInstrument *instrument = (SIDInstrument *)instr;
+  SIDInstrument *instrument = (SIDInstrument *)bank->GetInstrument(i);
   GUIPoint position = GetAnchor();
 
   position._y += 1;
-  staticField_.emplace_back(position, instr->GetName().c_str());
+  // work around because I can't figure out why the mem returned by c_str() is
+  // being overwritten somehow after first redraw
+  const char *s = instrument->GetName().c_str();
+  strcpy(sidName_, s);
+  staticField_.emplace_back(position, sidName_);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._y += 2;
@@ -565,7 +569,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (!player->IsRunning()) {
           // First check if the samplelib exists
           bool samplelibExists =
-              PicoFileSystem::GetInstance()->exists(SAMPLE_LIB);
+              PicoFileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
           if (!samplelibExists) {
             MessageBox *mb =
@@ -738,7 +742,8 @@ void InstrumentView::DrawView() {
 
   char title[20];
   SetColor(CD_NORMAL);
-  sprintf(title, "Instrument %2.2X", viewData_->currentInstrumentID_);
+  npf_snprintf(title, sizeof(title), "Instrument %2.2X",
+               viewData_->currentInstrumentID_);
   DrawString(pos._x, pos._y, title, props);
 
   // Draw fields
@@ -768,9 +773,12 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     // confirm user wants to change instrument type &lose changes
     Player *player = Player::GetInstance();
     if (!player->IsRunning()) {
-      MessageBox *mb = new MessageBox(
-          *this, "Change Instrument & lose changes?", MBBF_YES | MBBF_NO);
+      MessageBox *mb = new MessageBox(*this, "Change Instrument &",
+                                      "lose settings?", MBBF_YES | MBBF_NO);
       DoModal(mb, ChangeInstrumentTypeCallback);
+    } else {
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
     }
   }
   }

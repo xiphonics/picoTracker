@@ -5,6 +5,10 @@
 #include "picoTrackerGUIWindowImp.h"
 #include "usb_utils.h"
 
+#ifdef PICO_RP2350
+#include "power_button.h"
+#endif
+
 bool picoTrackerEventManager::finished_ = false;
 bool picoTrackerEventManager::redrawing_ = false;
 uint16_t picoTrackerEventManager::buttonMask_ = 0;
@@ -32,6 +36,12 @@ bool timerHandler(repeating_timer_t *rt) {
   if (gTime_ % 1000 == 0) {
     queue->push(picoTrackerEvent(PICO_CLOCK));
   }
+
+#ifdef PICO_RP2350
+  // handle receiving power button press
+  handlePowerButton();
+#endif
+
   return true;
 }
 
@@ -76,7 +86,7 @@ int picoTrackerEventManager::MainLoop() {
     }
 #ifdef PICOSTATS
     if (loops == 100000) {
-      printf("Usage %.1f% CPU\n", ((float)events / loops) * 100);
+      Trace::Debug("Usage %.1f% CPU\n", ((float)events / loops) * 100);
       events = 0;
       loops = 0;
       //      measure_freqs();

@@ -1,0 +1,7 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SdCard/SdioCard.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SdCard/SdioCard.h">
+<area shape="rect" id="Node000001" title="Classes for SDIO cards." alt="" coords="5,5,145,64"/>
+<area shape="rect" id="Node000002" href="$_sd_card_8h.html" title="Top level include for SPI and SDIO cards." alt="" coords="5,112,145,171"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="78,80,78,112,72,112,72,80"/>
+<area shape="rect" id="Node000003" href="$_sd_fat_8h.html" title="main SdFs include file." alt="" coords="5,219,145,277"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="78,186,78,218,72,218,72,186"/>
+</map>

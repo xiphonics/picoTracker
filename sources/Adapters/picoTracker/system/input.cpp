@@ -1,4 +1,5 @@
 #include "input.h"
+#include "Adapters/picoTracker/platform/gpio.h"
 #include <stdio.h>
 
 uint16_t scanKeys() {
@@ -29,5 +30,5 @@ uint16_t scanKeys() {
     return mask;
   }
 #endif
-  return (~gpio_get_all() & 0x0001FF00) >> 8;
+  return (~gpio_get_all64() & ((int64_t)0x1FF << INPUT_LEFT)) >> INPUT_LEFT;
 }

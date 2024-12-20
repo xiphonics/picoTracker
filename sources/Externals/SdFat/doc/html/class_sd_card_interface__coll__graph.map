@@ -1,0 +1,5 @@
+<map id="SdCardInterface" name="SdCardInterface">
+<area shape="rect" id="Node000001" title="Abstract interface for an SD card." alt="" coords="27,80,140,107"/>
+<area shape="rect" id="Node000002" href="$class_fs_block_device_interface.html" title="FsBlockDeviceInterface class." alt="" coords="5,5,162,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="86,48,86,80,81,80,81,48"/>
+</map>

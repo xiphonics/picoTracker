@@ -1,0 +1,5 @@
+<map id="FatVolume" name="FatVolume">
+<area shape="rect" id="Node000001" title="Integration class for the FatLib library." alt="" coords="7,80,92,107"/>
+<area shape="rect" id="Node000002" href="$class_fat_partition.html" title="Access FAT16 and FAT32 partitions on raw file devices." alt="" coords="5,5,94,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="52,48,52,80,47,80,47,48"/>
+</map>

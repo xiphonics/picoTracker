@@ -1,0 +1,9 @@
+<map id="ibufstream" name="ibufstream">
+<area shape="rect" id="Node000001" title="parse a char string" alt="" coords="5,229,87,256"/>
+<area shape="rect" id="Node000002" href="$classistream.html" title="Input Stream." alt="" coords="14,155,78,181"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="49,197,49,229,43,229,43,197"/>
+<area shape="rect" id="Node000003" href="$classios.html" title="Error and state information for all streams." alt="" coords="27,80,65,107"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="49,122,49,154,43,154,43,122"/>
+<area shape="rect" id="Node000004" href="$classios__base.html" title="Base class for all streams." alt="" coords="9,5,83,32"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="49,48,49,80,43,80,43,48"/>
+</map>

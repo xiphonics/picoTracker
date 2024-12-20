@@ -1,5 +1,5 @@
 add_library(system_console
-  Logger.h Logger.cpp
+  nanoprintf.h
   Trace.h Trace.cpp
   n_assert.h n_assert.cpp
 )

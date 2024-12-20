@@ -7,7 +7,9 @@
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
+#include <Application/AppWindow.h>
 #include <etl/string.h>
+#include <nanoprintf.h>
 #include <stdlib.h>
 
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
@@ -1067,10 +1069,10 @@ void PhraseView::DrawView() {
 
   // Draw title
 
-  char title[20];
+  char title[SCREEN_WIDTH + 1];
 
   SetColor(CD_NORMAL);
-  sprintf(title, "Phrase %2.2x", viewData_->currentPhrase_);
+  npf_snprintf(title, sizeof(title), "Phrase %2.2x", viewData_->currentPhrase_);
   DrawString(pos._x, pos._y, title, props);
 
   // Compute song grid location
@@ -1129,7 +1131,7 @@ void PhraseView::DrawView() {
       hex2char(d, buffer + 1);
       DrawString(pos._x, pos._y, buffer, props);
       if (j == row_) {
-        sprintf(buffer, "I%2.2x: ", d);
+        npf_snprintf(buffer, sizeof(buffer), "I%2.2x: ", d);
         etl::string<32> instrLine = buffer;
         setTextProps(props, 1, j, true);
         GUIPoint location = GetTitlePosition();

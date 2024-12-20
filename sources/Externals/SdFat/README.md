@@ -1,20 +1,42 @@
-### Warning: This is SdFat Version 2.
+### Warning: This version has major internal changes.
 
-Earlier releases of Version 1 are here:
+File copy constructors and file assignment operators have been made private by
+default in 2.2.3 to prevent call by value and multiple copies of file instances.
 
-https://github.com/greiman/SdFat/releases
+SdFatConfig.h has options to make file constructors and assignment operators
+public.
 
-UTF-8 encoded filenames are supported in v2.1.0 or later.
+There are a huge number of changes in 2.2.1 since I decided to use clang-format
+to force Google style formatting.
 
-Try the UnicodeFilenames example.  Here is output from ls:
-<pre>
-Type any character to begin
-ls:
-         0 😀/
-          20 россиянин
-          17 très élégant
-           9 狗.txt
-</pre>
+I did this to avoid warnings from the static analysis programs Cppcheck and
+cpplint.
+
+clang-format is aggressive so it may actually cause code to fail.  For example
+clang-format rearranges the order of includes according to the selected style.
+
+Please post an issue if you find broken code. I have done a lot of testing but
+there are way too many Arduino type boards and packages to cover everything.
+
+I chose Google format since it is close to how I edit C++ and it works well
+with both Cppcheck and cpplint.
+
+There are a number of bug fixes and several new features.
+
+The main new features are in RingBuf to improve use in ISRs and in the SPI
+library driver to allow calls to DMA drivers of the form
+SPI.transfer(txBuf, rxBuf, count).
+
+The release version of SdFat Version 2 is here:
+
+https://github.com/greiman/SdFat
+
+This library is in development, features may change and
+it may have bugs. I am posting this version to get comments and
+help finding bugs/compatibility problems.
+
+You can help by posting issues for problems you find.  I am doing a great deal
+of testing but actual applications make the best test cases.
 
 SdFat Version 2 supports FAT16/FAT32 and exFAT SD cards. It is mostly
 backward compatible with SdFat Version 1 for FAT16/FAT32 cards.
@@ -29,7 +51,7 @@ If the SD card is the only SPI device, use dedicated SPI mode. This can
 greatly improve performance. See the bench example.
 
 Here is write performance for an old, 2011, card on a Due board.
-```
+<pre>
 Shared SPI:
 write speed and latency
 speed,max,min,avg
@@ -41,7 +63,7 @@ write speed and latency
 speed,max,min,avg
 KB/Sec,usec,usec,usec
 3965.11,16733,110,127
-```
+</pre>
 The default version of SdFatConfig.h enables support for dedicated SPI and
 optimized access to contiguous files.  This makes SdFat Version 2 slightly
 larger than Version 1.  If these features are disabled, Version 2 is smaller
@@ -55,13 +77,13 @@ can use these basic classes in applications.
 Support for exFAT requires a substantial amount of flash.  Here are sizes on
 an UNO for a simple program that opens a file, prints one line, and closes
 the file.
-```
+<pre>
 FAT16/FAT32 only: 9780 bytes flash, 875 bytes SRAM.
 
 exFAT only: 13830 bytes flash, 938 bytes SRAM.
 
 FAT16/FAT32/exFAT: 19326 bytes flash, 928 bytes SRAM.
-```
+</pre>
 The section below of SdFatConfig.h has been edited to uses FAT16/FAT32 for
 small AVR boards and FAT16/FAT32/exFAT for all other boards.
 ```

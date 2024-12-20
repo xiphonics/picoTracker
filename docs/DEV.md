@@ -2,7 +2,21 @@
 If you'd like to make changes and develop for the picoTracker, here are guidelines about how to do so.
 
 picoTracker is based on the Raspberry Pi Pico and it's built around the [C SDK](https://www.raspberrypi.com/documentation/pico-sdk/) of the platform.
+
 The only requirement is to install the toolchain as explained in [Getting started](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) document, this will depend on each platform. It's essentially: Basic build tools (build-essentials in Debian based distros), cmake and arm cross compiler.
+
+## Coding style
+
+The coding style is based on the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and is enforced with clang-format run on CI so please try to run it locally before submitting a pull request.
+
+### Printf, sprintf and friends
+
+The printf family of functions are not to be used as they have significant issues on embedded systems with limited ram, especially in the form of a large buffer that is allocated on the stack. Instead please use the [nanoprintf](https://github.com/martinets/nanoprintf) library functions found in `nanoprintf.h`.
+
+For debug logging, please do *not* use even nanoprintf functions directly and instead use the `Trace` class.
+
+
+## Getting started
 
 ## Building optimized version
 Assuming a unix style operating system (Linux, OSX). Below example assumes 8 thread processor on your build machine, adjust ```-j``` flag on the ```make``` command to match your platform.

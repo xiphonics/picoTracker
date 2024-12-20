@@ -2,6 +2,7 @@ add_library(platform_system
   picoTrackerSystem.h picoTrackerSystem.cpp
   picoTrackerEventQueue.h picoTrackerEventQueue.cpp
   input.h input.cpp
+  critical_error_message.h critical_error_message.c
 )
 
 target_link_libraries(platform_system INTERFACE system_system

@@ -1,0 +1,51 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SdFat.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SdFat.h">
+<area shape="rect" id="Node000001" title="main SdFs include file." alt="" coords="320,5,460,64"/>
+<area shape="rect" id="Node000002" href="$_fs_lib_8h.html" title="FsLib include file." alt="" coords="101,112,202,139"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="321,64,200,109,198,104,319,59"/>
+<area shape="rect" id="Node000005" href="$_sd_card_8h.html" title="Top level include for SPI and SDIO cards." alt="" coords="329,112,451,139"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="393,64,393,96,387,96,387,64"/>
+<area shape="rect" id="Node000009" href="$_sys_call_8h.html" title="SysCall class." alt="" coords="422,411,566,437"/>
+<area shape="poly" id="edge30_Node000001_Node000009" title=" " alt="" coords="461,44,575,65,701,97,758,118,804,141,835,168,844,183,847,198,847,276,846,325,838,345,821,365,804,376,780,386,720,401,650,412,582,419,581,414,649,407,719,396,779,381,801,371,818,361,834,342,841,324,842,276,842,199,839,185,831,172,801,146,756,123,699,102,573,70,460,49"/>
+<area shape="rect" id="Node000003" href="$_fs_file_8h.html" title="FsBaseFile include file." alt="" coords="45,187,114,213"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="141,141,104,177,101,174,137,137"/>
+<area shape="rect" id="Node000004" href="$_fs_volume_8h.html" title="FsVolume include file." alt="" coords="34,261,125,288"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="152,140,144,174,128,215,103,251,99,248,124,212,139,173,147,138"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="82,214,82,246,77,246,77,214"/>
+<area shape="rect" id="Node000006" href="$_sd_spi_card_8h.html" title="Classes for SPI access to SD/SDHC cards." alt="" coords="400,187,495,213"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="402,138,430,173,426,176,398,141"/>
+<area shape="rect" id="Node000019" href="$_sdio_card_8h.html" title="Classes for SDIO cards." alt="" coords="291,187,377,213"/>
+<area shape="poly" id="edge27_Node000005_Node000019" title=" " alt="" coords="382,141,355,176,351,173,378,138"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="243,485,310,512"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="429,216,365,264,332,298,304,337,291,371,283,407,278,470,273,469,278,406,286,369,300,335,328,294,362,260,425,212"/>
+<area shape="rect" id="Node000008" href="$_sd_spi_driver_8h.html" title="SpiDriver classes." alt="" coords="535,261,701,288"/>
+<area shape="poly" id="edge8_Node000006_Node000008" title=" " alt="" coords="478,211,575,252,573,257,476,216"/>
+<area shape="poly" id="edge18_Node000006_Node000009" title=" " alt="" coords="453,213,491,395,486,396,447,214"/>
+<area shape="rect" id="Node000016" href="$_sd_card_info_8h.html" title="Definitions for SD cards." alt="" coords="314,336,410,363"/>
+<area shape="poly" id="edge19_Node000006_Node000016" title=" " alt="" coords="442,215,379,324,374,321,438,212"/>
+<area shape="rect" id="Node000017" href="$_sd_card_interface_8h.html" title="Abstract interface for an SD card." alt="" coords="149,261,274,288"/>
+<area shape="poly" id="edge22_Node000006_Node000017" title=" " alt="" coords="407,216,268,259,266,254,405,211"/>
+<area shape="poly" id="edge9_Node000008_Node000009" title=" " alt="" coords="609,290,516,400,512,397,605,287"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="586,336,639,363"/>
+<area shape="poly" id="edge15_Node000008_Node000013" title=" " alt="" coords="620,289,617,321,612,320,614,288"/>
+<area shape="rect" id="Node000014" href="$_sd_spi_arduino_driver_8h.html" title="SpiDriver classes for Arduino compatible systems." alt="" coords="664,336,807,363"/>
+<area shape="poly" id="edge16_Node000008_Node000014" title=" " alt="" coords="640,286,704,325,701,330,637,291"/>
+<area shape="poly" id="edge10_Node000009_Node000007" title=" " alt="" coords="457,440,326,484,324,479,455,435"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="346,560,410,587"/>
+<area shape="poly" id="edge11_Node000009_Node000010" title=" " alt="" coords="479,440,455,461,431,487,410,517,393,547,388,545,405,515,427,484,452,457,476,436"/>
+<area shape="rect" id="Node000011" href="$_sd_fat_config_8h.html" title="configuration definitions" alt="" coords="440,485,556,512"/>
+<area shape="poly" id="edge12_Node000009_Node000011" title=" " alt="" coords="497,438,499,470,494,470,492,438"/>
+<area shape="poly" id="edge13_Node000011_Node000010" title=" " alt="" coords="478,515,413,554,411,549,476,510"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="460,560,536,587"/>
+<area shape="poly" id="edge14_Node000011_Node000012" title=" " alt="" coords="501,513,501,544,495,544,495,513"/>
+<area shape="rect" id="Node000015" href="$_sd_spi_lib_driver_8h.html" title="Class using only simple SPI library functions." alt="" coords="677,411,794,437"/>
+<area shape="poly" id="edge17_Node000014_Node000015" title=" " alt="" coords="738,363,738,395,733,395,733,363"/>
+<area shape="poly" id="edge21_Node000016_Node000009" title=" " alt="" coords="386,361,459,401,457,405,384,366"/>
+<area shape="poly" id="edge20_Node000016_Node000010" title=" " alt="" coords="366,363,379,545,373,545,360,363"/>
+<area shape="poly" id="edge26_Node000017_Node000016" title=" " alt="" coords="239,286,323,326,321,331,236,291"/>
+<area shape="rect" id="Node000018" href="$_fs_block_device_interface_8h.html" title="FsBlockDeviceInterface include file." alt="" coords="5,411,239,437"/>
+<area shape="poly" id="edge23_Node000017_Node000018" title=" " alt="" coords="206,290,140,399,135,396,201,287"/>
+<area shape="poly" id="edge24_Node000018_Node000007" title=" " alt="" coords="150,435,237,476,235,481,148,440"/>
+<area shape="poly" id="edge25_Node000018_Node000010" title=" " alt="" coords="137,436,178,471,233,510,283,535,332,554,330,559,281,540,230,514,175,476,133,440"/>
+<area shape="poly" id="edge28_Node000019_Node000009" title=" " alt="" coords="345,212,478,396,474,400,341,215"/>
+<area shape="poly" id="edge29_Node000019_Node000017" title=" " alt="" coords="314,216,247,255,245,251,311,212"/>
+</map>

@@ -1,0 +1,21 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/iostream/bufstream.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/iostream/bufstream.h">
+<area shape="rect" id="Node000001" title="ibufstream and obufstream classes" alt="" coords="12,5,159,64"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,112,70,139"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="72,66,54,100,49,97,68,63"/>
+<area shape="rect" id="Node000003" href="$iostream_8h.html" title="iostream class" alt="" coords="94,112,176,139"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="104,63,123,97,118,100,99,66"/>
+<area shape="rect" id="Node000004" href="$istream_8h.html" title="istream class" alt="" coords="47,187,122,213"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="128,141,104,176,99,173,124,138"/>
+<area shape="rect" id="Node000009" href="$ostream_8h.html" title="ostream class" alt="" coords="146,187,225,213"/>
+<area shape="poly" id="edge9_Node000003_Node000009" title=" " alt="" coords="146,138,170,173,166,176,141,141"/>
+<area shape="rect" id="Node000005" href="$ios_8h.html" title="ios_base and ios classes" alt="" coords="110,261,160,288"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="95,212,120,247,115,250,91,215"/>
+<area shape="rect" id="Node000006" href="$_fs_lib_8h.html" title="FsLib include file." alt="" coords="79,336,191,363"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="138,289,138,320,132,320,132,289"/>
+<area shape="rect" id="Node000007" href="$_fs_file_8h.html" title="FsBaseFile include file." alt="" coords="65,411,133,437"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="131,364,114,398,109,395,126,362"/>
+<area shape="rect" id="Node000008" href="$_fs_volume_8h.html" title="FsVolume include file." alt="" coords="89,485,181,512"/>
+<area shape="poly" id="edge8_Node000006_Node000008" title=" " alt="" coords="140,363,148,410,148,442,144,470,139,470,143,441,143,411,135,363"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="107,437,124,470,119,472,103,439"/>
+<area shape="poly" id="edge10_Node000009_Node000005" title=" " alt="" coords="179,215,154,250,150,247,174,212"/>
+</map>

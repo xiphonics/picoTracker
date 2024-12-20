@@ -1,0 +1,5 @@
+<map id="SoftSpiDriver&lt; MisoPin, MosiPin, SckPin &gt;" name="SoftSpiDriver&lt; MisoPin, MosiPin, SckPin &gt;">
+<area shape="rect" id="Node000001" title="Class for external soft SPI." alt="" coords="5,80,164,123"/>
+<area shape="rect" id="Node000002" href="$class_sd_spi_soft_driver.html" title="Base class for external soft SPI." alt="" coords="29,5,140,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,48,87,80,82,80,82,48"/>
+</map>

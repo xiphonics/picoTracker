@@ -91,7 +91,7 @@ SIDInstrument::~SIDInstrument(){};
 bool SIDInstrument::Init() {
   tableState_.Reset();
 
-  printf("SID instrument chip is %i and osc is %i\n", chip_, osc_);
+  Trace::Debug("SID instrument chip is %i and osc is %i\n", chip_, osc_);
   switch (chip_) {
   case 1:
     sid_ = &sid1_;
@@ -146,7 +146,7 @@ void SIDInstrument::OnStart() {
 };
 
 bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
-  printf("Retrigger: %i\n", retrigger);
+  Trace::Debug("Retrigger: %i\n", retrigger);
   gate_ = retrigger;
   // Select master render instrument
   // At each row of the sequencer we call start for each instrument in
@@ -158,24 +158,24 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   case SID1:
     if (SID1RenderMaster) {
       SID1RenderMaster->SetRender(false);
-      printf("Previous renderer for SID1 was %s\n",
-             SID1RenderMaster->GetName().c_str());
+      Trace::Debug("Previous renderer for SID1 was %s\n",
+                   SID1RenderMaster->GetName().c_str());
     }
     SID1RenderMaster = this;
     SID1RenderMaster->SetRender(true);
-    printf("New renderer for SID1 is %s\n",
-           SID1RenderMaster->GetName().c_str());
+    Trace::Debug("New renderer for SID1 is %s\n",
+                 SID1RenderMaster->GetName().c_str());
     break;
   case SID2:
     if (SID2RenderMaster) {
       SID2RenderMaster->SetRender(false);
-      printf("Previous renderer for SID2 was %s\n",
-             SID2RenderMaster->GetName().c_str());
+      Trace::Debug("Previous renderer for SID2 was %s\n",
+                   SID2RenderMaster->GetName().c_str());
     }
     SID2RenderMaster = this;
     SID2RenderMaster->SetRender(true);
-    printf("New renderer for SID2 is %s\n",
-           SID2RenderMaster->GetName().c_str());
+    Trace::Debug("New renderer for SID2 is %s\n",
+                 SID2RenderMaster->GetName().c_str());
     break;
   }
 
@@ -218,7 +218,7 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   playing_ = true;
 
   for (int i = 0; i <= 24; i++) {
-    printf("Register %i value: -  0x%2.2X\n", i, sid_->Register[i]);
+    Trace::Debug("Register %i value: -  0x%2.2X\n", i, sid_->Register[i]);
   }
   return true;
 };

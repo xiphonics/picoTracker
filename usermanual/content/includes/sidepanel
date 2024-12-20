@@ -1,0 +1,62 @@
+<aside>
+    <h1> picoTracker Manual</h1>
+    <ul class="sideNav">
+        <li>
+            <h2>General</h2>
+        </li>
+        <a href="introduction.html">
+            <li>Introduction</li>
+        </a>
+        <li>
+            <h2>Interface</h2>
+        </li>
+        <a href="getting-started.html">
+            <li>Getting Started</li>
+        </a>
+        <a href="device.html">
+            <li>Device settings</li>
+        </a>
+        <a href="projects.html">
+            <li>Projects</li>
+        </a>
+        <a href="songs.html">
+            <li>Songs</li>
+        </a>
+        <a href="chains.html">
+            <li>Chains</li>
+        </a>
+        <a href="phrases.html">
+            <li>Phrases</li>
+        </a>
+        <a href="instruments.html">
+            <li>Instruments</li>
+        </a>
+        <a href="grooves.html">
+            <li>Grooves</li>
+        </a>
+        <a href="tables.html">
+            <li>Tables</li>
+        </a>
+        <a href="renders.html">
+            <li>Renders and stems</li>
+        </a>
+        <a href="mixer.html">
+            <li>The Mixer</li>
+        </a>
+        <li>
+            <h2>Reference</h2>
+        </li>
+        <a href="keypadcombos.html">
+            <li>Controls & Moves</li>
+        </a>
+        <a href="commands.html">
+            <li>Commands List</li>
+        </a>
+        <a href="scales.html">
+            <li>Scales List</li>
+        </a>
+        <a href="midi.html">
+            <li>MIDI Implementation</li>
+        </a>
+    </ul>
+</aside>

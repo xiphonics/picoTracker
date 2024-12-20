@@ -1,0 +1,17 @@
+<map id="istream" name="istream">
+<area shape="rect" id="Node000001" title="Input Stream." alt="" coords="131,155,195,181"/>
+<area shape="rect" id="Node000004" href="$classibufstream.html" title="parse a char string" alt="" coords="23,229,105,256"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="135,193,83,231,79,227,132,189"/>
+<area shape="rect" id="Node000006" href="$classifstream.html" title="file input stream." alt="" coords="129,229,196,256"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="165,197,165,229,160,229,160,197"/>
+<area shape="rect" id="Node000007" href="$classiostream.html" title="Input/Output stream." alt="" coords="220,229,292,256"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="193,189,242,227,238,231,189,193"/>
+<area shape="rect" id="Node000002" href="$classios.html" title="Error and state information for all streams." alt="" coords="143,80,182,107"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="165,122,165,154,160,154,160,122"/>
+<area shape="rect" id="Node000003" href="$classios__base.html" title="Base class for all streams." alt="" coords="126,5,199,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="165,48,165,80,160,80,160,48"/>
+<area shape="rect" id="Node000005" href="$class_arduino_in_stream.html" title="Input stream for Arduino Stream objects." alt="" coords="5,304,123,331"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="67,272,67,304,61,304,61,272"/>
+<area shape="rect" id="Node000008" href="$classfstream.html" title="file input/output stream." alt="" coords="224,304,288,331"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="259,272,259,304,253,304,253,272"/>
+</map>

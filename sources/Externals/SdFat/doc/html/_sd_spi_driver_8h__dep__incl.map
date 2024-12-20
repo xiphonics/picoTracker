@@ -1,0 +1,9 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SpiDriver/SdSpiDriver.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/SpiDriver/SdSpiDriver.h">
+<area shape="rect" id="Node000001" title="SpiDriver classes." alt="" coords="5,5,164,64"/>
+<area shape="rect" id="Node000002" href="$_sd_spi_card_8h.html" title="Classes for SPI access to SD/SDHC cards." alt="" coords="12,112,157,171"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,80,87,112,82,112,82,80"/>
+<area shape="rect" id="Node000003" href="$_sd_card_8h.html" title="Top level include for SPI and SDIO cards." alt="" coords="15,219,154,277"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="87,186,87,218,82,218,82,186"/>
+<area shape="rect" id="Node000004" href="$_sd_fat_8h.html" title="main SdFs include file." alt="" coords="15,325,154,384"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="87,293,87,325,82,325,82,293"/>
+</map>

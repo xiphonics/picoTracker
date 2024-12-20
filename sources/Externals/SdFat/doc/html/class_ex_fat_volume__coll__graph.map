@@ -1,0 +1,5 @@
+<map id="ExFatVolume" name="ExFatVolume">
+<area shape="rect" id="Node000001" title="exFAT volume." alt="" coords="7,80,108,107"/>
+<area shape="rect" id="Node000002" href="$class_ex_fat_partition.html" title="Access exFat partitions on raw file devices." alt="" coords="5,5,110,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="60,48,60,80,55,80,55,48"/>
+</map>

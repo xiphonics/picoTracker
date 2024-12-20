@@ -51,6 +51,8 @@
 #define MIDI_IN_PIN 1
 #endif
 
+#define DEBUG_UART uart1
+
 // SD Card
 /* SPI (SPI1) */
 // #define SD_SPI spi0
@@ -115,9 +117,10 @@
 #define AUDIO_DMA_IRQ 0
 #if PICO_RP2350
 // TODO: we'll need more stuff to support CODEC
+#define AUDIO_MCLK_SM 1
 #define CODEC_RESET 15
-#define AUDIO_SDATA 16
-#define CODEC_DIN 17
+#define AUDIO_SDATA 17
+#define CODEC_DIN 16
 #define AUDIO_BCLK 18 // BCLK and LRCLK HAVE to be consecutive
 #define AUDIO_LRCLK 19
 #define CODEC_MCLK 20

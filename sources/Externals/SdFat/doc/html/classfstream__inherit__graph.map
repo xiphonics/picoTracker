@@ -1,0 +1,19 @@
+<map id="fstream" name="fstream">
+<area shape="rect" id="Node000001" title="file input/output stream." alt="" coords="96,304,161,331"/>
+<area shape="rect" id="Node000002" href="$classiostream.html" title="Input/Output stream." alt="" coords="153,229,224,256"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="171,270,141,305,137,302,166,266"/>
+<area shape="rect" id="Node000003" href="$classistream.html" title="Input Stream." alt="" coords="156,155,221,181"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="191,197,191,229,186,229,186,197"/>
+<area shape="rect" id="Node000004" href="$classios.html" title="Error and state information for all streams." alt="" coords="169,80,208,107"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="191,122,191,154,186,154,186,122"/>
+<area shape="rect" id="Node000006" href="$classostream.html" title="Output Stream." alt="" coords="245,155,313,181"/>
+<area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="218,114,265,152,262,156,214,119"/>
+<area shape="rect" id="Node000007" href="$class_stream_base_class.html" title="base type for FAT and exFAT streams" alt="" coords="5,155,132,181"/>
+<area shape="poly" id="edge9_Node000007_Node000004" title=" " alt="" coords="157,117,91,156,88,152,154,112"/>
+<area shape="rect" id="Node000005" href="$classios__base.html" title="Base class for all streams." alt="" coords="152,5,225,32"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="191,48,191,80,186,80,186,48"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="253,193,206,231,202,227,250,189"/>
+<area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="82,195,126,303,121,305,77,197"/>
+<area shape="rect" id="Node000008" href="$class_fat_file.html" title="Basic file class." alt="" coords="11,80,126,107"/>
+<area shape="poly" id="edge8_Node000007_Node000008" title=" " alt="" coords="71,122,71,154,66,154,66,122"/>
+</map>

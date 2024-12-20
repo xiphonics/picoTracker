@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['dat0pin_0',['dat0Pin',['../class_sdio_config.html#a03a825ee0b3ddf214b5878a4c084e7f8',1,'SdioConfig']]],
+  ['data_5fres_5faccepted_1',['DATA_RES_ACCEPTED',['../_sd_card_info_8h.html#a4d3c106b58ae6d3073be9e023dad309e',1,'SdCardInfo.h']]],
+  ['data_5fres_5fmask_2',['DATA_RES_MASK',['../_sd_card_info_8h.html#ae69df74cf48dd991c1aaf4e87c5f8a84',1,'SdCardInfo.h']]],
+  ['data_5fstart_5fsector_3',['DATA_START_SECTOR',['../_sd_card_info_8h.html#ab17e9c0b080e70ef1e0bd00e0fc4e904',1,'SdCardInfo.h']]],
+  ['dataaftererase_4',['dataAfterErase',['../structscr__t.html#a2b5b4242eafe186b5e40babfdd923057',1,'scr_t']]],
+  ['datalength_5',['dataLength',['../class_ex_fat_file.html#abc1acc08645049680144c8c4bf2fe8ba',1,'ExFatFile::dataLength()'],['../class_fs_base_file.html#ab3a8ce76dfe1cb0391bef65992715f3d',1,'FsBaseFile::dataLength()']]],
+  ['datastartsector_6',['dataStartSector',['../class_fat_partition.html#a7e89ec91780f7dfa060b261c605bf2e5',1,'FatPartition::dataStartSector()'],['../class_fs_volume.html#a79cebeb23cb3cdaa06550475fe24272a',1,'FsVolume::dataStartSector()']]],
+  ['datetimecallback_7',['dateTimeCallback',['../class_sd_file.html#a2d78e6a8cedbf8ce545af68457b43bf1',1,'SdFile']]],
+  ['datetimecallbackcancel_8',['dateTimeCallbackCancel',['../class_sd_file.html#ad266770d0a779d1a528a3997aee5142d',1,'SdFile']]],
+  ['dbgfat_9',['dbgFat',['../class_fat_partition.html#a0af1e91a311180119b4a2c85d7e6e87e',1,'FatPartition']]],
+  ['deactivate_10',['deactivate',['../class_sd_spi_arduino_driver.html#ae88a255f533e3acb41d1221025a69b55',1,'SdSpiArduinoDriver::deactivate()'],['../class_sd_spi_base_class.html#ae3a5ede781e390263382fcf7765d665d',1,'SdSpiBaseClass::deactivate()'],['../class_sd_spi_soft_driver.html#a05315e4128ae7263d9e68119d6ae4308',1,'SdSpiSoftDriver::deactivate()']]],
+  ['dec_11',['dec',['../classios__base.html#a2826aed005e7c1f6858060cddae7971a',1,'ios_base::dec'],['../ios_8h.html#acefd615ed6ae0a0ca25153eafda6e086',1,'dec(ios_base &amp;str):&#160;ios.h']]],
+  ['dedicated_5fspi_12',['DEDICATED_SPI',['../_sd_spi_driver_8h.html#ad81ddcc2265c6b6a4c835fd739f0f534',1,'SdSpiDriver.h']]],
+  ['dedicatedspicard_13',['DedicatedSpiCard',['../class_dedicated_spi_card.html',1,'DedicatedSpiCard'],['../class_dedicated_spi_card.html#a94adc7b3db3baa0ce295d3b9f7ad6c25',1,'DedicatedSpiCard::DedicatedSpiCard()']]],
+  ['destructor_5fcloses_5ffile_14',['DESTRUCTOR_CLOSES_FILE',['../_sd_fat_config_8h.html#a9a2b1ca4d91cff876f48deeaacbc33da',1,'SdFatConfig.h']]],
+  ['directories_15',['Paths and Working Directories',['../index.html#SDPath',1,'']]],
+  ['direntriespercluster_16',['dirEntriesPerCluster',['../class_fat_partition.html#a00ea37a7dadc4578236e14e84dc7839e',1,'FatPartition']]],
+  ['direntry_17',['dirEntry',['../class_fat_file.html#a2f4e9ab3056125b07f15d14ca26d5346',1,'FatFile']]],
+  ['dirindex_18',['dirIndex',['../class_ex_fat_file.html#aea5b18625a06892a03a8d17c66b71717',1,'ExFatFile::dirIndex()'],['../class_fat_file.html#a7f0d6488685dc3be61720caca49fa116',1,'FatFile::dirIndex()'],['../class_fs_base_file.html#a41626a85a4665db2400ee6e251c66afd',1,'FsBaseFile::dirIndex()']]],
+  ['dirpos_5ft_19',['DirPos_t',['../struct_dir_pos__t.html',1,'']]],
+  ['dirsize_20',['dirSize',['../class_fat_file.html#ae2ed15f05c9ccbce355e7a8d3ce8382d',1,'FatFile']]],
+  ['dirty_21',['dirty',['../class_fs_cache.html#af50f564561a2db190280769d4641147b',1,'FsCache']]],
+  ['discard_22',['discard',['../structsds__t.html#adab497f1c2d86110001d1a76dc5bc8c1',1,'sds_t']]],
+  ['discardfule_23',['discardFule',['../structsds__t.html#a9b82ba7933f235b7295ffe4ed55e240f',1,'sds_t']]],
+  ['dmpfile_24',['dmpFile',['../class_fat_file.html#a4f01d27954ae49aeb6888ac7302f55d9',1,'FatFile']]]
+];

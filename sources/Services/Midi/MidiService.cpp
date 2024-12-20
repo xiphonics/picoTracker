@@ -102,7 +102,7 @@ void MidiService::Update(Observable &o, I_ObservableData *d) {
   case FourCC::VarMidiDevice: {
     auto activeDeviceConfig = v.GetInt();
     // note deviceID has 0 == OFF
-    printf("midi device var changed:%d", activeDeviceConfig);
+    Trace::Debug("midi device var changed:%d", activeDeviceConfig);
 
     stopDevice();
     updateActiveDevicesList(activeDeviceConfig);

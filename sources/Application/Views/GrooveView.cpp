@@ -3,6 +3,8 @@
 #include "Application/Model/Groove.h"
 #include "Application/Utils/char.h"
 #include "ViewData.h"
+#include <Application/AppWindow.h>
+#include <nanoprintf.h>
 
 GrooveView::GrooveView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
   position_ = 0;
@@ -143,11 +145,12 @@ void GrooveView::DrawView() {
 
   // Draw title
 
-  char title[40];
+  char title[SCREEN_WIDTH + 1];
 
   SetColor(CD_NORMAL);
 
-  sprintf(title, "Groove: %2.2x", viewData_->currentGroove_);
+  npf_snprintf(title, sizeof(title), "Groove: %2.2x",
+               viewData_->currentGroove_);
   DrawString(pos._x, pos._y, title, props);
 
   // Compute song grid location

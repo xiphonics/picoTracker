@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2024 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -22,8 +22,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#ifndef FreeStack_h
-#define FreeStack_h
+#pragma once
 /**
  * \file
  * \brief FreeStack() function.
@@ -34,23 +33,21 @@
 /** Indicate FillStack() and UnusedStack() are available. */
 #define HAS_UNUSED_STACK 1
 /** boundary between stack and heap. */
-extern char *__brkval;
+extern char* __brkval;
 /** End of bss section.*/
 extern char __bss_end;
 /** Amount of free stack space.
  * \return The number of free bytes.
  */
 inline int FreeStack() {
-  char* sp = reinterpret_cast<char*>(SP);
+  const char* sp = reinterpret_cast<char*>(SP);
   return __brkval ? sp - __brkval : sp - &__bss_end;
 }
 #elif defined(ARDUINO_ARCH_APOLLO3)
 #define HAS_UNUSED_STACK 0
 #elif defined(PLATFORM_ID)  // Particle board
 #include "Arduino.h"
-inline int FreeStack() {
-  return System.freeMemory();
-}
+inline int FreeStack() { return System.freeMemory(); }
 #elif defined(__IMXRT1062__)
 #define HAS_UNUSED_STACK 1
 extern uint8_t _ebss;
@@ -69,9 +66,7 @@ inline int FreeStack() {
 #ifndef FREE_STACK_CPP
 #warning FreeStack is not defined for this system.
 #endif  // FREE_STACK_CPP
-inline int FreeStack() {
-  return 0;
-}
+inline int FreeStack() { return 0; }
 #endif  // defined(__AVR__) || defined(DOXYGEN)
 #if defined(HAS_UNUSED_STACK) || defined(DOXYGEN)
 /** Fill stack with 0x55 pattern */
@@ -89,6 +84,5 @@ int UnusedStack();
 #else  // HAS_UNUSED_STACK
 #define HAS_UNUSED_STACK 0
 inline void FillStack() {}
-inline int UnusedStack() {return 0;}
+inline int UnusedStack() { return 0; }
 #endif  // defined(HAS_UNUSED_STACK)
-#endif  // FreeStack_h

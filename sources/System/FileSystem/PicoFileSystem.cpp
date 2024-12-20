@@ -36,7 +36,9 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
     return 0;
   }
   FsBaseFile cwd;
-  cwd.openCwd();
+  if (!cwd.openCwd()) {
+    return nullptr;
+  }
   PI_File *wFile = 0;
   if (cwd.open(name, rmode)) {
     wFile = new PI_File(cwd);
@@ -70,7 +72,7 @@ PicoFileType PicoFileSystem::getFileType(int index) {
   }
   FsBaseFile entry;
   entry.open(index);
-  auto isDir = entry.isDirectory();
+  auto isDir = entry.isDir();
   entry.close();
   return isDir ? PFT_DIR : PFT_FILE;
 }
@@ -220,7 +222,7 @@ int PI_File::Read(void *ptr, int size) { return file_.read(ptr, size); }
 void PI_File::Seek(long offset, int whence) {
   switch (whence) {
   case SEEK_SET:
-    file_.seek(offset);
+    file_.seekSet(offset);
     break;
   case SEEK_CUR:
     file_.seekCur(offset);
@@ -245,4 +247,4 @@ long PI_File::Tell() { return file_.curPosition(); }
 
 int PI_File::Error() { return file_.getError(); }
 
-void PI_File::Close() { file_.close(); }
+bool PI_File::Close() { return file_.close(); }

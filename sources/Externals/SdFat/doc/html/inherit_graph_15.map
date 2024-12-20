@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$class_fs_name.html" title="Handle UTF&#45;8 file names." alt="" coords="5,31,76,57"/>
+<area shape="rect" id="Node000001" href="$class_ex_name__t.html" title="Internal type for file name &#45; do not use in user apps." alt="" coords="124,5,206,32"/>
+<area shape="poly" id="edge44_Node000000_Node000001" title=" " alt="" coords="90,31,123,24,124,30,91,36"/>
+<area shape="rect" id="Node000002" href="$class_fat_lfn__t.html" title="Internal type for Long File Name &#45; do not use in user apps." alt="" coords="131,56,199,83"/>
+<area shape="poly" id="edge45_Node000000_Node000002" title=" " alt="" coords="91,51,131,60,130,65,90,57"/>
+</map>

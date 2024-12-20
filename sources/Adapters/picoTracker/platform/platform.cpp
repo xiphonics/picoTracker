@@ -8,7 +8,13 @@
 #include "hardware/uart.h"
 #include "hardware/vreg.h"
 #include "pico/stdlib.h"
+#include <System/Console/Trace.h>
+#include <System/Console/nanoprintf.h>
 #include <cstdio>
+
+#ifdef PICO_RP2350
+#include "power_button.h"
+#endif
 
 #define RP2040_RAM_BASE 0x20000000U
 
@@ -113,7 +119,7 @@ void platform_init() {
   // This example will use SPI0 at 0.5MHz.
   spi_init(DISPLAY_SPI, 500 * 1000);
   int baudrate = spi_set_baudrate(DISPLAY_SPI, 75000 * 1000);
-  printf("Display SPI Baudrate: %i\n", baudrate);
+  Trace::Log("PLATFORM", "SPI Baudrate: %i", baudrate);
 
   gpio_set_function(DISPLAY_SCK, GPIO_FUNC_SPI);
   gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
@@ -148,8 +154,6 @@ void platform_init() {
   // AUDIO //
   ///////////
 
-  //   gpio_pull_down(AUDIO_MCLK);
-
   //////////
   // MIDI //
   //////////
@@ -159,7 +163,7 @@ void platform_init() {
 
   // Set up our UART with the required speed.
   baudrate = uart_init(MIDI_UART, MIDI_BAUD_RATE);
-  printf("Init MIDI device with %i baud rate\n", baudrate);
+  Trace::Log("PLATFORM", "Init MIDI device with % i baud rate", baudrate);
 #endif
 
   ///////////
@@ -193,4 +197,13 @@ void platform_init() {
   gpio_init(INPUT_PLAY);
   gpio_set_dir(INPUT_PLAY, GPIO_IN);
   gpio_pull_up(INPUT_PLAY);
+
+// Power button only for RP2350
+#if PICO_RP2350
+  gpio_init(POWER_BTN);
+  gpio_set_dir(POWER_BTN, GPIO_IN);
+  gpio_pull_up(POWER_BTN);
+  gpio_set_irq_enabled_with_callback(POWER_BTN, GPIO_IRQ_EDGE_FALL, true,
+                                     powerbuttonirq);
+#endif
 }

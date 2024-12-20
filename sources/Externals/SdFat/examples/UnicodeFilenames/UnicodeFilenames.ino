@@ -18,19 +18,19 @@ const char* names[] = {u8"россиянин", u8"très élégant", u8"狗.txt",
 // SDCARD_SS_PIN is defined for the built-in SD on some boards.
 #ifndef SDCARD_SS_PIN
 const uint8_t SD_CS_PIN = SS;
-#else  // SDCARD_SS_PIN
+#else   // SDCARD_SS_PIN
 // Assume built-in SD is used.
 const uint8_t SD_CS_PIN = SDCARD_SS_PIN;
 #endif  // SDCARD_SS_PIN
 
 // Try to select the best SD card configuration.
-#if HAS_SDIO_CLASS
+#if defined(HAS_TEENSY_SDIO)
 #define SD_CONFIG SdioConfig(FIFO_SDIO)
 #elif ENABLE_DEDICATED_SPI
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SD_SCK_MHZ(16))
-#else  // HAS_SDIO_CLASS
+#else  // HAS_TEENSY_SDIO
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(16))
-#endif  // HAS_SDIO_CLASS
+#endif  // HAS_TEENSY_SDIO
 
 #if SD_FAT_TYPE == 0
 SdFat sd;
@@ -91,8 +91,7 @@ void setup() {
 #endif  // REMOVE_UTF8_FILES
   Serial.println("Done!");
 }
-void loop() {
-}
+void loop() {}
 #else  // USE_UTF8_LONG_NAMES
 #error USE_UTF8_LONG_NAMES must be non-zero in SdFat/src/SdFatCongfig.h
 #endif  // USE_UTF8_LONG_NAMES

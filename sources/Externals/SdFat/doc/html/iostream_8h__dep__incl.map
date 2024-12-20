@@ -1,0 +1,12 @@
+<map id="D:/Bill/ArduinoSdFat/libraries/SdFat/src/iostream/iostream.h" name="D:/Bill/ArduinoSdFat/libraries/SdFat/src/iostream/iostream.h">
+<area shape="rect" id="Node000001" title="iostream class" alt="" coords="113,5,253,64"/>
+<area shape="rect" id="Node000002" href="$bufstream_8h.html" title="ibufstream and obufstream classes" alt="" coords="37,112,185,171"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="157,79,133,113,128,110,152,76"/>
+<area shape="rect" id="Node000005" href="$fstream_8h.html" title="iostreams for files." alt="" coords="205,219,345,277"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="204,77,265,217,260,219,199,79"/>
+<area shape="rect" id="Node000003" href="$_arduino_stream_8h.html" title="ArduinoInStream and ArduinoOutStream classes." alt="" coords="5,219,182,277"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="106,186,101,219,96,218,101,186"/>
+<area shape="rect" id="Node000004" href="$sdios_8h.html" title="C++ IO Streams features." alt="" coords="115,325,254,384"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="130,288,161,323,157,327,126,291"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="242,291,211,327,207,323,238,288"/>
+</map>

@@ -1,0 +1,21 @@
+<map id="FatFile" name="FatFile">
+<area shape="rect" id="Node000001" title="Basic file class." alt="" coords="300,5,362,32"/>
+<area shape="rect" id="Node000002" href="$class_print_file.html" title=" " alt="" coords="5,88,166,115"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="286,37,125,90,123,85,285,32"/>
+<area shape="rect" id="Node000004" href="$class_stream_file.html" title=" " alt="" coords="190,80,330,123"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="312,46,280,82,276,78,308,42"/>
+<area shape="rect" id="Node000006" href="$class_stdio_stream.html" title="StdioStream implements a minimal stdio stream." alt="" coords="355,88,448,115"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="354,42,393,86,389,90,350,45"/>
+<area shape="rect" id="Node000007" href="$class_stream_base_class.html" title="base type for FAT and exFAT streams" alt="" coords="472,88,598,115"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="377,35,504,85,502,90,375,40"/>
+<area shape="rect" id="Node000003" href="$class_sd_file.html" title="File with Print." alt="" coords="56,171,115,197"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="88,130,88,171,83,171,83,130"/>
+<area shape="rect" id="Node000005" href="$class_file32.html" title="FAT16/FAT32 file with Arduino Stream." alt="" coords="232,171,288,197"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="263,139,263,170,258,170,258,139"/>
+<area shape="rect" id="Node000008" href="$classfstream.html" title="file input/output stream." alt="" coords="413,171,478,197"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="512,127,461,173,457,169,508,123"/>
+<area shape="rect" id="Node000009" href="$classifstream.html" title="file input stream." alt="" coords="501,171,569,197"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="538,130,538,171,532,171,532,130"/>
+<area shape="rect" id="Node000010" href="$classofstream.html" title="file output stream." alt="" coords="593,171,664,197"/>
+<area shape="poly" id="edge9_Node000007_Node000010" title=" " alt="" coords="563,123,616,168,612,173,559,127"/>
+</map>

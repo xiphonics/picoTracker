@@ -65,19 +65,19 @@ void View::drawMap() {
   char buffer[5];
   props.invert_ = false;
   // row1
-  sprintf(buffer, "D   ");
+  strcpy(buffer, "D   ");
   DrawString(pos._x, pos._y, buffer, props);
   pos._y++;
   // row2
-  sprintf(buffer, "P G ");
+  strcpy(buffer, "P G ");
   DrawString(pos._x, pos._y, buffer, props);
   pos._y++;
   // row3
-  sprintf(buffer, "SCPI");
+  strcpy(buffer, "SCPI");
   DrawString(pos._x, pos._y, buffer, props);
   pos._y++;
   // row4
-  sprintf(buffer, "  TT");
+  strcpy(buffer, "  TT");
   DrawString(pos._x, pos._y, buffer, props);
 
   // draw current screen on map

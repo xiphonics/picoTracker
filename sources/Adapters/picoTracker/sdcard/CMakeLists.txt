@@ -1,11 +1,9 @@
 add_library(platform_sdcard
-  sdcard.h
-  sdio.pio
-  sdio.h sdio.cpp
-  sd_card_sdio.cpp
+  Rp2040SdioConfig.h
+  PioSdioCard.h PioSdioCard.cpp
 )
 
-pico_generate_pio_header(platform_sdcard ${CMAKE_CURRENT_LIST_DIR}/sdio.pio)
+pico_generate_pio_header(platform_sdcard ${CMAKE_CURRENT_LIST_DIR}/PioSdioCard.pio)
 
 target_link_libraries(platform_sdcard PRIVATE hardware_pio
                                       PRIVATE hardware_dma

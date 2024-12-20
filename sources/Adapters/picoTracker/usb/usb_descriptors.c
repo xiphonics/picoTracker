@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  *
  */
+#include "pico/unique_id.h"
 #include "tusb.h"
 
 #define USB_VID 0xCafe
@@ -141,17 +142,21 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
   return desc_fs_configuration;
 #endif
 }
+
 //--------------------------------------------------------------------+
 // String Descriptors
 //--------------------------------------------------------------------+
 // array of pointer to string descriptors
 char const *string_desc_arr[] = {
     (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-    "Raspberry Pi",             // 1: Manufacturer
+    "xiphonics, inc",           // 1: Manufacturer
     "PicoTracker",              // 2: Product
     "123456",                   // 3: Serials, should use chip ID
     "TinyUSB CDC",              // 4: CDC Interface
 };
+
+char id_out[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
+
 static uint16_t _desc_str[32];
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long
@@ -159,6 +164,10 @@ static uint16_t _desc_str[32];
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
   (void)langid;
   uint8_t chr_count;
+
+  pico_get_unique_board_id_string(id_out, sizeof(id_out));
+  string_desc_arr[3] = id_out;
+
   if (index == 0) {
     memcpy(&_desc_str[1], string_desc_arr[0], 2);
     chr_count = 1;

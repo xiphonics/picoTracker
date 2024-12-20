@@ -1,0 +1,28 @@
+.program audio_codec_i2s_mclk
+; Output I2S master clock.
+;
+
+.wrap_target
+    set pins 1
+    set pins 0
+.wrap
+
+% c-sdk {
+/*
+ * Master Clock (MCLK)
+ * This outputs it at 1 MCLK per 2 PIO clocks, so PIO the divider needs to setup double the freq
+ * 
+ */
+static void audio_codec_i2s_mclk_program_init(PIO pio, uint8_t sm, uint8_t offset, uint8_t mclk_pin) {
+    pio_gpio_init(pio, mclk_pin);
+    pio_sm_config sm_config = audio_codec_i2s_mclk_program_get_default_config(offset);
+    sm_config_set_set_pins(&sm_config, mclk_pin, 1);
+
+    uint pin_mask = (1u << mclk_pin);
+    pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    pio_sm_set_pins_with_mask(pio, sm, 0, pin_mask);  // clear pin
+    
+    pio_sm_init(pio, sm, offset, &sm_config);
+}
+
+%}

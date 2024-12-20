@@ -11,6 +11,7 @@
 #include "System/System/System.h"
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
+#include <nanoprintf.h>
 
 #define MAX_COLOR_VALUE 0xFFFFFF
 
@@ -52,11 +53,13 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   v = config->FindVariable(FourCC::VarRemoteUI);
   intVarField_.emplace_back(position, *v, "Remote UI: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 2;
   v = config->FindVariable(FourCC::VarUIFont);
   intVarField_.emplace_back(position, *v, "Font: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarFGColor);
@@ -181,8 +184,8 @@ void DeviceView::DrawView() {
 
   // Draw title
   char projectString[SCREEN_WIDTH];
-  sprintf(projectString, "Device - Build %s%s_%s", PROJECT_NUMBER,
-          PROJECT_RELEASE, BUILD_COUNT);
+  npf_snprintf(projectString, sizeof(projectString), "Device - Build %s%s_%s",
+               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
 
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
@@ -227,7 +230,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   case FourCC::VarInfoColor:
   case FourCC::VarWarnColor:
   case FourCC::VarErrorColor:
-    printf("Color updated!");
+    Trace::Log("DEVICE", "Color updated!");
     ((AppWindow &)w_).UpdateColorsFromConfig();
     ((AppWindow &)w_).Clear(true);
     w_.Update();

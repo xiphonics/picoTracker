@@ -1,39 +1,31 @@
 #include "Trace.h"
-#include "System/System/System.h"
-#include <stdarg.h>
-#include <stdio.h>
+#include "Adapters/picoTracker/platform/platform.h"
+#include "hardware/uart.h"
 #include <string.h>
 
-Trace::Trace() : logger_(0) {}
+// be explicit about the nanoprintf configuration
+#define NANOPRINTF_IMPLEMENTATION
+#define NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS 1
+#define NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS 1
+#define NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS 1
+#define NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS 0
+#define NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS 1
+#include "nanoprintf.h"
 
-//------------------------------------------------------------------------------
+void pt_uart_putc(int c, void *context) { putchar(c); }
 
-void Trace::AddLine(const char *line) {
-  if (logger_) {
-    logger_->AddLine(line);
-  } else {
-    printf("Trying to log %s before logger is installed", line);
-  }
-}
-
-//------------------------------------------------------------------------------
-
-Trace::Logger *Trace::SetLogger(Trace::Logger &logger) {
-  Trace::Logger *tmp = logger_;
-  logger_ = &logger;
-  return tmp;
-}
+Trace::Trace() {}
 
 //------------------------------------------------------------------------------
 
 void Trace::VLog(const char *category, const char *fmt, va_list &args) {
-  char buffer[256];
-  sprintf(buffer, "[%s] ", category);
+  // first prepend the category
+  npf_pprintf(&pt_uart_putc, NULL, "[%s] ", category);
 
-  char *ptr = buffer + strlen(buffer);
-
-  vsprintf(ptr, fmt, args);
-  GetInstance()->AddLine(buffer);
+  npf_vpprintf(&pt_uart_putc, NULL, fmt, args);
+  // end with NL+CR as thats how it previously worked using stdio' printf
+  npf_pprintf(&pt_uart_putc, NULL, "\r\n");
 }
 
 //------------------------------------------------------------------------------

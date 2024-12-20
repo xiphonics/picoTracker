@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2024 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -22,18 +22,18 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#ifndef StdioStream_h
-#define StdioStream_h
+#pragma once
 /**
  * \file
  * \brief StdioStream class
  */
 #include <limits.h>
+
 #include "ios.h"
 //------------------------------------------------------------------------------
 /** Total size of stream buffer. The entire buffer is used for output.
-  * During input UNGETC_BUF_SIZE of this space is reserved for ungetc.
-  */
+ * During input UNGETC_BUF_SIZE of this space is reserved for ungetc.
+ */
 const uint8_t STREAM_BUF_SIZE = 64;
 /** Amount of buffer allocated for ungetc during input. */
 const uint8_t UNGETC_BUF_SIZE = 2;
@@ -63,7 +63,7 @@ const uint8_t UNGETC_BUF_SIZE = 2;
 #undef getchar
 #undef gets
 #undef perror
-//#undef printf  // NOLINT
+// #undef printf  // NOLINT
 #undef putc
 #undef putchar
 #undef puts
@@ -73,7 +73,7 @@ const uint8_t UNGETC_BUF_SIZE = 2;
 #undef scanf
 #undef setbuf
 #undef setvbuf
-//#undef sprintf  // NOLINT
+// #undef sprintf  // NOLINT
 #undef sscanf
 #undef tmpfile
 #undef tmpnam
@@ -111,15 +111,14 @@ const uint8_t UNGETC_BUF_SIZE = 2;
  */
 class StdioStream : private StreamBaseFile {
  public:
+  using StreamBaseFile::printField;
   /** Constructor
    *
    */
-  StdioStream() {}
+  StdioStream() : m_buf{0} {}
   //----------------------------------------------------------------------------
   /** Clear the stream's end-of-file and error indicators. */
-  void clearerr() {
-    m_status &= ~(S_ERR | S_EOF);
-  }
+  void clearerr() { m_status &= ~(S_ERR | S_EOF); }
   //----------------------------------------------------------------------------
   /** Close a stream.
    *
@@ -137,16 +136,12 @@ class StdioStream : private StreamBaseFile {
   /** Test the stream's end-of-file indicator.
    * \return non-zero if and only if the end-of-file indicator is set.
    */
-  int feof() {
-    return (m_status & S_EOF) != 0;
-  }
+  int feof() { return (m_status & S_EOF) != 0; }
   //----------------------------------------------------------------------------
   /** Test the stream's error indicator.
    * \return return non-zero if and only if the error indicator is set.
    */
-  int ferror() {
-    return (m_status & S_ERR) != 0;
-  }
+  int ferror() { return (m_status & S_ERR) != 0; }
   //----------------------------------------------------------------------------
   /** Flush the stream.
    *
@@ -167,9 +162,7 @@ class StdioStream : private StreamBaseFile {
    * set and the fgetc function returns EOF. Otherwise, the fgetc function
    * returns the next character from the input stream.
    */
-  int fgetc() {
-    return m_r-- == 0 ? fillGet() : *m_p++;
-  }
+  int fgetc() { return m_r-- == 0 ? fillGet() : *m_p++; }
   //----------------------------------------------------------------------------
   /** Get a string from a stream.
    *
@@ -265,9 +258,7 @@ class StdioStream : private StreamBaseFile {
    * has written. Otherwise, it returns EOF and sets the error indicator for
    * the stream.
    */
-  int fputc(int c) {
-    return m_w-- == 0 ? flushPut(c) : *m_p++ = c;
-  }
+  int fputc(int c) { return m_w-- == 0 ? flushPut(c) : *m_p++ = c; }
   //----------------------------------------------------------------------------
   /** Write a string to a stream.
    *
@@ -336,7 +327,7 @@ class StdioStream : private StreamBaseFile {
    * less than count, an error has occurred.  If size or count is zero,
    * fwrite returns zero.
    */
-  size_t fwrite(const void * ptr, size_t size, size_t count);
+  size_t fwrite(const void* ptr, size_t size, size_t count);
   //----------------------------------------------------------------------------
   /** Get a byte from the stream.
    *
@@ -348,8 +339,7 @@ class StdioStream : private StreamBaseFile {
    * set and the fgetc function returns EOF. Otherwise, the fgetc function
    * returns the next character from the input stream.
    */
-  inline __attribute__((always_inline))
-  int getc() {
+  inline __attribute__((always_inline)) int getc() {
     return m_r-- == 0 ? fillGet() : *m_p++;
   }
   //----------------------------------------------------------------------------
@@ -364,8 +354,7 @@ class StdioStream : private StreamBaseFile {
    * has written. Otherwise, it returns EOF and sets the error indicator for
    * the stream.
    */
-  inline __attribute__((always_inline))
-  int putc(int c) {
+  inline __attribute__((always_inline)) int putc(int c) {
     return m_w-- == 0 ? flushPut(c) : *m_p++ = c;
   }
   //----------------------------------------------------------------------------
@@ -373,8 +362,7 @@ class StdioStream : private StreamBaseFile {
    *
    * \return two, the number of bytes written, for success or -1 for failure.
    */
-  inline __attribute__((always_inline))
-  int putCRLF() {
+  inline __attribute__((always_inline)) int putCRLF() {
     if (m_w < 2) {
       if (!flushBuf()) {
         return -1;
@@ -390,9 +378,7 @@ class StdioStream : private StreamBaseFile {
    * \param[in] c the character to write.
    * \return the number of bytes written.
    */
-  size_t print(char c) {
-    return putc(c) < 0 ? 0 : 1;
-  }
+  size_t print(char c) { return putc(c) < 0 ? 0 : 1; }
   //----------------------------------------------------------------------------
   /** Write a string.
    *
@@ -412,7 +398,7 @@ class StdioStream : private StreamBaseFile {
    *
    * \return the number of bytes written.
    */
-  size_t print(const __FlashStringHelper *str);
+  size_t print(const __FlashStringHelper* str);
 #endif  // (defined(ARDUINO) && ENABLE_ARDUINO_FEATURES) || defined(DOXYGEN)
   //----------------------------------------------------------------------------
   /** Print a floating point number.
@@ -456,9 +442,7 @@ class StdioStream : private StreamBaseFile {
    *
    * \return two, the number of bytes written, for success or zero for failure.
    */
-  size_t println() {
-    return putCRLF() > 0 ? 2 : 0;
-  }
+  size_t println() { return putCRLF() > 0 ? 2 : 0; }
   //----------------------------------------------------------------------------
   /** Print a floating point number followed by CR/LF.
    *
@@ -519,9 +503,7 @@ class StdioStream : private StreamBaseFile {
    * \param[in] n number to be print.
    * \return The number of bytes written or -1 if an error occurs.
    */
-  int printDec(unsigned char n) {
-    return printDec((uint16_t)n);
-  }
+  int printDec(unsigned char n) { return printDec((uint16_t)n); }
   //----------------------------------------------------------------------------
   /** Print a int16_t
    * \param[in] n number to be printed.
@@ -563,38 +545,6 @@ class StdioStream : private StreamBaseFile {
    */
   int printDec(float value, uint8_t prec);
   //----------------------------------------------------------------------------
-  /** Print a number followed by a field terminator.
-   * \param[in] value The number to be printed.
-   * \param[in] term The field terminator.
-   * \param[in] prec Number of digits after decimal point.
-   * \return The number of bytes written or -1 if an error occurs.
-   */
-  int printField(double value, char term, uint8_t prec = 2) {
-    return printField(static_cast<float>(value), term, prec) > 0;
-  }
-  //----------------------------------------------------------------------------
-  /** Print a number followed by a field terminator.
-   * \param[in] value The number to be printed.
-   * \param[in] term The field terminator.
-   * \param[in] prec Number of digits after decimal point.
-   * \return The number of bytes written or -1 if an error occurs.
-   */
-  int printField(float value, char term, uint8_t prec = 2) {
-    int rtn = printDec(value, prec);
-    return rtn < 0 || putc(term) < 0 ? -1 : rtn + 1;
-  }
-  //----------------------------------------------------------------------------
-  /** Print a number followed by a field terminator.
-   * \param[in] value The number to be printed.
-   * \param[in] term The field terminator.
-   * \return The number of bytes written or -1 if an error occurs.
-   */
-  template <typename T>
-  int printField(T value, char term) {
-    int rtn = printDec(value);
-    return rtn < 0 || putc(term) < 0 ? -1 : rtn + 1;
-  }
-  //----------------------------------------------------------------------------
   /** Print HEX
    * \param[in] n number to be printed as HEX.
    *
@@ -609,7 +559,7 @@ class StdioStream : private StreamBaseFile {
    */
   int printHexln(uint32_t n) {
     int rtn = printHex(n);
-    return  rtn < 0 || putCRLF() != 2 ? -1 : rtn + 2;
+    return rtn < 0 || putCRLF() != 2 ? -1 : rtn + 2;
   }
   //----------------------------------------------------------------------------
   /** Set position of a stream to the beginning.
@@ -643,7 +593,6 @@ class StdioStream : private StreamBaseFile {
   int fillGet();
   bool flushBuf();
   int flushPut(uint8_t c);
-  char* fmtSpace(uint8_t len);
   int write(const void* buf, size_t count);
   //----------------------------------------------------------------------------
   // S_SRD and S_WR are never simultaneously asserted
@@ -653,11 +602,9 @@ class StdioStream : private StreamBaseFile {
   static const uint8_t S_EOF = 0x10;  // found EOF
   static const uint8_t S_ERR = 0x20;  // found error
   //----------------------------------------------------------------------------
-  uint8_t  m_buf[STREAM_BUF_SIZE];
-  uint8_t  m_status = 0;
+  uint8_t m_buf[STREAM_BUF_SIZE];
+  uint8_t m_status = 0;
   uint8_t* m_p = m_buf;
-  uint8_t  m_r = 0;
-  uint8_t  m_w;
+  uint8_t m_r = 0;
+  uint8_t m_w = 0;
 };
-//------------------------------------------------------------------------------
-#endif  // StdioStream_h

@@ -1,0 +1,9 @@
+<map id="FsFile" name="FsFile">
+<area shape="rect" id="Node000001" title="FsBaseFile file with Arduino Stream." alt="" coords="65,171,122,197"/>
+<area shape="rect" id="Node000002" href="$class_stream_file.html" title=" " alt="" coords="10,80,177,123"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="96,139,96,170,91,170,91,139"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,5,78,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="60,44,83,78,78,81,56,47"/>
+<area shape="rect" id="Node000004" href="$class_fs_base_file.html" title="FsBaseFile class." alt="" coords="102,5,189,32"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="131,47,109,81,104,78,127,44"/>
+</map>

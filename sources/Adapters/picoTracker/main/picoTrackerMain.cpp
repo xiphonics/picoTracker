@@ -1,5 +1,6 @@
 #include "Adapters/picoTracker/platform/platform.h"
 #include "Adapters/picoTracker/system/picoTrackerSystem.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Application.h"
 #include "bsp/board.h"
 #include "hardware/clocks.h"
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]) {
   Application::GetInstance()->Init(params);
 
   picoTrackerSystem::MainLoop();
-  printf("Finish main loop?\n");
+  // WE NEVER GET HERE
 
   picoTrackerSystem::Shutdown();
 }

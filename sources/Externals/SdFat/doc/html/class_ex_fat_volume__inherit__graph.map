@@ -1,0 +1,9 @@
+<map id="ExFatVolume" name="ExFatVolume">
+<area shape="rect" id="Node000001" title="exFAT volume." alt="" coords="36,80,137,107"/>
+<area shape="rect" id="Node000003" href="$class_sd_base.html" title=" " alt="" coords="5,155,168,197"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="89,122,89,154,84,154,84,122"/>
+<area shape="rect" id="Node000002" href="$class_ex_fat_partition.html" title="Access exFat partitions on raw file devices." alt="" coords="34,5,139,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="89,48,89,80,84,80,84,48"/>
+<area shape="rect" id="Node000004" href="$class_sd_ex_fat.html" title="SD file system class for exFAT volumes." alt="" coords="50,245,123,272"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="89,213,89,245,84,245,84,213"/>
+</map>

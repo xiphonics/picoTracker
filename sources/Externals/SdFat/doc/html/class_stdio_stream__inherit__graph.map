@@ -1,0 +1,5 @@
+<map id="StdioStream" name="StdioStream">
+<area shape="rect" id="Node000001" title="StdioStream implements a minimal stdio stream." alt="" coords="16,80,109,107"/>
+<area shape="rect" id="Node000002" href="$class_fat_file.html" title="Basic file class." alt="" coords="5,5,120,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="65,48,65,80,60,80,60,48"/>
+</map>
