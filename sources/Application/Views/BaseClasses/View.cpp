@@ -225,7 +225,7 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 void View::drawBattery(GUITextProperties &props) {
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
-  battpos._x = 26;
+  battpos._x = 27;
   System *sys = System::GetInstance();
   float voltage = sys->GetBatteryLevel() / 1000.0;
 
