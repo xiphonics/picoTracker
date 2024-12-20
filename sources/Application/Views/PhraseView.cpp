@@ -1116,7 +1116,6 @@ void PhraseView::DrawView() {
   }
 
   // Draw instruments
-
   pos = anchor;
   pos._x += 4;
 
@@ -1133,11 +1132,11 @@ void PhraseView::DrawView() {
       hex2char(d, buffer + 1);
       DrawString(pos._x, pos._y, buffer, props);
       if (j == row_) {
-        npf_snprintf(buffer, sizeof(buffer), "I%2.2x: ", d);
-        etl::string<32> instrLine = buffer;
+        npf_snprintf(buffer, sizeof(buffer), "I%2.2x:", d);
+        etl::string<32 - BATTERY_GAUGE_WIDTH> instrLine = buffer;
         setTextProps(props, 1, j, true);
         GUIPoint location = GetTitlePosition();
-        location._x += 12;
+        location._x += 10; // make space for "Phrase %2.2x"
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(d);
         instrLine += instr->GetName();
