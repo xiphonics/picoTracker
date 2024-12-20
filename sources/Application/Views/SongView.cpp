@@ -799,6 +799,8 @@ void SongView::DrawView() {
   // Draw title
   SetColor(CD_NORMAL);
 
+  drawBattery(props);
+
   Player *player = Player::GetInstance();
 
   props.invert_ = true;

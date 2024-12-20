@@ -1075,6 +1075,8 @@ void PhraseView::DrawView() {
   npf_snprintf(title, sizeof(title), "Phrase %2.2x", viewData_->currentPhrase_);
   DrawString(pos._x, pos._y, title, props);
 
+  drawBattery(props);
+
   // Compute song grid location
 
   GUIPoint anchor = GetAnchor();
@@ -1320,3 +1322,11 @@ void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
   DrawString(0, 0, helpLegend[0], props);
   DrawString(5, 1, helpLegend[1], props);
 }
+
+void PhraseView::AnimationUpdate() {
+  // redraw batt gauge on every clock tick (~1Hz) even when not playing
+  // and not redrawing due to user cursor navigation
+  GUITextProperties props;
+  drawBattery(props);
+  w_.Flush();
+};

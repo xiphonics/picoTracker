@@ -144,10 +144,11 @@ void GrooveView::DrawView() {
   GUIPoint pos = GetTitlePosition();
 
   // Draw title
-
   char title[SCREEN_WIDTH + 1];
 
   SetColor(CD_NORMAL);
+
+  drawBattery(props);
 
   npf_snprintf(title, sizeof(title), "Groove: %2.2x",
                viewData_->currentGroove_);
@@ -224,3 +225,11 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
 };
 
 void GrooveView::OnFocus(){};
+
+void GrooveView::AnimationUpdate() {
+  // redraw batt gauge on every clock tick (~1Hz) even when not playing
+  // and not redrawing due to user cursor navigation
+  GUITextProperties props;
+  drawBattery(props);
+  w_.Flush();
+};

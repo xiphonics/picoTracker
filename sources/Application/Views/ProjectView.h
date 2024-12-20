@@ -15,7 +15,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
-  virtual void AnimationUpdate(){};
+  virtual void AnimationUpdate();
   etl::string<40> getProjectName() { return nameField_->GetString(); };
   void clearSaveAsFlag() { saveAsFlag_ = false; };
 

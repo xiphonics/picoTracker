@@ -698,6 +698,8 @@ void TableView::DrawView() {
   npf_snprintf(title, sizeof(title), "Table %2.2X", viewData_->currentTable_);
   DrawString(pos._x, pos._y, title, props);
 
+  drawBattery(props);
+
   // Compute song grid location
 
   GUIPoint anchor = GetAnchor();
@@ -888,3 +890,11 @@ void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
   DrawString(0, 0, helpLegend[0], props);
   DrawString(5, 1, helpLegend[1], props);
 }
+
+void TableView::AnimationUpdate() {
+  // redraw batt gauge on every clock tick (~1Hz) even when not playing
+  // and not redrawing due to user cursor navigation
+  GUITextProperties props;
+  drawBattery(props);
+  w_.Flush();
+};

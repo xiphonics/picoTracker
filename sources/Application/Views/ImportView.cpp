@@ -72,6 +72,8 @@ void ImportView::DrawView() {
 
   SetColor(CD_NORMAL);
 
+  drawBattery(props);
+
   // Draw samples
   int x = 1;
   int y = pos._y + 2;
@@ -203,3 +205,11 @@ void ImportView::setCurrentFolder(PicoFileSystem *picoFS, const char *name) {
     fileIndexList_.erase(fileIndexList_.begin());
   }
 }
+
+void ImportView::AnimationUpdate() {
+  // redraw batt gauge on every clock tick (~1Hz) even when not playing
+  // and not redrawing due to user cursor navigation
+  GUITextProperties props;
+  drawBattery(props);
+  w_.Flush();
+};

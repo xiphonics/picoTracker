@@ -670,6 +670,8 @@ void ChainView::DrawView() {
 
   GUIPoint anchor = GetAnchor();
 
+  drawBattery(props);
+
   // Display row numbers
 
   SetColor(CD_HILITE1);
@@ -805,3 +807,11 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
            w_.DrawString("----",pos,props); 
     }
 */} ;
+
+void ChainView::AnimationUpdate() {
+  // redraw batt gauge on every clock tick (~1Hz) even when not playing
+  // and not redrawing due to user cursor navigation
+  GUITextProperties props;
+  drawBattery(props);
+  w_.Flush();
+};
