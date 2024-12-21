@@ -1,11 +1,11 @@
 #ifndef _FIELD_VIEW_H_
 #define _FIELD_VIEW_H_
 
+#include "BaseClasses/UIField.h"
 #include "Foundation/T_SimpleList.h"
-#include "UIField.h"
-#include "View.h"
+#include "ScreenView.h"
 
-class FieldView : public View {
+class FieldView : public ScreenView {
 public:
   FieldView(GUIWindow &w, ViewData *viewData);
 

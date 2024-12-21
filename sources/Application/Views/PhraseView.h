@@ -3,10 +3,10 @@
 #define _PHRASE_VIEW_H_
 
 #include "BaseClasses/UIBigHexVarField.h"
-#include "BaseClasses/View.h"
+#include "ScreenView.h"
 #include "ViewData.h"
 
-class PhraseView : public View {
+class PhraseView : public ScreenView {
 
 public:
   PhraseView(GUIWindow &w, ViewData *viewData);
@@ -15,7 +15,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
-  virtual void AnimationUpdate();
 
 protected:
   void updateCursor(int dx, int dy);

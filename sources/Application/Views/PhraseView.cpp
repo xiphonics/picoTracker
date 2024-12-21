@@ -15,7 +15,7 @@
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
   GUIPoint pos(0, 10);
@@ -1321,11 +1321,3 @@ void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
   DrawString(0, 0, helpLegend[0], props);
   DrawString(5, 1, helpLegend[1], props);
 }
-
-void PhraseView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
-};

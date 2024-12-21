@@ -9,7 +9,7 @@
 #define INVALID_PROJECT_NAME "INVALID NAME"
 
 SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData) {}
+    : ScreenView(w, viewData) {}
 
 SelectProjectView::~SelectProjectView() {}
 
@@ -165,14 +165,3 @@ void SelectProjectView::setCurrentFolder() {
 void SelectProjectView::getSelectedProjectName(char *name) {
   strcpy(name, selection_);
 }
-
-/// Updates the animation by redrawing the battery gauge on every clock tick
-/// (~1Hz). This occurs even when playback is not active and there is no user
-/// cursor navigation.
-void SelectProjectView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
-};

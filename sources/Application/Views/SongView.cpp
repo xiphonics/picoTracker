@@ -13,7 +13,7 @@
  Constructor
  ****************/
 
-SongView::SongView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
+SongView::SongView(GUIWindow &w, ViewData *viewData) : ScreenView(w, viewData) {
 
   updatingChain_ = false;
   lastChain_ = 0;
@@ -1005,12 +1005,4 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 
   drawNotes();
-};
-
-void SongView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
 };

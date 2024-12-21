@@ -2,11 +2,11 @@
 #ifndef _SONG_VIEW_H_
 #define _SONG_VIEW_H_
 
-#include "BaseClasses/View.h"
+#include "ScreenView.h"
 
 class SongView;
 
-class SongView : public View {
+class SongView : public ScreenView {
 public:
   SongView(GUIWindow &w, ViewData *viewData);
   ~SongView();
@@ -16,7 +16,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
-  virtual void AnimationUpdate();
 
 protected:
   void processNormalButtonMask(unsigned int mask);

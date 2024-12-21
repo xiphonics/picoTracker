@@ -6,7 +6,8 @@
 #include <Application/AppWindow.h>
 #include <nanoprintf.h>
 
-GrooveView::GrooveView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
+GrooveView::GrooveView(GUIWindow &w, ViewData *viewData)
+    : ScreenView(w, viewData) {
   position_ = 0;
   lastPosition_ = 0;
 }
@@ -225,11 +226,3 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
 };
 
 void GrooveView::OnFocus(){};
-
-void GrooveView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
-};

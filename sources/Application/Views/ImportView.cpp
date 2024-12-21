@@ -9,7 +9,8 @@
 #define LIST_WIDTH 24
 #define LIST_PAGE_SIZE 18
 
-ImportView::ImportView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
+ImportView::ImportView(GUIWindow &w, ViewData *viewData)
+    : ScreenView(w, viewData) {}
 
 ImportView::~ImportView() {}
 
@@ -205,11 +206,3 @@ void ImportView::setCurrentFolder(PicoFileSystem *picoFS, const char *name) {
     fileIndexList_.erase(fileIndexList_.begin());
   }
 }
-
-void ImportView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
-};
