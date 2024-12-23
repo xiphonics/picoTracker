@@ -411,9 +411,10 @@ void AppWindow::UpdateColorsFromConfig() {
   defineColor(FourCC::VarHI1Color, highlightColor_, 2);
   defineColor(FourCC::VarHI2Color, highlight2Color_, 3);
   defineColor(FourCC::VarCursorColor, cursorColor_, 4);
-  defineColor(FourCC::VarInfoColor, infoColor_, 5);
-  defineColor(FourCC::VarWarnColor, warnColor_, 6);
-  defineColor(FourCC::VarErrorColor, errorColor_, 7);
+  defineColor(FourCC::VarConsoleColor, consoleColor_, 5);
+  defineColor(FourCC::VarInfoColor, infoColor_, 6);
+  defineColor(FourCC::VarWarnColor, warnColor_, 7);
+  defineColor(FourCC::VarErrorColor, errorColor_, 8);
 };
 
 bool AppWindow::onEvent(GUIEvent &event) {
