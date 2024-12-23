@@ -77,9 +77,30 @@ void ili9341_init() {
   ili9341_set_command(ILI9341_GAMMASET);
   ili9341_command_param(0x01);
 
+#ifdef LCD_ST7789
+  // TODO: need good negative gamma correction values for ST7789, the ones below
+  // from the lvgl driver don't work well, are too "bright"
+
+  // src:
+  // https://github.com/eudoxos/pico-st7789-driver-lvgl/blob/main/st7789_lowlevel.py
+  // (ST7789_GMCTRP1,b'\x0f\x1a\x0f\x18\x2f\x28\x20\x22\x1f\x1b\x23\x37\x00\x07\x02\x10'),
+  // (ST7789_GMCTRN1,b'\x0f\x1b\x0f\x17\x33\x2c\x29\x2e\x30\x30\x39\x3f\x00\x07\x03\x10'),
+
+  ili9341_set_command(ILI9341_GMCTRP1);
+  ili9341_write_data((uint8_t[16]){0x0f, 0x1a, 0x0f, 0x18, 0x2f, 0x28, 0x20,
+                                   0x22, 0x1f, 0x1b, 0x23, 0x37, 0x00, 0x07,
+                                   0x02, 0x10},
+                     16);
+  // negative gamma correction
+  // ili9341_set_command(ILI9341_GMCTRN1);
+  // ili9341_write_data((uint8_t[16]){0x0f, 0x1b, 0x0f, 0x17, 0x33, 0x2c, 0x29,
+  //                                  0x2e, 0x30, 0x30, 0x39, 0x3f, 0x00, 0x07,
+  //                                  0x03, 0x10},
+  //                    16);
+#else
   // positive gamma correction
   ili9341_set_command(ILI9341_GMCTRP1);
-  ili9341_write_data((uint8_t[15]){0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
+  ili9341_write_data((uint8_t[16]){0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
                                    0xf1, 0x37, 0x07, 0x10, 0x03, 0x0e, 0x09,
                                    0x00},
                      15);
@@ -90,6 +111,7 @@ void ili9341_init() {
                                    0xc1, 0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36,
                                    0x0f},
                      15);
+#endif
 
   // memory access control
   ili9341_set_command(ILI9341_MADCTL);
@@ -100,6 +122,7 @@ void ili9341_init() {
   // MY MX MV ML RGB MH -  -
   ili9341_command_param(0xC0);
   ili9341_set_command(ILI9341_INVON);
+
 #else
   ili9341_command_param(0x88);
 #endif
