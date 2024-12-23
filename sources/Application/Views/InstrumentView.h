@@ -23,6 +23,7 @@ public:
   virtual void OnFocus();
   virtual void AnimationUpdate();
   void onInstrumentTypeChange();
+  void clearInstrumentModified() { instrumentModified_ = false; }
 
 protected:
   void warpToNext(int offset);
@@ -42,6 +43,7 @@ private:
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
   InstrumentType currentType_ = IT_NONE;
+  bool instrumentModified_ = false;
 
   char sidName_[24];
 

@@ -20,6 +20,9 @@ static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     ((InstrumentView &)v).onInstrumentTypeChange();
     Trace::Log("INSTRUMENTVIEW", "instrument type changed!!");
+
+    // clear instrument modified flag
+    ((InstrumentView &)v).clearInstrumentModified();
   }
 };
 
@@ -85,6 +88,19 @@ void InstrumentView::onInstrumentChange() {
 };
 
 void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
+  for (auto &f : intVarField_) {
+    f.RemoveObserver(*this);
+  }
+  for (auto &f : bigHexVarField_) {
+    f.RemoveObserver(*this);
+  }
+  for (auto &f : intVarOffField_) {
+    f.RemoveObserver(*this);
+  }
+  for (auto &f : bitmaskVarField_) {
+    f.RemoveObserver(*this);
+  }
+
   fieldList_.clear();
   intVarField_.clear();
   noteVarField_.clear();
@@ -123,6 +139,21 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
       SetFocus(field);
       break;
     }
+  }
+
+  // observer all var fields so we can mark the instrument as modified
+  // to be able to show confirmation dialog when switching instrument type
+  for (auto &f : intVarField_) {
+    f.AddObserver(*this);
+  }
+  for (auto &f : bigHexVarField_) {
+    f.AddObserver(*this);
+  }
+  for (auto &f : intVarOffField_) {
+    f.AddObserver(*this);
+  }
+  for (auto &f : bitmaskVarField_) {
+    f.AddObserver(*this);
   }
 
   if (getInstrument() != old) {
@@ -629,7 +660,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   FieldView::ProcessButtonMask(mask);
 
   // B Modifier
-
   if (mask & EPBM_B) {
     if (mask & EPBM_LEFT)
       warpToNext(-1);
@@ -775,14 +805,24 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     // confirm user wants to change instrument type &lose changes
     Player *player = Player::GetInstance();
     if (!player->IsRunning()) {
-      MessageBox *mb = new MessageBox(*this, "Change Instrument &",
-                                      "lose settings?", MBBF_YES | MBBF_NO);
-      DoModal(mb, ChangeInstrumentTypeCallback);
+      if (instrumentModified_) {
+        MessageBox *mb = new MessageBox(*this, "Change Instrument &",
+                                        "lose settings?", MBBF_YES | MBBF_NO);
+        DoModal(mb, ChangeInstrumentTypeCallback);
+      } else {
+        onInstrumentTypeChange();
+      }
     } else {
       MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
+    break;
   }
+  default:
+    if (fourcc != 0) {
+      instrumentModified_ = true;
+    }
+    break;
   }
 }
 
