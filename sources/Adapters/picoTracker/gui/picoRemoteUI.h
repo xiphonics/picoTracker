@@ -20,8 +20,8 @@
 // REMOTE_UI_CMD_MARKER and also verify the expected byte count length of each
 // command received to check for any transmission errors.
 //
-// SetPalette is currently not implemented, so remote clients just need to use
-// their own color palette for now.
+// SetPalette, SetFont are currently not implemented, so remote clients just
+// need to use their own font & color palette for now.
 
 #define ITF_NUM_CDC_0 0
 
@@ -60,7 +60,8 @@ enum RemoteUICommand {
   DRAW_CMD = 0x32,
   CLEAR_CMD = 0x33,
   SETCOLOR_CMD = 0x34,
-  SETPALETTE_CMD = 0x04
+  SETPALETTE_CMD = 0x04,
+  SETFONT_CMD = 0x05
 };
 
 #define REMOTE_UI_CMD_MARKER 0xFD
