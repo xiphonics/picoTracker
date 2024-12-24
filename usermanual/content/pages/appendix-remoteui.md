@@ -59,6 +59,7 @@ Currently the only available fonts are:
  | 1     | You Squared
 
 
+
 ### RGB565 Format
 
 RGB565 is a 16-bit color format used for drawing text and UI. It is composed of three 5-bit values for the red, green and blue components of the color. Example code for efficient conversion between RGB565 and RGB888 can be found from the official picoTracker client Flutter code:
@@ -85,9 +86,22 @@ remoteUIBuffer[5] = 32;          // Not inverted
 sendToUSBCDC(remoteUIBuffer, 6);
 ```
 
+### Input Commands
+
+Clients are also able to send input events to the picoTracker. As for output commands, the input commands are prefixed by sending the REMOTE_UI_CMD_MARKER byte.
+
+The events currently supported are:
+
+1. FULL_REFRESH_CMD (0x2): Request sending all the current screen and current font
+
+Parameters:
+
+* None
+
+
 ### Limitations
 
-* Input events are not yet implemented
+* Input events other than FULL_REFRESH_CMD are not yet implemented.
 
 ### Client Implementation Guidelines
 
