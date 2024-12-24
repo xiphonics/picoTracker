@@ -33,17 +33,27 @@ Parameters:
 
 Parameters:
 
-* Background color (offset by 32)
+* Background color in RGB565 format
 
 3. SETCOLOR_CMD (0x34): Set foreground color
 
 Parameters:
 
-* Color index (offset by 32)
+* Color in RGB565 format
 
 4. SETPALETTE_CMD (0x04): Not currently implemented
 
 Remote clients should use their own color palette
+
+### RGB565 Format
+
+RGB565 is a 16-bit color format used for drawing text and UI. It is composed of three 5-bit values for the red, green and blue components of the color. Example code for efficient conversion between RGB565 and RGB888 can be found from the official picoTracker client Flutter code:
+
+```dart
+r: (_byteBuffer[0] * 527 + 23) >> 5, // Red component
+g: (_byteBuffer[1] * 259 + 33) >> 6, // Green component
+b: (_byteBuffer[2] * 527 + 23) >> 5, // Blue component
+```
 
 ### Example Transmission Flow
 
@@ -63,7 +73,6 @@ sendToUSBCDC(remoteUIBuffer, 6);
 
 ### Limitations
 
-SetPalette command is not implemented
 SetFont command is not implemented
 
 ### Client Implementation Guidelines
