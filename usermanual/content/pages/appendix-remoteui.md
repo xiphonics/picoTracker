@@ -14,36 +14,50 @@ The Remote UI protocol is a communication mechanism that allows rendering the pi
 
 ### Command Marker
 
-Every command starts with a fixed marker: 0xFD (REMOTE_UI_CMD_MARKER)
+Every command starts with a fixed marker: `0xFE` (REMOTE_UI_CMD_MARKER). This allows clients to verify the start of a valid command.
 
-This helps clients verify the start of a valid command.
+**Note:** That the use of this value as a marker to start commands means that the characters 0xFE and 0xFF from the extended ASCII range are not allowed in the protocols command parameter values.
+
 
 ### Command Types
 
-1. DRAW_CMD (0x32): Draw a character
+Note: `ASCII_SPACE_OFFSET = 0xF`
+
+
+1. TEXT_CMD (0x2): Draw a character
 
 Parameters:
 
 * Character to draw
-* X position (offset by 32)
-* Y position (offset by 32)
-* Invert flag (32 for normal, 127 for inverted)
+* X position (offset by ASCII_SPACE_OFFSET)
+* Y position (offset by ASCII_SPACE_OFFSET)
+* Invert flag (0 for normal, 0x7F for inverted)
 
-2. CLEAR_CMD (0x33): Clear screen
+2. `CLEAR_CMD (0x3)`: Clear screen
 
 Parameters:
 
 * Background color in RGB565 format
 
-3. SETCOLOR_CMD (0x34): Set foreground color
+3. SETCOLOR_CMD (0x4): Set foreground color
 
 Parameters:
 
 * Color in RGB565 format
 
-4. SETPALETTE_CMD (0x04): Not currently implemented
+4. SETFONT_CMD (0x5)
 
-Remote clients should use their own color palette
+Parameters:
+
+* Font index  (offset by ASCII_SPACE_OFFSET)
+
+Currently the only available fonts are:
+
+ | Index | Font   
+ | ----- | -----
+ | 0     | Hourglass
+ | 1     | You Squared
+
 
 ### RGB565 Format
 
@@ -62,7 +76,7 @@ To give a concrete example, below is a simple example of how a command in the pi
 ```cpp
 
 // Drawing a character 'A' at position (2,3), not inverted
-remoteUIBuffer[0] = 0xFD;        // Command marker
+remoteUIBuffer[0] = 0xFE;        // Command marker
 remoteUIBuffer[1] = DRAW_CMD;    // Draw command
 remoteUIBuffer[2] = 'A';         // Character
 remoteUIBuffer[3] = 34;          // X position (2 + 32)
@@ -73,7 +87,7 @@ sendToUSBCDC(remoteUIBuffer, 6);
 
 ### Limitations
 
-SetFont command is not implemented
+* Input events are not yet implemented
 
 ### Client Implementation Guidelines
 

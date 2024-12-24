@@ -52,10 +52,26 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   auto uiFontVar = (WatchedVariable *)config->FindVariable(FourCC::VarUIFont);
   // register to receive updates to remoteui setting
   uiFontVar->AddObserver(*this);
-  mode0_set_font_index(uiFontVar->GetInt());
+  auto uifontIndex = uiFontVar->GetInt();
+  mode0_set_font_index(uifontIndex);
+#ifdef USB_REMOTE_UI
+  if (remoteUIEnabled_) {
+    SendFont(uifontIndex);
+  }
+#endif
 };
 
 picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}
+
+#ifdef USB_REMOTE_UI
+void picoTrackerGUIWindowImp::SendFont(uint8_t uifontIndex) {
+  char remoteUIBuffer[3];
+  remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
+  remoteUIBuffer[1] = SETFONT_CMD;
+  remoteUIBuffer[2] = uifontIndex + ASCII_SPACE_OFFSET;
+  sendToUSBCDC(remoteUIBuffer, 3);
+}
+#endif
 
 void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
                                        GUITextProperties &p) {
@@ -208,6 +224,11 @@ void picoTrackerGUIWindowImp::Update(Observable &o, I_ObservableData *d) {
   case FourCC::VarUIFont: {
     auto uifont = v.GetInt();
     mode0_set_font_index(uifont);
+#ifdef USB_REMOTE_UI
+    if (remoteUIEnabled_) {
+      SendFont(uifont);
+    }
+#endif
   } break;
   }
 }
