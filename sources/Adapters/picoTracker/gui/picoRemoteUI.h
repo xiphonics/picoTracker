@@ -57,14 +57,14 @@ static void sendToUSBCDC(char buf[], int length) {
 }
 
 enum RemoteUICommand {
-  DRAW_CMD = 0x32,
-  CLEAR_CMD = 0x33,
-  SETCOLOR_CMD = 0x34,
-  SETPALETTE_CMD = 0x04,
+  REMOTE_UI_CMD_MARKER = 0xFE,
+  TEXT_CMD = 0x02,
+  CLEAR_CMD = 0x03,
+  SETCOLOR_CMD = 0x04,
   SETFONT_CMD = 0x05
 };
 
-#define REMOTE_UI_CMD_MARKER 0xFD
-#define UART_ASCII_OFFSET 32
+#define ASCII_SPACE_OFFSET 0xF
+#define INVERT_ON 0x7F
 
 #endif

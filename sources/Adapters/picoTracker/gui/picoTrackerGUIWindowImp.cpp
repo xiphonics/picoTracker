@@ -70,11 +70,11 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = DRAW_CMD;
+    remoteUIBuffer[1] = TEXT_CMD;
     remoteUIBuffer[2] = c;
-    remoteUIBuffer[3] = x + 32;
-    remoteUIBuffer[4] = y + 32;
-    remoteUIBuffer[5] = p.invert_ ? 127 : 32;
+    remoteUIBuffer[3] = x + ASCII_SPACE_OFFSET; // to avoid sending NUL (aka 0)
+    remoteUIBuffer[4] = y + ASCII_SPACE_OFFSET;
+    remoteUIBuffer[5] = p.invert_ ? 127 : 0;
     sendToUSBCDC(remoteUIBuffer, 6);
   }
 #endif
