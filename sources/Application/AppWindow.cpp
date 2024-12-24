@@ -480,8 +480,12 @@ bool AppWindow::onEvent(GUIEvent &event) {
   return false;
 };
 
-void AppWindow::onUpdate() {
-  //	Redraw() ;
+void AppWindow::onUpdate(bool redraw) {
+  if (redraw) {
+    GUIWindow::Clear(backgroundColor_, true);
+    Clear(true);
+    Redraw();
+  }
   Flush();
 };
 

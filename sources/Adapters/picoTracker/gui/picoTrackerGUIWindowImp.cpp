@@ -1,13 +1,12 @@
 #include "picoTrackerGUIWindowImp.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Model/Config.h"
+#include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
+#include "UIFramework/BasicDatas/GUIEvent.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include <string.h>
-// #include "Application/Utils/assert.h"
-#include "Adapters/picoTracker/utils/utils.h"
-#include "Application/Utils/char.h"
-#include "UIFramework/BasicDatas/GUIEvent.h"
 #ifdef USB_REMOTE_UI
 #include "picoRemoteUI.h"
 #endif
@@ -171,7 +170,7 @@ void picoTrackerGUIWindowImp::Unlock(){};
 void picoTrackerGUIWindowImp::Flush() { mode0_draw_changed(); };
 
 void picoTrackerGUIWindowImp::Invalidate() {
-  picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent(PICO_REDRAW));
+  picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent(PICO_FLUSH));
 };
 
 void picoTrackerGUIWindowImp::PushEvent(GUIEvent &event) {
@@ -187,8 +186,11 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
   switch (event.type_) {
   case PICO_REDRAW:
     //        instance_->currentBuffer_^=0x01 ;
-    instance_->_window->Update();
+    instance_->_window->Update(true);
     //        gp_setFramebuffer(instance_->framebuffer_[instance_->currentBuffer_],1);
+    break;
+  case PICO_FLUSH:
+    instance_->_window->Update(false);
     break;
   case PICO_CLOCK:
     instance_->_window->ClockTick();

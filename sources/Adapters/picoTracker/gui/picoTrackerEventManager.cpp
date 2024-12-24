@@ -2,8 +2,13 @@
 #include "Adapters/picoTracker/system/input.h"
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Application.h"
+#include "Application/Model/Config.h"
 #include "picoTrackerGUIWindowImp.h"
 #include "usb_utils.h"
+
+#ifdef USB_REMOTE_UI
+#include "picoRemoteUI.h"
+#endif
 
 bool picoTrackerEventManager::finished_ = false;
 bool picoTrackerEventManager::redrawing_ = false;
@@ -33,6 +38,15 @@ bool timerHandler(repeating_timer_t *rt) {
     queue->push(picoTrackerEvent(PICO_CLOCK));
   }
   return true;
+}
+
+int readFromUSBCDC(char *buf, int len) {
+  int rc = PICO_ERROR_NO_DATA;
+  if (tud_cdc_available()) {
+    int count = (int)tud_cdc_read(buf, (uint32_t)len);
+    rc = count ? count : PICO_ERROR_NO_DATA;
+  }
+  return rc;
 }
 
 picoTrackerEventManager::picoTrackerEventManager() {}
@@ -139,4 +153,24 @@ void picoTrackerEventManager::ProcessInputEvent() {
 #ifdef SERIAL_REPL
   serialDebugUI_.readSerialIn(inBuffer, INPUT_BUFFER_SIZE);
 #endif
+
+  char inBuffer[16];
+  auto readbytes = readFromUSBCDC(inBuffer, 16);
+  if (readbytes > 0) {
+    Trace::Debug("Read %d bytes from USB CDC", readbytes);
+    if (inBuffer[0] != REMOTE_INPUT_CMD_MARKER) {
+      Trace::Debug("Invalid input command marker %d", inBuffer[0]);
+      return;
+    }
+    switch (inBuffer[1]) {
+    case FULL_REFRESH_CMD:
+      Trace::Debug("Full refresh requested!");
+      queue = picoTrackerEventQueue::GetInstance();
+      queue->push(picoTrackerEvent(PICO_REDRAW));
+      break;
+
+    default:
+      break;
+    }
+  }
 }
