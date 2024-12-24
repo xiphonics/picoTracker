@@ -185,9 +185,16 @@ GUIRect picoTrackerGUIWindowImp::GetRect() {
 void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
   switch (event.type_) {
   case PICO_REDRAW:
-    //        instance_->currentBuffer_^=0x01 ;
     instance_->_window->Update(true);
-    //        gp_setFramebuffer(instance_->framebuffer_[instance_->currentBuffer_],1);
+#ifdef USB_REMOTE_UI
+    // send font update
+    if (instance_->remoteUIEnabled_) {
+      Config *config = Config::GetInstance();
+      auto uiFontVar = config->FindVariable(FourCC::VarUIFont);
+      int uifontIndex = uiFontVar->GetInt();
+      instance_->SendFont(uifontIndex);
+    }
+#endif
     break;
   case PICO_FLUSH:
     instance_->_window->Update(false);
