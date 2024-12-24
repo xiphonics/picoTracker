@@ -105,9 +105,9 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
     char remoteUIBuffer[5];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
     remoteUIBuffer[1] = CLEAR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
+    remoteUIBuffer[2] = r;
+    remoteUIBuffer[3] = g;
+    remoteUIBuffer[4] = b;
     sendToUSBCDC(remoteUIBuffer, 5);
   }
 #endif
