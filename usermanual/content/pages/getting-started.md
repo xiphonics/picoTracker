@@ -16,9 +16,13 @@ On bootup, the picoTracker will start on the Song screen of the last previously 
 
 The picoTrackers keypad layout resembles a typical old console game controller.
 
-You can navigate (aka move) between screens using the `NAV`+`UP`/`DOWN`/`LEFT`/`RIGHT` keys.
+You can navigate (aka move) between screens using the `NAV`+`UP`/`DOWN`/`LEFT`/`RIGHT` keys. 
 
 To get to the chain screen, you need to have your cursor on a chain in the song. To get to the phrase screen, you need to have your cursor on a pattern in the chain screen.
+
+The names of the keys are shown below.
+
+![labeled photo of Picotracker keymapping](image/pT-buttonMap.png)
 
 ### Playback Modes and Controls
 
