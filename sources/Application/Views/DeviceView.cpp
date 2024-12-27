@@ -242,7 +242,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     Trace::Log("DEVICE", "Color updated!");
     ((AppWindow &)w_).UpdateColorsFromConfig();
     ((AppWindow &)w_).Clear(true);
-    w_.Update();
+    w_.Update(true);
     break;
 
   case FourCC::VarLineOut: {

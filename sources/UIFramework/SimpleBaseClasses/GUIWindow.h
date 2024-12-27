@@ -37,9 +37,9 @@ public: // I_GUIGraphics implementation
   virtual void Flush();
   virtual void Lock();
   virtual void Unlock();
-  virtual void Update();
+  virtual void Update(bool redraw);
   virtual void ClockTick();
-  virtual void onUpdate() = 0;
+  virtual void onUpdate(bool redraw) = 0;
   virtual void AnimationUpdate() = 0;
   //	virtual void Save() ;
   //	virtual void Restore() ;

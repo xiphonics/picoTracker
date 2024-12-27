@@ -51,7 +51,7 @@ public:
 
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);
-  virtual void onUpdate();
+  virtual void onUpdate(bool redraw);
   virtual void LayoutChildren();
   virtual void Flush();
   virtual void Redraw();

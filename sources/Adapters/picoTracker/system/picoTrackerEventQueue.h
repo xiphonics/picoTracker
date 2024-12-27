@@ -4,7 +4,7 @@
 #include "Externals/etl/include/etl/deque.h"
 #include "Foundation/T_Singleton.h"
 
-enum picoTrackerEventType { PICO_REDRAW, PICO_CLOCK, LAST };
+enum picoTrackerEventType { PICO_REDRAW, PICO_FLUSH, PICO_CLOCK, LAST };
 
 class picoTrackerEvent {
 public:

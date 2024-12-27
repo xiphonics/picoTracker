@@ -77,9 +77,25 @@ void ili9341_init() {
   ili9341_set_command(ILI9341_GAMMASET);
   ili9341_command_param(0x01);
 
+#ifdef LCD_ST7789
+  // gamma correction for ST7789V
+  // src:
+  // https://github.com/kiklhorn/esphome/blob/dbb824c937fda160c0f2165a29a8b1a9aee4fb43/esphome/components/st7789/st7789_init.h#L57
   // positive gamma correction
   ili9341_set_command(ILI9341_GMCTRP1);
-  ili9341_write_data((uint8_t[15]){0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
+  ili9341_write_data((uint8_t[14]){0xD0, 0x00, 0x02, 0x07, 0x0A, 0x28, 0x32,
+                                   0x44, 0x42, 0x06, 0x0E, 0x12, 0x14, 0x17},
+                     14);
+  // negative gamma correction
+  ili9341_set_command(ILI9341_GMCTRN1);
+  ili9341_write_data((uint8_t[14]){0xD0, 0x00, 0x02, 0x07, 0x0A, 0x28, 0x31,
+                                   0x54, 0x47, 0x0E, 0x1C, 0x17, 0x1B, 0x1E},
+                     14);
+
+#else
+  // positive gamma correction
+  ili9341_set_command(ILI9341_GMCTRP1);
+  ili9341_write_data((uint8_t[16]){0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
                                    0xf1, 0x37, 0x07, 0x10, 0x03, 0x0e, 0x09,
                                    0x00},
                      15);
@@ -90,6 +106,7 @@ void ili9341_init() {
                                    0xc1, 0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36,
                                    0x0f},
                      15);
+#endif
 
   // memory access control
   ili9341_set_command(ILI9341_MADCTL);
@@ -100,6 +117,7 @@ void ili9341_init() {
   // MY MX MV ML RGB MH -  -
   ili9341_command_param(0xC0);
   ili9341_set_command(ILI9341_INVON);
+
 #else
   ili9341_command_param(0x88);
 #endif
