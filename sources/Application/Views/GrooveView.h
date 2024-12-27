@@ -1,10 +1,10 @@
 #ifndef _GROOVE_VIEW_H_
 #define _GROOVE_VIEW_H_
 
-#include "BaseClasses/View.h"
+#include "ScreenView.h"
 #include "ViewData.h"
 
-class GrooveView : public View {
+class GrooveView : public ScreenView {
 public:
   GrooveView(GUIWindow &w, ViewData *viewData);
   ~GrooveView();
@@ -12,7 +12,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
-  virtual void AnimationUpdate(){};
 
 protected:
   void updateCursorValue(int val, bool sync = false);

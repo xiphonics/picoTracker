@@ -2,7 +2,7 @@
 #include "System/Console/Trace.h"
 #include "UIIntVarField.h"
 
-FieldView::FieldView(GUIWindow &w, ViewData *data) : View(w, data) {
+FieldView::FieldView(GUIWindow &w, ViewData *data) : ScreenView(w, data) {
   focus_ = 0;
 };
 

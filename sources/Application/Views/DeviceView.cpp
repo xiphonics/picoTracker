@@ -184,14 +184,23 @@ void DeviceView::DrawView() {
 
   // Draw title
   char projectString[SCREEN_WIDTH];
-  npf_snprintf(projectString, sizeof(projectString), "Device - Build %s%s_%s",
-               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
+  strcpy(projectString, "Device");
 
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
 
+  drawBattery(props);
+
   FieldView::Redraw();
+
+  SetColor(CD_NORMAL);
   drawMap();
+
+  pos._x = SCREEN_MAP_WIDTH + 1;
+  pos._y = SCREEN_HEIGHT - 1;
+  npf_snprintf(projectString, sizeof(projectString), "Build %s%s_%s",
+               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
+  DrawString(pos._x, pos._y, projectString, props);
 };
 
 void DeviceView::Update(Observable &, I_ObservableData *data) {
@@ -259,3 +268,11 @@ void DeviceView::addSwatchField(ColorDefinition color, GUIPoint position) {
   swatchField_.emplace_back(position, color);
   fieldList_.insert(fieldList_.end(), &(*swatchField_.rbegin()));
 }
+
+void DeviceView::AnimationUpdate() {
+  // redraw batt gauge on every clock tick (~1Hz) even when not playing
+  // and not redrawing due to user cursor navigation
+  GUITextProperties props;
+  drawBattery(props);
+  w_.Flush();
+};

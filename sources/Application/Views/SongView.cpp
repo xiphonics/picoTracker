@@ -13,7 +13,7 @@
  Constructor
  ****************/
 
-SongView::SongView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
+SongView::SongView(GUIWindow &w, ViewData *viewData) : ScreenView(w, viewData) {
 
   updatingChain_ = false;
   lastChain_ = 0;
@@ -813,16 +813,10 @@ void SongView::DrawView() {
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
   DrawString(pos._x + 5, pos._y, projectName.c_str(), props);
 
+  drawBattery(props);
+
   // Compute song grid location
   GUIPoint anchor = GetAnchor();
-
-  // draw battery gauge
-  GUIPoint battpos = GetAnchor();
-  battpos._y = 0;
-  battpos._x = 26;
-  System *sys = System::GetInstance();
-  float batt = sys->GetBatteryLevel() / 1000.0;
-  drawBattery(batt, battpos, props);
 
   // Display row numbers
   SetColor(CD_HILITE1);
@@ -1011,19 +1005,4 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 
   drawNotes();
-};
-
-void SongView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos = anchor;
-  GUITextProperties props;
-  pos._y = 0;
-  pos._x = 26;
-
-  System *sys = System::GetInstance();
-  float batt = sys->GetBatteryLevel() / 1000.0;
-  drawBattery(batt, pos, props);
-  w_.Flush();
 };

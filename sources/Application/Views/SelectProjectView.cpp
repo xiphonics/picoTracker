@@ -9,7 +9,7 @@
 #define INVALID_PROJECT_NAME "INVALID NAME"
 
 SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData) {}
+    : ScreenView(w, viewData) {}
 
 SelectProjectView::~SelectProjectView() {}
 
@@ -28,6 +28,8 @@ void SelectProjectView::DrawView() {
   DrawString(pos._x + 1, pos._y, title, props);
 
   SetColor(CD_NORMAL);
+
+  drawBattery(props);
 
   // Draw projects
   int x = 1;

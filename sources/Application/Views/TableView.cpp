@@ -7,7 +7,7 @@
 #include <nanoprintf.h>
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);
@@ -697,6 +697,8 @@ void TableView::DrawView() {
   SetColor(CD_NORMAL);
   npf_snprintf(title, sizeof(title), "Table %2.2X", viewData_->currentTable_);
   DrawString(pos._x, pos._y, title, props);
+
+  drawBattery(props);
 
   // Compute song grid location
 

@@ -1,8 +1,8 @@
 #ifndef _PROJECT_VIEW_H_
 #define _PROJECT_VIEW_H_
 
-#include "BaseClasses/FieldView.h"
 #include "BaseClasses/UITextField.h"
+#include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
@@ -15,7 +15,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
-  virtual void AnimationUpdate(){};
+  virtual void AnimationUpdate();
   etl::string<40> getProjectName() { return nameField_->GetString(); };
   void clearSaveAsFlag() { saveAsFlag_ = false; };
 

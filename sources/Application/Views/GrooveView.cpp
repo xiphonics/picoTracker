@@ -6,7 +6,8 @@
 #include <Application/AppWindow.h>
 #include <nanoprintf.h>
 
-GrooveView::GrooveView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
+GrooveView::GrooveView(GUIWindow &w, ViewData *viewData)
+    : ScreenView(w, viewData) {
   position_ = 0;
   lastPosition_ = 0;
 }
@@ -144,10 +145,11 @@ void GrooveView::DrawView() {
   GUIPoint pos = GetTitlePosition();
 
   // Draw title
-
   char title[SCREEN_WIDTH + 1];
 
   SetColor(CD_NORMAL);
+
+  drawBattery(props);
 
   npf_snprintf(title, sizeof(title), "Groove: %2.2x",
                viewData_->currentGroove_);

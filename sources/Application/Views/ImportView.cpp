@@ -9,7 +9,8 @@
 #define LIST_WIDTH 24
 #define LIST_PAGE_SIZE 18
 
-ImportView::ImportView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
+ImportView::ImportView(GUIWindow &w, ViewData *viewData)
+    : ScreenView(w, viewData) {}
 
 ImportView::~ImportView() {}
 
@@ -71,6 +72,8 @@ void ImportView::DrawView() {
   DrawString(pos._x + 1, pos._y, title, props);
 
   SetColor(CD_NORMAL);
+
+  drawBattery(props);
 
   // Draw samples
   int x = 1;
