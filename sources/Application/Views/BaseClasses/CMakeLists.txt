@@ -1,5 +1,4 @@
 add_library(application_views_baseclasses
-  FieldView.h FieldView.cpp
   I_Action.h I_Action.cpp
   ModalView.h ModalView.cpp
   UIActionField.h UIActionField.cpp

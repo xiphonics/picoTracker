@@ -1,4 +1,5 @@
 add_library(application_views
+  FieldView.h FieldView.cpp
   ChainView.h ChainView.cpp
   ConsoleView.h ConsoleView.cpp
   GrooveView.h GrooveView.cpp
@@ -13,6 +14,7 @@ add_library(application_views
   TableView.h TableView.cpp
   UIController.h UIController.cpp
   ViewData.h ViewData.cpp
+  ScreenView.h ScreenView.cpp
 )
 
 target_link_libraries(application_views PUBLIC application_views_baseclasses

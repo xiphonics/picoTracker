@@ -9,7 +9,7 @@
 #define INVALID_PROJECT_NAME "INVALID NAME"
 
 SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData) {}
+    : ScreenView(w, viewData) {}
 
 SelectProjectView::~SelectProjectView() {}
 
@@ -157,6 +157,18 @@ void SelectProjectView::setCurrentFolder() {
   fileIndexList_.erase(fileIndexList_.begin());
   fileIndexList_.erase(fileIndexList_.begin());
 
+  // filter out the "untitled" project entry
+  for (size_t i = 0; i < fileIndexList_.size(); i++) {
+    picoFS->getFileName(fileIndexList_[i], selection_,
+                        MAX_PROJECT_NAME_LENGTH + 1);
+    if (strcmp(selection_, UNNAMED_PROJECT_NAME) == 0) {
+      Trace::Log("SELECTPROJECTVIEW", "skipping untitled project on Index:%d",
+                 i);
+      fileIndexList_.erase(fileIndexList_.begin() + i);
+      break;
+    }
+  }
+
   // reset & redraw screen
   topIndex_ = 0;
   isDirty_ = true;
@@ -165,14 +177,3 @@ void SelectProjectView::setCurrentFolder() {
 void SelectProjectView::getSelectedProjectName(char *name) {
   strcpy(name, selection_);
 }
-
-/// Updates the animation by redrawing the battery gauge on every clock tick
-/// (~1Hz). This occurs even when playback is not active and there is no user
-/// cursor navigation.
-void SelectProjectView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
-};

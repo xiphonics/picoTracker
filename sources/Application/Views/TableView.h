@@ -3,10 +3,10 @@
 
 #include "Application/Model/Table.h"
 #include "BaseClasses/UIBigHexVarField.h"
-#include "BaseClasses/View.h"
+#include "ScreenView.h"
 #include "ViewData.h"
 
-class TableView : public View {
+class TableView : public ScreenView {
 public:
   TableView(GUIWindow &w, ViewData *viewData);
   ~TableView();
@@ -14,7 +14,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
-  virtual void AnimationUpdate();
 
 protected:
   void processNormalButtonMask(unsigned short mask);

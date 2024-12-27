@@ -1,7 +1,6 @@
 #ifndef _INSTRUMENT_VIEW_H_
 #define _INSTRUMENT_VIEW_H_
 
-#include "BaseClasses/FieldView.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmaskVarField.h"
 #include "BaseClasses/UIIntVarField.h"
@@ -9,6 +8,7 @@
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "Externals/etl/include/etl/vector.h"
+#include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 

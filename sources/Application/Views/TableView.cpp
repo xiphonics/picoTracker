@@ -7,7 +7,7 @@
 #include <nanoprintf.h>
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);
@@ -890,11 +890,3 @@ void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
   DrawString(0, 0, helpLegend[0], props);
   DrawString(5, 1, helpLegend[1], props);
 }
-
-void TableView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
-};
