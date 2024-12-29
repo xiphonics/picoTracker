@@ -25,7 +25,7 @@
 #include "pico/unique_id.h"
 #include "tusb.h"
 
-#define USB_VID 0xCafe
+#define USB_VID 0x2E8A
 #define USB_BCD 0x0200
 
 /* A combination of interfaces must have a unique product id, since PC will save
@@ -36,9 +36,7 @@
  *   [MSB]       MIDI | HID | MSC | CDC          [LSB]
  */
 #define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
-#define USB_PID                                                                \
-  (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) |           \
-   _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4))
+#define USB_PID 0x000A
 //--------------------------------------------------------------------+
 // Device Descriptors
 //--------------------------------------------------------------------+
@@ -95,7 +93,9 @@ enum {
 #define EPNUM_CDC_OUT 0x02
 #define EPNUM_CDC_IN 0x82
 #else
-#define EPNUM_MIDI 0x01
+// needs to be different than the CDC notification (0x01) endpoint
+// see: https://github.com/hathach/tinyusb/discussions/2162
+#define EPNUM_MIDI 0x04
 
 #define EPNUM_CDC_NOTIF 0x81
 #define EPNUM_CDC_OUT 0x02
