@@ -79,7 +79,8 @@ static char **getHelpLegend(FourCC command) {
     result[0] = (char *)("PAN:aabb, pan to value");
     break;
   case FourCC::InstrumentCommandGroove:
-    result[0] = (char *)("GRooVe:--bb, set groove bb");
+    result[0] = (char *)("GRooVe:aabb, set groove bb");
+    result[1] = (char *)("if aa > 0, set all tracks");
     break;
   case FourCC::InstrumentCommandInstrumentRetrigger:
     result[0] = (char *)("InstrumentReTrig:aabb,");
@@ -95,8 +96,7 @@ static char **getHelpLegend(FourCC command) {
     result[0] = (char *)("Stop playing song now");
     break;
   case FourCC::InstrumentCommandGateOff:
-    result[0] = (char *)("GateOff (Synth):--bb,");
-    result[1] = (char *)("close synth instrument gate");
+    result[0] = (char *)("GateOff (Synth only)");
     break;
   default:
     result[0] = result[1] = (char *)("");

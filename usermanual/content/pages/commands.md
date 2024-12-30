@@ -28,16 +28,30 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 
 - FCT 0080 will instantly set the filter cutoff to 50%
 - FCT 1000 will close the filter entirely at speed 10
+
 ## FLT aabb (FLTR in lgpt)
 
 **lowpass filter, set absolute frequency value for cutoff aa & resonance bb**
 
 - FLT 00FF is un-adultered sound
+
 ## FRS aabb (FRES in lgpt)
 
 **adjust the filter resonance to bb at speed aa**
 
 - FRS 08FF will raise the resonance to screeching at speed 08
+
+## GOF
+
+**Close Gate OFF for Synth Instruments _only_**
+
+## GRV aabb
+
+**set Groove to bb**
+
+- In Phrases, if `aa > 0` then Groove will be set for _all_ tracks
+- In Tables, the Groove command has a maximum value of `1F` (15)
+
 
 ## HOP aabb
 
