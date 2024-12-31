@@ -466,8 +466,8 @@ void Opal::SampleBuffer(fixed *buffer, int size) {
     SampleAccum += OPL3SampleRate;
 
     // =====
-    buffer[0] = l << 15;
-    buffer[1] = r << 15;
+    buffer[0] = i2fp(l);
+    buffer[1] = i2fp(r);
     buffer += 2;
   }
 }
