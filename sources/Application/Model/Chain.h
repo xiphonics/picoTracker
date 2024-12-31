@@ -1,6 +1,8 @@
 #ifndef _CHAIN_H_
 #define _CHAIN_H_
 
+#include <bitset>
+
 #define CHAIN_COUNT 0x80
 #define NO_MORE_CHAIN 0x81
 
@@ -17,7 +19,7 @@ public:
   unsigned char transpose_[CHAIN_COUNT * 16];
 
 private:
-  bool isUsed_[CHAIN_COUNT];
+  std::bitset<CHAIN_COUNT> isUsed_;
 };
 
 #endif
