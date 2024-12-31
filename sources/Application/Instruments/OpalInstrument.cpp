@@ -141,22 +141,21 @@ void OpalInstrument::Stop(int c) {
   opl_.Port(OCTAVE_BASE_REG, stop);
 };
 
-bool OpalInstrument::Render(int channel, fixed *buffer, int size,
+static int debugCount = 0;
 
+bool OpalInstrument::Render(int channel, fixed *buffer, int size,
                             bool updateTick) {
 
   int start = micros();
-  int count = size;
-  while (count--) {
-    int16_t l, r;
-    opl_.Sample(&l, &r);
 
-    buffer[0] = l << 15;
-    buffer[1] = r << 15;
-    buffer += 2;
-  }
+  // optimise to remove function calls in hot loop
+  opl_.SampleBuffer(buffer, size);
+
   int took = micros() - start;
-  // printf("Render took: %i (%i ts)[%i]\n", took, took * 441 / size / 10000);
+  debugCount++;
+  if (debugCount % 100 == 0) {
+    Trace::Log("OPALINSTRUMENT", "Render took: %i us [%i])", took, size);
+  }
   return true;
 };
 
