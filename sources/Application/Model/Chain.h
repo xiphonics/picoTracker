@@ -3,8 +3,8 @@
 
 #include <bitset>
 
-#define CHAIN_COUNT 0x80
-#define NO_MORE_CHAIN 0x81
+#define CHAIN_COUNT 0xFF
+#define NO_MORE_CHAIN 0x100
 
 class Chain {
 public:
