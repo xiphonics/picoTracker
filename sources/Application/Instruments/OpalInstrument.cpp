@@ -141,8 +141,6 @@ void OpalInstrument::Stop(int c) {
   opl_.Port(OCTAVE_BASE_REG, stop);
 };
 
-static int debugCount = 0;
-
 bool OpalInstrument::Render(int channel, fixed *buffer, int size,
                             bool updateTick) {
 
@@ -152,10 +150,7 @@ bool OpalInstrument::Render(int channel, fixed *buffer, int size,
   opl_.SampleBuffer(buffer, size);
 
   int took = micros() - start;
-  debugCount++;
-  if (debugCount % 100 == 0) {
-    Trace::Log("OPALINSTRUMENT", "Render took: %i us [%i])", took, size);
-  }
+  // Trace::Log("OPALINSTRUMENT", "Render took: %i us [%i])", took, size);
   return true;
 };
 
