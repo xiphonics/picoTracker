@@ -397,77 +397,8 @@ void Opal::SampleBuffer(fixed *buffer, int size) {
   while (count--) {
     int16_t l, r;
 
-    // =====
-    // for rp2040 perf optimisation inline manually: Sample(&l, &r);
-    while (SampleAccum >= SampleRate) {
-      LastOutput[0] = CurrOutput[0];
-      LastOutput[1] = CurrOutput[1];
+    Sample(&l, &r);
 
-      // +++++
-      // manually inline: Output(CurrOutput[0], CurrOutput[1]);
-      int32_t leftmix = 0, rightmix = 0;
-
-      // Sum the output of each channel
-      for (int i = 0; i < NumChannels; i++) {
-
-        int16_t chanleft, chanright;
-        Chan[i].Output(chanleft, chanright);
-
-        leftmix += chanleft;
-        rightmix += chanright;
-      }
-      // Clamp
-      if (leftmix < -0x8000)
-        CurrOutput[0] = -0x8000;
-      else if (leftmix > 0x7FFF)
-        CurrOutput[0] = 0x7FFF;
-      else
-        CurrOutput[0] = static_cast<uint16_t>(leftmix);
-
-      if (rightmix < -0x8000)
-        CurrOutput[1] = -0x8000;
-      else if (rightmix > 0x7FFF)
-        CurrOutput[1] = 0x7FFF;
-      else
-        CurrOutput[1] = static_cast<uint16_t>(rightmix);
-
-      Clock++;
-
-      // Tremolo.  According to this post, the OPL3 tremolo is a 13,440 sample
-      // length triangle wave with a peak at 26 and a trough at 0 and is simply
-      // added to the logarithmic level accumulator
-      //      http://forums.submarine.org.uk/phpBB/viewtopic.php?f=9&t=1171
-      TremoloClock = (TremoloClock + 1) % 13440;
-      TremoloLevel =
-          ((TremoloClock < 13440 / 2) ? TremoloClock : 13440 - TremoloClock) /
-          256;
-      if (!TremoloDepth)
-        TremoloLevel >>= 2;
-
-      // Vibrato.  This appears to be a 8 sample long triangle wave with a
-      // magnitude of the three high bits of the channel frequency, positive and
-      // negative, divided by two if the vibrato depth is zero.  It is only
-      // cycled every 1,024 samples.
-      VibratoTick++;
-      if (VibratoTick >= 1024) {
-        VibratoTick = 0;
-        VibratoClock = (VibratoClock + 1) & 7;
-      }
-
-      // ++++++
-      SampleAccum -= SampleRate;
-    }
-
-    // Mix with the partial accumulation
-    int32_t omblend = SampleRate - SampleAccum;
-    l = static_cast<uint16_t>(
-        (LastOutput[0] * omblend + CurrOutput[0] * SampleAccum) / SampleRate);
-    r = static_cast<uint16_t>(
-        (LastOutput[1] * omblend + CurrOutput[1] * SampleAccum) / SampleRate);
-
-    SampleAccum += OPL3SampleRate;
-
-    // =====
     buffer[0] = i2fp(l);
     buffer[1] = i2fp(r);
     buffer += 2;
@@ -479,7 +410,8 @@ void Opal::SampleBuffer(fixed *buffer, int size) {
 // samples (one for each stereo channel) which will sound correct when played
 // back at the sample rate given when the class was constructed.
 //==================================================================================================
-void Opal::Sample(int16_t *left, int16_t *right) {
+__attribute__((always_inline)) inline void Opal::Sample(int16_t *left,
+                                                        int16_t *right) {
 
   // If the destination sample rate is higher than the OPL3 sample rate, we need
   // to skip ahead
@@ -505,7 +437,8 @@ void Opal::Sample(int16_t *left, int16_t *right) {
 //==================================================================================================
 // Produce final output from the chip.  This is at the OPL3 sample-rate.
 //==================================================================================================
-void Opal::Output(int16_t &left, int16_t &right) {
+__attribute__((always_inline)) inline void Opal::Output(int16_t &left,
+                                                        int16_t &right) {
 
   int32_t leftmix = 0, rightmix = 0;
 
