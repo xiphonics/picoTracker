@@ -34,7 +34,7 @@ void VolumeRamp::Trigger(bool tableTick) {
   };
 };
 
-void VolumeRamp::UpdateSRP(struct RUParams &rup) {
+inline void VolumeRamp::UpdateSRP(struct RUParams &rup) {
   if (!enabled_)
     return;
   rup.volumeOffset_ = fp_add(rup.volumeOffset_, current_);
@@ -72,7 +72,7 @@ void FCRamp::Trigger(bool tableTick) {
   };
 };
 
-void FCRamp::UpdateSRP(struct RUParams &rup) {
+inline void FCRamp::UpdateSRP(struct RUParams &rup) {
   if (!enabled_)
     return;
   rup.cutOffset_ = fp_add(rup.cutOffset_, current_);
@@ -110,7 +110,7 @@ void FRRamp::Trigger(bool tableTick) {
   };
 };
 
-void FRRamp::UpdateSRP(struct RUParams &rup) {
+inline void FRRamp::UpdateSRP(struct RUParams &rup) {
   if (!enabled_)
     return;
   rup.resOffset_ = fp_add(rup.resOffset_, current_);
@@ -162,7 +162,7 @@ void LogSpeedRamp::Trigger(bool tableTick) {
   };
 };
 
-void LogSpeedRamp::UpdateSRP(struct RUParams &rup) {
+inline void LogSpeedRamp::UpdateSRP(struct RUParams &rup) {
   if (!enabled_)
     return;
   rup.speedOffset_ = fp_mul(rup.speedOffset_, current_);
@@ -205,7 +205,7 @@ void LinSpeedRamp::Trigger(bool tableTick) {
   };
 };
 
-void LinSpeedRamp::UpdateSRP(struct RUParams &rup) {
+inline void LinSpeedRamp::UpdateSRP(struct RUParams &rup) {
   if (!enabled_)
     return;
   rup.speedOffset_ = fp_mul(rup.speedOffset_, current_);
@@ -246,7 +246,7 @@ void Panner::Trigger(bool tableTick) {
   };
 };
 
-void Panner::UpdateSRP(struct RUParams &rup) {
+inline void Panner::UpdateSRP(struct RUParams &rup) {
   if (!enabled_)
     return;
   rup.panOffset_ = fp_add(rup.panOffset_, current_);
@@ -285,7 +285,7 @@ void Arp::Trigger(bool tableTick) {
   }
 };
 
-void Arp::UpdateSRP(struct RUParams &rup) {
+inline void Arp::UpdateSRP(struct RUParams &rup) {
   if (!enabled_)
     return;
   rup.speedOffset_ = fp_mul(rup.speedOffset_, current_);

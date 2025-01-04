@@ -1,4 +1,5 @@
 #include "SampleInstrument.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Instruments/Filters.h"
 #include "Application/Model/Table.h"
 #include "Application/Player/PlayerMixer.h" // For MIX_BUFFER_SIZE.. kick out pls
@@ -27,6 +28,17 @@ renderParams SampleInstrument::renderParams_[SONG_CHANNEL_COUNT];
 signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 
 #define KRATE_SAMPLE_COUNT 100
+
+const fixed FixedPointOne = i2fp(1);
+const fixed FixedPointZero = i2fp(0);
+
+// volume scale
+const fixed volscale = fl2fp(0.003921568627450980392156862745098f);
+// filter constants
+const fixed f_k = fl2fp(1.0F / 3.0F);
+const fixed f_s = FP_ONE - f_k;
+
+const fixed zerofive = fl2fp(0.5f);
 
 SampleInstrument::SampleInstrument()
     : I_Instrument(&variables_), sample_(FourCC::SampleInstrumentSample),
@@ -305,7 +317,7 @@ void SampleInstrument::doTickUpdate(int channel) {
   }
 };
 
-void SampleInstrument::doKRateUpdate(int channel) {
+inline void SampleInstrument::doKRateUpdate(int channel) {
 
   renderParams *rp = renderParams_ + channel;
   for (auto it = rp->activeUpdaters_.begin(); it != rp->activeUpdaters_.end();
@@ -321,6 +333,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
                               bool updateTick) {
 
   bool somethingToMix = false;
+  absolute_time_t tracestart = 0;
+  absolute_time_t tracestop = 0;
 
   // Get Current render parameters
 
@@ -350,7 +364,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
                bassyFilter);
 
     filter_t *flt = get_filter(channel);
-    bool filtering = (rp->cutoff_ < i2fp(1)) || (rp->reso_ > i2fp(0));
+    bool filtering =
+        (rp->cutoff_ < FixedPointOne) || (rp->reso_ > FixedPointZero);
 
     // Process tick-level updates
 
@@ -433,17 +448,10 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     fixed *result = buffer;
 
     // Get volume factor and pan
-
-    fixed volscale = fl2fp(0.003921568627450980392156862745098f);
     fixed volfactor = fp_mul(rp->volume_, volscale);
     int pan = fp2i(rp->pan_);
     fixed fixedpanl = panlaw[pan];
     fixed fixedpanr = panlaw[254 - pan];
-
-    // filter constants
-
-    fixed f_k = fl2fp(1.0F / 3.0F);
-    fixed f_s = FP_ONE - f_k;
 
     // Get pan multiplicators, and take volume into account
 
@@ -470,9 +478,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     if (/*(loopMode==SILM_OSCFINE)||*/ (rp->reverse_)) {
       lastSample = (short *)(wavbuf + rp->rendLoopEnd_ * 2 * channelCount);
     }
-
-    fixed zerofive = fl2fp(0.5f);
-
     // try to speed up access using pointers rather than structure access
 
     bool rpReverse = rp->reverse_;
@@ -493,10 +498,15 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     short *dsBasePtr = ((short *)wavbuf) + rp->rendFirst_ * channelCount;
 
+    tracestart = get_absolute_time();
+
+    // tight loop generating samples!
     while (count > 0) {
+      // if (count == size - 10) {
+      //   tracestart = get_absolute_time();
+      // }
 
       // look where we are, if we need to
-
       if (!rpReverse) {
         if (input >= lastSample /*-((loopMode==SILM_OSCFINE)?1:0)*/) {
           switch (loopMode) {
@@ -623,7 +633,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
             set_filter(channel, FLT_LOWPASS, rp->cutoff_, rp->reso_, filterMix,
                        bassyFilter);
-            filtering = (rp->cutoff_ < i2fp(1)) || (rp->reso_ > i2fp(0));
+            filtering =
+                (rp->cutoff_ < FixedPointOne) || (rp->reso_ > FixedPointZero);
 
             volfactor = fp_mul(rp->volume_, volscale);
             pan = fp2i(rp->pan_);
@@ -702,7 +713,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
           s2 = fp_mul(s2, volfactor);
 
           // apply filtering if needed
-
           if (filtering) {
 
             fixed lpin = fp_mul(s2, fltMixInv);
@@ -759,6 +769,9 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         int delta = fp2i(fpPos);
         input += channelCount * delta;
         fpPos = fp_sub(fpPos, i2fp(delta));
+        // if (count == size - 1) {
+        //   tracestop = get_absolute_time();
+        // }
         count--;
       }
     }
@@ -772,6 +785,11 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     somethingToMix = true;
   }
+
+  tracestop = get_absolute_time();
+
+  Trace::Log("SAMPLEINSTRUMENT", "Render took: %i us [%i])",
+             absolute_time_diff_us(tracestart, tracestop), size);
 
   return somethingToMix;
 };

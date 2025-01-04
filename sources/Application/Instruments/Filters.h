@@ -1,3 +1,6 @@
+#ifndef _FILTERS_H_
+#define _FILTERS_H_
+
 /****************************
 some wanabe filter code by Beausoleil S Guillemette
 hope it will work :D
@@ -39,3 +42,5 @@ void set_filter(int channel, filterType_t type, fixed parm1, fixed parm2,
 void init_filters(void);
 
 filter_t *get_filter(int channel);
+
+#endif
