@@ -1,4 +1,5 @@
 #include "opal.h"
+#include "hardware/flash.h"
 
 const uint16_t Opal::RateTables[4][8] = {
     {1, 0, 1, 0, 1, 0, 1, 0},
@@ -6,8 +7,10 @@ const uint16_t Opal::RateTables[4][8] = {
     {1, 0, 0, 0, 1, 0, 0, 0},
     {1, 0, 0, 0, 0, 0, 0, 0},
 };
+// These look up tables are accessed in tight loops for each sample, so they
+// need to be in RAM not flash for fast access
 //--------------------------------------------------------------------------------------------------
-const uint16_t Opal::ExpTable[0x100] = {
+static const uint16_t __not_in_flash("opalLUTdata") ExpTable[0x100] = {
     1018, 1013, 1007, 1002, 996, 991, 986, 980, 975, 969, 964, 959, 953, 948,
     942,  937,  932,  927,  921, 916, 911, 906, 900, 895, 890, 885, 880, 874,
     869,  864,  859,  854,  849, 844, 839, 834, 829, 824, 819, 814, 809, 804,
@@ -28,8 +31,9 @@ const uint16_t Opal::ExpTable[0x100] = {
     48,   45,   42,   40,   37,  34,  31,  28,  25,  22,  20,  17,  14,  11,
     8,    6,    3,    0,
 };
+
 //--------------------------------------------------------------------------------------------------
-const uint16_t Opal::LogSinTable[0x100] = {
+static const uint16_t __not_in_flash("opalLUTdata") LogSinTable[0x100] = {
     2137, 1731, 1543, 1419, 1326, 1252, 1190, 1137, 1091, 1050, 1013, 979, 949,
     920,  894,  869,  846,  825,  804,  785,  767,  749,  732,  717,  701, 687,
     672,  659,  646,  633,  621,  609,  598,  587,  576,  566,  556,  546, 536,
@@ -387,12 +391,27 @@ void Opal::Port(uint16_t reg_num, uint8_t val) {
   }
 }
 
+// Fill a fixed point buffer with size number of samples
+void Opal::SampleBuffer(fixed *buffer, int size) {
+  int count = size;
+  while (count--) {
+    int16_t l, r;
+
+    Sample(&l, &r);
+
+    buffer[0] = i2fp(l);
+    buffer[1] = i2fp(r);
+    buffer += 2;
+  }
+}
+
 //==================================================================================================
 // Generate sample.  Every time you call this you will get two signed 16-bit
 // samples (one for each stereo channel) which will sound correct when played
 // back at the sample rate given when the class was constructed.
 //==================================================================================================
-void Opal::Sample(int16_t *left, int16_t *right) {
+__attribute__((always_inline)) inline void Opal::Sample(int16_t *left,
+                                                        int16_t *right) {
 
   // If the destination sample rate is higher than the OPL3 sample rate, we need
   // to skip ahead
@@ -418,7 +437,8 @@ void Opal::Sample(int16_t *left, int16_t *right) {
 //==================================================================================================
 // Produce final output from the chip.  This is at the OPL3 sample-rate.
 //==================================================================================================
-void Opal::Output(int16_t &left, int16_t &right) {
+__attribute__((always_inline)) inline void Opal::Output(int16_t &left,
+                                                        int16_t &right) {
 
   int32_t leftmix = 0, rightmix = 0;
 
@@ -491,7 +511,8 @@ Opal::Channel::Channel() {
 //==================================================================================================
 // Produce output from channel.
 //==================================================================================================
-void Opal::Channel::Output(int16_t &left, int16_t &right) {
+__attribute__((always_inline)) inline void
+Opal::Channel::Output(int16_t &left, int16_t &right) {
 
   // Has the channel been disabled?  This is usually a result of the 4-op
   // enables being used to disable the secondary channel in each 4-op pair
@@ -715,8 +736,9 @@ Opal::Operator::Operator() {
 //==================================================================================================
 // Produce output from operator.
 //==================================================================================================
-int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
-                               int16_t vibrato, int16_t mod, int16_t fbshift) {
+__attribute__((always_inline)) inline int16_t
+Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
+                       int16_t vibrato, int16_t mod, int16_t fbshift) {
 
   // Advance wave phase
   if (VibratoEnable)
@@ -811,7 +833,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
   case 0:
     if (phase & 0x100)
       offset ^= 0xFF;
-    logsin = Master->LogSinTable[offset];
+    logsin = LogSinTable[offset];
     negate = (phase & 0x200) != 0;
     break;
 
@@ -823,7 +845,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
       offset = 0;
     else if (phase & 0x100)
       offset ^= 0xFF;
-    logsin = Master->LogSinTable[offset];
+    logsin = LogSinTable[offset];
     break;
 
   //------------------------------------
@@ -832,7 +854,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
   case 2:
     if (phase & 0x100)
       offset ^= 0xFF;
-    logsin = Master->LogSinTable[offset];
+    logsin = LogSinTable[offset];
     break;
 
   //------------------------------------
@@ -841,7 +863,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
   case 3:
     if (phase & 0x100)
       offset = 0;
-    logsin = Master->LogSinTable[offset];
+    logsin = LogSinTable[offset];
     break;
 
   //------------------------------------
@@ -860,7 +882,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
       negate = (phase & 0x100) != 0;
     }
 
-    logsin = Master->LogSinTable[offset];
+    logsin = LogSinTable[offset];
     break;
 
   //------------------------------------
@@ -877,7 +899,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
         offset ^= 0xFF;
     }
 
-    logsin = Master->LogSinTable[offset];
+    logsin = LogSinTable[offset];
     break;
 
   //------------------------------------
@@ -911,7 +933,7 @@ int16_t Opal::Operator::Output(uint16_t /*keyscalenum*/, uint32_t phase_step,
   // (the hidden bit) is then the significand of the floating point output and
   // the yet unused MSB's of the input are the exponent of the floating point
   // output."
-  int16_t v = (Master->ExpTable[mix & 0xFF] + 1024u) >> (mix >> 8u);
+  int16_t v = (ExpTable[mix & 0xFF] + 1024u) >> (mix >> 8u);
   v += v;
   if (negate)
     v = ~v;

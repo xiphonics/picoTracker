@@ -52,7 +52,7 @@ void GUIWindow::Flush() { _imp->Flush(); }
 void GUIWindow::Lock() { _imp->Lock(); }
 void GUIWindow::Unlock() { _imp->Unlock(); }
 
-void GUIWindow::Update() { onUpdate(); }
+void GUIWindow::Update(bool redraw) { onUpdate(redraw); }
 
 void GUIWindow::ClockTick() { AnimationUpdate(); }
 

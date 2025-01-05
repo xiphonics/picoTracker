@@ -1,15 +1,18 @@
 #include "ImportView.h"
 
+#include "Application/AppWindow.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "pico/multicore.h"
 #include <memory>
 #include <nanoprintf.h>
 
-#define LIST_WIDTH 24
-#define LIST_PAGE_SIZE 18
+#define LIST_WIDTH SCREEN_WIDTH - 2
+// -4 to allow for title, filesize & spacers
+#define LIST_PAGE_SIZE SCREEN_HEIGHT - 4
 
-ImportView::ImportView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {}
+ImportView::ImportView(GUIWindow &w, ViewData *viewData)
+    : ScreenView(w, viewData) {}
 
 ImportView::~ImportView() {}
 
@@ -72,6 +75,8 @@ void ImportView::DrawView() {
 
   SetColor(CD_NORMAL);
 
+  drawBattery(props);
+
   // Draw samples
   int x = 1;
   int y = pos._y + 2;
@@ -104,14 +109,16 @@ void ImportView::DrawView() {
     y += 1;
   };
 
+  // draw current selected file size
   SetColor(CD_HILITE2);
   props.invert_ = true;
   y = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
   if (picoFS->getFileType(currentFileIndex) == PFT_FILE) {
-    auto filesize = picoFS->getFileSize(currentFileIndex);
-    npf_snprintf(buffer, sizeof(buffer), "[size: %d]", filesize);
-    x = 32 - strlen(buffer) + 1;
+    int filesize = picoFS->getFileSize(currentFileIndex);
+    npf_snprintf(buffer, sizeof(buffer), "[size: %i]", filesize);
+    x = 1;  // align with rest screen title & file list
+    y = 23; // bottom line
     DrawString(x, y, buffer, props);
   }
 

@@ -15,7 +15,7 @@
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
   GUIPoint pos(0, 10);
@@ -1075,6 +1075,8 @@ void PhraseView::DrawView() {
   npf_snprintf(title, sizeof(title), "Phrase %2.2x", viewData_->currentPhrase_);
   DrawString(pos._x, pos._y, title, props);
 
+  drawBattery(props);
+
   // Compute song grid location
 
   GUIPoint anchor = GetAnchor();
@@ -1114,7 +1116,6 @@ void PhraseView::DrawView() {
   }
 
   // Draw instruments
-
   pos = anchor;
   pos._x += 4;
 
@@ -1131,11 +1132,11 @@ void PhraseView::DrawView() {
       hex2char(d, buffer + 1);
       DrawString(pos._x, pos._y, buffer, props);
       if (j == row_) {
-        npf_snprintf(buffer, sizeof(buffer), "I%2.2x: ", d);
-        etl::string<32> instrLine = buffer;
+        npf_snprintf(buffer, sizeof(buffer), "I%2.2x:", d);
+        etl::string<32 - BATTERY_GAUGE_WIDTH> instrLine = buffer;
         setTextProps(props, 1, j, true);
         GUIPoint location = GetTitlePosition();
-        location._x += 12;
+        location._x += 10; // make space for "Phrase %2.2x"
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(d);
         instrLine += instr->GetName();
@@ -1317,6 +1318,13 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
 void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
   char **helpLegend = getHelpLegend(command);
-  DrawString(0, 0, helpLegend[0], props);
-  DrawString(5, 1, helpLegend[1], props);
+  char line[32]; //-1 for 1char space start of line
+  strcpy(line, " ");
+  strcpy(line, helpLegend[0]);
+  DrawString(0, 0, line, props);
+  memset(line, ' ', 32);
+  if (helpLegend[1] != NULL) {
+    strcpy(line, helpLegend[1]);
+    DrawString(0, 1, line, props);
+  }
 }

@@ -7,7 +7,7 @@
 #include <nanoprintf.h>
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);
@@ -698,6 +698,8 @@ void TableView::DrawView() {
   npf_snprintf(title, sizeof(title), "Table %2.2X", viewData_->currentTable_);
   DrawString(pos._x, pos._y, title, props);
 
+  drawBattery(props);
+
   // Compute song grid location
 
   GUIPoint anchor = GetAnchor();
@@ -885,6 +887,13 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
 void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
   char **helpLegend = getHelpLegend(command);
-  DrawString(0, 0, helpLegend[0], props);
-  DrawString(5, 1, helpLegend[1], props);
+  char line[32]; //-1 for 1char space start of line
+  strcpy(line, " ");
+  strcpy(line, helpLegend[0]);
+  DrawString(0, 0, line, props);
+  memset(line, ' ', 32);
+  if (helpLegend[1] != NULL) {
+    strcpy(line, helpLegend[1]);
+    DrawString(0, 1, line, props);
+  }
 }

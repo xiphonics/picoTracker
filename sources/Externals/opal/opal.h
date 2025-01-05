@@ -24,6 +24,7 @@
 #ifndef _OPAL_H_
 #define _OPAL_H_
 
+#include "Application/Utils/fixed.h"
 #include <cstdint>
 
 //==================================================================================================
@@ -185,6 +186,8 @@ public:
   void Port(uint16_t reg_num, uint8_t val);
   void Sample(int16_t *left, int16_t *right);
 
+  void SampleBuffer(fixed *buffer, int size);
+
 protected:
   void Init(int sample_rate);
   void Output(int16_t &left, int16_t &right);
@@ -194,8 +197,6 @@ protected:
   int16_t LastOutput[2], CurrOutput[2];
   Channel Chan[NumChannels];
   Operator Op[NumOperators];
-  //      uint16_t            ExpTable[256];
-  //      uint16_t            LogSinTable[256];
   uint16_t Clock;
   uint16_t TremoloClock;
   uint16_t TremoloLevel;
@@ -206,8 +207,6 @@ protected:
   bool VibratoDepth;
 
   static const uint16_t RateTables[4][8];
-  static const uint16_t ExpTable[256];
-  static const uint16_t LogSinTable[256];
 };
 
 #endif

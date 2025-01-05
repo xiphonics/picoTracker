@@ -41,6 +41,7 @@ protected:
   virtual void Update(Observable &o, I_ObservableData *d);
 
 private:
+  void SendFont(uint8_t uifontIndex);
   bool remoteUIEnabled_ = 0;
 };
 #endif

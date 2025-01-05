@@ -1,11 +1,11 @@
 #ifndef _DEVICE_VIEW_H_
 #define _DEVICE_VIEW_H_
 
-#include "BaseClasses/FieldView.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UISwatchField.h"
+#include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
@@ -18,7 +18,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
-  virtual void AnimationUpdate(){};
+  virtual void AnimationUpdate();
 
   // Observer for action callback
 

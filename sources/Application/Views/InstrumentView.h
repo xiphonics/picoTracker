@@ -1,7 +1,6 @@
 #ifndef _INSTRUMENT_VIEW_H_
 #define _INSTRUMENT_VIEW_H_
 
-#include "BaseClasses/FieldView.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmaskVarField.h"
 #include "BaseClasses/UIIntVarField.h"
@@ -9,6 +8,7 @@
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "Externals/etl/include/etl/vector.h"
+#include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
 
@@ -21,8 +21,9 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
-  virtual void AnimationUpdate(){};
+  virtual void AnimationUpdate();
   void onInstrumentTypeChange();
+  void clearInstrumentModified() { instrumentModified_ = false; }
 
 protected:
   void warpToNext(int offset);
@@ -42,6 +43,9 @@ private:
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
   InstrumentType currentType_ = IT_NONE;
+  bool instrumentModified_ = false;
+
+  char sidName_[24];
 
   char sidName_[24];
 

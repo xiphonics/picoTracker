@@ -25,6 +25,9 @@
 #define CHAR_HEIGHT 10
 #define SCREEN_WIDTH 32
 #define SCREEN_HEIGHT 24
+#define SCREEN_MAP_HEIGHT 4
+#define SCREEN_MAP_WIDTH 4
+#define BATTERY_GAUGE_WIDTH 5
 #define SCREEN_CHARS SCREEN_WIDTH *SCREEN_HEIGHT
 #define MAX_FIELD_WIDTH 26
 
@@ -48,7 +51,7 @@ public:
 
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);
-  virtual void onUpdate();
+  virtual void onUpdate(bool redraw);
   virtual void LayoutChildren();
   virtual void Flush();
   virtual void Redraw();

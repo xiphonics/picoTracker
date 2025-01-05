@@ -1,13 +1,13 @@
 #ifndef _IMPORT_VIEW_H_
 #define _IMPORT_VIEW_H_
 
-#include "BaseClasses/View.h"
 #include "Foundation/T_SimpleList.h"
+#include "ScreenView.h"
 #include "System/FileSystem/PicoFileSystem.h"
 #include "ViewData.h"
 #include <string>
 
-class ImportView : public View {
+class ImportView : public ScreenView {
 public:
   ImportView(GUIWindow &w, ViewData *viewData);
   ~ImportView();
@@ -15,7 +15,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
-  virtual void AnimationUpdate(){};
 
 protected:
   void setCurrentFolder(PicoFileSystem *picoFS, const char *name);

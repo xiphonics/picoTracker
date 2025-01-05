@@ -39,6 +39,18 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 
 - FRS 08FF will raise the resonance to screeching at speed 08
 
+## GOF
+
+**Close Gate OFF for Synth Instruments _only_**
+
+## GRV aabb
+
+**set Groove to bb**
+
+- In Phrases, if `aa > 0` then Groove will be set for _all_ tracks
+- In Tables, the Groove command has a maximum value of `1F` (15)
+
+
 ## HOP aabb
 
 **play position will jump to the next phrase in a chain, jumping directly at position bb in the phrase.**

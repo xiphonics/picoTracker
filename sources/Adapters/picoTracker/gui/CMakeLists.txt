@@ -3,6 +3,7 @@ add_library(platform_gui
   picoTrackerGUIWindowImp.h picoTrackerGUIWindowImp.cpp
   picoTrackerEventManager.h picoTrackerEventManager.cpp
   SerialDebugUI.h SerialDebugUI.cpp
+  picoRemoteUI.h picoRemoteUI.cpp
 )
 
 if(PICO_RP2350)

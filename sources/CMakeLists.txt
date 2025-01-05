@@ -45,6 +45,15 @@ message(USE_LCD="${USE_LCD}")
 add_compile_definitions(${USE_LCD})
 # add_compile_definitions(LCD_ST7789)
 
+# ST7789 controller based LCD instead of a ILI9341 controller
+# for CI builds this will be set via command line
+if(NOT USE_LCD)
+    set(USE_LCD LCD_ST7789)
+endif()
+message(USE_LCD="${USE_LCD}")
+add_compile_definitions(${USE_LCD})
+# add_compile_definitions(LCD_ST7789)
+
 # Initialize the SDK
 pico_sdk_init()
 
