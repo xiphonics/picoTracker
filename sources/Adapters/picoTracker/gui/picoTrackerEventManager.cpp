@@ -86,6 +86,13 @@ int picoTrackerEventManager::MainLoop() {
   while (!finished_) {
     loops++;
 
+#if defined(PICO_RP2350) && !defined(PICO_DEOPTIMIZED_DEBUG)
+    // no idea why this is needed, but on rp2350 with optimised builds anything
+    // less than 7us causes the events not to be processed while this loop
+    // does continue to run -\_(o.o)_/-
+    sleep_us(7);
+#endif
+
     // process usb interrupts, should this be done somewhere else??
     handleUSBInterrupts();
 
