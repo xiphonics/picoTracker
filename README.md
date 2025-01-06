@@ -57,7 +57,7 @@ Head over to the [User Manual](https://picotracker-manual.web.app/)
 
 You can join the fun by following our [contributing guide](docs/CONTRIBUTING.md). 
 
-Join us on [Discord](https://discord.gg/6kYvqbegha)
+Join us on [Discord](https://discord.gg/F9nhkd7qj2)
 
 ## Development
 
