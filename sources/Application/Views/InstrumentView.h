@@ -47,8 +47,6 @@ private:
 
   char sidName_[24];
 
-  char sidName_[24];
-
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
