@@ -86,6 +86,12 @@ int picoTrackerEventManager::MainLoop() {
   while (!finished_) {
     loops++;
 
+#if defined(PICO_RP2350) && !defined(PICO_DEOPTIMIZED_DEBUG)
+    // seems this is needed on rp2350 with optimised builds to overcome some
+    // issue due to the overclocking
+    sleep_us(7);
+#endif
+
     // process usb interrupts, should this be done somewhere else??
     handleUSBInterrupts();
 
