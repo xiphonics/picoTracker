@@ -217,9 +217,9 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   playing_ = true;
 
-  for (int i = 0; i <= 24; i++) {
-    Trace::Debug("Register %i value: -  0x%2.2X\n", i, sid_->Register[i]);
-  }
+  // for (int i = 0; i <= 24; i++) {
+  //   Trace::Debug("Register %i value: -  0x%2.2X\n", i, sid_->Register[i]);
+  // }
   return true;
 };
 
@@ -234,13 +234,8 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     // clear the fixed point buffer
     SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
 
-    for (int n = 0; n < size; n++) {
-      // Have to calculate ASDRs somewhere here
-      sid_->cRSID_emulateADSRs(1);
-      int output = sid_->cRSID_emulateWaves();
-      buffer[2 * n] = (fixed)output << 15;     // L
-      buffer[2 * n + 1] = (fixed)output << 15; // R
-    }
+    sid_->cRSID_emulateWavesBuffer(buffer, size);
+
     int time_taken = micros() - start;
     Trace::Log("RENDER", "SID-%i Render took %ius (%i%%ts)", GetOsc(),
                time_taken, (time_taken * 44100) / size / 10000);
