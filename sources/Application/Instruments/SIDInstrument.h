@@ -77,7 +77,7 @@ private:
 
   etl::string<24> name_;
   SIDInstrumentInstance chip_; // SID1 or SID2
-  unsigned short osc_ = 0;     // 0, 1 or 2
+  unsigned char osc_ = 0;      // 0, 1 or 2
   bool render_ = false;
 
   bool playing_;

@@ -242,13 +242,13 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
       buffer[2 * n + 1] = (fixed)output << 15; // R
     }
     int time_taken = micros() - start;
-    Trace::Log("RENDER", "SID Render took %ius (%i%%ts)", time_taken,
-               (time_taken * 44100) / size / 10000);
+    Trace::Log("RENDER", "SID-%i Render took %ius (%i%%ts)", GetOsc(),
+               time_taken, (time_taken * 44100) / size / 10000);
     return true;
   }
   int time_taken = micros() - start;
-  Trace::Log("RENDER", "SID Render took %ius (%i%%ts)", time_taken,
-             (time_taken * 44100) / size / 10000);
+  Trace::Log("RENDER", ">SID-%i Render took %ius (%i%%ts)", GetOsc(),
+             time_taken, (time_taken * 44100) / size / 10000);
   return false;
 };
 

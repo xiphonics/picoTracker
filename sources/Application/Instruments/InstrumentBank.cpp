@@ -156,7 +156,7 @@ void InstrumentBank::Init() {}
 // Get the next available instance of the given Instrument type from the pool of
 // unused Instruments and assign it to the given instrument "slot id"
 unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
-                                                  unsigned short id) {
+                                                  unsigned char id) {
   switch (type) {
   case IT_SAMPLE: {
     SampleInstrument *si = sampleInstrumentPool_.create();
