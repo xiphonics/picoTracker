@@ -216,15 +216,8 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     case 0: {
       lastNote_ = *c;
 
-      Player *player = Player::GetInstance();
-      if (player->IsRunning()) {
-        // now also update if in auditioning mode
-        if (viewData_->playMode_ == PM_AUDITION) {
-          player->Stop();
-          player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                                viewData_->chainRow_);
-        }
-      }
+      // Need to restart audition to update it with the new note
+      startAudition(false);
       break;
     }
     case 1:
@@ -633,6 +626,21 @@ void PhraseView::pasteClipboard() {
   isDirty_ = true;
 };
 
+inline void PhraseView::startAudition(bool startIfNotRunning) {
+  Player *player = Player::GetInstance();
+  if (player->IsRunning()) {
+    // now also update if in auditioning mode
+    if (viewData_->playMode_ == PM_AUDITION) {
+      player->Stop();
+      player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                            viewData_->chainRow_);
+    }
+  } else if (startIfNotRunning) {
+    player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                          viewData_->chainRow_);
+  }
+}
+
 inline void PhraseView::stopAudition() {
   Player *player = Player::GetInstance();
   if (viewData_->playMode_ == PM_AUDITION) {
@@ -813,9 +821,6 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 void PhraseView::processNormalButtonMask(unsigned short mask) {
 
   // B Modifier
-
-  Player *player = Player::GetInstance();
-
   if (mask & EPBM_B) {
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
@@ -834,9 +839,9 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_R)
       toggleMute();
   } else {
+    Player *player = Player::GetInstance();
 
     // A Modifer
-
     if (mask & EPBM_A) {
       if (mask & EPBM_DOWN)
         updateCursorValue(VUD_DOWN);
@@ -855,16 +860,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         if ((col_ == 1) || (col_ == 3) || (col_ == 5))
           viewMode_ = VM_NEW;
         if (col_ == 0 || col_ == 1) {
-          if (player->IsRunning()) {
-            if ((viewData_->playMode_ == PM_AUDITION)) {
-              player->Stop();
-              player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                                    viewData_->chainRow_);
-            }
-          } else {
-            player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                                  viewData_->chainRow_);
-          }
+          startAudition(true);
         }
       }
     } else {
