@@ -860,6 +860,9 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         if ((col_ == 1) || (col_ == 3) || (col_ == 5))
           viewMode_ = VM_NEW;
         if (col_ == 0 || col_ == 1) {
+          // Start auditionq, note stopping audition happens in
+          // processButtonMask on key up
+          stopAudition();
           startAudition(true);
         }
       }
