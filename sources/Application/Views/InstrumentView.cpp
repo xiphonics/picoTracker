@@ -327,15 +327,21 @@ void InstrumentView::fillSIDParameters() {
   GUIPoint position = GetAnchor();
 
   position._y += 1;
+
   // work around because I can't figure out why the mem returned by c_str() is
   // being overwritten somehow after first redraw
-  const char *s = instrument->GetName().c_str();
-  strcpy(sidName_, s);
+  npf_snprintf(sidName_, strlen(sidName_), "SID#%i", (unsigned char)instrument->GetChip());
   staticField_.emplace_back(position, sidName_);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
+  position._y += 1;
+
+  Variable *v = instrument->FindVariable(FourCC::SIDInstrumentOSCNumber);
+  intVarField_.emplace_back(position, *v, "OSC: %1.1X", 0, 0x2, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
   position._y += 2;
-  Variable *v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
+  v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
   intVarField_.emplace_back(position, *v, "VPW: %2.2X", 0, 0xFFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 

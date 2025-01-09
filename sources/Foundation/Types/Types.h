@@ -92,6 +92,7 @@ struct FourCC {
     SIDInstrumentVoice3Off = 91,
     SIDInstrumentTable = 121,
     SIDInstrumentTableAutomation = 122,
+    SIDInstrumentOSCNumber = 142,
 
     OPALInstrumentChannel = 123,
     OPALInstrumentAlgorithm = 124,
@@ -148,6 +149,7 @@ struct FourCC {
     VarMidiSync = 112,
     VarRemoteUI = 140,
     VarUIFont = 141,
+    // 142 is taken for SIDInstrumentOSCNumber
 
     VarInstrumentType = 113,
 
@@ -247,6 +249,7 @@ struct FourCC {
   ETL_ENUM_TYPE(SIDInstrumentFilterOn, "VFON")
   ETL_ENUM_TYPE(SIDInstrumentTable, "table")
   ETL_ENUM_TYPE(SIDInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(SIDInstrumentOSCNumber, "OSCNUM")
 
   // channel variable not currently used by OPAL instruments but maybe in future
   ETL_ENUM_TYPE(OPALInstrumentChannel, "CHANNEL")

@@ -69,15 +69,14 @@ public:
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
   SIDInstrumentInstance GetChip() { return chip_; };
-  unsigned short GetOsc() { return osc_; };
+  unsigned short GetOsc() { return osc_.GetInt(); };
   void SetRender(bool render) { render_ = render; };
 
 private:
-  etl::list<Variable *, 16> variables_;
+  etl::list<Variable *, 18> variables_;
 
   etl::string<24> name_;
   SIDInstrumentInstance chip_; // SID1 or SID2
-  unsigned char osc_ = 0;      // 0, 1 or 2
   bool render_ = false;
 
   bool playing_;
@@ -105,6 +104,7 @@ private:
   Variable vfon_;
   Variable table_;
   Variable tableAuto_;
+  Variable osc_; // 0, 1 or 2
 
   static Variable fltcut1_;
   static Variable fltcut2_;
