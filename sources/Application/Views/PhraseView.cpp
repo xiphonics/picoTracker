@@ -213,9 +213,20 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
 
     updateData(c, offset, limit, wrap);
     switch (col_ + xOffset) {
-    case 0:
+    case 0: {
       lastNote_ = *c;
+
+      Player *player = Player::GetInstance();
+      if (player->IsRunning()) {
+        // now also update if in auditioning mode
+        if (viewData_->playMode_ == PM_AUDITION) {
+          player->Stop();
+          player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                                viewData_->chainRow_);
+        }
+      }
       break;
+    }
     case 1:
       lastInstr_ = *c;
       break;
@@ -661,7 +672,8 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (!pressed) {
     // ENTER might now no longer be pressed so first check if we were in
-    // audition mode and if its not then stop auditioning
+    // audition mode and if its not then stop auditioning, stopAudition does
+    // both those things
     if (!(mask & EPBM_A)) {
       stopAudition();
     }
