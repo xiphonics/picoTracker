@@ -622,10 +622,11 @@ void PhraseView::pasteClipboard() {
   isDirty_ = true;
 };
 
-void PhraseView::stopAudition() {
+inline void PhraseView::stopAudition() {
   Player *player = Player::GetInstance();
-  if (viewData_->playMode_ == PM_AUDITION)
+  if (viewData_->playMode_ == PM_AUDITION) {
     player->Stop();
+  }
 }
 
 void PhraseView::unMuteAll() {
@@ -659,6 +660,12 @@ void PhraseView::OnFocus() {
 void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (!pressed) {
+    // ENTER might now no longer be pressed so first check if we were in
+    // audition mode and if its not then stop auditioning
+    if (!(mask & EPBM_A)) {
+      stopAudition();
+    }
+
     if (viewMode_ == VM_MUTEON) {
       if (mask & EPBM_R) {
         toggleMute();
@@ -807,7 +814,6 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_DOWN)
       warpInChain(1);
     if (mask & EPBM_A) {
-      stopAudition();
       cutPosition();
     }
     if (mask & EPBM_L) {
@@ -815,9 +821,6 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     };
     if (mask & EPBM_R)
       toggleMute();
-    if (mask == EPBM_B) {
-      stopAudition();
-    }
   } else {
 
     // A Modifer
@@ -853,19 +856,15 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         }
       }
     } else {
-
       // R Modifier
-
       if (mask & EPBM_R) {
         if (mask & EPBM_LEFT) {
-          stopAudition();
           ViewType vt = VT_CHAIN;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();
           NotifyObservers(&ve);
         }
         if (mask & EPBM_RIGHT) {
-          stopAudition();
           unsigned char *c =
               phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
           if (*c != 0xFF) {
@@ -882,7 +881,6 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         }
         if (mask & EPBM_DOWN) {
           // Go to table view
-          stopAudition();
 
           ViewType vt = VT_TABLE;
 
