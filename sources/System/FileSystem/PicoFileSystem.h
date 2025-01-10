@@ -45,6 +45,9 @@ public:
   bool makeDir(const char *path);
   uint64_t getFileSize(int index);
 
+  static void lockAccess();
+  static void unlockAccess();
+
 private:
   SdFs sd;
   void tolowercase(char *temp);
