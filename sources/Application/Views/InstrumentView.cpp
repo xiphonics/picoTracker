@@ -326,8 +326,6 @@ void InstrumentView::fillSIDParameters() {
   SIDInstrument *instrument = (SIDInstrument *)bank->GetInstrument(i);
   GUIPoint position = GetAnchor();
 
-  position._y += 1;
-
   staticField_.emplace_back(position, instrument->GetChipName().c_str());
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
@@ -372,12 +370,16 @@ void InstrumentView::fillSIDParameters() {
       UIBigHexVarField(position, *v, 4, "A/D/S/R: %4.4X", 0, 0xFFFF, 16, true));
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
+  position._y += 2;
+  staticField_.emplace_back(position, "== CHIP SETTINGS ==");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentFilterOn);
-  intVarField_.emplace_back(position, *v, "filter: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Filter: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 2;
+  position._y += 1;
   switch (instrument->GetChip()) {
   case SID1:
     v = instrument->FindVariable(FourCC::SIDInstrument1FilterCut);
