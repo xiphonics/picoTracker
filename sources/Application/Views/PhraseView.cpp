@@ -213,9 +213,13 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
 
     updateData(c, offset, limit, wrap);
     switch (col_ + xOffset) {
-    case 0:
+    case 0: {
       lastNote_ = *c;
+
+      // Need to restart audition to update it with the new note
+      startAudition(false);
       break;
+    }
     case 1:
       lastInstr_ = *c;
       break;
@@ -622,10 +626,26 @@ void PhraseView::pasteClipboard() {
   isDirty_ = true;
 };
 
-void PhraseView::stopAudition() {
+inline void PhraseView::startAudition(bool startIfNotRunning) {
   Player *player = Player::GetInstance();
-  if (viewData_->playMode_ == PM_AUDITION)
+  if (player->IsRunning()) {
+    // now also update if in auditioning mode
+    if (viewData_->playMode_ == PM_AUDITION) {
+      player->Stop();
+      player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                            viewData_->chainRow_);
+    }
+  } else if (startIfNotRunning) {
+    player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                          viewData_->chainRow_);
+  }
+}
+
+inline void PhraseView::stopAudition() {
+  Player *player = Player::GetInstance();
+  if (viewData_->playMode_ == PM_AUDITION) {
     player->Stop();
+  }
 }
 
 void PhraseView::unMuteAll() {
@@ -659,6 +679,13 @@ void PhraseView::OnFocus() {
 void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (!pressed) {
+    // ENTER might now no longer be pressed so first check if we were in
+    // audition mode and if its not then stop auditioning, stopAudition does
+    // both those things
+    if (!(mask & EPBM_A)) {
+      stopAudition();
+    }
+
     if (viewMode_ == VM_MUTEON) {
       if (mask & EPBM_R) {
         toggleMute();
@@ -794,9 +821,6 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 void PhraseView::processNormalButtonMask(unsigned short mask) {
 
   // B Modifier
-
-  Player *player = Player::GetInstance();
-
   if (mask & EPBM_B) {
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
@@ -807,7 +831,6 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_DOWN)
       warpInChain(1);
     if (mask & EPBM_A) {
-      stopAudition();
       cutPosition();
     }
     if (mask & EPBM_L) {
@@ -815,13 +838,10 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     };
     if (mask & EPBM_R)
       toggleMute();
-    if (mask == EPBM_B) {
-      stopAudition();
-    }
   } else {
+    Player *player = Player::GetInstance();
 
     // A Modifer
-
     if (mask & EPBM_A) {
       if (mask & EPBM_DOWN)
         updateCursorValue(VUD_DOWN);
@@ -840,32 +860,22 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         if ((col_ == 1) || (col_ == 3) || (col_ == 5))
           viewMode_ = VM_NEW;
         if (col_ == 0 || col_ == 1) {
-          if (player->IsRunning()) {
-            if ((viewData_->playMode_ == PM_AUDITION)) {
-              player->Stop();
-              player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                                    viewData_->chainRow_);
-            }
-          } else {
-            player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                                  viewData_->chainRow_);
-          }
+          // Start auditionq, note stopping audition happens in
+          // processButtonMask on key up
+          stopAudition();
+          startAudition(true);
         }
       }
     } else {
-
       // R Modifier
-
       if (mask & EPBM_R) {
         if (mask & EPBM_LEFT) {
-          stopAudition();
           ViewType vt = VT_CHAIN;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();
           NotifyObservers(&ve);
         }
         if (mask & EPBM_RIGHT) {
-          stopAudition();
           unsigned char *c =
               phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
           if (*c != 0xFF) {
@@ -882,7 +892,6 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         }
         if (mask & EPBM_DOWN) {
           // Go to table view
-          stopAudition();
 
           ViewType vt = VT_TABLE;
 
