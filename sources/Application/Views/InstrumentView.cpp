@@ -372,8 +372,9 @@ void InstrumentView::fillSIDParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentADSR);
-  intVarField_.emplace_back(position, *v, "ADSR: %4.4X", 0, 0xFFFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  bigHexVarField_.emplace_back(
+      UIBigHexVarField(position, *v, 4, "A/D/S/R: %4.4X", 0, 0xFFFF, 16, true));
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentFilterOn);
