@@ -34,6 +34,7 @@ protected:
   void cutSelection();
   void pasteClipboard();
 
+  void startAudition(bool startIfNotRunning);
   void stopAudition();
   void unMuteAll();
   void toggleMute();
