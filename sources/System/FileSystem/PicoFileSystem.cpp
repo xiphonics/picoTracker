@@ -1,5 +1,7 @@
 #include "PicoFileSystem.h"
 
+Mutex mutex;
+
 PicoFileSystem::PicoFileSystem() {
   // Check for the common case, FAT filesystem as first partition
   Trace::Log("FILESYSTEM", "Try to mount SD Card");
@@ -22,6 +24,8 @@ PicoFileSystem::PicoFileSystem() {
 
 PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
+  std::lock_guard<Mutex> lock(mutex);
+
   oflag_t rmode;
   switch (*mode) {
   case 'r':
@@ -50,6 +54,7 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
 
 bool PicoFileSystem::chdir(const char *name) {
   Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
+  std::lock_guard<Mutex> lock(mutex);
 
   sd.chvol();
   auto res = sd.vol()->chdir(name);
@@ -63,6 +68,8 @@ bool PicoFileSystem::chdir(const char *name) {
 }
 
 PicoFileType PicoFileSystem::getFileType(int index) {
+  std::lock_guard<Mutex> lock(mutex);
+
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
     char name[PFILENAME_SIZE];
@@ -79,6 +86,8 @@ PicoFileType PicoFileSystem::getFileType(int index) {
 
 void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
                           const char *filter, bool subDirOnly) {
+  std::lock_guard<Mutex> lock(mutex);
+
   fileIndexes->clear();
 
   File cwd;
@@ -135,6 +144,8 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
 }
 
 void PicoFileSystem::getFileName(int index, char *name, int length) {
+  std::lock_guard<Mutex> lock(mutex);
+
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
@@ -150,6 +161,8 @@ void PicoFileSystem::getFileName(int index, char *name, int length) {
 }
 
 bool PicoFileSystem::isParentRoot() {
+  std::lock_guard<Mutex> lock(mutex);
+
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
@@ -171,13 +184,24 @@ bool PicoFileSystem::isParentRoot() {
   return result;
 }
 
-bool PicoFileSystem::DeleteFile(const char *path) { return sd.remove(path); }
+bool PicoFileSystem::DeleteFile(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.remove(path);
+}
 
-bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
+bool PicoFileSystem::exists(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.exists(path);
+}
 
-bool PicoFileSystem::makeDir(const char *path) { return sd.mkdir(path); }
+bool PicoFileSystem::makeDir(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.mkdir(path);
+}
 
 uint64_t PicoFileSystem::getFileSize(const int index) {
+  std::lock_guard<Mutex> lock(mutex);
+
   FsBaseFile cwd;
   FsBaseFile entry;
   if (!entry.open(index)) {
