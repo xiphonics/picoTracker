@@ -55,6 +55,8 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (picoFS->getFileType(fileIndex) == PFT_DIR) {
         setCurrentFolder(picoFS, name);
         isDirty_ = true;
+        topIndex_ = 0; // need to reset when entering a dir as prev dir may
+                       // have been already scrolled down
       }
     }
   }
@@ -205,8 +207,8 @@ void ImportView::setCurrentFolder(PicoFileSystem *picoFS, const char *name) {
   // now update list of file indexes in this new dir
   picoFS->list(&fileIndexList_, ".wav", false);
 
-  bool isSampleLIbDir = picoFS->isParentRoot();
-  if (isSampleLIbDir && !fileIndexList_.empty()) {
+  bool isSampleLibDir = picoFS->isParentRoot();
+  if (isSampleLibDir && !fileIndexList_.empty()) {
     fileIndexList_.erase(fileIndexList_.begin());
   }
 }
