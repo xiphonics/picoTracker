@@ -330,7 +330,8 @@ void InstrumentView::fillSIDParameters() {
 
   // work around because I can't figure out why the mem returned by c_str() is
   // being overwritten somehow after first redraw
-  npf_snprintf(sidName_, strlen(sidName_), "SID#%i", (unsigned char)instrument->GetChip());
+  npf_snprintf(sidName_, strlen(sidName_), "SID#%i",
+               (unsigned char)instrument->GetChip());
   staticField_.emplace_back(position, sidName_);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 

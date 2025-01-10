@@ -93,7 +93,8 @@ SIDInstrument::~SIDInstrument(){};
 bool SIDInstrument::Init() {
   tableState_.Reset();
 
-  Trace::Debug("SID instrument chip is %i and osc is %i\n", chip_, osc_.GetInt());
+  Trace::Debug("SID instrument chip is %i and osc is %i\n", chip_,
+               osc_.GetInt());
   switch (chip_) {
   case 1:
     sid_ = &sid1_;
@@ -188,8 +189,8 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   sid_->Register[2 + osc * 7] = vpw_.GetInt() & 0xFF;        // V1 PW Lo
   sid_->Register[3 + osc * 7] = vpw_.GetInt() >> 8;          // V1 PW Hi
   sid_->Register[4 + osc * 7] = vwf_->GetInt() << 4 | vring_.GetInt() << 2 |
-                                 vsync_.GetInt() << 1 |
-                                 (int)gate_;             // V1 Control Reg
+                                vsync_.GetInt() << 1 |
+                                (int)gate_;             // V1 Control Reg
   sid_->Register[5 + osc * 7] = vadsr_.GetInt() >> 8;   // V1 Attack/Decay
   sid_->Register[6 + osc * 7] = vadsr_.GetInt() & 0xFF; // V1 Sustain/Release
 
