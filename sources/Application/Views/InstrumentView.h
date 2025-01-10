@@ -45,8 +45,6 @@ private:
   InstrumentType currentType_ = IT_NONE;
   bool instrumentModified_ = false;
 
-  char sidName_[16];
-
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;

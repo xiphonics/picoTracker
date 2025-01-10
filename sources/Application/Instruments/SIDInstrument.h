@@ -72,6 +72,9 @@ public:
   unsigned short GetOsc() { return osc_.GetInt(); };
   void SetRender(bool render) { render_ = render; };
 
+  // returns just the chip name, eg "SID #1"
+  etl::string<6> GetChipName() { return name_.substr(0, 6); };
+
 private:
   etl::list<Variable *, 18> variables_;
 
