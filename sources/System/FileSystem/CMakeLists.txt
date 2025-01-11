@@ -8,6 +8,7 @@ target_link_libraries(system_filesystem
                                           PUBLIC sdfat
                                           PUBLIC platform_sdcard
                                           PUBLIC etl
+                                          pico_multicore
 )
 
 
