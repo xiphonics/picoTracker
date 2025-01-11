@@ -375,12 +375,12 @@ void ChainView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (!pressed) {
     if (viewMode_ == VM_MUTEON) {
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         toggleMute();
       }
     };
     if (viewMode_ == VM_SOLOON) {
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         switchSoloMode();
       }
     };
@@ -388,20 +388,20 @@ void ChainView::ProcessButtonMask(unsigned short mask, bool pressed) {
   };
 
   if (viewMode_ == VM_NEW) {
-    if (mask == EPBM_A) {
+    if (mask == EPBM_ENTER) {
       unsigned short next = viewData_->song_->phrase_.GetNext();
       if (next != NO_MORE_PHRASE) {
         setPhrase((unsigned char)next);
         isDirty_ = true;
       }
-      mask &= (0xFFFF - EPBM_A);
+      mask &= (0xFFFF - EPBM_ENTER);
     }
   }
 
   if (viewMode_ == VM_CLONE) {
-    if ((mask & EPBM_A) && (mask & EPBM_L)) {
+    if ((mask & EPBM_ENTER) && (mask & EPBM_ALT)) {
       clonePosition();
-      mask &= (0xFFFF - (EPBM_A | EPBM_L));
+      mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
     } else {
       viewMode_ = VM_SELECTION;
     }
@@ -434,7 +434,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
 
   // B Modifier
 
-  if (mask & EPBM_B) {
+  if (mask & EPBM_EDIT) {
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
     if (mask & EPBM_RIGHT)
@@ -443,18 +443,18 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
       warpInColumn(-1);
     if (mask & EPBM_DOWN)
       warpInColumn(+1);
-    if (mask & EPBM_A)
+    if (mask & EPBM_ENTER)
       cutPosition();
-    if (mask & EPBM_L) {
+    if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;
     };
-    if (mask & EPBM_R)
+    if (mask & EPBM_NAV)
       toggleMute();
   } else {
 
     // A Modifier
 
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       if (mask & EPBM_DOWN)
         updateCursorValue(viewData_->chainCol_ == 0 ? -0x10 : -0x0C);
       if (mask & EPBM_UP)
@@ -463,20 +463,20 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
         updateCursorValue(-0x01);
       if (mask & EPBM_RIGHT)
         updateCursorValue(0x01);
-      if (mask & EPBM_L)
+      if (mask & EPBM_ALT)
         pasteClipboard();
-      if (mask == EPBM_A) {
+      if (mask == EPBM_ENTER) {
         pasteLastPhrase();
         if (viewData_->chainCol_ == 0)
           viewMode_ = VM_NEW;
       }
-      if (mask & EPBM_R)
+      if (mask & EPBM_NAV)
         switchSoloMode();
     } else {
 
       // R Modifier
 
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
 
         if (mask & EPBM_LEFT) {
           ViewType vt = VT_SONG;
@@ -499,15 +499,15 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
         // We toggle full chain start only if we"re not in live mode
         // or if the player ain't playing yet
 
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
-        if (mask & EPBM_L)
+        if (mask & EPBM_ALT)
           unMuteAll();
       } else {
         // L Modifier
-        if (mask & EPBM_L) {
+        if (mask & EPBM_ALT) {
 
         } else {
           // NO modifier
@@ -519,7 +519,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
             updateCursor(-1, 0);
           if (mask & EPBM_RIGHT)
             updateCursor(1, 0);
-          if (mask & EPBM_START) {
+          if (mask & EPBM_PLAY) {
             player->OnStartButton(PM_CHAIN, viewData_->songX_, false,
                                   viewData_->chainRow_);
           }
@@ -527,7 +527,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
       }
     }
   }
-  if ((!(mask & EPBM_A)) && updatingPhrase_) {
+  if ((!(mask & EPBM_ENTER)) && updatingPhrase_) {
     unsigned char *c = viewData_->song_->chain_.data_ +
                        (16 * viewData_->currentChain_ + updateRow_);
     viewData_->song_->phrase_.SetUsed(*c);
@@ -541,18 +541,18 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
 
   // B Modifier
 
-  if (mask & EPBM_B) {
-    if (mask == EPBM_B)
+  if (mask & EPBM_EDIT) {
+    if (mask == EPBM_EDIT)
       copySelection();
-    if (mask & EPBM_R)
+    if (mask & EPBM_NAV)
       toggleMute();
-    if (mask & EPBM_L)
+    if (mask & EPBM_ALT)
       extendSelection();
   } else {
 
     // A modifier
 
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
 
       if (mask & EPBM_DOWN)
         updateSelectionValue(viewData_->chainCol_ == 0 ? -0x10 : -0x0C);
@@ -563,16 +563,16 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
       if (mask & EPBM_RIGHT)
         updateSelectionValue(0x01);
 
-      if (mask & EPBM_L) {
+      if (mask & EPBM_ALT) {
         cutSelection();
       }
-      if (mask & EPBM_R)
+      if (mask & EPBM_NAV)
         switchSoloMode();
     } else {
 
       // R Modifier
 
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
 
         if (mask & EPBM_LEFT) {
           ViewType vt = VT_SONG;
@@ -592,12 +592,12 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
           }
         }
 
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
 
-        if (mask & EPBM_L)
+        if (mask & EPBM_ALT)
           unMuteAll();
 
       } else {
@@ -613,7 +613,7 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
         if (mask & EPBM_RIGHT)
           updateCursor(1, 0);
 
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_CHAIN, viewData_->songX_, false,
                                 viewData_->chainRow_);
         }
