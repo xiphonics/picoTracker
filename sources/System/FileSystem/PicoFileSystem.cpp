@@ -1,6 +1,13 @@
 #include "PicoFileSystem.h"
 
+#include "pico/multicore.h"
+
+Mutex mutex;
+
 PicoFileSystem::PicoFileSystem() {
+  // init out access mutex
+  std::lock_guard<Mutex> lock(mutex);
+
   // Check for the common case, FAT filesystem as first partition
   Trace::Log("FILESYSTEM", "Try to mount SD Card");
   if (sd.begin(SD_CONFIG)) {
@@ -22,6 +29,7 @@ PicoFileSystem::PicoFileSystem() {
 
 PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
+  std::lock_guard<Mutex> lock(mutex);
   oflag_t rmode;
   switch (*mode) {
   case 'r':
@@ -50,6 +58,7 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
 
 bool PicoFileSystem::chdir(const char *name) {
   Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
+  std::lock_guard<Mutex> lock(mutex);
 
   sd.chvol();
   auto res = sd.vol()->chdir(name);
@@ -63,6 +72,8 @@ bool PicoFileSystem::chdir(const char *name) {
 }
 
 PicoFileType PicoFileSystem::getFileType(int index) {
+  std::lock_guard<Mutex> lock(mutex);
+
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
     char name[PFILENAME_SIZE];
@@ -74,11 +85,14 @@ PicoFileType PicoFileSystem::getFileType(int index) {
   entry.open(index);
   auto isDir = entry.isDir();
   entry.close();
+
   return isDir ? PFT_DIR : PFT_FILE;
 }
 
 void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
                           const char *filter, bool subDirOnly) {
+  std::lock_guard<Mutex> lock(mutex);
+
   fileIndexes->clear();
 
   File cwd;
@@ -135,6 +149,8 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
 }
 
 void PicoFileSystem::getFileName(int index, char *name, int length) {
+  std::lock_guard<Mutex> lock(mutex);
+
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
@@ -150,6 +166,8 @@ void PicoFileSystem::getFileName(int index, char *name, int length) {
 }
 
 bool PicoFileSystem::isParentRoot() {
+  std::lock_guard<Mutex> lock(mutex);
+
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
@@ -171,13 +189,23 @@ bool PicoFileSystem::isParentRoot() {
   return result;
 }
 
-bool PicoFileSystem::DeleteFile(const char *path) { return sd.remove(path); }
+bool PicoFileSystem::DeleteFile(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.remove(path);
+}
 
-bool PicoFileSystem::exists(const char *path) { return sd.exists(path); }
+bool PicoFileSystem::exists(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.exists(path);
+}
 
-bool PicoFileSystem::makeDir(const char *path) { return sd.mkdir(path); }
+bool PicoFileSystem::makeDir(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.mkdir(path);
+}
 
 uint64_t PicoFileSystem::getFileSize(const int index) {
+  std::lock_guard<Mutex> lock(mutex);
   FsBaseFile cwd;
   FsBaseFile entry;
   if (!entry.open(index)) {
@@ -189,6 +217,8 @@ uint64_t PicoFileSystem::getFileSize(const int index) {
   if (size == 0) {
     size = entry.fileSize();
   }
+  entry.close();
+  cwd.close();
   return size;
 }
 
@@ -217,9 +247,13 @@ PI_File::PI_File(FsBaseFile file) { file_ = file; };
  * read() called before a file has been opened, corrupt file system
  * or an I/O error occurred.
  */
-int PI_File::Read(void *ptr, int size) { return file_.read(ptr, size); }
+int PI_File::Read(void *ptr, int size) {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.read(ptr, size);
+}
 
 void PI_File::Seek(long offset, int whence) {
+  std::lock_guard<Mutex> lock(mutex);
   switch (whence) {
   case SEEK_SET:
     file_.seekSet(offset);
@@ -235,16 +269,32 @@ void PI_File::Seek(long offset, int whence) {
   }
 }
 
-bool PI_File::DeleteFile() { return file_.remove(); }
+bool PI_File::DeleteFile() {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.remove();
+}
 
-int PI_File::GetC() { return file_.read(); }
+int PI_File::GetC() {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.read();
+}
 
 int PI_File::Write(const void *ptr, int size, int nmemb) {
+  std::lock_guard<Mutex> lock(mutex);
   return file_.write(ptr, size * nmemb);
 }
 
-long PI_File::Tell() { return file_.curPosition(); }
+long PI_File::Tell() {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.curPosition();
+}
 
-int PI_File::Error() { return file_.getError(); }
+int PI_File::Error() {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.getError();
+}
 
-bool PI_File::Close() { return file_.close(); }
+bool PI_File::Close() {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.close();
+}
