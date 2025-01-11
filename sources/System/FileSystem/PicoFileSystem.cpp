@@ -2,14 +2,11 @@
 
 #include "pico/multicore.h"
 
-semaphore_t fileAccessSem;
+Mutex mutex;
 
 PicoFileSystem::PicoFileSystem() {
   // init out access mutex
-  sem_init(&fileAccessSem, 1, 1);
-
-  auto available = sem_available(&fileAccessSem);
-  Trace::Log("FILESYSTEM", "semaphore available: %d", available);
+  std::lock_guard<Mutex> lock(mutex);
 
   // Check for the common case, FAT filesystem as first partition
   Trace::Log("FILESYSTEM", "Try to mount SD Card");
@@ -32,7 +29,7 @@ PicoFileSystem::PicoFileSystem() {
 
 PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
-  lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
   oflag_t rmode;
   switch (*mode) {
   case 'r':
@@ -44,12 +41,10 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
   default:
     rmode = O_RDONLY;
     Trace::Error("Invalid mode: %s [%d]", mode, rmode);
-    unlockAccess();
     return 0;
   }
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
-    unlockAccess();
     return nullptr;
   }
   PI_File *wFile = 0;
@@ -58,13 +53,12 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
   } else {
     Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
   }
-  unlockAccess();
   return wFile;
 }
 
 bool PicoFileSystem::chdir(const char *name) {
   Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
-  lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
 
   sd.chvol();
   auto res = sd.vol()->chdir(name);
@@ -74,20 +68,17 @@ bool PicoFileSystem::chdir(const char *name) {
   cwd.getName(buf, 128);
   Trace::Log("PICOFILESYSTEM", "new CWD:%s\n", buf);
   cwd.close();
-
-  unlockAccess();
   return res;
 }
 
 PicoFileType PicoFileSystem::getFileType(int index) {
-  lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
 
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
     char name[PFILENAME_SIZE];
     cwd.getName(name, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd: %s", name);
-    unlockAccess();
     return PFT_UNKNOWN;
   }
   FsBaseFile entry;
@@ -95,13 +86,12 @@ PicoFileType PicoFileSystem::getFileType(int index) {
   auto isDir = entry.isDirectory();
   entry.close();
 
-  unlockAccess();
   return isDir ? PFT_DIR : PFT_FILE;
 }
 
 void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
                           const char *filter, bool subDirOnly) {
-  lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
 
@@ -110,7 +100,6 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
     char name[PFILENAME_SIZE];
     cwd.getName(name, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd");
-    unlockAccess();
     return;
   }
   char buffer[PFILENAME_SIZE];
@@ -119,7 +108,6 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
 
   if (!cwd.isDir()) {
     Trace::Error("Path is not a directory");
-    unlockAccess();
     return;
   }
 
@@ -158,19 +146,16 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
   cwd.close();
   Trace::Log("PICOFILESYSTEM", "scanned: %d, added file indexes:%d", count,
              fileIndexes->size());
-
-  unlockAccess();
 }
 
 void PicoFileSystem::getFileName(int index, char *name, int length) {
-  lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
 
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
     cwd.getName(dirname, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd:%s", dirname);
-    unlockAccess();
     return;
   }
   FsFile entry;
@@ -178,19 +163,16 @@ void PicoFileSystem::getFileName(int index, char *name, int length) {
   entry.getName(name, length);
   entry.close();
   cwd.close();
-
-  unlockAccess();
 }
 
 bool PicoFileSystem::isParentRoot() {
-  lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
 
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
   if (!cwd.openCwd()) {
     cwd.getName(dirname, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd:%s", dirname);
-    unlockAccess();
     return false;
   }
 
@@ -204,34 +186,26 @@ bool PicoFileSystem::isParentRoot() {
   root.close();
   up.close();
   cwd.close();
-
-  unlockAccess();
   return result;
 }
 
 bool PicoFileSystem::DeleteFile(const char *path) {
-  lockAccess();
-  bool result = sd.remove(path);
-  unlockAccess();
-  return result;
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.remove(path);
 }
 
 bool PicoFileSystem::exists(const char *path) {
-  lockAccess();
-  bool result = sd.exists(path);
-  unlockAccess();
-  return result;
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.exists(path);
 }
 
 bool PicoFileSystem::makeDir(const char *path) {
-  lockAccess();
-  bool result = sd.mkdir(path);
-  unlockAccess();
-  return result;
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.mkdir(path);
 }
 
 uint64_t PicoFileSystem::getFileSize(const int index) {
-  lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
   FsBaseFile cwd;
   FsBaseFile entry;
   if (!entry.open(index)) {
@@ -243,7 +217,8 @@ uint64_t PicoFileSystem::getFileSize(const int index) {
   if (size == 0) {
     size = entry.fileSize();
   }
-  unlockAccess();
+  entry.close();
+  cwd.close();
   return size;
 }
 
@@ -254,16 +229,6 @@ void PicoFileSystem::tolowercase(char *temp) {
     *s = tolower((unsigned char)*s);
     s++;
   }
-}
-
-inline void PicoFileSystem::lockAccess() {
-  // Trace::Log("PICOFILESYSTEM", "lockAccess");
-  sem_acquire_blocking(&fileAccessSem);
-}
-
-inline void PicoFileSystem::unlockAccess() {
-  // Trace::Log("PICOFILESYSTEM", "unlockAccess");
-  sem_release(&fileAccessSem);
 }
 
 PI_File::PI_File(FsBaseFile file) { file_ = file; };
@@ -283,14 +248,12 @@ PI_File::PI_File(FsBaseFile file) { file_ = file; };
  * or an I/O error occurred.
  */
 int PI_File::Read(void *ptr, int size) {
-  PicoFileSystem::lockAccess();
-  int res = file_.read(ptr, size);
-  PicoFileSystem::unlockAccess();
-  return res;
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.read(ptr, size);
 }
 
 void PI_File::Seek(long offset, int whence) {
-  PicoFileSystem::lockAccess();
+  std::lock_guard<Mutex> lock(mutex);
   switch (whence) {
   case SEEK_SET:
     file_.seek(offset);
@@ -304,47 +267,34 @@ void PI_File::Seek(long offset, int whence) {
   default:
     Trace::Error("Invalid seek whence: %s", whence);
   }
-  PicoFileSystem::unlockAccess();
 }
 
 bool PI_File::DeleteFile() {
-  PicoFileSystem::lockAccess();
-  bool res = file_.remove();
-  PicoFileSystem::unlockAccess();
-  return res;
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.remove();
 }
 
 int PI_File::GetC() {
-  PicoFileSystem::lockAccess();
-  int res = file_.read();
-  PicoFileSystem::unlockAccess();
-  return res;
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.read();
 }
 
 int PI_File::Write(const void *ptr, int size, int nmemb) {
-  PicoFileSystem::lockAccess();
-  int res = file_.write(ptr, size * nmemb);
-  PicoFileSystem::unlockAccess();
-  return res;
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.write(ptr, size * nmemb);
 }
 
 long PI_File::Tell() {
-  PicoFileSystem::lockAccess();
-  long res = file_.curPosition();
-  PicoFileSystem::unlockAccess();
-  return res;
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.curPosition();
 }
 
 int PI_File::Error() {
-  PicoFileSystem::lockAccess();
-  int res = file_.getError();
-  PicoFileSystem::unlockAccess();
-  return res;
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.getError();
 }
 
 bool PI_File::Close() {
-  PicoFileSystem::lockAccess();
-  bool res = file_.close();
-  PicoFileSystem::unlockAccess();
-  return res;
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.close();
 }

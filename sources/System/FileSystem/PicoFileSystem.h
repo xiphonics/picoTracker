@@ -6,6 +6,8 @@
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
 #include "System/Console/Trace.h"
+#include "pico/sync.h"
+#include <mutex>
 
 #define MAX_FILE_INDEX_SIZE 256
 #define PFILENAME_SIZE 128
@@ -45,12 +47,20 @@ public:
   bool makeDir(const char *path);
   uint64_t getFileSize(int index);
 
-  static void lockAccess();
-  static void unlockAccess();
-
 private:
   SdFs sd;
   void tolowercase(char *temp);
+};
+
+struct Mutex {
+  Mutex() { mutex_init(&mutex); }
+  void lock() { mutex_enter_blocking(&mutex); }
+  void unlock() { mutex_exit(&mutex); }
+  Mutex(const Mutex &) = delete;
+  Mutex &operator=(const Mutex &) = delete;
+
+private:
+  mutex_t mutex;
 };
 
 #endif
