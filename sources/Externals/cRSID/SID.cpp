@@ -91,7 +91,7 @@ cRSID::cRSID(unsigned short model, bool realsid, unsigned short samplerate):Chip
   PrevLowPass = PrevBandPass = PrevVolume = 0;
 }
 
-void cRSID::cRSID_emulateADSRs (char cycles) {
+__attribute__((always_inline)) inline void cRSID::cRSID_emulateADSRs (char cycles) {
 
  enum ADSRstateBits { GATE_BITVAL=0x01, ATTACK_BITVAL=0x80, DECAYSUSTAIN_BITVAL=0x40, HOLDZEROn_BITVAL=0x10 };
 
@@ -156,7 +156,7 @@ void cRSID::cRSID_emulateADSRs (char cycles) {
  }
 }
 
-unsigned short cRSID::combinedWF(const unsigned char *WFarray,
+__attribute__((always_inline)) inline unsigned short cRSID::combinedWF(const unsigned char *WFarray,
                                  unsigned short oscval, unsigned char Channel) {
   static unsigned char Pitch;
   static unsigned short Filt;
@@ -171,7 +171,19 @@ unsigned short cRSID::combinedWF(const unsigned char *WFarray,
   return PrevWavData[Channel] << 8;
 }
 
-int cRSID::cRSID_emulateWaves () {
+void cRSID::cRSID_emulateWavesBuffer(fixed *buffer, int size) {
+  for (int n = 0; n < size; n++) {
+    // Have to calculate ASDRs somewhere here
+    cRSID_emulateADSRs(1);
+    int output = cRSID_emulateWaves();
+    buffer[2 * n] = (fixed)output << 15;     // L
+    buffer[2 * n + 1] = (fixed)output << 15; // R
+  }
+}
+
+
+
+__attribute__((always_inline)) inline int cRSID::cRSID_emulateWaves () {
  enum WaveFormBits { NOISE_BITVAL=0x80, PULSE_BITVAL=0x40, SAW_BITVAL=0x20, TRI_BITVAL=0x10 };
  enum ControlBits { TEST_BITVAL=0x08, RING_BITVAL=0x04, SYNC_BITVAL=0x02, GATE_BITVAL=0x01 };
  enum FilterBits { OFF3_BITVAL=0x80 };

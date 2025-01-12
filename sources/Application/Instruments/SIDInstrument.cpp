@@ -42,7 +42,8 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
       vadsr_(FourCC::SIDInstrumentADSR, 0x2282),
       vfon_(FourCC::SIDInstrumentFilterOn, false),
       table_(FourCC::SIDInstrumentTable, -1),
-      tableAuto_(FourCC::SIDInstrumentTableAutomation, false) {
+      tableAuto_(FourCC::SIDInstrumentTableAutomation, false),
+      osc_(FourCC::SIDInstrumentOSCNumber, 0) {
 
   name_ = "SID #";
   etl::string<1> num;
@@ -50,7 +51,7 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
   etl::to_string((int)chip_, num, format);
   name_ += num;
   name_ += " OSC #";
-  etl::to_string(osc_, num, format);
+  etl::to_string(GetOsc(), num, format);
   name_ += num;
 
   variables_.insert(variables_.end(), &vpw_);
@@ -63,6 +64,7 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
   variables_.insert(variables_.end(), &vfon_);
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
+  variables_.insert(variables_.end(), &osc_);
 
   //  fltcut_ = new Variable("FILTCUT", DIP_FILTCUT,
   //                         0x1FF); // TODO: what's a
@@ -91,7 +93,7 @@ SIDInstrument::~SIDInstrument(){};
 bool SIDInstrument::Init() {
   tableState_.Reset();
 
-  Trace::Debug("SID instrument chip is %i and osc is %i\n", chip_, osc_);
+  Trace::Debug("SID instrument chip is %i and osc is %i\n", chip_, GetOsc());
   switch (chip_) {
   case 1:
     sid_ = &sid1_;
@@ -179,15 +181,17 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
     break;
   }
 
-  sid_->Register[0 + osc_ * 7] = sid_notes[note - 24] & 0xFF; // V1 Freq Lo
-  sid_->Register[1 + osc_ * 7] = sid_notes[note - 24] >> 8;   // V1 Freq Hi
-  sid_->Register[2 + osc_ * 7] = vpw_.GetInt() & 0xFF;        // V1 PW Lo
-  sid_->Register[3 + osc_ * 7] = vpw_.GetInt() >> 8;          // V1 PW Hi
-  sid_->Register[4 + osc_ * 7] = vwf_->GetInt() << 4 | vring_.GetInt() << 2 |
-                                 vsync_.GetInt() << 1 |
-                                 (int)gate_;             // V1 Control Reg
-  sid_->Register[5 + osc_ * 7] = vadsr_.GetInt() >> 8;   // V1 Attack/Decay
-  sid_->Register[6 + osc_ * 7] = vadsr_.GetInt() & 0xFF; // V1 Sustain/Release
+  int osc = GetOsc();
+
+  sid_->Register[0 + osc * 7] = sid_notes[note - 24] & 0xFF; // V1 Freq Lo
+  sid_->Register[1 + osc * 7] = sid_notes[note - 24] >> 8;   // V1 Freq Hi
+  sid_->Register[2 + osc * 7] = vpw_.GetInt() & 0xFF;        // V1 PW Lo
+  sid_->Register[3 + osc * 7] = vpw_.GetInt() >> 8;          // V1 PW Hi
+  sid_->Register[4 + osc * 7] = vwf_->GetInt() << 4 | vring_.GetInt() << 2 |
+                                vsync_.GetInt() << 1 |
+                                (int)gate_;             // V1 Control Reg
+  sid_->Register[5 + osc * 7] = vadsr_.GetInt() >> 8;   // V1 Attack/Decay
+  sid_->Register[6 + osc * 7] = vadsr_.GetInt() & 0xFF; // V1 Sustain/Release
 
   // filter settings
   sid_->Register[21] = fltcut_->GetInt() >> 8;   // Filter Cut lo  TODO: MAL
@@ -195,7 +199,7 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   // on start for each instrument it sets it's own filter in this register
   sid_->Register[23] = sid_->Register[23] | fltres_->GetInt() << 4 |
-                       vfon_.GetInt() << osc_; // Filter Res/Filt
+                       vfon_.GetInt() << osc; // Filter Res/Filt
 
   int8_t mode = 0;
   switch (fltmode_->GetInt()) {
@@ -217,9 +221,6 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   playing_ = true;
 
-  for (int i = 0; i <= 24; i++) {
-    Trace::Debug("Register %i value: -  0x%2.2X\n", i, sid_->Register[i]);
-  }
   return true;
 };
 
@@ -234,21 +235,16 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     // clear the fixed point buffer
     SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
 
-    for (int n = 0; n < size; n++) {
-      // Have to calculate ASDRs somewhere here
-      sid_->cRSID_emulateADSRs(1);
-      int output = sid_->cRSID_emulateWaves();
-      buffer[2 * n] = (fixed)output << 15;     // L
-      buffer[2 * n + 1] = (fixed)output << 15; // R
-    }
+    sid_->cRSID_emulateWavesBuffer(buffer, size);
+
     int time_taken = micros() - start;
-    Trace::Log("RENDER", "SID Render took %ius (%i%%ts)", time_taken,
-               (time_taken * 44100) / size / 10000);
+    Trace::Debug("RENDER", "SID-%i Render took %ius (%i%%ts)", GetOsc(),
+                 time_taken, (time_taken * 44100) / size / 10000);
     return true;
   }
   int time_taken = micros() - start;
-  Trace::Log("RENDER", "SID Render took %ius (%i%%ts)", time_taken,
-             (time_taken * 44100) / size / 10000);
+  Trace::Debug("RENDER", ">SID-%i Render took %ius (%i%%ts)", GetOsc(),
+               time_taken, (time_taken * 44100) / size / 10000);
   return false;
 };
 
@@ -259,7 +255,8 @@ bool SIDInstrument::IsInitialized() {
 void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
   case FourCC::InstrumentCommandGateOff:
-    sid_->Register[4 + osc_ * 7] &= ~1; // Set gate bit off
+    int osc = GetOsc();
+    sid_->Register[4 + osc * 7] &= ~1; // Set gate bit off
     break;
   }
 };
