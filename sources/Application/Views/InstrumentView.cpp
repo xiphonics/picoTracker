@@ -326,16 +326,17 @@ void InstrumentView::fillSIDParameters() {
   SIDInstrument *instrument = (SIDInstrument *)bank->GetInstrument(i);
   GUIPoint position = GetAnchor();
 
-  position._y += 1;
-  // work around because I can't figure out why the mem returned by c_str() is
-  // being overwritten somehow after first redraw
-  const char *s = instrument->GetName().c_str();
-  strcpy(sidName_, s);
-  staticField_.emplace_back(position, sidName_);
+  staticField_.emplace_back(position, instrument->GetChipName().c_str());
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
+  position._y += 1;
+
+  Variable *v = instrument->FindVariable(FourCC::SIDInstrumentOSCNumber);
+  intVarField_.emplace_back(position, *v, "OSC: %1.1X", 0, 0x2, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
   position._y += 2;
-  Variable *v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
+  v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
   intVarField_.emplace_back(position, *v, "VPW: %2.2X", 0, 0xFFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -365,15 +366,20 @@ void InstrumentView::fillSIDParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentADSR);
-  intVarField_.emplace_back(position, *v, "ADSR: %4.4X", 0, 0xFFFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  bigHexVarField_.emplace_back(
+      UIBigHexVarField(position, *v, 4, "A/D/S/R: %4.4X", 0, 0xFFFF, 16, true));
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+
+  position._y += 2;
+  staticField_.emplace_back(position, "== CHIP SETTINGS ==");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentFilterOn);
-  intVarField_.emplace_back(position, *v, "filter: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Filter: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 2;
+  position._y += 1;
   switch (instrument->GetChip()) {
   case SID1:
     v = instrument->FindVariable(FourCC::SIDInstrument1FilterCut);

@@ -1,6 +1,8 @@
 #ifndef SID_H
 #define SID_H
 
+#include "Application/Utils/fixed.h"
+
 #define ATTENUATION 26
 #define C64_PAL_CPUCLK 985248
 
@@ -15,6 +17,8 @@ public:
   void cRSID_emulateADSRs(char cycles);
   int cRSID_emulateWaves();
   cRSID_SIDwavOutput cRSID_emulateHQwaves(char cycles);
+
+  void cRSID_emulateWavesBuffer(fixed *buffer, int size);
 
   // SID-chip data:
   unsigned short     ChipModel;     //values: 8580 / 6581

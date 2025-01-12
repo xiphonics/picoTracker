@@ -24,7 +24,7 @@ public:
   virtual void RestoreContent(PersistencyDocument *doc);
   void Init();
   void OnStart();
-  unsigned short GetNextAndAssignID(InstrumentType type, unsigned short id);
+  unsigned short GetNextAndAssignID(InstrumentType type, unsigned char id);
   void releaseInstrument(unsigned short id);
   unsigned short Clone(unsigned short i);
 

@@ -69,15 +69,17 @@ public:
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
   SIDInstrumentInstance GetChip() { return chip_; };
-  unsigned short GetOsc() { return osc_; };
+  unsigned short GetOsc() { return osc_.GetInt(); };
   void SetRender(bool render) { render_ = render; };
 
+  // returns just the chip name, eg "SID #1"
+  etl::string<6> GetChipName() { return name_.substr(0, 6); };
+
 private:
-  etl::list<Variable *, 16> variables_;
+  etl::list<Variable *, 18> variables_;
 
   etl::string<24> name_;
   SIDInstrumentInstance chip_; // SID1 or SID2
-  unsigned short osc_ = 0;     // 0, 1 or 2
   bool render_ = false;
 
   bool playing_;
@@ -96,16 +98,18 @@ private:
   //  static bool rendered1_;
 
   Variable vpw_;
-  static Variable vwf1_;
-  static Variable vwf2_;
-  Variable *vwf_;
   Variable vsync_;
   Variable vring_;
   Variable vadsr_;
   Variable vfon_;
   Variable table_;
   Variable tableAuto_;
+  Variable osc_; // 0, 1 or 2
 
+  // all these settings are shared by all oscillators on a single SID Chip
+  static Variable vwf1_;
+  static Variable vwf2_;
+  Variable *vwf_;
   static Variable fltcut1_;
   static Variable fltcut2_;
   Variable *fltcut_;
