@@ -8,10 +8,10 @@ class UITempoField : public UIIntVarField, public I_Observer {
 public:
   UITempoField(FourCC action, GUIPoint &position, Variable &variable,
                const char *format, int min, int max, int xOffset, int yOffset);
-  virtual void OnBClick();
+  virtual void OnEditClick();
   void Update(Observable &, I_ObservableData *);
   void ProcessArrow(unsigned short mask);
-  void ProcessBArrow(unsigned short mask);
+  void ProcessEditArrow(unsigned short mask);
 
 private:
   FourCC action_;

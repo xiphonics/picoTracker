@@ -159,7 +159,7 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   FieldView::ProcessButtonMask(mask);
 
-  if (mask & EPBM_R) {
+  if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_PROJECT;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -167,7 +167,7 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
       NotifyObservers(&ve);
     }
   } else {
-    if (mask & EPBM_START) {
+    if (mask & EPBM_PLAY) {
       Player *player = Player::GetInstance();
       player->OnStartButton(PM_SONG, viewData_->songX_, false,
                             viewData_->songX_);
