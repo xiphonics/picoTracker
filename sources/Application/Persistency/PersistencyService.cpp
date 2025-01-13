@@ -25,7 +25,7 @@ void PersistencyService::PurgeUnnamedProject() {
   picoFS->DeleteFile(PROJECT_DATA_FILE);
 
   picoFS->chdir("samples");
-  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
+  etl::vector<int, MAX_PIG_SAMPLES> fileIndexes;
   picoFS->list(&fileIndexes, ".wav", false);
 
   // delete all samples

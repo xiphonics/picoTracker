@@ -38,8 +38,8 @@ public:
   PI_File *Open(const char *name, const char *mode);
   bool chdir(const char *path);
   bool read(int index, void *data);
-  void list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
-            const char *filter, bool subDirOnly);
+  void list(etl::ivector<int> *fileIndexes, const char *filter,
+            bool subDirOnly);
   void getFileName(int index, char *name, int length);
   PicoFileType getFileType(int index);
   bool isParentRoot();
