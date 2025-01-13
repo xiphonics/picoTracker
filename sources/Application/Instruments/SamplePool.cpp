@@ -8,8 +8,6 @@
 #include <string.h>
 #include <string>
 
-#define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
-
 #ifdef LOAD_IN_FLASH
 #include "hardware/flash.h"
 // #define FLASH_TARGET_OFFSET (1024 * 1024)

@@ -194,6 +194,11 @@ bool PicoFileSystem::DeleteFile(const char *path) {
   return sd.remove(path);
 }
 
+bool PicoFileSystem::DeleteDir(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.rmdir(path);
+}
+
 bool PicoFileSystem::exists(const char *path) {
   std::lock_guard<Mutex> lock(mutex);
   return sd.exists(path);
