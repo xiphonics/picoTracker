@@ -11,6 +11,7 @@
 
 #define MAX_FILE_INDEX_SIZE 256
 #define PFILENAME_SIZE 128
+#define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
 enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 
@@ -43,6 +44,7 @@ public:
   PicoFileType getFileType(int index);
   bool isParentRoot();
   bool DeleteFile(const char *name);
+  bool DeleteDir(const char *name);
   bool exists(const char *path);
   bool makeDir(const char *path);
   uint64_t getFileSize(int index);

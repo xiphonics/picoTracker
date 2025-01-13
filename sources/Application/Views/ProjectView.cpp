@@ -30,6 +30,9 @@ static void CreateNewProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     PersistencyService::GetInstance()->SaveProjectState(UNNAMED_PROJECT_NAME);
 
+    // first clear out any existing "unnamed" project
+    PersistencyService::GetInstance()->PurgeUnnamedProject();
+
     // now reboot!
     watchdog_reboot(0, 0, 0);
   }
@@ -249,12 +252,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       char projName[MAX_PROJECT_NAME_LENGTH];
       project_->GetProjectName(projName);
 
-      if (strcmp(projName, UNNAMED_PROJECT_NAME) == 0) {
-        MessageBox *mb =
-            new MessageBox(*this, "Please name the project first", MBBF_OK);
-        DoModal(mb);
-        return;
-      }
       if (saveAsFlag_) {
         // first need to check if project with this name already exists
         if (persist->Exists(projName)) {
