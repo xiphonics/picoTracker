@@ -598,7 +598,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   Player *player = Player::GetInstance();
 
   if (viewMode_ == VM_NEW) {
-    if (mask == EPBM_A) {
+    if (mask == EPBM_ENTER) {
       UIIntVarField *field = (UIIntVarField *)GetFocus();
       Variable &v = field->GetVariable();
       switch (v.GetID()) {
@@ -636,14 +636,14 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       default:
         break;
       }
-      mask &= (0xFFFF - EPBM_A);
+      mask &= (0xFFFF - EPBM_ENTER);
     }
   }
 
   if (viewMode_ == VM_CLONE) {
-    if ((mask & EPBM_A) && (mask & EPBM_L)) {
+    if ((mask & EPBM_ENTER) && (mask & EPBM_ALT)) {
       UIIntVarField *field = (UIIntVarField *)GetFocus();
-      mask &= (0xFFFF - EPBM_A);
+      mask &= (0xFFFF - EPBM_ENTER);
       Variable &v = field->GetVariable();
       int current = v.GetInt();
       if (current == -1)
@@ -655,7 +655,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         isDirty_ = true;
       }
     }
-    mask &= (0xFFFF - (EPBM_A | EPBM_L));
+    mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
   };
 
   if (viewMode_ == VM_SELECTION) {
@@ -666,7 +666,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   FieldView::ProcessButtonMask(mask);
 
   // B Modifier
-  if (mask & EPBM_B) {
+  if (mask & EPBM_EDIT) {
     if (mask & EPBM_LEFT)
       warpToNext(-1);
     if (mask & EPBM_RIGHT)
@@ -675,7 +675,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       warpToNext(-16);
     if (mask & EPBM_UP)
       warpToNext(+16);
-    if (mask & EPBM_A) { // Allow cut instrument
+    if (mask & EPBM_ENTER) { // Allow cut instrument
       if (getInstrument()->GetType() == IT_SAMPLE) {
         if (GetFocus() == *fieldList_.begin()) {
           int i = viewData_->currentInstrumentID_;
@@ -698,14 +698,14 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         isDirty_ = true;
       };
     }
-    if (mask & EPBM_L) {
+    if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;
     };
   } else {
 
     // A modifier
 
-    if (mask == EPBM_A) {
+    if (mask == EPBM_ENTER) {
       FourCC varID = ((UIIntVarField *)GetFocus())->GetVariableID();
       if ((varID == FourCC::SampleInstrumentTable) ||
           (varID == FourCC::MidiInstrumentTable) ||
@@ -716,7 +716,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
       // R Modifier
 
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         if (mask & EPBM_LEFT) {
           ViewType vt = VT_PHRASE;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -747,13 +747,13 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
           NotifyObservers(&ve);
         }
 
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
       } else {
         // No modifier
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
                                 viewData_->chainRow_);
         }

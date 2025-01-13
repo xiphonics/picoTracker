@@ -682,17 +682,17 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // ENTER might now no longer be pressed so first check if we were in
     // audition mode and if its not then stop auditioning, stopAudition does
     // both those things
-    if (!(mask & EPBM_A)) {
+    if (!(mask & EPBM_ENTER)) {
       stopAudition();
     }
 
     if (viewMode_ == VM_MUTEON) {
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         toggleMute();
       }
     };
     if (viewMode_ == VM_SOLOON) {
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         switchSoloMode();
       }
     };
@@ -700,7 +700,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
   };
 
   if (viewMode_ == VM_NEW) {
-    if (mask == EPBM_A) {
+    if (mask == EPBM_ENTER) {
 
       // If note or I, we request a new instr
       if (col_ < 2) {
@@ -716,7 +716,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
           lastInstr_ = next;
           isDirty_ = true;
         }
-        mask &= (0xFFFF - EPBM_A);
+        mask &= (0xFFFF - EPBM_ENTER);
       } else {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
@@ -728,7 +728,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
                 phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
             *c = next;
             isDirty_ = true;
-            mask &= (0xFFFF - EPBM_A);
+            mask &= (0xFFFF - EPBM_ENTER);
             cmdEdit_.SetInt(next);
           }
         }
@@ -742,7 +742,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
                 phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
             *c = next;
             isDirty_ = true;
-            mask &= (0xFFFF - EPBM_A);
+            mask &= (0xFFFF - EPBM_ENTER);
             cmdEdit_.SetInt(next);
           }
         }
@@ -751,7 +751,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
   }
 
   if (viewMode_ == VM_CLONE) {
-    if ((mask & EPBM_A) && (mask & EPBM_L)) {
+    if ((mask & EPBM_ENTER) && (mask & EPBM_ALT)) {
       if (col_ < 2) {
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         unsigned char *c =
@@ -797,7 +797,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
           }
         }
       };
-      mask &= (0xFFFF - (EPBM_A | EPBM_L));
+      mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
     } else {
       viewMode_ = VM_SELECTION;
     }
@@ -821,7 +821,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 void PhraseView::processNormalButtonMask(unsigned short mask) {
 
   // B Modifier
-  if (mask & EPBM_B) {
+  if (mask & EPBM_EDIT) {
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
     if (mask & EPBM_RIGHT)
@@ -830,19 +830,19 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       warpInChain(-1);
     if (mask & EPBM_DOWN)
       warpInChain(1);
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       cutPosition();
     }
-    if (mask & EPBM_L) {
+    if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;
     };
-    if (mask & EPBM_R)
+    if (mask & EPBM_NAV)
       toggleMute();
   } else {
     Player *player = Player::GetInstance();
 
     // A Modifer
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       if (mask & EPBM_DOWN)
         updateCursorValue(VUD_DOWN);
       if (mask & EPBM_UP)
@@ -851,11 +851,11 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
         updateCursorValue(VUD_LEFT);
       if (mask & EPBM_RIGHT)
         updateCursorValue(VUD_RIGHT);
-      if (mask & EPBM_L)
+      if (mask & EPBM_ALT)
         pasteClipboard();
-      if (mask & EPBM_R)
+      if (mask & EPBM_NAV)
         switchSoloMode();
-      if (mask == EPBM_A) {
+      if (mask == EPBM_ENTER) {
         pasteLast();
         if ((col_ == 1) || (col_ == 3) || (col_ == 5))
           viewMode_ = VM_NEW;
@@ -868,7 +868,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       }
     } else {
       // R Modifier
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         if (mask & EPBM_LEFT) {
           ViewType vt = VT_CHAIN;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -922,16 +922,16 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
           NotifyObservers(&ve);
         }
 
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
-        if (mask & EPBM_L)
+        if (mask & EPBM_ALT)
           unMuteAll();
 
       } else {
         // L Modifier
-        if (mask & EPBM_L) {
+        if (mask & EPBM_ALT) {
 
         } else {
           // No modifier
@@ -944,7 +944,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
             updateCursor(-1, 0);
           if (mask & EPBM_RIGHT)
             updateCursor(1, 0);
-          if (mask & EPBM_START) {
+          if (mask & EPBM_PLAY) {
             player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
                                   viewData_->chainRow_);
           }
@@ -960,8 +960,8 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
 
   // B modifier
 
-  if (mask & EPBM_B) {
-    if (mask & EPBM_L) {
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_ALT) {
       extendSelection();
     } else {
       copySelection();
@@ -970,7 +970,7 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
 
     // A Modifer
 
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
 
       if (mask & EPBM_DOWN)
         updateSelectionValue(VUD_DOWN);
@@ -981,15 +981,15 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
       if (mask & EPBM_RIGHT)
         updateSelectionValue(VUD_RIGHT);
 
-      if (mask & EPBM_L)
+      if (mask & EPBM_ALT)
         cutSelection();
-      if (mask & EPBM_R)
+      if (mask & EPBM_NAV)
         switchSoloMode();
     } else {
 
       // R Modifier
 
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         if (mask & EPBM_LEFT) {
           ViewType vt = VT_CHAIN;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -1009,16 +1009,16 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
           SetChanged();
           NotifyObservers(&ve);
         }
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
-        if (mask & EPBM_L)
+        if (mask & EPBM_ALT)
           unMuteAll();
 
       } else {
         // L Modifier
-        if (mask & EPBM_L) {
+        if (mask & EPBM_ALT) {
 
         } else {
           // No modifier
@@ -1031,7 +1031,7 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
             updateCursor(-1, 0);
           if (mask & EPBM_RIGHT)
             updateCursor(1, 0);
-          if (mask & EPBM_START) {
+          if (mask & EPBM_PLAY) {
             player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
                                   viewData_->chainRow_);
           }
