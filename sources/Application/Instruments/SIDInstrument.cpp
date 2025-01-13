@@ -147,6 +147,13 @@ void SIDInstrument::OnStart() {
   tableState_.Reset();
 };
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)                                                   \
+  ((byte) & 0x80 ? '1' : '0'), ((byte) & 0x40 ? '1' : '0'),                    \
+      ((byte) & 0x20 ? '1' : '0'), ((byte) & 0x10 ? '1' : '0'),                \
+      ((byte) & 0x08 ? '1' : '0'), ((byte) & 0x04 ? '1' : '0'),                \
+      ((byte) & 0x02 ? '1' : '0'), ((byte) & 0x01 ? '1' : '0')
+
 bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   Trace::Debug("Retrigger: %i\n", retrigger);
   gate_ = retrigger;
@@ -219,6 +226,11 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   sid_->Register[24] = 0 << 7 | mode << 4 | vol_->GetInt(); // Filter Mode / Vol
 
+  for (int n = 0; n < 29; n++) {
+    printf("Register %i value: 0x%x (0b" BYTE_TO_BINARY_PATTERN ")\n", n,
+           sid_->Register[n], BYTE_TO_BINARY(sid_->Register[n]));
+  }
+
   playing_ = true;
 
   return true;
@@ -238,13 +250,13 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     sid_->cRSID_emulateWavesBuffer(buffer, size);
 
     int time_taken = micros() - start;
-    Trace::Debug("RENDER", "SID-%i Render took %ius (%i%%ts)", GetOsc(),
-                 time_taken, (time_taken * 44100) / size / 10000);
+    printf("RENDER: SID-%i Render took %ius (%i%%ts)\n", GetOsc(), time_taken,
+           (time_taken * 44100) / size / 10000);
     return true;
   }
   int time_taken = micros() - start;
-  Trace::Debug("RENDER", ">SID-%i Render took %ius (%i%%ts)", GetOsc(),
-               time_taken, (time_taken * 44100) / size / 10000);
+  printf("RENDER: >SID-%i Render took %ius (%i%%ts)\nf", GetOsc(), time_taken,
+         (time_taken * 44100) / size / 10000);
   return false;
 };
 
@@ -257,6 +269,7 @@ void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   case FourCC::InstrumentCommandGateOff:
     int osc = GetOsc();
     sid_->Register[4 + osc * 7] &= ~1; // Set gate bit off
+    gate_ = false;
     break;
   }
 };
