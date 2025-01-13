@@ -84,7 +84,7 @@ void MessageBox::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (selected_ < 0) {
       selected_ = buttonCount_ - 1;
     }
-  } else if (mask & EPBM_A && pressed) {
+  } else if (mask & EPBM_ENTER && pressed) {
     EndModal(button_[selected_]);
   }
   isDirty_ = true;

@@ -53,7 +53,7 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
     focus_->SetFocus();
   }
 
-  if (mask & EPBM_A) { // A or A+ARROW is sent to the field
+  if (mask & EPBM_ENTER) { // A or A+ARROW is sent to the field
     if (mask & EPBM_DOWN) {
       focus_->ProcessArrow(EPBM_DOWN);
       isDirty_ = true;
@@ -73,41 +73,41 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
       isDirty_ = true;
     }
 
-    if (mask == EPBM_A) {
+    if (mask == EPBM_ENTER) {
       focus_->OnClick();
     };
 
   } else {
-    if (mask & EPBM_B) { // B or B+ARROW is sent to the field
+    if (mask & EPBM_EDIT) { // B or B+ARROW is sent to the field
 
-      if (mask == EPBM_B) {
-        focus_->OnBClick();
+      if (mask == EPBM_EDIT) {
+        focus_->OnEditClick();
         isDirty_ = true;
       };
 
       if (mask & EPBM_DOWN) {
-        focus_->ProcessBArrow(EPBM_DOWN);
+        focus_->ProcessEditArrow(EPBM_DOWN);
         isDirty_ = true;
       }
       if (mask & EPBM_UP) {
-        focus_->ProcessBArrow(EPBM_UP);
+        focus_->ProcessEditArrow(EPBM_UP);
         isDirty_ = true;
       }
 
       if (mask & EPBM_LEFT) {
-        focus_->ProcessBArrow(EPBM_LEFT);
+        focus_->ProcessEditArrow(EPBM_LEFT);
         isDirty_ = true;
       }
 
       if (mask & EPBM_RIGHT) {
-        focus_->ProcessBArrow(EPBM_RIGHT);
+        focus_->ProcessEditArrow(EPBM_RIGHT);
         isDirty_ = true;
       }
 
     } else { // Nor B or A is pressed
 
-      if (!(mask &
-            (EPBM_A | EPBM_B | EPBM_L | EPBM_R | EPBM_SELECT | EPBM_START))) {
+      if (!(mask & (EPBM_ENTER | EPBM_EDIT | EPBM_ALT | EPBM_NAV | EPBM_SELECT |
+                    EPBM_PLAY))) {
 
         if (mask & EPBM_DOWN) {
           UIField *next = 0;

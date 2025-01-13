@@ -506,7 +506,7 @@ void TableView::processNormalButtonMask(unsigned short mask) {
 
   Player *player = Player::GetInstance();
 
-  if (mask & EPBM_B) {
+  if (mask & EPBM_EDIT) {
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
     if (mask & EPBM_RIGHT)
@@ -515,16 +515,16 @@ void TableView::processNormalButtonMask(unsigned short mask) {
       warpToNeighbour(-16);
     if (mask & EPBM_UP)
       warpToNeighbour(16);
-    if (mask & EPBM_A)
+    if (mask & EPBM_ENTER)
       cutPosition();
-    if (mask & EPBM_L)
+    if (mask & EPBM_ALT)
       viewMode_ = VM_SELECTION;
 
   } else {
 
     // A modifier
 
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       if (mask & EPBM_DOWN)
         updateCursorValue(-0x10);
       if (mask & EPBM_UP)
@@ -533,15 +533,15 @@ void TableView::processNormalButtonMask(unsigned short mask) {
         updateCursorValue(-0x01);
       if (mask & EPBM_RIGHT)
         updateCursorValue(0x01);
-      if (mask == EPBM_A)
+      if (mask == EPBM_ENTER)
         pasteLast();
-      if (mask & EPBM_L)
+      if (mask & EPBM_ALT)
         pasteClipboard();
     } else {
 
       // R Modifier
 
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         if (mask & EPBM_UP) {
           ViewType vt = (viewType_ == VT_TABLE ? VT_PHRASE : VT_INSTRUMENT);
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -564,14 +564,14 @@ void TableView::processNormalButtonMask(unsigned short mask) {
             NotifyObservers(&ve);
           }
         }
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
 
       } else {
         // L MOdifier
-        if (mask & EPBM_R) {
+        if (mask & EPBM_NAV) {
         } else {
 
           // No modifier
@@ -584,7 +584,7 @@ void TableView::processNormalButtonMask(unsigned short mask) {
             updateCursor(-1, 0);
           if (mask & EPBM_RIGHT)
             updateCursor(1, 0);
-          if (mask & EPBM_START) {
+          if (mask & EPBM_PLAY) {
             player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
                                   viewData_->chainRow_);
           }
@@ -598,8 +598,8 @@ void TableView::processSelectionButtonMask(unsigned short mask) {
 
   Player *player = Player::GetInstance();
 
-  if (mask & EPBM_B) {
-    if (mask & EPBM_L) {
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_ALT) {
       extendSelection();
     } else {
       copySelection();
@@ -608,22 +608,22 @@ void TableView::processSelectionButtonMask(unsigned short mask) {
 
     // A Modifer
 
-    if (mask & EPBM_A) {
-      if (mask & EPBM_L)
+    if (mask & EPBM_ENTER) {
+      if (mask & EPBM_ALT)
         cutSelection();
       //		if (mask&EPBM_R) switchSoloMode() ;
     } else {
 
       // R Modifier
 
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         if (mask & EPBM_UP) {
           ViewType vt = VT_PHRASE;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();
           NotifyObservers(&ve);
         }
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
@@ -631,7 +631,7 @@ void TableView::processSelectionButtonMask(unsigned short mask) {
          */
       } else {
         // L Modifier
-        if (mask & EPBM_L) {
+        if (mask & EPBM_ALT) {
 
         } else {
           // No modifier
@@ -644,7 +644,7 @@ void TableView::processSelectionButtonMask(unsigned short mask) {
             updateCursor(-1, 0);
           if (mask & EPBM_RIGHT)
             updateCursor(1, 0);
-          if (mask & EPBM_START) {
+          if (mask & EPBM_PLAY) {
             player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
                                   viewData_->chainRow_);
           }

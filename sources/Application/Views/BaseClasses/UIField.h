@@ -13,8 +13,8 @@ public:
   virtual void Draw(GUIWindow &w, int offset = 0) = 0;
   virtual void OnClick() = 0; // A depressed
   virtual void ProcessArrow(unsigned short mask) = 0;
-  virtual void OnBClick(){}; // B depressed
-  virtual void ProcessBArrow(unsigned short mask){};
+  virtual void OnEditClick(){}; // B depressed
+  virtual void ProcessEditArrow(unsigned short mask){};
   void SetFocus();
   void ClearFocus();
   bool HasFocus();

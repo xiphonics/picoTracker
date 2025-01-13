@@ -20,13 +20,13 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  if (mask & EPBM_START) {
+  if (mask & EPBM_PLAY) {
     auto picoFS = PicoFileSystem::GetInstance();
     char name[PFILENAME_SIZE];
     unsigned fileIndex = fileIndexList_[currentIndex_];
     picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
 
-    if (mask & EPBM_L) {
+    if (mask & EPBM_ALT) {
       Trace::Log("PICOIMPORT", "SHIFT play - import");
       import(name);
     } else {
@@ -38,7 +38,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     warpToNextSample(true);
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
-  } else if ((mask & EPBM_LEFT) && (mask & EPBM_R)) {
+  } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
     // Go to back "left" to instrument screen
     ViewType vt = VT_INSTRUMENT;
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -47,7 +47,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   } else {
     // A modifier
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       auto picoFS = PicoFileSystem::GetInstance();
       unsigned fileIndex = fileIndexList_[currentIndex_];
       char name[PFILENAME_SIZE];

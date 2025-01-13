@@ -73,14 +73,14 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  if (mask & EPBM_B) {
+  if (mask & EPBM_EDIT) {
     if (mask & EPBM_UP)
       warpToNextProject(true);
     if (mask & EPBM_DOWN)
       warpToNextProject(false);
   } else {
     // A modifier
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       // all subdirs directly inside /project are expected to be projects
       unsigned fileIndex = fileIndexList_[currentIndex_];
       auto picoFS = PicoFileSystem::GetInstance();
@@ -101,7 +101,7 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       return;
     } else {
       // R Modifier
-      if ((mask & EPBM_R) && (mask & EPBM_LEFT)) {
+      if ((mask & EPBM_NAV) && (mask & EPBM_LEFT)) {
         // Go to back "left" to Project Screen
         ViewType vt = VT_PROJECT;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);

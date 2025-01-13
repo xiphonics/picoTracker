@@ -72,7 +72,7 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   Player *player = Player::GetInstance();
 
-  if (mask & EPBM_B) {
+  if (mask & EPBM_EDIT) {
     if (mask & EPBM_LEFT) {
       warpGroove(-1);
     }
@@ -85,13 +85,13 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_UP) {
       warpGroove(0x10);
     }
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       clearCursorValue();
     };
   } else {
 
     // A modifier
-    if (mask & EPBM_A) {
+    if (mask & EPBM_ENTER) {
       if (mask & EPBM_LEFT) {
         updateCursorValue(-1);
       }
@@ -104,20 +104,20 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (mask & EPBM_UP) {
         updateCursorValue(1, true);
       }
-      if (mask == EPBM_A) {
+      if (mask == EPBM_ENTER) {
         initCursorValue();
       };
     } else {
       // R Modifier
 
-      if (mask & EPBM_R) {
+      if (mask & EPBM_NAV) {
         if (mask & EPBM_DOWN) {
           ViewType vt = VT_PHRASE;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();
           NotifyObservers(&ve);
         }
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
                                 viewData_->chainRow_);
         }
@@ -128,7 +128,7 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
           updateCursor(1);
         if (mask & EPBM_UP)
           updateCursor(-1);
-        if (mask & EPBM_START) {
+        if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
                                 viewData_->chainRow_);
         }
