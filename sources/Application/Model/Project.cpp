@@ -182,17 +182,13 @@ void Project::Purge() {
 
 void Project::PurgeInstruments(bool removeFromDisk) {
 
-  bool used[MAX_INSTRUMENT_COUNT];
-  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
-    used[i] = false;
-  }
-
+  bool used[MAX_SAMPLEINSTRUMENT_COUNT] = {false};
   unsigned char *data = song_.phrase_.instr_;
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
       if (*data != 0xFF) {
-        NAssert(*data < MAX_INSTRUMENT_COUNT);
+        NAssert(*data < MAX_SAMPLEINSTRUMENT_COUNT);
         used[*data] = true;
       }
       data++;
@@ -200,46 +196,44 @@ void Project::PurgeInstruments(bool removeFromDisk) {
   }
 
   InstrumentBank *bank = GetInstrumentBank();
-  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
+  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
     if (!used[i]) {
       I_Instrument *instrument = bank->GetInstrument(i);
       instrument->Purge();
+      Trace::Debug("Purged Unused instrument [%d]", i);
     }
   }
 
   // now see if any samples isn't used and get rid if them if needed
-
   if (removeFromDisk) {
-
     // clear used flag
-
-    bool iUsed[MAX_PIG_SAMPLES];
-    for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
-      iUsed[i] = false;
-    }
+    bool isUsed[MAX_PIG_SAMPLES] = {false};
 
     // flag all samples actually used
-
     for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
       I_Instrument *instrument = bank->GetInstrument(i);
       if (instrument->GetType() == IT_SAMPLE) {
         SampleInstrument *si = (SampleInstrument *)instrument;
         int index = si->GetSampleIndex();
         if (index >= 0)
-          iUsed[index] = true;
+          isUsed[index] = true;
       };
     }
 
-    // Now effectively purge all unused sample from disk
+    // Now remove all unused samples from disk
     int purged = 0;
     SamplePool *sp = SamplePool::GetInstance();
     for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
-      if ((!iUsed[i]) && (sp->GetSource(i - purged))) {
+      if ((!isUsed[i]) && (sp->GetSource(i - purged))) {
         char projName[MAX_PROJECT_NAME_LENGTH];
         sp->PurgeSample(i - purged, projectName_.GetString().c_str());
+        Trace::Debug("Purged sample [%d]", i - purged);
         purged++;
-      };
+      } else {
+        Trace::Debug("Sample [%d] not purged\n", i);
+      }
     };
+    Trace::Debug("Purged %d samples", purged);
   }
 };
 
