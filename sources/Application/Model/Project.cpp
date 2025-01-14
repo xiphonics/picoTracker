@@ -182,13 +182,13 @@ void Project::Purge() {
 
 void Project::PurgeInstruments(bool removeFromDisk) {
 
-  bool used[MAX_SAMPLEINSTRUMENT_COUNT] = {false};
+  bool used[MAX_INSTRUMENT_COUNT] = {false};
   unsigned char *data = song_.phrase_.instr_;
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
       if (*data != 0xFF) {
-        NAssert(*data < MAX_SAMPLEINSTRUMENT_COUNT);
+        NAssert(*data < MAX_INSTRUMENT_COUNT);
         used[*data] = true;
       }
       data++;
@@ -196,7 +196,7 @@ void Project::PurgeInstruments(bool removeFromDisk) {
   }
 
   InstrumentBank *bank = GetInstrumentBank();
-  for (int i = 0; i < MAX_SAMPLEINSTRUMENT_COUNT; i++) {
+  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
     if (!used[i]) {
       I_Instrument *instrument = bank->GetInstrument(i);
       instrument->Purge();
