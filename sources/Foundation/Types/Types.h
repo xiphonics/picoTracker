@@ -35,6 +35,7 @@ struct FourCC {
     InstrumentCommandVelocity = 66,            // VELM
     InstrumentCommandVolume = 69,              // VOLM
     InstrumentCommandNone = 45,                // ----
+    InstrumentCommandMidiChord = 143,
 
     SampleInstrumentCrushVolume = 3,
     SampleInstrumentVolume = 19,
@@ -150,6 +151,7 @@ struct FourCC {
     VarRemoteUI = 140,
     VarUIFont = 141,
     // 142 is taken for SIDInstrumentOSCNumber
+    // 143 is taken for InstrumentCommandMidiChord
 
     VarInstrumentType = 113,
 
@@ -196,6 +198,7 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandPitchFineTune, "PFT")
   ETL_ENUM_TYPE(InstrumentCommandDelay, "DLY")
   ETL_ENUM_TYPE(InstrumentCommandInstrumentRetrigger, "IRT")
+  ETL_ENUM_TYPE(InstrumentCommandMidiChord, "MCH")
 
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
