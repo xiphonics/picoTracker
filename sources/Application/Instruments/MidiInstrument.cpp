@@ -180,11 +180,11 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   case FourCC::InstrumentCommandMidiChord: {
     // split into 4 note offsets
     for (int i = 0; i < MAX_MIDI_CHORD_NOTES; i++) {
-      uint8_t note = (value >> (i * 4)) & 0xF;
-      if (note != 0) {
+      uint8_t noteOffset = (value >> (i * 4)) & 0xF;
+      if (noteOffset != 0) {
         MidiMessage msg;
         msg.status_ = MIDI_NOTE_ON + mchannel;
-        msg.data1_ = lastNote_[channel] + note;
+        msg.data1_ = lastNote_[channel] + noteOffset;
         msg.data2_ = velocity_;
         Trace::Log("MIDI", "chord note %d", msg.data1_);
         svc_->QueueMessage(msg);
