@@ -98,6 +98,10 @@ static char **getHelpLegend(FourCC command) {
   case FourCC::InstrumentCommandGateOff:
     result[0] = (char *)("GateOff (Synth only)");
     break;
+  case FourCC::InstrumentCommandMidiChord:
+    result[0] = (char *)("MIDI Chord:abcd");
+    result[1] = (char *)("send rel notes:+a,+b,+c,+d");
+    break;
   default:
     result[0] = result[1] = (char *)("");
     break;
