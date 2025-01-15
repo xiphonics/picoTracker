@@ -4,6 +4,8 @@
 #include "System/Console/Trace.h"
 #include <string.h>
 
+#define MAX_MIDI_CHORD_NOTES 4
+
 MidiService *MidiInstrument::svc_ = 0;
 
 MidiInstrument::MidiInstrument()
@@ -174,8 +176,23 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     msg.data2_ = MidiMessage::UNUSED_BYTE;
     svc_->QueueMessage(msg);
   }; break;
-  }
-};
+
+  case FourCC::InstrumentCommandMidiChord: {
+    // split into 4 note offsets
+    for (int i = 0; i < MAX_MIDI_CHORD_NOTES; i++) {
+      uint8_t noteOffset = (value >> (i * 4)) & 0xF;
+      if (noteOffset != 0) {
+        MidiMessage msg;
+        msg.status_ = MIDI_NOTE_ON + mchannel;
+        msg.data1_ = lastNote_[channel] + noteOffset;
+        msg.data2_ = velocity_;
+        Trace::Log("MIDI", "chord note %d", msg.data1_);
+        svc_->QueueMessage(msg);
+      }
+    }
+  }; break;
+  };
+}
 
 etl::string<24> MidiInstrument::GetName() {
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
