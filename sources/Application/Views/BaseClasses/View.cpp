@@ -233,7 +233,7 @@ void View::drawBattery(GUITextProperties &props) {
     SetColor(CD_INFO);
 
     char *battText;
-    if (voltage > 4.0) {
+    if (voltage > 3.95) {
       battText = (char *)"[CHG]";
     } else if (voltage > 3.7) {
       battText = (char *)"[+++]";
