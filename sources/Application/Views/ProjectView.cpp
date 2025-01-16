@@ -231,8 +231,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     project_->Purge();
     break;
   case FourCC::ActionPurgeInstrument: {
-    MessageBox *mb = new MessageBox(*this, "Purge unused samples from disk ?",
-                                    MBBF_YES | MBBF_NO);
+    MessageBox *mb =
+        new MessageBox(*this, "Remove unused samples?", MBBF_YES | MBBF_NO);
     DoModal(mb, PurgeCallback);
     break;
   }
