@@ -128,6 +128,7 @@ char **SamplePool::GetNameList() { return names_; };
 int SamplePool::GetNameListSize() { return count_; };
 
 bool SamplePool::loadSample(const char *name) {
+  Trace::Log("SAMPLEPOOL", "Loading sample into flash: %s", name);
 
   if (count_ == MAX_PIG_SAMPLES)
     return false;

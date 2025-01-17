@@ -317,12 +317,15 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   // this time
   int irqs = save_and_disable_interrupts();
 
-// this is required due to strange issue with above interrupts disable causing a
-// crash without this delay but only in deoptimised debug builds
-#ifdef PICO_DEOPTIMIZED_DEBUG
+  // this is required due to strange issue with above interrupts disable causing
+  // a crash without this delay
+  // Don't be tempted to replace this with a sleep because it doesn't work with
+  // no interrupts enabled!!
   for (int i = 0; i < 100000; i++) {
+    if (i % 10000 == 0) {
+      Trace::Log("WAVFILE", ".");
+    }
   }
-#endif
 
   // If data doesn't fit in previously erased page, we'll have to erase
   // additional ones
