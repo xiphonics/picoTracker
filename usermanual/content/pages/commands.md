@@ -104,8 +104,17 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 
 **Sends a Chord via MIDI note on messages. The notes a,b,c,d relative _semitone_ offsets from the current note as the root note of the chord.**
 
-- For example, if the current note is C3, MCH 0047 will send a D3 note on and a G3 note on
-- Note as the maximum of 4 notes can be sent at once, this limits the maximum chord size to a 5 note chord with the maximum distance of 15 semitones from the current root note.
+- For example, if the current note is C3, MCH 0047 will send a E3 note on and a G3 note on to give a C major triad chord.
+- Some more examples for a C root note:
+    * `0027` Suspended 2nd    **(C D G)**
+    * `0036` Diminished triad **(C D# F#)**
+    * `0037` Minor            **(C D# G)**
+    * `0047` Major            **(C E G)**
+    * `0048` Augmented        **(C E G#)**
+    * `0057` Diminished 7th   **(C F G)**
+    * `037A` Minor 7th        **(C D# G A)**
+    * `047B` Major 7th        **(C E G B)**
+- Note as the maximum of 4 notes can be sent at once, this limits the maximum chord size to a 5 note chord with the maximum distance of 15 semitones from the root note (the note on the current step).
 
 ## MPC --bb (MDPG in lgpt)
 
