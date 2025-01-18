@@ -30,6 +30,9 @@ static void CreateNewProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     PersistencyService::GetInstance()->SaveProjectState(UNNAMED_PROJECT_NAME);
 
+    // first clear out any existing "unnamed" project
+    PersistencyService::GetInstance()->PurgeUnnamedProject();
+
     // now reboot!
     watchdog_reboot(0, 0, 0);
   }
@@ -109,14 +112,8 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), f3);
 
   position._y += 2;
-  UIActionField *a1 =
-      new UIActionField("Compact Sequencer", FourCC::ActionPurge, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
-
-  position._y += 1;
-  a1 = new UIActionField("Compact Instruments", FourCC::ActionPurgeInstrument,
-                         position);
+  UIActionField *a1 = new UIActionField(
+      "Compact Instruments", FourCC::ActionPurgeInstrument, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
@@ -231,8 +228,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     project_->Purge();
     break;
   case FourCC::ActionPurgeInstrument: {
-    MessageBox *mb = new MessageBox(*this, "Purge unused samples from disk ?",
-                                    MBBF_YES | MBBF_NO);
+    MessageBox *mb =
+        new MessageBox(*this, "Remove unused samples?", MBBF_YES | MBBF_NO);
     DoModal(mb, PurgeCallback);
     break;
   }
@@ -249,12 +246,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       char projName[MAX_PROJECT_NAME_LENGTH];
       project_->GetProjectName(projName);
 
-      if (strcmp(projName, UNNAMED_PROJECT_NAME) == 0) {
-        MessageBox *mb =
-            new MessageBox(*this, "Please name the project first", MBBF_OK);
-        DoModal(mb);
-        return;
-      }
       if (saveAsFlag_) {
         // first need to check if project with this name already exists
         if (persist->Exists(projName)) {

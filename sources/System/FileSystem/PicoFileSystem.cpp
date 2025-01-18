@@ -89,8 +89,8 @@ PicoFileType PicoFileSystem::getFileType(int index) {
   return isDir ? PFT_DIR : PFT_FILE;
 }
 
-void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
-                          const char *filter, bool subDirOnly) {
+void PicoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
+                          bool subDirOnly) {
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
@@ -112,10 +112,10 @@ void PicoFileSystem::list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
   }
 
   File entry;
-  int count = 0;
+  uint16_t count = 0;
 
   // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
-  while (entry.openNext(&cwd, O_READ) && (count < PFILENAME_SIZE)) {
+  while (entry.openNext(&cwd, O_READ) && (count < fileIndexes->capacity())) {
     uint32_t index = entry.dirIndex();
     entry.getName(buffer, PFILENAME_SIZE);
 
@@ -192,6 +192,11 @@ bool PicoFileSystem::isParentRoot() {
 bool PicoFileSystem::DeleteFile(const char *path) {
   std::lock_guard<Mutex> lock(mutex);
   return sd.remove(path);
+}
+
+bool PicoFileSystem::DeleteDir(const char *path) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.rmdir(path);
 }
 
 bool PicoFileSystem::exists(const char *path) {
