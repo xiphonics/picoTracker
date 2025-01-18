@@ -112,14 +112,8 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), f3);
 
   position._y += 2;
-  UIActionField *a1 =
-      new UIActionField("Compact Sequencer", FourCC::ActionPurge, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
-
-  position._y += 1;
-  a1 = new UIActionField("Compact Instruments", FourCC::ActionPurgeInstrument,
-                         position);
+  UIActionField *a1 = new UIActionField(
+      "Compact Instruments", FourCC::ActionPurgeInstrument, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
