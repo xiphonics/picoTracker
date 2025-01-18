@@ -21,6 +21,7 @@ enum PersistencyResult {
 };
 
 #define UNNAMED_PROJECT_NAME ".untitled"
+#define PROJECT_DATA_FILE "lgptsav.dat"
 
 class PersistencyService : public Service,
                            public T_Singleton<PersistencyService> {
@@ -32,6 +33,7 @@ public:
   PersistencyResult SaveProjectState(const char *projectName);
   PersistencyResult CreateProject();
   bool Exists(const char *projectName);
+  void PurgeUnnamedProject();
 };
 
 #endif
