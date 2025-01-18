@@ -21,7 +21,7 @@ UITempoField::UITempoField(FourCC action, GUIPoint &position, Variable &v,
 } ;
 */
 
-void UITempoField::OnBClick() {
+void UITempoField::OnEditClick() {
   ApplicationCommandDispatcher::GetInstance()->OnTempoTap();
 };
 
@@ -57,7 +57,7 @@ void UITempoField::ProcessArrow(unsigned short mask) {
   src_.SetInt(value);
 };
 
-void UITempoField::ProcessBArrow(unsigned short mask) {
+void UITempoField::ProcessEditArrow(unsigned short mask) {
 
   ApplicationCommandDispatcher *dispatcher =
       ApplicationCommandDispatcher::GetInstance();

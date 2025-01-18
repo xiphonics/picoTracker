@@ -35,6 +35,7 @@ struct FourCC {
     InstrumentCommandVelocity = 66,            // VELM
     InstrumentCommandVolume = 69,              // VOLM
     InstrumentCommandNone = 45,                // ----
+    InstrumentCommandMidiChord = 143,
 
     SampleInstrumentCrushVolume = 3,
     SampleInstrumentVolume = 19,
@@ -92,6 +93,7 @@ struct FourCC {
     SIDInstrumentVoice3Off = 91,
     SIDInstrumentTable = 121,
     SIDInstrumentTableAutomation = 122,
+    SIDInstrumentOSCNumber = 142,
 
     OPALInstrumentChannel = 123,
     OPALInstrumentAlgorithm = 124,
@@ -148,6 +150,8 @@ struct FourCC {
     VarMidiSync = 112,
     VarRemoteUI = 140,
     VarUIFont = 141,
+    // 142 is taken for SIDInstrumentOSCNumber
+    // 143 is taken for InstrumentCommandMidiChord
 
     VarInstrumentType = 113,
 
@@ -194,6 +198,7 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandPitchFineTune, "PFT")
   ETL_ENUM_TYPE(InstrumentCommandDelay, "DLY")
   ETL_ENUM_TYPE(InstrumentCommandInstrumentRetrigger, "IRT")
+  ETL_ENUM_TYPE(InstrumentCommandMidiChord, "MCH")
 
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
@@ -247,6 +252,7 @@ struct FourCC {
   ETL_ENUM_TYPE(SIDInstrumentFilterOn, "VFON")
   ETL_ENUM_TYPE(SIDInstrumentTable, "table")
   ETL_ENUM_TYPE(SIDInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(SIDInstrumentOSCNumber, "OSCNUM")
 
   // channel variable not currently used by OPAL instruments but maybe in future
   ETL_ENUM_TYPE(OPALInstrumentChannel, "CHANNEL")
