@@ -4,7 +4,9 @@ template: page
 ---
 
 There can be upto two commands on every row of the phrase screen and upto three on a row in a table. Commands which effect instruments can be run on any step of the instruments playback, including the step where the instrument is triggered.
-in vol; pitch and kill but the definition of the “time' is slightly different for all command…
+
+** Note:** most commands only effect sampler instruments unless otherwise specified in the documentation for the specific command.
+
 
 ## ARP abcd (ARPG in lgpt)
 
@@ -61,13 +63,12 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 
 ## IRT aabb (IRTG in lgpt)
 
-IRT stands for Instrument Retrigger and will retrigger the current instrument. It gives table the ability to work as progammable phrases that then can be triggered simply by changing tables.
-IRT –bb will retrigger the current instrument transposed by bb semi-tones. Note that each IRT transposition is cumulatively added. So a table with
-IRT 0001
-will keep going a semi tone up. Great for dubby echoes :)
-The retriggered instrument is NOT reset (as if you enter a note with no instrument number). The table (obviously) will continue to run and all running variable (filter,etc) won't be reset.
-This system is also pretty useful to implement temporary non 4/4 signature without having to switch grooves, since you have the ability to re-trigger the instrument at tick resolution
-don't forget trying to combine it with complex hop structure !
+**Instrument Retrigger, will retrigger the current instrument. It gives a table the ability to work as progammable phrases that then can be triggered simply by changing tables.**
+
+- IRT –bb will retrigger the current instrument transposed by bb semi-tones. Note that each IRT transposition is cumulatively added. So a table with IRT 0001 will keep going a semi tone up. Great for dubby echoes :)
+- The retriggered instrument is NOT reset (as if you enter a note with no instrument number). The table (obviously) will continue to run and all running variable (filter,etc) won't be reset.
+- This system is also pretty useful to implement temporary non 4/4 signature without having to switch grooves, since you have the ability to re-trigger the instrument at tick resolution
+- don't forget trying to combine it with complex hop structure !
 
 ## KIL --bb (KILL in lgpt)
 
@@ -92,9 +93,26 @@ don't forget trying to combine it with complex hop structure !
 - LOF is absolute
 - you can't trigger a note with the LOF, it has to be executed after a sample is playing
 - every time you trigger a sample LOF is set back to the instrument parameters
+
 ## MCC aabb (MDCC in lgpt)
 
 **Sends a MIDI “continuous control” message. aa is the control number and bb is the value. It will be sent on the MIDI channel of the currently running instrument.**
+
+## MCH abcd
+
+**Sends a Chord via MIDI note on messages. The notes a,b,c,d relative _semitone_ offsets from the current note as the root note of the chord.**
+
+- For example, if the current note is C3, MCH 0047 will send a E3 note on and a G3 note on to give a C major triad chord.
+- Some more examples for a C root note:
+    * `0027` Suspended 2nd    **(C D G)**
+    * `0036` Diminished triad **(C D# F#)**
+    * `0037` Minor            **(C D# G)**
+    * `0047` Major            **(C E G)**
+    * `0048` Augmented        **(C E G#)**
+    * `0057` Diminished 7th   **(C F G)**
+    * `037A` Minor 7th        **(C D# G A)**
+    * `047B` Major 7th        **(C E G B)**
+- Note as the maximum of 4 notes can be sent at once, this limits the maximum chord size to a 5 note chord with the maximum distance of 15 semitones from the root note (the note on the current step).
 
 ## MPC --bb (MDPG in lgpt)
 
@@ -131,7 +149,7 @@ sends a program change command on the current channel. 0000 is program change 1
 
 RTG 0001: loop one tick from current play position
 RTG 0102: loop of two ticks but move the loop one tick every loop
-RTG 0101: does not do anything because after looping one tick, you move forward one tick and therefore go back to the current position :)
+RTG 0101: does not do anything because after looping one tick, you move forward one tick and therefore go back to the current position
 
 ## TBL --bb (TABL in lgpt)
 
