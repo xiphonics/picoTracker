@@ -11,9 +11,9 @@ public:
   UIField(GUIPoint &position);
   virtual ~UIField();
   virtual void Draw(GUIWindow &w, int offset = 0) = 0;
-  virtual void OnClick() = 0; // A depressed
+  virtual void OnClick() = 0; // ENTER pressed
   virtual void ProcessArrow(unsigned short mask) = 0;
-  virtual void OnEditClick(){}; // B depressed
+  virtual void OnEditClick(){}; // EDIT pressed
   virtual void ProcessEditArrow(unsigned short mask){};
   void SetFocus();
   void ClearFocus();
