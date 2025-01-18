@@ -16,6 +16,27 @@ PersistencyResult PersistencyService::CreateProject() {
   return PersistencyService::GetInstance()->Save(UNNAMED_PROJECT_NAME, true);
 };
 
+void PersistencyService::PurgeUnnamedProject() {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  picoFS->chdir(PROJECTS_DIR);
+  Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir\n");
+  picoFS->chdir(UNNAMED_PROJECT_NAME);
+  picoFS->DeleteFile(PROJECT_DATA_FILE);
+
+  picoFS->chdir("samples");
+  etl::vector<int, MAX_PIG_SAMPLES> fileIndexes;
+  picoFS->list(&fileIndexes, ".wav", false);
+
+  // delete all samples
+  char filename[128];
+  for (size_t i = 0; i < fileIndexes.size(); i++) {
+    picoFS->getFileName(fileIndexes[i], filename,
+                        MAX_PROJECT_SAMPLE_PATH_LENGTH);
+    picoFS->DeleteFile(filename);
+  };
+};
+
 PersistencyResult PersistencyService::Save(const char *projectName,
                                            bool saveAs) {
   etl::string<128> projectFilePath(PROJECTS_DIR);
@@ -36,7 +57,8 @@ PersistencyResult PersistencyService::Save(const char *projectName,
                samplesPath.c_str());
   }
 
-  projectFilePath.append("/lgptsav.dat");
+  projectFilePath.append("/");
+  projectFilePath.append(PROJECT_DATA_FILE);
 
   PI_File *fp = picoFS->Open(projectFilePath.c_str(), "w");
   if (!fp) {
@@ -79,7 +101,8 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
   etl::string<128> projectFilePath(PROJECTS_DIR);
   projectFilePath.append("/");
   projectFilePath.append(projectName);
-  projectFilePath.append("/lgptsav.dat");
+  projectFilePath.append("/");
+  projectFilePath.append(PROJECT_DATA_FILE);
 
   PersistencyDocument doc;
   if (!doc.Load(projectFilePath.c_str()))

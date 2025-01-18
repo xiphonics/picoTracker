@@ -11,6 +11,7 @@
 
 #define MAX_FILE_INDEX_SIZE 256
 #define PFILENAME_SIZE 128
+#define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
 enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 
@@ -37,12 +38,13 @@ public:
   PI_File *Open(const char *name, const char *mode);
   bool chdir(const char *path);
   bool read(int index, void *data);
-  void list(etl::vector<int, MAX_FILE_INDEX_SIZE> *fileIndexes,
-            const char *filter, bool subDirOnly);
+  void list(etl::ivector<int> *fileIndexes, const char *filter,
+            bool subDirOnly);
   void getFileName(int index, char *name, int length);
   PicoFileType getFileType(int index);
   bool isParentRoot();
   bool DeleteFile(const char *name);
+  bool DeleteDir(const char *name);
   bool exists(const char *path);
   bool makeDir(const char *path);
   uint64_t getFileSize(int index);
