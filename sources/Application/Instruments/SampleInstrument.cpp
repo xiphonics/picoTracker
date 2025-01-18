@@ -1132,10 +1132,6 @@ void SampleInstrument::Purge() {
     it++;
   }
   source_ = NULL;
-  /*    Variable *v=FindVariable(SIP_SAMPLE) ;
-          if (v->GetInt()!=-1) {
-              v->SetInt(-1) ;
-          }*/
 };
 
 bool SampleInstrument::IsEmpty() {
