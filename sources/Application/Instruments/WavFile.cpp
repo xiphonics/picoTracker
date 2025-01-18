@@ -317,12 +317,12 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   // this time
   int irqs = save_and_disable_interrupts();
 
-// TODO: Need to remove this hacky delay workaround and properly fix underlying
-// issue with disabling interrupts needed to import samples into Flash !!
+  // TODO: Need to remove this hacky delay workaround and properly fix
+  // underlying issue with disabling interrupts needed to import samples into
+  // Flash !!
 
-// This is required due to strange issue with above interrupts disable causing a
-// crash without this delay but only in deoptimised debug builds
-#ifdef PICO_DEOPTIMIZED_DEBUG
+  // This is required due to strange issue with above interrupts disable causing
+  // a crash without this delay but only in deoptimised debug builds
   for (int i = 0; i < 100000; i++) {
     if (i % 10000 == 0) {
       Trace::Log("WAVFILE", ".");
