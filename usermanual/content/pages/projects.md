@@ -16,11 +16,7 @@ On the project screen you change various settings of the current project, save t
 
 ## Current Project optimisation
 
-**NOTE THESE OPERATIONS CURRENTLY DO NOT WORK CORRECTLY**
-
-- **Compact Sequencer:** Free all unused chain/phrases.
-- **Compact Instruments:** All unused instruments get their sample set to (null), old parameter settings stick. A dialog offers to remove unused samples.
-
+- **Compact Instruments:** All unused instruments will have their sample set to (null) and the sample file will be removed from the projects sample subdirectory.
 
 ## Project Management
 
@@ -29,3 +25,5 @@ On the project screen you change various settings of the current project, save t
 - **Save** Save the current project **NOTE:** *saving currently cannot be done during playback.*
 - **New** *REPLACE* the current project with a new, *Blank* project.  
 - **Random** *RENAME* the current project with a new, *Randomly generated* name.  
+
+The project name is limited to 12 characters. The project name field allows deleting the currently selected character using the [EDIT] key.
