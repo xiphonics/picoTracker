@@ -44,7 +44,7 @@ void UITextField::OnClick() {
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
-void UITextField::OnBClick() {
+void UITextField::OnEditClick() {
   char name[40];
   strcpy(name, src_->GetString().c_str());
   uint8_t len = std::strlen(name);

@@ -13,7 +13,7 @@ public:
   void Draw(GUIWindow &w, int offset = 0);
   void ProcessArrow(unsigned short mask);
   void OnClick();
-  void OnBClick();
+  void OnEditClick();
   etl::string<40> GetString();
 
 private:
