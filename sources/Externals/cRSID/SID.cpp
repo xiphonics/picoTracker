@@ -31,20 +31,8 @@ int cRSID::cRSID_emulateSIDoutputStage() {
   FilterInput = FilterInputSample;
 
   // Filter
-
-  if (ChipModel == 8580) {
-    Cutoff = CutoffMul8580_44100Hz[Cutoff];
-    Resonance = Resonances8580[ResonancePos];
-  } else { // 6581
-    Cutoff += (FilterInput * 105) >> 16;
-    if (Cutoff > 0x7FF)
-      Cutoff = 0x7FF;
-    else if (Cutoff < 0)
-      Cutoff = 0; // MOSFET-VCR control-voltage calculation
-    Cutoff = CutoffMul6581_44100Hz[Cutoff]; //(resistance-modulation aka 6581
-                                            // filter distortion) emulation
-    Resonance = Resonances6581[ResonancePos];
-  }
+  Cutoff = CutoffMul8580_44100Hz[Cutoff];
+  Resonance = Resonances8580[ResonancePos];
 
   FilterOutput = 0;
   Tmp = FilterInput + ((PrevBandPass * Resonance) >> 12) + PrevLowPass;
@@ -69,25 +57,14 @@ int cRSID::cRSID_emulateSIDoutputStage() {
   // together with normal SID channels, won't sound distorted anymore, and the
   // volume-clicks disappear when setting SID-volume. (This is useful for
   // fade-in/out tunes like Hades Nebula, where clicking ruins the intro.)
-  if (RealSIDmode) {
-    Tmp = (signed int)((VolumeBand & 0xF) << 12);
-    NonFilted += (Tmp - PrevVolume) *
-                 D418_DIGI_VOLUME; // highpass is digi, adding it to output must
-                                   // be before digifilter-code
-    PrevVolume +=
-        (Tmp - PrevVolume) >>
-        10; // arithmetic shift amount determines digi lowpass-frequency
-    MainVolume = PrevVolume >> 12; // lowpass is main volume
-  } else
-    MainVolume = VolumeBand & 0xF;
+  MainVolume = VolumeBand & 0xF;
 
   Output = ((NonFilted + FilterOutput) * MainVolume) /
            ((CHANNELS * VOLUME_MAX) + ATTENUATION);
   return Output; // master output of a SID
 }
 
-cRSID::cRSID(unsigned short model, bool realsid, unsigned short samplerate)
-    : ChipModel(model), RealSIDmode(realsid) {
+cRSID::cRSID(unsigned short samplerate) {
   SampleClockRatio = (C64_PAL_CPUCLK << 4) / samplerate;
   static unsigned char Channel;
   for (Channel = 0; Channel < 21; Channel += 7) {
@@ -201,8 +178,6 @@ cRSID::combinedWF(const unsigned char *WFarray, unsigned short oscval,
                   unsigned char Channel) {
   static unsigned char Pitch;
   static unsigned short Filt;
-  if (ChipModel == 6581 && WFarray != PulseTriangle)
-    oscval &= 0x7FFF;
   Pitch = Register[Channel + 1] ? Register[Channel + 1]
                                 : 1; // avoid division by zero
   Filt = 0x7777 + (0x8888 / Pitch);
@@ -399,8 +374,7 @@ __attribute__((always_inline)) inline int cRSID::cRSID_emulateWaves() {
 
     // routing the channel signal to either the filter or the unfiltered master
     // output depending on filter-switch SID-registers
-    Envelope = ChipModel == 8580 ? EnvelopeCounter[Channel]
-                                 : ADSR_DAC_6581[EnvelopeCounter[Channel]];
+    Envelope = EnvelopeCounter[Channel];
     if (FilterSwitchReso & FilterSwitchVal[Channel]) {
       FilterInputSample += (((int)WavGenOut - 0x8000) * Envelope) >> 8;
     } else if (Channel != 14 || !(VolumeBand & OFF3_BITVAL)) {
@@ -423,8 +397,6 @@ __attribute__((always_inline)) inline int cRSID::cRSID_emulateWaves() {
 unsigned short cRSID::HQcombinedWF(const unsigned char *WFarray,
                                    unsigned short oscval,
                                    unsigned char Channel) {
-  if (ChipModel == 6581 && WFarray != PulseTriangle)
-    oscval &= 0x7FFF;
   return WFarray[oscval >> 4] << 8;
 }
 
@@ -545,8 +517,7 @@ cRSID_SIDwavOutput cRSID::cRSID_emulateHQwaves(char cycles) {
 
     // routing the channel signal to either the filter or the unfiltered master
     // output depending on filter-switch SID-registers
-    Envelope = ChipModel == 8580 ? EnvelopeCounter[Channel]
-                                 : ADSR_DAC_6581[EnvelopeCounter[Channel]];
+    Envelope = EnvelopeCounter[Channel];
     if (FilterSwitchReso & FilterSwitchVal[Channel]) {
       SIDwavOutput.FilterInput += (((int)WavGenOut - 0x8000) * Envelope) >> 8;
     } else if (Channel != 14 || !(VolumeBand & OFF3_BITVAL)) {

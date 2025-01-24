@@ -11,9 +11,9 @@ const char *sidWaveformText[DWF_LAST] = {"----", "T---", "-S--", "TS--", "--Q-",
                                          "T-Q-", "-SQ-", "TSQ-", "---N"};
 const char *sidFilterModeText[DFM_LAST] = {"LP", "BP", "HP"};
 
-cRSID SIDInstrument::sid1_(6581, false, 44100);
+cRSID SIDInstrument::sid1_(44100);
 SIDInstrument *SIDInstrument::SID1RenderMaster = 0;
-cRSID SIDInstrument::sid2_(6581, false, 44100);
+cRSID SIDInstrument::sid2_(44100);
 SIDInstrument *SIDInstrument::SID2RenderMaster = 0;
 // bool SIDInstrument::rendered1_ = false;
 
@@ -226,10 +226,10 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   sid_->Register[24] = 0 << 7 | mode << 4 | vol_->GetInt(); // Filter Mode / Vol
 
-  for (int n = 0; n < 29; n++) {
-    printf("Register %i value: 0x%x (0b" BYTE_TO_BINARY_PATTERN ")\n", n,
-           sid_->Register[n], BYTE_TO_BINARY(sid_->Register[n]));
-  }
+  //  for (int n = 0; n < 29; n++) {
+  //    printf("Register %i value: 0x%x (0b" BYTE_TO_BINARY_PATTERN ")\n", n,
+  //           sid_->Register[n], BYTE_TO_BINARY(sid_->Register[n]));
+  //  }
 
   playing_ = true;
 
@@ -250,13 +250,13 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     sid_->cRSID_emulateWavesBuffer(buffer, size);
 
     int time_taken = micros() - start;
-    printf("RENDER: SID-%i Render took %ius (%i%%ts)\n", GetOsc(), time_taken,
-           (time_taken * 44100) / size / 10000);
+    Trace::Debug("RENDER: SID-%i Render took %ius (%i%%ts)\n", GetOsc(),
+                 time_taken, (time_taken * 44100) / size / 10000);
     return true;
   }
   int time_taken = micros() - start;
-  printf("RENDER: >SID-%i Render took %ius (%i%%ts)\nf", GetOsc(), time_taken,
-         (time_taken * 44100) / size / 10000);
+  Trace::Debug("RENDER: >SID-%i Render took %ius (%i%%ts)\nf", GetOsc(),
+               time_taken, (time_taken * 44100) / size / 10000);
   return false;
 };
 
