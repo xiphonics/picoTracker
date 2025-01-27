@@ -13,6 +13,7 @@ struct cRSID_SIDwavOutput {
 
 class cRSID {
 public:
+  // SID model fixed at 8580
   cRSID(unsigned short samplerate);
   void cRSID_emulateADSRs(char cycles);
   int cRSID_emulateWaves();
