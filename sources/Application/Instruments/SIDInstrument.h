@@ -18,7 +18,15 @@ enum SIDInstrumentWaveform {
   DWF_NOISE,
   DWF_LAST
 };
-enum SIDInstrumentFilterMode { DFM_LP = 0, DFM_BP, DFM_HP, DFM_LAST };
+// TODO: filter modes are additive, so they can be used together. Does it make
+// sense to offer all combinations, or just some that make sense?
+enum SIDInstrumentFilterMode {
+  DFM_LP = 0,
+  DFM_BP,
+  DFM_HP,
+  DFM_NOTCH,
+  DFM_LAST
+};
 
 static const unsigned short sid_notes[96] = {
     0x0112, 0x0123, 0x0134, 0x0146, 0x015A, 0x016E, 0x0184, 0x018B, 0x01B3,
