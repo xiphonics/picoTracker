@@ -1,2 +1,5 @@
-add_subdirectory(picoTracker)
-add_subdirectory(Dummy)
+if (PICO_RP2350)
+  add_subdirectory(picoTrackerPlus)
+else ()
+  add_subdirectory(picoTracker)
+endif()

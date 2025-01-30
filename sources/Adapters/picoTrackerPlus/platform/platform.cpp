@@ -8,6 +8,7 @@
 #include "hardware/uart.h"
 #include "hardware/vreg.h"
 #include "pico/stdlib.h"
+#include "power_button.h"
 #include <System/Console/Trace.h>
 #include <System/Console/nanoprintf.h>
 #include <cstdio>
@@ -191,4 +192,9 @@ void platform_init() {
   gpio_init(INPUT_PLAY);
   gpio_set_dir(INPUT_PLAY, GPIO_IN);
   gpio_pull_up(INPUT_PLAY);
+  gpio_init(POWER_BTN);
+  gpio_set_dir(POWER_BTN, GPIO_IN);
+  gpio_pull_up(POWER_BTN);
+  gpio_set_irq_enabled_with_callback(POWER_BTN, GPIO_IRQ_EDGE_FALL, true,
+                                     powerbuttonirq);
 }

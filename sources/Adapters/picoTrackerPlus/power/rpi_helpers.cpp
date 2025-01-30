@@ -19,9 +19,7 @@
 // for clocks_init()
 #include "pico/runtime_init.h"
 
-#if PICO_RP2350
 #include "hardware/powman.h"
-#endif
 
 // The difference between sleep and dormant is that ALL clocks are stopped in
 // dormant mode, until the source (either xosc or rosc) is started again by an
@@ -82,9 +80,7 @@ void sleep_run_from_dormant_source(dormant_source_t dormant_source) {
   // CLK ADC = 0MHz
   clock_stop(clk_adc);
   clock_stop(clk_usb);
-#if PICO_RP2350
   clock_stop(clk_hstx);
-#endif
 
 #if PICO_RP2040
   // CLK RTC = ideally XOSC (12MHz) / 256 = 46875Hz but could be rosc
@@ -162,12 +158,10 @@ void sleep_power_up(void) {
   // Restore all clocks
   clocks_init();
 
-#if PICO_RP2350
   // make powerman use xosc again
   // uint64_t restore_ms = powman_timer_get_ms();
   // powman_timer_set_1khz_tick_source_xosc();
   // powman_timer_set_ms(restore_ms);
-#endif
 
   // UART needs to be reinitialised with the new clock frequencies for stable
   // output

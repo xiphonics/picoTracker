@@ -1,9 +1,10 @@
 #include "picoTrackerEventManager.h"
-#include "Adapters/picoTracker/system/input.h"
-#include "Adapters/picoTracker/utils/utils.h"
+#include "Adapters/picoTrackerPlus/system/input.h"
+#include "Adapters/picoTrackerPlus/utils/utils.h"
 #include "Application/Application.h"
 #include "Application/Model/Config.h"
 #include "picoTrackerGUIWindowImp.h"
+#include "power_button.h"
 #include "usb_utils.h"
 
 #ifdef USB_REMOTE_UI
@@ -37,6 +38,10 @@ bool timerHandler(repeating_timer_t *rt) {
   if (gTime_ % 1000 == 0) {
     queue->push(picoTrackerEvent(PICO_CLOCK));
   }
+
+  // handle receiving power button press
+  handlePowerButton();
+
   return true;
 }
 
@@ -75,6 +80,12 @@ int picoTrackerEventManager::MainLoop() {
 #endif
   while (!finished_) {
     loops++;
+
+#if !defined(PICO_DEOPTIMIZED_DEBUG)
+    // seems this is needed on rp2350 with optimised builds to overcome some
+    // issue due to the overclocking
+    sleep_us(7);
+#endif
 
     // process usb interrupts, should this be done somewhere else??
     handleUSBInterrupts();

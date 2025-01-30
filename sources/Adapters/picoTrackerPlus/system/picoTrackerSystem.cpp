@@ -1,14 +1,18 @@
 #include "picoTrackerSystem.h"
-#include "Adapters/picoTracker/audio/picoTrackerAudio.h"
-#include "Adapters/picoTracker/gui/GUIFactory.h"
-#include "Adapters/picoTracker/midi/picoTrackerMidiService.h"
-#include "Adapters/picoTracker/timer/picoTrackerTimer.h"
+#include "Adapters/picoTrackerPlus/audio/picoTrackerAudio.h"
+#include "Adapters/picoTrackerPlus/gui/GUIFactory.h"
+#include "Adapters/picoTrackerPlus/midi/picoTrackerMidiService.h"
+#include "Adapters/picoTrackerPlus/platform/platform.h"
+#include "Adapters/picoTrackerPlus/timer/picoTrackerTimer.h"
 #include "Application/Commands/NodeList.h"
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
+#include "critical_error_message.h"
+#include "hardware/adc.h"
 #include "hardware/gpio.h"
 #include "input.h"
+#include "pico/stdlib.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <malloc.h>
@@ -18,11 +22,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
-#include "Adapters/picoTracker/platform/platform.h"
-#include "critical_error_message.h"
-#include "hardware/adc.h"
-#include "pico/stdlib.h"
 
 EventManager *picoTrackerSystem::eventManager_ = NULL;
 bool picoTrackerSystem::invert_ = false;

@@ -5,6 +5,7 @@ add_library(platform_gui
   SerialDebugUI.h SerialDebugUI.cpp
   picoRemoteUI.h picoRemoteUI.cpp
 )
+
 target_link_libraries(platform_gui PUBLIC uiframework_simplebaseclasses
                                    PUBLIC system_console
                                    PUBLIC uiframework_basicdatas
@@ -12,6 +13,7 @@ target_link_libraries(platform_gui PUBLIC uiframework_simplebaseclasses
                                    PUBLIC platform_display
                                    PUBLIC platform_system
                                    PUBLIC platform_usb
+                                   PUBLIC platform_power
 )
 
 target_include_directories(platform_gui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

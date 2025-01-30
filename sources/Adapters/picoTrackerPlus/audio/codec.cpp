@@ -1,4 +1,4 @@
-#include "Adapters/picoTracker/platform/gpio.h"
+#include "Adapters/picoTrackerPlus/platform/gpio.h"
 #include "hardware/gpio.h"
 #include "i2c_reg_io.h"
 #include "mclk.pio.h"

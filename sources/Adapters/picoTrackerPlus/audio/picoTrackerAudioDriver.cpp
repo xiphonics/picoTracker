@@ -1,5 +1,6 @@
-#include "Adapters/picoTracker/platform/platform.h"
-#include "Adapters/picoTracker/utils/utils.h"
+#include "picoTrackerAudioDriver.h"
+#include "Adapters/picoTrackerPlus/platform/platform.h"
+#include "Adapters/picoTrackerPlus/utils/utils.h"
 #include "Application/Model/Config.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
@@ -12,7 +13,6 @@
 #include "hardware/pio.h"
 #include "pico/multicore.h"
 #include "pico/sync.h"
-#include "picoTrackerAudioDriver.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

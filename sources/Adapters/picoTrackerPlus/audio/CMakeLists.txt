@@ -1,9 +1,12 @@
 add_library(platform_audio
   picoTrackerAudio.h picoTrackerAudio.cpp
+  i2c_reg_io.h i2c_reg_io.cpp
   picoTrackerAudioDriver.h picoTrackerAudioDriver.cpp
+  codec.h codec.cpp
 )
 
 pico_generate_pio_header(platform_audio ${CMAKE_CURRENT_LIST_DIR}/audio_i2s.pio)
+pico_generate_pio_header(platform_audio ${CMAKE_CURRENT_LIST_DIR}/mclk.pio)
 
 target_link_libraries(platform_audio PUBLIC pico_stdlib
                                      PUBLIC pico_multicore
@@ -14,6 +17,7 @@ target_link_libraries(platform_audio PUBLIC pico_stdlib
                                      PUBLIC hardware_clocks
                                      PUBLIC hardware_irq
                                      PUBLIC hardware_pio
+                                     PUBLIC hardware_i2c
 )
 
 target_include_directories(platform_audio PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
