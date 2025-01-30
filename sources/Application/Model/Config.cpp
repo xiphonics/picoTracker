@@ -36,7 +36,7 @@ static const etl::flat_map validParameters{
     etl::pair{ParamString("LINEOUT"), 0x2},
     etl::pair{ParamString("MIDIDEVICE"), 0x0},
     etl::pair{ParamString("MIDISYNC"), 0x0},
-    etl::pair{ParamString("REMOTEUI"), 0x0},
+    etl::pair{ParamString("REMOTEUI"), 0x1},
     etl::pair{ParamString("UIFONT"), 0x0},
 };
 
