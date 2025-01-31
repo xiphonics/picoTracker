@@ -110,19 +110,14 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   mode0_color_t backgroundColor = GetColor(c);
   mode0_set_background(backgroundColor);
   mode0_clear(backgroundColor);
-  // split send color into r, g, b
-  auto sendColor = to_rgb565(c);
-  auto r = sendColor >> 11;
-  auto g = (sendColor >> 5) & 0b111111;
-  auto b = sendColor & 0b11111;
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
     remoteUIBuffer[1] = CLEAR_CMD;
-    remoteUIBuffer[2] = r;
-    remoteUIBuffer[3] = g;
-    remoteUIBuffer[4] = b;
+    remoteUIBuffer[2] = c._r;
+    remoteUIBuffer[3] = c._g;
+    remoteUIBuffer[4] = c._b;
     sendToUSBCDC(remoteUIBuffer, 5);
   }
 #endif
@@ -142,22 +137,14 @@ mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   mode0_color_t color = GetColor(c);
   mode0_set_foreground(color);
-  auto sendColor = to_rgb565(c);
-
-  // split send color into r, g, b
-  auto r = sendColor >> 11;
-  auto g = (sendColor >> 5) & 0b111111;
-  auto b = sendColor & 0b11111;
-  // Trace::Debug("sendColor: %d,%d,%d", r, g, b);
-
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
     remoteUIBuffer[1] = SETCOLOR_CMD;
-    remoteUIBuffer[2] = r;
-    remoteUIBuffer[3] = g;
-    remoteUIBuffer[4] = b;
+    remoteUIBuffer[2] = c._r;
+    remoteUIBuffer[3] = c._g;
+    remoteUIBuffer[4] = c._b;
     sendToUSBCDC(remoteUIBuffer, 5);
   }
 #endif

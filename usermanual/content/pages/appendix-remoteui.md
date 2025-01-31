@@ -37,13 +37,13 @@ Parameters:
 
 Parameters:
 
-* Background color in RGB565 format
+* Background color in RGB888 format
 
 3. SETCOLOR_CMD (0x4): Set foreground color
 
 Parameters:
 
-* Color in RGB565 format
+* Color in RGB888 format
 
 4. SETFONT_CMD (0x5)
 
@@ -59,16 +59,6 @@ Currently the only available fonts are:
  | 1     | You Squared
 
 
-
-### RGB565 Format
-
-RGB565 is a 16-bit color format used for drawing text and UI. It is composed of three 5-bit values for the red, green and blue components of the color. Example code for efficient conversion between RGB565 and RGB888 can be found from the official picoTracker client Flutter code:
-
-```dart
-r: (_byteBuffer[0] * 527 + 23) >> 5, // Red component
-g: (_byteBuffer[1] * 259 + 33) >> 6, // Green component
-b: (_byteBuffer[2] * 527 + 23) >> 5, // Blue component
-```
 
 ### Example Transmission Flow
 
