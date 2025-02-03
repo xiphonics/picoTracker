@@ -4,6 +4,7 @@
 #include "Application/Model/Table.h"
 #include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
@@ -705,8 +706,8 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // If note or I, we request a new instr
       if (col_ < 2) {
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        // default always to just Sample Instrument
-        auto nextId = ++(viewData_->currentInstrumentID_);
+
+        auto nextId = bank->GetNextFreeInstrumentSlotId();
         // New Instruments default to type NONE!
         unsigned short next = bank->GetNextAndAssignID(IT_NONE, nextId);
         if (next != NO_MORE_INSTRUMENT) {
@@ -715,6 +716,12 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
           *c = (unsigned char)next;
           lastInstr_ = next;
           isDirty_ = true;
+        } else {
+          // show error dialog that no more instruments are available
+          MessageBox *mb =
+              new MessageBox(*this, "No more instruments!", MBBF_OK);
+          DoModal(mb);
+          return;
         }
         mask &= (0xFFFF - EPBM_ENTER);
       } else {
