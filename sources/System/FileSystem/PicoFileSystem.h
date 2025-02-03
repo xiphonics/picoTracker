@@ -48,10 +48,14 @@ public:
   bool exists(const char *path);
   bool makeDir(const char *path);
   uint64_t getFileSize(int index);
+  bool CopyFile(const char *src, const char *dest);
 
 private:
   SdFs sd;
   void tolowercase(char *temp);
+  // buffer needs to be allocated here as too big for allocation as local
+  // variable on the stack
+  uint8_t fileBuffer_[512];
 };
 
 struct Mutex {
