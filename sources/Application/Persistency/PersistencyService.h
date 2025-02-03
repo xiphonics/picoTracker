@@ -2,6 +2,7 @@
 #define _PERSISTENCY_SERVICE_H_
 
 #include "Externals/TinyXML2/tinyxml2.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Externals/yxml/yxml.h"
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
@@ -27,13 +28,21 @@ class PersistencyService : public Service,
                            public T_Singleton<PersistencyService> {
 public:
   PersistencyService();
-  PersistencyResult Save(const char *projectName, bool saveAs);
+  PersistencyResult Save(const char *projectName, const char *oldProjectName,
+                         bool saveAs);
   PersistencyResult Load(const char *projectName);
   PersistencyResult LoadCurrentProjectName(char *projectName);
   PersistencyResult SaveProjectState(const char *projectName);
   PersistencyResult CreateProject();
   bool Exists(const char *projectName);
   void PurgeUnnamedProject();
+
+private:
+  PersistencyResult CreateProjectDirs_(const char *projectName);
+  // need these as statically allocated buffers as too big for stack
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes_;
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferA;
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferB;
 };
 
 #endif
