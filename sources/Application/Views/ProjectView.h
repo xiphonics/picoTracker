@@ -16,8 +16,12 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
   virtual void AnimationUpdate();
-  etl::string<40> getProjectName() { return nameField_->GetString(); };
-  etl::string<40> getOldProjectName() { return oldProjName_; };
+  etl::string<MAX_PROJECT_NAME_LENGTH> getProjectName() {
+    return nameField_->GetString();
+  };
+  etl::string<MAX_PROJECT_NAME_LENGTH> getOldProjectName() {
+    return oldProjName_;
+  };
   void clearSaveAsFlag() {
     saveAsFlag_ = false;
     oldProjName_ = getProjectName();
