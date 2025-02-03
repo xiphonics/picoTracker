@@ -257,6 +257,15 @@ void InstrumentBank::releaseInstrument(unsigned short id) {
   instruments_[id] = &none_;
 }
 
+unsigned short InstrumentBank::GetNextFreeInstrumentSlotId() {
+  for (unsigned short i = 0; i < instruments_.max_size(); i++) {
+    if (instruments_[i] == &none_) {
+      return i;
+    }
+  }
+  return NO_MORE_INSTRUMENT;
+}
+
 unsigned short InstrumentBank::Clone(unsigned short i) {
   I_Instrument *src = instruments_[i];
 

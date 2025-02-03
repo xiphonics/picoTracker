@@ -27,6 +27,7 @@ public:
   unsigned short GetNextAndAssignID(InstrumentType type, unsigned char id);
   void releaseInstrument(unsigned short id);
   unsigned short Clone(unsigned short i);
+  unsigned short GetNextFreeInstrumentSlotId();
 
 private:
   etl::array<I_Instrument *, MAX_INSTRUMENT_COUNT> instruments_;
