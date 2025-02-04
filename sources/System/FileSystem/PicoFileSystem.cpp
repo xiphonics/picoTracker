@@ -236,10 +236,16 @@ bool PicoFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   int bufferSize = sizeof(fileBuffer_);
   while (true) {
     n = fSrc.read(fileBuffer_, bufferSize);
+    // check for read error and only write if no error
+    if (n >= 0) {
+      fDest.write(fileBuffer_, n);
+    } else {
+      Trace::Error("Failed to read file: %s", srcPath);
+      return false;
+    }
     if (n < bufferSize) {
       break;
     }
-    fDest.write(fileBuffer_, n);
   }
   fSrc.close();
   fDest.close();
