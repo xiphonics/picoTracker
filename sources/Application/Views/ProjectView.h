@@ -14,10 +14,18 @@ public:
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
-  virtual void OnFocus(){};
+  virtual void OnFocus();
   virtual void AnimationUpdate();
-  etl::string<40> getProjectName() { return nameField_->GetString(); };
-  void clearSaveAsFlag() { saveAsFlag_ = false; };
+  etl::string<MAX_PROJECT_NAME_LENGTH> getProjectName() {
+    return nameField_->GetString();
+  };
+  etl::string<MAX_PROJECT_NAME_LENGTH> getOldProjectName() {
+    return oldProjName_;
+  };
+  void clearSaveAsFlag() {
+    saveAsFlag_ = false;
+    oldProjName_ = getProjectName();
+  };
 
   // Observer for action callback
 
@@ -34,5 +42,6 @@ private:
   UIField *tempoField_;
   UITextField *nameField_;
   bool saveAsFlag_ = false;
+  etl::string<MAX_PROJECT_NAME_LENGTH> oldProjName_;
 };
 #endif

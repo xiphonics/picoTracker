@@ -227,6 +227,31 @@ uint64_t PicoFileSystem::getFileSize(const int index) {
   return size;
 }
 
+bool PicoFileSystem::CopyFile(const char *srcPath, const char *destPath) {
+  std::lock_guard<Mutex> lock(mutex);
+  auto fSrc = sd.open(srcPath, O_READ);
+  auto fDest = sd.open(destPath, O_WRITE | O_CREAT);
+
+  int n = 0;
+  int bufferSize = sizeof(fileBuffer_);
+  while (true) {
+    n = fSrc.read(fileBuffer_, bufferSize);
+    // check for read error and only write if no error
+    if (n >= 0) {
+      fDest.write(fileBuffer_, n);
+    } else {
+      Trace::Error("Failed to read file: %s", srcPath);
+      return false;
+    }
+    if (n < bufferSize) {
+      break;
+    }
+  }
+  fSrc.close();
+  fDest.close();
+  return true;
+}
+
 void PicoFileSystem::tolowercase(char *temp) {
   // Convert to upper case
   char *s = temp;
