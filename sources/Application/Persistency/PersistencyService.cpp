@@ -41,23 +41,27 @@ void PersistencyService::PurgeUnnamedProject() {
 PersistencyResult
 PersistencyService::CreateProjectDirs_(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
-  pathBufferA.clear();
-  pathBufferA.append(PROJECTS_DIR);
-  pathBufferA.append("/");
-  pathBufferA.append(projectName);
+
+  etl::vector segments{PROJECTS_DIR, projectName};
+  CreatePath(pathBufferA, segments);
 
   bool result = picoFS->makeDir(pathBufferA.c_str());
   Trace::Log("PERSISTENCYSERVICE", "created project dir: %s\n [%b]",
              pathBufferA.c_str(), result);
+  if (!result) {
+    return PersistencyResult::PERSIST_ERROR;
+  }
 
   // also create samples sub dir
-  pathBufferA.append("/");
-  pathBufferA.append(PROJECT_SAMPLES_DIR);
+  segments = {PROJECT_SAMPLES_DIR};
+  CreatePath(pathBufferA, segments);
+
   result = picoFS->makeDir(pathBufferA.c_str());
   Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n [%b]",
              pathBufferA.c_str(), result);
 
-  return PersistencyResult::PERSIST_SAVED;
+  return result ? PersistencyResult::PERSIST_SAVED
+                : PersistencyResult::PERSIST_ERROR;
 }
 
 PersistencyResult PersistencyService::Save(const char *projectName,
@@ -72,8 +76,7 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     picoFS->chdir(oldProjectName);
     picoFS->chdir(PROJECT_SAMPLES_DIR);
 
-    Trace::Log("PERSISTENCYSERVICE",
-               "list samples to copyfrom old project: %s\n", oldProjectName);
+    Trace::Debug("list samples to copyfrom old project: %s\n", oldProjectName);
 
     picoFS->list(&fileIndexes_, ".wav", false);
     char filenameBuffer[32];
@@ -85,34 +88,20 @@ PersistencyResult PersistencyService::Save(const char *projectName,
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)
         continue;
 
-      pathBufferA.clear();
-      pathBufferA.append(PROJECTS_DIR);
-      pathBufferA.append("/");
-      pathBufferA.append(oldProjectName);
-      pathBufferA.append("/");
-      pathBufferA.append(PROJECT_SAMPLES_DIR);
-      pathBufferA.append("/");
-      pathBufferA.append(filenameBuffer);
+      etl::vector filePathSegments = {PROJECTS_DIR, oldProjectName,
+                                      PROJECT_SAMPLES_DIR, filenameBuffer};
+      CreatePath(pathBufferA, filePathSegments);
 
-      pathBufferB.clear();
-      pathBufferB.append(PROJECTS_DIR);
-      pathBufferB.append("/");
-      pathBufferB.append(projectName);
-      pathBufferB.append("/");
-      pathBufferB.append(PROJECT_SAMPLES_DIR);
-      pathBufferB.append("/");
-      pathBufferB.append(filenameBuffer);
+      filePathSegments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR,
+                          filenameBuffer};
+      CreatePath(pathBufferB, filePathSegments);
 
       picoFS->CopyFile(pathBufferA.c_str(), pathBufferB.c_str());
     };
   }
 
-  pathBufferA.clear();
-  pathBufferA.append(PROJECTS_DIR);
-  pathBufferA.append("/");
-  pathBufferA.append(projectName);
-  pathBufferA.append("/");
-  pathBufferA.append(PROJECT_DATA_FILE);
+  etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_DATA_FILE};
+  CreatePath(pathBufferA, segments);
 
   PI_File *fp = picoFS->Open(pathBufferA.c_str(), "w");
   if (!fp) {
@@ -204,4 +193,15 @@ PersistencyService::SaveProjectState(const char *projectName) {
   current->Write(projectName, 1, strlen(projectName));
   current->Close();
   return PERSIST_SAVED;
+}
+
+void PersistencyService::CreatePath(
+    etl::istring &path, const etl::ivector<const char *> &segments) {
+  // concatenate path segments into a single path
+  path.clear();
+  // iterate over segments and concatenate using iterator
+  for (auto it = segments.begin(); it != segments.end(); ++it) {
+    path.append("/");
+    path.append(*it);
+  }
 }

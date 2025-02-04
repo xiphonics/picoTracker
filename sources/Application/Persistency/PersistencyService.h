@@ -19,6 +19,7 @@ enum PersistencyResult {
   PERSIST_SAVED,
   PERSIST_LOAD_FAILED,
   PERSIST_LOADED,
+  PERSIST_ERROR,
 };
 
 #define UNNAMED_PROJECT_NAME ".untitled"
@@ -39,6 +40,8 @@ public:
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);
+  void CreatePath(etl::istring &path,
+                  const etl::ivector<const char *> &segments);
   // need these as statically allocated buffers as too big for stack
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes_;
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferA;
