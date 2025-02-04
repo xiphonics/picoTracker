@@ -54,7 +54,9 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
 
   PersistencyService *persist = PersistencyService::GetInstance();
   const char *projName = ((ProjectView &)v).getProjectName().c_str();
-  if (persist->Save(projName, true) != PERSIST_SAVED) {
+  const char *oldProjName = ((ProjectView &)v).getOldProjectName().c_str();
+
+  if (persist->Save(projName, oldProjName, true) != PERSIST_SAVED) {
     Trace::Error("failed to save project");
     MessageBox *mb = new MessageBox(
         ((ProjectView &)v), "failed to save project", MBBF_OK | MBBF_CANCEL);
@@ -255,16 +257,18 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
           DoModal(mb, SaveAsOverwriteCallback);
           return;
         }
-        if (persist->Save(projName, saveAsFlag_) != PERSIST_SAVED) {
+        if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
+            PERSIST_SAVED) {
           Trace::Error("failed to save project state");
           MessageBox *mb =
               new MessageBox(*this, "Error saving Project", MBBF_OK);
           DoModal(mb);
           return;
         }
-        saveAsFlag_ = false; // clear flag after saving
+        clearSaveAsFlag();
       } else {
-        if (persist->Save(projName, saveAsFlag_) != PERSIST_SAVED) {
+        if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
+            PERSIST_SAVED) {
           Trace::Error("failed to save project state");
           MessageBox *mb =
               new MessageBox(*this, "Error saving Project", MBBF_OK);
@@ -334,6 +338,15 @@ void ProjectView::OnQuit() {
   SetChanged();
   NotifyObservers(&ve);
 };
+
+void ProjectView::OnFocus() {
+  // only store current project name for use in a "save as" operation if it's
+  // not already been modified by the user pending a save which is indicated
+  // by the saveAsFlag_ flag being set
+  if (!saveAsFlag_) {
+    oldProjName_ = getProjectName();
+  }
+}
 
 /// Updates the animation by redrawing the battery gauge on every clock tick
 /// (~1Hz). This occurs even when playback is not active and there is no user

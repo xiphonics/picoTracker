@@ -3,7 +3,6 @@
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
-#include <etl/string.h>
 
 #define PROJECT_STATE_FILE "/.current"
 
@@ -13,7 +12,9 @@ PersistencyService::PersistencyService()
 PersistencyResult PersistencyService::CreateProject() {
   Trace::Log("APPLICATION", "create new project\n");
   // create  project
-  return PersistencyService::GetInstance()->Save(UNNAMED_PROJECT_NAME, true);
+  CreateProjectDirs_(UNNAMED_PROJECT_NAME);
+  return PersistencyService::GetInstance()->Save(UNNAMED_PROJECT_NAME, "",
+                                                 false);
 };
 
 void PersistencyService::PurgeUnnamedProject() {
@@ -37,39 +38,81 @@ void PersistencyService::PurgeUnnamedProject() {
   };
 };
 
-PersistencyResult PersistencyService::Save(const char *projectName,
-                                           bool saveAs) {
-  etl::string<128> projectFilePath(PROJECTS_DIR);
-  projectFilePath.append("/");
-  projectFilePath.append(projectName);
+PersistencyResult
+PersistencyService::CreateProjectDirs_(const char *projectName) {
+  auto picoFS = PicoFileSystem::GetInstance();
 
+  etl::vector segments{PROJECTS_DIR, projectName};
+  CreatePath(pathBufferA, segments);
+
+  bool result = picoFS->makeDir(pathBufferA.c_str());
+  Trace::Log("PERSISTENCYSERVICE", "created project dir: %s\n [%b]",
+             pathBufferA.c_str(), result);
+  if (!result) {
+    return PersistencyResult::PERSIST_ERROR;
+  }
+
+  // also create samples sub dir
+  segments = {PROJECT_SAMPLES_DIR};
+  CreatePath(pathBufferA, segments);
+
+  result = picoFS->makeDir(pathBufferA.c_str());
+  Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n [%b]",
+             pathBufferA.c_str(), result);
+
+  return result ? PersistencyResult::PERSIST_SAVED
+                : PersistencyResult::PERSIST_ERROR;
+}
+
+PersistencyResult PersistencyService::Save(const char *projectName,
+                                           const char *oldProjectName,
+                                           bool saveAs) {
   auto picoFS = PicoFileSystem::GetInstance();
 
   if (saveAs && !Exists(projectName)) {
-    // need to first create project dir
-    picoFS->makeDir(projectFilePath.c_str());
-    // also create samples sub dir
-    etl::string<128> samplesPath(projectFilePath);
-    samplesPath.append("/");
-    samplesPath.append(PROJECT_SAMPLES_DIR);
-    picoFS->makeDir(samplesPath.c_str());
-    Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n",
-               samplesPath.c_str());
+    CreateProjectDirs_(projectName);
+
+    // copy across the samples from the old project
+    picoFS->chdir(oldProjectName);
+    picoFS->chdir(PROJECT_SAMPLES_DIR);
+
+    Trace::Debug("list samples to copyfrom old project: %s\n", oldProjectName);
+
+    picoFS->list(&fileIndexes_, ".wav", false);
+    char filenameBuffer[32];
+    for (size_t i = 0; i < fileIndexes_.size(); i++) {
+      picoFS->getFileName(fileIndexes_[i], filenameBuffer,
+                          MAX_PROJECT_SAMPLE_PATH_LENGTH);
+
+      // ignore . and .. entries as using *.wav doesnt filter them out
+      if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)
+        continue;
+
+      etl::vector filePathSegments = {PROJECTS_DIR, oldProjectName,
+                                      PROJECT_SAMPLES_DIR, filenameBuffer};
+      CreatePath(pathBufferA, filePathSegments);
+
+      filePathSegments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR,
+                          filenameBuffer};
+      CreatePath(pathBufferB, filePathSegments);
+
+      picoFS->CopyFile(pathBufferA.c_str(), pathBufferB.c_str());
+    };
   }
 
-  projectFilePath.append("/");
-  projectFilePath.append(PROJECT_DATA_FILE);
+  etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_DATA_FILE};
+  CreatePath(pathBufferA, segments);
 
-  PI_File *fp = picoFS->Open(projectFilePath.c_str(), "w");
+  PI_File *fp = picoFS->Open(pathBufferA.c_str(), "w");
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
-                 projectFilePath.c_str());
+                 pathBufferA.c_str());
   }
   Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s\n",
-             projectFilePath.c_str());
+             pathBufferA.c_str());
   tinyxml2::XMLPrinter printer(fp);
   Trace::Log("PERSISTENCYSERVICE", "Saved Proj File: %s\n",
-             projectFilePath.c_str());
+             pathBufferA.c_str());
 
   printer.OpenElement("PICOTRACKER");
 
@@ -150,4 +193,15 @@ PersistencyService::SaveProjectState(const char *projectName) {
   current->Write(projectName, 1, strlen(projectName));
   current->Close();
   return PERSIST_SAVED;
+}
+
+void PersistencyService::CreatePath(
+    etl::istring &path, const etl::ivector<const char *> &segments) {
+  // concatenate path segments into a single path
+  path.clear();
+  // iterate over segments and concatenate using iterator
+  for (auto it = segments.begin(); it != segments.end(); ++it) {
+    path.append("/");
+    path.append(*it);
+  }
 }
