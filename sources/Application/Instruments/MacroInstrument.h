@@ -27,7 +27,8 @@ public:
   virtual bool IsInitialized();
   virtual bool IsEmpty();
 
-  virtual InstrumentType GetType() { return IT_MACRO; };
+  // TODO: set a real instrument type before shipping macro instruments
+  virtual InstrumentType GetType() { return IT_NONE; };
   virtual etl::string<24> GetName(); // returns sample name until real
                                      // namer is implemented
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
