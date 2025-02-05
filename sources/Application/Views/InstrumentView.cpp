@@ -27,16 +27,15 @@ static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
 };
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data),
-      instrumentType_(FourCC::VarInstrumentType, InstrumentTypeNames,
-                      INSTRUMENT_TYPES_COUNT, 0) {
+    : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
+                                          InstrumentTypeNames, IT_LAST, 0) {
 
   project_ = data->project_;
 
   GUIPoint position = GetAnchor();
   position._y -= 2;
   typeIntVarField_.emplace_back(position, *&instrumentType_, "Type: %s", 0,
-                                INSTRUMENT_TYPES_COUNT - 1, 1, 1);
+                                IT_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
   (*typeIntVarField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::VarInstrumentType;
@@ -124,9 +123,6 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   case IT_NONE:
     fillNoneParameters();
     break;
-  case IT_MACRO:
-    fillMacroParameters();
-    break;
   case IT_MIDI:
     fillMidiParameters();
     break;
@@ -138,6 +134,9 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
     break;
   case IT_OPAL:
     fillOpalParameters();
+    break;
+  case IT_LAST:
+    // NA
     break;
   };
 

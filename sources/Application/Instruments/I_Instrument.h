@@ -9,11 +9,16 @@
 
 #include "Application/Player/TablePlayback.h"
 
-const u_char INSTRUMENT_TYPES_COUNT = 5;
-
-enum InstrumentType { IT_NONE, IT_SAMPLE, IT_MIDI, IT_SID, IT_OPAL, IT_MACRO };
-static const char *InstrumentTypeNames[INSTRUMENT_TYPES_COUNT] = {
-    "NONE", "SAMPLE", "MIDI", "SID", "OPAL"};
+enum InstrumentType {
+  IT_NONE = 0,
+  IT_SAMPLE,
+  IT_MIDI,
+  IT_SID,
+  IT_OPAL,
+  IT_LAST
+};
+static const char *InstrumentTypeNames[IT_LAST] = {"NONE", "SAMPLE", "MIDI",
+                                                   "SID", "OPAL"};
 
 class I_Instrument : public VariableContainer, public Observable {
 public:
