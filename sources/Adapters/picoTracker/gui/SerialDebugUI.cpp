@@ -52,8 +52,10 @@ void SerialDebugUI::dispatchCmd(char *input) {
     rmFile(arg);
   } else if (strcmp(cmd, "save") == 0) {
     saveConfig();
+  } else if (strcmp(cmd, "mkdir") == 0) {
+    mkdir(arg);
   } else if (strcmp(cmd, "help") == 0) {
-    Trace::Log("SERIALDEBUG", "cat, ls, rm , help");
+    Trace::Log("SERIALDEBUG", "cat, ls, rm, mkdir, help");
   } else {
     Trace::Log("SERIALDEBUG", "unknown command");
   }
@@ -114,4 +116,9 @@ void SerialDebugUI::rmFile(const char *path) {
 void SerialDebugUI::saveConfig() {
   Config *config = Config::GetInstance();
   config->Save();
+}
+
+void SerialDebugUI::mkdir(const char *path) {
+  auto picoFS = PicoFileSystem::GetInstance();
+  picoFS->makeDir(path, true);
 }

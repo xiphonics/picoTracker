@@ -42,21 +42,11 @@ PersistencyResult
 PersistencyService::CreateProjectDirs_(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
 
-  etl::vector segments{PROJECTS_DIR, projectName};
+  // create samples sub dir as well as project dir containing it
+  etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR};
   CreatePath(pathBufferA, segments);
 
-  bool result = picoFS->makeDir(pathBufferA.c_str());
-  Trace::Log("PERSISTENCYSERVICE", "created project dir: %s\n [%b]",
-             pathBufferA.c_str(), result);
-  if (!result) {
-    return PersistencyResult::PERSIST_ERROR;
-  }
-
-  // also create samples sub dir
-  segments = {PROJECT_SAMPLES_DIR};
-  CreatePath(pathBufferA, segments);
-
-  result = picoFS->makeDir(pathBufferA.c_str());
+  auto result = picoFS->makeDir(pathBufferA.c_str(), true);
   Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n [%b]",
              pathBufferA.c_str(), result);
 
@@ -73,16 +63,18 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     CreateProjectDirs_(projectName);
 
     // copy across the samples from the old project
+    picoFS->chdir(PROJECTS_DIR);
     picoFS->chdir(oldProjectName);
     picoFS->chdir(PROJECT_SAMPLES_DIR);
 
-    Trace::Debug("list samples to copyfrom old project: %s\n", oldProjectName);
+    Trace::Debug("get list of samples to copy from old project: %s\n",
+                 oldProjectName);
 
     picoFS->list(&fileIndexes_, ".wav", false);
-    char filenameBuffer[32];
+    char filenameBuffer[PFILENAME_SIZE];
     for (size_t i = 0; i < fileIndexes_.size(); i++) {
       picoFS->getFileName(fileIndexes_[i], filenameBuffer,
-                          MAX_PROJECT_SAMPLE_PATH_LENGTH);
+                          sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)

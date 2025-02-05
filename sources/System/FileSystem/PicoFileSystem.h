@@ -46,7 +46,7 @@ public:
   bool DeleteFile(const char *name);
   bool DeleteDir(const char *name);
   bool exists(const char *path);
-  bool makeDir(const char *path);
+  bool makeDir(const char *path, bool pFlag = false);
   uint64_t getFileSize(int index);
   bool CopyFile(const char *src, const char *dest);
 
