@@ -63,16 +63,18 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     CreateProjectDirs_(projectName);
 
     // copy across the samples from the old project
+    picoFS->chdir(PROJECTS_DIR);
     picoFS->chdir(oldProjectName);
     picoFS->chdir(PROJECT_SAMPLES_DIR);
 
-    Trace::Debug("list samples to copyfrom old project: %s\n", oldProjectName);
+    Trace::Debug("get list of samples to copy from old project: %s\n",
+                 oldProjectName);
 
     picoFS->list(&fileIndexes_, ".wav", false);
-    char filenameBuffer[32];
+    char filenameBuffer[PFILENAME_SIZE];
     for (size_t i = 0; i < fileIndexes_.size(); i++) {
       picoFS->getFileName(fileIndexes_[i], filenameBuffer,
-                          MAX_PROJECT_SAMPLE_PATH_LENGTH);
+                          sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)
