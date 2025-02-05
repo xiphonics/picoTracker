@@ -42,21 +42,11 @@ PersistencyResult
 PersistencyService::CreateProjectDirs_(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
 
-  etl::vector segments{PROJECTS_DIR, projectName};
+  // create samples sub dir as well as project dir containing it
+  etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR};
   CreatePath(pathBufferA, segments);
 
-  bool result = picoFS->makeDir(pathBufferA.c_str());
-  Trace::Log("PERSISTENCYSERVICE", "created project dir: %s\n [%b]",
-             pathBufferA.c_str(), result);
-  if (!result) {
-    return PersistencyResult::PERSIST_ERROR;
-  }
-
-  // also create samples sub dir
-  segments = {PROJECT_SAMPLES_DIR};
-  CreatePath(pathBufferA, segments);
-
-  result = picoFS->makeDir(pathBufferA.c_str());
+  auto result = picoFS->makeDir(pathBufferA.c_str(), true);
   Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n [%b]",
              pathBufferA.c_str(), result);
 

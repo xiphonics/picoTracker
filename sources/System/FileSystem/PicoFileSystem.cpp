@@ -204,9 +204,17 @@ bool PicoFileSystem::exists(const char *path) {
   return sd.exists(path);
 }
 
-bool PicoFileSystem::makeDir(const char *path) {
+/**
+ * Create a directory at the specified path.
+ *
+ * \param[in] path The path where the directory will be created.
+ * \param[in] pFlag If true, create missing parent directories.
+ *
+ * \return true if the directory was successfully created, false otherwise.
+ */
+bool PicoFileSystem::makeDir(const char *path, bool pFlag) {
   std::lock_guard<Mutex> lock(mutex);
-  return sd.mkdir(path);
+  return sd.mkdir(path, pFlag);
 }
 
 uint64_t PicoFileSystem::getFileSize(const int index) {

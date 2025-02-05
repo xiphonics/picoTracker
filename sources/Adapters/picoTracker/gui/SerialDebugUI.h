@@ -12,6 +12,7 @@ public:
   void listFiles(const char *path);
   void rmFile(const char *path);
   void saveConfig();
+  void mkdir(const char *path);
 
 private:
   int lp_ = 0;
