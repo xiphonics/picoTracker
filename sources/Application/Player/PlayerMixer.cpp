@@ -51,6 +51,9 @@ bool PlayerMixer::Init(Project *project) {
     channel_[i]->SetMixBus(mixer->GetBus(i));
   }
 
+  // streamer need access to project to get current volume
+  fileStreamer_.SetProject(project);
+
   return true;
 };
 

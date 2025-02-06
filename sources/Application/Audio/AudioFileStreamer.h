@@ -2,6 +2,7 @@
 #define _AUDIO_FILE_STREAMER_H_
 
 #include "Application/Instruments/WavFile.h"
+#include "Application/Model/Project.h"
 #include "Services/Audio/AudioModule.h"
 
 enum AudioFileStreamerMode { AFSM_STOPPED, AFSM_PLAYING };
@@ -21,7 +22,12 @@ protected:
   bool newPath_;
   WavFile *wav_;
   int position_;
-  int shift_;
+
+private:
+  Project *project_;
+
+public:
+  void SetProject(Project *project) { project_ = project; }
 };
 
 #endif
