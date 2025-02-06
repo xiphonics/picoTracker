@@ -16,3 +16,5 @@ template: page
 - You can cut or delete a phrase/transposition/selection by highlighting and pressing `EDIT`+`ENTER`.
 - Make a big selection by pressing `NAV`+`EDIT`, then Arrows around to highlight.
 - Press `NAV`+`ENTER` to paste.
+- In Song mode, `Play` starts/stops playback from the highlighted step, soloing the current chain
+- In Live mode `Play` queues the currently highlighted phrase step
