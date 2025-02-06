@@ -18,3 +18,5 @@ template: page
 - If you copy/cut anything in the phrase screen, pasting will always put the data back in the same column (regardless if you've moved the cursor to another column). This means effects in column one are always pasted back there, and you can't accidentally paste a note into the effect column, etc.
 - You can clone a MIDI or other type of instrument in the phrase screen by pressing RT+(B,A) on instrument number in phrase screen. 
 - If no instrument is set when triggering a new note, tables are not stopped, running commands are not stopped and phase of oscillator instrument is not reset (allowing for clickless transitions)
+- In Song `Play` starts and stops playback from Step 00, soloing the current phrase
+- In Live mode `Play` queues the Edited Chain Step from 00
