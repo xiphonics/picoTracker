@@ -51,8 +51,7 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
     }
   }
 
-  //  Aplply volume
-
+  //  Apply volume
   if (gotData) {
     fixed *c = buffer;
     if (volume_ != i2fp(1)) {

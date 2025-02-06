@@ -69,6 +69,10 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   fixed *dst = buffer;
   int channel = wav_->GetChannelCount(-1);
 
+  Variable *v = project_->FindVariable(FourCC::VarMasterVolume);
+  int vol = v->GetInt();
+  fixed volume = fp_mul(i2fp(vol), fl2fp(0.01f));
+
   while (count > 0) {
     // 64 bytes * 2 bytes resolution * 2 channels = 256
     // which is the half the readBuffer size for files
@@ -80,13 +84,13 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     short *src = (short *)wav_->GetSampleBuffer(-1);
 
     // I might need to do sample interpolation here
-
     for (int i = 0; i < bufferSize; i++) {
       fixed v = *dst++ = i2fp((*src++) >> (1 + shift_));
       if (channel == 2) {
-        *dst++ = i2fp((*src++) >> (1 + shift_));
+        // apply master volume when streaming
+        *dst++ = fp_mul(i2fp((*src++) >> (1 + shift_)), volume);
       } else {
-        *dst++ = v;
+        *dst++ = fp_mul(v, volume);
       }
     }
     count -= bufferSize;
