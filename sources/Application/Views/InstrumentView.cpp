@@ -113,6 +113,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   staticField_.clear();
   bigHexVarField_.clear();
   intVarOffField_.clear();
+  bitmaskVarField_.clear();
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
