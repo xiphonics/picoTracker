@@ -22,7 +22,6 @@ protected:
   bool newPath_;
   WavFile *wav_;
   int position_;
-  int shift_;
 
 private:
   Project *project_;

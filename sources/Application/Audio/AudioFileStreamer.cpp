@@ -5,7 +5,6 @@
 
 AudioFileStreamer::AudioFileStreamer() {
   wav_ = 0;
-  shift_ = 1;
   mode_ = AFSM_STOPPED;
   newPath_ = false;
 };
@@ -15,8 +14,6 @@ AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
 bool AudioFileStreamer::Start(char *name) {
   Trace::Debug("Starting to stream:%s", name);
   strcpy(name_, name);
-  shift_ = Config::GetInstance()->GetValue("PRELISTENATTENUATION");
-  Trace::Debug("Streaming shift is %d", shift_);
   newPath_ = true;
   mode_ = AFSM_PLAYING;
   return true;
@@ -85,10 +82,10 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 
     // I might need to do sample interpolation here
     for (int i = 0; i < bufferSize; i++) {
-      fixed v = *dst++ = i2fp((*src++) >> (1 + shift_));
+      fixed v = *dst++ = i2fp(*src++);
       if (channel == 2) {
         // apply master volume when streaming
-        *dst++ = fp_mul(i2fp((*src++) >> (1 + shift_)), volume);
+        *dst++ = fp_mul(i2fp(*src++), volume);
       } else {
         *dst++ = fp_mul(v, volume);
       }
