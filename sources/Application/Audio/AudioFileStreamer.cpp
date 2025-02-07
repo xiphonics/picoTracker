@@ -82,12 +82,12 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 
     // I might need to do sample interpolation here
     for (int i = 0; i < bufferSize; i++) {
-      fixed v = *dst++ = i2fp(*src++);
+      fixed v = *dst++ = fp_mul(i2fp(*src++), volume);
       if (channel == 2) {
         // apply master volume when streaming
         *dst++ = fp_mul(i2fp(*src++), volume);
       } else {
-        *dst++ = fp_mul(v, volume);
+        *dst++ = v;
       }
     }
     count -= bufferSize;
