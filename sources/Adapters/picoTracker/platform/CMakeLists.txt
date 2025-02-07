@@ -1,7 +1,6 @@
 add_library(platform
   gpio.h
   platform.h platform.cpp
-  etl_profile.h
 )
 
 target_link_libraries(platform PUBLIC pico_stdlib

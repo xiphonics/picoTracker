@@ -1,5 +1,4 @@
 #include "platform.h"
-#include "etl_profile.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/pll.h"
