@@ -75,6 +75,8 @@ protected: // GUIWindow implementation
   void onQuitApp();
 
 private:
+  bool autoSave();
+
   View *_currentView;
   ViewData *_viewData;
   SongView *_songView;
@@ -120,6 +122,8 @@ private:
   SysMutex drawMutex_;
 
   bool loadProject_ = false;
+
+  uint32_t lastAutoSave = 0;
 };
 
 #endif

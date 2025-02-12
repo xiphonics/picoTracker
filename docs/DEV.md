@@ -96,3 +96,16 @@ A helpful tool for debugging MIDI output is [ShowMIDI](https://github.com/gbevin
 ### USB MIDI output
 
 TODO
+
+## Notes on code structure
+
+### Key classes
+
+Some classes are worth documenting specifically here as they contain key pieces of functionality.
+
+`sources/Adapters/picoTracker/gui/picoTrackerEventManager.cpp`
+
+`picoTrackerEventManager` is important because it's where `MainLoop()` is and hence it's where "events" are dispatched. 
+It is also here that the 1ms tick timer callback is set up and the callback function for it is found: `timerHandler()`. The `timerHandler()` function is then the source of the `PICO_CLOCK` events, which are then dispatched to the `picoTrackerEventQueue` at the rate of 1Hz.
+
+`AppWindow::AnimationUpdate()` is the handy spot where we handle calling autosave just because of the convienence of the `AppWindow` class having easy access to the player, the current project name and the persistance service.
