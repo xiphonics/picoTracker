@@ -31,9 +31,12 @@ picoTrackerEventQueue *queue;
 char inBuffer[INPUT_BUFFER_SIZE];
 #endif
 
+// timer callback at a rate of 1kHz (from a 1ms hardware interrupt timer)
 bool timerHandler(repeating_timer_t *rt) {
   queue = picoTrackerEventQueue::GetInstance();
   gTime_++;
+
+  // send a clock (PICO_CLOCK) event once every second
   if (gTime_ % 1000 == 0) {
     queue->push(picoTrackerEvent(PICO_CLOCK));
   }
@@ -58,9 +61,7 @@ bool picoTrackerEventManager::Init() {
 
   keyboardCS_ = new KeyboardControllerSource("keyboard");
 
-  // TODO: fix this, there is a timer service that should be used. Also all of
-  // this keyRepeat logic is already implemented in the eventdispatcher
-  // Application/Commands/EventDispatcher.cpp
+  // setup a repeating timer for 1ms ticks
   add_repeating_timer_ms(1, timerHandler, NULL, &timer_);
   return true;
 }

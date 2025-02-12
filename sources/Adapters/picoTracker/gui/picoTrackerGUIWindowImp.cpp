@@ -2,6 +2,7 @@
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Model/Config.h"
 #include "Application/Utils/char.h"
+#include "Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include "UIFramework/BasicDatas/GUIEvent.h"

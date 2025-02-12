@@ -16,6 +16,8 @@
 #include <nanoprintf.h>
 #include <string.h>
 
+const u_int16_t AUTOSAVE_INTERVAL_IN_SECONDS = 2 * 60;
+
 AppWindow *instance = 0;
 
 unsigned char AppWindow::_charScreen[SCREEN_CHARS];
@@ -495,6 +497,18 @@ void AppWindow::AnimationUpdate() {
     loadProject_ = false;
   }
   _currentView->AnimationUpdate();
+
+  // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_MILLIS
+  // will return false if auto save was unsuccessful because eg. the sequencer
+  // is running
+  // we do this here because for sheer convenience because this
+  // callback is called every second and we have easy access in this class to
+  // the player, projectname and persistence service
+  if (++lastAutoSave > AUTOSAVE_INTERVAL_IN_SECONDS) {
+    if (autoSave()) {
+      lastAutoSave = 0;
+    }
+  }
 }
 
 void AppWindow::LayoutChildren(){};
@@ -616,3 +630,16 @@ void AppWindow::Print(char *line) {
 };
 
 void AppWindow::SetColor(ColorDefinition cd) { colorIndex_ = cd; };
+
+bool AppWindow::autoSave() {
+  Player *player = Player::GetInstance();
+  // only auto save when sequencer is not running
+  if (!player->IsRunning()) {
+    Trace::Log("APPWINDOW", "AutoSaving Project Data");
+    // get persistence service and call autosave
+    PersistencyService *ps = PersistencyService::GetInstance();
+    ps->AutoSaveProjectData(projectName_);
+    return true;
+  }
+  return false;
+}
