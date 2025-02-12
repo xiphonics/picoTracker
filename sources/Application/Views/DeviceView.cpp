@@ -51,7 +51,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarRemoteUI);
-  intVarField_.emplace_back(position, *v, "Remote UI: %s", 0, 2, 1, 1);
+  intVarField_.emplace_back(position, *v, "Remote UI: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
