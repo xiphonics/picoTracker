@@ -3,6 +3,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "ModalDialogs/MessageBox.h"
 #include "pico/multicore.h"
 #include <memory>
 #include <nanoprintf.h>
@@ -174,6 +175,14 @@ void ImportView::preview(char *name) {
 }
 
 void ImportView::import(char *name) {
+  // stop playing before trying to import
+  if (Player::GetInstance()->IsPlaying()) {
+    MessageBox *mb =
+        new MessageBox(*this, "Can't import while previewing", MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
   SamplePool *pool = SamplePool::GetInstance();
 
   // Pause core1 in order to be able to write to flash and ensure core1 is
