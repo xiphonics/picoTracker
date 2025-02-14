@@ -7,30 +7,30 @@ template: page
 
 ![screen capture of sampler screen](image/sample-screen-small.png)
 
-- **sample:** selects the .wav file to associate with the instrument. you can select the same sample in more than one instrument. if you tap A,A here it will take you to the Sample Import Screen (which lets you load new .WAV into your project).
-- **volume:**
-- **pan:** pans the instrument left or right (0x7F is center)
-- **root note**
-- **detune**
-- **drive:** This is a volume modification before crush, and the instruments volume is after the crush.
-- **crush:** decrease bit resolution
-- **downsample:** decrease the bit rate, get those low frequency aliasing whines. each increase in this value will downsample the original sample by a factor of 2
-- **cutoff:** filter cutoff frequency
-- **reso:** filter resonance frequency
-- **type:** this is where it gets a little trickier. The filter now supports continuous change from low pass to high pass. set type to 00 for low pazz. FF for hi-pass and 7f for Band pass (or is it notch? n0s must check). all intermediate values morph in between them.
-- **dist:** filter distortion. for the moment we have none & scream. i'm planning on maybe add a third choice that would make the filter behave a little better when resonance is set very high in the old/default mode
+- **sample:** Selects the .wav file to associate with this instrument. You can use the same sample in more than one instrument. Tap `ENTER`,`ENTER` to go to the Sample Import Screen which lets you load new .wav files into your project, with the last imported sample selected as the sample assigned to this instrument [1]
+- **volume:** Set the volume of the instrument
+- **pan:** Pans the instrument left or right (0x7F is center)
+- **root note:** The root note of the sample
+- **detune:** Detune the sample by the number of semitones
+- **drive:** This is a volume modification before crush, and the instruments volume is after the crush
+- **crush:** Decreases the bit resolution
+- **downsample:** Decreases the bit rate (eg. low frequency aliasing whines). Each increase in this value will downsample the original sample by a factor of 2
+- **cutoff:** Set the Filter cutoff frequency
+- **reso:** Set the Filter resonance frequency
+- **type:** The filter supports continuous change from low pass to high pass. Set type to `00` for low pass. `FF` for high pass and `7F` for band pass. All intermediate values morph in between them
+- **dist:** Set the filter distortion. Available values are `none` and `scream`
 
-- **interpolation:** Interpolation mode ('linear'/'none'): selects which interpolation mode is used when in between samples. linear interpols linearly while none takes the nearest neighbor. Use none when playing samples at low range to add some typical overtones.
+- **interpolation:** Interpolation mode ('linear'/'none'). Selects which interpolation mode is used when in between samples. `Linear` interpolates linearly while `none` takes the nearest neighbor. Use none when playing samples at low range to add some typical overtones. Note using linear interpolation currently adds significantly to the CPU load during playback.
 - **loop mode:** selects the looping mode.
-  - none will play sample from zero to end.
-  - loop will start at zero and loop from loopstart to end.
-  - looper sync will automatically tune a loop so that it plays exactly 16 bars. Use the root note to play twice faster/slower
-  - oscillator is a special mode where the loop selection (from loopstart to end) is taken as oscillator data and automatically tuned. Experiment with different settings, do not forget 'root note' is your friend to tune the oscillator back in a useful range
-- **start:** start point of the sample regardless of if loop is enabled; in hex
-- **loop Start:** start point of the sample when loop is enabled; in hex
-- **loop End:** end point of the sample; in hex. You can play samples backwards by setting the end value lower than the start!
-- **automation:** If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows cruise around real fast).
-- **table:** Select a table the instrument will always run. Clone a table here: RT+(B,A). Make a new table here: A,A.
+  - `none` will play sample from start to finish
+  - `loop` will start at the start and loop from loopstart to end.
+  - `looper sync` will automatically tune a loop so that it plays exactly 16 bars. Use the root note to play twice faster/slower
+  - `oscillator` is a special mode where the loop selection (from loopstart to end) is taken as oscillator data and automatically tuned. Note that 'root note' can be used to tune the oscillator back in a useful range
+- **start:** start point of the sample regardless of if loop is enabled (note value is in hex)
+- **loop Start:** start point of the sample when loop is enabled (note value is in hex)
+- **loop End:** end point of the sample (note value is in hex). You can play samples backwards by setting the end value lower than the start
+- **automation:** If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows will move at the speed of 1 row per tick)
+- **table:** Select a table the instrument will always run. To clone a table here: `NAV`+(`EDIT`, `ENTER`). Make a new table by selecting a higher number not yet in use.
 
 
 ## Sample Import Screen
@@ -56,6 +56,8 @@ At any time, you can return to the instrument screen from the sample file browse
 
 ### Supported sample file formats
 
+Only uncompressed Wave (*.wav) files are supported using **8 or 16 bit**, mono or stereo and they **MUST** only be 44.1KHz.
+
 ## MIDI
 
 ## Midi Instrument Screen
@@ -64,11 +66,11 @@ At any time, you can return to the instrument screen from the sample file browse
 
 A MIDI instrument has the following settings:
 
-- **Channel** - This can be set 0x80 to 0x8F which is midi channel 1-16 respectively
-- **Volume** - The volume any NOTE ON will be sent to your device. FF=127, 00=00
-- **Length** - Sets note gate length in number of ticks.
-- **Automation** - On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows cruise around real fast).
-- **Table**- As above, select a table the instrument will always run. Clone a table here: `NAV`+`EDIT ENTER`. Make a new table here: `EDIT EDIT`
+- **Channel** - This can be set `01`-`16` (in **decimal** not hex!) which is midi channel 1-16 respectively
+- **Volume** - The volume any NOTE ON will be sent to your device: FF=127, 00=00
+- **Length** - Sets note gate length in number of ticks
+- **Automation** - When on, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is `Off`, table behavior is normal (play arrows will move at the speed of 1 row per tick)
+- **Table**- As above, select a table the instrument will always run. Clone a table here: `NAV`+`EDIT`,`ENTER`. Make a new table by selecting a higher number not yet in use.
 
 
 ## Synths
