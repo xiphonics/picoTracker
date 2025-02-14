@@ -7,6 +7,10 @@ template: page
 
 On the project screen you change various settings of the current project, save the current project, rename it (including giving it a random new name) create a new blank project or go to the project browser screen to **load** an another existing project.
 
+Your current project settings are saved automatically every minute except when the sequencer is running, ie. when the current project is playing. This means that should you restart the picoTracker or accidently power off or a crash occurs, your current project state within the last minute will be restored when you restart the picoTracker.
+
+You can ***explicitly*** save the current project by pressing [SAVE] on the project screen. By doing this you can then later on revert to the state that you just saved by reloading the current project using the [Load] button on screen button on the project screen.
+
 ## Current Project settings
 
 - **Tempo:**: Can be set between 60bpm [0x3c] and 400bpm [0x190]. Resolution aligned to LSDJ.
@@ -21,9 +25,11 @@ On the project screen you change various settings of the current project, save t
 ## Project Management
 
 - **project:** Displays the current name of the project and allows you to edit it
-- **Load** Go to the project file browser to load a different project
+- **Load** Go to the project file browser to load a different project or reload the last explicitly saved version of the current project
 - **Save** Save the current project **NOTE:** *saving currently cannot be done during playback.*
 - **New** *REPLACE* the current project with a new, *Blank* project.  
 - **Random** *RENAME* the current project with a new, *Randomly generated* name.  
 
-The project name is limited to 12 characters. The project name field allows deleting the currently selected character using the [EDIT] key.
+The project name is **limited to 12 characters**. 
+
+You edit to project name by moving onto the name field and then holding the `ENTER` key while using the `UP` and `DOWN` keys to change the selected character and `LEFT` and `RIGHT` keys to move the cursor to the left or right of the current character. When on the last character, you can add chararacter to the end of the project name by using the `RIGHT` key.
