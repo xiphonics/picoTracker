@@ -91,7 +91,7 @@ PersistencyResult PersistencyService::Save(const char *projectName,
       picoFS->CopyFile(pathBufferA.c_str(), pathBufferB.c_str());
     };
   }
-  return SaveProjectData(projectName);
+  return SaveProjectData(projectName, false);
 };
 
 PersistencyResult

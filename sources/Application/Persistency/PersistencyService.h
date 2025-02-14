@@ -44,8 +44,7 @@ private:
   PersistencyResult CreateProjectDirs_(const char *projectName);
   void CreatePath(etl::istring &path,
                   const etl::ivector<const char *> &segments);
-  PersistencyResult SaveProjectData(const char *projectName,
-                                    bool autosave = false);
+  PersistencyResult SaveProjectData(const char *projectName, bool autosave);
 
   // need these as statically allocated buffers as too big for stack
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes_;
