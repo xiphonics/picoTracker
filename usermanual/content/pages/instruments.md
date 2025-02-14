@@ -77,16 +77,27 @@ A MIDI instrument has the following settings:
 
 ![screen capture of SID instrument screen](image/sid-screen-small.png)
 
-* **VPW:**
-* **WF:**
-* **Sync:**
-* **Ring:**
-* **ADSR:**
-* **filter:**
-* **Flt cut:**
-* **Flt res:**
-* **Flt mode:**
-* **volume:**
+* **SID Chip:** Currently only "SID #1" is supported
+* **OSC:** The oscillator to use: 0-2
+* **VPW:** Pulse Width Modulation (PWM) of the oscillator, 000-FFF [1]
+* **WF:** Waveform to use: TSQN (Triangle, Sawtooth, Square PWM, Noise (white-ish))
+* **Sync:** Sync the oscillator (false/true)
+* **Ring:** Enable or disable Ring modulation (false/true)
+* **A/D/S/R:** Attack/Decay/Sustain/Release, each is single digit 0-15 value
+### Global SID chip settings:
+* **Filter:** Set if the filter is on or off (false/true)
+* **Flt cut:** The filter cutoff frequency 0-F
+* **Flt res:** The filter resonance 0-F
+* **Flt mode:** The filter mode: LP (lowpass), BP (bandpass), HP (highpass)
+* **Volume:** Output volume: 0-F
+
+The picoTracker currently only supports up to 3 SID instruments. Each of these represents a single monophonic oscillator with a single emulated "SID chip". Thus some of the settings above are shared between the 3 SID instruments because they are a global setting for the entire SID chip and *not* per oscillator.
+
+SID Notes:
+[1] In the SID, the pulse waveform can have its width dynamically adjusted. This parameter controls the duty cycle of the square wave, which determines the harmonic content and timbre of the sound.
+
+A pulse width of `0` creates a very thin pulse (almost a spike), while a value of `FFF` (4095) creates a full square wave. Values in between create asymmetrical square waves with varying harmonic characteristics.
+
 
 
 ### OPAL
@@ -116,3 +127,14 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 
 ![screen capture of OPAL instrument screen](image/opal-waveforms-small.png)
 
+## Limitations of instrument performance
+
+The picoTrackers CPU limits the number of simultaneous instruments that can be played at once. The specific limit depends on the instrument type and the settings of each instrument. In general the limit is:
+* 4-5 Sample instruments or
+* 3 OPAL instruments or
+* 3 SID instruments
+* 8 MIDI instruments
+
+Because they are very light weight when it comes to CPU usage 8 instruments can be played at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
+
+Given the above limits though, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 samplers, 1 OPAL, 1 SID and 4 MIDI should in theory be possible. Note this only applies to simulatenously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
