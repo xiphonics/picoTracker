@@ -137,9 +137,9 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   // delete the existing autosave file so that this explicit save will be loaded
   // in case subsequent autosave has changes the user doesn't want to keep
   if (!autosave) {
-    etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
-    CreatePath(pathBufferA, segments);
-    picoFS->DeleteFile(pathBufferA.c_str());
+    if (!ClearAutosave(projectName)) {
+      return PERSIST_ERROR;
+    }
     Trace::Log("PERSISTENCYSERVICE", "Deleted Autosave File: %s\n",
                pathBufferA.c_str());
   }
@@ -237,4 +237,11 @@ void PersistencyService::CreatePath(
       path.append("/");
     }
   }
+}
+
+bool PersistencyService::ClearAutosave(const char *projectName) {
+  auto picoFS = PicoFileSystem::GetInstance();
+  etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
+  CreatePath(pathBufferA, segments);
+  return picoFS->DeleteFile(pathBufferA.c_str());
 }

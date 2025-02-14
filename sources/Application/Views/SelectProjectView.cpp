@@ -94,7 +94,11 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       Trace::Log("SELECTPROJECTVIEW", "Select Project:%s \n", selection_);
       // save newly opened projectname, it will be used to load the project file
       // on device boots following the reboot below
-      PersistencyService::GetInstance()->SaveProjectState(selection_);
+      auto ps = PersistencyService::GetInstance();
+      ps->SaveProjectState(selection_);
+
+      // now need to delete autosave file so its not loaded when we reboot
+      ps->ClearAutosave(selection_);
 
       // now reboot!
       watchdog_reboot(0, 0, 0);

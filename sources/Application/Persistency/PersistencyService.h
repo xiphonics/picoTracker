@@ -39,6 +39,7 @@ public:
   bool Exists(const char *projectName);
   void PurgeUnnamedProject();
   PersistencyResult AutoSaveProjectData(const char *projectName);
+  bool ClearAutosave(const char *projectName);
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);
