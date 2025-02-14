@@ -16,7 +16,7 @@
 #include <nanoprintf.h>
 #include <string.h>
 
-const u_int16_t AUTOSAVE_INTERVAL_IN_SECONDS = 2 * 60;
+const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 2 * 60;
 
 AppWindow *instance = 0;
 
