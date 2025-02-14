@@ -60,6 +60,15 @@ bool Application::initProject(char *projectName) {
     if (PersistencyService::GetInstance()->Load(projectName) ==
         PERSIST_LOAD_FAILED) {
       Trace::Error("failed to load CURRENT proj: %s\n", projectName);
+      if (strcmp(projectName, UNNAMED_PROJECT_NAME) == 0) {
+        // untitled project is missing so need to create a new one
+        if (PersistencyService::GetInstance()->CreateProject() !=
+            PERSIST_SAVED) {
+          Trace::Log("APPLICATION", "FAILED to create new UNTITLED project !!");
+          // TODO: show user some sort of error message and how to recover from
+          // this?
+        }
+      }
     }
     return false;
   } else {

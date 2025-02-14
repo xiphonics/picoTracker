@@ -194,9 +194,11 @@ bool PicoFileSystem::DeleteFile(const char *path) {
   return sd.remove(path);
 }
 
+// directory has to be empty
 bool PicoFileSystem::DeleteDir(const char *path) {
   std::lock_guard<Mutex> lock(mutex);
-  return sd.rmdir(path);
+  auto delDir = sd.open(path, O_READ);
+  return delDir.rmdir();
 }
 
 bool PicoFileSystem::exists(const char *path) {
