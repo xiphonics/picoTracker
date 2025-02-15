@@ -137,6 +137,6 @@ The picoTrackers CPU limits the number of simultaneous instruments that can be p
 * 3 SID instruments
 * 8 MIDI instruments
 
-Because they are very light weight when it comes to CPU usage 8 instruments can be played at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
+Because they are very light weight when it comes to CPU usage 8 MIDI instruments can be played at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
 
 Given the above limits though, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 samplers, 1 OPAL, 1 SID and 4 MIDI should in theory be possible. Note this only applies to simulatenously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
