@@ -91,10 +91,23 @@ PersistencyResult PersistencyService::Save(const char *projectName,
       picoFS->CopyFile(pathBufferA.c_str(), pathBufferB.c_str());
     };
   }
+  return SaveProjectData(projectName, false);
+};
 
-  etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_DATA_FILE};
+PersistencyResult
+PersistencyService::AutoSaveProjectData(const char *projectName) {
+  return SaveProjectData(projectName, true);
+};
+
+PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
+                                                      bool autosave) {
+
+  const char *filename = autosave ? AUTO_SAVE_FILENAME : PROJECT_DATA_FILE;
+
+  etl::vector segments = {PROJECTS_DIR, projectName, filename};
   CreatePath(pathBufferA, segments);
 
+  auto picoFS = PicoFileSystem::GetInstance();
   PI_File *fp = picoFS->Open(pathBufferA.c_str(), "w");
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
@@ -119,6 +132,18 @@ PersistencyResult PersistencyService::Save(const char *projectName,
 
   fp->Close();
   delete (fp);
+
+  // if we are doing an explicit save (ie nto a autosave), then we need to
+  // delete the existing autosave file so that this explicit save will be loaded
+  // in case subsequent autosave has changes the user doesn't want to keep
+  if (!autosave) {
+    if (!ClearAutosave(projectName)) {
+      return PERSIST_ERROR;
+    }
+    Trace::Log("PERSISTENCYSERVICE", "Deleted Autosave File: %s\n",
+               pathBufferA.c_str());
+  }
+
   return PERSIST_SAVED;
 };
 
@@ -133,11 +158,25 @@ bool PersistencyService::Exists(const char *projectName) {
 }
 
 PersistencyResult PersistencyService::Load(const char *projectName) {
+  // first check if autosave exists
+  etl::string<128> autoSavePath(PROJECTS_DIR);
+  autoSavePath.append("/");
+  autoSavePath.append(projectName);
+  autoSavePath.append("/");
+  autoSavePath.append(AUTO_SAVE_FILENAME);
+
+  auto picoFS = PicoFileSystem::GetInstance();
+  bool useAutosave = (picoFS->exists(autoSavePath.c_str()));
+
+  Trace::Log("PERSISTENCYSERVICE", "using autosave: %b\n", useAutosave);
+  // if autosave exists, then we load it instead of the normal project file
+  const char *filename = useAutosave ? AUTO_SAVE_FILENAME : PROJECT_DATA_FILE;
+
   etl::string<128> projectFilePath(PROJECTS_DIR);
   projectFilePath.append("/");
   projectFilePath.append(projectName);
   projectFilePath.append("/");
-  projectFilePath.append(PROJECT_DATA_FILE);
+  projectFilePath.append(filename);
 
   PersistencyDocument doc;
   if (!doc.Load(projectFilePath.c_str()))
@@ -193,7 +232,16 @@ void PersistencyService::CreatePath(
   path.clear();
   // iterate over segments and concatenate using iterator
   for (auto it = segments.begin(); it != segments.end(); ++it) {
-    path.append("/");
     path.append(*it);
+    if (it != segments.end() - 1) {
+      path.append("/");
+    }
   }
+}
+
+bool PersistencyService::ClearAutosave(const char *projectName) {
+  auto picoFS = PicoFileSystem::GetInstance();
+  etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
+  CreatePath(pathBufferA, segments);
+  return picoFS->DeleteFile(pathBufferA.c_str());
 }

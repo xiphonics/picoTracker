@@ -57,9 +57,10 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
   const char *oldProjName = ((ProjectView &)v).getOldProjectName().c_str();
 
   if (persist->Save(projName, oldProjName, true) != PERSIST_SAVED) {
-    Trace::Error("failed to save project");
+    Trace::Error("failed to save renamed project %s [old: %s]", projName,
+                 oldProjName);
     MessageBox *mb = new MessageBox(
-        ((ProjectView &)v), "failed to save project", MBBF_OK | MBBF_CANCEL);
+        ((ProjectView &)v), "Failed to save project", MBBF_OK | MBBF_CANCEL);
     ((ProjectView &)v).DoModal(mb, SaveAsOverwriteCallback);
     return;
   }
