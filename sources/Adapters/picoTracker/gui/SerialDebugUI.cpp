@@ -54,8 +54,10 @@ void SerialDebugUI::dispatchCmd(char *input) {
     saveConfig();
   } else if (strcmp(cmd, "mkdir") == 0) {
     mkdir(arg);
+  } else if (strcmp(cmd, "rmdir") == 0) {
+    rmdir(arg);
   } else if (strcmp(cmd, "help") == 0) {
-    Trace::Log("SERIALDEBUG", "cat, ls, rm, mkdir, help");
+    Trace::Log("SERIALDEBUG", "cat, ls, rm, mkdir, rmdir, save, help");
   } else {
     Trace::Log("SERIALDEBUG", "unknown command");
   }
@@ -120,5 +122,14 @@ void SerialDebugUI::saveConfig() {
 
 void SerialDebugUI::mkdir(const char *path) {
   auto picoFS = PicoFileSystem::GetInstance();
-  picoFS->makeDir(path, true);
+  if (!picoFS->makeDir(path, true)) {
+    Trace::Error("failed to create dir:%s", path);
+  }
+}
+
+void SerialDebugUI::rmdir(const char *path) {
+  auto picoFS = PicoFileSystem::GetInstance();
+  if (!picoFS->DeleteDir(path)) {
+    Trace::Error("failed to remove dir:%s", path);
+  }
 }

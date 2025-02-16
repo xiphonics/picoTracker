@@ -13,6 +13,7 @@ public:
   void rmFile(const char *path);
   void saveConfig();
   void mkdir(const char *path);
+  void rmdir(const char *path);
 
 private:
   int lp_ = 0;
