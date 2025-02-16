@@ -7,30 +7,30 @@ template: page
 
 ![screen capture of sampler screen](image/sample-screen-small.png)
 
-- **sample:** selects the .wav file to associate with the instrument. you can select the same sample in more than one instrument. if you tap A,A here it will take you to the Sample Import Screen (which lets you load new .WAV into your project).
-- **volume:**
-- **pan:** pans the instrument left or right (0x7F is center)
-- **root note**
-- **detune**
-- **drive:** This is a volume modification before crush, and the instruments volume is after the crush.
-- **crush:** decrease bit resolution
-- **downsample:** decrease the bit rate, get those low frequency aliasing whines. each increase in this value will downsample the original sample by a factor of 2
-- **cutoff:** filter cutoff frequency
-- **reso:** filter resonance frequency
-- **type:** this is where it gets a little trickier. The filter now supports continuous change from low pass to high pass. set type to 00 for low pazz. FF for hi-pass and 7f for Band pass (or is it notch? n0s must check). all intermediate values morph in between them.
-- **dist:** filter distortion. for the moment we have none & scream. i'm planning on maybe add a third choice that would make the filter behave a little better when resonance is set very high in the old/default mode
+- **sample:** Selects the .wav file to associate with this instrument. You can use the same sample in more than one instrument. Tap `ENTER`,`ENTER` to go to the Sample Import Screen which lets you load new .wav files into your project, with the last imported sample selected as the sample assigned to this instrument [1]
+- **volume:** Set the volume of the instrument
+- **pan:** Pans the instrument left or right (0x7F is center)
+- **root note:** The root note of the sample
+- **detune:** Detune the sample by the number of semitones
+- **drive:** This is a volume modification before crush, and the instruments volume is after the crush
+- **crush:** Decreases the bit resolution
+- **downsample:** Decreases the bit rate (eg. low frequency aliasing whines). Each increase in this value will downsample the original sample by a factor of 2
+- **cutoff:** Set the Filter cutoff frequency
+- **reso:** Set the Filter resonance frequency
+- **type:** The filter supports continuous change from low pass to high pass. Set type to `00` for low pass. `FF` for high pass and `7F` for band pass. All intermediate values morph in between them
+- **dist:** Set the filter distortion. Available values are `none` and `scream`
 
-- **interpolation:** Interpolation mode ('linear'/'none'): selects which interpolation mode is used when in between samples. linear interpols linearly while none takes the nearest neighbor. Use none when playing samples at low range to add some typical overtones.
+- **interpolation:** Interpolation mode ('linear'/'none'). Selects which interpolation mode is used when in between samples. `Linear` interpolates linearly while `none` takes the nearest neighbor. Use none when playing samples at low range to add some typical overtones. Note using linear interpolation currently adds significantly to the CPU load during playback.
 - **loop mode:** selects the looping mode.
-  - none will play sample from zero to end.
-  - loop will start at zero and loop from loopstart to end.
-  - looper sync will automatically tune a loop so that it plays exactly 16 bars. Use the root note to play twice faster/slower
-  - oscillator is a special mode where the loop selection (from loopstart to end) is taken as oscillator data and automatically tuned. Experiment with different settings, do not forget 'root note' is your friend to tune the oscillator back in a useful range
-- **start:** start point of the sample regardless of if loop is enabled; in hex
-- **loop Start:** start point of the sample when loop is enabled; in hex
-- **loop End:** end point of the sample; in hex. You can play samples backwards by setting the end value lower than the start!
-- **automation:** If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows cruise around real fast).
-- **table:** Select a table the instrument will always run. Clone a table here: RT+(B,A). Make a new table here: A,A.
+  - `none` will play sample from start to finish
+  - `loop` will start at the start and loop from loopstart to end.
+  - `looper sync` will automatically tune a loop so that it plays exactly 16 bars. Use the root note to play twice faster/slower
+  - `oscillator` is a special mode where the loop selection (from loopstart to end) is taken as oscillator data and automatically tuned. Note that 'root note' can be used to tune the oscillator back in a useful range
+- **start:** start point of the sample regardless of if loop is enabled (note value is in hex)
+- **loop Start:** start point of the sample when loop is enabled (note value is in hex)
+- **loop End:** end point of the sample (note value is in hex). You can play samples backwards by setting the end value lower than the start
+- **automation:** If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows will move at the speed of 1 row per tick)
+- **table:** Select a table the instrument will always run. To clone a table here: `NAV`+(`EDIT`, `ENTER`). Make a new table by selecting a higher number not yet in use.
 
 
 ## Sample Import Screen
@@ -56,6 +56,8 @@ At any time, you can return to the instrument screen from the sample file browse
 
 ### Supported sample file formats
 
+Only uncompressed Wave (*.wav) files are supported using **8 or 16 bit**, mono or stereo and they **MUST** only be 44.1KHz.
+
 ## MIDI
 
 ## Midi Instrument Screen
@@ -64,11 +66,11 @@ At any time, you can return to the instrument screen from the sample file browse
 
 A MIDI instrument has the following settings:
 
-- **Channel** - This can be set 0x80 to 0x8F which is midi channel 1-16 respectively
-- **Volume** - The volume any NOTE ON will be sent to your device. FF=127, 00=00
-- **Length** - Sets note gate length in number of ticks.
-- **Automation** - On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows cruise around real fast).
-- **Table**- As above, select a table the instrument will always run. Clone a table here: `NAV`+`EDIT ENTER`. Make a new table here: `EDIT EDIT`
+- **Channel** - This can be set `01`-`16` (in **decimal** not hex!) which is midi channel 1-16 respectively
+- **Volume** - The volume any NOTE ON will be sent to your device: FF=127, 00=00
+- **Length** - Sets note gate length in number of ticks
+- **Automation** - When on, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is `Off`, table behavior is normal (play arrows will move at the speed of 1 row per tick)
+- **Table**- As above, select a table the instrument will always run. Clone a table here: `NAV`+`EDIT`,`ENTER`. Make a new table by selecting a higher number not yet in use.
 
 
 ## Synths
@@ -77,16 +79,27 @@ A MIDI instrument has the following settings:
 
 ![screen capture of SID instrument screen](image/sid-screen-small.png)
 
-* **VPW:**
-* **WF:**
-* **Sync:**
-* **Ring:**
-* **ADSR:**
-* **filter:**
-* **Flt cut:**
-* **Flt res:**
-* **Flt mode:**
-* **volume:**
+* **SID Chip:** Currently only "SID #1" is supported
+* **OSC:** The oscillator to use: 0-2
+* **VPW:** Pulse Width Modulation (PWM) of the oscillator, 000-FFF [1]
+* **WF:** Waveform to use: TSQN (Triangle, Sawtooth, Square PWM, Noise (white-ish))
+* **Sync:** Sync the oscillator (false/true)
+* **Ring:** Enable or disable Ring modulation (false/true)
+* **A/D/S/R:** Attack/Decay/Sustain/Release, each is single digit 0-15 value
+### Global SID chip settings:
+* **Filter:** Set if the filter is on or off (false/true)
+* **Flt cut:** The filter cutoff frequency 0-F
+* **Flt res:** The filter resonance 0-F
+* **Flt mode:** The filter mode: LP (lowpass), BP (bandpass), HP (highpass)
+* **Volume:** Output volume: 0-F
+
+The picoTracker currently only supports up to 3 SID instruments. Each of these represents a single monophonic oscillator with a single emulated "SID chip". Thus some of the settings above are shared between the 3 SID instruments because they are a global setting for the entire SID chip and *not* per oscillator.
+
+SID Notes:
+[1] In the SID, the pulse waveform can have its width dynamically adjusted. This parameter controls the duty cycle of the square wave, which determines the harmonic content and timbre of the sound.
+
+A pulse width of `0` creates a very thin pulse (almost a spike), while a value of `FFF` (4095) creates a full square wave. Values in between create asymmetrical square waves with varying harmonic characteristics.
+
 
 
 ### OPAL
@@ -116,3 +129,14 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 
 ![screen capture of OPAL instrument screen](image/opal-waveforms-small.png)
 
+## Limitations of instrument performance
+
+The picoTrackers CPU limits the number of simultaneous instruments that can be played at once. The specific limit depends on the instrument type and the settings of each instrument. In general the limit is:
+* 4-5 Sample instruments or
+* 3 OPAL instruments or
+* 3 SID instruments
+* 8 MIDI instruments
+
+Because they are very light weight when it comes to CPU usage 8 MIDI instruments can be played at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
+
+Given the above limits though, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 samplers, 1 OPAL, 1 SID and 4 MIDI should in theory be possible. Note this only applies to simulatenously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
