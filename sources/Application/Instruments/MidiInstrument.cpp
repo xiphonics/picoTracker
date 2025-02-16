@@ -4,8 +4,6 @@
 #include "System/Console/Trace.h"
 #include <string.h>
 
-#define MAX_MIDI_CHORD_NOTES 4
-
 MidiService *MidiInstrument::svc_ = 0;
 
 MidiInstrument::MidiInstrument()
@@ -38,7 +36,7 @@ void MidiInstrument::OnStart() { tableState_.Reset(); };
 bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   first_[c] = true;
-  lastNote_[c] = note;
+  lastNotes_[c][0] = note;
 
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int channel = v->GetInt();
@@ -71,11 +69,19 @@ void MidiInstrument::Stop(int c) {
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int channel = v->GetInt();
 
-  MidiMessage msg;
-  msg.status_ = MIDI_NOTE_OFF + channel;
-  msg.data1_ = lastNote_[c];
-  msg.data2_ = 0x00;
-  svc_->QueueMessage(msg);
+  for (int i = 0; i < MAX_MIDI_CHORD_NOTES + 1; i++) {
+    if (lastNotes_[c][i] == 0) {
+      continue;
+    }
+    MidiMessage msg;
+    msg.status_ = MIDI_NOTE_OFF + channel;
+    msg.data1_ = lastNotes_[c][i];
+    msg.data2_ = 0x00;
+    svc_->QueueMessage(msg);
+    Trace::Debug("MIDI chord note OFF[%d]:%d", i, msg.data1_);
+  }
+  // clear last notes array
+  lastNotes_[c].fill(0);
   playing_ = false;
 };
 
@@ -88,17 +94,13 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
                             bool updateTick) {
 
   // We do it here so we have the opportunity to send some command before
-
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int mchannel = v->GetInt();
   if (first_[channel]) {
-
     // send note
-
     MidiMessage msg;
-
     msg.status_ = MIDI_NOTE_ON + mchannel;
-    msg.data1_ = lastNote_[channel];
+    msg.data1_ = lastNotes_[channel][0];
     msg.data2_ = velocity_;
     svc_->QueueMessage(msg);
 
@@ -113,11 +115,11 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
         MidiMessage msg;
         remainingTicks_ = retrigLoop_;
         msg.status_ = MIDI_NOTE_OFF + mchannel;
-        msg.data1_ = lastNote_[channel];
+        msg.data1_ = lastNotes_[channel][0];
         msg.data2_ = 0x00;
         svc_->QueueMessage(msg);
         msg.status_ = MIDI_NOTE_ON + mchannel;
-        msg.data1_ = lastNote_[channel];
+        msg.data1_ = lastNotes_[channel][0];
         msg.data2_ = velocity_;
         svc_->QueueMessage(msg);
       };
@@ -181,17 +183,29 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     // split into 4 note offsets
     for (int i = 0; i < MAX_MIDI_CHORD_NOTES; i++) {
       uint8_t noteOffset = (value >> (i * 4)) & 0xF;
+      if (noteOffset == 0) {
+        continue;
+      }
+
+      // use the existing steps note to calculate each notes offset
+      uint8_t note = lastNotes_[channel][0] + noteOffset;
+      // save the chord note for sending a note off later
+      lastNotes_[channel][i + 1] = note;
+
       if (noteOffset != 0) {
         MidiMessage msg;
         msg.status_ = MIDI_NOTE_ON + mchannel;
-        msg.data1_ = lastNote_[channel] + noteOffset;
+        msg.data1_ = note;
         msg.data2_ = velocity_;
-        Trace::Log("MIDI", "chord note %d", msg.data1_);
+        Trace::Debug("MIDI chord note ON[%d]: %d", i, msg.data1_);
         svc_->QueueMessage(msg);
       }
     }
   }; break;
-  };
+  case FourCC::InstrumentCommandKill: {
+    Stop(channel);
+  }; break;
+  }
 }
 
 etl::string<24> MidiInstrument::GetName() {
