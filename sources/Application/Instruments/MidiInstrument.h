@@ -10,6 +10,8 @@
 #define MIDI_CC 0xB0
 #define MIDI_PRG 0xC0
 
+#define MAX_MIDI_CHORD_NOTES 4
+
 class MidiInstrument : public I_Instrument {
 
 public:
@@ -51,7 +53,7 @@ public:
 private:
   etl::list<Variable *, 5> variables_;
 
-  uint8_t lastNote_[SONG_CHANNEL_COUNT];
+  etl::array<uint8_t, MAX_MIDI_CHORD_NOTES + 1> lastNotes_[SONG_CHANNEL_COUNT];
   int remainingTicks_;
   bool playing_;
   bool retrig_;
