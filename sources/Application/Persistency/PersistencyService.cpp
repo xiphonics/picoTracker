@@ -24,6 +24,7 @@ void PersistencyService::PurgeUnnamedProject() {
   Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir\n");
   picoFS->chdir(UNNAMED_PROJECT_NAME);
   picoFS->DeleteFile(PROJECT_DATA_FILE);
+  picoFS->DeleteFile(AUTO_SAVE_FILENAME);
 
   picoFS->chdir("samples");
   etl::vector<int, MAX_PIG_SAMPLES> fileIndexes;
