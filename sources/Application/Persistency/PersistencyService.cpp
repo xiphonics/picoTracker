@@ -139,7 +139,10 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   // in case subsequent autosave has changes the user doesn't want to keep
   if (!autosave) {
     if (!ClearAutosave(projectName)) {
-      return PERSIST_ERROR;
+      Trace::Log("PERSISTENCYSERVICE", "Error Deleting Autosave File: %s\n",
+                 pathBufferA.c_str());
+      // the autosave file may not have been created yet, eg. if this is a new
+      // project or a project beign "saved as" so just keep going
     }
     Trace::Log("PERSISTENCYSERVICE", "Deleted Autosave File: %s\n",
                pathBufferA.c_str());
