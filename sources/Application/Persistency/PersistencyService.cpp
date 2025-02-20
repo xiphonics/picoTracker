@@ -247,5 +247,8 @@ bool PersistencyService::ClearAutosave(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
   etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
   CreatePath(pathBufferA, segments);
+  // TODO: check if file exists before deleting and only return false if it does
+  // exist and deleting fails but this can only be done once Open() return
+  // values are improved and we can implement a Exists() function on top of it
   return picoFS->DeleteFile(pathBufferA.c_str());
 }
