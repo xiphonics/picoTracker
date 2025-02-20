@@ -24,6 +24,7 @@ void PersistencyService::PurgeUnnamedProject() {
   Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir\n");
   picoFS->chdir(UNNAMED_PROJECT_NAME);
   picoFS->DeleteFile(PROJECT_DATA_FILE);
+  picoFS->DeleteFile(AUTO_SAVE_FILENAME);
 
   picoFS->chdir("samples");
   etl::vector<int, MAX_PIG_SAMPLES> fileIndexes;
@@ -138,7 +139,10 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   // in case subsequent autosave has changes the user doesn't want to keep
   if (!autosave) {
     if (!ClearAutosave(projectName)) {
-      return PERSIST_ERROR;
+      Trace::Log("PERSISTENCYSERVICE", "Error Deleting Autosave File: %s\n",
+                 pathBufferA.c_str());
+      // the autosave file may not have been created yet, eg. if this is a new
+      // project or a project beign "saved as" so just keep going
     }
     Trace::Log("PERSISTENCYSERVICE", "Deleted Autosave File: %s\n",
                pathBufferA.c_str());
@@ -243,5 +247,8 @@ bool PersistencyService::ClearAutosave(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
   etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
   CreatePath(pathBufferA, segments);
+  // TODO: check if file exists before deleting and only return false if it does
+  // exist and deleting fails but this can only be done once Open() return
+  // values are improved and we can implement a Exists() function on top of it
   return picoFS->DeleteFile(pathBufferA.c_str());
 }
