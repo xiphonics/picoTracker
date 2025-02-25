@@ -651,15 +651,15 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
       timeToLive_[channel] = timeToLive + 1;
     }
     return true;
-  case FourCC::InstrumentCommandTempo:
-    if ((param < 400) && (param > 40)) {
-      Variable *v = project_->FindVariable(FourCC::VarTempo);
-      v->SetInt(param);
-      SyncMaster *sync = SyncMaster::GetInstance();
-      sync->SetTempo(project_->GetTempo());
-    }
+  case FourCC::InstrumentCommandTempo: {
+    param = std::clamp(param, MIN_TEMPO, MAX_TEMPO);
+    Variable *v = project_->FindVariable(FourCC::VarTempo);
+    v->SetInt(param);
+    SyncMaster *sync = SyncMaster::GetInstance();
+    sync->SetTempo(project_->GetTempo());
     return true;
     break;
+  }
   case FourCC::InstrumentCommandTable: {
     TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);

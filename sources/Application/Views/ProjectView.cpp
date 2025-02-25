@@ -86,8 +86,9 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   GUIPoint position = GetAnchor();
 
   Variable *v = project_->FindVariable(FourCC::VarTempo);
-  UITempoField *f = new UITempoField(FourCC::ActionTempoChanged, position, *v,
-                                     "tempo: %d [%2.2x]  ", 60, 400, 1, 10);
+  UITempoField *f =
+      new UITempoField(FourCC::ActionTempoChanged, position, *v,
+                       "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
   fieldList_.insert(fieldList_.end(), f);
   f->AddObserver(*this);
   tempoField_ = f;
