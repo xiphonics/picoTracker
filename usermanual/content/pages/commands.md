@@ -162,7 +162,8 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 **sets the tempo to hex value –bb.**
 
 - TPO 0000 is safe and doesn't effect the tempo at all.
-- TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value
+- TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value.
+  Values outside the allowable range will be clamped to the nearest value within the range.
 
 ## VEL --bb
 
