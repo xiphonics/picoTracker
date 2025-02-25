@@ -15,7 +15,7 @@ Trackers later evolved to also run on devices such as the Gameboy as popularised
 The picoTracker features include:
 
 * 8 song channels
-* 128 chains
+* 256 chains
 * 128 phrases
 * 32 tables
 * 16 Sample instruments
