@@ -16,7 +16,7 @@
 
 Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
-      tempoNudge_(0), tempo_(FourCC::VarTempo, 138),
+      tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
       masterVolume_(FourCC::VarMasterVolume, 100),
       wrap_(FourCC::VarWrap, false), transpose_(FourCC::VarTranspose, 0),
       scale_(FourCC::VarScale, scaleNames, numScales, 0),
@@ -318,6 +318,8 @@ void Project::OnTempoTap() {
       int tempo =
           int(60000 * (tempoTapCount_ - 1) / (float)(now - lastTap_[0]));
       Variable *v = FindVariable(FourCC::VarTempo);
+      // ensure tempo is within range
+      tempo = std::clamp((unsigned short)tempo, MIN_TEMPO, MAX_TEMPO);
       v->SetInt(tempo);
     } else {
       tempoTapCount_ = 1;
