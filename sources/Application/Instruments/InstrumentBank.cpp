@@ -41,9 +41,10 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
   char hex[3];
   int i = 0;
   for (auto &instr : instruments_) {
+    i++;
     if (!instr->IsEmpty()) {
+      hex2char(i, hex);
       printer->OpenElement("INSTRUMENT");
-      hex2char(i++, hex);
       printer->PushAttribute("ID", hex);
       printer->PushAttribute("TYPE", InstrumentTypeNames[instr->GetType()]);
 
