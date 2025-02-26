@@ -137,3 +137,15 @@ const bool scaleSteps[numScales][12] = {
      false},
     {true, false, true, false, true, false, true, false, true, false, true,
      false}};
+
+// return the offset from the root note in semitones for the given scale and
+// "scale number"
+unsigned char getSemitonesOffset(unsigned char scale, unsigned char number) {
+  unsigned char i = 0;
+  for (; number != 0; i++) {
+    if (scaleSteps[scale][i]) {
+      number--;
+    }
+  }
+  return i;
+}
