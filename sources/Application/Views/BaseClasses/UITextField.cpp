@@ -45,7 +45,7 @@ void UITextField::OnClick() {
 };
 
 void UITextField::OnEditClick() {
-  char name[40];
+  char name[MAX_PROJECT_NAME_LENGTH + 1];
   strcpy(name, src_->GetString().c_str());
   uint8_t len = std::strlen(name);
   deleteChar(name, currentChar_);
@@ -57,7 +57,7 @@ void UITextField::OnEditClick() {
 };
 
 void UITextField::ProcessArrow(unsigned short mask) {
-  char name[40];
+  char name[MAX_PROJECT_NAME_LENGTH + 1];
   strcpy(name, src_->GetString().c_str());
   int len = std::strlen(name);
 
@@ -92,7 +92,7 @@ void UITextField::ProcessArrow(unsigned short mask) {
   case EPBM_RIGHT:
     if (currentChar_ < len - 1) {
       currentChar_++;
-    } else if (currentChar_ < 39) {
+    } else if (currentChar_ < MAX_PROJECT_NAME_LENGTH - 1) {
       currentChar_++;
       name[currentChar_] = 'A';
       name[currentChar_ + 1] = '\0';
@@ -105,7 +105,9 @@ void UITextField::ProcessArrow(unsigned short mask) {
   };
 };
 
-etl::string<40> UITextField::GetString() { return src_->GetString(); };
+etl::string<MAX_PROJECT_NAME_LENGTH> UITextField::GetString() {
+  return src_->GetString();
+};
 
 char getNext(char c, bool reverse) {
   // Valid characters in order
