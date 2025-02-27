@@ -14,7 +14,7 @@ public:
   void ProcessArrow(unsigned short mask);
   void OnClick();
   void OnEditClick();
-  etl::string<40> GetString();
+  etl::string<MAX_PROJECT_NAME_LENGTH> GetString();
 
 private:
   int selected_;
