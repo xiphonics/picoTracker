@@ -30,7 +30,7 @@ You can ***explicitly*** save the current project by pressing [SAVE] on the proj
 - **New** *REPLACE* the current project with a new, *Blank* project.  
 - **Random** *RENAME* the current project with a new, *Randomly generated* name.  
 
-The project name is **limited to 12 characters**. 
+The project name is **limited to 16 characters**. 
 
 You edit to project name by moving onto the name field and then holding the `ENTER` key while using the `UP` and `DOWN` keys to change the selected character and `LEFT` and `RIGHT` keys to move the cursor to the left or right of the current character. When on the last character, you can add chararacter to the end of the project name by using the `RIGHT` key.
 To delete a character, select the character and press `EDIT`. 
