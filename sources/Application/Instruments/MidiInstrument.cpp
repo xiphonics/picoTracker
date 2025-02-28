@@ -1,4 +1,6 @@
 #include "MidiInstrument.h"
+#include "Application/Model/Scale.h"
+#include "Application/Player/Player.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "System/Console/Trace.h"
@@ -187,8 +189,18 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
         continue;
       }
 
+      // fit the offset into nearest valid note of the currently selected scale
+      // Add/remove from offset to match selected scale
+      uint8_t rootNote = lastNotes_[channel][0];
+      int scale = Player::GetInstance()->GetProject()->GetScale();
+      // apply current scale to offset
+      uint8_t scaledOffset = getSemitonesOffset(scale, noteOffset);
+
       // use the existing steps note to calculate each notes offset
-      uint8_t note = lastNotes_[channel][0] + noteOffset;
+      uint8_t note = rootNote + scaledOffset;
+      Trace::Debug("MIDI SCALE note:%d root:%d offset: %d", note, rootNote,
+                   noteOffset);
+
       // save the chord note for sending a note off later
       lastNotes_[channel][i + 1] = note;
 

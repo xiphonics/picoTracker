@@ -103,6 +103,8 @@ public:
   int GetAudioRequestedBufferSize();
   int GetAudioPreBufferCount();
 
+  Project *GetProject() { return project_; }
+
 protected:
   void updateSongPos(int position, int channel, int chainPos = 0, int hop = -1);
   void updateChainPos(int position, int channel, int hop = 0);
