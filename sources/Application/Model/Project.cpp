@@ -22,16 +22,10 @@ Project::Project(const char *name)
       scale_(FourCC::VarScale, scaleNames, numScales, 0),
       projectName_(FourCC::VarProjectName, name) {
 
-  //  WatchedVariable *tempo = new WatchedVariable("tempo", VAR_TEMPO, 138);
   this->variables_.insert(variables_.end(), &tempo_);
-  //  Variable *masterVolume = new Variable("master", VAR_MASTERVOL, 100);
   this->variables_.insert(variables_.end(), &masterVolume_);
-  //  Variable *wrap = new Variable("wrap", VAR_WRAP, false);
   this->variables_.insert(variables_.end(), &wrap_);
-  //  Variable *transpose = new Variable("transpose", VAR_TRANSPOSE, 0);
   this->variables_.insert(variables_.end(), &transpose_);
-  //  Variable *scale = new Variable("scale", VAR_SCALE, scaleNames, numScales,
-  //  0);
   this->variables_.insert(variables_.end(), &scale_);
   scale_.SetInt(0);
   this->variables_.insert(variables_.end(), &projectName_);
