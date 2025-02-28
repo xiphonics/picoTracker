@@ -33,13 +33,7 @@ GUIPoint View::GetAnchor() {
   return GUIPoint(5, 3);
 }
 
-GUIPoint View::GetTitlePosition() {
-#ifndef PLATFORM_CAANOO
-  return GUIPoint(0, 0);
-#else
-  return GUIPoint(0, 1);
-#endif
-};
+GUIPoint View::GetTitlePosition() { return GUIPoint(0, 0); };
 
 bool View::Lock() {
   if (locked_)
