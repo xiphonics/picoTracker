@@ -28,10 +28,6 @@ public: // I_GUIWindowImp implementation
   virtual void ClearRect(GUIRect &);
   virtual void PushEvent(GUIEvent &event);
 
-  /*public: // Added functionality
-    void ProcessQuit() ;
-    void ProcessUserEvent(SDL_Event &event) ;
-  */
   static void ProcessEvent(picoTrackerEvent &event);
   static void ProcessButtonChange(uint16_t changeMask, uint16_t buttonMask);
 

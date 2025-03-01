@@ -7,12 +7,7 @@
 #include "MixBus.h"
 #include "Services/Audio/AudioMixer.h"
 #include "Services/Audio/AudioOut.h"
-
-#ifndef PICOBUILD
-#include "SDL/SDL.h"
-#else
 #include "pico/mutex.h"
-#endif
 
 enum MixerServiceMode {
   MSM_AUDIO,
@@ -65,10 +60,6 @@ private:
   MixBus master_;
   MixBus bus_[MAX_BUS_COUNT];
   MixerServiceMode mode_;
-#ifndef PICOBUILD
-  SDL_mutex *sync_;
-#else
   mutex_t *sync_;
-#endif
 };
 #endif
