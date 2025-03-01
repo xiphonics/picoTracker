@@ -1,6 +1,0 @@
--include $(PWD)/base_rules
-
-#---------------------------------------------------------------------------------
-%.app: $(OFILES)
-	$(CXX) $(LDFLAGS) -arch $(shell uname -m) -framework Cocoa -framework Carbon -o $@ $(OFILES) $(LIBS) -L$(shell brew --prefix sdl12-compat)/lib
-	mv $@ ../lgpt
