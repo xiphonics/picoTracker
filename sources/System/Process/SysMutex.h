@@ -6,12 +6,7 @@
  *  Copyright 2012 __MyCompanyName__. All rights reserved.
  *
  */
-
-#ifndef PICOBUILD
-#include <SDL/SDL.h>
-#else
 #include "pico/mutex.h"
-#endif
 
 class SysMutex {
 public:
@@ -21,11 +16,7 @@ public:
   void Unlock();
 
 private:
-#ifndef PICOBUILD
-  SDL_mutex *mutex_;
-#else
   mutex_t *mutex_;
-#endif
 };
 
 class SysMutexLocker {

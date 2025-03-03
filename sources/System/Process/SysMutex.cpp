@@ -11,25 +11,9 @@
 
 SysMutex::SysMutex() : mutex_(0) {}
 
-SysMutex::~SysMutex() {
-#ifndef PICOBUILD
-  if (mutex_) {
-    SDL_DestroyMutex(mutex_);
-    mutex_ = NULL;
-  }
-#endif
-}
+SysMutex::~SysMutex() {}
 
 bool SysMutex::Lock() {
-#ifndef PICOBUILD
-  if (!mutex_) {
-    mutex_ = SDL_CreateMutex();
-  }
-  if (mutex_) {
-    SDL_LockMutex(mutex_);
-    return true;
-  }
-#else
   if (!mutex_) {
     mutex_init(mutex_);
   }
@@ -37,17 +21,12 @@ bool SysMutex::Lock() {
     mutex_enter_blocking(mutex_);
     return true;
   }
-#endif
   return false;
 }
 
 void SysMutex::Unlock() {
   if (mutex_) {
-#ifndef PICOBUILD
-    SDL_UnlockMutex(mutex_);
-#else
     mutex_exit(mutex_);
-#endif
   }
 }
 

@@ -16,28 +16,7 @@
 #define fp_add(a, b) ((a) + (b))
 #define fp_sub(a, b) ((a) - (b))
 
-// #define FP_FRACMASK 0x10007FFF ; // ! Only valid with FIXED_SHIFT=15
-
-#if defined(PLATFORM_GP32) || defined(PLATFORM_GP2X)
-
-#define fp_mul(x, y)                                                           \
-  ({                                                                           \
-    int __hi;                                                                  \
-    unsigned int __lo;                                                         \
-    fixed __result;                                                            \
-    asm("smull	%0, %1, %3, %4\n\t"                                             \
-        "movs	%0, %0, lsr %5\n\t"                                              \
-        "adc	%2, %0, %1, lsl %6"                                               \
-        : "=&r"(__lo), "=&r"(__hi), "=r"(__result)                             \
-        : "%r"(x), "r"(y), "M"(FIXED_SHIFT), "M"(32 - FIXED_SHIFT)             \
-        : "cc");                                                               \
-    __result;                                                                  \
-  })
-
-#else
-
 #define fp_mul(x, y) ((fixed)(((long long)(x) * (long long)(y)) >> FIXED_SHIFT))
-#endif
 
 #define fp_div(x, y) ((((x) << 2) / ((y) >> 8)) << 10)
 #define fp_mulint(x, y) fp_mul(x, y)
