@@ -17,6 +17,19 @@
 #include <nanoprintf.h>
 #include <string.h>
 
+#include "Application/Views/ChainView.h"
+#include "Application/Views/ConsoleView.h"
+#include "Application/Views/DeviceView.h"
+#include "Application/Views/GrooveView.h"
+#include "Application/Views/ImportView.h"
+#include "Application/Views/InstrumentView.h"
+#include "Application/Views/NullView.h"
+#include "Application/Views/PhraseView.h"
+#include "Application/Views/SelectProjectView.h"
+#include "Application/Views/SongView.h"
+#include "Application/Views/TableView.h"
+#include "BaseClasses/View.h"
+
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 
 AppWindow *instance = 0;
