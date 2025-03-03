@@ -46,7 +46,7 @@ template <uint8_t MaxLength> void UITextField<MaxLength>::OnClick() {
 };
 
 template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
-  char name[MAX_PROJECT_NAME_LENGTH + 1];
+  char name[MaxLength + 1];
   strcpy(name, src_->GetString().c_str());
   uint8_t len = std::strlen(name);
   deleteChar(name, currentChar_);
@@ -94,7 +94,7 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
   case EPBM_RIGHT:
     if (currentChar_ < len - 1) {
       currentChar_++;
-    } else if (currentChar_ < MAX_PROJECT_NAME_LENGTH - 1) {
+    } else if (currentChar_ < MaxLength - 1) {
       currentChar_++;
       name[currentChar_] = 'A';
       name[currentChar_ + 1] = '\0';
