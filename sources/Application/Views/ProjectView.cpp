@@ -14,7 +14,6 @@
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
 #endif
-#include <Application/AppWindow.h>
 #include <nanoprintf.h>
 
 static void LoadCallback(View &v, ModalView &dialog) {
@@ -127,8 +126,9 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   int xalign = position._x;
 
   v = project_->FindVariable(FourCC::VarProjectName);
-  nameField_ =
-      new UITextField(v, position, "project: ", FourCC::ActionProjectRename);
+  nameField_ = new UITextField<MAX_PROJECT_NAME_LENGTH>(
+      v, position, "project: ", FourCC::ActionProjectRename,
+      UNNAMED_PROJECT_NAME);
   nameField_->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), nameField_);
 

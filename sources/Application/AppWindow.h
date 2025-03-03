@@ -10,7 +10,6 @@
 #include "Application/Views/InstrumentView.h"
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
-#include "Application/Views/ProjectView.h"
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
@@ -30,6 +29,12 @@
 #define BATTERY_GAUGE_WIDTH 5
 #define SCREEN_CHARS SCREEN_WIDTH *SCREEN_HEIGHT
 #define MAX_FIELD_WIDTH 26
+
+// need this forward declaration to break out of circular dependency as
+// ProjectView uses a UITextfield which in turn had dependency on AppWindow
+// and UITextField is templated which means its class/method definitions need to
+// be in its header file  :-(
+class ProjectView;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
 protected:

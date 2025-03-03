@@ -11,11 +11,12 @@ add_library(application_views_baseclasses
   UISortedVarList.h UISortedVarList.cpp
   UIStaticField.h UIStaticField.cpp
   UITempoField.h UITempoField.cpp
-  UITextField.h UITextField.cpp
+  UITextField.h
   UISwatchField.h UISwatchField.cpp
   UIBitmaskVarField.h UIBitmaskVarField.cpp
   View.h View.cpp
   ViewEvent.h ViewEvent.cpp
+  stringutils.h stringutils.cpp 
 )
 
 target_link_libraries(application_views_baseclasses PUBLIC pico_stdlib
