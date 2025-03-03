@@ -207,8 +207,8 @@ void Variable::SetString(const char *string, bool notify) {
   }
 };
 
-etl::string<40> Variable::GetString() {
-  char buf[40];
+etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
+  char buf[MAX_VARIABLE_STRING_LENGTH];
   switch (type_) {
   // !!! NOTE !!! we don't want to enable nanoprintf's float support so we just
   // cast to int here because we don't really display floats anyway

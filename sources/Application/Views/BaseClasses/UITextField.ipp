@@ -1,17 +1,18 @@
-#include "UITextField.h"
 #include "Application/AppWindow.h"
 #include "View.h"
+#include "stringutils.h"
 
-UITextField::UITextField(Variable *v, GUIPoint &position, const char *name,
-                         unsigned int fourcc)
-    : UIField(position), src_(v) {
-  name_ = name;
-  fourcc_ = fourcc;
-};
+template <uint8_t MaxLength>
+UITextField<MaxLength>::UITextField(Variable *v, GUIPoint &position,
+                                    const char *name, uint8_t fourcc,
+                                    const char *defaultValue_)
+    : UIField(position), src_(v), name_(name), fourcc_(fourcc),
+      defaultValue_(defaultValue_) {}
 
-UITextField::~UITextField(){};
+template <uint8_t MaxLength> UITextField<MaxLength>::~UITextField(){};
 
-void UITextField::Draw(GUIWindow &w, int offset) {
+template <uint8_t MaxLength>
+void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
 
   GUITextProperties props;
   GUIPoint position = GetPosition();
@@ -38,14 +39,14 @@ void UITextField::Draw(GUIWindow &w, int offset) {
   }
 };
 
-void UITextField::OnClick() {
+template <uint8_t MaxLength> void UITextField<MaxLength>::OnClick() {
   currentChar_ = 0;
   SetChanged();
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
-void UITextField::OnEditClick() {
-  char name[MAX_PROJECT_NAME_LENGTH + 1];
+template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
+  char name[MaxLength + 1];
   strcpy(name, src_->GetString().c_str());
   uint8_t len = std::strlen(name);
   deleteChar(name, currentChar_);
@@ -56,14 +57,15 @@ void UITextField::OnEditClick() {
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
-void UITextField::ProcessArrow(unsigned short mask) {
-  char name[MAX_PROJECT_NAME_LENGTH + 1];
+template <uint8_t MaxLength>
+void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
+  char name[MaxLength + 1];
   strcpy(name, src_->GetString().c_str());
   int len = std::strlen(name);
 
   switch (mask) {
   case EPBM_UP:
-    if (!strcmp(name, UNNAMED_PROJECT_NAME)) {
+    if (!strcmp(name, defaultValue_)) {
       currentChar_ = 0;
       name[0] = 'A' - 1; // to land in A
       name[1] = '\0';
@@ -74,7 +76,7 @@ void UITextField::ProcessArrow(unsigned short mask) {
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_DOWN:
-    if (!strcmp(name, UNNAMED_PROJECT_NAME)) {
+    if (!strcmp(name, defaultValue_)) {
       currentChar_ = 0;
       name[0] = 'A' + 1; // to land in A
       name[1] = '\0';
@@ -92,7 +94,7 @@ void UITextField::ProcessArrow(unsigned short mask) {
   case EPBM_RIGHT:
     if (currentChar_ < len - 1) {
       currentChar_++;
-    } else if (currentChar_ < MAX_PROJECT_NAME_LENGTH - 1) {
+    } else if (currentChar_ < MaxLength - 1) {
       currentChar_++;
       name[currentChar_] = 'A';
       name[currentChar_ + 1] = '\0';
@@ -105,43 +107,7 @@ void UITextField::ProcessArrow(unsigned short mask) {
   };
 };
 
-etl::string<MAX_PROJECT_NAME_LENGTH> UITextField::GetString() {
+template <uint8_t MaxLength>
+etl::string<MaxLength> UITextField<MaxLength>::GetString() {
   return src_->GetString();
 };
-
-char getNext(char c, bool reverse) {
-  // Valid characters in order
-  const char validChars[] =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._";
-  const int numChars = sizeof(validChars) - 1; // Exclude null terminator
-
-  // Find the index of the current character
-  for (int i = 0; i < numChars; ++i) {
-    if (validChars[i] == c) {
-      // Calculate next index based on direction (forward or reverse)
-      int nextIndex =
-          reverse ? (i - 1 + numChars) % numChars : (i + 1) % numChars;
-      return validChars[nextIndex];
-    }
-  }
-
-  // If character is not valid, return the first valid character in the list
-  return reverse ? validChars[numChars - 1] : validChars[0];
-};
-
-void deleteChar(char *name, uint8_t pos) {
-  int len = std::strlen(name);
-
-  // If length is 1 or position is invalid, do nothing
-  if (len <= 1 || pos < 0 || pos >= len) {
-    return;
-  }
-
-  // Shift characters left starting from the position
-  for (int i = pos; i < len - 1; ++i) {
-    name[i] = name[i + 1];
-  }
-
-  // Null-terminate the string at the new end
-  name[len - 1] = '\0';
-}

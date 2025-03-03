@@ -5,6 +5,9 @@
 #include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
+#include <stdint.h>
+
+template <uint8_t MaxLength> class UITextField;
 
 class ProjectView : public FieldView, public I_Observer {
 public:
@@ -19,6 +22,7 @@ public:
   etl::string<MAX_PROJECT_NAME_LENGTH> getProjectName() {
     return nameField_->GetString();
   };
+
   etl::string<MAX_PROJECT_NAME_LENGTH> getOldProjectName() {
     return oldProjName_;
   };
@@ -40,7 +44,7 @@ private:
   unsigned long lastTick_;
   unsigned long lastClock_;
   UIField *tempoField_;
-  UITextField *nameField_;
+  UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
   bool saveAsFlag_ = false;
   etl::string<MAX_PROJECT_NAME_LENGTH> oldProjName_;
 };
