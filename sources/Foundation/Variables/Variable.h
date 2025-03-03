@@ -65,7 +65,7 @@ protected:
     const char *const *char_;
   } list_;
 
-  std::string stringValue_;
+  etl::string<MAX_VARIABLE_STRING_LENGTH> stringValue_;
 
   uint8_t listSize_;
 };

@@ -114,6 +114,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   bigHexVarField_.clear();
   intVarOffField_.clear();
   bitmaskVarField_.clear();
+  uiTextfield_.clear();
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -444,7 +445,17 @@ void InstrumentView::fillMidiParameters() {
   MidiInstrument *instrument = (MidiInstrument *)instr;
   GUIPoint position = GetAnchor();
 
-  Variable *v = instrument->FindVariable(FourCC::MidiInstrumentChannel);
+  Variable *v = instrument->FindVariable(FourCC::MidiInstrumentName);
+  auto label = etl::make_string_with_capacity<MAX_LABEL_LENGTH>("name: ");
+  auto defaultName =
+      etl::make_string_with_capacity<MAX_MIDI_INSTRUMENT_NAME_LENGTH>(
+          UNNAMED_PROJECT_NAME);
+  uiTextfield_.emplace_back(UITextField<MAX_MIDI_INSTRUMENT_NAME_LENGTH>(
+      *v, position, label, FourCC::MidiInstrumentName, defaultName));
+  fieldList_.insert(fieldList_.end(), &(*uiTextfield_.rbegin()));
+  position._y += 1;
+
+  v = instrument->FindVariable(FourCC::MidiInstrumentChannel);
   intVarField_.emplace_back(
       UIIntVarField(position, *v, "channel: %2.2d", 0, 0x0F, 1, 0x04, 1));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));

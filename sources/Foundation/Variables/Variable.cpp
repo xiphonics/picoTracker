@@ -181,7 +181,8 @@ void Variable::SetString(const char *string, bool notify) {
     value_.bool_ = (!strcmp("false", string) ? false : true);
     break;
   case STRING:
-    stringValue_ = std::string(string);
+    stringValue_.clear();
+    stringValue_.append(string);
     break;
   case CHAR_LIST:
     value_.index_ = -1;
@@ -222,7 +223,7 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
     npf_snprintf(buf, sizeof(buf), "%s", value_.bool_ ? "true" : "false");
     break;
   case STRING:
-    return stringValue_.c_str();
+    return stringValue_;
   case CHAR_LIST:
     if ((value_.index_ < 0) || (value_.index_ >= listSize_)) {
       return "(null)";
