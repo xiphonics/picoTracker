@@ -25,8 +25,8 @@ Variable::Variable(FourCC id, bool value) : id_(id) {
   type_ = BOOL;
 };
 
-Variable::Variable(FourCC id, const char *value)
-    : id_(id), stringValue_(value) {
+Variable::Variable(FourCC id, const char *value) : id_(id) {
+  setStringValue(value);
   type_ = STRING;
 };
 
@@ -64,7 +64,7 @@ void Variable::SetFloat(float value, bool notify) {
   case STRING:
     char buf[10];
     npf_snprintf(buf, sizeof(buf), "%f", value);
-    stringValue_ = buf;
+    setStringValue(buf);
     break;
   };
   if (notify) {
@@ -89,7 +89,7 @@ void Variable::SetInt(int value, bool notify) {
   case STRING:
     char buf[10];
     npf_snprintf(buf, sizeof(buf), "%d", value);
-    stringValue_ = buf;
+    setStringValue(buf);
     break;
   };
   if (notify) {
@@ -112,7 +112,7 @@ void Variable::SetBool(bool value, bool notify) {
     value_.index_ = int(value);
     break;
   case STRING:
-    stringValue_ = (value) ? "true" : "false";
+    setStringValue(value ? "true" : "false");
     break;
   };
   if (notify) {
@@ -131,7 +131,7 @@ float Variable::GetFloat() {
   case CHAR_LIST:
     return float(value_.index_);
   case STRING:
-    return float(atof(stringValue_.c_str()));
+    return float(atof(stringValue_->c_str()));
   };
   return 0.0f;
 };
@@ -147,7 +147,7 @@ int Variable::GetInt() {
   case CHAR_LIST:
     return value_.index_;
   case STRING:
-    return atoi(stringValue_.c_str());
+    return atoi(stringValue_->c_str());
   };
   return 0;
 };
@@ -181,8 +181,7 @@ void Variable::SetString(const char *string, bool notify) {
     value_.bool_ = (!strcmp("false", string) ? false : true);
     break;
   case STRING:
-    stringValue_.clear();
-    stringValue_.append(string);
+    setStringValue(string);
     break;
   case CHAR_LIST:
     value_.index_ = -1;
@@ -223,7 +222,7 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
     npf_snprintf(buf, sizeof(buf), "%s", value_.bool_ ? "true" : "false");
     break;
   case STRING:
-    return stringValue_;
+    return *stringValue_;
   case CHAR_LIST:
     if ((value_.index_ < 0) || (value_.index_ >= listSize_)) {
       return "(null)";
@@ -233,7 +232,7 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
     break;
   };
 
-  return buf;
+  return etl::string<MAX_VARIABLE_STRING_LENGTH>(buf, etl::strlen(buf));
 };
 
 void Variable::CopyFrom(Variable &other) {
@@ -272,7 +271,14 @@ void Variable::Reset() {
     break;
   case STRING:
     // TODO: Check if this may be needed in the future, not used at this time
-    stringValue_ = "";
+    setStringValue("");
     break;
   }
+}
+
+void Variable::setStringValue(const char *value) {
+  if (stringValue_ != nullptr) {
+    delete stringValue_;
+  }
+  stringValue_ = new etl::string<MAX_VARIABLE_STRING_LENGTH>(value);
 }

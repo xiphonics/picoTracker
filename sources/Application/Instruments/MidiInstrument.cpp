@@ -4,6 +4,7 @@
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "System/Console/Trace.h"
+#include "stringutils.h"
 #include <string.h>
 
 MidiService *MidiInstrument::svc_ = 0;
@@ -14,7 +15,7 @@ MidiInstrument::MidiInstrument()
       volume_(FourCC::MidiInstrumentVolume, 255),
       table_(FourCC::MidiInstrumentTable, -1),
       tableAuto_(FourCC::MidiInstrumentTableAutomation, false),
-      name_(FourCC::MidiInstrumentName, "") {
+      name_(FourCC::MidiInstrumentName, DEFAULT_EMPTY_VALUE) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
@@ -225,7 +226,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 etl::string<24> MidiInstrument::GetName() {
   Variable *v = FindVariable(FourCC::MidiInstrumentName);
   if (v->GetString().length() > 0) {
-    return v->GetString();
+    return v->GetString().substr(0, 24);
   }
   v = FindVariable(FourCC::MidiInstrumentChannel);
   etl::string<24> name = "MIDI CH ";
