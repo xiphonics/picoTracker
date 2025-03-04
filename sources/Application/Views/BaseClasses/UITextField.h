@@ -23,7 +23,7 @@ public:
 
 private:
   int selected_;
-  int currentChar_ = 0;
+  uint8_t currentChar_ = 0;
   Variable &src_;
   const etl::string<8> label_;
   uint8_t fourcc_;

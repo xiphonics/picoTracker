@@ -3,6 +3,7 @@ add_library(application_utils
   char.h char.cpp
   fixed.h fixed.cpp
   randomnames.h
+  stringutils.h stringutils.cpp 
 )
 
 target_link_libraries(application_utils

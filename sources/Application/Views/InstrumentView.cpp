@@ -449,7 +449,7 @@ void InstrumentView::fillMidiParameters() {
   auto label = etl::make_string_with_capacity<MAX_LABEL_LENGTH>("name: ");
   auto defaultName =
       etl::make_string_with_capacity<MAX_MIDI_INSTRUMENT_NAME_LENGTH>(
-          UNNAMED_PROJECT_NAME);
+          DEFAULT_EMPTY_VALUE);
   uiTextfield_.emplace_back(UITextField<MAX_MIDI_INSTRUMENT_NAME_LENGTH>(
       *v, position, label, FourCC::MidiInstrumentName, defaultName));
   fieldList_.insert(fieldList_.end(), &(*uiTextfield_.rbegin()));
