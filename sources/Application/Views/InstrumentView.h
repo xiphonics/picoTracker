@@ -7,6 +7,7 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
+#include "BaseClasses/UITextField.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
@@ -52,5 +53,6 @@ private:
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
+  etl::vector<UITextField<MAX_MIDI_INSTRUMENT_NAME_LENGTH>, 1> uiTextfield_;
 };
 #endif

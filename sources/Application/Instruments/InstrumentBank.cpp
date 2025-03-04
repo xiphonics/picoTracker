@@ -128,6 +128,7 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           auto vars = instr->Variables();
           for (auto elem : *vars) {
             if (!strcasecmp((elem)->GetName(), name)) {
+              Trace::Debug("Restore SetString %s->%s", name, value);
               (elem)->SetString(value);
             };
           }

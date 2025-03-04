@@ -69,6 +69,7 @@ struct FourCC {
     MidiInstrumentVolume = 118,
     MidiInstrumentTable = 119,
     MidiInstrumentTableAutomation = 120,
+    MidiInstrumentName = 144,
 
     SIDInstrument1Waveform = 72,
     SIDInstrument2Waveform = 73,
@@ -152,6 +153,7 @@ struct FourCC {
     VarUIFont = 141,
     // 142 is taken for SIDInstrumentOSCNumber
     // 143 is taken for InstrumentCommandMidiChord
+    // 144 is taken for InstrumentMidiName
 
     VarInstrumentType = 113,
 
@@ -231,6 +233,7 @@ struct FourCC {
   ETL_ENUM_TYPE(SampleInstrumentTable, "table")
   ETL_ENUM_TYPE(SampleInstrumentTableAutomation, "table automation")
   ETL_ENUM_TYPE(MidiInstrumentChannel, "channel")
+  ETL_ENUM_TYPE(MidiInstrumentName, "midi name")
   ETL_ENUM_TYPE(MidiInstrumentNoteLength, "note length")
   ETL_ENUM_TYPE(MidiInstrumentVolume, "volume")
   ETL_ENUM_TYPE(MidiInstrumentTable, "table")
