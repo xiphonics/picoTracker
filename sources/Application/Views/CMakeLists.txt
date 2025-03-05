@@ -15,6 +15,7 @@ add_library(application_views
   UIController.h UIController.cpp
   ViewData.h ViewData.cpp
   ScreenView.h ScreenView.cpp
+  MixerView.h MixerView.cpp
 )
 
 target_link_libraries(application_views PUBLIC application_views_baseclasses

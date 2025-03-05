@@ -71,7 +71,7 @@ void View::drawMap() {
   DrawString(pos._x, pos._y, buffer, props);
   pos._y++;
   // row4
-  strcpy(buffer, "  TT");
+  strcpy(buffer, "M TT");
   DrawString(pos._x, pos._y, buffer, props);
 
   // draw current screen on map
@@ -114,6 +114,10 @@ void View::drawMap() {
     pos._x += 2;
     pos._y += 1;
     DrawString(pos._x, pos._y, "G", props);
+    break;
+  case VT_MIXER:
+    pos._y += 3;
+    DrawString(pos._x, pos._y, "M", props);
     break;
   default: // VT_SONG
     pos._y += 2;
