@@ -446,7 +446,8 @@ void InstrumentView::fillMidiParameters() {
   GUIPoint position = GetAnchor();
 
   Variable *v = instrument->FindVariable(FourCC::MidiInstrumentName);
-  auto label = etl::make_string_with_capacity<MAX_LABEL_LENGTH>("name: ");
+  auto label =
+      etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
   auto defaultName =
       etl::make_string_with_capacity<MAX_MIDI_INSTRUMENT_NAME_LENGTH>(
           DEFAULT_EMPTY_VALUE);
