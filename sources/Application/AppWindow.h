@@ -37,6 +37,7 @@ class SelectProjectView;
 class SongView;
 class TableView;
 class ScreenView;
+class MixerView;
 class View;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
@@ -96,6 +97,7 @@ private:
   TableView *_tableView;
   GrooveView *_grooveView;
   ImportView *_importView;
+  MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   NullView *_nullView;
 
