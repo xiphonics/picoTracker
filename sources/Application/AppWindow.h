@@ -2,17 +2,7 @@
 #ifndef _APP_WINDOW_H_
 #define _APP_WINDOW_H_
 
-#include "Application/Views/ChainView.h"
-#include "Application/Views/ConsoleView.h"
-#include "Application/Views/DeviceView.h"
-#include "Application/Views/GrooveView.h"
-#include "Application/Views/ImportView.h"
-#include "Application/Views/InstrumentView.h"
-#include "Application/Views/NullView.h"
-#include "Application/Views/PhraseView.h"
-#include "Application/Views/SelectProjectView.h"
-#include "Application/Views/SongView.h"
-#include "Application/Views/TableView.h"
+#include "Application/Views/BaseClasses/View.h"
 #include "Application/Views/ViewData.h"
 #include "Foundation/Observable.h"
 #include "System/Process/SysMutex.h"
@@ -35,6 +25,19 @@
 // and UITextField is templated which means its class/method definitions need to
 // be in its header file  :-(
 class ProjectView;
+class ChainView;
+class ConsoleView;
+class DeviceView;
+class GrooveView;
+class ImportView;
+class InstrumentView;
+class NullView;
+class PhraseView;
+class SelectProjectView;
+class SongView;
+class TableView;
+class ScreenView;
+class View;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
 protected:

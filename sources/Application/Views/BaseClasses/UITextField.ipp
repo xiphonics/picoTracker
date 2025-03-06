@@ -3,10 +3,11 @@
 #include "stringutils.h"
 
 template <uint8_t MaxLength>
-UITextField<MaxLength>::UITextField(Variable *v, GUIPoint &position,
-                                    const char *name, uint8_t fourcc,
-                                    const char *defaultValue_)
-    : UIField(position), src_(v), name_(name), fourcc_(fourcc),
+UITextField<MaxLength>::UITextField(
+    Variable &v, GUIPoint &position,
+    const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> &label, uint8_t fourcc,
+    etl::string<MaxLength> &defaultValue_)
+    : UIField(position), src_(v), label_(label), fourcc_(fourcc),
       defaultValue_(defaultValue_) {}
 
 template <uint8_t MaxLength> UITextField<MaxLength>::~UITextField(){};
@@ -18,71 +19,75 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
   GUIPoint position = GetPosition();
   position._y += offset;
 
-  w.DrawString(name_, position, props);
-  position._x += strlen(name_);
+  w.DrawString(label_.c_str(), position, props);
+  position._x += label_.length();
 
   ((AppWindow &)w).SetColor(CD_INFO);
 
-  auto name = src_->GetString().c_str();
-  int len = strlen(name);
+  auto value = src_.GetString().c_str();
+  int len = src_.GetString().length();
+
   if (focus_) {
     char buffer[2];
     buffer[1] = 0;
     for (int i = 0; i < len; i++) {
       props.invert_ = (i == currentChar_);
-      buffer[0] = name[i];
+      buffer[0] = value[i];
       w.DrawString(buffer, position, props);
       position._x += 1;
     }
   } else {
-    w.DrawString(name, position, props);
+    if (len != 0) {
+      w.DrawString(value, position, props);
+    }
   }
 };
 
 template <uint8_t MaxLength> void UITextField<MaxLength>::OnClick() {
-  currentChar_ = 0;
   SetChanged();
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
 template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
-  char name[MaxLength + 1];
-  strcpy(name, src_->GetString().c_str());
-  uint8_t len = std::strlen(name);
-  deleteChar(name, currentChar_);
-  if (currentChar_ && (currentChar_ == len - 1))
+  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_.GetString());
+  if (currentChar_ > 0 && currentChar_ < buffer.length()) {
+    buffer.erase(currentChar_, 1);
     currentChar_--;
-  src_->SetString(name, true);
+  }
+  src_.SetString(buffer.c_str(), true);
   SetChanged();
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
 template <uint8_t MaxLength>
 void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
-  char name[MaxLength + 1];
-  strcpy(name, src_->GetString().c_str());
-  int len = std::strlen(name);
+  auto buffer(src_.GetString());
 
   switch (mask) {
   case EPBM_UP:
-    if (!strcmp(name, defaultValue_)) {
+    // on a char edit key (up or down), if we are on the default string value,
+    // we want to clear default value and start user off with just first char
+    if (buffer.compare(defaultValue_) == 0) {
       currentChar_ = 0;
-      name[0] = 'A' - 1; // to land in A
-      name[1] = '\0';
+      buffer.clear();
+      buffer.append("A");
+      src_.SetString(buffer.c_str(), true);
+    } else {
+      buffer[currentChar_] = getNext(buffer.c_str()[currentChar_], false);
+      src_.SetString(buffer.c_str(), true);
     }
-    name[currentChar_] = getNext(name[currentChar_], false);
-    src_->SetString(name, true);
     SetChanged();
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_DOWN:
-    if (!strcmp(name, defaultValue_)) {
+    if (buffer.compare(defaultValue_) == 0) {
       currentChar_ = 0;
-      name[0] = 'A' + 1; // to land in A
-      name[1] = '\0';
+      buffer.clear();
+      buffer.append("A");
+      src_.SetString(buffer.c_str(), true);
     }
-    name[currentChar_] = getNext(name[currentChar_], true);
-    src_->SetString(name, true);
+    buffer[currentChar_] = getNext((char)buffer.c_str()[currentChar_], true);
+    src_.SetString(buffer.c_str(), true);
     SetChanged();
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
@@ -92,14 +97,13 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
     }
     break;
   case EPBM_RIGHT:
-    if (currentChar_ < len - 1) {
+    if (currentChar_ < (buffer.length() - 1)) {
       currentChar_++;
-    } else if (currentChar_ < MaxLength - 1) {
+      // -1 to allow for adding 1 more char
+    } else if (currentChar_ < (MaxLength - 1)) {
       currentChar_++;
-      name[currentChar_] = 'A';
-      name[currentChar_ + 1] = '\0';
-      len++;
-      src_->SetString(name, true);
+      buffer.append("A");
+      src_.SetString(buffer.c_str(), true);
       SetChanged();
       NotifyObservers((I_ObservableData *)fourcc_);
     }
@@ -109,5 +113,5 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
 
 template <uint8_t MaxLength>
 etl::string<MaxLength> UITextField<MaxLength>::GetString() {
-  return src_->GetString();
+  return src_.GetString().substr(0, MaxLength);
 };

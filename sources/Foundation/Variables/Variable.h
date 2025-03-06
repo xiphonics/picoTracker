@@ -32,7 +32,7 @@ public:
   void SetFloat(float value, bool notify = true);
   float GetFloat();
   void SetString(const char *string, bool notify = true);
-  etl::string<40> GetString();
+  etl::string<MAX_VARIABLE_STRING_LENGTH> GetString();
   void SetBool(bool value, bool notify = true);
   bool GetBool();
   void CopyFrom(Variable &other);
@@ -65,8 +65,10 @@ protected:
     const char *const *char_;
   } list_;
 
-  std::string stringValue_;
+  etl::string<MAX_VARIABLE_STRING_LENGTH> *stringValue_ = nullptr;
 
   uint8_t listSize_;
+
+  void setStringValue(const char *value);
 };
 #endif
