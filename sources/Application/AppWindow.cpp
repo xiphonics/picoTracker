@@ -23,6 +23,7 @@
 #include "Application/Views/GrooveView.h"
 #include "Application/Views/ImportView.h"
 #include "Application/Views/InstrumentView.h"
+#include "Application/Views/MixerView.h"
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
 #include "Application/Views/SelectProjectView.h"
@@ -83,6 +84,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
+  _mixerView = 0;
   _nullView = 0;
   _grooveView = 0;
   _closeProject = 0;
@@ -360,6 +362,10 @@ void AppWindow::LoadProject(const char *projectName) {
       new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
   _selectProjectView->AddObserver((*this));
 
+  static char mixerViewMemBuf[sizeof(SelectProjectView)];
+  _mixerView = new (mixerViewMemBuf) MixerView((*this), _viewData);
+  _mixerView->AddObserver((*this));
+
   _currentView = _songView;
   _currentView->OnFocus();
 
@@ -571,6 +577,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_SELECTPROJECT:
       _currentView = _selectProjectView;
+      break;
+    case VT_MIXER:
+      _currentView = _mixerView;
       break;
     default:
       break;
