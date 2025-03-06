@@ -146,6 +146,9 @@ void MixerView::DrawView() {
   props.invert_ = true;
   const u_int8_t dx = 3;
 
+  // get levels from the player
+  auto levels = player->GetMixerLevels();
+
   // draw vu meter for each bus
   for (int j = 0; j < VU_METER_HEIGHT; j++) {
     for (int i = 0; i < 8; i++) {
@@ -156,7 +159,11 @@ void MixerView::DrawView() {
       } else {
         SetColor(CD_INFO);
       }
-      DrawString(pos._x + (i * dx), pos._y - j, " ", props);
+      auto level = levels[i];
+      Trace::Debug("lvl:%d", fp2i(level));
+      if (level / 1024 < j) {
+        DrawString(pos._x + (i * dx), pos._y - j, " ", props);
+      }
       SetColor(CD_HILITE1);
       DrawString(pos._x + (i * dx) + 1, pos._y - j, " ", props);
     }

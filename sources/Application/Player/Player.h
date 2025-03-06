@@ -99,6 +99,8 @@ public:
   // info
   int GetPlayedBufferPercentage();
 
+  etl::array<fixed, 8> GetMixerLevels();
+
   std::string GetAudioAPI();
   std::string GetAudioDevice();
   int GetAudioBufferSize();

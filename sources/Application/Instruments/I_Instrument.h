@@ -40,9 +40,9 @@ public:
 
   // size refers to the number of samples
   // should always fill interleaved stereo / 16bit
-
-  virtual bool Render(int channel, fixed *buffer, int size,
-                      bool updateTick) = 0;
+  // return value is the avg volume/level of the buffer that was rendered
+  virtual fixed Render(int channel, fixed *buffer, int size,
+                       bool updateTick) = 0;
 
   virtual bool IsInitialized() = 0;
 
