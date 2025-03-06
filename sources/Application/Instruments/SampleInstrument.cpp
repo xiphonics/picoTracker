@@ -3,6 +3,7 @@
 #include "Application/Model/Table.h"
 #include "Application/Player/PlayerMixer.h" // For MIX_BUFFER_SIZE.. kick out pls
 #include "Application/Player/SyncMaster.h"
+#include "Application/Utils/fixed.h"
 #include "CommandList.h"
 #include "SamplePool.h"
 #include "SampleVariable.h"
@@ -317,10 +318,10 @@ void SampleInstrument::doKRateUpdate(int channel) {
 
 // Size in samples
 
-bool SampleInstrument::Render(int channel, fixed *buffer, int size,
-                              bool updateTick) {
+fixed SampleInstrument::Render(int channel, fixed *buffer, int size,
+                               bool updateTick) {
 
-  bool somethingToMix = false;
+  fixed avgLevel = 0;
 
   // Get Current render parameters
 
@@ -331,7 +332,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
   if (source_) {
 
     if (*rpFinished)
-      return false;
+      return 0;
 
     // clear the fixed point buffer
 
@@ -770,10 +771,10 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     rp->position_ =
         (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
 
-    somethingToMix = true;
+    avgLevel = fp_div(fp_add(s2, t2), i2fp(2));
   }
 
-  return somethingToMix;
+  return avgLevel;
 };
 
 void SampleInstrument::AssignSample(int i) {

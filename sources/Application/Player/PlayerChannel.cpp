@@ -35,11 +35,11 @@ void PlayerChannel::StopInstrument() {
   instr_ = 0;
 };
 
-bool PlayerChannel::Render(fixed *buffer, int samplecount) {
+fixed PlayerChannel::Render(fixed *buffer, int samplecount) {
   if (instr_) {
     bool tableSlice = SyncMaster::GetInstance()->TableSlice();
-    bool status = instr_->Render(index_, buffer, samplecount, tableSlice);
-    return ((status) && (!muted_));
+    fixed avgLevel = instr_->Render(index_, buffer, samplecount, tableSlice);
+    return ((avgLevel != FP_ZERO) && (!muted_));
   } else {
     return false;
   }
