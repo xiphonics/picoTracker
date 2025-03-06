@@ -23,7 +23,7 @@ public:
   virtual bool Init();
   virtual bool Start(int channel, unsigned char note, bool trigger = true);
   virtual void Stop(int channel);
-  virtual bool Render(int channel, fixed *buffer, int size, bool updateTick);
+  virtual fixed Render(int channel, fixed *buffer, int size, bool updateTick);
   virtual bool IsInitialized();
   virtual bool IsEmpty();
 

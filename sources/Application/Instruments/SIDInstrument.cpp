@@ -200,8 +200,8 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
 
 void SIDInstrument::Stop(int c) { playing_ = false; };
 
-bool SIDInstrument::Render(int channel, fixed *buffer, int size,
-                           bool updateTick) {
+fixed SIDInstrument::Render(int channel, fixed *buffer, int size,
+                            bool updateTick) {
   int start = micros();
 
   if (playing_ and render_) {
@@ -214,12 +214,14 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     int time_taken = micros() - start;
     Trace::Debug("RENDER: SID-%i Render took %ius (%i%%ts)\n", GetOsc(),
                  time_taken, (time_taken * 44100) / size / 10000);
-    return true;
+
+    // TODO: need to actually calculate average volume level to return!
+    return FP_ONE;
   }
   int time_taken = micros() - start;
   Trace::Debug("RENDER: >SID-%i Render took %ius (%i%%ts)\nf", GetOsc(),
                time_taken, (time_taken * 44100) / size / 10000);
-  return false;
+  return FP_ZERO;
 };
 
 bool SIDInstrument::IsInitialized() {

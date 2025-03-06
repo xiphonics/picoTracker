@@ -1180,3 +1180,7 @@ int Player::GetAudioPreBufferCount() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioPreBufferCount() : 0;
 };
+
+etl::array<fixed, 8> Player::GetMixerLevels() {
+  return mixer_.GetMixerLevels();
+}

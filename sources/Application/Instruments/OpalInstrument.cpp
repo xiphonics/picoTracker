@@ -141,8 +141,8 @@ void OpalInstrument::Stop(int c) {
   opl_.Port(OCTAVE_BASE_REG, stop);
 };
 
-bool OpalInstrument::Render(int channel, fixed *buffer, int size,
-                            bool updateTick) {
+fixed OpalInstrument::Render(int channel, fixed *buffer, int size,
+                             bool updateTick) {
 
   int start = micros();
 
@@ -151,7 +151,9 @@ bool OpalInstrument::Render(int channel, fixed *buffer, int size,
 
   int took = micros() - start;
   // Trace::Log("OPALINSTRUMENT", "Render took: %i us [%i])", took, size);
-  return true;
+
+  // TODO: need to actually calculate average volume level to return!
+  return FP_ONE;
 };
 
 bool OpalInstrument::IsInitialized() {

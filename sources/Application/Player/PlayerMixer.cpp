@@ -202,3 +202,9 @@ void PlayerMixer::Unlock() {
   MixerService *ms = MixerService::GetInstance();
   ms->Unlock();
 };
+
+etl::array<fixed, 8> PlayerMixer::GetMixerLevels() {
+  MixerService *ms = MixerService::GetInstance();
+  AudioMixer *audioMixer = ms->GetMixBus(STREAM_MIX_BUS);
+  return audioMixer->GetMixerLevels();
+}

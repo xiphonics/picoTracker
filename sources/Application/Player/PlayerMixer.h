@@ -63,6 +63,8 @@ public:
   void Lock();
   void Unlock();
 
+  etl::array<fixed, 8> GetMixerLevels();
+
 private:
   Project *project_;
   bool clipped_;
