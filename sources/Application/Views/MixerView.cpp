@@ -122,13 +122,11 @@ void MixerView::processSelectionButtonMask(unsigned int mask) {
 }
 
 void MixerView::DrawView() {
-
   Clear();
 
   GUITextProperties props;
   GUIPoint pos = GetTitlePosition();
   GUIPoint anchor = GetAnchor();
-  char hex[3];
 
   // Draw title
   SetColor(CD_NORMAL);
@@ -142,46 +140,43 @@ void MixerView::DrawView() {
   props.invert_ = false;
 
   // Now draw busses
+  // we start at the bottom of the VU meter and draw it growing upwards
   pos = anchor;
-  short dx = 3;
-
-  int xoffset = pos._x;
+  pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
-#define VU_METER_HEIGHT 12
+  const u_int8_t dx = 3;
+
   // draw vu meter for each bus
   for (int j = 0; j < VU_METER_HEIGHT; j++) {
     for (int i = 0; i < 8; i++) {
-      if (j < 2) {
+      if (j == VU_METER_CLIP_LEVEL) {
         SetColor(CD_ERROR);
-      } else if (j < 6) {
+      } else if (j > VU_METER_WARN_LEVEL) {
         SetColor(CD_WARN);
       } else {
         SetColor(CD_INFO);
       }
-      DrawString(pos._x, pos._y, " ", props);
-      pos._x++;
+      DrawString(pos._x + (i * dx), pos._y - j, " ", props);
       SetColor(CD_HILITE1);
-      DrawString(pos._x, pos._y, " ", props);
-      pos._x += dx - 1;
+      DrawString(pos._x + (i * dx) + 1, pos._y - j, " ", props);
     }
-    pos._y++;
-    pos._x = xoffset;
   };
   SetColor(CD_NORMAL);
   props.invert_ = false;
 
   pos._y += 1;
-  // draw bus names
+  // draw bus states
+  char state[3];
+  state[0] = 'M';
+  state[1] = 'S';
+  state[2] = '\0';
   for (int i = 0; i < 8; i++) {
     if (i == viewData_->mixerCol_) {
       props.invert_ = true;
       SetColor(CD_HILITE2);
     }
 
-    int bus = Mixer::GetInstance()->GetBus(i);
-    hex2char(bus, hex);
-
-    DrawString(pos._x, pos._y, hex, props);
+    DrawString(pos._x, pos._y, state, props);
     pos._x += dx;
     if (i == viewData_->mixerCol_) {
       props.invert_ = false;
@@ -191,6 +186,7 @@ void MixerView::DrawView() {
 
   drawMap();
   drawNotes();
+  drawMasterVuMeter(player, pos, props);
 
   if (player->IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
