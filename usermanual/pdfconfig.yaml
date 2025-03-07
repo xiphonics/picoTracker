@@ -1,6 +1,15 @@
+title: picoTracker User Manual
+author: xiphonics
+
+styles:
+  code:
+    background-color: 0xffe0e0e0
+  show-page-numbers-from: 1
+
+tocPagePosition: 1
+
 pages:
   - frontcover.md
-  - contents.md
   - introduction.md
   - getting-started.md
   - device.md

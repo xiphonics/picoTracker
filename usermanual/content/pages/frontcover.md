@@ -3,4 +3,4 @@ title: The picoTracker User Manual
 template: cover
 ---
 
-![picoTracker image](image/picotracker-assembled-small.png)
+![picoTracker image](image/Page1.png)
