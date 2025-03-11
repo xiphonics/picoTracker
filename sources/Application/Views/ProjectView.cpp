@@ -126,9 +126,13 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   int xalign = position._x;
 
   v = project_->FindVariable(FourCC::VarProjectName);
-  nameField_ = new UITextField<MAX_PROJECT_NAME_LENGTH>(
-      v, position, "project: ", FourCC::ActionProjectRename,
+  auto label =
+      etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("project: ");
+  auto defaultName = etl::make_string_with_capacity<MAX_PROJECT_NAME_LENGTH>(
       UNNAMED_PROJECT_NAME);
+  nameField_ = new UITextField<MAX_PROJECT_NAME_LENGTH>(
+      *v, position, label, FourCC::ActionProjectRename, defaultName);
+
   nameField_->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), nameField_);
 

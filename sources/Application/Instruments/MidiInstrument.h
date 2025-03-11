@@ -2,6 +2,7 @@
 #define _MIDI_INSTRUMENT_H_
 
 #include "Application/Model/Song.h"
+#include "Externals/etl/include/etl/string.h"
 #include "I_Instrument.h"
 #include "Services/Midi/MidiService.h"
 
@@ -11,6 +12,8 @@
 #define MIDI_PRG 0xC0
 
 #define MAX_MIDI_CHORD_NOTES 4
+
+const int MAX_MIDI_INSTRUMENT_NAME_LENGTH = 12;
 
 class MidiInstrument : public I_Instrument {
 
@@ -51,7 +54,7 @@ public:
   void SetChannel(int i);
 
 private:
-  etl::list<Variable *, 5> variables_;
+  etl::list<Variable *, 6> variables_;
 
   etl::array<uint8_t, MAX_MIDI_CHORD_NOTES + 1> lastNotes_[SONG_CHANNEL_COUNT];
   int remainingTicks_;
@@ -67,6 +70,7 @@ private:
   Variable volume_;
   Variable table_;
   Variable tableAuto_;
+  Variable name_;
 
   static MidiService *svc_;
 };
