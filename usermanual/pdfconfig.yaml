@@ -5,6 +5,8 @@ styles:
   code:
     background-color: 0xffe0e0e0
   show-page-numbers-from: 1
+  # path from inside assets dir
+  ttf-font-path: font/PROJEKTBlackbird.ttf
 
 tocPagePosition: 1
 
