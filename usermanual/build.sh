@@ -2,6 +2,6 @@
 
 # builds the html and pdf outputs
 
-bin/picosite -a static -s content
+bin/picosite -a static -s content -d pdfconfig.yaml
 
-#TODO: weasyprint to process content
+cp output.pdf output/picoTracker-user-manual.pdf
