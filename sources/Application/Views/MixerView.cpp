@@ -145,22 +145,11 @@ void MixerView::DrawView() {
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
   const u_int8_t dx = 3;
+  // get levels from the player
+  etl::array<stereosample, 8> levels = player->GetMixerLevels();
 
-  // draw vu meter for each bus
-  for (int j = 0; j < VU_METER_HEIGHT; j++) {
-    for (int i = 0; i < 8; i++) {
-      if (j == VU_METER_CLIP_LEVEL) {
-        SetColor(CD_ERROR);
-      } else if (j > VU_METER_WARN_LEVEL) {
-        SetColor(CD_WARN);
-      } else {
-        SetColor(CD_INFO);
-      }
-      DrawString(pos._x + (i * dx), pos._y - j, " ", props);
-      SetColor(CD_HILITE1);
-      DrawString(pos._x + (i * dx) + 1, pos._y - j, " ", props);
-    }
-  };
+  drawChannelVUMeters(levels, props);
+
   SetColor(CD_NORMAL);
   props.invert_ = false;
 
@@ -186,59 +175,37 @@ void MixerView::DrawView() {
 
   drawMap();
   drawNotes();
-  drawMasterVuMeter(player, pos, props);
+  drawMasterVuMeter(player, props);
 
   if (player->IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 };
 
-void MixerView::OnPlayerUpdate(PlayerEventType type, unsigned int tick) {
+void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   Player *player = Player::GetInstance();
 
   // Draw clipping indicator & CPU usage
-
   GUIPoint anchor = GetAnchor();
   GUIPoint pos = anchor;
+
+  // get levels from the player
+  etl::array<stereosample, 8> levels = player->GetMixerLevels();
 
   GUITextProperties props;
   SetColor(CD_NORMAL);
 
-  if (player->Clipped()) {
-    DrawString(pos._x, pos._y, "clip", props);
-  } else {
-    DrawString(pos._x, pos._y, "----", props);
-  }
-  char strbuffer[12];
+  drawChannelVUMeters(levels, props);
 
+  drawMasterVuMeter(player, props);
+
+  pos = 0;
+  pos._x = 27;
   pos._y += 1;
-  sprintf(strbuffer, "P:%3.3d%%", player->GetPlayedBufferPercentage());
-  DrawString(pos._x, pos._y, strbuffer, props);
-
-  System *sys = System::GetInstance();
-  int batt = sys->GetBatteryLevel();
-  if (batt >= 0) {
-    if (batt < 90) {
-      SetColor(CD_HILITE2);
-      invertBatt_ = !invertBatt_;
-    } else {
-      invertBatt_ = false;
-    };
-    props.invert_ = invertBatt_;
-
-    pos._y += 1;
-    sprintf(strbuffer, "%B:3.3d%", batt);
-    DrawString(pos._x, pos._y, strbuffer, props);
+  if (eventType != PET_STOP) {
+    drawPlayTime(player, pos, props);
   }
-  SetColor(CD_NORMAL);
-  props.invert_ = false;
-  int time = int(player->GetPlayTime());
-  int mi = time / 60;
-  int se = time - mi * 60;
-  sprintf(strbuffer, "%2.2d:%2.2d", mi, se);
-  pos._y += 1;
-  DrawString(pos._x, pos._y, strbuffer, props);
 
   drawNotes();
 };
@@ -250,3 +217,25 @@ void MixerView::AnimationUpdate() {
   drawBattery(props);
   w_.Flush();
 };
+
+void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> levels,
+                                    GUITextProperties props) {
+
+  // we start at the bottom of the VU meter and draw it growing upwards
+  GUIPoint pos = GetAnchor();
+  pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
+
+  // draw vu meter for each bus
+  for (int i = 0; i < 8; i++) {
+    // top 16bits is left channel, bottom 16bits is right
+    unsigned short levelL = fp2i(levels[i] >> 16) / 4096;
+    unsigned short levelR = fp2i(levels[i] & 0x0000FFFF) / 4096;
+
+    // debugging
+    levelL = 15;
+    levelR = 15;
+
+    drawVUMeter(levelL, levelR, pos, props);
+    pos._x += 3; // 3 chars across per channel
+  }
+}

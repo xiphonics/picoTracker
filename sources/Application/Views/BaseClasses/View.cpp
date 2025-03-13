@@ -4,6 +4,7 @@
 #include "Application/Utils/char.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
+#include <nanoprintf.h>
 
 bool View::initPrivate_ = false;
 
@@ -166,25 +167,31 @@ void View::drawNotes() {
   }
 }
 
-void View::drawMasterVuMeter(Player *player, GUIPoint pos,
-                             GUITextProperties props) {
-  MixerStereoLevel playerLevel = player->GetMasterLevel();
+void View::drawMasterVuMeter(Player *player, GUITextProperties props) {
+  stereosample playerLevel = player->GetMasterLevels();
 
   // TODO: fix to use dB not linear
   // for now for linear divide by 4096
   short leftBars = (playerLevel >> 16) / 4096;
   short rightBars = (playerLevel & 0xFFFF) / 4096;
 
-  leftBars = 15;
-  rightBars = 15;
-
   // we start at the bottom of the VU meter and draw it growing upwards
-  pos = GetAnchor();
+  GUIPoint pos = GetAnchor();
   pos._x += 24;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
 
+  drawVUMeter(leftBars, rightBars, pos, props);
+}
+
+void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
+                       GUITextProperties props) {
+
   props.invert_ = true;
   for (int i = 0; i < VU_METER_HEIGHT; i++) {
+    // first need to clear previous drawn bars
+    SetColor(CD_BACKGROUND);
+    DrawString(pos._x, pos._y - i, "  ", props);
+
     if (i == VU_METER_CLIP_LEVEL) {
       SetColor(CD_ERROR);
     } else if (i > VU_METER_WARN_LEVEL) {
@@ -196,11 +203,24 @@ void View::drawMasterVuMeter(Player *player, GUIPoint pos,
       DrawString(pos._x, pos._y - i, " ", props);
     }
     if (rightBars >= i) {
-      SetColor(CD_HILITE1); // TODO: remive this test hack for setting color
+      SetColor(CD_HILITE1); // TODO: remove this test hack for setting color
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
   }
   props.invert_ = false;
+}
+
+void View::drawPlayTime(Player *player, GUIPoint pos,
+                        GUITextProperties &props) {
+  char strbuffer[10];
+
+  SetColor(CD_NORMAL);
+  props.invert_ = false;
+  int time = int(player->GetPlayTime());
+  int mi = time / 60;
+  int se = time - mi * 60;
+  npf_snprintf(strbuffer, sizeof(strbuffer), "%2.2d:%2.2d", mi, se);
+  DrawString(pos._x, pos._y, strbuffer, props);
 }
 
 void View::DoModal(ModalView *view, ModalViewCallback cb) {

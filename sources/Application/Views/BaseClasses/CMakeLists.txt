@@ -22,6 +22,7 @@ target_link_libraries(application_views_baseclasses PUBLIC pico_stdlib
                                           PUBLIC sdfat
                                           PUBLIC platform_sdcard
                                           PUBLIC application_utils
+                                          PUBLIC system_console
 )
 
 target_include_directories(application_views_baseclasses PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

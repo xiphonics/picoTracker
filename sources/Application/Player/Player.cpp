@@ -405,6 +405,8 @@ bool Player::IsRunning() { return isRunning_; };
 
 bool Player::Clipped() { return mixer_.Clipped(); }
 
+stereosample Player::GetMasterLevels() { return mixer_.GetAudioLevels(); }
+
 bool Player::isPlayable(int row, int col, int chainPos) {
 
   uchar *chain = viewData_->song_->data_ + SONG_CHANNEL_COUNT * row + col;
@@ -1180,3 +1182,7 @@ int Player::GetAudioPreBufferCount() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioPreBufferCount() : 0;
 };
+
+etl::array<stereosample, 8> Player::GetMixerLevels() {
+  return mixer_.GetMixerLevels();
+}
