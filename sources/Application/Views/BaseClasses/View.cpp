@@ -167,8 +167,7 @@ void View::drawNotes() {
   }
 }
 
-void View::drawMasterVuMeter(Player *player, GUIPoint pos,
-                             GUITextProperties props) {
+void View::drawMasterVuMeter(Player *player, GUITextProperties props) {
   stereosample playerLevel = player->GetMasterLevels();
 
   // TODO: fix to use dB not linear
@@ -177,9 +176,15 @@ void View::drawMasterVuMeter(Player *player, GUIPoint pos,
   short rightBars = (playerLevel & 0xFFFF) / 4096;
 
   // we start at the bottom of the VU meter and draw it growing upwards
-  pos = GetAnchor();
+  GUIPoint pos = GetAnchor();
   pos._x += 24;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
+
+  drawVUMeter(leftBars, rightBars, pos, props);
+}
+
+void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
+                       GUITextProperties props) {
 
   props.invert_ = true;
   for (int i = 0; i < VU_METER_HEIGHT; i++) {
@@ -198,7 +203,7 @@ void View::drawMasterVuMeter(Player *player, GUIPoint pos,
       DrawString(pos._x, pos._y - i, " ", props);
     }
     if (rightBars >= i) {
-      SetColor(CD_HILITE1); // TODO: remive this test hack for setting color
+      SetColor(CD_HILITE1); // TODO: remove this test hack for setting color
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
   }

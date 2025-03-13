@@ -145,33 +145,11 @@ void MixerView::DrawView() {
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
   const u_int8_t dx = 3;
-
   // get levels from the player
   etl::array<stereosample, 8> levels = player->GetMixerLevels();
 
-  // draw vu meter for each bus
-  for (int j = 0; j < VU_METER_HEIGHT; j++) {
-    for (int i = 0; i < 8; i++) {
-      if (j == VU_METER_CLIP_LEVEL) {
-        SetColor(CD_ERROR);
-      } else if (j > VU_METER_WARN_LEVEL) {
-        SetColor(CD_WARN);
-      } else {
-        SetColor(CD_INFO);
-      }
-      // top 16bits is left channel, bottom 16bits is right
-      fixed levelL = levels[i] & 0xFFFF0000;
-      fixed levelR = levels[i] & 0x0000FFFF;
-      if (j == 0) {
-        Trace::Debug("[%d] level L:%d R:%d\n", i, fp2i(levelL), fp2i(levelR));
-      }
-      if (fp2i(levelL) / 1024 < j) {
-        DrawString(pos._x + (i * dx), pos._y - j, " ", props);
-      }
-      SetColor(CD_HILITE1);
-      DrawString(pos._x + (i * dx) + 1, pos._y - j, " ", props);
-    }
-  };
+  drawChannelVUMeters(levels, props);
+
   SetColor(CD_NORMAL);
   props.invert_ = false;
 
@@ -197,7 +175,7 @@ void MixerView::DrawView() {
 
   drawMap();
   drawNotes();
-  drawMasterVuMeter(player, pos, props);
+  drawMasterVuMeter(player, props);
 
   if (player->IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
@@ -212,10 +190,15 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   GUIPoint anchor = GetAnchor();
   GUIPoint pos = anchor;
 
+  // get levels from the player
+  etl::array<stereosample, 8> levels = player->GetMixerLevels();
+
   GUITextProperties props;
   SetColor(CD_NORMAL);
 
-  drawMasterVuMeter(player, pos, props);
+  drawChannelVUMeters(levels, props);
+
+  drawMasterVuMeter(player, props);
 
   pos = 0;
   pos._x = 27;
@@ -234,3 +217,25 @@ void MixerView::AnimationUpdate() {
   drawBattery(props);
   w_.Flush();
 };
+
+void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> levels,
+                                    GUITextProperties props) {
+
+  // we start at the bottom of the VU meter and draw it growing upwards
+  GUIPoint pos = GetAnchor();
+  pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
+
+  // draw vu meter for each bus
+  for (int i = 0; i < 8; i++) {
+    // top 16bits is left channel, bottom 16bits is right
+    unsigned short levelL = fp2i(levels[i] >> 16) / 4096;
+    unsigned short levelR = fp2i(levels[i] & 0x0000FFFF) / 4096;
+
+    // debugging
+    levelL = 15;
+    levelR = 15;
+
+    drawVUMeter(levelL, levelR, pos, props);
+    pos._x += 3; // 3 chars across per channel
+  }
+}

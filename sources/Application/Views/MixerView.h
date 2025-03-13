@@ -22,6 +22,8 @@ protected:
   void updateCursor(int dx, int dy);
 
 private:
+  void drawChannelVUMeters(etl::array<stereosample, 8> levels,
+                           GUITextProperties props);
   const char *song_;
   int saveX_;
   int saveY_;
