@@ -2,11 +2,12 @@
 #define _AUDIO_MODULE_H_
 
 #include "Application/Utils/fixed.h"
+#include "Foundation/Types/Types.h"
 
 class AudioModule {
 public:
   virtual ~AudioModule(){};
-  virtual fixed Render(fixed *buffer, int samplecount) = 0;
+  virtual stereosample Render(fixed *buffer, int samplecount) = 0;
 };
 
 #endif

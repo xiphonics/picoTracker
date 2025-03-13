@@ -26,7 +26,7 @@ void AudioFileStreamer::Stop() {
 
 bool AudioFileStreamer::IsPlaying() { return (mode_ == AFSM_PLAYING); }
 
-fixed AudioFileStreamer::Render(fixed *buffer, int samplecount) {
+stereosample AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 
   // See if we're playing
   if (mode_ == AFSM_STOPPED) {

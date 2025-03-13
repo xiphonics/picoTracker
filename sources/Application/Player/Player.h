@@ -99,19 +99,16 @@ public:
   // info
   int GetPlayedBufferPercentage();
 
-  etl::array<fixed, 8> GetMixerLevels();
+  etl::array<stereosample, 8> GetMixerLevels();
+
+  // master out, last avg level while playing
+  stereosample GetMasterLevels();
 
   std::string GetAudioAPI();
   std::string GetAudioDevice();
   int GetAudioBufferSize();
   int GetAudioRequestedBufferSize();
   int GetAudioPreBufferCount();
-
-  MixerStereoLevel GetMasterLevel() {
-    // TODO: implement plumbing to get actual level out of audio mixer
-    // return mixer_.GetMasterLevel();
-    return 0xFFFFFFFF;
-  }
 
   Project *GetProject() { return project_; }
 

@@ -147,7 +147,7 @@ void MixerView::DrawView() {
   const u_int8_t dx = 3;
 
   // get levels from the player
-  auto levels = player->GetMixerLevels();
+  etl::array<stereosample, 8> levels = player->GetMixerLevels();
 
   // draw vu meter for each bus
   for (int j = 0; j < VU_METER_HEIGHT; j++) {
@@ -159,9 +159,13 @@ void MixerView::DrawView() {
       } else {
         SetColor(CD_INFO);
       }
-      auto level = levels[i];
-      Trace::Debug("lvl:%d", fp2i(level));
-      if (level / 1024 < j) {
+      // top 16bits is left channel, bottom 16bits is right
+      fixed levelL = levels[i] & 0xFFFF0000;
+      fixed levelR = levels[i] & 0x0000FFFF;
+      if (j == 0) {
+        Trace::Debug("[%d] level L:%d R:%d\n", i, fp2i(levelL), fp2i(levelR));
+      }
+      if (fp2i(levelL) / 1024 < j) {
         DrawString(pos._x + (i * dx), pos._y - j, " ", props);
       }
       SetColor(CD_HILITE1);
@@ -200,52 +204,25 @@ void MixerView::DrawView() {
   };
 };
 
-void MixerView::OnPlayerUpdate(PlayerEventType type, unsigned int tick) {
+void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   Player *player = Player::GetInstance();
 
   // Draw clipping indicator & CPU usage
-
   GUIPoint anchor = GetAnchor();
   GUIPoint pos = anchor;
 
   GUITextProperties props;
   SetColor(CD_NORMAL);
 
-  if (player->Clipped()) {
-    DrawString(pos._x, pos._y, "clip", props);
-  } else {
-    DrawString(pos._x, pos._y, "----", props);
-  }
-  char strbuffer[12];
+  drawMasterVuMeter(player, pos, props);
 
+  pos = 0;
+  pos._x = 27;
   pos._y += 1;
-  sprintf(strbuffer, "P:%3.3d%%", player->GetPlayedBufferPercentage());
-  DrawString(pos._x, pos._y, strbuffer, props);
-
-  System *sys = System::GetInstance();
-  int batt = sys->GetBatteryLevel();
-  if (batt >= 0) {
-    if (batt < 90) {
-      SetColor(CD_HILITE2);
-      invertBatt_ = !invertBatt_;
-    } else {
-      invertBatt_ = false;
-    };
-    props.invert_ = invertBatt_;
-
-    pos._y += 1;
-    sprintf(strbuffer, "%B:3.3d%", batt);
-    DrawString(pos._x, pos._y, strbuffer, props);
+  if (eventType != PET_STOP) {
+    drawPlayTime(player, pos, props);
   }
-  SetColor(CD_NORMAL);
-  props.invert_ = false;
-  int time = int(player->GetPlayTime());
-  int mi = time / 60;
-  int se = time - mi * 60;
-  sprintf(strbuffer, "%2.2d:%2.2d", mi, se);
-  pos._y += 1;
-  DrawString(pos._x, pos._y, strbuffer, props);
 
   drawNotes();
 };

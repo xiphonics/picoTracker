@@ -318,8 +318,8 @@ void SampleInstrument::doKRateUpdate(int channel) {
 
 // Size in samples
 
-fixed SampleInstrument::Render(int channel, fixed *buffer, int size,
-                               bool updateTick) {
+stereosample SampleInstrument::Render(int channel, fixed *buffer, int size,
+                                      bool updateTick) {
 
   fixed avgLevel = 0;
 
@@ -771,7 +771,8 @@ fixed SampleInstrument::Render(int channel, fixed *buffer, int size,
     rp->position_ =
         (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
 
-    avgLevel = fp_div(fp_add(s2, t2), i2fp(2));
+    avgLevel = s2 << 16;
+    avgLevel += t2;
   }
 
   return avgLevel;

@@ -45,6 +45,8 @@ public:
   void SetMasterVolume(int);
   int GetPlayedBufferPercentage();
 
+  stereosample GetAudioPeakLevels();
+
   virtual void Execute(FourCC id, float value);
 
   AudioOut *GetAudioOut();

@@ -35,7 +35,7 @@ void PlayerChannel::StopInstrument() {
   instr_ = 0;
 };
 
-fixed PlayerChannel::Render(fixed *buffer, int samplecount) {
+stereosample PlayerChannel::Render(fixed *buffer, int samplecount) {
   if (instr_) {
     bool tableSlice = SyncMaster::GetInstance()->TableSlice();
     fixed avgLevel = instr_->Render(index_, buffer, samplecount, tableSlice);

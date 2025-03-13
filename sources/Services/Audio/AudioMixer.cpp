@@ -30,18 +30,18 @@ void AudioMixer::EnableRendering(bool enable) {
   }
 };
 
-fixed AudioMixer::Render(fixed *buffer, int samplecount) {
+stereosample AudioMixer::Render(fixed *buffer, int samplecount) {
 
   // FP_ZERO represents also that no data was rendered, ie. zero volume for the
   // whole buffer
-  fixed avgLevel = FP_ZERO;
+  stereosample avgLevels = 0;
 
   u_int8_t index = 0;
   for (Begin(); !IsDone(); Next()) {
     AudioModule &current = CurrentItem();
-    if (avgLevel == FP_ZERO) {
-      avgLevel = current.Render(buffer, samplecount);
-      avgModuleLevels_[index] = avgLevel;
+    if (avgLevels == 0) {
+      avgLevels = current.Render(buffer, samplecount);
+      avgModuleLevels_[index] = avgLevels;
     } else {
       if (current.Render(renderBuffer_, samplecount)) {
         memcpy(buffer, renderBuffer_, samplecount * 2 * sizeof(fixed));
@@ -50,7 +50,7 @@ fixed AudioMixer::Render(fixed *buffer, int samplecount) {
   }
 
   //  Apply volume
-  if (avgLevel != FP_ZERO) {
+  if (avgLevels != FP_ZERO) {
     fixed *c = buffer;
     if (volume_ != i2fp(1)) {
       for (int i = 0; i < samplecount * 2; i++) {
@@ -60,12 +60,12 @@ fixed AudioMixer::Render(fixed *buffer, int samplecount) {
     }
   }
   if (enableRendering_ && writer_) {
-    if (avgLevel == FP_ZERO) {
+    if (avgLevels == FP_ZERO) {
       memset(buffer, 0, samplecount * 2 * sizeof(fixed));
     };
     writer_->AddBuffer(buffer, samplecount);
   }
-  return avgLevel;
+  return avgLevels; // TODO: return actual levels?
 };
 
 void AudioMixer::SetVolume(fixed volume) { volume_ = volume; }

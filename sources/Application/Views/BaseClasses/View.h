@@ -140,6 +140,7 @@ protected:
   void drawNotes();
   void drawBattery(GUITextProperties &props);
   void drawMasterVuMeter(Player *player, GUIPoint pos, GUITextProperties props);
+  void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);
 
 public: // temp hack for modl windo constructors
   GUIWindow &w_;

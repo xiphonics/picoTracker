@@ -11,11 +11,11 @@ class AudioMixer : public AudioModule, public T_SimpleList<AudioModule> {
 public:
   AudioMixer(const char *name);
   virtual ~AudioMixer();
-  virtual fixed Render(fixed *buffer, int samplecount);
+  virtual stereosample Render(fixed *buffer, int samplecount);
   void SetFileRenderer(const char *path);
   void EnableRendering(bool enable);
   void SetVolume(fixed volume);
-  etl::array<fixed, 8> GetMixerLevels() { return avgModuleLevels_; }
+  etl::array<stereosample, 8> GetMixerLevels() { return avgModuleLevels_; }
 
 private:
   bool enableRendering_;
@@ -26,7 +26,7 @@ private:
 
   // hold the avg volume of a buffer worth of samples for each audiomodule in
   // the mix
-  etl::array<fixed, 8> avgModuleLevels_;
+  etl::array<stereosample, 8> avgModuleLevels_;
 
   static fixed renderBuffer_[MAX_SAMPLE_COUNT * 2];
 };

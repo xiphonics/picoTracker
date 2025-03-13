@@ -11,7 +11,7 @@ class AudioFileStreamer : public AudioModule {
 public:
   AudioFileStreamer();
   virtual ~AudioFileStreamer();
-  virtual fixed Render(fixed *buffer, int samplecount);
+  virtual stereosample Render(fixed *buffer, int samplecount);
   bool Start(char *name);
   void Stop();
   bool IsPlaying();
