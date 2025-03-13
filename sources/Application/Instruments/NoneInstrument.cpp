@@ -15,9 +15,9 @@ bool NoneInstrument::Start(int c, unsigned char note, bool retrigger) {
 
 void NoneInstrument::Stop(int c){};
 
-stereosample NoneInstrument::Render(int channel, fixed *buffer, int size,
-                                    bool updateTick) {
-  return 0;
+bool NoneInstrument::Render(int channel, fixed *buffer, int size,
+                            bool updateTick) {
+  return false;
 };
 
 bool NoneInstrument::IsInitialized() {

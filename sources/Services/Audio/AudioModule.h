@@ -7,7 +7,7 @@
 class AudioModule {
 public:
   virtual ~AudioModule(){};
-  virtual stereosample Render(fixed *buffer, int samplecount) = 0;
+  virtual bool Render(fixed *buffer, int samplecount) = 0;
 };
 
 #endif

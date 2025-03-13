@@ -26,7 +26,7 @@ void AudioFileStreamer::Stop() {
 
 bool AudioFileStreamer::IsPlaying() { return (mode_ == AFSM_PLAYING); }
 
-stereosample AudioFileStreamer::Render(fixed *buffer, int samplecount) {
+bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 
   // See if we're playing
   if (mode_ == AFSM_STOPPED) {
@@ -94,6 +94,5 @@ stereosample AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     position_ += bufferSize;
   }
 
-  // TODO: need to actually calculate average volume level to return!
-  return FP_ONE;
+  return true;
 }

@@ -10,7 +10,7 @@ class PlayerChannel : public AudioModule {
 public:
   PlayerChannel(int index);
   virtual ~PlayerChannel();
-  virtual stereosample Render(fixed *buffer, int samplecount);
+  virtual bool Render(fixed *buffer, int samplecount);
   void StartInstrument(I_Instrument *instr, unsigned char note,
                        bool cleanStart);
   void StopInstrument();

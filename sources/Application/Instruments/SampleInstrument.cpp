@@ -318,13 +318,12 @@ void SampleInstrument::doKRateUpdate(int channel) {
 
 // Size in samples
 
-stereosample SampleInstrument::Render(int channel, fixed *buffer, int size,
-                                      bool updateTick) {
+bool SampleInstrument::Render(int channel, fixed *buffer, int size,
+                              bool updateTick) {
 
-  fixed avgLevel = 0;
+  bool somethingToMix = false;
 
   // Get Current render parameters
-
   renderParams *rp = renderParams_ + channel;
   lastMidiNote_[channel] = rp->midiNote_;
   bool *rpFinished = &(rp->finished_);
@@ -771,11 +770,10 @@ stereosample SampleInstrument::Render(int channel, fixed *buffer, int size,
     rp->position_ =
         (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
 
-    avgLevel = s2 << 16;
-    avgLevel += t2;
+    somethingToMix = true;
   }
 
-  return avgLevel;
+  return somethingToMix;
 };
 
 void SampleInstrument::AssignSample(int i) {

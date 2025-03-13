@@ -11,7 +11,7 @@ class AudioMixer : public AudioModule, public T_SimpleList<AudioModule> {
 public:
   AudioMixer(const char *name);
   virtual ~AudioMixer();
-  virtual stereosample Render(fixed *buffer, int samplecount);
+  virtual bool Render(fixed *buffer, int samplecount);
   void SetFileRenderer(const char *path);
   void EnableRendering(bool enable);
   void SetVolume(fixed volume);
