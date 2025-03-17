@@ -82,9 +82,6 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
     }
     avgMixerLevel_ = fp2i(peakL) << 16;
     avgMixerLevel_ += fp2i(peakR);
-    if (peakL > 0 || peakR > 0) {
-      Trace::Debug("PEAKS[%s] %d %d", name_.c_str(), fp2i(peakL), fp2i(peakR));
-    }
   }
 
   if (enableRendering_ && writer_) {

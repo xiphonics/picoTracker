@@ -1,6 +1,8 @@
 #include "MixerView.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
+#include "Application/Utils/mathutils.h"
 #include <string>
 
 #define CHANNELS_X_OFFSET_ 3 // stride between each channel
@@ -227,18 +229,15 @@ void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> *levels,
 
   // draw vu meter for each bus
   for (int i = 0; i < 8; i++) {
-    // top 16bits is left channel, bottom 16bits is right
-    // TODO: fix to use dB not linear
-    // for now for linear divide by 4096
-    unsigned char levelL = (levels->at(i) >> 16) / 4096;
-    unsigned char levelR = (levels->at(i) & 0x0000FFFF) / 4096;
+    // Convert to dB
+    int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
+    int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
 
-    // Trace::Debug("VUs[%d] %d %d", i, levelL, levelR);
-    if (levelL > 15 || levelR > 15) {
-      continue;
-    }
+    // Map dB to bar levels  -60dB to 0dB range mapped to 0-15 bars
+    int leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
+    int rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
 
-    drawVUMeter(levelL, levelR, pos, props);
+    drawVUMeter(leftBars, rightBars, pos, props);
     pos._x += CHANNELS_X_OFFSET_;
   }
 }

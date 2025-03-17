@@ -2,6 +2,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
+#include "Application/Utils/mathutils.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
 #include <nanoprintf.h>
@@ -170,10 +171,13 @@ void View::drawNotes() {
 void View::drawMasterVuMeter(Player *player, GUITextProperties props) {
   stereosample playerLevel = player->GetMasterLevel();
 
-  // TODO: fix to use dB not linear
-  // for now for linear divide by 4096
-  short leftBars = (playerLevel >> 16) / 4096;
-  short rightBars = (playerLevel & 0xFFFF) / 4096;
+  // Convert to dB
+  int leftDb = amplitudeToDb((playerLevel >> 16) & 0xFFFF);
+  int rightDb = amplitudeToDb(playerLevel & 0xFFFF);
+
+  // Map dB to bar levels  -60dB to 0dB range mapped to 0-15 bars
+  int leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
+  int rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();
@@ -199,10 +203,10 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
     } else {
       SetColor(CD_INFO);
     }
-    if (leftBars >= i) {
+    if (leftBars > i) {
       DrawString(pos._x, pos._y - i, " ", props);
     }
-    if (rightBars >= i) {
+    if (rightBars > i) {
       SetColor(CD_HILITE1); // TODO: remove this test hack for setting color
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
