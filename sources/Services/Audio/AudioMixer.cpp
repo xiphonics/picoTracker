@@ -4,9 +4,9 @@
 fixed AudioMixer::renderBuffer_[MAX_SAMPLE_COUNT * 2];
 
 AudioMixer::AudioMixer(const char *name)
-    : T_SimpleList<AudioModule>(false), enableRendering_(0), writer_(0) {
+    : T_SimpleList<AudioModule>(false), enableRendering_(0), writer_(0),
+      name_(name) {
   volume_ = (i2fp(1));
-  name_ = name;
   Trace::Debug("AudioMixer [%s]", name);
 };
 
