@@ -21,6 +21,10 @@ protected:
   void onStop();
   void updateCursor(int dx, int dy);
 
+  void unMuteAll();
+  void toggleMute();
+  void switchSoloMode();
+
 private:
   void drawChannelVUMeters(etl::array<stereosample, 8> *levels,
                            GUITextProperties props);

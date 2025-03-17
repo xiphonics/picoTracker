@@ -3,6 +3,7 @@
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
+#include "UIController.h"
 #include <string>
 
 #define CHANNELS_X_OFFSET_ 3 // stride between each channel
@@ -40,21 +41,44 @@ void MixerView::updateCursor(int dx, int dy) {
   isDirty_ = true;
 }
 
+void MixerView::switchSoloMode() {
+  UIController *controller = UIController::GetInstance();
+  int currentChannel = viewData_->mixerCol_;
+  controller->SwitchSoloMode(currentChannel, currentChannel,
+                             (viewMode_ == VM_NORMAL));
+  viewMode_ = (viewMode_ != VM_SOLOON) ? VM_SOLOON : VM_NORMAL;
+  isDirty_ = true;
+};
+
+void MixerView::unMuteAll() {
+  UIController *controller = UIController::GetInstance();
+  controller->UnMuteAll();
+  isDirty_ = true;
+};
+
+void MixerView::toggleMute() {
+
+  UIController *controller = UIController::GetInstance();
+  int currentChannel = viewData_->mixerCol_;
+  controller->ToggleMute(currentChannel, currentChannel);
+  viewMode_ = (viewMode_ != VM_MUTEON) ? VM_MUTEON : VM_NORMAL;
+  isDirty_ = true;
+};
+
 void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
-  // if (!pressed) {
-  //	if (viewMode_==VM_MUTEON) {
-  //		if (mask&EPBM_R) {
-  //			toggleMute() ;
-  //		}
-  //	} ;
-  //	if (viewMode_==VM_SOLOON) {
-  //		if (mask&EPBM_R) {
-  //			switchSoloMode() ;
-  //		}
-  //	} ;
-  //	return ;
-  // } ;
-  //
+  if (!pressed) {
+    if (viewMode_ == VM_MUTEON) {
+      if (mask & EPBM_NAV) {
+        toggleMute();
+      }
+    };
+    if (viewMode_ == VM_SOLOON) {
+      if (mask & EPBM_NAV) {
+        switchSoloMode();
+      }
+    };
+    return;
+  };
 
   viewMode_ = VM_NORMAL;
   processNormalButtonMask(mask);
@@ -69,8 +93,14 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
 void MixerView::processNormalButtonMask(unsigned int mask) {
 
   if (mask & EPBM_EDIT) {
+    if (mask & EPBM_NAV) {
+      toggleMute();
+    };
   } else {
     if (mask & EPBM_ENTER) {
+      if (mask & EPBM_NAV) {
+        switchSoloMode();
+      }
     } else {
       if (mask & EPBM_NAV) {
         if (mask & EPBM_UP) {
@@ -81,6 +111,9 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
         }
         if (mask & EPBM_PLAY) {
           onStop();
+        }
+        if (mask & EPBM_ALT) {
+          unMuteAll();
         }
       } else {
         if (mask & EPBM_ALT) {
@@ -110,10 +143,16 @@ void MixerView::processSelectionButtonMask(unsigned int mask) {
 
   } else {
     if (mask & EPBM_ENTER) {
+      if (mask & EPBM_NAV) {
+        switchSoloMode();
+      }
     } else {
       if (mask & EPBM_NAV) {
         if (mask & EPBM_PLAY) {
           onStop();
+        }
+        if (mask & EPBM_ALT) {
+          unMuteAll();
         }
       } else {
         // No modifier
@@ -158,14 +197,15 @@ void MixerView::DrawView() {
   pos._y += 1;
   // draw bus states
   char state[3];
-  state[0] = 'M';
-  state[1] = 'S';
+  state[0] = '-'; // M
+  state[1] = '-';
   state[2] = '\0';
   for (int i = 0; i < 8; i++) {
     if (i == viewData_->mixerCol_) {
       props.invert_ = true;
       SetColor(CD_HILITE2);
     }
+    state[0] = player->IsChannelMuted(i) ? 'M' : '-';
 
     DrawString(pos._x, pos._y, state, props);
     pos._x += CHANNELS_X_OFFSET_;
