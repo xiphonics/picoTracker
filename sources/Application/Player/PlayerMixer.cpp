@@ -106,6 +106,17 @@ bool PlayerMixer::Clipped() { return clipped_; }
 
 stereosample PlayerMixer::GetAudioLevels() { return peakLevels_; }
 
+etl::array<stereosample, 8> *PlayerMixer::GetMixerLevels() {
+  MixerService *ms = MixerService::GetInstance();
+  for (int i = 0; i < 8; i++) {
+    AudioMixer *audioMixer = ms->GetMixBus(i);
+    mixerLevels_[i] = audioMixer->GetMixerLevels();
+    short levelL = (mixerLevels_[i] >> 16);
+    short levelR = (mixerLevels_[i] & 0x0000FFFF);
+  }
+  return &mixerLevels_;
+}
+
 void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
 
   // Notifies the player so that pattern data is processed
@@ -206,9 +217,3 @@ void PlayerMixer::Unlock() {
   MixerService *ms = MixerService::GetInstance();
   ms->Unlock();
 };
-
-etl::array<stereosample, 8> PlayerMixer::GetMixerLevels() {
-  MixerService *ms = MixerService::GetInstance();
-  AudioMixer *audioMixer = ms->GetMixBus(STREAM_MIX_BUS);
-  return audioMixer->GetMixerLevels();
-}

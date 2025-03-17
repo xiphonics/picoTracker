@@ -3,6 +3,8 @@
 #include "Application/Utils/char.h"
 #include <string>
 
+#define CHANNELS_X_OFFSET_ 3 // stride between each channel
+
 MixerView::MixerView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
   invertBatt_ = false;
 }
@@ -144,10 +146,8 @@ void MixerView::DrawView() {
   pos = anchor;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
-  const u_int8_t dx = 3;
   // get levels from the player
-  etl::array<stereosample, 8> levels = player->GetMixerLevels();
-
+  etl::array<stereosample, 8> *levels = player->GetMixerLevels();
   drawChannelVUMeters(levels, props);
 
   SetColor(CD_NORMAL);
@@ -166,7 +166,7 @@ void MixerView::DrawView() {
     }
 
     DrawString(pos._x, pos._y, state, props);
-    pos._x += dx;
+    pos._x += CHANNELS_X_OFFSET_;
     if (i == viewData_->mixerCol_) {
       props.invert_ = false;
       SetColor(CD_NORMAL);
@@ -191,7 +191,7 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   GUIPoint pos = anchor;
 
   // get levels from the player
-  etl::array<stereosample, 8> levels = player->GetMixerLevels();
+  etl::array<stereosample, 8> *levels = player->GetMixerLevels();
 
   GUITextProperties props;
   SetColor(CD_NORMAL);
@@ -218,7 +218,7 @@ void MixerView::AnimationUpdate() {
   w_.Flush();
 };
 
-void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> levels,
+void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> *levels,
                                     GUITextProperties props) {
 
   // we start at the bottom of the VU meter and draw it growing upwards
@@ -228,14 +228,17 @@ void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> levels,
   // draw vu meter for each bus
   for (int i = 0; i < 8; i++) {
     // top 16bits is left channel, bottom 16bits is right
-    unsigned short levelL = fp2i(levels[i] >> 16) / 4096;
-    unsigned short levelR = fp2i(levels[i] & 0x0000FFFF) / 4096;
+    // TODO: fix to use dB not linear
+    // for now for linear divide by 4096
+    unsigned char levelL = (levels->at(i) >> 16) / 4096;
+    unsigned char levelR = (levels->at(i) & 0x0000FFFF) / 4096;
 
-    // debugging
-    levelL = 15;
-    levelR = 15;
+    // Trace::Debug("VUs[%d] %d %d", i, levelL, levelR);
+    if (levelL > 15 || levelR > 15) {
+      continue;
+    }
 
     drawVUMeter(levelL, levelR, pos, props);
-    pos._x += 3; // 3 chars across per channel
+    pos._x += CHANNELS_X_OFFSET_;
   }
 }

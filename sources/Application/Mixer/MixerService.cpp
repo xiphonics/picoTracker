@@ -1,6 +1,7 @@
 #include "MixerService.h"
 #include "Application/Model/Config.h"
 #include "Application/Model/Mixer.h"
+#include "Application/Utils/char.h"
 #include "Services/Audio/Audio.h"
 #include "Services/Audio/AudioDriver.h"
 #include "Services/Midi/MidiService.h"
@@ -36,8 +37,12 @@ bool MixerService::Init() {
 
   bool result = false;
 
+  char buffer[5];
   for (int i = 0; i < MAX_BUS_COUNT; i++) {
+    hex2char(i, buffer);
+    bus_[i].SetName(etl::string<12>(buffer));
     master_.Insert(bus_[i]);
+    master_.SetName("Master");
   }
 
   if (out_) {
