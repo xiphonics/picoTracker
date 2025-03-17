@@ -207,7 +207,6 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
       DrawString(pos._x, pos._y - i, " ", props);
     }
     if (rightBars > i) {
-      SetColor(CD_HILITE1); // TODO: remove this test hack for setting color
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
   }
