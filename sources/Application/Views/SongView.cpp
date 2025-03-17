@@ -987,5 +987,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     drawPlayTime(player, pos, props);
   }
 
+  drawMasterVuMeter(player, props);
+
   drawNotes();
 };
