@@ -331,7 +331,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
   if (source_) {
 
     if (*rpFinished)
-      return 0;
+      return false;
 
     // clear the fixed point buffer
 

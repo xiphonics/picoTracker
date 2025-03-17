@@ -189,7 +189,7 @@ void MixerView::DrawView() {
   props.invert_ = true;
   // get levels from the player
   etl::array<stereosample, 8> *levels = player->GetMixerLevels();
-  drawChannelVUMeters(levels, props);
+  drawChannelVUMeters(levels, player, props);
 
   SetColor(CD_NORMAL);
   props.invert_ = false;
@@ -238,7 +238,7 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   GUITextProperties props;
   SetColor(CD_NORMAL);
 
-  drawChannelVUMeters(levels, props);
+  drawChannelVUMeters(levels, player, props);
 
   drawMasterVuMeter(player, props);
 
@@ -261,7 +261,7 @@ void MixerView::AnimationUpdate() {
 };
 
 void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> *levels,
-                                    GUITextProperties props) {
+                                    Player *player, GUITextProperties props) {
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();
@@ -269,13 +269,18 @@ void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> *levels,
 
   // draw vu meter for each bus
   for (int i = 0; i < 8; i++) {
-    // Convert to dB
-    int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
-    int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
+    int leftBars = 0;
+    int rightBars = 0;
+    // if channel is muted just use default 0 values for bars
+    if (!player->IsChannelMuted(i)) {
+      // Convert to dB
+      int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
+      int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
 
-    // Map dB to bar levels  -60dB to 0dB range mapped to 0-15 bars
-    int leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
-    int rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
+      // Map dB to bar levels  -60dB to 0dB range mapped to 0-15 bars
+      leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
+      rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
+    }
 
     drawVUMeter(leftBars, rightBars, pos, props);
     pos._x += CHANNELS_X_OFFSET_;
