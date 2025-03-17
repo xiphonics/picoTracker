@@ -102,7 +102,7 @@ public:
   etl::array<stereosample, 8> *GetMixerLevels();
 
   // master out, last avg level while playing
-  stereosample GetMasterLevels();
+  stereosample GetMasterLevel();
 
   std::string GetAudioAPI();
   std::string GetAudioDevice();

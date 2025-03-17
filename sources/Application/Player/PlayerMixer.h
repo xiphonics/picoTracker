@@ -49,7 +49,7 @@ public:
 
   bool Clipped();
 
-  stereosample GetAudioLevels();
+  stereosample GetMasterOutLevel();
 
   void Update(Observable &o, I_ObservableData *d);
   int GetPlayedBufferPercentage();
@@ -70,7 +70,6 @@ public:
 private:
   Project *project_;
   bool clipped_;
-  stereosample peakLevels_;
   etl::array<stereosample, 8> mixerLevels_;
 
   I_Instrument *lastInstrument_[SONG_CHANNEL_COUNT];

@@ -24,8 +24,6 @@ public:
 
   virtual bool Clipped() = 0;
 
-  virtual stereosample GetLastPeakLevels() = 0;
-
   virtual int GetPlayedBufferPercentage() = 0;
 
   virtual std::string GetAudioAPI() = 0;

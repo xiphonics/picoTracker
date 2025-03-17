@@ -104,7 +104,10 @@ I_Instrument *PlayerMixer::GetLastInstrument(int channel) {
 
 bool PlayerMixer::Clipped() { return clipped_; }
 
-stereosample PlayerMixer::GetAudioLevels() { return peakLevels_; }
+stereosample PlayerMixer::GetMasterOutLevel() {
+  MixerService *ms = MixerService::GetInstance();
+  return ms->GetMasterBus()->GetMixerLevels();
+}
 
 etl::array<stereosample, 8> *PlayerMixer::GetMixerLevels() {
   MixerService *ms = MixerService::GetInstance();
@@ -129,8 +132,6 @@ void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
   MixerService *ms = MixerService::GetInstance();
   ms->SetMasterVolume(project_->GetMasterVolume());
   clipped_ = ms->Clipped();
-
-  peakLevels_ = ms->GetAudioPeakLevels();
 };
 
 void PlayerMixer::StartInstrument(int channel, I_Instrument *instrument,

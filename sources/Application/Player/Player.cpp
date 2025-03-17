@@ -405,7 +405,7 @@ bool Player::IsRunning() { return isRunning_; };
 
 bool Player::Clipped() { return mixer_.Clipped(); }
 
-stereosample Player::GetMasterLevels() { return mixer_.GetAudioLevels(); }
+stereosample Player::GetMasterLevel() { return mixer_.GetMasterOutLevel(); }
 
 bool Player::isPlayable(int row, int col, int chainPos) {
 

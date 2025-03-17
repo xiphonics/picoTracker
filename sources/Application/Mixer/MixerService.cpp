@@ -157,10 +157,6 @@ int MixerService::GetPlayedBufferPercentage() {
   return out_->GetPlayedBufferPercentage();
 }
 
-stereosample MixerService::GetAudioPeakLevels() {
-  return out_->GetLastPeakLevels();
-};
-
 void MixerService::toggleRendering(bool enable) {
   switch (mode_) {
   case MSM_AUDIO:

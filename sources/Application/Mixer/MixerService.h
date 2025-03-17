@@ -36,6 +36,8 @@ public:
 
   MixBus *GetMixBus(int i);
 
+  MixBus *GetMasterBus() { return &master_; };
+
   virtual void Update(Observable &o, I_ObservableData *d);
 
   void OnPlayerStart();
@@ -44,8 +46,6 @@ public:
   bool Clipped();
   void SetMasterVolume(int);
   int GetPlayedBufferPercentage();
-
-  stereosample GetAudioPeakLevels();
 
   virtual void Execute(FourCC id, float value);
 

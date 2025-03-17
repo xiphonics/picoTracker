@@ -168,7 +168,7 @@ void View::drawNotes() {
 }
 
 void View::drawMasterVuMeter(Player *player, GUITextProperties props) {
-  stereosample playerLevel = player->GetMasterLevels();
+  stereosample playerLevel = player->GetMasterLevel();
 
   // TODO: fix to use dB not linear
   // for now for linear divide by 4096

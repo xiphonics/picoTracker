@@ -69,14 +69,22 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
           peakL = v;
         }
       }
+    } else {
+      for (int i = 0; i < samplecount * 2; i++) {
+        fixed v = buffer[i];
+        if (i % 2 == 0 && v >= peakR) {
+          peakR = v;
+        }
+        if (v >= peakL) {
+          peakL = v;
+        }
+      }
     }
     avgMixerLevel_ = fp2i(peakL) << 16;
     avgMixerLevel_ += fp2i(peakR);
-    // if (peakL > 0 || peakR > 0) {
-    //   Trace::Debug("PEAKS[%s] %d %d", name_.c_str(), fp2i(peakL),
-    //   fp2i(peakR));
-    // }
-    peakL = peakR = 0;
+    if (peakL > 0 || peakR > 0) {
+      Trace::Debug("PEAKS[%s] %d %d", name_.c_str(), fp2i(peakL), fp2i(peakR));
+    }
   }
 
   if (enableRendering_ && writer_) {
