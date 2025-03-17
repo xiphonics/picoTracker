@@ -143,8 +143,6 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
   }
 }
 
-bool MixerService::Clipped() { return out_->Clipped(); };
-
 void MixerService::SetMasterVolume(int vol) {
   fixed masterVolume = fp_mul(i2fp(vol), fl2fp(0.01f));
 

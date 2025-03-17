@@ -24,14 +24,11 @@ bool AudioOutDriver::Init() { return driver_->Init(); };
 void AudioOutDriver::Close() { driver_->Close(); }
 
 bool AudioOutDriver::Start() {
-  clipped_ = false;
   sampleCount_ = 0;
   return driver_->Start();
 }
 
 void AudioOutDriver::Stop() { driver_->Stop(); }
-
-bool AudioOutDriver::Clipped() { return clipped_; };
 
 stereosample AudioOutDriver::GetLastPeakLevels() { return lastPeakVolume_; };
 
@@ -49,7 +46,6 @@ void AudioOutDriver::Update(Observable &o, I_ObservableData *d) {
 
 void AudioOutDriver::prepareMixBuffers() {
   sampleCount_ = getPlaySampleCount();
-  clipped_ = false;
 };
 
 void AudioOutDriver::clipToMix() {
@@ -75,13 +71,6 @@ void AudioOutDriver::clipToMix() {
     for (int i = 0; i < sampleCount_; i++) {
       // Left
       v = *p++;
-      if (v > f_32767) {
-        v = f_32767;
-        clipped_ = true;
-      } else if (v < f_m32768) {
-        v = f_m32768;
-        clipped_ = true;
-      }
       int iVal = fp2i(v);
       *s1 = short(iVal);
       s1 += offset;
@@ -91,13 +80,6 @@ void AudioOutDriver::clipToMix() {
 
       // Right
       v = *p++;
-      if (v > f_32767) {
-        v = f_32767;
-        clipped_ = true;
-      } else if (v < f_m32768) {
-        v = f_m32768;
-        clipped_ = true;
-      }
       iVal = fp2i(v);
       *s2 = short(iVal);
       s2 += offset;

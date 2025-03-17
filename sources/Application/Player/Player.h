@@ -67,7 +67,6 @@ public:
   bool IsPlaying();
 
   bool IsRunning();
-  bool Clipped();
 
   void ProcessCommands();
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);

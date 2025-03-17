@@ -47,8 +47,6 @@ public:
   void StartStreaming(char *name);
   void StopStreaming();
 
-  bool Clipped();
-
   stereosample GetMasterOutLevel();
 
   void Update(Observable &o, I_ObservableData *d);
@@ -69,7 +67,6 @@ public:
 
 private:
   Project *project_;
-  bool clipped_;
   etl::array<stereosample, 8> mixerLevels_;
 
   I_Instrument *lastInstrument_[SONG_CHANNEL_COUNT];

@@ -43,7 +43,6 @@ public:
   void OnPlayerStart();
   void OnPlayerStop();
 
-  bool Clipped();
   void SetMasterVolume(int);
   int GetPlayedBufferPercentage();
 
