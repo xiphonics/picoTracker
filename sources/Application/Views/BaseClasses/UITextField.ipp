@@ -3,10 +3,10 @@
 #include "stringutils.h"
 
 template <uint8_t MaxLength>
-UITextField<MaxLength>::UITextField(Variable &v, GUIPoint &position,
-                                    const etl::string<MAX_LABEL_LENGTH> &label,
-                                    uint8_t fourcc,
-                                    etl::string<MaxLength> &defaultValue_)
+UITextField<MaxLength>::UITextField(
+    Variable &v, GUIPoint &position,
+    const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> &label, uint8_t fourcc,
+    etl::string<MaxLength> &defaultValue_)
     : UIField(position), src_(v), label_(label), fourcc_(fourcc),
       defaultValue_(defaultValue_) {}
 

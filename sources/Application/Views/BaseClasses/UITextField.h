@@ -5,14 +5,14 @@
 #include "UIField.h"
 #include "stdint.h"
 
-#define MAX_LABEL_LENGTH 8
+#define MAX_UITEXTFIELD_LABEL_LENGTH 8
 
 template <uint8_t MaxLength>
 class UITextField : public UIField, public Observable {
 public:
   UITextField(Variable &v, GUIPoint &position,
-              const etl::string<MAX_LABEL_LENGTH> &label, uint8_t fourcc,
-              etl::string<MaxLength> &defaultValue_);
+              const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> &label,
+              uint8_t fourcc, etl::string<MaxLength> &defaultValue_);
 
   virtual ~UITextField();
   void Draw(GUIWindow &w, int offset = 0);
