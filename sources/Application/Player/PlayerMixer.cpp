@@ -105,7 +105,7 @@ stereosample PlayerMixer::GetMasterOutLevel() {
   return ms->GetMasterBus()->GetMixerLevels();
 }
 
-etl::array<stereosample, 8> *PlayerMixer::GetMixerLevels() {
+etl::array<stereosample, SONG_CHANNEL_COUNT> *PlayerMixer::GetMixerLevels() {
   MixerService *ms = MixerService::GetInstance();
   for (int i = 0; i < 8; i++) {
     AudioMixer *audioMixer = ms->GetMixBus(i);

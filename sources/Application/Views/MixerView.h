@@ -26,8 +26,8 @@ protected:
   void switchSoloMode();
 
 private:
-  void drawChannelVUMeters(etl::array<stereosample, 8> *levels, Player *player,
-                           GUITextProperties props);
+  void drawChannelVUMeters(etl::array<stereosample, SONG_CHANNEL_COUNT> *levels,
+                           Player *player, GUITextProperties props);
   const char *song_;
   int saveX_;
   int saveY_;

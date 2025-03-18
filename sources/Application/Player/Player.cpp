@@ -1181,6 +1181,6 @@ int Player::GetAudioPreBufferCount() {
   return (out) ? out->GetAudioPreBufferCount() : 0;
 };
 
-etl::array<stereosample, 8> *Player::GetMixerLevels() {
+etl::array<stereosample, SONG_CHANNEL_COUNT> *Player::GetMixerLevels() {
   return mixer_.GetMixerLevels();
 }

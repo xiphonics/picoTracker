@@ -98,7 +98,7 @@ public:
   // info
   int GetPlayedBufferPercentage();
 
-  etl::array<stereosample, 8> *GetMixerLevels();
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *GetMixerLevels();
 
   // master out, last avg level while playing
   stereosample GetMasterLevel();

@@ -188,7 +188,8 @@ void MixerView::DrawView() {
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
   // get levels from the player
-  etl::array<stereosample, 8> *levels = player->GetMixerLevels();
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+      player->GetMixerLevels();
   drawChannelVUMeters(levels, player, props);
 
   SetColor(CD_NORMAL);
@@ -200,7 +201,7 @@ void MixerView::DrawView() {
   state[0] = '-'; // M
   state[1] = '-';
   state[2] = '\0';
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     if (i == viewData_->mixerCol_) {
       props.invert_ = true;
       SetColor(CD_HILITE2);
@@ -233,7 +234,8 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   GUIPoint pos = anchor;
 
   // get levels from the player
-  etl::array<stereosample, 8> *levels = player->GetMixerLevels();
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+      player->GetMixerLevels();
 
   GUITextProperties props;
   SetColor(CD_NORMAL);
@@ -260,15 +262,16 @@ void MixerView::AnimationUpdate() {
   w_.Flush();
 };
 
-void MixerView::drawChannelVUMeters(etl::array<stereosample, 8> *levels,
-                                    Player *player, GUITextProperties props) {
+void MixerView::drawChannelVUMeters(
+    etl::array<stereosample, SONG_CHANNEL_COUNT> *levels, Player *player,
+    GUITextProperties props) {
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
 
   // draw vu meter for each bus
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     int leftBars = 0;
     int rightBars = 0;
     // if channel is muted just use default 0 values for bars
