@@ -1,0 +1,33 @@
+title: picoTracker User Manual
+author: xiphonics
+
+styles:
+  code:
+    background-color: 0xffe0e0e0
+  show-page-numbers-from: 1
+  # path from inside assets dir
+  ttf-font-path: font/PROJEKTBlackbird.ttf
+
+tocPagePosition: 1
+
+pages:
+  - frontcover.md
+  - introduction.md
+  - getting-started.md
+  - device.md
+  - projects.md
+  - songs.md
+  - chains.md
+  - phrases.md
+  - instruments.md
+  - grooves.md
+  - tables.md
+  - renders.md
+  - mixer.md
+  # reference
+  - keypadcombos.md
+  - commands.md
+  - scales.md
+  - midi.md
+  - appendix-remoteui.md
+  - theindex.md
