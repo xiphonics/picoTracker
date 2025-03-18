@@ -73,8 +73,8 @@ bool MacroInstrument::Start(int channel, unsigned char midinote,
 void MacroInstrument::Stop(int channel) { running_ = false; }
 
 // Size in samples
-fixed MacroInstrument::Render(int channel, fixed *buffer, int size,
-                              bool updateTick) {
+bool MacroInstrument::Render(int channel, fixed *buffer, int size,
+                             bool updateTick) {
   //  int start = micros();
 
   // clear the fixed point buffer
@@ -121,8 +121,7 @@ fixed MacroInstrument::Render(int channel, fixed *buffer, int size,
     buffer[2 * (num_blocks * block_size + j) + 1] = fp_sample;
   }
 
-  // TODO: need to actually calculate average volume level to return!
-  return FP_ONE;
+  return true;
 };
 
 bool MacroInstrument::IsInitialized() { /*return (source_ != 0); */

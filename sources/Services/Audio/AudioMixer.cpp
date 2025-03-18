@@ -38,12 +38,18 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
 
   for (Begin(); !IsDone(); Next()) {
     AudioModule &current = CurrentItem();
-    if (avgLevel == FP_ZERO) {
-      avgLevel = current.Render(buffer, samplecount);
-      avgModuleLevels_[index] = avgLevel;
+    if (!gotData) {
+      gotData = current.Render(buffer, samplecount);
     } else {
       if (current.Render(renderBuffer_, samplecount)) {
-        memcpy(buffer, renderBuffer_, samplecount * 2 * sizeof(fixed));
+        fixed *dst = buffer;
+        fixed *src = renderBuffer_;
+        int count = samplecount * 2;
+        while (count--) {
+          *dst += *src;
+          dst++;
+          src++;
+        }
       }
     }
   }
@@ -79,12 +85,12 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
   }
 
   if (enableRendering_ && writer_) {
-    if (avgLevel == FP_ZERO) {
+    if (!gotData) {
       memset(buffer, 0, samplecount * 2 * sizeof(fixed));
     };
     writer_->AddBuffer(buffer, samplecount);
   }
-  return avgLevel;
+  return gotData;
 };
 
 void AudioMixer::SetVolume(fixed volume) { volume_ = volume; }

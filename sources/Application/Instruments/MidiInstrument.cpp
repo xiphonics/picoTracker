@@ -95,8 +95,8 @@ void MidiInstrument::SetChannel(int channel) {
   v->SetInt(channel);
 };
 
-fixed MidiInstrument::Render(int channel, fixed *buffer, int size,
-                             bool updateTick) {
+bool MidiInstrument::Render(int channel, fixed *buffer, int size,
+                            bool updateTick) {
 
   // We do it here so we have the opportunity to send some command before
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
@@ -130,7 +130,7 @@ fixed MidiInstrument::Render(int channel, fixed *buffer, int size,
       };
     };
   };
-  return FP_ZERO;
+  return false;
 };
 
 bool MidiInstrument::IsInitialized() {

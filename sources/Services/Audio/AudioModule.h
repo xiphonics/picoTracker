@@ -1,3 +1,4 @@
+
 #ifndef _AUDIO_MODULE_H_
 #define _AUDIO_MODULE_H_
 
@@ -7,7 +8,7 @@
 class AudioModule {
 public:
   virtual ~AudioModule(){};
-  virtual fixed Render(fixed *buffer, int samplecount) = 0;
+  virtual bool Render(fixed *buffer, int samplecount) = 0;
 };
 
 #endif

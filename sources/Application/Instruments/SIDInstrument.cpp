@@ -200,8 +200,8 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
 
 void SIDInstrument::Stop(int c) { playing_ = false; };
 
-fixed SIDInstrument::Render(int channel, fixed *buffer, int size,
-                            bool updateTick) {
+bool SIDInstrument::Render(int channel, fixed *buffer, int size,
+                           bool updateTick) {
   int start = micros();
 
   if (playing_ and render_) {
@@ -220,7 +220,7 @@ fixed SIDInstrument::Render(int channel, fixed *buffer, int size,
   int time_taken = micros() - start;
   Trace::Debug("RENDER: >SID-%i Render took %ius (%i%%ts)\nf", GetOsc(),
                time_taken, (time_taken * 44100) / size / 10000);
-  return FP_ZERO;
+  return false;
 };
 
 bool SIDInstrument::IsInitialized() {

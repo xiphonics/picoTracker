@@ -1,4 +1,5 @@
 
+
 #include "PlayerChannel.h"
 #include "Application/Mixer/MixerService.h"
 #include "Application/Model/Mixer.h"
@@ -35,11 +36,11 @@ void PlayerChannel::StopInstrument() {
   instr_ = 0;
 };
 
-fixed PlayerChannel::Render(fixed *buffer, int samplecount) {
+bool PlayerChannel::Render(fixed *buffer, int samplecount) {
   if (instr_) {
     bool tableSlice = SyncMaster::GetInstance()->TableSlice();
-    fixed avgLevel = instr_->Render(index_, buffer, samplecount, tableSlice);
-    return ((avgLevel != FP_ZERO) && (!muted_));
+    bool status = instr_->Render(index_, buffer, samplecount, tableSlice);
+    return ((status) && (!muted_));
   } else {
     return false;
   }

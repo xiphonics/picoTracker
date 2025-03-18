@@ -318,10 +318,10 @@ void SampleInstrument::doKRateUpdate(int channel) {
 
 // Size in samples
 
-fixed SampleInstrument::Render(int channel, fixed *buffer, int size,
-                               bool updateTick) {
+bool SampleInstrument::Render(int channel, fixed *buffer, int size,
+                              bool updateTick) {
 
-  fixed avgLevel = 0;
+  bool somethingToMix = false;
 
   // Get Current render parameters
   renderParams *rp = renderParams_ + channel;
@@ -331,7 +331,7 @@ fixed SampleInstrument::Render(int channel, fixed *buffer, int size,
   if (source_) {
 
     if (*rpFinished)
-      return 0;
+      return false;
 
     // clear the fixed point buffer
 
@@ -770,10 +770,10 @@ fixed SampleInstrument::Render(int channel, fixed *buffer, int size,
     rp->position_ =
         (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
 
-    avgLevel = fp_div(fp_add(s2, t2), i2fp(2));
+    somethingToMix = true;
   }
 
-  return avgLevel;
+  return somethingToMix;
 };
 
 void SampleInstrument::AssignSample(int i) {
