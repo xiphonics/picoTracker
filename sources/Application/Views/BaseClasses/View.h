@@ -11,6 +11,10 @@
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "ViewEvent.h"
 
+#define VU_METER_HEIGHT 16
+#define VU_METER_CLIP_LEVEL 15
+#define VU_METER_WARN_LEVEL 10
+
 enum GUIEventPadButtonMasks {
   EPBM_LEFT = 1,
   EPBM_DOWN = 2,
@@ -134,8 +138,8 @@ protected:
 
   void drawMap();
   void drawNotes();
-
   void drawBattery(GUITextProperties &props);
+  void drawMasterVuMeter(Player *player, GUIPoint pos, GUITextProperties props);
 
 public: // temp hack for modl windo constructors
   GUIWindow &w_;

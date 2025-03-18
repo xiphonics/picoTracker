@@ -71,7 +71,7 @@ void View::drawMap() {
   DrawString(pos._x, pos._y, buffer, props);
   pos._y++;
   // row4
-  strcpy(buffer, "  TT");
+  strcpy(buffer, "M TT");
   DrawString(pos._x, pos._y, buffer, props);
 
   // draw current screen on map
@@ -114,6 +114,10 @@ void View::drawMap() {
     pos._x += 2;
     pos._y += 1;
     DrawString(pos._x, pos._y, "G", props);
+    break;
+  case VT_MIXER:
+    pos._y += 3;
+    DrawString(pos._x, pos._y, "M", props);
     break;
   default: // VT_SONG
     pos._y += 2;
@@ -160,6 +164,43 @@ void View::drawNotes() {
     pos._y = initialY;
     pos._x += 3;
   }
+}
+
+void View::drawMasterVuMeter(Player *player, GUIPoint pos,
+                             GUITextProperties props) {
+  MixerStereoLevel playerLevel = player->GetMasterLevel();
+
+  // TODO: fix to use dB not linear
+  // for now for linear divide by 4096
+  short leftBars = (playerLevel >> 16) / 4096;
+  short rightBars = (playerLevel & 0xFFFF) / 4096;
+
+  leftBars = 15;
+  rightBars = 15;
+
+  // we start at the bottom of the VU meter and draw it growing upwards
+  pos = GetAnchor();
+  pos._x += 24;
+  pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
+
+  props.invert_ = true;
+  for (int i = 0; i < VU_METER_HEIGHT; i++) {
+    if (i == VU_METER_CLIP_LEVEL) {
+      SetColor(CD_ERROR);
+    } else if (i > VU_METER_WARN_LEVEL) {
+      SetColor(CD_WARN);
+    } else {
+      SetColor(CD_INFO);
+    }
+    if (leftBars >= i) {
+      DrawString(pos._x, pos._y - i, " ", props);
+    }
+    if (rightBars >= i) {
+      SetColor(CD_HILITE1); // TODO: remive this test hack for setting color
+      DrawString(pos._x + 1, pos._y - i, " ", props);
+    }
+  }
+  props.invert_ = false;
 }
 
 void View::DoModal(ModalView *view, ModalViewCallback cb) {
