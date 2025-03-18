@@ -47,7 +47,7 @@ public:
   void StartStreaming(char *name);
   void StopStreaming();
 
-  bool Clipped();
+  stereosample GetMasterOutLevel();
 
   void Update(Observable &o, I_ObservableData *d);
   int GetPlayedBufferPercentage();
@@ -63,11 +63,11 @@ public:
   void Lock();
   void Unlock();
 
-  etl::array<fixed, 8> GetMixerLevels();
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *GetMixerLevels();
 
 private:
   Project *project_;
-  bool clipped_;
+  etl::array<stereosample, SONG_CHANNEL_COUNT> mixerLevels_;
 
   I_Instrument *lastInstrument_[SONG_CHANNEL_COUNT];
   bool isChannelPlaying_[SONG_CHANNEL_COUNT];

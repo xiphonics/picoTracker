@@ -324,7 +324,6 @@ fixed SampleInstrument::Render(int channel, fixed *buffer, int size,
   fixed avgLevel = 0;
 
   // Get Current render parameters
-
   renderParams *rp = renderParams_ + channel;
   lastMidiNote_[channel] = rp->midiNote_;
   bool *rpFinished = &(rp->finished_);

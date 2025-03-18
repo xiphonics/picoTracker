@@ -22,8 +22,6 @@ public:
 
   virtual void Trigger() = 0;
 
-  virtual bool Clipped() = 0;
-
   virtual int GetPlayedBufferPercentage() = 0;
 
   virtual std::string GetAudioAPI() = 0;

@@ -215,8 +215,7 @@ fixed SIDInstrument::Render(int channel, fixed *buffer, int size,
     Trace::Debug("RENDER: SID-%i Render took %ius (%i%%ts)\n", GetOsc(),
                  time_taken, (time_taken * 44100) / size / 10000);
 
-    // TODO: need to actually calculate average volume level to return!
-    return FP_ONE;
+    return true;
   }
   int time_taken = micros() - start;
   Trace::Debug("RENDER: >SID-%i Render took %ius (%i%%ts)\nf", GetOsc(),

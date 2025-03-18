@@ -43,8 +43,6 @@ bool PlayerMixer::Init(Project *project) {
     lastInstrument_[i] = 0;
   };
 
-  clipped_ = false;
-
   // Setup mixbus
   Mixer *mixer = Mixer::GetInstance();
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -102,7 +100,21 @@ I_Instrument *PlayerMixer::GetLastInstrument(int channel) {
   return lastInstrument_[channel];
 };
 
-bool PlayerMixer::Clipped() { return clipped_; }
+stereosample PlayerMixer::GetMasterOutLevel() {
+  MixerService *ms = MixerService::GetInstance();
+  return ms->GetMasterBus()->GetMixerLevels();
+}
+
+etl::array<stereosample, SONG_CHANNEL_COUNT> *PlayerMixer::GetMixerLevels() {
+  MixerService *ms = MixerService::GetInstance();
+  for (int i = 0; i < 8; i++) {
+    AudioMixer *audioMixer = ms->GetMixBus(i);
+    mixerLevels_[i] = audioMixer->GetMixerLevels();
+    short levelL = (mixerLevels_[i] >> 16);
+    short levelR = (mixerLevels_[i] & 0x0000FFFF);
+  }
+  return &mixerLevels_;
+}
 
 void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
 
@@ -115,7 +127,6 @@ void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
   //     out_->SetMasterVolume(project_->GetMasterVolume()) ;
   MixerService *ms = MixerService::GetInstance();
   ms->SetMasterVolume(project_->GetMasterVolume());
-  clipped_ = ms->Clipped();
 };
 
 void PlayerMixer::StartInstrument(int channel, I_Instrument *instrument,
@@ -202,9 +213,3 @@ void PlayerMixer::Unlock() {
   MixerService *ms = MixerService::GetInstance();
   ms->Unlock();
 };
-
-etl::array<fixed, 8> PlayerMixer::GetMixerLevels() {
-  MixerService *ms = MixerService::GetInstance();
-  AudioMixer *audioMixer = ms->GetMixBus(STREAM_MIX_BUS);
-  return audioMixer->GetMixerLevels();
-}

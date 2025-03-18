@@ -36,12 +36,13 @@ public:
 
   MixBus *GetMixBus(int i);
 
+  MixBus *GetMasterBus() { return &master_; };
+
   virtual void Update(Observable &o, I_ObservableData *d);
 
   void OnPlayerStart();
   void OnPlayerStop();
 
-  bool Clipped();
   void SetMasterVolume(int);
   int GetPlayedBufferPercentage();
 
