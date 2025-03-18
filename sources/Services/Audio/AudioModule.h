@@ -2,6 +2,7 @@
 #define _AUDIO_MODULE_H_
 
 #include "Application/Utils/fixed.h"
+#include "Foundation/Types/Types.h"
 
 class AudioModule {
 public:

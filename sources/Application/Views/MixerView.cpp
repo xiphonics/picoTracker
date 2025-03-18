@@ -1,7 +1,12 @@
 #include "MixerView.h"
+#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
+#include "Application/Utils/mathutils.h"
+#include "UIController.h"
 #include <string>
+
+#define CHANNELS_X_OFFSET_ 3 // stride between each channel
 
 MixerView::MixerView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
   invertBatt_ = false;
@@ -36,21 +41,44 @@ void MixerView::updateCursor(int dx, int dy) {
   isDirty_ = true;
 }
 
+void MixerView::switchSoloMode() {
+  UIController *controller = UIController::GetInstance();
+  int currentChannel = viewData_->mixerCol_;
+  controller->SwitchSoloMode(currentChannel, currentChannel,
+                             (viewMode_ == VM_NORMAL));
+  viewMode_ = (viewMode_ != VM_SOLOON) ? VM_SOLOON : VM_NORMAL;
+  isDirty_ = true;
+};
+
+void MixerView::unMuteAll() {
+  UIController *controller = UIController::GetInstance();
+  controller->UnMuteAll();
+  isDirty_ = true;
+};
+
+void MixerView::toggleMute() {
+
+  UIController *controller = UIController::GetInstance();
+  int currentChannel = viewData_->mixerCol_;
+  controller->ToggleMute(currentChannel, currentChannel);
+  viewMode_ = (viewMode_ != VM_MUTEON) ? VM_MUTEON : VM_NORMAL;
+  isDirty_ = true;
+};
+
 void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
-  // if (!pressed) {
-  //	if (viewMode_==VM_MUTEON) {
-  //		if (mask&EPBM_R) {
-  //			toggleMute() ;
-  //		}
-  //	} ;
-  //	if (viewMode_==VM_SOLOON) {
-  //		if (mask&EPBM_R) {
-  //			switchSoloMode() ;
-  //		}
-  //	} ;
-  //	return ;
-  // } ;
-  //
+  if (!pressed) {
+    if (viewMode_ == VM_MUTEON) {
+      if (mask & EPBM_NAV) {
+        toggleMute();
+      }
+    };
+    if (viewMode_ == VM_SOLOON) {
+      if (mask & EPBM_NAV) {
+        switchSoloMode();
+      }
+    };
+    return;
+  };
 
   viewMode_ = VM_NORMAL;
   processNormalButtonMask(mask);
@@ -65,8 +93,14 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
 void MixerView::processNormalButtonMask(unsigned int mask) {
 
   if (mask & EPBM_EDIT) {
+    if (mask & EPBM_NAV) {
+      toggleMute();
+    };
   } else {
     if (mask & EPBM_ENTER) {
+      if (mask & EPBM_NAV) {
+        switchSoloMode();
+      }
     } else {
       if (mask & EPBM_NAV) {
         if (mask & EPBM_UP) {
@@ -77,6 +111,9 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
         }
         if (mask & EPBM_PLAY) {
           onStop();
+        }
+        if (mask & EPBM_ALT) {
+          unMuteAll();
         }
       } else {
         if (mask & EPBM_ALT) {
@@ -106,10 +143,16 @@ void MixerView::processSelectionButtonMask(unsigned int mask) {
 
   } else {
     if (mask & EPBM_ENTER) {
+      if (mask & EPBM_NAV) {
+        switchSoloMode();
+      }
     } else {
       if (mask & EPBM_NAV) {
         if (mask & EPBM_PLAY) {
           onStop();
+        }
+        if (mask & EPBM_ALT) {
+          unMuteAll();
         }
       } else {
         // No modifier
@@ -144,40 +187,29 @@ void MixerView::DrawView() {
   pos = anchor;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
-  const u_int8_t dx = 3;
+  // get levels from the player
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+      player->GetMixerLevels();
+  drawChannelVUMeters(levels, player, props);
 
-  // draw vu meter for each bus
-  for (int j = 0; j < VU_METER_HEIGHT; j++) {
-    for (int i = 0; i < 8; i++) {
-      if (j == VU_METER_CLIP_LEVEL) {
-        SetColor(CD_ERROR);
-      } else if (j > VU_METER_WARN_LEVEL) {
-        SetColor(CD_WARN);
-      } else {
-        SetColor(CD_INFO);
-      }
-      DrawString(pos._x + (i * dx), pos._y - j, " ", props);
-      SetColor(CD_HILITE1);
-      DrawString(pos._x + (i * dx) + 1, pos._y - j, " ", props);
-    }
-  };
   SetColor(CD_NORMAL);
   props.invert_ = false;
 
   pos._y += 1;
   // draw bus states
   char state[3];
-  state[0] = 'M';
-  state[1] = 'S';
+  state[0] = '-'; // M
+  state[1] = '-';
   state[2] = '\0';
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     if (i == viewData_->mixerCol_) {
       props.invert_ = true;
       SetColor(CD_HILITE2);
     }
+    state[0] = player->IsChannelMuted(i) ? 'M' : '-';
 
     DrawString(pos._x, pos._y, state, props);
-    pos._x += dx;
+    pos._x += CHANNELS_X_OFFSET_;
     if (i == viewData_->mixerCol_) {
       props.invert_ = false;
       SetColor(CD_NORMAL);
@@ -186,59 +218,38 @@ void MixerView::DrawView() {
 
   drawMap();
   drawNotes();
-  drawMasterVuMeter(player, pos, props);
+  drawMasterVuMeter(player, props);
 
   if (player->IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 };
 
-void MixerView::OnPlayerUpdate(PlayerEventType type, unsigned int tick) {
+void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   Player *player = Player::GetInstance();
 
   // Draw clipping indicator & CPU usage
-
   GUIPoint anchor = GetAnchor();
   GUIPoint pos = anchor;
+
+  // get levels from the player
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+      player->GetMixerLevels();
 
   GUITextProperties props;
   SetColor(CD_NORMAL);
 
-  if (player->Clipped()) {
-    DrawString(pos._x, pos._y, "clip", props);
-  } else {
-    DrawString(pos._x, pos._y, "----", props);
-  }
-  char strbuffer[12];
+  drawChannelVUMeters(levels, player, props);
 
+  drawMasterVuMeter(player, props);
+
+  pos = 0;
+  pos._x = 27;
   pos._y += 1;
-  sprintf(strbuffer, "P:%3.3d%%", player->GetPlayedBufferPercentage());
-  DrawString(pos._x, pos._y, strbuffer, props);
-
-  System *sys = System::GetInstance();
-  int batt = sys->GetBatteryLevel();
-  if (batt >= 0) {
-    if (batt < 90) {
-      SetColor(CD_HILITE2);
-      invertBatt_ = !invertBatt_;
-    } else {
-      invertBatt_ = false;
-    };
-    props.invert_ = invertBatt_;
-
-    pos._y += 1;
-    sprintf(strbuffer, "%B:3.3d%", batt);
-    DrawString(pos._x, pos._y, strbuffer, props);
+  if (eventType != PET_STOP) {
+    drawPlayTime(player, pos, props);
   }
-  SetColor(CD_NORMAL);
-  props.invert_ = false;
-  int time = int(player->GetPlayTime());
-  int mi = time / 60;
-  int se = time - mi * 60;
-  sprintf(strbuffer, "%2.2d:%2.2d", mi, se);
-  pos._y += 1;
-  DrawString(pos._x, pos._y, strbuffer, props);
 
   drawNotes();
 };
@@ -250,3 +261,31 @@ void MixerView::AnimationUpdate() {
   drawBattery(props);
   w_.Flush();
 };
+
+void MixerView::drawChannelVUMeters(
+    etl::array<stereosample, SONG_CHANNEL_COUNT> *levels, Player *player,
+    GUITextProperties props) {
+
+  // we start at the bottom of the VU meter and draw it growing upwards
+  GUIPoint pos = GetAnchor();
+  pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
+
+  // draw vu meter for each bus
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    int leftBars = 0;
+    int rightBars = 0;
+    // if channel is muted just use default 0 values for bars
+    if (!player->IsChannelMuted(i)) {
+      // Convert to dB
+      int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
+      int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
+
+      // Map dB to bar levels  -60dB to 0dB range mapped to 0-15 bars
+      leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
+      rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
+    }
+
+    drawVUMeter(leftBars, rightBars, pos, props);
+    pos._x += CHANNELS_X_OFFSET_;
+  }
+}

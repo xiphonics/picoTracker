@@ -5,7 +5,6 @@
 #include "System/System/System.h"
 #include "UIController.h"
 #include "ViewData.h"
-#include <nanoprintf.h>
 #include <stdlib.h>
 #include <string>
 
@@ -981,28 +980,14 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   SetColor(CD_NORMAL);
 
-  // Draw clipping indicator
   pos = 0;
-  pos._x = 26;
-  pos._y += 1; // make space for batt guage which is on top line
-  if (player->Clipped()) {
-    DrawString(pos._x, pos._y, "clip", props);
-  } else {
-    DrawString(pos._x, pos._y, "----", props);
-  }
-
-  char strbuffer[10];
-
+  pos._x = 27;
+  pos._y += 1;
   if (eventType != PET_STOP) {
-    SetColor(CD_NORMAL);
-    props.invert_ = false;
-    int time = int(player->GetPlayTime());
-    int mi = time / 60;
-    int se = time - mi * 60;
-    npf_snprintf(strbuffer, sizeof(strbuffer), "%2.2d:%2.2d", mi, se);
-    pos._y += 1;
-    DrawString(pos._x, pos._y, strbuffer, props);
+    drawPlayTime(player, pos, props);
   }
+
+  drawMasterVuMeter(player, props);
 
   drawNotes();
 };

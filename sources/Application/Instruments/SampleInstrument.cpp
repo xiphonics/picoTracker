@@ -3,6 +3,7 @@
 #include "Application/Model/Table.h"
 #include "Application/Player/PlayerMixer.h" // For MIX_BUFFER_SIZE.. kick out pls
 #include "Application/Player/SyncMaster.h"
+#include "Application/Utils/fixed.h"
 #include "CommandList.h"
 #include "SamplePool.h"
 #include "SampleVariable.h"
@@ -323,7 +324,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
   bool somethingToMix = false;
 
   // Get Current render parameters
-
   renderParams *rp = renderParams_ + channel;
   lastMidiNote_[channel] = rp->midiNote_;
   bool *rpFinished = &(rp->finished_);

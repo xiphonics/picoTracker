@@ -1323,16 +1323,8 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
       }
     }
   }
-
   pos = anchor;
   pos._x += 200;
-
-  /*	if (player->Clipped()) {
-             w_.DrawString("clip",pos,props);
-      } else {
-             w_.DrawString("----",pos,props);
-      }
-  */
 };
 
 void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {

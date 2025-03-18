@@ -21,7 +21,13 @@ protected:
   void onStop();
   void updateCursor(int dx, int dy);
 
+  void unMuteAll();
+  void toggleMute();
+  void switchSoloMode();
+
 private:
+  void drawChannelVUMeters(etl::array<stereosample, SONG_CHANNEL_COUNT> *levels,
+                           Player *player, GUITextProperties props);
   const char *song_;
   int saveX_;
   int saveY_;

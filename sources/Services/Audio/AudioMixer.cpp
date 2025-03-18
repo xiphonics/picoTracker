@@ -7,6 +7,7 @@ AudioMixer::AudioMixer(const char *name)
     : T_SimpleList<AudioModule>(false), enableRendering_(0), writer_(0),
       name_(name) {
   volume_ = (i2fp(1));
+  Trace::Debug("AudioMixer [%s]", name);
 };
 
 AudioMixer::~AudioMixer() {}
@@ -31,8 +32,10 @@ void AudioMixer::EnableRendering(bool enable) {
 };
 
 bool AudioMixer::Render(fixed *buffer, int samplecount) {
-
   bool gotData = false;
+  fixed peakL = 0;
+  fixed peakR = 0;
+
   for (Begin(); !IsDone(); Next()) {
     AudioModule &current = CurrentItem();
     if (!gotData) {
@@ -51,16 +54,36 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
     }
   }
 
-  //  Apply volume
+  //  Apply volume to mix of all of this instances "sub" audiomixers
   if (gotData) {
     fixed *c = buffer;
     if (volume_ != i2fp(1)) {
       for (int i = 0; i < samplecount * 2; i++) {
         fixed v = fp_mul(*c, volume_);
         *c++ = v;
+
+        if (i % 2 == 0 && v >= peakR) {
+          peakR = v;
+        }
+        if (v >= peakL) {
+          peakL = v;
+        }
+      }
+    } else {
+      for (int i = 0; i < samplecount * 2; i++) {
+        fixed v = buffer[i];
+        if (i % 2 == 0 && v >= peakR) {
+          peakR = v;
+        }
+        if (v >= peakL) {
+          peakL = v;
+        }
       }
     }
+    avgMixerLevel_ = fp2i(peakL) << 16;
+    avgMixerLevel_ += fp2i(peakR);
   }
+
   if (enableRendering_ && writer_) {
     if (!gotData) {
       memset(buffer, 0, samplecount * 2 * sizeof(fixed));

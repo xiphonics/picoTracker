@@ -40,7 +40,7 @@ public:
 
   // size refers to the number of samples
   // should always fill interleaved stereo / 16bit
-
+  // return value is true if any audio was rendered
   virtual bool Render(int channel, fixed *buffer, int size,
                       bool updateTick) = 0;
 

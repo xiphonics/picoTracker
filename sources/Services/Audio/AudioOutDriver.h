@@ -20,7 +20,7 @@ public:
 
   virtual void Trigger();
 
-  virtual bool Clipped();
+  virtual stereosample GetLastPeakLevels();
 
   virtual int GetPlayedBufferPercentage();
 
@@ -42,8 +42,8 @@ protected:
 
 private:
   AudioDriver *driver_;
-  bool clipped_;
   bool hasSound_;
+  stereosample lastPeakVolume_ = 0;
 
   static fixed primarySoundBuffer_[MIX_BUFFER_SIZE];
   static short mixBuffer_[MIX_BUFFER_SIZE];

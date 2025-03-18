@@ -800,13 +800,7 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   pos = anchor;
   pos._x += 200;
-/*
-	if (player->Clipped()) {
-           w_.DrawString("clip",pos,props); 
-    } else {
-           w_.DrawString("----",pos,props); 
-    }
-*/} ;
+};
 
 void ChainView::AnimationUpdate() {
   // redraw batt gauge on every clock tick (~1Hz) even when not playing

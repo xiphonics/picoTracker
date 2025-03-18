@@ -67,7 +67,6 @@ public:
   bool IsPlaying();
 
   bool IsRunning();
-  bool Clipped();
 
   void ProcessCommands();
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
@@ -99,17 +98,16 @@ public:
   // info
   int GetPlayedBufferPercentage();
 
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *GetMixerLevels();
+
+  // master out, last avg level while playing
+  stereosample GetMasterLevel();
+
   std::string GetAudioAPI();
   std::string GetAudioDevice();
   int GetAudioBufferSize();
   int GetAudioRequestedBufferSize();
   int GetAudioPreBufferCount();
-
-  MixerStereoLevel GetMasterLevel() {
-    // TODO: implement plumbing to get actual level out of audio mixer
-    // return mixer_.GetMasterLevel();
-    return 0xFFFFFFFF;
-  }
 
   Project *GetProject() { return project_; }
 

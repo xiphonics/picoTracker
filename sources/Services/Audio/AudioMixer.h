@@ -3,9 +3,9 @@
 
 #include "Application/Instruments/WavFileWriter.h"
 #include "AudioModule.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/T_SimpleList.h"
 #include "Services/Audio/AudioDriver.h" // for MAX_SAMPLE_COUNT
-#include <string>
 
 class AudioMixer : public AudioModule, public T_SimpleList<AudioModule> {
 public:
@@ -15,13 +15,20 @@ public:
   void SetFileRenderer(const char *path);
   void EnableRendering(bool enable);
   void SetVolume(fixed volume);
+  void SetName(etl::string<12> name) { name_ = name; };
+
+  stereosample GetMixerLevels() { return avgMixerLevel_; }
 
 private:
   bool enableRendering_;
   std::string renderPath_;
   WavFileWriter *writer_;
   fixed volume_;
-  std::string name_;
+  etl::string<12> name_;
+
+  // hold the avg volume of a buffer worth of samples for each audiomodule in
+  // the mix
+  stereosample avgMixerLevel_ = 0;
 
   static fixed renderBuffer_[MAX_SAMPLE_COUNT * 2];
 };
