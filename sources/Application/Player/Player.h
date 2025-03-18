@@ -109,6 +109,12 @@ public:
   int GetAudioRequestedBufferSize();
   int GetAudioPreBufferCount();
 
+  MixerStereoLevel GetMasterLevel() {
+    // TODO: implement plumbing to get actual level out of audio mixer
+    // return mixer_.GetMasterLevel();
+    return 0xFFFFFFFF;
+  }
+
   Project *GetProject() { return project_; }
 
 protected:

@@ -14,6 +14,7 @@
 #define VU_METER_HEIGHT 16
 #define VU_METER_CLIP_LEVEL 15
 #define VU_METER_WARN_LEVEL 8
+#define VU_METER_WARN_LEVEL 10
 
 enum GUIEventPadButtonMasks {
   EPBM_LEFT = 1,
