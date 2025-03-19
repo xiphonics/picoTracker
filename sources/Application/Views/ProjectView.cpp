@@ -3,6 +3,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/randomnames.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
@@ -364,17 +365,17 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       player->Start(PM_SONG, true, MSM_FILE);
 
       // Show a dialog with a Stop button during rendering
-      MessageBox *renderDialog = new MessageBox(*this, "Rendering in progress",
-                                                "Press OK to stop", MBBF_OK);
+      RenderProgressModal *renderDialog =
+          new RenderProgressModal(*this, "Rendering", "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
 
-      // If rendering completed naturally (not stopped by the user)
-      if (!player->IsRunning()) {
-        // Show completion message
-        MessageBox *completeDialog =
-            new MessageBox(*this, "Mixdown Complete", MBBF_OK);
-        DoModal(completeDialog);
-      }
+      // // If rendering completed naturally (not stopped by the user)
+      // if (!player->IsRunning()) {
+      //   // Show completion message
+      //   MessageBox *completeDialog =
+      //       new MessageBox(*this, "Mixdown Complete", MBBF_OK);
+      //   DoModal(completeDialog);
+      // }
     }
     break;
   case FourCC::ActionRenderStems:
@@ -387,8 +388,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       player->Start(PM_SONG, true, MSM_FILESPLIT);
 
       // Show a dialog with a Stop button during rendering
-      MessageBox *renderDialog = new MessageBox(
-          *this, "Stems Rendering in progress", "Press OK to stop", MBBF_OK);
+      RenderProgressModal *renderDialog =
+          new RenderProgressModal(*this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
 
       // If rendering completed naturally (not stopped by the user)

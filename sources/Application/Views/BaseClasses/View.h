@@ -1,4 +1,3 @@
-
 #ifndef _VIEW_H_
 #define _VIEW_H_
 
@@ -98,6 +97,10 @@ public:
   virtual void AnimationUpdate() = 0;
 
   void SetDirty(bool dirty);
+
+  // Methods to access modal view
+  bool HasModalView() const { return modalView_ != nullptr; }
+  ModalView *GetModalView() const { return modalView_; }
 
   // Primitive locking mechanism
 
