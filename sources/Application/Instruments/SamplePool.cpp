@@ -1,12 +1,13 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Externals/etl/include/etl/string.h"
+#include "Externals/etl/include/etl/string_stream.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/PicoFileSystem.h"
 #include "System/io/Status.h"
 #include <stdlib.h>
 #include <string.h>
-#include <string>
 
 #ifdef LOAD_IN_FLASH
 #include "hardware/flash.h"
@@ -213,14 +214,14 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
 void SamplePool::PurgeSample(int i, const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
 
-  // TODO use define constants for these strings
-  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> delPath("/projects/");
-  delPath.append(projectName);
-  delPath.append("/samples/");
-  delPath.append(names_[i]);
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> buffer;
+  etl::string_stream delPath(buffer);
+
+  delPath << "/" << PROJECTS_DIR << "/" << projectName << "/"
+          << PROJECT_SAMPLES_DIR << "/" << names_[i];
 
   // delete file
-  PicoFileSystem::GetInstance()->DeleteFile(delPath.c_str());
+  PicoFileSystem::GetInstance()->DeleteFile(delPath.str().c_str());
   // delete wav
   SAFE_DELETE(wav_[i]);
   // delete name entry
