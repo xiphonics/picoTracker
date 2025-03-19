@@ -50,6 +50,8 @@ public:
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
+  static etl::string<MAX_PROJECT_NAME_LENGTH> ProjectNameGlobal;
+
 private:
   etl::list<Variable *, 6> variables_;
 

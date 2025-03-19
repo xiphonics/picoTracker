@@ -50,20 +50,18 @@ public:
 
   // basic interface
 
-  void Start(PlayMode mode, bool forceSongMode);
+  void Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode);
   void Stop();
-
-  //	void Toggle(PlayMode mode,bool forceSongMode=false) ;
-  //	void ChangePlayMode(PlayMode mode) ;
-  //	PlayMode GetPlayMode() ;
 
   void SetSequencerMode(SequencerMode mode);
   SequencerMode GetSequencerMode();
 
   void OnStartButton(PlayMode origin, unsigned int from, bool startFromLastPos,
-                     unsigned char chainPos);
+                     unsigned char chainPos,
+                     MixerServiceMode msmMode = MSM_AUDIO);
   void OnSongStartButton(unsigned int from, unsigned int to, bool requestStop,
-                         bool forceImmediate);
+                         bool forceImmediate,
+                         MixerServiceMode msmMode = MSM_AUDIO);
   bool IsPlaying();
 
   bool IsRunning();

@@ -15,7 +15,6 @@ AudioMixer::~AudioMixer() {}
 void AudioMixer::SetFileRenderer(const char *path) { renderPath_ = path; };
 
 void AudioMixer::EnableRendering(bool enable) {
-
   if (enable == enableRendering_) {
     return;
   }
@@ -88,6 +87,7 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
     if (!gotData) {
       memset(buffer, 0, samplecount * 2 * sizeof(fixed));
     };
+    Trace::Debug("=====RENDERING==========");
     writer_->AddBuffer(buffer, samplecount);
   }
   return gotData;

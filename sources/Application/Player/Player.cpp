@@ -76,7 +76,8 @@ bool Player::IsChannelMuted(int channel) {
   return mixer_.IsChannelMuted(channel);
 };
 
-void Player::Start(PlayMode mode, bool forceSongMode) {
+void Player::Start(PlayMode mode, bool forceSongMode,
+                   MixerServiceMode msmMode) {
 
   mixer_.Lock();
 
@@ -127,7 +128,9 @@ void Player::Start(PlayMode mode, bool forceSongMode) {
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;
 
-  mixer_.OnPlayerStart();
+  // Notify MixerService about player start - this will set up rendering if
+  // needed
+  mixer_.OnPlayerStart(msmMode);
 
   MidiService *ms = MidiService::GetInstance();
   ms->OnPlayerStart();
@@ -292,7 +295,8 @@ bool Player::IsChannelPlaying(int channel) {
 // Handles start button on any screen BUT the song screen
 
 void Player::OnStartButton(PlayMode origin, unsigned int from,
-                           bool startFromPrevious, unsigned char chainPos) {
+                           bool startFromPrevious, unsigned char chainPos,
+                           MixerServiceMode msmMode) {
 
   switch (GetSequencerMode()) {
 
@@ -306,7 +310,7 @@ void Player::OnStartButton(PlayMode origin, unsigned int from,
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
         liveQueueingMode_[i] = QM_NONE;
       };
-      Start(origin, startFromPrevious);
+      Start(origin, startFromPrevious, msmMode);
     }
     break;
   case SM_LIVE: // doesn't make much sense here
@@ -316,7 +320,8 @@ void Player::OnStartButton(PlayMode origin, unsigned int from,
 
 // Handles start on song screen
 void Player::OnSongStartButton(unsigned int from, unsigned int to,
-                               bool requestStop, bool forceImmediate) {
+                               bool requestStop, bool forceImmediate,
+                               MixerServiceMode msmMode) {
 
   switch (GetSequencerMode()) {
 
@@ -336,7 +341,7 @@ void Player::OnSongStartButton(unsigned int from, unsigned int to,
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
         liveQueueingMode_[i] = QM_NONE;
       };
-      Start(PM_SONG, false);
+      Start(PM_SONG, false, msmMode);
     }
     break;
 
@@ -360,7 +365,7 @@ void Player::OnSongStartButton(unsigned int from, unsigned int to,
         }
       };
 
-      Start(PM_LIVE, false);
+      Start(PM_LIVE, false, msmMode);
 
     } else { // Player already running
 
