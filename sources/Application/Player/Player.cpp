@@ -76,12 +76,13 @@ bool Player::IsChannelMuted(int channel) {
   return mixer_.IsChannelMuted(channel);
 };
 
-void Player::Start(PlayMode mode, bool forceSongMode,
-                   MixerServiceMode msmMode) {
+void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
+                   bool stopAtEnd) {
 
   mixer_.Lock();
 
   lastBeatCount_ = 0;
+  stopAtEnd_ = stopAtEnd;
 
   // Get start time for clock
 
@@ -296,7 +297,7 @@ bool Player::IsChannelPlaying(int channel) {
 
 void Player::OnStartButton(PlayMode origin, unsigned int from,
                            bool startFromPrevious, unsigned char chainPos,
-                           MixerServiceMode msmMode) {
+                           MixerServiceMode msmMode, bool stopAtEnd) {
 
   switch (GetSequencerMode()) {
 
@@ -321,7 +322,7 @@ void Player::OnStartButton(PlayMode origin, unsigned int from,
 // Handles start on song screen
 void Player::OnSongStartButton(unsigned int from, unsigned int to,
                                bool requestStop, bool forceImmediate,
-                               MixerServiceMode msmMode) {
+                               MixerServiceMode msmMode, bool stopAtEnd) {
 
   switch (GetSequencerMode()) {
 
@@ -1103,6 +1104,18 @@ void Player::moveToNextChain(int channel, int hop) {
       loopBack = (step == 0xFF);
     };
     if (loopBack) {
+      // If stopAtEnd is enabled and we need to loop back, stop playback instead
+      if (stopAtEnd_) {
+        // Stop all channels
+        for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+          mixer_.StopChannel(i);
+        }
+        // Stop the player completely
+        Stop();
+        return;
+      }
+
+      // Otherwise proceed with normal loop back behavior
       data -= SONG_CHANNEL_COUNT;
       pos--;
       while (pos >= 0) {
@@ -1179,7 +1192,7 @@ int Player::GetAudioBufferSize() {
 int Player::GetAudioRequestedBufferSize() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioRequestedBufferSize() : 0;
-}
+};
 
 int Player::GetAudioPreBufferCount() {
   AudioOut *out = mixer_.GetAudioOut();

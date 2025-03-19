@@ -362,20 +362,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       DoModal(mb);
 
       // Start playback in rendering mode with MSM_FILE
-      player->Start(PM_SONG, true, MSM_FILE);
+      player->Start(PM_SONG, true, MSM_FILE, true);
 
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
           new RenderProgressModal(*this, "Rendering", "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
-
-      // // If rendering completed naturally (not stopped by the user)
-      // if (!player->IsRunning()) {
-      //   // Show completion message
-      //   MessageBox *completeDialog =
-      //       new MessageBox(*this, "Mixdown Complete", MBBF_OK);
-      //   DoModal(completeDialog);
-      // }
     }
     break;
   case FourCC::ActionRenderStems:
@@ -385,20 +377,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       DoModal(mb);
 
       // Start playback in rendering mode with MSM_FILESPLIT
-      player->Start(PM_SONG, true, MSM_FILESPLIT);
+      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
 
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
           new RenderProgressModal(*this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
-
-      // If rendering completed naturally (not stopped by the user)
-      if (!player->IsRunning()) {
-        // Show completion message
-        MessageBox *completeDialog =
-            new MessageBox(*this, "Stems Complete", MBBF_OK);
-        DoModal(completeDialog);
-      }
     }
     break;
   default:

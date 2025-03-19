@@ -8,8 +8,7 @@
 
 RenderProgressModal::RenderProgressModal(View &view, const char *title,
                                          const char *message)
-    : ModalView(view), title_(title), message_(message), lastTick_(0),
-      totalSamples_(0.0f), loopDetected_(false) {
+    : ModalView(view), title_(title), message_(message), totalSamples_(0.0f) {
 
   Player *player = Player::GetInstance();
   tempo_ = SyncMaster::GetInstance()->GetTempo();
@@ -27,7 +26,7 @@ void RenderProgressModal::DrawView() {
   int y = 0;
   int x = (width - title_.size()) / 2;
   GUITextProperties props;
-  SetColor(CD_ERROR);
+  SetColor(CD_WARN);
   DrawString(x, y, title_.c_str(), props);
 
   // Draw message
@@ -54,14 +53,20 @@ void RenderProgressModal::OnPlayerUpdate(PlayerEventType,
   width = width > 16 ? width : 16; // Minimum width for time display
   int y = 2;
   GUITextProperties props;
-  SetColor(CD_ERROR);
-
-  Trace::Debug("Render tick %d", currentTick);
+  SetColor(CD_WARN);
+  // Song has looped, end the rendering
+  Player *player = Player::GetInstance();
+  if (!player->IsRunning()) {
+    // Show completion message
+    SetColor(CD_INFO);
+    message_ = "Render Complete!";
+    int x = (width - message_.size()) / 2;
+    DrawString(x, y - 1, message_.c_str(), props);
+  }
 
   // Each time OnPlayerUpdate is called, a buffer of audio has been processed
   // Get the current tempo to calculate the actual number of samples in this
   // buffer
-
   // Calculate samples for this buffer based on the tempo
   float samplesThisBuffer = calculateSamplesPerBuffer(tempo_);
 
@@ -70,10 +75,8 @@ void RenderProgressModal::OnPlayerUpdate(PlayerEventType,
 
   // Redraw just the render progress display
   GUIPoint progressPos(width / 2 - 2, y); // Center the progress display
+  SetColor(CD_NORMAL);
   drawRenderProgress(progressPos, props);
-
-  // Update last tick for next update
-  lastTick_ = currentTick;
 }
 
 void RenderProgressModal::OnFocus() {}
@@ -106,17 +109,6 @@ void RenderProgressModal::drawRenderProgress(GUIPoint &pos,
   char buffer[10];
   sprintf(buffer, "%02d:%02d", minutes, seconds);
   DrawString(pos._x, pos._y, buffer, props);
-}
-
-bool RenderProgressModal::hasSongLooped(unsigned int currentTick) {
-  // Detect if song has looped back to start
-  // This happens when the current tick is significantly less than the last tick
-  // we saw
-  if (lastTick_ > 0 && currentTick < lastTick_ &&
-      (lastTick_ - currentTick) > 100) {
-    return true;
-  }
-  return false;
 }
 
 float RenderProgressModal::calculateSamplesPerBuffer(int tempo) {

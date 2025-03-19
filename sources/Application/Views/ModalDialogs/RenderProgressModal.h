@@ -29,9 +29,6 @@ private:
   // Helper method to draw the render progress
   void drawRenderProgress(GUIPoint &pos, GUITextProperties &props);
 
-  // Helper method to check if song has looped back to start
-  bool hasSongLooped(unsigned int currentTick);
-
   // Helper method to calculate samples per buffer based on tempo
   float calculateSamplesPerBuffer(int tempo);
 
@@ -39,14 +36,8 @@ private:
   etl::string<20> title_;
   etl::string<32> message_;
 
-  // Track the last tick we saw to detect loops
-  unsigned int lastTick_;
-
   // Track total rendered samples (calculated from player updates)
   float totalSamples_;
-
-  // Flag to indicate if we've detected a loop
-  bool loopDetected_;
 
   int tempo_ = 0;
 
