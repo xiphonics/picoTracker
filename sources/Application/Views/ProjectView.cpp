@@ -365,10 +365,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
-      // Show initial message
-      MessageBox *mb = new MessageBox(*this, "Starting Render...", MBBF_OK);
-      DoModal(mb);
-
       // Start playback in rendering mode with MSM_FILE
       player->Start(PM_SONG, true, MSM_FILE, true);
 
@@ -380,10 +376,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
-      // Show initial message
-      MessageBox *mb = new MessageBox(*this, "Starting Render...", MBBF_OK);
-      DoModal(mb);
-
       // Start playback in rendering mode with MSM_FILESPLIT
       player->Start(PM_SONG, true, MSM_FILESPLIT, true);
 
