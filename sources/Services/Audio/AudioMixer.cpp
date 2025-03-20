@@ -15,7 +15,6 @@ AudioMixer::~AudioMixer() {}
 void AudioMixer::SetFileRenderer(const char *path) { renderPath_ = path; };
 
 void AudioMixer::EnableRendering(bool enable) {
-
   if (enable == enableRendering_) {
     return;
   }

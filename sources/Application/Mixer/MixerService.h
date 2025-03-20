@@ -13,8 +13,6 @@ enum MixerServiceMode {
   MSM_AUDIO,
   MSM_FILE,
   MSM_FILESPLIT,
-  MSM_FILERT,
-  MSM_FILESPLITRT
 };
 
 #define MAX_BUS_COUNT 10
@@ -40,7 +38,7 @@ public:
 
   virtual void Update(Observable &o, I_ObservableData *d);
 
-  void OnPlayerStart();
+  void OnPlayerStart(MixerServiceMode mode);
   void OnPlayerStop();
 
   void SetMasterVolume(int);
@@ -54,13 +52,12 @@ public:
   void Unlock();
 
 protected:
-  void toggleRendering(bool enable);
+  void setRenderingMode(MixerServiceMode mode);
 
 private:
   AudioOut *out_;
   MixBus master_;
   MixBus bus_[MAX_BUS_COUNT];
-  MixerServiceMode mode_;
   mutex_t *sync_;
 };
 #endif
