@@ -40,6 +40,7 @@ private:
   float totalSamples_;
 
   int tempo_ = 0;
+  unsigned char spinner_ = 0;
 
   // Constants for sample rate calculations
   static const int SAMPLE_RATE = 44100;

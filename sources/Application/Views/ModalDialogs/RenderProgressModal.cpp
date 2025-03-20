@@ -107,7 +107,9 @@ void RenderProgressModal::drawRenderProgress(GUIPoint &pos,
 
   // Format as MM:SS
   char buffer[10];
-  sprintf(buffer, "%02d:%02d", minutes, seconds);
+  const char *spinnerchars = "|/-\\";
+  char spinner = spinnerchars[spinner_++ % 4];
+  sprintf(buffer, "%02d:%02d %c", minutes, seconds, spinner);
   DrawString(pos._x, pos._y, buffer, props);
 }
 
