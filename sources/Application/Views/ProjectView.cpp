@@ -6,6 +6,7 @@
 #include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UIStaticField.h"
 #include "BaseClasses/UITempoField.h"
 #include "BaseClasses/View.h"
 #include "BaseClasses/ViewEvent.h"
@@ -175,11 +176,18 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   // Add rendering action fields
   position._y += 2;
-  a1 = new UIActionField("Render", FourCC::ActionRenderMixdown, position);
+
+  // Add a static field as a label for the render actions
+  UIStaticField *renderLabel = new UIStaticField(position, "Render:");
+  fieldList_.insert(fieldList_.end(), renderLabel);
+
+  // Position the Mixdown action field to the right of the label
+  position._x += 8;
+  a1 = new UIActionField("Mixdown", FourCC::ActionRenderMixdown, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
 
-  position._x += 7;
+  position._x += 8;
   a1 = new UIActionField("Stems", FourCC::ActionRenderStems, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
