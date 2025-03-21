@@ -54,29 +54,28 @@ void MidiInDevice::Stop() {
 };
 
 bool MidiInDevice::IsRunning() { return isRunning_; };
-/*
+
 void MidiInDevice::onMidiStart() {
-        MidiSyncData data(MSM_START) ;
-        SetChanged() ;
-        NotifyObservers() ;
-} ;
+  MidiSyncData data(MSM_START);
+  SetChanged();
+  NotifyObservers();
+};
 
 void MidiInDevice::onMidiStop() {
-        MidiSyncData data(MSM_STOP) ;
-        SetChanged() ;
-        NotifyObservers() ;
-} ;
+  MidiSyncData data(MSM_STOP);
+  SetChanged();
+  NotifyObservers();
+};
 
 void MidiInDevice::onMidiTempoTick() {
-        MidiSyncData data(MSM_TEMPOTICK) ;
-        SetChanged() ;
-        NotifyObservers() ;
-} ;
+  MidiSyncData data(MSM_TEMPOTICK);
+  SetChanged();
+  NotifyObservers();
+};
 
-void MidiInDevice::queueEvent(MidiEvent &event) {
-        T_Stack<MidiEvent>::Insert(event) ;
-} ;
-*/
+void MidiInDevice::queueEvent(MidiEvent &event){
+    // TODO: queue the event
+};
 
 void MidiInDevice::onDriverMessage(MidiMessage &message) {
   SetChanged();
@@ -122,7 +121,9 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
 
   int midiChannel = event.status_ & 0x0F;
 
-  //	bool isMidiClockEvent = (event.status_ == 0xF8);
+  bool isMidiClockEvent = (event.status_ == 0xF8);
+
+  Trace::Debug("midi:%d:%d:%d", event.status_, event.data1_, event.data2_);
 
   switch (event.GetType()) {
   case MidiMessage::MIDI_NOTE_OFF: {
@@ -204,7 +205,14 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
       channel->Trigger();
     };
   }
-  case 0xF0: // Midi clock
+  case MidiMessage::MIDI_MIDI_CLOCK:
+    onMidiTempoTick();
+    break;
+  case MidiMessage::MIDI_MIDI_START:
+    onMidiStart();
+    break;
+  case MidiMessage::MIDI_MIDI_STOP:
+    onMidiStop();
     break;
   default:
     break;

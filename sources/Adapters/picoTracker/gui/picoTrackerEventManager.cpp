@@ -1,8 +1,10 @@
 #include "picoTrackerEventManager.h"
+#include "Adapters/picoTracker/midi/picoTrackerMidiService.h"
 #include "Adapters/picoTracker/system/input.h"
 #include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Application.h"
 #include "Application/Model/Config.h"
+#include "Services/Midi/MidiService.h"
 #include "picoTrackerGUIWindowImp.h"
 #include "usb_utils.h"
 
@@ -79,6 +81,16 @@ int picoTrackerEventManager::MainLoop() {
 
     // process usb interrupts, should this be done somewhere else??
     handleUSBInterrupts();
+
+    // Poll MIDI service to process any pending MIDI messages
+    MidiService *midiService = MidiService::GetInstance();
+    if (midiService) {
+      picoTrackerMidiService *ptMidiService =
+          (picoTrackerMidiService *)midiService;
+      if (ptMidiService) {
+        ptMidiService->poll();
+      }
+    }
 
     ProcessInputEvent();
     if (!queue->empty()) {

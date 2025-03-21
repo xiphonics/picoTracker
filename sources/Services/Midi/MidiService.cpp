@@ -1,5 +1,6 @@
 #include "MidiService.h"
 #include "Application/Model/Config.h"
+#include "Application/Player/Player.h"
 #include "Application/Player/SyncMaster.h"
 #include "Services/Audio/AudioDriver.h"
 #include "System/Console/Trace.h"
@@ -10,7 +11,7 @@
 #undef SendMessage
 #endif
 
-MidiService::MidiService() : inList_(true), sendSync_(true) {
+MidiService::MidiService() : sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
@@ -21,7 +22,7 @@ MidiService::~MidiService() { Close(); };
 
 bool MidiService::Init() {
   outList_.empty();
-  inList_.Empty();
+  inList_.empty();
   buildDriverList();
   // Init all the output midi devices
   for (auto dev : outList_) {
@@ -30,9 +31,11 @@ bool MidiService::Init() {
 
   // Add a merger for the input
   merger_ = new MidiInMerger();
-  for (inList_.Begin(); !inList_.IsDone(); inList_.Next()) {
-    MidiInDevice &current = inList_.CurrentItem();
-    merger_->Insert(current);
+  for (auto dev : inList_) {
+    merger_->Insert(*dev);
+    dev->Start();
+    // Add this service as an observer to receive transport control messages
+    dev->AddObserver(*this);
   }
 
 #ifndef DUMMY_MIDI
@@ -130,6 +133,23 @@ void MidiService::Flush() {
     flushOutQueue();
   }
 };
+
+void MidiService::OnMidiStart() {
+  // Start the Player in song mode
+  Trace::Log("MIDI", "Received MIDI Start message");
+  Player::GetInstance()->Start(PM_SONG, true);
+}
+
+void MidiService::OnMidiStop() {
+  // Stop the Player
+  Trace::Log("MIDI", "Received MIDI Stop message");
+  Player::GetInstance()->Stop();
+}
+
+void MidiService::OnMidiClock() {
+  // Handle MIDI clock messages if needed
+  // This could be used for tempo synchronization
+}
 
 void MidiService::flushOutQueue() {
   // Move queue positions

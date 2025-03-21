@@ -13,28 +13,6 @@ Application *Application::instance_ = NULL;
 
 Application::Application() {}
 
-void Application::initMidiInput() {
-  int preferedDeviceID = Config::GetInstance()->GetValue("MIDICTRLDEVICE");
-
-  auto midiInService = MidiService::GetInstance();
-  for (midiInService->InBegin(); !midiInService->InIsDone();
-       midiInService->InNext()) {
-    MidiInDevice &in = midiInService->InCurrentItem();
-    // TODO: fix midi device selection to be by device int ID not name string
-
-    // if (!strncmp(in.GetName(), preferedDevice, strlen(preferedDevice))) {
-    //   if (in.Init()) {
-    //     if (in.Start()) {
-    //       Trace::Log("MIDI", "Controlling activated for MIDI interface %s",
-    //                  in.GetName());
-    //     } else {
-    //       in.Close();
-    //     }
-    //   }
-    // }
-  }
-}
-
 bool Application::Init(GUICreateWindowParams &params) {
   PersistencyService::GetInstance();
 
@@ -47,7 +25,6 @@ bool Application::Init(GUICreateWindowParams &params) {
   Audio *audio = Audio::GetInstance();
   audio->Init();
 
-  initMidiInput();
   return true;
 };
 

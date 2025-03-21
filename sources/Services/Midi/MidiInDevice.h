@@ -4,6 +4,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/T_Stack.h"
 #include "MidiChannel.h"
+#include "MidiEvent.h"
 #include "MidiMessage.h"
 #include "Services/Controllers/ControllerSource.h"
 
@@ -22,8 +23,8 @@ public:
   virtual ~MidiInDevice();
   bool Init();
   void Close();
-  bool Start();
-  void Stop();
+  virtual bool Start() = 0;
+  virtual void Stop() = 0;
 
   virtual Channel *GetChannel(const char *name);
   virtual bool IsRunning();
@@ -45,11 +46,11 @@ protected:
   // Callbacks from driver
 
   void onDriverMessage(MidiMessage &event);
-  /*	void onMidiTempoTick() ;
-          void onMidiStart() ;
-          void onMidiStop() ;
-          void queueEvent(MidiEvent &event) ;
-  */
+  void onMidiTempoTick();
+  void onMidiStart();
+  void onMidiStop();
+  void queueEvent(MidiEvent &event);
+
 private:
   static bool dumpEvents_;
   // MIDI Channel dependant channels

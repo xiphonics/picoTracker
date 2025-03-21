@@ -1,9 +1,9 @@
 
-#include "picoTrackerMidiDevice.h"
 #include "Adapters/picoTracker/platform/platform.h"
 #include "System/Console/Trace.h"
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
+#include "picoTrackerMidiOutDevice.h"
 
 picoTrackerMidiOutDevice::picoTrackerMidiOutDevice(const char *name)
     : MidiOutDevice(name) {}
