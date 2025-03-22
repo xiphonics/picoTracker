@@ -3,6 +3,7 @@
 #include "System/Console/Trace.h"
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
+#include "hardware/sync.h"
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
 
@@ -25,15 +26,12 @@ static volatile uint32_t midi_rx_tail = 0;
 
 // UART interrupt handler - called directly from the IRQ
 void __isr __time_critical_func(midi_uart_irq_handler)() {
+  uint32_t status = uart_get_hw(MIDI_UART)->mis; // the reason this irq happened
   // Check if this is a UART RX interrupt
-  if (uart_get_hw(MIDI_UART)->mis & UART_UARTMIS_RXMIS_BITS) {
-    // Clear the interrupt
-    uart_get_hw(MIDI_UART)->icr = UART_UARTICR_RXIC_BITS;
-
+  if (status & UART_UARTMIS_RXMIS_BITS) {
     // Process all available data
     while (uart_is_readable(MIDI_UART)) {
       uint8_t data = uart_getc(MIDI_UART);
-
       // Store in ring buffer
       uint32_t next_head = (midi_rx_head + 1) % MIDI_UART_BUFFER_SIZE;
       if (next_head != midi_rx_tail) {
@@ -63,9 +61,9 @@ bool picoTrackerMidiInDevice::initDriver() {
 
 void picoTrackerMidiInDevice::closeDriver() {
   // Disable UART RX interrupt
-  // irq_set_enabled(MIDI_UART_IRQ, false);
-  // uart_set_irq_enables(MIDI_UART, false, false);
-  // Trace::Log("MIDI", "Closed MIDI input driver");
+  irq_set_enabled(MIDI_UART_IRQ, false);
+  uart_set_irq_enables(MIDI_UART, false, false);
+  Trace::Log("MIDI", "Closed MIDI input driver");
 }
 
 bool picoTrackerMidiInDevice::Start() { return startDriver(); }
@@ -73,10 +71,6 @@ bool picoTrackerMidiInDevice::Start() { return startDriver(); }
 void picoTrackerMidiInDevice::Stop() { stopDriver(); }
 
 bool picoTrackerMidiInDevice::startDriver() {
-  // Clear any existing data in the UART
-  // while (uart_is_readable(MIDI_UART)) {
-  //   uart_getc(MIDI_UART);
-  // }
 
   // Reset the ring buffer and MIDI parser state
   midi_rx_head = 0;
@@ -104,33 +98,37 @@ void picoTrackerMidiInDevice::stopDriver() {
 }
 
 void picoTrackerMidiInDevice::poll() {
-  // Debug: Log poll calls periodically
-  static uint32_t poll_count = 0;
-  if (poll_count++ % 1000 == 0) { // Log every 1000th call to avoid flooding
-    // Trace::Log("MIDI",
-    //            "Poll called (%d times) - buffer state: head=%d, tail=%d",
-    //            poll_count, midi_rx_head, midi_rx_tail);
-  }
+  uint8_t data[MIDI_UART_BUFFER_SIZE];
+  bool has_data;
 
   // Check if there's any data to process
-  if (midi_rx_head != midi_rx_tail) {
-    Trace::Log("MIDI", "Processing MIDI data: head=%d, tail=%d", midi_rx_head,
-               midi_rx_tail);
+  // Critical section - disable interrupts while checking/updating shared
+  // variables
+  uint32_t save = save_and_disable_interrupts();
+  has_data = (midi_rx_head != midi_rx_tail);
+
+  if (has_data) {
+    Trace::Debug("Processing MIDI data: head=%d, tail=%d", midi_rx_head,
+                 midi_rx_tail);
   }
-
   // Process any data in the ring buffer
-  while (midi_rx_head != midi_rx_tail) {
-    uint8_t data = midi_rx_buffer[midi_rx_tail];
-    midi_rx_tail = (midi_rx_tail + 1) % MIDI_UART_BUFFER_SIZE;
-
-    // Debug: Log bytes being processed
-    static uint32_t byte_count = 0;
-    if (byte_count++ % 10 == 0) { // Log every 10th byte to avoid flooding
-      Trace::Log("MIDI", "Processing byte: 0x%02X", data);
+  int i = 0;
+  while (true) {
+    if (midi_rx_head == midi_rx_tail) {
+      break;
     }
 
-    // Process the MIDI data
-    processMidiData(data);
+    // Get data and update tail
+    data[i] = midi_rx_buffer[midi_rx_tail];
+    midi_rx_tail = (midi_rx_tail + 1) % MIDI_UART_BUFFER_SIZE;
+    i++;
+  }
+  restore_interrupts(save);
+
+  for (int j = 0; j < i; j++) {
+    // Process the MIDI data (outside critical section)
+    Trace::Debug("Processing byte: 0x%02X", data[j]);
+    processMidiData(data[j]);
   }
 }
 
@@ -174,6 +172,7 @@ void picoTrackerMidiInDevice::processMidiData(uint8_t data) {
     // This is a data byte
     if (midiStatus == 0) {
       // Ignore data bytes without status
+      Trace::Debug("MIDI", "Ignored data byte without status: 0x%02X", data);
       return;
     }
 

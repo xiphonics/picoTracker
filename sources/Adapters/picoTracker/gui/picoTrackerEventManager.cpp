@@ -76,6 +76,7 @@ int picoTrackerEventManager::MainLoop() {
   // Perform a benchmark of SD card on startup
   sd_bench();
 #endif
+  MidiService *midiService = MidiService::GetInstance();
   while (!finished_) {
     loops++;
 
@@ -83,7 +84,6 @@ int picoTrackerEventManager::MainLoop() {
     handleUSBInterrupts();
 
     // Poll MIDI service to process any pending MIDI messages
-    MidiService *midiService = MidiService::GetInstance();
     if (midiService) {
       picoTrackerMidiService *ptMidiService =
           (picoTrackerMidiService *)midiService;
