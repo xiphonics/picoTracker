@@ -123,7 +123,10 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
 
   bool isMidiClockEvent = (event.status_ == 0xF8);
 
-  Trace::Debug("midi:%d:%d:%d", event.status_, event.data1_, event.data2_);
+  // display as hex
+  Trace::Debug("midi:%02X:%02X:%02X", event.status_, event.data1_,
+               event.data2_);
+  Trace::Debug("miditype:%02X", event.GetType());
 
   switch (event.GetType()) {
   case MidiMessage::MIDI_NOTE_OFF: {
@@ -136,10 +139,10 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
 
   case MidiMessage::MIDI_NOTE_ON: {
     int note = event.data1_ & 0x7F;
-    int data = event.data2_ & 0x7F;
-    Trace::Log("EVENT", "midi:note:%d", note);
+    int value = event.data2_ & 0x7F;
+    Trace::Log("EVENT", "midi note:%d [%d]", note, value);
     if (noteChannel_[midiChannel][note] != 0) {
-      treatNoteOn(noteChannel_[midiChannel][note], data);
+      treatNoteOn(noteChannel_[midiChannel][note], value);
     }
   } break;
 
@@ -209,9 +212,11 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     onMidiTempoTick();
     break;
   case MidiMessage::MIDI_START:
+    Trace::Log("MIDI", "Received START message!!!!");
     onMidiStart();
     break;
   case MidiMessage::MIDI_STOP:
+    Trace::Log("MIDI", "Received STOP message!!!!");
     onMidiStop();
     break;
   default:
@@ -498,8 +503,8 @@ void MidiInDevice::treatNoteOff(MidiChannel *channel) {
   channel->Trigger();
 };
 
-void MidiInDevice::treatNoteOn(MidiChannel *channel, int data) {
-  if (data == 0) { // Actually a note off
+void MidiInDevice::treatNoteOn(MidiChannel *channel, int value) {
+  if (value == 0) { // Actually a note off
     if (!channel->IsToggle()) {
       channel->SetValue(0.0F);
     }

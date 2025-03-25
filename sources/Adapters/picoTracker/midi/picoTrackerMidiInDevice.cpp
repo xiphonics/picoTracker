@@ -138,36 +138,59 @@ void picoTrackerMidiInDevice::processMidiData(uint8_t data) {
   // Handle MIDI data byte
   if (data & 0x80) {
     // This is a status byte
-    midiStatus = data;
-    midiDataCount = 0;
 
-    // Determine how many data bytes to expect
+    // System Real-Time messages can appear anywhere and have no data bytes
     if (data >= 0xF8) {
-      // System real-time messages have no data bytes
       MidiMessage msg;
       msg.status_ = data;
       msg.data1_ = MidiMessage::UNUSED_BYTE;
       msg.data2_ = MidiMessage::UNUSED_BYTE;
-      Trace::Log("MIDI", "Received real-time message: 0x%02X", data);
       MidiInDevice::onDriverMessage(msg);
-    } else if (data >= 0xF0) {
-      // System common messages - variable length
-      // For simplicity, we're not handling these properly
-    } else {
-      // Channel messages
-      uint8_t msgType = data & 0xF0;
-      switch (msgType) {
-      case MidiMessage::MIDI_NOTE_OFF:
-      case MidiMessage::MIDI_NOTE_ON:
-      case MidiMessage::MIDI_POLY_PRESSURE:
-      case MidiMessage::MIDI_CONTROLLER:
-      case MidiMessage::MIDI_PITCH_BEND:
-        midiDataBytes = 2;
-        break;
-      case MidiMessage::MIDI_PROGRAM_CHANGE:
-      case MidiMessage::MIDI_CHANNEL_PRESSURE:
+      return; // Don't change the running status
+    }
+
+    // For all other status bytes, reset the data count
+    midiStatus = data;
+    midiDataCount = 0;
+
+    // Determine how many data bytes to expect based solely on the status byte
+    if (data >= 0xF0) {
+      // System Common messages
+      switch (data) {
+      case 0xF1: // MIDI Time Code Quarter Frame
+      case 0xF3: // Song Select
         midiDataBytes = 1;
         break;
+      case 0xF2: // Song Position Pointer
+        midiDataBytes = 2;
+        break;
+      case 0xF0: // Start of System Exclusive
+        // SysEx messages are variable length and end with 0xF7
+        // For simplicity, we're not fully handling SysEx here
+        midiDataBytes = 0; // Special case, handled differently
+        break;
+      default:
+        // All other System Common messages have no data bytes
+        midiDataBytes = 0;
+
+        // For messages with no data bytes, send them immediately
+        MidiMessage msg;
+        msg.status_ = midiStatus;
+        msg.data1_ = MidiMessage::UNUSED_BYTE;
+        msg.data2_ = MidiMessage::UNUSED_BYTE;
+        MidiInDevice::onDriverMessage(msg);
+        break;
+      }
+    } else {
+      // Channel messages - determine bytes by status byte range
+      uint8_t msgType = data & 0xF0;
+
+      // Program Change and Channel Pressure have 1 data byte
+      if (msgType == 0xC0 || msgType == 0xD0) {
+        midiDataBytes = 1;
+      } else {
+        // All other channel messages have 2 data bytes
+        midiDataBytes = 2;
       }
     }
   } else {
@@ -182,27 +205,24 @@ void picoTrackerMidiInDevice::processMidiData(uint8_t data) {
       midiData1 = data;
       midiDataCount++;
 
+      // If we only expect one data byte, we have a complete message
       if (midiDataBytes == 1) {
-        // We have all the data we need
         MidiMessage msg;
         msg.status_ = midiStatus;
         msg.data1_ = midiData1;
         msg.data2_ = MidiMessage::UNUSED_BYTE;
-        Trace::Log("MIDI", "Received channel message: 0x%02X 0x%02X",
-                   msg.status_, msg.data1_);
         MidiInDevice::onDriverMessage(msg);
       }
-    } else if (midiDataCount == 1) {
-      // We have all the data we need
+    } else if (midiDataCount == 1 && midiDataBytes == 2) {
+      // We have all the data we need for a 2-byte message
       MidiMessage msg;
       msg.status_ = midiStatus;
       msg.data1_ = midiData1;
       msg.data2_ = data;
-      Trace::Log("MIDI", "Received channel message: 0x%02X 0x%02X 0x%02X",
-                 msg.status_, msg.data1_, msg.data2_);
       MidiInDevice::onDriverMessage(msg);
 
-      midiDataCount = 0; // Reset for running status
+      // Reset data count but keep status for running status
+      midiDataCount = 0;
     }
   }
 }
