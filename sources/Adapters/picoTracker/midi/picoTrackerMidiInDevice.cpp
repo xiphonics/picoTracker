@@ -27,8 +27,9 @@ static volatile uint32_t midi_rx_tail = 0;
 // UART interrupt handler - called directly from the IRQ
 void __isr __time_critical_func(midi_uart_irq_handler)() {
   uint32_t status = uart_get_hw(MIDI_UART)->mis; // the reason this irq happened
+
   // Check if this is a UART RX interrupt
-  if (status & UART_UARTMIS_RXMIS_BITS) {
+  if (status & UART_UARTMIS_RXMIS_BITS || status & UART_UARTMIS_RTMIS_BITS) {
     // Process all available data
     while (uart_is_readable(MIDI_UART)) {
       uint8_t data = uart_getc(MIDI_UART);
