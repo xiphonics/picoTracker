@@ -1,5 +1,6 @@
 #include "picoTrackerMidiInDevice.h"
 #include "Adapters/picoTracker/platform/platform.h"
+#include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
@@ -156,15 +157,15 @@ void picoTrackerMidiInDevice::processMidiData(uint8_t data) {
       // Channel messages
       uint8_t msgType = data & 0xF0;
       switch (msgType) {
-      case 0x80: // Note Off
-      case 0x90: // Note On
-      case 0xA0: // Poly Pressure
-      case 0xB0: // Control Change
-      case 0xE0: // Pitch Bend
+      case MidiMessage::MIDI_NOTE_OFF:
+      case MidiMessage::MIDI_NOTE_ON:
+      case MidiMessage::MIDI_POLY_PRESSURE:
+      case MidiMessage::MIDI_CONTROLLER:
+      case MidiMessage::MIDI_PITCH_BEND:
         midiDataBytes = 2;
         break;
-      case 0xC0: // Program Change
-      case 0xD0: // Channel Pressure
+      case MidiMessage::MIDI_PROGRAM_CHANGE:
+      case MidiMessage::MIDI_CHANNEL_PRESSURE:
         midiDataBytes = 1;
         break;
       }

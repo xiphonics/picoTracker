@@ -205,13 +205,13 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
       channel->Trigger();
     };
   }
-  case MidiMessage::MIDI_MIDI_CLOCK:
+  case MidiMessage::MIDI_CLOCK:
     onMidiTempoTick();
     break;
-  case MidiMessage::MIDI_MIDI_START:
+  case MidiMessage::MIDI_START:
     onMidiStart();
     break;
-  case MidiMessage::MIDI_MIDI_STOP:
+  case MidiMessage::MIDI_STOP:
     onMidiStop();
     break;
   default:
