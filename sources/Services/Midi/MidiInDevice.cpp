@@ -5,6 +5,9 @@
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 
+#define MIDI_CHANNEL_MASK 0x0F
+#define MIDI_DATA_MASK 0x7F
+
 using namespace std;
 
 // Set this to true to log MIDI events to stdout for debugging
@@ -124,18 +127,20 @@ void MidiInDevice::Trigger(Time time) {
 
 void MidiInDevice::treatChannelEvent(MidiMessage &event) {
 
-  int midiChannel = event.status_ & 0x0F;
+  int midiChannel = event.status_ & MIDI_CHANNEL_MASK;
 
-  bool isMidiClockEvent = (event.status_ == 0xF8);
+  bool isMidiClockEvent = (event.status_ == MidiMessage::MIDI_CLOCK);
 
   // display as hex
-  Trace::Debug("midi:%02X:%02X:%02X", event.status_, event.data1_,
-               event.data2_);
-  Trace::Debug("miditype:%02X", event.GetType());
+  if (!isMidiClockEvent) {
+    Trace::Debug("midi:%02X:%02X:%02X", event.status_, event.data1_,
+                 event.data2_);
+    Trace::Debug("miditype:%02X", event.GetType());
+  }
 
   switch (event.GetType()) {
   case MidiMessage::MIDI_NOTE_OFF: {
-    int note = event.data1_ & 0x7F;
+    int note = event.data1_ & MIDI_DATA_MASK;
 
     // Check if we have a direct instrument mapping for this channel
     if (channelToInstrument_[midiChannel] != -1) {
@@ -155,8 +160,8 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   } break;
 
   case MidiMessage::MIDI_NOTE_ON: {
-    int note = event.data1_ & 0x7F;
-    int value = event.data2_ & 0x7F;
+    int note = event.data1_ & MIDI_DATA_MASK;
+    int value = event.data2_ & MIDI_DATA_MASK;
 
     // Check if we have a direct instrument mapping for this channel
     if (channelToInstrument_[midiChannel] != -1) {
@@ -182,8 +187,8 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   } break;
 
   case MidiMessage::MIDI_AFTERTOUCH: {
-    int note = event.data1_ & 0x7F;
-    int data = event.data2_ & 0x7F;
+    int note = event.data1_ & MIDI_DATA_MASK;
+    int data = event.data2_ & MIDI_DATA_MASK;
 
     MidiChannel *channel = atChannel_[midiChannel][note];
     if (channel) {
@@ -193,8 +198,8 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   } break;
 
   case MidiMessage::MIDI_CONTROLLER: {
-    int cc = event.data1_ & 0x7F;
-    int data = event.data2_ & 0x7F;
+    int cc = event.data1_ & MIDI_DATA_MASK;
+    int data = event.data2_ & MIDI_DATA_MASK;
 
     if (dumpEvents_) {
       Trace::Log("EVENT", "midi:cc:%d:%d", cc, data);
@@ -217,7 +222,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   } break;
 
   case MidiMessage::MIDI_PROGRAM_CHANGE: {
-    int data = event.data1_ & 0x7F;
+    int data = event.data1_ & MIDI_DATA_MASK;
 
     MidiChannel *channel = pcChannel_[midiChannel];
     if (channel) {
@@ -227,7 +232,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   } break;
 
   case MidiMessage::MIDI_CHANNEL_AFTERTOUCH: {
-    int data = event.data1_ & 0x7F;
+    int data = event.data1_ & MIDI_DATA_MASK;
 
     MidiChannel *channel = catChannel_[midiChannel];
     if (channel) {
@@ -239,7 +244,8 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   case MidiMessage::MIDI_PITCH_BEND: {
     MidiChannel *channel = pbChannel_[midiChannel];
     if (channel) {
-      channel->SetValue((event.data2_ * 0x7F + event.data1_) / float(0x3F80));
+      channel->SetValue((event.data2_ * MIDI_DATA_MASK + event.data1_) /
+                        float(0x3F80));
       channel->Trigger();
     };
   }
