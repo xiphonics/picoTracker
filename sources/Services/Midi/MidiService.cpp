@@ -38,6 +38,11 @@ bool MidiService::Init() {
     dev->AddObserver(*this);
   }
 
+  // Initialize the new channel-to-instrument mapping
+  for (short i = 0; i < 16; i++) {
+    inList_[0]->AssignInstrumentToChannel(i, i);
+  }
+
 #ifndef DUMMY_MIDI
   auto config = Config::GetInstance();
   auto midiDevVar =

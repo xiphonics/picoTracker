@@ -1,5 +1,7 @@
 #include "MidiInDevice.h"
+#include "Application/Instruments/InstrumentBank.h"
 #include "Application/Model/Config.h"
+#include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 
@@ -10,7 +12,6 @@ bool MidiInDevice::dumpEvents_ = false;
 
 MidiInDevice::MidiInDevice(const char *name)
     : ControllerSource("midi", name), T_Stack<MidiMessage>(true) {
-
   for (int channel = 0; channel < 16; channel++) {
     for (int i = 0; i < 128; i++) {
       noteChannel_[channel][i] = NULL;
@@ -20,24 +21,14 @@ MidiInDevice::MidiInDevice(const char *name)
     pbChannel_[channel] = NULL;
     catChannel_[channel] = NULL;
     pcChannel_[channel] = NULL;
-  }
 
+    // Initialize the new channel-to-instrument mapping
+    channelToInstrument_[channel] = -1; // -1 means no instrument assigned
+  }
   isRunning_ = false;
 };
 
-MidiInDevice::~MidiInDevice() {
-
-  for (int channel = 0; channel < 16; channel++) {
-    for (int i = 0; i < 128; i++) {
-      SAFE_DELETE(noteChannel_[channel][i]);
-      SAFE_DELETE(ccChannel_[channel][i]);
-      SAFE_DELETE(atChannel_[channel][i]);
-    }
-    SAFE_DELETE(pbChannel_[channel]);
-    SAFE_DELETE(catChannel_[channel]);
-    SAFE_DELETE(pcChannel_[channel]);
-  }
-};
+MidiInDevice::~MidiInDevice(){};
 
 bool MidiInDevice::Init() { return initDriver(); };
 
@@ -132,6 +123,18 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   case MidiMessage::MIDI_NOTE_OFF: {
     int note = event.data1_ & 0x7F;
 
+    // Check if we have a direct instrument mapping for this channel
+    if (channelToInstrument_[midiChannel] != -1) {
+      int instrumentIndex = channelToInstrument_[midiChannel];
+      Trace::Log("EVENT", "MIDI Note Off: channel=%d, note=%d, instrument=%d",
+                 midiChannel, note, instrumentIndex);
+      Player *player = Player::GetInstance();
+      if (player) {
+        player->StopNote(instrumentIndex, midiChannel);
+      }
+    }
+
+    // Keep the legacy channel system for backward compatibility
     if (noteChannel_[midiChannel][note] != 0) {
       treatNoteOff(noteChannel_[midiChannel][note]);
     }
@@ -140,9 +143,27 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   case MidiMessage::MIDI_NOTE_ON: {
     int note = event.data1_ & 0x7F;
     int value = event.data2_ & 0x7F;
-    Trace::Log("EVENT", "midi note:%d [%d]", note, value);
-    if (noteChannel_[midiChannel][note] != 0) {
-      treatNoteOn(noteChannel_[midiChannel][note], value);
+
+    // Check if we have a direct instrument mapping for this channel
+    if (channelToInstrument_[midiChannel] != -1) {
+      int instrumentIndex = channelToInstrument_[midiChannel];
+      Trace::Log(
+          "EVENT",
+          "MIDI Note On: channel=%d, note=%d, velocity=%d, instrument=%d",
+          midiChannel, note, value, instrumentIndex);
+
+      // If velocity is 0, it's actually a note off in MIDI
+      if (value == 0) {
+        Player *player = Player::GetInstance();
+        if (player) {
+          player->StopNote(instrumentIndex, midiChannel);
+        }
+      } else {
+        Player *player = Player::GetInstance();
+        if (player) {
+          player->PlayNote(instrumentIndex, midiChannel, note, value);
+        }
+      }
     }
   } break;
 
@@ -223,6 +244,29 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     break;
   };
 };
+
+// New methods for direct instrument mapping
+void MidiInDevice::AssignInstrumentToChannel(int midiChannel,
+                                             int instrumentIndex) {
+  if (midiChannel >= 0 && midiChannel < 16) {
+    channelToInstrument_[midiChannel] = instrumentIndex;
+    Trace::Log("MIDI", "Assigned instrument %d to MIDI channel %d",
+               instrumentIndex, midiChannel);
+  }
+}
+
+int MidiInDevice::GetInstrumentForChannel(int midiChannel) const {
+  if (midiChannel >= 0 && midiChannel < 16) {
+    return channelToInstrument_[midiChannel];
+  }
+  return -1; // No instrument assigned
+}
+
+void MidiInDevice::ClearChannelAssignment(int midiChannel) {
+  if (midiChannel >= 0 && midiChannel < 16) {
+    channelToInstrument_[midiChannel] = -1;
+  }
+}
 
 Channel *MidiInDevice::GetChannel(const char *sourcePath) {
 

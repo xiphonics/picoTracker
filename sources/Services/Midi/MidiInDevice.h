@@ -30,6 +30,11 @@ public:
   virtual bool IsRunning();
   virtual void Trigger(Time time);
 
+  // New methods for direct instrument mapping
+  void AssignInstrumentToChannel(int midiChannel, int instrumentIndex);
+  int GetInstrumentForChannel(int midiChannel) const;
+  void ClearChannelAssignment(int midiChannel);
+
 protected:
   // Driver specific initialisation
   virtual bool initDriver() = 0;
@@ -60,6 +65,9 @@ private:
   MidiChannel *pbChannel_[16];        // Pitch bend
   MidiChannel *catChannel_[16];       // Channel after touch
   MidiChannel *pcChannel_[16];        // Program change
+
+  // New direct mapping from MIDI channels to instrument indices
+  short channelToInstrument_[16];
 };
 
 #endif
