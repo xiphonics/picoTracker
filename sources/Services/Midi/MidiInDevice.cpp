@@ -50,12 +50,26 @@ void MidiInDevice::onMidiStart() {
   MidiSyncData data(MSM_START);
   SetChanged();
   NotifyObservers();
+
+  // Get the Player instance and start playback similar to SongView's onStart
+  Player *player = Player::GetInstance();
+  if (player) {
+    // Start playback on all channels (0-7) like the play button does
+    player->OnSongStartButton(0, 7, false, false);
+  }
 };
 
 void MidiInDevice::onMidiStop() {
   MidiSyncData data(MSM_STOP);
   SetChanged();
   NotifyObservers();
+
+  // Get the Player instance and stop playback similar to SongView's onStop
+  Player *player = Player::GetInstance();
+  if (player) {
+    // Stop playback on all channels (0-7)
+    player->OnSongStartButton(0, 7, true, false);
+  }
 };
 
 void MidiInDevice::onMidiTempoTick() {
