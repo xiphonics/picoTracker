@@ -138,6 +138,24 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     Trace::Debug("miditype:%02X", event.GetType());
   }
 
+  // First check for system real-time messages which need to be compared with
+  // the full status byte
+  if (event.status_ == MidiMessage::MIDI_CLOCK) {
+    onMidiTempoTick();
+    return;
+  } else if (event.status_ == MidiMessage::MIDI_START) {
+    onMidiStart();
+    return;
+  } else if (event.status_ == MidiMessage::MIDI_STOP) {
+    onMidiStop();
+    return;
+  } else if (event.status_ == MidiMessage::MIDI_CONTINUE) {
+    // TODO: how to handle continue message as pT doesnt have concept of pausing
+    // then continuing playback from the same position
+    return;
+  }
+
+  // Process channel messages using GetType()
   switch (event.GetType()) {
   case MidiMessage::MIDI_NOTE_OFF: {
     int note = event.data1_ & MIDI_DATA_MASK;
@@ -145,17 +163,10 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     // Check if we have a direct instrument mapping for this channel
     if (channelToInstrument_[midiChannel] != -1) {
       int instrumentIndex = channelToInstrument_[midiChannel];
-      Trace::Log("EVENT", "MIDI Note Off: channel=%d, note=%d, instrument=%d",
-                 midiChannel, note, instrumentIndex);
       Player *player = Player::GetInstance();
       if (player) {
         player->StopNote(instrumentIndex, midiChannel);
       }
-    }
-
-    // Keep the legacy channel system for backward compatibility
-    if (noteChannel_[midiChannel][note] != 0) {
-      treatNoteOff(noteChannel_[midiChannel][note]);
     }
   } break;
 
@@ -165,21 +176,13 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
 
     // Check if we have a direct instrument mapping for this channel
     if (channelToInstrument_[midiChannel] != -1) {
-      int instrumentIndex = channelToInstrument_[midiChannel];
-      Trace::Log(
-          "EVENT",
-          "MIDI Note On: channel=%d, note=%d, velocity=%d, instrument=%d",
-          midiChannel, note, value, instrumentIndex);
-
-      // If velocity is 0, it's actually a note off in MIDI
-      if (value == 0) {
-        Player *player = Player::GetInstance();
-        if (player) {
+      short instrumentIndex = channelToInstrument_[midiChannel];
+      Player *player = Player::GetInstance();
+      if (player) {
+        // If velocity is 0, it's actually a note off in MIDI
+        if (value == 0) {
           player->StopNote(instrumentIndex, midiChannel);
-        }
-      } else {
-        Player *player = Player::GetInstance();
-        if (player) {
+        } else {
           player->PlayNote(instrumentIndex, midiChannel, note, value);
         }
       }
@@ -193,7 +196,6 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     MidiChannel *channel = atChannel_[midiChannel][note];
     if (channel) {
       channel->SetValue(float(data) / (channel->GetRange() / 2.0f - 1));
-      channel->Trigger();
     }
   } break;
 
@@ -248,18 +250,8 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
                         float(0x3F80));
       channel->Trigger();
     };
-  }
-  case MidiMessage::MIDI_CLOCK:
-    onMidiTempoTick();
-    break;
-  case MidiMessage::MIDI_START:
-    Trace::Log("MIDI", "Received START message!!!!");
-    onMidiStart();
-    break;
-  case MidiMessage::MIDI_STOP:
-    Trace::Log("MIDI", "Received STOP message!!!!");
-    onMidiStop();
-    break;
+  } break;
+
   default:
     break;
   };

@@ -1187,8 +1187,8 @@ etl::array<stereosample, SONG_CHANNEL_COUNT> *Player::GetMixerLevels() {
 
 // Direct note playback methods for MIDI
 
-void Player::PlayNote(int instrumentIndex, int channel, unsigned char note,
-                      unsigned char velocity) {
+void Player::PlayNote(unsigned short instrumentIndex, unsigned short channel,
+                      unsigned char note, unsigned char velocity) {
   if (!project_)
     return;
 
@@ -1204,7 +1204,7 @@ void Player::PlayNote(int instrumentIndex, int channel, unsigned char note,
   }
 }
 
-void Player::StopNote(int instrumentIndex, int channel) {
+void Player::StopNote(unsigned short instrumentIndex, unsigned short channel) {
   // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
   int playerChannel = channel % SONG_CHANNEL_COUNT;
   mixer_.StopInstrument(playerChannel);
