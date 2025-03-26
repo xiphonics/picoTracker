@@ -3,6 +3,8 @@ add_library(platform_midi
   picoTrackerUSBMidiDevice.h picoTrackerUSBMidiDevice.cpp
   picoTrackerMidiInDevice.h picoTrackerMidiInDevice.cpp
   picoTrackerMidiOutDevice.h picoTrackerMidiOutDevice.cpp
+  picoTrackerUSBMidiInDevice.h picoTrackerUSBMidiInDevice.cpp
+  
 )
 
 target_link_libraries(platform_midi PRIVATE pico_stdlib

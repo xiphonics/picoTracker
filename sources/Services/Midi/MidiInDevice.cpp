@@ -13,6 +13,10 @@ using namespace std;
 // Set this to true to log MIDI events to stdout for debugging
 bool MidiInDevice::dumpEvents_ = false;
 
+// Initialize the static channel-to-instrument mapping array
+short MidiInDevice::channelToInstrument_[16] = {-1, -1, -1, -1, -1, -1, -1, -1,
+                                                -1, -1, -1, -1, -1, -1, -1, -1};
+
 MidiInDevice::MidiInDevice(const char *name)
     : ControllerSource("midi", name), T_Stack<MidiMessage>(true) {
   for (int channel = 0; channel < 16; channel++) {
@@ -39,6 +43,11 @@ void MidiInDevice::Close() { closeDriver(); };
 
 bool MidiInDevice::Start() {
   isRunning_ = true;
+
+  // Reset the MIDI parser state
+  midiStatus = 0;
+  midiDataCount = 0;
+
   return startDriver();
 };
 
@@ -186,6 +195,8 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
           player->PlayNote(instrumentIndex, midiChannel, note, value);
         }
       }
+    } else {
+      Trace::Debug("No instrument assigned for MIDI channel %d", midiChannel);
     }
   } break;
 
@@ -267,7 +278,7 @@ void MidiInDevice::AssignInstrumentToChannel(int midiChannel,
   }
 }
 
-int MidiInDevice::GetInstrumentForChannel(int midiChannel) const {
+int MidiInDevice::GetInstrumentForChannel(int midiChannel) {
   if (midiChannel >= 0 && midiChannel < 16) {
     return channelToInstrument_[midiChannel];
   }
@@ -574,3 +585,96 @@ void MidiInDevice::treatNoteOn(MidiChannel *channel, int value) {
   }
   channel->Trigger();
 };
+
+void MidiInDevice::processMidiData(uint8_t data) {
+  // Handle MIDI data byte
+  if (data & 0x80) {
+    // This is a status byte
+
+    // System Real-Time messages can appear anywhere and have no data bytes
+    if (data >= 0xF8) {
+      MidiMessage msg;
+      msg.status_ = data;
+      msg.data1_ = MidiMessage::UNUSED_BYTE;
+      msg.data2_ = MidiMessage::UNUSED_BYTE;
+      onDriverMessage(msg);
+      return; // Don't change the running status
+    }
+
+    // For all other status bytes, reset the data count
+    midiStatus = data;
+    midiDataCount = 0;
+
+    // Determine how many data bytes to expect based solely on the status byte
+    if (data >= 0xF0) {
+      // System Common messages
+      switch (data) {
+      case 0xF1: // MIDI Time Code Quarter Frame
+      case 0xF3: // Song Select
+        midiDataBytes = 1;
+        break;
+      case 0xF2: // Song Position Pointer
+        midiDataBytes = 2;
+        break;
+      case 0xF0: // Start of System Exclusive
+        // SysEx messages are variable length and end with 0xF7
+        // For simplicity, we're not fully handling SysEx here
+        midiDataBytes = 0; // Special case, handled differently
+        break;
+      default:
+        // All other System Common messages have no data bytes
+        midiDataBytes = 0;
+
+        // For messages with no data bytes, send them immediately
+        MidiMessage msg;
+        msg.status_ = midiStatus;
+        msg.data1_ = MidiMessage::UNUSED_BYTE;
+        msg.data2_ = MidiMessage::UNUSED_BYTE;
+        onDriverMessage(msg);
+        break;
+      }
+    } else {
+      // Channel messages - determine bytes by status byte range
+      uint8_t msgType = data & 0xF0;
+
+      // Program Change and Channel Pressure have 1 data byte
+      if (msgType == 0xC0 || msgType == 0xD0) {
+        midiDataBytes = 1;
+      } else {
+        // All other channel messages have 2 data bytes
+        midiDataBytes = 2;
+      }
+    }
+  } else {
+    // This is a data byte
+    if (midiStatus == 0) {
+      // Ignore data bytes without status
+      Trace::Debug("MIDI", "Ignored data byte without status: 0x%02X", data);
+      return;
+    }
+
+    if (midiDataCount == 0) {
+      midiData1 = data;
+      midiDataCount++;
+
+      // If we only expect one data byte, we have a complete message
+      if (midiDataBytes == 1) {
+        MidiMessage msg;
+        msg.status_ = midiStatus;
+        msg.data1_ = midiData1;
+        msg.data2_ = MidiMessage::UNUSED_BYTE;
+        onDriverMessage(msg);
+      }
+    } else if (midiDataCount == 1 && midiDataBytes == 2) {
+      // We have all the data we need for a 2-byte message
+      MidiMessage msg;
+      msg.status_ = midiStatus;
+      msg.data1_ = midiData1;
+      msg.data2_ = data;
+      onDriverMessage(msg);
+
+      // Reset data count but keep status for running status
+      midiDataCount = 0;
+    }
+  }
+}
