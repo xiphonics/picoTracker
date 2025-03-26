@@ -199,22 +199,23 @@ void MidiService::stopDevice() {
 };
 
 void MidiService::OnPlayerStart() {
-  for (auto dev : activeOutDevices_) {
-    stopDevice();
-    startDevice();
+  // Stop and restart devices to ensure clean state
+  stopDevice();
+  startDevice();
 
-    if (sendSync_) {
-      MidiMessage msg;
-      msg.status_ = 0xFA;
-      QueueMessage(msg);
-    }
+  // Send MIDI Start message (0xFA) to all active output devices
+  if (sendSync_) {
+    MidiMessage msg;
+    msg.status_ = MidiMessage::MIDI_START;
+    QueueMessage(msg);
   }
 };
 
 void MidiService::OnPlayerStop() {
+  // Send MIDI Stop message (0xFC) to all active output devices
   if (sendSync_) {
     MidiMessage msg;
-    msg.status_ = 0xFC;
+    msg.status_ = MidiMessage::MIDI_STOP;
     QueueMessage(msg);
   }
 };
