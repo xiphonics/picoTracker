@@ -1,4 +1,3 @@
-
 #ifndef _MIDI_SERVICE_H_
 #define _MIDI_SERVICE_H_
 
@@ -25,13 +24,6 @@ public:
   bool Start();
   void Stop();
 
-  // in iterator
-  // TODO: refactor this
-  void InBegin() { inList_.Begin(); };
-  void InNext() { inList_.Next(); };
-  bool InIsDone() { return inList_.IsDone(); };
-  MidiInDevice &InCurrentItem() { return inList_.CurrentItem(); };
-
   //! player notification
   void OnPlayerStart();
   void OnPlayerStop();
@@ -46,8 +38,13 @@ public:
   //! Flush current queue to the output
   void Flush();
 
+  //! Handle MIDI transport messages
+  void OnMidiStart();
+  void OnMidiStop();
+  void OnMidiClock();
+
 protected:
-  T_SimpleList<MidiInDevice> inList_;
+  etl::vector<MidiInDevice *, 2> inList_;
   etl::vector<MidiOutDevice *, 2> outList_;
 
   virtual void Update(Observable &o, I_ObservableData *d);

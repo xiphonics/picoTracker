@@ -15,7 +15,6 @@ public:
   GUIWindow *GetWindow();
 
 protected:
-  void initMidiInput();
   bool initProject(char *projectName);
   void ensurePTDirsExist();
 

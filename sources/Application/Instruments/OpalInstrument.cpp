@@ -69,7 +69,7 @@ bool OpalInstrument::Init() {
 
 void OpalInstrument::OnStart(){};
 
-bool OpalInstrument::Start(int c, unsigned char note, bool retrigger) {
+bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   int start = micros();
 
   // channel wide settings

@@ -158,8 +158,17 @@ void platform_init() {
   gpio_set_function(MIDI_OUT_PIN, GPIO_FUNC_UART);
   gpio_set_function(MIDI_IN_PIN, GPIO_FUNC_UART);
 
+  // Set UART flow control CTS/RTS, we don't want these, so turn them off
+  uart_set_hw_flow(MIDI_UART, false, false);
+
+  // Turn off FIFO's - we want to do this character by character
+  uart_set_fifo_enabled(MIDI_UART, false);
+
   // Set up our UART with the required speed.
   baudrate = uart_init(MIDI_UART, MIDI_BAUD_RATE);
+  uart_set_format(MIDI_UART, 8, 1, UART_PARITY_NONE);
+  uart_set_translate_crlf(MIDI_UART, false);
+
   Trace::Log("PLATFORM", "Init MIDI device with % i baud rate", baudrate);
 #endif
 

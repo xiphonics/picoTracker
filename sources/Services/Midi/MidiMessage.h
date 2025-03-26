@@ -13,7 +13,14 @@ struct MidiMessage : public I_ObservableData {
     MIDI_PROGRAM_CHANGE = 0xC0,
     MIDI_CHANNEL_AFTERTOUCH = 0xD0,
     MIDI_PITCH_BEND = 0xE0,
-    MIDI_MIDI_CLOCK = 0xF0,
+    MIDI_CHANNEL_PRESSURE = 0xD0,
+    MIDI_POLY_PRESSURE = 0xA0,
+    MIDI_CLOCK = 0xF8,
+    MIDI_START = 0xFA,
+    MIDI_CONTINUE = 0xFB,
+    MIDI_STOP = 0xFC,
+    MIDI_ACTIVE_SENSING = 0xFE,
+    MIDI_SYSTEM_RESET = 0xFF,
   };
 
   static const unsigned char UNUSED_BYTE = 255;

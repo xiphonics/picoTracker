@@ -47,6 +47,7 @@
 #define MIDI_IN_PIN 43
 #else
 #define MIDI_UART uart0
+#define MIDI_UART_IRQ UART0_IRQ
 #define MIDI_OUT_PIN 0
 #define MIDI_IN_PIN 1
 #endif

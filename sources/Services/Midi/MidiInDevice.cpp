@@ -1,7 +1,12 @@
 #include "MidiInDevice.h"
+#include "Application/Instruments/InstrumentBank.h"
 #include "Application/Model/Config.h"
+#include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
+
+#define MIDI_CHANNEL_MASK 0x0F
+#define MIDI_DATA_MASK 0x7F
 
 using namespace std;
 
@@ -10,7 +15,6 @@ bool MidiInDevice::dumpEvents_ = false;
 
 MidiInDevice::MidiInDevice(const char *name)
     : ControllerSource("midi", name), T_Stack<MidiMessage>(true) {
-
   for (int channel = 0; channel < 16; channel++) {
     for (int i = 0; i < 128; i++) {
       noteChannel_[channel][i] = NULL;
@@ -20,24 +24,14 @@ MidiInDevice::MidiInDevice(const char *name)
     pbChannel_[channel] = NULL;
     catChannel_[channel] = NULL;
     pcChannel_[channel] = NULL;
-  }
 
+    // Initialize the new channel-to-instrument mapping
+    channelToInstrument_[channel] = -1; // -1 means no instrument assigned
+  }
   isRunning_ = false;
 };
 
-MidiInDevice::~MidiInDevice() {
-
-  for (int channel = 0; channel < 16; channel++) {
-    for (int i = 0; i < 128; i++) {
-      SAFE_DELETE(noteChannel_[channel][i]);
-      SAFE_DELETE(ccChannel_[channel][i]);
-      SAFE_DELETE(atChannel_[channel][i]);
-    }
-    SAFE_DELETE(pbChannel_[channel]);
-    SAFE_DELETE(catChannel_[channel]);
-    SAFE_DELETE(pcChannel_[channel]);
-  }
-};
+MidiInDevice::~MidiInDevice(){};
 
 bool MidiInDevice::Init() { return initDriver(); };
 
@@ -54,29 +48,42 @@ void MidiInDevice::Stop() {
 };
 
 bool MidiInDevice::IsRunning() { return isRunning_; };
-/*
+
 void MidiInDevice::onMidiStart() {
-        MidiSyncData data(MSM_START) ;
-        SetChanged() ;
-        NotifyObservers() ;
-} ;
+  MidiSyncData data(MSM_START);
+  SetChanged();
+  NotifyObservers();
+
+  // Get the Player instance and start playback similar to SongView's onStart
+  Player *player = Player::GetInstance();
+  if (player) {
+    // Start playback on all channels (0-7) like the play button does
+    player->OnSongStartButton(0, 7, false, false);
+  }
+};
 
 void MidiInDevice::onMidiStop() {
-        MidiSyncData data(MSM_STOP) ;
-        SetChanged() ;
-        NotifyObservers() ;
-} ;
+  MidiSyncData data(MSM_STOP);
+  SetChanged();
+  NotifyObservers();
+
+  // Get the Player instance and stop playback similar to SongView's onStop
+  Player *player = Player::GetInstance();
+  if (player) {
+    // Stop playback on all channels (0-7)
+    player->OnSongStartButton(0, 7, true, false);
+  }
+};
 
 void MidiInDevice::onMidiTempoTick() {
-        MidiSyncData data(MSM_TEMPOTICK) ;
-        SetChanged() ;
-        NotifyObservers() ;
-} ;
+  MidiSyncData data(MSM_TEMPOTICK);
+  SetChanged();
+  NotifyObservers();
+};
 
-void MidiInDevice::queueEvent(MidiEvent &event) {
-        T_Stack<MidiEvent>::Insert(event) ;
-} ;
-*/
+void MidiInDevice::queueEvent(MidiEvent &event){
+    // TODO: queue the event
+};
 
 void MidiInDevice::onDriverMessage(MidiMessage &message) {
   SetChanged();
@@ -120,42 +127,81 @@ void MidiInDevice::Trigger(Time time) {
 
 void MidiInDevice::treatChannelEvent(MidiMessage &event) {
 
-  int midiChannel = event.status_ & 0x0F;
+  int midiChannel = event.status_ & MIDI_CHANNEL_MASK;
 
-  //	bool isMidiClockEvent = (event.status_ == 0xF8);
+  bool isMidiClockEvent = (event.status_ == MidiMessage::MIDI_CLOCK);
 
+  // display as hex
+  if (!isMidiClockEvent) {
+    Trace::Debug("midi:%02X:%02X:%02X", event.status_, event.data1_,
+                 event.data2_);
+    Trace::Debug("miditype:%02X", event.GetType());
+  }
+
+  // First check for system real-time messages which need to be compared with
+  // the full status byte
+  if (event.status_ == MidiMessage::MIDI_CLOCK) {
+    onMidiTempoTick();
+    return;
+  } else if (event.status_ == MidiMessage::MIDI_START) {
+    onMidiStart();
+    return;
+  } else if (event.status_ == MidiMessage::MIDI_STOP) {
+    onMidiStop();
+    return;
+  } else if (event.status_ == MidiMessage::MIDI_CONTINUE) {
+    // TODO: how to handle continue message as pT doesnt have concept of pausing
+    // then continuing playback from the same position
+    return;
+  }
+
+  // Process channel messages using GetType()
   switch (event.GetType()) {
   case MidiMessage::MIDI_NOTE_OFF: {
-    int note = event.data1_ & 0x7F;
+    int note = event.data1_ & MIDI_DATA_MASK;
 
-    if (noteChannel_[midiChannel][note] != 0) {
-      treatNoteOff(noteChannel_[midiChannel][note]);
+    // Check if we have a direct instrument mapping for this channel
+    if (channelToInstrument_[midiChannel] != -1) {
+      int instrumentIndex = channelToInstrument_[midiChannel];
+      Player *player = Player::GetInstance();
+      if (player) {
+        player->StopNote(instrumentIndex, midiChannel);
+      }
     }
   } break;
 
   case MidiMessage::MIDI_NOTE_ON: {
-    int note = event.data1_ & 0x7F;
-    int data = event.data2_ & 0x7F;
-    Trace::Log("EVENT", "midi:note:%d", note);
-    if (noteChannel_[midiChannel][note] != 0) {
-      treatNoteOn(noteChannel_[midiChannel][note], data);
+    int note = event.data1_ & MIDI_DATA_MASK;
+    int value = event.data2_ & MIDI_DATA_MASK;
+
+    // Check if we have a direct instrument mapping for this channel
+    if (channelToInstrument_[midiChannel] != -1) {
+      short instrumentIndex = channelToInstrument_[midiChannel];
+      Player *player = Player::GetInstance();
+      if (player) {
+        // If velocity is 0, it's actually a note off in MIDI
+        if (value == 0) {
+          player->StopNote(instrumentIndex, midiChannel);
+        } else {
+          player->PlayNote(instrumentIndex, midiChannel, note, value);
+        }
+      }
     }
   } break;
 
   case MidiMessage::MIDI_AFTERTOUCH: {
-    int note = event.data1_ & 0x7F;
-    int data = event.data2_ & 0x7F;
+    int note = event.data1_ & MIDI_DATA_MASK;
+    int data = event.data2_ & MIDI_DATA_MASK;
 
     MidiChannel *channel = atChannel_[midiChannel][note];
     if (channel) {
       channel->SetValue(float(data) / (channel->GetRange() / 2.0f - 1));
-      channel->Trigger();
     }
   } break;
 
   case MidiMessage::MIDI_CONTROLLER: {
-    int cc = event.data1_ & 0x7F;
-    int data = event.data2_ & 0x7F;
+    int cc = event.data1_ & MIDI_DATA_MASK;
+    int data = event.data2_ & MIDI_DATA_MASK;
 
     if (dumpEvents_) {
       Trace::Log("EVENT", "midi:cc:%d:%d", cc, data);
@@ -178,7 +224,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   } break;
 
   case MidiMessage::MIDI_PROGRAM_CHANGE: {
-    int data = event.data1_ & 0x7F;
+    int data = event.data1_ & MIDI_DATA_MASK;
 
     MidiChannel *channel = pcChannel_[midiChannel];
     if (channel) {
@@ -188,7 +234,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   } break;
 
   case MidiMessage::MIDI_CHANNEL_AFTERTOUCH: {
-    int data = event.data1_ & 0x7F;
+    int data = event.data1_ & MIDI_DATA_MASK;
 
     MidiChannel *channel = catChannel_[midiChannel];
     if (channel) {
@@ -200,16 +246,39 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   case MidiMessage::MIDI_PITCH_BEND: {
     MidiChannel *channel = pbChannel_[midiChannel];
     if (channel) {
-      channel->SetValue((event.data2_ * 0x7F + event.data1_) / float(0x3F80));
+      channel->SetValue((event.data2_ * MIDI_DATA_MASK + event.data1_) /
+                        float(0x3F80));
       channel->Trigger();
     };
-  }
-  case 0xF0: // Midi clock
-    break;
+  } break;
+
   default:
     break;
   };
 };
+
+// New methods for direct instrument mapping
+void MidiInDevice::AssignInstrumentToChannel(int midiChannel,
+                                             int instrumentIndex) {
+  if (midiChannel >= 0 && midiChannel < 16) {
+    channelToInstrument_[midiChannel] = instrumentIndex;
+    Trace::Log("MIDI", "Assigned instrument %d to MIDI channel %d",
+               instrumentIndex, midiChannel);
+  }
+}
+
+int MidiInDevice::GetInstrumentForChannel(int midiChannel) const {
+  if (midiChannel >= 0 && midiChannel < 16) {
+    return channelToInstrument_[midiChannel];
+  }
+  return -1; // No instrument assigned
+}
+
+void MidiInDevice::ClearChannelAssignment(int midiChannel) {
+  if (midiChannel >= 0 && midiChannel < 16) {
+    channelToInstrument_[midiChannel] = -1;
+  }
+}
 
 Channel *MidiInDevice::GetChannel(const char *sourcePath) {
 
@@ -490,8 +559,8 @@ void MidiInDevice::treatNoteOff(MidiChannel *channel) {
   channel->Trigger();
 };
 
-void MidiInDevice::treatNoteOn(MidiChannel *channel, int data) {
-  if (data == 0) { // Actually a note off
+void MidiInDevice::treatNoteOn(MidiChannel *channel, int value) {
+  if (value == 0) { // Actually a note off
     if (!channel->IsToggle()) {
       channel->SetValue(0.0F);
     }
