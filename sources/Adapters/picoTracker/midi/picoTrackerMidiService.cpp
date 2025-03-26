@@ -2,6 +2,7 @@
 #include "picoTrackerMidiInDevice.h"
 #include "picoTrackerMidiOutDevice.h"
 #include "picoTrackerUSBMidiDevice.h"
+#include "picoTrackerUSBMidiInDevice.h"
 
 picoTrackerMidiService::picoTrackerMidiService(){};
 
@@ -17,6 +18,11 @@ void picoTrackerMidiService::buildDriverList() {
   // Create MIDI input device
   MidiInDevice *inDev = new picoTrackerMidiInDevice("MIDI IN 1");
   inList_.insert(inList_.end(), inDev);
+
+  // Add USB MIDI input device
+  picoTrackerUSBMidiInDevice *usbMidiIn =
+      new picoTrackerUSBMidiInDevice("USB MIDI IN 1");
+  inList_.insert(inList_.end(), usbMidiIn);
 };
 
 void picoTrackerMidiService::poll() {
