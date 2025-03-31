@@ -210,7 +210,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     }
   } break;
 
-  case MidiMessage::MIDI_CONTROLLER: {
+  case MidiMessage::MIDI_CONTROL_CHANGE: {
     int cc = event.data1_ & MIDI_DATA_MASK;
     int data = event.data2_ & MIDI_DATA_MASK;
 
