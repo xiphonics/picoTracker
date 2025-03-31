@@ -92,29 +92,17 @@ void picoTrackerMidiInDevice::stopDriver() {
 }
 
 void picoTrackerMidiInDevice::poll() {
-  uint8_t data[MIDI_UART_BUFFER_SIZE];
-
   // Check if there's any data to process
-  // Critical section - disable interrupts while checking/updating shared
-  // variables
-  uint32_t save = save_and_disable_interrupts();
   // Process any data in the ring buffer
-  int i = 0;
   while (true) {
     if (midi_rx_head == midi_rx_tail) {
       break;
     }
-
     // Get data and update tail
-    data[i] = midi_rx_buffer[midi_rx_tail];
+    auto data = midi_rx_buffer[midi_rx_tail];
     midi_rx_tail = (midi_rx_tail + 1) % MIDI_UART_BUFFER_SIZE;
-    i++;
-  }
-  restore_interrupts(save);
-
-  for (int j = 0; j < i; j++) {
-    // Process the MIDI data (outside critical section)
+    // Process the MIDI data
     // Trace::Debug("Processing byte: 0x%02X", data[j]);
-    processMidiData(data[j]);
+    processMidiData(data);
   }
 }
