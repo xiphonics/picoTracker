@@ -72,7 +72,7 @@ private:
   MidiChannel *pcChannel_[16];        // Program change
 
   // New direct mapping from MIDI channels to instrument indices
-  static short channelToInstrument_[16];
+  static int8_t channelToInstrument_[16];
 
   // MIDI message parsing state
   uint8_t midiStatus = 0;

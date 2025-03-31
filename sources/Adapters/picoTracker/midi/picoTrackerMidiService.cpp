@@ -10,18 +10,18 @@ picoTrackerMidiService::~picoTrackerMidiService(){};
 
 void picoTrackerMidiService::buildDriverList() {
   // create a midi device for each of Midi Output device
-  MidiOutDevice *dev = new picoTrackerMidiOutDevice("MIDI OUT 1");
+  MidiOutDevice *dev = new picoTrackerMidiOutDevice("MIDI OUT");
   outList_.insert(outList_.end(), dev);
   dev = new picoTrackerUSBMidiOutDevice("USB");
   outList_.insert(outList_.end(), dev);
 
   // Create MIDI input device
-  MidiInDevice *inDev = new picoTrackerMidiInDevice("MIDI IN 1");
+  MidiInDevice *inDev = new picoTrackerMidiInDevice("MIDI IN");
   inList_.insert(inList_.end(), inDev);
 
   // Add USB MIDI input device
   picoTrackerUSBMidiInDevice *usbMidiIn =
-      new picoTrackerUSBMidiInDevice("USB MIDI IN 1");
+      new picoTrackerUSBMidiInDevice("USB MIDI IN");
   inList_.insert(inList_.end(), usbMidiIn);
 };
 

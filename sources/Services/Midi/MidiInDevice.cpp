@@ -14,8 +14,8 @@ using namespace std;
 bool MidiInDevice::dumpEvents_ = false;
 
 // Initialize the static channel-to-instrument mapping array
-short MidiInDevice::channelToInstrument_[16] = {-1, -1, -1, -1, -1, -1, -1, -1,
-                                                -1, -1, -1, -1, -1, -1, -1, -1};
+int8_t MidiInDevice::channelToInstrument_[16] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 MidiInDevice::MidiInDevice(const char *name)
     : ControllerSource("midi", name), T_Stack<MidiMessage>(true) {

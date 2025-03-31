@@ -37,12 +37,6 @@ void picoTrackerUSBMidiInDevice::poll() {
     return;
   }
 
-  // Check if there are any data available
-  uint32_t available = tud_midi_available();
-  if (available == 0) {
-    return;
-  }
-
   // MIDI packet format: [cable_number << 4 | code_index, midi_data1,
   // midi_data2, midi_data3]
   uint8_t packet[4];
@@ -51,10 +45,11 @@ void picoTrackerUSBMidiInDevice::poll() {
     bool bytesRead = tud_midi_packet_read(packet);
 
     if (!bytesRead) {
+      Trace::Error("Failed to read expected MIDI packet!");
       break;
     }
     // start at 1 to skip USB midi cable number
-    for (unsigned short j = 1; j < 4; j++) {
+    for (unsigned short j = 1; j < bytesRead; j++) {
       // Trace::Debug("Processing byte: 0x%02X", data[j]);
       processMidiData(packet[j]);
     }
