@@ -257,7 +257,11 @@ PersistencyResult PersistencyService::ExportInstrument(I_Instrument *instrument,
                                                        etl::string<16> name) {
   auto picoFS = PicoFileSystem::GetInstance();
 
-  etl::vector segments = {INSTRUMENTS_DIR, name.c_str()};
+  // Add .pti extension to the filename
+  etl::string<24> filename = name;
+  filename.append(INSTRUMENT_FILE_EXTENSION);
+
+  etl::vector segments = {INSTRUMENTS_DIR, filename.c_str()};
   CreatePath(pathBufferA, segments);
 
   auto fp = picoFS->Open(pathBufferA.c_str(), "w");
@@ -270,7 +274,43 @@ PersistencyResult PersistencyService::ExportInstrument(I_Instrument *instrument,
   return PERSIST_SAVED;
 }
 
-PersistencyResult PersistencyService::ImportInstrument(int instrumentID) {
-  // TODO
-  return PERSIST_ERROR;
+PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
+                                                       const char *name) {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  if (!picoFS->chdir(INSTRUMENTS_DIR)) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not change to instruments directory");
+    return PERSIST_ERROR;
+  }
+
+  // Load the XML document
+  PersistencyDocument doc;
+  if (!doc.Load(name)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not parse XML from file: %s", name);
+    return PERSIST_ERROR;
+  }
+
+  // Find the INSTRUMENT element
+  bool elem = doc.FirstChild();
+  if (!elem || strcmp(doc.ElemName(), "INSTRUMENT")) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not find INSTRUMENT node in file: %s", name);
+    return PERSIST_ERROR;
+  }
+
+  // Restore the instrument content
+  // We need to call Restore instead of RestoreContent directly
+  if (!instrument->Restore(&doc)) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Failed to restore instrument from file: %s", name);
+    return PERSIST_ERROR;
+  }
+
+  // Mark the instrument as changed to trigger UI updates
+  instrument->SetChanged();
+  instrument->NotifyObservers();
+
+  Trace::Log("PERSISTENCYSERVICE", "Successfully imported instrument settings");
+  return PERSIST_LOADED;
 }

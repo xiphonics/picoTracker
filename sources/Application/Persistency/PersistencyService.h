@@ -1,12 +1,12 @@
 #ifndef _PERSISTENCY_SERVICE_H_
 #define _PERSISTENCY_SERVICE_H_
 
+#include "Application/Instruments/I_Instrument.h"
 #include "Externals/TinyXML2/tinyxml2.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/yxml/yxml.h"
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
-#include "Application/Instruments/I_Instrument.h"
 
 #define MAX_PROJECT_NAME_LENGTH 16
 
@@ -14,6 +14,7 @@
 #define PROJECT_SAMPLES_DIR "samples"
 #define SAMPLES_LIB_DIR "/samples"
 #define INSTRUMENTS_DIR "/instruments"
+#define INSTRUMENT_FILE_EXTENSION ".pti"
 #define RENDERS_DIR "/renders"
 
 enum PersistencyResult {
@@ -44,7 +45,8 @@ public:
 
   PersistencyResult ExportInstrument(I_Instrument *instrument,
                                      etl::string<16> name);
-  PersistencyResult ImportInstrument(int instrumentID);
+  PersistencyResult ImportInstrument(I_Instrument *instrument,
+                                     const char *name);
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);

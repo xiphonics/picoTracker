@@ -883,9 +883,13 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                                                     "Name:", "Export", "_");
     DoModal(mb, ExportInstrumentCallback);
   } break;
-  case FourCC::ActionImport:
-    // TODO
-    break;
+  case FourCC::ActionImport: {
+    // Switch to the InstrumentImportView
+    ViewType vt = VT_INSTRUMENT_IMPORT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+  } break;
   default:
     if (fourcc != 0) {
       instrumentModified_ = true;
