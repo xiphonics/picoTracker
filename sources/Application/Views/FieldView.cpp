@@ -53,7 +53,7 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
     focus_->SetFocus();
   }
 
-  if (mask & EPBM_ENTER) { // A or A+ARROW is sent to the field
+  if (mask & EPBM_ENTER) { // ENTER or ENTER+ARROW is sent to the field
     if (mask & EPBM_DOWN) {
       focus_->ProcessArrow(EPBM_DOWN);
       isDirty_ = true;
@@ -78,7 +78,7 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
     };
 
   } else {
-    if (mask & EPBM_EDIT) { // B or B+ARROW is sent to the field
+    if (mask & EPBM_EDIT) { // EDIT or EDIT+ARROW is sent to the field
 
       if (mask == EPBM_EDIT) {
         focus_->OnEditClick();
@@ -104,7 +104,7 @@ void FieldView::ProcessButtonMask(unsigned short mask) {
         isDirty_ = true;
       }
 
-    } else { // Nor B or A is pressed
+    } else { // Nor ENTER or EDIT is pressed
 
       if (!(mask & (EPBM_ENTER | EPBM_EDIT | EPBM_ALT | EPBM_NAV | EPBM_SELECT |
                     EPBM_PLAY))) {

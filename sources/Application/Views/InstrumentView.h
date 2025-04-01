@@ -1,6 +1,7 @@
 #ifndef _INSTRUMENT_VIEW_H_
 #define _INSTRUMENT_VIEW_H_
 
+#include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmaskVarField.h"
 #include "BaseClasses/UIIntVarField.h"
@@ -47,6 +48,7 @@ private:
   bool instrumentModified_ = false;
 
   etl::vector<UIIntVarField, 1> typeIntVarField_;
+  etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 4> staticField_;

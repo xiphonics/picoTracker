@@ -13,6 +13,7 @@
 #include "BaseClasses/UIStaticField.h"
 #include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/MessageBox.h"
+#include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <nanoprintf.h>
 
@@ -23,6 +24,24 @@ static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
 
     // clear instrument modified flag
     ((InstrumentView &)v).clearInstrumentModified();
+  }
+};
+
+static void ExportInstrumentCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == TIB_OK) {
+    TextInputModalView *textInput = (TextInputModalView *)&dialog;
+    const char *name = textInput->GetTextField()->GetString().c_str();
+
+    // get current instrument using its id
+    I_Instrument *instrument =
+        ((InstrumentView &)v)
+            .viewData_->project_->GetInstrumentBank()
+            ->GetInstrument(
+                ((InstrumentView &)v).viewData_->currentInstrumentID_);
+
+    // TODO:
+    // Use persistency service to export instrument settings
+    // PersistencyService::GetInstance()->ExportInstrument(instrument, name);
   }
 };
 
@@ -39,6 +58,19 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
   (*typeIntVarField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::VarInstrumentType;
+
+  // add ui action fields for exporting and importing instrument settings
+  position._y += 1;
+  actionField_.emplace_back("Export", FourCC::ActionExport, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+  lastFocusID_ = FourCC::ActionExport;
+
+  position._x += 8;
+  actionField_.emplace_back("Import", FourCC::ActionImport, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+  lastFocusID_ = FourCC::ActionImport;
 }
 
 InstrumentView::~InstrumentView() {}
@@ -119,6 +151,11 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
   lastFocusID_ = FourCC::VarInstrumentType;
+
+  // Re-add the action fields for export and import
+  for (auto &action : actionField_) {
+    fieldList_.insert(fieldList_.end(), &action);
+  }
 
   InstrumentType it = getInstrument()->GetType();
   switch (it) {
@@ -841,6 +878,15 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     }
     break;
   }
+  case FourCC::ActionExport: {
+    // show modal to request name for export
+    TextInputModalView *mb = new TextInputModalView(*this, "Export Instrument",
+                                                    "Name:", "Export", "_");
+    DoModal(mb, ExportInstrumentCallback);
+  } break;
+  case FourCC::ActionImport:
+    // TODO
+    break;
   default:
     if (fourcc != 0) {
       instrumentModified_ = true;

@@ -154,6 +154,8 @@ struct FourCC {
     // 142 is taken for SIDInstrumentOSCNumber
     // 143 is taken for InstrumentCommandMidiChord
     // 144 is taken for InstrumentMidiName
+    // 145 is taken for ActionExport
+    // 146 is taken for ActionImport
 
     VarInstrumentType = 113,
 
@@ -167,6 +169,9 @@ struct FourCC {
     ActionRandomName = 100,
     ActionBootSelect = 18,
     ActionEdit = 59,
+    ActionExport = 145,
+    ActionImport = 146,
+    ActionOK = 147,
 
     Default = 255, // "    "
   };
@@ -295,6 +300,8 @@ struct FourCC {
   ETL_ENUM_TYPE(VarInstrumentType, "INSTRUMENTTYPE")
 
   ETL_ENUM_TYPE(ActionEdit, "edit")
+  ETL_ENUM_TYPE(ActionExport, "export")
+  ETL_ENUM_TYPE(ActionImport, "import")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE
