@@ -167,6 +167,8 @@ struct FourCC {
     ActionRandomName = 100,
     ActionBootSelect = 18,
     ActionEdit = 59,
+    ActionRenderMixdown = 200,
+    ActionRenderStems = 201,
 
     Default = 255, // "    "
   };

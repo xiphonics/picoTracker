@@ -1,6 +1,7 @@
 #include "MixerService.h"
 #include "Application/Model/Config.h"
 #include "Application/Model/Mixer.h"
+#include "Application/Model/Project.h"
 #include "Application/Utils/char.h"
 #include "Services/Audio/Audio.h"
 #include "Services/Audio/AudioDriver.h"
@@ -9,31 +10,15 @@
 #include "System/System/System.h"
 #include <nanoprintf.h>
 
-MixerService::MixerService() : out_(0), sync_(0) {
-  mode_ = MSM_AUDIO;
-
-  // render value is saved as value of enum MixerServiceMode
-  mode_ = (MixerServiceMode)Config::GetInstance()->GetValue("RENDER");
-};
+MixerService::MixerService() : out_(0), sync_(0){};
 
 MixerService::~MixerService(){};
 
 bool MixerService::Init() {
-
   out_ = 0;
-
   // Create the output depending on rendering mode
-
-  switch (mode_) {
-  case MSM_FILE:
-  case MSM_FILESPLIT:
-    // This is where dummy audio was initialized for the file rendering use case
-    break;
-  default:
-    Audio *audio = Audio::GetInstance();
-    out_ = audio->GetFirst();
-    break;
-  }
+  Audio *audio = Audio::GetInstance();
+  out_ = audio->GetFirst();
 
   bool result = false;
 
@@ -46,29 +31,22 @@ bool MixerService::Init() {
   }
 
   if (out_) {
-
     result = out_->Init();
     if (result) {
       out_->Insert(master_);
     }
 
-    switch (mode_) {
-    case MSM_AUDIO:
-      break;
-    case MSM_FILERT:
-    case MSM_FILE:
-      out_->SetFileRenderer("project:mixdown.wav");
-      break;
-    case MSM_FILESPLITRT:
-    case MSM_FILESPLIT:
-      for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        char buffer[18];
-        npf_snprintf(buffer, sizeof(buffer), "project:channel%d.wav", i);
-        bus_[i].SetFileRenderer(buffer);
-      }
-      break;
-    }
+    char path[30 + MAX_PROJECT_NAME_LENGTH];
+    const char *projectname = Project::ProjectNameGlobal.c_str();
+
     out_->AddObserver(*MidiService::GetInstance());
+    npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
+    out_->SetFileRenderer(path);
+    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      npf_snprintf(path, sizeof(path), "/renders/%s-channel%d.wav", projectname,
+                   i);
+      bus_[i].SetFileRenderer(path);
+    }
   }
 
   mutex_init(sync_);
@@ -89,21 +67,7 @@ void MixerService::Close() {
     out_->Empty();
     master_.Empty();
 
-    switch (mode_) {
-    case MSM_FILE:
-    case MSM_FILESPLIT:
-      SAFE_DELETE(out_);
-      break;
-    default:
-      break;
-    }
-    switch (mode_) {
-    case MSM_FILESPLITRT:
-    case MSM_FILESPLIT:
-      break;
-    default:
-      break;
-    }
+    SAFE_DELETE(out_);
   }
   for (int i = 0; i < MAX_BUS_COUNT; i++) {
     bus_[i].Empty();
@@ -155,26 +119,33 @@ int MixerService::GetPlayedBufferPercentage() {
   return out_->GetPlayedBufferPercentage();
 }
 
-void MixerService::toggleRendering(bool enable) {
-  switch (mode_) {
+void MixerService::setRenderingMode(MixerServiceMode mode) {
+  switch (mode) {
   case MSM_AUDIO:
+    out_->EnableRendering(false);
+    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      bus_[i].EnableRendering(false);
+    };
     break;
-  case MSM_FILERT:
   case MSM_FILE:
-    out_->EnableRendering(enable);
+    out_->EnableRendering(true);
     break;
-  case MSM_FILESPLITRT:
   case MSM_FILESPLIT:
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      bus_[i].EnableRendering(enable);
+      bus_[i].EnableRendering(true);
     };
     break;
   }
 }
 
-void MixerService::OnPlayerStart() { toggleRendering(true); };
+void MixerService::OnPlayerStart(MixerServiceMode mode) {
+  setRenderingMode(mode);
+};
 
-void MixerService::OnPlayerStop() { toggleRendering(false); };
+void MixerService::OnPlayerStop() {
+  // always reset back to audio mode when stopping
+  setRenderingMode(MSM_AUDIO);
+};
 
 void MixerService::Execute(FourCC id, float value) {
   if (value > 0.5) {

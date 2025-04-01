@@ -164,9 +164,9 @@ void PlayerMixer::StopStreaming() { fileStreamer_.Stop(); };
 
 bool PlayerMixer::IsPlaying() { return fileStreamer_.IsPlaying(); }
 
-void PlayerMixer::OnPlayerStart() {
+void PlayerMixer::OnPlayerStart(MixerServiceMode msmMode) {
   MixerService *ms = MixerService::GetInstance();
-  ms->OnPlayerStart();
+  ms->OnPlayerStart(msmMode);
 }
 
 void PlayerMixer::OnPlayerStop() {
