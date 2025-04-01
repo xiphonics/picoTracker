@@ -252,3 +252,25 @@ bool PersistencyService::ClearAutosave(const char *projectName) {
   // values are improved and we can implement a Exists() function on top of it
   return picoFS->DeleteFile(pathBufferA.c_str());
 }
+
+PersistencyResult PersistencyService::ExportInstrument(I_Instrument *instrument,
+                                                       etl::string<16> name) {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  etl::vector segments = {INSTRUMENTS_DIR, name.c_str()};
+  CreatePath(pathBufferA, segments);
+
+  auto fp = picoFS->Open(pathBufferA.c_str(), "w");
+  tinyxml2::XMLPrinter printer(fp);
+
+  // Use the instrument's Persistent interface to save its data
+  instrument->Save(&printer);
+
+  fp->Close();
+  return PERSIST_SAVED;
+}
+
+PersistencyResult PersistencyService::ImportInstrument(int instrumentID) {
+  // TODO
+  return PERSIST_ERROR;
+}

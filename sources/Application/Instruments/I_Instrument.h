@@ -6,6 +6,7 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/VariableContainer.h"
+#include "Application/Persistency/Persistent.h"
 
 #include "Application/Player/TablePlayback.h"
 
@@ -20,10 +21,11 @@ enum InstrumentType {
 static const char *InstrumentTypeNames[IT_LAST] = {"NONE", "SAMPLE", "MIDI",
                                                    "SID", "OPAL"};
 
-class I_Instrument : public VariableContainer, public Observable {
+class I_Instrument : public VariableContainer, public Observable, public Persistent {
 public:
-  I_Instrument(etl::ilist<Variable *> *list) : VariableContainer(list){};
-  virtual ~I_Instrument(){};
+  I_Instrument(etl::ilist<Variable *> *list, const char *nodeName = "INSTRUMENT") 
+    : VariableContainer(list), Persistent(nodeName) {};
+  virtual ~I_Instrument();
 
   // Initialisation routine
 
@@ -62,5 +64,9 @@ public:
   virtual void GetTableState(TableSaveState &state) = 0;
   virtual void SetTableState(TableSaveState &state) = 0;
   virtual etl::ilist<Variable *> *Variables() = 0;
+
+  // Persistent implementation
+  virtual void SaveContent(tinyxml2::XMLPrinter *printer) override;
+  virtual void RestoreContent(PersistencyDocument *doc) override;
 };
 #endif

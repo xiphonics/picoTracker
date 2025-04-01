@@ -6,6 +6,7 @@
 #include "Externals/yxml/yxml.h"
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
+#include "Application/Instruments/I_Instrument.h"
 
 #define MAX_PROJECT_NAME_LENGTH 16
 
@@ -40,6 +41,10 @@ public:
   void PurgeUnnamedProject();
   PersistencyResult AutoSaveProjectData(const char *projectName);
   bool ClearAutosave(const char *projectName);
+
+  PersistencyResult ExportInstrument(I_Instrument *instrument,
+                                     etl::string<16> name);
+  PersistencyResult ImportInstrument(int instrumentID);
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);

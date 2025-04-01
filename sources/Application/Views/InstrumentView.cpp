@@ -39,9 +39,8 @@ static void ExportInstrumentCallback(View &v, ModalView &dialog) {
             ->GetInstrument(
                 ((InstrumentView &)v).viewData_->currentInstrumentID_);
 
-    // TODO:
     // Use persistency service to export instrument settings
-    // PersistencyService::GetInstance()->ExportInstrument(instrument, name);
+    PersistencyService::GetInstance()->ExportInstrument(instrument, name);
   }
 };
 
