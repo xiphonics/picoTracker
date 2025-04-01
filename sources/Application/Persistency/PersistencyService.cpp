@@ -253,12 +253,12 @@ bool PersistencyService::ClearAutosave(const char *projectName) {
   return picoFS->DeleteFile(pathBufferA.c_str());
 }
 
-PersistencyResult PersistencyService::ExportInstrument(I_Instrument *instrument,
-                                                       etl::string<16> name) {
+PersistencyResult PersistencyService::ExportInstrument(
+    I_Instrument *instrument, etl::string<MAX_INSTRUMENT_NAME_LENGTH> name) {
   auto picoFS = PicoFileSystem::GetInstance();
 
   // Add .pti extension to the filename
-  etl::string<24> filename = name;
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename = name;
   filename.append(INSTRUMENT_FILE_EXTENSION);
 
   etl::vector segments = {INSTRUMENTS_DIR, filename.c_str()};

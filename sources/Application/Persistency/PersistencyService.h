@@ -9,13 +9,16 @@
 #include "Foundation/T_Singleton.h"
 
 #define MAX_PROJECT_NAME_LENGTH 16
+#define MAX_INSTRUMENT_FILENAME_LENGTH 24
+// accounts for .pti extension
+#define MAX_INSTRUMENT_NAME_LENGTH (MAX_INSTRUMENT_FILENAME_LENGTH - 4)
 
 #define PROJECTS_DIR "/projects"
 #define PROJECT_SAMPLES_DIR "samples"
 #define SAMPLES_LIB_DIR "/samples"
 #define INSTRUMENTS_DIR "/instruments"
-#define INSTRUMENT_FILE_EXTENSION ".pti"
 #define RENDERS_DIR "/renders"
+#define INSTRUMENT_FILE_EXTENSION ".pti"
 
 enum PersistencyResult {
   PERSIST_SAVED,
@@ -43,8 +46,9 @@ public:
   PersistencyResult AutoSaveProjectData(const char *projectName);
   bool ClearAutosave(const char *projectName);
 
-  PersistencyResult ExportInstrument(I_Instrument *instrument,
-                                     etl::string<16> name);
+  PersistencyResult
+  ExportInstrument(I_Instrument *instrument,
+                   etl::string<MAX_INSTRUMENT_NAME_LENGTH> name);
   PersistencyResult ImportInstrument(I_Instrument *instrument,
                                      const char *name);
 
