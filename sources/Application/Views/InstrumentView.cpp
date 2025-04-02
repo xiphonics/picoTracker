@@ -159,10 +159,12 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
   lastFocusID_ = FourCC::VarInstrumentType;
 
-  // Re-add the action fields for export and import
-  for (auto &action : actionField_) {
-    fieldList_.insert(fieldList_.end(), &action);
-    action.AddObserver(*this); // Make sure observers are re-added
+  // Re-add the action fields for export and import only if not IT_NONE
+  if (instrumentType_.GetInt() != IT_NONE) {
+    for (auto &action : actionField_) {
+      fieldList_.insert(fieldList_.end(), &action);
+      action.AddObserver(*this); // Make sure observers are re-added
+    }
   }
 
   // Handle the name field
