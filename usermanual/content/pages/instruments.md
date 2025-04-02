@@ -129,6 +129,35 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 
 ![screen capture of OPAL instrument screen](image/opal-waveforms-small.png)
 
+### Exporting an Instrument
+
+1. Make sure your instrument has a name set in the "name:" field
+   - Each instrument must have a unique name before it can be exported
+   - The default instrument type name (e.g., "Sampler", "MIDI", etc.) is not considered a valid name
+2. Navigate to the instrument you want to export
+3. Select "Export" from the instrument menu
+4. Press **OK** to continue after the export is complete message is shown
+
+Exported instruments are stored in `/instruments/` on your SD card. 
+
+### Importing an Instrument
+
+1. Navigate to the instrument you want to import
+2. Select "Import" from the instrument menu
+3. A file browser will appear showing all available `.pti` files in the `/instruments` directory
+4. Select a `.pti` file to import, use the key combo `ALT`+`PLAY` to import it
+5. The imported instrument will be applied to the current instrument slot
+6. Press **OK** to continue after the import is complete message is shown
+
+
+### Tips for Instrument Management
+
+- You can organise your instrument files into subfolders inside the `/instruments` directory but exported files will always be saved in the root `/instruments` directory
+- Use descriptive names in the instrument's name field to easily identify them when importing later
+- The instrument name is now used directly for the export filename, so ensure it's set before exporting
+- Back up your `/instruments` directory when backing up your picoTracker data on your sdcard
+
+
 ## Limitations of instrument performance
 
 The picoTrackers CPU limits the number of simultaneous instruments that can be played at once. The specific limit depends on the instrument type and the settings of each instrument. In general the limit is:
@@ -144,35 +173,3 @@ Given the above limits though, it is still possible to mix and match instruments
 ## Exporting and Importing Instruments
 
 picoTracker allows you to save and reuse your instrument settings across different projects through the instrument export and import functionality. This feature is particularly useful for building a library of your favorite synth instruments or using instruments created by other picoTracker users.
-
-### Exporting Instruments
-
-To export an instrument:
-
-1. Navigate to the instrument you want to export in the Instrument Screen
-2. Select **Export** in the onscreen action field
-3. Enter a name for your instrument (up to 16 characters)
-4. Select the **Export** button below the name field to save the instrument
-
-The instrument will be saved as a `.pti` file (the `.pti` extension will be added automatically to the name of the instrument you enter) in the `/instruments` directory on your picoTracker's sdcard.
-
-**NOTE:** The file contains all the parameters and settings for that specific instrument type but note that for sample instruments it will **NOT** contain the sample file.
-
-### Importing Instruments
-
-To import a previously exported instrument:
-
-1. Navigate to the instrument slot where you want to import an instrument in the Instrument Screen
-2. Set it to the instrument type you want to import
-3. Select the **Import** onscreen action field
-4. A file browser will appear showing all available `.pti` files in the `/instruments` directory
-5. Navigate to the instrument file you want to import and import it using the `ALT+PLAY` button
-6. Press **OK** to continue after the import is complete message is shown
-
-After importing, all the settings from the saved instrument will be applied to the current instrument slot. Note that you can only import instruments of the same type - for example, you cannot import a Sample instrument into an OPAL instrument slot.
-
-### Tips for Instrument Management
-
-- You can organise your instrument files into subfolders inside the `/instruments` directory but exported files will always be saved in the root `/instruments` directory
-- Use descriptive names for your exported instruments to easily identify them later
-- Back up your `/instruments` directory when backing up your picoTracker data on your sdcard
