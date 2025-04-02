@@ -527,7 +527,7 @@ void InstrumentView::fillMidiParameters() {
   GUIPoint position = GetAnchor();
 
   // offset y to account for instrument type, name and export/import fields
-  position._y += 2;
+  position._y += 3;
 
   Variable *v = instrument->FindVariable(FourCC::MidiInstrumentChannel);
   intVarField_.emplace_back(
@@ -568,7 +568,8 @@ void InstrumentView::fillOpalParameters() {
 
   u_int8_t savex = 0;
 
-  position._y += 1;
+  // extra y spacing to allow for gap between export/import and parameters
+  position._y += 2;
   Variable *v = instrument->FindVariable(FourCC::OPALInstrumentAlgorithm);
   intVarField_.emplace_back(position, *v, "algorithm:     %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
