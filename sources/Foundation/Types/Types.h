@@ -156,6 +156,8 @@ struct FourCC {
     // 144 is taken for InstrumentMidiName
     // 145 is taken for ActionExport
     // 146 is taken for ActionImport
+    // 147 is taken for ActionOK
+    // 148 is taken for InstrumentName
 
     VarInstrumentType = 113,
 
@@ -172,6 +174,7 @@ struct FourCC {
     ActionExport = 145,
     ActionImport = 146,
     ActionOK = 147,
+    InstrumentName = 148,
 
     Default = 255, // "    "
   };
@@ -238,6 +241,7 @@ struct FourCC {
   ETL_ENUM_TYPE(SampleInstrumentTable, "table")
   ETL_ENUM_TYPE(SampleInstrumentTableAutomation, "table automation")
   ETL_ENUM_TYPE(MidiInstrumentChannel, "channel")
+  ETL_ENUM_TYPE(InstrumentName, "name")
   ETL_ENUM_TYPE(MidiInstrumentName, "midi name")
   ETL_ENUM_TYPE(MidiInstrumentNoteLength, "note length")
   ETL_ENUM_TYPE(MidiInstrumentVolume, "volume")

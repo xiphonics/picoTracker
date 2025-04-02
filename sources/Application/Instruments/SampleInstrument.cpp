@@ -62,6 +62,7 @@ SampleInstrument::SampleInstrument()
   running_ = false;
 
   // Initialize exported variables
+  variables_.insert(variables_.end(), &name_);
   variables_.insert(variables_.end(), &sample_);
   sample_.AddObserver(*this);
 
@@ -1120,7 +1121,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   };
 };
 
-etl::string<24> SampleInstrument::GetName() {
+etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetUserSetName() {
   Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return v->GetString();
 };

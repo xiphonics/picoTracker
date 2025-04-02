@@ -7,7 +7,7 @@ UITextField<MaxLength>::UITextField(
     Variable &v, GUIPoint &position,
     const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> &label, uint8_t fourcc,
     etl::string<MaxLength> &defaultValue_)
-    : UIField(position), src_(v), label_(label), fourcc_(fourcc),
+    : UIField(position), src_(&v), label_(label), fourcc_(fourcc),
       defaultValue_(defaultValue_) {}
 
 template <uint8_t MaxLength> UITextField<MaxLength>::~UITextField(){};
@@ -24,8 +24,8 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
 
   ((AppWindow &)w).SetColor(CD_INFO);
 
-  auto value = src_.GetString().c_str();
-  int len = src_.GetString().length();
+  auto value = src_->GetString().c_str();
+  int len = src_->GetString().length();
 
   if (focus_) {
     char buffer[2];
@@ -49,19 +49,19 @@ template <uint8_t MaxLength> void UITextField<MaxLength>::OnClick() {
 };
 
 template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
-  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_.GetString());
+  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_->GetString());
   if (currentChar_ > 0 && currentChar_ < buffer.length()) {
     buffer.erase(currentChar_, 1);
     currentChar_--;
   }
-  src_.SetString(buffer.c_str(), true);
+  src_->SetString(buffer.c_str(), true);
   SetChanged();
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
 template <uint8_t MaxLength>
 void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
-  auto buffer(src_.GetString());
+  auto buffer(src_->GetString());
 
   switch (mask) {
   case EPBM_UP:
@@ -71,10 +71,10 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
       currentChar_ = 0;
       buffer.clear();
       buffer.append("A");
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
     } else {
       buffer[currentChar_] = getNext(buffer.c_str()[currentChar_], false);
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
     }
     SetChanged();
     NotifyObservers((I_ObservableData *)fourcc_);
@@ -84,10 +84,10 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
       currentChar_ = 0;
       buffer.clear();
       buffer.append("A");
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
     }
     buffer[currentChar_] = getNext((char)buffer.c_str()[currentChar_], true);
-    src_.SetString(buffer.c_str(), true);
+    src_->SetString(buffer.c_str(), true);
     SetChanged();
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
@@ -103,7 +103,7 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
     } else if (currentChar_ < (MaxLength - 1)) {
       currentChar_++;
       buffer.append("A");
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
       SetChanged();
       NotifyObservers((I_ObservableData *)fourcc_);
     }
@@ -113,5 +113,12 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
 
 template <uint8_t MaxLength>
 etl::string<MaxLength> UITextField<MaxLength>::GetString() {
-  return src_.GetString().substr(0, MaxLength);
+  return src_->GetString().substr(0, MaxLength);
+};
+
+template <uint8_t MaxLength>
+void UITextField<MaxLength>::SetVariable(Variable &v) {
+  // Set the variable this UITextField is bound to
+  src_ = &v;
+  currentChar_ = 0; // Reset cursor position
 };

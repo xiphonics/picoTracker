@@ -15,6 +15,7 @@
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
+#include <Application/Utils/stringutils.h>
 #include <nanoprintf.h>
 
 static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
@@ -24,23 +25,6 @@ static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
 
     // clear instrument modified flag
     ((InstrumentView &)v).clearInstrumentModified();
-  }
-};
-
-static void ExportInstrumentCallback(View &v, ModalView &dialog) {
-  if (dialog.GetReturnCode() == TIB_OK) {
-    TextInputModalView *textInput = (TextInputModalView *)&dialog;
-    const char *name = textInput->GetTextField()->GetString().c_str();
-
-    // get current instrument using its id
-    I_Instrument *instrument =
-        ((InstrumentView &)v)
-            .viewData_->project_->GetInstrumentBank()
-            ->GetInstrument(
-                ((InstrumentView &)v).viewData_->currentInstrumentID_);
-
-    // Use persistency service to export instrument settings
-    PersistencyService::GetInstance()->ExportInstrument(instrument, name);
   }
 };
 
@@ -57,6 +41,26 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
   (*typeIntVarField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::VarInstrumentType;
+
+  // Create the name field with the actual instrument variable
+  I_Instrument *instr = getInstrument();
+  if (instr) {
+    Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
+    // NONE dont have a name field, SAMPLE use the name of the sample file
+    auto instrumentType = instr->GetType();
+    if (nameVar && instrumentType != IT_NONE && instrumentType != IT_SAMPLE) {
+      position._y += 1;
+
+      auto label = etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>(
+          "name: ");
+      auto defaultName =
+          etl::make_string_with_capacity<MAX_INSTRUMENT_NAME_LENGTH>("_");
+
+      nameTextfield_ = new UITextField<MAX_INSTRUMENT_NAME_LENGTH>(
+          *nameVar, position, label, FourCC::InstrumentName, defaultName);
+      fieldList_.insert(fieldList_.end(), nameTextfield_);
+    }
+  }
 
   // add ui action fields for exporting and importing instrument settings
   position._y += 1;
@@ -121,6 +125,14 @@ void InstrumentView::onInstrumentChange() {
   // update type field to match current instrument
   ((WatchedVariable *)&instrumentType_)->SetInt(getInstrument()->GetType());
 
+  // Update the nameTextfield_ to use the current instrument's name variable
+  I_Instrument *instr = getInstrument();
+  Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
+
+  // need to update the nameTextfield_ to use the current instrument's name
+  // variable
+  nameTextfield_->SetVariable(*nameVar);
+
   refreshInstrumentFields(old);
 };
 
@@ -145,7 +157,6 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   bigHexVarField_.clear();
   intVarOffField_.clear();
   bitmaskVarField_.clear();
-  uiTextfield_.clear();
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -154,6 +165,13 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   // Re-add the action fields for export and import
   for (auto &action : actionField_) {
     fieldList_.insert(fieldList_.end(), &action);
+    action.AddObserver(*this); // Make sure observers are re-added
+  }
+
+  // Re-add the name field if needed
+  if (instrumentType_.GetInt() != IT_NONE &&
+      instrumentType_.GetInt() != IT_SAMPLE) {
+    fieldList_.insert(fieldList_.end(), nameTextfield_);
   }
 
   InstrumentType it = getInstrument()->GetType();
@@ -214,7 +232,9 @@ void InstrumentView::fillMacroParameters() {
   MacroInstrument *instrument = (MacroInstrument *)instr;
   GUIPoint position = GetAnchor();
 
-  //	position._y+=View::fieldSpaceHeight_;
+  // offset y to account for instrument type and export/import fields
+  position._y += 1;
+
   position._y += 1;
   Variable *v = instrument->FindVariable(FourCC::MacroInstrumentShape);
   intVarField_.emplace_back(position, *v, "shape: %s", 0,
@@ -255,6 +275,10 @@ void InstrumentView::fillSampleParameters() {
   SampleInstrument *instrument = (SampleInstrument *)instr;
 
   GUIPoint position = GetAnchor();
+
+  // offset y to account for instrument type and export/import fields
+  position._y += 1;
+
   Variable *v = instrument->FindVariable(FourCC::SampleInstrumentSample);
   SamplePool *sp = SamplePool::GetInstance();
   intVarField_.emplace_back(position, *v, "sample: %.19s", 0,
@@ -322,7 +346,7 @@ void InstrumentView::fillSampleParameters() {
   intVarField_.emplace_back(position, *v, "Mode: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 2;
+  position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentInterpolation);
   intVarField_.emplace_back(position, *v, "interpolation: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -369,6 +393,9 @@ void InstrumentView::fillSIDParameters() {
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   SIDInstrument *instrument = (SIDInstrument *)bank->GetInstrument(i);
   GUIPoint position = GetAnchor();
+
+  // offset y to account for instrument type, name and export/import fields
+  position._y += 2;
 
   staticField_.emplace_back(position, instrument->GetChipName().c_str());
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
@@ -481,18 +508,10 @@ void InstrumentView::fillMidiParameters() {
   MidiInstrument *instrument = (MidiInstrument *)instr;
   GUIPoint position = GetAnchor();
 
-  Variable *v = instrument->FindVariable(FourCC::MidiInstrumentName);
-  auto label =
-      etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
-  auto defaultName =
-      etl::make_string_with_capacity<MAX_MIDI_INSTRUMENT_NAME_LENGTH>(
-          DEFAULT_EMPTY_VALUE);
-  uiTextfield_.emplace_back(UITextField<MAX_MIDI_INSTRUMENT_NAME_LENGTH>(
-      *v, position, label, FourCC::MidiInstrumentName, defaultName));
-  fieldList_.insert(fieldList_.end(), &(*uiTextfield_.rbegin()));
-  position._y += 1;
+  // offset y to account for instrument type, name and export/import fields
+  position._y += 2;
 
-  v = instrument->FindVariable(FourCC::MidiInstrumentChannel);
+  Variable *v = instrument->FindVariable(FourCC::MidiInstrumentChannel);
   intVarField_.emplace_back(
       UIIntVarField(position, *v, "channel: %2.2d", 0, 0x0F, 1, 0x04, 1));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -528,6 +547,7 @@ void InstrumentView::fillOpalParameters() {
   I_Instrument *instr = bank->GetInstrument(i);
   OpalInstrument *instrument = (OpalInstrument *)instr;
   GUIPoint position = GetAnchor();
+
   u_int8_t savex = 0;
 
   position._y += 1;
@@ -878,10 +898,41 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     break;
   }
   case FourCC::ActionExport: {
-    // show modal to request name for export
-    TextInputModalView *mb = new TextInputModalView(*this, "Export Instrument",
-                                                    "Name:", "Export", "_");
-    DoModal(mb, ExportInstrumentCallback);
+    // Get current instrument using its id
+    I_Instrument *instrument =
+        viewData_->project_->GetInstrumentBank()->GetInstrument(
+            viewData_->currentInstrumentID_);
+
+    // Check if the instrument has a name set
+    etl::string<MAX_INSTRUMENT_NAME_LENGTH> name = instrument->GetDisplayName();
+    // Check if the name is empty, the default value, or matches the default
+    // instrument type name
+    etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultTypeName =
+        instrument->GetDefaultName();
+
+    if (name.empty() || name == DEFAULT_EMPTY_VALUE ||
+        name == defaultTypeName) {
+      // Show error message if no name is set
+      MessageBox *mb = new MessageBox(*this, "Please set a name",
+                                      "before exporting", MBBF_OK);
+      DoModal(mb);
+    } else {
+      // Export the instrument using the name field
+      PersistencyResult result =
+          PersistencyService::GetInstance()->ExportInstrument(instrument, name);
+
+      // Create a message with the instrument name
+      etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
+          successMsg = "Exported: ";
+      successMsg += name;
+
+      const char *message = result == PERSIST_SAVED
+                                ? successMsg.c_str()
+                                : "Failed to export instrument";
+      // Show export result message
+      MessageBox *mb = new MessageBox(*this, message, MBBF_OK);
+      DoModal(mb);
+    }
   } break;
   case FourCC::ActionImport: {
     // Switch to the InstrumentImportView

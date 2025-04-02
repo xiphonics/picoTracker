@@ -264,6 +264,11 @@ PersistencyResult PersistencyService::ExportInstrument(
   etl::vector segments = {INSTRUMENTS_DIR, filename.c_str()};
   CreatePath(pathBufferA, segments);
 
+  // check if file already exists
+  if (picoFS->exists(pathBufferA.c_str())) {
+    return PERSIST_ERROR;
+  }
+
   auto fp = picoFS->Open(pathBufferA.c_str(), "w");
   tinyxml2::XMLPrinter printer(fp);
 
@@ -307,10 +312,36 @@ PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
     return PERSIST_ERROR;
   }
 
+  // Extract instrument name from filename (minus .pti extension)
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> instrumentName;
+  const char *dotPos = strrchr(name, '.');
+  if (dotPos) {
+    // Calculate the length of the name without extension
+    size_t nameLength = dotPos - name;
+    // Copy only up to MAX_INSTRUMENT_NAME_LENGTH characters
+    nameLength = nameLength < MAX_INSTRUMENT_NAME_LENGTH
+                     ? nameLength
+                     : MAX_INSTRUMENT_NAME_LENGTH - 1;
+    instrumentName.assign(name, nameLength);
+  } else {
+    // No extension found, use the whole name (up to MAX_INSTRUMENT_NAME_LENGTH)
+    instrumentName.assign(name, strlen(name) < MAX_INSTRUMENT_NAME_LENGTH
+                                    ? strlen(name)
+                                    : MAX_INSTRUMENT_NAME_LENGTH - 1);
+  }
+
+  // Set the instrument name
+  Variable *nameVar = instrument->FindVariable(FourCC::InstrumentName);
+  if (nameVar) {
+    nameVar->SetString(instrumentName.c_str());
+  }
+
   // Mark the instrument as changed to trigger UI updates
   instrument->SetChanged();
   instrument->NotifyObservers();
 
   Trace::Log("PERSISTENCYSERVICE", "Successfully imported instrument settings");
+  Trace::Log("PERSISTENCYSERVICE", "Set instrument name to: %s",
+             instrumentName.c_str());
   return PERSIST_LOADED;
 }

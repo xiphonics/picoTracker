@@ -2,6 +2,7 @@
 #define _OPAL_INSTRUMENT_H_
 
 #include "Application/Model/Song.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/opal/opal.h"
 #include "I_Instrument.h"
 
@@ -30,8 +31,6 @@ public:
 
   virtual InstrumentType GetType() { return IT_OPAL; };
 
-  virtual etl::string<24> GetName();
-
   virtual void OnStart();
 
   virtual void Purge(){};
@@ -49,7 +48,7 @@ private:
 
   uint8_t breg;
 
-  etl::list<Variable *, 15> variables_;
+  etl::list<Variable *, 16> variables_;
 
   Variable algorithm_;
   Variable feedback_;

@@ -1,5 +1,6 @@
 #include "SIDInstrument.h"
 #include "Adapters/picoTracker/utils/utils.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "I_Instrument.h"
@@ -44,15 +45,7 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
       tableAuto_(FourCC::SIDInstrumentTableAutomation, false),
       osc_(FourCC::SIDInstrumentOSCNumber, 0) {
 
-  name_ = "SID #";
-  etl::string<1> num;
-  etl::format_spec format;
-  etl::to_string((int)chip_, num, format);
-  name_ += num;
-  name_ += " OSC #";
-  etl::to_string(GetOsc(), num, format);
-  name_ += num;
-
+  variables_.insert(variables_.end(), &name_);
   variables_.insert(variables_.end(), &vpw_);
   variables_.insert(variables_.end(), &vwf1_);
   variables_.insert(variables_.end(), &vsync_);
@@ -237,7 +230,14 @@ void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }
 };
 
-etl::string<24> SIDInstrument::GetName() { return name_; }
+etl::string<MAX_INSTRUMENT_NAME_LENGTH> SIDInstrument::GetName() {
+  // first check if the name_ variable has been explicitly set
+  if (!name_.GetString().empty() && name_.GetString() != DEFAULT_EMPTY_VALUE) {
+    return name_.GetString();
+  }
+  // otherwise return the default name for this instrument type
+  return etl::string<MAX_INSTRUMENT_NAME_LENGTH>(InstrumentTypeNames[IT_SID]);
+}
 
 int SIDInstrument::GetTable() {
   Variable *v = FindVariable(FourCC::SIDInstrumentTable);

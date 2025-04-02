@@ -132,11 +132,6 @@ void MacroInstrument::Update(Observable &o, I_ObservableData *d){};
 
 void MacroInstrument::ProcessCommand(int channel, FourCC cc, ushort value){};
 
-etl::string<24> MacroInstrument::GetName() {
-  Variable *v = FindVariable(FourCC::MacroInstrumentShape);
-  return v->GetString();
-};
-
 void MacroInstrument::Purge(){};
 
 bool MacroInstrument::IsEmpty() { return false; };
