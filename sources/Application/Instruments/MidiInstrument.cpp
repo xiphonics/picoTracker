@@ -220,18 +220,15 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }
 }
 
-etl::string<MAX_INSTRUMENT_NAME_LENGTH> MidiInstrument::GetName() {
+etl::string<MAX_INSTRUMENT_NAME_LENGTH> MidiInstrument::GetDefaultName() {
   // use the channel number as a fallback
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
-  etl::string<MAX_INSTRUMENT_NAME_LENGTH> temp = "MIDI CH ";
-
+  defaultName_ = "MIDI CH ";
   int displayChannelNum = v->GetInt() + 1;
   char channelStr[3];
   hex2char(displayChannelNum, channelStr);
-  temp += channelStr;
-
-  name_.SetString(temp.c_str());
-  return name_.GetString();
+  defaultName_ += channelStr;
+  return defaultName_;
 }
 
 int MidiInstrument::GetTable() {

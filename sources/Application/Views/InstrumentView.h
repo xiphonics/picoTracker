@@ -55,7 +55,6 @@ private:
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
-
-  UITextField<MAX_INSTRUMENT_NAME_LENGTH> *nameTextfield_;
+  etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
 };
 #endif

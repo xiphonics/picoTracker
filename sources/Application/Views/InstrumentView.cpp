@@ -56,9 +56,9 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
       auto defaultName =
           etl::make_string_with_capacity<MAX_INSTRUMENT_NAME_LENGTH>("_");
 
-      nameTextfield_ = new UITextField<MAX_INSTRUMENT_NAME_LENGTH>(
-          *nameVar, position, label, FourCC::InstrumentName, defaultName);
-      fieldList_.insert(fieldList_.end(), nameTextfield_);
+      nameTextField_.emplace_back(*nameVar, position, label,
+                                  FourCC::InstrumentName, defaultName);
+      fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
     }
   }
 
@@ -125,13 +125,10 @@ void InstrumentView::onInstrumentChange() {
   // update type field to match current instrument
   ((WatchedVariable *)&instrumentType_)->SetInt(getInstrument()->GetType());
 
-  // Update the nameTextfield_ to use the current instrument's name variable
-  I_Instrument *instr = getInstrument();
-  Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
-
-  // need to update the nameTextfield_ to use the current instrument's name
-  // variable
-  nameTextfield_->SetVariable(*nameVar);
+  // Let's take a simpler approach - we'll just leave the nameTextfield_ alone
+  // and let refreshInstrumentFields handle it
+  // The crash might be happening because we're modifying fieldList_ here and
+  // then again in refreshInstrumentFields
 
   refreshInstrumentFields(old);
 };
@@ -168,10 +165,31 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
     action.AddObserver(*this); // Make sure observers are re-added
   }
 
-  // Re-add the name field if needed
+  // Handle the name field
+  // Clear the nameTextField_ vector
+  nameTextField_.clear();
+
+  // Create a new nameTextField_ if the instrument type supports it
   if (instrumentType_.GetInt() != IT_NONE &&
       instrumentType_.GetInt() != IT_SAMPLE) {
-    fieldList_.insert(fieldList_.end(), nameTextfield_);
+    I_Instrument *instr = getInstrument();
+    if (instr) {
+      Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
+      if (nameVar) {
+        GUIPoint position = GetAnchor();
+        position._y -= 1;
+
+        auto label =
+            etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>(
+                "name: ");
+        auto defaultName =
+            etl::make_string_with_capacity<MAX_INSTRUMENT_NAME_LENGTH>("_");
+
+        nameTextField_.emplace_back(*nameVar, position, label,
+                                    FourCC::InstrumentName, defaultName);
+        fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
+      }
+    }
   }
 
   InstrumentType it = getInstrument()->GetType();

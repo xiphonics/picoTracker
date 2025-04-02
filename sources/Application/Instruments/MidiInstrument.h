@@ -37,7 +37,7 @@ public:
 
   virtual InstrumentType GetType() { return IT_MIDI; };
 
-  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetName();
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDefaultName();
 
   virtual void OnStart();
 
@@ -48,7 +48,6 @@ public:
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
   etl::ilist<Variable *> *Variables() { return &variables_; };
-  // external parameter list
 
   void SetChannel(int i);
 
@@ -69,7 +68,9 @@ private:
   Variable volume_;
   Variable table_;
   Variable tableAuto_;
-  // Using name_ from I_Instrument base class
+  // need to store defaultname as it depends on the MIDI channel of the
+  // instrument
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName_;
 
   static MidiService *svc_;
 };
