@@ -7,6 +7,5 @@ class DummyMidi : public MidiService {
 public:
   DummyMidi();
   ~DummyMidi();
-  virtual void buildDriverList();
 };
 #endif
