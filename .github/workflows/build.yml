@@ -50,6 +50,10 @@ jobs:
           GH_RUN_NUMBER: ${{ github.run_number }}
       run: echo "#define BUILD_COUNT \"$GH_RUN_NUMBER\"" > sources/Application/Model/BuildNumber.h
 
+    - name: Old Cmake in Mbedtls workaround
+      shell: bash
+      run: rm -rf sources/Externals/pico-sdk/lib/mbedtls  
+
     - name: Get core count
       id: core_count
       run : cat /proc/cpuinfo  | grep processor | wc -l
