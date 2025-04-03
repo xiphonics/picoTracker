@@ -1,24 +1,18 @@
 #include "picoTrackerMidiService.h"
-#include "picoTrackerMidiInDevice.h"
-#include "picoTrackerMidiOutDevice.h"
-#include "picoTrackerUSBMidiDevice.h"
-#include "picoTrackerUSBMidiInDevice.h"
 
-picoTrackerMidiService::picoTrackerMidiService() {
-  // create a midi device for each of Midi Output device
-  MidiOutDevice *dev = new picoTrackerMidiOutDevice("MIDI OUT");
-  outList_.insert(outList_.end(), dev);
-  dev = new picoTrackerUSBMidiOutDevice("USB");
-  outList_.insert(outList_.end(), dev);
+picoTrackerMidiService::picoTrackerMidiService() :
+    // Initialize static member variables with their respective names
+    midiOutDevice_("MIDI OUT"),
+    usbMidiOutDevice_("USB"),
+    midiInDevice_("MIDI IN"),
+    usbMidiInDevice_("USB MIDI IN") {
+  // Add MIDI output devices to the output device list
+  outList_.insert(outList_.end(), &midiOutDevice_);
+  outList_.insert(outList_.end(), &usbMidiOutDevice_);
 
-  // Create MIDI input device
-  MidiInDevice *inDev = new picoTrackerMidiInDevice("MIDI IN");
-  inList_.insert(inList_.end(), inDev);
-
-  // Add USB MIDI input device
-  picoTrackerUSBMidiInDevice *usbMidiIn =
-      new picoTrackerUSBMidiInDevice("USB MIDI IN");
-  inList_.insert(inList_.end(), usbMidiIn);
+  // Add MIDI input devices to the input device list
+  inList_.insert(inList_.end(), &midiInDevice_);
+  inList_.insert(inList_.end(), &usbMidiInDevice_);
 };
 
 picoTrackerMidiService::~picoTrackerMidiService(){};

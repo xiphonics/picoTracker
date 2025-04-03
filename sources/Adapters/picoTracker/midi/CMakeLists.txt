@@ -1,6 +1,6 @@
 add_library(platform_midi
   picoTrackerMidiService.h picoTrackerMidiService.cpp
-  picoTrackerUSBMidiDevice.h picoTrackerUSBMidiDevice.cpp
+  picoTrackerUSBMidiOutDevice.h picoTrackerUSBMidiOutDevice.cpp
   picoTrackerMidiInDevice.h picoTrackerMidiInDevice.cpp
   picoTrackerMidiOutDevice.h picoTrackerMidiOutDevice.cpp
   picoTrackerUSBMidiInDevice.h picoTrackerUSBMidiInDevice.cpp
