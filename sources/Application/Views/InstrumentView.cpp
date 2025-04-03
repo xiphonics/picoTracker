@@ -179,7 +179,6 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
       Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
       if (nameVar) {
         GUIPoint position = GetAnchor();
-        position._y -= 1;
 
         auto label =
             etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>(
