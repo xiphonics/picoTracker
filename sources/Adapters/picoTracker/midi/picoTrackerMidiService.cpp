@@ -1,11 +1,9 @@
 #include "picoTrackerMidiService.h"
 
-picoTrackerMidiService::picoTrackerMidiService() :
-    // Initialize static member variables with their respective names
-    midiOutDevice_("MIDI OUT"),
-    usbMidiOutDevice_("USB"),
-    midiInDevice_("MIDI IN"),
-    usbMidiInDevice_("USB MIDI IN") {
+picoTrackerMidiService::picoTrackerMidiService()
+    : // Initialize static member variables with their respective names
+      midiOutDevice_("MIDI OUT"), usbMidiOutDevice_("USB"),
+      midiInDevice_("MIDI IN"), usbMidiInDevice_("USB MIDI IN") {
   // Add MIDI output devices to the output device list
   outList_.insert(outList_.end(), &midiOutDevice_);
   outList_.insert(outList_.end(), &usbMidiOutDevice_);
