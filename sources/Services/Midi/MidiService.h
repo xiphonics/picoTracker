@@ -56,9 +56,6 @@ protected:
   // stop the selected midi device
   void stopDevice();
 
-  // build the list of available drivers
-  virtual void buildDriverList() = 0;
-
 private:
   void flushOutQueue();
   void updateActiveDevicesList(unsigned short config);

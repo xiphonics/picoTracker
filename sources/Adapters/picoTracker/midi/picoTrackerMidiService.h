@@ -10,9 +10,6 @@ public:
 
   // Poll MIDI input devices for new messages
   void poll();
-
-protected:
-  virtual void buildDriverList();
 };
 
 #endif

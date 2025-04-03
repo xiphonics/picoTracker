@@ -4,11 +4,7 @@
 #include "picoTrackerUSBMidiDevice.h"
 #include "picoTrackerUSBMidiInDevice.h"
 
-picoTrackerMidiService::picoTrackerMidiService(){};
-
-picoTrackerMidiService::~picoTrackerMidiService(){};
-
-void picoTrackerMidiService::buildDriverList() {
+picoTrackerMidiService::picoTrackerMidiService() {
   // create a midi device for each of Midi Output device
   MidiOutDevice *dev = new picoTrackerMidiOutDevice("MIDI OUT");
   outList_.insert(outList_.end(), dev);
@@ -24,6 +20,8 @@ void picoTrackerMidiService::buildDriverList() {
       new picoTrackerUSBMidiInDevice("USB MIDI IN");
   inList_.insert(inList_.end(), usbMidiIn);
 };
+
+picoTrackerMidiService::~picoTrackerMidiService(){};
 
 void picoTrackerMidiService::poll() {
   // Poll all MIDI input devices
