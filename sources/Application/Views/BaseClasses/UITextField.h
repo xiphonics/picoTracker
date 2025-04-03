@@ -20,7 +20,7 @@ public:
   void OnClick();
   void OnEditClick();
   etl::string<MaxLength> GetString();
-  
+
   // Set the variable this UITextField is bound to
   void SetVariable(Variable &v);
 
