@@ -43,6 +43,10 @@ message(USE_LCD="${USE_LCD}")
 add_compile_definitions(${USE_LCD})
 # add_compile_definitions(LCD_ST7789)
 
+
+# Needed for ETL to pick up our etl_profile.h
+include_directories("config/")
+
 # Enable ETL debug mode only for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(ETL_DEBUG)
