@@ -33,12 +33,12 @@
 ;
 ; The modifications bare a little bit of explanation:
 ; The I2S output bitstream word length has been changed to 32bit BUT the input data has been
-; untouched, so what the modified PIO code below does is insert a fixed amount of 0 bits at the
+; untouched, so what the modified PIO code below does is insert a fixed amount of bits at the
 ; front of the real 16bit sample data and then fills in after the real data the remaining required
 ; number of bits to get to 32 in total. We can't *just* blindly preface 0 bits at the start of the 
 ; real data on the i2s output because the data in i2s is twos-complement so we need to preserve the
 ; real data's MSB on the i2s output bitstream so the i2s bitstream becomes:
-; MSB+0-bits-padding+RealData+0-bits-Backfill
+; MSB+Copies of MSB+RestOfData+0-bits-Backfill
 
 
 .program audio_i2s
@@ -65,10 +65,10 @@ bitloop1:                   ;      ||
     set x, DATA_LOOP_COUNT  side 0b01
 
     out pins, 1             side 0b00 ; twos complement so need to keep most significant Bit of real sample data
-    set y, OFFSET_COUNT     side 0b01 ; now how many bits+1 of zeros we will pad from MSB
+    set y, OFFSET_COUNT     side 0b01 ; now how many bits+1 of MSB we will pad from MSB
 
 padloop1:
-    set pins, 0             side 0b00
+    nop                     side 0b00 ; Clocking out MSB for sign extension
     jmp y-- padloop1        side 0b01
 
 bitloop0:
@@ -89,10 +89,10 @@ public entry_point:
     set x, DATA_LOOP_COUNT  side 0b11
 
     out pins, 1             side 0b10 ; twos complement so need to keep most significant Bit of real sample data
-    set y, OFFSET_COUNT     side 0b11 ; now how many bits+1 of zeros we will pad from MSB
+    set y, OFFSET_COUNT     side 0b11 ; now how many bits+1 of MSB we will pad from MSB
 
 padloop0:
-    set pins, 0             side 0b10
+    nop                     side 0b10 ; Clocking out MSB for sign extension
     jmp y-- padloop0        side 0b11
      
 
@@ -102,6 +102,7 @@ static inline void audio_i2s_program_init(PIO pio, uint sm, uint offset, uint da
     pio_sm_config sm_config = audio_i2s_program_get_default_config(offset);
     
     sm_config_set_out_pins(&sm_config, data_pin, 1);
+    sm_config_set_set_pins(&sm_config, data_pin, 1);
     sm_config_set_sideset_pins(&sm_config, clock_pin_base);
     sm_config_set_out_shift(&sm_config, false, true, 32);
 
