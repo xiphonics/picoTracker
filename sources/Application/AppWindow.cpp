@@ -605,7 +605,13 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     PlayerEvent *pt = (PlayerEvent *)ve;
     if (_currentView) {
       SysMutexLocker locker(drawMutex_);
-      _currentView->OnPlayerUpdate(pt->GetType(), pt->GetTickCount());
+      // Check if the current view has a modal view
+      if (_currentView->HasModalView()) {
+        _currentView->GetModalView()->OnPlayerUpdate(pt->GetType(),
+                                                     pt->GetTickCount());
+      } else {
+        _currentView->OnPlayerUpdate(pt->GetType(), pt->GetTickCount());
+      }
       Invalidate();
     }
     break;

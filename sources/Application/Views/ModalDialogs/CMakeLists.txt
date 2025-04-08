@@ -2,6 +2,7 @@ add_library(application_views_modaldialogs
   # PicoImportSampleDialog.h PicoImportSampleDialog.cpp
   MessageBox.h MessageBox.cpp
   TextInputModalView.h TextInputModalView.cpp
+  RenderProgressModal.h RenderProgressModal.cpp
 )
 
 target_link_libraries(application_views_modaldialogs PUBLIC application_views_baseclasses

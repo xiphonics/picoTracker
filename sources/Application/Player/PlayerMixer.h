@@ -3,6 +3,7 @@
 #define _APPLICATION_MIXER_H_
 
 #include "Application/Audio/AudioFileStreamer.h"
+#include "Application/Mixer/MixerService.h"
 #include "Application/Model/Project.h"
 #include "Application/Utils/fixed.h"
 #include "Application/Views/ViewData.h"
@@ -26,7 +27,7 @@ public:
   bool Init(Project *project);
   void Close();
 
-  void OnPlayerStart();
+  void OnPlayerStart(MixerServiceMode msmMode);
   void OnPlayerStop();
 
   void StartInstrument(int channel, I_Instrument *instrument,

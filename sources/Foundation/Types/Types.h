@@ -158,6 +158,8 @@ struct FourCC {
     // 146 is taken for ActionImport
     // 147 is taken for ActionOK
     // 148 is taken for InstrumentName
+    // 149 is taken for ActionRenderMixdown
+    // 150 is taken for ActionRenderStems
 
     VarInstrumentType = 113,
 
@@ -175,6 +177,8 @@ struct FourCC {
     ActionImport = 146,
     ActionOK = 147,
     InstrumentName = 148,
+    ActionRenderMixdown = 149,
+    ActionRenderStems = 150,
 
     Default = 255, // "    "
   };
