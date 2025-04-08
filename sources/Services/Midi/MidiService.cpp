@@ -23,7 +23,6 @@ MidiService::~MidiService() { Close(); };
 bool MidiService::Init() {
   outList_.empty();
   inList_.empty();
-
   // Init all the output midi devices
   for (auto dev : outList_) {
     dev->Init();
@@ -142,7 +141,7 @@ void MidiService::Flush() {
 void MidiService::OnMidiStart() {
   // Start the Player in song mode
   Trace::Log("MIDI", "Received MIDI Start message");
-  Player::GetInstance()->Start(PM_SONG, true);
+  Player::GetInstance()->Start(PM_SONG, true, MSM_AUDIO, false);
 }
 
 void MidiService::OnMidiStop() {

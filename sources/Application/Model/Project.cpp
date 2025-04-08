@@ -14,6 +14,8 @@
 
 #include <math.h>
 
+etl::string<MAX_PROJECT_NAME_LENGTH> Project::ProjectNameGlobal;
+
 Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
@@ -29,6 +31,8 @@ Project::Project(const char *name)
   this->variables_.insert(variables_.end(), &scale_);
   scale_.SetInt(0);
   this->variables_.insert(variables_.end(), &projectName_);
+
+  Project::ProjectNameGlobal = etl::string<16>(name);
 
   static char instrumentBankMemBuf[sizeof(InstrumentBank)];
   instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();

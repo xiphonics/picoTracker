@@ -3,8 +3,10 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/randomnames.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UIStaticField.h"
 #include "BaseClasses/UITempoField.h"
 #include "BaseClasses/View.h"
 #include "BaseClasses/ViewEvent.h"
@@ -74,6 +76,21 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
 static void PurgeCallback(View &v, ModalView &dialog) {
   ((ProjectView &)v).OnPurgeInstruments(dialog.GetReturnCode() == MBL_YES);
 };
+
+static void RenderStopCallback(View &v, ModalView &dialog) {
+  // If the user clicked OK, stop the rendering
+  if (dialog.GetReturnCode() == MBL_OK) {
+    Player *player = Player::GetInstance();
+    if (player->IsRunning()) {
+      player->Stop();
+
+      // Show cancellation message
+      MessageBox *cancelDialog =
+          new MessageBox(((ProjectView &)v), "Rendering Stopped", MBBF_OK);
+      ((ProjectView &)v).DoModal(cancelDialog);
+    }
+  }
+}
 
 ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
@@ -153,6 +170,25 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._x += 5;
   a1 = new UIActionField("Random", FourCC::ActionRandomName, position);
+  a1->AddObserver(*this);
+  fieldList_.insert(fieldList_.end(), a1);
+  position._x = xalign;
+
+  // Add rendering action fields
+  position._y += 2;
+
+  // Add a static field as a label for the render actions
+  UIStaticField *renderLabel = new UIStaticField(position, "Render:");
+  fieldList_.insert(fieldList_.end(), renderLabel);
+
+  // Position the Mixdown action field to the right of the label
+  position._x += 8;
+  a1 = new UIActionField("Mixdown", FourCC::ActionRenderMixdown, position);
+  a1->AddObserver(*this);
+  fieldList_.insert(fieldList_.end(), a1);
+
+  position._x += 8;
+  a1 = new UIActionField("Stems", FourCC::ActionRenderStems, position);
   a1->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), a1);
   position._x = xalign;
@@ -326,6 +362,28 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 #endif
 
   case FourCC::ActionTempoChanged:
+    break;
+  case FourCC::ActionRenderMixdown:
+    if (!player->IsRunning()) {
+      // Start playback in rendering mode with MSM_FILE
+      player->Start(PM_SONG, true, MSM_FILE, true);
+
+      // Show a dialog with a Stop button during rendering
+      RenderProgressModal *renderDialog =
+          new RenderProgressModal(*this, "Rendering", "Press OK to stop");
+      DoModal(renderDialog, RenderStopCallback);
+    }
+    break;
+  case FourCC::ActionRenderStems:
+    if (!player->IsRunning()) {
+      // Start playback in rendering mode with MSM_FILESPLIT
+      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
+
+      // Show a dialog with a Stop button during rendering
+      RenderProgressModal *renderDialog =
+          new RenderProgressModal(*this, "Stems Rendering", "Press OK to stop");
+      DoModal(renderDialog, RenderStopCallback);
+    }
     break;
   default:
     NInvalid;

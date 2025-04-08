@@ -50,23 +50,25 @@ public:
 
   // basic interface
 
-  void Start(PlayMode mode, bool forceSongMode);
+  void Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
+             bool stopAtEnd = false);
   void Stop();
-
-  //	void Toggle(PlayMode mode,bool forceSongMode=false) ;
-  //	void ChangePlayMode(PlayMode mode) ;
-  //	PlayMode GetPlayMode() ;
 
   void SetSequencerMode(SequencerMode mode);
   SequencerMode GetSequencerMode();
 
   void OnStartButton(PlayMode origin, unsigned int from, bool startFromLastPos,
-                     unsigned char chainPos);
+                     unsigned char chainPos,
+                     MixerServiceMode msmMode = MSM_AUDIO,
+                     bool stopAtEnd = false);
   void OnSongStartButton(unsigned int from, unsigned int to, bool requestStop,
-                         bool forceImmediate);
+                         bool forceImmediate,
+                         MixerServiceMode msmMode = MSM_AUDIO,
+                         bool stopAtEnd = false);
   bool IsPlaying();
 
   bool IsRunning();
+  bool GetStopAtEnd() { return stopAtEnd_; }
 
   void ProcessCommands();
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
@@ -139,6 +141,7 @@ private:
   SequencerMode sequencerMode_;
   PlayMode mode_;
   bool isRunning_;
+  bool stopAtEnd_;
 
   unsigned long startClock_; // .Used to time display live queued chains
                              //  for blinking effect
