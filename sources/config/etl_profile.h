@@ -8,4 +8,9 @@
 #define ETL_CPP17_SUPPORTED 1
 #define ETL_CHECK_PUSH_POP
 
+#ifdef ETL_DEBUG
+#define ETL_LOG_ERRORS
+#define ETL_VERBOSE_ERRORS
+#endif
+
 #endif

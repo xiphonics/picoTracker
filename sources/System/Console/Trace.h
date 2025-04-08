@@ -19,6 +19,7 @@ public:
   static void Debug(const char *fmt, ...);
   static void Log(const char *category, const char *fmt, ...);
   static void Error(const char *fmt, ...);
+  static void RegisterEtlErrorHandler();
 
   //--------------------------------------
 

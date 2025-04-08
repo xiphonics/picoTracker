@@ -6,6 +6,7 @@
 #include "hardware/pll.h"
 #include "pico/stdlib.h"
 #include "tusb.h"
+#include <System/Console/Trace.h>
 
 int main(int argc, char *argv[]) {
 
@@ -18,6 +19,9 @@ int main(int argc, char *argv[]) {
   // Do remaining pT init, this needs to be done *after* above hardware and
   // tinyusb subsystem init
   platform_init();
+
+  // Make sure we get ETL logs
+  Trace::RegisterEtlErrorHandler();
 
   picoTrackerSystem::Boot(argc, argv);
 
