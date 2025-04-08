@@ -1,4 +1,4 @@
-#include "picoTrackerUSBMidiDevice.h"
+#include "picoTrackerUSBMidiOutDevice.h"
 #include "Adapters/picoTracker/platform/platform.h"
 #include "System/Console/Trace.h"
 #include "pico/stdlib.h"

@@ -9,7 +9,7 @@ struct MidiMessage : public I_ObservableData {
     MIDI_NOTE_OFF = 0x80,
     MIDI_NOTE_ON = 0x90,
     MIDI_AFTERTOUCH = 0xA0,
-    MIDI_CONTROLLER = 0xB0,
+    MIDI_CONTROL_CHANGE = 0xB0,
     MIDI_PROGRAM_CHANGE = 0xC0,
     MIDI_CHANNEL_AFTERTOUCH = 0xD0,
     MIDI_PITCH_BEND = 0xE0,

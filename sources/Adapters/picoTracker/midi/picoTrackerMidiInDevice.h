@@ -8,7 +8,7 @@ public:
   virtual ~picoTrackerMidiInDevice();
 
   // Poll the MIDI input buffer for new messages
-  void poll();
+  virtual void poll();
 
   virtual bool Start();
   virtual void Stop();
@@ -19,7 +19,4 @@ protected:
   virtual void closeDriver();
   virtual bool startDriver();
   virtual void stopDriver();
-
-  // MIDI message parsing
-  void processMidiData(uint8_t data);
 };
