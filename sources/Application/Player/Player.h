@@ -113,6 +113,11 @@ public:
 
   Project *GetProject() { return project_; }
 
+  // Direct note playback methods for MIDI
+  void PlayNote(unsigned short instrumentIndex, unsigned short channel,
+                unsigned char note, unsigned char velocity);
+  void StopNote(unsigned short instrumentIndex, unsigned short channel);
+
 protected:
   void updateSongPos(int position, int channel, int chainPos = 0, int hop = -1);
   void updateChainPos(int position, int channel, int hop = 0);
