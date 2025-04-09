@@ -9,7 +9,7 @@ Songs are made up of chains. Each hex number on the song screen grid is a chain.
 
 ### Screen elements
 
-* The top of the song screen displays if you are in SONG or LIVE mode (toggle with `ENTER`+`LEFT`/`RIGHT`) and the name of the project that is currently open.
+* The top of the song screen displays if you are in SONG or LIVE mode (toggle with `EDIT`+`LEFT`/`RIGHT`) and the name of the project that is currently open.
 
 * At the bottom of the screen are the channel playback visualiser boxes. Each box correlates with the above column in the song grid. When a step is triggered in one of the columns, the note value of that trigger is displayed in the play-time visualizer.
 
@@ -17,7 +17,7 @@ Songs are made up of chains. Each hex number on the song screen grid is a chain.
 
 ### Controls
 
-* You can toggle between "SONG" or "LIVE" mode with `ENTER`+`LEFT`/`RIGHT`
+* You can toggle between "SONG" or "LIVE" mode with `EDIT`+`LEFT`/`RIGHT`
 
 * You can navigate through the grid of chains using `UP`/`DOWN`/`LEFT`/`RIGHT` 
 
