@@ -53,6 +53,15 @@ class PrintFile : public print_t, public BaseFile {
   size_t write(uint8_t b) {
     return BaseFile::write(&b, 1);
   }
+  
+  /** Write multiple bytes.
+   * \param[in] buffer pointer to data to be written.
+   * \param[in] size number of bytes to write.
+   * \return number of bytes written.
+   */
+  virtual size_t write(const uint8_t* buffer, size_t size) override {
+    return BaseFile::write(buffer, size);
+  }
 };
 //------------------------------------------------------------------------------
 /**
