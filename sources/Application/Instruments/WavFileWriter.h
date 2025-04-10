@@ -2,7 +2,7 @@
 #define _WAV_FILE_WRITER_H_
 
 #include "Application/Utils/fixed.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "System/FileSystem/FileSystem.h"
 
 class WavFileWriter {
 public:

@@ -7,7 +7,7 @@ PersistencyDocument::PersistencyDocument() {
 }
 
 bool PersistencyDocument::Load(const char *filename) {
-  fp_ = PicoFileSystem::GetInstance()->Open(filename, "r");
+  fp_ = FileSystem::GetInstance()->Open(filename, "r");
   if (fp_)
     return true;
   return false;

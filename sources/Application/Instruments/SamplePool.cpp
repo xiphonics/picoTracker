@@ -4,7 +4,8 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
 #include "System/Console/Trace.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "System/FileSystem/FileSystem.h"
+#include "System/FileSystem/PI_File.h"
 #include "System/io/Status.h"
 #include <stdlib.h>
 #include <string.h>
@@ -78,19 +79,19 @@ void SamplePool::Reset() {
 };
 
 void SamplePool::Load(const char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->chdir(PROJECTS_DIR) || !picoFS->chdir(projectName) ||
-      !picoFS->chdir(PROJECT_SAMPLES_DIR)) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->chdir(PROJECTS_DIR) || !fs->chdir(projectName) ||
+      !fs->chdir(PROJECT_SAMPLES_DIR)) {
     Trace::Error("Failed to chdir into %s/%s/%s", PROJECTS_DIR, projectName,
                  PROJECT_SAMPLES_DIR);
   }
   // First, find all wav files
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
-  picoFS->list(&fileIndexes, ".wav", false);
+  fs->list(&fileIndexes, ".wav", false);
   char name[PFILENAME_SIZE];
   for (size_t i = 0; i < fileIndexes.size(); i++) {
-    picoFS->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
-    if (picoFS->getFileType(fileIndexes[i]) == PFT_FILE) {
+    fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
+    if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
       Status::Set("Loading:%s\n", name);
       Trace::Debug("Loading:%s", name);
       loadSample(name);
@@ -161,8 +162,8 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
 
   // Opens file - we assume that have already chdir() into the correct dir
   // that contains the sample file
-  auto picoFS = PicoFileSystem::GetInstance();
-  PI_File *fin = picoFS->Open(name, "r");
+  auto fs = FileSystem::GetInstance();
+  PI_File *fin = fs->Open(name, "r");
   if (!fin) {
     Trace::Error("Failed to open sample input file:%s\n", name);
     return -1;
@@ -178,7 +179,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   Status::Set("Loading %s->", name);
 
   PI_File *fout =
-      PicoFileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
+      FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
     Trace::Error("Failed to open sample project file:%s\n", projectSamplePath);
     fin->Close();
@@ -212,7 +213,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
 };
 
 void SamplePool::PurgeSample(int i, const char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> buffer;
   etl::string_stream delPath(buffer);
@@ -221,7 +222,7 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
           << PROJECT_SAMPLES_DIR << "/" << names_[i];
 
   // delete file
-  PicoFileSystem::GetInstance()->DeleteFile(delPath.str().c_str());
+  FileSystem::GetInstance()->DeleteFile(delPath.str().c_str());
   // delete wav
   SAFE_DELETE(wav_[i]);
   // delete name entry

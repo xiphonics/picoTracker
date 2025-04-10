@@ -3,6 +3,7 @@
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/PI_File.h"
 
 #define PROJECT_STATE_FILE "/.current"
 
@@ -18,36 +19,36 @@ PersistencyResult PersistencyService::CreateProject() {
 };
 
 void PersistencyService::PurgeUnnamedProject() {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
-  picoFS->chdir(PROJECTS_DIR);
+  fs->chdir(PROJECTS_DIR);
   Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir\n");
-  picoFS->chdir(UNNAMED_PROJECT_NAME);
-  picoFS->DeleteFile(PROJECT_DATA_FILE);
-  picoFS->DeleteFile(AUTO_SAVE_FILENAME);
+  fs->chdir(UNNAMED_PROJECT_NAME);
+  fs->DeleteFile(PROJECT_DATA_FILE);
+  fs->DeleteFile(AUTO_SAVE_FILENAME);
 
-  picoFS->chdir("samples");
+  fs->chdir("samples");
   etl::vector<int, MAX_PIG_SAMPLES> fileIndexes;
-  picoFS->list(&fileIndexes, ".wav", false);
+  fs->list(&fileIndexes, ".wav", false);
 
   // delete all samples
   char filename[128];
   for (size_t i = 0; i < fileIndexes.size(); i++) {
-    picoFS->getFileName(fileIndexes[i], filename,
+    fs->getFileName(fileIndexes[i], filename,
                         MAX_PROJECT_SAMPLE_PATH_LENGTH);
-    picoFS->DeleteFile(filename);
+    fs->DeleteFile(filename);
   };
 };
 
 PersistencyResult
 PersistencyService::CreateProjectDirs_(const char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   // create samples sub dir as well as project dir containing it
   etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR};
   CreatePath(pathBufferA, segments);
 
-  auto result = picoFS->makeDir(pathBufferA.c_str(), true);
+  auto result = fs->makeDir(pathBufferA.c_str(), true);
   Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n [%b]",
              pathBufferA.c_str(), result);
 
@@ -58,23 +59,23 @@ PersistencyService::CreateProjectDirs_(const char *projectName) {
 PersistencyResult PersistencyService::Save(const char *projectName,
                                            const char *oldProjectName,
                                            bool saveAs) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   if (saveAs && !Exists(projectName)) {
     CreateProjectDirs_(projectName);
 
     // copy across the samples from the old project
-    picoFS->chdir(PROJECTS_DIR);
-    picoFS->chdir(oldProjectName);
-    picoFS->chdir(PROJECT_SAMPLES_DIR);
+    fs->chdir(PROJECTS_DIR);
+    fs->chdir(oldProjectName);
+    fs->chdir(PROJECT_SAMPLES_DIR);
 
     Trace::Debug("get list of samples to copy from old project: %s\n",
                  oldProjectName);
 
-    picoFS->list(&fileIndexes_, ".wav", false);
+    fs->list(&fileIndexes_, ".wav", false);
     char filenameBuffer[PFILENAME_SIZE];
     for (size_t i = 0; i < fileIndexes_.size(); i++) {
-      picoFS->getFileName(fileIndexes_[i], filenameBuffer,
+      fs->getFileName(fileIndexes_[i], filenameBuffer,
                           sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out
@@ -89,7 +90,7 @@ PersistencyResult PersistencyService::Save(const char *projectName,
                           filenameBuffer};
       CreatePath(pathBufferB, filePathSegments);
 
-      picoFS->CopyFile(pathBufferA.c_str(), pathBufferB.c_str());
+      fs->CopyFile(pathBufferA.c_str(), pathBufferB.c_str());
     };
   }
   return SaveProjectData(projectName, false);
@@ -108,8 +109,8 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   etl::vector segments = {PROJECTS_DIR, projectName, filename};
   CreatePath(pathBufferA, segments);
 
-  auto picoFS = PicoFileSystem::GetInstance();
-  PI_File *fp = picoFS->Open(pathBufferA.c_str(), "w");
+  auto fs = FileSystem::GetInstance();
+  PI_File *fp = fs->Open(pathBufferA.c_str(), "w");
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  pathBufferA.c_str());
@@ -157,8 +158,8 @@ bool PersistencyService::Exists(const char *projectName) {
   projectFilePath.append("/");
   projectFilePath.append(projectName);
 
-  auto picoFS = PicoFileSystem::GetInstance();
-  return picoFS->exists(projectFilePath.c_str());
+  auto fs = FileSystem::GetInstance();
+  return fs->exists(projectFilePath.c_str());
 }
 
 PersistencyResult PersistencyService::Load(const char *projectName) {
@@ -169,8 +170,8 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
   autoSavePath.append("/");
   autoSavePath.append(AUTO_SAVE_FILENAME);
 
-  auto picoFS = PicoFileSystem::GetInstance();
-  bool useAutosave = (picoFS->exists(autoSavePath.c_str()));
+  auto fs = FileSystem::GetInstance();
+  bool useAutosave = (fs->exists(autoSavePath.c_str()));
 
   Trace::Log("PERSISTENCYSERVICE", "using autosave: %b\n", useAutosave);
   // if autosave exists, then we load it instead of the normal project file
@@ -207,9 +208,9 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
 
 PersistencyResult
 PersistencyService::LoadCurrentProjectName(char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
-  if (picoFS->exists(PROJECT_STATE_FILE)) {
-    auto current = picoFS->Open(PROJECT_STATE_FILE, "r");
+  auto fs = FileSystem::GetInstance();
+  if (fs->exists(PROJECT_STATE_FILE)) {
+    auto current = fs->Open(PROJECT_STATE_FILE, "r");
     int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH - 1);
     current->Close();
     projectName[len] = '\0';
@@ -223,8 +224,8 @@ PersistencyService::LoadCurrentProjectName(char *projectName) {
 
 PersistencyResult
 PersistencyService::SaveProjectState(const char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
-  auto current = picoFS->Open(PROJECT_STATE_FILE, "w");
+  auto fs = FileSystem::GetInstance();
+  auto current = fs->Open(PROJECT_STATE_FILE, "w");
   current->Write(projectName, 1, strlen(projectName));
   current->Close();
   return PERSIST_SAVED;
@@ -244,11 +245,11 @@ void PersistencyService::CreatePath(
 }
 
 bool PersistencyService::ClearAutosave(const char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
   etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
   CreatePath(pathBufferA, segments);
   // TODO: check if file exists before deleting and only return false if it does
   // exist and deleting fails but this can only be done once Open() return
   // values are improved and we can implement a Exists() function on top of it
-  return picoFS->DeleteFile(pathBufferA.c_str());
+  return fs->DeleteFile(pathBufferA.c_str());
 }

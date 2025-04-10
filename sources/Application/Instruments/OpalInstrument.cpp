@@ -79,7 +79,7 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
 
   // set note in OPAL
   uint8_t block = note / 12;
-  u_int16_t fnum = noteFNumbers[note % 12];
+  uint16_t fnum = noteFNumbers[note % 12];
 
   // multiplier is only 4bits
   uint8_t freqMultOp1 = (op1Multiplier_.GetInt() & 0xF);
@@ -112,8 +112,8 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   uint8_t keyscaleOutLvl1 = (keyscale << 6) + (op1Level_.GetInt() & 0x3F);
   uint8_t keyscaleOutLvl2 = (keyscale << 6) + (op2Level_.GetInt() & 0x3F);
 
-  u_int16_t adsr1 = op1ADSR_.GetInt();
-  u_int16_t adsr2 = op2ADSR_.GetInt();
+  uint16_t adsr1 = op1ADSR_.GetInt();
+  uint16_t adsr2 = op2ADSR_.GetInt();
 
   // Waveform
   opl_.Port(0xE0 + CHANNEL, waveform1);
@@ -137,7 +137,7 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
 };
 
 void OpalInstrument::Stop(int c) {
-  u_int8_t stop = BitClr(breg, 5);
+  uint8_t stop = BitClr(breg, 5);
   opl_.Port(OCTAVE_BASE_REG, stop);
 };
 
@@ -161,7 +161,7 @@ bool OpalInstrument::IsInitialized() {
 void OpalInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
   case FourCC::InstrumentCommandGateOff:
-    u_int8_t stop = BitClr(breg, 5);
+    uint8_t stop = BitClr(breg, 5);
     opl_.Port(OCTAVE_BASE_REG, stop);
     break;
   }

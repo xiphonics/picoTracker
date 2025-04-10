@@ -1,4 +1,5 @@
 #include "AudioMixer.h"
+#include "System/Console/Trace.h"
 #include "System/System/System.h"
 
 fixed AudioMixer::renderBuffer_[MAX_SAMPLE_COUNT * 2];

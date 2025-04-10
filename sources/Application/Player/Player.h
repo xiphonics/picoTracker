@@ -21,7 +21,7 @@ enum QueueingMode {
   QM_TICKSTART
 };
 
-typedef u_int32_t MixerStereoLevel;
+typedef uint32_t MixerStereoLevel;
 
 class PlayerEvent : public ViewEvent {
 public:

@@ -2,7 +2,8 @@
 #define _PERSISTENCY_DOCUMENT_H_
 
 #include "Externals/yxml/yxml.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "System/FileSystem/FileSystem.h"
+#include "System/FileSystem/PI_File.h"
 
 class PersistencyDocument {
 public:

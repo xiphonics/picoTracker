@@ -1,5 +1,6 @@
 #include "tinyxml2adapter.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/PI_File.h"
 #include <stdarg.h>
 #include <string.h>
 

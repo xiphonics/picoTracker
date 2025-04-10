@@ -1,5 +1,5 @@
 add_library(system_filesystem
-  PicoFileSystem.h PicoFileSystem.cpp
+  FileSystem.h PI_File.h
 )
 
 target_link_libraries(system_filesystem 
