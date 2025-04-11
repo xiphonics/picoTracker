@@ -44,7 +44,8 @@ PersistencyService::CreateProjectDirs_(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
 
   // create samples sub dir as well as project dir containing it
-  etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR};
+  etl::vector<const char *, 3> segments = {PROJECTS_DIR, projectName,
+                                           PROJECT_SAMPLES_DIR};
   CreatePath(pathBufferA, segments);
 
   auto result = picoFS->makeDir(pathBufferA.c_str(), true);
@@ -81,8 +82,8 @@ PersistencyResult PersistencyService::Save(const char *projectName,
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)
         continue;
 
-      etl::vector filePathSegments = {PROJECTS_DIR, oldProjectName,
-                                      PROJECT_SAMPLES_DIR, filenameBuffer};
+      etl::vector<const char *, 4> filePathSegments = {
+          PROJECTS_DIR, oldProjectName, PROJECT_SAMPLES_DIR, filenameBuffer};
       CreatePath(pathBufferA, filePathSegments);
 
       filePathSegments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR,
@@ -105,7 +106,7 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
 
   const char *filename = autosave ? AUTO_SAVE_FILENAME : PROJECT_DATA_FILE;
 
-  etl::vector segments = {PROJECTS_DIR, projectName, filename};
+  etl::vector<const char *, 3> segments = {PROJECTS_DIR, projectName, filename};
   CreatePath(pathBufferA, segments);
 
   auto picoFS = PicoFileSystem::GetInstance();
@@ -245,7 +246,8 @@ void PersistencyService::CreatePath(
 
 bool PersistencyService::ClearAutosave(const char *projectName) {
   auto picoFS = PicoFileSystem::GetInstance();
-  etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
+  etl::vector<const char *, 3> segments = {PROJECTS_DIR, projectName,
+                                           AUTO_SAVE_FILENAME};
   CreatePath(pathBufferA, segments);
   // TODO: check if file exists before deleting and only return false if it does
   // exist and deleting fails but this can only be done once Open() return
@@ -262,7 +264,7 @@ PersistencyResult PersistencyService::ExportInstrument(
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename = name;
   filename.append(INSTRUMENT_FILE_EXTENSION);
 
-  etl::vector segments = {INSTRUMENTS_DIR, filename.c_str()};
+  etl::vector<const char *, 2> segments = {INSTRUMENTS_DIR, filename.c_str()};
   CreatePath(pathBufferA, segments);
 
   // check if file already exists
@@ -294,6 +296,53 @@ PersistencyResult PersistencyService::ExportInstrument(
   return PERSIST_SAVED;
 }
 
+InstrumentType PersistencyService::DetectInstrumentType(const char *name) {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  if (!picoFS->chdir(INSTRUMENTS_DIR)) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not change to instruments directory");
+    return IT_NONE;
+  }
+
+  // Load the XML document
+  PersistencyDocument doc;
+  if (!doc.Load(name)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not parse XML from file: %s", name);
+    return IT_NONE;
+  }
+
+  // Find the INSTRUMENT element
+  bool elem = doc.FirstChild();
+  if (!elem || strcmp(doc.ElemName(), "INSTRUMENT")) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not find INSTRUMENT node in file: %s", name);
+    return IT_NONE;
+  }
+
+  // Check for TYPE attribute in the INSTRUMENT element
+  InstrumentType importedType = IT_NONE;
+  bool hasAttr = doc.NextAttribute();
+  while (hasAttr) {
+    if (!strcasecmp(doc.attrname_, "TYPE")) {
+      Trace::Log("PERSISTENCYSERVICE", "Found instrument type in XML: %s",
+                 doc.attrval_);
+
+      // Map the type string to InstrumentType enum
+      for (int i = 0; i < IT_LAST; i++) {
+        if (!strcasecmp(doc.attrval_, InstrumentTypeNames[i])) {
+          importedType = static_cast<InstrumentType>(i);
+          Trace::Log("PERSISTENCYSERVICE", "Mapped to instrument type: %d",
+                     importedType);
+          break;
+        }
+      }
+    }
+    hasAttr = doc.NextAttribute();
+  }
+  return importedType;
+}
+
 PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
                                                        const char *name) {
   auto picoFS = PicoFileSystem::GetInstance();
@@ -319,8 +368,41 @@ PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
     return PERSIST_ERROR;
   }
 
+  // Check for TYPE attribute in the INSTRUMENT element
+  InstrumentType importedType = IT_NONE;
+  bool hasAttr = doc.NextAttribute();
+  while (hasAttr) {
+    if (!strcasecmp(doc.attrname_, "TYPE")) {
+      Trace::Log("PERSISTENCYSERVICE", "Found instrument type in XML: %s",
+                 doc.attrval_);
+
+      // Map the type string to InstrumentType enum
+      for (int i = 0; i < IT_LAST; i++) {
+        if (!strcasecmp(doc.attrval_, InstrumentTypeNames[i])) {
+          importedType = static_cast<InstrumentType>(i);
+          Trace::Log("PERSISTENCYSERVICE", "Mapped to instrument type: %d",
+                     importedType);
+          break;
+        }
+      }
+    }
+    hasAttr = doc.NextAttribute();
+  }
+
+  // If we found a valid instrument type and it doesn't match the current
+  // instrument
+  if (importedType != IT_NONE && importedType != instrument->GetType()) {
+    Trace::Log("PERSISTENCYSERVICE",
+               "Current instrument type: %d, imported type: %d",
+               instrument->GetType(), importedType);
+
+    // We can't directly change the instrument type, so we'll need to
+    // create a new instrument of the correct type and copy parameters later
+    Trace::Log("PERSISTENCYSERVICE",
+               "Instrument type mismatch, will convert after loading");
+  }
+
   // Restore the instrument content
-  // We need to call Restore instead of RestoreContent directly
   if (!instrument->Restore(&doc)) {
     Trace::Error(
         "PERSISTENCYSERVICE: Failed to restore instrument from file: %s", name);

@@ -42,6 +42,7 @@ public:
                    bool overwrite = false);
   PersistencyResult ImportInstrument(I_Instrument *instrument,
                                      const char *name);
+  InstrumentType DetectInstrumentType(const char *name);
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);

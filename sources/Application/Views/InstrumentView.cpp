@@ -869,7 +869,26 @@ void InstrumentView::DrawView() {
 
 void InstrumentView::OnFocus() {
   Trace::Log("INSTRUMENTVIEW", "onFocus");
+  
+  // Make sure we're observing the instrument type
   ((WatchedVariable *)&instrumentType_)->AddObserver(*this);
+  
+  // Get the current instrument
+  I_Instrument *instr = getInstrument();
+  if (instr) {
+    // Update the instrument type field to match the current instrument
+    InstrumentType currentType = instr->GetType();
+    Trace::Log("INSTRUMENTVIEW", "Current instrument type: %d", currentType);
+    
+    // Only update if the type has changed
+    if (instrumentType_.GetInt() != currentType) {
+      Trace::Log("INSTRUMENTVIEW", "Updating instrument type from %d to %d", 
+                 instrumentType_.GetInt(), currentType);
+      ((WatchedVariable *)&instrumentType_)->SetInt(currentType);
+    }
+  }
+  
+  // Force a full refresh of the view
   onInstrumentChange();
 }
 
