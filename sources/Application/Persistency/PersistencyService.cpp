@@ -254,7 +254,8 @@ bool PersistencyService::ClearAutosave(const char *projectName) {
 }
 
 PersistencyResult PersistencyService::ExportInstrument(
-    I_Instrument *instrument, etl::string<MAX_INSTRUMENT_NAME_LENGTH> name) {
+    I_Instrument *instrument, etl::string<MAX_INSTRUMENT_NAME_LENGTH> name,
+    bool overwrite) {
   auto picoFS = PicoFileSystem::GetInstance();
 
   // Add .pti extension to the filename
@@ -266,10 +267,24 @@ PersistencyResult PersistencyService::ExportInstrument(
 
   // check if file already exists
   if (picoFS->exists(pathBufferA.c_str())) {
-    return PERSIST_ERROR;
+    if (!overwrite) {
+      return PERSIST_EXISTS;
+    }
+    // Delete the existing file if overwrite is true
+    if (!picoFS->DeleteFile(pathBufferA.c_str())) {
+      Trace::Error("PERSISTENCYSERVICE: Failed to delete existing file: %s",
+                   pathBufferA.c_str());
+      return PERSIST_ERROR;
+    }
   }
 
   auto fp = picoFS->Open(pathBufferA.c_str(), "w");
+  if (!fp) {
+    Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
+                 pathBufferA.c_str());
+    return PERSIST_ERROR;
+  }
+  
   tinyxml2::XMLPrinter printer(fp);
 
   // Use the instrument's Persistent interface to save its data

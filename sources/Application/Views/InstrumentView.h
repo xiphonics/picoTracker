@@ -47,6 +47,10 @@ private:
   InstrumentType currentType_ = IT_NONE;
   bool instrumentModified_ = false;
 
+  // Variables for export confirmation dialog
+  I_Instrument *exportInstrument_ = nullptr;
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> exportName_;
+
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIIntVarField, 40> intVarField_;

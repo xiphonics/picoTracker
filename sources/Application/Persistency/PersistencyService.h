@@ -14,6 +14,7 @@ enum PersistencyResult {
   PERSIST_LOAD_FAILED,
   PERSIST_LOADED,
   PERSIST_ERROR,
+  PERSIST_EXISTS,
 };
 
 #define UNNAMED_PROJECT_NAME ".untitled"
@@ -37,7 +38,8 @@ public:
 
   PersistencyResult
   ExportInstrument(I_Instrument *instrument,
-                   etl::string<MAX_INSTRUMENT_NAME_LENGTH> name);
+                   etl::string<MAX_INSTRUMENT_NAME_LENGTH> name,
+                   bool overwrite = false);
   PersistencyResult ImportInstrument(I_Instrument *instrument,
                                      const char *name);
 

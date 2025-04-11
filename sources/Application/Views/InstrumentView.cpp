@@ -940,17 +940,46 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       PersistencyResult result =
           PersistencyService::GetInstance()->ExportInstrument(instrument, name);
 
-      // Create a message with the instrument name
-      etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
-          successMsg = "Exported: ";
-      successMsg += name;
+      if (result == PERSIST_EXISTS) {
+        // File already exists, ask user if they want to override it
+        etl::string<strlen("Overwrite existing file: ")> confirmMsg =
+            "Overwrite existing file?";
+        MessageBox *mb = new MessageBox(*this, confirmMsg.c_str(), name.c_str(),
+                                        MBBF_YES | MBBF_NO);
 
-      const char *message = result == PERSIST_SAVED
-                                ? successMsg.c_str()
-                                : "Failed to export instrument";
-      // Show export result message
-      MessageBox *mb = new MessageBox(*this, message, MBBF_OK);
-      DoModal(mb);
+        // Store the instrument and name for use in the callback
+        exportInstrument_ = instrument;
+        exportName_ = name;
+
+        DoModal(mb, [](View &v, ModalView &dialog) {
+          if (dialog.GetReturnCode() == MBL_YES) {
+            // User confirmed override, call ExportInstrument with
+            // overwrite=true
+            InstrumentView &iv = (InstrumentView &)v;
+
+            // Re-export the instrument with overwrite flag set to true
+            PersistencyResult result =
+                PersistencyService::GetInstance()->ExportInstrument(
+                    iv.exportInstrument_, iv.exportName_, true);
+
+            // TODO: unfortunately we can't show the result message here
+            // because we're in a modal already and showing a model from result
+            // of a modal is not supported
+          }
+        });
+      } else {
+        // Create a message with the instrument name
+        etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
+            successMsg = "Exported: ";
+        successMsg += name;
+
+        const char *message = result == PERSIST_SAVED
+                                  ? successMsg.c_str()
+                                  : "Failed to export instrument";
+        // Show export result message
+        MessageBox *mb = new MessageBox(*this, message, MBBF_OK);
+        DoModal(mb);
+      }
     }
   } break;
   case FourCC::ActionImport: {
