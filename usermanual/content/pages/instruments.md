@@ -140,21 +140,24 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 
 Exported instruments are stored in `/instruments/` on your SD card. 
 
+**NOTE:** In the future the sample for the instrument will be stored in the same directory as the instrument file but for now is not exported.
+
 ### Importing an Instrument
 
 1. Navigate to the instrument you want to import
 2. Select "Import" from the instrument menu
 3. A file browser will appear showing all available `.pti` files in the `/instruments` directory
 4. Select a `.pti` file to import, use the key combo `ALT`+`PLAY` to import it
-5. The imported instrument will be applied to the current instrument slot
+5. The imported instrument will be added into the next available instrument slot
 6. Press **OK** to continue after the import is complete message is shown
+
 
 
 ### Tips for Instrument Management
 
 - You can organise your instrument files into subfolders inside the `/instruments` directory but exported files will always be saved in the root `/instruments` directory
 - Use descriptive names in the instrument's name field to easily identify them when importing later
-- The instrument name is now used directly for the export filename, so ensure it's set before exporting
+- The instrument name is used for the export filename, so ensure it's set before exporting
 - Back up your `/instruments` directory when backing up your picoTracker data on your sdcard
 
 
