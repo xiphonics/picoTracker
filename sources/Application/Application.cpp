@@ -69,17 +69,17 @@ bool Application::initProject(char *projectName) {
 // /instruments
 // /renders
 void Application::ensurePTDirsExist() {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
-  createIfNotExists(picoFS, PROJECTS_DIR);
-  createIfNotExists(picoFS, SAMPLES_LIB_DIR);
-  createIfNotExists(picoFS, INSTRUMENTS_DIR);
-  createIfNotExists(picoFS, RENDERS_DIR);
+  createIfNotExists(fs, PROJECTS_DIR);
+  createIfNotExists(fs, SAMPLES_LIB_DIR);
+  createIfNotExists(fs, INSTRUMENTS_DIR);
+  createIfNotExists(fs, RENDERS_DIR);
 }
 
-void Application::createIfNotExists(PicoFileSystem *picoFS, const char *path) {
-  if (!picoFS->exists(path)) {
-    picoFS->makeDir(path);
+void Application::createIfNotExists(FileSystem *fs, const char *path) {
+  if (!fs->exists(path)) {
+    fs->makeDir(path);
     Trace::Log("APPLICATION", "created %s std dir\n", path);
   }
 }

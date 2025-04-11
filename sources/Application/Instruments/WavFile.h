@@ -3,7 +3,7 @@
 #define _WAV_FILE_H_
 
 #include "SoundSource.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 
 class WavFile : public SoundSource {

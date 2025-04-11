@@ -1,14 +1,15 @@
 #ifndef _TINY2NOSSTUP_H_
 #define _TINY2NOSSTUP_H_
 #include "System/Console/n_assert.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "System/FileSystem/FileSystem.h"
+#include "System/FileSystem/PI_File.h"
 #include <stdio.h>
 
 #ifdef FILE
 #undef FILE
 #endif
 #define FILE PI_File
-#define fopen(a, b) PicoFileSystem::GetInstance()->Open(a, b)
+#define fopen(a, b) FileSystem::GetInstance()->Open(a, b)
 #define fclose(a)  a->Close() ; delete (a)
 #ifdef __APPLE__
 #define fseeko(a, b, c) a->Seek(b, c)

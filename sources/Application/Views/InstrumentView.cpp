@@ -492,7 +492,7 @@ void InstrumentView::fillOpalParameters() {
   I_Instrument *instr = bank->GetInstrument(i);
   OpalInstrument *instrument = (OpalInstrument *)instr;
   GUIPoint position = GetAnchor();
-  u_int8_t savex = 0;
+  uint8_t savex = 0;
 
   position._y += 1;
   Variable *v = instrument->FindVariable(FourCC::OPALInstrumentAlgorithm);
@@ -625,7 +625,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (!player->IsRunning()) {
           // First check if the samplelib exists
           bool samplelibExists =
-              PicoFileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+              FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
           if (!samplelibExists) {
             MessageBox *mb =

@@ -4,6 +4,7 @@
 #include "Foundation/Types/Types.h"
 #include "Services/Time/TimeService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/PI_File.h"
 #include <stdlib.h>
 
 #ifdef LOAD_IN_FLASH
@@ -60,7 +61,7 @@ WavFile *WavFile::Open(const char *name) {
   Trace::Log("WAVFILE", "wave open from %s", name);
 
   // open file
-  PicoFileSystem *fs = PicoFileSystem::GetInstance();
+  FileSystem *fs = FileSystem::GetInstance();
   PI_File *file = fs->Open(name, "r");
 
   if (!file)

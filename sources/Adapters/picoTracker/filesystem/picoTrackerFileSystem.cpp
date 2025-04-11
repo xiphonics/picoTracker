@@ -1,10 +1,11 @@
-#include "PicoFileSystem.h"
+#include "picoTrackerFileSystem.h"
 
 #include "pico/multicore.h"
 
+// Global mutex for thread safety
 Mutex mutex;
 
-PicoFileSystem::PicoFileSystem() {
+picoTrackerFileSystem::picoTrackerFileSystem() {
   // init out access mutex
   std::lock_guard<Mutex> lock(mutex);
 
@@ -21,13 +22,13 @@ PicoFileSystem::PicoFileSystem() {
   }
   // Try to mount the whole card as FAT (without partition table)
   if (static_cast<FsVolume *>(&sd)->begin(sd.card(), true, 0)) {
-    Trace::Log("PICOFILESYSTEM",
+    Trace::Log("FILESYSTEM",
                "Mounted SD Card FAT Filesystem without partition table");
     return;
   }
 }
 
-PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
+PI_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   std::lock_guard<Mutex> lock(mutex);
   oflag_t rmode;
@@ -49,15 +50,15 @@ PI_File *PicoFileSystem::Open(const char *name, const char *mode) {
   }
   PI_File *wFile = 0;
   if (cwd.open(name, rmode)) {
-    wFile = new PI_File(cwd);
+    wFile = new picoTrackerFile(cwd);
   } else {
     Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
   }
   return wFile;
 }
 
-bool PicoFileSystem::chdir(const char *name) {
-  Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
+bool picoTrackerFileSystem::chdir(const char *name) {
+  Trace::Log("FILESYSTEM", "chdir:%s", name);
   std::lock_guard<Mutex> lock(mutex);
 
   sd.chvol();
@@ -66,12 +67,12 @@ bool PicoFileSystem::chdir(const char *name) {
   char buf[PFILENAME_SIZE];
   cwd.openCwd();
   cwd.getName(buf, 128);
-  Trace::Log("PICOFILESYSTEM", "new CWD:%s\n", buf);
+  Trace::Log("FILESYSTEM", "new CWD:%s\n", buf);
   cwd.close();
   return res;
 }
 
-PicoFileType PicoFileSystem::getFileType(int index) {
+PicoFileType picoTrackerFileSystem::getFileType(int index) {
   std::lock_guard<Mutex> lock(mutex);
 
   FsBaseFile cwd;
@@ -89,7 +90,7 @@ PicoFileType PicoFileSystem::getFileType(int index) {
   return isDir ? PFT_DIR : PFT_FILE;
 }
 
-void PicoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
+void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
                           bool subDirOnly) {
   std::lock_guard<Mutex> lock(mutex);
 
@@ -104,7 +105,7 @@ void PicoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
   }
   char buffer[PFILENAME_SIZE];
   cwd.getName(buffer, PFILENAME_SIZE);
-  Trace::Log("PICOFILESYSTEM", "LIST DIR:%s", buffer);
+  Trace::Log("FILESYSTEM", "LIST DIR:%s", buffer);
 
   if (!cwd.isDir()) {
     Trace::Error("Path is not a directory");
@@ -123,7 +124,7 @@ void PicoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     if (strlen(filter) > 0) {
       tolowercase(buffer);
       matchesFilter = (strstr(buffer, filter) != nullptr);
-      Trace::Log("PICOFILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
+      Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
                  matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given
@@ -136,41 +137,39 @@ void PicoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
       } else {
         fileIndexes->push_back(index);
       }
-      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
+      Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {
-      Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", buffer);
+      Trace::Log("FILESYSTEM", "skipped hidden: %s", buffer);
     }
     entry.close();
   }
   cwd.close();
-  Trace::Log("PICOFILESYSTEM", "scanned: %d, added file indexes:%d", count,
+  Trace::Log("FILESYSTEM", "scanned: %d, added file indexes:%d", count,
              fileIndexes->size());
 }
 
-void PicoFileSystem::getFileName(int index, char *name, int length) {
+void picoTrackerFileSystem::getFileName(int index, char *name, int length) {
   std::lock_guard<Mutex> lock(mutex);
-
-  FsFile cwd;
-  char dirname[PFILENAME_SIZE];
+  FsBaseFile cwd;
   if (!cwd.openCwd()) {
+    char dirname[PFILENAME_SIZE];
     cwd.getName(dirname, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd:%s", dirname);
     return;
   }
-  FsFile entry;
+  FsBaseFile entry;
   entry.open(index);
   entry.getName(name, length);
   entry.close();
   cwd.close();
 }
 
-bool PicoFileSystem::isParentRoot() {
+bool picoTrackerFileSystem::isParentRoot() {
   std::lock_guard<Mutex> lock(mutex);
-
-  FsFile cwd;
-  char dirname[PFILENAME_SIZE];
+  FsBaseFile cwd;
   if (!cwd.openCwd()) {
+    char dirname[PFILENAME_SIZE];
     cwd.getName(dirname, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd:%s", dirname);
     return false;
@@ -189,37 +188,28 @@ bool PicoFileSystem::isParentRoot() {
   return result;
 }
 
-bool PicoFileSystem::DeleteFile(const char *path) {
+bool picoTrackerFileSystem::DeleteFile(const char *path) {
   std::lock_guard<Mutex> lock(mutex);
   return sd.remove(path);
 }
 
-// directory has to be empty
-bool PicoFileSystem::DeleteDir(const char *path) {
+bool picoTrackerFileSystem::DeleteDir(const char *path) {
   std::lock_guard<Mutex> lock(mutex);
   auto delDir = sd.open(path, O_READ);
   return delDir.rmdir();
 }
 
-bool PicoFileSystem::exists(const char *path) {
+bool picoTrackerFileSystem::exists(const char *path) {
   std::lock_guard<Mutex> lock(mutex);
   return sd.exists(path);
 }
 
-/**
- * Create a directory at the specified path.
- *
- * \param[in] path The path where the directory will be created.
- * \param[in] pFlag If true, create missing parent directories.
- *
- * \return true if the directory was successfully created, false otherwise.
- */
-bool PicoFileSystem::makeDir(const char *path, bool pFlag) {
+bool picoTrackerFileSystem::makeDir(const char *path, bool pFlag) {
   std::lock_guard<Mutex> lock(mutex);
   return sd.mkdir(path, pFlag);
 }
 
-uint64_t PicoFileSystem::getFileSize(const int index) {
+uint64_t picoTrackerFileSystem::getFileSize(const int index) {
   std::lock_guard<Mutex> lock(mutex);
   FsBaseFile cwd;
   FsBaseFile entry;
@@ -237,7 +227,7 @@ uint64_t PicoFileSystem::getFileSize(const int index) {
   return size;
 }
 
-bool PicoFileSystem::CopyFile(const char *srcPath, const char *destPath) {
+bool picoTrackerFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   std::lock_guard<Mutex> lock(mutex);
   auto fSrc = sd.open(srcPath, O_READ);
   auto fDest = sd.open(destPath, O_WRITE | O_CREAT);
@@ -262,8 +252,8 @@ bool PicoFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   return true;
 }
 
-void PicoFileSystem::tolowercase(char *temp) {
-  // Convert to upper case
+void picoTrackerFileSystem::tolowercase(char *temp) {
+  // Convert to lower case
   char *s = temp;
   while (*s != '\0') {
     *s = tolower((unsigned char)*s);
@@ -271,28 +261,16 @@ void PicoFileSystem::tolowercase(char *temp) {
   }
 }
 
-PI_File::PI_File(FsBaseFile file) { file_ = file; };
+// picoTrackerFile implementation
 
-/**
- * Read data from a file starting at the current position.
- *
- * \param[out] buf Pointer to the location that will receive the data.
- *
- * \param[in] size Maximum number of bytes to read.
- *
- * \return For success read() returns the number of bytes read.
- * A value less than \a count, including zero, will be returned
- * if end of file is reached.
- * If an error occurs, read() returns -1.  Possible errors include
- * read() called before a file has been opened, corrupt file system
- * or an I/O error occurred.
- */
-int PI_File::Read(void *ptr, int size) {
+picoTrackerFile::picoTrackerFile(FsBaseFile file) { file_ = file; }
+
+int picoTrackerFile::Read(void *ptr, int size) {
   std::lock_guard<Mutex> lock(mutex);
   return file_.read(ptr, size);
 }
 
-void PI_File::Seek(long offset, int whence) {
+void picoTrackerFile::Seek(long offset, int whence) {
   std::lock_guard<Mutex> lock(mutex);
   switch (whence) {
   case SEEK_SET:
@@ -309,32 +287,32 @@ void PI_File::Seek(long offset, int whence) {
   }
 }
 
-bool PI_File::DeleteFile() {
+bool picoTrackerFile::DeleteFile() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.remove();
 }
 
-int PI_File::GetC() {
+int picoTrackerFile::GetC() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.read();
 }
 
-int PI_File::Write(const void *ptr, int size, int nmemb) {
+int picoTrackerFile::Write(const void *ptr, int size, int nmemb) {
   std::lock_guard<Mutex> lock(mutex);
   return file_.write(ptr, size * nmemb);
 }
 
-long PI_File::Tell() {
+long picoTrackerFile::Tell() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.curPosition();
 }
 
-int PI_File::Error() {
+int picoTrackerFile::Error() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.getError();
 }
 
-bool PI_File::Close() {
+bool picoTrackerFile::Close() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.close();
 }

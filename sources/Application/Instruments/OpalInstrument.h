@@ -4,6 +4,7 @@
 #include "Application/Model/Song.h"
 #include "Externals/opal/opal.h"
 #include "I_Instrument.h"
+#include <cstdint>
 
 #define OPAL_MAX_CHANNELS 4
 
@@ -42,7 +43,7 @@ public:
   virtual void SetTableState(TableSaveState &state);
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
-  void setChannel(u_char channel);
+  void setChannel(uint8_t channel);
 
 private:
   Opal opl_ = (44100);

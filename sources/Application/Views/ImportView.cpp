@@ -22,10 +22,10 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
 
   if (mask & EPBM_PLAY) {
-    auto picoFS = PicoFileSystem::GetInstance();
+    auto fs = FileSystem::GetInstance();
     char name[PFILENAME_SIZE];
     unsigned fileIndex = fileIndexList_[currentIndex_];
-    picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
+    fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
     if (mask & EPBM_ALT) {
       Trace::Log("PICOIMPORT", "SHIFT play - import");
@@ -49,12 +49,12 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else {
     // A modifier
     if (mask & EPBM_ENTER) {
-      auto picoFS = PicoFileSystem::GetInstance();
+      auto fs = FileSystem::GetInstance();
       unsigned fileIndex = fileIndexList_[currentIndex_];
       char name[PFILENAME_SIZE];
-      picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
-      if (picoFS->getFileType(fileIndex) == PFT_DIR) {
-        setCurrentFolder(picoFS, name);
+      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+      if (fs->getFileType(fileIndex) == PFT_DIR) {
+        setCurrentFolder(fs, name);
         isDirty_ = true;
         topIndex_ = 0; // need to reset when entering a dir as prev dir may
                        // have been already scrolled down
@@ -69,7 +69,7 @@ void ImportView::DrawView() {
   GUITextProperties props;
   GUIPoint pos = GetTitlePosition();
 
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   // Draw title
   const char *title = "Import Sample";
@@ -100,11 +100,11 @@ void ImportView::DrawView() {
     memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
 
-    if (picoFS->getFileType(fileIndex) != PFT_DIR) {
-      picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
+    if (fs->getFileType(fileIndex) != PFT_DIR) {
+      fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
     } else {
       buffer[0] = '/';
-      picoFS->getFileName(fileIndex, buffer + 1, PFILENAME_SIZE);
+      fs->getFileName(fileIndex, buffer + 1, PFILENAME_SIZE);
     }
     // make sure truncate to list width the filename with trailing null
     buffer[LIST_WIDTH] = 0;
@@ -117,8 +117,8 @@ void ImportView::DrawView() {
   props.invert_ = true;
   y = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
-  if (picoFS->getFileType(currentFileIndex) == PFT_FILE) {
-    int filesize = picoFS->getFileSize(currentFileIndex);
+  if (fs->getFileType(currentFileIndex) == PFT_FILE) {
+    int filesize = fs->getFileSize(currentFileIndex);
     npf_snprintf(buffer, sizeof(buffer), "[size: %i]", filesize);
     x = 1;  // align with rest screen title & file list
     y = 23; // bottom line
@@ -131,11 +131,11 @@ void ImportView::DrawView() {
 void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){};
 
 void ImportView::OnFocus() {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   toInstr_ = viewData_->currentInstrumentID_;
 
-  setCurrentFolder(picoFS, SAMPLES_LIB_DIR);
+  setCurrentFolder(fs, SAMPLES_LIB_DIR);
 };
 
 void ImportView::warpToNextSample(bool goUp) {
@@ -207,16 +207,16 @@ void ImportView::import(char *name) {
   isDirty_ = true;
 };
 
-void ImportView::setCurrentFolder(PicoFileSystem *picoFS, const char *name) {
+void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Trace::Log("PICOIMPORT", "set Current Folder:%s");
-  if (!picoFS->chdir(name)) {
+  if (!fs->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
   }
   currentIndex_ = 0;
   // now update list of file indexes in this new dir
-  picoFS->list(&fileIndexList_, ".wav", false);
+  fs->list(&fileIndexList_, ".wav", false);
 
-  bool isSampleLibDir = picoFS->isParentRoot();
+  bool isSampleLibDir = fs->isParentRoot();
   if (isSampleLibDir && !fileIndexList_.empty()) {
     fileIndexList_.erase(fileIndexList_.begin());
   }

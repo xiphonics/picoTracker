@@ -20,7 +20,7 @@ void SelectProjectView::DrawView() {
   GUIPoint pos = GetTitlePosition();
   SetColor(CD_NORMAL);
 
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   // Draw title
   const char *title = "Load Project";
@@ -49,8 +49,8 @@ void SelectProjectView::DrawView() {
     memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
 
-    if (picoFS->getFileType(fileIndex) == PFT_DIR) {
-      picoFS->getFileName(fileIndex, buffer, MAX_PROJECT_NAME_LENGTH + 1);
+    if (fs->getFileType(fileIndex) == PFT_DIR) {
+      fs->getFileName(fileIndex, buffer, MAX_PROJECT_NAME_LENGTH + 1);
     }
     // SDFat lib doesnt truncate if filename longer than buffer as per docs but
     // instead returns empty string in buffer
@@ -83,8 +83,8 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_ENTER) {
       // all subdirs directly inside /project are expected to be projects
       unsigned fileIndex = fileIndexList_[currentIndex_];
-      auto picoFS = PicoFileSystem::GetInstance();
-      picoFS->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
+      auto fs = FileSystem::GetInstance();
+      fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
       if (strlen(selection_) == 0) {
         Trace::Log("SELECTPROJECTVIEW",
                    "skipping too long project name on Index:%d", fileIndex);
@@ -148,14 +148,14 @@ void SelectProjectView::warpToNextProject(bool goUp) {
 }
 
 void SelectProjectView::setCurrentFolder() {
-  auto picoFS = PicoFileSystem::GetInstance();
-  picoFS->chdir(PROJECTS_DIR);
+  auto fs = FileSystem::GetInstance();
+  fs->chdir(PROJECTS_DIR);
 
   // get ready
   fileIndexList_.clear();
 
   // Let's read all the directory in the project dir
-  picoFS->list(&fileIndexList_, NULL, true);
+  fs->list(&fileIndexList_, NULL, true);
 
   // temp hack,  filter out "." & ".."
   fileIndexList_.erase(fileIndexList_.begin());
@@ -163,7 +163,7 @@ void SelectProjectView::setCurrentFolder() {
 
   // filter out the "untitled" project entry
   for (size_t i = 0; i < fileIndexList_.size(); i++) {
-    picoFS->getFileName(fileIndexList_[i], selection_,
+    fs->getFileName(fileIndexList_[i], selection_,
                         MAX_PROJECT_NAME_LENGTH + 1);
     if (strcmp(selection_, UNNAMED_PROJECT_NAME) == 0) {
       Trace::Log("SELECTPROJECTVIEW", "skipping untitled project on Index:%d",

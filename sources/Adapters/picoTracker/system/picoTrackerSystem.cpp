@@ -1,5 +1,6 @@
 #include "picoTrackerSystem.h"
 #include "Adapters/picoTracker/audio/picoTrackerAudio.h"
+#include "Adapters/picoTracker/filesystem/picoTrackerFileSystem.h"
 #include "Adapters/picoTracker/gui/GUIFactory.h"
 #include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #ifdef DUMMY_MIDI
@@ -54,9 +55,13 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   TimerService::GetInstance()->Install(new (timerMemBuf)
                                            picoTrackerTimerService());
 
+  // Install FileSystem
+  static char fsMemBuf[sizeof(picoTrackerFileSystem)];
+  FileSystem::Install(new (fsMemBuf) picoTrackerFileSystem());
+
   // First check for SDCard
-  auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->chdir("/")) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->chdir("/")) {
     Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
     critical_error_message("SDCARD MISSING", 0x01);
   }
