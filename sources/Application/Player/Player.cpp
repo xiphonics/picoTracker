@@ -1202,3 +1202,28 @@ int Player::GetAudioPreBufferCount() {
 etl::array<stereosample, SONG_CHANNEL_COUNT> *Player::GetMixerLevels() {
   return mixer_.GetMixerLevels();
 }
+
+// Direct note playback methods for MIDI
+
+void Player::PlayNote(unsigned short instrumentIndex, unsigned short channel,
+                      unsigned char note, unsigned char velocity) {
+  if (!project_)
+    return;
+
+  InstrumentBank *bank = project_->GetInstrumentBank();
+  if (!bank)
+    return;
+
+  I_Instrument *instrument = bank->GetInstrument(instrumentIndex);
+  if (instrument) {
+    // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
+    int playerChannel = channel % SONG_CHANNEL_COUNT;
+    mixer_.StartInstrument(playerChannel, instrument, note, true);
+  }
+}
+
+void Player::StopNote(unsigned short instrumentIndex, unsigned short channel) {
+  // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
+  int playerChannel = channel % SONG_CHANNEL_COUNT;
+  mixer_.StopInstrument(playerChannel);
+}

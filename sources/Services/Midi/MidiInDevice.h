@@ -4,6 +4,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/T_Stack.h"
 #include "MidiChannel.h"
+#include "MidiEvent.h"
 #include "MidiMessage.h"
 #include "Services/Controllers/ControllerSource.h"
 
@@ -22,12 +23,19 @@ public:
   virtual ~MidiInDevice();
   bool Init();
   void Close();
-  bool Start();
-  void Stop();
+  virtual bool Start() = 0;
+  virtual void Stop() = 0;
 
   virtual Channel *GetChannel(const char *name);
   virtual bool IsRunning();
   virtual void Trigger(Time time);
+
+  // New methods for direct instrument mapping
+  static void AssignInstrumentToChannel(int midiChannel, int instrumentIndex);
+  static int GetInstrumentForChannel(int midiChannel);
+  static void ClearChannelAssignment(int midiChannel);
+
+  virtual void poll() = 0;
 
 protected:
   // Driver specific initialisation
@@ -45,11 +53,14 @@ protected:
   // Callbacks from driver
 
   void onDriverMessage(MidiMessage &event);
-  /*	void onMidiTempoTick() ;
-          void onMidiStart() ;
-          void onMidiStop() ;
-          void queueEvent(MidiEvent &event) ;
-  */
+  void onMidiTempoTick();
+  void onMidiStart();
+  void onMidiStop();
+  void queueEvent(MidiEvent &event);
+
+  // MIDI message parsing
+  void processMidiData(uint8_t data);
+
 private:
   static bool dumpEvents_;
   // MIDI Channel dependant channels
@@ -59,6 +70,15 @@ private:
   MidiChannel *pbChannel_[16];        // Pitch bend
   MidiChannel *catChannel_[16];       // Channel after touch
   MidiChannel *pcChannel_[16];        // Program change
+
+  // New direct mapping from MIDI channels to instrument indices
+  static int8_t channelToInstrument_[16];
+
+  // MIDI message parsing state
+  uint8_t midiStatus = 0;
+  uint8_t midiData1 = 0;
+  uint8_t midiDataCount = 0;
+  uint8_t midiDataBytes = 0;
 };
 
 #endif

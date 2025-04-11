@@ -749,7 +749,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     viewMode_ = VM_NORMAL;
   }
 
-  FieldView::ProcessButtonMask(mask);
+  FieldView::ProcessButtonMask(mask, pressed);
 
   // EDIT Modifier
   if (mask & EPBM_EDIT) {

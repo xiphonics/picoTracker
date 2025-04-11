@@ -6,6 +6,17 @@
 #include "hardware/pll.h"
 #include "pico/stdlib.h"
 #include "tusb.h"
+#include <System/Console/Trace.h>
+
+// this prevents a really annoying linker warning due to newlib and >gcc13
+// ref:
+// https://github.com/raspberrypi/pico-sdk/issues/1768#issuecomment-2649260970
+#ifdef __cplusplus
+extern "C" {
+int _getentropy(void *buffer, size_t length) { return -1; }
+}
+#endif
+// ================
 
 int main(int argc, char *argv[]) {
 
@@ -18,6 +29,9 @@ int main(int argc, char *argv[]) {
   // Do remaining pT init, this needs to be done *after* above hardware and
   // tinyusb subsystem init
   platform_init();
+
+  // Make sure we get ETL logs
+  Trace::RegisterEtlErrorHandler();
 
   picoTrackerSystem::Boot(argc, argv);
 

@@ -1,5 +1,6 @@
 #include "Trace.h"
 #include "Adapters/picoTracker/platform/platform.h"
+#include "Externals/etl/include/etl/error_handler.h"
 #include "hardware/uart.h"
 #include <string.h>
 
@@ -55,6 +56,19 @@ void Trace::Error(const char *fmt, ...) {
   va_start(args, fmt);
   VLog("*ERROR*", fmt, args);
   va_end(args);
+}
+
+//------------------------------------------------------------------------------
+
+// Never inline, so you can breakpoint on this function to get backtraces
+__attribute__((noinline)) void EtlError(const etl::exception &e) {
+  Trace::Error("ETL: %s:%d: %s", e.file_name(), e.line_number(), e.what());
+}
+
+void Trace::RegisterEtlErrorHandler() {
+#ifdef ETL_LOG_ERRORS
+  etl::error_handler::set_callback<EtlError>();
+#endif
 }
 
 //------------------------------------------------------------------------------

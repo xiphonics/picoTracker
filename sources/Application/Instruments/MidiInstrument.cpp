@@ -3,6 +3,8 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "CommandList.h"
+#include "Externals/etl/include/etl/to_string.h"
+#include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
 
 MidiService *MidiInstrument::svc_ = 0;
@@ -53,7 +55,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   //	send volume initial volume for this midi channel
   v = FindVariable(FourCC::MidiInstrumentVolume);
-  msg.status_ = MIDI_CC + channel;
+  msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
   msg.data1_ = 7;
   msg.data2_ = floor(v->GetInt() / 2);
   svc_->QueueMessage(msg);
@@ -76,7 +78,7 @@ void MidiInstrument::Stop(int c) {
       continue;
     }
     MidiMessage msg;
-    msg.status_ = MIDI_NOTE_OFF + channel;
+    msg.status_ = MidiMessage::MIDI_NOTE_OFF + channel;
     msg.data1_ = lastNotes_[c][i];
     msg.data2_ = 0x00;
     svc_->QueueMessage(msg);
@@ -101,7 +103,7 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
   if (first_[channel]) {
     // send note
     MidiMessage msg;
-    msg.status_ = MIDI_NOTE_ON + mchannel;
+    msg.status_ = MidiMessage::MIDI_NOTE_ON + mchannel;
     msg.data1_ = lastNotes_[channel][0];
     msg.data2_ = velocity_;
     svc_->QueueMessage(msg);
@@ -116,11 +118,11 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
       } else {
         MidiMessage msg;
         remainingTicks_ = retrigLoop_;
-        msg.status_ = MIDI_NOTE_OFF + mchannel;
+        msg.status_ = MidiMessage::MIDI_NOTE_OFF + mchannel;
         msg.data1_ = lastNotes_[channel][0];
         msg.data2_ = 0x00;
         svc_->QueueMessage(msg);
-        msg.status_ = MIDI_NOTE_ON + mchannel;
+        msg.status_ = MidiMessage::MIDI_NOTE_ON + mchannel;
         msg.data1_ = lastNotes_[channel][0];
         msg.data2_ = velocity_;
         svc_->QueueMessage(msg);
@@ -159,7 +161,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandVolume: {
     MidiMessage msg;
-    msg.status_ = MIDI_CC + mchannel;
+    msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + mchannel;
     msg.data1_ = 7;
     msg.data2_ = floor(value / 2);
     svc_->QueueMessage(msg);
@@ -167,7 +169,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandMidiCC: {
     MidiMessage msg;
-    msg.status_ = MIDI_CC + mchannel;
+    msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + mchannel;
     msg.data1_ = (value & 0x7F00) >> 8;
     msg.data2_ = (value & 0x7F);
     svc_->QueueMessage(msg);
@@ -175,7 +177,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandMidiPC: {
     MidiMessage msg;
-    msg.status_ = MIDI_PRG + mchannel;
+    msg.status_ = MidiMessage::MIDI_PROGRAM_CHANGE + mchannel;
     msg.data1_ = (value & 0x7F);
     msg.data2_ = MidiMessage::UNUSED_BYTE;
     svc_->QueueMessage(msg);
@@ -206,7 +208,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
       if (noteOffset != 0) {
         MidiMessage msg;
-        msg.status_ = MIDI_NOTE_ON + mchannel;
+        msg.status_ = MidiMessage::MIDI_NOTE_ON + mchannel;
         msg.data1_ = note;
         msg.data2_ = velocity_;
         Trace::Debug("MIDI chord note ON[%d]: %d", i, msg.data1_);

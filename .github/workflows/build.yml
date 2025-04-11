@@ -25,7 +25,7 @@ jobs:
       uses: carlosperate/arm-none-eabi-gcc-action@v1
       id: arm-none-eabi-gcc-action
       with:
-        release: 12.3.Rel1
+        release: 13.2.Rel1
     - run: arm-none-eabi-gcc --version
 
     - name: Create Build Environment for ILI9341
@@ -49,6 +49,10 @@ jobs:
       env:
           GH_RUN_NUMBER: ${{ github.run_number }}
       run: echo "#define BUILD_COUNT \"$GH_RUN_NUMBER\"" > sources/Application/Model/BuildNumber.h
+
+    - name: Old Cmake in Mbedtls workaround
+      shell: bash
+      run: rm -rf sources/Externals/pico-sdk/lib/mbedtls  
 
     - name: Get core count
       id: core_count

@@ -201,7 +201,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  FieldView::ProcessButtonMask(mask);
+  FieldView::ProcessButtonMask(mask, pressed);
 
   if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN) {

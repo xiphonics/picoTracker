@@ -9,7 +9,7 @@
 
 template <class Item> class T_Factory {
 protected:
-  virtual ~T_Factory<Item>(){};
+  virtual ~T_Factory(){};
 
 public:
   // Install the factory to use

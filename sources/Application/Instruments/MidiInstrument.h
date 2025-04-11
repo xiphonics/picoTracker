@@ -5,12 +5,8 @@
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/etl/include/etl/string.h"
 #include "I_Instrument.h"
+#include "Services/Midi/MidiMessage.h"
 #include "Services/Midi/MidiService.h"
-
-#define MIDI_NOTE_ON 0x90
-#define MIDI_NOTE_OFF 0x80
-#define MIDI_CC 0xB0
-#define MIDI_PRG 0xC0
 
 #define MAX_MIDI_CHORD_NOTES 4
 
