@@ -31,7 +31,7 @@ public:
   I_Instrument(etl::ilist<Variable *> *list,
                const char *nodeName = "INSTRUMENT")
       : VariableContainer(list), Persistent(nodeName),
-        name_(FourCC::InstrumentName, DEFAULT_EMPTY_VALUE){
+        name_(FourCC::InstrumentName, ""){
             // We don't automatically add name_ to the list
             // This allows derived classes to control their variable lists
         };
@@ -75,7 +75,7 @@ public:
   // will be the user set name if available other the default name is returned
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() {
     auto name = GetUserSetName();
-    if (!name.empty() && name != DEFAULT_EMPTY_VALUE) {
+    if (!name.empty()) {
       return name;
     }
     return GetDefaultName();

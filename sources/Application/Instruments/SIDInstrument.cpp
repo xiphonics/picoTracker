@@ -232,7 +232,7 @@ void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SIDInstrument::GetName() {
   // first check if the name_ variable has been explicitly set
-  if (!name_.GetString().empty() && name_.GetString() != DEFAULT_EMPTY_VALUE) {
+  if (!name_.GetString().empty()) {
     return name_.GetString();
   }
   // otherwise return the default name for this instrument type

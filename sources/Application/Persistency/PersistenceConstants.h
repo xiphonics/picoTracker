@@ -13,6 +13,4 @@
 #define RENDERS_DIR "/renders"
 #define INSTRUMENT_FILE_EXTENSION ".pti"
 
-#define DEFAULT_EMPTY_VALUE "_"
-
 #endif // _PERSISTENCE_CONSTANTS_H_

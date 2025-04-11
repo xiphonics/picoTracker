@@ -44,20 +44,10 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   // Create the name field with the actual instrument variable
   I_Instrument *instr = getInstrument();
   if (instr) {
-    Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
     // NONE dont have a name field
-    auto instrumentType = instr->GetType();
-    if (instrumentType != IT_NONE) {
+    if (instr->GetType() != IT_NONE) {
       position._y = 3;
-
-      auto label = etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>(
-          "name: ");
-      auto defaultName =
-          etl::make_string_with_capacity<MAX_INSTRUMENT_NAME_LENGTH>("_");
-
-      nameTextField_.emplace_back(*nameVar, position, label,
-                                  FourCC::InstrumentName, defaultName);
-      fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
+      addNameTextField(instr, position);
     }
   }
 
@@ -76,6 +66,22 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 }
 
 InstrumentView::~InstrumentView() {}
+
+void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
+  Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
+  if (nameVar) {
+    auto label =
+        etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
+
+    // Create a default name based on the instrument's display name
+    etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName =
+        instr->GetDisplayName();
+
+    nameTextField_.emplace_back(*nameVar, position, label,
+                                FourCC::InstrumentName, defaultName);
+    fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
+  }
+}
 
 I_Instrument *InstrumentView::getInstrument() {
   int id = viewData_->currentInstrumentID_;
@@ -166,20 +172,8 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   if (instrumentType_.GetInt() != IT_NONE) {
     I_Instrument *instr = getInstrument();
     if (instr) {
-      Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
-      if (nameVar) {
-        GUIPoint position = GetAnchor();
-
-        auto label =
-            etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>(
-                "name: ");
-        auto defaultName =
-            etl::make_string_with_capacity<MAX_INSTRUMENT_NAME_LENGTH>("_");
-
-        nameTextField_.emplace_back(*nameVar, position, label,
-                                    FourCC::InstrumentName, defaultName);
-        fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
-      }
+      GUIPoint position = GetAnchor();
+      addNameTextField(instr, position);
     }
   }
 
@@ -920,8 +914,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultTypeName =
         instrument->GetDefaultName();
 
-    if (name.empty() || name == DEFAULT_EMPTY_VALUE ||
-        name == defaultTypeName) {
+    if (name.empty() || name == defaultTypeName) {
       // Show error message if no name is set
       MessageBox *mb = new MessageBox(*this, "Please set a name",
                                       "before exporting", MBBF_OK);

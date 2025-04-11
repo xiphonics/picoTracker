@@ -39,6 +39,7 @@ protected:
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
   void refreshInstrumentFields(const I_Instrument *old);
+  void addNameTextField(I_Instrument *instr, GUIPoint &position);
 
 private:
   Project *project_;

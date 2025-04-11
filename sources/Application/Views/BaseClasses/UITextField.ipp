@@ -24,8 +24,20 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
 
   ((AppWindow &)w).SetColor(CD_INFO);
 
-  auto value = src_->GetString().c_str();
-  int len = src_->GetString().length();
+  auto srcString = src_->GetString();
+  const char *value;
+  int len;
+
+  // If the variable's value is empty, use the default value for display
+  if (srcString.empty()) {
+    value = defaultValue_.c_str();
+    len = defaultValue_.length();
+    // Use a different color for default values to indicate they're not set
+    ((AppWindow &)w).SetColor(CD_INFO);
+  } else {
+    value = srcString.c_str();
+    len = srcString.length();
+  }
 
   if (focus_) {
     char buffer[2];
@@ -63,11 +75,14 @@ template <uint8_t MaxLength>
 void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
   auto buffer(src_->GetString());
 
+  // If the variable's value is empty, we need to initialize it when the user
+  // starts editing
+  bool isEmptyBuffer = buffer.empty();
+
   switch (mask) {
   case EPBM_UP:
-    // on a char edit key (up or down), if we are on the default string value,
-    // we want to clear default value and start user off with just first char
-    if (buffer.compare(defaultValue_) == 0) {
+    // If buffer is empty or matches default, initialize with 'A'
+    if (isEmptyBuffer || buffer.compare(defaultValue_) == 0) {
       currentChar_ = 0;
       buffer.clear();
       buffer.append("A");
@@ -80,23 +95,41 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_DOWN:
-    if (buffer.compare(defaultValue_) == 0) {
+    // If buffer is empty or matches default, initialize with 'A'
+    if (isEmptyBuffer || buffer.compare(defaultValue_) == 0) {
       currentChar_ = 0;
       buffer.clear();
       buffer.append("A");
       src_->SetString(buffer.c_str(), true);
+    } else {
+      buffer[currentChar_] = getNext((char)buffer.c_str()[currentChar_], true);
+      src_->SetString(buffer.c_str(), true);
     }
-    buffer[currentChar_] = getNext((char)buffer.c_str()[currentChar_], true);
-    src_->SetString(buffer.c_str(), true);
     SetChanged();
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_LEFT:
+    // If we're showing the default value and user presses left, initialize with
+    // the default
+    if (isEmptyBuffer) {
+      buffer = defaultValue_;
+      src_->SetString(buffer.c_str(), true);
+      SetChanged();
+      NotifyObservers((I_ObservableData *)fourcc_);
+    }
     if (currentChar_ > 0) {
       currentChar_--;
     }
     break;
   case EPBM_RIGHT:
+    // If we're showing the default value and user presses right, initialize
+    // with the default
+    if (isEmptyBuffer) {
+      buffer = defaultValue_;
+      src_->SetString(buffer.c_str(), true);
+      SetChanged();
+      NotifyObservers((I_ObservableData *)fourcc_);
+    }
     if (currentChar_ < (buffer.length() - 1)) {
       currentChar_++;
       // -1 to allow for adding 1 more char
