@@ -53,16 +53,17 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 
   // add ui action fields for exporting and importing instrument settings
   position._y = 2;
-  actionField_.emplace_back("Export", FourCC::ActionExport, position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
-  lastFocusID_ = FourCC::ActionExport;
 
-  position._x += 8;
   actionField_.emplace_back("Import", FourCC::ActionImport, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::ActionImport;
+
+  position._x += 8;
+  actionField_.emplace_back("Export", FourCC::ActionExport, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+  lastFocusID_ = FourCC::ActionExport;
 }
 
 InstrumentView::~InstrumentView() {}
@@ -166,6 +167,12 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
       fieldList_.insert(fieldList_.end(), &action);
       action.AddObserver(*this); // Make sure observers are re-added
     }
+  } else {
+    // add back only the import field for IT_NONE
+    // bit of a hack !!since we just assume that import is the first action
+    // field
+    fieldList_.insert(fieldList_.end(), &(*actionField_.begin()));
+    (*actionField_.rbegin()).AddObserver(*this);
   }
 
   // Create a new nameTextField_ if the instrument type supports it
@@ -869,25 +876,25 @@ void InstrumentView::DrawView() {
 
 void InstrumentView::OnFocus() {
   Trace::Log("INSTRUMENTVIEW", "onFocus");
-  
+
   // Make sure we're observing the instrument type
   ((WatchedVariable *)&instrumentType_)->AddObserver(*this);
-  
+
   // Get the current instrument
   I_Instrument *instr = getInstrument();
   if (instr) {
     // Update the instrument type field to match the current instrument
     InstrumentType currentType = instr->GetType();
     Trace::Log("INSTRUMENTVIEW", "Current instrument type: %d", currentType);
-    
+
     // Only update if the type has changed
     if (instrumentType_.GetInt() != currentType) {
-      Trace::Log("INSTRUMENTVIEW", "Updating instrument type from %d to %d", 
+      Trace::Log("INSTRUMENTVIEW", "Updating instrument type from %d to %d",
                  instrumentType_.GetInt(), currentType);
       ((WatchedVariable *)&instrumentType_)->SetInt(currentType);
     }
   }
-  
+
   // Force a full refresh of the view
   onInstrumentChange();
 }
