@@ -45,7 +45,7 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   I_Instrument *instr = getInstrument();
   if (instr) {
     Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
-    // NONE dont have a name field, SAMPLE use the name of the sample file
+    // NONE dont have a name field
     auto instrumentType = instr->GetType();
     if (instrumentType != IT_NONE) {
       position._y = 3;
@@ -124,11 +124,6 @@ void InstrumentView::onInstrumentChange() {
   // update type field to match current instrument
   ((WatchedVariable *)&instrumentType_)->SetInt(getInstrument()->GetType());
 
-  // Let's take a simpler approach - we'll just leave the nameTextfield_ alone
-  // and let refreshInstrumentFields handle it
-  // The crash might be happening because we're modifying fieldList_ here and
-  // then again in refreshInstrumentFields
-
   refreshInstrumentFields(old);
 };
 
@@ -153,6 +148,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   bigHexVarField_.clear();
   intVarOffField_.clear();
   bitmaskVarField_.clear();
+  nameTextField_.clear();
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -166,13 +162,8 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
     }
   }
 
-  // Handle the name field
-  // Clear the nameTextField_ vector
-  nameTextField_.clear();
-
   // Create a new nameTextField_ if the instrument type supports it
-  if (instrumentType_.GetInt() != IT_NONE &&
-      instrumentType_.GetInt() != IT_SAMPLE) {
+  if (instrumentType_.GetInt() != IT_NONE) {
     I_Instrument *instr = getInstrument();
     if (instr) {
       Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
