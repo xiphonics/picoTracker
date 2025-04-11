@@ -34,8 +34,7 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 
   project_ = data->project_;
 
-  GUIPoint position = GetAnchor();
-  position._y -= 2;
+  GUIPoint position = GUIPoint(5, 1);
   typeIntVarField_.emplace_back(position, *&instrumentType_, "Type: %s", 0,
                                 IT_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -48,8 +47,8 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
     // NONE dont have a name field, SAMPLE use the name of the sample file
     auto instrumentType = instr->GetType();
-    if (nameVar && instrumentType != IT_NONE && instrumentType != IT_SAMPLE) {
-      position._y += 1;
+    if (instrumentType != IT_NONE) {
+      position._y = 3;
 
       auto label = etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>(
           "name: ");
@@ -63,7 +62,7 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   }
 
   // add ui action fields for exporting and importing instrument settings
-  position._y += 1;
+  position._y = 2;
   actionField_.emplace_back("Export", FourCC::ActionExport, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
