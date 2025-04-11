@@ -284,7 +284,7 @@ PersistencyResult PersistencyService::ExportInstrument(
                  pathBufferA.c_str());
     return PERSIST_ERROR;
   }
-  
+
   tinyxml2::XMLPrinter printer(fp);
 
   // Use the instrument's Persistent interface to save its data
