@@ -225,7 +225,7 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
     return *stringValue_;
   case CHAR_LIST:
     if ((value_.index_ < 0) || (value_.index_ >= listSize_)) {
-      return "(null)";
+      return "";
     } else {
       return list_.char_[value_.index_];
     }

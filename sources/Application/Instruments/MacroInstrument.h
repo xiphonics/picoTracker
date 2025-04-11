@@ -5,6 +5,7 @@
 #include "pico/stdlib.h"
 
 #include "Application/Model/Song.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/braids/envelope.h"
 #include "Externals/braids/macro_oscillator.h"
 #include "Externals/braids/quantizer.h"
@@ -29,8 +30,6 @@ public:
 
   // TODO: set a real instrument type before shipping macro instruments
   virtual InstrumentType GetType() { return IT_NONE; };
-  virtual etl::string<24> GetName(); // returns sample name until real
-                                     // namer is implemented
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
   virtual void Purge();
   virtual int GetTable();
@@ -47,7 +46,7 @@ public:
 
 protected:
 private:
-  etl::list<Variable *, 6> variables_;
+  etl::list<Variable *, 7> variables_;
 
   bool running_;
 

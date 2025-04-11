@@ -7,7 +7,7 @@ UITextField<MaxLength>::UITextField(
     Variable &v, GUIPoint &position,
     const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> &label, uint8_t fourcc,
     etl::string<MaxLength> &defaultValue_)
-    : UIField(position), src_(v), label_(label), fourcc_(fourcc),
+    : UIField(position), src_(&v), label_(label), fourcc_(fourcc),
       defaultValue_(defaultValue_) {}
 
 template <uint8_t MaxLength> UITextField<MaxLength>::~UITextField(){};
@@ -24,8 +24,20 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
 
   ((AppWindow &)w).SetColor(CD_INFO);
 
-  auto value = src_.GetString().c_str();
-  int len = src_.GetString().length();
+  auto srcString = src_->GetString();
+  const char *value;
+  int len;
+
+  // If the variable's value is empty, use the default value for display
+  if (srcString.empty()) {
+    value = defaultValue_.c_str();
+    len = defaultValue_.length();
+    // Use a different color for default values to indicate they're not set
+    ((AppWindow &)w).SetColor(CD_INFO);
+  } else {
+    value = srcString.c_str();
+    len = srcString.length();
+  }
 
   if (focus_) {
     char buffer[2];
@@ -49,61 +61,82 @@ template <uint8_t MaxLength> void UITextField<MaxLength>::OnClick() {
 };
 
 template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
-  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_.GetString());
+  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_->GetString());
   if (currentChar_ > 0 && currentChar_ < buffer.length()) {
     buffer.erase(currentChar_, 1);
     currentChar_--;
   }
-  src_.SetString(buffer.c_str(), true);
+  src_->SetString(buffer.c_str(), true);
   SetChanged();
   NotifyObservers((I_ObservableData *)fourcc_);
 };
 
 template <uint8_t MaxLength>
 void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
-  auto buffer(src_.GetString());
+  auto buffer(src_->GetString());
+
+  // If the variable's value is empty, we need to initialize it when the user
+  // starts editing
+  bool isEmptyBuffer = buffer.empty();
 
   switch (mask) {
   case EPBM_UP:
-    // on a char edit key (up or down), if we are on the default string value,
-    // we want to clear default value and start user off with just first char
-    if (buffer.compare(defaultValue_) == 0) {
+    // If buffer is empty or matches default, initialize with 'A'
+    if (isEmptyBuffer || buffer.compare(defaultValue_) == 0) {
       currentChar_ = 0;
       buffer.clear();
       buffer.append("A");
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
     } else {
       buffer[currentChar_] = getNext(buffer.c_str()[currentChar_], false);
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
     }
     SetChanged();
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_DOWN:
-    if (buffer.compare(defaultValue_) == 0) {
+    // If buffer is empty or matches default, initialize with 'A'
+    if (isEmptyBuffer || buffer.compare(defaultValue_) == 0) {
       currentChar_ = 0;
       buffer.clear();
       buffer.append("A");
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
+    } else {
+      buffer[currentChar_] = getNext((char)buffer.c_str()[currentChar_], true);
+      src_->SetString(buffer.c_str(), true);
     }
-    buffer[currentChar_] = getNext((char)buffer.c_str()[currentChar_], true);
-    src_.SetString(buffer.c_str(), true);
     SetChanged();
     NotifyObservers((I_ObservableData *)fourcc_);
     break;
   case EPBM_LEFT:
+    // If we're showing the default value and user presses left, initialize with
+    // the default
+    if (isEmptyBuffer) {
+      buffer = defaultValue_;
+      src_->SetString(buffer.c_str(), true);
+      SetChanged();
+      NotifyObservers((I_ObservableData *)fourcc_);
+    }
     if (currentChar_ > 0) {
       currentChar_--;
     }
     break;
   case EPBM_RIGHT:
+    // If we're showing the default value and user presses right, initialize
+    // with the default
+    if (isEmptyBuffer) {
+      buffer = defaultValue_;
+      src_->SetString(buffer.c_str(), true);
+      SetChanged();
+      NotifyObservers((I_ObservableData *)fourcc_);
+    }
     if (currentChar_ < (buffer.length() - 1)) {
       currentChar_++;
       // -1 to allow for adding 1 more char
     } else if (currentChar_ < (MaxLength - 1)) {
       currentChar_++;
       buffer.append("A");
-      src_.SetString(buffer.c_str(), true);
+      src_->SetString(buffer.c_str(), true);
       SetChanged();
       NotifyObservers((I_ObservableData *)fourcc_);
     }
@@ -113,5 +146,12 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
 
 template <uint8_t MaxLength>
 etl::string<MaxLength> UITextField<MaxLength>::GetString() {
-  return src_.GetString().substr(0, MaxLength);
+  return src_->GetString().substr(0, MaxLength);
+};
+
+template <uint8_t MaxLength>
+void UITextField<MaxLength>::SetVariable(Variable &v) {
+  // Set the variable this UITextField is bound to
+  src_ = &v;
+  currentChar_ = 0; // Reset cursor position
 };

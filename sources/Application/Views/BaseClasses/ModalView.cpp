@@ -22,6 +22,17 @@ void ModalView::DrawString(int x, int y, const char *txt,
   View::DrawString(x + left_, y + top_, txt, props);
 };
 
+GUIPoint ModalView::GetAnchor() {
+  // Get the base anchor point from View
+  GUIPoint baseAnchor = View::GetAnchor();
+
+  // Adjust for modal window position
+  baseAnchor._x = left_;
+  baseAnchor._y = top_;
+
+  return baseAnchor;
+}
+
 void ModalView::SetWindow(int width, int height) {
 
   if (width > 28) {

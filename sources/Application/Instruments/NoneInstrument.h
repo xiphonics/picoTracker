@@ -2,6 +2,7 @@
 #define _NONE_INSTRUMENT_H_
 
 #include "Application/Model/Song.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "I_Instrument.h"
 
 class NoneInstrument : public I_Instrument {
@@ -27,8 +28,6 @@ public:
 
   virtual InstrumentType GetType() { return IT_NONE; };
 
-  virtual etl::string<24> GetName();
-
   virtual void OnStart();
 
   virtual void Purge(){};
@@ -40,7 +39,6 @@ public:
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
 private:
-  etl::string<24> name_ = "None";
-  etl::list<Variable *, 1> variables_;
+  etl::list<Variable *, 2> variables_;
 };
 #endif

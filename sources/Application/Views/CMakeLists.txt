@@ -4,6 +4,7 @@ add_library(application_views
   ConsoleView.h ConsoleView.cpp
   GrooveView.h GrooveView.cpp
   ImportView.h ImportView.cpp
+  InstrumentImportView.h InstrumentImportView.cpp
   InstrumentView.h InstrumentView.cpp
   DeviceView.h DeviceView.cpp
   NullView.h NullView.cpp

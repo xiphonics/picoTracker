@@ -1,14 +1,14 @@
 #ifndef _SAMPLE_INSTRUMENT_H_
 #define _SAMPLE_INSTRUMENT_H_
 
-#include "I_Instrument.h"
-#include "SRPUpdaters.h"
-#include "SampleRenderingParams.h"
-
 #include "Application/Model/Song.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
+#include "I_Instrument.h"
+#include "SRPUpdaters.h"
+#include "SampleRenderingParams.h"
 #include "SampleVariable.h"
 #include "SoundSource.h"
 
@@ -60,8 +60,9 @@ public:
   int GetVolume();
   void SetVolume(int);
   int GetSampleSize(int channel = -1);
-  virtual etl::string<24> GetName(); // returns sample name until real
-                                     // namer is implemented
+
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName();
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() override;
 
   static void EnableDownsamplingLegacy();
 
@@ -71,7 +72,7 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
-  etl::list<Variable *, 19> variables_;
+  etl::list<Variable *, 20> variables_;
 
   SoundSource *source_;
   static struct renderParams renderParams_[SONG_CHANNEL_COUNT];

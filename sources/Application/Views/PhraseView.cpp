@@ -1158,7 +1158,7 @@ void PhraseView::DrawView() {
         location._x += 10; // make space for "Phrase %2.2x"
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(d);
-        instrLine += instr->GetName();
+        instrLine += instr->GetDisplayName();
         DrawString(location._x, location._y, instrLine.c_str(), props);
       }
     }

@@ -1,7 +1,7 @@
 add_library(application_instruments
   CommandList.h CommandList.cpp
   Filters.h Filters.cpp
-  I_Instrument.h
+  I_Instrument.h I_Instrument.cpp
   I_SRPUpdater.h
   InstrumentBank.h InstrumentBank.cpp
   MacroInstrument.h MacroInstrument.cpp

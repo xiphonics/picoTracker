@@ -30,6 +30,7 @@ class ConsoleView;
 class DeviceView;
 class GrooveView;
 class ImportView;
+class InstrumentImportView;
 class InstrumentView;
 class NullView;
 class PhraseView;
@@ -97,6 +98,7 @@ private:
   TableView *_tableView;
   GrooveView *_grooveView;
   ImportView *_importView;
+  InstrumentImportView *_instrumentImportView;
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   NullView *_nullView;

@@ -1,4 +1,3 @@
-
 #ifndef _MODAL_VIEW_H_
 #define _MODAL_VIEW_H_
 
@@ -18,6 +17,9 @@ protected:
   virtual void DrawString(int x, int y, const char *txt,
                           GUITextProperties &props);
   void EndModal(int returnCode);
+
+  // Override GetAnchor to account for modal window position
+  virtual GUIPoint GetAnchor();
 
 private:
   bool finished_;
