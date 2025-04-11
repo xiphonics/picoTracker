@@ -55,15 +55,15 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
     }
 
     if (name[0] != '\0' && value[0] != '\0') {
-      Trace::Log("I_INSTRUMENT", "Found parameter in XML: %s = %s", name,
-                 value);
+      // Trace::Log("I_INSTRUMENT", "Found parameter in XML: %s = %s", name,
+      //            value);
       bool found = false;
 
       // Find the variable with this name and set its value
       for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
         if (!strcasecmp((*it)->GetName(), name)) {
           (*it)->SetString(value);
-          Trace::Log("I_INSTRUMENT", "Set parameter: %s = %s", name, value);
+          // Trace::Log("I_INSTRUMENT", "Set parameter: %s = %s", name, value);
           found = true;
           paramCount++;
           break;
