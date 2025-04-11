@@ -8,6 +8,7 @@
 #include "Services/Midi/MidiService.h"
 
 #define MAX_MIDI_CHORD_NOTES 4
+#define INITIAL_NOTE_VELOCITY 0x7F
 
 const int MAX_MIDI_INSTRUMENT_NAME_LENGTH = 12;
 

@@ -55,15 +55,18 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   MidiMessage msg;
 
-  //	send volume initial volume for this midi channel
+  // send instrument volume for this midi channel when it's not zero
   v = FindVariable(FourCC::MidiInstrumentVolume);
-  msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
-  msg.data1_ = 7;
-  msg.data2_ = floor(v->GetInt() / 2);
-  svc_->QueueMessage(msg);
+  int volume = v->GetInt();
+  if (volume > 0) {
+    msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
+    msg.data1_ = 7;
+    msg.data2_ = floor(volume / 2);
+    svc_->QueueMessage(msg);
+  }
 
-  // store initial velocity
-  velocity_ = msg.data2_;
+  // set initial velocity (changed via InstrumentCommandVelocity)
+  velocity_ = INITIAL_NOTE_VELOCITY;
   playing_ = true;
   retrig_ = false;
 
