@@ -30,7 +30,7 @@ MidiInstrument::MidiInstrument()
   variables_.insert(variables_.end(), &name_);
 }
 
-MidiInstrument::~MidiInstrument() {};
+MidiInstrument::~MidiInstrument(){};
 
 bool MidiInstrument::Init() {
   tableState_.Reset();
