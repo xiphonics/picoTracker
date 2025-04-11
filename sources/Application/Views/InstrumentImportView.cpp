@@ -201,19 +201,19 @@ void InstrumentImportView::importInstrument(char *name) {
   // Find the next available instrument slot
   unsigned short nextSlotId = bank->GetNextFreeInstrumentSlotId();
   if (nextSlotId == NO_MORE_INSTRUMENT) {
-    MessageBox *mb =
-        new MessageBox(*this, "No free instrument slots", MBBF_OK);
+    MessageBox *mb = new MessageBox(*this, "No free instrument slots", MBBF_OK);
     DoModal(mb);
     return;
   }
-  
+
   // Log the instrument IDs
-  Trace::Log("INSTRUMENTIMPORT", "Current instrument ID: %d, Next free slot: %d", 
-             toInstrID_, nextSlotId);
-  
+  Trace::Log("INSTRUMENTIMPORT",
+             "Current instrument ID: %d, Next free slot: %d", toInstrID_,
+             nextSlotId);
+
   // Update toInstrID_ to use the next free slot
   toInstrID_ = nextSlotId;
-  
+
   // Create a new instrument of the correct type in the next free slot
   if (bank->GetNextAndAssignID(importedType, toInstrID_) ==
       NO_MORE_INSTRUMENT) {
