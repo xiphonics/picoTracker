@@ -30,7 +30,7 @@ MidiInstrument::MidiInstrument()
   variables_.insert(variables_.end(), &name_);
 }
 
-MidiInstrument::~MidiInstrument(){};
+MidiInstrument::~MidiInstrument() {};
 
 bool MidiInstrument::Init() {
   tableState_.Reset();
@@ -55,18 +55,18 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
   MidiMessage msg;
 
-  //	send instrument volume for this midi channel when it's not zero
+  // send instrument volume for this midi channel when it's not zero
   v = FindVariable(FourCC::MidiInstrumentVolume);
   int volume = v->GetInt();
-  if(volume > 0){
+  if (volume > 0) {
     msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
     msg.data1_ = 7;
     msg.data2_ = floor(volume / 2);
     svc_->QueueMessage(msg);
   }
 
-  // set initial velocity to 128 (is later controllable via FourCC::InstrumentCommandVelocity)
-  velocity_ = 0x7F;
+  // set initial velocity (changed via InstrumentCommandVelocity)
+  velocity_ = INITIAL_NOTE_VELOCITY;
   playing_ = true;
   retrig_ = false;
 
