@@ -73,7 +73,7 @@ public:
 
   // return the name to display in the UI
   // will be the user set name if available other the default name is returned
-  etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() {
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() {
     auto name = GetUserSetName();
     if (!name.empty()) {
       return name;

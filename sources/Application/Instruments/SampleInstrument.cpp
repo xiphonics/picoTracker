@@ -840,6 +840,20 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
 
   switch (id) {
   case FourCC::SampleInstrumentSample: {
+    // Get the sample name to use as the default instrument name if no custom name is set
+    Variable *sampleVar = FindVariable(FourCC::SampleInstrumentSample);
+    Variable *nameVar = FindVariable(FourCC::InstrumentName);
+    
+    if (sampleVar && nameVar) {
+      // Only update the name if it's empty or matches the previous sample name
+      etl::string<MAX_INSTRUMENT_NAME_LENGTH> currentName = nameVar->GetString();
+      if (currentName.empty()) {
+        // Set the instrument name to the sample name (without extension)
+        etl::string<MAX_INSTRUMENT_NAME_LENGTH> sampleName = GetDisplayName();
+        nameVar->SetString(sampleName.c_str());
+      }
+    }
+    
     if (running_) {
       dirty_ = true; // we'll update later, when instrument gets re-triggered
     } else {
@@ -1124,6 +1138,23 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetUserSetName() {
   Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return v->GetString();
+};
+
+etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
+  // Get the name from the base class method
+  auto name = I_Instrument::GetDisplayName();
+  
+  // Strip .wav extension if present
+  size_t dotPos = name.find_last_of('.');
+  if (dotPos != etl::string<MAX_INSTRUMENT_NAME_LENGTH>::npos) {
+    // Check if the extension is .wav (case insensitive)
+    const char* ext = name.c_str() + dotPos;
+    if (strcasecmp(ext, ".wav") == 0) {
+      return name.substr(0, dotPos);
+    }
+  }
+  
+  return name;
 };
 
 void SampleInstrument::Purge() {

@@ -62,6 +62,7 @@ public:
   int GetSampleSize(int channel = -1);
 
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName();
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() override;
 
   static void EnableDownsamplingLegacy();
 
