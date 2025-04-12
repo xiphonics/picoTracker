@@ -39,7 +39,7 @@ Variable::Variable(FourCC id, const char *const *list, int size, int index)
   type_ = CHAR_LIST;
 };
 
-Variable::~Variable() {};
+Variable::~Variable(){};
 
 Variable::Type Variable::GetType() { return type_; };
 
