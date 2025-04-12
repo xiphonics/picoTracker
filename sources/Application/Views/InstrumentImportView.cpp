@@ -160,11 +160,16 @@ void InstrumentImportView::warpToNextInstrument(bool goUp) {
 }
 
 void InstrumentImportView::importInstrument(char *name) {
+  // TODO: check that current instrument is not modified
+
   // Get the current instrument bank
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
   // assert bank is not null
   assert(bank);
+
+  // use current instrument ID if importing a new instrument
+  toInstrID_ = viewData_->currentInstrumentID_;
 
   // First detect the instrument type from the file
   InstrumentType importedType =
@@ -194,38 +199,30 @@ void InstrumentImportView::importInstrument(char *name) {
              "Current instrument type: %d, Imported type: %d",
              currentInstrument->GetType(), importedType);
 
-  // Always create a new instrument in the next available slot
-  Trace::Log("INSTRUMENTIMPORT", "Creating new instrument of type %d",
-             importedType);
+  if (currentInstrument->GetType() != importedType) {
+    Trace::Log("INSTRUMENTIMPORT", "Converting instrument from type %d to %d",
+               currentInstrument->GetType(), importedType);
 
-  // Find the next available instrument slot
-  unsigned short nextSlotId = bank->GetNextFreeInstrumentSlotId();
-  if (nextSlotId == NO_MORE_INSTRUMENT) {
-    MessageBox *mb = new MessageBox(*this, "No free instrument slots", MBBF_OK);
-    DoModal(mb);
-    return;
+    // Delete the current instrument
+    bank->releaseInstrument(toInstrID_);
+
+    // Create a new instrument of the correct type in the same slot
+    if (bank->GetNextAndAssignID(importedType, toInstrID_) ==
+        NO_MORE_INSTRUMENT) {
+      MessageBox *mb =
+          new MessageBox(*this, "Failed to create instrument", MBBF_OK);
+      DoModal(mb);
+      return;
+    }
+
+    Trace::Log("INSTRUMENTIMPORT",
+               "Created new instrument of type %d in slot %d", importedType,
+               toInstrID_);
+  } else {
+    Trace::Log("INSTRUMENTIMPORT",
+               "Keeping existing instrument of type %d in slot %d",
+               importedType, toInstrID_);
   }
-
-  // Log the instrument IDs
-  Trace::Log("INSTRUMENTIMPORT",
-             "Current instrument ID: %d, Next free slot: %d", toInstrID_,
-             nextSlotId);
-
-  // Update toInstrID_ to use the next free slot
-  toInstrID_ = nextSlotId;
-
-  // Create a new instrument of the correct type in the next free slot
-  if (bank->GetNextAndAssignID(importedType, toInstrID_) ==
-      NO_MORE_INSTRUMENT) {
-    MessageBox *mb =
-        new MessageBox(*this, "Failed to create instrument", MBBF_OK);
-    DoModal(mb);
-    return;
-  }
-
-  // Log the new instrument ID after creation
-  Trace::Log("INSTRUMENTIMPORT", "New instrument created with ID: %d",
-             toInstrID_);
 
   // Force the ViewData to update its current instrument type
   // This ensures the InstrumentView will show the correct instrument type
