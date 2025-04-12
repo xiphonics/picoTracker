@@ -30,11 +30,7 @@ protected:
 public:
   I_Instrument(etl::ilist<Variable *> *list,
                const char *nodeName = "INSTRUMENT")
-      : VariableContainer(list),
-        Persistent(nodeName){
-            // We don't automatically add name_ to the list
-            // This allows derived classes to control their variable lists
-        };
+      : VariableContainer(list), Persistent(nodeName){};
   virtual ~I_Instrument();
 
   // Initialisation routine
