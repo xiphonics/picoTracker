@@ -9,6 +9,14 @@ void I_Instrument::SaveContent(tinyxml2::XMLPrinter *printer) {
   // Save the instrument type
   printer->PushAttribute("TYPE", InstrumentTypeNames[GetType()]);
 
+  // Save the instrument name as its not stored in the Variables
+  if (!name_.empty()) {
+    printer->OpenElement("PARAM");
+    printer->PushAttribute("NAME", "InstrumentName");
+    printer->PushAttribute("VALUE", name_.c_str());
+    printer->CloseElement(); // PARAM
+  }
+
   // Save all the instrument's parameters
   for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
     printer->OpenElement("PARAM");
@@ -55,23 +63,31 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
     }
 
     if (name[0] != '\0' && value[0] != '\0') {
-      // Trace::Log("I_INSTRUMENT", "Found parameter in XML: %s = %s", name,
-      //            value);
-      bool found = false;
+      // Special handling for InstrumentName parameter
+      if (!strcasecmp(name, "InstrumentName")) {
+        // Set the instrument name directly
+        SetName(value);
+        Trace::Log("I_INSTRUMENT", "Set instrument name: %s", value);
+        paramCount++;
+      } else {
+        // For other parameters, find the variable and set its value
+        bool found = false;
 
-      // Find the variable with this name and set its value
-      for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
-        if (!strcasecmp((*it)->GetName(), name)) {
-          (*it)->SetString(value);
-          // Trace::Log("I_INSTRUMENT", "Set parameter: %s = %s", name, value);
-          found = true;
-          paramCount++;
-          break;
+        // Find the variable with this name and set its value
+        for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+          if (!strcasecmp((*it)->GetName(), name)) {
+            (*it)->SetString(value);
+            // Trace::Log("I_INSTRUMENT", "Set parameter: %s = %s", name,
+            // value);
+            found = true;
+            paramCount++;
+            break;
+          }
         }
-      }
 
-      if (!found) {
-        Trace::Error("Parameter '%s' not found in instrument", name);
+        if (!found) {
+          Trace::Error("Parameter '%s' not found in instrument", name);
+        }
       }
     }
 
@@ -81,4 +97,10 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
 
   Trace::Log("I_INSTRUMENT", "RestoreContent: Restored %d parameters",
              paramCount);
+
+  // Update any UI variables that represent the instrument name
+  Variable *nameVar = FindVariable(FourCC::InstrumentName);
+  if (nameVar && !name_.empty()) {
+    nameVar->SetString(name_.c_str());
+  }
 }

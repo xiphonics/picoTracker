@@ -45,7 +45,7 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
       tableAuto_(FourCC::SIDInstrumentTableAutomation, false),
       osc_(FourCC::SIDInstrumentOSCNumber, 0) {
 
-  variables_.insert(variables_.end(), &name_);
+  // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &vpw_);
   variables_.insert(variables_.end(), &vwf1_);
   variables_.insert(variables_.end(), &vsync_);
@@ -231,9 +231,9 @@ void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 };
 
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SIDInstrument::GetName() {
-  // first check if the name_ variable has been explicitly set
-  if (!name_.GetString().empty()) {
-    return name_.GetString();
+  // first check if the name_ string has been explicitly set
+  if (!name_.empty()) {
+    return name_;
   }
   // otherwise return the default name for this instrument type
   return etl::string<MAX_INSTRUMENT_NAME_LENGTH>(InstrumentTypeNames[IT_SID]);

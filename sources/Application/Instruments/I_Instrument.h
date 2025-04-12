@@ -25,13 +25,13 @@ class I_Instrument : public VariableContainer,
                      public Observable,
                      public Persistent {
 protected:
-  Variable name_;
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> name_;
 
 public:
   I_Instrument(etl::ilist<Variable *> *list,
                const char *nodeName = "INSTRUMENT")
-      : VariableContainer(list), Persistent(nodeName),
-        name_(FourCC::InstrumentName, ""){
+      : VariableContainer(list),
+        Persistent(nodeName){
             // We don't automatically add name_ to the list
             // This allows derived classes to control their variable lists
         };
@@ -68,7 +68,23 @@ public:
   };
 
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName() {
-    return name_.GetString();
+    return name_;
+  };
+
+  // Set the instrument name
+  virtual void SetName(const char *name) {
+    name_ = name;
+    SetChanged();
+    NotifyObservers();
+  };
+
+  // Set the instrument name from a Variable
+  virtual void SetNameFromVariable(Variable *nameVar) {
+    if (nameVar) {
+      name_ = nameVar->GetString();
+      SetChanged();
+      NotifyObservers();
+    }
   };
 
   // return the name to display in the UI

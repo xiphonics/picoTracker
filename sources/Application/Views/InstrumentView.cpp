@@ -69,19 +69,20 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 InstrumentView::~InstrumentView() {}
 
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
-  Variable *nameVar = instr->FindVariable(FourCC::InstrumentName);
-  if (nameVar) {
-    auto label =
-        etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
+  // Create a NameVariable that bridges between the UITextField and the
+  // instrument's name
+  nameVariables_.emplace_back(instr);
+  Variable &nameVar = *nameVariables_.rbegin();
 
-    // Create a default name based on the instrument's display name
-    etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName =
-        instr->GetDisplayName();
+  auto label =
+      etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
 
-    nameTextField_.emplace_back(*nameVar, position, label,
-                                FourCC::InstrumentName, defaultName);
-    fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
-  }
+  // Create a default name based on the instrument's display name
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName = instr->GetDisplayName();
+
+  nameTextField_.emplace_back(nameVar, position, label, FourCC::InstrumentName,
+                              defaultName);
+  fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 }
 
 I_Instrument *InstrumentView::getInstrument() {
@@ -156,6 +157,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
   intVarOffField_.clear();
   bitmaskVarField_.clear();
   nameTextField_.clear();
+  nameVariables_.clear();
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -928,69 +930,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     break;
   }
   case FourCC::ActionExport: {
-    // Get current instrument using its id
-    I_Instrument *instrument =
-        viewData_->project_->GetInstrumentBank()->GetInstrument(
-            viewData_->currentInstrumentID_);
-
-    // Check if the instrument has a name set
-    etl::string<MAX_INSTRUMENT_NAME_LENGTH> name = instrument->GetDisplayName();
-    // Check if the name is empty, the default value, or matches the default
-    // instrument type name
-    etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultTypeName =
-        instrument->GetDefaultName();
-
-    if (name.empty() || name == defaultTypeName) {
-      // Show error message if no name is set
-      MessageBox *mb = new MessageBox(*this, "Please set a name",
-                                      "before exporting", MBBF_OK);
-      DoModal(mb);
-    } else {
-      // Export the instrument using the name field
-      PersistencyResult result =
-          PersistencyService::GetInstance()->ExportInstrument(instrument, name);
-
-      if (result == PERSIST_EXISTS) {
-        // File already exists, ask user if they want to override it
-        etl::string<strlen("Overwrite existing file: ")> confirmMsg =
-            "Overwrite existing file?";
-        MessageBox *mb = new MessageBox(*this, confirmMsg.c_str(), name.c_str(),
-                                        MBBF_YES | MBBF_NO);
-
-        // Store the instrument and name for use in the callback
-        exportInstrument_ = instrument;
-        exportName_ = name;
-
-        DoModal(mb, [](View &v, ModalView &dialog) {
-          if (dialog.GetReturnCode() == MBL_YES) {
-            // User confirmed override, call ExportInstrument with
-            // overwrite=true
-            InstrumentView &iv = (InstrumentView &)v;
-
-            // Re-export the instrument with overwrite flag set to true
-            PersistencyResult result =
-                PersistencyService::GetInstance()->ExportInstrument(
-                    iv.exportInstrument_, iv.exportName_, true);
-
-            // TODO: unfortunately we can't show the result message here
-            // because we're in a modal already and showing a model from result
-            // of a modal is not supported
-          }
-        });
-      } else {
-        // Create a message with the instrument name
-        etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
-            successMsg = "Exported: ";
-        successMsg += name;
-
-        const char *message = result == PERSIST_SAVED
-                                  ? successMsg.c_str()
-                                  : "Failed to export instrument";
-        // Show export result message
-        MessageBox *mb = new MessageBox(*this, message, MBBF_OK);
-        DoModal(mb);
-      }
-    }
+    handleInstrumentExport();
   } break;
   case FourCC::ActionImport: {
     // Switch to the InstrumentImportView
@@ -1004,6 +944,72 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       instrumentModified_ = true;
     }
     break;
+  }
+}
+
+void InstrumentView::handleInstrumentExport() {
+  // Get current instrument using its id
+  I_Instrument *instrument =
+      viewData_->project_->GetInstrumentBank()->GetInstrument(
+          viewData_->currentInstrumentID_);
+
+  // Check if the instrument has a name set
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> name = instrument->GetDisplayName();
+  // Check if the name is empty, the default value, or matches the default
+  // instrument type name
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultTypeName =
+      instrument->GetDefaultName();
+
+  if (name.empty() || name == defaultTypeName) {
+    // Show error message if no name is set
+    MessageBox *mb =
+        new MessageBox(*this, "Please set a name", "before exporting", MBBF_OK);
+    DoModal(mb);
+  } else {
+    // Export the instrument using the name field
+    PersistencyResult result =
+        PersistencyService::GetInstance()->ExportInstrument(instrument, name);
+
+    if (result == PERSIST_EXISTS) {
+      // File already exists, ask user if they want to override it
+      etl::string<strlen("Overwrite existing file: ")> confirmMsg =
+          "Overwrite existing file?";
+      MessageBox *mb = new MessageBox(*this, confirmMsg.c_str(), name.c_str(),
+                                      MBBF_YES | MBBF_NO);
+
+      // Store the instrument and name for use in the callback
+      exportInstrument_ = instrument;
+      exportName_ = name;
+
+      DoModal(mb, [](View &v, ModalView &dialog) {
+        if (dialog.GetReturnCode() == MBL_YES) {
+          // User confirmed override, call ExportInstrument with
+          // overwrite=true
+          InstrumentView &iv = (InstrumentView &)v;
+
+          // Re-export the instrument with overwrite flag set to true
+          PersistencyResult result =
+              PersistencyService::GetInstance()->ExportInstrument(
+                  iv.exportInstrument_, iv.exportName_, true);
+
+          // TODO: unfortunately we can't show the result message here
+          // because we're in a modal already and showing a model from result
+          // of a modal is not supported
+        }
+      });
+    } else {
+      // Create a message with the instrument name
+      etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
+          successMsg = "Exported: ";
+      successMsg += name;
+
+      const char *message = result == PERSIST_SAVED
+                                ? successMsg.c_str()
+                                : "Failed to export instrument";
+      // Show export result message
+      MessageBox *mb = new MessageBox(*this, message, MBBF_OK);
+      DoModal(mb);
+    }
   }
 }
 

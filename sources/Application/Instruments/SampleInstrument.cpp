@@ -62,7 +62,7 @@ SampleInstrument::SampleInstrument()
   running_ = false;
 
   // Initialize exported variables
-  variables_.insert(variables_.end(), &name_);
+  // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &sample_);
   sample_.AddObserver(*this);
 

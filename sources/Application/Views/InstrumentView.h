@@ -1,6 +1,7 @@
 #ifndef _INSTRUMENT_VIEW_H_
 #define _INSTRUMENT_VIEW_H_
 
+#include "Application/Instruments/InstrumentNameVariable.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmaskVarField.h"
@@ -40,6 +41,7 @@ protected:
   void Update(Observable &o, I_ObservableData *d);
   void refreshInstrumentFields(const I_Instrument *old);
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
+  void handleInstrumentExport();
 
 private:
   Project *project_;
@@ -61,5 +63,6 @@ private:
   etl::vector<UIIntVarOffField, 1> intVarOffField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
+  etl::vector<InstrumentNameVariable, 1> nameVariables_;
 };
 #endif

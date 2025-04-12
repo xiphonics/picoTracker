@@ -20,7 +20,7 @@ MidiInstrument::MidiInstrument()
     svc_ = MidiService::GetInstance();
   };
 
-  variables_.insert(variables_.end(), &name_);
+  // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &channel_);
   variables_.insert(variables_.end(), &noteLen_);
   variables_.insert(variables_.end(), &volume_);
