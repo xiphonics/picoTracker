@@ -1,13 +1,14 @@
 #ifndef _I_INSTRUMENT_H_
 #define _I_INSTRUMENT_H_
 
+#include "Application/Persistency/PersistenceConstants.h"
+#include "Application/Persistency/Persistent.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/fixed.h"
+#include "Application/Utils/stringutils.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/VariableContainer.h"
-
-#include "Application/Player/TablePlayback.h"
 
 enum InstrumentType {
   IT_NONE = 0,
@@ -20,10 +21,17 @@ enum InstrumentType {
 static const char *InstrumentTypeNames[IT_LAST] = {"NONE", "SAMPLE", "MIDI",
                                                    "SID", "OPAL"};
 
-class I_Instrument : public VariableContainer, public Observable {
+class I_Instrument : public VariableContainer,
+                     public Observable,
+                     public Persistent {
+protected:
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> name_;
+
 public:
-  I_Instrument(etl::ilist<Variable *> *list) : VariableContainer(list){};
-  virtual ~I_Instrument(){};
+  I_Instrument(etl::ilist<Variable *> *list,
+               const char *nodeName = "INSTRUMENT")
+      : VariableContainer(list), Persistent(nodeName){};
+  virtual ~I_Instrument();
 
   // Initialisation routine
 
@@ -50,7 +58,40 @@ public:
 
   virtual InstrumentType GetType() = 0;
 
-  virtual etl::string<24> GetName() = 0;
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDefaultName() {
+    return etl::string<MAX_INSTRUMENT_NAME_LENGTH>(
+        InstrumentTypeNames[GetType()]);
+  };
+
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName() {
+    return name_;
+  };
+
+  // Set the instrument name
+  virtual void SetName(const char *name) {
+    name_ = name;
+    SetChanged();
+    NotifyObservers();
+  };
+
+  // Set the instrument name from a Variable
+  virtual void SetNameFromVariable(Variable *nameVar) {
+    if (nameVar) {
+      name_ = nameVar->GetString();
+      SetChanged();
+      NotifyObservers();
+    }
+  };
+
+  // return the name to display in the UI
+  // will be the user set name if available other the default name is returned
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() {
+    auto name = GetUserSetName();
+    if (!name.empty()) {
+      return name;
+    }
+    return GetDefaultName();
+  }
 
   virtual void ProcessCommand(int channel, FourCC cc, ushort value) = 0;
 
@@ -62,5 +103,9 @@ public:
   virtual void GetTableState(TableSaveState &state) = 0;
   virtual void SetTableState(TableSaveState &state) = 0;
   virtual etl::ilist<Variable *> *Variables() = 0;
+
+  // Persistent implementation
+  virtual void SaveContent(tinyxml2::XMLPrinter *printer) override;
+  virtual void RestoreContent(PersistencyDocument *doc) override;
 };
 #endif

@@ -21,10 +21,13 @@ public:
   void OnEditClick();
   etl::string<MaxLength> GetString();
 
+  // Set the variable this UITextField is bound to
+  void SetVariable(Variable &v);
+
 private:
   int selected_;
   uint8_t currentChar_ = 0;
-  Variable &src_;
+  Variable *src_; // Pointer instead of reference
   const etl::string<8> label_;
   uint8_t fourcc_;
   etl::string<MaxLength> defaultValue_;

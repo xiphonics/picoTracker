@@ -154,6 +154,12 @@ struct FourCC {
     // 142 is taken for SIDInstrumentOSCNumber
     // 143 is taken for InstrumentCommandMidiChord
     // 144 is taken for InstrumentMidiName
+    // 145 is taken for ActionExport
+    // 146 is taken for ActionImport
+    // 147 is taken for ActionOK
+    // 148 is taken for InstrumentName
+    // 149 is taken for ActionRenderMixdown
+    // 150 is taken for ActionRenderStems
 
     VarInstrumentType = 113,
 
@@ -167,8 +173,12 @@ struct FourCC {
     ActionRandomName = 100,
     ActionBootSelect = 18,
     ActionEdit = 59,
-    ActionRenderMixdown = 200,
-    ActionRenderStems = 201,
+    ActionExport = 145,
+    ActionImport = 146,
+    ActionOK = 147,
+    InstrumentName = 148,
+    ActionRenderMixdown = 149,
+    ActionRenderStems = 150,
 
     Default = 255, // "    "
   };
@@ -235,6 +245,7 @@ struct FourCC {
   ETL_ENUM_TYPE(SampleInstrumentTable, "table")
   ETL_ENUM_TYPE(SampleInstrumentTableAutomation, "table automation")
   ETL_ENUM_TYPE(MidiInstrumentChannel, "channel")
+  ETL_ENUM_TYPE(InstrumentName, "name")
   ETL_ENUM_TYPE(MidiInstrumentName, "midi name")
   ETL_ENUM_TYPE(MidiInstrumentNoteLength, "note length")
   ETL_ENUM_TYPE(MidiInstrumentVolume, "volume")
@@ -297,6 +308,8 @@ struct FourCC {
   ETL_ENUM_TYPE(VarInstrumentType, "INSTRUMENTTYPE")
 
   ETL_ENUM_TYPE(ActionEdit, "edit")
+  ETL_ENUM_TYPE(ActionExport, "export")
+  ETL_ENUM_TYPE(ActionImport, "import")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

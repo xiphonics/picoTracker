@@ -1,4 +1,5 @@
 #include "NoneInstrument.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/etl/include/etl/string.h"
 
 NoneInstrument::NoneInstrument() : I_Instrument(&variables_) {}
@@ -25,8 +26,6 @@ bool NoneInstrument::IsInitialized() {
 };
 
 void NoneInstrument::ProcessCommand(int channel, FourCC cc, ushort value){};
-
-etl::string<24> NoneInstrument::GetName() { return name_; }
 
 int NoneInstrument::GetTable() { return 0; };
 

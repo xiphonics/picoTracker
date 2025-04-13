@@ -129,6 +129,38 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 
 ![screen capture of OPAL instrument screen](image/opal-waveforms-small.png)
 
+### Exporting an Instrument
+
+1. Make sure your instrument has a name set in the "name:" field
+   - Each instrument must have a unique name before it can be exported
+   - The default instrument type name (e.g., "Sampler", "MIDI", etc.) is not considered a valid name
+2. Navigate to the instrument you want to export
+3. Select "Export" from the instrument menu
+4. Press **OK** to continue after the export is complete message is shown
+
+Exported instruments are stored in `/instruments/` on your SD card. 
+
+**NOTE:** In the future the sample for the instrument will be stored in the same directory as the instrument file but for now is not exported.
+
+### Importing an Instrument
+
+1. Navigate to the instrument you want to import
+2. Select "Import" from the instrument menu
+3. A file browser will appear showing all available `.pti` files in the `/instruments` directory
+4. Select a `.pti` file to import, use the key combo `ALT`+`PLAY` to import it
+5. The imported instrument will replace the currently selected instrument
+6. Press **OK** to continue after the import is complete message is shown
+
+
+
+### Tips for Instrument Management
+
+- You can organise your instrument files into subfolders inside the `/instruments` directory but exported files will always be saved in the root `/instruments` directory
+- Use descriptive names in the instrument's name field to easily identify them when importing later
+- The instrument name is used for the export filename, so ensure it's set before exporting
+- Back up your `/instruments` directory when backing up your picoTracker data on your sdcard
+
+
 ## Limitations of instrument performance
 
 The picoTrackers CPU limits the number of simultaneous instruments that can be played at once. The specific limit depends on the instrument type and the settings of each instrument. In general the limit is:
@@ -137,6 +169,10 @@ The picoTrackers CPU limits the number of simultaneous instruments that can be p
 * 3 SID instruments
 * 8 MIDI instruments
 
-Because they are very light weight when it comes to CPU usage 8 MIDI instruments can be played at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
+Because they are very light weight when it comes to CPU usage, 8 MIDI instruments can be sequenced at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
 
-Given the above limits though, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 samplers, 1 OPAL, 1 SID and 4 MIDI should in theory be possible. Note this only applies to simulatenously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
+Even given the above limits, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 samplers, 1 OPAL, 1 SID and 4 MIDI should in theory be possible. Note this only applies to simultaneously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
+
+## Exporting and Importing Instruments
+
+picoTracker allows you to save and reuse your instrument settings across different projects through the instrument export and import functionality. This feature is particularly useful for building a library of your favorite synth instruments or using instruments created by other picoTracker users.

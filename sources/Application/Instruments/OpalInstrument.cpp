@@ -41,6 +41,7 @@ OpalInstrument::OpalInstrument()
       op2KeyScaleLevel_(FourCC::OPALInstrumentOp2KeyScaleLevel, kslValues, 4,
                         0) {
 
+  // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &algorithm_);
   variables_.insert(variables_.end(), &feedback_);
   variables_.insert(variables_.end(), &deepTremeloVibrato_);
@@ -166,8 +167,6 @@ void OpalInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     break;
   }
 };
-
-etl::string<24> OpalInstrument::GetName() { return "opal"; }
 
 int OpalInstrument::GetTable() {
   //  Variable *v = FindVariable(MIP_TABLE);

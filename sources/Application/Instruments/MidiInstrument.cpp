@@ -1,12 +1,11 @@
 #include "MidiInstrument.h"
 #include "Application/Model/Scale.h"
 #include "Application/Player/Player.h"
+#include "Application/Utils/char.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
-#include "stringutils.h"
-#include <string.h>
 
 MidiService *MidiInstrument::svc_ = 0;
 
@@ -15,19 +14,18 @@ MidiInstrument::MidiInstrument()
       noteLen_(FourCC::MidiInstrumentNoteLength, 0),
       volume_(FourCC::MidiInstrumentVolume, 255),
       table_(FourCC::MidiInstrumentTable, -1),
-      tableAuto_(FourCC::MidiInstrumentTableAutomation, false),
-      name_(FourCC::MidiInstrumentName, DEFAULT_EMPTY_VALUE) {
+      tableAuto_(FourCC::MidiInstrumentTableAutomation, false) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
   };
 
+  // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &channel_);
   variables_.insert(variables_.end(), &noteLen_);
   variables_.insert(variables_.end(), &volume_);
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
-  variables_.insert(variables_.end(), &name_);
 }
 
 MidiInstrument::~MidiInstrument(){};
@@ -224,15 +222,15 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }
 }
 
-etl::string<24> MidiInstrument::GetName() {
-  Variable *v = FindVariable(FourCC::MidiInstrumentName);
-  if (v->GetString().length() > 0) {
-    return v->GetString().substr(0, 24);
-  }
-  v = FindVariable(FourCC::MidiInstrumentChannel);
-  etl::string<24> name = "MIDI CH ";
-  etl::to_string(v->GetInt() + 1, name, etl::format_spec().precision(0), true);
-  return name;
+etl::string<MAX_INSTRUMENT_NAME_LENGTH> MidiInstrument::GetDefaultName() {
+  // use the channel number as a fallback
+  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
+  defaultName_ = "MIDI CH ";
+  int displayChannelNum = v->GetInt() + 1;
+  char channelStr[3];
+  hex2char(displayChannelNum, channelStr);
+  defaultName_ += channelStr;
+  return defaultName_;
 }
 
 int MidiInstrument::GetTable() {

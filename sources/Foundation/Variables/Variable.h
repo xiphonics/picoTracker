@@ -31,8 +31,8 @@ public:
   int GetInt();
   void SetFloat(float value, bool notify = true);
   float GetFloat();
-  void SetString(const char *string, bool notify = true);
-  etl::string<MAX_VARIABLE_STRING_LENGTH> GetString();
+  virtual void SetString(const char *string, bool notify = true);
+  virtual etl::string<MAX_VARIABLE_STRING_LENGTH> GetString();
   void SetBool(bool value, bool notify = true);
   bool GetBool();
   void CopyFrom(Variable &other);
