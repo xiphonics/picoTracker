@@ -14,7 +14,7 @@ We communicate primarily over GitHub and [Discord](https://discord.gg/FNnXvmk4Pu
 
 If you would prefer to write code, you may wish to start with our [list of good first issues](https://github.com/democloid/picotracker/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22). 
 
-See the [Developer Guide](docs/DEV.md) for instructions on how to setup your development enviroment and get started building and debugging the picoTracker firmware.
+See the [Developer Guide](./DEV.md) for instructions on how to setup your development enviroment and get started building and debugging the picoTracker firmware.
 
 Here are some guidelines for when you are ready to contribute code:
 
