@@ -194,7 +194,7 @@ void Variable::SetString(const char *string, bool notify) {
             break;
           }
         }
-        if (*s == 0) {
+        if (*s == 0 && *d == 0) { // Ensure both strings end at the same point
           value_.index_ = i;
           break;
         }
