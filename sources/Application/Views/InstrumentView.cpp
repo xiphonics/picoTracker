@@ -371,7 +371,7 @@ void InstrumentView::fillSampleParameters() {
 
   if (v->GetString() == "slicer") {
     position._x += 18;
-    v = instrument->FindVariable(SIP_SLICES);
+    v = instrument->FindVariable(FourCC::SampleInstrumentSlices);
     intVarField_.emplace_back(position, *v, "slcs: %d", 1, 128, 1, 16);
     fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
     position._x -= 18;
@@ -764,13 +764,9 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // EDIT Modifier
   if (mask & EPBM_EDIT) {
     FourCC varID = ((UIIntVarField *)GetFocus())->GetVariableID();
-    if (varID == SIP_LOOPMODE) { // Show or hide slices
+    if (varID == FourCC::SampleInstrumentLoopMode) { // Show or hide slices
       onInstrumentChange();
     }
-  }
-  // B Modifier
-
-  if (mask & EPBM_B) {
     if (mask & EPBM_LEFT)
       warpToNext(-1);
     if (mask & EPBM_RIGHT)
