@@ -1,10 +1,10 @@
-#ifndef _PI_FILE_H_
-#define _PI_FILE_H_
+#ifndef _I_FILE_H_
+#define _I_FILE_H_
 
-class PI_File {
+class I_File {
 public:
-  PI_File() {}
-  virtual ~PI_File() {}
+  I_File() {}
+  virtual ~I_File() {}
 
   virtual int Read(void *ptr, int size) = 0;
   virtual int GetC() = 0;
@@ -16,4 +16,4 @@ public:
   virtual int Error() = 0;
 };
 
-#endif // _PI_FILE_H_
+#endif // _I_FILE_H_

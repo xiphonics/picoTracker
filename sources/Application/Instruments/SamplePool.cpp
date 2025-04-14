@@ -5,7 +5,7 @@
 #include "Externals/etl/include/etl/string_stream.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
-#include "System/FileSystem/PI_File.h"
+#include "System/FileSystem/I_File.h"
 #include "System/io/Status.h"
 #include <stdlib.h>
 #include <string.h>
@@ -163,7 +163,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   // Opens file - we assume that have already chdir() into the correct dir
   // that contains the sample file
   auto fs = FileSystem::GetInstance();
-  PI_File *fin = fs->Open(name, "r");
+  I_File *fin = fs->Open(name, "r");
   if (!fin) {
     Trace::Error("Failed to open sample input file:%s\n", name);
     return -1;
@@ -178,7 +178,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   projectSamplePath.append(name);
   Status::Set("Loading %s->", name);
 
-  PI_File *fout =
+  I_File *fout =
       FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
     Trace::Error("Failed to open sample project file:%s\n", projectSamplePath);

@@ -28,7 +28,7 @@ picoTrackerFileSystem::picoTrackerFileSystem() {
   }
 }
 
-PI_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
+I_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   std::lock_guard<Mutex> lock(mutex);
   oflag_t rmode;
@@ -48,7 +48,7 @@ PI_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
   if (!cwd.openCwd()) {
     return nullptr;
   }
-  PI_File *wFile = 0;
+  I_File *wFile = 0;
   if (cwd.open(name, rmode)) {
     wFile = new picoTrackerFile(cwd);
   } else {

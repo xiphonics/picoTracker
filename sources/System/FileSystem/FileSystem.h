@@ -12,7 +12,7 @@
 enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 
 // Forward declaration
-class PI_File;
+class I_File;
 
 // This is the main FileSystem interface that will be implemented by
 // platform-specific classes
@@ -21,7 +21,7 @@ public:
   FileSystem() {}
   virtual ~FileSystem() {}
 
-  virtual PI_File *Open(const char *name, const char *mode) = 0;
+  virtual I_File *Open(const char *name, const char *mode) = 0;
   virtual bool chdir(const char *path) = 0;
   virtual bool read(int index, void *data) {
     return false;

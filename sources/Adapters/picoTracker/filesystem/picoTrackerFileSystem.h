@@ -5,7 +5,7 @@
 #include "Externals/SdFat/src/SdFat.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
-#include "System/FileSystem/PI_File.h"
+#include "System/FileSystem/I_File.h"
 #include "pico/sync.h"
 #include <mutex>
 
@@ -20,7 +20,7 @@ public:
   virtual ~picoTrackerFileSystem() {}
 
   // FileSystem interface implementation
-  virtual PI_File *Open(const char *name, const char *mode) override;
+  virtual I_File *Open(const char *name, const char *mode) override;
   virtual bool chdir(const char *path) override;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
                     bool subDirOnly) override;
@@ -43,7 +43,7 @@ private:
 };
 
 // Concrete implementation of PI_File for picoTracker
-class picoTrackerFile : public PI_File {
+class picoTrackerFile : public I_File {
 public:
   picoTrackerFile(FsBaseFile file);
   virtual ~picoTrackerFile() {}

@@ -4,7 +4,7 @@
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
-#include "System/FileSystem/PI_File.h"
+#include "System/FileSystem/I_File.h"
 
 #define PROJECT_STATE_FILE "/.current"
 
@@ -110,7 +110,7 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   CreatePath(pathBufferA, segments);
 
   auto fs = FileSystem::GetInstance();
-  PI_File *fp = fs->Open(pathBufferA.c_str(), "w");
+  I_File *fp = fs->Open(pathBufferA.c_str(), "w");
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  pathBufferA.c_str());

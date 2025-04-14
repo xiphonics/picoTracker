@@ -5,7 +5,7 @@
 #include "Externals/etl/include/etl/string_utilities.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
-#include "System/FileSystem/PI_File.h"
+#include "System/FileSystem/I_File.h"
 #include "Variable.h"
 #include <stdlib.h>
 
@@ -97,7 +97,7 @@ Config::~Config() {}
 
 bool Config::Save() {
   auto fs = FileSystem::GetInstance();
-  PI_File *fp = fs->Open(CONFIG_FILE_PATH, "w");
+  I_File *fp = fs->Open(CONFIG_FILE_PATH, "w");
   if (!fp) {
     Trace::Error("CONFIG: Could not open file for writing: %s",
                  CONFIG_FILE_PATH);

@@ -3,7 +3,7 @@
 
 #include "Externals/yxml/yxml.h"
 #include "System/FileSystem/FileSystem.h"
-#include "System/FileSystem/PI_File.h"
+#include "System/FileSystem/I_File.h"
 
 class PersistencyDocument {
 public:
@@ -26,6 +26,6 @@ public:
 private:
   inline static char stack_[1024];
   inline static yxml_t state_[1];
-  PI_File *fp_;
+  I_File *fp_;
 };
 #endif

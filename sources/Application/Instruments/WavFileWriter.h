@@ -15,6 +15,6 @@ private:
   int sampleCount_;
   short *buffer_;
   int bufferSize_;
-  PI_File *file_;
+  I_File *file_;
 };
 #endif

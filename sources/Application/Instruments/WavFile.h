@@ -9,7 +9,7 @@
 class WavFile : public SoundSource {
 
 protected: // Factory - see Load method
-  WavFile(PI_File *file);
+  WavFile(I_File *file);
 
 public:
   virtual ~WavFile();
@@ -31,7 +31,7 @@ protected:
   long readBlock(long position, long count);
 
 private:
-  PI_File *file_;      // File
+  I_File *file_;       // File
   int readBufferSize_; // Read buffer size
   short *samples_;     // sample buffer size (16 bits)
   int sampleBufferSize_;
