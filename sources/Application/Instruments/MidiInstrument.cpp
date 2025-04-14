@@ -61,7 +61,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   if (volume > 0) {
     msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
     msg.data1_ = 7;
-    msg.data2_ = floor(volume / 2);
+    msg.data2_ = volume / 2;
     svc_->QueueMessage(msg);
   }
 
@@ -161,14 +161,14 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandVelocity: {
     // VELM cmds set velocity for MIDI steps
-    velocity_ = floor(value / 2);
+    velocity_ = value / 2;
   }; break;
 
   case FourCC::InstrumentCommandVolume: {
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + mchannel;
     msg.data1_ = 7;
-    msg.data2_ = floor(value / 2);
+    msg.data2_ = value / 2;
     svc_->QueueMessage(msg);
   }; break;
 
