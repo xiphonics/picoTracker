@@ -12,7 +12,8 @@
 // Forward declaration
 class picoTrackerFile;
 
-// This is the concrete implementation of the FileSystem interface for picoTracker
+// This is the concrete implementation of the FileSystem interface for
+// picoTracker
 class picoTrackerFileSystem : public FileSystem {
 public:
   picoTrackerFileSystem();
@@ -22,7 +23,7 @@ public:
   virtual PI_File *Open(const char *name, const char *mode) override;
   virtual bool chdir(const char *path) override;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
-                   bool subDirOnly) override;
+                    bool subDirOnly) override;
   virtual void getFileName(int index, char *name, int length) override;
   virtual PicoFileType getFileType(int index) override;
   virtual bool isParentRoot() override;

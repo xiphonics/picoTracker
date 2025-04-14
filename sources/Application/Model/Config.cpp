@@ -1,11 +1,11 @@
 #include "Config.h"
-#include "System/Console/Trace.h"
-#include "System/FileSystem/PI_File.h"
 #include "Application/Persistency/PersistencyDocument.h"
 #include "Externals/etl/include/etl/flat_map.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_utilities.h"
 #include "Services/Midi/MidiService.h"
+#include "System/Console/Trace.h"
+#include "System/FileSystem/PI_File.h"
 #include "Variable.h"
 #include <stdlib.h>
 

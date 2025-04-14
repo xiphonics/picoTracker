@@ -5,7 +5,7 @@ class PI_File {
 public:
   PI_File() {}
   virtual ~PI_File() {}
-  
+
   virtual int Read(void *ptr, int size) = 0;
   virtual int GetC() = 0;
   virtual int Write(const void *ptr, int size, int nmemb) = 0;

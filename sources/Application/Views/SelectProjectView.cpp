@@ -163,8 +163,7 @@ void SelectProjectView::setCurrentFolder() {
 
   // filter out the "untitled" project entry
   for (size_t i = 0; i < fileIndexList_.size(); i++) {
-    fs->getFileName(fileIndexList_[i], selection_,
-                        MAX_PROJECT_NAME_LENGTH + 1);
+    fs->getFileName(fileIndexList_[i], selection_, MAX_PROJECT_NAME_LENGTH + 1);
     if (strcmp(selection_, UNNAMED_PROJECT_NAME) == 0) {
       Trace::Log("SELECTPROJECTVIEW", "skipping untitled project on Index:%d",
                  i);

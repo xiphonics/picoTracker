@@ -90,8 +90,8 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
   return isDir ? PFT_DIR : PFT_FILE;
 }
 
-void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
-                          bool subDirOnly) {
+void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
+                                 const char *filter, bool subDirOnly) {
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
@@ -227,7 +227,8 @@ uint64_t picoTrackerFileSystem::getFileSize(const int index) {
   return size;
 }
 
-bool picoTrackerFileSystem::CopyFile(const char *srcPath, const char *destPath) {
+bool picoTrackerFileSystem::CopyFile(const char *srcPath,
+                                     const char *destPath) {
   std::lock_guard<Mutex> lock(mutex);
   auto fSrc = sd.open(srcPath, O_READ);
   auto fDest = sd.open(destPath, O_WRITE | O_CREAT);

@@ -14,7 +14,8 @@ enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
 // Forward declaration
 class PI_File;
 
-// This is the main FileSystem interface that will be implemented by platform-specific classes
+// This is the main FileSystem interface that will be implemented by
+// platform-specific classes
 class FileSystem : public T_Factory<FileSystem> {
 public:
   FileSystem() {}
@@ -22,9 +23,11 @@ public:
 
   virtual PI_File *Open(const char *name, const char *mode) = 0;
   virtual bool chdir(const char *path) = 0;
-  virtual bool read(int index, void *data) { return false; } // Default implementation
+  virtual bool read(int index, void *data) {
+    return false;
+  } // Default implementation
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
-                   bool subDirOnly) = 0;
+                    bool subDirOnly) = 0;
   virtual void getFileName(int index, char *name, int length) = 0;
   virtual PicoFileType getFileType(int index) = 0;
   virtual bool isParentRoot() = 0;

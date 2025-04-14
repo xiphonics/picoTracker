@@ -1,7 +1,7 @@
 #include "WavFileWriter.h"
 #include "System/Console/Trace.h"
-#include "System/System/System.h"
 #include "System/FileSystem/PI_File.h"
+#include "System/System/System.h"
 
 WavFileWriter::WavFileWriter(const char *path)
     : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
