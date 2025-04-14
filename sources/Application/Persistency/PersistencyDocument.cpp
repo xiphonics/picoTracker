@@ -1,4 +1,5 @@
 #include "PersistencyDocument.h"
+#include "System/Console/Trace.h"
 
 PersistencyDocument::PersistencyDocument() {
   version_ = 0;
@@ -9,7 +10,7 @@ PersistencyDocument::PersistencyDocument() {
 bool PersistencyDocument::Load(const char *filename) {
   Trace::Log("PERSISTENCYDOCUMENT", "Loading document from file: %s", filename);
 
-  fp_ = PicoFileSystem::GetInstance()->Open(filename, "r");
+  fp_ = FileSystem::GetInstance()->Open(filename, "r");
   if (!fp_) {
     Trace::Error("Failed to open file: %s", filename);
     return false;

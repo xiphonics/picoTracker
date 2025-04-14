@@ -3,6 +3,7 @@
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/PI_File.h"
 
 #define PROJECT_STATE_FILE "/.current"
@@ -244,20 +245,20 @@ void PersistencyService::CreatePath(
 }
 
 bool PersistencyService::ClearAutosave(const char *projectName) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
   etl::vector<const char *, 3> segments = {PROJECTS_DIR, projectName,
                                            AUTO_SAVE_FILENAME};
   CreatePath(pathBufferA, segments);
   // TODO: check if file exists before deleting and only return false if it does
   // exist and deleting fails but this can only be done once Open() return
   // values are improved and we can implement a Exists() function on top of it
-  return picoFS->DeleteFile(pathBufferA.c_str());
+  return fs->DeleteFile(pathBufferA.c_str());
 }
 
 PersistencyResult PersistencyService::ExportInstrument(
     I_Instrument *instrument, etl::string<MAX_INSTRUMENT_NAME_LENGTH> name,
     bool overwrite) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   // Add .pti extension to the filename
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename = name;
@@ -267,19 +268,19 @@ PersistencyResult PersistencyService::ExportInstrument(
   CreatePath(pathBufferA, segments);
 
   // check if file already exists
-  if (picoFS->exists(pathBufferA.c_str())) {
+  if (fs->exists(pathBufferA.c_str())) {
     if (!overwrite) {
       return PERSIST_EXISTS;
     }
     // Delete the existing file if overwrite is true
-    if (!picoFS->DeleteFile(pathBufferA.c_str())) {
+    if (!fs->DeleteFile(pathBufferA.c_str())) {
       Trace::Error("PERSISTENCYSERVICE: Failed to delete existing file: %s",
                    pathBufferA.c_str());
       return PERSIST_ERROR;
     }
   }
 
-  auto fp = picoFS->Open(pathBufferA.c_str(), "w");
+  auto fp = fs->Open(pathBufferA.c_str(), "w");
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  pathBufferA.c_str());
@@ -296,9 +297,9 @@ PersistencyResult PersistencyService::ExportInstrument(
 }
 
 InstrumentType PersistencyService::DetectInstrumentType(const char *name) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
-  if (!picoFS->chdir(INSTRUMENTS_DIR)) {
+  if (!fs->chdir(INSTRUMENTS_DIR)) {
     Trace::Error(
         "PERSISTENCYSERVICE: Could not change to instruments directory");
     return IT_NONE;
@@ -344,9 +345,9 @@ InstrumentType PersistencyService::DetectInstrumentType(const char *name) {
 
 PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
                                                        const char *name) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
-  if (!picoFS->chdir(INSTRUMENTS_DIR)) {
+  if (!fs->chdir(INSTRUMENTS_DIR)) {
     Trace::Error(
         "PERSISTENCYSERVICE: Could not change to instruments directory");
     return PERSIST_ERROR;
