@@ -1,15 +1,18 @@
 #include "picoTrackerEventQueue.h"
 
 picoTrackerEventQueue::picoTrackerEventQueue(){};
+
 void picoTrackerEventQueue::push(picoTrackerEvent event) {
-  if (std::find(queue_.begin(), queue_.end(), event) == queue_.end()) {
-    queue_.push_back(event);
+  if (!queue_.full()) {
+    queue_.push(event);
   }
 };
 
 void picoTrackerEventQueue::pop_into(picoTrackerEvent &event) {
-  event.type_ = queue_.front().type_;
-  queue_.pop_front();
+  if (!queue_.empty()) {
+    event.type_ = queue_.front().type_;
+    queue_.pop();
+  }
 };
 
 bool picoTrackerEventQueue::empty() { return queue_.empty(); }
