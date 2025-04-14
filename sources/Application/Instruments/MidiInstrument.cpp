@@ -60,7 +60,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   int volume = v->GetInt();
   if (volume > 0) {
     msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
-    msg.data1_ = 7;
+    msg.data1_ = MidiCC::CC_VOLUME;
     msg.data2_ = volume / 2;
     svc_->QueueMessage(msg);
   }
@@ -167,7 +167,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   case FourCC::InstrumentCommandVolume: {
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + mchannel;
-    msg.data1_ = 7;
+    msg.data1_ = MidiCC::CC_VOLUME;
     msg.data2_ = value / 2;
     svc_->QueueMessage(msg);
   }; break;
