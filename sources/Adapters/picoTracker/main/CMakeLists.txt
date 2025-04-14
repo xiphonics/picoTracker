@@ -8,6 +8,7 @@ target_link_libraries(picoTracker PUBLIC pico_stdlib
                                   PUBLIC tinyusb_board
                                   PUBLIC tinyusb_device
                                   PUBLIC platform_usb
+                                  PUBLIC platform_filesystem
 )
 
 target_include_directories(picoTracker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

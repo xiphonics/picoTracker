@@ -26,12 +26,12 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
     return;
 
   if (mask & EPBM_PLAY) {
-    auto picoFS = PicoFileSystem::GetInstance();
+    auto fs = FileSystem::GetInstance();
     char name[PFILENAME_SIZE];
 
     if (currentIndex_ < fileIndexList_.size()) {
       unsigned fileIndex = fileIndexList_[currentIndex_];
-      picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
+      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
       if (mask & EPBM_ALT) {
         Trace::Log("INSTRUMENTIMPORT", "SHIFT play - import");
@@ -57,17 +57,17 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
   } else {
     // ENTER modifier
     if (mask & EPBM_ENTER) {
-      auto picoFS = PicoFileSystem::GetInstance();
+      auto fs = FileSystem::GetInstance();
 
       if (currentIndex_ < fileIndexList_.size()) {
         unsigned fileIndex = fileIndexList_[currentIndex_];
         char name[PFILENAME_SIZE];
-        picoFS->getFileName(fileIndex, name, PFILENAME_SIZE);
+        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
         // Only allow navigation into directories, not to parent directory
-        if (picoFS->getFileType(fileIndex) == PFT_DIR &&
-            strcmp(name, ".") != 0 && strcmp(name, "..") != 0) {
-          setCurrentFolder(picoFS, name);
+        if (fs->getFileType(fileIndex) == PFT_DIR && strcmp(name, ".") != 0 &&
+            strcmp(name, "..") != 0) {
+          setCurrentFolder(fs, name);
           isDirty_ = true;
           topIndex_ = 0; // need to reset when entering a dir as prev dir may
                          // have been already scrolled down
@@ -83,7 +83,7 @@ void InstrumentImportView::DrawView() {
   GUITextProperties props;
   GUIPoint pos = GetTitlePosition();
 
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   // Draw title
   const char *title = "Import Instrument";
@@ -113,9 +113,9 @@ void InstrumentImportView::DrawView() {
 
     memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
-    picoFS->getFileName(fileIndex, buffer, PFILENAME_SIZE);
+    fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
-    if (picoFS->getFileType(fileIndex) == PFT_DIR) {
+    if (fs->getFileType(fileIndex) == PFT_DIR) {
       // Draw a directory
       DrawString(x, y, "[", props);
       DrawString(x + 1, y, buffer, props);
@@ -131,10 +131,10 @@ void InstrumentImportView::DrawView() {
 void InstrumentImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {}
 
 void InstrumentImportView::OnFocus() {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
 
   // Navigate to the instruments directory
-  setCurrentFolder(picoFS, INSTRUMENTS_DIR);
+  setCurrentFolder(fs, INSTRUMENTS_DIR);
 }
 
 void InstrumentImportView::warpToNextInstrument(bool goUp) {
@@ -287,9 +287,8 @@ void InstrumentImportView::importInstrument(char *name) {
   isDirty_ = true;
 }
 
-void InstrumentImportView::setCurrentFolder(PicoFileSystem *picoFS,
-                                            const char *name) {
-  if (!picoFS->chdir(name)) {
+void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {
+  if (!fs->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
     return;
   }
@@ -300,6 +299,6 @@ void InstrumentImportView::setCurrentFolder(PicoFileSystem *picoFS,
   // Update list of file indexes in this new dir
   fileIndexList_.clear();
   // Use false for subDirOnly to include both files and directories
-  picoFS->list(&fileIndexList_, INSTRUMENT_FILE_EXTENSION, false);
+  fs->list(&fileIndexList_, INSTRUMENT_FILE_EXTENSION, false);
   Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
 }

@@ -4,6 +4,8 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_utilities.h"
 #include "Services/Midi/MidiService.h"
+#include "System/Console/Trace.h"
+#include "System/FileSystem/I_File.h"
 #include "Variable.h"
 #include <stdlib.h>
 
@@ -94,8 +96,8 @@ Config::Config()
 Config::~Config() {}
 
 bool Config::Save() {
-  auto picoFS = PicoFileSystem::GetInstance();
-  PI_File *fp = picoFS->Open(CONFIG_FILE_PATH, "w");
+  auto fs = FileSystem::GetInstance();
+  I_File *fp = fs->Open(CONFIG_FILE_PATH, "w");
   if (!fp) {
     Trace::Error("CONFIG: Could not open file for writing: %s",
                  CONFIG_FILE_PATH);

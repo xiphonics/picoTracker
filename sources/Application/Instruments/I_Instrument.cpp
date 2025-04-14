@@ -1,5 +1,6 @@
 #include "I_Instrument.h"
 #include "Application/Utils/char.h"
+#include "System/Console/Trace.h"
 
 I_Instrument::~I_Instrument() {
   // Virtual destructor implementation

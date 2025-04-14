@@ -1,9 +1,9 @@
 #ifndef _IMPORT_VIEW_H_
 #define _IMPORT_VIEW_H_
 
-#include "Foundation/T_SimpleList.h"
-#include "ScreenView.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "Application/Views/ScreenView.h"
+#include "Externals/etl/include/etl/vector.h"
+#include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"
 #include <string>
 
@@ -17,7 +17,7 @@ public:
   virtual void OnFocus();
 
 protected:
-  void setCurrentFolder(PicoFileSystem *picoFS, const char *name);
+  void setCurrentFolder(FileSystem *fs, const char *name);
   void warpToNextSample(bool goUp);
   void import(char *name);
   void preview(char *name);

@@ -1,6 +1,7 @@
 #include "SerialDebugUI.h"
 #include "Application/Model/Config.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "System/FileSystem/FileSystem.h"
+#include "System/FileSystem/I_File.h"
 #include "hardware/uart.h"
 #include <Adapters/picoTracker/platform/gpio.h>
 #include <Trace.h>
@@ -64,10 +65,10 @@ void SerialDebugUI::dispatchCmd(char *input) {
 }
 
 void SerialDebugUI::catFile(const char *path) {
-  auto picoFS = PicoFileSystem::GetInstance();
+  auto fs = FileSystem::GetInstance();
   uint8_t contents[READ_BUFFER_SIZE + 1]; //+1 one to leave space for \0
-  if (picoFS->exists(path)) {
-    auto current = picoFS->Open(path, "r");
+  if (fs->exists(path)) {
+    auto current = fs->Open(path, "r");
     int len = 0;
     do {
       len = current->Read(contents, READ_BUFFER_SIZE);
@@ -82,15 +83,15 @@ void SerialDebugUI::catFile(const char *path) {
 }
 
 void SerialDebugUI::listFiles(const char *path) {
-  auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->chdir(path)) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->chdir(path)) {
     Trace::Error("failed to ls files path:%s", path);
   }
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
-  picoFS->list(&fileIndexes, "", false);
+  fs->list(&fileIndexes, "", false);
 
   // No need to actually do the printing below for now as the current debug code
-  // in PicoFileSystem class is already printing all the files fetched when the
+  // in FileSystem class is already printing all the files fetched when the
   // list() method is run!
 
   // char name[PFILENAME_SIZE];
@@ -105,10 +106,11 @@ void SerialDebugUI::listFiles(const char *path) {
 }
 
 void SerialDebugUI::rmFile(const char *path) {
-  auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->DeleteFile(path)) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->DeleteFile(path)) {
     Trace::Error("failed to delete file:%s", path);
   } else {
+    Trace::Log("SERIALDEBUGUI", "deleted file:%s", path);
     char buf[128];
     npf_snprintf(buf, sizeof(buf), "deleted:%s\n", path);
     uart_write_blocking(DEBUG_UART, (uint8_t *)buf, sizeof(buf));
@@ -121,15 +123,15 @@ void SerialDebugUI::saveConfig() {
 }
 
 void SerialDebugUI::mkdir(const char *path) {
-  auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->makeDir(path, true)) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->makeDir(path, true)) {
     Trace::Error("failed to create dir:%s", path);
   }
 }
 
 void SerialDebugUI::rmdir(const char *path) {
-  auto picoFS = PicoFileSystem::GetInstance();
-  if (!picoFS->DeleteDir(path)) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->DeleteDir(path)) {
     Trace::Error("failed to remove dir:%s", path);
   }
 }

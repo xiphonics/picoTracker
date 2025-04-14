@@ -3,7 +3,7 @@
 
 #include "Foundation/T_SimpleList.h"
 #include "ScreenView.h"
-#include "System/FileSystem/PicoFileSystem.h"
+#include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"
 #include <string>
 
@@ -17,7 +17,7 @@ public:
   virtual void OnFocus();
 
 protected:
-  void setCurrentFolder(PicoFileSystem *picoFS, const char *name);
+  void setCurrentFolder(FileSystem *fs, const char *name);
   void warpToNextInstrument(bool goUp);
   void importInstrument(char *name);
 

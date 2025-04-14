@@ -16,6 +16,7 @@
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
+#include <cstdint>
 #include <nanoprintf.h>
 
 static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
@@ -560,7 +561,7 @@ void InstrumentView::fillOpalParameters() {
   OpalInstrument *instrument = (OpalInstrument *)instr;
   GUIPoint position = GetAnchor();
 
-  u_int8_t savex = 0;
+  uint8_t savex = 0;
 
   // extra y spacing to allow for gap between export/import and parameters
   position._y += 2;
@@ -694,7 +695,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (!player->IsRunning()) {
           // First check if the samplelib exists
           bool samplelibExists =
-              PicoFileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+              FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
           if (!samplelibExists) {
             MessageBox *mb =
