@@ -34,8 +34,7 @@ void PersistencyService::PurgeUnnamedProject() {
   // delete all samples
   char filename[128];
   for (size_t i = 0; i < fileIndexes.size(); i++) {
-    fs->getFileName(fileIndexes[i], filename,
-                        MAX_PROJECT_SAMPLE_PATH_LENGTH);
+    fs->getFileName(fileIndexes[i], filename, MAX_PROJECT_SAMPLE_PATH_LENGTH);
     fs->DeleteFile(filename);
   };
 };
@@ -45,7 +44,8 @@ PersistencyService::CreateProjectDirs_(const char *projectName) {
   auto fs = FileSystem::GetInstance();
 
   // create samples sub dir as well as project dir containing it
-  etl::vector segments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR};
+  etl::vector<const char *, 3> segments = {PROJECTS_DIR, projectName,
+                                           PROJECT_SAMPLES_DIR};
   CreatePath(pathBufferA, segments);
 
   auto result = fs->makeDir(pathBufferA.c_str(), true);
@@ -75,15 +75,14 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     fs->list(&fileIndexes_, ".wav", false);
     char filenameBuffer[PFILENAME_SIZE];
     for (size_t i = 0; i < fileIndexes_.size(); i++) {
-      fs->getFileName(fileIndexes_[i], filenameBuffer,
-                          sizeof(filenameBuffer));
+      fs->getFileName(fileIndexes_[i], filenameBuffer, sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)
         continue;
 
-      etl::vector filePathSegments = {PROJECTS_DIR, oldProjectName,
-                                      PROJECT_SAMPLES_DIR, filenameBuffer};
+      etl::vector<const char *, 4> filePathSegments = {
+          PROJECTS_DIR, oldProjectName, PROJECT_SAMPLES_DIR, filenameBuffer};
       CreatePath(pathBufferA, filePathSegments);
 
       filePathSegments = {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR,
@@ -106,7 +105,7 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
 
   const char *filename = autosave ? AUTO_SAVE_FILENAME : PROJECT_DATA_FILE;
 
-  etl::vector segments = {PROJECTS_DIR, projectName, filename};
+  etl::vector<const char *, 3> segments = {PROJECTS_DIR, projectName, filename};
   CreatePath(pathBufferA, segments);
 
   auto fs = FileSystem::GetInstance();
@@ -245,11 +244,200 @@ void PersistencyService::CreatePath(
 }
 
 bool PersistencyService::ClearAutosave(const char *projectName) {
-  auto fs = FileSystem::GetInstance();
-  etl::vector segments = {PROJECTS_DIR, projectName, AUTO_SAVE_FILENAME};
+  auto picoFS = PicoFileSystem::GetInstance();
+  etl::vector<const char *, 3> segments = {PROJECTS_DIR, projectName,
+                                           AUTO_SAVE_FILENAME};
   CreatePath(pathBufferA, segments);
   // TODO: check if file exists before deleting and only return false if it does
   // exist and deleting fails but this can only be done once Open() return
   // values are improved and we can implement a Exists() function on top of it
-  return fs->DeleteFile(pathBufferA.c_str());
+  return picoFS->DeleteFile(pathBufferA.c_str());
+}
+
+PersistencyResult PersistencyService::ExportInstrument(
+    I_Instrument *instrument, etl::string<MAX_INSTRUMENT_NAME_LENGTH> name,
+    bool overwrite) {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  // Add .pti extension to the filename
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename = name;
+  filename.append(INSTRUMENT_FILE_EXTENSION);
+
+  etl::vector<const char *, 2> segments = {INSTRUMENTS_DIR, filename.c_str()};
+  CreatePath(pathBufferA, segments);
+
+  // check if file already exists
+  if (picoFS->exists(pathBufferA.c_str())) {
+    if (!overwrite) {
+      return PERSIST_EXISTS;
+    }
+    // Delete the existing file if overwrite is true
+    if (!picoFS->DeleteFile(pathBufferA.c_str())) {
+      Trace::Error("PERSISTENCYSERVICE: Failed to delete existing file: %s",
+                   pathBufferA.c_str());
+      return PERSIST_ERROR;
+    }
+  }
+
+  auto fp = picoFS->Open(pathBufferA.c_str(), "w");
+  if (!fp) {
+    Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
+                 pathBufferA.c_str());
+    return PERSIST_ERROR;
+  }
+
+  tinyxml2::XMLPrinter printer(fp);
+
+  // Use the instrument's Persistent interface to save its data
+  instrument->Save(&printer);
+
+  fp->Close();
+  return PERSIST_SAVED;
+}
+
+InstrumentType PersistencyService::DetectInstrumentType(const char *name) {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  if (!picoFS->chdir(INSTRUMENTS_DIR)) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not change to instruments directory");
+    return IT_NONE;
+  }
+
+  // Load the XML document
+  PersistencyDocument doc;
+  if (!doc.Load(name)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not parse XML from file: %s", name);
+    return IT_NONE;
+  }
+
+  // Find the INSTRUMENT element
+  bool elem = doc.FirstChild();
+  if (!elem || strcmp(doc.ElemName(), "INSTRUMENT")) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not find INSTRUMENT node in file: %s", name);
+    return IT_NONE;
+  }
+
+  // Check for TYPE attribute in the INSTRUMENT element
+  InstrumentType importedType = IT_NONE;
+  bool hasAttr = doc.NextAttribute();
+  while (hasAttr) {
+    if (!strcasecmp(doc.attrname_, "TYPE")) {
+      Trace::Log("PERSISTENCYSERVICE", "Found instrument type in XML: %s",
+                 doc.attrval_);
+
+      // Map the type string to InstrumentType enum
+      for (int i = 0; i < IT_LAST; i++) {
+        if (!strcasecmp(doc.attrval_, InstrumentTypeNames[i])) {
+          importedType = static_cast<InstrumentType>(i);
+          Trace::Log("PERSISTENCYSERVICE", "Mapped to instrument type: %d",
+                     importedType);
+          break;
+        }
+      }
+    }
+    hasAttr = doc.NextAttribute();
+  }
+  return importedType;
+}
+
+PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
+                                                       const char *name) {
+  auto picoFS = PicoFileSystem::GetInstance();
+
+  if (!picoFS->chdir(INSTRUMENTS_DIR)) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not change to instruments directory");
+    return PERSIST_ERROR;
+  }
+
+  // Load the XML document
+  PersistencyDocument doc;
+  if (!doc.Load(name)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not parse XML from file: %s", name);
+    return PERSIST_ERROR;
+  }
+
+  // Find the INSTRUMENT element
+  bool elem = doc.FirstChild();
+  if (!elem || strcmp(doc.ElemName(), "INSTRUMENT")) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Could not find INSTRUMENT node in file: %s", name);
+    return PERSIST_ERROR;
+  }
+
+  // Check for TYPE attribute in the INSTRUMENT element
+  InstrumentType importedType = IT_NONE;
+  bool hasAttr = doc.NextAttribute();
+  while (hasAttr) {
+    if (!strcasecmp(doc.attrname_, "TYPE")) {
+      Trace::Log("PERSISTENCYSERVICE", "Found instrument type in XML: %s",
+                 doc.attrval_);
+
+      // Map the type string to InstrumentType enum
+      for (int i = 0; i < IT_LAST; i++) {
+        if (!strcasecmp(doc.attrval_, InstrumentTypeNames[i])) {
+          importedType = static_cast<InstrumentType>(i);
+          Trace::Log("PERSISTENCYSERVICE", "Mapped to instrument type: %d",
+                     importedType);
+          break;
+        }
+      }
+    }
+    hasAttr = doc.NextAttribute();
+  }
+
+  // If we found a valid instrument type and it doesn't match the current
+  // instrument
+  if (importedType != IT_NONE && importedType != instrument->GetType()) {
+    Trace::Log("PERSISTENCYSERVICE",
+               "Current instrument type: %d, imported type: %d",
+               instrument->GetType(), importedType);
+
+    // We can't directly change the instrument type, so we'll need to
+    // create a new instrument of the correct type and copy parameters later
+    Trace::Log("PERSISTENCYSERVICE",
+               "Instrument type mismatch, will convert after loading");
+  }
+
+  // Restore the instrument content
+  if (!instrument->Restore(&doc)) {
+    Trace::Error(
+        "PERSISTENCYSERVICE: Failed to restore instrument from file: %s", name);
+    return PERSIST_ERROR;
+  }
+
+  // Extract instrument name from filename (minus .pti extension)
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> instrumentName;
+  const char *dotPos = strrchr(name, '.');
+  if (dotPos) {
+    // Calculate the length of the name without extension
+    size_t nameLength = dotPos - name;
+    // Copy only up to MAX_INSTRUMENT_NAME_LENGTH characters
+    nameLength = nameLength < MAX_INSTRUMENT_NAME_LENGTH
+                     ? nameLength
+                     : MAX_INSTRUMENT_NAME_LENGTH - 1;
+    instrumentName.assign(name, nameLength);
+  } else {
+    // No extension found, use the whole name (up to MAX_INSTRUMENT_NAME_LENGTH)
+    instrumentName.assign(name, strlen(name) < MAX_INSTRUMENT_NAME_LENGTH
+                                    ? strlen(name)
+                                    : MAX_INSTRUMENT_NAME_LENGTH - 1);
+  }
+
+  // Set the instrument name
+  Variable *nameVar = instrument->FindVariable(FourCC::InstrumentName);
+  if (nameVar) {
+    nameVar->SetString(instrumentName.c_str());
+  }
+
+  // Mark the instrument as changed to trigger UI updates
+  instrument->SetChanged();
+  instrument->NotifyObservers();
+
+  Trace::Log("PERSISTENCYSERVICE", "Successfully imported instrument settings");
+  Trace::Log("PERSISTENCYSERVICE", "Set instrument name to: %s",
+             instrumentName.c_str());
+  return PERSIST_LOADED;
 }

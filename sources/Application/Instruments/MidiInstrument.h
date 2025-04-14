@@ -2,14 +2,13 @@
 #define _MIDI_INSTRUMENT_H_
 
 #include "Application/Model/Song.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/etl/include/etl/string.h"
 #include "I_Instrument.h"
 #include "Services/Midi/MidiMessage.h"
 #include "Services/Midi/MidiService.h"
 
 #define MAX_MIDI_CHORD_NOTES 4
-
-const int MAX_MIDI_INSTRUMENT_NAME_LENGTH = 12;
 
 class MidiInstrument : public I_Instrument {
 
@@ -34,7 +33,7 @@ public:
 
   virtual InstrumentType GetType() { return IT_MIDI; };
 
-  virtual etl::string<24> GetName();
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDefaultName();
 
   virtual void OnStart();
 
@@ -45,7 +44,6 @@ public:
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
   etl::ilist<Variable *> *Variables() { return &variables_; };
-  // external parameter list
 
   void SetChannel(int i);
 
@@ -66,7 +64,9 @@ private:
   Variable volume_;
   Variable table_;
   Variable tableAuto_;
-  Variable name_;
+  // need to store defaultname as it depends on the MIDI channel of the
+  // instrument
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName_;
 
   static MidiService *svc_;
 };

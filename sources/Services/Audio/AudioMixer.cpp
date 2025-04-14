@@ -8,7 +8,6 @@ AudioMixer::AudioMixer(const char *name)
     : T_SimpleList<AudioModule>(false), enableRendering_(0), writer_(0),
       name_(name) {
   volume_ = (i2fp(1));
-  Trace::Debug("AudioMixer [%s]", name);
 };
 
 AudioMixer::~AudioMixer() {}

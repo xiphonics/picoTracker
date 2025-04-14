@@ -7,10 +7,32 @@ PersistencyDocument::PersistencyDocument() {
 }
 
 bool PersistencyDocument::Load(const char *filename) {
-  fp_ = FileSystem::GetInstance()->Open(filename, "r");
-  if (fp_)
-    return true;
-  return false;
+  Trace::Log("PERSISTENCYDOCUMENT", "Loading document from file: %s", filename);
+
+  fp_ = PicoFileSystem::GetInstance()->Open(filename, "r");
+  if (!fp_) {
+    Trace::Error("Failed to open file: %s", filename);
+    return false;
+  }
+
+  // Reset the XML parser state
+  yxml_init(state_, stack_, sizeof(stack_));
+  r_ = YXML_OK;
+
+  // Verify we can read from the file
+  int c = fp_->GetC();
+  if (c == EOF) {
+    Trace::Error("File is empty or cannot be read: %s", filename);
+    fp_->Close();
+    fp_ = nullptr;
+    return false;
+  }
+
+  // Reset file position
+  fp_->Seek(0, SEEK_SET);
+
+  Trace::Log("PERSISTENCYDOCUMENT", "Successfully opened file: %s", filename);
+  return true;
 }
 
 char *PersistencyDocument::ElemName() { return state_->elem; }
@@ -50,8 +72,11 @@ bool PersistencyDocument::FirstChild() {
 
 bool PersistencyDocument::NextSibling() {
   // Only to be called after YXML_ELEMEND
-  if ((r_ != YXML_OK) && (r_ != YXML_ELEMEND))
+  if ((r_ != YXML_OK) && (r_ != YXML_ELEMEND)) {
+    Trace::Error("NextSibling called with invalid state: %d", r_);
     return false;
+  }
+
   int c;
   while ((c = fp_->GetC()) != EOF) {
     r_ = yxml_parse(state_, c);
@@ -64,25 +89,32 @@ bool PersistencyDocument::NextSibling() {
     case YXML_ATTRSTART:
     case YXML_ATTRVAL:
     case YXML_ATTREND:
+      break;
     case YXML_EEOF:
     case YXML_EREF:
     case YXML_ECLOSE:
     case YXML_ESTACK:
     case YXML_ESYN:
       // Error
+      Trace::Error("NextSibling encountered error: %d", r_);
+      break;
     default:
       // Any other values we skip, including YXML_OK
       break;
     }
   }
+
+  Trace::Error("NextSibling reached EOF");
   return false;
 }
 
 bool PersistencyDocument::NextAttribute() {
   // This is called as soon as a YXML_ELEMSTART happened or after another
   // YXML_ATTREND
-  if ((r_ != YXML_OK) && (r_ != YXML_ELEMSTART) && (r_ != YXML_ATTREND))
+  if ((r_ != YXML_OK) && (r_ != YXML_ELEMSTART) && (r_ != YXML_ATTREND)) {
+    Trace::Error("NextAttribute called with invalid state: %d", r_);
     return false;
+  }
 
   int cur = 0;
   int c;
@@ -115,6 +147,8 @@ bool PersistencyDocument::NextAttribute() {
     case YXML_ESTACK:
     case YXML_ESYN:
       // Error
+      Trace::Error("NextAttribute encountered error: %d", r_);
+      break;
     default:
       // Any other values we skip, including YXML_OK
       break;

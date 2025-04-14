@@ -1,6 +1,7 @@
 #ifndef _CRSID_INSTRUMENT_H_
 #define _CRSID_INSTRUMENT_H_
 
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/cRSID/SID.h"
 #include "I_Instrument.h"
 
@@ -64,7 +65,7 @@ public:
 
   virtual InstrumentType GetType() { return IT_SID; };
 
-  virtual etl::string<24> GetName();
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetName();
 
   virtual void OnStart();
 
@@ -81,12 +82,11 @@ public:
   void SetRender(bool render) { render_ = render; };
 
   // returns just the chip name, eg "SID #1"
-  etl::string<6> GetChipName() { return name_.substr(0, 6); };
+  etl::string<6> GetChipName() { return "SID #1"; };
 
 private:
-  etl::list<Variable *, 18> variables_;
+  etl::list<Variable *, 19> variables_;
 
-  etl::string<24> name_;
   SIDInstrumentInstance chip_; // SID1 or SID2
   bool render_ = false;
 

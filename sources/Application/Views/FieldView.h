@@ -10,7 +10,7 @@ public:
   FieldView(GUIWindow &w, ViewData *viewData);
 
   virtual void Redraw();
-  virtual void ProcessButtonMask(unsigned short mask);
+  virtual void ProcessButtonMask(unsigned short mask, bool pressed) override;
 
   void SetFocus(UIField *);
   UIField *GetFocus();
@@ -18,7 +18,7 @@ public:
   int GetFocusIndex();
   void SetSize(int size);
 
-  etl::list<UIField *, 28> fieldList_; // adjust to maximum fields on one screen
+  etl::list<UIField *, 34> fieldList_; // adjust to maximum fields on one screen
 
 private:
   UIField *focus_;

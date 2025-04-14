@@ -194,7 +194,7 @@ void Variable::SetString(const char *string, bool notify) {
             break;
           }
         }
-        if (*s == 0) {
+        if (*s == 0 && *d == 0) { // Ensure both strings end at the same point
           value_.index_ = i;
           break;
         }
@@ -225,7 +225,7 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
     return *stringValue_;
   case CHAR_LIST:
     if ((value_.index_ < 0) || (value_.index_ >= listSize_)) {
-      return "(null)";
+      return "";
     } else {
       return list_.char_[value_.index_];
     }

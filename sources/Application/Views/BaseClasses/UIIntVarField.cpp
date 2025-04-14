@@ -40,6 +40,14 @@ void UIIntVarField::Draw(GUIWindow &w, int offset) {
     npf_snprintf(buffer, sizeof(buffer), format_, ivalue, ivalue);
   } break;
   case Variable::CHAR_LIST:
+    // if no value initialize with "NONE"
+    if (src_.GetInt() < 0) {
+      npf_snprintf(buffer, sizeof(buffer), format_, "NONE");
+    } else {
+      const char *cvalue = src_.GetString().c_str();
+      npf_snprintf(buffer, sizeof(buffer), format_, cvalue);
+    }
+    break;
   case Variable::BOOL: {
     const char *cvalue = src_.GetString().c_str();
     npf_snprintf(buffer, sizeof(buffer), format_, cvalue);

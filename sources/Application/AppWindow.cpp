@@ -22,6 +22,7 @@
 #include "Application/Views/DeviceView.h"
 #include "Application/Views/GrooveView.h"
 #include "Application/Views/ImportView.h"
+#include "Application/Views/InstrumentImportView.h"
 #include "Application/Views/InstrumentView.h"
 #include "Application/Views/MixerView.h"
 #include "Application/Views/NullView.h"
@@ -344,6 +345,11 @@ void AppWindow::LoadProject(const char *projectName) {
   _importView = new (importViewMemBuf) ImportView((*this), _viewData);
   _importView->AddObserver((*this));
 
+  static char instrumentImportViewMemBuf[sizeof(InstrumentImportView)];
+  _instrumentImportView =
+      new (instrumentImportViewMemBuf) InstrumentImportView((*this), _viewData);
+  _instrumentImportView->AddObserver((*this));
+
   static char instrumentViewMemBuf[sizeof(InstrumentView)];
   _instrumentView =
       new (instrumentViewMemBuf) InstrumentView((*this), _viewData);
@@ -574,6 +580,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_IMPORT:
       _currentView = _importView;
+      break;
+    case VT_INSTRUMENT_IMPORT:
+      _currentView = _instrumentImportView;
       break;
     case VT_SELECTPROJECT:
       _currentView = _selectProjectView;

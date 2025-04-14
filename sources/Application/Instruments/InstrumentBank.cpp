@@ -45,15 +45,10 @@ void InstrumentBank::SaveContent(tinyxml2::XMLPrinter *printer) {
       hex2char(i, hex);
       printer->OpenElement("INSTRUMENT");
       printer->PushAttribute("ID", hex);
-      printer->PushAttribute("TYPE", InstrumentTypeNames[instr->GetType()]);
 
-      for (auto it = instr->Variables()->begin();
-           it != instr->Variables()->end(); it++) {
-        printer->OpenElement("PARAM");
-        printer->PushAttribute("NAME", (*it)->GetName());
-        printer->PushAttribute("VALUE", (*it)->GetString().c_str());
-        printer->CloseElement(); // PARAM
-      }
+      // Let the instrument save its own content
+      instr->SaveContent(printer);
+
       printer->CloseElement(); // INSTRUMENT
     }
     i++;
@@ -100,53 +95,8 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
         }
         I_Instrument *instr = instruments_[id];
 
-        bool subelem = doc->FirstChild();
-        while (subelem) {
-          bool hasAttr = doc->NextAttribute();
-          char name[24] = "";
-          char value[24] = "";
-          while (hasAttr) {
-            if (!strcasecmp(doc->attrname_, "NAME")) {
-              strcpy(name, doc->attrval_);
-            }
-            if (!strcasecmp(doc->attrname_, "VALUE")) {
-              strcpy(value, doc->attrval_);
-            }
-            hasAttr = doc->NextAttribute();
-          }
-
-          // Convert old filter dist to newer filter mode
-          if (!strcasecmp(name, "filter dist")) {
-            strcpy(name, "filter mode");
-            if (!strcasecmp(value, "none")) {
-              strcpy(value, "original");
-            } else {
-              strcpy(value, "scream");
-            }
-          }
-
-          auto vars = instr->Variables();
-          for (auto elem : *vars) {
-            if (!strcasecmp((elem)->GetName(), name)) {
-              // Trace::Debug("Restore SetString %s->%s", name, value);
-              (elem)->SetString(value);
-            };
-          }
-          subelem = doc->NextSibling();
-        }
-        if (doc->version_ < 38) {
-          Variable *cvl =
-              instr->FindVariable(FourCC::SampleInstrumentCrushVolume);
-          Variable *vol = instr->FindVariable(FourCC::SampleInstrumentVolume);
-          Variable *crs = instr->FindVariable(FourCC::SampleInstrumentCrush);
-          if ((vol) && (cvl) && (crs)) {
-            if (crs->GetInt() != 16) {
-              int temp = vol->GetInt();
-              vol->SetInt(cvl->GetInt());
-              cvl->SetInt(temp);
-            }
-          };
-        }
+        // Let the instrument restore its own content
+        instr->RestoreContent(doc);
       }
     }
     elem = doc->NextSibling();
