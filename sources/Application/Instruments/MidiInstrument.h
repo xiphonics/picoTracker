@@ -9,6 +9,7 @@
 #include "Services/Midi/MidiService.h"
 
 #define MAX_MIDI_CHORD_NOTES 4
+#define INITIAL_NOTE_VELOCITY 0x7F
 
 class MidiInstrument : public I_Instrument {
 

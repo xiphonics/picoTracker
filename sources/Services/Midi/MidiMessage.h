@@ -42,3 +42,5 @@ struct MidiMessage : public I_ObservableData {
   unsigned char data1_;
   unsigned char data2_;
 };
+
+enum MidiCC { CC_VOLUME = 0x07 };
