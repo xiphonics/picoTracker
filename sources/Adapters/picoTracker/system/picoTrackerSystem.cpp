@@ -88,26 +88,6 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
 
-  bool invert = false;
-  Config *config = Config::GetInstance();
-  invert = config->GetValue("INVERT") > 0;
-
-  if (!invert) {
-    eventManager_->MapAppButton("left ctrl", APP_BUTTON_A);
-    eventManager_->MapAppButton("left alt", APP_BUTTON_B);
-  } else {
-    eventManager_->MapAppButton("left alt", APP_BUTTON_A);
-    eventManager_->MapAppButton("left ctrl", APP_BUTTON_B);
-  }
-  eventManager_->MapAppButton("return", APP_BUTTON_START);
-  //	em->MapElement("esc",APP_BUTTON_SELECT) ;
-  eventManager_->MapAppButton("tab", APP_BUTTON_L);
-  eventManager_->MapAppButton("backspace", APP_BUTTON_R);
-  eventManager_->MapAppButton("right", APP_BUTTON_RIGHT);
-  eventManager_->MapAppButton("left", APP_BUTTON_LEFT);
-  eventManager_->MapAppButton("down", APP_BUTTON_DOWN);
-  eventManager_->MapAppButton("up", APP_BUTTON_UP);
-
 #if PICO_RP2040
   // init GPIO for use as ADC: hi-Z, no pullups, etc
   adc_gpio_init(BATT_VOLTAGE_IN);
