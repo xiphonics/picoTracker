@@ -1,7 +1,7 @@
 #ifndef _PICOTRACKEREVENTQUEUE_H_
 #define _PICOTRACKEREVENTQUEUE_H_
 
-#include "Externals/etl/include/etl/deque.h"
+#include "Externals/etl/include/etl/queue_spsc_atomic.h"
 #include "Foundation/T_Singleton.h"
 
 enum picoTrackerEventType { PICO_REDRAW, PICO_FLUSH, PICO_CLOCK, LAST };
@@ -25,7 +25,8 @@ public:
   bool empty();
 
 private:
-  etl::deque<picoTrackerEvent, picoTrackerEventType::LAST> queue_;
+  static const size_t EVENT_QUEUE_SIZE = 256;
+  etl::queue_spsc_atomic<picoTrackerEvent, EVENT_QUEUE_SIZE> queue_;
 };
 
 #endif
