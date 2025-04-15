@@ -42,6 +42,7 @@ protected:
   void refreshInstrumentFields(const I_Instrument *old);
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void handleInstrumentExport();
+  void setFocus(FourCC id);
 
 private:
   Project *project_;

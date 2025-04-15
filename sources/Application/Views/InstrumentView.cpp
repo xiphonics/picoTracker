@@ -208,12 +208,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
     break;
   };
 
-  for (auto field : fieldList_) {
-    if (((UIIntVarField *)field)->GetVariableID() == lastFocusID_) {
-      SetFocus(field);
-      break;
-    }
-  }
+  setFocus(lastFocusID_);
 
   // observer all var fields so we can mark the instrument as modified
   // to be able to show confirmation dialog when switching instrument type
@@ -763,10 +758,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // EDIT Modifier
   if (mask & EPBM_EDIT) {
-    FourCC varID = ((UIIntVarField *)GetFocus())->GetVariableID();
-    if (varID == FourCC::SampleInstrumentLoopMode) { // Show or hide slices
-      onInstrumentChange();
-    }
     if (mask & EPBM_LEFT)
       warpToNext(-1);
     if (mask & EPBM_RIGHT)
@@ -951,6 +942,12 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     SetChanged();
     NotifyObservers(&ve);
   } break;
+  case FourCC::SampleInstrumentLoopMode: {
+    // Show or hide slices
+    onInstrumentChange();
+    lastFocusID_ = FourCC::SampleInstrumentLoopMode;
+    setFocus(lastFocusID_);
+  }
   default:
     if (fourcc != 0) {
       instrumentModified_ = true;
