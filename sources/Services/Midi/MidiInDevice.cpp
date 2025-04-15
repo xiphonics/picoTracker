@@ -20,15 +20,6 @@ int8_t MidiInDevice::channelToInstrument_[16] = {
 MidiInDevice::MidiInDevice(const char *name)
     : ControllerSource("midi", name), T_Stack<MidiMessage>(true) {
   for (int channel = 0; channel < 16; channel++) {
-    for (int i = 0; i < 128; i++) {
-      noteChannel_[channel][i] = NULL;
-      ccChannel_[channel][i] = NULL;
-      atChannel_[channel][i] = NULL;
-    }
-    pbChannel_[channel] = NULL;
-    catChannel_[channel] = NULL;
-    pcChannel_[channel] = NULL;
-
     // Initialize the new channel-to-instrument mapping
     channelToInstrument_[channel] = -1; // -1 means no instrument assigned
   }
@@ -111,26 +102,7 @@ void MidiInDevice::Trigger(Time time) {
   };
 
   for (int midiChannel = 0; midiChannel < 16; midiChannel++) {
-    for (int i = 0; i < 128; i++) {
-      if (ccChannel_[midiChannel][i]) {
-        ccChannel_[midiChannel][i]->Trigger();
-      };
-      if (noteChannel_[midiChannel][i]) {
-        noteChannel_[midiChannel][i]->Trigger();
-      }
-      if (atChannel_[midiChannel][i]) {
-        atChannel_[midiChannel][i]->Trigger();
-      }
-    };
-    if (pbChannel_[midiChannel]) {
-      pbChannel_[midiChannel]->Trigger();
-    };
-    if (pcChannel_[midiChannel]) {
-      pcChannel_[midiChannel]->Trigger();
-    }
-    if (catChannel_[midiChannel]) {
-      catChannel_[midiChannel]->Trigger();
-    };
+    // TODO: Trigger all channels with relevant midi messages
   }
 };
 
@@ -204,10 +176,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     int note = event.data1_ & MIDI_DATA_MASK;
     int data = event.data2_ & MIDI_DATA_MASK;
 
-    MidiChannel *channel = atChannel_[midiChannel][note];
-    if (channel) {
-      channel->SetValue(float(data) / (channel->GetRange() / 2.0f - 1));
-    }
+    // TODO: handle aftertouch
   } break;
 
   case MidiMessage::MIDI_CONTROL_CHANGE: {
@@ -217,50 +186,23 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     if (dumpEvents_) {
       Trace::Log("EVENT", "midi:cc:%d:%d", cc, data);
     }
-
-    // First, look if we're not handling a hi nibble from a hi-res CC
-
-    if ((cc > 31) && (ccChannel_[midiChannel][cc - 32] != 0) &&
-        (ccChannel_[midiChannel][cc - 32]->IsHiRes())) {
-      treatCC(ccChannel_[midiChannel][cc - 32], data);
-    } else {
-      if (ccChannel_[midiChannel][cc] != 0) {
-        if (ccChannel_[midiChannel][cc]->IsHiRes()) {
-          treatCC(ccChannel_[midiChannel][cc], data, true);
-        } else {
-          treatCC(ccChannel_[midiChannel][cc], data);
-        }
-      };
-    }
+    // TODO: handle CC
   } break;
 
   case MidiMessage::MIDI_PROGRAM_CHANGE: {
     int data = event.data1_ & MIDI_DATA_MASK;
 
-    MidiChannel *channel = pcChannel_[midiChannel];
-    if (channel) {
-      channel->SetValue(float(data) / (channel->GetRange() / 2.0f - 1));
-      channel->Trigger();
-    }
+    // TODO: handle program change
   } break;
 
   case MidiMessage::MIDI_CHANNEL_AFTERTOUCH: {
     int data = event.data1_ & MIDI_DATA_MASK;
 
-    MidiChannel *channel = catChannel_[midiChannel];
-    if (channel) {
-      channel->SetValue(float(data) / (channel->GetRange() / 2.0f - 1));
-      channel->Trigger();
-    }
+    // TODO: handle channel aftertouch
   } break;
 
   case MidiMessage::MIDI_PITCH_BEND: {
-    MidiChannel *channel = pbChannel_[midiChannel];
-    if (channel) {
-      channel->SetValue((event.data2_ * MIDI_DATA_MASK + event.data1_) /
-                        float(0x3F80));
-      channel->Trigger();
-    };
+    // TODO: handle pitch bend
   } break;
 
   default:
@@ -336,13 +278,6 @@ Channel *MidiInDevice::GetChannel(const char *sourcePath) {
   if ((id < 0) || (id > 127)) {
     return 0;
   };
-
-  ccChannel = &(ccChannel_[midiChannel][id]);
-  noteChannel = &(noteChannel_[midiChannel][id]);
-  pbChannel = &(pbChannel_[midiChannel]);
-  catChannel = &(catChannel_[midiChannel]);
-  atChannel = &(atChannel_[midiChannel][id]);
-  pcChannel = &(pcChannel_[midiChannel]);
 
   if (type.substr(0, 2) == "cc") {
 
