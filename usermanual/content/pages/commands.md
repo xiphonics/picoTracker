@@ -165,6 +165,14 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 - TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value.
   Values outside the allowable range will be clamped to the nearest value within the range.
 
+## STP (STOP in lgpt)
+
+**Stops the table from processing any further rows.**
+
+- This command is only valid in tables, not in phrases
+- When the table processor encounters STP, it immediately stops executing the current table
+- Useful for creating one-shot effects that should run once and then stop
+
 ## VEL --bb
 
 Set the velocity of the note being played on the current step for a MIDI instrument. This valid for MIDI instruments *only* and this command is not supported for use in tables.

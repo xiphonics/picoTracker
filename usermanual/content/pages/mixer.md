@@ -5,6 +5,8 @@ template: page
 
 ![screen capture of mixer screen](image/mixer-screen-small.png)
 
+**NOTE: The mixer screen is only available in the version v2.1 of picoTracker firmware and later.**
+
 The Mixer screen provides a visual overview and control center for the audio levels of each channel in your song, as well as the master output. It allows you to quickly adjust volumes, monitor audio levels and mute/solo individual channels.
 
 ## Mixer Channels
