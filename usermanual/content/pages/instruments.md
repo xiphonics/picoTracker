@@ -3,6 +3,30 @@ title: Instruments
 template: page
 ---
 
+## Instrument Types
+
+picoTracker supports several different types of instruments, each with its own unique capabilities and parameters. You can switch between instrument types using the **Type** field at the top of the instrument screen.
+
+### Switching Instrument Types
+
+1. Navigate to the instrument screen by pressing `NAV`+`RIGHT` from the phrase screen
+2. By default the `NONE` instrument type is selected
+3. Press `EDIT`+`LEFT` or `EDIT`+`RIGHT` to cycle through the available instrument types:
+   - **SAMPLE**: For playing back WAV samples with various effects
+   - **MIDI**: For controlling external MIDI devices
+   - **SID**: Emulation of the Commodore 64 SID chip
+   - **OPAL**: FM synthesis emulating classic PC soundcards
+4. If you've made changes to the current instrument, you'll be asked to confirm before switching types
+5. Note that you cannot change instrument types while playback is active
+
+### Importing and Exporting Instruments
+
+Once you've created an instrument, you can save it for use in other projects:
+
+1. Make sure your instrument has a name set in the "name:" field
+2. Select "Export" on the instrument screen
+3. To import a previously saved instrument, select "Import"
+
 ## Sampler
 
 ![screen capture of sampler screen](image/sample-screen-small.png)
