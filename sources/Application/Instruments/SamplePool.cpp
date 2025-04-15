@@ -134,11 +134,30 @@ bool SamplePool::loadSample(const char *name) {
 
   WavFile *wave = WavFile::Open(name);
   if (wave) {
+    // Get sample information
+    int size = wave->GetSize(-1);
+    int channels = wave->GetChannelCount(-1);
+    int bytePerSample = (wave->GetSampleRate(-1) == 8) ? 1 : 2;
+    int totalBytes = size * channels * bytePerSample;
+
+    // Check if this is a single cycle waveform
+    bool isSingleCycle = (totalBytes < 1024);
+
+    Trace::Debug("Sample info: size=%d samples, channels=%d, total bytes=%d, "
+                 "isSingleCycle=%d",
+                 size, channels, totalBytes, isSingleCycle);
+
     wav_[count_] = wave;
     names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
     strcpy(names_[count_], name);
     count_++;
 #ifdef LOAD_IN_FLASH
+    // For single cycle waveforms, ensure we have enough buffer space
+    if (isSingleCycle) {
+      Trace::Debug("Loading single cycle waveform into flash: erase "
+                   "offset=0x%X, write offset=0x%X",
+                   flashEraseOffset_, flashWriteOffset_);
+    }
     wave->LoadInFlash(flashEraseOffset_, flashWriteOffset_, flashLimit_);
 #else
     wave->GetBuffer(0, wave->GetSize(-1));

@@ -1,6 +1,7 @@
 #include "ImportView.h"
 
 #include "Application/AppWindow.h"
+#include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "ModalDialogs/MessageBox.h"
@@ -102,6 +103,19 @@ void ImportView::DrawView() {
 
     if (fs->getFileType(fileIndex) != PFT_DIR) {
       fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
+
+      // Check if it's a single cycle waveform (less than 1KB)
+      int filesize = fs->getFileSize(fileIndex);
+      // check for LGPT or AKWF standard file sizes
+      bool isSingleCycle = (filesize == 1344 || filesize == 300);
+
+      // Add indicator for single cycle waveforms
+      if (isSingleCycle) {
+        int len = strlen(buffer);
+        if (len < LIST_WIDTH - 4) { // Make sure we have space
+          strcat(buffer, "[~]");    // Add cycle indicator
+        }
+      }
     } else {
       buffer[0] = '/';
       fs->getFileName(fileIndex, buffer + 1, PFILENAME_SIZE);
@@ -119,7 +133,15 @@ void ImportView::DrawView() {
   auto currentFileIndex = fileIndexList_[currentIndex_];
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
     int filesize = fs->getFileSize(currentFileIndex);
-    npf_snprintf(buffer, sizeof(buffer), "[size: %i]", filesize);
+    bool isSingleCycle = (filesize < 1024);
+
+    if (isSingleCycle) {
+      npf_snprintf(buffer, sizeof(buffer), "[size: %i] [Single Cycle]",
+                   filesize);
+    } else {
+      npf_snprintf(buffer, sizeof(buffer), "[size: %i]", filesize);
+    }
+
     x = 1;  // align with rest screen title & file list
     y = 23; // bottom line
     DrawString(x, y, buffer, props);
@@ -162,15 +184,57 @@ void ImportView::warpToNextSample(bool goUp) {
 }
 
 void ImportView::preview(char *name) {
+  // Get file size to check if it's a single cycle waveform
+  auto fs = FileSystem::GetInstance();
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  int fileSize = fs->getFileSize(fileIndex);
+
+  // Check for LGPT or AKWF standard file sizes
+  bool isSingleCycle = (fileSize == 300 || fileSize == 1344);
+
+  Trace::Debug("Preview: currentIndex_=%zu, previewPlayingIndex_=%zu, "
+               "IsPlaying=%d, isSingleCycle=%d",
+               currentIndex_, previewPlayingIndex_,
+               Player::GetInstance()->IsPlaying(), isSingleCycle);
+
+  // Check if we're trying to play the same sample that's already playing
+  bool isSameSample = (currentIndex_ == previewPlayingIndex_);
+
   if (Player::GetInstance()->IsPlaying()) {
+    // Always stop the current playback
     Player::GetInstance()->StopStreaming();
-    if (currentIndex_ != previewPlayingIndex_) {
+
+    if (isSameSample) {
+      // If it's the same sample, just stop (toggle off)
+      Trace::Debug("Stopping playback of current sample");
+      previewPlayingIndex_ = (size_t)-1;
+    } else {
+      // If it's a different sample, start playing it
+      Trace::Debug("Switching to play different sample");
       previewPlayingIndex_ = currentIndex_;
-      Player::GetInstance()->StartStreaming(name);
+
+      // Use looping for single cycle waveforms
+      if (isSingleCycle) {
+        Trace::Debug("Looping single cycle waveform: %s (size: %d bytes)", name,
+                     fileSize);
+        Player::GetInstance()->StartLoopingStreaming(name);
+      } else {
+        Player::GetInstance()->StartStreaming(name);
+      }
     }
   } else {
-    Player::GetInstance()->StartStreaming(name);
+    // Nothing is playing, so start playing this sample
+    Trace::Debug("Starting playback of sample");
     previewPlayingIndex_ = currentIndex_;
+
+    // Use looping for single cycle waveforms
+    if (isSingleCycle) {
+      Trace::Debug("Looping single cycle waveform: %s (size: %d bytes)", name,
+                   fileSize);
+      Player::GetInstance()->StartLoopingStreaming(name);
+    } else {
+      Player::GetInstance()->StartStreaming(name);
+    }
   }
 }
 
