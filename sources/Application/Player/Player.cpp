@@ -1170,7 +1170,9 @@ unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
 void Player::StartStreaming(char *name) { mixer_.StartStreaming(name); }
 
-void Player::StartLoopingStreaming(char *name) { mixer_.StartLoopingStreaming(name); }
+void Player::StartLoopingStreaming(char *name) {
+  mixer_.StartLoopingStreaming(name);
+}
 
 void Player::StopStreaming() { mixer_.StopStreaming(); }
 
