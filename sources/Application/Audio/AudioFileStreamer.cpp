@@ -8,7 +8,7 @@
 #include <string.h>
 
 // Initialize the static buffer for single cycle waveforms
-short AudioFileStreamer::singleCycleBuffer_[600] = {0};
+short AudioFileStreamer::singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE] = {0};
 
 AudioFileStreamer::AudioFileStreamer() {
   wav_ = 0;

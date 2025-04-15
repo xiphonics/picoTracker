@@ -13,6 +13,9 @@
 // -4 to allow for title, filesize & spacers
 #define LIST_PAGE_SIZE SCREEN_HEIGHT - 4
 
+// is single cycle macro, checks for FILE size of LGPT and AKWF file formats
+#define IS_SINGLE_CYCLE(x) (x == 1344 || x == 300)
+
 ImportView::ImportView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData) {}
 
@@ -107,7 +110,7 @@ void ImportView::DrawView() {
       // Check if it's a single cycle waveform (less than 1KB)
       int filesize = fs->getFileSize(fileIndex);
       // check for LGPT or AKWF standard file sizes
-      bool isSingleCycle = (filesize == 1344 || filesize == 300);
+      bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
 
       // Add indicator for single cycle waveforms
       if (isSingleCycle) {
@@ -126,14 +129,15 @@ void ImportView::DrawView() {
     y += 1;
   };
 
-  // draw current selected file size
+  // draw current selected file size and single cycle indicator
   SetColor(CD_HILITE2);
   props.invert_ = true;
   y = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
     int filesize = fs->getFileSize(currentFileIndex);
-    bool isSingleCycle = (filesize < 1024);
+    // check for LGPT or AKWF standard file sizes
+    bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
 
     if (isSingleCycle) {
       npf_snprintf(buffer, sizeof(buffer), "[size: %i] [Single Cycle]",
@@ -189,8 +193,8 @@ void ImportView::preview(char *name) {
   unsigned fileIndex = fileIndexList_[currentIndex_];
   int fileSize = fs->getFileSize(fileIndex);
 
-  // Check for LGPT or AKWF standard file sizes
-  bool isSingleCycle = (fileSize == 300 || fileSize == 1344);
+  // check for LGPT or AKWF standard file sizes
+  bool isSingleCycle = IS_SINGLE_CYCLE(fileSize);
 
   Trace::Debug("Preview: currentIndex_=%zu, previewPlayingIndex_=%zu, "
                "IsPlaying=%d, isSingleCycle=%d",

@@ -5,6 +5,8 @@
 #include "Application/Model/Project.h"
 #include "Services/Audio/AudioModule.h"
 
+#define SINGLE_CYCLE_MAX_SAMPLE_SIZE 600
+
 enum AudioFileStreamerMode { AFSM_STOPPED, AFSM_PLAYING, AFSM_LOOPING };
 
 class AudioFileStreamer : public AudioModule {
@@ -35,7 +37,7 @@ protected:
 
   // Static buffer for single cycle waveforms (max 600 samples in mono from AKWF
   // single cycle format
-  static short singleCycleBuffer_[600];
+  static short singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE];
   short *singleCycleData_; // Pointer to the current single cycle data
 
 public:
