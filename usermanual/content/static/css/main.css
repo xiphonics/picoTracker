@@ -15,20 +15,15 @@
 
 body {
     background: var(--background);
-        color: #353f5f;
-        font: 16px/135% "Roboto", sans-serif;
-        font-style: normal;
-        font-weight: normal;
-        width: 100%;
+    color: #353f5f;
+    font: 16px/135% "Roboto", sans-serif;
+    font-style: normal;
+    font-weight: normal;
+    width: 100%;
     margin: 0;
-    /*max-width: 960px;*/
-        /* padding: 50px; */
-        /* margin: auto; */
 
     line-height: 1.35em;
-        display: inline-block;
-
-    /* color: var(--panelheader); */
+    display: inline-block;
 }
 
 aside {
@@ -48,6 +43,7 @@ aside {
     /* Disable horizontal scroll */
     padding-top: 10px;
 }
+
 article {
     /* Same as the width of the sidebar */
     /* padding: 20px 0px 20px 50px; */
@@ -71,6 +67,7 @@ img {
 ul {
     line-height: 1.5em;
 }
+
 h1 {
     font-size: 2.75em;
     color: var(--button);
@@ -79,9 +76,11 @@ h1 {
     padding-top: 20px;
     padding-bottom: 10px;
 }
+
 h2 {
     font-size: 1.5em;
 }
+
 aside>h1 {
     font-size: 2em;
     line-height: 1.2;
@@ -89,19 +88,23 @@ aside>h1 {
     padding-top: 10px;
     padding-bottom: 0px;
 }
+
 ul.sideNav {
     list-style-type: none;
     padding-left: 0px;
 }
+
 ul.sideNav h2 {
     color: #ffffff;
     font-size: 1.1em;
     margin-bottom: 2px;
 }
+
 ul.sideNav li {
     width: calc(100%);
     padding: 2px 20px;
 }
+
 ul.sideNav a {
     color: #b0bdc9;
     text-decoration: none;
@@ -112,6 +115,7 @@ ul.sideNav a li:hover {
     color: white;
     font-size: 1em;
 }
+
 ul.sideNav a.selected li {
     color: #1f2235;
     background-color: var(--tableBorder);
@@ -125,11 +129,13 @@ h4 {
     padding-top: 20px;
     padding-bottom: 10px;
 }
+
 p {
     /* color: var(--textLight); */
     font-size: 1em;
     margin: 0 0 15px 0;
 }
+
 hr {
     border-top: 1px solid;
     color: var(--button);
@@ -138,13 +144,13 @@ hr {
 table {
     width: 100%;
     border: 1px solid;
-        border-color: var(--tableBorder);
-        border-collapse: collapse;
-    }
-    
-    tr {
-        border: 1px solid;
-        border-color: var(--tableBorder);
+    border-color: var(--tableBorder);
+    border-collapse: collapse;
+}
+
+tr {
+    border: 1px solid;
+    border-color: var(--tableBorder);
 }
 
 td {
@@ -156,7 +162,7 @@ td {
 th {
     text-align: left;
     padding-left: 7px;
-        background: var(--tableBorder);
+    background: var(--tableBorder);
 }
 
 .fx {
@@ -183,6 +189,7 @@ article a {
     color: var(--link);
     text-decoration: underline;
 }
+
 article a:hover {
     color: var(--effect);
     text-decoration: underline;
@@ -195,10 +202,19 @@ footer {
     margin-bottom: 10px;
     color: #626570;
 }
+
 footer a {
     color: #626570;
 }
+
 /* page specific rules */
 #screen-map+p>img {
     width: 60%;
+}
+
+/* rule for div child of body for front page */
+body>div#cover {
+    width: 100%;
+    text-align: center;
+    margin: 5%;
 }
