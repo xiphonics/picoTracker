@@ -92,19 +92,11 @@ target_compile_definitions(picoTracker PUBLIC
   PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 )
 
-if (PICO_RP2350)
-  target_compile_definitions(picoTracker PUBLIC
-    PICO_DEFAULT_UART=0
-    PICO_DEFAULT_UART_TX_PIN=30
-    PICO_DEFAULT_UART_RX_PIN=31
-  )
-else ()
-  target_compile_definitions(picoTracker PUBLIC
-    PICO_DEFAULT_UART=1
-    PICO_DEFAULT_UART_TX_PIN=24
-    PICO_DEFAULT_UART_RX_PIN=25
-  )
-endif()
+target_compile_definitions(picoTracker PUBLIC
+  PICO_DEFAULT_UART=1
+  PICO_DEFAULT_UART_TX_PIN=24
+  PICO_DEFAULT_UART_RX_PIN=25
+)
 
 # Debug output with USB uses +6K memory
 pico_enable_stdio_usb(${PROJECT_NAME} 0)
