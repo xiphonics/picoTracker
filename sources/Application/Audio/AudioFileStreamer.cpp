@@ -1,12 +1,17 @@
 #include "AudioFileStreamer.h"
 #include "Application/Model/Config.h"
 #include "Application/Utils/fixed.h"
+#include "Services/Audio/Audio.h"
 #include "System/Console/Trace.h"
 
 AudioFileStreamer::AudioFileStreamer() {
   wav_ = 0;
   mode_ = AFSM_STOPPED;
   newPath_ = false;
+  position_ = 0;
+  fileSampleRate_ = 44100;   // Default
+  systemSampleRate_ = 44100; // Default
+  fpSpeed_ = FP_ONE;         // Default 1.0 in fixed point
 };
 
 AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
@@ -50,48 +55,146 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       return false;
     }
     position_ = 0;
+
+    // Get sample rate information and calculate speed factor
+    fileSampleRate_ = wav_->GetSampleRate(-1);
+    systemSampleRate_ = Audio::GetInstance()->GetSampleRate();
+
+    // Calculate the speed factor for sample rate conversion
+    float ratio = (float)fileSampleRate_ / (float)systemSampleRate_;
+    fpSpeed_ = fl2fp(ratio);
+
+    int channels = wav_->GetChannelCount(-1);
+    long size = wav_->GetSize(-1);
+    Trace::Debug("AudioFileStreamer: File '%s' - Sample Rate: %d Hz, Channels: "
+                 "%d, Size: %ld samples, Speed: %d",
+                 name_, fileSampleRate_, channels, size, fp2i(fpSpeed_));
   }
 
-  // we are playing a valid file
-
+  // We are playing a valid file
   long size = wav_->GetSize(-1);
-  int count = samplecount;
-  if (position_ + samplecount >= size) {
-    Trace::Debug("Reached the end of %d samples", size);
-    count = size - position_;
-    mode_ = AFSM_STOPPED;
-    memset(buffer, 0, 2 * samplecount * sizeof(fixed));
-  }
+  int channelCount = wav_->GetChannelCount(-1);
 
-  fixed *dst = buffer;
-  int channel = wav_->GetChannelCount(-1);
+  // Clear the output buffer
+  SYS_MEMSET(buffer, 0, samplecount * 2 * sizeof(fixed));
 
+  // Get volume from project
   Variable *v = project_->FindVariable(FourCC::VarMasterVolume);
   int vol = v->GetInt();
   fixed volume = fp_mul(i2fp(vol), fl2fp(0.01f));
 
-  while (count > 0) {
-    // 64 bytes * 2 bytes resolution * 2 channels = 256
-    // which is the half the readBuffer size for files
-    // another half of such buffer is needed to expand to
-    // 16bits if sample is 8bit
-    // TODO: refactor this whole thing to make it less brittle
-    long bufferSize = count > 64 ? 64 : count;
-    wav_->GetBuffer(position_, bufferSize);
-    short *src = (short *)wav_->GetSampleBuffer(-1);
+  fixed *dst = buffer;
 
-    // I might need to do sample interpolation here
-    for (int i = 0; i < bufferSize; i++) {
-      fixed v = *dst++ = fp_mul(i2fp(*src++), volume);
-      if (channel == 2) {
-        // apply master volume when streaming
-        *dst++ = fp_mul(i2fp(*src++), volume);
-      } else {
-        *dst++ = v;
-      }
+  // Read a small buffer and resample directly
+  int bufferSize = 64; // Small, safe buffer size
+
+  // Check if we're near the end of the file
+  if (position_ + (samplecount * fp2fl(fpSpeed_)) >= size) {
+    // We'll reach the end during this render call
+    int remainingSamples = size - position_;
+    if (remainingSamples <= 0) {
+      mode_ = AFSM_STOPPED;
+      return false;
     }
-    count -= bufferSize;
-    position_ += bufferSize;
+  }
+
+  // Read the samples from the file - just once at the current position
+  if (!wav_->GetBuffer((int)position_, bufferSize)) {
+    Trace::Error("AudioFileStreamer: Failed to get buffer at position %d",
+                 (int)position_);
+    mode_ = AFSM_STOPPED;
+    return false;
+  }
+
+  // Get the sample buffer
+  short *src = (short *)wav_->GetSampleBuffer(-1);
+  if (!src) {
+    Trace::Error("AudioFileStreamer: GetSampleBuffer returned null");
+    mode_ = AFSM_STOPPED;
+    return false;
+  }
+
+  // Process each output sample
+  float pos = position_;
+
+  for (int i = 0; i < samplecount; i++) {
+    // Check if we need to read more samples
+    if ((int)pos >= (int)position_ + bufferSize - 1) {
+      // We've moved past our buffer, need to read more
+      position_ = (int)pos;
+
+      // Check if we've reached the end of the file
+      if (position_ >= size - 1) {
+        mode_ = AFSM_STOPPED;
+        break;
+      }
+
+      // Read the next buffer
+      if (!wav_->GetBuffer((int)position_, bufferSize)) {
+        Trace::Error("AudioFileStreamer: Failed to get buffer at position %d",
+                     (int)position_);
+        mode_ = AFSM_STOPPED;
+        break;
+      }
+
+      // Update the source pointer
+      src = (short *)wav_->GetSampleBuffer(-1);
+      if (!src) {
+        Trace::Error("AudioFileStreamer: GetSampleBuffer returned null");
+        mode_ = AFSM_STOPPED;
+        break;
+      }
+
+      // Adjust position to be relative to the new buffer
+      pos = position_;
+    }
+
+    // Calculate the source position and fractional part
+    int sourcePos = (int)(pos - position_);
+    float frac = pos - (position_ + sourcePos);
+
+    // Get the current and next sample for interpolation
+    short *currentSample = src + (sourcePos * channelCount);
+    short *nextSample = currentSample + channelCount;
+
+    // Linear interpolation between samples
+    if (channelCount == 2) {
+      // Stereo interpolation using optimized fixed-point math
+      fixed fpFrac = fl2fp(frac);
+      fixed s1 = i2fp(currentSample[0]);
+      fixed s2 = i2fp(nextSample[0]);
+      fixed leftSample = s1 + fp_mul(fpFrac, s2 - s1);
+
+      fixed s3 = i2fp(currentSample[1]);
+      fixed s4 = i2fp(nextSample[1]);
+      fixed rightSample = s3 + fp_mul(fpFrac, s4 - s3);
+
+      // Apply volume
+      *dst++ = fp_mul(leftSample, volume);
+      *dst++ = fp_mul(rightSample, volume);
+    } else {
+      // Mono interpolation using optimized fixed-point math
+      fixed fpFrac = fl2fp(frac);
+      fixed s1 = i2fp(currentSample[0]);
+      fixed s2 = i2fp(nextSample[0]);
+      fixed sample = s1 + fp_mul(fpFrac, s2 - s1);
+
+      // Apply volume and duplicate to both channels
+      fixed v = fp_mul(sample, volume);
+      *dst++ = v;
+      *dst++ = v;
+    }
+
+    // Move to the next source position based on the sample rate ratio
+    pos += fp2fl(fpSpeed_);
+  }
+
+  // Update the position for the next render call
+  position_ = pos;
+
+  // If we've reached the end of the file, stop playback
+  if (position_ >= size) {
+    mode_ = AFSM_STOPPED;
   }
 
   return true;
