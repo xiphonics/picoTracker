@@ -92,8 +92,7 @@ void SamplePool::Load(const char *projectName) {
   for (size_t i = 0; i < fileIndexes.size(); i++) {
     fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
-      Status::Set("Loading:%s\n", name);
-      Trace::Debug("Loading:%s", name);
+      Status::Set("Loading:%s", name);
       loadSample(name);
     }
     if (i == MAX_PIG_SAMPLES) {
@@ -147,7 +146,7 @@ bool SamplePool::loadSample(const char *name) {
     wave->Close();
     return true;
   } else {
-    Trace::Error("Failed to load sample:%s\n", name);
+    Trace::Error("Failed to load sample:%s", name);
     return false;
   }
 }
@@ -165,7 +164,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   auto fs = FileSystem::GetInstance();
   I_File *fin = fs->Open(name, "r");
   if (!fin) {
-    Trace::Error("Failed to open sample input file:%s\n", name);
+    Trace::Error("Failed to open sample input file:%s", name);
     return -1;
   };
   fin->Seek(0, SEEK_END);
@@ -181,7 +180,7 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   I_File *fout =
       FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
-    Trace::Error("Failed to open sample project file:%s\n", projectSamplePath);
+    Trace::Error("Failed to open sample project file:%s", projectSamplePath);
     fin->Close();
     delete (fin);
     return -1;

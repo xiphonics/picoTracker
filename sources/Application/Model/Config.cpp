@@ -102,7 +102,7 @@ bool Config::Save() {
     Trace::Error("CONFIG: Could not open file for writing: %s",
                  CONFIG_FILE_PATH);
   }
-  Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s\n", CONFIG_FILE_PATH);
+  Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s", CONFIG_FILE_PATH);
   tinyxml2::XMLPrinter printer(fp);
 
   SaveContent(&printer);

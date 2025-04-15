@@ -71,7 +71,7 @@ SIDInstrument::~SIDInstrument(){};
 bool SIDInstrument::Init() {
   tableState_.Reset();
 
-  Trace::Debug("SID instrument chip is %i and osc is %i\n", chip_, GetOsc());
+  Trace::Debug("SID instrument chip is %i and osc is %i", chip_, GetOsc());
   switch (chip_) {
   case 1:
     sid_ = &sid1_;
@@ -106,7 +106,7 @@ void SIDInstrument::OnStart() { tableState_.Reset(); };
       ((byte) & 0x02 ? '1' : '0'), ((byte) & 0x01 ? '1' : '0')
 
 bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
-  Trace::Debug("Retrigger: %i\n", retrigger);
+  Trace::Debug("Retrigger: %i", retrigger);
   gate_ = retrigger;
   // Select master render instrument
   // At each row of the sequencer we call start for each instrument in
@@ -118,23 +118,23 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   case SID1:
     if (SID1RenderMaster) {
       SID1RenderMaster->SetRender(false);
-      Trace::Debug("Previous renderer for SID1 was %s\n",
+      Trace::Debug("Previous renderer for SID1 was %s",
                    SID1RenderMaster->GetName().c_str());
     }
     SID1RenderMaster = this;
     SID1RenderMaster->SetRender(true);
-    Trace::Debug("New renderer for SID1 is %s\n",
+    Trace::Debug("New renderer for SID1 is %s",
                  SID1RenderMaster->GetName().c_str());
     break;
   case SID2:
     if (SID2RenderMaster) {
       SID2RenderMaster->SetRender(false);
-      Trace::Debug("Previous renderer for SID2 was %s\n",
+      Trace::Debug("Previous renderer for SID2 was %s",
                    SID2RenderMaster->GetName().c_str());
     }
     SID2RenderMaster = this;
     SID2RenderMaster->SetRender(true);
-    Trace::Debug("New renderer for SID2 is %s\n",
+    Trace::Debug("New renderer for SID2 is %s",
                  SID2RenderMaster->GetName().c_str());
     break;
   }
@@ -181,7 +181,7 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   sid_->Register[24] = 0 << 7 | mode << 4 | vol_->GetInt(); // Filter Mode / Vol
 
   //  for (int n = 0; n < 29; n++) {
-  //    printf("Register %i value: 0x%x (0b" BYTE_TO_BINARY_PATTERN ")\n",
+  //    printf("Register %i value: 0x%x (0b" BYTE_TO_BINARY_PATTERN ")",
   //    n,
   //           sid_->Register[n], BYTE_TO_BINARY(sid_->Register[n]));
   //  }
@@ -205,13 +205,13 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
     sid_->cRSID_emulateWavesBuffer(buffer, size);
 
     int time_taken = micros() - start;
-    Trace::Debug("RENDER: SID-%i Render took %ius (%i%%ts)\n", GetOsc(),
+    Trace::Debug("RENDER: SID-%i Render took %ius (%i%%ts)", GetOsc(),
                  time_taken, (time_taken * 44100) / size / 10000);
 
     return true;
   }
   int time_taken = micros() - start;
-  Trace::Debug("RENDER: >SID-%i Render took %ius (%i%%ts)\nf", GetOsc(),
+  Trace::Debug("RENDER: >SID-%i Render took %ius (%i%%ts)", GetOsc(),
                time_taken, (time_taken * 44100) / size / 10000);
   return false;
 };

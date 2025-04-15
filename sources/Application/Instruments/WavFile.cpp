@@ -58,7 +58,7 @@ WavFile::~WavFile() {
 };
 
 WavFile *WavFile::Open(const char *name) {
-  Trace::Log("WAVFILE", "wave open from %s", name);
+  // Trace::Log("WAVFILE", "wave open from %s", name);
 
   // open file
   FileSystem *fs = FileSystem::GetInstance();

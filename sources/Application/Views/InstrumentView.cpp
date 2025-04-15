@@ -94,7 +94,7 @@ I_Instrument *InstrumentView::getInstrument() {
 
 void InstrumentView::onInstrumentTypeChange() {
   auto nuType = (InstrumentType)instrumentType_.GetInt();
-  Trace::Log("INSTRUMENTVIEW", "UPDATE type:%d\n", nuType);
+  Trace::Log("INSTRUMENTVIEW", "UPDATE type:%d", nuType);
   I_Instrument *old = getInstrument();
 
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();

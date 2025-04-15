@@ -36,7 +36,7 @@ bool Application::initProject(char *projectName) {
       PERSIST_LOAD_FAILED) {
     if (PersistencyService::GetInstance()->Load(projectName) ==
         PERSIST_LOAD_FAILED) {
-      Trace::Error("failed to load CURRENT proj: %s\n", projectName);
+      Trace::Error("failed to load CURRENT proj: %s", projectName);
       if (strcmp(projectName, UNNAMED_PROJECT_NAME) == 0) {
         // untitled project is missing so need to create a new one
         if (PersistencyService::GetInstance()->CreateProject() !=
@@ -52,7 +52,7 @@ bool Application::initProject(char *projectName) {
     // need to create a new project and open it as no previously open
     // project state exists
     strcpy(projectName, UNNAMED_PROJECT_NAME); // default project name
-    Trace::Log("APPLICATION", "create new project\n");
+    Trace::Log("APPLICATION", "create new project");
     // create  project
     if (PersistencyService::GetInstance()->CreateProject() != PERSIST_SAVED) {
       Trace::Log("APPLICATION", "FAILED to create new project !!");
@@ -80,7 +80,7 @@ void Application::ensurePTDirsExist() {
 void Application::createIfNotExists(FileSystem *fs, const char *path) {
   if (!fs->exists(path)) {
     fs->makeDir(path);
-    Trace::Log("APPLICATION", "created %s std dir\n", path);
+    Trace::Log("APPLICATION", "created %s std dir", path);
   }
 }
 

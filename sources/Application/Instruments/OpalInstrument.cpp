@@ -132,7 +132,7 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   opl_.Port(0x80 + CHANNEL, (uint8_t)(adsr1 & 0x00FF));
   opl_.Port(0x81 + CHANNEL, (uint8_t)(adsr2 & 0x00FF));
 
-  // printf("Start took: %i us\n", micros() - start);
+  // printf("Start took: %i us", micros() - start);
 
   return true;
 };

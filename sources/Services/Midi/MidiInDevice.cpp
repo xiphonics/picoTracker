@@ -273,8 +273,8 @@ void MidiInDevice::AssignInstrumentToChannel(int midiChannel,
                                              int instrumentIndex) {
   if (midiChannel >= 0 && midiChannel < 16) {
     channelToInstrument_[midiChannel] = instrumentIndex;
-    Trace::Log("MIDI", "Assigned instrument %d to MIDI channel %d",
-               instrumentIndex, midiChannel);
+    // Trace::Log("MIDI", "Assigned instrument %d to MIDI channel %d",
+    //            instrumentIndex, midiChannel);
   }
 }
 

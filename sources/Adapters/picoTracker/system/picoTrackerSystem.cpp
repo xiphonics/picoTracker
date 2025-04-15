@@ -62,7 +62,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir("/")) {
-    Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
+    Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!");
     critical_error_message("SDCARD MISSING", 0x01);
   }
 
@@ -88,26 +88,6 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
 
-  bool invert = false;
-  Config *config = Config::GetInstance();
-  invert = config->GetValue("INVERT") > 0;
-
-  if (!invert) {
-    eventManager_->MapAppButton("left ctrl", APP_BUTTON_A);
-    eventManager_->MapAppButton("left alt", APP_BUTTON_B);
-  } else {
-    eventManager_->MapAppButton("left alt", APP_BUTTON_A);
-    eventManager_->MapAppButton("left ctrl", APP_BUTTON_B);
-  }
-  eventManager_->MapAppButton("return", APP_BUTTON_START);
-  //	em->MapElement("esc",APP_BUTTON_SELECT) ;
-  eventManager_->MapAppButton("tab", APP_BUTTON_L);
-  eventManager_->MapAppButton("backspace", APP_BUTTON_R);
-  eventManager_->MapAppButton("right", APP_BUTTON_RIGHT);
-  eventManager_->MapAppButton("left", APP_BUTTON_LEFT);
-  eventManager_->MapAppButton("down", APP_BUTTON_DOWN);
-  eventManager_->MapAppButton("up", APP_BUTTON_UP);
-
 #if PICO_RP2040
   // init GPIO for use as ADC: hi-Z, no pullups, etc
   adc_gpio_init(BATT_VOLTAGE_IN);
@@ -117,7 +97,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   // select analog MUX, GPIO 26=0, 27=1, 28=1, 29=3
   adc_select_input(3);
 
-  Trace::Log("PICOTRACKERSYSTEM", "ADC INIT DONE\n");
+  Trace::Log("PICOTRACKERSYSTEM", "ADC INIT DONE");
 #endif
 };
 
