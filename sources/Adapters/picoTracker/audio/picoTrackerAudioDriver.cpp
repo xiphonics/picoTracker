@@ -96,7 +96,7 @@ bool picoTrackerAudioDriver::InitDriver() {
 
   Config *config = Config::GetInstance();
   auto audioLevel = config->GetValue("LINEOUT");
-  Trace::Log("pTAUDIODRIVER", "LINE LEVEL config:%d\n", audioLevel);
+  Trace::Log("pTAUDIODRIVER", "LINE LEVEL config:%d", audioLevel);
   volume_ = 65;
   volume_ = config->GetValue("VOLUME");
 

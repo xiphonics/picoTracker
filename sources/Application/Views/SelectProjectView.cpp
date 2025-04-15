@@ -91,7 +91,7 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
         return;
       }
 
-      Trace::Log("SELECTPROJECTVIEW", "Select Project:%s \n", selection_);
+      Trace::Log("SELECTPROJECTVIEW", "Select Project:%s", selection_);
       // save newly opened projectname, it will be used to load the project file
       // on device boots following the reboot below
       auto ps = PersistencyService::GetInstance();

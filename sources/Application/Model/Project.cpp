@@ -228,7 +228,7 @@ void Project::PurgeInstruments(bool removeFromDisk) {
         Trace::Debug("Purged sample [%d]", i - purged);
         purged++;
       } else {
-        Trace::Debug("Sample [%d] not purged\n", i);
+        Trace::Debug("Sample [%d] not purged", i);
       }
     };
     Trace::Debug("Purged %d samples", purged);

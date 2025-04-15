@@ -62,7 +62,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir("/")) {
-    Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
+    Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!");
     critical_error_message("SDCARD MISSING", 0x01);
   }
 
@@ -97,7 +97,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   // select analog MUX, GPIO 26=0, 27=1, 28=1, 29=3
   adc_select_input(3);
 
-  Trace::Log("PICOTRACKERSYSTEM", "ADC INIT DONE\n");
+  Trace::Log("PICOTRACKERSYSTEM", "ADC INIT DONE");
 #endif
 };
 

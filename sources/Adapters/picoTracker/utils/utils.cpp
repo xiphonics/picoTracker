@@ -27,11 +27,11 @@ uint32_t measure_free_mem(void) {
     free(buff[j]);
   }
 
-  Trace::Debug("MAX memory free in heap: %i\n", max * 1000);
+  Trace::Debug("MAX memory free in heap: %i", max * 1000);
   /*
     buff = malloc(80000);
   if (buff) {
-    Trace::Debug("MALLOC addr: %p %i - Mem free: %i\n", buff,
+    Trace::Debug("MALLOC addr: %p %i - Mem free: %i", buff,
            reinterpret_cast<uintptr_t>(buff),  0x20040000l -
                reinterpret_cast<uintptr_t>(buff));
     free(buff);
@@ -53,15 +53,15 @@ void measure_freqs(void) {
   uint f_clk_rtc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_RTC);
 #endif
 
-  Trace::Debug("pll_sys  = %dkHz\n", f_pll_sys);
-  Trace::Debug("pll_usb  = %dkHz\n", f_pll_usb);
-  Trace::Debug("rosc     = %dkHz\n", f_rosc);
-  Trace::Debug("clk_sys  = %dkHz\n", f_clk_sys);
-  Trace::Debug("clk_peri = %dkHz\n", f_clk_peri);
-  Trace::Debug("clk_usb  = %dkHz\n", f_clk_usb);
-  Trace::Debug("clk_adc  = %dkHz\n", f_clk_adc);
+  Trace::Debug("pll_sys  = %dkHz", f_pll_sys);
+  Trace::Debug("pll_usb  = %dkHz", f_pll_usb);
+  Trace::Debug("rosc     = %dkHz", f_rosc);
+  Trace::Debug("clk_sys  = %dkHz", f_clk_sys);
+  Trace::Debug("clk_peri = %dkHz", f_clk_peri);
+  Trace::Debug("clk_usb  = %dkHz", f_clk_usb);
+  Trace::Debug("clk_adc  = %dkHz", f_clk_adc);
 #if PICO_RP2040
-  Trace::Debug("clk_rtc  = %dkHz\n", f_clk_rtc);
+  Trace::Debug("clk_rtc  = %dkHz", f_clk_rtc);
 #endif
 
   // Can't measure clk_ref / xosc as it is the ref
@@ -73,15 +73,15 @@ void measure_freqs(void) {
 void cidDmp(SdFs *sd) {
   cid_t cid;
   if (!sd->card()->readCID(&cid)) {
-    Trace::Debug("E: readCID failed\n");
+    Trace::Debug("E: readCID failed");
   }
-  Trace::Debug("\nManufacturer ID: %#04x\n", int(cid.mid));
-  Trace::Debug("OEM ID: %s%s\n", cid.oid[0], cid.oid[1]);
-  Trace::Debug("Product: %s\n", cid.pnm);
+  Trace::Debug("Manufacturer ID: %#04x", int(cid.mid));
+  Trace::Debug("OEM ID: %s%s", cid.oid[0], cid.oid[1]);
+  Trace::Debug("Product: %s", cid.pnm);
 
-  Trace::Debug("\nRevision: %i.%i\n", cid.prvN(), cid.prvM());
-  Trace::Debug("Serial number: %#10x\n", cid.psn());
-  Trace::Debug("Manufacturing date: %i/%i\n\n", cid.mdtMonth(), cid.mdtYear());
+  Trace::Debug("Revision: %i.%i", cid.prvN(), cid.prvM());
+  Trace::Debug("Serial number: %#10x", cid.psn());
+  Trace::Debug("Manufacturing date: %i/%i", cid.mdtMonth(), cid.mdtYear());
 }
 
 void sd_bench() {
@@ -127,7 +127,7 @@ void sd_bench() {
   //  clearSerialInput();
 
   // F() stores strings in flash to save RAM
-  //  cout << F("Type any character to start\n");
+  //  cout << F("Type any character to start");
   //  while (!Serial.available()) {
   //    yield();
   //  }
@@ -136,19 +136,19 @@ void sd_bench() {
     //    sd.initErrorHalt(&Serial);
   }
   if (sd.fatType() == FAT_TYPE_EXFAT) {
-    Trace::Debug("Type is exFAT\n");
+    Trace::Debug("Type is exFAT");
   } else {
-    Trace::Debug("Type is FAT %i\n", int(sd.fatType()));
+    Trace::Debug("Type is FAT %i", int(sd.fatType()));
   }
 
-  Trace::Debug("Card size: %i\n", sd.card()->sectorCount() * 512E-9);
-  Trace::Debug(" GB (GB = 1E9 bytes)\n");
+  Trace::Debug("Card size: %i", sd.card()->sectorCount() * 512E-9);
+  Trace::Debug(" GB (GB = 1E9 bytes)");
 
   cidDmp(&sd);
 
   // open or create file - truncate existing file.
   if (!file.open("bench.dat", O_RDWR | O_CREAT | O_TRUNC)) {
-    Trace::Debug("E: open failed\n");
+    Trace::Debug("E: open failed");
   }
 
   // fill buf with known data
@@ -160,20 +160,20 @@ void sd_bench() {
   }
   buf[BUF_SIZE - 1] = '\n';
 
-  Trace::Debug("FILE_SIZE_MB = %i\n", FILE_SIZE_MB);
-  Trace::Debug("BUF_SIZE = %i bytes\n", BUF_SIZE);
-  Trace::Debug("\nStarting write test, please wait.\n");
+  Trace::Debug("FILE_SIZE_MB = %i", FILE_SIZE_MB);
+  Trace::Debug("BUF_SIZE = %i bytes", BUF_SIZE);
+  Trace::Debug("Starting write test, please wait.");
 
   // do write test
   uint32_t n = FILE_SIZE / BUF_SIZE;
-  Trace::Debug("write speed and latency\n");
-  Trace::Debug("speed,max,min,avg\n");
-  Trace::Debug("KB/Sec,usec,usec,usec\n");
+  Trace::Debug("write speed and latency");
+  Trace::Debug("speed,max,min,avg");
+  Trace::Debug("KB/Sec,usec,usec,usec");
   for (uint8_t nTest = 0; nTest < WRITE_COUNT; nTest++) {
     file.truncate(0);
     if (PRE_ALLOCATE) {
       if (!file.preAllocate(FILE_SIZE)) {
-        Trace::Debug("E: preAllocate failed\n");
+        Trace::Debug("E: preAllocate failed");
       }
     }
     maxLatency = 0;
@@ -184,7 +184,7 @@ void sd_bench() {
     for (uint32_t i = 0; i < n; i++) {
       uint32_t m = micros();
       if (file.write(buf, BUF_SIZE) != BUF_SIZE) {
-        Trace::Debug("E: write failed\n");
+        Trace::Debug("E: write failed");
       }
       m = micros() - m;
       totalLatency += m;
@@ -203,13 +203,13 @@ void sd_bench() {
     file.sync();
     t = millis() - t;
     s = file.fileSize();
-    Trace::Debug("%i,%i,%i,%i\n", s / t, maxLatency, minLatency,
+    Trace::Debug("%i,%i,%i,%i", s / t, maxLatency, minLatency,
                  totalLatency / n);
   }
-  Trace::Debug("\nStarting read test, please wait.\n");
-  Trace::Debug("\nread speed and latency\n");
-  Trace::Debug("speed,max,min,avg\n");
-  Trace::Debug("KB/Sec,usec,usec,usec\n");
+  Trace::Debug("Starting read test, please wait.");
+  Trace::Debug("read speed and latency");
+  Trace::Debug("speed,max,min,avg");
+  Trace::Debug("KB/Sec,usec,usec,usec");
 
   // do read test
   for (uint8_t nTest = 0; nTest < READ_COUNT; nTest++) {
@@ -224,13 +224,13 @@ void sd_bench() {
       uint32_t m = micros();
       int32_t nr = file.read(buf, BUF_SIZE);
       if (nr != BUF_SIZE) {
-        Trace::Debug("E: read failed\n");
+        Trace::Debug("E: read failed");
       }
       m = micros() - m;
       totalLatency += m;
-      if (buf[BUF_SIZE - 1] != '\n') {
+      if (buf[BUF_SIZE - 1] != '') {
 
-        Trace::Debug("E: data check error\n");
+        Trace::Debug("E: data check error");
       }
       if (skipLatency) {
         skipLatency = false;
@@ -245,10 +245,10 @@ void sd_bench() {
     }
     s = file.fileSize();
     t = millis() - t;
-    Trace::Debug("%i,%i,%i,%i\n", s / t, maxLatency, minLatency,
+    Trace::Debug("%i,%i,%i,%i", s / t, maxLatency, minLatency,
                  totalLatency / n);
   }
-  Trace::Debug("\nDone\n");
+  Trace::Debug("Done");
   file.close();
   sd.end();
 }

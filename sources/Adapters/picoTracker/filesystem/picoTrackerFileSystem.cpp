@@ -67,7 +67,7 @@ bool picoTrackerFileSystem::chdir(const char *name) {
   char buf[PFILENAME_SIZE];
   cwd.openCwd();
   cwd.getName(buf, 128);
-  Trace::Log("FILESYSTEM", "new CWD:%s\n", buf);
+  Trace::Log("FILESYSTEM", "new CWD:%s", buf);
   cwd.close();
   return res;
 }
@@ -124,7 +124,7 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     if (strlen(filter) > 0) {
       tolowercase(buffer);
       matchesFilter = (strstr(buffer, filter) != nullptr);
-      // Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
+      // Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]", buffer, filter,
       //            matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given

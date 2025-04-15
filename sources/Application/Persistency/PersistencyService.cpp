@@ -12,7 +12,7 @@ PersistencyService::PersistencyService()
     : Service(FourCC::ServicePersistency){};
 
 PersistencyResult PersistencyService::CreateProject() {
-  Trace::Log("APPLICATION", "create new project\n");
+  Trace::Log("APPLICATION", "create new project");
   // create  project
   CreateProjectDirs_(UNNAMED_PROJECT_NAME);
   return PersistencyService::GetInstance()->Save(UNNAMED_PROJECT_NAME, "",
@@ -23,7 +23,7 @@ void PersistencyService::PurgeUnnamedProject() {
   auto fs = FileSystem::GetInstance();
 
   fs->chdir(PROJECTS_DIR);
-  Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir\n");
+  Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir");
   fs->chdir(UNNAMED_PROJECT_NAME);
   fs->DeleteFile(PROJECT_DATA_FILE);
   fs->DeleteFile(AUTO_SAVE_FILENAME);
@@ -50,7 +50,7 @@ PersistencyService::CreateProjectDirs_(const char *projectName) {
   CreatePath(pathBufferA, segments);
 
   auto result = fs->makeDir(pathBufferA.c_str(), true);
-  Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s\n [%b]",
+  Trace::Log("PERSISTENCYSERVICE", "created samples subdir: %s [%b]",
              pathBufferA.c_str(), result);
 
   return result ? PersistencyResult::PERSIST_SAVED
@@ -70,7 +70,7 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     fs->chdir(oldProjectName);
     fs->chdir(PROJECT_SAMPLES_DIR);
 
-    Trace::Debug("get list of samples to copy from old project: %s\n",
+    Trace::Debug("get list of samples to copy from old project: %s",
                  oldProjectName);
 
     fs->list(&fileIndexes_, ".wav", false);
@@ -115,11 +115,9 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  pathBufferA.c_str());
   }
-  Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s\n",
-             pathBufferA.c_str());
+  Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s", pathBufferA.c_str());
   tinyxml2::XMLPrinter printer(fp);
-  Trace::Log("PERSISTENCYSERVICE", "Saved Proj File: %s\n",
-             pathBufferA.c_str());
+  Trace::Log("PERSISTENCYSERVICE", "Saved Proj File: %s", pathBufferA.c_str());
 
   printer.OpenElement("PICOTRACKER");
 
@@ -140,12 +138,12 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   // in case subsequent autosave has changes the user doesn't want to keep
   if (!autosave) {
     if (!ClearAutosave(projectName)) {
-      Trace::Log("PERSISTENCYSERVICE", "Error Deleting Autosave File: %s\n",
+      Trace::Log("PERSISTENCYSERVICE", "Error Deleting Autosave File: %s",
                  pathBufferA.c_str());
       // the autosave file may not have been created yet, eg. if this is a new
       // project or a project beign "saved as" so just keep going
     }
-    Trace::Log("PERSISTENCYSERVICE", "Deleted Autosave File: %s\n",
+    Trace::Log("PERSISTENCYSERVICE", "Deleted Autosave File: %s",
                pathBufferA.c_str());
   }
 
@@ -173,7 +171,7 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
   auto fs = FileSystem::GetInstance();
   bool useAutosave = (fs->exists(autoSavePath.c_str()));
 
-  Trace::Log("PERSISTENCYSERVICE", "using autosave: %b\n", useAutosave);
+  Trace::Log("PERSISTENCYSERVICE", "using autosave: %b", useAutosave);
   // if autosave exists, then we load it instead of the normal project file
   const char *filename = useAutosave ? AUTO_SAVE_FILENAME : PROJECT_DATA_FILE;
 
@@ -214,8 +212,7 @@ PersistencyService::LoadCurrentProjectName(char *projectName) {
     int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH - 1);
     current->Close();
     projectName[len] = '\0';
-    Trace::Log("APPLICATION", "read [%d] load proj name: %s\n", len,
-               projectName);
+    Trace::Log("APPLICATION", "read [%d] load proj name: %s", len, projectName);
     return PERSIST_LOADED;
   } else {
     return PERSIST_LOAD_FAILED;
