@@ -28,9 +28,6 @@ void I_Instrument::SaveContent(tinyxml2::XMLPrinter *printer) {
 }
 
 void I_Instrument::RestoreContent(PersistencyDocument *doc) {
-  Trace::Log("I_INSTRUMENT",
-             "RestoreContent: Starting to restore instrument parameters");
-
   // First, check for TYPE attribute in the INSTRUMENT element
   bool hasAttr = doc->NextAttribute();
   while (hasAttr) {
@@ -95,9 +92,8 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
     // Move to the next PARAM element
     subelem = doc->NextSibling();
   }
-
-  Trace::Log("I_INSTRUMENT", "RestoreContent: Restored %d parameters",
-             paramCount);
+  // Trace::Log("I_INSTRUMENT", "RestoreContent: Restored %d parameters",
+  //            paramCount);
 
   // Update any UI variables that represent the instrument name
   Variable *nameVar = FindVariable(FourCC::InstrumentName);

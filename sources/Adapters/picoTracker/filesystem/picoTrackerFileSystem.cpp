@@ -124,8 +124,8 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     if (strlen(filter) > 0) {
       tolowercase(buffer);
       matchesFilter = (strstr(buffer, filter) != nullptr);
-      Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
-                 matchesFilter);
+      // Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
+      //            matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
@@ -137,10 +137,10 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
       } else {
         fileIndexes->push_back(index);
       }
-      Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
+      // Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
     } else {
-      Trace::Log("FILESYSTEM", "skipped hidden: %s", buffer);
+      // Trace::Log("FILESYSTEM", "skipped hidden: %s", buffer);
     }
     entry.close();
   }

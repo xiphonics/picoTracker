@@ -93,7 +93,6 @@ void SamplePool::Load(const char *projectName) {
     fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
       Status::Set("Loading:%s\n", name);
-      Trace::Debug("Loading:%s", name);
       loadSample(name);
     }
     if (i == MAX_PIG_SAMPLES) {
