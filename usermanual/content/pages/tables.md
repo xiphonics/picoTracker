@@ -3,8 +3,6 @@ title: Tables
 template: page
 ---
 
-# Tables
-
 ![screen capture of table screen](image/table-screen-small.png)
 
 ## Introduction to Tables
@@ -17,6 +15,8 @@ Tables are one of the most powerful features in picoTracker, allowing you to cre
 - Each table can contain up to 16 rows of commands
 - Tables can be looped, played once, or used to jump between different sections
 - You can navigate between tables by pressing `EDIT`+`LEFT`/`RIGHT`
+- You can use all the [standard picoTracker key editing combos](keypadcombos.html) for navigating and editing the table screen.
+
 
 ## Table Interface
 
@@ -32,7 +32,6 @@ The table screen consists of seven columns:
 | FX3 | Third effect command |
 | Param3 | Parameter for the third effect |
 
-You can use all the [standard picoTracker key editing combos](keypadcombos.html) for navigating and editing the table screen.
 
 ## Using Tables from Phrases
 
@@ -147,10 +146,42 @@ You can create custom arpeggiators by using the FRQ command to change the pitch 
 00 FRQ 0100 --- --- --- ---
 01 FRQ 0104 --- --- --- ---
 02 FRQ 0107 --- --- --- ---
-03 JMP 0000 --- --- --- ---
+03 HOP 0003 --- --- --- ---
+04 HOP 0000 --- --- --- ---
 ```
 
-This creates a simple major arpeggio pattern.
+This creates a simple major arpeggio pattern that repeats 3 times before looping back to the beginning.
+
+### Trance Gate Effect
+
+Create a rhythmic gating effect by rapidly changing volume:
+
+```
+00 VOL FF --- --- --- ---
+01 VOL 00 --- --- --- ---
+02 VOL FF --- --- --- ---
+03 VOL 00 --- --- --- ---
+04 VOL 80 --- --- --- ---
+05 VOL 00 --- --- --- ---
+06 VOL FF --- --- --- ---
+07 HOP 0000 --- --- --- ---
+```
+
+This creates a rhythmic on/off pattern that's great for dance music.
+
+### Vibrato Effect
+
+Create a vibrato effect by oscillating pitch slightly:
+
+```
+00 FRQ 0101 --- --- --- ---
+01 FRQ 0100 --- --- --- ---
+02 FRQ 00FF --- --- --- ---
+03 FRQ 0100 --- --- --- ---
+04 HOP 0000 --- --- --- ---
+```
+
+This creates a subtle pitch wobble that adds character to sustained notes.
 
 ### Parameter Automation
 
@@ -160,25 +191,87 @@ Tables excel at automating parameters over time:
 00 VOL FF PAN 00 --- ---
 01 VOL F0 PAN 10 --- ---
 02 VOL E0 PAN 20 --- ---
-...
-07 VOL 80 PAN 80 --- ---
+03 VOL D0 PAN 30 --- ---
+04 VOL C0 PAN 40 --- ---
+05 VOL B0 PAN 50 --- ---
+06 VOL A0 PAN 60 --- ---
+07 VOL 90 PAN 70 --- ---
+08 VOL 80 PAN 80 --- ---
+09 STOP -- --- --- --- ---
 ```
 
-This creates a fade-in effect while panning from left to right.
+This creates a fade-in effect while panning from left to right, then stops.
 
-### Complex Effect Chains
+### Filter Sweep
+
+Create a filter sweep effect:
+
+```
+00 FCUT 00 --- --- --- ---
+01 FCUT 20 --- --- --- ---
+02 FCUT 40 --- --- --- ---
+03 FCUT 60 --- --- --- ---
+04 FCUT 80 --- --- --- ---
+05 FCUT A0 --- --- --- ---
+06 FCUT C0 --- --- --- ---
+07 FCUT E0 --- --- --- ---
+08 FCUT FF --- --- --- ---
+09 HOP 0000 --- --- --- ---
+```
+
+This gradually opens a filter from fully closed to fully open.
+
+### Complex Drum Pattern
+
+Use a table to create a complex drum pattern with retriggers:
+
+```
+00 RTG 04 --- --- --- ---
+01 VOL 80 --- --- --- ---
+02 VOL 40 --- --- --- ---
+03 VOL 20 --- --- --- ---
+04 HOP 0703 --- --- --- ---
+05 RTG 08 --- --- --- ---
+06 VOL FF --- --- --- ---
+07 HOP 0000 --- --- --- ---
+```
+
+This creates a drum pattern with initial quick retriggers, then a pause, followed by faster retriggers.
+
+### Sample Position Effects with POF
+
+Create interesting effects by manipulating the playback position of samples using POF (Play Offset):
+
+```
+00 VOL FF --- --- --- ---
+01 POF 1000 --- --- --- ---
+02 VOL C0 --- --- --- ---
+03 POF 2000 --- --- --- ---
+04 VOL 80 --- --- --- ---
+05 POF 3000 --- --- --- ---
+06 VOL 40 --- --- --- ---
+07 STP -- --- --- --- ---
+```
+
+This jumps to different positions in the sample while decreasing the volume, creating a stuttering effect that can sound like echoes or glitches depending on the sample content. The POF command takes a hexadecimal offset value that determines where in the sample to start playback from.
+
+### Multi-Parameter Modulation
 
 Combine multiple effects for rich sound design:
 
 ```
-00 VOL FF FRQ 0100 --- ---
-01 VOL F0 FRQ 0101 --- ---
-02 VOL E0 FRQ 0102 --- ---
-03 VOL D0 FRQ 0103 --- ---
-04 JMP 0000 --- --- --- ---
+00 VOL FF FCT 20 PAN 40
+01 VOL E0 FCT 40 PAN 50
+02 VOL C0 FCT 60 PAN 60
+03 VOL A0 FCT 80 PAN 70
+04 VOL 80 FCT A0 PAN 80
+05 VOL A0 FCT 80 PAN 70
+06 VOL C0 FCT 60 PAN 60
+07 VOL E0 FCT 40 PAN 50
+08 HOP 0000 --- --- --- ---
 ```
 
-This creates a pulsing effect with rising pitch.
+This creates a complex pattern that simultaneously modulates volume, filter cutoff, and panning in a wave-like pattern.
 
 ## Tips and Tricks
 
