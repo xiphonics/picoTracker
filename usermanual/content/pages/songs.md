@@ -43,6 +43,15 @@ You can solo and mute specific channels on the song screen using the following k
 
 As mentioned above, the Song screen can be either in *song* or *live* mode. The controls in each mode differ slightly. You can switch between the modes using `ENTER`+`LEFT`/`RIGHT` while on the Song screen. 
 
+### Tempo Nudge
+
+You can temporarily speed up or slow down the song playback using the Tempo Nudge feature. This is useful for syncing with external gear or making fine timing adjustments during live/DJ performances.
+
+- `SHIFT` + `LEFT`: Nudge tempo down (slower)
+- `SHIFT` + `RIGHT`: Nudge tempo up (faster)
+
+The tempo will return to its original value when you release the keys.
+
 #### Song Mode
 
 In the song mode `Play` starts and stops song playback from the currently highlighted row of the chain grid. If one of the rows channel is marked `--`, that channel will be ignored entirely for the rest of the playback session (until playback is stopped). 
