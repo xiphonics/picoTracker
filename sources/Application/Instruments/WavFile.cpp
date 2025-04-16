@@ -304,15 +304,6 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
                              ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) *
                             FLASH_PAGE_SIZE;
 
-  // Debug logging for small files
-  if (FlashBaseBufferSize < 1024) {
-    Trace::Debug("Single cycle waveform detected in LoadInFlash: size=%ld "
-                 "samples, channels=%d",
-                 size_, channelCount_);
-    Trace::Debug("Flash buffer sizes: base=%d bytes, page-aligned=%d bytes",
-                 FlashBaseBufferSize, FlashPageBufferSize);
-  }
-
   if (flashWriteOffset + FlashPageBufferSize > flashLimit) {
     Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)",
                  FlashPageBufferSize, flashLimit - flashWriteOffset);
@@ -351,12 +342,12 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   int bufferStart = dataPosition_;
 
   // Special handling for very small files (single cycle waveforms)
-  bool isSingleCycle = (bufferSize < 1024);
+  bool isSmallFile = (bufferSize < 1024);
 
-  if (isSingleCycle) {
-    // For single cycle waveforms, read the entire file at once
+  if (isSmallFile) {
+    // For small files, read the entire file at once
     // This avoids issues with small chunks and flash memory alignment
-    Trace::Debug("Special handling for single cycle waveform: reading entire "
+    Trace::Debug("Special handling for small file: reading entire "
                  "file at once");
 
     // Read the entire file
