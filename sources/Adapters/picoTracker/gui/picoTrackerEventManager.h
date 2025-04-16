@@ -28,6 +28,9 @@ private:
   static bool finished_;
   static bool redrawing_;
   static uint16_t buttonMask_;
+  static uint16_t debounceMask_;
+  static unsigned int debounceTime_;
+  static unsigned int lastDebounceTime_;
   static unsigned int keyRepeat_;
   static unsigned int keyDelay_;
   static unsigned int keyKill_;
