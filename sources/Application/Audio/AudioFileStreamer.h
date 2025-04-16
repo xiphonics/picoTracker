@@ -18,13 +18,16 @@ public:
 
 protected:
   AudioFileStreamerMode mode_;
-  char name_[128];
+  char name_[256];
   bool newPath_;
   WavFile *wav_;
-  int position_;
-
-private:
+  float position_;
   Project *project_;
+
+  // Sample rate conversion
+  int fileSampleRate_;
+  int systemSampleRate_;
+  fixed fpSpeed_; // Fixed-point speed factor for sample rate conversion
 
 public:
   void SetProject(Project *project) { project_ = project; }
