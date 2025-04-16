@@ -18,8 +18,6 @@ AudioFileStreamer::AudioFileStreamer() {
   fileSampleRate_ = 44100;   // Default
   systemSampleRate_ = 44100; // Default
   fpSpeed_ = FP_ONE;         // Default 1.0 in fixed point
-  isSingleCycle_ = false;
-  cycleLength_ = 0;
   project_ = NULL;
   singleCycleData_ = NULL;
 };
@@ -31,7 +29,6 @@ bool AudioFileStreamer::Start(char *name) {
   strcpy(name_, name);
   newPath_ = true;
   mode_ = AFSM_PLAYING;
-  isSingleCycle_ = false;
   return true;
 };
 
@@ -40,7 +37,6 @@ bool AudioFileStreamer::StartLooping(char *name) {
   strcpy(name_, name);
   newPath_ = true;
   mode_ = AFSM_LOOPING;
-  isSingleCycle_ = true;
   return true;
 };
 
@@ -83,25 +79,15 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     systemSampleRate_ = Audio::GetInstance()->GetSampleRate();
     int channels = wav_->GetChannelCount(-1);
     long size = wav_->GetSize(-1);
-    cycleLength_ = size;
 
     // Calculate the speed factor for sample rate conversion
     float ratio;
 
-    if (mode_ == AFSM_LOOPING) {
-      // For waveforms in looping mode, adjust playback speed to play at C3
-      // (130.81 Hz) C3 frequency = 130.81 Hz To get this frequency, we need to
-      // play the entire cycle 130.81 times per second So the effective sample
-      // rate = cycle length * 130.81
-      float effectiveSampleRate = size * 130.81f;
-      ratio = effectiveSampleRate / (float)systemSampleRate_;
-      Trace::Debug("Single cycle playback at C3: cycle length=%ld, effective "
-                   "sample rate=%.2f Hz",
-                   size, effectiveSampleRate);
-    } else {
-      // Normal playback uses the file's sample rate
-      ratio = (float)fileSampleRate_ / (float)systemSampleRate_;
-    }
+    // Always use the file's sample rate for playback, regardless of mode
+    ratio = (float)fileSampleRate_ / (float)systemSampleRate_;
+    Trace::Debug(
+        "AudioFileStreamer: Using file sample rate for playback. Ratio: %.6f",
+        ratio);
 
     fpSpeed_ = fl2fp(ratio);
     Trace::Debug("AudioFileStreamer: File '%s' - Sample Rate: %d Hz, Channels: "
@@ -109,9 +95,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
                  name_, fileSampleRate_, channels, size, fp2i(fpSpeed_));
 
     // Load the entire buffer for single cycle waveforms
-    if (mode_ == AFSM_LOOPING &&
-        size < 1024) { // 1024 samples = 2048 bytes for stereo
-      isSingleCycle_ = true;
+    if (mode_ == AFSM_LOOPING) {
 
       // Get channel count before using it
       int channels = wav_->GetChannelCount(-1);
@@ -166,8 +150,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
             "Successfully loaded entire single cycle waveform: %ld samples",
             size);
       } else {
-        // We didn't load the entire waveform, so don't use it
-        isSingleCycle_ = false;
+        // We didn't load the entire waveform
         Trace::Error("Failed to load entire single cycle waveform");
       }
     }
@@ -188,7 +171,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   fixed *dst = buffer;
 
   // Special handling for single cycle waveforms in looping mode
-  if (mode_ == AFSM_LOOPING && isSingleCycle_) {
+  if (mode_ == AFSM_LOOPING) {
     // Use our static buffer that we've already loaded with the entire waveform
     if (!singleCycleData_) {
       Trace::Error("AudioFileStreamer: Single cycle buffer is null");

@@ -31,10 +31,6 @@ protected:
   int systemSampleRate_;
   fixed fpSpeed_; // Fixed-point speed factor for sample rate conversion
 
-  // Single cycle waveform detection and looping
-  bool isSingleCycle_;
-  int cycleLength_; // Length of a single cycle in samples
-
   // Static buffer for single cycle waveforms (max 600 samples in mono from AKWF
   // single cycle format
   static short singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE];
@@ -44,7 +40,6 @@ public:
   void SetProject(Project *project) { project_ = project; }
 
   // Single cycle waveform methods
-  bool IsSingleCycle() { return isSingleCycle_; }
   bool StartLooping(char *name);
   void StopLooping() { mode_ = AFSM_STOPPED; }
 };
