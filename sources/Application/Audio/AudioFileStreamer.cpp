@@ -285,7 +285,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       // Check if we've reached the end of the file
       if (position_ >= size - 1) {
         mode_ = AFSM_STOPPED;
-        break;
+        return false;
       }
 
       // Read the next buffer
@@ -293,7 +293,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
         Trace::Error("AudioFileStreamer: Failed to get buffer at position %d",
                      (int)position_);
         mode_ = AFSM_STOPPED;
-        break;
+        return false;
       }
 
       // Update the source pointer
@@ -301,7 +301,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       if (!src) {
         Trace::Error("AudioFileStreamer: GetSampleBuffer returned null");
         mode_ = AFSM_STOPPED;
-        break;
+        return false;
       }
 
       // Adjust position to be relative to the new buffer
@@ -316,33 +316,23 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     short *currentSample = src + (sourcePos * channelCount);
     short *nextSample = currentSample + channelCount;
 
-    // Standard linear interpolation for normal playback
-    if (channelCount == 2) {
-      // Stereo interpolation using optimized fixed-point math
-      fixed fpFrac = fl2fp(frac);
-      fixed s1 = i2fp(currentSample[0]);
-      fixed s2 = i2fp(nextSample[0]);
-      fixed leftSample = s1 + fp_mul(fpFrac, s2 - s1);
+    // Linear interpolation between samples
+    fixed fpFrac = fl2fp(frac);
+    fixed s1 = i2fp(currentSample[0]);
+    fixed s2 = i2fp(nextSample[0]);
+    fixed leftSample = s1 + fp_mul(fpFrac, s2 - s1);
+    fixed rightSample;
 
+    if (channelCount == 2) {
       fixed s3 = i2fp(currentSample[1]);
       fixed s4 = i2fp(nextSample[1]);
-      fixed rightSample = s3 + fp_mul(fpFrac, s4 - s3);
-
-      // Apply volume
-      *dst++ = fp_mul(leftSample, volume);
-      *dst++ = fp_mul(rightSample, volume);
+      rightSample = s3 + fp_mul(fpFrac, s4 - s3);
     } else {
-      // Mono interpolation using optimized fixed-point math
-      fixed fpFrac = fl2fp(frac);
-      fixed s1 = i2fp(currentSample[0]);
-      fixed s2 = i2fp(nextSample[0]);
-      fixed sample = s1 + fp_mul(fpFrac, s2 - s1);
-
-      // Apply volume and duplicate to both channels
-      fixed v = fp_mul(sample, volume);
-      *dst++ = v;
-      *dst++ = v;
+      rightSample = leftSample;
     }
+    // Apply volume
+    *dst++ = fp_mul(leftSample, volume);
+    *dst++ = fp_mul(rightSample, volume);
 
     // Move to the next source position based on the sample rate ratio
     pos += fp2fl(fpSpeed_);
