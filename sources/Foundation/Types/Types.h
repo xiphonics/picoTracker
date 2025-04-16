@@ -56,7 +56,7 @@ struct FourCC {
     SampleInstrumentEnd = 6,
     SampleInstrumentTable = 117,
     SampleInstrumentTableAutomation = 60,
-    SampleInstrumentSlices = 202,
+    SampleInstrumentSlices = 151,
 
     MacroInstrumentShape = 93,
     MacroInstrmentTimbre = 94,

@@ -364,10 +364,10 @@ void InstrumentView::fillSampleParameters() {
                             1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  if (v->GetString() == "slicer") {
+  if (v->GetString() == "slices") {
     position._x += 18;
     v = instrument->FindVariable(FourCC::SampleInstrumentSlices);
-    intVarField_.emplace_back(position, *v, "slcs: %d", 1, 128, 1, 16);
+    intVarField_.emplace_back(position, *v, "#%d", 1, 128, 1, 16);
     fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
     position._x -= 18;
   }
