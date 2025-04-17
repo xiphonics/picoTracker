@@ -5,14 +5,16 @@
 #include "Application/Model/Project.h"
 #include "Services/Audio/AudioModule.h"
 
-enum AudioFileStreamerMode { AFSM_STOPPED, AFSM_PLAYING };
+#define SINGLE_CYCLE_MAX_SAMPLE_SIZE 600
+
+enum AudioFileStreamerMode { AFSM_STOPPED, AFSM_PLAYING, AFSM_LOOPING };
 
 class AudioFileStreamer : public AudioModule {
 public:
   AudioFileStreamer();
   virtual ~AudioFileStreamer();
   virtual bool Render(fixed *buffer, int samplecount);
-  bool Start(char *name);
+  bool Start(char *name); // Automatically detects single cycle waveforms
   void Stop();
   bool IsPlaying();
 
@@ -29,8 +31,17 @@ protected:
   int systemSampleRate_;
   fixed fpSpeed_; // Fixed-point speed factor for sample rate conversion
 
+  // Static buffer for single cycle waveforms (max 600 samples in mono from AKWF
+  // single cycle format
+  static short singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE];
+  short *singleCycleData_; // Pointer to the current single cycle data
+
 public:
   void SetProject(Project *project) { project_ = project; }
+
+  // Single cycle waveform methods
+  bool StartLooping(char *name);
+  void StopLooping() { mode_ = AFSM_STOPPED; }
 };
 
 #endif

@@ -134,6 +134,12 @@ bool SamplePool::loadSample(const char *name) {
 
   WavFile *wave = WavFile::Open(name);
   if (wave) {
+    // Get sample information
+    int size = wave->GetSize(-1);
+    int channels = wave->GetChannelCount(-1);
+    int bytePerSample = (wave->GetSampleRate(-1) == 8) ? 1 : 2;
+    int totalBytes = size * channels * bytePerSample;
+
     wav_[count_] = wave;
     names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
     strcpy(names_[count_], name);
