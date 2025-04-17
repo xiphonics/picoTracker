@@ -190,9 +190,11 @@ void Variable::SetString(const char *string, bool notify) {
         const char *d = list_.char_[i];
         const char *s = string;
         while (*s != 0) {
-          if (tolower(*s++) != tolower(*d++)) {
+          if (tolower(*s) != tolower(*d)) {
             break;
           }
+          s++;
+          d++;
         }
         if (*s == 0 && *d == 0) { // Ensure both strings end at the same point
           value_.index_ = i;
