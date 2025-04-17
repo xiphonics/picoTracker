@@ -19,6 +19,7 @@ enum SampleInstrumentLoopMode {
   SILM_OSC,
   //	SILM_OSCFINE,
   SILM_LOOPSYNC,
+  SILM_SLICE,
   SILM_LAST
 };
 
@@ -72,7 +73,7 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
-  etl::list<Variable *, 20> variables_;
+  etl::list<Variable *, 21> variables_;
 
   SoundSource *source_;
   static struct renderParams renderParams_[SONG_CHANNEL_COUNT];
@@ -101,6 +102,7 @@ private:
   WatchedVariable loopEnd_;
   Variable table_;
   Variable tableAuto_;
+  Variable slices_;
 
   static bool useDirtyDownsampling_;
 };

@@ -209,12 +209,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
     break;
   };
 
-  for (auto field : fieldList_) {
-    if (((UIIntVarField *)field)->GetVariableID() == lastFocusID_) {
-      SetFocus(field);
-      break;
-    }
-  }
+  setFocus(lastFocusID_);
 
   // observer all var fields so we can mark the instrument as modified
   // to be able to show confirmation dialog when switching instrument type
@@ -369,6 +364,14 @@ void InstrumentView::fillSampleParameters() {
   intVarField_.emplace_back(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1,
                             1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  if (v->GetString() == "slices") {
+    position._x += 18;
+    v = instrument->FindVariable(FourCC::SampleInstrumentSlices);
+    intVarField_.emplace_back(position, *v, "#%d", 1, 128, 1, 16);
+    fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+    position._x -= 18;
+  }
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentStart);
@@ -940,6 +943,12 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     SetChanged();
     NotifyObservers(&ve);
   } break;
+  case FourCC::SampleInstrumentLoopMode: {
+    // Show or hide slices
+    onInstrumentChange();
+    lastFocusID_ = FourCC::SampleInstrumentLoopMode;
+    setFocus(lastFocusID_);
+  }
   default:
     if (fourcc != 0) {
       instrumentModified_ = true;
