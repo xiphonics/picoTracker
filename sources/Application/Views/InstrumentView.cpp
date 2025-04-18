@@ -778,12 +778,11 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
 
       // Check if on table
-      if (GetFocus() == *fieldList_.rbegin()) {
-        int i = viewData_->currentInstrumentID_;
-        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        I_Instrument *instr = bank->GetInstrument(i);
-        Variable *v = instr->FindVariable(FourCC::SampleInstrumentTable);
-        v->SetInt(-1);
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      if ((field->GetVariableID() == FourCC::SampleInstrumentTable) ||
+          (field->GetVariableID() == FourCC::MidiInstrumentTable)) {
+        Variable &v = field->GetVariable();
+        v.SetInt(-1);
         isDirty_ = true;
       };
     }
