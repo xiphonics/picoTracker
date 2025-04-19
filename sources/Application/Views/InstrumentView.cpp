@@ -308,6 +308,12 @@ void InstrumentView::fillSampleParameters() {
   intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
+  position._x += 10;
+  Variable *s = instrument->FindVariable(FourCC::SampleInstrumentSlices);
+  intVarField_.emplace_back(position, *s, "Slices: %d", 1, 64, 1, 8);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._x -= 10;
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentRootNote);
   noteVarField_.emplace_back(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C);
@@ -373,19 +379,23 @@ void InstrumentView::fillSampleParameters() {
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentStart);
   bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0,
-                               instrument->GetSampleSize() - 1, 16);
+                               (instrument->GetSampleSize() / s->GetInt()) - 1,
+                               16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
   bigHexVarField_.emplace_back(position, *v, 7, "loop start: %7.7X", 0,
-                               instrument->GetSampleSize() - 1, 16);
+                               (instrument->GetSampleSize() / s->GetInt()) - 1,
+                               16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentEnd);
+  v->SetInt((instrument->GetSampleSize() - 1) / s->GetInt(), true);
   bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
-                               instrument->GetSampleSize() - 1, 16);
+                               (instrument->GetSampleSize() / s->GetInt()) - 1,
+                               16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);

@@ -37,6 +37,7 @@ SampleInstrument::SampleInstrument()
       crush_(FourCC::SampleInstrumentCrush, 16),
       drive_(FourCC::SampleInstrumentCrushVolume, 0xFF),
       downsample_(FourCC::SampleInstrumentDownsample, 0),
+      slices_(FourCC::SampleInstrumentSlices, 1),
       rootNote_(FourCC::SampleInstrumentRootNote, 60),
       fineTune_(FourCC::SampleInstrumentFineTune, 0x7F),
       pan_(FourCC::SampleInstrumentPan, 0x7F),
@@ -71,6 +72,7 @@ SampleInstrument::SampleInstrument()
   variables_.insert(variables_.end(), &crush_);
   variables_.insert(variables_.end(), &drive_);
   variables_.insert(variables_.end(), &downsample_);
+  variables_.insert(variables_.end(), &slices_);
   variables_.insert(variables_.end(), &rootNote_);
   variables_.insert(variables_.end(), &fineTune_);
   variables_.insert(variables_.end(), &pan_);
@@ -147,9 +149,30 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
   rp->pan_ = rp->basePan_ = i2fp(pan_.GetInt());
 
+  // TODO (democloid): We have 3 potential differnt modes, single sample
+  // multisample based on source file (CUEs not currently supported) which would
+  // be evaluated on the source material and use the IsMulti call on the source
+  // Explicit slicing, we tell how we want the sample file to be interpreted
   if (!source_->IsMulti()) {
-    rp->rendLoopStart_ = loopStart_.GetInt();
-    rp->rendLoopEnd_ = loopEnd_.GetInt();
+    if (slices_.GetInt() == 1) {
+      // single sample mode
+      rp->rendLoopStart_ = loopStart_.GetInt();
+      rp->rendLoopEnd_ = loopEnd_.GetInt();
+    } else {
+      // sliced mode
+      int32_t sliceSize = GetSampleSize(channel) / slices_.GetInt();
+      int note = rp->midiNote_;
+      int8_t sliceNum = note - rootNote;
+      Trace::Debug("SLICES: Midi note %i Slice Number: %i", note, sliceNum);
+
+      if ((sliceNum < 0) or (sliceNum >= slices_.GetInt())) {
+        Trace::Debug("SLICES: Out of range, discarded");
+        return false;
+      }
+      rp->rendLoopStart_ = sliceNum * sliceSize + loopStart_.GetInt();
+      slicedStart_ = sliceNum * sliceSize + start_.GetInt();
+      rp->rendLoopEnd_ = sliceNum * sliceSize + loopEnd_.GetInt();
+    }
   } else {
     long start = source_->GetLoopStart(rp->midiNote_);
     if (start > 0) {
@@ -185,7 +208,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     // if instrument sampled below 44.1Khz, should
     // travel slower in sample
 
-    rp->rendFirst_ = start_.GetInt();
+    rp->rendFirst_ = slices_.GetInt() == 1 ? start_.GetInt() : slicedStart_;
     rp->position_ = float(rp->rendFirst_);
     rp->baseSpeed_ = fl2fp(source_->GetSampleRate(rp->midiNote_) / driverRate);
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);

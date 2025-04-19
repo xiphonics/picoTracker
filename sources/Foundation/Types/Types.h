@@ -179,6 +179,7 @@ struct FourCC {
     InstrumentName = 148,
     ActionRenderMixdown = 149,
     ActionRenderStems = 150,
+    SampleInstrumentSlices = 151,
 
     Default = 255, // "    "
   };
@@ -244,6 +245,7 @@ struct FourCC {
   ETL_ENUM_TYPE(SampleInstrumentEnd, "end")
   ETL_ENUM_TYPE(SampleInstrumentTable, "table")
   ETL_ENUM_TYPE(SampleInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(SampleInstrumentSlices, "Slices")
   ETL_ENUM_TYPE(MidiInstrumentChannel, "channel")
   ETL_ENUM_TYPE(InstrumentName, "name")
   ETL_ENUM_TYPE(MidiInstrumentName, "midi name")
