@@ -12,7 +12,7 @@
 #include "picoRemoteUI.h"
 #endif
 
-#define KEY_DEBOUNCE_TIME 40
+#define KEY_DEBOUNCE_TIME 5
 
 bool picoTrackerEventManager::finished_ = false;
 bool picoTrackerEventManager::redrawing_ = false;
@@ -141,11 +141,17 @@ void picoTrackerEventManager::ProcessInputEvent() {
   unsigned long now = gTime_;
 
   if (newMask != debounceMask_) {
-    if ((now - lastDebounceTime_) < KEY_DEBOUNCE_TIME) {
-      return;
-    }
+    // Key state changed. We begin or continue debouncing.
     debounceMask_ = newMask;
     lastDebounceTime_ = now;
+    return;
+  } else {
+    // Keys have not changed since the last scan. But we cannot
+    // continue unless they have not changed for at least KEY_DEBOUNCE_TIME ms
+    unsigned long settleTime = now - lastDebounceTime_;
+    if (settleTime < KEY_DEBOUNCE_TIME) {
+      return;
+    }
   }
 
   // compute mask to send
