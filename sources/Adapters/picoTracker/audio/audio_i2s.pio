@@ -61,7 +61,7 @@ bitloop1:                   ;      ||
     set pins, 0             side 0b10
     jmp y-- backfill1       side 0b11
 
-    set pins, 1             side 0b00 ; Final LSB is a 1, to prevent DAC hardware mute
+    set pins, 0             side 0b00 ; Final LSB is a 0
     set x, DATA_LOOP_COUNT  side 0b01
 
     out pins, 1             side 0b00 ; twos complement so need to keep most significant Bit of real sample data
@@ -82,7 +82,7 @@ bitloop0:
     set pins, 0             side 0b00
     jmp y-- backfill0       side 0b01
 
-    set pins, 1             side 0b10 ; Final LSB is a 1, to prevent DAC hardware mute
+    set pins, 0             side 0b10 ; Final LSB is a 0
 
 ;----
 public entry_point:
