@@ -12,7 +12,9 @@
 #include "picoRemoteUI.h"
 #endif
 
-#define KEY_DEBOUNCE_TIME 5
+// Key debounce time in milliseconds. No state changes for this amount of time
+// means we accept the new key state.
+#define KEY_DEBOUNCE_TIME 10
 
 bool picoTrackerEventManager::finished_ = false;
 bool picoTrackerEventManager::redrawing_ = false;
