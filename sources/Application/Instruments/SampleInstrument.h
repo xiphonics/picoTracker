@@ -78,7 +78,6 @@ private:
   static struct renderParams renderParams_[SONG_CHANNEL_COUNT];
   bool running_;
   bool dirty_;
-  int32_t slicedStart_;
   TableSaveState tableState_;
 
   static signed char lastMidiNote_[SONG_CHANNEL_COUNT];

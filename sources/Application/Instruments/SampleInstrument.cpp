@@ -153,6 +153,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // multisample based on source file (CUEs not currently supported) which would
   // be evaluated on the source material and use the IsMulti call on the source
   // Explicit slicing, we tell how we want the sample file to be interpreted
+  int32_t slicedStart = 0;
   if (!source_->IsMulti()) {
     if (slices_.GetInt() == 1) {
       // single sample mode
@@ -170,7 +171,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
         return false;
       }
       rp->rendLoopStart_ = sliceNum * sliceSize + loopStart_.GetInt();
-      slicedStart_ = sliceNum * sliceSize + start_.GetInt();
+      slicedStart = sliceNum * sliceSize + start_.GetInt();
       rp->rendLoopEnd_ = sliceNum * sliceSize + loopEnd_.GetInt();
     }
   } else {
@@ -208,7 +209,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     // if instrument sampled below 44.1Khz, should
     // travel slower in sample
 
-    rp->rendFirst_ = slices_.GetInt() == 1 ? start_.GetInt() : slicedStart_;
+    rp->rendFirst_ = slicedStart;
     rp->position_ = float(rp->rendFirst_);
     rp->baseSpeed_ = fl2fp(source_->GetSampleRate(rp->midiNote_) / driverRate);
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);

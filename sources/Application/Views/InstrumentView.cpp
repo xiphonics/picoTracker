@@ -136,7 +136,8 @@ void InstrumentView::onInstrumentChange() {
   refreshInstrumentFields(old);
 };
 
-void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
+void InstrumentView::refreshInstrumentFields(const I_Instrument *old,
+                                             FourCC focus) {
   for (auto &f : intVarField_) {
     f.RemoveObserver(*this);
   }
@@ -162,7 +163,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
-  lastFocusID_ = FourCC::VarInstrumentType;
+  lastFocusID_ = focus;
 
   // Re-add the action fields for export and import only if not IT_NONE
   if (instrumentType_.GetInt() != IT_NONE) {
@@ -395,7 +396,6 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentEnd);
-  v->SetInt((instrument->GetSampleSize() - 1) / s->GetInt(), true);
   bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
                                (instrument->GetSampleSize() / s->GetInt()) - 1,
                                16);
@@ -954,26 +954,20 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     NotifyObservers(&ve);
   } break;
   case FourCC::SampleInstrumentSlices: {
+    // We are assuming we can only get here when instrument is Sample, safe?
     Trace::Debug("INSTRUMENTVIEW", "slice changed, redraw!");
-
-    int i = viewData_->currentInstrumentID_;
-    InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-    I_Instrument *instr = bank->GetInstrument(i);
-    SampleInstrument *instrument = (SampleInstrument *)instr;
-    Variable *s = instrument->FindVariable(FourCC::SampleInstrumentSlices);
-    auto slices = s->GetInt();
-
-    // calculate loop start and end based on the number of slices then set the
-    // variables values
-    auto loopStartEnd = (instrument->GetSampleSize() / slices) - 1;
-
-    Variable *ls = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
-    ls->SetInt(loopStartEnd, true);
-    ls = instrument->FindVariable(FourCC::SampleInstrumentStart);
+    I_Instrument *instrument = getInstrument();
+    // In slice change, reset markers for start and loop start
+    Variable *ls = instrument->FindVariable(FourCC::SampleInstrumentStart);
     ls->SetInt(0, true);
+    ls = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
+    ls->SetInt(0, true);
+    Variable *slices = instrument->FindVariable(FourCC::SampleInstrumentSlices);
     ls = instrument->FindVariable(FourCC::SampleInstrumentEnd);
-    ls->SetInt(loopStartEnd, true);
-    redrawAllFields();
+    ls->SetInt((((SampleInstrument *)instrument)->GetSampleSize() - 1) /
+                   slices->GetInt(),
+               true);
+    refreshInstrumentFields(instrument, FourCC::SampleInstrumentSlices);
   } break;
   default:
     if (fourcc != 0) {
