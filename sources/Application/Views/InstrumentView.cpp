@@ -313,6 +313,9 @@ void InstrumentView::fillSampleParameters() {
   intVarField_.emplace_back(position, *s, "Slices: %d", 1, 64, 1, 8);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
+  // add observer
+  (*intVarField_.rbegin()).AddObserver(*this);
+
   position._x -= 10;
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentRootNote);
@@ -950,6 +953,28 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     SetChanged();
     NotifyObservers(&ve);
   } break;
+  case FourCC::SampleInstrumentSlices: {
+    Trace::Debug("INSTRUMENTVIEW", "slice changed, redraw!");
+
+    int i = viewData_->currentInstrumentID_;
+    InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+    I_Instrument *instr = bank->GetInstrument(i);
+    SampleInstrument *instrument = (SampleInstrument *)instr;
+    Variable *s = instrument->FindVariable(FourCC::SampleInstrumentSlices);
+    auto slices = s->GetInt();
+
+    // calculate loop start and end based on the number of slices then set the
+    // variables values
+    auto loopStartEnd = (instrument->GetSampleSize() / slices) - 1;
+
+    Variable *ls = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
+    ls->SetInt(loopStartEnd, true);
+    ls = instrument->FindVariable(FourCC::SampleInstrumentStart);
+    ls->SetInt(0, true);
+    ls = instrument->FindVariable(FourCC::SampleInstrumentEnd);
+    ls->SetInt(loopStartEnd, true);
+    redrawAllFields();
+  } break;
   default:
     if (fourcc != 0) {
       instrumentModified_ = true;
@@ -1031,3 +1056,12 @@ void InstrumentView::AnimationUpdate() {
   drawBattery(props);
   w_.Flush();
 };
+
+// Redraw all UI fields to reflect updated variable values
+void InstrumentView::redrawAllFields() {
+  for (auto field : fieldList_) {
+    if (field) {
+      field->Draw(w_);
+    }
+  }
+}

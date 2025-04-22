@@ -44,6 +44,8 @@ protected:
   void handleInstrumentExport();
 
 private:
+  // Redraw all fields to reflect updated variable values
+  void redrawAllFields();
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
