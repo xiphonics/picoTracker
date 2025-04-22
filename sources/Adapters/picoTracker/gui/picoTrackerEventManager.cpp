@@ -12,6 +12,8 @@
 #include "picoRemoteUI.h"
 #endif
 
+#define KEY_DEBOUNCE_TIME 40
+
 bool picoTrackerEventManager::finished_ = false;
 bool picoTrackerEventManager::redrawing_ = false;
 uint16_t picoTrackerEventManager::buttonMask_ = 0;
@@ -21,6 +23,10 @@ unsigned long picoTrackerEventManager::time_ = 0;
 unsigned int picoTrackerEventManager::keyRepeat_ = 25;
 unsigned int picoTrackerEventManager::keyDelay_ = 500;
 unsigned int picoTrackerEventManager::keyKill_ = 5;
+
+unsigned int picoTrackerEventManager::lastDebounceTime_ = 0;
+uint16_t picoTrackerEventManager::debounceMask_ = 0;
+
 repeating_timer_t picoTrackerEventManager::timer_ = repeating_timer_t();
 SerialDebugUI picoTrackerEventManager::serialDebugUI_ = SerialDebugUI();
 
@@ -132,10 +138,20 @@ void picoTrackerEventManager::ProcessInputEvent() {
   // Get current mask
   newMask = scanKeys();
 
+  unsigned long now = gTime_;
+
+  if (newMask != debounceMask_) {
+    if ((now - lastDebounceTime_) < KEY_DEBOUNCE_TIME) {
+      return;
+    }
+    debounceMask_ = newMask;
+    lastDebounceTime_ = now;
+  }
+
   // compute mask to send
   sendMask = (newMask ^ buttonMask_) |
              (newMask & (KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN));
-  unsigned long now = gTime_;
+
   // see if we're repeating
   if (newMask == buttonMask_) {
     if ((isRepeating_) && ((now - time_) > keyRepeat_)) {
