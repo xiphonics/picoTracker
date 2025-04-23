@@ -381,9 +381,9 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
     // Write size will be either 256 (which is the flash page size) or 512
     int writeSize = (bytePerSample_ == 1) ? readSize * 2 : readSize;
     // Adjust to page size
-    writeSize = ((writeSize / FLASH_PAGE_SIZE) +
-                 ((writeSize % FLASH_PAGE_SIZE) != 0)) *
-                FLASH_PAGE_SIZE;
+    writeSize =
+        ((writeSize / FLASH_PAGE_SIZE) + ((writeSize % FLASH_PAGE_SIZE) != 0)) *
+        FLASH_PAGE_SIZE;
 
     // Ensure we have a minimum write size of one page
     if ((unsigned int)writeSize < FLASH_PAGE_SIZE) {
@@ -394,8 +394,9 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
 
     // Debug output for small files
     if (bufferSize < 1024) {
-      Trace::Debug("Writing sample: bufferSize=%d, writeSize=%d, chunk %d of %d",
-                 bufferSize, writeSize, bufferSize - count, bufferSize);
+      Trace::Debug(
+          "Writing sample: bufferSize=%d, writeSize=%d, chunk %d of %d",
+          bufferSize, writeSize, bufferSize - count, bufferSize);
     }
 
     flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
