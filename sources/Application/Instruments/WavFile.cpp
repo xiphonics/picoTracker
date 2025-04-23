@@ -318,6 +318,14 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   // this time
   int irqs = save_and_disable_interrupts();
 
+  // This is required due to strange issue with above interrupts disable causing
+  // a crash on some sample files without this delay
+  volatile uint32_t cycles = 100000;
+  while (cycles--) {
+    // Compiler won't optimize this away due to volatile
+    asm volatile("nop" ::: "memory");
+  }
+
   // If data doesn't fit in previously erased page, we'll have to erase
   // additional ones
   if (FlashPageBufferSize > (flashEraseOffset - flashWriteOffset)) {
