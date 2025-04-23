@@ -349,23 +349,22 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   // Where the data starts in the WAV (after header)
   int bufferStart = dataPosition_;
 
-  // Special handling for very small files (single cycle waveforms)
-  bool isSmallFile = (bufferSize < 1024);
+  // Process all files using the same chunked approach
+  // Read the buffer in small chunks to let the system breathe
+  uint count = bufferSize;
+  uint offset = 0;
+  uint readSize = count > FLASH_PAGE_SIZE ? FLASH_PAGE_SIZE : count;
 
-  if (isSmallFile) {
-    // For small files, read the entire file at once
-    // This avoids issues with small chunks and flash memory alignment
-    Trace::Debug("Special handling for small file: reading entire "
-                 "file at once");
+  while (count > 0) {
+    readSize = (count > readSize) ? readSize : count;
 
-    // Read the entire file
     file_->Seek(bufferStart, SEEK_SET);
-    file_->Read(readBuffer_, bufferSize);
+    file_->Read(readBuffer_, readSize);
 
-    // Process the data (convert 8-bit to 16-bit if needed)
+    // Have to expand 8 bit data (if needed) before writing to flash
     unsigned char *src = (unsigned char *)readBuffer_;
     short *dst = (short *)readBuffer_;
-    for (int i = bufferSize - 1; i >= 0; i--) {
+    for (int i = readSize - 1; i >= 0; i--) {
       if (bytePerSample_ == 1) {
         dst[i] = (src[i] - 128) * 256;
       } else {
@@ -378,76 +377,32 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
       }
     }
 
-    // Calculate the write size (ensure it's page-aligned)
-    uint writeSize = (bytePerSample_ == 1) ? bufferSize * 2 : bufferSize;
-    writeSize = ((writeSize / FLASH_PAGE_SIZE) + 1) * FLASH_PAGE_SIZE;
+    // We need to write double the bytes if we needed to expand to 16 bit
+    // Write size will be either 256 (which is the flash page size) or 512
+    int writeSize = (bytePerSample_ == 1) ? readSize * 2 : readSize;
+    // Adjust to page size
+    writeSize = ((writeSize / FLASH_PAGE_SIZE) +
+                 ((writeSize % FLASH_PAGE_SIZE) != 0)) *
+                FLASH_PAGE_SIZE;
 
-    Trace::Debug("Writing single cycle waveform: bufferSize=%d, writeSize=%d",
-                 bufferSize, writeSize);
-
-    // Write the entire file to flash at once
-    flash_range_program(flashWriteOffset, (uint8_t *)readBuffer_, writeSize);
-    flashWriteOffset += writeSize;
-  } else {
-    // Normal processing for larger files
-    // Read the buffer in small chunks to let the system breathe
-    uint count = bufferSize;
-    uint offset = 0;
-    uint readSize = count > FLASH_PAGE_SIZE ? FLASH_PAGE_SIZE : count;
-
-    while (count > 0) {
-      readSize = (count > readSize) ? readSize : count;
-
-      file_->Seek(bufferStart, SEEK_SET);
-      file_->Read(readBuffer_, readSize);
-
-      // Have to expand 8 bit data (if needed) before writing to flash
-      unsigned char *src = (unsigned char *)readBuffer_;
-      short *dst = (short *)readBuffer_;
-      for (int i = readSize - 1; i >= 0; i--) {
-        if (bytePerSample_ == 1) {
-          dst[i] = (src[i] - 128) * 256;
-        } else {
-          *dst = Swap16(*dst);
-          dst++;
-          if (channelCount_ > 1) {
-            *dst = Swap16(*dst);
-            dst++;
-          }
-        }
-      }
-
-      // We need to write double the bytes if we needed to expand to 16 bit
-      // Write size will be either 256 (which is the flash page size) or 512
-      int writeSize = (bytePerSample_ == 1) ? readSize * 2 : readSize;
-      // Adjust to page size
-      writeSize = ((writeSize / FLASH_PAGE_SIZE) +
-                   ((writeSize % FLASH_PAGE_SIZE) != 0)) *
-                  FLASH_PAGE_SIZE;
-
-      // There will be trash at the end, but sampleBufferSize_ gives me the
-      // bounds
-      if (FlashBaseBufferSize < 1024) {
-        Trace::Debug("About to write %i bytes in flash region 0x%X - 0x%X "
-                     "(chunk %d of %d)",
-                     writeSize, flashWriteOffset + offset,
-                     flashWriteOffset + offset + writeSize, bufferSize - count,
-                     bufferSize);
-      }
-
-      // For very small files, ensure we have a minimum write size
-      if ((unsigned int)writeSize < FLASH_PAGE_SIZE) {
-        Trace::Debug("Adjusting write size from %d to minimum page size %d",
-                     writeSize, FLASH_PAGE_SIZE);
-        writeSize = FLASH_PAGE_SIZE;
-      }
-
-      flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
-                          writeSize);
-      bufferStart += readSize;
-      count -= readSize;
-      flashWriteOffset += writeSize;
+    // Ensure we have a minimum write size of one page
+    if ((unsigned int)writeSize < FLASH_PAGE_SIZE) {
+      Trace::Debug("Adjusting write size from %d to minimum page size %d",
+                   writeSize, FLASH_PAGE_SIZE);
+      writeSize = FLASH_PAGE_SIZE;
     }
+
+    // Debug output for small files
+    if (bufferSize < 1024) {
+      Trace::Debug("Writing sample: bufferSize=%d, writeSize=%d, chunk %d of %d",
+                 bufferSize, writeSize, bufferSize - count, bufferSize);
+    }
+
+    flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
+                        writeSize);
+    bufferStart += readSize;
+    count -= readSize;
+    flashWriteOffset += writeSize;
   }
 
   // Lastly we restore the IRQs

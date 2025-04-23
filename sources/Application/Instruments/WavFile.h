@@ -8,7 +8,7 @@
 
 class WavFile : public SoundSource {
 
-protected: // Factory - see Load method
+protected:
   WavFile(I_File *file);
 
 public:
