@@ -148,7 +148,15 @@ struct FourCC {
     VarInfoColor = 109,
     VarWarnColor = 110,
     VarErrorColor = 111,
+    VarPlayColor = 152,
+    VarMuteColor = 153,
+    VarSongViewFEColor = 154,
+    VarSongView00Color = 155,
+    VarRowColor = 156,
+    VarRow2Color = 157,
+    VarMajorBeatColor = 158,
     VarMidiSync = 112,
+    VarMidiClockSync = 151,
     VarRemoteUI = 140,
     VarUIFont = 141,
     // 142 is taken for SIDInstrumentOSCNumber
@@ -160,6 +168,14 @@ struct FourCC {
     // 148 is taken for InstrumentName
     // 149 is taken for ActionRenderMixdown
     // 150 is taken for ActionRenderStems
+    // 151 is taken for VarMidiClockSync
+    // 152 is taken for VarPlayColor
+    // 153 is taken for VarMuteColor
+    // 154 is taken for VarSongViewFEColor
+    // 155 is taken for VarSongView00Color
+    // 156 is taken for VarRowColor
+    // 157 is taken for VarRow2Color
+    // 158 is taken for VarMajorBeatColor
 
     VarInstrumentType = 113,
 
@@ -217,6 +233,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
   ETL_ENUM_TYPE(VarMidiSync, "MIDISYNC")
+  ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(VarUIFont, "UIFONT")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
@@ -299,6 +316,13 @@ struct FourCC {
   ETL_ENUM_TYPE(VarInfoColor, "INFOCOLOR")
   ETL_ENUM_TYPE(VarWarnColor, "WARNCOLOR")
   ETL_ENUM_TYPE(VarErrorColor, "ERRORCOLOR")
+  ETL_ENUM_TYPE(VarPlayColor, "PLAYCOLOR")
+  ETL_ENUM_TYPE(VarMuteColor, "MUTECOLOR")
+  ETL_ENUM_TYPE(VarSongViewFEColor, "SONGVIEWFECOLOR")
+  ETL_ENUM_TYPE(VarSongView00Color, "SONGVIEW00COLOR")
+  ETL_ENUM_TYPE(VarRowColor, "ROWCOLOR")
+  ETL_ENUM_TYPE(VarRow2Color, "ROW2COLOR")
+  ETL_ENUM_TYPE(VarMajorBeatColor, "MAJORBEATCOLOR")
   ETL_ENUM_TYPE(VarTempo, "tempo")
   ETL_ENUM_TYPE(VarMasterVolume, "master")
   ETL_ENUM_TYPE(VarWrap, "wrap")

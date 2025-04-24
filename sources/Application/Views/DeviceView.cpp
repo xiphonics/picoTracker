@@ -143,6 +143,69 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   addSwatchField(CD_ERROR, position);
 
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarPlayColor);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Play:       %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  // addSwatchField(CD_PLAY, position);
+
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarMuteColor);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Mute:       %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  // addSwatchField(CD_MUTE, position);
+
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarSongViewFEColor);
+  bigHexVarField_.emplace_back(position, *v, 6, "SongViewFE: %6.6X", 0,
+                               MAX_COLOR_VALUE, 16);
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_SONGVIEWFE, position);
+
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarSongView00Color);
+  bigHexVarField_.emplace_back(position, *v, 6, "SongView00: %6.6X", 0,
+                               MAX_COLOR_VALUE, 16);
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  addSwatchField(CD_SONGVIEW00, position);
+
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarRowColor);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Row:        %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  // addSwatchField(CD_ROW, position);
+
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarRow2Color);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Row2:       %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  // addSwatchField(CD_ROW2, position);
+
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarMajorBeatColor);
+  // bigHexVarField_.emplace_back(position, *v, 6, "MajorBeat:  %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  // addSwatchField(CD_MAJORBEAT, position);
+
   position._y += 2;
   actionField_.emplace_back("Update firmware", FourCC::ActionBootSelect,
                             position);
@@ -239,6 +302,13 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   case FourCC::VarInfoColor:
   case FourCC::VarWarnColor:
   case FourCC::VarErrorColor:
+  case FourCC::VarPlayColor:
+  case FourCC::VarMuteColor:
+  case FourCC::VarSongViewFEColor:
+  case FourCC::VarSongView00Color:
+  case FourCC::VarRowColor:
+  case FourCC::VarRow2Color:
+  case FourCC::VarMajorBeatColor:
     Trace::Log("DEVICE", "Color updated!");
     ((AppWindow &)w_).UpdateColorsFromConfig();
     ((AppWindow &)w_).Clear(true);
@@ -249,6 +319,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     MessageBox *mb =
         new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
     DoModal(mb);
+    break;
   }
 
   default:

@@ -30,7 +30,7 @@ private:
 
   etl::vector<UIIntVarField, 5> intVarField_;
   etl::vector<UIActionField, 1> actionField_;
-  etl::vector<UIBigHexVarField, 9> bigHexVarField_;
-  etl::vector<UISwatchField, 9> swatchField_;
+  etl::vector<UIBigHexVarField, 16> bigHexVarField_;
+  etl::vector<UISwatchField, 16> swatchField_;
 };
 #endif

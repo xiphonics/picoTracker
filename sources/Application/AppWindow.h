@@ -118,13 +118,20 @@ private:
 
   static GUIColor backgroundColor_;
   static GUIColor normalColor_;
-  static GUIColor highlight2Color_;
   static GUIColor highlightColor_;
+  static GUIColor highlight2Color_;
   static GUIColor consoleColor_;
   static GUIColor cursorColor_;
   static GUIColor infoColor_;
   static GUIColor warnColor_;
   static GUIColor errorColor_;
+  static GUIColor playColor_;
+  static GUIColor muteColor_;
+  static GUIColor songViewFEColor_;
+  static GUIColor songView00Color_;
+  static GUIColor rowColor_;
+  static GUIColor row2Color_;
+  static GUIColor majorBeatColor_;
 
   ColorDefinition colorIndex_;
 
