@@ -277,7 +277,7 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   case FourCC::VarMajorBeatColor: {
     // Update the AppWindow's color values from Config
     ((AppWindow &)w_).UpdateColorsFromConfig();
-    
+
     // Force a redraw of the entire screen to update all colors
     ForceClear();
     DrawView();
