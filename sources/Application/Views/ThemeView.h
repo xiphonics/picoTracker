@@ -28,10 +28,7 @@ private:
   void addSwatchField(ColorDefinition color, GUIPoint position);
 
   etl::vector<UIIntVarField, 2> intVarField_;
-  etl::vector<UIBigHexVarField, 16>
-      bigHexVarField_;                         // Increased for all color fields
-  etl::vector<UISwatchField, 16> swatchField_; // Increased for all color fields
-  etl::vector<UIActionField, 1> actionField_;  // For "Back" button
+  etl::vector<UIBigHexVarField, 16> bigHexVarField_;
+  etl::vector<UISwatchField, 16> swatchField_;
 };
-
 #endif

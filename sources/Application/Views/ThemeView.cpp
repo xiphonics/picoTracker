@@ -258,6 +258,31 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
     DrawView();
     break;
   }
+  // Handle color variable changes
+  case FourCC::VarBGColor:
+  case FourCC::VarFGColor:
+  case FourCC::VarHI1Color:
+  case FourCC::VarHI2Color:
+  case FourCC::VarConsoleColor:
+  case FourCC::VarCursorColor:
+  case FourCC::VarInfoColor:
+  case FourCC::VarWarnColor:
+  case FourCC::VarErrorColor:
+  case FourCC::VarPlayColor:
+  case FourCC::VarMuteColor:
+  case FourCC::VarSongViewFEColor:
+  case FourCC::VarSongView00Color:
+  case FourCC::VarRowColor:
+  case FourCC::VarRow2Color:
+  case FourCC::VarMajorBeatColor: {
+    // Update the AppWindow's color values from Config
+    ((AppWindow &)w_).UpdateColorsFromConfig();
+    
+    // Force a redraw of the entire screen to update all colors
+    ForceClear();
+    DrawView();
+    break;
+  }
   default:
     NInvalid;
     break;
