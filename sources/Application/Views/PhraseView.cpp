@@ -1118,13 +1118,14 @@ void PhraseView::DrawView() {
   pos = anchor;
 
   // Display notes
-
   unsigned char *data = phrase_->note_ + (16 * viewData_->currentPhrase_);
 
   buffer[4] = 0;
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
     setTextProps(props, 0, j, false);
+    (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_MAJORBEAT)
+                                            : SetColor(CD_NORMAL);
     if (d == 0xFF) {
       DrawString(pos._x, pos._y, "----", props);
     } else {
