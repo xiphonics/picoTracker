@@ -208,16 +208,22 @@ void ImportView::import(char *name) {
 };
 
 void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
-  // Trace::Log("PICOIMPORT", "set Current Folder:%s");
+  // Special case: if we're trying to go up (..) from a top-level directory
+  if (strcmp(name, "..") == 0) {
+    // Check if we're in a top-level directory (parent is root)
+    if (fs->isParentRoot()) {
+      Trace::Log("PICOIMPORT",
+                 "Detected top-level directory, navigating to root");
+      // Navigate directly to root instead of using ".."
+      fs->chdir("/");
+    }
+  }
+
+  // Normal directory navigation
   if (!fs->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
   }
   currentIndex_ = 0;
-  // now update list of file indexes in this new dir
+  // Update list of file indexes in this new dir
   fs->list(&fileIndexList_, ".wav", false);
-
-  bool isSampleLibDir = fs->isParentRoot();
-  if (isSampleLibDir && !fileIndexList_.empty()) {
-    fileIndexList_.erase(fileIndexList_.begin());
-  }
 }
