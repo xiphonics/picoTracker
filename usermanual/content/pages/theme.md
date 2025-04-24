@@ -33,16 +33,18 @@ The picoTracker allows you to customize the color scheme of the interface. Each 
 | Highlight2 | 6B316B | Secondary highlight color, used for inverted highlights like screen labels |
 | Console | FF00FF | Console text color |
 | Cursor | 776B56 | Cursor color |
-| Info | 29EE3D | Information displays, used for battery gauge OK level |
-| Warning | EFFA52 | Warning displays, used for battery gauge low level |
-| Error | FF1111 | Error displays, used for battery gauge critical level |
+| Info | 29EE3D | Information displays, used for battery gauge OK level, vu meter normal level |
+| Warning | EFFA52 | Warning displays, used for battery gauge low level, vu meter high level |
+| Error | FF1111 | Error displays, used for battery gauge critical level, vu meter clipping level |
 | Play | 00FF00 | Indicators for playing tracks |
 | Mute | FF0000 | Indicators for muted tracks |
-| SongViewFE | AAAAAA | Used for "FE" hex values in the Song View |
-| SongView00 | 777777 | Used for "00" hex values in the Song View |
+| SongViewFE | AAAAAA | Used for `FE` chain values in the Song View |
+| SongView00 | 777777 | Used for `00` chain values in the Song View |
 | Row | 444444 | Primary row highlighting |
 | Row2 | 333333 | Secondary row highlighting |
-| MajorBeat | 555555 | Major beat indicators |
+| MajorBeat | 555555 | Major beat (quarter note) indicators in the Phrase view|
+
+Note: Row, Row2 are used to mark every block of 4 rows in the each of the "grid views", currently this is a user setting.
 
 ## Color Swatches
 
