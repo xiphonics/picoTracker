@@ -160,12 +160,12 @@ void GrooveView::DrawView() {
   GUIPoint anchor = GetAnchor();
 
   // Display row numbers
-
   SetColor(CD_HILITE1);
   char buffer[6];
   pos = anchor;
   pos._x -= 3;
   for (int j = 0; j < 16; j++) {
+    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ROW) : SetColor(CD_ROW2);
     hex2char(j, buffer);
     DrawString(pos._x, pos._y, buffer, props);
     pos._y++;
