@@ -176,6 +176,7 @@ struct FourCC {
     // 156 is taken for VarRowColor
     // 157 is taken for VarRow2Color
     // 158 is taken for VarMajorBeatColor
+    // 159 is taken for ActionShowTheme
 
     VarInstrumentType = 113,
 
@@ -195,6 +196,7 @@ struct FourCC {
     InstrumentName = 148,
     ActionRenderMixdown = 149,
     ActionRenderStems = 150,
+    ActionShowTheme = 159,
 
     Default = 255, // "    "
   };
@@ -233,7 +235,6 @@ struct FourCC {
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
   ETL_ENUM_TYPE(VarMidiSync, "MIDISYNC")
-  ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(VarUIFont, "UIFONT")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")

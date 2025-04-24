@@ -30,6 +30,7 @@
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
+#include "Application/Views/ThemeView.h"
 #include "BaseClasses/View.h"
 
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
@@ -94,6 +95,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _chainView = 0;
   _phraseView = 0;
   _deviceView = 0;
+  _themeView = 0;
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
@@ -373,6 +375,10 @@ void AppWindow::LoadProject(const char *projectName) {
   _deviceView = new (deviceViewMemBuf) DeviceView((*this), _viewData);
   _deviceView->AddObserver((*this));
 
+  static char themeViewMemBuf[sizeof(ThemeView)];
+  _themeView = new (themeViewMemBuf) ThemeView((*this), _viewData);
+  _themeView->AddObserver((*this));
+
   static char projectViewMemBuf[sizeof(ProjectView)];
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
@@ -441,6 +447,7 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_chainView);
   SAFE_DELETE(_phraseView);
   SAFE_DELETE(_deviceView);
+  SAFE_DELETE(_themeView);
   SAFE_DELETE(_projectView);
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
@@ -633,6 +640,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_MIXER:
       _currentView = _mixerView;
+      break;
+    case VT_THEME:
+      _currentView = _themeView;
       break;
     default:
       break;

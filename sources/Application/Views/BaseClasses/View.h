@@ -40,7 +40,8 @@ enum ViewType {
   VT_MIXER,
   VT_IMPORT,            // Sample file import
   VT_INSTRUMENT_IMPORT, // Instrument file import
-  VT_SELECTPROJECT      // Select project
+  VT_SELECTPROJECT,     // Select project
+  VT_THEME              // Theme settings
 };
 
 enum ViewMode {
@@ -92,6 +93,8 @@ public:
   void LooseFocus() { hasFocus_ = false; };
 
   void Clear();
+
+  void ForceClear();
 
   void ProcessButton(unsigned short mask, bool pressed);
 

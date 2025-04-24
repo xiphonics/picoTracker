@@ -13,6 +13,7 @@ add_library(application_views
   SelectProjectView.h SelectProjectView.cpp
   SongView.h SongView.cpp
   TableView.h TableView.cpp
+  ThemeView.h ThemeView.cpp
   UIController.h UIController.cpp
   ViewData.h ViewData.cpp
   ScreenView.h ScreenView.cpp
