@@ -28,6 +28,7 @@ private:
   size_t previewPlayingIndex_ = 0;
   short selected_ = 0;
   int toInstr_ = 0;
+  bool inProjectSampleDir_ = false; // Flag to track if we're in the project's sample directory
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 #endif
