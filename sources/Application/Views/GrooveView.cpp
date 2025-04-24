@@ -172,9 +172,7 @@ void GrooveView::DrawView() {
   }
 
   // Display current groove
-
   pos = anchor;
-
   SetColor(CD_NORMAL);
 
   unsigned char *grooveData =
@@ -219,7 +217,9 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
     lastPosition_ = groovepos;
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_;
+    SetColor(CD_PLAY);
     DrawString(pos._x, pos._y, ">", props);
+    SetColor(CD_NORMAL);
   };
 
   drawNotes();

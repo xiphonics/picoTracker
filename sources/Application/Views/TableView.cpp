@@ -872,6 +872,7 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_[0];
+    SetColor(CD_PLAY);
     DrawString(pos._x, pos._y, ">", props);
 
     pos._x += 9;

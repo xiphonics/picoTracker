@@ -947,7 +947,6 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     }
 
     // For each playing position, draw current location
-
     if (player->IsChannelPlaying(i)) {
       if (eventType != PET_STOP) {
         if (viewData_->currentPlayChain_[i] != 0xFF) {
@@ -956,10 +955,13 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + y;
             if (!player->IsChannelMuted(i)) {
+              SetColor(CD_PLAY);
               DrawString(pos._x, pos._y, ">", props);
             } else {
+              SetColor(CD_MUTE);
               DrawString(pos._x, pos._y, "-", props);
             }
+            SetColor(CD_CURSOR);
             lastPlayedPosition_[i] = viewData_->songPlayPos_[i];
           }
         }
