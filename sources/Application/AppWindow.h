@@ -40,6 +40,7 @@ class TableView;
 class ScreenView;
 class MixerView;
 class ThemeView;
+class ThemeImportView;
 class View;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
@@ -101,6 +102,7 @@ private:
   ImportView *_importView;
   InstrumentImportView *_instrumentImportView;
   ThemeView *_themeView;
+  ThemeImportView *_themeImportView;
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   NullView *_nullView;

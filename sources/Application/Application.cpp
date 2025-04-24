@@ -3,6 +3,7 @@
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Services/Audio/Audio.h"
 #include "Services/Midi/MidiService.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
@@ -75,6 +76,7 @@ void Application::ensurePTDirsExist() {
   createIfNotExists(fs, SAMPLES_LIB_DIR);
   createIfNotExists(fs, INSTRUMENTS_DIR);
   createIfNotExists(fs, RENDERS_DIR);
+  createIfNotExists(fs, THEMES_DIR);
 }
 
 void Application::createIfNotExists(FileSystem *fs, const char *path) {

@@ -13,8 +13,6 @@
 #include "pico/bootrom.h"
 #include <nanoprintf.h>
 
-#define MAX_COLOR_VALUE 0xFFFFFF
-
 #define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
 
 static void BootselCallback(View &v, ModalView &dialog) {

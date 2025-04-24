@@ -5,6 +5,9 @@
 #include "Externals/TinyXML2/tinyxml2.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/yxml/yxml.h"
+
+// Forward declaration
+class Theme;
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
 #include "PersistenceConstants.h"
@@ -43,6 +46,14 @@ public:
   PersistencyResult ImportInstrument(I_Instrument *instrument,
                                      const char *name);
   InstrumentType DetectInstrumentType(const char *name);
+  
+  // Theme import/export methods
+  PersistencyResult
+  ExportTheme(Theme *theme,
+              etl::string<32> name,
+              bool overwrite = false);
+  PersistencyResult ImportTheme(Theme *theme,
+                               const char *name);
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);

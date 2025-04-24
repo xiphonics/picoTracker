@@ -11,6 +11,8 @@
 #define SAMPLES_LIB_DIR "/samples"
 #define INSTRUMENTS_DIR "/instruments"
 #define RENDERS_DIR "/renders"
+#define THEMES_DIR "/themes"
 #define INSTRUMENT_FILE_EXTENSION ".pti"
+#define THEME_FILE_EXTENSION ".ptt"
 
 #endif // _PERSISTENCE_CONSTANTS_H_

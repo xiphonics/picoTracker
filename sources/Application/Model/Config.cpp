@@ -6,6 +6,7 @@
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
+#include "ThemeConstants.h"
 #include "Variable.h"
 #include <stdlib.h>
 
@@ -26,29 +27,13 @@ static const char *fontOptions[2] = {"Standard", "Bold"};
 // Param keys MUST fit in this length limit!
 typedef etl::string<13> ParamString;
 
-// Define default values at compile time
-constexpr int DEFAULT_BACKGROUND = 0x0F0F0F;
-constexpr int DEFAULT_FOREGROUND = 0xADADAD;
-constexpr int DEFAULT_HICOLOR1 = 0x846F94;
-constexpr int DEFAULT_HICOLOR2 = 0x6B316B;
-constexpr int DEFAULT_CONSOLECOLOR = 0xFF00FF;
-constexpr int DEFAULT_CURSORCOLOR = 0x776B56;
-constexpr int DEFAULT_INFOCOLOR = 0x29EE3D;
-constexpr int DEFAULT_WARNCOLOR = 0xEFFA52;
-constexpr int DEFAULT_ERRORCOLOR = 0xE84D15;
-constexpr int DEFAULT_PLAYCOLOR = 0x00FF00;
-constexpr int DEFAULT_MUTECOLOR = 0xFF0000;
-constexpr int DEFAULT_SONGVIEWFECOLOR = 0xFFA500;
-constexpr int DEFAULT_SONGVIEW00COLOR = 0x0000FF;
-constexpr int DEFAULT_ROWCOLOR = 0x555555;
-constexpr int DEFAULT_ROW2COLOR = 0x777777;
-constexpr int DEFAULT_MAJORBEATCOLOR = 0xFFFF00;
+// Use default color values from ThemeConstants.h
+// Other default values not related to theme colors:
 constexpr int DEFAULT_LINEOUT = 0x2;
 constexpr int DEFAULT_MIDIDEVICE = 0x0;
 constexpr int DEFAULT_MIDISYNC = 0x0;
 constexpr int DEFAULT_MIDICLOCKSYNC = 0x0;
 constexpr int DEFAULT_REMOTEUI = 0x1;
-constexpr int DEFAULT_UIFONT = 0x0;
 
 // Use a struct to define parameter information
 struct ConfigParam {
@@ -61,28 +46,33 @@ struct ConfigParam {
 // because using a flat_map static requires too much stack space for
 // initialization
 static const ConfigParam configParams[] = {
-    {"BACKGROUND", DEFAULT_BACKGROUND, FourCC::VarBGColor},
-    {"FOREGROUND", DEFAULT_FOREGROUND, FourCC::VarFGColor},
-    {"HICOLOR1", DEFAULT_HICOLOR1, FourCC::VarHI1Color},
-    {"HICOLOR2", DEFAULT_HICOLOR2, FourCC::VarHI2Color},
-    {"CONSOLECOLOR", DEFAULT_CONSOLECOLOR, FourCC::VarConsoleColor},
-    {"CURSORCOLOR", DEFAULT_CURSORCOLOR, FourCC::VarCursorColor},
-    {"INFOCOLOR", DEFAULT_INFOCOLOR, FourCC::VarInfoColor},
-    {"WARNCOLOR", DEFAULT_WARNCOLOR, FourCC::VarWarnColor},
-    {"ERRORCOLOR", DEFAULT_ERRORCOLOR, FourCC::VarErrorColor},
-    {"PLAYCOLOR", DEFAULT_PLAYCOLOR, FourCC::VarPlayColor},
-    {"MUTECOLOR", DEFAULT_MUTECOLOR, FourCC::VarMuteColor},
-    {"SONGVIEWFECOLOR", DEFAULT_SONGVIEWFECOLOR, FourCC::VarSongViewFEColor},
-    {"SONGVIEW00COLOR", DEFAULT_SONGVIEW00COLOR, FourCC::VarSongView00Color},
-    {"ROWCOLOR", DEFAULT_ROWCOLOR, FourCC::VarRowColor},
-    {"ROW2COLOR", DEFAULT_ROW2COLOR, FourCC::VarRow2Color},
-    {"MAJORBEATCOLOR", DEFAULT_MAJORBEATCOLOR, FourCC::VarMajorBeatColor},
+    {"BACKGROUND", ThemeConstants::DEFAULT_BACKGROUND, FourCC::VarBGColor},
+    {"FOREGROUND", ThemeConstants::DEFAULT_FOREGROUND, FourCC::VarFGColor},
+    {"HICOLOR1", ThemeConstants::DEFAULT_HICOLOR1, FourCC::VarHI1Color},
+    {"HICOLOR2", ThemeConstants::DEFAULT_HICOLOR2, FourCC::VarHI2Color},
+    {"CONSOLECOLOR", ThemeConstants::DEFAULT_CONSOLECOLOR,
+     FourCC::VarConsoleColor},
+    {"CURSORCOLOR", ThemeConstants::DEFAULT_CURSORCOLOR,
+     FourCC::VarCursorColor},
+    {"INFOCOLOR", ThemeConstants::DEFAULT_INFOCOLOR, FourCC::VarInfoColor},
+    {"WARNCOLOR", ThemeConstants::DEFAULT_WARNCOLOR, FourCC::VarWarnColor},
+    {"ERRORCOLOR", ThemeConstants::DEFAULT_ERRORCOLOR, FourCC::VarErrorColor},
+    {"PLAYCOLOR", ThemeConstants::DEFAULT_PLAYCOLOR, FourCC::VarPlayColor},
+    {"MUTECOLOR", ThemeConstants::DEFAULT_MUTECOLOR, FourCC::VarMuteColor},
+    {"SONGVIEWFECOLOR", ThemeConstants::DEFAULT_SONGVIEWFECOLOR,
+     FourCC::VarSongViewFEColor},
+    {"SONGVIEW00COLOR", ThemeConstants::DEFAULT_SONGVIEW00COLOR,
+     FourCC::VarSongView00Color},
+    {"ROWCOLOR", ThemeConstants::DEFAULT_ROWCOLOR, FourCC::VarRowColor},
+    {"ROW2COLOR", ThemeConstants::DEFAULT_ROW2COLOR, FourCC::VarRow2Color},
+    {"MAJORBEATCOLOR", ThemeConstants::DEFAULT_MAJORBEATCOLOR,
+     FourCC::VarMajorBeatColor},
     {"LINEOUT", DEFAULT_LINEOUT, FourCC::VarLineOut},
     {"MIDIDEVICE", DEFAULT_MIDIDEVICE, FourCC::VarMidiDevice},
     {"MIDISYNC", DEFAULT_MIDISYNC, FourCC::VarMidiSync},
     {"MIDICLOCKSYNC", DEFAULT_MIDICLOCKSYNC, FourCC::VarMidiClockSync},
     {"REMOTEUI", DEFAULT_REMOTEUI, FourCC::VarRemoteUI},
-    {"UIFONT", DEFAULT_UIFONT, FourCC::VarUIFont},
+    {"UIFONT", ThemeConstants::DEFAULT_UIFONT, FourCC::VarUIFont},
 };
 
 Config::Config()
