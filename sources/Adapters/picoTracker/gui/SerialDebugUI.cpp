@@ -10,6 +10,8 @@
 
 #define ENDSTDIN 255
 #define CR 13
+#define BACKSPACE 8
+#define DELETE 127
 #define READ_BUFFER_SIZE 32
 
 SerialDebugUI::SerialDebugUI(){};
@@ -21,19 +23,36 @@ bool SerialDebugUI::readSerialIn(char *buffer, short size) {
   char chr = getchar_timeout_us(0);
   // in pico-sdk the char seemed to change from ENDSTDIN to 0xFE, no idea why
   while (chr != ENDSTDIN && chr != 0xFE) {
-    // echo char back on serial
-    putchar(chr);
-    buffer[lp_++] = chr;
-    if (chr == CR || lp_ == size - 1) {
-      buffer[lp_] = 0; // terminate the string
-      // strip off trailing carriage return char
-      size_t len = strlen(buffer);
-      if (len > 0 && buffer[len - 1] == '\r') {
-        buffer[--len] = '\0';
+    // Handle backspace or delete key
+    if (chr == BACKSPACE || chr == DELETE) {
+      if (lp_ > 0) {
+        // Move cursor back, print space, move cursor back again
+        putchar('\b');
+        putchar(' ');
+        putchar('\b');
+        lp_--; // Decrement buffer pointer
       }
-      dispatchCmd(buffer);
-      lp_ = 0; // reset string buffer pointer
-      return true;
+    } else {
+      // Regular character - echo it back and add to buffer
+      putchar(chr);
+
+      // Only add to buffer if we have space
+      if (lp_ < size - 1) {
+        buffer[lp_++] = chr;
+      }
+
+      // Check for carriage return (Enter key)
+      if (chr == CR || lp_ == size - 1) {
+        buffer[lp_] = 0; // terminate the string
+        // strip off trailing carriage return char
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\r') {
+          buffer[--len] = '\0';
+        }
+        dispatchCmd(buffer);
+        lp_ = 0; // reset string buffer pointer
+        return true;
+      }
     }
     chr = getchar_timeout_us(0);
   }
