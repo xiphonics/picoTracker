@@ -174,7 +174,7 @@ void ThemeImportView::onImportTheme(const char *filename) {
     // Theme was successfully imported and applied to config
     // Save the config to ensure changes persist
     config->Save();
-    
+
     // Get the AppWindow to update colors
     AppWindow &app = (AppWindow &)w_;
     app.UpdateColorsFromConfig();
