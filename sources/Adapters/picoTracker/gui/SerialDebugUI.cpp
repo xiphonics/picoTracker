@@ -72,18 +72,18 @@ void SerialDebugUI::catFile(const char *path) {
       Trace::Log("SERIALDEBUG", "failed to open file:%s", path);
       return;
     }
-    
+
     // Buffer for reading one character at a time
     char buffer[2] = {0};
     // Buffer for accumulating a line
     char line[READ_BUFFER_SIZE + 1] = {0};
     int linePos = 0;
-    
+
     // Read the file character by character
     while (current->Read(buffer, 1) > 0) {
       // Add character to line buffer
       line[linePos++] = buffer[0];
-      
+
       // If we hit a newline or buffer is full, print the line
       if (buffer[0] == '\n' || linePos >= READ_BUFFER_SIZE) {
         line[linePos] = '\0';
@@ -91,13 +91,13 @@ void SerialDebugUI::catFile(const char *path) {
         linePos = 0;
       }
     }
-    
+
     // Print any remaining characters in the buffer
     if (linePos > 0) {
       line[linePos] = '\0';
       printf("%s\n", line);
     }
-    
+
     current->Close();
   } else {
     Trace::Log("SERIALDEBUG", "failed to cat file:%s", path);

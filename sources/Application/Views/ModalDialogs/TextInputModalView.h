@@ -43,7 +43,7 @@ private:
   UITextField<MAX_TEXT_INPUT_LENGTH> *textField_;
   UIField *focus_; // Current focused field
   bool editingText_;
-  
+
   // Button handling (like MessageBox)
   int buttonCount_;
   int button_[MBL_LAST];

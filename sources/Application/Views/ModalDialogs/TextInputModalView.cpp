@@ -43,14 +43,14 @@ void TextInputModalView::DrawView() {
   // Calculate window size based on title and prompt
   int titleSize = title_.size();
   int promptSize = 6 + MAX_TEXT_INPUT_LENGTH; // "Name: " + text field length
-  
+
   // compute space needed for buttons
   int btnSize = 5; // Average button text size
   int buttonWidth = buttonCount_ * (btnSize + 1) + 1;
-  
+
   int width = titleSize > promptSize ? titleSize : promptSize;
   width = width > buttonWidth ? width : buttonWidth;
-  
+
   SetWindow(width, 5);
 
   // Draw title
@@ -79,7 +79,7 @@ void TextInputModalView::DrawView() {
   int offset = width / (buttonCount_ + 1);
 
   static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
-  
+
   for (int i = 0; i < buttonCount_; i++) {
     const char *text = buttonText[button_[i]];
     x = offset * (i + 1) - strlen(text) / 2;

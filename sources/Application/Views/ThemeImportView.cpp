@@ -3,10 +3,10 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
 #include "ThemeView.h"
-#include "ModalDialogs/MessageBox.h"
 #include <nanoprintf.h>
 
 #define LIST_WIDTH (SCREEN_WIDTH - 2)
@@ -14,8 +14,7 @@
 #define LIST_PAGE_SIZE (SCREEN_HEIGHT - 4)
 
 ThemeImportView::ThemeImportView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData) {
-}
+    : ScreenView(w, viewData) {}
 
 ThemeImportView::~ThemeImportView() {}
 
@@ -170,15 +169,16 @@ void ThemeImportView::onImportTheme(const char *filename) {
   // Use Config's ImportTheme method directly
   Config *config = Config::GetInstance();
   bool result = config->ImportTheme(filename);
-  
+
   if (result) {
     // Theme was successfully imported and applied to config
     // Get the AppWindow to update colors
     AppWindow &app = (AppWindow &)w_;
     app.UpdateColorsFromConfig();
-    
+
     // Show success message
-    MessageBox *mb = new MessageBox(*this, "Theme imported successfully", MBBF_OK);
+    MessageBox *mb =
+        new MessageBox(*this, "Theme imported successfully", MBBF_OK);
     DoModal(mb, [](View &v, ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_OK) {
         // Switch back to the theme view

@@ -6,7 +6,6 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/yxml/yxml.h"
 
-
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
 #include "PersistenceConstants.h"
@@ -45,8 +44,6 @@ public:
   PersistencyResult ImportInstrument(I_Instrument *instrument,
                                      const char *name);
   InstrumentType DetectInstrumentType(const char *name);
-  
-
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);

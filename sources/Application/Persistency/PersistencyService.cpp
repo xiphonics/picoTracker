@@ -439,5 +439,3 @@ PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
              instrumentName.c_str());
   return PERSIST_LOADED;
 }
-
-
