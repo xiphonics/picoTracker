@@ -210,9 +210,21 @@ void Config::ReadColorVariable(PersistencyDocument *doc) {
     // Get the name and value attributes
     while (doc->NextAttribute()) {
       if (strcmp(doc->attrname_, "name") == 0) {
-        strncpy(colorName, doc->attrval_, sizeof(colorName) - 1);
+        // Use safer string copy to ensure null-termination
+        size_t len = strlen(doc->attrval_);
+        if (len >= sizeof(colorName)) {
+          len = sizeof(colorName) - 1; // Truncate if too long
+        }
+        memcpy(colorName, doc->attrval_, len);
+        colorName[len] = '\0'; // Ensure null-termination
       } else if (strcmp(doc->attrname_, "value") == 0) {
-        strncpy(colorValue, doc->attrval_, sizeof(colorValue) - 1);
+        // Use safer string copy to ensure null-termination
+        size_t len = strlen(doc->attrval_);
+        if (len >= sizeof(colorValue)) {
+          len = sizeof(colorValue) - 1; // Truncate if too long
+        }
+        memcpy(colorValue, doc->attrval_, len);
+        colorValue[len] = '\0'; // Ensure null-termination
       }
     }
 
