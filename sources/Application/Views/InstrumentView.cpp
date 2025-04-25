@@ -952,15 +952,17 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     I_Instrument *instr = getInstrument();
     if (instr && instr->GetType() == IT_MIDI) {
       MidiInstrument *midiInstr = (MidiInstrument *)instr;
-      
+
       // Get the channel and program values
-      Variable *channelVar = midiInstr->FindVariable(FourCC::MidiInstrumentChannel);
-      Variable *programVar = midiInstr->FindVariable(FourCC::MidiInstrumentProgram);
-      
+      Variable *channelVar =
+          midiInstr->FindVariable(FourCC::MidiInstrumentChannel);
+      Variable *programVar =
+          midiInstr->FindVariable(FourCC::MidiInstrumentProgram);
+
       if (channelVar && programVar) {
         int channel = channelVar->GetInt();
         int program = programVar->GetInt();
-        
+
         // Send Program Change message and play C3 note using the helper method
         midiInstr->SendProgramChangeWithNote(channel, program);
       }
