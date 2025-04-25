@@ -2,7 +2,6 @@
 #define _THEME_VIEW_H_
 
 #include "Application/Model/Config.h"
-#include "Application/Model/Theme.h"
 #include "Application/Views/BaseClasses/ModalView.h"
 #include "Application/Views/UIController.h"
 #include "BaseClasses/UIActionField.h"

@@ -8,7 +8,6 @@ add_library(application_model
   Scale.h Scale.cpp
   Song.h Song.cpp
   Table.h Table.cpp
-  Theme.h Theme.cpp
   )
 
 target_link_libraries(application_model PUBLIC pico_stdlib

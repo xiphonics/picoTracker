@@ -1,8 +1,7 @@
 #include "ThemeImportView.h"
 #include "Application/AppWindow.h"
 #include "Application/Model/Config.h"
-#include "Application/Model/Theme.h"
-#include "Application/Persistency/PersistencyService.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
@@ -168,13 +167,11 @@ void ThemeImportView::warpToNextTheme(bool goUp) {
 }
 
 void ThemeImportView::onImportTheme(const char *filename) {
-  // Create a Theme object
-  Theme theme;
+  // Use Config's ImportTheme method directly
+  Config *config = Config::GetInstance();
+  bool result = config->ImportTheme(filename);
   
-  // Import the theme using PersistencyService
-  PersistencyResult result = PersistencyService::GetInstance()->ImportTheme(&theme, filename);
-  
-  if (result == PERSIST_LOADED) {
+  if (result) {
     // Theme was successfully imported and applied to config
     // Get the AppWindow to update colors
     AppWindow &app = (AppWindow &)w_;

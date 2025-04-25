@@ -1,7 +1,7 @@
 #include "ThemeView.h"
 #include "Application/AppWindow.h"
 #include "Application/Model/Config.h"
-#include "Application/Persistency/PersistencyService.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/ModalDialogs/TextInputModalView.h"
 #include "System/Console/Trace.h"
@@ -353,10 +353,10 @@ static void ExportThemeInputCallback(View &v, ModalView &dialog) {
     auto fs = FileSystem::GetInstance();
 
     // Check if theme with this name already exists
-    etl::string<MAX_INSTRUMENT_NAME_LENGTH + 4> filename = themeName;
+    etl::string<MAX_THEME_EXPORT_PATH_LENGTH> filename = themeName;
     filename.append(THEME_FILE_EXTENSION);
 
-    etl::string<MAX_INSTRUMENT_NAME_LENGTH + 10> path = THEMES_DIR;
+    etl::string<MAX_THEME_EXPORT_PATH_LENGTH> path = THEMES_DIR;
     path.append("/");
     path.append(filename);
 
@@ -368,15 +368,11 @@ static void ExportThemeInputCallback(View &v, ModalView &dialog) {
       tv.DoModal(mb, OverwriteThemeCallback);
     } else {
       // Theme doesn't exist, export it directly
-      Theme theme;
-      theme.SaveFromConfig(); // Save current config settings to the theme
+      // Use Config's ExportTheme method directly
+      Config *config = Config::GetInstance();
+      bool result = config->ExportTheme(tv.exportThemeName_.c_str(), false);
 
-      // Export with overwrite flag set to false
-      PersistencyResult result =
-          PersistencyService::GetInstance()->ExportTheme(
-              &theme, tv.exportThemeName_, false);
-
-      if (result == PERSIST_SAVED) {
+      if (result) {
         MessageBox *successMb =
             new MessageBox(tv, "Theme exported successfully", MBBF_OK);
         tv.DoModal(successMb);
@@ -394,17 +390,12 @@ static void OverwriteThemeCallback(View &v, ModalView &dialog) {
   ThemeView &tv = (ThemeView &)v;
   if (dialog.GetReturnCode() == MBL_YES) {
     // User confirmed overwrite, export the theme
-    Theme theme;
-    theme.SaveFromConfig(); // Save current config settings to the theme
+    // Use Config's ExportTheme method directly with overwrite=true
+    Config *config = Config::GetInstance();
+    bool result = config->ExportTheme(tv.exportThemeName_.c_str(), true);
 
-    // Export with overwrite flag set to true
-    PersistencyResult result =
-        PersistencyService::GetInstance()->ExportTheme(
-            &theme, tv.exportThemeName_, true);
-
-    if (result == PERSIST_SAVED) {
-      MessageBox *successMb =
-          new MessageBox(tv, "Theme exported successfully", MBBF_OK);
+    if (result) {
+      MessageBox *successMb = new MessageBox(tv, "Theme exported", MBBF_OK);
       tv.DoModal(successMb);
     } else {
       MessageBox *errorMb =
