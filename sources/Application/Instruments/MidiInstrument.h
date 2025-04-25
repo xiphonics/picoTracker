@@ -47,9 +47,11 @@ public:
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
   void SetChannel(int i);
+  void SendProgramChange(int channel, int program);
+  void SendProgramChangeWithNote(int channel, int program);
 
 private:
-  etl::list<Variable *, 6> variables_;
+  etl::list<Variable *, 7> variables_;
 
   etl::array<uint8_t, MAX_MIDI_CHORD_NOTES + 1> lastNotes_[SONG_CHANNEL_COUNT];
   int remainingTicks_;
@@ -65,6 +67,7 @@ private:
   Variable volume_;
   Variable table_;
   Variable tableAuto_;
+  Variable program_;
   // need to store defaultname as it depends on the MIDI channel of the
   // instrument
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName_;

@@ -14,7 +14,8 @@ MidiInstrument::MidiInstrument()
       noteLen_(FourCC::MidiInstrumentNoteLength, 0),
       volume_(FourCC::MidiInstrumentVolume, 255),
       table_(FourCC::MidiInstrumentTable, -1),
-      tableAuto_(FourCC::MidiInstrumentTableAutomation, false) {
+      tableAuto_(FourCC::MidiInstrumentTableAutomation, false),
+      program_(FourCC::MidiInstrumentProgram, 0) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
@@ -26,6 +27,7 @@ MidiInstrument::MidiInstrument()
   variables_.insert(variables_.end(), &volume_);
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
+  variables_.insert(variables_.end(), &program_);
 }
 
 MidiInstrument::~MidiInstrument(){};
@@ -62,6 +64,11 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
     msg.data2_ = volume / 2;
     svc_->QueueMessage(msg);
   }
+
+  // send program change message
+  v = FindVariable(FourCC::MidiInstrumentProgram);
+  int program = v->GetInt();
+  SendProgramChange(channel, program);
 
   // set initial velocity (changed via InstrumentCommandVelocity)
   velocity_ = INITIAL_NOTE_VELOCITY;
@@ -179,11 +186,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }; break;
 
   case FourCC::InstrumentCommandMidiPC: {
-    MidiMessage msg;
-    msg.status_ = MidiMessage::MIDI_PROGRAM_CHANGE + mchannel;
-    msg.data1_ = (value & 0x7F);
-    msg.data2_ = MidiMessage::UNUSED_BYTE;
-    svc_->QueueMessage(msg);
+    SendProgramChange(mchannel, value & 0x7F);
   }; break;
 
   case FourCC::InstrumentCommandMidiChord: {
@@ -256,4 +259,36 @@ void MidiInstrument::SetTableState(TableSaveState &state) {
   memcpy(tableState_.hopCount_, state.hopCount_,
          sizeof(uchar) * TABLE_STEPS * 3);
   memcpy(tableState_.position_, state.position_, sizeof(int) * 3);
+};
+
+void MidiInstrument::SendProgramChange(int channel, int program) {
+  MidiMessage msg;
+  msg.status_ = MidiMessage::MIDI_PROGRAM_CHANGE + channel;
+  msg.data1_ = program;
+  msg.data2_ = MidiMessage::UNUSED_BYTE;
+  svc_->QueueMessage(msg);
+};
+
+void MidiInstrument::SendProgramChangeWithNote(int channel, int program) {
+  // First send the program change
+  SendProgramChange(channel, program);
+
+  // Define C3 as MIDI note 60
+  const uint8_t C3_NOTE = 60;
+
+  // Send Note On for C3 with velocity 100 (0x64)
+  MidiMessage noteOn;
+  noteOn.status_ = MidiMessage::MIDI_NOTE_ON + channel;
+  noteOn.data1_ = C3_NOTE;
+  noteOn.data2_ = 0x64; // Velocity 100
+  svc_->QueueMessage(noteOn);
+
+  // Send Note Off after a short (completely arbitrary) delay so that we get
+  // reasonable audition of adsr in external midi
+  sleep_ms(300);
+  MidiMessage noteOff;
+  noteOff.status_ = MidiMessage::MIDI_NOTE_OFF + channel;
+  noteOff.data1_ = C3_NOTE;
+  noteOff.data2_ = 0x00;
+  svc_->QueueMessage(noteOff);
 };

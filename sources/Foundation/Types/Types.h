@@ -70,6 +70,7 @@ struct FourCC {
     MidiInstrumentTable = 119,
     MidiInstrumentTableAutomation = 120,
     MidiInstrumentName = 144,
+    MidiInstrumentProgram = 151,
 
     SIDInstrument1Waveform = 72,
     SIDInstrument2Waveform = 73,
@@ -160,6 +161,7 @@ struct FourCC {
     // 148 is taken for InstrumentName
     // 149 is taken for ActionRenderMixdown
     // 150 is taken for ActionRenderStems
+    // 151 is taken for MidiInstrumentProgram
 
     VarInstrumentType = 113,
 
@@ -251,6 +253,7 @@ struct FourCC {
   ETL_ENUM_TYPE(MidiInstrumentVolume, "volume")
   ETL_ENUM_TYPE(MidiInstrumentTable, "table")
   ETL_ENUM_TYPE(MidiInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(MidiInstrumentProgram, "program")
   ETL_ENUM_TYPE(SIDInstrument1Waveform, "VWF1")
   ETL_ENUM_TYPE(SIDInstrument2Waveform, "VWF2")
   ETL_ENUM_TYPE(SIDInstrument1FilterCut, "FILTCUT1")

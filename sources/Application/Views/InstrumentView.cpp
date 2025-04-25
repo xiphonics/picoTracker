@@ -541,7 +541,14 @@ void InstrumentView::fillMidiParameters() {
       UIIntVarField(position, *v, "length: %2.2X", 0, 0xFF, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 2;
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::MidiInstrumentProgram);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "program: %2.2X", 0, 0x7F, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentTableAutomation);
   intVarField_.emplace_back(
       UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1));
@@ -939,6 +946,26 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
     SetChanged();
     NotifyObservers(&ve);
+  } break;
+  case FourCC::MidiInstrumentProgram: {
+    // When program value changes, send a MIDI Program Change message
+    I_Instrument *instr = getInstrument();
+    if (instr && instr->GetType() == IT_MIDI) {
+      MidiInstrument *midiInstr = (MidiInstrument *)instr;
+      
+      // Get the channel and program values
+      Variable *channelVar = midiInstr->FindVariable(FourCC::MidiInstrumentChannel);
+      Variable *programVar = midiInstr->FindVariable(FourCC::MidiInstrumentProgram);
+      
+      if (channelVar && programVar) {
+        int channel = channelVar->GetInt();
+        int program = programVar->GetInt();
+        
+        // Send Program Change message and play C3 note using the helper method
+        midiInstr->SendProgramChangeWithNote(channel, program);
+      }
+    }
+    instrumentModified_ = true;
   } break;
   default:
     if (fourcc != 0) {
