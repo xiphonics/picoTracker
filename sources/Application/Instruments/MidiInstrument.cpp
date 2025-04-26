@@ -22,7 +22,7 @@ MidiInstrument::MidiInstrument()
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
   };
-  
+
   if (timerSvc_ == 0) {
     timerSvc_ = TimerService::GetInstance();
   };
@@ -292,7 +292,7 @@ void MidiInstrument::SendProgramChangeWithNote(int channel, int program) {
   // Set up the note-off information for the callback
   NoteOffInfo::current.channel = channel;
   NoteOffInfo::current.note = C3_NOTE;
-  
+
   // Schedule the note-off message after 300ms using TimerService
   // This is non-blocking and will happen asynchronously
   timerSvc_->TriggerCallback(300, NoteOffCallback);

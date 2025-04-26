@@ -49,10 +49,10 @@ public:
   void SetChannel(int i);
   void SendProgramChange(int channel, int program);
   void SendProgramChangeWithNote(int channel, int program);
-  
+
   // Static callback for handling delayed note-off messages
   static void NoteOffCallback();
-  
+
   // Structure to hold note-off information
   struct NoteOffInfo {
     int channel;
