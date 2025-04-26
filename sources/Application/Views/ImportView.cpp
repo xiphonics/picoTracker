@@ -6,6 +6,8 @@
 #include "Application/Instruments/SamplePool.h"
 #include "ModalDialogs/MessageBox.h"
 #include "pico/multicore.h"
+#include "Externals/etl/include/etl/string.h"
+#include "Externals/etl/include/etl/to_string.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -88,9 +90,7 @@ void ImportView::DrawView() {
   int x = 1;
   int y = pos._y + 2;
 
-  // need to use fullsize buffer as sdfat doesnt truncate if filename longer
-  // than buffer but instead returns empty string  in buffer :-(
-  char buffer[PFILENAME_SIZE];
+  // Loop through visible files in the list
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
@@ -101,31 +101,40 @@ void ImportView::DrawView() {
       props.invert_ = false;
     }
 
-    memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
+    etl::string<PFILENAME_SIZE> displayName;
 
     if (fs->getFileType(fileIndex) != PFT_DIR) {
-      fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
-
-      // Check if it's a single cycle waveform (less than 1KB)
+      // Handle regular files
+      char tempBuffer[PFILENAME_SIZE];
+      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+      
+      // Check if it's a single cycle waveform
       int filesize = fs->getFileSize(fileIndex);
-      // check for LGPT or AKWF standard file sizes
       bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
 
-      // Add indicator for single cycle waveforms
+      // Format the display name with appropriate prefix
       if (isSingleCycle) {
-        int len = strlen(buffer);
-        if (len < LIST_WIDTH - 4) { // Make sure we have space
-          strcat(buffer, "[~]");    // Add cycle indicator
-        }
+        displayName = "~";
+        displayName += tempBuffer;
+      } else {
+        displayName = " ";
+        displayName += tempBuffer;
       }
     } else {
-      buffer[0] = '/';
-      fs->getFileName(fileIndex, buffer + 1, PFILENAME_SIZE);
+      // Handle directories
+      char tempBuffer[PFILENAME_SIZE];
+      displayName = "/";
+      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+      displayName += tempBuffer;
     }
-    // make sure truncate to list width the filename with trailing null
-    buffer[LIST_WIDTH] = 0;
-    DrawString(x, y, buffer, props);
+    
+    // Truncate to fit display width
+    if (displayName.size() > LIST_WIDTH) {
+      displayName.resize(LIST_WIDTH);
+    }
+    
+    DrawString(x, y, displayName.c_str(), props);
     y += 1;
   };
 
@@ -139,16 +148,21 @@ void ImportView::DrawView() {
     // check for LGPT or AKWF standard file sizes
     bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
 
+    // Create a temporary buffer for formatting
+    char tempBuffer[PFILENAME_SIZE];
+    
     if (isSingleCycle) {
-      npf_snprintf(buffer, sizeof(buffer), "[size: %i] [Single Cycle]",
-                   filesize);
+      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i] [Single Cycle]", filesize);
     } else {
-      npf_snprintf(buffer, sizeof(buffer), "[size: %i]", filesize);
+      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i]", filesize);
     }
+    
+    // Convert to etl::string for consistency
+    etl::string<PFILENAME_SIZE> statusText = tempBuffer;
 
     x = 1;  // align with rest screen title & file list
     y = 23; // bottom line
-    DrawString(x, y, buffer, props);
+    DrawString(x, y, statusText.c_str(), props);
   }
 
   SetColor(CD_NORMAL);
