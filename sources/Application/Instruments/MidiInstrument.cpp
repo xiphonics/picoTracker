@@ -8,6 +8,8 @@
 #include "System/Console/Trace.h"
 
 MidiService *MidiInstrument::svc_ = 0;
+TimerService *MidiInstrument::timerSvc_ = 0;
+MidiInstrument::NoteOffInfo MidiInstrument::NoteOffInfo::current = {0, 0};
 
 MidiInstrument::MidiInstrument()
     : I_Instrument(&variables_), channel_(FourCC::MidiInstrumentChannel, 0),
@@ -19,6 +21,10 @@ MidiInstrument::MidiInstrument()
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
+  };
+  
+  if (timerSvc_ == 0) {
+    timerSvc_ = TimerService::GetInstance();
   };
 
   // name_ is now an etl::string in the base class, not a Variable
@@ -283,12 +289,23 @@ void MidiInstrument::SendProgramChangeWithNote(int channel, int program) {
   noteOn.data2_ = 0x64; // Velocity 100
   svc_->QueueMessage(noteOn);
 
-  // Send Note Off after a short (completely arbitrary) delay so that we get
-  // reasonable audition of adsr in external midi
-  sleep_ms(300);
-  MidiMessage noteOff;
-  noteOff.status_ = MidiMessage::MIDI_NOTE_OFF + channel;
-  noteOff.data1_ = C3_NOTE;
-  noteOff.data2_ = 0x00;
-  svc_->QueueMessage(noteOff);
+  // Set up the note-off information for the callback
+  NoteOffInfo::current.channel = channel;
+  NoteOffInfo::current.note = C3_NOTE;
+  
+  // Schedule the note-off message after 300ms using TimerService
+  // This is non-blocking and will happen asynchronously
+  timerSvc_->TriggerCallback(300, NoteOffCallback);
+};
+
+void MidiInstrument::NoteOffCallback() {
+  // This static callback will be called after the timer expires
+  // Send the Note Off message for the stored note
+  if (svc_ != nullptr) {
+    MidiMessage noteOff;
+    noteOff.status_ = MidiMessage::MIDI_NOTE_OFF + NoteOffInfo::current.channel;
+    noteOff.data1_ = NoteOffInfo::current.note;
+    noteOff.data2_ = 0x00;
+    svc_->QueueMessage(noteOff);
+  }
 };

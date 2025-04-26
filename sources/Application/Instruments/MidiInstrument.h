@@ -49,6 +49,16 @@ public:
   void SetChannel(int i);
   void SendProgramChange(int channel, int program);
   void SendProgramChangeWithNote(int channel, int program);
+  
+  // Static callback for handling delayed note-off messages
+  static void NoteOffCallback();
+  
+  // Structure to hold note-off information
+  struct NoteOffInfo {
+    int channel;
+    uint8_t note;
+    static NoteOffInfo current;
+  };
 
 private:
   etl::list<Variable *, 7> variables_;
@@ -73,6 +83,7 @@ private:
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName_;
 
   static MidiService *svc_;
+  static TimerService *timerSvc_;
 };
 
 #endif
