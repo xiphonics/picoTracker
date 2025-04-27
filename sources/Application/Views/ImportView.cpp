@@ -4,10 +4,10 @@
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
-#include "ModalDialogs/MessageBox.h"
-#include "pico/multicore.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
+#include "ModalDialogs/MessageBox.h"
+#include "pico/multicore.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -108,7 +108,7 @@ void ImportView::DrawView() {
       // Handle regular files
       char tempBuffer[PFILENAME_SIZE];
       fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
-      
+
       // Check if it's a single cycle waveform
       int filesize = fs->getFileSize(fileIndex);
       bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
@@ -128,12 +128,12 @@ void ImportView::DrawView() {
       fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
       displayName += tempBuffer;
     }
-    
+
     // Truncate to fit display width
     if (displayName.size() > LIST_WIDTH) {
       displayName.resize(LIST_WIDTH);
     }
-    
+
     DrawString(x, y, displayName.c_str(), props);
     y += 1;
   };
@@ -150,13 +150,14 @@ void ImportView::DrawView() {
 
     // Create a temporary buffer for formatting
     char tempBuffer[PFILENAME_SIZE];
-    
+
     if (isSingleCycle) {
-      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i] [Single Cycle]", filesize);
+      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i] [Single Cycle]",
+                   filesize);
     } else {
       npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i]", filesize);
     }
-    
+
     // Convert to etl::string for consistency
     etl::string<PFILENAME_SIZE> statusText = tempBuffer;
 
