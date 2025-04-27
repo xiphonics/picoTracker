@@ -36,6 +36,11 @@ protected:
   static short singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE];
   short *singleCycleData_; // Pointer to the current single cycle data
 
+  // For matching oscillator mode in SampleInstrument
+  bool useReferencePitch_; // Whether to use the reference pitch instead of
+                           // sample rate ratio
+  float referencePitch_;   // Reference pitch in Hz (C3 = 130.81 Hz)
+
 public:
   void SetProject(Project *project) { project_ = project; }
 

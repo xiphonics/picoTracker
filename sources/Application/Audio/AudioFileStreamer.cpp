@@ -3,9 +3,14 @@
 #include "Application/Utils/fixed.h"
 #include "Services/Audio/Audio.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "System/io/Status.h"
 #include <string.h>
+#include <vector>
+
+// Define the single cycle waveform detection macro (same as in ImportView)
+#define IS_SINGLE_CYCLE(x) (x == 1344 || x == 300)
 
 // Initialize the static buffer for single cycle waveforms
 short AudioFileStreamer::singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE] = {0};
@@ -20,6 +25,9 @@ AudioFileStreamer::AudioFileStreamer() {
   fpSpeed_ = FP_ONE;         // Default 1.0 in fixed point
   project_ = NULL;
   singleCycleData_ = NULL;
+  useReferencePitch_ = false;
+  referencePitch_ = 261.63f; // C4 = 261.63 Hz (using C4 to compensate for how
+                             // its actually what we call C3 in pT)
 };
 
 AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
@@ -37,6 +45,10 @@ bool AudioFileStreamer::StartLooping(char *name) {
   strcpy(name_, name);
   newPath_ = true;
   mode_ = AFSM_LOOPING;
+
+  // For single cycle waveforms, set a fixed reference pitch
+  // to match SampleInstrument oscillator mode
+  useReferencePitch_ = true;
   return true;
 };
 
@@ -83,11 +95,27 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     // Calculate the speed factor for sample rate conversion
     float ratio;
 
-    // Always use the file's sample rate for playback, regardless of mode
-    ratio = (float)fileSampleRate_ / (float)systemSampleRate_;
-    Trace::Debug(
-        "AudioFileStreamer: Using file sample rate for playback. Ratio: %.6f",
-        ratio);
+    if (useReferencePitch_ && mode_ == AFSM_LOOPING) {
+      // For single cycle waveforms, calculate speed based on the reference
+      // pitch this matches how SampleInstrument plays in oscillator mode
+      float cyclesPerSecond = referencePitch_;
+      float samplesPerCycle = size;
+      float samplesPerSecond = cyclesPerSecond * samplesPerCycle;
+
+      // Calculate the speed factor for the reference pitch
+      ratio = (float)samplesPerSecond / (float)systemSampleRate_;
+
+      Trace::Debug(
+          "AudioFileStreamer: Using reference pitch for single cycle waveform. "
+          "Pitch: %.2f Hz, Samples: %ld, Ratio: %.6f",
+          referencePitch_, size, ratio);
+    } else {
+      // Standard sample rate conversion for normal samples
+      ratio = (float)fileSampleRate_ / (float)systemSampleRate_;
+      Trace::Debug(
+          "AudioFileStreamer: Using file sample rate for playback. Ratio: %.6f",
+          ratio);
+    }
 
     fpSpeed_ = fl2fp(ratio);
     Trace::Debug("AudioFileStreamer: File '%s' - Sample Rate: %d Hz, Channels: "
@@ -166,7 +194,10 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   // Get volume from project
   Variable *v = project_->FindVariable(FourCC::VarMasterVolume);
   int vol = v->GetInt();
-  fixed volume = fp_mul(i2fp(vol), fl2fp(0.01f));
+
+  // Apply additional attenuation for preview to match SampleInstrument volume
+  // Using 0.5 (50%) attenuation factor to match typical instrument volume
+  fixed volume = fp_mul(i2fp(vol), fl2fp(0.01f * 0.5f));
 
   fixed *dst = buffer;
 
@@ -196,18 +227,37 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       // Get the current sample
       short *currentSample = src + (sourcePos * channelCount);
 
-      // Use the exact sample value without interpolation
+      // Use linear interpolation between samples for smoother playback
+      // Calculate the fractional part for interpolation
+      float frac = pos - (float)sourcePos;
+      fixed fpFrac = fl2fp(frac);
+
+      // Get the next sample position for interpolation, with proper wrapping
+      int nextPos = sourcePos + 1;
+      if (nextPos >= size) {
+        nextPos = 0; // Wrap around to the beginning of the cycle
+      }
+
+      short *nextSample = src + (nextPos * channelCount);
+
       if (channelCount == 2) {
-        // Stereo sample
-        fixed leftSample = i2fp(currentSample[0]);
-        fixed rightSample = i2fp(currentSample[1]);
+        // Stereo sample with interpolation
+        fixed s1 = i2fp(currentSample[0]);
+        fixed s2 = i2fp(nextSample[0]);
+        fixed leftSample = s1 + fp_mul(fpFrac, s2 - s1);
+
+        fixed s3 = i2fp(currentSample[1]);
+        fixed s4 = i2fp(nextSample[1]);
+        fixed rightSample = s3 + fp_mul(fpFrac, s4 - s3);
 
         // Apply volume
         *dst++ = fp_mul(leftSample, volume);
         *dst++ = fp_mul(rightSample, volume);
       } else {
-        // Mono sample
-        fixed sample = i2fp(currentSample[0]);
+        // Mono sample with interpolation
+        fixed s1 = i2fp(currentSample[0]);
+        fixed s2 = i2fp(nextSample[0]);
+        fixed sample = s1 + fp_mul(fpFrac, s2 - s1);
 
         // Apply volume and duplicate to both channels
         fixed v = fp_mul(sample, volume);
