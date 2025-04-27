@@ -24,24 +24,45 @@ ImportView::ImportView(GUIWindow &w, ViewData *viewData)
 ImportView::~ImportView() {}
 
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
+  // First check for key release event and if play key was being held down
+  if (!pressed && playKeyHeld_ && !(mask & EPBM_PLAY)) {
+    // Play key no longer pressed so should stop playback
+    playKeyHeld_ = false;
+    if (Player::GetInstance()->IsPlaying()) {
+      Player::GetInstance()->StopStreaming();
+      previewPlayingIndex_ = (size_t)-1;
+    }
+    return;
+  }
+
+  // Handle key press events
+  if (pressed) {
+    if (mask & EPBM_PLAY) {
+      auto fs = FileSystem::GetInstance();
+      char name[PFILENAME_SIZE];
+      unsigned fileIndex = fileIndexList_[currentIndex_];
+      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+
+      // Set flag to track that play key is being held
+      playKeyHeld_ = true;
+
+      if (mask & EPBM_ALT) {
+        Trace::Log("PICOIMPORT", "SHIFT play - import");
+        import(name);
+      } else {
+        Trace::Log("PICOIMPORT", "play key pressed - start preview");
+        preview(name);
+      }
+      return; // We've handled the play button, so return
+    }
+  }
+
+  // Only process other buttons when pressed
   if (!pressed)
     return;
 
-  if (mask & EPBM_PLAY) {
-    auto fs = FileSystem::GetInstance();
-    char name[PFILENAME_SIZE];
-    unsigned fileIndex = fileIndexList_[currentIndex_];
-    fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-    if (mask & EPBM_ALT) {
-      Trace::Log("PICOIMPORT", "SHIFT play - import");
-      import(name);
-    } else {
-      Trace::Log("PICOIMPORT", "plain play preview");
-      preview(name);
-    }
-    // handle moving up and down the file list
-  } else if (mask & EPBM_UP) {
+  // handle moving up and down the file list
+  if (mask & EPBM_UP) {
     warpToNextSample(true);
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
@@ -211,49 +232,23 @@ void ImportView::preview(char *name) {
   // check for LGPT or AKWF standard file sizes
   bool isSingleCycle = IS_SINGLE_CYCLE(fileSize);
 
-  Trace::Debug("Preview: currentIndex_=%zu, previewPlayingIndex_=%zu, "
-               "IsPlaying=%d, isSingleCycle=%d",
-               currentIndex_, previewPlayingIndex_,
-               Player::GetInstance()->IsPlaying(), isSingleCycle);
-
-  // Check if we're trying to play the same sample that's already playing
-  bool isSameSample = (currentIndex_ == previewPlayingIndex_);
-
+  // If something is already playing, stop it first
   if (Player::GetInstance()->IsPlaying()) {
-    // Always stop the current playback
     Player::GetInstance()->StopStreaming();
+  }
 
-    if (isSameSample) {
-      // If it's the same sample, just stop (toggle off)
-      Trace::Debug("Stopping playback of current sample");
-      previewPlayingIndex_ = (size_t)-1;
-    } else {
-      // If it's a different sample, start playing it
-      Trace::Debug("Switching to play different sample");
-      previewPlayingIndex_ = currentIndex_;
+  // Start playing the selected sample
+  Trace::Debug("Starting preview of %s (single cycle: %d)", name,
+               isSingleCycle);
+  previewPlayingIndex_ = currentIndex_;
 
-      // Use looping for single cycle waveforms
-      if (isSingleCycle) {
-        Trace::Debug("Looping single cycle waveform: %s (size: %d bytes)", name,
-                     fileSize);
-        Player::GetInstance()->StartLoopingStreaming(name);
-      } else {
-        Player::GetInstance()->StartStreaming(name);
-      }
-    }
+  // Use looping for single cycle waveforms
+  if (isSingleCycle) {
+    Trace::Debug("Looping single cycle waveform: %s (size: %d bytes)", name,
+                 fileSize);
+    Player::GetInstance()->StartLoopingStreaming(name);
   } else {
-    // Nothing is playing, so start playing this sample
-    Trace::Debug("Starting playback of sample");
-    previewPlayingIndex_ = currentIndex_;
-
-    // Use looping for single cycle waveforms
-    if (isSingleCycle) {
-      Trace::Debug("Looping single cycle waveform: %s (size: %d bytes)", name,
-                   fileSize);
-      Player::GetInstance()->StartLoopingStreaming(name);
-    } else {
-      Player::GetInstance()->StartStreaming(name);
-    }
+    Player::GetInstance()->StartStreaming(name);
   }
 }
 

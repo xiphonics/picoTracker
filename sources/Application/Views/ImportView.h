@@ -28,6 +28,8 @@ private:
   size_t previewPlayingIndex_ = 0;
   short selected_ = 0;
   int toInstr_ = 0;
+  bool playKeyHeld_ =
+      false; // Flag to track when the play key is being held down
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 #endif
