@@ -13,6 +13,7 @@
 #define VU_METER_HEIGHT 16
 #define VU_METER_CLIP_LEVEL 15
 #define VU_METER_WARN_LEVEL 8
+#define ALT_ROW_NUMBER 4 // for now const vs a user setting
 
 enum GUIEventPadButtonMasks {
   EPBM_LEFT = 1,
@@ -40,7 +41,8 @@ enum ViewType {
   VT_MIXER,
   VT_IMPORT,            // Sample file import
   VT_INSTRUMENT_IMPORT, // Instrument file import
-  VT_SELECTPROJECT      // Select project
+  VT_SELECTPROJECT,     // Select project
+  VT_THEME              // Theme settings
 };
 
 enum ViewMode {
@@ -92,6 +94,8 @@ public:
   void LooseFocus() { hasFocus_ = false; };
 
   void Clear();
+
+  void ForceClear();
 
   void ProcessButton(unsigned short mask, bool pressed);
 

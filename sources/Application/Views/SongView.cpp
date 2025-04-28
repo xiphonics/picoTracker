@@ -834,6 +834,7 @@ void SongView::DrawView() {
   pos._x -= 3;
   for (int j = 0; j < View::songRowCount_; j++) {
     char p = j + viewData_->songOffset_;
+    ((p / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ROW) : SetColor(CD_ROW2);
     hex2char(p, row);
     DrawString(pos._x, pos._y, row, props);
     pos._y += 1;
@@ -956,7 +957,6 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     }
 
     // For each playing position, draw current location
-
     if (player->IsChannelPlaying(i)) {
       if (eventType != PET_STOP) {
         if (viewData_->currentPlayChain_[i] != 0xFF) {
@@ -965,10 +965,13 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + y;
             if (!player->IsChannelMuted(i)) {
+              SetColor(CD_PLAY);
               DrawString(pos._x, pos._y, ">", props);
             } else {
+              SetColor(CD_MUTE);
               DrawString(pos._x, pos._y, "-", props);
             }
+            SetColor(CD_CURSOR);
             lastPlayedPosition_[i] = viewData_->songPlayPos_[i];
           }
         }
