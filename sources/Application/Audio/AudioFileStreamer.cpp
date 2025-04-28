@@ -196,8 +196,9 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   int vol = v->GetInt();
 
   // Apply additional attenuation for preview to match SampleInstrument volume
-  // Using 0.5 (50%) attenuation factor to match typical instrument volume
-  fixed volume = fp_mul(i2fp(vol), fl2fp(0.01f * 0.5f));
+  // TODO: This is just temp workaround until we have dedicated preview volume
+  // user setting
+  fixed volume = fp_mul(i2fp(vol), fl2fp(0.001f));
 
   fixed *dst = buffer;
 
