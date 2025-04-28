@@ -646,25 +646,35 @@ void SongView::processNormalButtonMask(unsigned int mask) {
         // L Modifier
 
         if (mask & EPBM_ALT) {
-          if (mask & EPBM_DOWN)
+          if (mask & EPBM_DOWN) {
             jumpToNextSection(1);
-          if (mask & EPBM_UP)
+          }
+          if (mask & EPBM_UP) {
             jumpToNextSection(-1);
-          if (mask & EPBM_PLAY)
+          }
+          if (mask & EPBM_PLAY) {
             startCurrentRow();
+          }
+          if (mask & EPBM_LEFT) {
+            nudgeTempo(-1);
+          }
+          if (mask & EPBM_RIGHT) {
+            nudgeTempo(1);
+          }
         } else {
-
           // No modifier
-
-          if (mask & EPBM_DOWN)
+          if (mask & EPBM_DOWN) {
             updateCursor(0, 1);
-          if (mask & EPBM_UP)
+          }
+          if (mask & EPBM_UP) {
             updateCursor(0, -1);
-          if (mask & EPBM_LEFT)
+          }
+          if (mask & EPBM_LEFT) {
             updateCursor(-1, 0);
-          if (mask & EPBM_RIGHT)
+          }
+          if (mask & EPBM_RIGHT) {
             updateCursor(1, 0);
-
+          }
           if (mask & EPBM_PLAY) {
             onStart();
           }
@@ -999,4 +1009,17 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   drawMasterVuMeter(player, props);
 
   drawNotes();
+};
+
+void SongView::nudgeTempo(int direction) {
+  ApplicationCommandDispatcher *dispatcher =
+      ApplicationCommandDispatcher::GetInstance();
+  switch (direction) {
+  case -1:
+    dispatcher->OnNudgeDown();
+    break;
+  case 1:
+    dispatcher->OnNudgeUp();
+    break;
+  }
 };
