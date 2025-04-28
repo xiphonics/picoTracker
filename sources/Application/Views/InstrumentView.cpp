@@ -136,7 +136,8 @@ void InstrumentView::onInstrumentChange() {
   refreshInstrumentFields(old);
 };
 
-void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
+void InstrumentView::refreshInstrumentFields(const I_Instrument *old,
+                                             FourCC focus) {
   for (auto &f : intVarField_) {
     f.RemoveObserver(*this);
   }
@@ -162,7 +163,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
-  lastFocusID_ = FourCC::VarInstrumentType;
+  lastFocusID_ = focus;
 
   // Re-add the action fields for export and import only if not IT_NONE
   if (instrumentType_.GetInt() != IT_NONE) {
@@ -308,6 +309,15 @@ void InstrumentView::fillSampleParameters() {
   intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
+  position._x += 10;
+  Variable *s = instrument->FindVariable(FourCC::SampleInstrumentSlices);
+  intVarField_.emplace_back(position, *s, "Slices: %d", 1, 64, 1, 8);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  // add observer
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._x -= 10;
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentRootNote);
   noteVarField_.emplace_back(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C);
@@ -373,19 +383,22 @@ void InstrumentView::fillSampleParameters() {
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentStart);
   bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0,
-                               instrument->GetSampleSize() - 1, 16);
+                               (instrument->GetSampleSize() / s->GetInt()) - 1,
+                               16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
   bigHexVarField_.emplace_back(position, *v, 7, "loop start: %7.7X", 0,
-                               instrument->GetSampleSize() - 1, 16);
+                               (instrument->GetSampleSize() / s->GetInt()) - 1,
+                               16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentEnd);
   bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
-                               instrument->GetSampleSize() - 1, 16);
+                               (instrument->GetSampleSize() / s->GetInt()) - 1,
+                               16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
@@ -939,6 +952,22 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     SetChanged();
     NotifyObservers(&ve);
   } break;
+  case FourCC::SampleInstrumentSlices: {
+    // We are assuming we can only get here when instrument is Sample, safe?
+    Trace::Debug("INSTRUMENTVIEW", "slice changed, redraw!");
+    I_Instrument *instrument = getInstrument();
+    // In slice change, reset markers for start and loop start
+    Variable *ls = instrument->FindVariable(FourCC::SampleInstrumentStart);
+    ls->SetInt(0, true);
+    ls = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
+    ls->SetInt(0, true);
+    Variable *slices = instrument->FindVariable(FourCC::SampleInstrumentSlices);
+    ls = instrument->FindVariable(FourCC::SampleInstrumentEnd);
+    ls->SetInt((((SampleInstrument *)instrument)->GetSampleSize() - 1) /
+                   slices->GetInt(),
+               true);
+    refreshInstrumentFields(instrument, FourCC::SampleInstrumentSlices);
+  } break;
   default:
     if (fourcc != 0) {
       instrumentModified_ = true;
@@ -1020,3 +1049,12 @@ void InstrumentView::AnimationUpdate() {
   drawBattery(props);
   w_.Flush();
 };
+
+// Redraw all UI fields to reflect updated variable values
+void InstrumentView::redrawAllFields() {
+  for (auto field : fieldList_) {
+    if (field) {
+      field->Draw(w_);
+    }
+  }
+}

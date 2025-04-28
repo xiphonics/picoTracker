@@ -39,11 +39,14 @@ protected:
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
-  void refreshInstrumentFields(const I_Instrument *old);
+  void refreshInstrumentFields(const I_Instrument *old,
+                               FourCC focus = FourCC::VarInstrumentType);
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void handleInstrumentExport();
 
 private:
+  // Redraw all fields to reflect updated variable values
+  void redrawAllFields();
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
