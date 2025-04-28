@@ -61,7 +61,9 @@ Once you've created an instrument, you can save it for use in other projects:
 
 You can enter the sample import file browser by hitting `EDIT EDIT` (press the `EDIT` twice in quick succession) on the “sample:” field in the Instrument Screen.
 
-All the samples that you may want to import into a project **must** be located in a folder named `/samples` at the top-level of the sdcard. You can either put your samples in that directory or in sub-directories of it, allowing you to have a way of sorting your samples library. 
+All the samples that you may want to import into a project **must** be located in a folder named `/samples` at the top-level of the sdcard. You can either put your samples in that directory or in sub-directories of it, allowing you to have a way of sorting your samples library.
+
+_In firmware version 2.1_ the restriction on placing sample files *only* in the `/samples` directory has been removed and samples can be browsed and imported from any directory. 
 
 Note: sub-directories will be sorted before files, but otherwise the files will be listed in an unspecified order (ie. not necessarily alphabetical order).
 

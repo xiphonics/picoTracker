@@ -6,6 +6,7 @@ add_library(application_views
   ImportView.h ImportView.cpp
   InstrumentImportView.h InstrumentImportView.cpp
   InstrumentView.h InstrumentView.cpp
+  ThemeImportView.h ThemeImportView.cpp
   DeviceView.h DeviceView.cpp
   NullView.h NullView.cpp
   PhraseView.h PhraseView.cpp
@@ -13,6 +14,7 @@ add_library(application_views
   SelectProjectView.h SelectProjectView.cpp
   SongView.h SongView.cpp
   TableView.h TableView.cpp
+  ThemeView.h ThemeView.cpp
   UIController.h UIController.cpp
   ViewData.h ViewData.cpp
   ScreenView.h ScreenView.cpp

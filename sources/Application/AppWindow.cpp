@@ -30,6 +30,8 @@
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
+#include "Application/Views/ThemeImportView.h"
+#include "Application/Views/ThemeView.h"
 #include "BaseClasses/View.h"
 
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
@@ -50,6 +52,13 @@ GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 5);
 GUIColor AppWindow::infoColor_(0x29, 0xEE, 0x3D, 6);
 GUIColor AppWindow::warnColor_(0xEF, 0xFA, 0x52, 7);
 GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
+GUIColor AppWindow::playColor_(0x02, 0xFF, 0x02, 9);
+GUIColor AppWindow::muteColor_(0xFF, 0x02, 0x02, 10);
+GUIColor AppWindow::songViewFEColor_(0xFF, 0xA5, 0x02, 11);
+GUIColor AppWindow::songView00Color_(0x02, 0x02, 0xFF, 12);
+GUIColor AppWindow::rowColor_(0x55, 0x55, 0x55, 13);
+GUIColor AppWindow::row2Color_(0x77, 0x77, 0x77, 14);
+GUIColor AppWindow::majorBeatColor_(0xFF, 0xFF, 0x00, 15);
 
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
@@ -64,7 +73,12 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
     r = (rgbValue >> 16) & 0xFF;
     g = (rgbValue >> 8) & 0xFF;
     b = rgbValue & 0xFF;
+    // Always preserve the palette index when updating colors
     color = GUIColor(r, g, b, paletteIndex);
+  } else {
+    // Even if we don't update the RGB values, ensure the palette index is
+    // correct
+    color._paletteIndex = paletteIndex;
   }
 }
 
@@ -82,6 +96,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _chainView = 0;
   _phraseView = 0;
   _deviceView = 0;
+  _themeView = 0;
+  _themeImportView = 0;
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
@@ -221,6 +237,9 @@ void AppWindow::Flush() {
         props.invert_ = (*currentProp & PROP_INVERT) != 0;
         if (((*currentProp) & 0x7F) != color) {
           color = (ColorDefinition)((*currentProp) & 0x7F);
+
+          // Initialize gcolor with a safe default to avoid uninitialized value
+          // if switch falls through
           GUIColor gcolor = normalColor_;
           switch (color) {
           case CD_BACKGROUND:
@@ -248,6 +267,27 @@ void AppWindow::Flush() {
             break;
           case CD_ERROR:
             gcolor = errorColor_;
+            break;
+          case CD_PLAY:
+            gcolor = playColor_;
+            break;
+          case CD_MUTE:
+            gcolor = muteColor_;
+            break;
+          case CD_SONGVIEWFE:
+            gcolor = songViewFEColor_;
+            break;
+          case CD_SONGVIEW00:
+            gcolor = songView00Color_;
+            break;
+          case CD_ROW:
+            gcolor = rowColor_;
+            break;
+          case CD_ROW2:
+            gcolor = row2Color_;
+            break;
+          case CD_MAJORBEAT:
+            gcolor = majorBeatColor_;
             break;
 
           default:
@@ -337,6 +377,15 @@ void AppWindow::LoadProject(const char *projectName) {
   _deviceView = new (deviceViewMemBuf) DeviceView((*this), _viewData);
   _deviceView->AddObserver((*this));
 
+  static char themeViewMemBuf[sizeof(ThemeView)];
+  _themeView = new (themeViewMemBuf) ThemeView((*this), _viewData);
+  _themeView->AddObserver((*this));
+
+  static char themeImportViewMemBuf[sizeof(ThemeImportView)];
+  _themeImportView =
+      new (themeImportViewMemBuf) ThemeImportView((*this), _viewData);
+  _themeImportView->AddObserver((*this));
+
   static char projectViewMemBuf[sizeof(ProjectView)];
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
@@ -405,6 +454,8 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_chainView);
   SAFE_DELETE(_phraseView);
   SAFE_DELETE(_deviceView);
+  SAFE_DELETE(_themeView);
+  SAFE_DELETE(_themeImportView);
   SAFE_DELETE(_projectView);
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
@@ -443,6 +494,13 @@ void AppWindow::UpdateColorsFromConfig() {
   defineColor(FourCC::VarInfoColor, infoColor_, 6);
   defineColor(FourCC::VarWarnColor, warnColor_, 7);
   defineColor(FourCC::VarErrorColor, errorColor_, 8);
+  defineColor(FourCC::VarPlayColor, playColor_, 9);
+  defineColor(FourCC::VarMuteColor, muteColor_, 10);
+  defineColor(FourCC::VarSongViewFEColor, songViewFEColor_, 11);
+  defineColor(FourCC::VarSongView00Color, songView00Color_, 12);
+  defineColor(FourCC::VarRowColor, rowColor_, 13);
+  defineColor(FourCC::VarRow2Color, row2Color_, 14);
+  defineColor(FourCC::VarMajorBeatColor, majorBeatColor_, 15);
 };
 
 bool AppWindow::onEvent(GUIEvent &event) {
@@ -550,6 +608,7 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     if (_currentView) {
       _currentView->LooseFocus();
     }
+
     switch (*vt) {
     case VT_SONG:
       _currentView = _songView;
@@ -589,6 +648,15 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_MIXER:
       _currentView = _mixerView;
+      break;
+    case VT_THEME:
+      _currentView = _themeView;
+      break;
+    case VT_THEME_IMPORT:
+      _currentView = _themeImportView;
+      break;
+    case VT_SELECTTHEME:
+      _currentView = _themeView;
       break;
     default:
       break;
@@ -644,6 +712,7 @@ void AppWindow::onQuitApp() {
   player->Reset();
   System::GetInstance()->PostQuitMessage();
 }
+
 void AppWindow::Print(char *line) {
 
   //	GUIWindow::Clear(View::backgroundColor_,true) ;
@@ -667,7 +736,15 @@ void AppWindow::Print(char *line) {
   Flush();
 };
 
-void AppWindow::SetColor(ColorDefinition cd) { colorIndex_ = cd; };
+void AppWindow::SetColor(ColorDefinition cd) {
+  // Ensure color index is within valid range (0-15)
+  if (cd >= 0 && cd <= CD_MAJORBEAT) {
+    colorIndex_ = cd;
+  } else {
+    Trace::Error("APPWINDOW", "Invalid color index: %d", cd);
+    colorIndex_ = CD_NORMAL; // Default to normal color
+  }
+};
 
 bool AppWindow::autoSave() {
   Player *player = Player::GetInstance();

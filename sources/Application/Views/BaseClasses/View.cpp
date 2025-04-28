@@ -268,6 +268,8 @@ void View::ProcessButton(unsigned short mask, bool pressed) {
 
 void View::Clear() { ((AppWindow &)w_).Clear(); }
 
+void View::ForceClear() { ((AppWindow &)w_).Clear(true); }
+
 void View::SetColor(ColorDefinition cd) { ((AppWindow &)w_).SetColor(cd); };
 
 void View::ClearRect(int x, int y, int w, int h) {

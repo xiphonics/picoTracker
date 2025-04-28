@@ -39,6 +39,8 @@ class SongView;
 class TableView;
 class ScreenView;
 class MixerView;
+class ThemeView;
+class ThemeImportView;
 class View;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
@@ -99,6 +101,8 @@ private:
   GrooveView *_grooveView;
   ImportView *_importView;
   InstrumentImportView *_instrumentImportView;
+  ThemeView *_themeView;
+  ThemeImportView *_themeImportView;
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   NullView *_nullView;
@@ -118,13 +122,20 @@ private:
 
   static GUIColor backgroundColor_;
   static GUIColor normalColor_;
-  static GUIColor highlight2Color_;
   static GUIColor highlightColor_;
+  static GUIColor highlight2Color_;
   static GUIColor consoleColor_;
   static GUIColor cursorColor_;
   static GUIColor infoColor_;
   static GUIColor warnColor_;
   static GUIColor errorColor_;
+  static GUIColor playColor_;
+  static GUIColor muteColor_;
+  static GUIColor songViewFEColor_;
+  static GUIColor songView00Color_;
+  static GUIColor rowColor_;
+  static GUIColor row2Color_;
+  static GUIColor majorBeatColor_;
 
   ColorDefinition colorIndex_;
 
