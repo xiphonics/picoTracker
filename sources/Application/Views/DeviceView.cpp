@@ -13,8 +13,6 @@
 #include "pico/bootrom.h"
 #include <nanoprintf.h>
 
-#define MAX_COLOR_VALUE 0xFFFFFF
-
 #define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
 
 static void BootselCallback(View &v, ModalView &dialog) {
@@ -60,69 +58,6 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
                             position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
-
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarPlayColor);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Play:       %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_PLAY, position);
-
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarMuteColor);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Mute:       %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_MUTE, position);
-
-  position._y += 1;
-  v = config->FindVariable(FourCC::VarSongViewFEColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "SongViewFE: %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_SONGVIEWFE, position);
-
-  position._y += 1;
-  v = config->FindVariable(FourCC::VarSongView00Color);
-  bigHexVarField_.emplace_back(position, *v, 6, "SongView00: %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_SONGVIEW00, position);
-
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarRowColor);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Row:        %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_ROW, position);
-
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarRow2Color);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Row2:       %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_ROW2, position);
-
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarMajorBeatColor);
-  // bigHexVarField_.emplace_back(position, *v, 6, "MajorBeat:  %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_MAJORBEAT, position);
 
   position._y += 2;
   actionField_.emplace_back("Update firmware", FourCC::ActionBootSelect,

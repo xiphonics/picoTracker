@@ -1,16 +1,14 @@
 #include "ThemeView.h"
 #include "Application/AppWindow.h"
-#include "Application/Model/Scale.h"
-#include "Application/Persistency/PersistencyService.h"
-#include "Application/Utils/char.h"
+#include "Application/Model/Config.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
-#include "BaseClasses/UIActionField.h"
-#include "BaseClasses/UIIntVarField.h"
-#include "System/System/System.h"
-#include <nanoprintf.h>
+#include "Application/Views/ModalDialogs/TextInputModalView.h"
+#include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 
 #define MAX_COLOR_VALUE 0xFFFFFF
-#define FONT_FIELD_LINE 2
+#define FONT_FIELD_LINE 3
 
 ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
@@ -19,6 +17,19 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   auto config = Config::GetInstance();
 
   Variable *v;
+
+  // Add import/export buttons at the top
+  GUIPoint actionPos = position;
+  actionPos._y += 1;
+
+  actionField_.emplace_back("Import", FourCC::ActionImport, actionPos);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  actionPos._x += 8;
+  actionField_.emplace_back("Export", FourCC::ActionExport, actionPos);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   // Font selection
   position._y = FONT_FIELD_LINE;
@@ -251,6 +262,20 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   uintptr_t fourcc = (uintptr_t)d;
 
   switch (fourcc) {
+  // Handle theme import action
+  case FourCC::ActionImport: {
+    // Switch to the ThemeImportView
+    ViewType vt = VT_THEME_IMPORT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+    return;
+  }
+  // Handle theme export action
+  case FourCC::ActionExport: {
+    exportTheme();
+    return;
+  }
   // if font changes call redraw all fields
   case FourCC::VarUIFont: {
     // need to force redraw of entire screen to update for font change
@@ -292,4 +317,98 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   Trace::Log("THEMEVIEW", "persist config changes!");
   Config *config = Config::GetInstance();
   config->Save();
+}
+
+// No need for forward declarations with lambdas
+
+// Forward declarations for static callback functions
+static void ExportThemeInputCallback(View &v, ModalView &dialog);
+static void OverwriteThemeCallback(View &v, ModalView &dialog);
+
+void ThemeView::exportTheme() {
+  // Create a text input dialog for the theme name
+  TextInputModalView *tiv = new TextInputModalView(
+      *this, "Export Theme", "Name:", MBBF_OK | MBBF_CANCEL, exportThemeName_);
+
+  DoModal(tiv, ExportThemeInputCallback);
+}
+
+// Callback for the theme name input dialog
+static void ExportThemeInputCallback(View &v, ModalView &dialog) {
+  ThemeView &tv = (ThemeView &)v;
+  auto retCode = dialog.GetReturnCode();
+  if (retCode == MBL_OK) {
+    // Get the text from the text field
+    TextInputModalView &inputView = (TextInputModalView &)dialog;
+    etl::string<MAX_TEXT_INPUT_LENGTH> themeName =
+        inputView.GetTextField()->GetString();
+
+    // Don't proceed if the name is empty
+    if (themeName.empty()) {
+      return;
+    }
+
+    tv.exportThemeName_ = themeName;
+
+    auto fs = FileSystem::GetInstance();
+
+    // Check if theme with this name already exists
+    etl::string<MAX_THEME_EXPORT_PATH_LENGTH> filename = themeName;
+    filename.append(THEME_FILE_EXTENSION);
+
+    etl::string<MAX_THEME_EXPORT_PATH_LENGTH> path = THEMES_DIR;
+    path.append("/");
+    path.append(filename);
+
+    if (fs->exists(path.c_str())) {
+      // Theme already exists, ask for confirmation to overwrite
+      MessageBox *mb = new MessageBox(tv, "Theme already exists. Overwrite?",
+                                      MBBF_YES | MBBF_NO);
+
+      tv.DoModal(mb, OverwriteThemeCallback);
+    } else {
+      // Theme doesn't exist, export it directly
+      // Use Config's ExportTheme method directly
+      Config *config = Config::GetInstance();
+      bool result = config->ExportTheme(tv.exportThemeName_.c_str(), false);
+
+      if (result) {
+        MessageBox *successMb =
+            new MessageBox(tv, "Theme exported successfully", MBBF_OK);
+        tv.DoModal(successMb);
+      } else {
+        MessageBox *errorMb =
+            new MessageBox(tv, "Failed to export theme", MBBF_OK);
+        tv.DoModal(errorMb);
+      }
+    }
+  }
+}
+
+// Callback for the overwrite confirmation dialog
+static void OverwriteThemeCallback(View &v, ModalView &dialog) {
+  ThemeView &tv = (ThemeView &)v;
+  if (dialog.GetReturnCode() == MBL_YES) {
+    // User confirmed overwrite, export the theme
+    // Use Config's ExportTheme method directly with overwrite=true
+    Config *config = Config::GetInstance();
+    bool result = config->ExportTheme(tv.exportThemeName_.c_str(), true);
+
+    if (result) {
+      MessageBox *successMb = new MessageBox(tv, "Theme exported", MBBF_OK);
+      tv.DoModal(successMb);
+    } else {
+      MessageBox *errorMb =
+          new MessageBox(tv, "Failed to export theme", MBBF_OK);
+      tv.DoModal(errorMb);
+    }
+  }
+}
+
+void ThemeView::importTheme() {
+  // Switch to the theme import view
+  ViewType vt = VT_THEME_IMPORT;
+  ViewEvent ve(VET_SWITCH_VIEW, &vt);
+  SetChanged();
+  NotifyObservers(&ve);
 }

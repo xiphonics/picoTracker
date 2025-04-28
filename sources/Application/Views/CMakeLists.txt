@@ -6,6 +6,7 @@ add_library(application_views
   ImportView.h ImportView.cpp
   InstrumentImportView.h InstrumentImportView.cpp
   InstrumentView.h InstrumentView.cpp
+  ThemeImportView.h ThemeImportView.cpp
   DeviceView.h DeviceView.cpp
   NullView.h NullView.cpp
   PhraseView.h PhraseView.cpp

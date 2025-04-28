@@ -1,14 +1,25 @@
 #include "TextInputModalView.h"
 #include "Application/AppWindow.h"
+#include "MessageBox.h" // Include for button constants
 
 TextInputModalView::TextInputModalView(
-    View &view, const char *title, const char *prompt, const char *buttonLabel,
+    View &view, const char *title, const char *prompt, int btnFlags,
     etl::string<MAX_TEXT_INPUT_LENGTH> defaultValue)
     : ModalView(view), title_(title), prompt_(prompt),
       textVariable_(FourCC::ActionEdit, defaultValue.c_str()) {
 
   editingText_ = true;
   focus_ = nullptr;
+
+  buttonCount_ = 0;
+  for (int i = 0; i < MBL_LAST; i++) {
+    if (btnFlags & (1 << (i))) {
+      button_[buttonCount_] = i;
+      buttonCount_++;
+    }
+  }
+  selected_ = buttonCount_ - 1;
+  NAssert(buttonCount_ != 0);
 
   GUIPoint position = GetAnchor();
   position._y += 2; // 2 lines below title
@@ -22,9 +33,6 @@ TextInputModalView::TextInputModalView(
   position._y += 2; // 2 lines below text field
   position._x += 1; // Align roughly in middle of the dialog
 
-  okButton_ = new UIActionField(buttonLabel, FourCC::ActionOK, position);
-  okButton_->AddObserver(*this);
-
   // Set initial focus to text field
   SetFocus(textField_);
 }
@@ -35,27 +43,49 @@ void TextInputModalView::DrawView() {
   // Calculate window size based on title and prompt
   int titleSize = title_.size();
   int promptSize = 6 + MAX_TEXT_INPUT_LENGTH; // "Name: " + text field length
-  int width = std::max(titleSize, promptSize);
-  width = width > 20 ? width : 20; // Ensure minimum width
 
-  // Set window size (width, height)
-  SetWindow(width, 4); // Height of 4 for: title + text field + button + margin
+  // compute space needed for buttons
+  int btnSize = 5; // Average button text size
+  int buttonWidth = buttonCount_ * (btnSize + 1) + 1;
 
-  // Draw title centered at the top
-  GUITextProperties titleProps;
+  int width = titleSize > promptSize ? titleSize : promptSize;
+  width = width > buttonWidth ? width : buttonWidth;
+
+  SetWindow(width, 5);
+
+  // Draw title
+  GUITextProperties props;
+  props.invert_ = true;
   SetColor(CD_NORMAL);
-  DrawString((width - title_.size()) / 2, 0, title_.c_str(), titleProps);
+  int x = (width - titleSize) / 2;
+  DrawString(x, 0, title_.c_str(), props);
 
-  // Draw "Name: " label on second line
-  GUITextProperties promptProps;
-  SetColor(CD_NORMAL);
-  // 2 lines below the title
-  DrawString(0, 2, "Name: ", promptProps);
+  // Draw prompt
+  props.invert_ = false;
+  x = 0;
+  DrawString(x, 2, prompt_.c_str(), props);
 
-  // The text field and button will draw themselves based on their positions
+  // Draw text field
+  if (focus_ == textField_) {
+    SetColor(CD_HILITE1);
+  } else {
+    SetColor(CD_NORMAL);
+  }
   textField_->Draw(w_);
-  okButton_->Draw(w_);
 
+  // Draw buttons (similar to MessageBox)
+  SetColor(CD_NORMAL);
+  int y = 4; // Position for buttons
+  int offset = width / (buttonCount_ + 1);
+
+  static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
+
+  for (int i = 0; i < buttonCount_; i++) {
+    const char *text = buttonText[button_[i]];
+    x = offset * (i + 1) - strlen(text) / 2;
+    props.invert_ = (focus_ == nullptr && i == selected_) ? true : false;
+    DrawString(x, y, text, props);
+  }
   // Update editingText_ flag based on focus for backward compatibility
   editingText_ = (focus_ == textField_);
 }
@@ -63,16 +93,10 @@ void TextInputModalView::DrawView() {
 void TextInputModalView::OnFocus() {}
 
 void TextInputModalView::ProcessButtonMask(unsigned short mask, bool pressed) {
-
   if (!pressed) {
     return;
   }
 
-  // handle nav + left to cancel and leave dialog
-  if (mask & EPBM_LEFT) {
-    EndModal(TIB_CANCEL);
-    return;
-  }
   if (focus_ == textField_) {
     // Handle text field input
     if (mask & EPBM_ENTER) {
@@ -90,16 +114,26 @@ void TextInputModalView::ProcessButtonMask(unsigned short mask, bool pressed) {
         textField_->OnEditClick();
       }
     } else if (mask & EPBM_EDIT || mask & EPBM_DOWN) {
-      // Switch focus to button
-      SetFocus(okButton_);
+      // Switch focus to buttons
+      focus_ = nullptr;
     }
-  } else if (focus_ == okButton_) {
-    // Handle button selection
-    if (mask & EPBM_UP) {
+  } else {
+    // Button selection mode
+    if (mask & EPBM_LEFT) {
+      selected_ = (selected_ + 1);
+      if (selected_ >= buttonCount_) {
+        selected_ = 0;
+      }
+    } else if (mask & EPBM_RIGHT) {
+      selected_ = (selected_ - 1);
+      if (selected_ < 0) {
+        selected_ = buttonCount_ - 1;
+      }
+    } else if (mask & EPBM_UP) {
       // Move focus back to text field
       SetFocus(textField_);
-    } else if (mask & EPBM_ENTER || mask & EPBM_EDIT) {
-      EndModal(TIB_OK);
+    } else if (mask & EPBM_ENTER) {
+      EndModal(button_[selected_]);
     }
   }
   isDirty_ = true;
@@ -127,6 +161,6 @@ void TextInputModalView::ClearFocus() {
 
 // Implement the Update method for observer pattern
 void TextInputModalView::Update(Observable &o, I_ObservableData *d) {
-  // Handle notifications from fields if needed
+  // Handle notifications from text field
   isDirty_ = true;
 }

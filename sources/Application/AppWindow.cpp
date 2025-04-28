@@ -30,6 +30,7 @@
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
+#include "Application/Views/ThemeImportView.h"
 #include "Application/Views/ThemeView.h"
 #include "BaseClasses/View.h"
 
@@ -96,6 +97,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _phraseView = 0;
   _deviceView = 0;
   _themeView = 0;
+  _themeImportView = 0;
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
@@ -379,6 +381,11 @@ void AppWindow::LoadProject(const char *projectName) {
   _themeView = new (themeViewMemBuf) ThemeView((*this), _viewData);
   _themeView->AddObserver((*this));
 
+  static char themeImportViewMemBuf[sizeof(ThemeImportView)];
+  _themeImportView =
+      new (themeImportViewMemBuf) ThemeImportView((*this), _viewData);
+  _themeImportView->AddObserver((*this));
+
   static char projectViewMemBuf[sizeof(ProjectView)];
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
@@ -448,6 +455,7 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_phraseView);
   SAFE_DELETE(_deviceView);
   SAFE_DELETE(_themeView);
+  SAFE_DELETE(_themeImportView);
   SAFE_DELETE(_projectView);
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
@@ -642,6 +650,12 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       _currentView = _mixerView;
       break;
     case VT_THEME:
+      _currentView = _themeView;
+      break;
+    case VT_THEME_IMPORT:
+      _currentView = _themeImportView;
+      break;
+    case VT_SELECTTHEME:
       _currentView = _themeView;
       break;
     default:

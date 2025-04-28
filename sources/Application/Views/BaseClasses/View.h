@@ -42,7 +42,9 @@ enum ViewType {
   VT_IMPORT,            // Sample file import
   VT_INSTRUMENT_IMPORT, // Instrument file import
   VT_SELECTPROJECT,     // Select project
-  VT_THEME              // Theme settings
+  VT_THEME,             // Theme settings
+  VT_SELECTTHEME,       // Theme selection
+  VT_THEME_IMPORT       // Theme file import
 };
 
 enum ViewMode {
