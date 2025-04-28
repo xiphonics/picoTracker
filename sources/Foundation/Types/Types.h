@@ -70,6 +70,7 @@ struct FourCC {
     MidiInstrumentTable = 119,
     MidiInstrumentTableAutomation = 120,
     MidiInstrumentName = 144,
+    MidiInstrumentProgram = 160,
 
     SIDInstrument1Waveform = 72,
     SIDInstrument2Waveform = 73,
@@ -177,6 +178,7 @@ struct FourCC {
     // 157 is taken for VarRow2Color
     // 158 is taken for VarMajorBeatColor
     // 159 is taken for ActionShowTheme
+    // 160 is taken for MidiInstrumentProgram
 
     VarInstrumentType = 113,
 
@@ -270,6 +272,7 @@ struct FourCC {
   ETL_ENUM_TYPE(MidiInstrumentVolume, "volume")
   ETL_ENUM_TYPE(MidiInstrumentTable, "table")
   ETL_ENUM_TYPE(MidiInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(MidiInstrumentProgram, "program")
   ETL_ENUM_TYPE(SIDInstrument1Waveform, "VWF1")
   ETL_ENUM_TYPE(SIDInstrument2Waveform, "VWF2")
   ETL_ENUM_TYPE(SIDInstrument1FilterCut, "FILTCUT1")
