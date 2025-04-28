@@ -1107,6 +1107,7 @@ void PhraseView::DrawView() {
   pos = anchor;
   pos._x -= 3;
   for (int j = 0; j < 16; j++) {
+    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ROW) : SetColor(CD_ROW2);
     hex2char(j, buffer);
     DrawString(pos._x, pos._y, buffer, props);
     pos._y++;
@@ -1117,13 +1118,14 @@ void PhraseView::DrawView() {
   pos = anchor;
 
   // Display notes
-
   unsigned char *data = phrase_->note_ + (16 * viewData_->currentPhrase_);
 
   buffer[4] = 0;
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
     setTextProps(props, 0, j, false);
+    (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_MAJORBEAT)
+                                            : SetColor(CD_NORMAL);
     if (d == 0xFF) {
       DrawString(pos._x, pos._y, "----", props);
     } else {
@@ -1284,15 +1286,17 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
       if (player->IsChannelPlaying(i)) {
-
         if (viewData_->currentPlayPhrase_[i] == viewData_->currentPhrase_ &&
             viewData_->playMode_ != PM_AUDITION) {
           pos._y = anchor._y + viewData_->phrasePlayPos_[i];
           if (!player->IsChannelMuted(i)) {
+            SetColor(CD_PLAY);
             DrawString(pos._x, pos._y, ">", props);
           } else {
+            SetColor(CD_MUTE);
             DrawString(pos._x, pos._y, "-", props);
           }
+          SetColor(CD_CURSOR);
           lastPlayingPos_ = viewData_->phrasePlayPos_[i];
           break;
         }

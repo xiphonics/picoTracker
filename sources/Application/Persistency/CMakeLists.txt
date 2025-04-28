@@ -11,6 +11,7 @@ target_link_libraries(application_persistency
                                               PUBLIC etl
                                               PUBLIC sdfat
                                               PUBLIC platform_sdcard
+                                              PUBLIC application_model
 )
 
 target_include_directories(application_persistency PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

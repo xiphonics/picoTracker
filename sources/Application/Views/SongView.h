@@ -46,6 +46,8 @@ protected:
 
   void jumpToNextSection(int dir);
 
+  void nudgeTempo(int direction);
+
 private:
   bool updatingChain_; // .Flag that tells we're updating chain
                        //  so we don't allocate chains while

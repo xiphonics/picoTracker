@@ -646,25 +646,35 @@ void SongView::processNormalButtonMask(unsigned int mask) {
         // L Modifier
 
         if (mask & EPBM_ALT) {
-          if (mask & EPBM_DOWN)
+          if (mask & EPBM_DOWN) {
             jumpToNextSection(1);
-          if (mask & EPBM_UP)
+          }
+          if (mask & EPBM_UP) {
             jumpToNextSection(-1);
-          if (mask & EPBM_PLAY)
+          }
+          if (mask & EPBM_PLAY) {
             startCurrentRow();
+          }
+          if (mask & EPBM_LEFT) {
+            nudgeTempo(-1);
+          }
+          if (mask & EPBM_RIGHT) {
+            nudgeTempo(1);
+          }
         } else {
-
           // No modifier
-
-          if (mask & EPBM_DOWN)
+          if (mask & EPBM_DOWN) {
             updateCursor(0, 1);
-          if (mask & EPBM_UP)
+          }
+          if (mask & EPBM_UP) {
             updateCursor(0, -1);
-          if (mask & EPBM_LEFT)
+          }
+          if (mask & EPBM_LEFT) {
             updateCursor(-1, 0);
-          if (mask & EPBM_RIGHT)
+          }
+          if (mask & EPBM_RIGHT) {
             updateCursor(1, 0);
-
+          }
           if (mask & EPBM_PLAY) {
             onStart();
           }
@@ -824,6 +834,7 @@ void SongView::DrawView() {
   pos._x -= 3;
   for (int j = 0; j < View::songRowCount_; j++) {
     char p = j + viewData_->songOffset_;
+    ((p / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ROW) : SetColor(CD_ROW2);
     hex2char(p, row);
     DrawString(pos._x, pos._y, row, props);
     pos._y += 1;
@@ -859,14 +870,20 @@ void SongView::DrawView() {
         }
       }
 
+      // draw current step
+      unsigned char d = *data++;
+      if (d == 0xFE) {
+        SetColor(CD_SONGVIEWFE);
+      } else if (d == 0x00) {
+        SetColor(CD_SONGVIEW00);
+      } else {
+        SetColor(CD_NORMAL);
+      }
+
       if (invert) {
         SetColor(CD_HILITE2);
         props.invert_ = true;
       }
-
-      // draw current step
-
-      unsigned char d = *data++;
       if (d == 0xFF) {
         DrawString(pos._x, pos._y, "--", props);
       } else {
@@ -940,7 +957,6 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
     }
 
     // For each playing position, draw current location
-
     if (player->IsChannelPlaying(i)) {
       if (eventType != PET_STOP) {
         if (viewData_->currentPlayChain_[i] != 0xFF) {
@@ -949,10 +965,13 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + y;
             if (!player->IsChannelMuted(i)) {
+              SetColor(CD_PLAY);
               DrawString(pos._x, pos._y, ">", props);
             } else {
+              SetColor(CD_MUTE);
               DrawString(pos._x, pos._y, "-", props);
             }
+            SetColor(CD_CURSOR);
             lastPlayedPosition_[i] = viewData_->songPlayPos_[i];
           }
         }
@@ -990,4 +1009,17 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   drawMasterVuMeter(player, props);
 
   drawNotes();
+};
+
+void SongView::nudgeTempo(int direction) {
+  ApplicationCommandDispatcher *dispatcher =
+      ApplicationCommandDispatcher::GetInstance();
+  switch (direction) {
+  case -1:
+    dispatcher->OnNudgeDown();
+    break;
+  case 1:
+    dispatcher->OnNudgeUp();
+    break;
+  }
 };

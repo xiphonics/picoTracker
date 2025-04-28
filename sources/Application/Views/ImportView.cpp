@@ -261,14 +261,24 @@ void ImportView::import(char *name) {
     return;
   }
 
+  // Get current project name
+  char projName[MAX_PROJECT_NAME_LENGTH];
+  viewData_->project_->GetProjectName(projName);
+
+  // Check if we're in the project's sample directory
+  if (inProjectSampleDir_) {
+    MessageBox *mb =
+        new MessageBox(*this, "Can't import from project!", MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
   SamplePool *pool = SamplePool::GetInstance();
 
   // Pause core1 in order to be able to write to flash and ensure core1 is
   // not reading from it, it also disables IRQs on it
   // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
   multicore_lockout_start_blocking();
-  char projName[MAX_PROJECT_NAME_LENGTH];
-  viewData_->project_->GetProjectName(projName);
   int sampleID = pool->ImportSample(name, projName);
   multicore_lockout_end_blocking();
 
@@ -286,16 +296,47 @@ void ImportView::import(char *name) {
 };
 
 void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
-  // Trace::Log("PICOIMPORT", "set Current Folder:%s");
+  // Reset the project sample directory flag
+  inProjectSampleDir_ = false;
+
+  // Special case: if we're trying to go up (..) from a top-level directory
+  if (strcmp(name, "..") == 0) {
+    // Check if we're in a top-level directory (parent is root)
+    if (fs->isParentRoot()) {
+      Trace::Log("PICOIMPORT",
+                 "Detected top-level directory, navigating to root");
+      // Navigate directly to root instead of using ".."
+      fs->chdir("/");
+    }
+  }
+
+  // Normal directory navigation
   if (!fs->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
   }
   currentIndex_ = 0;
-  // now update list of file indexes in this new dir
+  // Update list of file indexes in this new dir
   fs->list(&fileIndexList_, ".wav", false);
 
-  bool isSampleLibDir = fs->isParentRoot();
-  if (isSampleLibDir && !fileIndexList_.empty()) {
-    fileIndexList_.erase(fileIndexList_.begin());
+  // Check if we're in the project's sample directory
+  // This is a simple check - if we're in a directory called "samples"
+  // and its parent is a directory with the same name as the current project
+  char projName[MAX_PROJECT_NAME_LENGTH];
+  viewData_->project_->GetProjectName(projName);
+
+  if (strcmp(name, PROJECT_SAMPLES_DIR) == 0) {
+    // We just navigated to a directory called "samples"
+    // Check if its parent directory has the same name as the current project
+    etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> expectedPath(PROJECTS_DIR);
+    expectedPath.append("/");
+    expectedPath.append(projName);
+
+    // If we can navigate to this path from the root, and then to samples,
+    // and that's where we are now, then we're in the project's sample directory
+    inProjectSampleDir_ = true;
+    Trace::Log("PICOIMPORT", "Now in project sample directory");
+  } else if (strcmp(name, "..") == 0) {
+    // We're navigating up, so we're no longer in the project's sample directory
+    inProjectSampleDir_ = false;
   }
 }
