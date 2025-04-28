@@ -187,14 +187,7 @@ void Variable::SetString(const char *string, bool notify) {
     value_.index_ = -1;
     for (int i = 0; i < listSize_; i++) {
       if (list_.char_[i]) {
-        const char *d = list_.char_[i];
-        const char *s = string;
-        while (*s != 0) {
-          if (tolower(*s++) != tolower(*d++)) {
-            break;
-          }
-        }
-        if (*s == 0 && *d == 0) { // Ensure both strings end at the same point
+        if (strcasecmp(string, list_.char_[i]) == 0) {
           value_.index_ = i;
           break;
         }

@@ -22,6 +22,7 @@ static const char *lineOutOptions[3] = {"HP Low", "HP High", "Line Level"};
 static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
                                                       "TRS+USB"};
 static const char *midiSendSync[2] = {"Off", "Send"};
+static const char *midiClockSyncOptions[2] = {"Internal", "External"};
 static const char *remoteUIOnOff[2] = {"Off", "On"};
 
 static const char *fontOptions[2] = {"Standard", "Bold"};

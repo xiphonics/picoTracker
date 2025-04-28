@@ -127,8 +127,19 @@ void FieldView::ProcessButtonMask(unsigned short mask, bool pressed) {
                 if (next) {
                   if ((*it)->GetPosition()._y < next->GetPosition()._y) {
                     next = *it;
-                  } else {
-                    // if both target at same height
+                  } else if ((*it)->GetPosition()._y ==
+                             next->GetPosition()._y) {
+                    // if both targets at same height, prefer the target with an
+                    // X value closest to the current focus
+
+                    // cast to signed ints
+                    int32_t itX = (*it)->GetPosition()._x;
+                    int32_t nextX = next->GetPosition()._x;
+                    int32_t focusX = focus_->GetPosition()._x;
+
+                    if (abs(itX - focusX) < abs(nextX - focusX)) {
+                      next = *it;
+                    }
                   };
                 } else {
                   next = *it;
@@ -167,8 +178,19 @@ void FieldView::ProcessButtonMask(unsigned short mask, bool pressed) {
                 if (prev) {
                   if ((*it)->GetPosition()._y > prev->GetPosition()._y) {
                     prev = *it;
-                  } else {
-                    // if both target at same height
+                  } else if ((*it)->GetPosition()._y ==
+                             prev->GetPosition()._y) {
+                    // if both targets at same height, prefer the target with an
+                    // X value closest to the current focus
+
+                    // cast to signed ints
+                    int32_t itX = (*it)->GetPosition()._x;
+                    int32_t prevX = prev->GetPosition()._x;
+                    int32_t focusX = focus_->GetPosition()._x;
+
+                    if (abs(itX - focusX) < abs(prevX - focusX)) {
+                      prev = *it;
+                    }
                   };
                 } else {
                   prev = *it;
