@@ -16,7 +16,7 @@ public:
   bool Save();
 
 private:
-  etl::list<Variable *, 22> variables_;
+  etl::list<Variable *, 24> variables_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
   void processParams(const char *name, int value, bool insert);
