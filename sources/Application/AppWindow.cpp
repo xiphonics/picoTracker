@@ -34,7 +34,7 @@
 #include "Application/Views/ThemeView.h"
 #include "BaseClasses/View.h"
 
-const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
+const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60 * 20;
 
 AppWindow *instance = 0;
 

@@ -192,9 +192,9 @@ void MixerView::DrawView() {
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
   // get levels from the player
-  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
-      player->GetMixerLevels();
-  drawChannelVUMeters(levels, player, props);
+  // etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+  //     player->GetMixerLevels();
+  // drawChannelVUMeters(levels, player, props);
 
   SetColor(CD_NORMAL);
   props.invert_ = false;
@@ -244,10 +244,8 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
       player->GetMixerLevels();
 
-  // Always update VU meters, whether we're playing or not
-  // This ensures we see VU meter updates from MIDI input even when not playing
-  drawChannelVUMeters(levels, player, props);
-  drawMasterVuMeter(player, props);
+  // drawing VUmeters needs to happen when sequencer is not running too so see
+  // AnimationUpdate
 
   // Handle play time display
   if (eventType != PET_STOP) {
@@ -273,6 +271,7 @@ void MixerView::AnimationUpdate() {
 
   // Always update VU meters, whether the sequencer is running or not
   // This ensures we see VU meter updates from MIDI input even when not playing
+
   etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
       player->GetMixerLevels();
   drawChannelVUMeters(levels, player, props);

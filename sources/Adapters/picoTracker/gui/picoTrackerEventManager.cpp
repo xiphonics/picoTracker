@@ -46,8 +46,8 @@ bool timerHandler(repeating_timer_t *rt) {
   queue = picoTrackerEventQueue::GetInstance();
   gTime_++;
 
-  // send a clock (PICO_CLOCK) 10Hz
-  if (gTime_ % 100 == 0) {
+  // send a clock (PICO_CLOCK) ~30Hz
+  if (gTime_ % 32 == 0) {
     queue->push(picoTrackerEvent(PICO_CLOCK));
   }
   return true;
