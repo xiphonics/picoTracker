@@ -162,7 +162,7 @@ protected:
   void drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
                    GUITextProperties props, int vuIndex,
                    bool forceRedraw = false);
-  void resetVUMeterValues(); // Reset all VU meter values to 0
+
 
 public: // temp hack for modl windo constructors
   GUIWindow &w_;

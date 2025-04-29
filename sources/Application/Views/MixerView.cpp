@@ -70,23 +70,21 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (viewMode_ == VM_MUTEON) {
       if (mask & EPBM_NAV) {
         toggleMute();
-        // Reset VU meter values when toggling mute to force a full redraw
-        resetVUMeterValues();
       }
     };
     if (viewMode_ == VM_SOLOON) {
       if (mask & EPBM_NAV) {
         switchSoloMode();
-        // Reset VU meter values when toggling solo to force a full redraw
-        resetVUMeterValues();
       }
     };
+    // Force a full redraw of the mixer view
+    SetDirty(true);
     return;
   };
 
   viewMode_ = VM_NORMAL;
-  // Reset VU meter values when any button is pressed to force a full redraw
-  resetVUMeterValues();
+  // Force a full redraw of the mixer view when any button is pressed
+  SetDirty(true);
   processNormalButtonMask(mask);
 };
 
@@ -263,8 +261,6 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   drawNotes();
 };
 
-
-
 void MixerView::AnimationUpdate() {
   // Update battery gauge and VU meters on every clock tick (~1Hz)
   GUITextProperties props;
@@ -277,7 +273,8 @@ void MixerView::AnimationUpdate() {
 
   // Always update VU meters, whether the sequencer is running or not
   // This ensures we see VU meter updates from MIDI input even when not playing
-  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels = player->GetMixerLevels();
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+      player->GetMixerLevels();
   drawChannelVUMeters(levels, player, props);
   drawMasterVuMeter(player, props);
 

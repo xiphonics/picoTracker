@@ -201,6 +201,38 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   leftBars = std::min(leftBars, (uint8_t)VU_METER_HEIGHT);
   rightBars = std::min(rightBars, (uint8_t)VU_METER_HEIGHT);
 
+  // Add inertia effect by limiting the rate of change
+  // Maximum step change allowed per update
+  const int maxStepChange = 2;
+
+  // For rising levels (current > previous), allow faster response
+  if (leftBars > prevLeftVU_[vuIndex]) {
+    // If the difference is greater than maxStepChange, limit it
+    if (leftBars - prevLeftVU_[vuIndex] > maxStepChange) {
+      leftBars = prevLeftVU_[vuIndex] + maxStepChange;
+    }
+  }
+  // For falling levels (current < previous), add more inertia for a slower fall
+  else if (leftBars < prevLeftVU_[vuIndex]) {
+    // Use a smaller step for falling levels to create more inertia
+    const int fallStepChange = 1;
+    if (prevLeftVU_[vuIndex] - leftBars > fallStepChange) {
+      leftBars = prevLeftVU_[vuIndex] - fallStepChange;
+    }
+  }
+
+  // Same for right channel
+  if (rightBars > prevRightVU_[vuIndex]) {
+    if (rightBars - prevRightVU_[vuIndex] > maxStepChange) {
+      rightBars = prevRightVU_[vuIndex] + maxStepChange;
+    }
+  } else if (rightBars < prevRightVU_[vuIndex]) {
+    const int fallStepChange = 1;
+    if (prevRightVU_[vuIndex] - rightBars > fallStepChange) {
+      rightBars = prevRightVU_[vuIndex] - fallStepChange;
+    }
+  }
+
   props.invert_ = true;
 
   // Left channel: Handle level changes
@@ -262,12 +294,7 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   props.invert_ = false;
 }
 
-void View::resetVUMeterValues() {
-  for (int i = 0; i <= SONG_CHANNEL_COUNT; i++) {
-    prevLeftVU_[i] = 0;
-    prevRightVU_[i] = 0;
-  }
-}
+
 
 void View::drawPlayTime(Player *player, GUIPoint pos,
                         GUITextProperties &props) {
