@@ -34,6 +34,7 @@ public:
   void OnTempoTap();
   void NudgeTempo(int value);
   int GetScale();
+  uint8_t GetScaleRoot();
   int GetTempo(); // Takes nudging into account
   int GetTranspose();
   void GetProjectName(char *name);
@@ -53,7 +54,7 @@ public:
   static etl::string<MAX_PROJECT_NAME_LENGTH> ProjectNameGlobal;
 
 private:
-  etl::list<Variable *, 6> variables_;
+  etl::list<Variable *, 7> variables_;
 
   InstrumentBank *instrumentBank_;
   int tempoNudge_;
@@ -67,6 +68,7 @@ private:
   Variable wrap_;
   Variable transpose_;
   Variable scale_;
+  Variable scaleRoot_;
   Variable projectName_;
 };
 

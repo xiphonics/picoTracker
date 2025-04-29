@@ -22,6 +22,7 @@ Project::Project(const char *name)
       masterVolume_(FourCC::VarMasterVolume, 100),
       wrap_(FourCC::VarWrap, false), transpose_(FourCC::VarTranspose, 0),
       scale_(FourCC::VarScale, scaleNames, numScales, 0),
+      scaleRoot_(FourCC::VarScaleRoot, noteNames, 12, 0),
       projectName_(FourCC::VarProjectName, name) {
 
   this->variables_.insert(variables_.end(), &tempo_);
@@ -30,6 +31,8 @@ Project::Project(const char *name)
   this->variables_.insert(variables_.end(), &transpose_);
   this->variables_.insert(variables_.end(), &scale_);
   scale_.SetInt(0);
+  this->variables_.insert(variables_.end(), &scaleRoot_);
+  scaleRoot_.SetInt(0); // Default to C (0)
   this->variables_.insert(variables_.end(), &projectName_);
 
   Project::ProjectNameGlobal = etl::string<16>(name);
@@ -54,6 +57,12 @@ Project::~Project() { delete instrumentBank_; };
 
 int Project::GetScale() {
   Variable *v = FindVariable(FourCC::VarScale);
+  NAssert(v);
+  return v->GetInt();
+}
+
+uint8_t Project::GetScaleRoot() {
+  Variable *v = FindVariable(FourCC::VarScaleRoot);
   NAssert(v);
   return v->GetInt();
 }
