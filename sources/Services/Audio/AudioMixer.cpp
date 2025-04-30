@@ -80,7 +80,7 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
       }
     }
   }
-  
+
   // Always update avgMixerLevel_ regardless of whether we got data
   // This ensures VU meters update properly in all scenarios
   avgMixerLevel_ = fp2i(peakL) << 16;

@@ -294,8 +294,6 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   props.invert_ = false;
 }
 
-
-
 void View::drawPlayTime(Player *player, GUIPoint pos,
                         GUITextProperties &props) {
   char strbuffer[10];

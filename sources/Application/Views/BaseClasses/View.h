@@ -163,7 +163,6 @@ protected:
                    GUITextProperties props, int vuIndex,
                    bool forceRedraw = false);
 
-
 public: // temp hack for modl windo constructors
   GUIWindow &w_;
   ViewData *viewData_;
