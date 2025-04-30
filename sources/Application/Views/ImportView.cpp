@@ -1,8 +1,11 @@
 #include "ImportView.h"
 
 #include "Application/AppWindow.h"
+#include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Externals/etl/include/etl/string.h"
+#include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
 #include "pico/multicore.h"
 #include <memory>
@@ -12,30 +15,54 @@
 // -4 to allow for title, filesize & spacers
 #define LIST_PAGE_SIZE SCREEN_HEIGHT - 4
 
+// is single cycle macro, checks for FILE size of LGPT and AKWF file formats
+#define IS_SINGLE_CYCLE(x) (x == 1344 || x == 300)
+
 ImportView::ImportView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData) {}
 
 ImportView::~ImportView() {}
 
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
+  // First check for key release event and if play key was being held down
+  if (!pressed && playKeyHeld_ && !(mask & EPBM_PLAY)) {
+    // Play key no longer pressed so should stop playback
+    playKeyHeld_ = false;
+    if (Player::GetInstance()->IsPlaying()) {
+      Player::GetInstance()->StopStreaming();
+      previewPlayingIndex_ = (size_t)-1;
+    }
+    return;
+  }
+
+  // Handle key press events
+  if (pressed) {
+    if (mask & EPBM_PLAY) {
+      auto fs = FileSystem::GetInstance();
+      char name[PFILENAME_SIZE];
+      unsigned fileIndex = fileIndexList_[currentIndex_];
+      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+
+      // Set flag to track that play key is being held
+      playKeyHeld_ = true;
+
+      if (mask & EPBM_ALT) {
+        Trace::Log("PICOIMPORT", "SHIFT play - import");
+        import(name);
+      } else {
+        Trace::Log("PICOIMPORT", "play key pressed - start preview");
+        preview(name);
+      }
+      return; // We've handled the play button, so return
+    }
+  }
+
+  // Only process other buttons when pressed
   if (!pressed)
     return;
 
-  if (mask & EPBM_PLAY) {
-    auto fs = FileSystem::GetInstance();
-    char name[PFILENAME_SIZE];
-    unsigned fileIndex = fileIndexList_[currentIndex_];
-    fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-    if (mask & EPBM_ALT) {
-      Trace::Log("PICOIMPORT", "SHIFT play - import");
-      import(name);
-    } else {
-      Trace::Log("PICOIMPORT", "plain play preview");
-      preview(name);
-    }
-    // handle moving up and down the file list
-  } else if (mask & EPBM_UP) {
+  // handle moving up and down the file list
+  if (mask & EPBM_UP) {
     warpToNextSample(true);
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
@@ -84,9 +111,7 @@ void ImportView::DrawView() {
   int x = 1;
   int y = pos._y + 2;
 
-  // need to use fullsize buffer as sdfat doesnt truncate if filename longer
-  // than buffer but instead returns empty string  in buffer :-(
-  char buffer[PFILENAME_SIZE];
+  // Loop through visible files in the list
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
@@ -97,32 +122,70 @@ void ImportView::DrawView() {
       props.invert_ = false;
     }
 
-    memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
+    etl::string<PFILENAME_SIZE> displayName;
 
     if (fs->getFileType(fileIndex) != PFT_DIR) {
-      fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
+      // Handle regular files
+      char tempBuffer[PFILENAME_SIZE];
+      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+
+      // Check if it's a single cycle waveform
+      int filesize = fs->getFileSize(fileIndex);
+      bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
+
+      displayName += tempBuffer;
+      // Format the display name with appropriate prefix
+      if (isSingleCycle) {
+        SetColor(CD_INFO);
+        DrawString(x, y, "~", props);
+        SetColor(CD_NORMAL);
+      } else {
+        DrawString(x, y, " ", props);
+      }
     } else {
-      buffer[0] = '/';
-      fs->getFileName(fileIndex, buffer + 1, PFILENAME_SIZE);
+      // Handle directories
+      char tempBuffer[PFILENAME_SIZE];
+      displayName = "/";
+      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+      displayName += tempBuffer;
     }
-    // make sure truncate to list width the filename with trailing null
-    buffer[LIST_WIDTH] = 0;
-    DrawString(x, y, buffer, props);
+
+    // Truncate to fit display width
+    if (displayName.size() > LIST_WIDTH) {
+      displayName.resize(LIST_WIDTH);
+    }
+
+    DrawString(x + 1, y, displayName.c_str(), props);
     y += 1;
   };
 
-  // draw current selected file size
+  // draw current selected file size and single cycle indicator
   SetColor(CD_HILITE2);
   props.invert_ = true;
   y = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
     int filesize = fs->getFileSize(currentFileIndex);
-    npf_snprintf(buffer, sizeof(buffer), "[size: %i]", filesize);
+    // check for LGPT or AKWF standard file sizes
+    bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
+
+    // Create a temporary buffer for formatting
+    char tempBuffer[PFILENAME_SIZE];
+
+    if (isSingleCycle) {
+      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i] [Single Cycle]",
+                   filesize);
+    } else {
+      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i]", filesize);
+    }
+
+    // Convert to etl::string for consistency
+    etl::string<PFILENAME_SIZE> statusText = tempBuffer;
+
     x = 1;  // align with rest screen title & file list
     y = 23; // bottom line
-    DrawString(x, y, buffer, props);
+    DrawString(x, y, statusText.c_str(), props);
   }
 
   SetColor(CD_NORMAL);
@@ -162,15 +225,31 @@ void ImportView::warpToNextSample(bool goUp) {
 }
 
 void ImportView::preview(char *name) {
+  // Get file size to check if it's a single cycle waveform
+  auto fs = FileSystem::GetInstance();
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  int fileSize = fs->getFileSize(fileIndex);
+
+  // check for LGPT or AKWF standard file sizes
+  bool isSingleCycle = IS_SINGLE_CYCLE(fileSize);
+
+  // If something is already playing, stop it first
   if (Player::GetInstance()->IsPlaying()) {
     Player::GetInstance()->StopStreaming();
-    if (currentIndex_ != previewPlayingIndex_) {
-      previewPlayingIndex_ = currentIndex_;
-      Player::GetInstance()->StartStreaming(name);
-    }
+  }
+
+  // Start playing the selected sample
+  Trace::Debug("Starting preview of %s (single cycle: %d)", name,
+               isSingleCycle);
+  previewPlayingIndex_ = currentIndex_;
+
+  // Use looping for single cycle waveforms
+  if (isSingleCycle) {
+    Trace::Debug("Looping single cycle waveform: %s (size: %d bytes)", name,
+                 fileSize);
+    Player::GetInstance()->StartLoopingStreaming(name);
   } else {
     Player::GetInstance()->StartStreaming(name);
-    previewPlayingIndex_ = currentIndex_;
   }
 }
 
