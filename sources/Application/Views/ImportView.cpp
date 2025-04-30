@@ -134,13 +134,14 @@ void ImportView::DrawView() {
       int filesize = fs->getFileSize(fileIndex);
       bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
 
+      displayName += tempBuffer;
       // Format the display name with appropriate prefix
       if (isSingleCycle) {
-        displayName = "~";
-        displayName += tempBuffer;
+        SetColor(CD_INFO);
+        DrawString(x, y, "~", props);
+        SetColor(CD_NORMAL);
       } else {
-        displayName = " ";
-        displayName += tempBuffer;
+        DrawString(x, y, " ", props);
       }
     } else {
       // Handle directories
@@ -155,7 +156,7 @@ void ImportView::DrawView() {
       displayName.resize(LIST_WIDTH);
     }
 
-    DrawString(x, y, displayName.c_str(), props);
+    DrawString(x + 1, y, displayName.c_str(), props);
     y += 1;
   };
 
