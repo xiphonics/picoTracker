@@ -24,15 +24,26 @@ ImportView::ImportView(GUIWindow &w, ViewData *viewData)
 ImportView::~ImportView() {}
 
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
-  // First check for key release event and if play key was being held down
-  if (!pressed && playKeyHeld_ && !(mask & EPBM_PLAY)) {
-    // Play key no longer pressed so should stop playback
-    playKeyHeld_ = false;
-    if (Player::GetInstance()->IsPlaying()) {
-      Player::GetInstance()->StopStreaming();
-      previewPlayingIndex_ = (size_t)-1;
+  // Check for key release events
+  if (!pressed) {
+    // Check if play key was released
+    if (playKeyHeld_ && !(mask & EPBM_PLAY)) {
+      // Play key no longer pressed so should stop playback
+      playKeyHeld_ = false;
+      if (Player::GetInstance()->IsPlaying()) {
+        Player::GetInstance()->StopStreaming();
+        previewPlayingIndex_ = (size_t)-1;
+      }
+      return;
     }
-    return;
+    
+    // Check if edit key was released
+    if (editKeyHeld_ && !(mask & EPBM_EDIT)) {
+      // Edit key no longer pressed, redraw the view to clear status message
+      editKeyHeld_ = false;
+      isDirty_ = true; // Mark view as dirty to force redraw
+      return;
+    }
   }
 
   // Handle key press events
@@ -54,6 +65,22 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
         preview(name);
       }
       return; // We've handled the play button, so return
+    }
+    
+    // Handle EDIT+UP and EDIT+DOWN for preview volume adjustment
+    if (mask & EPBM_EDIT) {
+      // Set flag to track that edit key is being held
+      editKeyHeld_ = true;
+      
+      if (mask & EPBM_UP) {
+        // EDIT+UP: Increase preview volume
+        adjustPreviewVolume(true);
+        return;
+      } else if (mask & EPBM_DOWN) {
+        // EDIT+DOWN: Decrease preview volume
+        adjustPreviewVolume(false);
+        return;
+      }
     }
   }
 
@@ -295,6 +322,49 @@ void ImportView::import(char *name) {
   };
   isDirty_ = true;
 };
+
+void ImportView::adjustPreviewVolume(bool increase) {
+  // Get the project instance
+  Project *project = viewData_->project_;
+  
+  // Find the preview volume variable
+  Variable *v = project->FindVariable(FourCC::VarPreviewVolume);
+  if (!v) {
+    Status::Set("Preview volume setting not found");
+    return;
+  }
+  
+  // Get current value
+  int currentVolume = v->GetInt();
+  
+  // Calculate new value (increase or decrease by 5)
+  int step = 5;
+  int newVolume = increase ? currentVolume + step : currentVolume - step;
+  
+  // Clamp to valid range (0-100)
+  newVolume = newVolume > 100 ? 100 : newVolume;
+  newVolume = newVolume < 0 ? 0 : newVolume;
+  
+  // Set the new value
+  v->SetInt(newVolume);
+  
+  // Display status message showing the new volume
+  char statusMsg[32];
+  snprintf(statusMsg, sizeof(statusMsg), "Preview volume: %d%%", newVolume);
+  Status::Set(statusMsg);
+  
+  // If currently previewing, restart the preview to apply the new volume
+  if (Player::GetInstance()->IsPlaying() && previewPlayingIndex_ != (size_t)-1) {
+    // Get the currently playing file name
+    auto fs = FileSystem::GetInstance();
+    char name[PFILENAME_SIZE];
+    unsigned fileIndex = fileIndexList_[previewPlayingIndex_];
+    fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+    
+    // Restart the preview with the new volume
+    preview(name);
+  }
+}
 
 void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Reset the project sample directory flag
