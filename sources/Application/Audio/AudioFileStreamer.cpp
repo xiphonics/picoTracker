@@ -194,13 +194,13 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   // Get preview volume from project
   Variable *v = project_->FindVariable(FourCC::VarPreviewVolume);
   int previewVol = v->GetInt();
-  
+
   // Apply logarithmic scaling to match human hearing perception
-  // Using a formula that gives a more natural volume curve: volume = (value/100)^2
-  // This gives more fine control at lower volumes
+  // Using a formula that gives a more natural volume curve: volume =
+  // (value/100)^2 This gives more fine control at lower volumes
   float normalizedVol = (float)previewVol / 100.0f;
   float logVol = normalizedVol * normalizedVol; // Quadratic curve
-  
+
   // Convert to fixed point
   fixed volume = fl2fp(logVol);
 

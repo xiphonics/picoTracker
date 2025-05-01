@@ -36,7 +36,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
       return;
     }
-    
+
     // Check if edit key was released
     if (editKeyHeld_ && !(mask & EPBM_EDIT)) {
       // Edit key no longer pressed, redraw the view to clear status message
@@ -66,12 +66,12 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
       return; // We've handled the play button, so return
     }
-    
+
     // Handle EDIT+UP and EDIT+DOWN for preview volume adjustment
     if (mask & EPBM_EDIT) {
       // Set flag to track that edit key is being held
       editKeyHeld_ = true;
-      
+
       if (mask & EPBM_UP) {
         // EDIT+UP: Increase preview volume
         adjustPreviewVolume(true);
@@ -326,41 +326,42 @@ void ImportView::import(char *name) {
 void ImportView::adjustPreviewVolume(bool increase) {
   // Get the project instance
   Project *project = viewData_->project_;
-  
+
   // Find the preview volume variable
   Variable *v = project->FindVariable(FourCC::VarPreviewVolume);
   if (!v) {
     Status::Set("Preview volume setting not found");
     return;
   }
-  
+
   // Get current value
   int currentVolume = v->GetInt();
-  
+
   // Calculate new value (increase or decrease by 5)
   int step = 5;
   int newVolume = increase ? currentVolume + step : currentVolume - step;
-  
+
   // Clamp to valid range (0-100)
   newVolume = newVolume > 100 ? 100 : newVolume;
   newVolume = newVolume < 0 ? 0 : newVolume;
-  
+
   // Set the new value
   v->SetInt(newVolume);
-  
+
   // Display status message showing the new volume
   char statusMsg[32];
   snprintf(statusMsg, sizeof(statusMsg), "Preview volume: %d%%", newVolume);
   Status::Set(statusMsg);
-  
+
   // If currently previewing, restart the preview to apply the new volume
-  if (Player::GetInstance()->IsPlaying() && previewPlayingIndex_ != (size_t)-1) {
+  if (Player::GetInstance()->IsPlaying() &&
+      previewPlayingIndex_ != (size_t)-1) {
     // Get the currently playing file name
     auto fs = FileSystem::GetInstance();
     char name[PFILENAME_SIZE];
     unsigned fileIndex = fileIndexList_[previewPlayingIndex_];
     fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-    
+
     // Restart the preview with the new volume
     preview(name);
   }
