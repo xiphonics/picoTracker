@@ -165,7 +165,7 @@ void GrooveView::DrawView() {
   pos = anchor;
   pos._x -= 3;
   for (int j = 0; j < 16; j++) {
-    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ROW) : SetColor(CD_ROW2);
+    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ACCENT) : SetColor(CD_ACCENTALT);
     hex2char(j, buffer);
     DrawString(pos._x, pos._y, buffer, props);
     pos._y++;
@@ -217,7 +217,7 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
     lastPosition_ = groovepos;
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_;
-    SetColor(CD_PLAY);
+    SetColor(CD_ACCENT);
     DrawString(pos._x, pos._y, ">", props);
     SetColor(CD_NORMAL);
   };

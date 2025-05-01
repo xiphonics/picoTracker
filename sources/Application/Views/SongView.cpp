@@ -834,7 +834,7 @@ void SongView::DrawView() {
   pos._x -= 3;
   for (int j = 0; j < View::songRowCount_; j++) {
     char p = j + viewData_->songOffset_;
-    ((p / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ROW) : SetColor(CD_ROW2);
+    ((p / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ACCENT) : SetColor(CD_ACCENTALT);
     hex2char(p, row);
     DrawString(pos._x, pos._y, row, props);
     pos._y += 1;
@@ -873,9 +873,9 @@ void SongView::DrawView() {
       // draw current step
       unsigned char d = *data++;
       if (d == 0xFE) {
-        SetColor(CD_SONGVIEWFE);
+        SetColor(CD_ACCENTALT);
       } else if (d == 0x00) {
-        SetColor(CD_SONGVIEW00);
+        SetColor(CD_EMPHASIS);
       } else {
         SetColor(CD_NORMAL);
       }
@@ -965,10 +965,10 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + y;
             if (!player->IsChannelMuted(i)) {
-              SetColor(CD_PLAY);
+              SetColor(CD_ACCENT);
               DrawString(pos._x, pos._y, ">", props);
             } else {
-              SetColor(CD_MUTE);
+              SetColor(CD_ACCENTALT);
               DrawString(pos._x, pos._y, "-", props);
             }
             SetColor(CD_CURSOR);

@@ -59,16 +59,15 @@ static const ConfigParam configParams[] = {
     {"INFOCOLOR", ThemeConstants::DEFAULT_INFOCOLOR, FourCC::VarInfoColor},
     {"WARNCOLOR", ThemeConstants::DEFAULT_WARNCOLOR, FourCC::VarWarnColor},
     {"ERRORCOLOR", ThemeConstants::DEFAULT_ERRORCOLOR, FourCC::VarErrorColor},
-    {"PLAYCOLOR", ThemeConstants::DEFAULT_PLAYCOLOR, FourCC::VarPlayColor},
-    {"MUTECOLOR", ThemeConstants::DEFAULT_MUTECOLOR, FourCC::VarMuteColor},
-    {"SONGVIEWFECOLOR", ThemeConstants::DEFAULT_SONGVIEWFECOLOR,
-     FourCC::VarSongViewFEColor},
-    {"SONGVIEW00COLOR", ThemeConstants::DEFAULT_SONGVIEW00COLOR,
-     FourCC::VarSongView00Color},
-    {"ROWCOLOR", ThemeConstants::DEFAULT_ROWCOLOR, FourCC::VarRowColor},
-    {"ROW2COLOR", ThemeConstants::DEFAULT_ROW2COLOR, FourCC::VarRow2Color},
-    {"MAJORBEATCOLOR", ThemeConstants::DEFAULT_MAJORBEATCOLOR,
-     FourCC::VarMajorBeatColor},
+    {"ACCENTCOLOR", ThemeConstants::DEFAULT_ACCENT, FourCC::VarAccentColor},
+    {"ACCENTALTCOLOR", ThemeConstants::DEFAULT_ACCENT_ALT,
+     FourCC::VarAccentAltColor},
+    {"EMPHASISCOLOR", ThemeConstants::DEFAULT_EMPHASIS,
+     FourCC::VarEmphasisColor},
+    {"RESERVED1", ThemeConstants::DEFAULT_RESERVED1, FourCC::VarReserved1Color},
+    {"RESERVED2", ThemeConstants::DEFAULT_RESERVED2, FourCC::VarReserved2Color},
+    {"RESERVED3", ThemeConstants::DEFAULT_RESERVED3, FourCC::VarReserved3Color},
+    {"RESERVED4", ThemeConstants::DEFAULT_RESERVED4, FourCC::VarReserved4Color},
     {"LINEOUT", DEFAULT_LINEOUT, FourCC::VarLineOut},
     {"MIDIDEVICE", DEFAULT_MIDIDEVICE, FourCC::VarMidiDevice},
     {"MIDISYNC", DEFAULT_MIDISYNC, FourCC::VarMidiSync},
@@ -174,10 +173,10 @@ void Config::WriteColorVariables(tinyxml2::XMLPrinter *printer) {
         id == FourCC::VarHI1Color || id == FourCC::VarHI2Color ||
         id == FourCC::VarConsoleColor || id == FourCC::VarCursorColor ||
         id == FourCC::VarInfoColor || id == FourCC::VarWarnColor ||
-        id == FourCC::VarErrorColor || id == FourCC::VarPlayColor ||
-        id == FourCC::VarMuteColor || id == FourCC::VarSongViewFEColor ||
-        id == FourCC::VarSongView00Color || id == FourCC::VarRowColor ||
-        id == FourCC::VarRow2Color || id == FourCC::VarMajorBeatColor) {
+        id == FourCC::VarErrorColor || id == FourCC::VarAccentColor ||
+        id == FourCC::VarAccentAltColor || id == FourCC::VarEmphasisColor ||
+        id == FourCC::VarReserved1Color || id == FourCC::VarReserved2Color ||
+        id == FourCC::VarReserved3Color || id == FourCC::VarReserved4Color) {
 
       // Open a Color element
       printer->OpenElement("Color");
@@ -273,20 +272,20 @@ void Config::ReadColorVariable(PersistencyDocument *doc) {
           fourcc = FourCC::VarWarnColor;
         } else if (strcmp(colorName, "ERRORCOLOR") == 0) {
           fourcc = FourCC::VarErrorColor;
-        } else if (strcmp(colorName, "PLAYCOLOR") == 0) {
-          fourcc = FourCC::VarPlayColor;
-        } else if (strcmp(colorName, "MUTECOLOR") == 0) {
-          fourcc = FourCC::VarMuteColor;
-        } else if (strcmp(colorName, "SONGVIEWFECOLOR") == 0) {
-          fourcc = FourCC::VarSongViewFEColor;
-        } else if (strcmp(colorName, "SONGVIEW00COLOR") == 0) {
-          fourcc = FourCC::VarSongView00Color;
-        } else if (strcmp(colorName, "ROWCOLOR") == 0) {
-          fourcc = FourCC::VarRowColor;
-        } else if (strcmp(colorName, "ROW2COLOR") == 0) {
-          fourcc = FourCC::VarRow2Color;
-        } else if (strcmp(colorName, "MAJORBEATCOLOR") == 0) {
-          fourcc = FourCC::VarMajorBeatColor;
+        } else if (strcmp(colorName, "ACCENTCOLOR") == 0) {
+          fourcc = FourCC::VarAccentColor;
+        } else if (strcmp(colorName, "ACCENTALTCOLOR") == 0) {
+          fourcc = FourCC::VarAccentAltColor;
+        } else if (strcmp(colorName, "EMPHASISCOLOR") == 0) {
+          fourcc = FourCC::VarEmphasisColor;
+        } else if (strcmp(colorName, "RESERVED1") == 0) {
+          fourcc = FourCC::VarReserved1Color;
+        } else if (strcmp(colorName, "RESERVED2") == 0) {
+          fourcc = FourCC::VarReserved2Color;
+        } else if (strcmp(colorName, "RESERVED3") == 0) {
+          fourcc = FourCC::VarReserved3Color;
+        } else if (strcmp(colorName, "RESERVED4") == 0) {
+          fourcc = FourCC::VarReserved4Color;
         }
 
         if (fourcc != FourCC::Default) { // If we found a valid color
@@ -347,10 +346,10 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
         id == FourCC::VarHI1Color || id == FourCC::VarHI2Color ||
         id == FourCC::VarConsoleColor || id == FourCC::VarCursorColor ||
         id == FourCC::VarInfoColor || id == FourCC::VarWarnColor ||
-        id == FourCC::VarErrorColor || id == FourCC::VarPlayColor ||
-        id == FourCC::VarMuteColor || id == FourCC::VarSongViewFEColor ||
-        id == FourCC::VarSongView00Color || id == FourCC::VarRowColor ||
-        id == FourCC::VarRow2Color || id == FourCC::VarMajorBeatColor) {
+        id == FourCC::VarErrorColor || id == FourCC::VarAccentColor ||
+        id == FourCC::VarAccentAltColor || id == FourCC::VarEmphasisColor ||
+        id == FourCC::VarReserved1Color || id == FourCC::VarReserved2Color ||
+        id == FourCC::VarReserved3Color || id == FourCC::VarReserved4Color) {
       it++;
       continue;
     }
@@ -479,20 +478,20 @@ void Config::processParams(const char *name, int value, bool insert) {
       fourcc = FourCC::VarWarnColor;
     } else if (!strcmp(name, FourCC(FourCC::VarErrorColor).c_str())) {
       fourcc = FourCC::VarErrorColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarPlayColor).c_str())) {
-      fourcc = FourCC::VarPlayColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarMuteColor).c_str())) {
-      fourcc = FourCC::VarMuteColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarSongViewFEColor).c_str())) {
-      fourcc = FourCC::VarSongViewFEColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarSongView00Color).c_str())) {
-      fourcc = FourCC::VarSongView00Color;
-    } else if (!strcmp(name, FourCC(FourCC::VarRowColor).c_str())) {
-      fourcc = FourCC::VarRowColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarRow2Color).c_str())) {
-      fourcc = FourCC::VarRow2Color;
-    } else if (!strcmp(name, FourCC(FourCC::VarMajorBeatColor).c_str())) {
-      fourcc = FourCC::VarMajorBeatColor;
+    } else if (!strcmp(name, FourCC(FourCC::VarAccentColor).c_str())) {
+      fourcc = FourCC::VarAccentColor;
+    } else if (!strcmp(name, FourCC(FourCC::VarAccentAltColor).c_str())) {
+      fourcc = FourCC::VarAccentAltColor;
+    } else if (!strcmp(name, FourCC(FourCC::VarEmphasisColor).c_str())) {
+      fourcc = FourCC::VarEmphasisColor;
+    } else if (!strcmp(name, FourCC(FourCC::VarReserved1Color).c_str())) {
+      fourcc = FourCC::VarReserved1Color;
+    } else if (!strcmp(name, FourCC(FourCC::VarReserved2Color).c_str())) {
+      fourcc = FourCC::VarReserved2Color;
+    } else if (!strcmp(name, FourCC(FourCC::VarReserved3Color).c_str())) {
+      fourcc = FourCC::VarReserved3Color;
+    } else if (!strcmp(name, FourCC(FourCC::VarReserved4Color).c_str())) {
+      fourcc = FourCC::VarReserved4Color;
     }
     if (insert) {
       Variable *v = new Variable(fourcc, value);
