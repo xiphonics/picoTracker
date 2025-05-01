@@ -30,6 +30,7 @@ public:
   Song song_;
 
   int GetMasterVolume();
+  int GetPreviewVolume();
   bool Wrap();
   void OnTempoTap();
   void NudgeTempo(int value);
@@ -53,7 +54,7 @@ public:
   static etl::string<MAX_PROJECT_NAME_LENGTH> ProjectNameGlobal;
 
 private:
-  etl::list<Variable *, 6> variables_;
+  etl::list<Variable *, 7> variables_;
 
   InstrumentBank *instrumentBank_;
   int tempoNudge_;
@@ -64,6 +65,7 @@ private:
   // variables
   WatchedVariable tempo_;
   Variable masterVolume_;
+  Variable previewVolume_;
   Variable wrap_;
   Variable transpose_;
   Variable scale_;

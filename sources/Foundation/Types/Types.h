@@ -134,6 +134,7 @@ struct FourCC {
 
     VarTempo = 33,
     VarMasterVolume = 41,
+    VarPreviewVolume = 161,
     VarWrap = 70,
     VarTranspose = 63,
     VarScale = 16,
@@ -179,6 +180,7 @@ struct FourCC {
     // 158 is taken for VarMajorBeatColor
     // 159 is taken for ActionShowTheme
     // 160 is taken for MidiInstrumentProgram
+    // 161 is taken for VarPreviewVolume
 
     VarInstrumentType = 113,
 
@@ -330,6 +332,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarMajorBeatColor, "MAJORBEATCOLOR")
   ETL_ENUM_TYPE(VarTempo, "tempo")
   ETL_ENUM_TYPE(VarMasterVolume, "master")
+  ETL_ENUM_TYPE(VarPreviewVolume, "preview")
   ETL_ENUM_TYPE(VarWrap, "wrap")
   ETL_ENUM_TYPE(VarTranspose, "transpose")
   ETL_ENUM_TYPE(VarScale, "scale")

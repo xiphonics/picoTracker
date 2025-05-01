@@ -112,8 +112,14 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   v = project_->FindVariable(FourCC::VarMasterVolume);
   position._y += 1;
   UIIntVarField *f1 =
-      new UIIntVarField(position, *v, "master: %d", 10, 200, 1, 10);
+      new UIIntVarField(position, *v, "master vol:  %d", 10, 200, 1, 10);
   fieldList_.insert(fieldList_.end(), f1);
+
+  v = project_->FindVariable(FourCC::VarPreviewVolume);
+  position._y += 1;
+  UIIntVarField *f1b =
+      new UIIntVarField(position, *v, "preview vol: %d", 0, 100, 1, 10);
+  fieldList_.insert(fieldList_.end(), f1b);
 
   v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
