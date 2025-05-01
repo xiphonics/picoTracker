@@ -63,7 +63,7 @@ You can enter the sample import file browser by hitting `EDIT EDIT` (press the `
 
 All the samples that you may want to import into a project **must** be located in a folder named `/samples` at the top-level of the sdcard. You can either put your samples in that directory or in sub-directories of it, allowing you to have a way of sorting your samples library.
 
-_In firmware version 2.1_ the restriction on placing sample files *only* in the `/samples` directory has been removed and samples can be browsed and imported from any directory. 
+The previous restriction on placing sample files *only* in the `/samples` directory has been removed and samples can be browsed and imported from any directory. 
 
 Note: sub-directories will be sorted before files, but otherwise the files will be listed in an unspecified order (ie. not necessarily alphabetical order).
 
@@ -73,9 +73,20 @@ For example:
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
-Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indciated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entery and pressing `ENTER`. Press `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`. 
+Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indciated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entery and pressing `ENTER`. Hold down `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`. 
 
 At any time, you can return to the instrument screen from the sample file browser by pressing `NAV`+`LEFT`.
+
+### Auditioning Volume Control
+
+The Import View includes a convenient way to adjust the volume when previewing samples:
+
+- **EDIT + UP**: Increase preview volume by 5%
+- **EDIT + DOWN**: Decrease preview volume by 5%
+
+While holding the EDIT key, the current preview volume level (0-100%) will be displayed in the onscreen. When you release the EDIT key, the file listing will be shown again.
+
+The preview volume uses a non-linear (quadratic) scale that provides more precise control at lower volumes, making it easier to fine-tune quiet previews. This setting is saved with your project and will be restored when you reload it.
 
 *Note:* While there is no fixed limit for the number of sub-directory levels, there is a maximum of **256** files per directory. Also please note that while FAT formatted sdcards can support upto *256* characters per filename, picoTracker only supports upto **128** character file names and only with **ASCII** characters.
 
