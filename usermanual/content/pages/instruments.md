@@ -71,7 +71,26 @@ Note: sub-directories will be sorted before files, but otherwise the files will 
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
-Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indicated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entry and pressing `ENTER`. Hold down `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`.
+### Navigating and Identifying Files
+
+Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories. Subdirectories are indicated with a `/` prefix.
+
+**Single Cycle Waveforms**: Single cycle waveforms are specially marked with a `~` prefix in the file listing. These are WAV files with specific sizes (300 or 1344 bytes) that can be used as oscillators. When imported, they'll automatically be set to oscillator mode in the instrument settings.
+
+A great collection of single cycle waveforms can be found in the [Adventure Kid Sample Library](https://www.adventurekid.se/akrt/waveforms/adventure-kid-waveforms/).
+
+The status bar at the bottom of the screen shows additional information about the selected file and other information such as:
+- Current preview volume (vol:XX%)
+- File size in bytes
+- For single cycle waveforms, a [1 Cycle] indicator
+
+### Basic Controls
+
+- Press `EDIT` to enter a subdirectory
+- Navigate to the `/..` entry and press `ENTER` to go back to the parent directory
+- Hold down `PLAY` to audition the currently selected sample wave file
+- Press `ALT`+`PLAY` to import the currently selected wave file
+- Use `EDIT`+`UP`/`DOWN` to adjust the preview volume
 
 ### Importing Multiple Samples
 
