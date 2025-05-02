@@ -417,7 +417,7 @@ void AppWindow::LoadProject(const char *projectName) {
       new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
   _selectProjectView->AddObserver((*this));
 
-  static char mixerViewMemBuf[sizeof(SelectProjectView)];
+  static char mixerViewMemBuf[sizeof(MixerView)];
   _mixerView = new (mixerViewMemBuf) MixerView((*this), _viewData);
   _mixerView->AddObserver((*this));
 
