@@ -179,6 +179,23 @@ struct FourCC {
     // 158 is taken for VarMajorBeatColor
     // 159 is taken for ActionShowTheme
     // 160 is taken for MidiInstrumentProgram
+    // 161 is taken for VarChannel1Volume
+    // 162 is taken for VarChannel2Volume
+    // 163 is taken for VarChannel3Volume
+    // 164 is taken for VarChannel4Volume
+    // 165 is taken for VarChannel5Volume
+    // 166 is taken for VarChannel6Volume
+    // 167 is taken for VarChannel7Volume
+    // 168 is taken for VarChannel8Volume
+
+    VarChannel1Volume = 161,
+    VarChannel2Volume = 162,
+    VarChannel3Volume = 163,
+    VarChannel4Volume = 164,
+    VarChannel5Volume = 165,
+    VarChannel6Volume = 166,
+    VarChannel7Volume = 167,
+    VarChannel8Volume = 168,
 
     VarInstrumentType = 113,
 
@@ -335,6 +352,14 @@ struct FourCC {
   ETL_ENUM_TYPE(VarScale, "scale")
   ETL_ENUM_TYPE(VarProjectName, "projectname")
   ETL_ENUM_TYPE(VarInstrumentType, "INSTRUMENTTYPE")
+  ETL_ENUM_TYPE(VarChannel1Volume, "channel1vol")
+  ETL_ENUM_TYPE(VarChannel2Volume, "channel2vol")
+  ETL_ENUM_TYPE(VarChannel3Volume, "channel3vol")
+  ETL_ENUM_TYPE(VarChannel4Volume, "channel4vol")
+  ETL_ENUM_TYPE(VarChannel5Volume, "channel5vol")
+  ETL_ENUM_TYPE(VarChannel6Volume, "channel6vol")
+  ETL_ENUM_TYPE(VarChannel7Volume, "channel7vol")
+  ETL_ENUM_TYPE(VarChannel8Volume, "channel8vol")
 
   ETL_ENUM_TYPE(ActionEdit, "edit")
   ETL_ENUM_TYPE(ActionExport, "export")

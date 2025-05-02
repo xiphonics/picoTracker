@@ -42,6 +42,7 @@ public:
   void OnPlayerStop();
 
   void SetMasterVolume(int);
+  void SetProject(Project *project) { project_ = project; }
   int GetPlayedBufferPercentage();
 
   virtual void Execute(FourCC id, float value);
@@ -53,11 +54,15 @@ public:
 
 protected:
   void setRenderingMode(MixerServiceMode mode);
+  
+  // Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in fixed point
+  fixed ConvertToNonLinearVolume(int vol);
 
 private:
   AudioOut *out_;
   MixBus master_;
   MixBus bus_[MAX_BUS_COUNT];
   mutex_t *sync_;
+  Project *project_; // Reference to the current project
 };
 #endif

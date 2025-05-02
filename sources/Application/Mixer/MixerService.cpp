@@ -1,16 +1,25 @@
 #include "MixerService.h"
+#include "Application/AppWindow.h"
+#include "Application/Application.h"
 #include "Application/Model/Config.h"
-#include "Application/Model/Mixer.h"
 #include "Application/Model/Project.h"
+#include "Application/Player/PlayerMixer.h"
 #include "Application/Utils/char.h"
 #include "Services/Audio/Audio.h"
 #include "Services/Audio/AudioDriver.h"
+#include "Services/Audio/AudioOut.h"
 #include "Services/Midi/MidiService.h"
+#include "Services/Time/TimeService.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include <nanoprintf.h>
 
-MixerService::MixerService() : out_(0), sync_(0){};
+MixerService::MixerService() : master_() {
+  out_ = 0;
+  sync_ = 0;
+  project_ = NULL;
+  master_.SetName("Master");
+};
 
 MixerService::~MixerService(){};
 
@@ -107,13 +116,49 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
   }
 }
 
-void MixerService::SetMasterVolume(int vol) {
-  fixed masterVolume = fp_mul(i2fp(vol), fl2fp(0.01f));
+// Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in
+// fixed point
+fixed MixerService::ConvertToNonLinearVolume(int vol) {
+  // Ensure vol is within valid range
+  if (vol < 0)
+    vol = 0;
+  if (vol > 100)
+    vol = 100;
 
-  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    bus_[i].SetVolume(masterVolume);
+  // Convert to fixed point (0-1 range)
+  fixed normalizedVol = fp_mul(i2fp(vol), fl2fp(0.01f));
+
+  // Apply quadratic curve for logarithmic-like scaling
+  // This gives better control at lower volumes
+  return fp_mul(normalizedVol, normalizedVol);
+}
+
+void MixerService::SetMasterVolume(int vol) {
+  // Apply logarithmic scaling for better volume control
+  // vol is 0-100, where 100 is unity gain (1.0)
+  fixed masterVolume = ConvertToNonLinearVolume(vol);
+
+  // Set the master bus volume
+  master_.SetVolume(masterVolume);
+
+  // Apply channel volumes to individual channel buses
+  if (project_) {
+    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      // Get the channel's individual volume (0-100)
+      int channelVol = project_->GetChannelVolume(i);
+
+      // Convert channel volume to non-linear scale (0.0-1.0)
+      fixed channelVolume = ConvertToNonLinearVolume(channelVol);
+
+      // Set the channel volume directly (not multiplied by master volume)
+      bus_[i].SetVolume(channelVolume);
+      // Trace::Debug("Set channel %d volume to %d", i, channelVol);
+    }
+  } else {
+    // assert and crash
+    NAssert(false);
   }
-};
+}
 
 int MixerService::GetPlayedBufferPercentage() {
   return out_->GetPlayedBufferPercentage();

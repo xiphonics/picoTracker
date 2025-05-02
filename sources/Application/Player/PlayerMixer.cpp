@@ -36,6 +36,9 @@ bool PlayerMixer::Init(Project *project) {
   audioMixer->Insert(fileStreamer_);
 
   project_ = project;
+  
+  // Set the project reference in MixerService so it can access channel volumes
+  ms->SetProject(project);
 
   // Init states
 

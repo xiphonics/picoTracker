@@ -64,6 +64,9 @@ public:
 
   void Lock();
   void Unlock();
+  
+  // Get the current project
+  Project *GetProject() { return project_; }
 
   etl::array<stereosample, SONG_CHANNEL_COUNT> *GetMixerLevels();
 
