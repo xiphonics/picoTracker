@@ -212,22 +212,14 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       int scale = viewData_->project_->GetScale();
       int scaleRoot = viewData_->project_->GetScaleRoot();
 
-      if (scaleRoot > 0) {
-        // When using a non-C root, we need to adjust the scale pattern
-        // First calculate the new note with the offset
-        int newNote = *c + offset;
+      // Calculate the new note with the offset
+      int newNote = *c + offset;
 
-        // Check if the note is in the scale (adjusted for root)
-        while (newNote >= 0 &&
-               !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
-          offset > 0 ? offset++ : offset--;
-          newNote = *c + offset;
-        }
-      } else {
-        // Original implementation for root = 0 (C)
-        while (!scaleSteps[scale][(*c + offset) % 12]) {
-          offset > 0 ? offset++ : offset--;
-        }
+      // Check if the note is in the scale (adjusted for root)
+      // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
+      while (newNote >= 0 && !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
+        offset > 0 ? offset++ : offset--;
+        newNote = *c + offset;
       }
     }
     updateData(c, offset, limit, wrap);
