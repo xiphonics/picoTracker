@@ -156,10 +156,10 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
           // Copy this chunk to our static buffer
           int bytesToCopy = chunkSize * channels * sizeof(short);
           memcpy(destPos, srcBuffer, bytesToCopy);
-
-          Trace::Debug("Loaded chunk of single cycle waveform: pos=%d, size=%d "
-                       "(%d bytes)",
-                       currentPos, chunkSize, bytesToCopy);
+          // Trace::Debug("Loaded chunk of single cycle waveform: pos=%d,
+          // size=%d "
+          //              "(%d bytes)",
+          //              currentPos, chunkSize, bytesToCopy);
         } else {
           Trace::Error("Failed to get sample buffer for chunk at position %d",
                        currentPos);

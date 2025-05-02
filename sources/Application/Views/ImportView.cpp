@@ -187,7 +187,7 @@ void ImportView::DrawView() {
     y += 1;
   };
 
-  // draw current selected file size and single cycle indicator
+  // draw current selected file size, preview volume and single cycle indicator
   SetColor(CD_HILITE2);
   props.invert_ = true;
   y = 0;
@@ -197,14 +197,22 @@ void ImportView::DrawView() {
     // check for LGPT or AKWF standard file sizes
     bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
 
+    // Get the current preview volume
+    int previewVolume = 0;
+    Variable *v = viewData_->project_->FindVariable(FourCC::VarPreviewVolume);
+    if (v) {
+      previewVolume = v->GetInt();
+    }
+
     // Create a temporary buffer for formatting
     char tempBuffer[PFILENAME_SIZE];
 
     if (isSingleCycle) {
-      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i] [Single Cycle]",
-                   filesize);
+      npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% [size: %i] [1C]",
+                   previewVolume, filesize);
     } else {
-      npf_snprintf(tempBuffer, sizeof(tempBuffer), "[size: %i]", filesize);
+      npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% [size: %i]",
+                   previewVolume, filesize);
     }
 
     // Convert to etl::string for consistency
@@ -348,10 +356,8 @@ void ImportView::adjustPreviewVolume(bool increase) {
   // Set the new value
   v->SetInt(newVolume);
 
-  // Display status message showing the new volume
-  char statusMsg[32];
-  snprintf(statusMsg, sizeof(statusMsg), "Preview volume: %d%%", newVolume);
-  Status::Set(statusMsg);
+  // Mark the view as dirty to update the status bar with the new volume
+  isDirty_ = true;
 
   // If currently previewing, restart the preview to apply the new volume
   if (Player::GetInstance()->IsPlaying() &&
