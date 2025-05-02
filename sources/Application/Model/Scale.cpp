@@ -1,4 +1,5 @@
 #include "Scale.h"
+#include <cstdint>
 
 // Source of scales in original release:
 // https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/PitchConstellations.svg/1280px-PitchConstellations.svg.png
@@ -144,8 +145,8 @@ const bool scaleSteps[numScales][12] = {
 
 // Return the offset from the root note in semitones for the given scale and
 // "scale number", taking into account the scale root
-unsigned char getSemitonesOffset(unsigned char scale, unsigned char number,
-                                 unsigned char root) {
+uint8_t getSemitonesOffset(unsigned char scale, unsigned char number,
+                           unsigned char root) {
   // Find the nth note in the scale (where n is the number parameter)
   unsigned char i = 0;
   unsigned char foundNotes = 0;
