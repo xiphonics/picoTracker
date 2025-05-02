@@ -108,8 +108,22 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
 }
 
 void MixerService::SetMasterVolume(int vol) {
-  fixed masterVolume = fp_mul(i2fp(vol), fl2fp(0.01f));
-
+  // Apply logarithmic scaling for better volume control
+  // vol is 0-100, where 100 is unity gain (1.0)
+  // Using a quadratic curve: (vol/100)^2 gives a more natural volume perception
+  
+  // Ensure vol is within valid range
+  if (vol < 0) vol = 0;
+  if (vol > 100) vol = 100;
+  
+  // Convert to fixed point (0-1 range)
+  fixed normalizedVol = fp_mul(i2fp(vol), fl2fp(0.01f));
+  
+  // Apply quadratic curve for logarithmic-like scaling
+  // This gives better control at lower volumes
+  fixed masterVolume = fp_mul(normalizedVol, normalizedVol);
+  
+  // Set the volume for all channels
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     bus_[i].SetVolume(masterVolume);
   }
