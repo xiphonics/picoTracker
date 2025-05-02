@@ -64,10 +64,14 @@ static const ConfigParam configParams[] = {
      FourCC::VarAccentAltColor},
     {"EMPHASISCOLOR", ThemeConstants::DEFAULT_EMPHASIS,
      FourCC::VarEmphasisColor},
-    {"RESERVED1", ThemeConstants::DEFAULT_RESERVED1, FourCC::VarReserved1Color},
-    {"RESERVED2", ThemeConstants::DEFAULT_RESERVED2, FourCC::VarReserved2Color},
-    {"RESERVED3", ThemeConstants::DEFAULT_RESERVED3, FourCC::VarReserved3Color},
-    {"RESERVED4", ThemeConstants::DEFAULT_RESERVED4, FourCC::VarReserved4Color},
+    // {"RESERVED1", ThemeConstants::DEFAULT_RESERVED1,
+    // FourCC::VarReserved1Color},
+    // {"RESERVED2", ThemeConstants::DEFAULT_RESERVED2,
+    // FourCC::VarReserved2Color},
+    // {"RESERVED3", ThemeConstants::DEFAULT_RESERVED3,
+    // FourCC::VarReserved3Color},
+    // {"RESERVED4", ThemeConstants::DEFAULT_RESERVED4,
+    // FourCC::VarReserved4Color},
     {"LINEOUT", DEFAULT_LINEOUT, FourCC::VarLineOut},
     {"MIDIDEVICE", DEFAULT_MIDIDEVICE, FourCC::VarMidiDevice},
     {"MIDISYNC", DEFAULT_MIDISYNC, FourCC::VarMidiSync},
@@ -174,9 +178,11 @@ void Config::WriteColorVariables(tinyxml2::XMLPrinter *printer) {
         id == FourCC::VarConsoleColor || id == FourCC::VarCursorColor ||
         id == FourCC::VarInfoColor || id == FourCC::VarWarnColor ||
         id == FourCC::VarErrorColor || id == FourCC::VarAccentColor ||
-        id == FourCC::VarAccentAltColor || id == FourCC::VarEmphasisColor ||
-        id == FourCC::VarReserved1Color || id == FourCC::VarReserved2Color ||
-        id == FourCC::VarReserved3Color || id == FourCC::VarReserved4Color) {
+        id == FourCC::VarAccentAltColor || id == FourCC::VarEmphasisColor
+        // ||
+        // id == FourCC::VarReserved1Color || id == FourCC::VarReserved2Color ||
+        // id == FourCC::VarReserved3Color || id == FourCC::VarReserved4Color
+    ) {
 
       // Open a Color element
       printer->OpenElement("Color");
@@ -278,15 +284,16 @@ void Config::ReadColorVariable(PersistencyDocument *doc) {
           fourcc = FourCC::VarAccentAltColor;
         } else if (strcmp(colorName, "EMPHASISCOLOR") == 0) {
           fourcc = FourCC::VarEmphasisColor;
-        } else if (strcmp(colorName, "RESERVED1") == 0) {
-          fourcc = FourCC::VarReserved1Color;
-        } else if (strcmp(colorName, "RESERVED2") == 0) {
-          fourcc = FourCC::VarReserved2Color;
-        } else if (strcmp(colorName, "RESERVED3") == 0) {
-          fourcc = FourCC::VarReserved3Color;
-        } else if (strcmp(colorName, "RESERVED4") == 0) {
-          fourcc = FourCC::VarReserved4Color;
         }
+        //  else if (strcmp(colorName, "RESERVED1") == 0) {
+        //   fourcc = FourCC::VarReserved1Color;
+        // } else if (strcmp(colorName, "RESERVED2") == 0) {
+        //   fourcc = FourCC::VarReserved2Color;
+        // } else if (strcmp(colorName, "RESERVED3") == 0) {
+        //   fourcc = FourCC::VarReserved3Color;
+        // } else if (strcmp(colorName, "RESERVED4") == 0) {
+        //   fourcc = FourCC::VarReserved4Color;
+        // }
 
         if (fourcc != FourCC::Default) { // If we found a valid color
           Variable *var = FindVariable(fourcc);
@@ -357,8 +364,8 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
     etl::string<16> elemName = var->GetName();
     to_upper_case(elemName);
     printer->OpenElement(elemName.c_str());
-    // these settings need to be saved as thier Int values not as String values
-    // hence we *dont* use GetString() !
+    // these settings need to be saved as thier Int values not as String
+    // values hence we *dont* use GetString() !
     if (var->GetType() == Variable::CHAR_LIST) {
       printer->PushAttribute("VALUE", std::to_string(var->GetInt()).c_str());
     } else {
@@ -484,15 +491,16 @@ void Config::processParams(const char *name, int value, bool insert) {
       fourcc = FourCC::VarAccentAltColor;
     } else if (!strcmp(name, FourCC(FourCC::VarEmphasisColor).c_str())) {
       fourcc = FourCC::VarEmphasisColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarReserved1Color).c_str())) {
-      fourcc = FourCC::VarReserved1Color;
-    } else if (!strcmp(name, FourCC(FourCC::VarReserved2Color).c_str())) {
-      fourcc = FourCC::VarReserved2Color;
-    } else if (!strcmp(name, FourCC(FourCC::VarReserved3Color).c_str())) {
-      fourcc = FourCC::VarReserved3Color;
-    } else if (!strcmp(name, FourCC(FourCC::VarReserved4Color).c_str())) {
-      fourcc = FourCC::VarReserved4Color;
     }
+    // else if (!strcmp(name, FourCC(FourCC::VarReserved1Color).c_str())) {
+    //   fourcc = FourCC::VarReserved1Color;
+    // } else if (!strcmp(name, FourCC(FourCC::VarReserved2Color).c_str())) {
+    //   fourcc = FourCC::VarReserved2Color;
+    // } else if (!strcmp(name, FourCC(FourCC::VarReserved3Color).c_str())) {
+    //   fourcc = FourCC::VarReserved3Color;
+    // } else if (!strcmp(name, FourCC(FourCC::VarReserved4Color).c_str())) {
+    //   fourcc = FourCC::VarReserved4Color;
+    // }
     if (insert) {
       Variable *v = new Variable(fourcc, value);
       variables_.insert(variables_.end(), v);

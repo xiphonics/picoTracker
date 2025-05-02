@@ -497,10 +497,10 @@ void AppWindow::UpdateColorsFromConfig() {
   defineColor(FourCC::VarAccentColor, accentColor_, 9);
   defineColor(FourCC::VarAccentAltColor, accentAltColor_, 10);
   defineColor(FourCC::VarEmphasisColor, emphasisColor_, 11);
-  defineColor(FourCC::VarReserved1Color, reserved1Color_, 12);
-  defineColor(FourCC::VarReserved2Color, reserved2Color_, 13);
-  defineColor(FourCC::VarReserved3Color, reserved3Color_, 14);
-  defineColor(FourCC::VarReserved4Color, reserved4Color_, 15);
+  // defineColor(FourCC::VarReserved1Color, reserved1Color_, 12);
+  // defineColor(FourCC::VarReserved2Color, reserved2Color_, 13);
+  // defineColor(FourCC::VarReserved3Color, reserved3Color_, 14);
+  // defineColor(FourCC::VarReserved4Color, reserved4Color_, 15);
 };
 
 bool AppWindow::onEvent(GUIEvent &event) {
