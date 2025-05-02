@@ -21,6 +21,8 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // Add import/export buttons at the top
   GUIPoint actionPos = position;
 
+  actionPos._y -= 1;
+
   actionField_.emplace_back("Import", FourCC::ActionImport, actionPos);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
