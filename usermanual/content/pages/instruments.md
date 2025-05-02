@@ -84,7 +84,7 @@ The Import View includes a convenient way to adjust the volume when previewing s
 - **EDIT + UP**: Increase preview volume by 5%
 - **EDIT + DOWN**: Decrease preview volume by 5%
 
-While holding the EDIT key, the current preview volume level (0-100%) will be displayed in the onscreen. When you release the EDIT key, the file listing will be shown again.
+The current preview volume is always displayed in the status bar at the bottom of the screen as "vol:XX%" alongside the file size information. 
 
 The preview volume uses a non-linear (quadratic) scale that provides more precise control at lower volumes, making it easier to fine-tune quiet previews. This setting is saved with your project and will be restored when you reload it.
 
