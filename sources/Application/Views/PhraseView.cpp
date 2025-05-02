@@ -217,7 +217,8 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
 
       // Check if the note is in the scale (adjusted for root)
       // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
-      while (newNote >= 0 && !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
+      while (newNote >= 0 &&
+             !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
         offset > 0 ? offset++ : offset--;
         newNote = *c + offset;
       }
