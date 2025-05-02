@@ -1,10 +1,12 @@
 #ifndef _MIXER_VIEW_H_
 #define _MIXER_VIEW_H_
 
-#include "BaseClasses/View.h"
+#include "FieldView.h"
 #include "ViewData.h"
+#include "BaseClasses/UIIntVarField.h"
+#include <array>
 
-class MixerView : public View {
+class MixerView : public FieldView {
 public:
   MixerView(GUIWindow &w, ViewData *viewData);
   ~MixerView();
@@ -28,10 +30,19 @@ protected:
 private:
   void drawChannelVUMeters(etl::array<stereosample, SONG_CHANNEL_COUNT> *levels,
                            Player *player, GUITextProperties props);
+  void initChannelVolumeFields();
+  void updateChannelVolumeFields();
+  void adjustChannelVolume(int channel, int delta);
+  void resetChannelVolume(int channel);
+  
   const char *song_;
   int saveX_;
   int saveY_;
   int saveOffset_;
   bool invertBatt_;
+  
+  // Channel volume UI fields
+  std::array<UIIntVarField*, SONG_CHANNEL_COUNT> channelVolumeFields_;
+  bool channelVolumeFieldsInitialized_;
 };
 #endif
