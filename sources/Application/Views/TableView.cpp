@@ -246,15 +246,18 @@ void TableView::pasteClipboard() {
 void TableView::updateCursor(int dx, int dy) {
   col_ += dx;
   row_ += dy;
-  if (col_ > 5)
+  if (col_ > 5) {
     col_ = 5;
-  if (col_ < 0)
+  }
+  if (col_ < 0) {
     col_ = 0;
-  if (row_ > 15)
+  }
+  if (row_ > 15) {
     row_ = 15;
-  if (row_ < 0)
+  }
+  if (row_ < 0) {
     row_ = 0;
-
+  }
   Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
 
   GUIPoint anchor = GetAnchor();
