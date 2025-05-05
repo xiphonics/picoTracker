@@ -5,8 +5,6 @@ template: page
 
 The Theme Settings screen allows you to customize the appearance of the picoTracker interface, including fonts and colors.
 
-## NOTE: Theme settings were added in firmware version 2.1.0
-
 ![screen capture of theme settings screen](image/theme-screen-small.png)
 
 ## Accessing the Theme Settings
