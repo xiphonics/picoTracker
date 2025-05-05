@@ -1,10 +1,9 @@
-name: Deploy to GitHub Pages on merge
+name: Deploy to GitHub Pages on merge to release branch
 on: 
   workflow_dispatch:
   push:
     branches:
-      - main
-      - master
+      - 2.0-release
     paths:
       - usermanual/**
 
