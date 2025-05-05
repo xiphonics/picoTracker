@@ -4,10 +4,6 @@
 // Source of scales in original release:
 // https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/PitchConstellations.svg/1280px-PitchConstellations.svg.png
 
-// Note names for the scale root (C, C#, D, etc.)
-const char *noteNames[12] = {"C",  "C#", "D",  "D#", "E",  "F",
-                             "F#", "G",  "G#", "A",  "A#", "B"};
-
 const char *scaleNames[numScales] = {"None (Chromatic)",
                                      "Acoustic",
                                      "Adonal malakh",
