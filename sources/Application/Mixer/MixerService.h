@@ -54,9 +54,10 @@ public:
 
 protected:
   void setRenderingMode(MixerServiceMode mode);
-  
-  // Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in fixed point
-  fixed ConvertToNonLinearVolume(int vol);
+
+  // Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in
+  // fixed point
+  fixed ToLogVolume(int vol);
 
 private:
   AudioOut *out_;

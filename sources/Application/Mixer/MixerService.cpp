@@ -118,7 +118,7 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
 
 // Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in
 // fixed point
-fixed MixerService::ConvertToNonLinearVolume(int vol) {
+fixed MixerService::ConvertToLogVolume(int vol) {
   // Ensure vol is within valid range
   if (vol < 0)
     vol = 0;
