@@ -693,47 +693,45 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   Player *player = Player::GetInstance();
 
-  if (viewMode_ == VM_NEW) {
-    if (mask == EPBM_ENTER) {
-      UIIntVarField *field = (UIIntVarField *)GetFocus();
-      Variable &v = field->GetVariable();
-      switch (v.GetID()) {
-      case FourCC::SampleInstrumentSample: {
-        if (!player->IsRunning()) {
-          // First check if the samplelib exists
-          bool samplelibExists =
-              FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+  if (mask == EPBM_ENTER) {
+    UIIntVarField *field = (UIIntVarField *)GetFocus();
+    Variable &v = field->GetVariable();
+    switch (v.GetID()) {
+    case FourCC::SampleInstrumentSample: {
+      if (!player->IsRunning()) {
+        // First check if the samplelib exists
+        bool samplelibExists =
+            FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
-          if (!samplelibExists) {
-            MessageBox *mb =
-                new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
-            DoModal(mb);
-          } else {
-            // Go to import sample
-            ViewType vt = VT_IMPORT;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            SetChanged();
-            NotifyObservers(&ve);
-          }
-        } else {
-          MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+        if (!samplelibExists) {
+          MessageBox *mb =
+              new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
           DoModal(mb);
+        } else {
+          // Go to import sample
+          ViewType vt = VT_IMPORT;
+          ViewEvent ve(VET_SWITCH_VIEW, &vt);
+          SetChanged();
+          NotifyObservers(&ve);
         }
-        break;
+      } else {
+        MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+        DoModal(mb);
       }
-      case FourCC::SampleInstrumentTable: {
-        int next = TableHolder::GetInstance()->GetNext();
-        if (next != NO_MORE_TABLE) {
-          v.SetInt(next);
-          isDirty_ = true;
-        }
-        break;
-      }
-      default:
-        break;
-      }
-      mask &= (0xFFFF - EPBM_ENTER);
+      break;
     }
+    case FourCC::SampleInstrumentTable: {
+      int next = TableHolder::GetInstance()->GetNext();
+      if (next != NO_MORE_TABLE) {
+        v.SetInt(next);
+        isDirty_ = true;
+      }
+      break;
+    }
+    default:
+      break;
+    }
+    mask &= (0xFFFF - EPBM_ENTER);
   }
 
   if (viewMode_ == VM_CLONE) {
@@ -797,59 +795,47 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       viewMode_ = VM_CLONE;
     };
   } else {
+    // NAV Modifier
+    if (mask & EPBM_NAV) {
+      if (mask & EPBM_LEFT) {
+        ViewType vt = VT_PHRASE;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
 
-    // ENTER modifier
-    if (mask == EPBM_ENTER) {
-      FourCC varID = ((UIIntVarField *)GetFocus())->GetVariableID();
-      if ((varID == FourCC::SampleInstrumentTable) ||
-          (varID == FourCC::MidiInstrumentTable) ||
-          (varID == FourCC::SampleInstrumentSample)) {
-        viewMode_ = VM_NEW;
-      };
+        // remove listening when leaving this screen
+        getInstrument()->RemoveObserver(*this);
+        ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
+
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+
+      if (mask & EPBM_DOWN) {
+
+        // Go to table view
+
+        ViewType vt = VT_TABLE2;
+
+        int i = viewData_->currentInstrumentID_;
+        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+        I_Instrument *instr = bank->GetInstrument(i);
+        int table = instr->GetTable();
+        if (table != VAR_OFF) {
+          viewData_->currentTable_ = table;
+        }
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+
+      if (mask & EPBM_PLAY) {
+        player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                              viewData_->chainRow_);
+      }
     } else {
-
-      // NAV Modifier
-      if (mask & EPBM_NAV) {
-        if (mask & EPBM_LEFT) {
-          ViewType vt = VT_PHRASE;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-
-          // remove listening when leaving this screen
-          getInstrument()->RemoveObserver(*this);
-          ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
-
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_DOWN) {
-
-          // Go to table view
-
-          ViewType vt = VT_TABLE2;
-
-          int i = viewData_->currentInstrumentID_;
-          InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-          I_Instrument *instr = bank->GetInstrument(i);
-          int table = instr->GetTable();
-          if (table != VAR_OFF) {
-            viewData_->currentTable_ = table;
-          }
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                                viewData_->chainRow_);
-        }
-      } else {
-        // No modifier
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                                viewData_->chainRow_);
-        }
+      // No modifier
+      if (mask & EPBM_PLAY) {
+        player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                              viewData_->chainRow_);
       }
     }
   }
