@@ -1,11 +1,8 @@
 #include "Scale.h"
-#include <cstdint>
 #include "System/Console/n_assert.h"
 
 // Source of scales in original release:
 // https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/PitchConstellations.svg/1280px-PitchConstellations.svg.png
-
-// const int numScales = 44;
 
 // Note names for the scale root (C, C#, D, etc.)
 const char *noteNames[12] = {"C",  "C#", "D",  "D#", "E",  "F",
@@ -148,8 +145,7 @@ const bool scaleSteps[numScales][12] = {
 
 // Return the offset from the root note in semitones for the given scale and
 // "scale number", taking into account the scale root
-uint8_t getSemitonesOffset(unsigned char scale, unsigned char number,
-                           unsigned char root) {
+uint8_t getSemitonesOffset(uint8_t scale, uint8_t number, uint8_t root) {
 
   // assert for valid ranges of scale, number and root
   NAssert(scale < numScales);
