@@ -42,7 +42,6 @@ public:
   void OnPlayerStop();
 
   void SetMasterVolume(int);
-  void SetProject(Project *project) { project_ = project; }
   int GetPlayedBufferPercentage();
 
   virtual void Execute(FourCC id, float value);
