@@ -1,5 +1,6 @@
 #include "Scale.h"
 #include <cstdint>
+#include "System/Console/n_assert.h"
 
 // Source of scales in original release:
 // https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/PitchConstellations.svg/1280px-PitchConstellations.svg.png
@@ -149,14 +150,15 @@ const bool scaleSteps[numScales][12] = {
 // "scale number", taking into account the scale root
 uint8_t getSemitonesOffset(unsigned char scale, unsigned char number,
                            unsigned char root) {
-  // Find the nth note in the scale (where n is the number parameter)
-  unsigned char i = 0;
-  unsigned char foundNotes = 0;
 
-  // Handle the case where we're looking for the root note (first note in scale)
-  if (number == 0) {
-    return 0;
-  }
+  // assert for valid ranges of scale, number and root
+  NAssert(scale < numScales);
+  NAssert(number < 12);
+  NAssert(root < 12);
+
+  // Find the nth note in the scale (where n is the number parameter)
+  uint8_t i = 0;
+  uint8_t foundNotes = 0;
 
   // Find the nth note in the scale
   while (foundNotes < number) {
