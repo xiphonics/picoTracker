@@ -105,9 +105,7 @@ Here's a nice example, courtesy of jonbro, chopping drums he had recorded previo
 
 [Jonbro - the thing is the thing](https://battleofthebits.com/arena/Entry/the+thing+is+the+thing/1479/)
 
-### Slice! (new chopping method)
-
-Since version 2.1 there is a new loop mode called Slice.
+### Slice (new chopping method)
 
 Using this, you can assign up to 256 individual slices from C-2 (C minus two) up to the amount of slices you set. How handy!
 
