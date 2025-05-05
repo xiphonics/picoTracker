@@ -17,22 +17,26 @@ MixerView::MixerView(GUIWindow &w, ViewData *viewData)
 
 MixerView::~MixerView() {}
 
-void MixerView::OnFocus(){};
+void MixerView::OnFocus() {
+  // update seleced field to match current cursor position
+  SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
+};
 
+// keep track of currently selected channel
 void MixerView::updateCursor(int dx, int dy) {
-  int x = viewData_->mixerCol_;
+  int x = viewData_->songX_;
   x += dx;
   if (x < 0)
     x = 0;
   if (x > 7)
     x = 7;
-  viewData_->mixerCol_ = x;
+  viewData_->songX_ = x;
   isDirty_ = true;
 }
 
 void MixerView::switchSoloMode() {
   UIController *controller = UIController::GetInstance();
-  int currentChannel = viewData_->mixerCol_;
+  int currentChannel = viewData_->songX_;
   controller->SwitchSoloMode(currentChannel, currentChannel,
                              (viewMode_ == VM_NORMAL));
   viewMode_ = (viewMode_ != VM_SOLOON) ? VM_SOLOON : VM_NORMAL;
@@ -48,7 +52,7 @@ void MixerView::unMuteAll() {
 void MixerView::toggleMute() {
 
   UIController *controller = UIController::GetInstance();
-  int currentChannel = viewData_->mixerCol_;
+  int currentChannel = viewData_->songX_;
   controller->ToggleMute(currentChannel, currentChannel);
   viewMode_ = (viewMode_ != VM_MUTEON) ? VM_MUTEON : VM_NORMAL;
   isDirty_ = true;
@@ -121,7 +125,7 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
-  viewMode_ = VM_NORMAL;
+  processNormalButtonMask(mask);
 };
 
 /******************************************************
@@ -148,16 +152,10 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
       SetChanged();
       NotifyObservers(&ve);
     }
-    if (mask & EPBM_PLAY) {
-      onStop();
-    }
     if (mask & EPBM_ALT) {
       unMuteAll();
     }
   } else {
-    if (mask & EPBM_PLAY) {
-      onStart();
-    }
     if (mask & EPBM_LEFT) {
       updateCursor(-1, 0);
     }
@@ -286,7 +284,7 @@ void MixerView::DrawView() {
   pos._x = GetTitlePosition()._x;
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    if (i == viewData_->mixerCol_) {
+    if (i == viewData_->songX_) {
       props.invert_ = true;
       SetColor(CD_HILITE2);
     }
@@ -298,7 +296,7 @@ void MixerView::DrawView() {
     DrawString(pos._x, pos._y, state, props);
     pos._x += CHANNELS_X_OFFSET_;
 
-    if (i == viewData_->mixerCol_) {
+    if (i == viewData_->songX_) {
       props.invert_ = false;
       SetColor(CD_NORMAL);
     }
@@ -377,3 +375,9 @@ void MixerView::drawChannelVUMeters(
     pos._x += CHANNELS_X_OFFSET_;
   }
 }
+
+void MixerView::togglePlay() {
+  Player *player = Player::GetInstance();
+  player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
+                        viewData_->chainRow_);
+};

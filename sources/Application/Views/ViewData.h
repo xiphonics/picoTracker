@@ -65,8 +65,6 @@ public:
 
   int currentGroove_; // .Current edited groove
 
-  int mixerCol_; //
-  int mixerRow_;
   // Player Settings
 
   PlayMode playMode_;
