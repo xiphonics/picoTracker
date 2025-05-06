@@ -497,6 +497,9 @@ void AppWindow::UpdateColorsFromConfig() {
   defineColor(FourCC::VarAccentColor, accentColor_, 9);
   defineColor(FourCC::VarAccentAltColor, accentAltColor_, 10);
   defineColor(FourCC::VarEmphasisColor, emphasisColor_, 11);
+
+  // These are commented out so they are not included in config or theme exports
+  // until they are actually used in the future
   // defineColor(FourCC::VarReserved1Color, reserved1Color_, 12);
   // defineColor(FourCC::VarReserved2Color, reserved2Color_, 13);
   // defineColor(FourCC::VarReserved3Color, reserved3Color_, 14);
