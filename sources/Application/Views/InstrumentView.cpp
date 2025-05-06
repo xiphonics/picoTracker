@@ -21,9 +21,14 @@
 
 static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    ((InstrumentView &)v).onInstrumentTypeChange();
+    // Apply the proposed type change when user confirms
+    InstrumentView &instrumentView = (InstrumentView &)v;
+    instrumentView.applyProposedTypeChange();
+    instrumentView.onInstrumentTypeChange();
     Trace::Log("INSTRUMENTVIEW", "instrument type changed!!");
   }
+  // If user selects No, we don't need to do anything as the UI already shows
+  // the current type not the proposed type
 };
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
@@ -901,18 +906,24 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
 
   switch (fourcc) {
   case FourCC::VarInstrumentType: {
-    Trace::Debug("INSTRUMENTVIEW", "instrument type change:%d",
-                 (InstrumentType)instrumentType_.GetInt());
-    // confirm user wants to change instrument type &lose changes
+    // Store the proposed instrument type
+    proposedType_ = (InstrumentType)instrumentType_.GetInt();
+
+    // Revert the UI field back to the current type until confirmed
+    instrumentType_.SetInt(currentType_, false);
+
+    // Check if player is running
     Player *player = Player::GetInstance();
     if (!player->IsRunning()) {
-      // check if any instrument field has been modified
-      auto instrumentModified = checkInstrumentModified();
+      // Check if any instrument field has been modified
+      bool instrumentModified = checkInstrumentModified();
       if (instrumentModified) {
         MessageBox *mb = new MessageBox(*this, "Change Instrument &",
                                         "lose settings?", MBBF_YES | MBBF_NO);
         DoModal(mb, ChangeInstrumentTypeCallback);
       } else {
+        // Apply the proposed type change immediately if not modified
+        applyProposedTypeChange();
         onInstrumentTypeChange();
       }
     } else {
@@ -955,6 +966,13 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
   default:
     break;
   }
+}
+
+void InstrumentView::applyProposedTypeChange() {
+  // Apply the proposed instrument type change to the UI field
+  instrumentType_.SetInt(proposedType_);
+  // Update the current type to match
+  currentType_ = proposedType_;
 }
 
 bool InstrumentView::checkInstrumentModified() {
