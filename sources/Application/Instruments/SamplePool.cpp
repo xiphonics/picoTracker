@@ -89,10 +89,13 @@ void SamplePool::Load(const char *projectName) {
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
   char name[PFILENAME_SIZE];
-  for (size_t i = 0; i < fileIndexes.size(); i++) {
+  size_t totalSamples = fileIndexes.size();
+  for (size_t i = 0; i < totalSamples; i++) {
     fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
-      Status::Set("Loading:%s", name);
+      // Show progress as percentage
+      int progress = (int)((i * 100) / totalSamples);
+      Status::Set("Loading:%s (%d%%)", name, progress);
       loadSample(name);
     }
     if (i == MAX_PIG_SAMPLES) {
@@ -100,6 +103,9 @@ void SamplePool::Load(const char *projectName) {
       break;
     };
   };
+
+  // Show 100% when complete
+  Status::Set("Loading samples: Complete (100%%)");
 
   // now sort the samples
   int rest = count_;
@@ -194,11 +200,17 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
 
   // copy file to current project
   char buffer[IMPORT_CHUNK_SIZE];
+  long totalSize = size; // Store original size for progress calculation
+
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
     fin->Read(buffer, count);
     fout->Write(buffer, 1, count);
     size -= count;
+
+    // Update progress indicator
+    int progress = (int)(((totalSize - size) * 100) / totalSize);
+    Status::Set("Loading %s: %d%%", name, progress);
   };
 
   // now load the sample into memory/flash
