@@ -134,6 +134,7 @@ struct FourCC {
 
     VarTempo = 33,
     VarMasterVolume = 41,
+    VarPreviewVolume = 161,
     VarWrap = 70,
     VarTranspose = 63,
     VarScale = 16,
@@ -149,13 +150,13 @@ struct FourCC {
     VarInfoColor = 109,
     VarWarnColor = 110,
     VarErrorColor = 111,
-    VarPlayColor = 152,
-    VarMuteColor = 153,
-    VarSongViewFEColor = 154,
-    VarSongView00Color = 155,
-    VarRowColor = 156,
-    VarRow2Color = 157,
-    VarMajorBeatColor = 158,
+    VarAccentColor = 152,
+    VarAccentAltColor = 153,
+    VarEmphasisColor = 154,
+    VarReserved1Color = 155,
+    VarReserved2Color = 156,
+    VarReserved3Color = 157,
+    VarReserved4Color = 158,
     VarMidiSync = 112,
     VarMidiClockSync = 151,
     VarRemoteUI = 140,
@@ -179,23 +180,24 @@ struct FourCC {
     // 158 is taken for VarMajorBeatColor
     // 159 is taken for ActionShowTheme
     // 160 is taken for MidiInstrumentProgram
-    // 161 is taken for VarChannel1Volume
-    // 162 is taken for VarChannel2Volume
-    // 163 is taken for VarChannel3Volume
-    // 164 is taken for VarChannel4Volume
-    // 165 is taken for VarChannel5Volume
-    // 166 is taken for VarChannel6Volume
-    // 167 is taken for VarChannel7Volume
-    // 168 is taken for VarChannel8Volume
+    // 161 is taken for VarPreviewVolume
+    // 162 is taken for VarChannel1Volume
+    // 163 is taken for VarChannel2Volume
+    // 164 is taken for VarChannel3Volume
+    // 165 is taken for VarChannel4Volume
+    // 166 is taken for VarChannel5Volume
+    // 167 is taken for VarChannel6Volume
+    // 168 is taken for VarChannel7Volume
+    // 169 is taken for VarChannel8Volume
 
-    VarChannel1Volume = 161,
-    VarChannel2Volume = 162,
-    VarChannel3Volume = 163,
-    VarChannel4Volume = 164,
-    VarChannel5Volume = 165,
-    VarChannel6Volume = 166,
-    VarChannel7Volume = 167,
-    VarChannel8Volume = 168,
+    VarChannel1Volume = 162,
+    VarChannel2Volume = 163,
+    VarChannel3Volume = 164,
+    VarChannel4Volume = 165,
+    VarChannel5Volume = 166,
+    VarChannel6Volume = 167,
+    VarChannel7Volume = 168,
+    VarChannel8Volume = 169,
 
     VarInstrumentType = 113,
 
@@ -338,15 +340,16 @@ struct FourCC {
   ETL_ENUM_TYPE(VarInfoColor, "INFOCOLOR")
   ETL_ENUM_TYPE(VarWarnColor, "WARNCOLOR")
   ETL_ENUM_TYPE(VarErrorColor, "ERRORCOLOR")
-  ETL_ENUM_TYPE(VarPlayColor, "PLAYCOLOR")
-  ETL_ENUM_TYPE(VarMuteColor, "MUTECOLOR")
-  ETL_ENUM_TYPE(VarSongViewFEColor, "SONGVIEWFECOLOR")
-  ETL_ENUM_TYPE(VarSongView00Color, "SONGVIEW00COLOR")
-  ETL_ENUM_TYPE(VarRowColor, "ROWCOLOR")
-  ETL_ENUM_TYPE(VarRow2Color, "ROW2COLOR")
-  ETL_ENUM_TYPE(VarMajorBeatColor, "MAJORBEATCOLOR")
+  ETL_ENUM_TYPE(VarAccentColor, "ACCENTCOLOR")
+  ETL_ENUM_TYPE(VarAccentAltColor, "ACCENTALTCOLOR")
+  ETL_ENUM_TYPE(VarEmphasisColor, "EMPHASISCOLOR")
+  ETL_ENUM_TYPE(VarReserved1Color, "RESERVED1COLOR")
+  ETL_ENUM_TYPE(VarReserved2Color, "RESERVED2COLOR")
+  ETL_ENUM_TYPE(VarReserved3Color, "RESERVED3COLOR")
+  ETL_ENUM_TYPE(VarReserved4Color, "RESERVED4COLOR")
   ETL_ENUM_TYPE(VarTempo, "tempo")
   ETL_ENUM_TYPE(VarMasterVolume, "master")
+  ETL_ENUM_TYPE(VarPreviewVolume, "preview")
   ETL_ENUM_TYPE(VarWrap, "wrap")
   ETL_ENUM_TYPE(VarTranspose, "transpose")
   ETL_ENUM_TYPE(VarScale, "scale")

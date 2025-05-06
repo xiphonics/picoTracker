@@ -112,7 +112,7 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   v = project_->FindVariable(FourCC::VarMasterVolume);
   position._y += 1;
   UIIntVarField *f1 =
-      new UIIntVarField(position, *v, "master: %d", 10, 200, 1, 10);
+      new UIIntVarField(position, *v, "master vol: %d%%", 0, 100, 1, 5);
   fieldList_.insert(fieldList_.end(), f1);
 
   v = project_->FindVariable(FourCC::VarTranspose);
@@ -284,47 +284,41 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     project_->SetProjectName(name);
     saveAsFlag_ = true;
     break;
-  case FourCC::ActionSave:
-    if (!player->IsRunning()) {
-      PersistencyService *persist = PersistencyService::GetInstance();
-      char projName[MAX_PROJECT_NAME_LENGTH];
-      project_->GetProjectName(projName);
+  case FourCC::ActionSave: {
+    PersistencyService *persist = PersistencyService::GetInstance();
+    char projName[MAX_PROJECT_NAME_LENGTH];
+    project_->GetProjectName(projName);
 
-      if (saveAsFlag_) {
-        // first need to check if project with this name already exists
-        if (persist->Exists(projName)) {
-          Trace::Error("project already exists ask user to confirm overwrite");
-          MessageBox *mb = new MessageBox(*this, "Overwrite EXISTING project?",
-                                          MBBF_OK | MBBF_CANCEL);
-          DoModal(mb, SaveAsOverwriteCallback);
-          return;
-        }
-        if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
-            PERSIST_SAVED) {
-          Trace::Error("failed to save project state");
-          MessageBox *mb =
-              new MessageBox(*this, "Error saving Project", MBBF_OK);
-          DoModal(mb);
-          return;
-        }
-        clearSaveAsFlag();
-      } else {
-        if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
-            PERSIST_SAVED) {
-          Trace::Error("failed to save project state");
-          MessageBox *mb =
-              new MessageBox(*this, "Error saving Project", MBBF_OK);
-          DoModal(mb);
-          return;
-        }
+    if (saveAsFlag_) {
+      // first need to check if project with this name already exists
+      if (persist->Exists(projName)) {
+        Trace::Error("project already exists ask user to confirm overwrite");
+        MessageBox *mb = new MessageBox(*this, "Overwrite EXISTING project?",
+                                        MBBF_OK | MBBF_CANCEL);
+        DoModal(mb, SaveAsOverwriteCallback);
+        return;
       }
-      // all good so now persist the new project name in project state
-      persist->SaveProjectState(projName);
+      if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
+          PERSIST_SAVED) {
+        Trace::Error("failed to save project state");
+        MessageBox *mb = new MessageBox(*this, "Error saving Project", MBBF_OK);
+        DoModal(mb);
+        return;
+      }
+      clearSaveAsFlag();
     } else {
-      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
-      DoModal(mb);
+      if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
+          PERSIST_SAVED) {
+        Trace::Error("failed to save project state");
+        MessageBox *mb = new MessageBox(*this, "Error saving Project", MBBF_OK);
+        DoModal(mb);
+        return;
+      }
     }
+    // all good so now persist the new project name in project state
+    persist->SaveProjectState(projName);
     break;
+  }
   case FourCC::ActionProjectRename:
     Trace::Log("PROJECTVIEW", "Project renamed! prev name:%s",
                nameField_->GetString().c_str());

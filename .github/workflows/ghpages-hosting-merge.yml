@@ -3,8 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-      - master
+      - release-2.0
     paths:
       - usermanual/**
 
