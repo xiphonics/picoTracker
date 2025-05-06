@@ -32,7 +32,7 @@ const char *scaleNames[numScales] = {"None (Chromatic)",
                                      "Lydian augmented",
                                      "Lydian",
                                      "Major bebop",
-                                     "Major locran",
+                                     "Major locrian",
                                      "Major pentatonic",
                                      "Melodic minor",
                                      "Melodic minor (asc)",
@@ -106,8 +106,8 @@ const bool scaleSteps[numScales][12] = {
      true}, // Lydian
     {true, false, true, false, true, true, false, true, true, true, false,
      true}, // Major bebop
-    {true, false, true, false, true, false, true, true, false, true, true,
-     false}, // Major locran
+    {true, false, true, false, true, true, true, false, true, false, true,
+     false}, // Major locrian
     {true, false, true, false, true, false, false, true, false, true, false,
      false}, // Major pentatonic
     {true, false, true, true, false, true, false, true, true, false, true,
