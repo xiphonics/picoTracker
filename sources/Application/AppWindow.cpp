@@ -52,13 +52,13 @@ GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 5);
 GUIColor AppWindow::infoColor_(0x29, 0xEE, 0x3D, 6);
 GUIColor AppWindow::warnColor_(0xEF, 0xFA, 0x52, 7);
 GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
-GUIColor AppWindow::playColor_(0x02, 0xFF, 0x02, 9);
-GUIColor AppWindow::muteColor_(0xFF, 0x02, 0x02, 10);
-GUIColor AppWindow::songViewFEColor_(0xFF, 0xA5, 0x02, 11);
-GUIColor AppWindow::songView00Color_(0x02, 0x02, 0xFF, 12);
-GUIColor AppWindow::rowColor_(0x55, 0x55, 0x55, 13);
-GUIColor AppWindow::row2Color_(0x77, 0x77, 0x77, 14);
-GUIColor AppWindow::majorBeatColor_(0xFF, 0xFF, 0x00, 15);
+GUIColor AppWindow::accentColor_(0x02, 0xFF, 0x02, 9);
+GUIColor AppWindow::accentAltColor_(0xFF, 0x02, 0x02, 10);
+GUIColor AppWindow::emphasisColor_(0xFF, 0xA5, 0x02, 11);
+GUIColor AppWindow::reserved1Color_(0x02, 0x02, 0xFF, 12);
+GUIColor AppWindow::reserved2Color_(0x55, 0x55, 0x55, 13);
+GUIColor AppWindow::reserved3Color_(0x77, 0x77, 0x77, 14);
+GUIColor AppWindow::reserved4Color_(0xFF, 0xFF, 0x00, 15);
 
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
@@ -268,26 +268,26 @@ void AppWindow::Flush() {
           case CD_ERROR:
             gcolor = errorColor_;
             break;
-          case CD_PLAY:
-            gcolor = playColor_;
+          case CD_ACCENT:
+            gcolor = accentColor_;
             break;
-          case CD_MUTE:
-            gcolor = muteColor_;
+          case CD_ACCENTALT:
+            gcolor = accentAltColor_;
             break;
-          case CD_SONGVIEWFE:
-            gcolor = songViewFEColor_;
+          case CD_EMPHASIS:
+            gcolor = emphasisColor_;
             break;
-          case CD_SONGVIEW00:
-            gcolor = songView00Color_;
+          case CD_RESERVED1:
+            gcolor = reserved1Color_;
             break;
-          case CD_ROW:
-            gcolor = rowColor_;
+          case CD_RESERVED2:
+            gcolor = reserved2Color_;
             break;
-          case CD_ROW2:
-            gcolor = row2Color_;
+          case CD_RESERVED3:
+            gcolor = reserved3Color_;
             break;
-          case CD_MAJORBEAT:
-            gcolor = majorBeatColor_;
+          case CD_RESERVED4:
+            gcolor = reserved4Color_;
             break;
 
           default:
@@ -494,13 +494,16 @@ void AppWindow::UpdateColorsFromConfig() {
   defineColor(FourCC::VarInfoColor, infoColor_, 6);
   defineColor(FourCC::VarWarnColor, warnColor_, 7);
   defineColor(FourCC::VarErrorColor, errorColor_, 8);
-  defineColor(FourCC::VarPlayColor, playColor_, 9);
-  defineColor(FourCC::VarMuteColor, muteColor_, 10);
-  defineColor(FourCC::VarSongViewFEColor, songViewFEColor_, 11);
-  defineColor(FourCC::VarSongView00Color, songView00Color_, 12);
-  defineColor(FourCC::VarRowColor, rowColor_, 13);
-  defineColor(FourCC::VarRow2Color, row2Color_, 14);
-  defineColor(FourCC::VarMajorBeatColor, majorBeatColor_, 15);
+  defineColor(FourCC::VarAccentColor, accentColor_, 9);
+  defineColor(FourCC::VarAccentAltColor, accentAltColor_, 10);
+  defineColor(FourCC::VarEmphasisColor, emphasisColor_, 11);
+
+  // These are commented out so they are not included in config or theme exports
+  // until they are actually used in the future
+  // defineColor(FourCC::VarReserved1Color, reserved1Color_, 12);
+  // defineColor(FourCC::VarReserved2Color, reserved2Color_, 13);
+  // defineColor(FourCC::VarReserved3Color, reserved3Color_, 14);
+  // defineColor(FourCC::VarReserved4Color, reserved4Color_, 15);
 };
 
 bool AppWindow::onEvent(GUIEvent &event) {
@@ -738,7 +741,7 @@ void AppWindow::Print(char *line) {
 
 void AppWindow::SetColor(ColorDefinition cd) {
   // Ensure color index is within valid range (0-15)
-  if (cd >= 0 && cd <= CD_MAJORBEAT) {
+  if (cd >= 0 && cd <= CD_EMPHASIS) {
     colorIndex_ = cd;
   } else {
     Trace::Error("APPWINDOW", "Invalid color index: %d", cd);

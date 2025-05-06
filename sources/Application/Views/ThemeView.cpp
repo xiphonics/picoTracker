@@ -20,7 +20,8 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   // Add import/export buttons at the top
   GUIPoint actionPos = position;
-  actionPos._y += 1;
+
+  actionPos._y -= 1;
 
   actionField_.emplace_back("Import", FourCC::ActionImport, actionPos);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
@@ -30,6 +31,8 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   actionField_.emplace_back("Export", FourCC::ActionExport, actionPos);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
+
+  actionPos._y += 1;
 
   // Font selection
   position._y = FONT_FIELD_LINE;
@@ -130,73 +133,75 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   // Play color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarPlayColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Play:       %6.6X", 0,
+  v = config->FindVariable(FourCC::VarAccentColor);
+  bigHexVarField_.emplace_back(position, *v, 6, "Accent:     %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  addSwatchField(CD_PLAY, position);
+  addSwatchField(CD_ACCENT, position);
 
   // Mute color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarMuteColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Mute:       %6.6X", 0,
+  v = config->FindVariable(FourCC::VarAccentAltColor);
+  bigHexVarField_.emplace_back(position, *v, 6, "AccentAlt:  %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  addSwatchField(CD_MUTE, position);
+  addSwatchField(CD_ACCENTALT, position);
 
-  // SongViewFE color
+  // Emphasis color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarSongViewFEColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "SongViewFE: %6.6X", 0,
+  v = config->FindVariable(FourCC::VarEmphasisColor);
+  bigHexVarField_.emplace_back(position, *v, 6, "Emphasis:   %6.6X", 0,
                                MAX_COLOR_VALUE, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  addSwatchField(CD_SONGVIEWFE, position);
+  addSwatchField(CD_EMPHASIS, position);
 
-  // SongView00 color
-  position._y += 1;
-  v = config->FindVariable(FourCC::VarSongView00Color);
-  bigHexVarField_.emplace_back(position, *v, 6, "SongView00: %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
+  // dont show UI fields for reserved colors
 
-  addSwatchField(CD_SONGVIEW00, position);
+  // // Reserved1 color
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarAccentAltColor);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved1: %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  // Row color
-  position._y += 1;
-  v = config->FindVariable(FourCC::VarRowColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Row:        %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
+  // addSwatchField(CD_RESERVED1, position);
 
-  addSwatchField(CD_ROW, position);
+  // // Reserved2 color
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarReserved2Color);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved2: %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  // Row2 color
-  position._y += 1;
-  v = config->FindVariable(FourCC::VarRow2Color);
-  bigHexVarField_.emplace_back(position, *v, 6, "Row2:       %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
+  // addSwatchField(CD_RESERVED2, position);
 
-  addSwatchField(CD_ROW2, position);
+  // // Reserved3 color
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarReserved3Color);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved3: %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  // MajorBeat color
-  position._y += 1;
-  v = config->FindVariable(FourCC::VarMajorBeatColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "MajorBeat:  %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
+  // addSwatchField(CD_RESERVED3, position);
 
-  addSwatchField(CD_MAJORBEAT, position);
+  // // Reserved4 color
+  // position._y += 1;
+  // v = config->FindVariable(FourCC::VarReserved4Color);
+  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved4: %6.6X", 0,
+  //                              MAX_COLOR_VALUE, 16);
+  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  // (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  // addSwatchField(CD_RESERVED4, position);
 }
 
 ThemeView::~ThemeView() {}
@@ -293,21 +298,22 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   case FourCC::VarInfoColor:
   case FourCC::VarWarnColor:
   case FourCC::VarErrorColor:
-  case FourCC::VarPlayColor:
-  case FourCC::VarMuteColor:
-  case FourCC::VarSongViewFEColor:
-  case FourCC::VarSongView00Color:
-  case FourCC::VarRowColor:
-  case FourCC::VarRow2Color:
-  case FourCC::VarMajorBeatColor: {
-    // Update the AppWindow's color values from Config
-    ((AppWindow &)w_).UpdateColorsFromConfig();
+  case FourCC::VarAccentColor:
+  case FourCC::VarAccentAltColor:
+  case FourCC::VarEmphasisColor:
+    // case FourCC::VarReserved1Color:
+    // case FourCC::VarReserved2Color:
+    // case FourCC::VarReserved3Color:
+    // case FourCC::VarReserved4Color:
+    {
+      // Update the AppWindow's color values from Config
+      ((AppWindow &)w_).UpdateColorsFromConfig();
 
-    // Force a redraw of the entire screen to update all colors
-    ForceClear();
-    DrawView();
-    break;
-  }
+      // Force a redraw of the entire screen to update all colors
+      ForceClear();
+      DrawView();
+      break;
+    }
   default:
     NInvalid;
     break;

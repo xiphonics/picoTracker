@@ -129,13 +129,13 @@ private:
   static GUIColor infoColor_;
   static GUIColor warnColor_;
   static GUIColor errorColor_;
-  static GUIColor playColor_;
-  static GUIColor muteColor_;
-  static GUIColor songViewFEColor_;
-  static GUIColor songView00Color_;
-  static GUIColor rowColor_;
-  static GUIColor row2Color_;
-  static GUIColor majorBeatColor_;
+  static GUIColor accentColor_;
+  static GUIColor accentAltColor_;
+  static GUIColor emphasisColor_;
+  static GUIColor reserved1Color_;
+  static GUIColor reserved2Color_;
+  static GUIColor reserved3Color_;
+  static GUIColor reserved4Color_;
 
   ColorDefinition colorIndex_;
 
