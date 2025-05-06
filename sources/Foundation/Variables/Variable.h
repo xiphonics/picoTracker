@@ -40,6 +40,9 @@ public:
   uint8_t GetListSize();
   const char *const *GetListPointer();
   void Reset();
+  
+  // Check if the current value differs from the default value
+  bool IsModified();
 
 protected:
   virtual void onChange(){};

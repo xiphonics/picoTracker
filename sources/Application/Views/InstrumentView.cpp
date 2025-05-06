@@ -23,9 +23,6 @@ static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     ((InstrumentView &)v).onInstrumentTypeChange();
     Trace::Log("INSTRUMENTVIEW", "instrument type changed!!");
-
-    // clear instrument modified flag
-    ((InstrumentView &)v).clearInstrumentModified();
   }
 };
 
@@ -909,7 +906,9 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     // confirm user wants to change instrument type &lose changes
     Player *player = Player::GetInstance();
     if (!player->IsRunning()) {
-      if (instrumentModified_) {
+      // check if any instrument field has been modified
+      auto instrumentModified = checkInstrumentModified();
+      if (instrumentModified) {
         MessageBox *mb = new MessageBox(*this, "Change Instrument &",
                                         "lose settings?", MBBF_YES | MBBF_NO);
         DoModal(mb, ChangeInstrumentTypeCallback);
@@ -952,13 +951,56 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         midiInstr->SendProgramChangeWithNote(channel, program);
       }
     }
-    instrumentModified_ = true;
   } break;
   default:
-    if (fourcc != 0) {
-      instrumentModified_ = true;
-    }
     break;
+  }
+}
+
+bool InstrumentView::checkInstrumentModified() {
+  // Get current instrument
+  I_Instrument *instrument = getInstrument();
+  if (!instrument) {
+    return false;
+  }
+
+  // Get the list of variables for this instrument
+  etl::ilist<Variable *> *variables = instrument->Variables();
+  if (!variables) {
+    return false;
+  }
+
+  // Check if any variable has been modified from its default value
+  for (auto it = variables->begin(); it != variables->end(); ++it) {
+    Variable *var = *it;
+    if (var && var->IsModified()) {
+      return true;
+    }
+  }
+
+  // No variables have been modified
+  return false;
+}
+
+void InstrumentView::resetInstrumentToDefaults() {
+  // Get current instrument
+  I_Instrument *instrument = getInstrument();
+  if (!instrument) {
+    return;
+  }
+
+  // Get the list of variables for this instrument
+  etl::ilist<Variable *> *variables = instrument->Variables();
+  if (!variables) {
+    return;
+  }
+
+  // Reset all variables to their default values
+  for (auto it = variables->begin(); it != variables->end(); ++it) {
+    Variable *var = *it;
+    if (var) {
+      var->Reset();
+    }
   }
 }
 

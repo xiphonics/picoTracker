@@ -275,3 +275,21 @@ void Variable::setStringValue(const char *value) {
   }
   stringValue_ = new etl::string<MAX_VARIABLE_STRING_LENGTH>(value);
 }
+
+bool Variable::IsModified() {
+  switch (type_) {
+  case FLOAT:
+    return value_.float_ != defaultValue_.float_;
+  case INT:
+    return value_.int_ != defaultValue_.int_;
+  case BOOL:
+    return value_.bool_ != defaultValue_.bool_;
+  case CHAR_LIST:
+    return value_.index_ != defaultValue_.index_;
+  case STRING:
+    // For string types, we don't currently track default values
+    // Could be enhanced in the future if needed
+    return true;
+  }
+  return false;
+}
