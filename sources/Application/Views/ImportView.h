@@ -21,6 +21,7 @@ protected:
   void warpToNextSample(bool goUp);
   void import(char *name);
   void preview(char *name);
+  void adjustPreviewVolume(bool increase);
 
 private:
   size_t topIndex_ = 0;
@@ -30,6 +31,8 @@ private:
   int toInstr_ = 0;
   bool playKeyHeld_ =
       false; // Flag to track when the play key is being held down
+  bool editKeyHeld_ =
+      false; // Flag to track when the edit key is being held down
   bool inProjectSampleDir_ =
       false; // Flag to track if we're in the project's sample directory
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;

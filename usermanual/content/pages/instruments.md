@@ -69,7 +69,7 @@ Note: sub-directories will be sorted before files, but otherwise the files will 
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
-### Navigating and Identifying Files
+Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indciated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entery and pressing `ENTER`. Hold down `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`. 
 
 Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories. Subdirectories are indicated with a `/` prefix.
 
@@ -103,6 +103,17 @@ You can import multiple samples in a single session without leaving the Import V
 Each sample will be added to your project's sample pool. The last imported sample will automatically be assigned to the current instrument. Previously imported samples remain available in your project and can be assigned to other instruments later.
 
 When you're finished importing samples, return to the instrument screen by pressing `NAV`+`LEFT`.
+
+### Auditioning Volume Control
+
+The Import View includes a convenient way to adjust the volume when previewing samples:
+
+- **EDIT + UP**: Increase preview volume by 5%
+- **EDIT + DOWN**: Decrease preview volume by 5%
+
+The current preview volume is always displayed in the status bar at the bottom of the screen as "vol:XX%" alongside the file size information. 
+
+The preview volume uses a non-linear (quadratic) scale that provides more precise control at lower volumes, making it easier to fine-tune quiet previews. This setting is saved with your project and will be restored when you reload it.
 
 *Note:* While there is no fixed limit for the number of sub-directory levels, there is a maximum of **256** files per directory. Also please note that while FAT formatted sdcards can support upto *256* characters per filename, picoTracker only supports upto **128** character file names and only with **ASCII** characters.
 

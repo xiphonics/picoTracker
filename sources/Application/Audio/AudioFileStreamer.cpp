@@ -156,10 +156,10 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
           // Copy this chunk to our static buffer
           int bytesToCopy = chunkSize * channels * sizeof(short);
           memcpy(destPos, srcBuffer, bytesToCopy);
-
-          Trace::Debug("Loaded chunk of single cycle waveform: pos=%d, size=%d "
-                       "(%d bytes)",
-                       currentPos, chunkSize, bytesToCopy);
+          // Trace::Debug("Loaded chunk of single cycle waveform: pos=%d,
+          // size=%d "
+          //              "(%d bytes)",
+          //              currentPos, chunkSize, bytesToCopy);
         } else {
           Trace::Error("Failed to get sample buffer for chunk at position %d",
                        currentPos);
@@ -191,14 +191,18 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   // Clear the output buffer
   SYS_MEMSET(buffer, 0, samplecount * 2 * sizeof(fixed));
 
-  // Get volume from project
-  Variable *v = project_->FindVariable(FourCC::VarMasterVolume);
-  int vol = v->GetInt();
+  // Get preview volume from project
+  Variable *v = project_->FindVariable(FourCC::VarPreviewVolume);
+  int previewVol = v->GetInt();
 
-  // Apply additional attenuation for preview to match SampleInstrument volume
-  // TODO: This is just temp workaround until we have dedicated preview volume
-  // user setting
-  fixed volume = fp_mul(i2fp(vol), fl2fp(0.001f));
+  // Apply logarithmic scaling to match human hearing perception
+  // Using a formula that gives a more natural volume curve: volume =
+  // (value/100)^2 This gives more fine control at lower volumes
+  float normalizedVol = (float)previewVol / 100.0f;
+  float logVol = normalizedVol * normalizedVol; // Quadratic curve
+
+  // Convert to fixed point
+  fixed volume = fl2fp(logVol);
 
   fixed *dst = buffer;
 
