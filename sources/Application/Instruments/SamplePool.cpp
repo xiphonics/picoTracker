@@ -89,8 +89,8 @@ void SamplePool::Load(const char *projectName) {
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
   char name[PFILENAME_SIZE];
-  size_t totalSamples = fileIndexes.size();
-  for (size_t i = 0; i < totalSamples; i++) {
+  uint totalSamples = fileIndexes.size();
+  for (uint i = 0; i < totalSamples; i++) {
     fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
       // Show progress as percentage

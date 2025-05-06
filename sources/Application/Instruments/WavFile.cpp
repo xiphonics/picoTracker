@@ -409,8 +409,8 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
     flashWriteOffset += writeSize;
 
     // Update progress indicator
-    int progress =
-        (int)(((totalBytesToProcess - count) * 100) / totalBytesToProcess);
+    uint progress =
+        (uint)(((totalBytesToProcess - count) * 100) / totalBytesToProcess);
     Status::Set("Loading into flash: %d%%", progress);
   }
 
