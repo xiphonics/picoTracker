@@ -36,8 +36,8 @@ protected:
   GUIRect getSelectionRect();
 
 private:
-  uchar row_;
-  uchar col_;
+  int8_t row_;
+  int8_t col_;
   uchar lastVol_;
   uchar lastTick_;
   uchar lastTsp_;
