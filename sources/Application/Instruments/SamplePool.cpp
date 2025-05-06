@@ -95,7 +95,7 @@ void SamplePool::Load(const char *projectName) {
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      Status::Set("Loading:%s (%d%%)", name, progress);
+      Status::Set("Copying:%s (%d%%)", name, progress);
       loadSample(name);
     }
     if (i == MAX_PIG_SAMPLES) {
@@ -103,9 +103,6 @@ void SamplePool::Load(const char *projectName) {
       break;
     };
   };
-
-  // Show 100% when complete
-  Status::Set("Loading samples: Complete (100%%)");
 
   // now sort the samples
   int rest = count_;

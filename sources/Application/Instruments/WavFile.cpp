@@ -411,7 +411,7 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
     // Update progress indicator
     uint progress =
         (uint)(((totalBytesToProcess - count) * 100) / totalBytesToProcess);
-    Status::Set("Loading into flash: %d%%", progress);
+    Status::Set("Loading: %d%%", progress);
   }
 
   // Lastly we restore the IRQs
