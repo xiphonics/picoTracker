@@ -358,19 +358,6 @@ void ImportView::adjustPreviewVolume(bool increase) {
 
   // Mark the view as dirty to update the status bar with the new volume
   isDirty_ = true;
-
-  // If currently previewing, restart the preview to apply the new volume
-  if (Player::GetInstance()->IsPlaying() &&
-      previewPlayingIndex_ != (size_t)-1) {
-    // Get the currently playing file name
-    auto fs = FileSystem::GetInstance();
-    char name[PFILENAME_SIZE];
-    unsigned fileIndex = fileIndexList_[previewPlayingIndex_];
-    fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-    // Restart the preview with the new volume
-    preview(name);
-  }
 }
 
 void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
