@@ -5,8 +5,6 @@ template: page
 
 The Theme Settings screen allows you to customize the appearance of the picoTracker interface, including fonts and colors.
 
-## NOTE: Theme settings were added in firmware version 2.1.0
-
 ![screen capture of theme settings screen](image/theme-screen-small.png)
 
 ## Accessing the Theme Settings
@@ -35,16 +33,12 @@ The picoTracker allows you to customize the color scheme of the interface. Each 
 | Cursor | 776B56 | Cursor color |
 | Info | 29EE3D | Information displays, used for battery gauge OK level, vu meter normal level |
 | Warning | EFFA52 | Warning displays, used for battery gauge low level, vu meter high level |
-| Error | FF1111 | Error displays, used for battery gauge critical level, vu meter clipping level |
-| Play | 00FF00 | Indicators for playing tracks |
-| Mute | FF0000 | Indicators for muted tracks |
-| SongViewFE | AAAAAA | Used for `FE` chain values in the Song View |
-| SongView00 | 777777 | Used for `00` chain values in the Song View |
-| Row | 444444 | Primary row highlighting |
-| Row2 | 333333 | Secondary row highlighting |
-| MajorBeat | 555555 | Major beat (quarter note) indicators in the Phrase view|
+| Error | E84D15 | Error displays, used for battery gauge critical level, vu meter clipping level |
+| Accent | 00FF00 | Primary accent color, used for playing track indicators and alternating row highlights |
+| AccentAlt | FF0000 | Secondary accent color, used for muted track indicators, alternating row highlights, and `FE` chain values in Song View |
+| Emphasis | FFA500 | Used for emphasis elements like major beat (quarter note) indicators in the Phrase view and `00` chain values in Song View |
 
-Note: Row, Row2 are used to mark every block of 4 rows in the each of the "grid views", currently this is a user setting.
+Note: Accent and AccentAlt are used to mark every block of 4 rows in each of the "grid views", currently this row count value is *not* a user setting.
 
 ## Color Swatches
 

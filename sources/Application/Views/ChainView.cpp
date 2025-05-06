@@ -678,7 +678,7 @@ void ChainView::DrawView() {
   pos = anchor;
   pos._x -= 3;
   for (int j = 0; j < 16; j++) {
-    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ROW) : SetColor(CD_ROW2);
+    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ACCENT) : SetColor(CD_ACCENTALT);
     hex2char(j, row);
     DrawString(pos._x, pos._y, row, props);
     pos._y += 1;

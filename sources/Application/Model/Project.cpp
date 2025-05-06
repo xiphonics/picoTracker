@@ -20,6 +20,7 @@ Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
       masterVolume_(FourCC::VarMasterVolume, 100),
+      previewVolume_(FourCC::VarPreviewVolume, 50),
       wrap_(FourCC::VarWrap, false), transpose_(FourCC::VarTranspose, 0),
       scale_(FourCC::VarScale, scaleNames, numScales, 0),
       scaleRoot_(FourCC::VarScaleRoot, noteNames, 12, 0),
@@ -27,6 +28,7 @@ Project::Project(const char *name)
 
   this->variables_.insert(variables_.end(), &tempo_);
   this->variables_.insert(variables_.end(), &masterVolume_);
+  this->variables_.insert(variables_.end(), &previewVolume_);
   this->variables_.insert(variables_.end(), &wrap_);
   this->variables_.insert(variables_.end(), &transpose_);
   this->variables_.insert(variables_.end(), &scale_);
@@ -76,6 +78,12 @@ int Project::GetTempo() {
 
 int Project::GetMasterVolume() {
   Variable *v = FindVariable(FourCC::VarMasterVolume);
+  NAssert(v);
+  return v->GetInt();
+};
+
+int Project::GetPreviewVolume() {
+  Variable *v = FindVariable(FourCC::VarPreviewVolume);
   NAssert(v);
   return v->GetInt();
 };

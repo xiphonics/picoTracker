@@ -318,6 +318,14 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   // this time
   int irqs = save_and_disable_interrupts();
 
+  // This is required due to strange issue with above interrupts disable causing
+  // a crash on some sample files without this delay
+  volatile uint32_t cycles = 100000;
+  while (cycles--) {
+    // Compiler won't optimize this away due to volatile
+    asm volatile("nop" ::: "memory");
+  }
+
   // If data doesn't fit in previously erased page, we'll have to erase
   // additional ones
   if (FlashPageBufferSize > (flashEraseOffset - flashWriteOffset)) {
@@ -341,8 +349,8 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   // Where the data starts in the WAV (after header)
   int bufferStart = dataPosition_;
 
-  // Read the buffer but in small chunk to let the system breathe
-  // if the files are big
+  // Process all files using the same chunked approach
+  // Read the buffer in small chunks to let the system breathe
   uint count = bufferSize;
   uint offset = 0;
   uint readSize = count > FLASH_PAGE_SIZE ? FLASH_PAGE_SIZE : count;
@@ -377,11 +385,19 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
         ((writeSize / FLASH_PAGE_SIZE) + ((writeSize % FLASH_PAGE_SIZE) != 0)) *
         FLASH_PAGE_SIZE;
 
-    // There will be trash at the end, but sampleBufferSize_ gives me the
-    // bounds
-    // Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
-    //  writeSize, flashWriteOffset + offset,
-    //  flashWriteOffset + offset + writeSize);
+    // Ensure we have a minimum write size of one page
+    if ((unsigned int)writeSize < FLASH_PAGE_SIZE) {
+      Trace::Debug("Adjusting write size from %d to minimum page size %d",
+                   writeSize, FLASH_PAGE_SIZE);
+      writeSize = FLASH_PAGE_SIZE;
+    }
+
+    // Debug output for small files
+    if (bufferSize < 1024) {
+      Trace::Debug(
+          "Writing sample: bufferSize=%d, writeSize=%d, chunk %d of %d",
+          bufferSize, writeSize, bufferSize - count, bufferSize);
+    }
 
     flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
                         writeSize);

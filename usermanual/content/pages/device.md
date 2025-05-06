@@ -41,8 +41,6 @@ The Theme Settings screen allows you to customize the appearance of the picoTrac
 
 See the [Theme Settings](theme.html) chapter for more details.
 
-### NOTE: Theme settings were added in firmware version 2.1.0
-
 ## Updating Firmware
 
 The picoTracker firmware can be easily updated by powering the picoTracker via a USB connected to a PC. Select `Update firmware`. This will reboot the device into *BOOTSEL* mode, and you'll see the picoTracker show up as a USB mass storage device on the connected computer. At that point, just copy the UF2 firmware file into the USB device as you would with a USB stick or USB drive. 

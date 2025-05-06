@@ -46,6 +46,7 @@ public:
   bool IsChannelPlaying(int channel);
 
   void StartStreaming(char *name);
+  void StartLoopingStreaming(char *name);
   void StopStreaming();
 
   stereosample GetMasterOutLevel();

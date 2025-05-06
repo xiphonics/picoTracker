@@ -30,6 +30,7 @@ public:
   Song song_;
 
   int GetMasterVolume();
+  int GetPreviewVolume();
   bool Wrap();
   void OnTempoTap();
   void NudgeTempo(int value);
@@ -65,6 +66,7 @@ private:
   // variables
   WatchedVariable tempo_;
   Variable masterVolume_;
+  Variable previewVolume_;
   Variable wrap_;
   Variable transpose_;
   Variable scale_;
