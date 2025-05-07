@@ -843,17 +843,33 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
     // Get the sample name to use as the default instrument name if no custom
     // name is set
     Variable *sampleVar = FindVariable(FourCC::SampleInstrumentSample);
-    Variable *nameVar = FindVariable(FourCC::InstrumentName);
-
-    if (sampleVar && nameVar) {
-      // Only update the name if it's empty or matches the previous sample name
-      etl::string<MAX_INSTRUMENT_NAME_LENGTH> currentName =
-          nameVar->GetString();
-      if (currentName.empty()) {
-        // Set the instrument name to the sample name (without extension)
-        etl::string<MAX_INSTRUMENT_NAME_LENGTH> sampleName = GetDisplayName();
-        nameVar->SetString(sampleName.c_str());
+    
+    // Get the sample filename from the SamplePool
+    SamplePool *sp = SamplePool::GetInstance();
+    int sampleIndex = sampleVar->GetInt();
+    etl::string<MAX_INSTRUMENT_NAME_LENGTH> sampleFilename;
+    
+    if (sampleIndex >= 0) {
+      const char* sampleName = sp->GetNameList()[sampleIndex];
+      if (sampleName) {
+        sampleFilename = sampleName;
+        
+        // Strip .wav extension if present
+        auto dotPos = sampleFilename.find_last_of('.');
+        if (dotPos != etl::string<MAX_INSTRUMENT_NAME_LENGTH>::npos) {
+          // Check if the extension is .wav (case insensitive)
+          const char *ext = sampleFilename.c_str() + dotPos;
+          if (strcasecmp(ext, ".wav") == 0) {
+            sampleFilename = sampleFilename.substr(0, dotPos);
+          }
+        }
       }
+    }
+    
+    // Check if the user has explicitly set a custom name
+    // If the name is empty or the default "SAMPLE", use the sample filename
+    if (name_.empty() || name_ == "SAMPLE") {
+      name_ = sampleFilename;
     }
 
     if (running_) {
@@ -1138,8 +1154,11 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 };
 
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetUserSetName() {
-  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
-  return v->GetString();
+  // Simply return the name_ field, which will either be:
+  // 1. The sample filename (set in Update when a sample is assigned)
+  // 2. A custom name set by the user
+  // 3. Empty, which will cause GetDisplayName to use the default name
+  return name_;
 };
 
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
