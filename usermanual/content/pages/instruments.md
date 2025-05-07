@@ -59,9 +59,13 @@ Once you've created an instrument, you can save it for use in other projects:
 
 ## Sample Import Screen
 
-You can enter the sample import file browser by hitting `EDIT EDIT` (press the `EDIT` twice in quick succession) on the “sample:” field in the Instrument Screen.
+You can enter the sample import file browser by hitting `ENTER ENTER` (press the `ENTER` key twice in quick succession) when you are in the *Sample* Instrument Screen. This double-press behavior provides a quick way to access the sample import file browser from any field in the *Sample* Instrument Screen.
+
+When in the Project Screen, you can access the sample import file browser with a single press of the `ENTER` key on the "Import Sample" field.
 
 Samples that you may want to import into a project can be located in any folder but it's recommended to keep them in the folder named `/samples` at the top-level of the sdcard as that is the default location for the sample import file browser to display when you enter it.
+
+When you're done in the Import Screen, you can press `NAV`+`LEFT` to return to the screen you came from (either the Instrument Screen or the Project Screen).
 
 Note: sub-directories will be sorted before files, but otherwise the files will be listed in an unspecified order (ie. not necessarily alphabetical order).
 
@@ -69,9 +73,7 @@ Note: sub-directories will be sorted before files, but otherwise the files will 
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
-Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indciated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entery and pressing `ENTER`. Hold down `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`. 
-
-Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories. Subdirectories are indicated with a `/` prefix.
+Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories. Subdirectories are indicated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entry and pressing `ENTER`. Hold down `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`.
 
 **Single Cycle Waveforms**: Single cycle waveforms are specially marked with a `~` prefix in the file listing. These are WAV files with specific sizes (300 or 1344 bytes) that can be used as oscillators. When imported, they'll automatically be set to oscillator mode in the instrument settings.
 
