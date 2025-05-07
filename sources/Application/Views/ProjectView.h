@@ -1,6 +1,10 @@
 #ifndef _PROJECT_VIEW_H_
 #define _PROJECT_VIEW_H_
 
+#include "BaseClasses/UIActionField.h"
+#include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UIStaticField.h"
+#include "BaseClasses/UITempoField.h"
 #include "BaseClasses/UITextField.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
@@ -43,6 +47,15 @@ private:
   // Debug
   unsigned long lastTick_;
   unsigned long lastClock_;
+  
+  // Statically allocated field vectors
+  etl::vector<UITempoField, 1> tempoFields_;
+  etl::vector<UIIntVarField, 4> intVarFields_;
+  etl::vector<UIActionField, 7> actionFields_;
+  etl::vector<UIStaticField, 1> staticFields_;
+  etl::vector<UITextField<MAX_PROJECT_NAME_LENGTH>, 1> textFields_;
+  
+  // References to specific fields that need direct access
   UIField *tempoField_;
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
   bool saveAsFlag_ = false;
