@@ -103,7 +103,7 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   Variable *v = project_->FindVariable(FourCC::VarTempo);
   tempoFields_.emplace_back(FourCC::ActionTempoChanged, position, *v,
-                          "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
+                            "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*tempoFields_.rbegin()));
   (*tempoFields_.rbegin()).AddObserver(*this);
   tempoField_ = &(*tempoFields_.rbegin());
@@ -115,7 +115,8 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
-  intVarFields_.emplace_back(position, *v, "transpose: %3.2d", -48, 48, 0x1, 0xC);
+  intVarFields_.emplace_back(position, *v, "transpose: %3.2d", -48, 48, 0x1,
+                             0xC);
   fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
 
   v = project_->FindVariable(FourCC::VarScale);
@@ -124,7 +125,8 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
     v->SetInt(0);
   }
   position._y += 1;
-  intVarFields_.emplace_back(position, *v, "scale: %s", 0, numScales - 1, 1, 10);
+  intVarFields_.emplace_back(position, *v, "scale: %s", 0, numScales - 1, 1,
+                             10);
   fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
 
   // Add Scale Root field
@@ -133,8 +135,14 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   intVarFields_.emplace_back(position, *v, "scale root: %s", 0, 11, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
 
+  position._y += 2;
+  actionFields_.emplace_back("Import Sample", FourCC::ActionImport, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
+
   position._y += 1;
-  actionFields_.emplace_back("Compact Instruments", FourCC::ActionPurgeInstrument, position);
+  actionFields_.emplace_back("Compact Instruments",
+                             FourCC::ActionPurgeInstrument, position);
   fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
   (*actionFields_.rbegin()).AddObserver(*this);
 
@@ -148,7 +156,8 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
       etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("project: ");
   auto defaultName = etl::make_string_with_capacity<MAX_PROJECT_NAME_LENGTH>(
       UNNAMED_PROJECT_NAME);
-  textFields_.emplace_back(*v, position, label, FourCC::ActionProjectRename, defaultName);
+  textFields_.emplace_back(*v, position, label, FourCC::ActionProjectRename,
+                           defaultName);
   nameField_ = &(*textFields_.rbegin());
 
   nameField_->AddObserver(*this);
@@ -378,6 +387,15 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       RenderProgressModal *renderDialog =
           new RenderProgressModal(*this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
+    }
+    break;
+  case FourCC::ActionImport:
+    // Switch to the ImportView for sample import
+    {
+      ViewType vt = VT_IMPORT;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
     }
     break;
   default:

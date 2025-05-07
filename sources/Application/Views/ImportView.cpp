@@ -94,8 +94,9 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
-    // Go to back "left" to instrument screen
-    ViewType vt = VT_INSTRUMENT;
+    // Go to back "left" to project screen, even if the instrument "hotkey" was
+    // used
+    ViewType vt = VT_PROJECT;
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
     SetChanged();
     NotifyObservers(&ve);

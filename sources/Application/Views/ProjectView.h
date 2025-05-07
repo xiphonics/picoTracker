@@ -47,14 +47,14 @@ private:
   // Debug
   unsigned long lastTick_;
   unsigned long lastClock_;
-  
+
   // Statically allocated field vectors
   etl::vector<UITempoField, 1> tempoFields_;
   etl::vector<UIIntVarField, 4> intVarFields_;
-  etl::vector<UIActionField, 7> actionFields_;
+  etl::vector<UIActionField, 8> actionFields_;
   etl::vector<UIStaticField, 1> staticFields_;
   etl::vector<UITextField<MAX_PROJECT_NAME_LENGTH>, 1> textFields_;
-  
+
   // References to specific fields that need direct access
   UIField *tempoField_;
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
