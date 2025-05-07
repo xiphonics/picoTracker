@@ -55,7 +55,7 @@ public:
   static etl::string<MAX_PROJECT_NAME_LENGTH> ProjectNameGlobal;
 
 private:
-  etl::list<Variable *, 7> variables_;
+  etl::list<Variable *, 8> variables_;
 
   InstrumentBank *instrumentBank_;
   int tempoNudge_;
