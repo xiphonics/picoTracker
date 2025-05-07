@@ -143,10 +143,11 @@ const bool scaleSteps[numScales][12] = {
 // "scale number", taking into account the scale root
 uint8_t getSemitonesOffset(uint8_t scale, uint8_t number, uint8_t root) {
 
-  // assert for valid ranges of scale, number and root
-  NAssert(scale < numScales);
-  NAssert(number < 12);
-  NAssert(root < 12);
+  // check for valid ranges of scale, number and root
+  if (scale >= numScales || number >= 12 || root >= 12) {
+    NAssert(false);
+    return 0;
+  }
 
   // Find the nth note in the scale (where n is the number parameter)
   uint8_t i = 0;
