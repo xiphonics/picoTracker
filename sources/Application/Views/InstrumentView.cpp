@@ -711,6 +711,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
                 new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
             DoModal(mb);
           } else {
+            ImportView::SetSourceViewType(VT_INSTRUMENT);
+
             // Go to import sample
             ViewType vt = VT_IMPORT;
             ViewEvent ve(VET_SWITCH_VIEW, &vt);

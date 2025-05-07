@@ -18,10 +18,16 @@
 // is single cycle macro, checks for FILE size of LGPT and AKWF file formats
 #define IS_SINGLE_CYCLE(x) (x == 1344 || x == 300)
 
+// Initialize static member
+ViewType ImportView::sourceViewType_ = VT_PROJECT;
+
 ImportView::ImportView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData) {}
 
 ImportView::~ImportView() {}
+
+// Static method to set the source view type before opening ImportView
+void ImportView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // Check for key release events
@@ -94,10 +100,8 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
-    // Go to back "left" to project screen, even if the instrument "hotkey" was
-    // used
-    ViewType vt = VT_PROJECT;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    // Go back to the source view that opened the ImportView
+    ViewEvent ve(VET_SWITCH_VIEW, &sourceViewType_);
     SetChanged();
     NotifyObservers(&ve);
     return;

@@ -2,6 +2,7 @@
 #include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/randomnames.h"
+#include "Application/Views/ImportView.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "BaseClasses/UIActionField.h"
@@ -228,8 +229,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
   } else if (mask & EPBM_PLAY) {
     Player *player = Player::GetInstance();
-    player->OnStartButton(PM_SONG, viewData_->songX_, false,
-                           viewData_->songX_);
+    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
   }
 };
 
@@ -391,14 +391,16 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     // Switch to the ImportView for sample import
     if (!player->IsRunning()) {
       // First check if the samplelib exists
-      bool samplelibExists =
-          FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+      bool samplelibExists = FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
       if (!samplelibExists) {
         MessageBox *mb =
             new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
         DoModal(mb);
       } else {
+        // Set the source view type before switching to ImportView
+        ImportView::SetSourceViewType(VT_PROJECT);
+
         // Go to import sample
         ViewType vt = VT_IMPORT;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
