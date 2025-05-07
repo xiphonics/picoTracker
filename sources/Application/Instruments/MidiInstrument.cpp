@@ -207,8 +207,9 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       // Add/remove from offset to match selected scale
       uint8_t rootNote = lastNotes_[channel][0];
       int scale = Player::GetInstance()->GetProject()->GetScale();
-      // apply current scale to offset
-      uint8_t scaledOffset = getSemitonesOffset(scale, noteOffset);
+      int scaleRoot = Player::GetInstance()->GetProject()->GetScaleRoot();
+      // apply current scale to offset, taking into account the scale root
+      uint8_t scaledOffset = getSemitonesOffset(scale, noteOffset, scaleRoot);
 
       // use the existing steps note to calculate each notes offset
       uint8_t note = rootNote + scaledOffset;

@@ -138,6 +138,7 @@ struct FourCC {
     VarWrap = 70,
     VarTranspose = 63,
     VarScale = 16,
+    VarScaleRoot = 162,
     VarProjectName = 99,
     VarMidiDevice = 40,
     VarLineOut = 17,
@@ -180,7 +181,8 @@ struct FourCC {
     // 158 is taken for VarMajorBeatColor
     // 159 is taken for ActionShowTheme
     // 160 is taken for MidiInstrumentProgram
-    // 161 is taken for VarPreviewVolume
+    // 161 is taken for VarScaleRoot
+    // 162 is taken for VarPreviewVolume
 
     VarInstrumentType = 113,
 
@@ -242,6 +244,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(VarUIFont, "UIFONT")
+  ETL_ENUM_TYPE(VarScaleRoot, "SCALEROOT")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
   ETL_ENUM_TYPE(MacroInstrmentTimbre, "timbre")
   ETL_ENUM_TYPE(MacroInstrumentColor, "color")

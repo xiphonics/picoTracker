@@ -15,6 +15,7 @@ target_link_libraries(application_model PUBLIC pico_stdlib
                                         PUBLIC foundation_variables
                                         PUBLIC sdfat
                                         PUBLIC platform_sdcard
+                                        PRIVATE application_utils
 )
 
 target_include_directories(application_model PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

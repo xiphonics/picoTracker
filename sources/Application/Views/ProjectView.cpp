@@ -131,7 +131,14 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
       new UIIntVarField(position, *v, "scale: %s", 0, numScales - 1, 1, 10);
   fieldList_.insert(fieldList_.end(), f3);
 
-  position._y += 2;
+  // Add Scale Root field
+  position._y += 1;
+  v = project_->FindVariable(FourCC::VarScaleRoot);
+  UIIntVarField *f4 =
+      new UIIntVarField(position, *v, "scale root: %s", 0, 11, 1, 1);
+  fieldList_.insert(fieldList_.end(), f4);
+
+  position._y += 1;
   UIActionField *a1 = new UIActionField(
       "Compact Instruments", FourCC::ActionPurgeInstrument, position);
   a1->AddObserver(*this);
