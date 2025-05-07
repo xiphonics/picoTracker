@@ -226,13 +226,11 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       SetChanged();
       NotifyObservers(&ve);
     }
-  } else {
-    if (mask & EPBM_PLAY) {
-      Player *player = Player::GetInstance();
-      player->OnStartButton(PM_SONG, viewData_->songX_, false,
-                            viewData_->songX_);
-    }
-  };
+  } else if (mask & EPBM_PLAY) {
+    Player *player = Player::GetInstance();
+    player->OnStartButton(PM_SONG, viewData_->songX_, false,
+                           viewData_->songX_);
+  }
 };
 
 void ProjectView::DrawView() {
@@ -391,11 +389,25 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionImport:
     // Switch to the ImportView for sample import
-    {
-      ViewType vt = VT_IMPORT;
-      ViewEvent ve(VET_SWITCH_VIEW, &vt);
-      SetChanged();
-      NotifyObservers(&ve);
+    if (!player->IsRunning()) {
+      // First check if the samplelib exists
+      bool samplelibExists =
+          FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+
+      if (!samplelibExists) {
+        MessageBox *mb =
+            new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
+        DoModal(mb);
+      } else {
+        // Go to import sample
+        ViewType vt = VT_IMPORT;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    } else {
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
     }
     break;
   default:

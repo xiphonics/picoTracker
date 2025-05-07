@@ -696,32 +696,41 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   Player *player = Player::GetInstance();
 
   if (mask == EPBM_ENTER) {
+    // first check if the current instrument is a sample instrument & in "new"
+    // viewmode
+    if (getInstrument()->GetType() == IT_SAMPLE) {
+      if (viewMode_ == VM_NEW) {
+        viewMode_ = VM_NORMAL; // clear the "enter double tap" state
+        if (!player->IsRunning()) {
+          // First check if the samplelib exists
+          bool samplelibExists =
+              FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+
+          if (!samplelibExists) {
+            MessageBox *mb =
+                new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
+            DoModal(mb);
+          } else {
+            // Go to import sample
+            ViewType vt = VT_IMPORT;
+            ViewEvent ve(VET_SWITCH_VIEW, &vt);
+            SetChanged();
+            NotifyObservers(&ve);
+          }
+        } else {
+          MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+          DoModal(mb);
+        }
+      } else {
+        // mark as "new" mode so a 2nd following ENTER will trigger the sample
+        // import above
+        viewMode_ = VM_NEW;
+      }
+    };
+
     UIIntVarField *field = (UIIntVarField *)GetFocus();
     Variable &v = field->GetVariable();
     switch (v.GetID()) {
-    case FourCC::SampleInstrumentSample: {
-      if (!player->IsRunning()) {
-        // First check if the samplelib exists
-        bool samplelibExists =
-            FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
-
-        if (!samplelibExists) {
-          MessageBox *mb =
-              new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
-          DoModal(mb);
-        } else {
-          // Go to import sample
-          ViewType vt = VT_IMPORT;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-      } else {
-        MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
-        DoModal(mb);
-      }
-      break;
-    }
     case FourCC::SampleInstrumentTable: {
       int next = TableHolder::GetInstance()->GetNext();
       if (next != NO_MORE_TABLE) {
@@ -756,7 +765,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_SELECTION) {
   } else {
-    viewMode_ = VM_NORMAL;
+    // viewMode_ = VM_NORMAL;
   }
 
   FieldView::ProcessButtonMask(mask, pressed);
