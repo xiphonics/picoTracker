@@ -287,9 +287,8 @@ bool Variable::IsModified() {
   case CHAR_LIST:
     return value_.index_ != defaultValue_.index_;
   case STRING:
-    // For string types, we don't currently track default values
-    // Could be enhanced in the future if needed
-    return true;
+    // For string types, just compare against empty string
+    return (stringValue_ != nullptr) && (stringValue_->size() > 0);
   }
   return false;
 }
