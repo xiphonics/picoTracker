@@ -35,6 +35,7 @@ public:
   void OnTempoTap();
   void NudgeTempo(int value);
   int GetScale();
+  uint8_t GetScaleRoot();
   int GetTempo(); // Takes nudging into account
   int GetTranspose();
   void GetProjectName(char *name);
@@ -79,6 +80,7 @@ private:
   Variable wrap_;
   Variable transpose_;
   Variable scale_;
+  Variable scaleRoot_;
   Variable projectName_;
 };
 

@@ -1,10 +1,10 @@
-
 #include "WavFile.h"
 #include "Application/Model/Config.h"
 #include "Foundation/Types/Types.h"
 #include "Services/Time/TimeService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
+#include "System/io/Status.h"
 #include <stdlib.h>
 
 #ifdef LOAD_IN_FLASH
@@ -355,6 +355,9 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
   uint offset = 0;
   uint readSize = count > FLASH_PAGE_SIZE ? FLASH_PAGE_SIZE : count;
 
+  // For progress tracking
+  uint totalBytesToProcess = bufferSize;
+
   while (count > 0) {
     readSize = (count > readSize) ? readSize : count;
 
@@ -404,6 +407,11 @@ bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
     bufferStart += readSize;
     count -= readSize;
     flashWriteOffset += writeSize;
+
+    // Update progress indicator
+    uint progress =
+        (uint)(((totalBytesToProcess - count) * 100) / totalBytesToProcess);
+    Status::Set("Loading: %d%%", progress);
   }
 
   // Lastly we restore the IRQs

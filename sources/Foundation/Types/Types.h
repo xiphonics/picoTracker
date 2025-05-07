@@ -138,6 +138,7 @@ struct FourCC {
     VarWrap = 70,
     VarTranspose = 63,
     VarScale = 16,
+    VarScaleRoot = 162,
     VarProjectName = 99,
     VarMidiDevice = 40,
     VarLineOut = 17,
@@ -180,24 +181,25 @@ struct FourCC {
     // 158 is taken for VarMajorBeatColor
     // 159 is taken for ActionShowTheme
     // 160 is taken for MidiInstrumentProgram
-    // 161 is taken for VarPreviewVolume
-    // 162 is taken for VarChannel1Volume
-    // 163 is taken for VarChannel2Volume
-    // 164 is taken for VarChannel3Volume
-    // 165 is taken for VarChannel4Volume
-    // 166 is taken for VarChannel5Volume
-    // 167 is taken for VarChannel6Volume
-    // 168 is taken for VarChannel7Volume
-    // 169 is taken for VarChannel8Volume
+    // 161 is taken for VarScaleRoot
+    // 162 is taken for VarPreviewVolume
+    // 163 is taken for VarChannel1Volume
+    // 164 is taken for VarChannel2Volume
+    // 165 is taken for VarChannel3Volume
+    // 166 is taken for VarChannel4Volume
+    // 167 is taken for VarChannel5Volume
+    // 168 is taken for VarChannel6Volume
+    // 169 is taken for VarChannel7Volume
+    // 170 is taken for VarChannel8Volume
 
-    VarChannel1Volume = 162,
-    VarChannel2Volume = 163,
-    VarChannel3Volume = 164,
-    VarChannel4Volume = 165,
-    VarChannel5Volume = 166,
-    VarChannel6Volume = 167,
-    VarChannel7Volume = 168,
-    VarChannel8Volume = 169,
+    VarChannel1Volume = 163,
+    VarChannel2Volume = 164,
+    VarChannel3Volume = 165,
+    VarChannel4Volume = 166,
+    VarChannel5Volume = 167,
+    VarChannel6Volume = 168,
+    VarChannel7Volume = 169,
+    VarChannel8Volume = 170,
 
     VarInstrumentType = 113,
 
@@ -259,6 +261,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(VarUIFont, "UIFONT")
+  ETL_ENUM_TYPE(VarScaleRoot, "SCALEROOT")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
   ETL_ENUM_TYPE(MacroInstrmentTimbre, "timbre")
   ETL_ENUM_TYPE(MacroInstrumentColor, "color")
