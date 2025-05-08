@@ -36,7 +36,7 @@ private:
 
   // Channel volume UI fields
   etl::vector<UIIntVarField, SONG_CHANNEL_COUNT> channelVolumeFields_;
-  
+
   // Flags to track which UI elements need updating
   // These prevent core1 from directly updating the UI
   bool needsPlayTimeUpdate_ = false;

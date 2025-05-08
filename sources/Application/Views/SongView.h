@@ -16,6 +16,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
+  virtual void AnimationUpdate();
 
 protected:
   void processNormalButtonMask(unsigned int mask);
@@ -80,6 +81,13 @@ private:
   int saveOffset_;
   bool invertBatt_;
   bool needClear_;
+
+  // Flags to track which UI elements need updating
+  // These prevent core1 from directly updating the UI
+  bool needsPlayTimeUpdate_ = false;
+  bool needsNotesUpdate_ = false;
+  bool needsPositionUpdate_ = false;
+  bool needsVUMeterUpdate_ = false;
 };
 
 #endif

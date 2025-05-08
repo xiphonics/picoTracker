@@ -9,7 +9,8 @@
 #define CHANNELS_X_OFFSET_ 3 // stride between each channel
 
 MixerView::MixerView(GUIWindow &w, ViewData *viewData)
-    : FieldView(w, viewData), needsPlayTimeUpdate_(false), needsNotesUpdate_(false) {
+    : FieldView(w, viewData), needsPlayTimeUpdate_(false),
+      needsNotesUpdate_(false) {
 
   // Initialize the channel volume fields
   initChannelVolumeFields();
@@ -318,40 +319,46 @@ void MixerView::DrawView() {
 
 void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Since this can be called from core1 via the Observer pattern,
-  // we need to ensure we don't interfere with core0's rendering cycle
-  
+  // we need to ensure we don't try directly calling draw functions here!
+
   // Instead of drawing directly, we'll just update our state and let
   // AnimationUpdate handle the actual drawing
-  
   Player *player = Player::GetInstance();
-  
-  // Handle play time display
+
   if (eventType != PET_STOP) {
     // Flag that play time needs to be updated
     needsPlayTimeUpdate_ = true;
   }
-  
-  // Flag that notes need to be updated
+
   needsNotesUpdate_ = true;
 };
 
 void MixerView::AnimationUpdate() {
-  // Update battery gauge and VU meters on every clock tick (~1Hz)
+  // update VU meters on every clock tick (~1Hz)
   GUITextProperties props;
 
-  // Draw battery gauge
+  // TODO: Update battery gauge every 50 ticks, ie 1hz
   drawBattery(props);
 
-  // Get the player
+  // Get the player safely
   Player *player = Player::GetInstance();
+
+  // Only process updates below if we're fully initialized
+  if (!viewData_ || !player) {
+    // Just flush the battery gauge and return
+    w_.Flush();
+    return;
+  }
 
   // Always update VU meters, whether the sequencer is running or not
   // This ensures we see VU meter updates from MIDI input even when not playing
   etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
       player->GetMixerLevels();
-  drawChannelVUMeters(levels, player, props);
-  drawMasterVuMeter(player, props);
-  
+  if (levels) {
+    drawChannelVUMeters(levels, player, props);
+    drawMasterVuMeter(player, props);
+  }
+
   // Handle any pending updates from OnPlayerUpdate
   // This ensures all UI drawing happens in the same thread (core0)
   if (needsPlayTimeUpdate_) {
@@ -361,7 +368,7 @@ void MixerView::AnimationUpdate() {
     drawPlayTime(player, pos, props);
     needsPlayTimeUpdate_ = false;
   }
-  
+
   if (needsNotesUpdate_) {
     drawNotes();
     needsNotesUpdate_ = false;
