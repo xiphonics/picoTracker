@@ -11,7 +11,7 @@
 
 #include <string>
 
-#define PICO_CLOCK_INTERVAL 40 // ~25Hz
+#define PICO_CLOCK_INTERVAL 20 // ~50Hz
 #define PICO_CLOCK_HZ (1000 / PICO_CLOCK_INTERVAL)
 
 enum AppButton {
