@@ -233,19 +233,22 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
     }
   }
 
-  props.invert_ = true;
-
+  // Store original inversion state
+  bool originalInvert = props.invert_;
+  
   // Left channel: Handle level changes
   if (forceRedraw || leftBars != prevLeftVU_[vuIndex]) {
     // If forcing redraw or level changed, redraw the entire meter
 
-    // First clear the entire meter area
+    // First clear the entire meter area with inversion disabled
+    props.invert_ = false;
     SetColor(CD_BACKGROUND);
     for (int i = 0; i < VU_METER_HEIGHT; i++) {
       DrawString(pos._x, pos._y - i, " ", props);
     }
 
-    // Then draw the active cells
+    // Then draw the active cells with inversion enabled
+    props.invert_ = true;
     for (int i = 0; i < leftBars; i++) {
       // Set appropriate color based on level
       if (i == VU_METER_CLIP_LEVEL) {
@@ -265,13 +268,15 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   if (forceRedraw || rightBars != prevRightVU_[vuIndex]) {
     // If forcing redraw or level changed, redraw the entire meter
 
-    // First clear the entire meter area
+    // First clear the entire meter area with inversion disabled
+    props.invert_ = false;
     SetColor(CD_BACKGROUND);
     for (int i = 0; i < VU_METER_HEIGHT; i++) {
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
 
-    // Then draw the active cells
+    // Then draw the active cells with inversion enabled
+    props.invert_ = true;
     for (int i = 0; i < rightBars; i++) {
       // Set appropriate color based on level
       if (i == VU_METER_CLIP_LEVEL) {
@@ -291,7 +296,8 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   prevLeftVU_[vuIndex] = leftBars;
   prevRightVU_[vuIndex] = rightBars;
 
-  props.invert_ = false;
+  // Restore original inversion state
+  props.invert_ = originalInvert;
 }
 
 void View::drawPlayTime(Player *player, GUIPoint pos,
