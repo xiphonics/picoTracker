@@ -9,7 +9,7 @@
 #define CHANNELS_X_OFFSET_ 3 // stride between each channel
 
 MixerView::MixerView(GUIWindow &w, ViewData *viewData)
-    : FieldView(w, viewData) {
+    : FieldView(w, viewData), needsPlayTimeUpdate_(false), needsNotesUpdate_(false) {
 
   // Initialize the channel volume fields
   initChannelVolumeFields();
@@ -317,33 +317,22 @@ void MixerView::DrawView() {
 };
 
 void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
-
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't interfere with core0's rendering cycle
+  
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
+  
   Player *player = Player::GetInstance();
-
-  // Draw clipping indicator & CPU usage
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos = anchor;
-
-  GUITextProperties props;
-  SetColor(CD_NORMAL);
-
-  // Get levels from the player
-  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
-      player->GetMixerLevels();
-
-  // drawing VUmeters needs to happen when sequencer is not running too so see
-  // AnimationUpdate
-
+  
   // Handle play time display
   if (eventType != PET_STOP) {
-    // Draw play time when playing
-    pos = 0;
-    pos._x = 27;
-    pos._y += 1;
-    drawPlayTime(player, pos, props);
+    // Flag that play time needs to be updated
+    needsPlayTimeUpdate_ = true;
   }
-
-  drawNotes();
+  
+  // Flag that notes need to be updated
+  needsNotesUpdate_ = true;
 };
 
 void MixerView::AnimationUpdate() {
@@ -358,11 +347,25 @@ void MixerView::AnimationUpdate() {
 
   // Always update VU meters, whether the sequencer is running or not
   // This ensures we see VU meter updates from MIDI input even when not playing
-
   etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
       player->GetMixerLevels();
   drawChannelVUMeters(levels, player, props);
   drawMasterVuMeter(player, props);
+  
+  // Handle any pending updates from OnPlayerUpdate
+  // This ensures all UI drawing happens in the same thread (core0)
+  if (needsPlayTimeUpdate_) {
+    GUIPoint pos = GetAnchor();
+    pos._x = 27;
+    pos._y += 1;
+    drawPlayTime(player, pos, props);
+    needsPlayTimeUpdate_ = false;
+  }
+  
+  if (needsNotesUpdate_) {
+    drawNotes();
+    needsNotesUpdate_ = false;
+  }
 
   // Flush the window to ensure changes are displayed
   w_.Flush();

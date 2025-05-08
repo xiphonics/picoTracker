@@ -133,7 +133,6 @@ void View::drawMap() {
 }
 
 void View::drawNotes() {
-
   GUIPoint anchor = GetAnchor();
   int initialX = View::margin_ + 5;
   int initialY = anchor._y + View::songRowCount_ + 2;
@@ -141,35 +140,59 @@ void View::drawNotes() {
   GUITextProperties props;
 
   Player *player = Player::GetInstance();
-
-  // column banger refactor
+  bool isPlaying = player->IsRunning() && viewData_->playMode_ != PM_AUDITION;
+  
+  // First draw all highlighted channels (selected channel)
   props.invert_ = true;
+  SetColor(CD_HILITE2);
+  
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     if (i == viewData_->songX_) {
-      SetColor(CD_HILITE2);
-    } else {
-      SetColor(CD_HILITE1);
+      pos._x = initialX + (i * 3);
+      pos._y = initialY;
+      
+      if (isPlaying) {
+        // Draw all three rows for this channel
+        DrawString(pos._x, pos._y, player->GetPlayedNote(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedOctive(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i), props);
+      } else {
+        // Draw empty strings if not playing
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+      }
     }
-    if (player->IsRunning() && viewData_->playMode_ != PM_AUDITION) {
-      DrawString(pos._x, pos._y, player->GetPlayedNote(i),
-                 props); // row for the note values
-      pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedOctive(i),
-                 props); // row for the octive values
-      pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedInstrument(i),
-                 props); // draw instrument number
-    } else {
-      DrawString(pos._x, pos._y, "  ", props); // row for the note
-                                               // values
-      pos._y++;
-      DrawString(pos._x, pos._y, "  ",
-                 props); // row for the octive values
-      pos._y++;
-      DrawString(pos._x, pos._y, "  ", props); // draw instrument number
+  }
+  
+  // Then draw all non-highlighted channels
+  SetColor(CD_HILITE1);
+  
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    if (i != viewData_->songX_) {
+      pos._x = initialX + (i * 3);
+      pos._y = initialY;
+      
+      if (isPlaying) {
+        // Draw all three rows for this channel
+        DrawString(pos._x, pos._y, player->GetPlayedNote(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedOctive(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i), props);
+      } else {
+        // Draw empty strings if not playing
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+      }
     }
-    pos._y = initialY;
-    pos._x += 3;
   }
 }
 

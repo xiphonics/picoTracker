@@ -1,12 +1,13 @@
 #include "picoTrackerGUIWindowImp.h"
-#include "Adapters/picoTracker/utils/utils.h"
+#include "Application/Commands/EventDispatcher.h"
 #include "Application/Model/Config.h"
 #include "Application/Utils/char.h"
-#include "Player/Player.h"
 #include "System/Console/Trace.h"
-#include "System/System/System.h"
 #include "UIFramework/BasicDatas/GUIEvent.h"
-#include "UIFramework/SimpleBaseClasses/GUIWindow.h"
+#include "UIFramework/BasicDatas/GUIPoint.h"
+#include "UIFramework/Interfaces/I_GUIWindowFactory.h"
+#include "pico/stdlib.h"
+#include <stdio.h>
 #include <string.h>
 #ifdef USB_REMOTE_UI
 #include "picoRemoteUI.h"
@@ -96,12 +97,14 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
 #endif
 }
 
-void picoTrackerGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
-                                         GUITextProperties &p, bool overlay) {
-  Trace::Debug("draw string");
-  mode0_set_cursor(pos._x, pos._y);
-  mode0_print(string, p.invert_);
-};
+// Currently not used but maybe in future
+// void picoTrackerGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
+//                                          GUITextProperties &p, bool overlay)
+//                                          {
+//   Trace::Debug("draw string");
+//   mode0_set_cursor(pos._x, pos._y);
+//   mode0_print(string, p.invert_);
+// };
 
 void picoTrackerGUIWindowImp::DrawRect(GUIRect &r) {
   Trace::Debug("GUI DrawRect call");
@@ -128,10 +131,24 @@ void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
   Trace::Debug("GUI ClearRect call");
 };
 
+// Keep track of the last RGB values set for each palette index
+static uint16_t lastPaletteRGB[16] = {0};
+
 mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
-  // Palette index should always be < 16. Wont check it.
-  // TODO: should not be redefining the palette colors every call
-  mode0_set_palette_color(c._paletteIndex, to_rgb565(c));
+  // Palette index should always be < 16
+  if (c._paletteIndex >= 16) {
+    return MODE0_NORMAL; // Default to normal color if index is invalid
+  }
+
+  // Convert the color to RGB565 format
+  uint16_t rgb565 = to_rgb565(c);
+
+  // Only update the palette if the color has changed
+  if (lastPaletteRGB[c._paletteIndex] != rgb565) {
+    mode0_set_palette_color(c._paletteIndex, rgb565);
+    lastPaletteRGB[c._paletteIndex] = rgb565;
+  }
+
   return (mode0_color_t)c._paletteIndex;
 }
 

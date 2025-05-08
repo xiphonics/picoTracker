@@ -142,8 +142,6 @@ private:
   static int charWidth_;
   static int charHeight_;
 
-  SysMutex drawMutex_;
-
   bool loadProject_ = false;
 
   uint32_t lastAutoSave = 0;
