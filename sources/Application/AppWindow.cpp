@@ -585,13 +585,13 @@ void AppWindow::AnimationUpdate() {
   }
   _currentView->AnimationUpdate();
 
-  // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_MILLIS
+  // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_SECONDS
   // will return false if auto save was unsuccessful because eg. the sequencer
   // is running
   // we do this here because for sheer convenience because this
-  // callback is called every second and we have easy access in this class to
-  // the player, projectname and persistence service
-  if (++lastAutoSave > AUTOSAVE_INTERVAL_IN_SECONDS) {
+  // this callback is called PICO_CLOCK_HZ times a second and we have easy
+  // access in this class to the player, projectname and persistence service
+  if ((++lastAutoSave / PICO_CLOCK_HZ) > AUTOSAVE_INTERVAL_IN_SECONDS) {
     if (autoSave()) {
       lastAutoSave = 0;
     }
