@@ -156,20 +156,28 @@ protected:
   void drawMap();
   void drawNotes();
   void drawBattery(GUITextProperties &props);
-  void drawMasterVuMeter(Player *player, GUITextProperties props);
+  void drawMasterVuMeter(Player *player, GUITextProperties props,
+                         bool forceRedraw = false);
   void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);
   void drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
-                   GUITextProperties props);
+                   GUITextProperties props, int vuIndex,
+                   bool forceRedraw = false);
 
 public: // temp hack for modl windo constructors
   GUIWindow &w_;
   ViewData *viewData_;
+  bool needsRedraw_;
+  bool isVisible_;
 
-protected:
+  int vuMeterCount_;
   ViewMode viewMode_;
   bool isDirty_; // .Do we need to redraw screeen
   ViewType viewType_;
   bool hasFocus_;
+
+  // Previous VU meter values for optimization (one pair per channel + master)
+  uint8_t prevLeftVU_[SONG_CHANNEL_COUNT + 1];
+  uint8_t prevRightVU_[SONG_CHANNEL_COUNT + 1];
 
 private:
   unsigned short mask_;

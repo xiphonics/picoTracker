@@ -25,8 +25,13 @@ View::View(GUIWindow &w, ViewData *viewData)
   modalView_ = 0;
   modalViewCallback_ = 0;
   hasFocus_ = false;
-};
 
+  // Initialize VU meter tracking variables
+  for (int i = 0; i < SONG_CHANNEL_COUNT + 1; i++) {
+    prevLeftVU_[i] = 0;
+    prevRightVU_[i] = 0;
+  }
+}
 GUIPoint View::GetAnchor() {
   // Original code had a dynamic anchor point dending on song count, but
   // changing the song count didn't work anyway given that there are many places
@@ -168,7 +173,8 @@ void View::drawNotes() {
   }
 }
 
-void View::drawMasterVuMeter(Player *player, GUITextProperties props) {
+void View::drawMasterVuMeter(Player *player, GUITextProperties props,
+                             bool forceRedraw) {
   stereosample playerLevel = player->GetMasterLevel();
 
   // Convert to dB
@@ -184,32 +190,107 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props) {
   pos._x += 24;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
 
-  drawVUMeter(leftBars, rightBars, pos, props);
+  // Use index 0 for the master VU meter
+  drawVUMeter(leftBars, rightBars, pos, props, 0, forceRedraw);
 }
 
 void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
-                       GUITextProperties props) {
+                       GUITextProperties props, int vuIndex, bool forceRedraw) {
+
+  // Clamp the values to the maximum height
+  leftBars = std::min(leftBars, (uint8_t)VU_METER_HEIGHT);
+  rightBars = std::min(rightBars, (uint8_t)VU_METER_HEIGHT);
+
+  // Add inertia effect by limiting the rate of change
+  // Maximum step change allowed per update
+  const int maxStepChange = 2;
+
+  // For rising levels (current > previous), allow faster response
+  if (leftBars > prevLeftVU_[vuIndex]) {
+    // If the difference is greater than maxStepChange, limit it
+    if (leftBars - prevLeftVU_[vuIndex] > maxStepChange) {
+      leftBars = prevLeftVU_[vuIndex] + maxStepChange;
+    }
+  }
+  // For falling levels (current < previous), add more inertia for a slower fall
+  else if (leftBars < prevLeftVU_[vuIndex]) {
+    // Use a smaller step for falling levels to create more inertia
+    const int fallStepChange = 1;
+    if (prevLeftVU_[vuIndex] - leftBars > fallStepChange) {
+      leftBars = prevLeftVU_[vuIndex] - fallStepChange;
+    }
+  }
+
+  // Same for right channel
+  if (rightBars > prevRightVU_[vuIndex]) {
+    if (rightBars - prevRightVU_[vuIndex] > maxStepChange) {
+      rightBars = prevRightVU_[vuIndex] + maxStepChange;
+    }
+  } else if (rightBars < prevRightVU_[vuIndex]) {
+    const int fallStepChange = 1;
+    if (prevRightVU_[vuIndex] - rightBars > fallStepChange) {
+      rightBars = prevRightVU_[vuIndex] - fallStepChange;
+    }
+  }
 
   props.invert_ = true;
-  for (int i = 0; i < VU_METER_HEIGHT; i++) {
-    // first need to clear previous drawn bars
-    SetColor(CD_BACKGROUND);
-    DrawString(pos._x, pos._y - i, "  ", props);
 
-    if (i == VU_METER_CLIP_LEVEL) {
-      SetColor(CD_ERROR);
-    } else if (i > VU_METER_WARN_LEVEL) {
-      SetColor(CD_WARN);
-    } else {
-      SetColor(CD_INFO);
-    }
-    if (leftBars > i) {
+  // Left channel: Handle level changes
+  if (forceRedraw || leftBars != prevLeftVU_[vuIndex]) {
+    // If forcing redraw or level changed, redraw the entire meter
+
+    // First clear the entire meter area
+    SetColor(CD_BACKGROUND);
+    for (int i = 0; i < VU_METER_HEIGHT; i++) {
       DrawString(pos._x, pos._y - i, " ", props);
     }
-    if (rightBars > i) {
+
+    // Then draw the active cells
+    for (int i = 0; i < leftBars; i++) {
+      // Set appropriate color based on level
+      if (i == VU_METER_CLIP_LEVEL) {
+        SetColor(CD_ERROR);
+      } else if (i > VU_METER_WARN_LEVEL) {
+        SetColor(CD_WARN);
+      } else {
+        SetColor(CD_INFO);
+      }
+      DrawString(pos._x, pos._y - i, " ", props);
+    }
+  }
+  // If not forcing redraw and leftBars == prevLeftVU_[vuIndex], do nothing for
+  // left channel
+
+  // Right channel: Handle level changes
+  if (forceRedraw || rightBars != prevRightVU_[vuIndex]) {
+    // If forcing redraw or level changed, redraw the entire meter
+
+    // First clear the entire meter area
+    SetColor(CD_BACKGROUND);
+    for (int i = 0; i < VU_METER_HEIGHT; i++) {
+      DrawString(pos._x + 1, pos._y - i, " ", props);
+    }
+
+    // Then draw the active cells
+    for (int i = 0; i < rightBars; i++) {
+      // Set appropriate color based on level
+      if (i == VU_METER_CLIP_LEVEL) {
+        SetColor(CD_ERROR);
+      } else if (i > VU_METER_WARN_LEVEL) {
+        SetColor(CD_WARN);
+      } else {
+        SetColor(CD_INFO);
+      }
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
   }
+  // If not forcing redraw and rightBars == prevRightVU_[vuIndex], do nothing
+  // for right channel
+
+  // Store the current values for next time
+  prevLeftVU_[vuIndex] = leftBars;
+  prevRightVU_[vuIndex] = rightBars;
+
   props.invert_ = false;
 }
 

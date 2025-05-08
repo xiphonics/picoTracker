@@ -77,10 +77,14 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
         switchSoloMode();
       }
     };
+    // Force a full redraw of the mixer view
+    SetDirty(true);
     return;
   };
 
   viewMode_ = VM_NORMAL;
+  // Force a full redraw of the mixer view when any button is pressed
+  SetDirty(true);
   processNormalButtonMask(mask);
 };
 
@@ -188,9 +192,9 @@ void MixerView::DrawView() {
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
   // get levels from the player
-  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
-      player->GetMixerLevels();
-  drawChannelVUMeters(levels, player, props);
+  // etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+  //     player->GetMixerLevels();
+  // drawChannelVUMeters(levels, player, props);
 
   SetColor(CD_NORMAL);
   props.invert_ = false;
@@ -233,21 +237,22 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   GUIPoint anchor = GetAnchor();
   GUIPoint pos = anchor;
 
-  // get levels from the player
-  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
-      player->GetMixerLevels();
-
   GUITextProperties props;
   SetColor(CD_NORMAL);
 
-  drawChannelVUMeters(levels, player, props);
+  // Get levels from the player
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+      player->GetMixerLevels();
 
-  drawMasterVuMeter(player, props);
+  // drawing VUmeters needs to happen when sequencer is not running too so see
+  // AnimationUpdate
 
-  pos = 0;
-  pos._x = 27;
-  pos._y += 1;
+  // Handle play time display
   if (eventType != PET_STOP) {
+    // Draw play time when playing
+    pos = 0;
+    pos._x = 27;
+    pos._y += 1;
     drawPlayTime(player, pos, props);
   }
 
@@ -255,16 +260,57 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 };
 
 void MixerView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
+  // Update battery gauge and VU meters on every clock tick (~1Hz)
   GUITextProperties props;
+
+  // Draw battery gauge
   drawBattery(props);
+
+  // Get the player
+  Player *player = Player::GetInstance();
+
+  // Always update VU meters, whether the sequencer is running or not
+  // This ensures we see VU meter updates from MIDI input even when not playing
+
+  etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
+      player->GetMixerLevels();
+  drawChannelVUMeters(levels, player, props);
+  drawMasterVuMeter(player, props);
+
+  // Flush the window to ensure changes are displayed
   w_.Flush();
 };
 
 void MixerView::drawChannelVUMeters(
     etl::array<stereosample, SONG_CHANNEL_COUNT> *levels, Player *player,
-    GUITextProperties props) {
+    GUITextProperties props, bool forceRedraw) {
+
+  // Quick optimization: If not forcing redraw, check if any levels have changed
+  // This saves CPU cycles by avoiding unnecessary drawing operations
+  if (!forceRedraw) {
+    bool anyChanges = false;
+    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      // Convert to dB
+      int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
+      int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
+
+      // Map dB to bar levels
+      int leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
+      int rightBars =
+          std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
+
+      // Check if this channel's levels have changed
+      if (leftBars != prevLeftVU_[i + 1] || rightBars != prevRightVU_[i + 1]) {
+        anyChanges = true;
+        break;
+      }
+    }
+
+    // If no changes, return early
+    if (!anyChanges) {
+      return;
+    }
+  }
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();
@@ -285,7 +331,8 @@ void MixerView::drawChannelVUMeters(
       rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
     }
 
-    drawVUMeter(leftBars, rightBars, pos, props);
+    // Use index i+1 for channel VU meters (index 0 is reserved for master)
+    drawVUMeter(leftBars, rightBars, pos, props, i + 1, forceRedraw);
     pos._x += CHANNELS_X_OFFSET_;
   }
 }

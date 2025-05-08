@@ -27,7 +27,8 @@ protected:
 
 private:
   void drawChannelVUMeters(etl::array<stereosample, SONG_CHANNEL_COUNT> *levels,
-                           Player *player, GUITextProperties props);
+                           Player *player, GUITextProperties props,
+                           bool forceRedraw = false);
   const char *song_;
   int saveX_;
   int saveY_;
