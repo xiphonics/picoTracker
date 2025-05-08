@@ -232,8 +232,9 @@ void AppWindow::Flush() {
 #endif
         // Extract invert flag from properties
         props.invert_ = (*currentProp & PROP_INVERT) != 0;
-        
-        // Extract color index from properties and check if it's different from current color
+
+        // Extract color index from properties and check if it's different from
+        // current color
         ColorDefinition charColor = (ColorDefinition)((*currentProp) & 0x7F);
         if (charColor != color) {
           color = charColor;
