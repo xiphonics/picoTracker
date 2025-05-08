@@ -160,7 +160,8 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
   NAssert((pos._x < SCREEN_WIDTH) && (pos._y < SCREEN_HEIGHT));
   int index = pos._x + SCREEN_WIDTH * pos._y;
   memcpy(_charScreen + index, buffer, len);
-  unsigned char prop = colorIndex_ + (props.invert_ ? PROP_INVERT : 0);
+  // Ensure color index is masked to prevent overlap with inversion bit
+  unsigned char prop = (colorIndex_ & 0x7F) + (props.invert_ ? PROP_INVERT : 0);
   memset(_charScreenProp + index, prop, len);
 };
 
