@@ -30,7 +30,7 @@ public:
   Song song_;
 
   int GetMasterVolume();
-  int GetPreviewVolume();
+  int GetChannelVolume(int channel);
   bool Wrap();
   void OnTempoTap();
   void NudgeTempo(int value);
@@ -55,7 +55,7 @@ public:
   static etl::string<MAX_PROJECT_NAME_LENGTH> ProjectNameGlobal;
 
 private:
-  etl::list<Variable *, 8> variables_;
+  etl::list<Variable *, 16> variables_;
 
   InstrumentBank *instrumentBank_;
   int tempoNudge_;
@@ -66,7 +66,17 @@ private:
   // variables
   WatchedVariable tempo_;
   Variable masterVolume_;
-  Variable previewVolume_;
+  // Individual channel volume variables instead of using an array
+  // as initialization of such a large array causes in constructors causes stack
+  // overflow issues
+  Variable channelVolume1_;
+  Variable channelVolume2_;
+  Variable channelVolume3_;
+  Variable channelVolume4_;
+  Variable channelVolume5_;
+  Variable channelVolume6_;
+  Variable channelVolume7_;
+  Variable channelVolume8_;
   Variable wrap_;
   Variable transpose_;
   Variable scale_;

@@ -38,7 +38,6 @@ bool PlayerMixer::Init(Project *project) {
   project_ = project;
 
   // Init states
-
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     lastInstrument_[i] = 0;
   };

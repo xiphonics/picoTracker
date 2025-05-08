@@ -20,7 +20,14 @@ Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
       masterVolume_(FourCC::VarMasterVolume, 100),
-      previewVolume_(FourCC::VarPreviewVolume, 50),
+      channelVolume1_(FourCC::VarChannel1Volume, 60),
+      channelVolume2_(FourCC::VarChannel2Volume, 60),
+      channelVolume3_(FourCC::VarChannel3Volume, 60),
+      channelVolume4_(FourCC::VarChannel4Volume, 60),
+      channelVolume5_(FourCC::VarChannel5Volume, 60),
+      channelVolume6_(FourCC::VarChannel6Volume, 60),
+      channelVolume7_(FourCC::VarChannel7Volume, 60),
+      channelVolume8_(FourCC::VarChannel8Volume, 60),
       wrap_(FourCC::VarWrap, false), transpose_(FourCC::VarTranspose, 0),
       scale_(FourCC::VarScale, scaleNames, numScales, 0),
       scaleRoot_(FourCC::VarScaleRoot, noteNames, 12, 0),
@@ -28,7 +35,17 @@ Project::Project(const char *name)
 
   this->variables_.insert(variables_.end(), &tempo_);
   this->variables_.insert(variables_.end(), &masterVolume_);
-  this->variables_.insert(variables_.end(), &previewVolume_);
+
+  // Add individual channel volume variables to the container
+  this->variables_.insert(variables_.end(), &channelVolume1_);
+  this->variables_.insert(variables_.end(), &channelVolume2_);
+  this->variables_.insert(variables_.end(), &channelVolume3_);
+  this->variables_.insert(variables_.end(), &channelVolume4_);
+  this->variables_.insert(variables_.end(), &channelVolume5_);
+  this->variables_.insert(variables_.end(), &channelVolume6_);
+  this->variables_.insert(variables_.end(), &channelVolume7_);
+  this->variables_.insert(variables_.end(), &channelVolume8_);
+
   this->variables_.insert(variables_.end(), &wrap_);
   this->variables_.insert(variables_.end(), &transpose_);
   this->variables_.insert(variables_.end(), &scale_);
@@ -80,12 +97,31 @@ int Project::GetMasterVolume() {
   Variable *v = FindVariable(FourCC::VarMasterVolume);
   NAssert(v);
   return v->GetInt();
-};
+}
 
-int Project::GetPreviewVolume() {
-  Variable *v = FindVariable(FourCC::VarPreviewVolume);
-  NAssert(v);
-  return v->GetInt();
+int Project::GetChannelVolume(int channel) {
+  // Return the appropriate channel volume variable
+  switch (channel) {
+  case 0:
+    return channelVolume1_.GetInt();
+  case 1:
+    return channelVolume2_.GetInt();
+  case 2:
+    return channelVolume3_.GetInt();
+  case 3:
+    return channelVolume4_.GetInt();
+  case 4:
+    return channelVolume5_.GetInt();
+  case 5:
+    return channelVolume6_.GetInt();
+  case 6:
+    return channelVolume7_.GetInt();
+  case 7:
+    return channelVolume8_.GetInt();
+  default:
+    NAssert(false);
+    return 0;
+  }
 };
 
 void Project::GetProjectName(char *name) {

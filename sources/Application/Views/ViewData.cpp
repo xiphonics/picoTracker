@@ -15,8 +15,6 @@ ViewData::ViewData(Project *project) {
   currentTable_ = 0;
   currentInstrumentID_ = 0;
   currentGroove_ = 0;
-  mixerCol_ = 0;
-  mixerRow_ = 0;
 };
 
 ViewData::~ViewData() { delete project_; };

@@ -8,42 +8,35 @@
 
 #define CHANNELS_X_OFFSET_ 3 // stride between each channel
 
-MixerView::MixerView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
-  invertBatt_ = false;
+MixerView::MixerView(GUIWindow &w, ViewData *viewData)
+    : FieldView(w, viewData) {
+
+  // Initialize the channel volume fields
+  initChannelVolumeFields();
 }
 
 MixerView::~MixerView() {}
 
-void MixerView::onStart() {
-  Player *player = Player::GetInstance();
-  unsigned char from = viewData_->songX_;
-  unsigned char to = from;
-  player->OnStartButton(PM_SONG, from, false, to);
+void MixerView::OnFocus() {
+  // update seleced field to match current cursor position
+  SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
 };
 
-void MixerView::onStop() {
-  Player *player = Player::GetInstance();
-  unsigned char from = viewData_->songX_;
-  unsigned char to = from;
-  player->OnStartButton(PM_SONG, from, true, to);
-};
-
-void MixerView::OnFocus(){};
-
+// keep track of currently selected channel
 void MixerView::updateCursor(int dx, int dy) {
-  int x = viewData_->mixerCol_;
+  int x = viewData_->songX_;
   x += dx;
   if (x < 0)
     x = 0;
   if (x > 7)
     x = 7;
-  viewData_->mixerCol_ = x;
+  viewData_->songX_ = x;
   isDirty_ = true;
 }
 
 void MixerView::switchSoloMode() {
   UIController *controller = UIController::GetInstance();
-  int currentChannel = viewData_->mixerCol_;
+  int currentChannel = viewData_->songX_;
   controller->SwitchSoloMode(currentChannel, currentChannel,
                              (viewMode_ == VM_NORMAL));
   viewMode_ = (viewMode_ != VM_SOLOON) ? VM_SOLOON : VM_NORMAL;
@@ -59,7 +52,7 @@ void MixerView::unMuteAll() {
 void MixerView::toggleMute() {
 
   UIController *controller = UIController::GetInstance();
-  int currentChannel = viewData_->mixerCol_;
+  int currentChannel = viewData_->songX_;
   controller->ToggleMute(currentChannel, currentChannel);
   viewMode_ = (viewMode_ != VM_MUTEON) ? VM_MUTEON : VM_NORMAL;
   isDirty_ = true;
@@ -82,6 +75,58 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   };
 
+  // First check if we need to handle special mixer-specific actions
+  if (!pressed) {
+    if (viewMode_ == VM_MUTEON) {
+      if (mask & EPBM_NAV) {
+        toggleMute();
+      }
+    };
+    if (viewMode_ == VM_SOLOON) {
+      if (mask & EPBM_NAV) {
+        switchSoloMode();
+      }
+    };
+    return;
+  };
+
+  // Fieldview gets first go at the button event
+  FieldView::ProcessButtonMask(mask, pressed);
+
+  // Handle playback specific actions
+  if (mask == EPBM_PLAY) {
+    togglePlay();
+    return;
+  }
+  // NAV back to Song view
+  if ((mask & EPBM_NAV) && (mask & EPBM_UP)) {
+    ViewType vt = VT_SONG;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+    return;
+  }
+  if ((mask & EPBM_NAV) && (mask & EPBM_ALT)) {
+    unMuteAll();
+    return;
+  }
+
+  // Handle mixer-specific actions for normal mode, but only if we don't have
+  // field focus or if they're specific mixer actions that should override field
+  // editing
+
+  // EDIT+NAV is always for toggling mute
+  if ((mask & EPBM_EDIT) && (mask & EPBM_NAV)) {
+    toggleMute();
+    return;
+  }
+
+  // ENTER+NAV is always for solo mode
+  if ((mask & EPBM_ENTER) && (mask & EPBM_NAV)) {
+    switchSoloMode();
+    return;
+  }
+
   viewMode_ = VM_NORMAL;
   // Force a full redraw of the mixer view when any button is pressed
   SetDirty(true);
@@ -94,44 +139,33 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
         selection active
  ******************************************************/
 
+// This method is no longer needed as we're using FieldView's field navigation
 void MixerView::processNormalButtonMask(unsigned int mask) {
-
+  // Handle mixer-specific actions
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_NAV) {
       toggleMute();
-    };
+    }
+  } else if (mask & EPBM_ENTER) {
+    if (mask & EPBM_NAV) {
+      switchSoloMode();
+    }
+  } else if (mask & EPBM_NAV) {
+    if (mask & EPBM_UP) {
+      ViewType vt = VT_SONG;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+    if (mask & EPBM_ALT) {
+      unMuteAll();
+    }
   } else {
-    if (mask & EPBM_ENTER) {
-      if (mask & EPBM_NAV) {
-        switchSoloMode();
-      }
-    } else {
-      if (mask & EPBM_NAV) {
-        if (mask & EPBM_UP) {
-          ViewType vt = VT_SONG;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-        if (mask & EPBM_PLAY) {
-          onStop();
-        }
-        if (mask & EPBM_ALT) {
-          unMuteAll();
-        }
-      } else {
-        if (mask & EPBM_ALT) {
-
-        } else {
-          if (mask & EPBM_PLAY) {
-            onStart();
-          }
-          if (mask & EPBM_LEFT)
-            updateCursor(-1, 0);
-          if (mask & EPBM_RIGHT)
-            updateCursor(1, 0);
-        }
-      }
+    if (mask & EPBM_LEFT) {
+      updateCursor(-1, 0);
+    }
+    if (mask & EPBM_RIGHT) {
+      updateCursor(1, 0);
     }
   }
 };
@@ -168,6 +202,52 @@ void MixerView::processSelectionButtonMask(unsigned int mask) {
   }
 }
 
+void MixerView::initChannelVolumeFields() {
+  // Get the project from the Player
+  Player *player = Player::GetInstance();
+  Project *project = player ? player->GetProject() : nullptr;
+
+  if (!project)
+    return;
+
+  // Position for volume fields - below VU meters
+  GUIPoint position = GetAnchor();
+  position._y += VU_METER_HEIGHT + 1; // Position below VU meters
+
+  // Get FourCC codes for channel volumes
+  FourCC channelVolumeFourCCs[SONG_CHANNEL_COUNT] = {
+      FourCC::VarChannel1Volume, FourCC::VarChannel2Volume,
+      FourCC::VarChannel3Volume, FourCC::VarChannel4Volume,
+      FourCC::VarChannel5Volume, FourCC::VarChannel6Volume,
+      FourCC::VarChannel7Volume, FourCC::VarChannel8Volume};
+
+  // Clear any existing fields
+  channelVolumeFields_.clear();
+
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    // Create position for this channel's volume field
+    GUIPoint fieldPos = position;
+    fieldPos._x = position._x + (i * CHANNELS_X_OFFSET_);
+
+    // Find the variable for this channel's volume
+    Variable *v = project->FindVariable(channelVolumeFourCCs[i]);
+    if (v) {
+      // Create a 2-digit field (00-99) for the channel volume
+      // Format: %2.2d = 2-digit decimal number with leading zeros
+      // Use xOffset=1 and yOffset=5 for small/large increments
+      channelVolumeFields_.emplace_back(fieldPos, *v, "%2.2d", 0, 99, 1, 5);
+
+      // Add the field to the fieldList_ for proper field navigation
+      fieldList_.insert(fieldList_.end(), &(*channelVolumeFields_.rbegin()));
+    }
+  }
+
+  // Set focus to the first field if we have any fields
+  if (!fieldList_.empty()) {
+    SetFocus(*fieldList_.begin());
+  }
+}
+
 void MixerView::DrawView() {
   Clear();
 
@@ -179,6 +259,7 @@ void MixerView::DrawView() {
   SetColor(CD_NORMAL);
 
   Player *player = Player::GetInstance();
+  Project *project = player->GetProject(); // Use Player's GetProject method
 
   props.invert_ = true;
   const char *buffer =
@@ -191,6 +272,7 @@ void MixerView::DrawView() {
   pos = anchor;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
+
   // get levels from the player
   // etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
   //     player->GetMixerLevels();
@@ -199,26 +281,31 @@ void MixerView::DrawView() {
   SetColor(CD_NORMAL);
   props.invert_ = false;
 
-  pos._y += 1;
-  // draw bus states
-  char state[3];
-  state[0] = '-'; // M
-  state[1] = '-';
-  state[2] = '\0';
+  // Draw all fields (channel volume fields)
+  FieldView::Redraw();
+
+  // Draw mute indicators below the volume values
+  pos._y = anchor._y + VU_METER_HEIGHT + 2; // Position below volume fields
+  pos._x = GetTitlePosition()._x;
+
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    if (i == viewData_->mixerCol_) {
+    if (i == viewData_->songX_) {
       props.invert_ = true;
       SetColor(CD_HILITE2);
     }
+
+    char state[2];
     state[0] = player->IsChannelMuted(i) ? 'M' : '-';
+    state[1] = '\0';
 
     DrawString(pos._x, pos._y, state, props);
     pos._x += CHANNELS_X_OFFSET_;
-    if (i == viewData_->mixerCol_) {
+
+    if (i == viewData_->songX_) {
       props.invert_ = false;
       SetColor(CD_NORMAL);
     }
-  };
+  }
 
   drawMap();
   drawNotes();
@@ -336,3 +423,9 @@ void MixerView::drawChannelVUMeters(
     pos._x += CHANNELS_X_OFFSET_;
   }
 }
+
+void MixerView::togglePlay() {
+  Player *player = Player::GetInstance();
+  player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
+                        viewData_->chainRow_);
+};
