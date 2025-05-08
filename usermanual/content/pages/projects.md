@@ -28,7 +28,8 @@ You can ***explicitly*** save the current project by pressing [SAVE] on the proj
 - **Load** Go to the project file browser to load a different project or reload the last explicitly saved version of the current project
 - **Save** Save the current project **NOTE:** *saving currently cannot be done during playback.*
 - **New** *REPLACE* the current project with a new, *Blank* project.  
-- **Random** *RENAME* the current project with a new, *Randomly generated* name.  
+- **Random** *RENAME* the current project with a new, *Randomly generated* name.
+- **Import Sample** Access the sample import file browser with a single press of the `ENTER` key. When you're done in the Import Screen, you can press `NAV`+`LEFT` to return to the Project Screen.
 
 The project name is **limited to 16 characters**. 
 

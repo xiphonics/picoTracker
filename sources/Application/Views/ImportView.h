@@ -16,6 +16,12 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
 
+  // Static method to set which view will open the ImportView
+  static void SetSourceViewType(ViewType vt);
+
+  // Track which view opened the ImportView (default to project view)
+  static ViewType sourceViewType_;
+
 protected:
   void setCurrentFolder(FileSystem *fs, const char *name);
   void warpToNextSample(bool goUp);
