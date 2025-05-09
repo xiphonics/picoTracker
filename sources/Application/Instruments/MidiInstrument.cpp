@@ -172,7 +172,8 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandVelocity: {
     // VELM cmds set velocity for MIDI steps
-    velocity_ = value / 2;
+    // Ensure velocity doesn't exceed 127 (MIDI spec maximum)
+    velocity_ = (value / 2) & 0x7F;
   }; break;
 
   case FourCC::InstrumentCommandVolume: {
