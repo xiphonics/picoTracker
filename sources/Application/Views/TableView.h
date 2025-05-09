@@ -14,6 +14,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
+  virtual void AnimationUpdate();
 
 protected:
   void processNormalButtonMask(unsigned short mask);
@@ -62,8 +63,13 @@ private:
     ushort param3_[16];
   } clipboard_;
 
-  uchar saveCol_;
-  uchar saveRow_;
+  int saveCol_;
+  int saveRow_;
+
+  // Flags to track which UI elements need updating
+  // These prevent core1 from directly updating the UI
+  bool needsPlayPositionUpdate_ = false;
+  bool needsNotesUpdate_ = false;
 
   uchar lastPosition_[3];
 };

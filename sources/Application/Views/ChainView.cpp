@@ -5,7 +5,9 @@
 #include "ViewData.h"
 #include <nanoprintf.h>
 
-ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
+ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData),
+    needsPlayPositionUpdate_(false), needsQueuePositionUpdate_(false),
+    needsNotesUpdate_(false) {
   updatingPhrase_ = false;
   lastPhrase_ = 0;
   lastPlayingPos_ = 0;
@@ -734,52 +736,97 @@ void ChainView::DrawView() {
 };
 
 void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't call any drawing functions directly
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
 
+  // Flag that notes need to be updated
+  needsNotesUpdate_ = true;
+  
+  // Flag that positions need to be updated
+  needsPlayPositionUpdate_ = true;
+  
+  // Flag that queue positions need to be updated if in live mode
   Player *player = Player::GetInstance();
+  if (player && player->GetSequencerMode() == SM_LIVE) {
+    needsQueuePositionUpdate_ = true;
+  }
+};
 
-  drawNotes();
-
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos = anchor;
-  pos._x -= 1;
-
+void ChainView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge
   GUITextProperties props;
-  SetColor(CD_NORMAL);
-
-  // Clear last played & queued
-
-  pos._y = anchor._y + lastPlayingPos_;
-  DrawString(pos._x, pos._y, " ", props);
-
-  pos._y = anchor._y + lastQueuedPos_;
-  DrawString(pos._x, pos._y, " ", props);
-
-  if (eventType != PET_STOP) {
-
-    // Loop on all channels to see if one of them is playing current chain
-
-    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      if (player->IsChannelPlaying(i)) {
-        if (viewData_->currentPlayChain_[i] == viewData_->currentChain_ &&
-            viewData_->playMode_ != PM_AUDITION) {
-          pos._y = anchor._y + viewData_->chainPlayPos_[i];
-          if (!player->IsChannelMuted(i)) {
-            DrawString(pos._x, pos._y, ">", props);
-          } else {
-            DrawString(pos._x, pos._y, "-", props);
+  drawBattery(props);
+  
+  // Get player instance safely
+  Player *player = Player::GetInstance();
+  
+  // Only process updates if we're fully initialized
+  if (!viewData_ || !player) {
+    // Just flush the battery gauge and return
+    w_.Flush();
+    return;
+  }
+  
+  // Handle any pending updates from OnPlayerUpdate
+  // This ensures all UI drawing happens on the "main" thread (core0)
+  
+  if (needsNotesUpdate_) {
+    drawNotes();
+    needsNotesUpdate_ = false;
+  }
+  
+  if (needsPlayPositionUpdate_) {
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos = anchor;
+    pos._x -= 1;
+    
+    SetColor(CD_NORMAL);
+    
+    // Clear last played & queued
+    pos._y = anchor._y + lastPlayingPos_;
+    DrawString(pos._x, pos._y, " ", props);
+    
+    pos._y = anchor._y + lastQueuedPos_;
+    DrawString(pos._x, pos._y, " ", props);
+    
+    // Only update play position if player is running
+    if (player->IsRunning()) {
+      // Loop on all channels to see if one of them is playing current chain
+      for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+        if (player->IsChannelPlaying(i)) {
+          if (viewData_->currentPlayChain_[i] == viewData_->currentChain_ &&
+              viewData_->playMode_ != PM_AUDITION) {
+            pos._y = anchor._y + viewData_->chainPlayPos_[i];
+            if (!player->IsChannelMuted(i)) {
+              SetColor(CD_ACCENT);
+              DrawString(pos._x, pos._y, ">", props);
+            } else {
+              SetColor(CD_ACCENTALT);
+              DrawString(pos._x, pos._y, "-", props);
+            }
+            lastPlayingPos_ = viewData_->chainPlayPos_[i];
+            break;
           }
-          lastPlayingPos_ = viewData_->chainPlayPos_[i];
-          break;
         }
       }
     }
-
-    // Loop on all channels to see if one has queued current chain
-
+    
+    needsPlayPositionUpdate_ = false;
+  }
+  
+  if (needsQueuePositionUpdate_) {
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos = anchor;
+    pos._x -= 1;
+    
+    SetColor(CD_NORMAL);
+    
+    // Only update queue position if in live mode
     if (player->GetSequencerMode() == SM_LIVE) {
-
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        // is anything queued ?
+        // is anything queued?
         if (player->GetQueueingMode(i) != QM_NONE) {
           // find the chain queued in channel
           unsigned char songPos = player->GetQueuePosition(i);
@@ -796,16 +843,10 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
         }
       }
     }
+    
+    needsQueuePositionUpdate_ = false;
   }
-
-  pos = anchor;
-  pos._x += 200;
-};
-
-void ChainView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
+  
+  // Flush the window to ensure changes are displayed
   w_.Flush();
 };

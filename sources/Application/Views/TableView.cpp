@@ -7,7 +7,8 @@
 #include <nanoprintf.h>
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
+      needsPlayPositionUpdate_(false), needsNotesUpdate_(false) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);
@@ -842,51 +843,106 @@ void TableView::DrawView() {
 }
 
 void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't call any drawing functions directly
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
 
-  GUITextProperties props;
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos;
-
-  pos._x = anchor._x - 1;
-  pos._y = anchor._y + lastPosition_[0];
-  DrawString(pos._x, pos._y, " ", props);
-
-  pos._x += 9;
-  pos._y = anchor._y + lastPosition_[1];
-  DrawString(pos._x, pos._y, " ", props);
-
-  pos._x += 9;
-  pos._y = anchor._y + lastPosition_[2];
-  DrawString(pos._x, pos._y, " ", props);
-
+  // Flag that notes need to be updated
+  needsNotesUpdate_ = true;
+  
+  // Flag that positions need to be updated
+  needsPlayPositionUpdate_ = true;
+  
+  // Update the last positions for use in AnimationUpdate
   TableHolder *th = TableHolder::GetInstance();
-  // Get current channel
-  int channel = viewData_->songX_;
-  // Table associated to the channel playerpb
-  TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
-  Table *playbackTable = tpb.GetTable();
-  // Table we're viewing
-  Table &viewTable = th->GetTable(viewData_->currentTable_);
-  if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+  if (th) {
+    // Get current channel
+    int channel = viewData_->songX_;
+    // Table associated to the channel playerpb
+    TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+    Table *playbackTable = tpb.GetTable();
+    // Table we're viewing
+    Table &viewTable = th->GetTable(viewData_->currentTable_);
+    if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+      // Store positions for later use in AnimationUpdate
+      lastPosition_[0] = tpb.GetPlaybackPosition(0);
+      lastPosition_[1] = tpb.GetPlaybackPosition(1);
+      lastPosition_[2] = tpb.GetPlaybackPosition(2);
+    }
+  }
+}
 
-    lastPosition_[0] = tpb.GetPlaybackPosition(0);
-    lastPosition_[1] = tpb.GetPlaybackPosition(1);
-    lastPosition_[2] = tpb.GetPlaybackPosition(2);
-
+void TableView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate();
+  
+  // Get player instance safely
+  Player *player = Player::GetInstance();
+  TableHolder *th = TableHolder::GetInstance();
+  
+  // Only process updates if we're fully initialized
+  if (!viewData_ || !player || !th) {
+    return;
+  }
+  
+  // Handle any pending updates from OnPlayerUpdate
+  // This ensures all UI drawing happens on the "main" thread (core0)
+  GUITextProperties props;
+  
+  if (needsNotesUpdate_) {
+    drawNotes();
+    needsNotesUpdate_ = false;
+  }
+  
+  if (needsPlayPositionUpdate_) {
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos;
+    
+    // Clear previous positions
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_[0];
-    SetColor(CD_ACCENT);
-    DrawString(pos._x, pos._y, ">", props);
-
+    DrawString(pos._x, pos._y, " ", props);
+    
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[1];
-    DrawString(pos._x, pos._y, ">", props);
-
+    DrawString(pos._x, pos._y, " ", props);
+    
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[2];
-    DrawString(pos._x, pos._y, ">", props);
-  };
-  drawNotes();
+    DrawString(pos._x, pos._y, " ", props);
+    
+    // Only update play position if player is running
+    if (player->IsRunning()) {
+      // Get current channel
+      int channel = viewData_->songX_;
+      // Table associated to the channel playerpb
+      TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+      Table *playbackTable = tpb.GetTable();
+      // Table we're viewing
+      Table &viewTable = th->GetTable(viewData_->currentTable_);
+      
+      if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+        pos._x = anchor._x - 1;
+        pos._y = anchor._y + lastPosition_[0];
+        SetColor(CD_ACCENT);
+        DrawString(pos._x, pos._y, ">", props);
+        
+        pos._x += 9;
+        pos._y = anchor._y + lastPosition_[1];
+        DrawString(pos._x, pos._y, ">", props);
+        
+        pos._x += 9;
+        pos._y = anchor._y + lastPosition_[2];
+        DrawString(pos._x, pos._y, ">", props);
+      }
+    }
+    
+    needsPlayPositionUpdate_ = false;
+  }
+  
+  // Flush the window to ensure changes are displayed
+  w_.Flush();
 }
 
 void TableView::printHelpLegend(FourCC command, GUITextProperties props) {

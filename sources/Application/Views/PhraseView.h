@@ -15,6 +15,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
+  virtual void AnimationUpdate();
 
 protected:
   void updateCursor(int dx, int dy);
@@ -76,6 +77,12 @@ private:
   int saveRow_;
 
   static short offsets_[2][4];
+
+  // Flags to track which UI elements need updating
+  // These prevent core1 from directly updating the UI
+  bool needsPlayPositionUpdate_ = false;
+  bool needsLiveIndicatorUpdate_ = false;
+  bool needsNotesUpdate_ = false;
 };
 
 #endif

@@ -63,6 +63,12 @@ private:
 
   int saveRow_;
   int saveCol_;
+
+  // Flags to track which UI elements need updating
+  // These prevent core1 from directly updating the UI
+  bool needsPlayPositionUpdate_ = false;
+  bool needsQueuePositionUpdate_ = false;
+  bool needsNotesUpdate_ = false;
 };
 
 #endif
