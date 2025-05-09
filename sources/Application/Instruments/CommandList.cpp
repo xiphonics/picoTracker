@@ -35,7 +35,8 @@ static FourCC _all[] = {
 ushort CommandList::RangeLimitCommandParam(FourCC command, ushort paramValue) {
   // Each command type can have its own specific range limits
   if (command == FourCC::InstrumentCommandVelocity) {
-    // For VEL command, limit the bb part to 0x7F (127) while preserving the aa part
+    // For VEL command, limit the bb part to 0x7F (127) while preserving the aa
+    // part
     return (paramValue & 0xFF00) | (paramValue & 0x7F);
   }
   // Add more command-specific limits here as needed
@@ -44,7 +45,7 @@ ushort CommandList::RangeLimitCommandParam(FourCC command, ushort paramValue) {
   //   // MIDI CC values should also be limited to 0-127
   //   return (paramValue & 0xFF00) | (paramValue & 0x7F);
   // }
-  
+
   // If no specific limit applies, return the original value
   return paramValue;
 }
