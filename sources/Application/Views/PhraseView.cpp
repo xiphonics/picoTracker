@@ -16,9 +16,7 @@
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
-      needsPlayPositionUpdate_(false), needsLiveIndicatorUpdate_(false),
-      needsNotesUpdate_(false), needsVUMeterUpdate_(false) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
   GUIPoint pos(0, 10);
@@ -1281,16 +1279,10 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Instead of drawing directly, we'll just update our state and let
   // AnimationUpdate handle the actual drawing
 
-  // Flag that notes need to be updated
-  needsNotesUpdate_ = true;
-  
-  // Flag that positions need to be updated
-  needsPlayPositionUpdate_ = true;
-  
-  // Flag that VU meter needs to be updated
-  needsVUMeterUpdate_ = true;
-  
-  // Flag that live indicators need to be updated if in live mode
+  // Set the consolidated flag for UI updates
+  needsUIUpdate_ = true;
+
+  // Update the play position for use in AnimationUpdate
   Player *player = Player::GetInstance();
   if (player && player->GetSequencerMode() == SM_LIVE) {
     needsLiveIndicatorUpdate_ = true;
@@ -1300,40 +1292,37 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 void PhraseView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
   ScreenView::AnimationUpdate();
-  
+
   // Get player instance safely
   Player *player = Player::GetInstance();
-  
+
   // Only process updates if we're fully initialized
   if (!viewData_ || !player) {
     return;
   }
-  
-  // Handle any pending updates from OnPlayerUpdate
+
+  // Handle any pending updates from OnPlayerUpdate using the consolidated flag
   // This ensures all UI drawing happens on the "main" thread (core0)
-  GUITextProperties props;
-  
-  if (needsNotesUpdate_) {
+  if (needsUIUpdate_) {
+    GUITextProperties props;
+
+    // Draw notes
     drawNotes();
-    needsNotesUpdate_ = false;
-  }
-  
-  if (needsVUMeterUpdate_) {
+
+    // Draw VU meter
     drawMasterVuMeter(player, props);
-    needsVUMeterUpdate_ = false;
-  }
-  
-  if (needsPlayPositionUpdate_) {
+
+    // Draw play position marker
     GUIPoint anchor = GetAnchor();
     GUIPoint pos = anchor;
     pos._x -= 1;
-    
+
     SetColor(CD_NORMAL);
-    
+
     // Clear last played position
     pos._y = anchor._y + lastPlayingPos_;
     DrawString(pos._x, pos._y, " ", props);
-    
+
     // Only update play position if player is running
     if (player->IsRunning()) {
       // Loop on all channels to see if one of them is playing current phrase
@@ -1356,25 +1345,14 @@ void PhraseView::AnimationUpdate() {
         }
       }
     }
-    
-    needsPlayPositionUpdate_ = false;
-  }
-  
-  if (needsLiveIndicatorUpdate_) {
-    GUIPoint anchor = GetAnchor();
-    GUIPoint pos = anchor;
-    pos._x -= 1;
-    
-    SetColor(CD_NORMAL);
-    
-    // Clear any live indicator
-    pos._y = anchor._y;
-    DrawString(pos._x, pos._y, " ", props);
-    
-    // Only update live indicators if in live mode
+
+    // Draw live indicators if in live mode
     if (player->GetSequencerMode() == SM_LIVE) {
+      pos = anchor;
+      pos._x -= 1;
+      SetColor(CD_ACCENT);
+
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        // is anything queued?
         if (player->GetQueueingMode(i) != QM_NONE) {
           // find the chain queued in channel
           unsigned char songPos = player->GetQueuePosition(i);
@@ -1388,14 +1366,23 @@ void PhraseView::AnimationUpdate() {
         }
       }
     }
-    
+
+    // Create a memory barrier to ensure proper synchronization between cores
+    createMemoryBarrier();
+
+    // Reset all individual flags for backward compatibility
+    needsPlayPositionUpdate_ = false;
     needsLiveIndicatorUpdate_ = false;
+    needsNotesUpdate_ = false;
+    needsVUMeterUpdate_ = false;
+
+    // Reset the consolidated flag
+    needsUIUpdate_ = false;
   }
-  
+
   // Flush the window to ensure changes are displayed
   w_.Flush();
 }
-
 void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
   char **helpLegend = getHelpLegend(command);
   char line[32]; //-1 for 1char space start of line

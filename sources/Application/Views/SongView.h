@@ -84,10 +84,30 @@ private:
 
   // Flags to track which UI elements need updating
   // These prevent core1 from directly updating the UI
-  bool needsPlayTimeUpdate_ = false;
-  bool needsNotesUpdate_ = false;
-  bool needsPositionUpdate_ = false;
-  bool needsVUMeterUpdate_ = false;
+  bool needsUIUpdate_ = false; // Single flag for all UI updates (notes, VU
+                               // meter, positions, play time)
+  bool needsPlayTimeUpdate_ = false; // Separate flag for play time updates
+
+#ifdef PICO_DEOPTIMIZED_DEBUG
+  // These variables are specifically for thread synchronization in debug builds
+  // They create memory barriers between cores when manipulated in a specific
+  // pattern DO NOT REMOVE - they are critical for performance in debug builds
+  bool syncVar1_ = false;
+  bool syncVar2_ = false;
+  bool syncVar3_ = false;
+#endif
+
+  // Memory barrier function that uses the sync variables in debug DEOPTIMISED
+  // builds only
+  inline void createMemoryBarrier() {
+#ifdef PICO_DEOPTIMIZED_DEBUG
+    // This specific pattern of operations was found to be necessary
+    // for proper thread synchronization in debug builds
+    syncVar1_ = false;
+    syncVar2_ = true;
+    syncVar3_ = false;
+#endif
+  }
 };
 
 #endif

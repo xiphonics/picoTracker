@@ -12,10 +12,7 @@
  Constructor
  ****************/
 
-SongView::SongView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData), needsPlayTimeUpdate_(false),
-      needsNotesUpdate_(false), needsPositionUpdate_(false),
-      needsVUMeterUpdate_(false) {
+SongView::SongView(GUIWindow &w, ViewData *viewData) : ScreenView(w, viewData) {
 
   updatingChain_ = false;
   lastChain_ = 0;
@@ -933,15 +930,16 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   if ((eventType == PET_UPDATE) && (!sync->MajorSlice()))
     return;
 
+  // Set the consolidated flag for UI updates
+  needsUIUpdate_ = true;
+
+  // Only set the play time update flag when not stopping
   if (eventType != PET_STOP) {
-    // Flag that play time needs to be updated
     needsPlayTimeUpdate_ = true;
   }
 
-  // Flag things that need to be updated
-  needsPositionUpdate_ = true;
-  needsVUMeterUpdate_ = true;
-  needsNotesUpdate_ = true;
+  // Create a memory barrier to ensure changes are visible across cores
+  createMemoryBarrier();
 };
 
 void SongView::AnimationUpdate() {
@@ -962,27 +960,23 @@ void SongView::AnimationUpdate() {
   // Draw battery gauge (always safe to do)
   drawBattery(props);
 
-  // Only update VU meters and notes if needed
-  if (needsVUMeterUpdate_) {
+  // Use the consolidated flag for all UI updates
+  if (needsUIUpdate_) {
+    // Draw VU meter and notes
     drawMasterVuMeter(player, props);
-    needsVUMeterUpdate_ = false;
-  }
-
-  if (needsNotesUpdate_) {
     drawNotes();
-    needsNotesUpdate_ = false;
-  }
 
-  if (needsPlayTimeUpdate_) {
-    GUIPoint pos = 0;
-    pos._x = 27;
-    pos._y += 1;
-    SetColor(CD_NORMAL);
-    drawPlayTime(player, pos, props);
-    needsPlayTimeUpdate_ = false;
-  }
+    // Only handle play time updates if needed
+    if (needsPlayTimeUpdate_) {
+      GUIPoint timePos = 0;
+      timePos._x = 27;
+      timePos._y += 1;
+      SetColor(CD_NORMAL);
+      drawPlayTime(player, timePos, props);
+      needsPlayTimeUpdate_ = false;
+    }
 
-  if (needsPositionUpdate_) {
+    // Handle position updates
     GUIPoint anchor = GetAnchor();
     GUIPoint pos = anchor;
     pos._x -= 1;
@@ -1040,7 +1034,11 @@ void SongView::AnimationUpdate() {
       pos._x += 3;
     }
 
-    needsPositionUpdate_ = false;
+    // Create a memory barrier to ensure proper synchronization between cores
+    createMemoryBarrier();
+
+    // Reset the consolidated flag
+    needsUIUpdate_ = false;
   }
 
   // Flush the window to ensure changes are displayed

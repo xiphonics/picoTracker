@@ -5,8 +5,7 @@
 #include "ViewData.h"
 #include <nanoprintf.h>
 
-ChainView::ChainView(GUIWindow &w, ViewData *viewData)
-    : View(w, viewData), needsUIUpdate_(false) {
+ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
   updatingPhrase_ = false;
   lastPhrase_ = 0;
   lastPlayingPos_ = 0;

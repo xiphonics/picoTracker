@@ -7,9 +7,7 @@
 #include <nanoprintf.h>
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
-      needsPlayPositionUpdate_(false), needsNotesUpdate_(false),
-      needsVUMeterUpdate_(false) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);
@@ -849,15 +847,14 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Instead of drawing directly, we'll just update our state and let
   // AnimationUpdate handle the actual drawing
 
-  // Flag that notes need to be updated
+  // Set the consolidated flag for UI updates
+  needsUIUpdate_ = true;
+
+  // Keep setting these for backward compatibility
   needsNotesUpdate_ = true;
-  
-  // Flag that positions need to be updated
   needsPlayPositionUpdate_ = true;
-  
-  // Flag that VU meter needs to be updated
   needsVUMeterUpdate_ = true;
-  
+
   // Update the last positions for use in AnimationUpdate
   TableHolder *th = TableHolder::GetInstance();
   if (th) {
@@ -875,52 +872,52 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
       lastPosition_[2] = tpb.GetPlaybackPosition(2);
     }
   }
+
+  // Create a memory barrier to ensure changes are visible across cores
+  createMemoryBarrier();
 }
 
 void TableView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
   ScreenView::AnimationUpdate();
-  
+
   // Get player instance safely
   Player *player = Player::GetInstance();
   TableHolder *th = TableHolder::GetInstance();
-  
+
   // Only process updates if we're fully initialized
   if (!viewData_ || !player || !th) {
     return;
   }
-  
-  // Handle any pending updates from OnPlayerUpdate
+
+  // Handle any pending updates from OnPlayerUpdate using the consolidated flag
   // This ensures all UI drawing happens on the "main" thread (core0)
-  GUITextProperties props;
-  
-  if (needsNotesUpdate_) {
+  if (needsUIUpdate_) {
+    GUITextProperties props;
+
+    // Draw notes
     drawNotes();
-    needsNotesUpdate_ = false;
-  }
-  
-  if (needsVUMeterUpdate_) {
+
+    // Draw VU meter
     drawMasterVuMeter(player, props);
-    needsVUMeterUpdate_ = false;
-  }
-  
-  if (needsPlayPositionUpdate_) {
+
+    // Draw play positions
     GUIPoint anchor = GetAnchor();
-    GUIPoint pos;
-    
+    GUIPoint pos = anchor;
+
     // Clear previous positions
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_[0];
     DrawString(pos._x, pos._y, " ", props);
-    
+
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[1];
     DrawString(pos._x, pos._y, " ", props);
-    
+
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[2];
     DrawString(pos._x, pos._y, " ", props);
-    
+
     // Only update play position if player is running
     if (player->IsRunning()) {
       // Get current channel
@@ -930,26 +927,30 @@ void TableView::AnimationUpdate() {
       Table *playbackTable = tpb.GetTable();
       // Table we're viewing
       Table &viewTable = th->GetTable(viewData_->currentTable_);
-      
+
       if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
         pos._x = anchor._x - 1;
         pos._y = anchor._y + lastPosition_[0];
         SetColor(CD_ACCENT);
         DrawString(pos._x, pos._y, ">", props);
-        
+
         pos._x += 9;
         pos._y = anchor._y + lastPosition_[1];
         DrawString(pos._x, pos._y, ">", props);
-        
+
         pos._x += 9;
         pos._y = anchor._y + lastPosition_[2];
         DrawString(pos._x, pos._y, ">", props);
       }
     }
-    
-    needsPlayPositionUpdate_ = false;
+
+    // Create a memory barrier to ensure proper synchronization between cores
+    createMemoryBarrier();
+
+    // Reset the consolidated flag
+    needsUIUpdate_ = false;
   }
-  
+
   // Flush the window to ensure changes are displayed
   w_.Flush();
 }
