@@ -734,52 +734,80 @@ void ChainView::DrawView() {
 };
 
 void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't call any drawing functions directly
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
 
+  // Flag that UI needs to be updated (notes, positions, VU meter)
+  needsUIUpdate_ = true;
+};
+
+void ChainView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge
+  GUITextProperties props;
+  drawBattery(props);
+
+  // Get player instance safely
   Player *player = Player::GetInstance();
 
-  drawNotes();
+  // Only process updates if we're fully initialized
+  if (!viewData_ || !player) {
+    // Just flush the battery gauge and return
+    w_.Flush();
+    return;
+  }
 
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos = anchor;
-  pos._x -= 1;
+  // Handle any pending updates from OnPlayerUpdate
+  // This ensures all UI drawing happens on the "main" thread (core0)
 
-  GUITextProperties props;
-  SetColor(CD_NORMAL);
+  if (needsUIUpdate_) {
+    // Draw notes
+    drawNotes();
 
-  // Clear last played & queued
+    // Draw master VU meter
+    drawMasterVuMeter(player, props);
 
-  pos._y = anchor._y + lastPlayingPos_;
-  DrawString(pos._x, pos._y, " ", props);
+    // Handle position updates
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos = anchor;
+    pos._x -= 1;
 
-  pos._y = anchor._y + lastQueuedPos_;
-  DrawString(pos._x, pos._y, " ", props);
+    SetColor(CD_NORMAL);
 
-  if (eventType != PET_STOP) {
+    // Clear last played & queued
+    pos._y = anchor._y + lastPlayingPos_;
+    DrawString(pos._x, pos._y, " ", props);
 
-    // Loop on all channels to see if one of them is playing current chain
+    pos._y = anchor._y + lastQueuedPos_;
+    DrawString(pos._x, pos._y, " ", props);
 
-    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      if (player->IsChannelPlaying(i)) {
-        if (viewData_->currentPlayChain_[i] == viewData_->currentChain_ &&
-            viewData_->playMode_ != PM_AUDITION) {
-          pos._y = anchor._y + viewData_->chainPlayPos_[i];
-          if (!player->IsChannelMuted(i)) {
-            DrawString(pos._x, pos._y, ">", props);
-          } else {
-            DrawString(pos._x, pos._y, "-", props);
+    // Only update play position if player is running
+    if (player->IsRunning()) {
+      // Loop on all channels to see if one of them is playing current chain
+      for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+        if (player->IsChannelPlaying(i)) {
+          if (viewData_->currentPlayChain_[i] == viewData_->currentChain_ &&
+              viewData_->playMode_ != PM_AUDITION) {
+            pos._y = anchor._y + viewData_->chainPlayPos_[i];
+            if (!player->IsChannelMuted(i)) {
+              SetColor(CD_ACCENT);
+              DrawString(pos._x, pos._y, ">", props);
+            } else {
+              SetColor(CD_ACCENTALT);
+              DrawString(pos._x, pos._y, "-", props);
+            }
+            lastPlayingPos_ = viewData_->chainPlayPos_[i];
+            break;
           }
-          lastPlayingPos_ = viewData_->chainPlayPos_[i];
-          break;
         }
       }
     }
 
-    // Loop on all channels to see if one has queued current chain
-
+    // Handle queue position updates if in live mode
     if (player->GetSequencerMode() == SM_LIVE) {
-
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        // is anything queued ?
+        // is anything queued?
         if (player->GetQueueingMode(i) != QM_NONE) {
           // find the chain queued in channel
           unsigned char songPos = player->GetQueuePosition(i);
@@ -796,16 +824,11 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
         }
       }
     }
+
+    // Mark UI update as complete
+    needsUIUpdate_ = false;
   }
 
-  pos = anchor;
-  pos._x += 200;
-};
-
-void ChainView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
+  // Flush the window to ensure changes are displayed
   w_.Flush();
 };

@@ -14,5 +14,4 @@ void ScreenView::AnimationUpdate() {
   // and not redrawing due to user cursor navigation
   GUITextProperties props;
   drawBattery(props);
-  w_.Flush();
 };

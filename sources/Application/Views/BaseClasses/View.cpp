@@ -133,7 +133,6 @@ void View::drawMap() {
 }
 
 void View::drawNotes() {
-
   GUIPoint anchor = GetAnchor();
   int initialX = View::margin_ + 5;
   int initialY = anchor._y + View::songRowCount_ + 2;
@@ -141,35 +140,59 @@ void View::drawNotes() {
   GUITextProperties props;
 
   Player *player = Player::GetInstance();
+  bool isPlaying = player->IsRunning() && viewData_->playMode_ != PM_AUDITION;
 
-  // column banger refactor
+  // First draw all highlighted channels (selected channel)
   props.invert_ = true;
+  SetColor(CD_HILITE2);
+
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     if (i == viewData_->songX_) {
-      SetColor(CD_HILITE2);
-    } else {
-      SetColor(CD_HILITE1);
+      pos._x = initialX + (i * 3);
+      pos._y = initialY;
+
+      if (isPlaying) {
+        // Draw all three rows for this channel
+        DrawString(pos._x, pos._y, player->GetPlayedNote(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedOctive(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i), props);
+      } else {
+        // Draw empty strings if not playing
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+      }
     }
-    if (player->IsRunning() && viewData_->playMode_ != PM_AUDITION) {
-      DrawString(pos._x, pos._y, player->GetPlayedNote(i),
-                 props); // row for the note values
-      pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedOctive(i),
-                 props); // row for the octive values
-      pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedInstrument(i),
-                 props); // draw instrument number
-    } else {
-      DrawString(pos._x, pos._y, "  ", props); // row for the note
-                                               // values
-      pos._y++;
-      DrawString(pos._x, pos._y, "  ",
-                 props); // row for the octive values
-      pos._y++;
-      DrawString(pos._x, pos._y, "  ", props); // draw instrument number
+  }
+
+  // Then draw all non-highlighted channels
+  SetColor(CD_HILITE1);
+
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    if (i != viewData_->songX_) {
+      pos._x = initialX + (i * 3);
+      pos._y = initialY;
+
+      if (isPlaying) {
+        // Draw all three rows for this channel
+        DrawString(pos._x, pos._y, player->GetPlayedNote(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedOctive(i), props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i), props);
+      } else {
+        // Draw empty strings if not playing
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+        pos._y++;
+        DrawString(pos._x, pos._y, "  ", props);
+      }
     }
-    pos._y = initialY;
-    pos._x += 3;
   }
 }
 
@@ -233,19 +256,22 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
     }
   }
 
-  props.invert_ = true;
+  // Store original inversion state
+  bool originalInvert = props.invert_;
 
   // Left channel: Handle level changes
   if (forceRedraw || leftBars != prevLeftVU_[vuIndex]) {
     // If forcing redraw or level changed, redraw the entire meter
 
-    // First clear the entire meter area
+    // First clear the entire meter area with inversion disabled
+    props.invert_ = false;
     SetColor(CD_BACKGROUND);
     for (int i = 0; i < VU_METER_HEIGHT; i++) {
       DrawString(pos._x, pos._y - i, " ", props);
     }
 
-    // Then draw the active cells
+    // Then draw the active cells with inversion enabled
+    props.invert_ = true;
     for (int i = 0; i < leftBars; i++) {
       // Set appropriate color based on level
       if (i == VU_METER_CLIP_LEVEL) {
@@ -265,13 +291,15 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   if (forceRedraw || rightBars != prevRightVU_[vuIndex]) {
     // If forcing redraw or level changed, redraw the entire meter
 
-    // First clear the entire meter area
+    // First clear the entire meter area with inversion disabled
+    props.invert_ = false;
     SetColor(CD_BACKGROUND);
     for (int i = 0; i < VU_METER_HEIGHT; i++) {
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
 
-    // Then draw the active cells
+    // Then draw the active cells with inversion enabled
+    props.invert_ = true;
     for (int i = 0; i < rightBars; i++) {
       // Set appropriate color based on level
       if (i == VU_METER_CLIP_LEVEL) {
@@ -291,7 +319,8 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   prevLeftVU_[vuIndex] = leftBars;
   prevRightVU_[vuIndex] = rightBars;
 
-  props.invert_ = false;
+  // Restore original inversion state
+  props.invert_ = originalInvert;
 }
 
 void View::drawPlayTime(Player *player, GUIPoint pos,

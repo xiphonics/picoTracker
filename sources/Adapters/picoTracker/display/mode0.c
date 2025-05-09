@@ -108,7 +108,7 @@ inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
 
   uint16_t screen_x = x * CHAR_WIDTH;
   uint16_t screen_y = (TEXT_HEIGHT - height - y) * CHAR_HEIGHT;
-  uint16_t screen_width = width * CHAR_HEIGHT;
+  uint16_t screen_width = width * CHAR_WIDTH;
   uint16_t screen_height = height * CHAR_HEIGHT;
 
   // column address set
@@ -120,7 +120,6 @@ inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
   ili9341_set_command(ILI9341_PASET);
   ili9341_command_param16(screen_x);
   ili9341_command_param16(screen_x + screen_width - 1);
-
   // start writing
   ili9341_set_command(ILI9341_RAMWR);
 
