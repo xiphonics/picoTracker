@@ -18,7 +18,7 @@ short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
       needsPlayPositionUpdate_(false), needsLiveIndicatorUpdate_(false),
-      needsNotesUpdate_(false) {
+      needsNotesUpdate_(false), needsVUMeterUpdate_(false) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
   GUIPoint pos(0, 10);
@@ -1287,6 +1287,9 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Flag that positions need to be updated
   needsPlayPositionUpdate_ = true;
   
+  // Flag that VU meter needs to be updated
+  needsVUMeterUpdate_ = true;
+  
   // Flag that live indicators need to be updated if in live mode
   Player *player = Player::GetInstance();
   if (player && player->GetSequencerMode() == SM_LIVE) {
@@ -1313,6 +1316,11 @@ void PhraseView::AnimationUpdate() {
   if (needsNotesUpdate_) {
     drawNotes();
     needsNotesUpdate_ = false;
+  }
+  
+  if (needsVUMeterUpdate_) {
+    drawMasterVuMeter(player, props);
+    needsVUMeterUpdate_ = false;
   }
   
   if (needsPlayPositionUpdate_) {

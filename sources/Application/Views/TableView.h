@@ -70,6 +70,7 @@ private:
   // These prevent core1 from directly updating the UI
   bool needsPlayPositionUpdate_ = false;
   bool needsNotesUpdate_ = false;
+  bool needsVUMeterUpdate_ = false;
 
   uchar lastPosition_[3];
 };

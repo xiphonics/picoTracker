@@ -69,6 +69,7 @@ private:
   bool needsPlayPositionUpdate_ = false;
   bool needsQueuePositionUpdate_ = false;
   bool needsNotesUpdate_ = false;
+  bool needsVUMeterUpdate_ = false;
 };
 
 #endif

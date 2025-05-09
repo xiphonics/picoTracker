@@ -83,6 +83,7 @@ private:
   bool needsPlayPositionUpdate_ = false;
   bool needsLiveIndicatorUpdate_ = false;
   bool needsNotesUpdate_ = false;
+  bool needsVUMeterUpdate_ = false;
 };
 
 #endif

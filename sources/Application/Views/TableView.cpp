@@ -8,7 +8,8 @@
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
-      needsPlayPositionUpdate_(false), needsNotesUpdate_(false) {
+      needsPlayPositionUpdate_(false), needsNotesUpdate_(false),
+      needsVUMeterUpdate_(false) {
   row_ = 0;
   col_ = 0;
   GUIPoint pos(0, 10);
@@ -854,6 +855,9 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Flag that positions need to be updated
   needsPlayPositionUpdate_ = true;
   
+  // Flag that VU meter needs to be updated
+  needsVUMeterUpdate_ = true;
+  
   // Update the last positions for use in AnimationUpdate
   TableHolder *th = TableHolder::GetInstance();
   if (th) {
@@ -893,6 +897,11 @@ void TableView::AnimationUpdate() {
   if (needsNotesUpdate_) {
     drawNotes();
     needsNotesUpdate_ = false;
+  }
+  
+  if (needsVUMeterUpdate_) {
+    drawMasterVuMeter(player, props);
+    needsVUMeterUpdate_ = false;
   }
   
   if (needsPlayPositionUpdate_) {

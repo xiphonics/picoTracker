@@ -7,7 +7,7 @@
 
 ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData),
     needsPlayPositionUpdate_(false), needsQueuePositionUpdate_(false),
-    needsNotesUpdate_(false) {
+    needsNotesUpdate_(false), needsVUMeterUpdate_(false) {
   updatingPhrase_ = false;
   lastPhrase_ = 0;
   lastPlayingPos_ = 0;
@@ -747,6 +747,9 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Flag that positions need to be updated
   needsPlayPositionUpdate_ = true;
   
+  // Flag that VU meter needs to be updated
+  needsVUMeterUpdate_ = true;
+  
   // Flag that queue positions need to be updated if in live mode
   Player *player = Player::GetInstance();
   if (player && player->GetSequencerMode() == SM_LIVE) {
@@ -775,6 +778,11 @@ void ChainView::AnimationUpdate() {
   if (needsNotesUpdate_) {
     drawNotes();
     needsNotesUpdate_ = false;
+  }
+  
+  if (needsVUMeterUpdate_) {
+    drawMasterVuMeter(player, props);
+    needsVUMeterUpdate_ = false;
   }
   
   if (needsPlayPositionUpdate_) {
