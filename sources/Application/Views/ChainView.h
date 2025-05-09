@@ -66,10 +66,8 @@ private:
 
   // Flags to track which UI elements need updating
   // These prevent core1 from directly updating the UI
-  bool needsPlayPositionUpdate_ = false;
-  bool needsQueuePositionUpdate_ = false;
-  bool needsNotesUpdate_ = false;
-  bool needsVUMeterUpdate_ = false;
+  bool needsUIUpdate_ =
+      false; // Single flag for notes, positions, and VU meter updates
 };
 
 #endif

@@ -5,9 +5,8 @@
 #include "ViewData.h"
 #include <nanoprintf.h>
 
-ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData),
-    needsPlayPositionUpdate_(false), needsQueuePositionUpdate_(false),
-    needsNotesUpdate_(false), needsVUMeterUpdate_(false) {
+ChainView::ChainView(GUIWindow &w, ViewData *viewData)
+    : View(w, viewData), needsUIUpdate_(false) {
   updatingPhrase_ = false;
   lastPhrase_ = 0;
   lastPlayingPos_ = 0;
@@ -741,64 +740,49 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Instead of drawing directly, we'll just update our state and let
   // AnimationUpdate handle the actual drawing
 
-  // Flag that notes need to be updated
-  needsNotesUpdate_ = true;
-  
-  // Flag that positions need to be updated
-  needsPlayPositionUpdate_ = true;
-  
-  // Flag that VU meter needs to be updated
-  needsVUMeterUpdate_ = true;
-  
-  // Flag that queue positions need to be updated if in live mode
-  Player *player = Player::GetInstance();
-  if (player && player->GetSequencerMode() == SM_LIVE) {
-    needsQueuePositionUpdate_ = true;
-  }
+  // Flag that UI needs to be updated (notes, positions, VU meter)
+  needsUIUpdate_ = true;
 };
 
 void ChainView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
   GUITextProperties props;
   drawBattery(props);
-  
+
   // Get player instance safely
   Player *player = Player::GetInstance();
-  
+
   // Only process updates if we're fully initialized
   if (!viewData_ || !player) {
     // Just flush the battery gauge and return
     w_.Flush();
     return;
   }
-  
+
   // Handle any pending updates from OnPlayerUpdate
   // This ensures all UI drawing happens on the "main" thread (core0)
-  
-  if (needsNotesUpdate_) {
+
+  if (needsUIUpdate_) {
+    // Draw notes
     drawNotes();
-    needsNotesUpdate_ = false;
-  }
-  
-  if (needsVUMeterUpdate_) {
+
+    // Draw master VU meter
     drawMasterVuMeter(player, props);
-    needsVUMeterUpdate_ = false;
-  }
-  
-  if (needsPlayPositionUpdate_) {
+
+    // Handle position updates
     GUIPoint anchor = GetAnchor();
     GUIPoint pos = anchor;
     pos._x -= 1;
-    
+
     SetColor(CD_NORMAL);
-    
+
     // Clear last played & queued
     pos._y = anchor._y + lastPlayingPos_;
     DrawString(pos._x, pos._y, " ", props);
-    
+
     pos._y = anchor._y + lastQueuedPos_;
     DrawString(pos._x, pos._y, " ", props);
-    
+
     // Only update play position if player is running
     if (player->IsRunning()) {
       // Loop on all channels to see if one of them is playing current chain
@@ -820,18 +804,8 @@ void ChainView::AnimationUpdate() {
         }
       }
     }
-    
-    needsPlayPositionUpdate_ = false;
-  }
-  
-  if (needsQueuePositionUpdate_) {
-    GUIPoint anchor = GetAnchor();
-    GUIPoint pos = anchor;
-    pos._x -= 1;
-    
-    SetColor(CD_NORMAL);
-    
-    // Only update queue position if in live mode
+
+    // Handle queue position updates if in live mode
     if (player->GetSequencerMode() == SM_LIVE) {
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
         // is anything queued?
@@ -851,10 +825,11 @@ void ChainView::AnimationUpdate() {
         }
       }
     }
-    
-    needsQueuePositionUpdate_ = false;
+
+    // Mark UI update as complete
+    needsUIUpdate_ = false;
   }
-  
+
   // Flush the window to ensure changes are displayed
   w_.Flush();
 };
