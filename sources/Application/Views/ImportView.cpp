@@ -311,12 +311,7 @@ void ImportView::import(char *name) {
 
   SamplePool *pool = SamplePool::GetInstance();
 
-  // Pause core1 in order to be able to write to flash and ensure core1 is
-  // not reading from it, it also disables IRQs on it
-  // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
-  multicore_lockout_start_blocking();
   int sampleID = pool->ImportSample(name, projName);
-  multicore_lockout_end_blocking();
 
   if (sampleID >= 0) {
     I_Instrument *instr =
