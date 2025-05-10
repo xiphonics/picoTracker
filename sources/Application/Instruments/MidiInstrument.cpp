@@ -103,6 +103,28 @@ void MidiInstrument::Stop(int c) {
   // clear last notes array
   lastNotes_[c].fill(0);
   playing_ = false;
+}
+
+void MidiInstrument::HandleMuteChange(int c, bool muted) {
+  if (muted) {
+    // When a channel becomes muted, send note-off messages for all active notes
+    Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
+    int channel = v->GetInt();
+
+    // First send individual note-off messages for any active notes
+    for (int i = 0; i < MAX_MIDI_CHORD_NOTES + 1; i++) {
+      if (lastNotes_[c][i] == 0) {
+        continue;
+      }
+      MidiMessage msg;
+      msg.status_ = MidiMessage::MIDI_NOTE_OFF + channel;
+      msg.data1_ = lastNotes_[c][i];
+      msg.data2_ = 0x00;
+      svc_->QueueMessage(msg);
+      Trace::Debug("MIDI mute note OFF[%d]:%d", i, msg.data1_);
+    }
+  }
+  // No action needed when unmuting - notes will play on next trigger
 };
 
 void MidiInstrument::SetChannel(int channel) {
@@ -116,8 +138,13 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
   // We do it here so we have the opportunity to send some command before
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int mchannel = v->GetInt();
-  if (first_[channel]) {
-    // send note
+
+  // Check if the channel is muted before sending MIDI messages
+  Player *player = Player::GetInstance();
+  bool channelMuted = player->IsChannelMuted(channel);
+
+  if (first_[channel] && !channelMuted) {
+    // Only send note-on if the channel is not muted
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_NOTE_ON + mchannel;
     msg.data1_ = lastNotes_[channel][0];
@@ -125,13 +152,17 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
     svc_->QueueMessage(msg);
 
     first_[channel] = false;
+  } else if (first_[channel] && channelMuted) {
+    // If channel is muted, don't send note-on but mark as not first anymore
+    first_[channel] = false;
   }
   if (remainingTicks_ > 0) {
     remainingTicks_--;
     if (remainingTicks_ == 0) {
       if (!retrig_) {
         Stop(channel);
-      } else {
+      } else if (!channelMuted) {
+        // Only send retrigger MIDI messages if the channel is not muted
         MidiMessage msg;
         remainingTicks_ = retrigLoop_;
         msg.status_ = MidiMessage::MIDI_NOTE_OFF + mchannel;
@@ -142,6 +173,9 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
         msg.data1_ = lastNotes_[channel][0];
         msg.data2_ = velocity_;
         svc_->QueueMessage(msg);
+      } else {
+        // If muted, just reset the timer without sending MIDI messages
+        remainingTicks_ = retrigLoop_;
       };
     };
   };
