@@ -2,13 +2,13 @@ add_executable(picoTracker
   picoTrackerMain.cpp
 )
 
-target_link_libraries(picoTracker PUBLIC pico_stdlib
-                                  PUBLIC platform_system
-                                  PUBLIC platform
-                                  PUBLIC tinyusb_board
-                                  PUBLIC tinyusb_device
-                                  PUBLIC platform_usb
-                                  PUBLIC platform_filesystem
+target_link_libraries(picoTracker PUBLIC
+  platform_system
+  platform
+  tinyusb_board
+  tinyusb_device
+  platform_usb
+  platform_filesystem
 )
 
 target_include_directories(picoTracker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
