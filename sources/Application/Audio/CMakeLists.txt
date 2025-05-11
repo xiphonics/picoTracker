@@ -4,7 +4,6 @@ add_library(application_audio
 
 target_link_libraries(application_audio PUBLIC
   system_process
-  services_time
   application_model
 )
 

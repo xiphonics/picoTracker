@@ -7,7 +7,6 @@ add_library(services_audio
 )
 
 target_link_libraries(services_audio PUBLIC
-  services_time
   application_instruments
   application_player
 )

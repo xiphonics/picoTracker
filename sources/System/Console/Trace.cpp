@@ -1,7 +1,7 @@
 #include "Trace.h"
 #include "Adapters/picoTracker/platform/platform.h"
 #include "Externals/etl/include/etl/error_handler.h"
-#include "hardware/uart.h"
+#include "platform.h"
 #include <string.h>
 
 // be explicit about the nanoprintf configuration
@@ -13,8 +13,6 @@
 #define NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS 0
 #define NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS 1
 #include "nanoprintf.h"
-
-void pt_uart_putc(int c, void *context) { putchar(c); }
 
 Trace::Trace() {}
 

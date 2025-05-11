@@ -1,5 +1,4 @@
 #include "ImportView.h"
-
 #include "Application/AppWindow.h"
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -7,7 +6,6 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
-#include "pico/multicore.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -310,7 +308,6 @@ void ImportView::import(char *name) {
   }
 
   SamplePool *pool = SamplePool::GetInstance();
-
   int sampleID = pool->ImportSample(name, projName);
 
   if (sampleID >= 0) {

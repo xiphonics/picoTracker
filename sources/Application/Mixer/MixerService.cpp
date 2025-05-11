@@ -9,14 +9,13 @@
 #include "Services/Audio/AudioDriver.h"
 #include "Services/Audio/AudioOut.h"
 #include "Services/Midi/MidiService.h"
-#include "Services/Time/TimeService.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
+#include "platform.h"
 #include <nanoprintf.h>
 
-MixerService::MixerService() : master_() {
+MixerService::MixerService() : master_(), sync_(platform_mutex()) {
   out_ = 0;
-  sync_ = 0;
   project_ = NULL;
   master_.SetName("Master");
 };
@@ -57,9 +56,6 @@ bool MixerService::Init() {
       bus_[i].SetFileRenderer(path);
     }
   }
-
-  mutex_init(sync_);
-  NAssert(sync_);
 
   if (result) {
     Trace::Debug("Out initialized");
@@ -215,13 +211,6 @@ void MixerService::Execute(FourCC id, float value) {
 
 AudioOut *MixerService::GetAudioOut() { return out_; };
 
-void MixerService::Lock() {
-  if (sync_)
-    mutex_enter_blocking(sync_);
-}
+void MixerService::Lock() { sync_->Lock(); }
 
-void MixerService::Unlock() {
-  if (sync_) {
-    mutex_exit(sync_);
-  }
-}
+void MixerService::Unlock() { sync_->Unlock(); }

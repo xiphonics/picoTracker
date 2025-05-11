@@ -1,4 +1,5 @@
 #include "platform.h"
+#include "Adapters/picoTracker/mutex/picoTrackerMutex.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/pll.h"
@@ -6,6 +7,9 @@
 #include "hardware/structs/clocks.h"
 #include "hardware/uart.h"
 #include "hardware/vreg.h"
+#include "hardware/watchdog.h"
+#include "pico/bootrom.h"
+#include "pico/rand.h"
 #include "pico/stdlib.h"
 #include <System/Console/Trace.h>
 #include <System/Console/nanoprintf.h>
@@ -204,3 +208,13 @@ void platform_init() {
   gpio_set_dir(INPUT_PLAY, GPIO_IN);
   gpio_pull_up(INPUT_PLAY);
 }
+
+int32_t platform_get_rand() { return get_rand_32(); };
+
+void platform_reboot() { watchdog_reboot(0, 0, 0); }
+
+void platform_bootloader() { reset_usb_boot(0, 0); }
+
+SysMutex *platform_mutex() { return new picoTrackerMutex(); };
+
+void pt_uart_putc(int c, void *context) { putchar(c); }
