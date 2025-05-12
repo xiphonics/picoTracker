@@ -696,9 +696,13 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   Player *player = Player::GetInstance();
 
   if (mask == EPBM_ENTER) {
-    // first check if the current instrument is a sample instrument & in "new"
-    // viewmode
-    if (getInstrument()->GetType() == IT_SAMPLE) {
+    // Get the current field to check if we're on the sample field
+    UIIntVarField *currentField = (UIIntVarField *)GetFocus();
+
+    // Only allow sample import when the sample field is selected
+    if (getInstrument()->GetType() == IT_SAMPLE && currentField &&
+        currentField->GetVariableID() == FourCC::SampleInstrumentSample) {
+
       if (viewMode_ == VM_NEW) {
         viewMode_ = VM_NORMAL; // clear the "enter double tap" state
         if (!player->IsRunning()) {
@@ -728,7 +732,10 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         // import above
         viewMode_ = VM_NEW;
       }
-    };
+    } else if (viewMode_ == VM_NEW) {
+      // If we're not on the sample field but in VM_NEW mode, reset it
+      viewMode_ = VM_NORMAL;
+    }
 
     UIIntVarField *field = (UIIntVarField *)GetFocus();
     Variable &v = field->GetVariable();
