@@ -26,7 +26,8 @@ void WatchedVariable::onChange() {
   if (!updating_ && enabled_) {
     updating_ = true;
     SetChanged();
-    // Cast the FourCC value to I_ObservableData* as done in other parts of the codebase
+    // Cast the FourCC value to I_ObservableData* as done in other parts of the
+    // codebase
     NotifyObservers((I_ObservableData *)(uintptr_t)id_);
     updating_ = false;
   }
