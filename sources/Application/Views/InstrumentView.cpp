@@ -752,6 +752,11 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       break;
     }
     mask &= (0xFFFF - EPBM_ENTER);
+  } else {
+    // Clear the VM_NEW state if any key other than ENTER is pressed
+    if (viewMode_ == VM_NEW) {
+      viewMode_ = VM_NORMAL;
+    }
   }
 
   if (viewMode_ == VM_CLONE) {
