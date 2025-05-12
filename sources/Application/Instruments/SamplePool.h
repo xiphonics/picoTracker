@@ -8,7 +8,7 @@
 #include "Foundation/T_Singleton.h"
 #include "WavFile.h"
 
-#define MAX_PIG_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
+#define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
 
 enum SamplePoolEventType { SPET_INSERT, SPET_DELETE };
 
@@ -17,12 +17,12 @@ struct SamplePoolEvent : public I_ObservableData {
   int index_;
 };
 
-class SamplePool : public T_Singleton<SamplePool>, public Observable {
+class SamplePool : public T_Factory<SamplePool>, public Observable {
 public:
   void Load(const char *projectName);
   SamplePool();
-  void Reset();
-  ~SamplePool();
+  virtual void Reset() = 0;
+  virtual ~SamplePool();
   SoundSource *GetSource(int i);
   char **GetNameList();
   int GetNameListSize();
@@ -30,20 +30,15 @@ public:
   void PurgeSample(int i, const char *projectName);
 
 protected:
-  bool loadSample(const char *name);
+  virtual bool loadSample(const char *name) = 0;
+  virtual bool unloadSample() = 0;
   bool loadSoundFont(const char *path);
   int count_;
-  char *names_[MAX_PIG_SAMPLES];
-  SoundSource *wav_[MAX_PIG_SAMPLES];
+  char *names_[MAX_SAMPLES];
+  SoundSource *wav_[MAX_SAMPLES];
 
 private:
   etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;
-
-#ifdef LOAD_IN_FLASH
-  static int flashEraseOffset_;
-  static int flashWriteOffset_;
-  static int flashLimit_;
-#endif
 };
 
 #endif

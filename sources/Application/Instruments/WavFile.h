@@ -6,24 +6,28 @@
 #include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 
+#define BUFFER_SIZE 512
+
 class WavFile : public SoundSource {
 
-protected:
+protected: // Factory - see Load method
   WavFile(I_File *file);
 
 public:
   virtual ~WavFile();
   static WavFile *Open(const char *);
   virtual void *GetSampleBuffer(int note);
+  void SetSampleBuffer(short *ptr);
   virtual int GetSize(int note);
   virtual int GetSampleRate(int note);
   virtual int GetChannelCount(int note);
   virtual int GetRootNote(int note);
   bool GetBuffer(long start, long sampleCount); // values in smples
-#ifdef LOAD_IN_FLASH
-  bool LoadInFlash(int &flashEraseOffset, int &flashWriteOffset,
-                   int &flashLimit);
-#endif
+
+  uint32_t GetDiskSize(int note);
+  bool Rewind();
+  bool Read(void *buff, uint32_t btr, uint32_t *br);
+
   void Close();
   virtual bool IsMulti() { return false; };
 
@@ -35,14 +39,15 @@ private:
   int readBufferSize_; // Read buffer size
   short *samples_;     // sample buffer size (16 bits)
   int sampleBufferSize_;
-  int size_;          // number of samples
-  int sampleRate_;    // sample rate
-  int channelCount_;  // mono / stereo
-  int bytePerSample_; // original file is in 8/16bit
-  int dataPosition_;  // offset in file to get to data
+  int size_;           // number of samples
+  int sampleRate_;     // sample rate
+  int channelCount_;   // mono / stereo
+  int bytePerSample_;  // original file is in 8/16bit
+  int dataPosition_;   // offset in file to get to data
+  uint32_t readCount_; // remaining bytes to be read from file
 
   static int bufferChunkSize_;
   static bool initChunkSize_;
-  static unsigned char readBuffer_[512];
+  static unsigned char readBuffer_[BUFFER_SIZE];
 };
 #endif

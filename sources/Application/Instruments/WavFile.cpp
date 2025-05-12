@@ -1,19 +1,13 @@
+
 #include "WavFile.h"
 #include "Application/Model/Config.h"
 #include "Foundation/Types/Types.h"
-#include "Services/Time/TimeService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
-#include "System/io/Status.h"
 #include <stdlib.h>
 
-#ifdef LOAD_IN_FLASH
-#include "hardware/flash.h"
-#include "hardware/sync.h"
-#endif
-
 int WavFile::bufferChunkSize_ = -1;
-unsigned char WavFile::readBuffer_[512];
+unsigned char WavFile::readBuffer_[BUFFER_SIZE];
 
 short Swap16(short from) {
 #ifdef __ppc__
@@ -52,9 +46,6 @@ WavFile::~WavFile() {
     file_->Close();
     delete file_;
   }
-#ifndef LOAD_IN_FLASH
-  SAFE_FREE(samples_);
-#endif
 };
 
 WavFile *WavFile::Open(const char *name) {
@@ -204,16 +195,23 @@ WavFile *WavFile::Open(const char *name) {
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
   size = Swap32(size);
+  Trace::Debug("File size: %i", size);
 
   wav->size_ =
       size / nChannels / bitPerSample; // Size in samples (stereo/16bits)
+  Trace::Debug("File size_: %i", wav->size_);
+  // All samples are saved as 16bit/sample into disk
+  wav->sampleBufferSize_ = wav->size_ * nChannels * 2;
+  Trace::Debug("File sampleBufferSize_: %i", wav->sampleBufferSize_);
+  wav->readCount_ = size;
 
   wav->dataPosition_ = position;
-
   return wav;
 };
 
 void *WavFile::GetSampleBuffer(int note) { return samples_; };
+
+void WavFile::SetSampleBuffer(short *ptr) { samples_ = ptr; }
 
 int WavFile::GetSize(int note) { return size_; };
 
@@ -224,9 +222,6 @@ int WavFile::GetSampleRate(int note) { return sampleRate_; };
 long WavFile::readBlock(long start, long size) {
   // Read buffer is a fixed size, nothing should be requested bigger than this
   // TODO: remove size option and work with what we have
-#ifdef PICOBUILD
-  assert((unsigned long)size <= FLASH_PAGE_SIZE);
-#endif
   if (size > readBufferSize_) {
     readBufferSize_ = size;
   }
@@ -240,9 +235,6 @@ bool WavFile::GetBuffer(long start, long size) {
   // sense anymore, refactor
   // 64 bits is the maximum size we can read without overflowing
   // readBuffer_ in the worst case scenario
-#ifdef PICOBUILD
-  assert((unsigned long)size < FLASH_PAGE_SIZE / 2);
-#endif
   samples_ = (short *)readBuffer_;
 
   // compute the file buffer size we need to read
@@ -267,8 +259,6 @@ bool WavFile::GetBuffer(long start, long size) {
     bufferStart += readSize;
     count -= readSize;
     offset += readSize;
-    if (bufferChunkSize_ > 0)
-      TimeService::GetInstance()->Sleep(1);
   }
 
   // expand 8 bit data if needed
@@ -290,135 +280,44 @@ bool WavFile::GetBuffer(long start, long size) {
   return true;
 };
 
-#ifdef LOAD_IN_FLASH
-bool __not_in_flash_func(WavFile::LoadInFlash)(int &flashEraseOffset,
-                                               int &flashWriteOffset,
-                                               int &flashLimit) {
+uint32_t WavFile::GetDiskSize(int note) { return sampleBufferSize_; }
 
-  // Size needed in flash before accounting for page size
-  int FlashBaseBufferSize = 2 * channelCount_ * size_;
-  // Store the size of samples
-  sampleBufferSize_ = FlashBaseBufferSize;
-  // Size actually occupied in flash
-  int FlashPageBufferSize = ((FlashBaseBufferSize / FLASH_PAGE_SIZE) +
-                             ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) *
-                            FLASH_PAGE_SIZE;
-
-  if (flashWriteOffset + FlashPageBufferSize > flashLimit) {
-    Trace::Error("Sample doesn't fit in available Flash (need: %i - avail: %i)",
-                 FlashPageBufferSize, flashLimit - flashWriteOffset);
-    return false;
-  }
-
-  // Pointer to location in flash
-  samples_ = (short *)(XIP_BASE + flashWriteOffset);
-
-  // Any operation on the flash need to ensure that nothing else reads or writes
-  // on it We disable IRQs and ensure that we don't have multiprocessing on at
-  // this time
-  int irqs = save_and_disable_interrupts();
-
-  // This is required due to strange issue with above interrupts disable causing
-  // a crash on some sample files without this delay
-  volatile uint32_t cycles = 100000;
-  while (cycles--) {
-    // Compiler won't optimize this away due to volatile
-    asm volatile("nop" ::: "memory");
-  }
-
-  // If data doesn't fit in previously erased page, we'll have to erase
-  // additional ones
-  if (FlashPageBufferSize > (flashEraseOffset - flashWriteOffset)) {
-    int additionalData =
-        FlashPageBufferSize - flashEraseOffset + flashWriteOffset;
-    int sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
-                          ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
-                         FLASH_SECTOR_SIZE;
-    Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
-                 sectorsToErase, flashEraseOffset,
-                 flashEraseOffset + sectorsToErase);
-    // Erase required number of sectors
-    flash_range_erase(flashEraseOffset, sectorsToErase);
-    // Move erase pointer to new position
-    flashEraseOffset += sectorsToErase;
-  }
-
-  // Actual buffer needed to read whole file (may be lower than
-  // FlashBaseBufferSize if it's an 8bit sample)
-  int bufferSize = size_ * channelCount_ * bytePerSample_;
-  // Where the data starts in the WAV (after header)
-  int bufferStart = dataPosition_;
-
-  // Process all files using the same chunked approach
-  // Read the buffer in small chunks to let the system breathe
-  uint count = bufferSize;
-  uint offset = 0;
-  uint readSize = count > FLASH_PAGE_SIZE ? FLASH_PAGE_SIZE : count;
-
-  // For progress tracking
-  uint totalBytesToProcess = bufferSize;
-
-  while (count > 0) {
-    readSize = (count > readSize) ? readSize : count;
-
-    file_->Seek(bufferStart, SEEK_SET);
-    file_->Read(readBuffer_, readSize);
-
-    // Have to expand 8 bit data (if needed) before writing to flash
-    unsigned char *src = (unsigned char *)readBuffer_;
-    short *dst = (short *)readBuffer_;
-    for (int i = readSize - 1; i >= 0; i--) {
-      if (bytePerSample_ == 1) {
-        dst[i] = (src[i] - 128) * 256;
-      } else {
-        *dst = Swap16(*dst);
-        dst++;
-        if (channelCount_ > 1) {
-          *dst = Swap16(*dst);
-          dst++;
-        }
-      }
-    }
-
-    // We need to write double the bytes if we needed to expand to 16 bit
-    // Write size will be either 256 (which is the flash page size) or 512
-    int writeSize = (bytePerSample_ == 1) ? readSize * 2 : readSize;
-    // Adjust to page size
-    writeSize =
-        ((writeSize / FLASH_PAGE_SIZE) + ((writeSize % FLASH_PAGE_SIZE) != 0)) *
-        FLASH_PAGE_SIZE;
-
-    // Ensure we have a minimum write size of one page
-    if ((unsigned int)writeSize < FLASH_PAGE_SIZE) {
-      Trace::Debug("Adjusting write size from %d to minimum page size %d",
-                   writeSize, FLASH_PAGE_SIZE);
-      writeSize = FLASH_PAGE_SIZE;
-    }
-
-    // Debug output for small files
-    if (bufferSize < 1024) {
-      Trace::Debug(
-          "Writing sample: bufferSize=%d, writeSize=%d, chunk %d of %d",
-          bufferSize, writeSize, bufferSize - count, bufferSize);
-    }
-
-    flash_range_program(flashWriteOffset + offset, (uint8_t *)readBuffer_,
-                        writeSize);
-    bufferStart += readSize;
-    count -= readSize;
-    flashWriteOffset += writeSize;
-
-    // Update progress indicator
-    uint progress =
-        (uint)(((totalBytesToProcess - count) * 100) / totalBytesToProcess);
-    Status::Set("Loading: %d%%", progress);
-  }
-
-  // Lastly we restore the IRQs
-  restore_interrupts(irqs);
+// rewind to start of data (no header)
+bool WavFile::Rewind() {
+  file_->Seek(dataPosition_, SEEK_SET);
+  readCount_ = size_ * channelCount_ * bytePerSample_;
   return true;
 };
-#endif
+
+// incrementally read file, use rewind method to go to beginning
+bool WavFile::Read(void *buff, uint32_t btr, uint32_t *br) {
+
+  uint32_t readSize = (bytePerSample_ == 1) ? btr / 2 : btr;
+  // Adjust for bytes remaning
+  readSize = readCount_ > readSize ? readSize : readCount_;
+
+  *br = file_->Read(buff, readSize);
+  if (bytePerSample_ == 1) {
+    *br = *br * 2;
+  }
+  // Have to expand 8 bit data (if needed) before writing
+  uint8_t *src = (uint8_t *)buff;
+  uint16_t *dst = (uint16_t *)buff;
+  for (int i = readSize - 1; i >= 0; i--) {
+    if (bytePerSample_ == 1) {
+      dst[i] = (src[i] - 128) * 256;
+    } else {
+      *dst = Swap16(*dst);
+      dst++;
+      if (channelCount_ > 1) {
+        *dst = Swap16(*dst);
+        dst++;
+      }
+    }
+  }
+  readCount_ -= readSize;
+  return true;
+}
 
 void WavFile::Close() {
   file_->Close();
