@@ -115,10 +115,10 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  pathBufferA.c_str());
+    return PERSIST_ERROR;
   }
   Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s", pathBufferA.c_str());
   tinyxml2::XMLPrinter printer(fp);
-  Trace::Log("PERSISTENCYSERVICE", "Saved Proj File: %s", pathBufferA.c_str());
 
   printer.OpenElement("PICOTRACKER");
 
