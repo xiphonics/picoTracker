@@ -1,5 +1,4 @@
 #include "Trace.h"
-#include "Adapters/picoTracker/platform/platform.h"
 #include "Externals/etl/include/etl/error_handler.h"
 #include "platform.h"
 #include <string.h>

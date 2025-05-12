@@ -1,5 +1,4 @@
 #include "SIDInstrument.h"
-#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
@@ -195,8 +194,6 @@ void SIDInstrument::Stop(int c) { playing_ = false; };
 
 bool SIDInstrument::Render(int channel, fixed *buffer, int size,
                            bool updateTick) {
-  int start = micros();
-
   if (playing_ and render_) {
 
     // clear the fixed point buffer
@@ -204,15 +201,8 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
 
     sid_->cRSID_emulateWavesBuffer(buffer, size);
 
-    int time_taken = micros() - start;
-    Trace::Debug("RENDER: SID-%i Render took %ius (%i%%ts)", GetOsc(),
-                 time_taken, (time_taken * 44100) / size / 10000);
-
     return true;
   }
-  int time_taken = micros() - start;
-  Trace::Debug("RENDER: >SID-%i Render took %ius (%i%%ts)", GetOsc(),
-               time_taken, (time_taken * 44100) / size / 10000);
   return false;
 };
 
