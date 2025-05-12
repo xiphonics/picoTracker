@@ -211,6 +211,15 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   FieldView::ProcessButtonMask(mask, pressed);
 
   if (mask & EPBM_NAV) {
+    if (mask & EPBM_DOWN || mask & EPBM_UP) {
+      if (saveAsFlag_) {
+        MessageBox *mb =
+            new MessageBox(*this, "Save project rename first", MBBF_OK);
+        DoModal(mb);
+        return;
+      }
+    }
+
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_SONG;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);

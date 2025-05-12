@@ -52,8 +52,6 @@ public:
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
-  static etl::string<MAX_PROJECT_NAME_LENGTH> ProjectNameGlobal;
-
 private:
   etl::list<Variable *, 16> variables_;
 
@@ -81,7 +79,7 @@ private:
   Variable transpose_;
   Variable scale_;
   Variable scaleRoot_;
-  Variable projectName_;
+  WatchedVariable projectName_;
 };
 
 #endif
