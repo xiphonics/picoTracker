@@ -45,7 +45,9 @@ bool MixerService::Init() {
     }
 
     char path[30 + MAX_PROJECT_NAME_LENGTH];
-    const char *projectname = Project::ProjectNameGlobal.c_str();
+    // Get the project name from the current project
+    char projectname[MAX_PROJECT_NAME_LENGTH];
+    Player::GetInstance()->GetProject()->GetProjectName(projectname);
 
     out_->AddObserver(*MidiService::GetInstance());
     npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);

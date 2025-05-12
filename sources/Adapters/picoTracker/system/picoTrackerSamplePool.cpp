@@ -39,7 +39,7 @@ picoTrackerSamplePool::picoTrackerSamplePool() : SamplePool() {
 
 void picoTrackerSamplePool::Reset() {
   count_ = 0;
-  for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
+  for (int i = 0; i < MAX_SAMPLES; i++) {
     SAFE_DELETE(wav_[i]);
     SAFE_FREE(names_[i]);
   };
@@ -58,7 +58,7 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
     multicore_lockout_start_blocking();
   }
 
-  if (count_ == MAX_PIG_SAMPLES)
+  if (count_ == MAX_SAMPLES)
     return false;
 
   WavFile *wave = WavFile::Open(name);
@@ -109,16 +109,16 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
   // Any operation on the flash need to ensure that nothing else reads or writes
   // on it We disable IRQs and ensure that we don't have multiprocessing on
   // at this time
-  int irqs = save_and_disable_interrupts();
+  uint32_t irqs = save_and_disable_interrupts();
 
   // If data doesn't fit in previously erased page, we'll have to erase
   // additional ones
   if (FlashPageBufferSize > (flashEraseOffset_ - flashWriteOffset_)) {
-    int additionalData =
+    uint32_t additionalData =
         FlashPageBufferSize - flashEraseOffset_ + flashWriteOffset_;
-    int sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
-                          ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
-                         FLASH_SECTOR_SIZE;
+    uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
+                               ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
+                              FLASH_SECTOR_SIZE;
     Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
                  sectorsToErase, flashEraseOffset_,
                  flashEraseOffset_ + sectorsToErase);
@@ -129,9 +129,9 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     Trace::Debug("new erase offset: %p", flashEraseOffset_);
   }
 
-  uint offset = 0;
+  uint32_t offset = 0;
   uint32_t br = 0;
-  unsigned char readBuffer[BUFFER_SIZE];
+  uint8_t readBuffer[BUFFER_SIZE];
 
   wave->Rewind();
   wave->Read(&readBuffer, BUFFER_SIZE, &br);

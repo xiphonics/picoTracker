@@ -11,7 +11,7 @@
 #include <string.h>
 
 SamplePool::SamplePool() : Observable(&observers_) {
-  for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
+  for (int i = 0; i < MAX_SAMPLES; i++) {
     names_[i] = NULL;
     wav_[i] = NULL;
   };
@@ -19,7 +19,7 @@ SamplePool::SamplePool() : Observable(&observers_) {
 };
 
 SamplePool::~SamplePool() {
-  for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
+  for (int i = 0; i < MAX_SAMPLES; i++) {
     SAFE_DELETE(wav_[i]);
     SAFE_FREE(names_[i]);
   };
@@ -45,7 +45,7 @@ void SamplePool::Load(const char *projectName) {
       Status::Set("Copying:%s (%d%%)", name, progress);
       loadSample(name);
     }
-    if (i == MAX_PIG_SAMPLES) {
+    if (i == MAX_SAMPLES) {
       Trace::Error("Warning maximum sample count reached");
       break;
     };
@@ -80,7 +80,7 @@ int SamplePool::GetNameListSize() { return count_; };
 
 int SamplePool::ImportSample(char *name, const char *projectName) {
 
-  if (count_ == MAX_PIG_SAMPLES) {
+  if (count_ == MAX_SAMPLES) {
     return -1;
   }
 

@@ -342,6 +342,18 @@ void AppWindow::LoadProject(const char *projectName) {
 
   WatchedVariable::Disable();
 
+  // Register as an observer of the project name variable to get notified of
+  // changes
+  Variable *projectNameVar = project->FindVariable(FourCC::VarProjectName);
+  if (projectNameVar) {
+    WatchedVariable *watchedVar = (WatchedVariable *)projectNameVar;
+    if (watchedVar) {
+      watchedVar->AddObserver(*this);
+      // Store the initial project name
+      project->GetProjectName(projectName_);
+    }
+  }
+
   project->GetInstrumentBank()->Init();
 
   WatchedVariable::Enable();
@@ -604,6 +616,17 @@ void AppWindow::AnimationUpdate() {
 void AppWindow::LayoutChildren(){};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
+  if (d && (uintptr_t)d == (uintptr_t)FourCC::VarProjectName) {
+    // Update the stored project name from the project
+    Project *project = _viewData->project_;
+    if (project) {
+      project->GetProjectName(projectName_);
+      Trace::Log("APPWINDOW", "Project name retrieved: %s", projectName_);
+    } else {
+      Trace::Error("APPWINDOW: Project name retrieval failed!");
+    }
+    return;
+  }
 
   ViewEvent *ve = (ViewEvent *)d;
 
@@ -759,7 +782,13 @@ bool AppWindow::autoSave() {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
     // get persistence service and call autosave
     PersistencyService *ps = PersistencyService::GetInstance();
-    ps->AutoSaveProjectData(projectName_);
+    auto result = ps->AutoSaveProjectData(projectName_);
+    if (result != PERSIST_SAVED) {
+      Trace::Error("APPWINDOW", "Failed to auto-save project data");
+      // we dont return false here as we dont want to go into a bombardment of
+      // auto save attempts and instead just attempt to auto save again after
+      // the next interval
+    }
     return true;
   }
   return false;

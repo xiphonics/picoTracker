@@ -295,8 +295,8 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *br) {
     *br = *br * 2;
   }
   // Have to expand 8 bit data (if needed) before writing
-  unsigned char *src = (unsigned char *)buff;
-  short *dst = (short *)buff;
+  uint8_t *src = (uint8_t *)buff;
+  uint16_t *dst = (uint16_t *)buff;
   for (int i = readSize - 1; i >= 0; i--) {
     if (bytePerSample_ == 1) {
       dst[i] = (src[i] - 128) * 256;
