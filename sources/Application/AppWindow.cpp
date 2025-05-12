@@ -154,7 +154,7 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
   int offset = (pos._x < 0) ? -pos._x / 8 : 0;
   len -= offset;
   int available = SCREEN_WIDTH - ((pos._x < 0) ? 0 : pos._x);
-  len = MIN(len, available);
+  len = std::min(len, available);
   memcpy(buffer, string + offset, len);
   buffer[len] = 0;
 
