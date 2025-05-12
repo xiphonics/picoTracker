@@ -45,6 +45,9 @@ add_compile_definitions(${USE_LCD})
 # Needed for ETL to pick up our etl_profile.h
 include_directories("config/")
 
+# platform specific implementations
+include_directories("Adapters/picoTracker/platform/")
+
 # Enable ETL debug mode only for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(ETL_DEBUG)
@@ -52,6 +55,31 @@ endif()
 
 # Initialize the SDK
 pico_sdk_init()
+
+link_libraries(
+  pico_stdlib
+  pico_sync
+  pico_multicore
+  pico_rand
+  pico_unique_id
+  tinyusb_board
+  tinyusb_device
+  hardware_pio
+  hardware_irq
+  hardware_clocks
+  hardware_dma
+  hardware_gpio
+  hardware_spi
+  hardware_watchdog
+  hardware_vreg
+  hardware_uart
+  hardware_pll
+  hardware_adc
+  hardware_flash
+)
+
+add_subdirectory(Adapters/picoTracker)
+add_subdirectory(Externals/SdFat)
 
 add_compile_options(
   -Werror
@@ -68,7 +96,6 @@ add_compile_options(
   -Wno-array-bounds
 )
 
-add_subdirectory(Adapters)
 add_subdirectory(UIFramework)
 add_subdirectory(System)
 add_subdirectory(Application)

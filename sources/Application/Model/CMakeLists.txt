@@ -1,21 +1,19 @@
 add_library(application_model
-  Chain.h Chain.cpp
-  Config.h Config.cpp
-  Groove.h Groove.cpp
-  Mixer.h Mixer.cpp
-  Phrase.h Phrase.cpp
-  Project.h Project.cpp
-  Scale.h Scale.cpp
-  Song.h Song.cpp
-  Table.h Table.cpp
-  )
+  Chain.cpp
+  Config.cpp
+  Groove.cpp
+  Mixer.cpp
+  Phrase.cpp
+  Project.cpp
+  Scale.cpp
+  Song.cpp
+  Table.cpp
+)
 
-target_link_libraries(application_model PUBLIC pico_stdlib
-                                        PUBLIC system_system
-                                        PUBLIC foundation_variables
-                                        PUBLIC sdfat
-                                        PUBLIC platform_sdcard
-                                        PRIVATE application_utils
+target_link_libraries(application_model PUBLIC
+  system_system
+  foundation_variables
+  application_utils
 )
 
 target_include_directories(application_model PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
