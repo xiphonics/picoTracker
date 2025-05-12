@@ -30,7 +30,7 @@ void PersistencyService::PurgeUnnamedProject() {
   fs->DeleteFile(AUTO_SAVE_FILENAME);
 
   fs->chdir("samples");
-  etl::vector<int, MAX_PIG_SAMPLES> fileIndexes;
+  etl::vector<int, MAX_SAMPLES> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
 
   // delete all samples

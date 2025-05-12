@@ -8,7 +8,7 @@
 #include "Foundation/T_Singleton.h"
 #include "WavFile.h"
 
-#define MAX_PIG_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
+#define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
 
 enum SamplePoolEventType { SPET_INSERT, SPET_DELETE };
 
@@ -34,8 +34,8 @@ protected:
   virtual bool unloadSample() = 0;
   bool loadSoundFont(const char *path);
   int count_;
-  char *names_[MAX_PIG_SAMPLES];
-  SoundSource *wav_[MAX_PIG_SAMPLES];
+  char *names_[MAX_SAMPLES];
+  SoundSource *wav_[MAX_SAMPLES];
 
 private:
   etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;
