@@ -619,7 +619,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     Project *project = _viewData->project_;
     if (project) {
       project->GetProjectName(projectName_);
-      Trace::Log("APPWINDOW", "Project name updated to: %s", projectName_);
+      Trace::Log("APPWINDOW", "Project name retrieved: %s", projectName_);
+    } else {
+      Trace::Error("APPWINDOW: Project name retrieval failed!");
     }
     return;
   }
