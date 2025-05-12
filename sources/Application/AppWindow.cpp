@@ -613,7 +613,6 @@ void AppWindow::AnimationUpdate() {
 void AppWindow::LayoutChildren(){};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
-  // Check if this is a notification from the project name variable
   if (d && (uintptr_t)d == (uintptr_t)FourCC::VarProjectName) {
     // Update the stored project name from the project
     Project *project = _viewData->project_;
