@@ -1,7 +1,7 @@
 add_library(foundation_services
-  Service.h Service.cpp
-  ServiceRegistry.h ServiceRegistry.cpp
-  SubService.h SubService.cpp
+  Service.cpp
+  ServiceRegistry.cpp
+  SubService.cpp
 )
 
 target_include_directories(foundation_services PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
