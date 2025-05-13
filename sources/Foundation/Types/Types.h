@@ -70,6 +70,7 @@ struct FourCC {
     MidiInstrumentTable = 119,
     MidiInstrumentTableAutomation = 120,
     MidiInstrumentName = 144,
+    MidiInstrumentProgram = 160,
 
     SIDInstrument1Waveform = 72,
     SIDInstrument2Waveform = 73,
@@ -133,9 +134,11 @@ struct FourCC {
 
     VarTempo = 33,
     VarMasterVolume = 41,
+    VarPreviewVolume = 161,
     VarWrap = 70,
     VarTranspose = 63,
     VarScale = 16,
+    VarScaleRoot = 162,
     VarProjectName = 99,
     VarMidiDevice = 40,
     VarLineOut = 17,
@@ -148,7 +151,15 @@ struct FourCC {
     VarInfoColor = 109,
     VarWarnColor = 110,
     VarErrorColor = 111,
+    VarAccentColor = 152,
+    VarAccentAltColor = 153,
+    VarEmphasisColor = 154,
+    VarReserved1Color = 155,
+    VarReserved2Color = 156,
+    VarReserved3Color = 157,
+    VarReserved4Color = 158,
     VarMidiSync = 112,
+    VarMidiClockSync = 151,
     VarRemoteUI = 140,
     VarUIFont = 141,
     // 142 is taken for SIDInstrumentOSCNumber
@@ -160,6 +171,35 @@ struct FourCC {
     // 148 is taken for InstrumentName
     // 149 is taken for ActionRenderMixdown
     // 150 is taken for ActionRenderStems
+    // 151 is taken for VarMidiClockSync
+    // 152 is taken for VarPlayColor
+    // 153 is taken for VarMuteColor
+    // 154 is taken for VarSongViewFEColor
+    // 155 is taken for VarSongView00Color
+    // 156 is taken for VarRowColor
+    // 157 is taken for VarRow2Color
+    // 158 is taken for VarMajorBeatColor
+    // 159 is taken for ActionShowTheme
+    // 160 is taken for MidiInstrumentProgram
+    // 161 is taken for VarScaleRoot
+    // 162 is taken for VarPreviewVolume
+    // 163 is taken for VarChannel1Volume
+    // 164 is taken for VarChannel2Volume
+    // 165 is taken for VarChannel3Volume
+    // 166 is taken for VarChannel4Volume
+    // 167 is taken for VarChannel5Volume
+    // 168 is taken for VarChannel6Volume
+    // 169 is taken for VarChannel7Volume
+    // 170 is taken for VarChannel8Volume
+
+    VarChannel1Volume = 163,
+    VarChannel2Volume = 164,
+    VarChannel3Volume = 165,
+    VarChannel4Volume = 166,
+    VarChannel5Volume = 167,
+    VarChannel6Volume = 168,
+    VarChannel7Volume = 169,
+    VarChannel8Volume = 170,
 
     VarInstrumentType = 113,
 
@@ -179,7 +219,8 @@ struct FourCC {
     InstrumentName = 148,
     ActionRenderMixdown = 149,
     ActionRenderStems = 150,
-    SampleInstrumentSlices = 151,
+    ActionShowTheme = 159,
+    SampleInstrumentSlices = 171,
 
     Default = 255, // "    "
   };
@@ -218,8 +259,10 @@ struct FourCC {
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
   ETL_ENUM_TYPE(VarMidiSync, "MIDISYNC")
+  ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(VarUIFont, "UIFONT")
+  ETL_ENUM_TYPE(VarScaleRoot, "SCALEROOT")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
   ETL_ENUM_TYPE(MacroInstrmentTimbre, "timbre")
   ETL_ENUM_TYPE(MacroInstrumentColor, "color")
@@ -253,6 +296,7 @@ struct FourCC {
   ETL_ENUM_TYPE(MidiInstrumentVolume, "volume")
   ETL_ENUM_TYPE(MidiInstrumentTable, "table")
   ETL_ENUM_TYPE(MidiInstrumentTableAutomation, "table automation")
+  ETL_ENUM_TYPE(MidiInstrumentProgram, "program")
   ETL_ENUM_TYPE(SIDInstrument1Waveform, "VWF1")
   ETL_ENUM_TYPE(SIDInstrument2Waveform, "VWF2")
   ETL_ENUM_TYPE(SIDInstrument1FilterCut, "FILTCUT1")
@@ -301,13 +345,29 @@ struct FourCC {
   ETL_ENUM_TYPE(VarInfoColor, "INFOCOLOR")
   ETL_ENUM_TYPE(VarWarnColor, "WARNCOLOR")
   ETL_ENUM_TYPE(VarErrorColor, "ERRORCOLOR")
+  ETL_ENUM_TYPE(VarAccentColor, "ACCENTCOLOR")
+  ETL_ENUM_TYPE(VarAccentAltColor, "ACCENTALTCOLOR")
+  ETL_ENUM_TYPE(VarEmphasisColor, "EMPHASISCOLOR")
+  ETL_ENUM_TYPE(VarReserved1Color, "RESERVED1COLOR")
+  ETL_ENUM_TYPE(VarReserved2Color, "RESERVED2COLOR")
+  ETL_ENUM_TYPE(VarReserved3Color, "RESERVED3COLOR")
+  ETL_ENUM_TYPE(VarReserved4Color, "RESERVED4COLOR")
   ETL_ENUM_TYPE(VarTempo, "tempo")
   ETL_ENUM_TYPE(VarMasterVolume, "master")
+  ETL_ENUM_TYPE(VarPreviewVolume, "preview")
   ETL_ENUM_TYPE(VarWrap, "wrap")
   ETL_ENUM_TYPE(VarTranspose, "transpose")
   ETL_ENUM_TYPE(VarScale, "scale")
   ETL_ENUM_TYPE(VarProjectName, "projectname")
   ETL_ENUM_TYPE(VarInstrumentType, "INSTRUMENTTYPE")
+  ETL_ENUM_TYPE(VarChannel1Volume, "channel1vol")
+  ETL_ENUM_TYPE(VarChannel2Volume, "channel2vol")
+  ETL_ENUM_TYPE(VarChannel3Volume, "channel3vol")
+  ETL_ENUM_TYPE(VarChannel4Volume, "channel4vol")
+  ETL_ENUM_TYPE(VarChannel5Volume, "channel5vol")
+  ETL_ENUM_TYPE(VarChannel6Volume, "channel6vol")
+  ETL_ENUM_TYPE(VarChannel7Volume, "channel7vol")
+  ETL_ENUM_TYPE(VarChannel8Volume, "channel8vol")
 
   ETL_ENUM_TYPE(ActionEdit, "edit")
   ETL_ENUM_TYPE(ActionExport, "export")

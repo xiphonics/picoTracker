@@ -1,5 +1,4 @@
 #include "InstrumentView.h"
-#include "Application/Instruments/MacroInstrument.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -11,7 +10,6 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
-#include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
@@ -21,12 +19,14 @@
 
 static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    ((InstrumentView &)v).onInstrumentTypeChange();
+    // Apply the proposed type change when user confirms
+    InstrumentView &instrumentView = (InstrumentView &)v;
+    instrumentView.applyProposedTypeChange();
+    instrumentView.onInstrumentTypeChange();
     Trace::Log("INSTRUMENTVIEW", "instrument type changed!!");
-
-    // clear instrument modified flag
-    ((InstrumentView &)v).clearInstrumentModified();
   }
+  // If user selects No, we don't need to do anything as the UI already shows
+  // the current type not the proposed type
 };
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
@@ -238,48 +238,6 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old,
 }
 
 void InstrumentView::fillNoneParameters() {}
-
-void InstrumentView::fillMacroParameters() {
-  int i = viewData_->currentInstrumentID_;
-  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  I_Instrument *instr = bank->GetInstrument(i);
-  MacroInstrument *instrument = (MacroInstrument *)instr;
-  GUIPoint position = GetAnchor();
-
-  // offset y to account for instrument type and export/import fields
-  position._y += 1;
-
-  position._y += 1;
-  Variable *v = instrument->FindVariable(FourCC::MacroInstrumentShape);
-  intVarField_.emplace_back(position, *v, "shape: %s", 0,
-                            braids::MACRO_OSC_SHAPE_LAST - 2, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrmentTimbre);
-  intVarField_.emplace_back(position, *v, "timbre: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentColor);
-  intVarField_.emplace_back(position, *v, "color: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentAttack);
-  intVarField_.emplace_back(position, *v, "attack: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentDecay);
-  intVarField_.emplace_back(position, *v, "decay: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentSignature);
-  intVarField_.emplace_back(position, *v, "signature: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-}
 
 void InstrumentView::fillSampleParameters() {
 
@@ -554,7 +512,14 @@ void InstrumentView::fillMidiParameters() {
       UIIntVarField(position, *v, "length: %2.2X", 0, 0xFF, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 2;
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::MidiInstrumentProgram);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "program: %2.2X", 0, 0x7F, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentTableAutomation);
   intVarField_.emplace_back(
       UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1));
@@ -699,12 +664,16 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   Player *player = Player::GetInstance();
 
-  if (viewMode_ == VM_NEW) {
-    if (mask == EPBM_ENTER) {
-      UIIntVarField *field = (UIIntVarField *)GetFocus();
-      Variable &v = field->GetVariable();
-      switch (v.GetID()) {
-      case FourCC::SampleInstrumentSample: {
+  if (mask == EPBM_ENTER) {
+    // Get the current field to check if we're on the sample field
+    UIIntVarField *currentField = (UIIntVarField *)GetFocus();
+
+    // Only allow sample import when the sample field is selected
+    if (getInstrument()->GetType() == IT_SAMPLE && currentField &&
+        currentField->GetVariableID() == FourCC::SampleInstrumentSample) {
+
+      if (viewMode_ == VM_NEW) {
+        viewMode_ = VM_NORMAL; // clear the "enter double tap" state
         if (!player->IsRunning()) {
           // First check if the samplelib exists
           bool samplelibExists =
@@ -715,6 +684,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
                 new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
             DoModal(mb);
           } else {
+            ImportView::SetSourceViewType(VT_INSTRUMENT);
+
             // Go to import sample
             ViewType vt = VT_IMPORT;
             ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -725,20 +696,35 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
           MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
           DoModal(mb);
         }
-        break;
+      } else {
+        // mark as "new" mode so a 2nd following ENTER will trigger the sample
+        // import above
+        viewMode_ = VM_NEW;
       }
-      case FourCC::SampleInstrumentTable: {
-        int next = TableHolder::GetInstance()->GetNext();
-        if (next != NO_MORE_TABLE) {
-          v.SetInt(next);
-          isDirty_ = true;
-        }
-        break;
+    } else if (viewMode_ == VM_NEW) {
+      // If we're not on the sample field but in VM_NEW mode, reset it
+      viewMode_ = VM_NORMAL;
+    }
+
+    UIIntVarField *field = (UIIntVarField *)GetFocus();
+    Variable &v = field->GetVariable();
+    switch (v.GetID()) {
+    case FourCC::SampleInstrumentTable: {
+      int next = TableHolder::GetInstance()->GetNext();
+      if (next != NO_MORE_TABLE) {
+        v.SetInt(next);
+        isDirty_ = true;
       }
-      default:
-        break;
-      }
-      mask &= (0xFFFF - EPBM_ENTER);
+      break;
+    }
+    default:
+      break;
+    }
+    mask &= (0xFFFF - EPBM_ENTER);
+  } else {
+    // Clear the VM_NEW state if any key other than ENTER is pressed
+    if (viewMode_ == VM_NEW) {
+      viewMode_ = VM_NORMAL;
     }
   }
 
@@ -762,7 +748,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_SELECTION) {
   } else {
-    viewMode_ = VM_NORMAL;
+    // viewMode_ = VM_NORMAL;
   }
 
   FieldView::ProcessButtonMask(mask, pressed);
@@ -803,59 +789,47 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       viewMode_ = VM_CLONE;
     };
   } else {
+    // NAV Modifier
+    if (mask & EPBM_NAV) {
+      if (mask & EPBM_LEFT) {
+        ViewType vt = VT_PHRASE;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
 
-    // ENTER modifier
-    if (mask == EPBM_ENTER) {
-      FourCC varID = ((UIIntVarField *)GetFocus())->GetVariableID();
-      if ((varID == FourCC::SampleInstrumentTable) ||
-          (varID == FourCC::MidiInstrumentTable) ||
-          (varID == FourCC::SampleInstrumentSample)) {
-        viewMode_ = VM_NEW;
-      };
+        // remove listening when leaving this screen
+        getInstrument()->RemoveObserver(*this);
+        ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
+
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+
+      if (mask & EPBM_DOWN) {
+
+        // Go to table view
+
+        ViewType vt = VT_TABLE2;
+
+        int i = viewData_->currentInstrumentID_;
+        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+        I_Instrument *instr = bank->GetInstrument(i);
+        int table = instr->GetTable();
+        if (table != VAR_OFF) {
+          viewData_->currentTable_ = table;
+        }
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+
+      if (mask & EPBM_PLAY) {
+        player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                              viewData_->chainRow_);
+      }
     } else {
-
-      // NAV Modifier
-      if (mask & EPBM_NAV) {
-        if (mask & EPBM_LEFT) {
-          ViewType vt = VT_PHRASE;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-
-          // remove listening when leaving this screen
-          getInstrument()->RemoveObserver(*this);
-          ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
-
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_DOWN) {
-
-          // Go to table view
-
-          ViewType vt = VT_TABLE2;
-
-          int i = viewData_->currentInstrumentID_;
-          InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-          I_Instrument *instr = bank->GetInstrument(i);
-          int table = instr->GetTable();
-          if (table != VAR_OFF) {
-            viewData_->currentTable_ = table;
-          }
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                                viewData_->chainRow_);
-        }
-      } else {
-        // No modifier
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                                viewData_->chainRow_);
-        }
+      // No modifier
+      if (mask & EPBM_PLAY) {
+        player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                              viewData_->chainRow_);
       }
     }
   }
@@ -924,16 +898,24 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
 
   switch (fourcc) {
   case FourCC::VarInstrumentType: {
-    Trace::Debug("INSTRUMENTVIEW", "instrument type change:%d",
-                 (InstrumentType)instrumentType_.GetInt());
-    // confirm user wants to change instrument type &lose changes
+    // Store the proposed instrument type
+    proposedType_ = (InstrumentType)instrumentType_.GetInt();
+
+    // Revert the UI field back to the current type until confirmed
+    instrumentType_.SetInt(currentType_, false);
+
+    // Check if player is running
     Player *player = Player::GetInstance();
     if (!player->IsRunning()) {
-      if (instrumentModified_) {
+      // Check if any instrument field has been modified
+      bool instrumentModified = checkInstrumentModified();
+      if (instrumentModified) {
         MessageBox *mb = new MessageBox(*this, "Change Instrument &",
                                         "lose settings?", MBBF_YES | MBBF_NO);
         DoModal(mb, ChangeInstrumentTypeCallback);
       } else {
+        // Apply the proposed type change immediately if not modified
+        applyProposedTypeChange();
         onInstrumentTypeChange();
       }
     } else {
@@ -968,11 +950,83 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                true);
     refreshInstrumentFields(instrument, FourCC::SampleInstrumentSlices);
   } break;
-  default:
-    if (fourcc != 0) {
-      instrumentModified_ = true;
+  case FourCC::MidiInstrumentProgram: {
+    // When program value changes, send a MIDI Program Change message
+    I_Instrument *instr = getInstrument();
+    if (instr && instr->GetType() == IT_MIDI) {
+      MidiInstrument *midiInstr = (MidiInstrument *)instr;
+
+      // Get the channel and program values
+      Variable *channelVar =
+          midiInstr->FindVariable(FourCC::MidiInstrumentChannel);
+      Variable *programVar =
+          midiInstr->FindVariable(FourCC::MidiInstrumentProgram);
+
+      if (channelVar && programVar) {
+        int channel = channelVar->GetInt();
+        int program = programVar->GetInt();
+
+        // Send Program Change message and play C3 note using the helper method
+        midiInstr->SendProgramChangeWithNote(channel, program);
+      }
     }
+  } break;
+  default:
     break;
+  }
+}
+
+void InstrumentView::applyProposedTypeChange() {
+  // Apply the proposed instrument type change to the UI field
+  instrumentType_.SetInt(proposedType_);
+  // Update the current type to match
+  currentType_ = proposedType_;
+}
+
+bool InstrumentView::checkInstrumentModified() {
+  // Get current instrument
+  I_Instrument *instrument = getInstrument();
+  if (!instrument) {
+    return false;
+  }
+
+  // Get the list of variables for this instrument
+  etl::ilist<Variable *> *variables = instrument->Variables();
+  if (!variables) {
+    return false;
+  }
+
+  // Check if any variable has been modified from its default value
+  for (auto it = variables->begin(); it != variables->end(); ++it) {
+    Variable *var = *it;
+    if (var && var->IsModified()) {
+      return true;
+    }
+  }
+
+  // No variables have been modified
+  return false;
+}
+
+void InstrumentView::resetInstrumentToDefaults() {
+  // Get current instrument
+  I_Instrument *instrument = getInstrument();
+  if (!instrument) {
+    return;
+  }
+
+  // Get the list of variables for this instrument
+  etl::ilist<Variable *> *variables = instrument->Variables();
+  if (!variables) {
+    return;
+  }
+
+  // Reset all variables to their default values
+  for (auto it = variables->begin(); it != variables->end(); ++it) {
+    Variable *var = *it;
+    if (var) {
+      var->Reset();
+    }
   }
 }
 

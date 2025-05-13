@@ -1,16 +1,24 @@
 #include "MixerService.h"
+#include "Application/AppWindow.h"
+#include "Application/Application.h"
 #include "Application/Model/Config.h"
-#include "Application/Model/Mixer.h"
 #include "Application/Model/Project.h"
+#include "Application/Player/PlayerMixer.h"
 #include "Application/Utils/char.h"
 #include "Services/Audio/Audio.h"
 #include "Services/Audio/AudioDriver.h"
+#include "Services/Audio/AudioOut.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
+#include "platform.h"
 #include <nanoprintf.h>
 
-MixerService::MixerService() : out_(0), sync_(0){};
+MixerService::MixerService() : master_(), sync_(platform_mutex()) {
+  out_ = 0;
+  project_ = NULL;
+  master_.SetName("Master");
+};
 
 MixerService::~MixerService(){};
 
@@ -37,7 +45,9 @@ bool MixerService::Init() {
     }
 
     char path[30 + MAX_PROJECT_NAME_LENGTH];
-    const char *projectname = Project::ProjectNameGlobal.c_str();
+    // Get the project name from the current project
+    char projectname[MAX_PROJECT_NAME_LENGTH];
+    Player::GetInstance()->GetProject()->GetProjectName(projectname);
 
     out_->AddObserver(*MidiService::GetInstance());
     npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
@@ -48,9 +58,6 @@ bool MixerService::Init() {
       bus_[i].SetFileRenderer(path);
     }
   }
-
-  mutex_init(sync_);
-  NAssert(sync_);
 
   if (result) {
     Trace::Debug("Out initialized");
@@ -107,13 +114,52 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
   }
 }
 
-void MixerService::SetMasterVolume(int vol) {
-  fixed masterVolume = fp_mul(i2fp(vol), fl2fp(0.01f));
+// Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in
+// fixed point
+fixed MixerService::ToLogVolume(int vol) {
+  // Ensure vol is within valid range
+  if (vol < 0)
+    vol = 0;
+  if (vol > 100)
+    vol = 100;
 
-  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    bus_[i].SetVolume(masterVolume);
+  // Convert to fixed point (0-1 range)
+  fixed normalizedVol = fp_mul(i2fp(vol), fl2fp(0.01f));
+
+  // Apply quadratic curve for logarithmic-like scaling
+  // This gives better control at lower volumes
+  return fp_mul(normalizedVol, normalizedVol);
+}
+
+void MixerService::SetMasterVolume(int vol) {
+  // Apply logarithmic scaling for better volume control
+  // vol is 0-100, where 100 is unity gain (1.0)
+  fixed masterVolume = ToLogVolume(vol);
+
+  // Set the master bus volume
+  master_.SetVolume(masterVolume);
+
+  Player *player = Player::GetInstance();
+  Project *project = player ? player->GetProject() : nullptr;
+
+  // Apply channel volumes to individual channel buses
+  if (project) {
+    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      // Get the channel's individual volume (0-100)
+      int channelVol = project->GetChannelVolume(i);
+
+      // Convert channel volume to non-linear scale (0.0-1.0)
+      fixed channelVolume = ToLogVolume(channelVol);
+
+      // Set the channel volume directly (not multiplied by master volume)
+      bus_[i].SetVolume(channelVolume);
+      // Trace::Debug("Set channel %d volume to %d", i, channelVol);
+    }
+  } else {
+    // assert and crash
+    NAssert(false);
   }
-};
+}
 
 int MixerService::GetPlayedBufferPercentage() {
   return out_->GetPlayedBufferPercentage();
@@ -167,13 +213,6 @@ void MixerService::Execute(FourCC id, float value) {
 
 AudioOut *MixerService::GetAudioOut() { return out_; };
 
-void MixerService::Lock() {
-  if (sync_)
-    mutex_enter_blocking(sync_);
-}
+void MixerService::Lock() { sync_->Lock(); }
 
-void MixerService::Unlock() {
-  if (sync_) {
-    mutex_exit(sync_);
-  }
-}
+void MixerService::Unlock() { sync_->Unlock(); }

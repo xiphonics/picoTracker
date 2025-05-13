@@ -30,10 +30,12 @@ public:
   Song song_;
 
   int GetMasterVolume();
+  int GetChannelVolume(int channel);
   bool Wrap();
   void OnTempoTap();
   void NudgeTempo(int value);
   int GetScale();
+  uint8_t GetScaleRoot();
   int GetTempo(); // Takes nudging into account
   int GetTranspose();
   void GetProjectName(char *name);
@@ -50,10 +52,8 @@ public:
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);
 
-  static etl::string<MAX_PROJECT_NAME_LENGTH> ProjectNameGlobal;
-
 private:
-  etl::list<Variable *, 6> variables_;
+  etl::list<Variable *, 16> variables_;
 
   InstrumentBank *instrumentBank_;
   int tempoNudge_;
@@ -64,10 +64,22 @@ private:
   // variables
   WatchedVariable tempo_;
   Variable masterVolume_;
+  // Individual channel volume variables instead of using an array
+  // as initialization of such a large array causes in constructors causes stack
+  // overflow issues
+  Variable channelVolume1_;
+  Variable channelVolume2_;
+  Variable channelVolume3_;
+  Variable channelVolume4_;
+  Variable channelVolume5_;
+  Variable channelVolume6_;
+  Variable channelVolume7_;
+  Variable channelVolume8_;
   Variable wrap_;
   Variable transpose_;
   Variable scale_;
-  Variable projectName_;
+  Variable scaleRoot_;
+  WatchedVariable projectName_;
 };
 
 #endif

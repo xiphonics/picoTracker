@@ -10,72 +10,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef LOAD_IN_FLASH
-#include "hardware/flash.h"
-// #define FLASH_TARGET_OFFSET (1024 * 1024)
-//  Use all flash available after binary for samples
-//  WARNING! should be conscious to always ensure 1MB of free space
-extern char __flash_binary_end;
-#define FLASH_TARGET_OFFSET                                                    \
-  ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
-   1) *                                                                        \
-      FLASH_SECTOR_SIZE
-// #define FLASH_LIMIT (2 * 1024 * 1024)
-
-int SamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
-int SamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
-int SamplePool::flashLimit_ =
-    2 * 1024 * 1024; // default 2mb for the Raspberry Pi Pico
-
-// From the SDK, values are not defined in the header file
-#define FLASH_RUID_DUMMY_BYTES 4
-#define FLASH_RUID_DATA_BYTES 8
-#define FLASH_RUID_TOTAL_BYTES                                                 \
-  (1 + FLASH_RUID_DUMMY_BYTES + FLASH_RUID_DATA_BYTES)
-
-#endif
-
-#ifdef PICOBUILD
-uint storage_get_flash_capacity() {
-  uint8_t txbuf[FLASH_RUID_TOTAL_BYTES] = {0x9f};
-  uint8_t rxbuf[FLASH_RUID_TOTAL_BYTES] = {0};
-  flash_do_cmd(txbuf, rxbuf, FLASH_RUID_TOTAL_BYTES);
-
-  return 1 << rxbuf[3];
-}
-#endif
-
 SamplePool::SamplePool() : Observable(&observers_) {
-  for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
+  for (int i = 0; i < MAX_SAMPLES; i++) {
     names_[i] = NULL;
     wav_[i] = NULL;
   };
   count_ = 0;
-#ifdef PICOBUILD
-  flashLimit_ = storage_get_flash_capacity();
-  Trace::Debug("Flash size is %i bytes", flashLimit_);
-#endif
 };
 
 SamplePool::~SamplePool() {
-  for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
+  for (int i = 0; i < MAX_SAMPLES; i++) {
     SAFE_DELETE(wav_[i]);
     SAFE_FREE(names_[i]);
   };
-};
-
-void SamplePool::Reset() {
-  count_ = 0;
-  for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
-    SAFE_DELETE(wav_[i]);
-    SAFE_FREE(names_[i]);
-  };
-
-#ifdef LOAD_IN_FLASH
-  // Reset flash erase and write pointers when we close project
-  flashEraseOffset_ = FLASH_TARGET_OFFSET;
-  flashWriteOffset_ = FLASH_TARGET_OFFSET;
-#endif
 };
 
 void SamplePool::Load(const char *projectName) {
@@ -89,13 +36,16 @@ void SamplePool::Load(const char *projectName) {
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
   char name[PFILENAME_SIZE];
-  for (size_t i = 0; i < fileIndexes.size(); i++) {
+  uint totalSamples = fileIndexes.size();
+  for (uint i = 0; i < totalSamples; i++) {
     fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
-      Status::Set("Loading:%s", name);
+      // Show progress as percentage
+      int progress = (int)((i * 100) / totalSamples);
+      Status::Set("Copying:%s (%d%%)", name, progress);
       loadSample(name);
     }
-    if (i == MAX_PIG_SAMPLES) {
+    if (i == MAX_SAMPLES) {
       Trace::Error("Warning maximum sample count reached");
       break;
     };
@@ -126,36 +76,11 @@ char **SamplePool::GetNameList() { return names_; };
 
 int SamplePool::GetNameListSize() { return count_; };
 
-bool SamplePool::loadSample(const char *name) {
-  Trace::Log("SAMPLEPOOL", "Loading sample into flash: %s", name);
-
-  if (count_ == MAX_PIG_SAMPLES)
-    return false;
-
-  WavFile *wave = WavFile::Open(name);
-  if (wave) {
-    wav_[count_] = wave;
-    names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
-    strcpy(names_[count_], name);
-    count_++;
-#ifdef LOAD_IN_FLASH
-    wave->LoadInFlash(flashEraseOffset_, flashWriteOffset_, flashLimit_);
-#else
-    wave->GetBuffer(0, wave->GetSize(-1));
-#endif
-    wave->Close();
-    return true;
-  } else {
-    Trace::Error("Failed to load sample:%s", name);
-    return false;
-  }
-}
-
 #define IMPORT_CHUNK_SIZE 1000
 
 int SamplePool::ImportSample(char *name, const char *projectName) {
 
-  if (count_ == MAX_PIG_SAMPLES) {
+  if (count_ == MAX_SAMPLES) {
     return -1;
   }
 
@@ -188,11 +113,17 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
 
   // copy file to current project
   char buffer[IMPORT_CHUNK_SIZE];
+  long totalSize = size; // Store original size for progress calculation
+
   while (size > 0) {
     int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
     fin->Read(buffer, count);
     fout->Write(buffer, 1, count);
     size -= count;
+
+    // Update progress indicator
+    int progress = (int)(((totalSize - size) * 100) / totalSize);
+    Status::Set("Loading %s: %d%%", name, progress);
   };
 
   // now load the sample into memory/flash

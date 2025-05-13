@@ -1,4 +1,3 @@
-
 #ifndef _CONTROLLER_SERVICE_H_
 #define _CONTROLLER_SERVICE_H_
 
@@ -7,7 +6,6 @@
 
 #include "ControllableVariable.h"
 #include "ControllerSource.h"
-#include "Services/Time/TimeService.h"
 
 class ControllerService : public T_Singleton<ControllerService>,
                           public T_SimpleList<ControllerSource> {

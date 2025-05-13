@@ -46,6 +46,7 @@ public:
   bool IsChannelPlaying(int channel);
 
   void StartStreaming(char *name);
+  void StartLoopingStreaming(char *name);
   void StopStreaming();
 
   stereosample GetMasterOutLevel();
@@ -63,6 +64,9 @@ public:
 
   void Lock();
   void Unlock();
+
+  // Get the current project
+  Project *GetProject() { return project_; }
 
   etl::array<stereosample, SONG_CHANNEL_COUNT> *GetMixerLevels();
 

@@ -59,21 +59,63 @@ Once you've created an instrument, you can save it for use in other projects:
 
 ## Sample Import Screen
 
-You can enter the sample import file browser by hitting `EDIT EDIT` (press the `EDIT` twice in quick succession) on the “sample:” field in the Instrument Screen.
+You can enter the sample import file browser by hitting `ENTER ENTER` (press the `ENTER` key twice in quick succession) when you are in sample field on the *Sample* Instrument Screen. This double-press behavior provides a quick way to access the sample import file browser from the sample field in the *Sample* Instrument Screen.
 
-All the samples that you may want to import into a project **must** be located in a folder named `/samples` at the top-level of the sdcard. You can either put your samples in that directory or in sub-directories of it, allowing you to have a way of sorting your samples library. 
+When in the Project Screen, you can access the sample import file browser with a single press of the `ENTER` key on the "Import Sample" field.
+
+Samples that you may want to import into a project can be located in any folder but it's recommended to keep them in the folder named `/samples` at the top-level of the sdcard as that is the default location for the sample import file browser to display when you enter it.
+
+When you're done in the Import Screen, you can press `NAV`+`LEFT` to return to the screen you came from (either the Instrument Screen or the Project Screen).
 
 Note: sub-directories will be sorted before files, but otherwise the files will be listed in an unspecified order (ie. not necessarily alphabetical order).
-
-For example:
 
 ![screen capture of sample screen](image/browser-files-screen-small.png)
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
-Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories, subdirectories are indciated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entery and pressing `ENTER`. Press `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`. 
+Use the `UP` and `DOWN` arrow keys to navigate through the list of available sample files and subdirectories. Subdirectories are indicated with a `/` prefix. Press `EDIT` to enter a subdirectory, you can go back to the parent directory by navigating to the `/..` entry and pressing `ENTER`. Hold down `PLAY` to audition the currently selected sample wave file. To import the currently selected wave file press `ALT`+`PLAY`.
 
-At any time, you can return to the instrument screen from the sample file browser by pressing `NAV`+`LEFT`.
+**Single Cycle Waveforms**: Single cycle waveforms are specially marked with a `~` prefix in the file listing. These are WAV files with specific sizes (300 or 1344 bytes) that can be used as oscillators. When imported, they'll automatically be set to oscillator mode in the instrument settings.
+
+A great collection of single cycle waveforms can be found in the [Adventure Kid Sample Library](https://www.adventurekid.se/akrt/waveforms/adventure-kid-waveforms/).
+
+The status bar at the bottom of the screen shows additional information about the selected file and other information such as:
+- Current preview volume (vol:XX%)
+- File size in bytes
+- For single cycle waveforms, a [1 Cycle] indicator
+
+### Basic Controls
+
+- Press `EDIT` to enter a subdirectory
+- Navigate to the `/..` entry and press `ENTER` to go back to the parent directory
+- Hold down `PLAY` to audition the currently selected sample wave file
+- Press `ALT`+`PLAY` to import the currently selected wave file
+- Use `EDIT`+`UP`/`DOWN` to adjust the preview volume
+
+### Importing Multiple Samples
+
+You can import multiple samples in a single session without leaving the Import View. This powerful workflow allows you to quickly build up your project's sample library:
+
+1. Navigate to a sample file you want to import
+2. Press `ALT`+`PLAY` to import it
+3. Navigate to another sample file
+4. Press `ALT`+`PLAY` again to import it
+5. Repeat as needed for all samples you want to import
+
+Each sample will be added to your project's sample pool. The last imported sample will automatically be assigned to the current instrument. Previously imported samples remain available in your project and can be assigned to other instruments later.
+
+When you're finished importing samples, return to the instrument screen by pressing `NAV`+`LEFT`.
+
+### Auditioning Volume Control
+
+The Import View includes a convenient way to adjust the volume when previewing samples:
+
+- **EDIT + UP**: Increase preview volume by 5%
+- **EDIT + DOWN**: Decrease preview volume by 5%
+
+The current preview volume is always displayed in the status bar at the bottom of the screen as "vol:XX%" alongside the file size information. 
+
+The preview volume uses a non-linear (quadratic) scale that provides more precise control at lower volumes, making it easier to fine-tune quiet previews. This setting is saved with your project and will be restored when you reload it.
 
 *Note:* While there is no fixed limit for the number of sub-directory levels, there is a maximum of **256** files per directory. Also please note that while FAT formatted sdcards can support upto *256* characters per filename, picoTracker only supports upto **128** character file names and only with **ASCII** characters.
 

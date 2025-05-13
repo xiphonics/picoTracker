@@ -16,6 +16,9 @@
         <a href="device.html">
             <li>Device settings</li>
         </a>
+        <a href="theme.html">
+            <li>Theme settings</li>
+        </a>
         <a href="projects.html">
             <li>Projects</li>
         </a>

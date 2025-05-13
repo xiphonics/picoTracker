@@ -28,7 +28,7 @@ public:
 
   virtual Channel *GetChannel(const char *name);
   virtual bool IsRunning();
-  virtual void Trigger(Time time);
+  virtual void Trigger();
 
   // New methods for direct instrument mapping
   static void AssignInstrumentToChannel(int midiChannel, int instrumentIndex);
@@ -63,9 +63,6 @@ protected:
 
 private:
   static bool dumpEvents_;
-  // MidiChannel *pbChannel_[16];  // Pitch bend
-  // MidiChannel *catChannel_[16]; // Channel after touch
-  // MidiChannel *pcChannel_[16];  // Program change
 
   // New direct mapping from MIDI channels to instrument indices
   static int8_t channelToInstrument_[16];

@@ -91,7 +91,7 @@ void MidiInDevice::onDriverMessage(MidiMessage &message) {
   treatChannelEvent(message);
 };
 
-void MidiInDevice::Trigger(Time time) {
+void MidiInDevice::Trigger() {
 
   MidiMessage *event = Pop(true);
   while (event) {

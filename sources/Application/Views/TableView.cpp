@@ -246,15 +246,18 @@ void TableView::pasteClipboard() {
 void TableView::updateCursor(int dx, int dy) {
   col_ += dx;
   row_ += dy;
-  if (col_ > 5)
+  if (col_ > 5) {
     col_ = 5;
-  if (col_ < 0)
+  }
+  if (col_ < 0) {
     col_ = 0;
-  if (row_ > 15)
+  }
+  if (row_ > 15) {
     row_ = 15;
-  if (row_ < 0)
+  }
+  if (row_ < 0) {
     row_ = 0;
-
+  }
   Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
 
   GUIPoint anchor = GetAnchor();
@@ -327,7 +330,7 @@ void TableView::updateCursorValue(int offset) {
     lastCmd_ = *cc;
     break;
 
-  case 1:
+  case 1: {
     switch (offset) {
     case 0x01:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -342,11 +345,16 @@ void TableView::updateCursorValue(int offset) {
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
-    *(table.param1_ + row_) = cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd = *(table.cmd1_ + row_);
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
+    *(table.param1_ + row_) = paramValue;
+    lastParam_ = paramValue;
     break;
-
-  case 2:
+  }
+  case 2: {
     cc = table.cmd2_ + row_;
     switch (offset) {
     case 0x01:
@@ -364,7 +372,8 @@ void TableView::updateCursorValue(int offset) {
     }
     lastCmd_ = *cc;
     break;
-  case 3:
+  }
+  case 3: {
     switch (offset) {
     case 0x01:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -379,10 +388,16 @@ void TableView::updateCursorValue(int offset) {
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
-    *(table.param2_ + row_) = cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd = *(table.cmd2_ + row_);
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
+    *(table.param2_ + row_) = paramValue;
+    lastParam_ = paramValue;
     break;
-  case 4:
+  }
+  case 4: {
     cc = table.cmd3_ + row_;
     switch (offset) {
     case 0x01:
@@ -400,7 +415,8 @@ void TableView::updateCursorValue(int offset) {
     }
     lastCmd_ = *cc;
     break;
-  case 5:
+  }
+  case 5: {
     switch (offset) {
     case 0x01:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -415,9 +431,15 @@ void TableView::updateCursorValue(int offset) {
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
-    *(table.param3_ + row_) = cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd = *(table.cmd3_ + row_);
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
+    *(table.param3_ + row_) = paramValue;
+    lastParam_ = paramValue;
     break;
+  }
   }
   if (c) {
     updateData(c, offset, limit, wrap);
@@ -705,12 +727,12 @@ void TableView::DrawView() {
   GUIPoint anchor = GetAnchor();
 
   // Display row numbers
-
   SetColor(CD_HILITE1);
   char buffer[6];
   pos = anchor;
   pos._x -= 3;
   for (int j = 0; j < 16; j++) {
+    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ACCENT) : SetColor(CD_ACCENTALT);
     hex2char(j, buffer);
     DrawString(pos._x, pos._y, buffer, props);
     pos._y++;
@@ -839,50 +861,117 @@ void TableView::DrawView() {
 }
 
 void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't call any drawing functions directly
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
 
-  GUITextProperties props;
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos;
+  // Set the consolidated flag for UI updates
+  needsUIUpdate_ = true;
 
-  pos._x = anchor._x - 1;
-  pos._y = anchor._y + lastPosition_[0];
-  DrawString(pos._x, pos._y, " ", props);
+  // Keep setting these for backward compatibility
+  needsNotesUpdate_ = true;
+  needsPlayPositionUpdate_ = true;
+  needsVUMeterUpdate_ = true;
 
-  pos._x += 9;
-  pos._y = anchor._y + lastPosition_[1];
-  DrawString(pos._x, pos._y, " ", props);
-
-  pos._x += 9;
-  pos._y = anchor._y + lastPosition_[2];
-  DrawString(pos._x, pos._y, " ", props);
-
+  // Update the last positions for use in AnimationUpdate
   TableHolder *th = TableHolder::GetInstance();
-  // Get current channel
-  int channel = viewData_->songX_;
-  // Table associated to the channel playerpb
-  TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
-  Table *playbackTable = tpb.GetTable();
-  // Table we're viewing
-  Table &viewTable = th->GetTable(viewData_->currentTable_);
-  if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+  if (th) {
+    // Get current channel
+    int channel = viewData_->songX_;
+    // Table associated to the channel playerpb
+    TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+    Table *playbackTable = tpb.GetTable();
+    // Table we're viewing
+    Table &viewTable = th->GetTable(viewData_->currentTable_);
+    if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+      // Store positions for later use in AnimationUpdate
+      lastPosition_[0] = tpb.GetPlaybackPosition(0);
+      lastPosition_[1] = tpb.GetPlaybackPosition(1);
+      lastPosition_[2] = tpb.GetPlaybackPosition(2);
+    }
+  }
 
-    lastPosition_[0] = tpb.GetPlaybackPosition(0);
-    lastPosition_[1] = tpb.GetPlaybackPosition(1);
-    lastPosition_[2] = tpb.GetPlaybackPosition(2);
+  // Create a memory barrier to ensure changes are visible across cores
+  createMemoryBarrier();
+}
 
+void TableView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate();
+
+  // Get player instance safely
+  Player *player = Player::GetInstance();
+  TableHolder *th = TableHolder::GetInstance();
+
+  // Only process updates if we're fully initialized
+  if (!viewData_ || !player || !th) {
+    return;
+  }
+
+  // Handle any pending updates from OnPlayerUpdate using the consolidated flag
+  // This ensures all UI drawing happens on the "main" thread (core0)
+  if (needsUIUpdate_) {
+    GUITextProperties props;
+
+    // Draw notes
+    drawNotes();
+
+    // Draw VU meter
+    drawMasterVuMeter(player, props);
+
+    // Draw play positions
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos = anchor;
+
+    // Clear previous positions
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_[0];
-    DrawString(pos._x, pos._y, ">", props);
+    DrawString(pos._x, pos._y, " ", props);
 
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[1];
-    DrawString(pos._x, pos._y, ">", props);
+    DrawString(pos._x, pos._y, " ", props);
 
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[2];
-    DrawString(pos._x, pos._y, ">", props);
-  };
-  drawNotes();
+    DrawString(pos._x, pos._y, " ", props);
+
+    // Only update play position if player is running
+    if (player->IsRunning()) {
+      // Get current channel
+      int channel = viewData_->songX_;
+      // Table associated to the channel playerpb
+      TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+      Table *playbackTable = tpb.GetTable();
+      // Table we're viewing
+      Table &viewTable = th->GetTable(viewData_->currentTable_);
+
+      if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+        pos._x = anchor._x - 1;
+        pos._y = anchor._y + lastPosition_[0];
+        SetColor(CD_ACCENT);
+        DrawString(pos._x, pos._y, ">", props);
+
+        pos._x += 9;
+        pos._y = anchor._y + lastPosition_[1];
+        DrawString(pos._x, pos._y, ">", props);
+
+        pos._x += 9;
+        pos._y = anchor._y + lastPosition_[2];
+        DrawString(pos._x, pos._y, ">", props);
+      }
+    }
+
+    // Create a memory barrier to ensure proper synchronization between cores
+    createMemoryBarrier();
+
+    // Reset the consolidated flag
+    needsUIUpdate_ = false;
+  }
+
+  // Flush the window to ensure changes are displayed
+  w_.Flush();
 }
 
 void TableView::printHelpLegend(FourCC command, GUITextProperties props) {

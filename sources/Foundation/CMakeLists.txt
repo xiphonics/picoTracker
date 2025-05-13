@@ -1,13 +1,6 @@
 add_library(foundation
-  I_Iterator.h
-  I_List.h
-  IteratorPtr.h
-  Observable.h Observable.cpp
-  SingletonRegistry.h SingletonRegistry.cpp
-  T_Factory.h
-  T_SimpleList.h
-  T_Singleton.h
-  T_Stack.h
+  Observable.cpp
+  SingletonRegistry.cpp
 )
 
 target_link_libraries(foundation PUBLIC system_console

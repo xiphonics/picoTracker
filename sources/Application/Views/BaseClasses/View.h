@@ -13,6 +13,7 @@
 #define VU_METER_HEIGHT 16
 #define VU_METER_CLIP_LEVEL 15
 #define VU_METER_WARN_LEVEL 8
+#define ALT_ROW_NUMBER 4 // for now const vs a user setting
 
 enum GUIEventPadButtonMasks {
   EPBM_LEFT = 1,
@@ -40,7 +41,10 @@ enum ViewType {
   VT_MIXER,
   VT_IMPORT,            // Sample file import
   VT_INSTRUMENT_IMPORT, // Instrument file import
-  VT_SELECTPROJECT      // Select project
+  VT_SELECTPROJECT,     // Select project
+  VT_THEME,             // Theme settings
+  VT_SELECTTHEME,       // Theme selection
+  VT_THEME_IMPORT       // Theme file import
 };
 
 enum ViewMode {
@@ -61,7 +65,14 @@ enum ColorDefinition {
   CD_CURSOR,
   CD_INFO,
   CD_WARN,
-  CD_ERROR
+  CD_ERROR,
+  CD_ACCENT,
+  CD_ACCENTALT,
+  CD_EMPHASIS,
+  CD_RESERVED1,
+  CD_RESERVED2,
+  CD_RESERVED3,
+  CD_RESERVED4,
 };
 
 enum ViewUpdateDirection { VUD_LEFT = 0, VUD_RIGHT, VUD_UP, VUD_DOWN };
@@ -85,6 +96,8 @@ public:
   void LooseFocus() { hasFocus_ = false; };
 
   void Clear();
+
+  void ForceClear();
 
   void ProcessButton(unsigned short mask, bool pressed);
 
@@ -143,20 +156,28 @@ protected:
   void drawMap();
   void drawNotes();
   void drawBattery(GUITextProperties &props);
-  void drawMasterVuMeter(Player *player, GUITextProperties props);
+  void drawMasterVuMeter(Player *player, GUITextProperties props,
+                         bool forceRedraw = false);
   void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);
   void drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
-                   GUITextProperties props);
+                   GUITextProperties props, int vuIndex,
+                   bool forceRedraw = false);
 
 public: // temp hack for modl windo constructors
   GUIWindow &w_;
   ViewData *viewData_;
+  bool needsRedraw_;
+  bool isVisible_;
 
-protected:
+  int vuMeterCount_;
   ViewMode viewMode_;
   bool isDirty_; // .Do we need to redraw screeen
   ViewType viewType_;
   bool hasFocus_;
+
+  // Previous VU meter values for optimization (one pair per channel + master)
+  uint8_t prevLeftVU_[SONG_CHANNEL_COUNT + 1];
+  uint8_t prevRightVU_[SONG_CHANNEL_COUNT + 1];
 
 private:
   unsigned short mask_;

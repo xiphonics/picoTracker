@@ -834,6 +834,7 @@ void SongView::DrawView() {
   pos._x -= 3;
   for (int j = 0; j < View::songRowCount_; j++) {
     char p = j + viewData_->songOffset_;
+    ((p / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ACCENT) : SetColor(CD_ACCENTALT);
     hex2char(p, row);
     DrawString(pos._x, pos._y, row, props);
     pos._y += 1;
@@ -869,14 +870,20 @@ void SongView::DrawView() {
         }
       }
 
+      // draw current step
+      unsigned char d = *data++;
+      if (d == 0xFE) {
+        SetColor(CD_ACCENTALT);
+      } else if (d == 0x00) {
+        SetColor(CD_EMPHASIS);
+      } else {
+        SetColor(CD_NORMAL);
+      }
+
       if (invert) {
         SetColor(CD_HILITE2);
         props.invert_ = true;
       }
-
-      // draw current step
-
-      unsigned char d = *data++;
       if (d == 0xFF) {
         DrawString(pos._x, pos._y, "--", props);
       } else {
@@ -915,66 +922,106 @@ void SongView::DrawView() {
  ******************************************************/
 
 void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
-
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't call any drawing functions directly
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
   SyncMaster *sync = SyncMaster::GetInstance();
   if ((eventType == PET_UPDATE) && (!sync->MajorSlice()))
     return;
 
+  // Set the consolidated flag for UI updates
+  needsUIUpdate_ = true;
+
+  // Only set the play time update flag when not stopping
+  if (eventType != PET_STOP) {
+    needsPlayTimeUpdate_ = true;
+  }
+
+  // Create a memory barrier to ensure changes are visible across cores
+  createMemoryBarrier();
+};
+
+void SongView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate();
+
+  // Get player instance safely
   Player *player = Player::GetInstance();
+  // Only process updates if we're fully initialized
+  if (!viewData_ || !player) {
+    return;
+  }
 
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos = anchor;
-  pos._x -= 1;
-
+  // Handle any pending updates from OnPlayerUpdate
+  // This ensures all UI drawing happens on the "main" thread (core0)
   GUITextProperties props;
-  SetColor(CD_CURSOR);
 
-  // Loop on all channels
+  // Draw battery gauge (always safe to do)
+  drawBattery(props);
 
-  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+  // Use the consolidated flag for all UI updates
+  if (needsUIUpdate_) {
+    // Draw VU meter and notes
+    drawMasterVuMeter(player, props);
+    drawNotes();
 
-    // Clear all current positions
-
-    int y = lastPlayedPosition_[i] - viewData_->songOffset_;
-    if (y >= 0 && y < View::songRowCount_) {
-      pos._y = anchor._y + y;
-      DrawString(pos._x, pos._y, " ", props);
+    // Only handle play time updates if needed
+    if (needsPlayTimeUpdate_) {
+      GUIPoint timePos = 0;
+      timePos._x = 27;
+      timePos._y += 1;
+      SetColor(CD_NORMAL);
+      drawPlayTime(player, timePos, props);
+      needsPlayTimeUpdate_ = false;
     }
 
-    // Clear all last queued positions
+    // Handle position updates
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos = anchor;
+    pos._x -= 1;
 
-    y = lastQueuedPosition_[i] - viewData_->songOffset_;
-    if (y >= 0 && y < View::songRowCount_) {
-      pos._y = anchor._y + y;
-      DrawString(pos._x, pos._y, " ", props);
-    }
+    SetColor(CD_CURSOR);
 
-    // For each playing position, draw current location
+    // Loop on all channels
+    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      // Clear all current positions
+      int y = lastPlayedPosition_[i] - viewData_->songOffset_;
+      if (y >= 0 && y < View::songRowCount_) {
+        pos._y = anchor._y + y;
+        DrawString(pos._x, pos._y, " ", props);
+      }
 
-    if (player->IsChannelPlaying(i)) {
-      if (eventType != PET_STOP) {
+      // Clear all last queued positions
+      y = lastQueuedPosition_[i] - viewData_->songOffset_;
+      if (y >= 0 && y < View::songRowCount_) {
+        pos._y = anchor._y + y;
+        DrawString(pos._x, pos._y, " ", props);
+      }
+
+      // For each playing position, draw current location
+      if (player->IsChannelPlaying(i)) {
         if (viewData_->currentPlayChain_[i] != 0xFF) {
           int y = viewData_->songPlayPos_[i] - viewData_->songOffset_;
           if (y >= 0 && y < View::songRowCount_ &&
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + y;
             if (!player->IsChannelMuted(i)) {
+              SetColor(CD_ACCENT);
               DrawString(pos._x, pos._y, ">", props);
             } else {
+              SetColor(CD_ACCENTALT);
               DrawString(pos._x, pos._y, "-", props);
             }
+            SetColor(CD_CURSOR);
             lastPlayedPosition_[i] = viewData_->songPlayPos_[i];
           }
         }
       }
-    }
 
-    // If in live mode, update queued position
-
-    if (player->GetSequencerMode() == SM_LIVE) {
-      if (player->GetQueueingMode(i) != QM_NONE) {
-
-        if (eventType != PET_STOP) {
+      // If in live mode, update queued position
+      if (player->GetSequencerMode() == SM_LIVE) {
+        if (player->GetQueueingMode(i) != QM_NONE) {
           int y = player->GetQueuePosition(i) - viewData_->songOffset_;
           if (y >= 0 && y < View::songRowCount_) {
             pos._y = anchor._y + y;
@@ -983,24 +1030,20 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
             lastQueuedPosition_[i] = player->GetQueuePosition(i);
           }
         }
-      };
+      }
+      pos._x += 3;
     }
-    pos._x += 3;
+
+    // Create a memory barrier to ensure proper synchronization between cores
+    createMemoryBarrier();
+
+    // Reset the consolidated flag
+    needsUIUpdate_ = false;
   }
 
-  SetColor(CD_NORMAL);
-
-  pos = 0;
-  pos._x = 27;
-  pos._y += 1;
-  if (eventType != PET_STOP) {
-    drawPlayTime(player, pos, props);
-  }
-
-  drawMasterVuMeter(player, props);
-
-  drawNotes();
-};
+  // Flush the window to ensure changes are displayed
+  w_.Flush();
+}
 
 void SongView::nudgeTempo(int direction) {
   ApplicationCommandDispatcher *dispatcher =

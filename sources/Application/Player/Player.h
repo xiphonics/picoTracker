@@ -74,6 +74,7 @@ public:
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
 
   void StartStreaming(char *name);
+  void StartLoopingStreaming(char *name);
   void StopStreaming();
 
   // Channel data

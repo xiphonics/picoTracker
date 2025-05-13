@@ -8,16 +8,23 @@
 #include "System/Console/Trace.h"
 
 MidiService *MidiInstrument::svc_ = 0;
+TimerService *MidiInstrument::timerSvc_ = 0;
+MidiInstrument::NoteOffInfo MidiInstrument::NoteOffInfo::current = {0, 0};
 
 MidiInstrument::MidiInstrument()
     : I_Instrument(&variables_), channel_(FourCC::MidiInstrumentChannel, 0),
       noteLen_(FourCC::MidiInstrumentNoteLength, 0),
       volume_(FourCC::MidiInstrumentVolume, 255),
       table_(FourCC::MidiInstrumentTable, -1),
-      tableAuto_(FourCC::MidiInstrumentTableAutomation, false) {
+      tableAuto_(FourCC::MidiInstrumentTableAutomation, false),
+      program_(FourCC::MidiInstrumentProgram, 0) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
+  };
+
+  if (timerSvc_ == 0) {
+    timerSvc_ = TimerService::GetInstance();
   };
 
   // name_ is now an etl::string in the base class, not a Variable
@@ -26,6 +33,7 @@ MidiInstrument::MidiInstrument()
   variables_.insert(variables_.end(), &volume_);
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
+  variables_.insert(variables_.end(), &program_);
 }
 
 MidiInstrument::~MidiInstrument(){};
@@ -62,6 +70,11 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
     msg.data2_ = volume / 2;
     svc_->QueueMessage(msg);
   }
+
+  // send program change message
+  v = FindVariable(FourCC::MidiInstrumentProgram);
+  int program = v->GetInt();
+  SendProgramChange(channel, program);
 
   // set initial velocity (changed via InstrumentCommandVelocity)
   velocity_ = INITIAL_NOTE_VELOCITY;
@@ -159,7 +172,8 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandVelocity: {
     // VELM cmds set velocity for MIDI steps
-    velocity_ = value / 2;
+    // Ensure velocity doesn't exceed 127 (MIDI spec maximum)
+    velocity_ = (value / 2) & 0x7F;
   }; break;
 
   case FourCC::InstrumentCommandVolume: {
@@ -179,11 +193,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }; break;
 
   case FourCC::InstrumentCommandMidiPC: {
-    MidiMessage msg;
-    msg.status_ = MidiMessage::MIDI_PROGRAM_CHANGE + mchannel;
-    msg.data1_ = (value & 0x7F);
-    msg.data2_ = MidiMessage::UNUSED_BYTE;
-    svc_->QueueMessage(msg);
+    SendProgramChange(mchannel, value & 0x7F);
   }; break;
 
   case FourCC::InstrumentCommandMidiChord: {
@@ -198,8 +208,9 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       // Add/remove from offset to match selected scale
       uint8_t rootNote = lastNotes_[channel][0];
       int scale = Player::GetInstance()->GetProject()->GetScale();
-      // apply current scale to offset
-      uint8_t scaledOffset = getSemitonesOffset(scale, noteOffset);
+      int scaleRoot = Player::GetInstance()->GetProject()->GetScaleRoot();
+      // apply current scale to offset, taking into account the scale root
+      uint8_t scaledOffset = getSemitonesOffset(scale, noteOffset, scaleRoot);
 
       // use the existing steps note to calculate each notes offset
       uint8_t note = rootNote + scaledOffset;
@@ -256,4 +267,47 @@ void MidiInstrument::SetTableState(TableSaveState &state) {
   memcpy(tableState_.hopCount_, state.hopCount_,
          sizeof(uchar) * TABLE_STEPS * 3);
   memcpy(tableState_.position_, state.position_, sizeof(int) * 3);
+};
+
+void MidiInstrument::SendProgramChange(int channel, int program) {
+  MidiMessage msg;
+  msg.status_ = MidiMessage::MIDI_PROGRAM_CHANGE + channel;
+  msg.data1_ = program;
+  msg.data2_ = MidiMessage::UNUSED_BYTE;
+  svc_->QueueMessage(msg);
+};
+
+void MidiInstrument::SendProgramChangeWithNote(int channel, int program) {
+  // First send the program change
+  SendProgramChange(channel, program);
+
+  // Define C3 as MIDI note 60
+  const uint8_t C3_NOTE = 60;
+
+  // Send Note On for C3 with velocity 100 (0x64)
+  MidiMessage noteOn;
+  noteOn.status_ = MidiMessage::MIDI_NOTE_ON + channel;
+  noteOn.data1_ = C3_NOTE;
+  noteOn.data2_ = 0x64; // Velocity 100
+  svc_->QueueMessage(noteOn);
+
+  // Set up the note-off information for the callback
+  NoteOffInfo::current.channel = channel;
+  NoteOffInfo::current.note = C3_NOTE;
+
+  // Schedule the note-off message after 300ms using TimerService
+  // This is non-blocking and will happen asynchronously
+  timerSvc_->TriggerCallback(300, NoteOffCallback);
+};
+
+void MidiInstrument::NoteOffCallback() {
+  // This static callback will be called after the timer expires
+  // Send the Note Off message for the stored note
+  if (svc_ != nullptr) {
+    MidiMessage noteOff;
+    noteOff.status_ = MidiMessage::MIDI_NOTE_OFF + NoteOffInfo::current.channel;
+    noteOff.data1_ = NoteOffInfo::current.note;
+    noteOff.data2_ = 0x00;
+    svc_->QueueMessage(noteOff);
+  }
 };

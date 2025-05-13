@@ -1,17 +1,12 @@
-add_library(system_filesystem
-  FileSystem.h I_File.h
-)
+add_library(system_filesystem INTERFACE)
 
-target_link_libraries(system_filesystem 
-                                          PUBLIC application_utils
-                                          PUBLIC system_errors
-                                          PUBLIC sdfat
-                                          PUBLIC platform_sdcard
-                                          PUBLIC etl
-                                          pico_multicore
+target_link_libraries(system_filesystem INTERFACE
+  application_utils
+  system_errors
+  etl
 )
 
 
-target_include_directories(system_filesystem PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(system_filesystem INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories(${PROJECT_SOURCE_DIR})

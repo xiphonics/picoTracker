@@ -26,12 +26,14 @@ public:
   virtual void OnFocus();
   virtual void AnimationUpdate();
   void onInstrumentTypeChange();
-  void clearInstrumentModified() { instrumentModified_ = false; }
+  void applyProposedTypeChange();
+
+  bool checkInstrumentModified();
+  void resetInstrumentToDefaults();
 
 protected:
   void warpToNext(int offset);
   void onInstrumentChange();
-  void fillMacroParameters();
   void fillSampleParameters();
   void fillSIDParameters();
   void fillMidiParameters();
@@ -51,7 +53,9 @@ private:
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
   InstrumentType currentType_ = IT_NONE;
-  bool instrumentModified_ = false;
+
+  // Store the proposed instrument type when changing types
+  InstrumentType proposedType_ = IT_NONE;
 
   // Variables for export confirmation dialog
   I_Instrument *exportInstrument_ = nullptr;

@@ -5,7 +5,7 @@
 #include <string.h>
 
 extern char h2c__[16];
-extern const char *notes__[12];
+extern const char *noteNames[12];
 
 inline void hex2char(const unsigned char c, char *s) {
   char *dest__ = s;
@@ -35,7 +35,7 @@ inline void char2hex(const char *s, unsigned char *c) {
 inline void note2char(unsigned char d, char *s) {
   int oct = d / 12 - 2;
   int note = d % 12;
-  strcpy(s, notes__[note]);
+  strcpy(s, noteNames[note]);
   if (oct < 0) {
     s[2] = '-';
     oct = -oct;
@@ -47,7 +47,7 @@ inline void note2char(unsigned char d, char *s) {
 
 inline void note2visualizer(unsigned char d, char *s) {
   int note = d % 12;
-  strcpy(s, notes__[note]);
+  strcpy(s, noteNames[note]);
   s[2] = '\0'; // sloppy, can we make the array shorter?
   s[3] = '\0'; // sloppy, can we make the array shorter?
 };

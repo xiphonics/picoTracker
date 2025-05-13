@@ -1,5 +1,6 @@
 #include "PersistencyService.h"
 #include "../Instruments/SamplePool.h"
+#include "../Model/Project.h"
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
@@ -29,7 +30,7 @@ void PersistencyService::PurgeUnnamedProject() {
   fs->DeleteFile(AUTO_SAVE_FILENAME);
 
   fs->chdir("samples");
-  etl::vector<int, MAX_PIG_SAMPLES> fileIndexes;
+  etl::vector<int, MAX_SAMPLES> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
 
   // delete all samples
@@ -114,10 +115,10 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  pathBufferA.c_str());
+    return PERSIST_ERROR;
   }
   Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s", pathBufferA.c_str());
   tinyxml2::XMLPrinter printer(fp);
-  Trace::Log("PERSISTENCYSERVICE", "Saved Proj File: %s", pathBufferA.c_str());
 
   printer.OpenElement("PICOTRACKER");
 
@@ -286,8 +287,17 @@ PersistencyResult PersistencyService::ExportInstrument(
 
   tinyxml2::XMLPrinter printer(fp);
 
+  // Open root element for the instrument file
+  printer.OpenElement("INSTRUMENT");
+
+  // Add firmware version information
+  printer.PushAttribute("VERSION", PROJECT_NUMBER);
+
   // Use the instrument's Persistent interface to save its data
   instrument->Save(&printer);
+
+  // Close the root element
+  printer.CloseElement();
 
   fp->Close();
   return PERSIST_SAVED;
@@ -365,11 +375,18 @@ PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
     return PERSIST_ERROR;
   }
 
-  // Check for TYPE attribute in the INSTRUMENT element
+  // Check for VERSION and TYPE attributes in the INSTRUMENT element
   InstrumentType importedType = IT_NONE;
   bool hasAttr = doc.NextAttribute();
+  etl::string<32> versionInfo;
+
   while (hasAttr) {
-    if (!strcasecmp(doc.attrname_, "TYPE")) {
+    if (!strcasecmp(doc.attrname_, "VERSION")) {
+      // Store version information for logging
+      versionInfo = doc.attrval_;
+      Trace::Log("PERSISTENCYSERVICE", "Instrument file version: %s",
+                 doc.attrval_);
+    } else if (!strcasecmp(doc.attrname_, "TYPE")) {
       Trace::Log("PERSISTENCYSERVICE", "Found instrument type in XML: %s",
                  doc.attrval_);
 
@@ -384,6 +401,13 @@ PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
       }
     }
     hasAttr = doc.NextAttribute();
+  }
+
+  // Log the complete version info if available
+  if (versionInfo.length() > 0) {
+    Trace::Log("PERSISTENCYSERVICE",
+               "Instrument created with firmware version: %s",
+               versionInfo.c_str());
   }
 
   // If we found a valid instrument type and it doesn't match the current

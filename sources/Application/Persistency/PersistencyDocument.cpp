@@ -74,7 +74,61 @@ bool PersistencyDocument::FirstChild() {
 bool PersistencyDocument::NextSibling() {
   // Only to be called after YXML_ELEMEND
   if ((r_ != YXML_OK) && (r_ != YXML_ELEMEND)) {
-    Trace::Error("NextSibling called with invalid state: %d", r_);
+    Trace::Error(
+        "XML NextSibling called with invalid state: %d for element '%s'", r_,
+        state_->elem ? state_->elem : "<unknown>");
+
+    // Print additional debug info about the parser state
+    const char *stateStr = "unknown";
+    switch (r_) {
+    case YXML_OK:
+      stateStr = "YXML_OK";
+      break;
+    case YXML_ELEMSTART:
+      stateStr = "YXML_ELEMSTART";
+      break;
+    case YXML_CONTENT:
+      stateStr = "YXML_CONTENT";
+      break;
+    case YXML_ELEMEND:
+      stateStr = "YXML_ELEMEND";
+      break;
+    case YXML_ATTRSTART:
+      stateStr = "YXML_ATTRSTART";
+      break;
+    case YXML_ATTRVAL:
+      stateStr = "YXML_ATTRVAL";
+      break;
+    case YXML_ATTREND:
+      stateStr = "YXML_ATTREND";
+      break;
+    case YXML_PISTART:
+      stateStr = "YXML_PISTART";
+      break;
+    case YXML_PICONTENT:
+      stateStr = "YXML_PICONTENT";
+      break;
+    case YXML_PIEND:
+      stateStr = "YXML_PIEND";
+      break;
+    case YXML_EEOF:
+      stateStr = "YXML_EEOF";
+      break;
+    case YXML_EREF:
+      stateStr = "YXML_EREF";
+      break;
+    case YXML_ECLOSE:
+      stateStr = "YXML_ECLOSE";
+      break;
+    case YXML_ESTACK:
+      stateStr = "YXML_ESTACK";
+      break;
+    case YXML_ESYN:
+      stateStr = "YXML_ESYN";
+      break;
+    }
+    Trace::Error("XML Parser state: %s, current path: %s", stateStr,
+                 state_->elem ? state_->elem : "<none>");
     return false;
   }
 

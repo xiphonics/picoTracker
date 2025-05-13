@@ -6,17 +6,6 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
-#include "Application/Views/ModalDialogs/MessageBox.h"
-#include "Application/Views/ProjectView.h"
-#include "Foundation/Variables/WatchedVariable.h"
-#include "Player/Player.h"
-#include "Services/Midi/MidiService.h"
-#include "System/Console/Trace.h"
-#include "UIFramework/Interfaces/I_GUIWindowFactory.h"
-#include "Views/UIController.h"
-#include <nanoprintf.h>
-#include <string.h>
-
 #include "Application/Views/ChainView.h"
 #include "Application/Views/ConsoleView.h"
 #include "Application/Views/DeviceView.h"
@@ -25,12 +14,25 @@
 #include "Application/Views/InstrumentImportView.h"
 #include "Application/Views/InstrumentView.h"
 #include "Application/Views/MixerView.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
+#include "Application/Views/ProjectView.h"
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
+#include "Application/Views/ThemeImportView.h"
+#include "Application/Views/ThemeView.h"
 #include "BaseClasses/View.h"
+#include "Foundation/Variables/WatchedVariable.h"
+#include "Player/Player.h"
+#include "Services/Midi/MidiService.h"
+#include "System/Console/Trace.h"
+#include "UIFramework/Interfaces/I_GUIWindowFactory.h"
+#include "Views/UIController.h"
+#include "platform.h"
+#include <nanoprintf.h>
+#include <string.h>
 
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 
@@ -50,6 +52,13 @@ GUIColor AppWindow::consoleColor_(0xFF, 0x00, 0xFF, 5);
 GUIColor AppWindow::infoColor_(0x29, 0xEE, 0x3D, 6);
 GUIColor AppWindow::warnColor_(0xEF, 0xFA, 0x52, 7);
 GUIColor AppWindow::errorColor_(0xE8, 0x4D, 0x15, 8);
+GUIColor AppWindow::accentColor_(0x02, 0xFF, 0x02, 9);
+GUIColor AppWindow::accentAltColor_(0xFF, 0x02, 0x02, 10);
+GUIColor AppWindow::emphasisColor_(0xFF, 0xA5, 0x02, 11);
+GUIColor AppWindow::reserved1Color_(0x02, 0x02, 0xFF, 12);
+GUIColor AppWindow::reserved2Color_(0x55, 0x55, 0x55, 13);
+GUIColor AppWindow::reserved3Color_(0x77, 0x77, 0x77, 14);
+GUIColor AppWindow::reserved4Color_(0xFF, 0xFF, 0x00, 15);
 
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
@@ -64,7 +73,12 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
     r = (rgbValue >> 16) & 0xFF;
     g = (rgbValue >> 8) & 0xFF;
     b = rgbValue & 0xFF;
+    // Always preserve the palette index when updating colors
     color = GUIColor(r, g, b, paletteIndex);
+  } else {
+    // Even if we don't update the RGB values, ensure the palette index is
+    // correct
+    color._paletteIndex = paletteIndex;
   }
 }
 
@@ -82,6 +96,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _chainView = 0;
   _phraseView = 0;
   _deviceView = 0;
+  _themeView = 0;
+  _themeImportView = 0;
   _projectView = 0;
   _instrumentView = 0;
   _tableView = 0;
@@ -131,20 +147,20 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
                            GUITextProperties &props, bool force) {
 
   // we know we don't have more than SCREEN_WIDTH chars
-
   char buffer[SCREEN_WIDTH + 1];
   int len = strlen(string);
   int offset = (pos._x < 0) ? -pos._x / 8 : 0;
   len -= offset;
   int available = SCREEN_WIDTH - ((pos._x < 0) ? 0 : pos._x);
-  len = MIN(len, available);
+  len = std::min(len, available);
   memcpy(buffer, string + offset, len);
   buffer[len] = 0;
 
   NAssert((pos._x < SCREEN_WIDTH) && (pos._y < SCREEN_HEIGHT));
   int index = pos._x + SCREEN_WIDTH * pos._y;
   memcpy(_charScreen + index, buffer, len);
-  unsigned char prop = colorIndex_ + (props.invert_ ? PROP_INVERT : 0);
+  // Ensure color index is masked to prevent overlap with inversion bit
+  unsigned char prop = (colorIndex_ & 0x7F) + (props.invert_ ? PROP_INVERT : 0);
   memset(_charScreenProp + index, prop, len);
 };
 
@@ -181,9 +197,6 @@ void AppWindow::ClearRect(GUIRect &r) {
 //
 
 void AppWindow::Redraw() {
-
-  SysMutexLocker locker(drawMutex_);
-
   if (_currentView) {
     _currentView->Redraw();
     Invalidate();
@@ -196,13 +209,12 @@ void AppWindow::Redraw() {
 
 void AppWindow::Flush() {
 
-  SysMutexLocker locker(drawMutex_);
-
   Lock();
 
   GUITextProperties props;
   GUIPoint pos;
 
+  // Start with an invalid color to force color setting on first character
   ColorDefinition color = (ColorDefinition)-1;
   pos._x = 0;
   pos._y = 0;
@@ -218,9 +230,17 @@ void AppWindow::Flush() {
 #ifndef _LGPT_NO_SCREEN_CACHE_
       if ((*current != *previous) || (*currentProp != *previousProp)) {
 #endif
+        // Extract invert flag from properties
         props.invert_ = (*currentProp & PROP_INVERT) != 0;
-        if (((*currentProp) & 0x7F) != color) {
-          color = (ColorDefinition)((*currentProp) & 0x7F);
+
+        // Extract color index from properties and check if it's different from
+        // current color
+        ColorDefinition charColor = (ColorDefinition)((*currentProp) & 0x7F);
+        if (charColor != color) {
+          color = charColor;
+
+          // Initialize gcolor with a safe default to avoid uninitialized value
+          // if switch falls through
           GUIColor gcolor = normalColor_;
           switch (color) {
           case CD_BACKGROUND:
@@ -248,6 +268,27 @@ void AppWindow::Flush() {
             break;
           case CD_ERROR:
             gcolor = errorColor_;
+            break;
+          case CD_ACCENT:
+            gcolor = accentColor_;
+            break;
+          case CD_ACCENTALT:
+            gcolor = accentAltColor_;
+            break;
+          case CD_EMPHASIS:
+            gcolor = emphasisColor_;
+            break;
+          case CD_RESERVED1:
+            gcolor = reserved1Color_;
+            break;
+          case CD_RESERVED2:
+            gcolor = reserved2Color_;
+            break;
+          case CD_RESERVED3:
+            gcolor = reserved3Color_;
+            break;
+          case CD_RESERVED4:
+            gcolor = reserved4Color_;
             break;
 
           default:
@@ -301,6 +342,18 @@ void AppWindow::LoadProject(const char *projectName) {
 
   WatchedVariable::Disable();
 
+  // Register as an observer of the project name variable to get notified of
+  // changes
+  Variable *projectNameVar = project->FindVariable(FourCC::VarProjectName);
+  if (projectNameVar) {
+    WatchedVariable *watchedVar = (WatchedVariable *)projectNameVar;
+    if (watchedVar) {
+      watchedVar->AddObserver(*this);
+      // Store the initial project name
+      project->GetProjectName(projectName_);
+    }
+  }
+
   project->GetInstrumentBank()->Init();
 
   WatchedVariable::Enable();
@@ -337,6 +390,15 @@ void AppWindow::LoadProject(const char *projectName) {
   _deviceView = new (deviceViewMemBuf) DeviceView((*this), _viewData);
   _deviceView->AddObserver((*this));
 
+  static char themeViewMemBuf[sizeof(ThemeView)];
+  _themeView = new (themeViewMemBuf) ThemeView((*this), _viewData);
+  _themeView->AddObserver((*this));
+
+  static char themeImportViewMemBuf[sizeof(ThemeImportView)];
+  _themeImportView =
+      new (themeImportViewMemBuf) ThemeImportView((*this), _viewData);
+  _themeImportView->AddObserver((*this));
+
   static char projectViewMemBuf[sizeof(ProjectView)];
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
@@ -368,7 +430,7 @@ void AppWindow::LoadProject(const char *projectName) {
       new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
   _selectProjectView->AddObserver((*this));
 
-  static char mixerViewMemBuf[sizeof(SelectProjectView)];
+  static char mixerViewMemBuf[sizeof(MixerView)];
   _mixerView = new (mixerViewMemBuf) MixerView((*this), _viewData);
   _mixerView->AddObserver((*this));
 
@@ -405,6 +467,8 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_chainView);
   SAFE_DELETE(_phraseView);
   SAFE_DELETE(_deviceView);
+  SAFE_DELETE(_themeView);
+  SAFE_DELETE(_themeImportView);
   SAFE_DELETE(_projectView);
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
@@ -443,6 +507,16 @@ void AppWindow::UpdateColorsFromConfig() {
   defineColor(FourCC::VarInfoColor, infoColor_, 6);
   defineColor(FourCC::VarWarnColor, warnColor_, 7);
   defineColor(FourCC::VarErrorColor, errorColor_, 8);
+  defineColor(FourCC::VarAccentColor, accentColor_, 9);
+  defineColor(FourCC::VarAccentAltColor, accentAltColor_, 10);
+  defineColor(FourCC::VarEmphasisColor, emphasisColor_, 11);
+
+  // These are commented out so they are not included in config or theme exports
+  // until they are actually used in the future
+  // defineColor(FourCC::VarReserved1Color, reserved1Color_, 12);
+  // defineColor(FourCC::VarReserved2Color, reserved2Color_, 13);
+  // defineColor(FourCC::VarReserved3Color, reserved3Color_, 14);
+  // defineColor(FourCC::VarReserved4Color, reserved4Color_, 15);
 };
 
 bool AppWindow::onEvent(GUIEvent &event) {
@@ -457,7 +531,9 @@ bool AppWindow::onEvent(GUIEvent &event) {
   unsigned short v = 1 << event.GetValue();
 
   MixerService *sm = MixerService::GetInstance();
-  sm->Lock();
+  // TODO(democloid): this causes a deadlock, verify original intent
+  //  MixerService *ms = MixerService::GetInstance();
+  //  ms->Lock();
 
   switch (event.GetType()) {
 
@@ -490,7 +566,7 @@ bool AppWindow::onEvent(GUIEvent &event) {
   default:
     break;
   }
-  sm->Unlock();
+  //  ms->Unlock();
 
   if (_shouldQuit) {
     onQuitApp();
@@ -524,13 +600,13 @@ void AppWindow::AnimationUpdate() {
   }
   _currentView->AnimationUpdate();
 
-  // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_MILLIS
+  // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_SECONDS
   // will return false if auto save was unsuccessful because eg. the sequencer
   // is running
   // we do this here because for sheer convenience because this
-  // callback is called every second and we have easy access in this class to
-  // the player, projectname and persistence service
-  if (++lastAutoSave > AUTOSAVE_INTERVAL_IN_SECONDS) {
+  // this callback is called PICO_CLOCK_HZ times a second and we have easy
+  // access in this class to the player, projectname and persistence service
+  if ((++lastAutoSave / PICO_CLOCK_HZ) > AUTOSAVE_INTERVAL_IN_SECONDS) {
     if (autoSave()) {
       lastAutoSave = 0;
     }
@@ -540,6 +616,17 @@ void AppWindow::AnimationUpdate() {
 void AppWindow::LayoutChildren(){};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
+  if (d && (uintptr_t)d == (uintptr_t)FourCC::VarProjectName) {
+    // Update the stored project name from the project
+    Project *project = _viewData->project_;
+    if (project) {
+      project->GetProjectName(projectName_);
+      Trace::Log("APPWINDOW", "Project name retrieved: %s", projectName_);
+    } else {
+      Trace::Error("APPWINDOW: Project name retrieval failed!");
+    }
+    return;
+  }
 
   ViewEvent *ve = (ViewEvent *)d;
 
@@ -550,6 +637,7 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     if (_currentView) {
       _currentView->LooseFocus();
     }
+
     switch (*vt) {
     case VT_SONG:
       _currentView = _songView;
@@ -590,6 +678,15 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     case VT_MIXER:
       _currentView = _mixerView;
       break;
+    case VT_THEME:
+      _currentView = _themeView;
+      break;
+    case VT_THEME_IMPORT:
+      _currentView = _themeImportView;
+      break;
+    case VT_SELECTTHEME:
+      _currentView = _themeView;
+      break;
     default:
       break;
     }
@@ -604,7 +701,6 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
   case VET_PLAYER_POSITION_UPDATE: {
     PlayerEvent *pt = (PlayerEvent *)ve;
     if (_currentView) {
-      SysMutexLocker locker(drawMutex_);
       // Check if the current view has a modal view
       if (_currentView->HasModalView()) {
         _currentView->GetModalView()->OnPlayerUpdate(pt->GetType(),
@@ -644,6 +740,7 @@ void AppWindow::onQuitApp() {
   player->Reset();
   System::GetInstance()->PostQuitMessage();
 }
+
 void AppWindow::Print(char *line) {
 
   //	GUIWindow::Clear(View::backgroundColor_,true) ;
@@ -667,7 +764,15 @@ void AppWindow::Print(char *line) {
   Flush();
 };
 
-void AppWindow::SetColor(ColorDefinition cd) { colorIndex_ = cd; };
+void AppWindow::SetColor(ColorDefinition cd) {
+  // Ensure color index is within valid range (0-15)
+  if (cd >= 0 && cd <= CD_EMPHASIS) {
+    colorIndex_ = cd;
+  } else {
+    Trace::Error("APPWINDOW", "Invalid color index: %d", cd);
+    colorIndex_ = CD_NORMAL; // Default to normal color
+  }
+};
 
 bool AppWindow::autoSave() {
   Player *player = Player::GetInstance();
@@ -676,7 +781,13 @@ bool AppWindow::autoSave() {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
     // get persistence service and call autosave
     PersistencyService *ps = PersistencyService::GetInstance();
-    ps->AutoSaveProjectData(projectName_);
+    auto result = ps->AutoSaveProjectData(projectName_);
+    if (result != PERSIST_SAVED) {
+      Trace::Error("APPWINDOW", "Failed to auto-save project data");
+      // we dont return false here as we dont want to go into a bombardment of
+      // auto save attempts and instead just attempt to auto save again after
+      // the next interval
+    }
     return true;
   }
   return false;

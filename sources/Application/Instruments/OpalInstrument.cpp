@@ -1,9 +1,9 @@
 #include "OpalInstrument.h"
-#include "Adapters/picoTracker/utils/utils.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "I_Instrument.h"
 #include "System/Console/Trace.h"
+#include "bit.h"
 #include <string.h>
 
 static const char *algorithms[2] = {"1*2", "1+2"};
@@ -71,7 +71,6 @@ bool OpalInstrument::Init() {
 void OpalInstrument::OnStart(){};
 
 bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
-  int start = micros();
 
   // channel wide settings
   // enable left/right output (D4, D5) & set algorithm D0
@@ -132,8 +131,6 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   opl_.Port(0x80 + CHANNEL, (uint8_t)(adsr1 & 0x00FF));
   opl_.Port(0x81 + CHANNEL, (uint8_t)(adsr2 & 0x00FF));
 
-  // printf("Start took: %i us", micros() - start);
-
   return true;
 };
 
@@ -145,13 +142,9 @@ void OpalInstrument::Stop(int c) {
 bool OpalInstrument::Render(int channel, fixed *buffer, int size,
                             bool updateTick) {
 
-  int start = micros();
-
   // optimise to remove function calls in hot loop
   opl_.SampleBuffer(buffer, size);
 
-  int took = micros() - start;
-  // Trace::Log("OPALINSTRUMENT", "Render took: %i us [%i])", took, size);
   return true;
 };
 

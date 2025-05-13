@@ -146,7 +146,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     lastCmd_ = *cc;
     break;
 
-  case 3:
+  case 3: {
     switch (direction) {
     case VUD_RIGHT:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -161,10 +161,17 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd =
+        *(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_ + yOffset));
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
     *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_ + yOffset)) =
-        cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+        paramValue;
+    lastParam_ = paramValue;
     break;
+  }
   case 4:
     cc = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset);
     switch (direction) {
@@ -198,9 +205,15 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd =
+        *(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset));
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
     *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset)) =
-        cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+        paramValue;
+    lastParam_ = paramValue;
     break;
   }
   if ((c) && (*c != 0xFF)) {
@@ -210,8 +223,17 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     if (col_ + xOffset == 0) {
       // Add/remove from offset to match selected scale
       int scale = viewData_->project_->GetScale();
-      while (!scaleSteps[scale][(*c + offset) % 12]) {
+      int scaleRoot = viewData_->project_->GetScaleRoot();
+
+      // Calculate the new note with the offset
+      int newNote = *c + offset;
+
+      // Check if the note is in the scale (adjusted for root)
+      // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
+      while (newNote >= 0 &&
+             !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
         offset > 0 ? offset++ : offset--;
+        newNote = *c + offset;
       }
     }
     updateData(c, offset, limit, wrap);
@@ -1107,6 +1129,7 @@ void PhraseView::DrawView() {
   pos = anchor;
   pos._x -= 3;
   for (int j = 0; j < 16; j++) {
+    ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ACCENT) : SetColor(CD_ACCENTALT);
     hex2char(j, buffer);
     DrawString(pos._x, pos._y, buffer, props);
     pos._y++;
@@ -1117,13 +1140,14 @@ void PhraseView::DrawView() {
   pos = anchor;
 
   // Display notes
-
   unsigned char *data = phrase_->note_ + (16 * viewData_->currentPhrase_);
 
   buffer[4] = 0;
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
     setTextProps(props, 0, j, false);
+    (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_EMPHASIS)
+                                            : SetColor(CD_NORMAL);
     if (d == 0xFF) {
       DrawString(pos._x, pos._y, "----", props);
     } else {
@@ -1263,52 +1287,85 @@ void PhraseView::DrawView() {
 };
 
 void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't call any drawing functions directly
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
 
-  drawNotes();
+  // Set the consolidated flag for UI updates
+  needsUIUpdate_ = true;
 
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos = anchor;
-  pos._x -= 1;
+  // Update the play position for use in AnimationUpdate
+  Player *player = Player::GetInstance();
+  if (player && player->GetSequencerMode() == SM_LIVE) {
+    needsLiveIndicatorUpdate_ = true;
+  }
+};
 
-  GUITextProperties props;
-  SetColor(CD_NORMAL);
+void PhraseView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate();
 
-  pos._y = anchor._y + lastPlayingPos_;
-  DrawString(pos._x, pos._y, " ", props);
-
+  // Get player instance safely
   Player *player = Player::GetInstance();
 
-  if (eventType != PET_STOP) {
+  // Only process updates if we're fully initialized
+  if (!viewData_ || !player) {
+    return;
+  }
 
-    // Clear current position if needed
+  // Handle any pending updates from OnPlayerUpdate using the consolidated flag
+  // This ensures all UI drawing happens on the "main" thread (core0)
+  if (needsUIUpdate_) {
+    GUITextProperties props;
 
-    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      if (player->IsChannelPlaying(i)) {
+    // Draw notes
+    drawNotes();
 
-        if (viewData_->currentPlayPhrase_[i] == viewData_->currentPhrase_ &&
-            viewData_->playMode_ != PM_AUDITION) {
-          pos._y = anchor._y + viewData_->phrasePlayPos_[i];
-          if (!player->IsChannelMuted(i)) {
-            DrawString(pos._x, pos._y, ">", props);
-          } else {
-            DrawString(pos._x, pos._y, "-", props);
+    // Draw VU meter
+    drawMasterVuMeter(player, props);
+
+    // Draw play position marker
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos = anchor;
+    pos._x -= 1;
+
+    SetColor(CD_NORMAL);
+
+    // Clear last played position
+    pos._y = anchor._y + lastPlayingPos_;
+    DrawString(pos._x, pos._y, " ", props);
+
+    // Only update play position if player is running
+    if (player->IsRunning()) {
+      // Loop on all channels to see if one of them is playing current phrase
+      for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+        if (player->IsChannelPlaying(i)) {
+          if (viewData_->currentPlayPhrase_[i] == viewData_->currentPhrase_ &&
+              viewData_->playMode_ != PM_AUDITION) {
+            pos._y = anchor._y + viewData_->phrasePlayPos_[i];
+            if (!player->IsChannelMuted(i)) {
+              SetColor(CD_ACCENT);
+              DrawString(pos._x, pos._y, ">", props);
+            } else {
+              SetColor(CD_ACCENTALT);
+              DrawString(pos._x, pos._y, "-", props);
+            }
+            SetColor(CD_CURSOR);
+            lastPlayingPos_ = viewData_->phrasePlayPos_[i];
+            break;
           }
-          lastPlayingPos_ = viewData_->phrasePlayPos_[i];
-          break;
         }
       }
     }
 
-    // clear any live indicator
-
-    pos._y = anchor._y;
-    DrawString(pos._x, pos._y, " ", props);
-
-    // Loop on all channels to see if one has queued current chain
+    // Draw live indicators if in live mode
     if (player->GetSequencerMode() == SM_LIVE) {
+      pos = anchor;
+      pos._x -= 1;
+      SetColor(CD_ACCENT);
 
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        // is anything queued ?
         if (player->GetQueueingMode(i) != QM_NONE) {
           // find the chain queued in channel
           unsigned char songPos = player->GetQueuePosition(i);
@@ -1322,11 +1379,19 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
         }
       }
     }
-  }
-  pos = anchor;
-  pos._x += 200;
-};
 
+    // Create a memory barrier to ensure proper synchronization between cores
+    createMemoryBarrier();
+
+    needsLiveIndicatorUpdate_ = false;
+
+    // Reset the consolidated flag
+    needsUIUpdate_ = false;
+  }
+
+  // Flush the window to ensure changes are displayed
+  w_.Flush();
+}
 void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
   char **helpLegend = getHelpLegend(command);
   char line[32]; //-1 for 1char space start of line

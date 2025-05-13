@@ -1,23 +1,21 @@
 add_library(platform_system
-  picoTrackerSystem.h picoTrackerSystem.cpp
-  picoTrackerEventQueue.h picoTrackerEventQueue.cpp
-  input.h input.cpp
-  critical_error_message.h critical_error_message.c
+  picoTrackerSystem.cpp
+  picoTrackerEventQueue.cpp
+  input.cpp
+  critical_error_message.c
+  picoTrackerSamplePool.cpp
 )
 
-target_link_libraries(platform_system INTERFACE system_system
-                                      PUBLIC uiframework_simplebaseclasses
-                                      PUBLIC platform_timer
-                                      PUBLIC platform_audio
-                                      PUBLIC services_audio
-                                      PUBLIC platform_midi
-                                      PUBLIC platform_gui
-                                      PUBLIC platform_display
-                                      PUBLIC pico_stdlib
-                                      PUBLIC hardware_gpio
-                                      PUBLIC hardware_adc
-                                      PUBLIC etl
-                                      PUBLIC platform_usb
+target_link_libraries(platform_system INTERFACE system_system PUBLIC
+  uiframework_simplebaseclasses
+  platform_timer
+  platform_audio
+  services_audio
+  platform_midi
+  platform_gui
+  platform_display
+  etl
+  platform_usb
 )
 
 

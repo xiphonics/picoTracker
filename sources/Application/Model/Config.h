@@ -15,8 +15,18 @@ public:
   void ProcessArguments(int argc, char **argv);
   bool Save();
 
+  // Methods for handling color variables and themes
+  void WriteColorVariables(tinyxml2::XMLPrinter *printer);
+  void ReadColorVariable(PersistencyDocument *doc);
+
+  // Theme-related methods (replacing Theme class)
+  bool SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName);
+  bool LoadTheme(PersistencyDocument *doc);
+  bool ExportTheme(const char *themeName, bool overwrite);
+  bool ImportTheme(const char *themeName);
+
 private:
-  etl::list<Variable *, 22> variables_;
+  etl::list<Variable *, 24> variables_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
   void processParams(const char *name, int value, bool insert);

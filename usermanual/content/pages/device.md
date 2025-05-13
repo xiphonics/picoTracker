@@ -35,27 +35,11 @@ This setting enables or disables sending commands to a computer attached via USB
 
 The [official picoTracker remote UI web application is available ](https://ui.xiphonics.com), it works only with Chromium based browsers.
 
-## Font
+## Theme Settings
 
-The font used for the picoTracker user interface. Choice of "standard" or "bold" fonts.
+The Theme Settings screen allows you to customize the appearance of the picoTracker interface, including fonts and colors. To access the Theme Settings screen, select the "Theme settings" option on the Device screen.
 
-## Color Themes
-
-The color scheme for the picoTracker can be customised and saved. 
-
-The following colors can be configured and are listed with their default setting as well as a note on the colors use in the picoTracker user interface:
-
-| Name | Default | Use
-| -------- | ------- | -------
-BACKROUND|0F0F0F| Background color on all screens
-FOREGROUND|ADADAD|text and cursor in cursor
-HICOLOR1|846F94|row count in song screen
-HICOLOR2|6B316B|inverted highlight, eg. "Song" screen label 
-INFOCOLOR|33EE33|information displays eg. used for battery gauge ok level
-WARNCOLOR|11EE22|warning displays eg. battery gauge low level
-ERRORCOLOR|FF1111|error displays eg. battery gauge critical level
-CURSORCOLOR|224400|??
-CONSOLECOLOR|99FFAA|??
+See the [Theme Settings](theme.html) chapter for more details.
 
 ## Updating Firmware
 
