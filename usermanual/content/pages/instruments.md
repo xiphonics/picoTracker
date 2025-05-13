@@ -59,7 +59,7 @@ Once you've created an instrument, you can save it for use in other projects:
 
 ## Sample Import Screen
 
-You can enter the sample import file browser by hitting `ENTER ENTER` (press the `ENTER` key twice in quick succession) when you are in the *Sample* Instrument Screen. This double-press behavior provides a quick way to access the sample import file browser from any field in the *Sample* Instrument Screen.
+You can enter the sample import file browser by hitting `ENTER ENTER` (press the `ENTER` key twice in quick succession) when you are in sample field on the *Sample* Instrument Screen. This double-press behavior provides a quick way to access the sample import file browser from the sample field in the *Sample* Instrument Screen.
 
 When in the Project Screen, you can access the sample import file browser with a single press of the `ENTER` key on the "Import Sample" field.
 
