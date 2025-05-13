@@ -1,13 +1,12 @@
-add_library(system_filesystem
-)
+add_library(system_filesystem INTERFACE)
 
-target_link_libraries(system_filesystem PUBLIC
+target_link_libraries(system_filesystem INTERFACE
   application_utils
   system_errors
   etl
 )
 
 
-target_include_directories(system_filesystem PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(system_filesystem INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories(${PROJECT_SOURCE_DIR})

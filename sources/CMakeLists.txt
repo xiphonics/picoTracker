@@ -12,9 +12,6 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-# Make this a picoTracker build within the project
-add_definitions(-DPICOBUILD)
-
 # For debugging purposes, print all mallocs
 # add_definitions(-DPICO_DEBUG_MALLOC)
 # add_definitions(-DPICOSTATS)

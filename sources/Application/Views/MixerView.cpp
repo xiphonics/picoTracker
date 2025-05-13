@@ -1,5 +1,4 @@
 #include "MixerView.h"
-#include "Adapters/picoTracker/utils/utils.h"
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"

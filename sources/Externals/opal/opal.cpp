@@ -1,5 +1,4 @@
 #include "opal.h"
-#include "hardware/flash.h"
 
 const uint16_t Opal::RateTables[4][8] = {
     {1, 0, 1, 0, 1, 0, 1, 0},

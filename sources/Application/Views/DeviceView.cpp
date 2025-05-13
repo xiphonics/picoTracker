@@ -9,15 +9,14 @@
 #include "BaseClasses/UITempoField.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
-#include "hardware/watchdog.h"
-#include "pico/bootrom.h"
+#include "platform.h"
 #include <nanoprintf.h>
 
 #define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
 
 static void BootselCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    reset_usb_boot(0, 0);
+    platform_bootloader();
   }
 };
 

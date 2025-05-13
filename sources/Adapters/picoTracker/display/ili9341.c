@@ -1,5 +1,5 @@
 #include "ili9341.h"
-#include "Adapters/picoTracker/platform/platform.h"
+#include "Adapters/picoTracker/platform/gpio.h"
 #include "pico/stdlib.h"
 #include <stdint.h>
 #include <stdio.h>

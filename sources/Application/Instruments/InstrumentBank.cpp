@@ -1,6 +1,4 @@
-
 #include "InstrumentBank.h"
-#include "Application/Instruments/MacroInstrument.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -17,8 +15,7 @@
 // Contain all instrument definition
 InstrumentBank::InstrumentBank()
     : Persistent("INSTRUMENTBANK"), sampleInstrumentPool_(),
-      midiInstrumentPool_(), sidInstrumentPool_(), opalInstrumentPool_(),
-      macroInstrumentPool_() {
+      midiInstrumentPool_(), sidInstrumentPool_(), opalInstrumentPool_() {
 
   for (size_t i = 0; i < instruments_.max_size(); i++) {
     instruments_[i] = &none_;
@@ -32,7 +29,6 @@ InstrumentBank::~InstrumentBank() {
   midiInstrumentPool_.release_all();
   sidInstrumentPool_.release_all();
   opalInstrumentPool_.release_all();
-  macroInstrumentPool_.release_all();
 };
 
 I_Instrument *InstrumentBank::GetInstrument(int i) { return instruments_[i]; };

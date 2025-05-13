@@ -22,7 +22,6 @@ target_link_libraries(application_instruments PUBLIC
   system_io
   crsid
   opal
-  services_time
   etl
   application_utils
 )

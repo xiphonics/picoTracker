@@ -220,8 +220,6 @@ int WavFile::GetChannelCount(int note) { return channelCount_; };
 int WavFile::GetSampleRate(int note) { return sampleRate_; };
 
 long WavFile::readBlock(long start, long size) {
-  // Read buffer is a fixed size, nothing should be requested bigger than this
-  // TODO: remove size option and work with what we have
   if (size > readBufferSize_) {
     readBufferSize_ = size;
   }
@@ -231,10 +229,6 @@ long WavFile::readBlock(long start, long size) {
 };
 
 bool WavFile::GetBuffer(long start, long size) {
-  // TODO: Many of the calculations in this function don't make any
-  // sense anymore, refactor
-  // 64 bits is the maximum size we can read without overflowing
-  // readBuffer_ in the worst case scenario
   samples_ = (short *)readBuffer_;
 
   // compute the file buffer size we need to read
