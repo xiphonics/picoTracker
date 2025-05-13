@@ -652,32 +652,50 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   Player *player = Player::GetInstance();
 
   if (mask == EPBM_ENTER) {
+    // Get the current field to check if we're on the sample field
+    UIIntVarField *currentField = (UIIntVarField *)GetFocus();
+
+    // Only allow sample import when the sample field is selected
+    if (getInstrument()->GetType() == IT_SAMPLE && currentField &&
+        currentField->GetVariableID() == FourCC::SampleInstrumentSample) {
+
+      if (viewMode_ == VM_NEW) {
+        viewMode_ = VM_NORMAL; // clear the "enter double tap" state
+        if (!player->IsRunning()) {
+          // First check if the samplelib exists
+          bool samplelibExists =
+              FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+
+          if (!samplelibExists) {
+            MessageBox *mb =
+                new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
+            DoModal(mb);
+          } else {
+            ImportView::SetSourceViewType(VT_INSTRUMENT);
+
+            // Go to import sample
+            ViewType vt = VT_IMPORT;
+            ViewEvent ve(VET_SWITCH_VIEW, &vt);
+            SetChanged();
+            NotifyObservers(&ve);
+          }
+        } else {
+          MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+          DoModal(mb);
+        }
+      } else {
+        // mark as "new" mode so a 2nd following ENTER will trigger the sample
+        // import above
+        viewMode_ = VM_NEW;
+      }
+    } else if (viewMode_ == VM_NEW) {
+      // If we're not on the sample field but in VM_NEW mode, reset it
+      viewMode_ = VM_NORMAL;
+    }
+
     UIIntVarField *field = (UIIntVarField *)GetFocus();
     Variable &v = field->GetVariable();
     switch (v.GetID()) {
-    case FourCC::SampleInstrumentSample: {
-      if (!player->IsRunning()) {
-        // First check if the samplelib exists
-        bool samplelibExists =
-            FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
-
-        if (!samplelibExists) {
-          MessageBox *mb =
-              new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
-          DoModal(mb);
-        } else {
-          // Go to import sample
-          ViewType vt = VT_IMPORT;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-      } else {
-        MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
-        DoModal(mb);
-      }
-      break;
-    }
     case FourCC::SampleInstrumentTable: {
       int next = TableHolder::GetInstance()->GetNext();
       if (next != NO_MORE_TABLE) {
@@ -690,6 +708,11 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       break;
     }
     mask &= (0xFFFF - EPBM_ENTER);
+  } else {
+    // Clear the VM_NEW state if any key other than ENTER is pressed
+    if (viewMode_ == VM_NEW) {
+      viewMode_ = VM_NORMAL;
+    }
   }
 
   if (viewMode_ == VM_CLONE) {
@@ -712,7 +735,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_SELECTION) {
   } else {
-    viewMode_ = VM_NORMAL;
+    // viewMode_ = VM_NORMAL;
   }
 
   FieldView::ProcessButtonMask(mask, pressed);
