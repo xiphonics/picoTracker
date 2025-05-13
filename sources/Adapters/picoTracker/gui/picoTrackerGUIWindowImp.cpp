@@ -97,15 +97,6 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
 #endif
 }
 
-// Currently not used but maybe in future
-// void picoTrackerGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
-//                                          GUITextProperties &p, bool overlay)
-//                                          {
-//   Trace::Debug("draw string");
-//   mode0_set_cursor(pos._x, pos._y);
-//   mode0_print(string, p.invert_);
-// };
-
 void picoTrackerGUIWindowImp::DrawRect(GUIRect &r) {
   Trace::Debug("GUI DrawRect call");
 };
