@@ -34,7 +34,6 @@ public:
 protected:
   void warpToNext(int offset);
   void onInstrumentChange();
-  void fillMacroParameters();
   void fillSampleParameters();
   void fillSIDParameters();
   void fillMidiParameters();

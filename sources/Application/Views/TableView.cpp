@@ -330,7 +330,7 @@ void TableView::updateCursorValue(int offset) {
     lastCmd_ = *cc;
     break;
 
-  case 1:
+  case 1: {
     switch (offset) {
     case 0x01:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -345,11 +345,16 @@ void TableView::updateCursorValue(int offset) {
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
-    *(table.param1_ + row_) = cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd = *(table.cmd1_ + row_);
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
+    *(table.param1_ + row_) = paramValue;
+    lastParam_ = paramValue;
     break;
-
-  case 2:
+  }
+  case 2: {
     cc = table.cmd2_ + row_;
     switch (offset) {
     case 0x01:
@@ -367,7 +372,8 @@ void TableView::updateCursorValue(int offset) {
     }
     lastCmd_ = *cc;
     break;
-  case 3:
+  }
+  case 3: {
     switch (offset) {
     case 0x01:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -382,10 +388,16 @@ void TableView::updateCursorValue(int offset) {
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
-    *(table.param2_ + row_) = cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd = *(table.cmd2_ + row_);
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
+    *(table.param2_ + row_) = paramValue;
+    lastParam_ = paramValue;
     break;
-  case 4:
+  }
+  case 4: {
     cc = table.cmd3_ + row_;
     switch (offset) {
     case 0x01:
@@ -403,7 +415,8 @@ void TableView::updateCursorValue(int offset) {
     }
     lastCmd_ = *cc;
     break;
-  case 5:
+  }
+  case 5: {
     switch (offset) {
     case 0x01:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -418,9 +431,15 @@ void TableView::updateCursorValue(int offset) {
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
-    *(table.param3_ + row_) = cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd = *(table.cmd3_ + row_);
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
+    *(table.param3_ + row_) = paramValue;
+    lastParam_ = paramValue;
     break;
+  }
   }
   if (c) {
     updateData(c, offset, limit, wrap);

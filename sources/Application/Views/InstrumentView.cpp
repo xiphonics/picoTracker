@@ -1,5 +1,4 @@
 #include "InstrumentView.h"
-#include "Application/Instruments/MacroInstrument.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -11,7 +10,6 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
-#include "Externals/braids/macro_oscillator.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
@@ -239,48 +237,6 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old) {
 }
 
 void InstrumentView::fillNoneParameters() {}
-
-void InstrumentView::fillMacroParameters() {
-  int i = viewData_->currentInstrumentID_;
-  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  I_Instrument *instr = bank->GetInstrument(i);
-  MacroInstrument *instrument = (MacroInstrument *)instr;
-  GUIPoint position = GetAnchor();
-
-  // offset y to account for instrument type and export/import fields
-  position._y += 1;
-
-  position._y += 1;
-  Variable *v = instrument->FindVariable(FourCC::MacroInstrumentShape);
-  intVarField_.emplace_back(position, *v, "shape: %s", 0,
-                            braids::MACRO_OSC_SHAPE_LAST - 2, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrmentTimbre);
-  intVarField_.emplace_back(position, *v, "timbre: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentColor);
-  intVarField_.emplace_back(position, *v, "color: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentAttack);
-  intVarField_.emplace_back(position, *v, "attack: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentDecay);
-  intVarField_.emplace_back(position, *v, "decay: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::MacroInstrumentSignature);
-  intVarField_.emplace_back(position, *v, "signature: %2.2X", 0, 0xFF, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-}
 
 void InstrumentView::fillSampleParameters() {
 

@@ -1,10 +1,8 @@
 #include "InstrumentImportView.h"
-
 #include "Application/AppWindow.h"
 #include "Application/Instruments/I_Instrument.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "ModalDialogs/MessageBox.h"
-#include "pico/multicore.h"
 #include <memory>
 #include <nanoprintf.h>
 

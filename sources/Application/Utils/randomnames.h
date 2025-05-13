@@ -1,7 +1,7 @@
 #ifndef _RANDOMNAMES_H_
 #define _RANDOMNAMES_H_
 
-#include "pico/rand.h"
+#include "platform.h"
 #include <string.h>
 
 const char *adjectives[] = {"bad",  "mad",  "sad",   "big",  "hot",  "red",
@@ -29,10 +29,10 @@ void getRandomName(char *name) {
 
   int adjectivesCount = sizeof(adjectives) / sizeof(char *);
   int verbsCount = sizeof(verbs) / sizeof(char *);
-  int rndIndex = (uint8_t)get_rand_32() % adjectivesCount;
+  int rndIndex = (uint8_t)platform_get_rand() % adjectivesCount;
   strcpy(name, adjectives[rndIndex]);
   strcat(name, "-");
-  rndIndex = (uint8_t)get_rand_32() % verbsCount;
+  rndIndex = (uint8_t)platform_get_rand() % verbsCount;
   strcat(name, verbs[rndIndex]);
 }
 

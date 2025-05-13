@@ -6,17 +6,6 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
-#include "Application/Views/ModalDialogs/MessageBox.h"
-#include "Application/Views/ProjectView.h"
-#include "Foundation/Variables/WatchedVariable.h"
-#include "Player/Player.h"
-#include "Services/Midi/MidiService.h"
-#include "System/Console/Trace.h"
-#include "UIFramework/Interfaces/I_GUIWindowFactory.h"
-#include "Views/UIController.h"
-#include <nanoprintf.h>
-#include <string.h>
-
 #include "Application/Views/ChainView.h"
 #include "Application/Views/ConsoleView.h"
 #include "Application/Views/DeviceView.h"
@@ -25,14 +14,25 @@
 #include "Application/Views/InstrumentImportView.h"
 #include "Application/Views/InstrumentView.h"
 #include "Application/Views/MixerView.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
+#include "Application/Views/ProjectView.h"
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
 #include "Application/Views/ThemeImportView.h"
 #include "Application/Views/ThemeView.h"
 #include "BaseClasses/View.h"
+#include "Foundation/Variables/WatchedVariable.h"
+#include "Player/Player.h"
+#include "Services/Midi/MidiService.h"
+#include "System/Console/Trace.h"
+#include "UIFramework/Interfaces/I_GUIWindowFactory.h"
+#include "Views/UIController.h"
+#include "platform.h"
+#include <nanoprintf.h>
+#include <string.h>
 
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 
@@ -82,7 +82,8 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
   }
 }
 
-AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
+AppWindow::AppWindow(I_GUIWindowImp &imp)
+    : GUIWindow(imp), drawMutex_(platform_mutex()) {
 
   instance = this;
 
@@ -153,7 +154,7 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
   int offset = (pos._x < 0) ? -pos._x / 8 : 0;
   len -= offset;
   int available = SCREEN_WIDTH - ((pos._x < 0) ? 0 : pos._x);
-  len = MIN(len, available);
+  len = std::min(len, available);
   memcpy(buffer, string + offset, len);
   buffer[len] = 0;
 
@@ -198,7 +199,7 @@ void AppWindow::ClearRect(GUIRect &r) {
 
 void AppWindow::Redraw() {
 
-  SysMutexLocker locker(drawMutex_);
+  SysMutexLocker locker(*drawMutex_);
 
   if (_currentView) {
     _currentView->Redraw();
@@ -212,7 +213,7 @@ void AppWindow::Redraw() {
 
 void AppWindow::Flush() {
 
-  SysMutexLocker locker(drawMutex_);
+  SysMutexLocker locker(*drawMutex_);
 
   Lock();
 
@@ -341,6 +342,18 @@ void AppWindow::LoadProject(const char *projectName) {
 
   WatchedVariable::Disable();
 
+  // Register as an observer of the project name variable to get notified of
+  // changes
+  Variable *projectNameVar = project->FindVariable(FourCC::VarProjectName);
+  if (projectNameVar) {
+    WatchedVariable *watchedVar = (WatchedVariable *)projectNameVar;
+    if (watchedVar) {
+      watchedVar->AddObserver(*this);
+      // Store the initial project name
+      project->GetProjectName(projectName_);
+    }
+  }
+
   project->GetInstrumentBank()->Init();
 
   WatchedVariable::Enable();
@@ -417,7 +430,7 @@ void AppWindow::LoadProject(const char *projectName) {
       new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
   _selectProjectView->AddObserver((*this));
 
-  static char mixerViewMemBuf[sizeof(SelectProjectView)];
+  static char mixerViewMemBuf[sizeof(MixerView)];
   _mixerView = new (mixerViewMemBuf) MixerView((*this), _viewData);
   _mixerView->AddObserver((*this));
 
@@ -518,7 +531,9 @@ bool AppWindow::onEvent(GUIEvent &event) {
   unsigned short v = 1 << event.GetValue();
 
   MixerService *sm = MixerService::GetInstance();
-  sm->Lock();
+  // TODO(democloid): this causes a deadlock, verify original intent
+  //  MixerService *ms = MixerService::GetInstance();
+  //  ms->Lock();
 
   switch (event.GetType()) {
 
@@ -551,7 +566,7 @@ bool AppWindow::onEvent(GUIEvent &event) {
   default:
     break;
   }
-  sm->Unlock();
+  //  ms->Unlock();
 
   if (_shouldQuit) {
     onQuitApp();
@@ -585,13 +600,13 @@ void AppWindow::AnimationUpdate() {
   }
   _currentView->AnimationUpdate();
 
-  // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_MILLIS
+  // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_SECONDS
   // will return false if auto save was unsuccessful because eg. the sequencer
   // is running
   // we do this here because for sheer convenience because this
-  // callback is called every second and we have easy access in this class to
-  // the player, projectname and persistence service
-  if (++lastAutoSave > AUTOSAVE_INTERVAL_IN_SECONDS) {
+  // this callback is called PICO_CLOCK_HZ times a second and we have easy
+  // access in this class to the player, projectname and persistence service
+  if ((++lastAutoSave / PICO_CLOCK_HZ) > AUTOSAVE_INTERVAL_IN_SECONDS) {
     if (autoSave()) {
       lastAutoSave = 0;
     }
@@ -601,6 +616,17 @@ void AppWindow::AnimationUpdate() {
 void AppWindow::LayoutChildren(){};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
+  if (d && (uintptr_t)d == (uintptr_t)FourCC::VarProjectName) {
+    // Update the stored project name from the project
+    Project *project = _viewData->project_;
+    if (project) {
+      project->GetProjectName(projectName_);
+      Trace::Log("APPWINDOW", "Project name retrieved: %s", projectName_);
+    } else {
+      Trace::Error("APPWINDOW: Project name retrieval failed!");
+    }
+    return;
+  }
 
   ViewEvent *ve = (ViewEvent *)d;
 
@@ -675,7 +701,7 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
   case VET_PLAYER_POSITION_UPDATE: {
     PlayerEvent *pt = (PlayerEvent *)ve;
     if (_currentView) {
-      SysMutexLocker locker(drawMutex_);
+      SysMutexLocker locker(*drawMutex_);
       // Check if the current view has a modal view
       if (_currentView->HasModalView()) {
         _currentView->GetModalView()->OnPlayerUpdate(pt->GetType(),
@@ -756,7 +782,13 @@ bool AppWindow::autoSave() {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
     // get persistence service and call autosave
     PersistencyService *ps = PersistencyService::GetInstance();
-    ps->AutoSaveProjectData(projectName_);
+    auto result = ps->AutoSaveProjectData(projectName_);
+    if (result != PERSIST_SAVED) {
+      Trace::Error("APPWINDOW", "Failed to auto-save project data");
+      // we dont return false here as we dont want to go into a bombardment of
+      // auto save attempts and instead just attempt to auto save again after
+      // the next interval
+    }
     return true;
   }
   return false;

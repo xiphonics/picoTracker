@@ -9,27 +9,6 @@
 
 #include "SysMutex.h"
 
-SysMutex::SysMutex() : mutex_(0) {}
-
-SysMutex::~SysMutex() {}
-
-bool SysMutex::Lock() {
-  if (!mutex_) {
-    mutex_init(mutex_);
-  }
-  if (mutex_) {
-    mutex_enter_blocking(mutex_);
-    return true;
-  }
-  return false;
-}
-
-void SysMutex::Unlock() {
-  if (mutex_) {
-    mutex_exit(mutex_);
-  }
-}
-
 SysMutexLocker::SysMutexLocker(SysMutex &mutex) : mutex_(&mutex) {
   mutex_->Lock();
 }

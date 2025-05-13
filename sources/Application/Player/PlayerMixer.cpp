@@ -38,7 +38,6 @@ bool PlayerMixer::Init(Project *project) {
   project_ = project;
 
   // Init states
-
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     lastInstrument_[i] = 0;
   };
@@ -107,12 +106,13 @@ stereosample PlayerMixer::GetMasterOutLevel() {
 
 etl::array<stereosample, SONG_CHANNEL_COUNT> *PlayerMixer::GetMixerLevels() {
   MixerService *ms = MixerService::GetInstance();
+
+  // Get the current mixer levels from each bus
   for (int i = 0; i < 8; i++) {
     AudioMixer *audioMixer = ms->GetMixBus(i);
     mixerLevels_[i] = audioMixer->GetMixerLevels();
-    short levelL = (mixerLevels_[i] >> 16);
-    short levelR = (mixerLevels_[i] & 0x0000FFFF);
   }
+
   return &mixerLevels_;
 }
 

@@ -13,10 +13,7 @@
 #include "BaseClasses/ViewEvent.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
-#ifdef PICOBUILD
-#include "hardware/watchdog.h"
-#include "pico/bootrom.h"
-#endif
+#include "platform.h"
 #include <nanoprintf.h>
 
 static void LoadCallback(View &v, ModalView &dialog) {
@@ -36,17 +33,15 @@ static void CreateNewProjectCallback(View &v, ModalView &dialog) {
     PersistencyService::GetInstance()->PurgeUnnamedProject();
 
     // now reboot!
-    watchdog_reboot(0, 0, 0);
+    platform_reboot();
   }
 };
 
-#ifdef PICOBUILD
 static void BootselCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    reset_usb_boot(0, 0);
+    platform_bootloader();
   }
 };
-#endif
 
 static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
   bool cancelOverwrite = dialog.GetReturnCode() == MBL_CANCEL;
@@ -215,6 +210,15 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   FieldView::ProcessButtonMask(mask, pressed);
 
   if (mask & EPBM_NAV) {
+    if (mask & EPBM_DOWN || mask & EPBM_UP) {
+      if (saveAsFlag_) {
+        MessageBox *mb =
+            new MessageBox(*this, "Save project rename first", MBBF_OK);
+        DoModal(mb);
+        return;
+      }
+    }
+
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_SONG;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -349,7 +353,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     DoModal(mb, CreateNewProjectCallback);
     break;
   }
-#ifdef PICOBUILD
   case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
       MessageBox *mb =
@@ -361,7 +364,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   }
-#endif
 
   case FourCC::ActionTempoChanged:
     break;

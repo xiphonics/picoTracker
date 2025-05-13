@@ -142,7 +142,7 @@ private:
   static int charWidth_;
   static int charHeight_;
 
-  SysMutex drawMutex_;
+  SysMutex *drawMutex_;
 
   bool loadProject_ = false;
 

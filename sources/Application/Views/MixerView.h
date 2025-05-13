@@ -1,10 +1,12 @@
 #ifndef _MIXER_VIEW_H_
 #define _MIXER_VIEW_H_
 
-#include "BaseClasses/View.h"
+#include "BaseClasses/UIIntVarField.h"
+#include "FieldView.h"
+#include "Foundation/T_SimpleList.h"
 #include "ViewData.h"
 
-class MixerView : public View {
+class MixerView : public FieldView {
 public:
   MixerView(GUIWindow &w, ViewData *viewData);
   ~MixerView();
@@ -24,14 +26,15 @@ protected:
   void unMuteAll();
   void toggleMute();
   void switchSoloMode();
+  void togglePlay();
 
 private:
   void drawChannelVUMeters(etl::array<stereosample, SONG_CHANNEL_COUNT> *levels,
-                           Player *player, GUITextProperties props);
-  const char *song_;
-  int saveX_;
-  int saveY_;
-  int saveOffset_;
-  bool invertBatt_;
+                           Player *player, GUITextProperties props,
+                           bool forceRedraw = false);
+  void initChannelVolumeFields();
+
+  // Channel volume UI fields
+  etl::vector<UIIntVarField, SONG_CHANNEL_COUNT> channelVolumeFields_;
 };
 #endif
