@@ -861,51 +861,117 @@ void TableView::DrawView() {
 }
 
 void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
+  // Since this can be called from core1 via the Observer pattern,
+  // we need to ensure we don't call any drawing functions directly
+  // Instead of drawing directly, we'll just update our state and let
+  // AnimationUpdate handle the actual drawing
 
-  GUITextProperties props;
-  GUIPoint anchor = GetAnchor();
-  GUIPoint pos;
+  // Set the consolidated flag for UI updates
+  needsUIUpdate_ = true;
 
-  pos._x = anchor._x - 1;
-  pos._y = anchor._y + lastPosition_[0];
-  DrawString(pos._x, pos._y, " ", props);
+  // Keep setting these for backward compatibility
+  needsNotesUpdate_ = true;
+  needsPlayPositionUpdate_ = true;
+  needsVUMeterUpdate_ = true;
 
-  pos._x += 9;
-  pos._y = anchor._y + lastPosition_[1];
-  DrawString(pos._x, pos._y, " ", props);
-
-  pos._x += 9;
-  pos._y = anchor._y + lastPosition_[2];
-  DrawString(pos._x, pos._y, " ", props);
-
+  // Update the last positions for use in AnimationUpdate
   TableHolder *th = TableHolder::GetInstance();
-  // Get current channel
-  int channel = viewData_->songX_;
-  // Table associated to the channel playerpb
-  TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
-  Table *playbackTable = tpb.GetTable();
-  // Table we're viewing
-  Table &viewTable = th->GetTable(viewData_->currentTable_);
-  if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+  if (th) {
+    // Get current channel
+    int channel = viewData_->songX_;
+    // Table associated to the channel playerpb
+    TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+    Table *playbackTable = tpb.GetTable();
+    // Table we're viewing
+    Table &viewTable = th->GetTable(viewData_->currentTable_);
+    if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+      // Store positions for later use in AnimationUpdate
+      lastPosition_[0] = tpb.GetPlaybackPosition(0);
+      lastPosition_[1] = tpb.GetPlaybackPosition(1);
+      lastPosition_[2] = tpb.GetPlaybackPosition(2);
+    }
+  }
 
-    lastPosition_[0] = tpb.GetPlaybackPosition(0);
-    lastPosition_[1] = tpb.GetPlaybackPosition(1);
-    lastPosition_[2] = tpb.GetPlaybackPosition(2);
+  // Create a memory barrier to ensure changes are visible across cores
+  createMemoryBarrier();
+}
 
+void TableView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate();
+
+  // Get player instance safely
+  Player *player = Player::GetInstance();
+  TableHolder *th = TableHolder::GetInstance();
+
+  // Only process updates if we're fully initialized
+  if (!viewData_ || !player || !th) {
+    return;
+  }
+
+  // Handle any pending updates from OnPlayerUpdate using the consolidated flag
+  // This ensures all UI drawing happens on the "main" thread (core0)
+  if (needsUIUpdate_) {
+    GUITextProperties props;
+
+    // Draw notes
+    drawNotes();
+
+    // Draw VU meter
+    drawMasterVuMeter(player, props);
+
+    // Draw play positions
+    GUIPoint anchor = GetAnchor();
+    GUIPoint pos = anchor;
+
+    // Clear previous positions
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_[0];
-    SetColor(CD_ACCENT);
-    DrawString(pos._x, pos._y, ">", props);
+    DrawString(pos._x, pos._y, " ", props);
 
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[1];
-    DrawString(pos._x, pos._y, ">", props);
+    DrawString(pos._x, pos._y, " ", props);
 
     pos._x += 9;
     pos._y = anchor._y + lastPosition_[2];
-    DrawString(pos._x, pos._y, ">", props);
-  };
-  drawNotes();
+    DrawString(pos._x, pos._y, " ", props);
+
+    // Only update play position if player is running
+    if (player->IsRunning()) {
+      // Get current channel
+      int channel = viewData_->songX_;
+      // Table associated to the channel playerpb
+      TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+      Table *playbackTable = tpb.GetTable();
+      // Table we're viewing
+      Table &viewTable = th->GetTable(viewData_->currentTable_);
+
+      if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
+        pos._x = anchor._x - 1;
+        pos._y = anchor._y + lastPosition_[0];
+        SetColor(CD_ACCENT);
+        DrawString(pos._x, pos._y, ">", props);
+
+        pos._x += 9;
+        pos._y = anchor._y + lastPosition_[1];
+        DrawString(pos._x, pos._y, ">", props);
+
+        pos._x += 9;
+        pos._y = anchor._y + lastPosition_[2];
+        DrawString(pos._x, pos._y, ">", props);
+      }
+    }
+
+    // Create a memory barrier to ensure proper synchronization between cores
+    createMemoryBarrier();
+
+    // Reset the consolidated flag
+    needsUIUpdate_ = false;
+  }
+
+  // Flush the window to ensure changes are displayed
+  w_.Flush();
 }
 
 void TableView::printHelpLegend(FourCC command, GUITextProperties props) {

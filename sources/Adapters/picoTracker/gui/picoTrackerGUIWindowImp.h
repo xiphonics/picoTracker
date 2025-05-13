@@ -18,7 +18,7 @@ public: // I_GUIWindowImp implementation
   virtual void DrawRect(GUIRect &);
   virtual void DrawChar(const char c, GUIPoint &pos, GUITextProperties &);
   virtual void DrawString(const char *string, GUIPoint &pos,
-                          GUITextProperties &, bool overlay = false);
+                          GUITextProperties &, bool overlay = false){};
   virtual GUIRect GetRect();
   virtual void Invalidate();
   virtual void Flush();

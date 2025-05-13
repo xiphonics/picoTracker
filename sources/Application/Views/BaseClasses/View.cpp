@@ -133,7 +133,6 @@ void View::drawMap() {
 }
 
 void View::drawNotes() {
-
   GUIPoint anchor = GetAnchor();
   int initialX = View::margin_ + 5;
   int initialY = anchor._y + View::songRowCount_ + 2;
@@ -142,7 +141,6 @@ void View::drawNotes() {
 
   Player *player = Player::GetInstance();
 
-  // column banger refactor
   props.invert_ = true;
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     if (i == viewData_->songX_) {
@@ -233,19 +231,19 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
     }
   }
 
-  props.invert_ = true;
-
   // Left channel: Handle level changes
   if (forceRedraw || leftBars != prevLeftVU_[vuIndex]) {
     // If forcing redraw or level changed, redraw the entire meter
 
-    // First clear the entire meter area
+    // First clear the entire meter area with inversion disabled
+    props.invert_ = false;
     SetColor(CD_BACKGROUND);
     for (int i = 0; i < VU_METER_HEIGHT; i++) {
       DrawString(pos._x, pos._y - i, " ", props);
     }
 
-    // Then draw the active cells
+    // Then draw the active cells with inversion enabled
+    props.invert_ = true;
     for (int i = 0; i < leftBars; i++) {
       // Set appropriate color based on level
       if (i == VU_METER_CLIP_LEVEL) {
@@ -265,13 +263,15 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   if (forceRedraw || rightBars != prevRightVU_[vuIndex]) {
     // If forcing redraw or level changed, redraw the entire meter
 
-    // First clear the entire meter area
+    // First clear the entire meter area with inversion disabled
+    props.invert_ = false;
     SetColor(CD_BACKGROUND);
     for (int i = 0; i < VU_METER_HEIGHT; i++) {
       DrawString(pos._x + 1, pos._y - i, " ", props);
     }
 
-    // Then draw the active cells
+    // Then draw the active cells with inversion enabled
+    props.invert_ = true;
     for (int i = 0; i < rightBars; i++) {
       // Set appropriate color based on level
       if (i == VU_METER_CLIP_LEVEL) {
@@ -290,8 +290,6 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   // Store the current values for next time
   prevLeftVU_[vuIndex] = leftBars;
   prevRightVU_[vuIndex] = rightBars;
-
-  props.invert_ = false;
 }
 
 void View::drawPlayTime(Player *player, GUIPoint pos,

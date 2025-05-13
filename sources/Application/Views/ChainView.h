@@ -63,6 +63,11 @@ private:
 
   int saveRow_;
   int saveCol_;
+
+  // Flags to track which UI elements need updating
+  // These prevent core1 from directly updating the UI
+  bool needsUIUpdate_ =
+      false; // Single flag for notes, positions, and VU meter updates
 };
 
 #endif

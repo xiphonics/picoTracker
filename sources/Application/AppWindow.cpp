@@ -82,8 +82,7 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
   }
 }
 
-AppWindow::AppWindow(I_GUIWindowImp &imp)
-    : GUIWindow(imp), drawMutex_(platform_mutex()) {
+AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
 
   instance = this;
 
@@ -148,7 +147,6 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
                            GUITextProperties &props, bool force) {
 
   // we know we don't have more than SCREEN_WIDTH chars
-
   char buffer[SCREEN_WIDTH + 1];
   int len = strlen(string);
   int offset = (pos._x < 0) ? -pos._x / 8 : 0;
@@ -161,7 +159,8 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
   NAssert((pos._x < SCREEN_WIDTH) && (pos._y < SCREEN_HEIGHT));
   int index = pos._x + SCREEN_WIDTH * pos._y;
   memcpy(_charScreen + index, buffer, len);
-  unsigned char prop = colorIndex_ + (props.invert_ ? PROP_INVERT : 0);
+  // Ensure color index is masked to prevent overlap with inversion bit
+  unsigned char prop = (colorIndex_ & 0x7F) + (props.invert_ ? PROP_INVERT : 0);
   memset(_charScreenProp + index, prop, len);
 };
 
@@ -198,9 +197,6 @@ void AppWindow::ClearRect(GUIRect &r) {
 //
 
 void AppWindow::Redraw() {
-
-  SysMutexLocker locker(*drawMutex_);
-
   if (_currentView) {
     _currentView->Redraw();
     Invalidate();
@@ -213,13 +209,12 @@ void AppWindow::Redraw() {
 
 void AppWindow::Flush() {
 
-  SysMutexLocker locker(*drawMutex_);
-
   Lock();
 
   GUITextProperties props;
   GUIPoint pos;
 
+  // Start with an invalid color to force color setting on first character
   ColorDefinition color = (ColorDefinition)-1;
   pos._x = 0;
   pos._y = 0;
@@ -235,9 +230,14 @@ void AppWindow::Flush() {
 #ifndef _LGPT_NO_SCREEN_CACHE_
       if ((*current != *previous) || (*currentProp != *previousProp)) {
 #endif
+        // Extract invert flag from properties
         props.invert_ = (*currentProp & PROP_INVERT) != 0;
-        if (((*currentProp) & 0x7F) != color) {
-          color = (ColorDefinition)((*currentProp) & 0x7F);
+
+        // Extract color index from properties and check if it's different from
+        // current color
+        ColorDefinition charColor = (ColorDefinition)((*currentProp) & 0x7F);
+        if (charColor != color) {
+          color = charColor;
 
           // Initialize gcolor with a safe default to avoid uninitialized value
           // if switch falls through
@@ -701,7 +701,6 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
   case VET_PLAYER_POSITION_UPDATE: {
     PlayerEvent *pt = (PlayerEvent *)ve;
     if (_currentView) {
-      SysMutexLocker locker(*drawMutex_);
       // Check if the current view has a modal view
       if (_currentView->HasModalView()) {
         _currentView->GetModalView()->OnPlayerUpdate(pt->GetType(),
