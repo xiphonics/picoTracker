@@ -1370,11 +1370,7 @@ void PhraseView::AnimationUpdate() {
     // Create a memory barrier to ensure proper synchronization between cores
     createMemoryBarrier();
 
-    // Reset all individual flags for backward compatibility
-    needsPlayPositionUpdate_ = false;
     needsLiveIndicatorUpdate_ = false;
-    needsNotesUpdate_ = false;
-    needsVUMeterUpdate_ = false;
 
     // Reset the consolidated flag
     needsUIUpdate_ = false;

@@ -83,11 +83,7 @@ private:
   bool needsUIUpdate_ = false; // Single flag for all UI updates (notes, VU
                                // meter, positions, live indicators)
 
-  // Keep these for backward compatibility
-  bool needsPlayPositionUpdate_ = false;
   bool needsLiveIndicatorUpdate_ = false;
-  bool needsNotesUpdate_ = false;
-  bool needsVUMeterUpdate_ = false;
 
 #ifdef PICO_DEOPTIMIZED_DEBUG
   // These variables are specifically for thread synchronization in debug builds

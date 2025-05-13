@@ -140,59 +140,34 @@ void View::drawNotes() {
   GUITextProperties props;
 
   Player *player = Player::GetInstance();
-  bool isPlaying = player->IsRunning() && viewData_->playMode_ != PM_AUDITION;
 
-  // First draw all highlighted channels (selected channel)
   props.invert_ = true;
-  SetColor(CD_HILITE2);
-
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     if (i == viewData_->songX_) {
-      pos._x = initialX + (i * 3);
-      pos._y = initialY;
-
-      if (isPlaying) {
-        // Draw all three rows for this channel
-        DrawString(pos._x, pos._y, player->GetPlayedNote(i), props);
-        pos._y++;
-        DrawString(pos._x, pos._y, player->GetPlayedOctive(i), props);
-        pos._y++;
-        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i), props);
-      } else {
-        // Draw empty strings if not playing
-        DrawString(pos._x, pos._y, "  ", props);
-        pos._y++;
-        DrawString(pos._x, pos._y, "  ", props);
-        pos._y++;
-        DrawString(pos._x, pos._y, "  ", props);
-      }
+      SetColor(CD_HILITE2);
+    } else {
+      SetColor(CD_HILITE1);
     }
-  }
-
-  // Then draw all non-highlighted channels
-  SetColor(CD_HILITE1);
-
-  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    if (i != viewData_->songX_) {
-      pos._x = initialX + (i * 3);
-      pos._y = initialY;
-
-      if (isPlaying) {
-        // Draw all three rows for this channel
-        DrawString(pos._x, pos._y, player->GetPlayedNote(i), props);
-        pos._y++;
-        DrawString(pos._x, pos._y, player->GetPlayedOctive(i), props);
-        pos._y++;
-        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i), props);
-      } else {
-        // Draw empty strings if not playing
-        DrawString(pos._x, pos._y, "  ", props);
-        pos._y++;
-        DrawString(pos._x, pos._y, "  ", props);
-        pos._y++;
-        DrawString(pos._x, pos._y, "  ", props);
-      }
+    if (player->IsRunning() && viewData_->playMode_ != PM_AUDITION) {
+      DrawString(pos._x, pos._y, player->GetPlayedNote(i),
+                 props); // row for the note values
+      pos._y++;
+      DrawString(pos._x, pos._y, player->GetPlayedOctive(i),
+                 props); // row for the octive values
+      pos._y++;
+      DrawString(pos._x, pos._y, player->GetPlayedInstrument(i),
+                 props); // draw instrument number
+    } else {
+      DrawString(pos._x, pos._y, "  ", props); // row for the note
+                                               // values
+      pos._y++;
+      DrawString(pos._x, pos._y, "  ",
+                 props); // row for the octive values
+      pos._y++;
+      DrawString(pos._x, pos._y, "  ", props); // draw instrument number
     }
+    pos._y = initialY;
+    pos._x += 3;
   }
 }
 
@@ -256,9 +231,6 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
     }
   }
 
-  // Store original inversion state
-  bool originalInvert = props.invert_;
-
   // Left channel: Handle level changes
   if (forceRedraw || leftBars != prevLeftVU_[vuIndex]) {
     // If forcing redraw or level changed, redraw the entire meter
@@ -318,9 +290,6 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   // Store the current values for next time
   prevLeftVU_[vuIndex] = leftBars;
   prevRightVU_[vuIndex] = rightBars;
-
-  // Restore original inversion state
-  props.invert_ = originalInvert;
 }
 
 void View::drawPlayTime(Player *player, GUIPoint pos,
