@@ -2,6 +2,7 @@
 #include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/randomnames.h"
+#include "Application/Views/ImportView.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "BaseClasses/UIActionField.h"
@@ -12,10 +13,7 @@
 #include "BaseClasses/ViewEvent.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
-#ifdef PICOBUILD
-#include "hardware/watchdog.h"
-#include "pico/bootrom.h"
-#endif
+#include "platform.h"
 #include <nanoprintf.h>
 
 static void LoadCallback(View &v, ModalView &dialog) {
@@ -35,17 +33,15 @@ static void CreateNewProjectCallback(View &v, ModalView &dialog) {
     PersistencyService::GetInstance()->PurgeUnnamedProject();
 
     // now reboot!
-    watchdog_reboot(0, 0, 0);
+    platform_reboot();
   }
 };
 
-#ifdef PICOBUILD
 static void BootselCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    reset_usb_boot(0, 0);
+    platform_bootloader();
   }
 };
-#endif
 
 static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
   bool cancelOverwrite = dialog.GetReturnCode() == MBL_CANCEL;
@@ -102,24 +98,22 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   GUIPoint position = GetAnchor();
 
   Variable *v = project_->FindVariable(FourCC::VarTempo);
-  UITempoField *f =
-      new UITempoField(FourCC::ActionTempoChanged, position, *v,
-                       "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
-  fieldList_.insert(fieldList_.end(), f);
-  f->AddObserver(*this);
-  tempoField_ = f;
+  tempoFields_.emplace_back(FourCC::ActionTempoChanged, position, *v,
+                            "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
+  fieldList_.insert(fieldList_.end(), &(*tempoFields_.rbegin()));
+  (*tempoFields_.rbegin()).AddObserver(*this);
+  tempoField_ = &(*tempoFields_.rbegin());
 
   v = project_->FindVariable(FourCC::VarMasterVolume);
   position._y += 1;
-  UIIntVarField *f1 =
-      new UIIntVarField(position, *v, "master vol: %d%%", 0, 100, 1, 5);
-  fieldList_.insert(fieldList_.end(), f1);
+  intVarFields_.emplace_back(position, *v, "master vol: %d%%", 0, 100, 1, 5);
+  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
 
   v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
-  UIIntVarField *f2 =
-      new UIIntVarField(position, *v, "transpose: %3.2d", -48, 48, 0x1, 0xC);
-  fieldList_.insert(fieldList_.end(), f2);
+  intVarFields_.emplace_back(position, *v, "transpose: %3.2d", -48, 48, 0x1,
+                             0xC);
+  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
 
   v = project_->FindVariable(FourCC::VarScale);
   // if scale name is not found, set the default chromatic scale
@@ -127,22 +121,26 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
     v->SetInt(0);
   }
   position._y += 1;
-  UIIntVarField *f3 =
-      new UIIntVarField(position, *v, "scale: %s", 0, numScales - 1, 1, 10);
-  fieldList_.insert(fieldList_.end(), f3);
+  intVarFields_.emplace_back(position, *v, "scale: %s", 0, numScales - 1, 1,
+                             10);
+  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
 
   // Add Scale Root field
   position._y += 1;
   v = project_->FindVariable(FourCC::VarScaleRoot);
-  UIIntVarField *f4 =
-      new UIIntVarField(position, *v, "scale root: %s", 0, 11, 1, 1);
-  fieldList_.insert(fieldList_.end(), f4);
+  intVarFields_.emplace_back(position, *v, "scale root: %s", 0, 11, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
+
+  position._y += 2;
+  actionFields_.emplace_back("Import Sample", FourCC::ActionImport, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
 
   position._y += 1;
-  UIActionField *a1 = new UIActionField(
-      "Compact Instruments", FourCC::ActionPurgeInstrument, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
+  actionFields_.emplace_back("Compact Instruments",
+                             FourCC::ActionPurgeInstrument, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
 
   position._y += 2;
 
@@ -154,50 +152,51 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
       etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("project: ");
   auto defaultName = etl::make_string_with_capacity<MAX_PROJECT_NAME_LENGTH>(
       UNNAMED_PROJECT_NAME);
-  nameField_ = new UITextField<MAX_PROJECT_NAME_LENGTH>(
-      *v, position, label, FourCC::ActionProjectRename, defaultName);
+  textFields_.emplace_back(*v, position, label, FourCC::ActionProjectRename,
+                           defaultName);
+  nameField_ = &(*textFields_.rbegin());
 
   nameField_->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), nameField_);
 
   position._y += 1;
-  a1 = new UIActionField("Load", FourCC::ActionLoad, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
+  actionFields_.emplace_back("Load", FourCC::ActionLoad, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
 
   position._x += 5;
-  a1 = new UIActionField("Save", FourCC::ActionSave, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
+  actionFields_.emplace_back("Save", FourCC::ActionSave, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
 
   position._x += 5;
-  a1 = new UIActionField("New", FourCC::ActionNewProject, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
+  actionFields_.emplace_back("New", FourCC::ActionNewProject, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
 
   position._x += 5;
-  a1 = new UIActionField("Random", FourCC::ActionRandomName, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
+  actionFields_.emplace_back("Random", FourCC::ActionRandomName, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
   position._x = xalign;
 
   // Add rendering action fields
   position._y += 2;
 
   // Add a static field as a label for the render actions
-  UIStaticField *renderLabel = new UIStaticField(position, "Render:");
-  fieldList_.insert(fieldList_.end(), renderLabel);
+  staticFields_.emplace_back(position, "Render:");
+  fieldList_.insert(fieldList_.end(), &(*staticFields_.rbegin()));
 
   // Position the Mixdown action field to the right of the label
   position._x += 8;
-  a1 = new UIActionField("Mixdown", FourCC::ActionRenderMixdown, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
+  actionFields_.emplace_back("Mixdown", FourCC::ActionRenderMixdown, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
 
   position._x += 8;
-  a1 = new UIActionField("Stems", FourCC::ActionRenderStems, position);
-  a1->AddObserver(*this);
-  fieldList_.insert(fieldList_.end(), a1);
+  actionFields_.emplace_back("Stems", FourCC::ActionRenderStems, position);
+  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
+  (*actionFields_.rbegin()).AddObserver(*this);
   position._x = xalign;
 }
 
@@ -211,6 +210,15 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   FieldView::ProcessButtonMask(mask, pressed);
 
   if (mask & EPBM_NAV) {
+    if (mask & EPBM_DOWN || mask & EPBM_UP) {
+      if (saveAsFlag_) {
+        MessageBox *mb =
+            new MessageBox(*this, "Save project rename first", MBBF_OK);
+        DoModal(mb);
+        return;
+      }
+    }
+
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_SONG;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -223,13 +231,10 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       SetChanged();
       NotifyObservers(&ve);
     }
-  } else {
-    if (mask & EPBM_PLAY) {
-      Player *player = Player::GetInstance();
-      player->OnStartButton(PM_SONG, viewData_->songX_, false,
-                            viewData_->songX_);
-    }
-  };
+  } else if (mask & EPBM_PLAY) {
+    Player *player = Player::GetInstance();
+    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
+  }
 };
 
 void ProjectView::DrawView() {
@@ -348,7 +353,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     DoModal(mb, CreateNewProjectCallback);
     break;
   }
-#ifdef PICOBUILD
   case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
       MessageBox *mb =
@@ -360,7 +364,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   }
-#endif
 
   case FourCC::ActionTempoChanged:
     break;
@@ -384,6 +387,31 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       RenderProgressModal *renderDialog =
           new RenderProgressModal(*this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
+    }
+    break;
+  case FourCC::ActionImport:
+    // Switch to the ImportView for sample import
+    if (!player->IsRunning()) {
+      // First check if the samplelib exists
+      bool samplelibExists = FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
+
+      if (!samplelibExists) {
+        MessageBox *mb =
+            new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
+        DoModal(mb);
+      } else {
+        // Set the source view type before switching to ImportView
+        ImportView::SetSourceViewType(VT_PROJECT);
+
+        // Go to import sample
+        ViewType vt = VT_IMPORT;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    } else {
+      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      DoModal(mb);
     }
     break;
   default:

@@ -146,7 +146,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     lastCmd_ = *cc;
     break;
 
-  case 3:
+  case 3: {
     switch (direction) {
     case VUD_RIGHT:
       cmdEditField_->ProcessArrow(EPBM_RIGHT);
@@ -161,10 +161,17 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd =
+        *(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_ + yOffset));
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
     *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_ + yOffset)) =
-        cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+        paramValue;
+    lastParam_ = paramValue;
     break;
+  }
   case 4:
     cc = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset);
     switch (direction) {
@@ -198,9 +205,15 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       cmdEditField_->ProcessArrow(EPBM_DOWN);
       break;
     }
+    // Sanitize MIDI velocity values if needed
+    FourCC currentCmd =
+        *(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset));
+    ushort paramValue = cmdEdit_.GetInt();
+    paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
+    cmdEdit_.SetInt(paramValue);
     *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset)) =
-        cmdEdit_.GetInt();
-    lastParam_ = cmdEdit_.GetInt();
+        paramValue;
+    lastParam_ = paramValue;
     break;
   }
   if ((c) && (*c != 0xFF)) {

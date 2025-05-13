@@ -1,12 +1,10 @@
 add_library(tinyxml2
-  tinyxml2.h tinyxml2.cpp
-  tinyxml2adapter.h tinyxml2adapter.cpp
+  tinyxml2.cpp
+  tinyxml2adapter.cpp
 )
 
-target_link_libraries(tinyxml2 
-                                      PUBLIC system_filesystem
-                                      PUBLIC sdfat
-                                      PUBLIC platform_sdcard
+target_link_libraries(tinyxml2 PUBLIC
+  system_filesystem
 )
 
 target_include_directories(tinyxml2 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

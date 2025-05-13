@@ -1,18 +1,19 @@
 add_library(platform_gui
-  GUIFactory.h GUIFactory.cpp
-  picoTrackerGUIWindowImp.h picoTrackerGUIWindowImp.cpp
-  picoTrackerEventManager.h picoTrackerEventManager.cpp
-  SerialDebugUI.h SerialDebugUI.cpp
-  picoRemoteUI.h picoRemoteUI.cpp
+  GUIFactory.cpp
+  picoTrackerGUIWindowImp.cpp
+  picoTrackerEventManager.cpp
+  SerialDebugUI.cpp
+  picoRemoteUI.cpp
 )
 
-target_link_libraries(platform_gui PUBLIC uiframework_simplebaseclasses
-                                   PUBLIC system_console
-                                   PUBLIC uiframework_basicdatas
-                                   PUBLIC application
-                                   PUBLIC platform_display
-                                   PUBLIC platform_system
-                                   PUBLIC platform_usb
+target_link_libraries(platform_gui PUBLIC
+  uiframework_simplebaseclasses
+  system_console
+  uiframework_basicdatas
+  application
+  platform_display
+  platform_system
+  platform_usb
 )
 
 target_include_directories(platform_gui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

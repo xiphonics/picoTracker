@@ -28,7 +28,7 @@ public:
 
   virtual Channel *GetChannel(const char *name);
   virtual bool IsRunning();
-  virtual void Trigger(Time time);
+  virtual void Trigger();
 
   // New methods for direct instrument mapping
   static void AssignInstrumentToChannel(int midiChannel, int instrumentIndex);

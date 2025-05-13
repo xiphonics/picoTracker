@@ -1,9 +1,6 @@
 #ifndef _MACRO_INSTRUMENT_H_
 #define _MACRO_INSTRUMENT_H_
 
-#include "I_Instrument.h"
-#include "pico/stdlib.h"
-
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/braids/envelope.h"
@@ -14,6 +11,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
+#include "I_Instrument.h"
 
 class MacroInstrument : public I_Instrument, I_Observer {
 

@@ -14,8 +14,6 @@
 
 #include <math.h>
 
-etl::string<MAX_PROJECT_NAME_LENGTH> Project::ProjectNameGlobal;
-
 Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
@@ -54,7 +52,7 @@ Project::Project(const char *name)
   scaleRoot_.SetInt(0); // Default to C (0)
   this->variables_.insert(variables_.end(), &projectName_);
 
-  Project::ProjectNameGlobal = etl::string<16>(name);
+  // Project name is now managed through the WatchedVariable
 
   static char instrumentBankMemBuf[sizeof(InstrumentBank)];
   instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
@@ -262,7 +260,7 @@ void Project::PurgeInstruments(bool removeFromDisk) {
   // now see if any samples isn't used and get rid if them if needed
   if (removeFromDisk) {
     // clear used flag
-    bool isUsed[MAX_PIG_SAMPLES] = {false};
+    bool isUsed[MAX_SAMPLES] = {false};
 
     // flag all samples actually used
     for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
@@ -278,7 +276,7 @@ void Project::PurgeInstruments(bool removeFromDisk) {
     // Now remove all unused samples from disk
     int purged = 0;
     SamplePool *sp = SamplePool::GetInstance();
-    for (int i = 0; i < MAX_PIG_SAMPLES; i++) {
+    for (int i = 0; i < MAX_SAMPLES; i++) {
       if ((!isUsed[i]) && (sp->GetSource(i - purged))) {
         char projName[MAX_PROJECT_NAME_LENGTH];
         sp->PurgeSample(i - purged, projectName_.GetString().c_str());

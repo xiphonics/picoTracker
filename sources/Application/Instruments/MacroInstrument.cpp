@@ -9,7 +9,6 @@
 #include "Services/Audio/Audio.h"
 #include "System/Console/Trace.h"
 #include "System/io/Status.h"
-#include "pico/rand.h"
 #include <assert.h>
 
 MacroInstrument::MacroInstrument()
@@ -39,7 +38,7 @@ bool MacroInstrument::Init() {
   // we shouldn't need a quantizer
   //  quantizer_.Init();
   envelope_.Init();
-  ws_.Init(get_rand_32());
+  ws_.Init(platform_get_rand());
   jitter_source_.Init();
 
   return true;

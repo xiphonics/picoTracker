@@ -1,5 +1,4 @@
 #include "ImportView.h"
-
 #include "Application/AppWindow.h"
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -7,7 +6,6 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
-#include "pico/multicore.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -18,10 +16,16 @@
 // is single cycle macro, checks for FILE size of LGPT and AKWF file formats
 #define IS_SINGLE_CYCLE(x) (x == 1344 || x == 300)
 
+// Initialize static member
+ViewType ImportView::sourceViewType_ = VT_PROJECT;
+
 ImportView::ImportView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData) {}
 
 ImportView::~ImportView() {}
+
+// Static method to set the source view type before opening ImportView
+void ImportView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // Check for key release events
@@ -94,9 +98,8 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
-    // Go to back "left" to instrument screen
-    ViewType vt = VT_INSTRUMENT;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    // Go back to the source view that opened the ImportView
+    ViewEvent ve(VET_SWITCH_VIEW, &sourceViewType_);
     SetChanged();
     NotifyObservers(&ve);
     return;
@@ -310,13 +313,7 @@ void ImportView::import(char *name) {
   }
 
   SamplePool *pool = SamplePool::GetInstance();
-
-  // Pause core1 in order to be able to write to flash and ensure core1 is
-  // not reading from it, it also disables IRQs on it
-  // https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#multicore_lockout
-  multicore_lockout_start_blocking();
   int sampleID = pool->ImportSample(name, projName);
-  multicore_lockout_end_blocking();
 
   if (sampleID >= 0) {
     I_Instrument *instr =

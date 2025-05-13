@@ -6,17 +6,16 @@
  *  Copyright 2012 __MyCompanyName__. All rights reserved.
  *
  */
-#include "pico/mutex.h"
+
+#ifndef _SYS_MUTEX_H_
+#define _SYS_MUTEX_H_
 
 class SysMutex {
 public:
-  SysMutex();
-  ~SysMutex();
-  bool Lock();
-  void Unlock();
-
-private:
-  mutex_t *mutex_;
+  SysMutex(){};
+  ~SysMutex(){};
+  virtual bool Lock() = 0;
+  virtual void Unlock() = 0;
 };
 
 class SysMutexLocker {
@@ -27,3 +26,5 @@ public:
 private:
   SysMutex *mutex_;
 };
+
+#endif

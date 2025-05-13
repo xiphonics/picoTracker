@@ -12,9 +12,6 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-# Make this a picoTracker build within the project
-add_definitions(-DPICOBUILD)
-
 # For debugging purposes, print all mallocs
 # add_definitions(-DPICO_DEBUG_MALLOC)
 # add_definitions(-DPICOSTATS)
@@ -22,8 +19,6 @@ add_definitions(-DPICOBUILD)
 # add_definitions(-DSHOW_MEM_USAGE)
 # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
 # add_definitions(-DSDIO_BENCH)
-# Enable loading samples into Flash
-add_definitions(-DLOAD_IN_FLASH)
 # Disable MIDI. Enable in order to use UART0 as stdio for debugging
 # add_definitions(-DDUMMY_MIDI)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
@@ -47,6 +42,9 @@ add_compile_definitions(${USE_LCD})
 # Needed for ETL to pick up our etl_profile.h
 include_directories("config/")
 
+# platform specific implementations
+include_directories("Adapters/picoTracker/platform/")
+
 # Enable ETL debug mode only for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(ETL_DEBUG)
@@ -54,6 +52,31 @@ endif()
 
 # Initialize the SDK
 pico_sdk_init()
+
+link_libraries(
+  pico_stdlib
+  pico_sync
+  pico_multicore
+  pico_rand
+  pico_unique_id
+  tinyusb_board
+  tinyusb_device
+  hardware_pio
+  hardware_irq
+  hardware_clocks
+  hardware_dma
+  hardware_gpio
+  hardware_spi
+  hardware_watchdog
+  hardware_vreg
+  hardware_uart
+  hardware_pll
+  hardware_adc
+  hardware_flash
+)
+
+add_subdirectory(Adapters/picoTracker)
+add_subdirectory(Externals/SdFat)
 
 add_compile_options(
   -Werror
@@ -70,7 +93,6 @@ add_compile_options(
   -Wno-array-bounds
 )
 
-add_subdirectory(Adapters)
 add_subdirectory(UIFramework)
 add_subdirectory(System)
 add_subdirectory(Application)

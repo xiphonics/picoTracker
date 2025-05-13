@@ -8,6 +8,7 @@
 #else
 #include "Adapters/picoTracker/midi/picoTrackerMidiService.h"
 #endif
+#include "Adapters/picoTracker/system/picoTrackerSamplePool.h"
 #include "Application/Commands/NodeList.h"
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
@@ -84,6 +85,10 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   hint.preBufferCount_ = 8;
   static char audioMemBuf[sizeof(picoTrackerAudio)];
   Audio::Install(new (audioMemBuf) picoTrackerAudio(hint));
+
+  // Install SamplePool
+  static char samplePoolMemBuf[sizeof(picoTrackerSamplePool)];
+  SamplePool::Install(new (samplePoolMemBuf) picoTrackerSamplePool());
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
