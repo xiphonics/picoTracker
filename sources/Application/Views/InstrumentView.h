@@ -50,7 +50,6 @@ private:
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
-  InstrumentType currentType_ = IT_NONE;
 
   // Store the proposed instrument type when changing types
   InstrumentType proposedType_ = IT_NONE;
