@@ -82,7 +82,6 @@ I_Instrument *InstrumentView::getInstrument() {
 
 void InstrumentView::onInstrumentTypeChange(bool updateUI) {
   auto nuType = (InstrumentType)instrumentType_.GetInt();
-  Trace::Log("INSTRUMENTVIEW", "UPDATE type:%d", nuType);
   I_Instrument *old = getInstrument();
 
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
@@ -94,8 +93,6 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
     // user is at end of instrument list and just keeps pressing key combo to
     // trigger next instrument event again and again
     if (old->GetType() == nuType) {
-      Trace::Log("INSTRUMENTVIEW", "Instrument type no change old:%d new:%d",
-                 old->GetType(), nuType);
       if (updateUI) {
         refreshInstrumentFields();
       }
@@ -864,17 +861,15 @@ void InstrumentView::OnFocus() {
   if (instr) {
     // Update the instrument type field to match the current instrument
     InstrumentType currentType = instr->GetType();
-    Trace::Log("INSTRUMENTVIEW", "Current instrument type: %d", currentType);
 
     // Only update if the type has changed
     if (instrumentType_.GetInt() != currentType) {
-      Trace::Log("INSTRUMENTVIEW", "Updating instrument type from %d to %d",
+      Trace::Log("INSTRUMENTVIEW",
+                 "OnFocus instrument type changed from %d to %d",
                  instrumentType_.GetInt(), currentType);
       // Set the instrument type without triggering the observer update
       // because we dont want the observer to do its normal check for a modified
       // instrument
-      ((WatchedVariable *)&instrumentType_)->SetInt(currentType, false);
-      // Apply the proposed type change immediately
       instrumentType_.SetInt(currentType, false);
       // need to force refresh of UI fields as instrument type may not have
       // changed but still need to draw all the fields for the first time
@@ -900,10 +895,6 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     // Store the proposed instrument type BEFORE we revert the UI
     InstrumentType proposedType = (InstrumentType)instrumentType_.GetInt();
 
-    // Log the current and proposed types for debugging
-    Trace::Log("INSTRUMENTVIEW", "User wants to change from type %d to type %d",
-               currentType, proposedType);
-
     // Revert the UI field back to the current type until confirmed
     instrumentType_.SetInt(currentType, false);
 
@@ -922,10 +913,6 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                 [this, currentType, proposedType](View &v, ModalView &dialog) {
                   if (dialog.GetReturnCode() == MBL_YES) {
                     // Apply the proposed type change when user confirms
-                    Trace::Log("INSTRUMENTVIEW",
-                               "Changing from type %d to proposed type %d",
-                               currentType, proposedType);
-
                     instrumentType_.SetInt(proposedType, false);
                     onInstrumentTypeChange();
                   }
