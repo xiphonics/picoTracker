@@ -25,7 +25,7 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
   virtual void AnimationUpdate();
-  void onInstrumentTypeChange();
+  void onInstrumentTypeChange(bool updateUI = false);
   bool checkInstrumentModified();
   void resetInstrumentToDefaults();
 
@@ -42,7 +42,7 @@ protected:
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
-  void refreshInstrumentFields(const I_Instrument *old);
+  void refreshInstrumentFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void handleInstrumentExport();
 
@@ -50,9 +50,6 @@ private:
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
-
-  // Store the proposed instrument type when changing types
-  InstrumentType proposedType_ = IT_NONE;
 
   // Variables for export confirmation dialog
   I_Instrument *exportInstrument_ = nullptr;
