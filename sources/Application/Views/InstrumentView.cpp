@@ -21,12 +21,13 @@ static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     // Apply the proposed type change when user confirms
     InstrumentView &instrumentView = (InstrumentView &)v;
-    instrumentView.applyProposedTypeChange();
+    instrumentView.applyProposedTypeChangeUI();
     instrumentView.onInstrumentTypeChange();
     Trace::Log("INSTRUMENTVIEW", "instrument type changed!!");
   }
   // If user selects No, we don't need to do anything as the UI already shows
-  // the current type not the proposed type
+  // the current type not the proposed type change that the user decided to
+  // reject
 };
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
@@ -112,11 +113,28 @@ void InstrumentView::onInstrumentTypeChange() {
   }
 
   // now assign new instrument type to the current instrument slot id
-  bank->GetNextAndAssignID(nuType, id);
+  unsigned short result = bank->GetNextAndAssignID(nuType, id);
 
+  if (result == NO_MORE_INSTRUMENT) {
+    Trace::Log("INSTRUMENTVIEW", "Failed to assign new instrument type");
+    return;
+  }
+
+  // Update our cached current type
   currentType_ = nuType;
 
+  // Get the new instrument after type change
+  I_Instrument *newInstr = getInstrument();
+  if (newInstr) {
+    Trace::Log("INSTRUMENTVIEW", "New instrument type: %d",
+               newInstr->GetType());
+  }
+
+  // Refresh the UI fields for the new instrument type
   refreshInstrumentFields(old);
+
+  // Mark the view as dirty to ensure it gets redrawn
+  isDirty_ = true;
 }
 
 void InstrumentView::onInstrumentChange() {
@@ -902,7 +920,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         DoModal(mb, ChangeInstrumentTypeCallback);
       } else {
         // Apply the proposed type change immediately if not modified
-        applyProposedTypeChange();
+        applyProposedTypeChangeUI();
         onInstrumentTypeChange();
       }
     } else {
@@ -947,9 +965,11 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
   }
 }
 
-void InstrumentView::applyProposedTypeChange() {
+void InstrumentView::applyProposedTypeChangeUI() {
   // Apply the proposed instrument type change to the UI field
-  instrumentType_.SetInt(proposedType_);
+  // Use false to avoid triggering another update
+  instrumentType_.SetInt(proposedType_, false);
+
   // Update the current type to match
   currentType_ = proposedType_;
 }

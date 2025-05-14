@@ -26,10 +26,11 @@ public:
   virtual void OnFocus();
   virtual void AnimationUpdate();
   void onInstrumentTypeChange();
-  void applyProposedTypeChange();
-
   bool checkInstrumentModified();
   void resetInstrumentToDefaults();
+
+  // only public to allow to be called from modal dialog static callback
+  void applyProposedTypeChangeUI();
 
 protected:
   void warpToNext(int offset);
