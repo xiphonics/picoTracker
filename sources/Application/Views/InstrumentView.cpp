@@ -859,9 +859,6 @@ void InstrumentView::DrawView() {
 void InstrumentView::OnFocus() {
   Trace::Log("INSTRUMENTVIEW", "onFocus");
 
-  // Make sure we're observing the instrument type
-  ((WatchedVariable *)&instrumentType_)->AddObserver(*this);
-
   // Get the current instrument
   I_Instrument *instr = getInstrument();
   if (instr) {
