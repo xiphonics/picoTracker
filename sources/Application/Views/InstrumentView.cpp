@@ -269,11 +269,11 @@ void InstrumentView::fillSampleParameters() {
 
   position._x += 10;
   Variable *s = instrument->FindVariable(FourCC::SampleInstrumentSlices);
-  intVarField_.emplace_back(position, *s, "Slices: %d", 1, 64, 1, 8);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  intVarOffField_.emplace_back(position, *s, "Slices: %d", 2, 64, 1, 8);
+  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 
   // add observer
-  (*intVarField_.rbegin()).AddObserver(*this);
+  (*intVarOffField_.rbegin()).AddObserver(*this);
 
   position._x -= 10;
   position._y += 1;

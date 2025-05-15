@@ -63,11 +63,11 @@ private:
 
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIActionField, 2> actionField_;
-  etl::vector<UIIntVarField, 40> intVarField_;
+  etl::vector<UIIntVarField, 39> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
-  etl::vector<UIIntVarOffField, 1> intVarOffField_;
+  etl::vector<UIIntVarOffField, 2> intVarOffField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
   etl::vector<InstrumentNameVariable, 1> nameVariables_;

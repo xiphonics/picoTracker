@@ -37,7 +37,7 @@ SampleInstrument::SampleInstrument()
       crush_(FourCC::SampleInstrumentCrush, 16),
       drive_(FourCC::SampleInstrumentCrushVolume, 0xFF),
       downsample_(FourCC::SampleInstrumentDownsample, 0),
-      slices_(FourCC::SampleInstrumentSlices, 1),
+      slices_(FourCC::SampleInstrumentSlices, -1),
       rootNote_(FourCC::SampleInstrumentRootNote, 60),
       fineTune_(FourCC::SampleInstrumentFineTune, 0x7F),
       pan_(FourCC::SampleInstrumentPan, 0x7F),
@@ -155,7 +155,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // Explicit slicing, we tell how we want the sample file to be interpreted
   int32_t slicedStart = 0;
   if (!source_->IsMulti()) {
-    if (slices_.GetInt() == 1) {
+    if (slices_.GetInt() == -1) {
       // single sample mode
       rp->rendLoopStart_ = loopStart_.GetInt();
       rp->rendLoopEnd_ = loopEnd_.GetInt();
