@@ -25,11 +25,12 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
   virtual void AnimationUpdate();
-  void onInstrumentTypeChange();
-  void applyProposedTypeChange();
-
+  void onInstrumentTypeChange(bool updateUI = false);
   bool checkInstrumentModified();
   void resetInstrumentToDefaults();
+
+  // only public to allow to be called from modal dialog static callback
+  void applyProposedTypeChangeUI();
 
 protected:
   void warpToNext(int offset);
@@ -41,7 +42,7 @@ protected:
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
-  void refreshInstrumentFields(const I_Instrument *old);
+  void refreshInstrumentFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void handleInstrumentExport();
 
@@ -49,10 +50,6 @@ private:
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
-  InstrumentType currentType_ = IT_NONE;
-
-  // Store the proposed instrument type when changing types
-  InstrumentType proposedType_ = IT_NONE;
 
   // Variables for export confirmation dialog
   I_Instrument *exportInstrument_ = nullptr;

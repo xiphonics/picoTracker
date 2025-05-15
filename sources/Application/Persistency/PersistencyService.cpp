@@ -1,6 +1,6 @@
 #include "PersistencyService.h"
 #include "../Instruments/SamplePool.h"
-#include "../Model/Project.h"
+
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
@@ -287,17 +287,8 @@ PersistencyResult PersistencyService::ExportInstrument(
 
   tinyxml2::XMLPrinter printer(fp);
 
-  // Open root element for the instrument file
-  printer.OpenElement("INSTRUMENT");
-
-  // Add firmware version information
-  printer.PushAttribute("VERSION", PROJECT_NUMBER);
-
   // Use the instrument's Persistent interface to save its data
   instrument->Save(&printer);
-
-  // Close the root element
-  printer.CloseElement();
 
   fp->Close();
   return PERSIST_SAVED;

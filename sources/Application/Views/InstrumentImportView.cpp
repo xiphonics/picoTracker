@@ -268,8 +268,16 @@ void InstrumentImportView::importInstrument(char *name) {
 
     // Show success message and return to instrument view
     MessageBox *mb = new MessageBox(*this, "Import successful", MBBF_OK);
-    DoModal(mb, [](View &v, ModalView &dialog) {
+    DoModal(mb, [this, instrument](View &v, ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_OK) {
+        // Log that we're about to switch back to the instrument view
+        Trace::Log("INSTRUMENTIMPORT",
+                   "Switching back to instrument view with ID: %d", toInstrID_);
+
+        // Force another notification to ensure the UI updates when we return
+        instrument->SetChanged();
+        instrument->NotifyObservers();
+
         // Switch back to the instrument view
         ViewType vt = VT_INSTRUMENT;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
