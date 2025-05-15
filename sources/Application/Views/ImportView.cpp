@@ -306,8 +306,11 @@ void ImportView::import(char *name) {
   if (nameLength > MAX_INSTRUMENT_FILENAME_LENGTH) {
     Trace::Log("PICOIMPORT", "Filename too long: %s (%zu chars, max is %d)",
                name, nameLength, MAX_INSTRUMENT_FILENAME_LENGTH);
+    char sizeMesg[20];
+    npf_snprintf(sizeMesg, sizeof(sizeMesg), "Max is %02d chars",
+                 MAX_INSTRUMENT_FILENAME_LENGTH);
     MessageBox *mb =
-        new MessageBox(*this, "Filename too long", "Max is 24 chars", MBBF_OK);
+        new MessageBox(*this, "Filename too long", sizeMesg, MBBF_OK);
     DoModal(mb);
     return;
   }
