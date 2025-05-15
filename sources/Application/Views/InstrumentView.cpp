@@ -652,6 +652,10 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   isDirty_ = false;
 
+  // Call the parent class's implementation first to ensure action fields like
+  // Export, Import work correctly
+  FieldView::ProcessButtonMask(mask, pressed);
+
   Player *player = Player::GetInstance();
 
   if (mask == EPBM_ENTER) {
@@ -740,8 +744,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else {
     // viewMode_ = VM_NORMAL;
   }
-
-  FieldView::ProcessButtonMask(mask, pressed);
 
   // EDIT Modifier
   if (mask & EPBM_EDIT) {
@@ -1044,20 +1046,18 @@ void InstrumentView::handleInstrumentExport() {
       MessageBox *mb = new MessageBox(*this, confirmMsg.c_str(), name.c_str(),
                                       MBBF_YES | MBBF_NO);
 
-      // Store the instrument and name for use in the callback
-      exportInstrument_ = instrument;
-      exportName_ = name;
-
-      DoModal(mb, [](View &v, ModalView &dialog) {
+      // Use a lambda function with captures to avoid using class members
+      DoModal(mb, [this, instrument, name](View &v, ModalView &dialog) {
         if (dialog.GetReturnCode() == MBL_YES) {
-          // User confirmed override, call ExportInstrument with
-          // overwrite=true
-          InstrumentView &iv = (InstrumentView &)v;
+          // User confirmed override, call ExportInstrument with overwrite=true
 
           // Re-export the instrument with overwrite flag set to true
           PersistencyResult result =
-              PersistencyService::GetInstance()->ExportInstrument(
-                  iv.exportInstrument_, iv.exportName_, true);
+              PersistencyService::GetInstance()->ExportInstrument(instrument,
+                                                                  name, true);
+
+          Trace::Log("INSTRUMENTVIEW",
+                     "Instrument '%s' exported with overwrite", name.c_str());
 
           // TODO: unfortunately we can't show the result message here
           // because we're in a modal already and showing a model from result
