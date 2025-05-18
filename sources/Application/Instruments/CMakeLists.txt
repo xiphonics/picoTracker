@@ -24,6 +24,7 @@ target_link_libraries(application_instruments PUBLIC
   opal
   etl
   application_utils
+  Performance
 )
 
 target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

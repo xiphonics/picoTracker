@@ -1,4 +1,6 @@
 #include "opal.h"
+#include "System/Performance/Profiler.h"
+#include <math.h>
 
 const uint16_t Opal::RateTables[4][8] = {
     {1, 0, 1, 0, 1, 0, 1, 0},
