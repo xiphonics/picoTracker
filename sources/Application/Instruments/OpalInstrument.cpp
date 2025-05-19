@@ -132,6 +132,16 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   opl_.Port(0x80 + CHANNEL, (uint8_t)(adsr1 & 0x00FF));
   opl_.Port(0x81 + CHANNEL, (uint8_t)(adsr2 & 0x00FF));
 
+  // Set vibrato/tremolo depth (0xBD)
+  // Bit 6: Enable vibrato depth (1 = deep, 0 = normal)
+  // Bit 5: Enable tremolo depth (1 = deep, 0 = normal)
+  uint8_t vibratoTremolo = 0x00;
+  if (deepTremeloVibrato_.GetInt() > 0) {
+    vibratoTremolo |= 0x40; // Enable deep vibrato
+    vibratoTremolo |= 0x20; // Enable deep tremolo
+  }
+  opl_.Port(0xBD, vibratoTremolo);
+
   return true;
 };
 
@@ -143,7 +153,7 @@ void OpalInstrument::Stop(int c) {
 bool OpalInstrument::Render(int channel, fixed *buffer, int size,
                             bool updateTick) {
   PROFILE_SCOPE("OpalInstrument::Render");
-  
+
   // optimise to remove function calls in hot loop
   opl_.SampleBuffer(buffer, size);
 
