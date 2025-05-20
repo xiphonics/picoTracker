@@ -94,7 +94,7 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
     // trigger next instrument event again and again
     if (old->GetType() == nuType) {
       if (updateUI) {
-        refreshInstrumentFields(old, FourCC::VarInstrumentType);
+        refreshInstrumentFields();
       }
       return;
     }
@@ -118,7 +118,7 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
   }
 
   // Refresh the UI fields for the new instrument type
-  refreshInstrumentFields(old, FourCC::VarInstrumentType);
+  refreshInstrumentFields();
 
   // Mark the view as dirty to ensure it gets redrawn
   isDirty_ = true;
@@ -138,11 +138,10 @@ void InstrumentView::onInstrumentChange() {
   // update type field to match current instrument
   ((WatchedVariable *)&instrumentType_)->SetInt(getInstrument()->GetType());
 
-  refreshInstrumentFields(old, FourCC::VarInstrumentType);
+  refreshInstrumentFields();
 };
 
-void InstrumentView::refreshInstrumentFields(const I_Instrument *old,
-                                             FourCC focus) {
+void InstrumentView::refreshInstrumentFields(FourCC focus) {
   for (auto &f : intVarField_) {
     f.RemoveObserver(*this);
   }
@@ -970,7 +969,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     ls->SetInt((((SampleInstrument *)instrument)->GetSampleSize() - 1) /
                    slices->GetInt(),
                true);
-    refreshInstrumentFields(instrument, FourCC::SampleInstrumentSlices);
+    refreshInstrumentFields(FourCC::SampleInstrumentSlices);
   } break;
   case FourCC::MidiInstrumentProgram: {
     // When program value changes, send a MIDI Program Change message

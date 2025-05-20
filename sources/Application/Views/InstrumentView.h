@@ -42,8 +42,7 @@ protected:
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
-  void refreshInstrumentFields(const I_Instrument *old,
-                               FourCC focus = FourCC::VarInstrumentType);
+  void refreshInstrumentFields(FourCC focus = FourCC::VarInstrumentType);
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void handleInstrumentExport();
 
