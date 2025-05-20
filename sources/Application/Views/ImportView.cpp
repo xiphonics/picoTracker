@@ -300,6 +300,21 @@ void ImportView::import(char *name) {
     return;
   }
 
+  // Check if the filename is too long
+  size_t nameLength = strlen(name);
+
+  if (nameLength > MAX_INSTRUMENT_FILENAME_LENGTH) {
+    Trace::Log("PICOIMPORT", "Filename too long: %s (%zu chars, max is %d)",
+               name, nameLength, MAX_INSTRUMENT_FILENAME_LENGTH);
+    char sizeMesg[20];
+    npf_snprintf(sizeMesg, sizeof(sizeMesg), "Max is %02d chars",
+                 MAX_INSTRUMENT_FILENAME_LENGTH);
+    MessageBox *mb =
+        new MessageBox(*this, "Filename too long", sizeMesg, MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
   // Get current project name
   char projName[MAX_PROJECT_NAME_LENGTH];
   viewData_->project_->GetProjectName(projName);

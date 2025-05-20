@@ -262,7 +262,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(VarUIFont, "UIFONT")
-  ETL_ENUM_TYPE(VarScaleRoot, "SCALEROOT")
+  ETL_ENUM_TYPE(VarScaleRoot, "scaleroot")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
   ETL_ENUM_TYPE(MacroInstrmentTimbre, "timbre")
   ETL_ENUM_TYPE(MacroInstrumentColor, "color")

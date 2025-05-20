@@ -1,4 +1,5 @@
 #include "I_Instrument.h"
+#include "../Model/Project.h"
 #include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
 
@@ -7,6 +8,8 @@ I_Instrument::~I_Instrument() {
 }
 
 void I_Instrument::SaveContent(tinyxml2::XMLPrinter *printer) {
+  // Add firmware version information
+  printer->PushAttribute("VERSION", PROJECT_NUMBER);
   // Save the instrument type
   printer->PushAttribute("TYPE", InstrumentTypeNames[GetType()]);
 

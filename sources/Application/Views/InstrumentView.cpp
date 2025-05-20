@@ -17,18 +17,6 @@
 #include <cstdint>
 #include <nanoprintf.h>
 
-static void ChangeInstrumentTypeCallback(View &v, ModalView &dialog) {
-  if (dialog.GetReturnCode() == MBL_YES) {
-    // Apply the proposed type change when user confirms
-    InstrumentView &instrumentView = (InstrumentView &)v;
-    instrumentView.applyProposedTypeChange();
-    instrumentView.onInstrumentTypeChange();
-    Trace::Log("INSTRUMENTVIEW", "instrument type changed!!");
-  }
-  // If user selects No, we don't need to do anything as the UI already shows
-  // the current type not the proposed type
-};
-
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
                                           InstrumentTypeNames, IT_LAST, 0) {
@@ -92,9 +80,8 @@ I_Instrument *InstrumentView::getInstrument() {
   return bank->GetInstrument(id);
 };
 
-void InstrumentView::onInstrumentTypeChange() {
+void InstrumentView::onInstrumentTypeChange(bool updateUI) {
   auto nuType = (InstrumentType)instrumentType_.GetInt();
-  Trace::Log("INSTRUMENTVIEW", "UPDATE type:%d", nuType);
   I_Instrument *old = getInstrument();
 
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
@@ -106,17 +93,35 @@ void InstrumentView::onInstrumentTypeChange() {
     // user is at end of instrument list and just keeps pressing key combo to
     // trigger next instrument event again and again
     if (old->GetType() == nuType) {
+      if (updateUI) {
+        refreshInstrumentFields(old, FourCC::VarInstrumentType);
+      }
       return;
     }
     bank->releaseInstrument(viewData_->currentInstrumentID_);
   }
 
   // now assign new instrument type to the current instrument slot id
-  bank->GetNextAndAssignID(nuType, id);
+  unsigned short result = bank->GetNextAndAssignID(nuType, id);
 
-  currentType_ = nuType;
+  if (result == NO_MORE_INSTRUMENT) {
+    Trace::Log("INSTRUMENTVIEW", "Failed to assign new instrument type");
+    // TODO: need to show user some sort of error message here
+    return;
+  }
 
-  refreshInstrumentFields(old);
+  // Get the new instrument after type change
+  I_Instrument *newInstr = getInstrument();
+  if (newInstr) {
+    Trace::Log("INSTRUMENTVIEW", "New instrument type: %d",
+               newInstr->GetType());
+  }
+
+  // Refresh the UI fields for the new instrument type
+  refreshInstrumentFields(old, FourCC::VarInstrumentType);
+
+  // Mark the view as dirty to ensure it gets redrawn
+  isDirty_ = true;
 }
 
 void InstrumentView::onInstrumentChange() {
@@ -133,7 +138,7 @@ void InstrumentView::onInstrumentChange() {
   // update type field to match current instrument
   ((WatchedVariable *)&instrumentType_)->SetInt(getInstrument()->GetType());
 
-  refreshInstrumentFields(old);
+  refreshInstrumentFields(old, FourCC::VarInstrumentType);
 };
 
 void InstrumentView::refreshInstrumentFields(const I_Instrument *old,
@@ -232,9 +237,7 @@ void InstrumentView::refreshInstrumentFields(const I_Instrument *old,
     f.AddObserver(*this);
   }
 
-  if (getInstrument() != old) {
-    getInstrument()->AddObserver(*this);
-  }
+  getInstrument()->AddObserver(*this);
 }
 
 void InstrumentView::fillNoneParameters() {}
@@ -662,6 +665,10 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   isDirty_ = false;
 
+  // Call the parent class's implementation first to ensure action fields like
+  // Export, Import work correctly
+  FieldView::ProcessButtonMask(mask, pressed);
+
   Player *player = Player::GetInstance();
 
   if (mask == EPBM_ENTER) {
@@ -750,8 +757,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else {
     // viewMode_ = VM_NORMAL;
   }
-
-  FieldView::ProcessButtonMask(mask, pressed);
 
   // EDIT Modifier
   if (mask & EPBM_EDIT) {
@@ -866,26 +871,26 @@ void InstrumentView::DrawView() {
 void InstrumentView::OnFocus() {
   Trace::Log("INSTRUMENTVIEW", "onFocus");
 
-  // Make sure we're observing the instrument type
-  ((WatchedVariable *)&instrumentType_)->AddObserver(*this);
-
   // Get the current instrument
   I_Instrument *instr = getInstrument();
   if (instr) {
     // Update the instrument type field to match the current instrument
     InstrumentType currentType = instr->GetType();
-    Trace::Log("INSTRUMENTVIEW", "Current instrument type: %d", currentType);
 
     // Only update if the type has changed
     if (instrumentType_.GetInt() != currentType) {
-      Trace::Log("INSTRUMENTVIEW", "Updating instrument type from %d to %d",
+      Trace::Log("INSTRUMENTVIEW",
+                 "OnFocus instrument type changed from %d to %d",
                  instrumentType_.GetInt(), currentType);
-      ((WatchedVariable *)&instrumentType_)->SetInt(currentType);
+      // Set the instrument type without triggering the observer update
+      // because we dont want the observer to do its normal check for a modified
+      // instrument
+      instrumentType_.SetInt(currentType, false);
+      // need to force refresh of UI fields as instrument type may not have
+      // changed but still need to draw all the fields for the first time
+      onInstrumentTypeChange(true);
     }
   }
-
-  // Force a full refresh of the view
-  onInstrumentChange();
 }
 
 void InstrumentView::Update(Observable &o, I_ObservableData *data) {
@@ -898,11 +903,15 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
 
   switch (fourcc) {
   case FourCC::VarInstrumentType: {
-    // Store the proposed instrument type
-    proposedType_ = (InstrumentType)instrumentType_.GetInt();
+    // Get the current instrument to determine its actual type
+    I_Instrument *instr = getInstrument();
+    InstrumentType currentType = instr ? instr->GetType() : IT_NONE;
+
+    // Store the proposed instrument type BEFORE we revert the UI
+    InstrumentType proposedType = (InstrumentType)instrumentType_.GetInt();
 
     // Revert the UI field back to the current type until confirmed
-    instrumentType_.SetInt(currentType_, false);
+    instrumentType_.SetInt(currentType, false);
 
     // Check if player is running
     Player *player = Player::GetInstance();
@@ -912,10 +921,23 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (instrumentModified) {
         MessageBox *mb = new MessageBox(*this, "Change Instrument &",
                                         "lose settings?", MBBF_YES | MBBF_NO);
-        DoModal(mb, ChangeInstrumentTypeCallback);
+
+        // Use a lambda function that captures 'this' for direct access to class
+        // members
+        DoModal(mb,
+                [this, currentType, proposedType](View &v, ModalView &dialog) {
+                  if (dialog.GetReturnCode() == MBL_YES) {
+                    // Apply the proposed type change when user confirms
+                    instrumentType_.SetInt(proposedType, false);
+                    onInstrumentTypeChange();
+                  }
+                  // If user selects No, we don't need to do anything as the UI
+                  // already shows the current type not the proposed type change
+                  // that the user decided to reject
+                });
       } else {
         // Apply the proposed type change immediately if not modified
-        applyProposedTypeChange();
+        instrumentType_.SetInt(proposedType, false);
         onInstrumentTypeChange();
       }
     } else {
@@ -974,13 +996,6 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
   default:
     break;
   }
-}
-
-void InstrumentView::applyProposedTypeChange() {
-  // Apply the proposed instrument type change to the UI field
-  instrumentType_.SetInt(proposedType_);
-  // Update the current type to match
-  currentType_ = proposedType_;
 }
 
 bool InstrumentView::checkInstrumentModified() {
@@ -1060,20 +1075,18 @@ void InstrumentView::handleInstrumentExport() {
       MessageBox *mb = new MessageBox(*this, confirmMsg.c_str(), name.c_str(),
                                       MBBF_YES | MBBF_NO);
 
-      // Store the instrument and name for use in the callback
-      exportInstrument_ = instrument;
-      exportName_ = name;
-
-      DoModal(mb, [](View &v, ModalView &dialog) {
+      // Use a lambda function with captures to avoid using class members
+      DoModal(mb, [this, instrument, name](View &v, ModalView &dialog) {
         if (dialog.GetReturnCode() == MBL_YES) {
-          // User confirmed override, call ExportInstrument with
-          // overwrite=true
-          InstrumentView &iv = (InstrumentView &)v;
+          // User confirmed override, call ExportInstrument with overwrite=true
 
           // Re-export the instrument with overwrite flag set to true
           PersistencyResult result =
-              PersistencyService::GetInstance()->ExportInstrument(
-                  iv.exportInstrument_, iv.exportName_, true);
+              PersistencyService::GetInstance()->ExportInstrument(instrument,
+                                                                  name, true);
+
+          Trace::Log("INSTRUMENTVIEW",
+                     "Instrument '%s' exported with overwrite", name.c_str());
 
           // TODO: unfortunately we can't show the result message here
           // because we're in a modal already and showing a model from result
