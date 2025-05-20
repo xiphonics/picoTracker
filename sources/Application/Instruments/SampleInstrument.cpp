@@ -161,18 +161,53 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
       rp->rendLoopEnd_ = loopEnd_.GetInt();
     } else {
       // sliced mode
-      int32_t sliceSize = GetSampleSize(channel) / slices_.GetInt();
-      int note = rp->midiNote_;
-      int8_t sliceNum = note - rootNote;
-      Trace::Debug("SLICES: Midi note %i Slice Number: %i", note, sliceNum);
+      int totalSize = GetSampleSize(channel);
+      int numSlices = slices_.GetInt();
 
-      if ((sliceNum < 0) or (sliceNum >= slices_.GetInt())) {
+      // Safety check to prevent division by zero
+      if (numSlices <= 0) {
+        Trace::Debug("SLICES: Invalid slice count %d", numSlices);
+        return false;
+      }
+
+      int32_t sliceSize = totalSize / numSlices;
+      int note = rp->midiNote_;
+      int rootNoteVal = rootNote_.GetInt();
+      int8_t sliceNum = note - rootNoteVal;
+      Trace::Debug("SLICES: Midi note %i Root %i Slice Number: %i", note,
+                   rootNoteVal, sliceNum);
+
+      if ((sliceNum < 0) || (sliceNum >= numSlices)) {
         Trace::Debug("SLICES: Out of range, discarded");
         return false;
       }
-      rp->rendLoopStart_ = sliceNum * sliceSize + loopStart_.GetInt();
-      slicedStart = sliceNum * sliceSize + start_.GetInt();
-      rp->rendLoopEnd_ = sliceNum * sliceSize + loopEnd_.GetInt();
+
+      // Calculate slice boundaries
+      int32_t sliceStart = sliceNum * sliceSize;
+      // calculate end of slice using sliceStart and sliceSize
+      int32_t sliceEnd = sliceStart + sliceSize;
+
+      // Ensure slice boundaries are within sample bounds
+      if (sliceEnd > totalSize) {
+        sliceEnd = totalSize;
+      }
+
+      // Set loop points relative to the slice
+      rp->rendLoopStart_ = sliceStart + loopStart_.GetInt();
+      slicedStart = sliceStart + start_.GetInt();
+      rp->rendLoopEnd_ = sliceStart + loopEnd_.GetInt();
+
+      // Make sure loop points don't exceed slice boundaries
+      if (rp->rendLoopEnd_ > sliceEnd) {
+        rp->rendLoopEnd_ = sliceEnd;
+      }
+      if (rp->rendLoopEnd_ <= rp->rendLoopStart_) {
+        rp->rendLoopEnd_ = sliceEnd;
+        rp->rendLoopStart_ = sliceStart;
+      }
+      if (slicedStart >= sliceEnd) {
+        slicedStart = sliceStart;
+      }
     }
   } else {
     long start = source_->GetLoopStart(rp->midiNote_);
@@ -209,8 +244,20 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     // if instrument sampled below 44.1Khz, should
     // travel slower in sample
 
+    // Set the initial playback position to the slice start
     rp->rendFirst_ = slicedStart;
     rp->position_ = float(rp->rendFirst_);
+
+    // Ensure position stays within valid boundaries
+    if (rp->position_ < 0) {
+      rp->position_ = 0;
+    }
+
+    // For non-oneshot modes, ensure we start at loop start if needed
+    if (loopMode_.GetInt() != SILM_ONESHOT &&
+        rp->position_ < float(rp->rendLoopStart_)) {
+      rp->position_ = float(rp->rendLoopStart_);
+    }
     rp->baseSpeed_ = fl2fp(source_->GetSampleRate(rp->midiNote_) / driverRate);
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);
 
@@ -792,8 +839,25 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     rp->reverse_ = rpReverse;
 
     // Update final sample position
-    rp->position_ =
-        (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
+    if (input && wavbuf) {
+      rp->position_ =
+          (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
+
+      // Safety check for valid position
+      if (rp->position_ < 0) {
+        rp->position_ = 0;
+      }
+
+      // Ensure position stays within slice boundaries for sliced mode
+      if (slices_.GetInt() > 0 && !source_->IsMulti()) {
+        // If we've gone past the slice end, reset to loop start for looping
+        // modes
+        if (loopMode_.GetInt() != SILM_ONESHOT &&
+            rp->position_ >= float(rp->rendLoopEnd_)) {
+          rp->position_ = float(rp->rendLoopStart_);
+        }
+      }
+    }
 
     somethingToMix = true;
   }
