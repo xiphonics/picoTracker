@@ -155,22 +155,49 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // Explicit slicing, we tell how we want the sample file to be interpreted
   int32_t slicedStart = 0;
   if (!source_->IsMulti()) {
-    if (slices_.GetInt() == -1) {
-      // single sample mode
+    // Check if slices are disabled or set to an invalid value
+    // -1, 0, or 1 all mean no slices
+    if (slices_.GetInt() <= 1) {
+      // single sample mode (no slices)
       rp->rendLoopStart_ = loopStart_.GetInt();
       rp->rendLoopEnd_ = loopEnd_.GetInt();
+
+      // If end is 0 or negative, use the full sample size
+      if (rp->rendLoopEnd_ <= 0) {
+        rp->rendLoopEnd_ = GetSampleSize(channel);
+      }
     } else {
       // sliced mode
-      int totalSize = GetSampleSize(channel);
-      int numSlices = slices_.GetInt();
+      uint32_t totalSize = GetSampleSize(channel);
+      uint8_t numSlices = (uint8_t)slices_.GetInt();
 
-      // Safety check to prevent division by zero
-      if (numSlices <= 0) {
-        Trace::Debug("SLICES: Invalid slice count %d", numSlices);
+      // Get user-defined start and end points
+      uint32_t userStart = start_.GetInt();
+      uint32_t userEnd = loopEnd_.GetInt();
+
+      // Ensure we have enough range for the number of slices
+      // End point should be at least (numSlices) more than start point
+      if (userEnd <= userStart + numSlices) {
+        // just dont play anything in this case
         return false;
       }
 
-      int32_t sliceSize = totalSize / numSlices;
+      // Calculate the effective sample range to slice
+      uint32_t effectiveStart = userStart;
+      uint32_t effectiveEnd = userEnd;
+      uint32_t effectiveSize = effectiveEnd - effectiveStart;
+
+      // Ensure we have a valid size
+      if (effectiveSize <= 0) {
+        return false;
+      }
+
+      // Ensure at least 1 sample per slice
+      uint32_t sliceSize = effectiveSize / numSlices;
+      if (sliceSize <= 0) {
+        return false;
+      }
+
       int note = rp->midiNote_;
       int rootNoteVal = rootNote_.GetInt();
       int8_t sliceNum = note - rootNoteVal;
@@ -182,32 +209,35 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
         return false;
       }
 
-      // Calculate slice boundaries
-      int32_t sliceStart = sliceNum * sliceSize;
-      // calculate end of slice using sliceStart and sliceSize
-      int32_t sliceEnd = sliceStart + sliceSize;
+      // Calculate slice boundaries within the effective range
+      uint32_t sliceStart = effectiveStart + (sliceNum * sliceSize);
+      uint32_t sliceEnd = sliceStart + sliceSize;
 
       // Ensure slice boundaries are within sample bounds
       if (sliceEnd > totalSize) {
         sliceEnd = totalSize;
       }
 
-      // Set loop points relative to the slice
-      rp->rendLoopStart_ = sliceStart + loopStart_.GetInt();
-      slicedStart = sliceStart + start_.GetInt();
-      rp->rendLoopEnd_ = sliceStart + loopEnd_.GetInt();
+      // Set playback points for this slice
+      slicedStart = sliceStart;
 
-      // Make sure loop points don't exceed slice boundaries
-      if (rp->rendLoopEnd_ > sliceEnd) {
-        rp->rendLoopEnd_ = sliceEnd;
+      // Make sure start point doesn't exceed sample end
+      if (sliceStart >= effectiveEnd) {
+        Trace::Debug("SLICES: Start point exceeds sample end");
+        return false;
       }
-      if (rp->rendLoopEnd_ <= rp->rendLoopStart_) {
-        rp->rendLoopEnd_ = sliceEnd;
-        rp->rendLoopStart_ = sliceStart;
-      }
-      if (slicedStart >= sliceEnd) {
-        slicedStart = sliceStart;
-      }
+
+      // For slices, we always use one-shot mode regardless of the loop mode
+      // setting This overrides any loop mode setting when using slices
+      loopMode_.SetInt(SILM_ONESHOT);
+      Trace::Debug("SLICES: Enforcing one-shot mode for slices");
+
+      // Set the boundaries for one-shot playback of this slice
+      rp->rendLoopStart_ = sliceStart;
+      rp->rendLoopEnd_ = sliceEnd;
+
+      Trace::Debug("SLICES: Slice %i boundaries: %i to %i (one-shot mode)",
+                   sliceNum, sliceStart, sliceEnd);
     }
   } else {
     long start = source_->GetLoopStart(rp->midiNote_);
