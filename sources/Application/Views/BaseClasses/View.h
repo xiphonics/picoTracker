@@ -190,7 +190,7 @@ private:
 public:
   static int margin_;
   static int songRowCount_;
-  
+
   // Counter for animation frames (used for 1Hz battery updates at 50fps)
   static uint8_t animationFrameCounter_;
 };
