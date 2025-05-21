@@ -362,7 +362,12 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
   w_.DrawString(txt, pos, props);
 };
 
-void View::drawBattery(GUITextProperties &props) {
+void View::drawBattery(GUITextProperties &props, unsigned long tick) {
+  // Update battery gauge only once per second (every 50 frames at 50Hz)
+  if (tick % 50 != 0) {
+    return;
+  }
+
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
   battpos._x = 27;

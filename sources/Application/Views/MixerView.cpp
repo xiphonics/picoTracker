@@ -333,12 +333,9 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 };
 
 void MixerView::AnimationUpdate(unsigned long tick) {
+  // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate(tick);
   GUITextProperties props;
-
-  // Update battery gauge only once per second (every 50 frames at 50Hz)
-  if (tick % 50 == 0) {
-    drawBattery(props);
-  }
 
   // Get the player safely
   Player *player = Player::GetInstance();
@@ -373,6 +370,8 @@ void MixerView::AnimationUpdate(unsigned long tick) {
     drawNotes();
     needsNotesUpdate_ = false;
   }
+
+  drawBattery(props);
 
   // Flush the window to ensure changes are displayed
   w_.Flush();

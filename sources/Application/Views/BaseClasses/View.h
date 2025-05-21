@@ -156,7 +156,7 @@ protected:
 
   void drawMap();
   void drawNotes();
-  void drawBattery(GUITextProperties &props);
+  void drawBattery(GUITextProperties &props, unsigned long tick = 0);
   void drawMasterVuMeter(Player *player, GUITextProperties props,
                          bool forceRedraw = false);
   void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);

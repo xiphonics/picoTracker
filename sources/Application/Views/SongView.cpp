@@ -957,9 +957,6 @@ void SongView::AnimationUpdate(unsigned long tick) {
   // This ensures all UI drawing happens on the "main" thread (core0)
   GUITextProperties props;
 
-  // Draw battery gauge (always safe to do)
-  drawBattery(props);
-
   // Use the consolidated flag for all UI updates
   if (needsUIUpdate_) {
     // Draw VU meter and notes
