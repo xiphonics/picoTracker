@@ -1108,7 +1108,7 @@ void InstrumentView::handleInstrumentExport() {
   }
 }
 
-void InstrumentView::AnimationUpdate() {
+void InstrumentView::AnimationUpdate(unsigned long tick) {
   // redraw batt gauge on every clock tick (~1Hz) even when not playing
   // and not redrawing due to user cursor navigation
   GUITextProperties props;

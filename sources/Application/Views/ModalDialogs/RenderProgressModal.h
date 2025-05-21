@@ -23,7 +23,7 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick);
   virtual void OnFocus();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
-  virtual void AnimationUpdate();
+  virtual void AnimationUpdate(unsigned long tick);
 
 private:
   // Helper method to draw the render progress

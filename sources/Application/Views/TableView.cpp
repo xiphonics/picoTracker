@@ -896,9 +896,9 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   createMemoryBarrier();
 }
 
-void TableView::AnimationUpdate() {
+void TableView::AnimationUpdate(unsigned long tick) {
   // First call the parent class implementation to draw the battery gauge
-  ScreenView::AnimationUpdate();
+  ScreenView::AnimationUpdate(tick);
 
   // Get player instance safely
   Player *player = Player::GetInstance();

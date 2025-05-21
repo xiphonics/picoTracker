@@ -1302,9 +1302,9 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   }
 };
 
-void PhraseView::AnimationUpdate() {
+void PhraseView::AnimationUpdate(unsigned long tick) {
   // First call the parent class implementation to draw the battery gauge
-  ScreenView::AnimationUpdate();
+  ScreenView::AnimationUpdate(tick);
 
   // Get player instance safely
   Player *player = Player::GetInstance();

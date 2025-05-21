@@ -109,7 +109,7 @@ public:
   virtual void DrawView() = 0;
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick) = 0;
   virtual void OnFocus() = 0;
-  virtual void AnimationUpdate() = 0;
+  virtual void AnimationUpdate(unsigned long tick) = 0;
 
   void SetDirty(bool dirty);
 
@@ -190,6 +190,9 @@ private:
 public:
   static int margin_;
   static int songRowCount_;
+  
+  // Counter for animation frames (used for 1Hz battery updates at 50fps)
+  static uint8_t animationFrameCounter_;
 };
 
 #endif

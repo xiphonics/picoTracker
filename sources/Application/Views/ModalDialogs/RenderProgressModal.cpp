@@ -93,7 +93,7 @@ void RenderProgressModal::ProcessButtonMask(unsigned short mask, bool pressed) {
   isDirty_ = true;
 }
 
-void RenderProgressModal::AnimationUpdate() {
+void RenderProgressModal::AnimationUpdate(unsigned long tick) {
   // Mark as dirty to update the render progress display
   isDirty_ = true;
 }

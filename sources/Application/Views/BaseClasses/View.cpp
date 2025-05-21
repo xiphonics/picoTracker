@@ -10,6 +10,7 @@
 bool View::initPrivate_ = false;
 
 int View::margin_ = 0;
+uint8_t View::animationFrameCounter_ = 0;
 int View::songRowCount_; //=21 ;
 
 View::View(GUIWindow &w, ViewData *viewData)
@@ -17,7 +18,7 @@ View::View(GUIWindow &w, ViewData *viewData)
   if (!initPrivate_) {
     View::margin_ = 0;
     songRowCount_ = 16;
-
+    animationFrameCounter_ = 0;
     initPrivate_ = true;
   }
   mask_ = 0;

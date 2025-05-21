@@ -176,7 +176,7 @@ void DeviceView::addSwatchField(ColorDefinition color, GUIPoint position) {
   fieldList_.insert(fieldList_.end(), &(*swatchField_.rbegin()));
 }
 
-void DeviceView::AnimationUpdate() {
+void DeviceView::AnimationUpdate(unsigned long tick) {
   // redraw batt gauge on every clock tick (~1Hz) even when not playing
   // and not redrawing due to user cursor navigation
   GUITextProperties props;

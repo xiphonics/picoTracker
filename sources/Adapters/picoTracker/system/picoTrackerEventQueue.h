@@ -10,6 +10,7 @@ class picoTrackerEvent {
 public:
   picoTrackerEvent(picoTrackerEventType type) : type_(type) {}
   picoTrackerEventType type_;
+  unsigned long tick_;
 };
 
 inline bool operator==(const picoTrackerEvent &lhs,

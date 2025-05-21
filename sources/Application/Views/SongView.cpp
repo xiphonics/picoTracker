@@ -942,9 +942,9 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   createMemoryBarrier();
 };
 
-void SongView::AnimationUpdate() {
+void SongView::AnimationUpdate(unsigned long tick) {
   // First call the parent class implementation to draw the battery gauge
-  ScreenView::AnimationUpdate();
+  ScreenView::AnimationUpdate(tick);
 
   // Get player instance safely
   Player *player = Player::GetInstance();
