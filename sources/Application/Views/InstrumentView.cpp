@@ -886,11 +886,21 @@ void InstrumentView::DrawView() {
 void InstrumentView::OnFocus() {
   Trace::Log("INSTRUMENTVIEW", "onFocus");
 
-  // Get the current instrument
-  I_Instrument *instr = getInstrument();
+  // Get latest selected instrument, ensures we display the instrument that was
+  // selected in the PhraseView
+  int currentID = viewData_->currentInstrumentID_;
+  Trace::Debug("INSTRUMENTVIEW", "Current instrument ID from ViewData: %d",
+               currentID);
+
+  // Get the current instrument based on the ViewData's currentInstrumentID_
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  I_Instrument *instr = bank->GetInstrument(currentID);
+
   if (instr) {
     // Update the instrument type field to match the current instrument
     InstrumentType currentType = instr->GetType();
+
+    Trace::Debug("INSTRUMENTVIEW", "Current instrument type: %d", currentType);
 
     // Only update if the type has changed
     if (instrumentType_.GetInt() != currentType) {
@@ -901,10 +911,11 @@ void InstrumentView::OnFocus() {
       // because we dont want the observer to do its normal check for a modified
       // instrument
       instrumentType_.SetInt(currentType, false);
-      // need to force refresh of UI fields as instrument type may not have
-      // changed but still need to draw all the fields for the first time
-      onInstrumentTypeChange(true);
     }
+
+    // Always refresh the UI fields when focusing the view in case of instrument
+    // change from last time
+    onInstrumentTypeChange(true);
   }
 }
 
