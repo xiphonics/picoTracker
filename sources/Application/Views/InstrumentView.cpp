@@ -348,18 +348,21 @@ void InstrumentView::fillSampleParameters() {
     // If slices are enabled, we still allow editing the full range
     // The actual slice boundaries will be enforced during playback
   }
-  bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0, maxStartValue, 16);
+  bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0,
+                               maxStartValue, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
-  // Calculate max value for loop start field - use full sample size if no slices
+  // Calculate max value for loop start field - use full sample size if no
+  // slices
   int maxLoopStartValue = instrument->GetSampleSize() - 1;
   if (s->GetInt() > 0) {
     // If slices are enabled, we still allow editing the full range
     // The actual slice boundaries will be enforced during playback
   }
-  bigHexVarField_.emplace_back(position, *v, 7, "loop start: %7.7X", 0, maxLoopStartValue, 16);
+  bigHexVarField_.emplace_back(position, *v, 7, "loop start: %7.7X", 0,
+                               maxLoopStartValue, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
@@ -370,7 +373,8 @@ void InstrumentView::fillSampleParameters() {
     // If slices are enabled, we still allow editing the full range
     // The actual slice boundaries will be enforced during playback
   }
-  bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0, maxLoopEndValue, 16);
+  bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
+                               maxLoopEndValue, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
