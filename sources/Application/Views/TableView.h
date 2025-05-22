@@ -74,7 +74,6 @@ private:
   // Keep these for backward compatibility
   bool needsPlayPositionUpdate_ = false;
   bool needsNotesUpdate_ = false;
-  bool needsVUMeterUpdate_ = false;
 
 #ifdef PICO_DEOPTIMIZED_DEBUG
   // These variables are specifically for thread synchronization in debug builds

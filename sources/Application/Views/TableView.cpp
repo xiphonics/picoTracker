@@ -870,7 +870,6 @@ void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Keep setting these for backward compatibility
   needsNotesUpdate_ = true;
   needsPlayPositionUpdate_ = true;
-  needsVUMeterUpdate_ = true;
 
   // Update the last positions for use in AnimationUpdate
   TableHolder *th = TableHolder::GetInstance();
@@ -914,9 +913,6 @@ void TableView::AnimationUpdate() {
 
     // Draw notes
     drawNotes();
-
-    // Draw VU meter
-    drawMasterVuMeter(player, props);
 
     // Draw play positions
     GUIPoint anchor = GetAnchor();
