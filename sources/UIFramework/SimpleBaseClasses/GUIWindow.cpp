@@ -54,7 +54,7 @@ void GUIWindow::Unlock() { _imp->Unlock(); }
 
 void GUIWindow::Update(bool redraw) { onUpdate(redraw); }
 
-void GUIWindow::ClockTick(unsigned long tick) { AnimationUpdate(); }
+void GUIWindow::ClockTick() { AnimationUpdate(); }
 
 I_GUIGraphics *GUIWindow::GetGraphics() { return this; }
 

@@ -41,6 +41,5 @@ protected:
 private:
   void SendFont(uint8_t uifontIndex);
   bool remoteUIEnabled_ = 0;
-  static uint32_t tickCounter_;
 };
 #endif

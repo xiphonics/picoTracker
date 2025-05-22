@@ -36,7 +36,6 @@ static GUIEventPadButtonType *eventMapping = eventMappingPico;
 
 // Initialize static members
 picoTrackerGUIWindowImp *picoTrackerGUIWindowImp::instance_ = NULL;
-uint32_t picoTrackerGUIWindowImp::tickCounter_ = 0;
 
 picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   mode0_init();
@@ -198,7 +197,7 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
     instance_->_window->Update(false);
     break;
   case PICO_CLOCK:
-    instance_->_window->ClockTick(instance_->tickCounter_++);
+    instance_->_window->ClockTick();
     break;
   case LAST:
     break;
