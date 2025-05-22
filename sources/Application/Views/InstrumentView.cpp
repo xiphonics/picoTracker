@@ -875,8 +875,6 @@ void InstrumentView::DrawView() {
                viewData_->currentInstrumentID_);
   DrawString(pos._x, pos._y, title, props);
 
-  drawBattery(props);
-
   // Draw fields
 
   FieldView::Redraw();
@@ -1134,14 +1132,6 @@ void InstrumentView::handleInstrumentExport() {
     }
   }
 }
-
-void InstrumentView::AnimationUpdate() {
-  // redraw batt gauge on every clock tick (~1Hz) even when not playing
-  // and not redrawing due to user cursor navigation
-  GUITextProperties props;
-  drawBattery(props);
-  w_.Flush();
-};
 
 // Redraw all UI fields to reflect updated variable values
 void InstrumentView::redrawAllFields() {

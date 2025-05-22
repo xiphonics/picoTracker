@@ -34,7 +34,8 @@ static GUIEventPadButtonType eventMappingPico[10] = {
 
 static GUIEventPadButtonType *eventMapping = eventMappingPico;
 
-picoTrackerGUIWindowImp *instance_;
+// Initialize static members
+picoTrackerGUIWindowImp *picoTrackerGUIWindowImp::instance_ = NULL;
 
 picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   mode0_init();

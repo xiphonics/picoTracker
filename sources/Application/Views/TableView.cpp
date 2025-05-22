@@ -720,8 +720,6 @@ void TableView::DrawView() {
   npf_snprintf(title, sizeof(title), "Table %2.2X", viewData_->currentTable_);
   DrawString(pos._x, pos._y, title, props);
 
-  drawBattery(props);
-
   // Compute song grid location
 
   GUIPoint anchor = GetAnchor();

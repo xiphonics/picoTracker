@@ -46,7 +46,7 @@ bool timerHandler(repeating_timer_t *rt) {
   queue = picoTrackerEventQueue::GetInstance();
   gTime_++;
 
-  // send a clock (PICO_CLOCK)
+  // send a clock (PICO_CLOCK) with the current tick value
   if (gTime_ % PICO_CLOCK_INTERVAL == 0) {
     queue->push(picoTrackerEvent(PICO_CLOCK));
   }

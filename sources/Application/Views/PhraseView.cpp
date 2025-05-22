@@ -1116,8 +1116,6 @@ void PhraseView::DrawView() {
   npf_snprintf(title, sizeof(title), "Phrase %2.2x", viewData_->currentPhrase_);
   DrawString(pos._x, pos._y, title, props);
 
-  drawBattery(props);
-
   // Compute song grid location
 
   GUIPoint anchor = GetAnchor();

@@ -109,7 +109,7 @@ public:
   virtual void DrawView() = 0;
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick) = 0;
   virtual void OnFocus() = 0;
-  virtual void AnimationUpdate() = 0;
+  virtual void AnimationUpdate();
 
   void SetDirty(bool dirty);
 
@@ -190,6 +190,10 @@ private:
 public:
   static int margin_;
   static int songRowCount_;
+
+  // Counter for animation frames, updated once per frame ie each
+  // AnimationUpdate() callback so currently ticks at 50hz
+  static uint32_t animationFrameCounter_;
 };
 
 #endif

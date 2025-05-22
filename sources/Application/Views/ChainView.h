@@ -2,10 +2,10 @@
 #ifndef _CHAIN_VIEW_H_
 #define _CHAIN_VIEW_H_
 
-#include "BaseClasses/View.h"
+#include "ScreenView.h"
 #include "ViewData.h"
 
-class ChainView : public View {
+class ChainView : public ScreenView {
 public:
   ChainView(GUIWindow &w, ViewData *data);
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);

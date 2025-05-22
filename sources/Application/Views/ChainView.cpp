@@ -1,11 +1,13 @@
 #include "ChainView.h"
 #include "Application/Utils/char.h"
+#include "ScreenView.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
 #include <nanoprintf.h>
 
-ChainView::ChainView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
+ChainView::ChainView(GUIWindow &w, ViewData *viewData)
+    : ScreenView(w, viewData) {
   updatingPhrase_ = false;
   lastPhrase_ = 0;
   lastPlayingPos_ = 0;
@@ -670,8 +672,6 @@ void ChainView::DrawView() {
 
   GUIPoint anchor = GetAnchor();
 
-  drawBattery(props);
-
   // Display row numbers
   SetColor(CD_HILITE1);
   char row[3];
@@ -745,8 +745,8 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
 void ChainView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate();
   GUITextProperties props;
-  drawBattery(props);
 
   // Get player instance safely
   Player *player = Player::GetInstance();
