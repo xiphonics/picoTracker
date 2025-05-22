@@ -31,6 +31,8 @@ public: // I_GUIWindowImp implementation
   static void ProcessEvent(picoTrackerEvent &event);
   static void ProcessButtonChange(uint16_t changeMask, uint16_t buttonMask);
 
+  static picoTrackerGUIWindowImp *instance_;
+
 protected:
   static mode0_color_t GetColor(GUIColor &c);
 

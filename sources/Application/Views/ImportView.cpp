@@ -135,8 +135,6 @@ void ImportView::DrawView() {
 
   SetColor(CD_NORMAL);
 
-  drawBattery(props);
-
   // Draw samples
   int x = 1;
   int y = pos._y + 2;

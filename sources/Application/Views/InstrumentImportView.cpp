@@ -90,8 +90,6 @@ void InstrumentImportView::DrawView() {
 
   SetColor(CD_NORMAL);
 
-  drawBattery(props);
-
   // Draw instrument files
   int x = 1;
   int y = pos._y + 2;

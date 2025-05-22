@@ -22,7 +22,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
-  virtual void AnimationUpdate();
   etl::string<MAX_PROJECT_NAME_LENGTH> getProjectName() {
     return nameField_->GetString();
   };

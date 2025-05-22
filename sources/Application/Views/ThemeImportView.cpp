@@ -89,8 +89,6 @@ void ThemeImportView::DrawView() {
 
   SetColor(CD_NORMAL);
 
-  drawBattery(props);
-
   // Draw theme files
   int x = 1;
   int y = pos._y + 2;

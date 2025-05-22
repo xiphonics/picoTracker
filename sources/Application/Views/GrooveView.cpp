@@ -149,8 +149,6 @@ void GrooveView::DrawView() {
 
   SetColor(CD_NORMAL);
 
-  drawBattery(props);
-
   npf_snprintf(title, sizeof(title), "Groove: %2.2x",
                viewData_->currentGroove_);
   DrawString(pos._x, pos._y, title, props);

@@ -333,11 +333,9 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 };
 
 void MixerView::AnimationUpdate() {
-  // update VU meters on every clock tick (~1Hz)
+  // First call the parent class implementation to draw the battery gauge
+  ScreenView::AnimationUpdate();
   GUITextProperties props;
-
-  // TODO: Update battery gauge every 50 ticks, ie 1hz
-  drawBattery(props);
 
   // Get the player safely
   Player *player = Player::GetInstance();

@@ -23,8 +23,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
-  virtual void AnimationUpdate(){};
-
   // Observer for action callback
   void Update(Observable &, I_ObservableData *);
 
