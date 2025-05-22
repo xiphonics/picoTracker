@@ -5,7 +5,6 @@
 #include "Application/Utils/mathutils.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
-#include <Adapters/picoTracker/utils/utils.h>
 #include <nanoprintf.h>
 
 bool View::initPrivate_ = false;
@@ -19,7 +18,6 @@ View::View(GUIWindow &w, ViewData *viewData)
   if (!initPrivate_) {
     View::margin_ = 0;
     songRowCount_ = 16;
-    animationFrameCounter_ = 0;
     initPrivate_ = true;
   }
   mask_ = 0;
