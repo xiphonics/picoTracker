@@ -29,7 +29,7 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick);
   virtual void OnFocus();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
-  virtual void AnimationUpdate() {};
+  virtual void AnimationUpdate(){};
 
 private:
   etl::string<SCREEN_WIDTH - 2> line1_ = "";

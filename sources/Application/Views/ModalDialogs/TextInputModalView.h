@@ -23,7 +23,7 @@ public:
   virtual void DrawView();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void OnFocus();
-  virtual void AnimationUpdate() {};
+  virtual void AnimationUpdate(){};
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
 
   // Observer implementation
