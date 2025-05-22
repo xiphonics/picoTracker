@@ -11,7 +11,7 @@
 bool View::initPrivate_ = false;
 
 int View::margin_ = 0;
-uint8_t View::animationFrameCounter_ = 0;
+uint32_t View::animationFrameCounter_ = 0;
 int View::songRowCount_; //=21 ;
 
 View::View(GUIWindow &w, ViewData *viewData)
@@ -364,8 +364,8 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 };
 
 void View::drawBattery(GUITextProperties &props) {
-  // Update battery gauge only once per second using millis() from util.h
-  if (millis() % 1000 != 0) {
+  // Update battery gauge only once per second
+  if (animationFrameCounter_ % 50 != 0) {
     return;
   }
 
@@ -396,3 +396,5 @@ void View::drawBattery(GUITextProperties &props) {
     DrawString(battpos._x, battpos._y, battText, props);
   }
 }
+
+void View::AnimationUpdate() { animationFrameCounter_++; }
