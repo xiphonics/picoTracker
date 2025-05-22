@@ -745,9 +745,9 @@ void ChainView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   needsUIUpdate_ = true;
 };
 
-void ChainView::AnimationUpdate(unsigned long tick) {
+void ChainView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
-  ScreenView::AnimationUpdate(tick);
+  ScreenView::AnimationUpdate();
   GUITextProperties props;
 
   // Get player instance safely

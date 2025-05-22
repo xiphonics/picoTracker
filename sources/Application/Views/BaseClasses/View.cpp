@@ -5,6 +5,7 @@
 #include "Application/Utils/mathutils.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
+#include <Adapters/picoTracker/utils/utils.h>
 #include <nanoprintf.h>
 
 bool View::initPrivate_ = false;
@@ -362,9 +363,9 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
   w_.DrawString(txt, pos, props);
 };
 
-void View::drawBattery(GUITextProperties &props, unsigned long tick) {
-  // Update battery gauge only once per second (every 50 frames at 50Hz)
-  if (tick % 50 != 0) {
+void View::drawBattery(GUITextProperties &props) {
+  // Update battery gauge only once per second using millis() from util.h
+  if (millis() % 1000 != 0) {
     return;
   }
 

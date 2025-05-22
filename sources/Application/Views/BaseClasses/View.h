@@ -109,7 +109,7 @@ public:
   virtual void DrawView() = 0;
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick) = 0;
   virtual void OnFocus() = 0;
-  virtual void AnimationUpdate(unsigned long tick) = 0;
+  virtual void AnimationUpdate() = 0;
 
   void SetDirty(bool dirty);
 
@@ -156,7 +156,7 @@ protected:
 
   void drawMap();
   void drawNotes();
-  void drawBattery(GUITextProperties &props, unsigned long tick = 0);
+  void drawBattery(GUITextProperties &props);
   void drawMasterVuMeter(Player *player, GUITextProperties props,
                          bool forceRedraw = false);
   void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);

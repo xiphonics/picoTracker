@@ -593,12 +593,12 @@ void AppWindow::onUpdate(bool redraw) {
   Flush();
 };
 
-void AppWindow::AnimationUpdate(unsigned long tick) {
+void AppWindow::AnimationUpdate() {
   if (loadProject_) {
     LoadProject(projectName_);
     loadProject_ = false;
   }
-  _currentView->AnimationUpdate(tick);
+  _currentView->AnimationUpdate();
 
   // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_SECONDS
   // will return false if auto save was unsuccessful because eg. the sequencer

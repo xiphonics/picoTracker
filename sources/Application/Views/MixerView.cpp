@@ -332,9 +332,9 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   needsNotesUpdate_ = true;
 };
 
-void MixerView::AnimationUpdate(unsigned long tick) {
+void MixerView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
-  ScreenView::AnimationUpdate(tick);
+  ScreenView::AnimationUpdate();
   GUITextProperties props;
 
   // Get the player safely
