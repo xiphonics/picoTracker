@@ -10,7 +10,7 @@ ScreenView::~ScreenView() {}
 void ScreenView::AnimationUpdate() {
   GUITextProperties props;
   drawBattery(props);
-  
+
   // Flush the window to ensure the battery gauge is displayed
   w_.Flush();
 };
