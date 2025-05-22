@@ -672,8 +672,6 @@ void ChainView::DrawView() {
 
   GUIPoint anchor = GetAnchor();
 
-  drawBattery(props);
-
   // Display row numbers
   SetColor(CD_HILITE1);
   char row[3];

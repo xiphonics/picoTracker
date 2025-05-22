@@ -254,8 +254,6 @@ void ProjectView::DrawView() {
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
   DrawString(pos._x + strlen(title), pos._y, projectName.c_str(), props);
 
-  drawBattery(props);
-
   FieldView::Redraw();
   drawMap();
 };

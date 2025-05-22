@@ -104,8 +104,6 @@ void DeviceView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
 
-  drawBattery(props);
-
   FieldView::Redraw();
 
   SetColor(CD_NORMAL);

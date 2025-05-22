@@ -27,8 +27,6 @@ void SelectProjectView::DrawView() {
 
   SetColor(CD_NORMAL);
 
-  drawBattery(props);
-
   // Draw projects
   int x = 1;
   int y = pos._y + 2;

@@ -822,8 +822,6 @@ void SongView::DrawView() {
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
   DrawString(pos._x + 5, pos._y, projectName.c_str(), props);
 
-  drawBattery(props);
-
   // Compute song grid location
   GUIPoint anchor = GetAnchor();
 

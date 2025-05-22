@@ -859,8 +859,6 @@ void InstrumentView::DrawView() {
                viewData_->currentInstrumentID_);
   DrawString(pos._x, pos._y, title, props);
 
-  drawBattery(props);
-
   // Draw fields
 
   FieldView::Redraw();

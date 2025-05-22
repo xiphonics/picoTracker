@@ -371,8 +371,6 @@ void MixerView::AnimationUpdate() {
     needsNotesUpdate_ = false;
   }
 
-  drawBattery(props);
-
   // Flush the window to ensure changes are displayed
   w_.Flush();
 };
