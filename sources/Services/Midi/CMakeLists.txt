@@ -5,6 +5,7 @@ add_library(services_midi
   MidiInMerger.cpp
   MidiOutDevice.cpp
   MidiService.cpp
+  MidiNoteTracker.cpp
 )
 
 target_link_libraries(services_midi PUBLIC

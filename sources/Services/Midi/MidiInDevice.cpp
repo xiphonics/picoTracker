@@ -24,6 +24,9 @@ MidiInDevice::MidiInDevice(const char *name)
     channelToInstrument_[channel] = -1; // -1 means no instrument assigned
   }
   isRunning_ = false;
+
+  // Initialize the note tracker
+  noteTracker_.clear();
 };
 
 MidiInDevice::~MidiInDevice(){};
@@ -38,6 +41,9 @@ bool MidiInDevice::Start() {
   // Reset the MIDI parser state
   midiStatus = 0;
   midiDataCount = 0;
+
+  // Clear the note tracker when starting
+  noteTracker_.clear();
 
   return startDriver();
 };
@@ -141,12 +147,23 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
   case MidiMessage::MIDI_NOTE_OFF: {
     int note = event.data1_ & MIDI_DATA_MASK;
 
-    // Check if we have a direct instrument mapping for this channel
-    if (channelToInstrument_[midiChannel] != -1) {
-      int instrumentIndex = channelToInstrument_[midiChannel];
-      Player *player = Player::GetInstance();
-      if (player) {
-        player->StopNote(instrumentIndex, midiChannel);
+    // Map MIDI channel directly to instrument index
+    short instrumentIndex = midiChannel;
+
+    Player *player = Player::GetInstance();
+    if (player) {
+      // Check if this specific note is active on this MIDI channel
+      if (noteTracker_.isNoteActiveOnChannel(note, midiChannel)) {
+        // Get the audio channel this note is playing on
+        int audioChannel = noteTracker_.unregisterNote(note, midiChannel);
+        if (audioChannel >= 0) {
+          Trace::Debug("Stopping note %d on MIDI channel %d, audio channel %d",
+                       note, midiChannel, audioChannel);
+          player->StopNote(instrumentIndex, audioChannel);
+        }
+      } else {
+        Trace::Debug("Note %d not active on MIDI channel %d, not stopping",
+                     note, midiChannel);
       }
     }
   } break;
@@ -155,20 +172,46 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     int note = event.data1_ & MIDI_DATA_MASK;
     int value = event.data2_ & MIDI_DATA_MASK;
 
-    // Check if we have a direct instrument mapping for this channel
-    if (channelToInstrument_[midiChannel] != -1) {
-      short instrumentIndex = channelToInstrument_[midiChannel];
-      Player *player = Player::GetInstance();
-      if (player) {
-        // If velocity is 0, it's actually a note off in MIDI
-        if (value == 0) {
-          player->StopNote(instrumentIndex, midiChannel);
+    // Map MIDI channel directly to instrument index
+    short instrumentIndex = midiChannel;
+
+    Player *player = Player::GetInstance();
+    if (player) {
+      // If velocity is 0, it's actually a note off in MIDI
+      if (value == 0) {
+        // Handle as note off - only stop if this note is active on this channel
+        if (noteTracker_.isNoteActiveOnChannel(note, midiChannel)) {
+          int audioChannel = noteTracker_.unregisterNote(note, midiChannel);
+          if (audioChannel >= 0) {
+            Trace::Debug("Note off (vel=0): Stopping note %d on MIDI channel "
+                         "%d, audio channel %d",
+                         note, midiChannel, audioChannel);
+            player->StopNote(instrumentIndex, audioChannel);
+          }
         } else {
-          player->PlayNote(instrumentIndex, midiChannel, note, value);
+          Trace::Debug("Note off (vel=0): Note %d not active on MIDI channel "
+                       "%d, not stopping",
+                       note, midiChannel);
+        }
+      } else {
+        // Get the next available audio channel for this note
+        int audioChannel = noteTracker_.getNextAvailableChannel();
+
+        if (audioChannel >= 0) {
+          // Register the note with the tracker
+          if (noteTracker_.registerNote(note, midiChannel, audioChannel,
+                                        value)) {
+            Trace::Debug("Playing note %d on MIDI channel %d (instrument %d), "
+                         "audio channel %d",
+                         note, midiChannel, instrumentIndex, audioChannel);
+            player->PlayNote(instrumentIndex, audioChannel, note, value);
+          } else {
+            Trace::Debug("Failed to register note %d", note);
+          }
+        } else {
+          Trace::Debug("No available audio channels for note %d", note);
         }
       }
-    } else {
-      Trace::Debug("No instrument assigned for MIDI channel %d", midiChannel);
     }
   } break;
 
@@ -205,6 +248,13 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     // TODO: handle pitch bend
   } break;
 
+  // Handle any other MIDI message types
+  case MidiMessage::MIDI_CLOCK:
+  case MidiMessage::MIDI_START:
+  case MidiMessage::MIDI_CONTINUE:
+  case MidiMessage::MIDI_STOP:
+  case MidiMessage::MIDI_ACTIVE_SENSING:
+  case MidiMessage::MIDI_SYSTEM_RESET:
   default:
     break;
   };
