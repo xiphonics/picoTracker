@@ -73,11 +73,31 @@ void MidiInDevice::onMidiStop() {
   SetChanged();
   NotifyObservers();
 
-  // Get the Player instance and stop playback similar to SongView's onStop
+  // Get the Player instance and stop playback
   Player *player = Player::GetInstance();
   if (player) {
-    // Stop playback on all channels (0-7)
-    player->OnSongStartButton(0, 7, true, false);
+    // Only stop if the player is currently running
+    if (player->IsRunning()) {
+      // Use the direct Stop() method instead of OnSongStartButton
+      // to avoid toggling behavior
+      player->Stop();
+    }
+  }
+};
+
+void MidiInDevice::onMidiContinue() {
+  MidiSyncData data(MSM_CONTINUE);
+  SetChanged();
+  NotifyObservers();
+
+  // Get the Player instance and start playback
+  Player *player = Player::GetInstance();
+  if (player) {
+    // Only start if the player is not already running
+    if (!player->IsRunning()) {
+      // Start playback on all channels (0-7) like the play button does
+      player->OnSongStartButton(0, 7, false, false);
+    }
   }
 };
 
@@ -137,8 +157,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     onMidiStop();
     return;
   } else if (event.status_ == MidiMessage::MIDI_CONTINUE) {
-    // TODO: how to handle continue message as pT doesnt have concept of pausing
-    // then continuing playback from the same position
+    onMidiContinue();
     return;
   }
 

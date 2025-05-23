@@ -9,7 +9,7 @@
 #include "MidiNoteTracker.h"
 #include "Services/Controllers/ControllerSource.h"
 
-enum MidiSyncMessage { MSM_START, MSM_STOP, MSM_TEMPOTICK };
+enum MidiSyncMessage { MSM_START, MSM_STOP, MSM_TEMPOTICK, MSM_CONTINUE };
 
 struct MidiSyncData : public I_ObservableData {
   MidiSyncMessage message_;
@@ -57,6 +57,7 @@ protected:
   void onMidiTempoTick();
   void onMidiStart();
   void onMidiStop();
+  void onMidiContinue();
   void queueEvent(MidiEvent &event);
 
   // MIDI message parsing
