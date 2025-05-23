@@ -33,7 +33,6 @@ void PlayerChannel::StopInstrument() {
   if (instr_) {
     instr_->Stop(index_);
   }
-  instr_ = 0;
 };
 
 bool PlayerChannel::Render(fixed *buffer, int samplecount) {
