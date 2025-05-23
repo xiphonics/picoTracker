@@ -29,11 +29,9 @@ When a MIDI device is connected and configured, incoming MIDI notes will trigger
 
 - **Sample Instruments**: Fully support polyphonic playback. Multiple notes can be played simultaneously, and each note can be stopped independently.
 
-- **OPAL Instruments**: Should be considered monophonic from a MIDI input perspective. Playing a new note will stop any currently playing note on the same MIDI channel.
+- **OPAL Instruments**: Should be *considered* monophonic from a MIDI input perspective. However they DONT behave completely like a monophonic instrument, so care needs to be taken to ensure that only one note is played on a midi channel at a time. 
 
-- **SID Instruments**: Should be considered monophonic from a MIDI input perspective. Playing a new note will stop any currently playing note on the same MIDI channel.
-
-This limitation is due to how these instrument types handle note playback internally. Sample instruments maintain separate state for each audio channel, while OPAL and SID instruments use a single state that affects all notes played through them.
+- **SID Instruments**: Should be *considered* monophonic from a MIDI input perspective. However they DONT behave completely like a monophonic instrument, so care needs to be taken to ensure that only one note is played on a midi channel at a time. 
 
 ### Supported MIDI Messages
 
