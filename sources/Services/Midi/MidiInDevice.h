@@ -73,7 +73,7 @@ private:
   uint8_t midiData1 = 0;
   uint8_t midiDataCount = 0;
   uint8_t midiDataBytes = 0;
-  
+
   // Note tracker for polyphonic note handling
   MidiNoteTracker noteTracker_;
 };

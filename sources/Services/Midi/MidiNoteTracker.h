@@ -33,24 +33,25 @@ public:
 
   /**
    * Check if a note is currently active on any channel
-   * 
+   *
    * @param note The MIDI note number (0-127)
    * @return True if the note is active on any channel
    */
   bool isNoteActive(uint8_t note) const;
-  
+
   /**
    * Check if a specific note is active on a specific MIDI channel
-   * 
+   *
    * @param note The MIDI note number (0-127)
    * @param midiChannel The MIDI channel (0-15)
    * @return True if the note is active on the specified channel
    */
   bool isNoteActiveOnChannel(uint8_t note, uint8_t midiChannel) const;
-  
+
   /**
-   * Get the audio channel assigned to a specific note on a specific MIDI channel
-   * 
+   * Get the audio channel assigned to a specific note on a specific MIDI
+   * channel
+   *
    * @param note The MIDI note number (0-127)
    * @param midiChannel The MIDI channel (0-15)
    * @return The audio channel assigned to the note, or -1 if not found
