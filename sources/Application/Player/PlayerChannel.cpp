@@ -32,6 +32,7 @@ void PlayerChannel::StartInstrument(I_Instrument *instr, unsigned char note,
 void PlayerChannel::StopInstrument() {
   if (instr_) {
     instr_->Stop(index_);
+    instr_ = 0;
   }
 };
 
