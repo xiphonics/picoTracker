@@ -37,21 +37,45 @@ void picoTrackerUSBMidiInDevice::poll() {
     return;
   }
 
-  // MIDI packet format: [cable_number << 4 | code_index, midi_data1,
+  // USB MIDI packet format: [cable_number << 4 | code_index, midi_data1,
   // midi_data2, midi_data3]
   uint8_t packet[4];
+
   while (tud_midi_available()) {
     // Read the MIDI packet
-    bool bytesRead = tud_midi_packet_read(packet);
+    uint32_t bytesRead = tud_midi_packet_read(packet);
 
-    if (!bytesRead) {
+    if (bytesRead == 0) {
       Trace::Error("Failed to read expected MIDI packet!");
       break;
     }
-    // start at 1 to skip USB midi cable number
-    for (unsigned short j = 1; j < bytesRead; j++) {
-      // Trace::Debug("Processing byte: 0x%02X", data[j]);
-      processMidiData(packet[j]);
+
+    // Extract the Code Index Number (CIN) from the first byte
+    uint8_t cin = packet[0] & 0x0F;
+
+    // Process the packet based on the CIN
+    // The Code Index Number (CIN) indicates the classification of the bytes in
+    // the MIDI_x fields
+    // See Table 4-1 in the USB MIDI 1.0 specification PDF
+    // The bytes in positions 1, 2, and 3 are the actual MIDI message
+    // We just need to feed them to the MIDI parser
+
+    // Only process valid MIDI messages (CIN values 0x2 through 0xF)
+    if (cin >= 0x2) {
+      // Feed each byte of the MIDI message to the parser
+      // Start with the status byte
+      processMidiData(packet[1]);
+
+      // For CIN values 0x2-0xE, we need to process additional data bytes
+      if (cin <= 0xE) {
+        // Add data byte 1 for all message types
+        processMidiData(packet[2]);
+
+        // Add data byte 2 for 3-byte messages (CIN 0x8-0xB, 0xE)
+        if ((cin >= 0x8 && cin <= 0xB) || cin == 0xE) {
+          processMidiData(packet[3]);
+        }
+      }
     }
   }
 }
