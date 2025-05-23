@@ -18,7 +18,6 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
-  virtual void AnimationUpdate(unsigned long tick){};
 
   // Trace Implementation
 

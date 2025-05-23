@@ -395,7 +395,10 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   return true;
 }
 
-void SampleInstrument::Stop(int channel) { running_ = false; }
+void SampleInstrument::Stop(int channel) {
+  renderParams *rp = renderParams_ + channel;
+  rp->finished_ = true; // Mark this channel as finished
+}
 
 void SampleInstrument::doTickUpdate(int channel) {
 
@@ -629,7 +632,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               }
             }
             break;
-            /*						case SILM_OSCFINE:
+            /*						case
+               SILM_OSCFINE:
                                                             {
                                                                     int
                offset=(input-lastSample)/channelCount ;
@@ -675,7 +679,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               }
             }
             break;
-            /*						case SILM_OSCFINE:
+            /*						case
+               SILM_OSCFINE:
                                                             {
                                                                     int
                offset=(lastSample-input)/channelCount ;
@@ -824,8 +829,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             }
 
             *fltSpeedPtr =
-                fp_mul(*fltSpeedPtr, fltParm2); // mul by res, it's some kind of
-                                                // inertia.
+                fp_mul(*fltSpeedPtr, fltParm2); // mul by res, it's some kind
+                                                // of inertia.
             /*HOG:5*/ *fltSpeedPtr = fp_add(
                 *fltSpeedPtr,
                 fp_mul(difr, fltParm1)); // mul by cutoff, less cutoff = no
@@ -964,7 +969,8 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
     Variable *nameVar = FindVariable(FourCC::InstrumentName);
 
     if (sampleVar && nameVar) {
-      // Only update the name if it's empty or matches the previous sample name
+      // Only update the name if it's empty or matches the previous sample
+      // name
       etl::string<MAX_INSTRUMENT_NAME_LENGTH> currentName =
           nameVar->GetString();
       if (currentName.empty()) {
