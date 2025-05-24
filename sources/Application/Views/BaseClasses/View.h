@@ -158,7 +158,7 @@ protected:
   void drawNotes();
   void drawBattery(GUITextProperties &props);
   void drawMasterVuMeter(Player *player, GUITextProperties props,
-                         bool forceRedraw = false);
+                         bool forceRedraw = false, uint8_t xoffset = 24);
   void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);
   void drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
                    GUITextProperties props, int vuIndex,

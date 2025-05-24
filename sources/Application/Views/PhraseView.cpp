@@ -1321,7 +1321,7 @@ void PhraseView::AnimationUpdate() {
     drawNotes();
 
     // Draw VU meter
-    drawMasterVuMeter(player, props);
+    drawMasterVuMeter(player, props, false, 25);
 
     // Draw play position marker
     GUIPoint anchor = GetAnchor();
