@@ -24,7 +24,8 @@ public:
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
-  virtual void OnFocus(){};
+  virtual void OnFocus();
+
   // Observer for action callback
   void Update(Observable &, I_ObservableData *);
 
@@ -39,16 +40,18 @@ private:
   etl::vector<UIBigHexVarField, 16> bigHexVarField_;
   etl::vector<UISwatchField, 16> swatchField_;
   etl::vector<UIActionField, 2> actionField_; // For Import/Export buttons
-  etl::vector<UITextField<MAX_THEME_NAME_LENGTH>, 1> textFields_; // For theme name input
-  
+  etl::vector<UITextField<MAX_THEME_NAME_LENGTH>, 1>
+      textFields_; // For theme name input
+
   // Reference to the theme name field for direct access
   UITextField<MAX_THEME_NAME_LENGTH> *themeNameField_;
   bool themeNameEditMode_; // Flag to track if we're editing the theme name
-  
+
   // Helper methods for theme import/export
   void handleThemeExport();
   void exportTheme();
   void importTheme();
-  void exportThemeWithName(const char* themeName, bool overwrite);
+  void exportThemeWithName(const char *themeName, bool overwrite);
+  void updateThemeNameFromConfig(); // Update the theme name field from Config
 };
 #endif

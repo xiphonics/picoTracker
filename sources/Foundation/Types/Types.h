@@ -193,6 +193,7 @@ struct FourCC {
     // 170 is taken for VarChannel8Volume
     // 171 is taken for SampleInstrumentSlices
     // 172 is taken for ActionThemeName
+    // 173 is taken for VarThemeName
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -202,6 +203,7 @@ struct FourCC {
     VarChannel6Volume = 168,
     VarChannel7Volume = 169,
     VarChannel8Volume = 170,
+    VarThemeName = 173, // Variable for storing the current theme name
 
     VarInstrumentType = 113,
 
@@ -222,7 +224,7 @@ struct FourCC {
     ActionRenderMixdown = 149,
     ActionRenderStems = 150,
     ActionShowTheme = 159,
-    ActionThemeName = 172, // New action for theme name field
+    ActionThemeName = 172,
     SampleInstrumentSlices = 171,
 
     Default = 255, // "    "
@@ -265,6 +267,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
   ETL_ENUM_TYPE(VarUIFont, "UIFONT")
+  ETL_ENUM_TYPE(VarThemeName, "THEMENAME")
   ETL_ENUM_TYPE(VarScaleRoot, "scaleroot")
   ETL_ENUM_TYPE(MacroInstrumentShape, "shape")
   ETL_ENUM_TYPE(MacroInstrmentTimbre, "timbre")

@@ -37,6 +37,7 @@ private:
   WatchedVariable midiSync_;
   WatchedVariable remoteUI_;
   WatchedVariable uiFont_;
+  Variable themeName_; // Current theme name
 };
 
 #endif

@@ -77,6 +77,8 @@ static const ConfigParam configParams[] = {
     {"MIDISYNC", DEFAULT_MIDISYNC, FourCC::VarMidiSync},
     {"REMOTEUI", DEFAULT_REMOTEUI, FourCC::VarRemoteUI},
     {"UIFONT", ThemeConstants::DEFAULT_UIFONT, FourCC::VarUIFont},
+    // Note Theme name is stored as a string, not an int
+    {"THEMENAME", 0, FourCC::VarThemeName},
 };
 
 Config::Config()
@@ -85,7 +87,16 @@ Config::Config()
       midiDevice_(FourCC::VarMidiDevice, midiDeviceList, MIDI_DEVICE_LEN),
       midiSync_(FourCC::VarMidiSync, midiSendSync, 2, 0),
       remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, 0),
-      uiFont_(FourCC::VarUIFont, fontOptions, 2, 0) {
+      uiFont_(FourCC::VarUIFont, fontOptions, 2, 0),
+      themeName_(FourCC::VarThemeName, ThemeConstants::DEFAULT_THEME_NAME) {
+
+  // Add all variables to the container
+  variables_.push_back(&lineOut_);
+  variables_.push_back(&midiDevice_);
+  variables_.push_back(&midiSync_);
+  variables_.push_back(&remoteUI_);
+  variables_.push_back(&uiFont_);
+  variables_.push_back(&themeName_);
   PersistencyDocument doc;
 
   // First always just apply all default settings values, these will then be
@@ -137,9 +148,17 @@ Config::Config()
     bool hasAttr = doc.NextAttribute();
     while (hasAttr) {
       if (!strcasecmp(doc.attrname_, "VALUE")) {
-        processParams(doc.ElemName(), atoi(doc.attrval_), false);
-        Trace::Log("CONFIG", "Read Param:%s->[%s]", doc.ElemName(),
-                   doc.attrval_);
+        // Special handling for THEMENAME which is a string value
+        if (!strcmp(doc.ElemName(), "THEMENAME")) {
+          // Process theme name as a string
+          themeName_.SetString(doc.attrval_);
+          Trace::Log("CONFIG", "Read Theme Name:%s", doc.attrval_);
+        } else {
+          // Process other parameters as integers
+          processParams(doc.ElemName(), atoi(doc.attrval_), false);
+          Trace::Log("CONFIG", "Read Param:%s->[%s]", doc.ElemName(),
+                     doc.attrval_);
+        }
       }
       hasAttr = doc.NextAttribute();
     }
@@ -341,7 +360,6 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
   // store config version
   printer->OpenElement("CONFIG");
   printer->PushAttribute("VERSION", CONFIG_VERSION_NUMBER);
-
   // save all of the config parameters
   auto it = variables_.begin();
   for (size_t i = 0; i < variables_.size(); i++) {
@@ -573,6 +591,14 @@ bool Config::ImportTheme(const char *themeName) {
     filename.append(THEME_FILE_EXTENSION);
   }
 
+  // Extract the theme name without extension for storing in the config
+  etl::string<MAX_THEME_NAME_LENGTH> baseThemeName = themeName;
+  if (extension && strcmp(extension, THEME_FILE_EXTENSION) == 0) {
+    // Remove the extension from the theme name
+    baseThemeName =
+        etl::string<MAX_THEME_NAME_LENGTH>(themeName, extension - themeName);
+  }
+
   // Build the full path to the theme file
   etl::string<MAX_THEME_EXPORT_PATH_LENGTH> path = THEMES_DIR;
   path.append("/");
@@ -603,6 +629,16 @@ bool Config::ImportTheme(const char *themeName) {
   fp->Close();
   delete fp;
 
+  // Store the theme name in the config
+  themeName_.SetString(baseThemeName.c_str());
+
   // Use the LoadTheme method to load the theme data
-  return LoadTheme(&doc);
+  bool result = LoadTheme(&doc);
+
+  // Save the config to persist the theme name
+  if (result) {
+    Save();
+  }
+
+  return result;
 }
