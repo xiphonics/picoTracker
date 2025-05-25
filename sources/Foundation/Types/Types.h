@@ -191,6 +191,8 @@ struct FourCC {
     // 168 is taken for VarChannel6Volume
     // 169 is taken for VarChannel7Volume
     // 170 is taken for VarChannel8Volume
+    // 171 is taken for SampleInstrumentSlices
+    // 172 is taken for ActionThemeName
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -220,6 +222,7 @@ struct FourCC {
     ActionRenderMixdown = 149,
     ActionRenderStems = 150,
     ActionShowTheme = 159,
+    ActionThemeName = 172, // New action for theme name field
     SampleInstrumentSlices = 171,
 
     Default = 255, // "    "
@@ -372,6 +375,7 @@ struct FourCC {
   ETL_ENUM_TYPE(ActionEdit, "edit")
   ETL_ENUM_TYPE(ActionExport, "export")
   ETL_ENUM_TYPE(ActionImport, "import")
+  ETL_ENUM_TYPE(ActionThemeName, "themename")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE
