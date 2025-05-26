@@ -861,7 +861,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 };
 
 void InstrumentView::DrawView() {
-
   Clear();
 
   GUITextProperties props;
@@ -874,12 +873,21 @@ void InstrumentView::DrawView() {
   npf_snprintf(title, sizeof(title), "Instrument %2.2X",
                viewData_->currentInstrumentID_);
   DrawString(pos._x, pos._y, title, props);
-
   // Draw fields
-
   FieldView::Redraw();
   drawMap();
-};
+
+  // Draw instrument type with special handling for SID and OPAL
+  I_Instrument *instr = getInstrument();
+  if (instr) {
+    InstrumentType type = instr->GetType();
+    if (type == IT_SID || type == IT_OPAL) {
+      SetColor(CD_WARN);
+      DrawString(16, 1, "!EXPERIMENTAL!", props);
+      SetColor(CD_NORMAL);
+    }
+  }
+}
 
 void InstrumentView::OnFocus() {
   Trace::Log("INSTRUMENTVIEW", "onFocus");
