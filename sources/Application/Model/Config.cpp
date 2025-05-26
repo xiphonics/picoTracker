@@ -40,30 +40,137 @@ constexpr int DEFAULT_REMOTEUI = 0x1;
 // Use a struct to define parameter information
 struct ConfigParam {
   const char *name;
-  int defaultValue;
+  union {
+    int intValue;
+    const char *strValue;
+  } defaultValue;
   FourCC::enum_type fourcc;
+  const char **options;
+  int optionCount;
+  bool isString;
 };
 
 // Define parameters as a static array instead of a ETL flat_map for example,
 // because using a flat_map static requires too much stack space for
 // initialization
 static const ConfigParam configParams[] = {
-    {"BACKGROUND", ThemeConstants::DEFAULT_BACKGROUND, FourCC::VarBGColor},
-    {"FOREGROUND", ThemeConstants::DEFAULT_FOREGROUND, FourCC::VarFGColor},
-    {"HICOLOR1", ThemeConstants::DEFAULT_HICOLOR1, FourCC::VarHI1Color},
-    {"HICOLOR2", ThemeConstants::DEFAULT_HICOLOR2, FourCC::VarHI2Color},
-    {"CONSOLECOLOR", ThemeConstants::DEFAULT_CONSOLECOLOR,
-     FourCC::VarConsoleColor},
-    {"CURSORCOLOR", ThemeConstants::DEFAULT_CURSORCOLOR,
-     FourCC::VarCursorColor},
-    {"INFOCOLOR", ThemeConstants::DEFAULT_INFOCOLOR, FourCC::VarInfoColor},
-    {"WARNCOLOR", ThemeConstants::DEFAULT_WARNCOLOR, FourCC::VarWarnColor},
-    {"ERRORCOLOR", ThemeConstants::DEFAULT_ERRORCOLOR, FourCC::VarErrorColor},
-    {"ACCENTCOLOR", ThemeConstants::DEFAULT_ACCENT, FourCC::VarAccentColor},
-    {"ACCENTALTCOLOR", ThemeConstants::DEFAULT_ACCENT_ALT,
-     FourCC::VarAccentAltColor},
-    {"EMPHASISCOLOR", ThemeConstants::DEFAULT_EMPHASIS,
-     FourCC::VarEmphasisColor},
+    // Color variables
+    {"BACKGROUND",
+     {.intValue = ThemeConstants::DEFAULT_BACKGROUND},
+     FourCC::VarBGColor,
+     nullptr,
+     0,
+     false},
+    {"FOREGROUND",
+     {.intValue = ThemeConstants::DEFAULT_FOREGROUND},
+     FourCC::VarFGColor,
+     nullptr,
+     0,
+     false},
+    {"HICOLOR1",
+     {.intValue = ThemeConstants::DEFAULT_HICOLOR1},
+     FourCC::VarHI1Color,
+     nullptr,
+     0,
+     false},
+    {"HICOLOR2",
+     {.intValue = ThemeConstants::DEFAULT_HICOLOR2},
+     FourCC::VarHI2Color,
+     nullptr,
+     0,
+     false},
+    {"CONSOLECOLOR",
+     {.intValue = ThemeConstants::DEFAULT_CONSOLECOLOR},
+     FourCC::VarConsoleColor,
+     nullptr,
+     0,
+     false},
+    {"CURSORCOLOR",
+     {.intValue = ThemeConstants::DEFAULT_CURSORCOLOR},
+     FourCC::VarCursorColor,
+     nullptr,
+     0,
+     false},
+    {"INFOCOLOR",
+     {.intValue = ThemeConstants::DEFAULT_INFOCOLOR},
+     FourCC::VarInfoColor,
+     nullptr,
+     0,
+     false},
+    {"WARNCOLOR",
+     {.intValue = ThemeConstants::DEFAULT_WARNCOLOR},
+     FourCC::VarWarnColor,
+     nullptr,
+     0,
+     false},
+    {"ERRORCOLOR",
+     {.intValue = ThemeConstants::DEFAULT_ERRORCOLOR},
+     FourCC::VarErrorColor,
+     nullptr,
+     0,
+     false},
+    {"ACCENTCOLOR",
+     {.intValue = ThemeConstants::DEFAULT_ACCENT},
+     FourCC::VarAccentColor,
+     nullptr,
+     0,
+     false},
+    {"ACCENTALTCOLOR",
+     {.intValue = ThemeConstants::DEFAULT_ACCENT_ALT},
+     FourCC::VarAccentAltColor,
+     nullptr,
+     0,
+     false},
+    {"EMPHASISCOLOR",
+     {.intValue = ThemeConstants::DEFAULT_EMPHASIS},
+     FourCC::VarEmphasisColor,
+     nullptr,
+     0,
+     false},
+
+    // Device settings with options
+    {"LINEOUT",
+     {.intValue = DEFAULT_LINEOUT},
+     FourCC::VarLineOut,
+     lineOutOptions,
+     3,
+     false},
+    {"MIDIDEVICE",
+     {.intValue = DEFAULT_MIDIDEVICE},
+     FourCC::VarMidiDevice,
+     midiDeviceList,
+     4,
+     false},
+    {"MIDISYNC",
+     {.intValue = DEFAULT_MIDISYNC},
+     FourCC::VarMidiSync,
+     midiSendSync,
+     2,
+     false},
+    {"REMOTEUI",
+     {.intValue = DEFAULT_REMOTEUI},
+     FourCC::VarRemoteUI,
+     remoteUIOnOff,
+     2,
+     false},
+    {"UIFONT",
+     {.intValue = ThemeConstants::DEFAULT_UIFONT},
+     FourCC::VarUIFont,
+     fontOptions,
+     2,
+     false},
+
+    // Device settings with options
+    {"LINEOUT", DEFAULT_LINEOUT, FourCC::VarLineOut, lineOutOptions, 3, false},
+    {"MIDIDEVICE", DEFAULT_MIDIDEVICE, FourCC::VarMidiDevice, midiDeviceList, 4,
+     false},
+    {"MIDISYNC", DEFAULT_MIDISYNC, FourCC::VarMidiSync, midiSendSync, 2,
+     false}, // Only using first 2 options
+    {"REMOTEUI", DEFAULT_REMOTEUI, FourCC::VarRemoteUI, remoteUIOnOff, 2,
+     false},
+    {"UIFONT", ThemeConstants::DEFAULT_UIFONT, FourCC::VarUIFont, fontOptions,
+     2, false},
+
     // {"RESERVED1", ThemeConstants::DEFAULT_RESERVED1,
     // FourCC::VarReserved1Color},
     // {"RESERVED2", ThemeConstants::DEFAULT_RESERVED2,
@@ -72,39 +179,43 @@ static const ConfigParam configParams[] = {
     // FourCC::VarReserved3Color},
     // {"RESERVED4", ThemeConstants::DEFAULT_RESERVED4,
     // FourCC::VarReserved4Color},
-    {"LINEOUT", DEFAULT_LINEOUT, FourCC::VarLineOut},
-    {"MIDIDEVICE", DEFAULT_MIDIDEVICE, FourCC::VarMidiDevice},
-    {"MIDISYNC", DEFAULT_MIDISYNC, FourCC::VarMidiSync},
-    {"REMOTEUI", DEFAULT_REMOTEUI, FourCC::VarRemoteUI},
-    {"UIFONT", ThemeConstants::DEFAULT_UIFONT, FourCC::VarUIFont},
-    // Note Theme name is stored as a string, not an int
-    {"THEMENAME", 0, FourCC::VarThemeName},
+
+    {"THEMENAME",
+     {.strValue = ThemeConstants::DEFAULT_THEME_NAME},
+     FourCC::VarThemeName,
+     nullptr,
+     0,
+     true},
 };
 
-Config::Config()
-    : VariableContainer(&variables_),
-      lineOut_(FourCC::VarLineOut, lineOutOptions, 3, 0),
-      midiDevice_(FourCC::VarMidiDevice, midiDeviceList, MIDI_DEVICE_LEN),
-      midiSync_(FourCC::VarMidiSync, midiSendSync, 2, 0),
-      remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, 0),
-      uiFont_(FourCC::VarUIFont, fontOptions, 2, 0),
-      themeName_(FourCC::VarThemeName, ThemeConstants::DEFAULT_THEME_NAME) {
+Config::Config() : VariableContainer(&variables_) {
 
-  // Add all variables to the container
-  variables_.push_back(&lineOut_);
-  variables_.push_back(&midiDevice_);
-  variables_.push_back(&midiSync_);
-  variables_.push_back(&remoteUI_);
-  variables_.push_back(&uiFont_);
-  variables_.push_back(&themeName_);
+  // Create all variables from configParams
+  for (const auto &param : configParams) {
+    if (variables_.size() >= variables_.max_size()) {
+      Trace::Error("CONFIG", "Maximum number of variables reached");
+      break;
+    }
+
+    Variable *var = nullptr;
+
+    if (param.isString) {
+      // For string parameters (like theme name)
+      var = new Variable(FourCC(param.fourcc), param.defaultValue.strValue);
+    } else if (param.options) {
+      // For parameters with options
+      var = new WatchedVariable(FourCC(param.fourcc), param.options,
+                                param.optionCount, 0);
+      var->SetInt(param.defaultValue.intValue);
+    } else {
+      // For simple integer parameters (like colors)
+      var = new WatchedVariable(FourCC(param.fourcc),
+                                param.defaultValue.intValue);
+    }
+    variables_.push_back(var);
+  }
+
   PersistencyDocument doc;
-
-  // First always just apply all default settings values, these will then be
-  // overwritten by values read from config file but if there are any missing
-  // from config file, ie. new settings that that have been added to firmware
-  // since the version of the firmware that wrote the config file they will get
-  // default values
-  useDefaultConfig();
 
   if (!doc.Load(CONFIG_FILE_PATH)) {
     Trace::Error("CONFIG Could not open file for reading: %s",
@@ -147,17 +258,23 @@ Config::Config()
     }
     bool hasAttr = doc.NextAttribute();
     while (hasAttr) {
-      if (!strcasecmp(doc.attrname_, "VALUE")) {
-        // Special handling for THEMENAME which is a string value
-        if (!strcmp(doc.ElemName(), "THEMENAME")) {
-          // Process theme name as a string
-          themeName_.SetString(doc.attrval_);
+      // Special handling for Theme Name sadly because it is a string and no
+      // easy way to look that that up in configParams data above
+      if (!strcmp(doc.ElemName(), "THEMENAME")) {
+        if (Variable *themeVar = FindVariable(FourCC::VarThemeName)) {
+          themeVar->SetString(doc.attrval_);
           Trace::Log("CONFIG", "Read Theme Name:%s", doc.attrval_);
-        } else {
-          // Process other parameters as integers
-          processParams(doc.ElemName(), atoi(doc.attrval_), false);
-          Trace::Log("CONFIG", "Read Param:%s->[%s]", doc.ElemName(),
-                     doc.attrval_);
+        }
+      } else {
+        // Find the variable by name in configParams
+        for (const auto &param : configParams) {
+          if (!strcmp(doc.ElemName(), param.name)) {
+            if (Variable *var = FindVariable(param.fourcc)) {
+              var->SetInt(atoi(doc.attrval_));
+              Trace::Log("CONFIG", "Set %s = %s", param.name, doc.attrval_);
+            }
+            break;
+          }
         }
       }
       hasAttr = doc.NextAttribute();
@@ -224,8 +341,6 @@ void Config::WriteColorVariables(tinyxml2::XMLPrinter *printer) {
 }
 
 void Config::ReadColorVariable(PersistencyDocument *doc) {
-  Trace::Log("CONFIG", "Reading color variable from document");
-
   // Process the current element if it's a Color element
   if (strcmp(doc->ElemName(), "Color") == 0) {
     // Process Color element
@@ -318,6 +433,7 @@ void Config::ReadColorVariable(PersistencyDocument *doc) {
           Variable *var = FindVariable(fourcc);
           if (var) {
             var->SetInt(value);
+            Trace::Log("CONFIG", "Read Color: %s = %d", colorName, value);
           }
         }
       }
@@ -357,6 +473,9 @@ bool Config::SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName) {
 }
 
 void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
+  // Log the number of variables in the list before saving
+  Trace::Log("CONFIG", "Saving %d variables to config file", variables_.size());
+
   // store config version
   printer->OpenElement("CONFIG");
   printer->PushAttribute("VERSION", CONFIG_VERSION_NUMBER);
@@ -381,6 +500,7 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
 
     etl::string<16> elemName = var->GetName();
     to_upper_case(elemName);
+
     printer->OpenElement(elemName.c_str());
     // these settings need to be saved as thier Int values not as String
     // values hence we *dont* use GetString() !
@@ -453,89 +573,6 @@ int Config::GetValue(const char *key) {
   }
   return v ? v->GetInt() : 0;
 };
-
-// need to handle some variable like LINEOUT separately
-void Config::processParams(const char *name, int value, bool insert) {
-  if (!strcmp(name, "LINEOUT")) {
-    lineOut_.SetInt(value);
-    if (insert) {
-      variables_.insert(variables_.end(), &lineOut_);
-    }
-  } else if (!strcmp(name, "MIDIDEVICE")) {
-    midiDevice_.SetInt(value);
-    if (insert) {
-      variables_.insert(variables_.end(), &midiDevice_);
-    }
-  } else if (!strcmp(name, "MIDISYNC")) {
-    midiSync_.SetInt(value);
-    if (insert) {
-      variables_.insert(variables_.end(), &midiSync_);
-    }
-  } else if (!strcmp(name, "REMOTEUI")) {
-    remoteUI_.SetInt(value);
-    if (insert) {
-      variables_.insert(variables_.end(), &remoteUI_);
-    }
-  } else if (!strcmp(name, "UIFONT")) {
-    uiFont_.SetInt(value);
-    if (insert) {
-      variables_.insert(variables_.end(), &uiFont_);
-    }
-  } else {
-    auto fourcc = FourCC::Default;
-    // TODO: need to be able to assign fourcc based on name of element from
-    // the Xml config
-    if (!strcmp(name, FourCC(FourCC::VarFGColor).c_str())) {
-      fourcc = FourCC::VarFGColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarBGColor).c_str())) {
-      fourcc = FourCC::VarBGColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarHI1Color).c_str())) {
-      fourcc = FourCC::VarHI1Color;
-    } else if (!strcmp(name, FourCC(FourCC::VarHI2Color).c_str())) {
-      fourcc = FourCC::VarHI2Color;
-    } else if (!strcmp(name, FourCC(FourCC::VarConsoleColor).c_str())) {
-      fourcc = FourCC::VarConsoleColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarCursorColor).c_str())) {
-      fourcc = FourCC::VarCursorColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarInfoColor).c_str())) {
-      fourcc = FourCC::VarInfoColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarWarnColor).c_str())) {
-      fourcc = FourCC::VarWarnColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarErrorColor).c_str())) {
-      fourcc = FourCC::VarErrorColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarAccentColor).c_str())) {
-      fourcc = FourCC::VarAccentColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarAccentAltColor).c_str())) {
-      fourcc = FourCC::VarAccentAltColor;
-    } else if (!strcmp(name, FourCC(FourCC::VarEmphasisColor).c_str())) {
-      fourcc = FourCC::VarEmphasisColor;
-    }
-    // else if (!strcmp(name, FourCC(FourCC::VarReserved1Color).c_str())) {
-    //   fourcc = FourCC::VarReserved1Color;
-    // } else if (!strcmp(name, FourCC(FourCC::VarReserved2Color).c_str())) {
-    //   fourcc = FourCC::VarReserved2Color;
-    // } else if (!strcmp(name, FourCC(FourCC::VarReserved3Color).c_str())) {
-    //   fourcc = FourCC::VarReserved3Color;
-    // } else if (!strcmp(name, FourCC(FourCC::VarReserved4Color).c_str())) {
-    //   fourcc = FourCC::VarReserved4Color;
-    // }
-    if (insert) {
-      Variable *v = new Variable(fourcc, value);
-      variables_.insert(variables_.end(), v);
-    } else {
-      FindVariable(fourcc)->SetInt(value);
-    }
-  }
-}
-
-void Config::useDefaultConfig() {
-  Trace::Log("CONFIG", "Setting DEFAULT values for config parameters");
-
-  // Process all parameters from the static array
-  for (const auto &param : configParams) {
-    processParams(param.name, param.defaultValue, true);
-  }
-}
 
 bool Config::ExportTheme(const char *themeName, bool overwrite) {
   auto fs = FileSystem::GetInstance();
@@ -630,7 +667,8 @@ bool Config::ImportTheme(const char *themeName) {
   delete fp;
 
   // Store the theme name in the config
-  themeName_.SetString(baseThemeName.c_str());
+  Variable *themeVar = FindVariable(FourCC::VarThemeName);
+  themeVar->SetString(baseThemeName.c_str());
 
   // Use the LoadTheme method to load the theme data
   bool result = LoadTheme(&doc);
