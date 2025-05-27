@@ -44,20 +44,23 @@ int picoTrackerSystem::MainLoop() {
 void picoTrackerSystem::Boot(int argc, char **argv) {
 
   // Install System
-  static char systemMemBuf[sizeof(picoTrackerSystem)];
+  alignas(
+      picoTrackerSystem) static char systemMemBuf[sizeof(picoTrackerSystem)];
   System::Install(new (systemMemBuf) picoTrackerSystem());
 
   // Install GUI Factory
-  static char guiMemBuf[sizeof(GUIFactory)];
+  alignas(GUIFactory) static char guiMemBuf[sizeof(GUIFactory)];
   I_GUIWindowFactory::Install(new (guiMemBuf) GUIFactory());
 
   // Install Timers
-  static char timerMemBuf[sizeof(picoTrackerTimerService)];
+  alignas(picoTrackerTimerService) static char
+      timerMemBuf[sizeof(picoTrackerTimerService)];
   TimerService::GetInstance()->Install(new (timerMemBuf)
                                            picoTrackerTimerService());
 
   // Install FileSystem
-  static char fsMemBuf[sizeof(picoTrackerFileSystem)];
+  alignas(picoTrackerFileSystem) static char
+      fsMemBuf[sizeof(picoTrackerFileSystem)];
   FileSystem::Install(new (fsMemBuf) picoTrackerFileSystem());
 
   // First check for SDCard
@@ -75,7 +78,8 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   static char midiMemBuf[sizeof(DummyMidi)];
   MidiService::Install(new (midiMemBuf) DummyMidi());
 #else
-  static char midiMemBuf[sizeof(picoTrackerMidiService)];
+  alignas(picoTrackerMidiService) static char
+      midiMemBuf[sizeof(picoTrackerMidiService)];
   MidiService::Install(new (midiMemBuf) picoTrackerMidiService());
 #endif
 
@@ -83,11 +87,12 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   AudioSettings hint;
   hint.bufferSize_ = 1024;
   hint.preBufferCount_ = 8;
-  static char audioMemBuf[sizeof(picoTrackerAudio)];
+  alignas(picoTrackerAudio) static char audioMemBuf[sizeof(picoTrackerAudio)];
   Audio::Install(new (audioMemBuf) picoTrackerAudio(hint));
 
   // Install SamplePool
-  static char samplePoolMemBuf[sizeof(picoTrackerSamplePool)];
+  alignas(picoTrackerSamplePool) static char
+      samplePoolMemBuf[sizeof(picoTrackerSamplePool)];
   SamplePool::Install(new (samplePoolMemBuf) picoTrackerSamplePool());
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();

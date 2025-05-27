@@ -122,7 +122,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
 
   GUIWindow::Clear(backgroundColor_);
 
-  static char nullViewMemBuf[sizeof(NullView)];
+  alignas(NullView) static char nullViewMemBuf[sizeof(NullView)];
   _nullView = new (nullViewMemBuf) NullView((*this), 0);
   _currentView = _nullView;
   _nullView->SetDirty(true);
@@ -330,7 +330,7 @@ void AppWindow::LoadProject(const char *projectName) {
   // load the projects samples
   pool->Load(projectName);
 
-  static char projectMemBuf[sizeof(Project)];
+  alignas(Project) static char projectMemBuf[sizeof(Project)];
   Project *project = new (projectMemBuf) Project(projectName);
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
@@ -361,7 +361,7 @@ void AppWindow::LoadProject(const char *projectName) {
   ApplicationCommandDispatcher::GetInstance()->Init(project);
 
   // Create view data
-  static char viewDataMemBuf[sizeof(ViewData)];
+  alignas(ViewData) static char viewDataMemBuf[sizeof(ViewData)];
   _viewData = new (viewDataMemBuf) ViewData(project);
 
   // Create & observe the player
@@ -374,63 +374,67 @@ void AppWindow::LoadProject(const char *projectName) {
   controller->Init(project, _viewData);
 
   // Create & observe all views
-  static char songViewMemBuf[sizeof(SongView)];
+  alignas(SongView) static char songViewMemBuf[sizeof(SongView)];
   _songView = new (songViewMemBuf) SongView((*this), _viewData);
   _songView->AddObserver((*this));
 
-  static char chainViewMemBuf[sizeof(ChainView)];
+  alignas(ChainView) static char chainViewMemBuf[sizeof(ChainView)];
   _chainView = new (chainViewMemBuf) ChainView((*this), _viewData);
   _chainView->AddObserver((*this));
 
-  static char phraseViewMemBuf[sizeof(PhraseView)];
+  alignas(PhraseView) static char phraseViewMemBuf[sizeof(PhraseView)];
   _phraseView = new (phraseViewMemBuf) PhraseView((*this), _viewData);
   _phraseView->AddObserver((*this));
 
-  static char deviceViewMemBuf[sizeof(DeviceView)];
+  alignas(DeviceView) static char deviceViewMemBuf[sizeof(DeviceView)];
   _deviceView = new (deviceViewMemBuf) DeviceView((*this), _viewData);
   _deviceView->AddObserver((*this));
 
-  static char themeViewMemBuf[sizeof(ThemeView)];
+  alignas(ThemeView) static char themeViewMemBuf[sizeof(ThemeView)];
   _themeView = new (themeViewMemBuf) ThemeView((*this), _viewData);
   _themeView->AddObserver((*this));
 
-  static char themeImportViewMemBuf[sizeof(ThemeImportView)];
+  alignas(ThemeImportView) static char
+      themeImportViewMemBuf[sizeof(ThemeImportView)];
   _themeImportView =
       new (themeImportViewMemBuf) ThemeImportView((*this), _viewData);
   _themeImportView->AddObserver((*this));
 
-  static char projectViewMemBuf[sizeof(ProjectView)];
+  alignas(ProjectView) static char projectViewMemBuf[sizeof(ProjectView)];
   _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
   _projectView->AddObserver((*this));
 
-  static char importViewMemBuf[sizeof(ImportView)];
+  alignas(ImportView) static char importViewMemBuf[sizeof(ImportView)];
   _importView = new (importViewMemBuf) ImportView((*this), _viewData);
   _importView->AddObserver((*this));
 
-  static char instrumentImportViewMemBuf[sizeof(InstrumentImportView)];
+  alignas(InstrumentImportView) static char
+      instrumentImportViewMemBuf[sizeof(InstrumentImportView)];
   _instrumentImportView =
       new (instrumentImportViewMemBuf) InstrumentImportView((*this), _viewData);
   _instrumentImportView->AddObserver((*this));
 
-  static char instrumentViewMemBuf[sizeof(InstrumentView)];
+  alignas(
+      InstrumentView) static char instrumentViewMemBuf[sizeof(InstrumentView)];
   _instrumentView =
       new (instrumentViewMemBuf) InstrumentView((*this), _viewData);
   _instrumentView->AddObserver((*this));
 
-  static char tableViewMemBuf[sizeof(TableView)];
+  alignas(TableView) static char tableViewMemBuf[sizeof(TableView)];
   _tableView = new (tableViewMemBuf) TableView((*this), _viewData);
   _tableView->AddObserver((*this));
 
-  static char grooveViewMemBuf[sizeof(GrooveView)];
+  alignas(GrooveView) static char grooveViewMemBuf[sizeof(GrooveView)];
   _grooveView = new (grooveViewMemBuf) GrooveView((*this), _viewData);
   _grooveView->AddObserver(*this);
 
-  static char selectProjectViewMemBuf[sizeof(SelectProjectView)];
+  alignas(SelectProjectView) static char
+      selectProjectViewMemBuf[sizeof(SelectProjectView)];
   _selectProjectView =
       new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
   _selectProjectView->AddObserver((*this));
 
-  static char mixerViewMemBuf[sizeof(MixerView)];
+  alignas(MixerView) static char mixerViewMemBuf[sizeof(MixerView)];
   _mixerView = new (mixerViewMemBuf) MixerView((*this), _viewData);
   _mixerView->AddObserver((*this));
 
@@ -487,7 +491,7 @@ AppWindow *AppWindow::Create(GUICreateWindowParams &params,
                              const char *projectName) {
   I_GUIWindowImp &imp =
       I_GUIWindowFactory::GetInstance()->CreateWindowImp(params);
-  static char appWindowMemBuf[sizeof(AppWindow)];
+  alignas(AppWindow) static char appWindowMemBuf[sizeof(AppWindow)];
   AppWindow *w = new (appWindowMemBuf) AppWindow(imp);
   strcpy(w->projectName_, projectName);
   return w;
