@@ -894,7 +894,7 @@ void TableView::AnimationUpdate() {
     // Get anchor position for drawing
     GUIPoint anchor = GetAnchor();
     GUIPoint pos = anchor;
-    
+
     // Clear all cursor columns first (positions 0, 9, 18 from anchor)
     for (int i = 0; i < 3; i++) {
       pos._x = anchor._x - 1 + (i * 9);
@@ -919,7 +919,7 @@ void TableView::AnimationUpdate() {
         SetColor(CD_ACCENT);
         for (int i = 0; i < 3; i++) {
           int yPos = tpb.GetPlaybackPosition(i);
-          if (yPos >= 0 && yPos < 16) {  // Only draw if position is valid
+          if (yPos >= 0 && yPos < 16) { // Only draw if position is valid
             pos._x = anchor._x - 1 + (i * 9);
             pos._y = anchor._y + yPos;
             DrawString(pos._x, pos._y, ">", props);
