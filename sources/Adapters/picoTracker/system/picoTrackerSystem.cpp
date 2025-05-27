@@ -2,13 +2,9 @@
 #include "Adapters/picoTracker/audio/picoTrackerAudio.h"
 #include "Adapters/picoTracker/filesystem/picoTrackerFileSystem.h"
 #include "Adapters/picoTracker/gui/GUIFactory.h"
-#include "Adapters/picoTracker/timer/picoTrackerTimer.h"
-#ifdef DUMMY_MIDI
-#include "Adapters/Dummy/Midi/DummyMidi.h"
-#else
 #include "Adapters/picoTracker/midi/picoTrackerMidiService.h"
-#endif
 #include "Adapters/picoTracker/system/picoTrackerSamplePool.h"
+#include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #include "Application/Commands/NodeList.h"
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
@@ -74,14 +70,9 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   // **NOTE**: MIDI install MUST happen before Audio install because it triggers
   // reading config file and config file needs to have MidiService already
   // installed in order to apply midi settings read from the config file
-#ifdef DUMMY_MIDI
-  static char midiMemBuf[sizeof(DummyMidi)];
-  MidiService::Install(new (midiMemBuf) DummyMidi());
-#else
   alignas(picoTrackerMidiService) static char
       midiMemBuf[sizeof(picoTrackerMidiService)];
   MidiService::Install(new (midiMemBuf) picoTrackerMidiService());
-#endif
 
   // Install Sound
   AudioSettings hint;
