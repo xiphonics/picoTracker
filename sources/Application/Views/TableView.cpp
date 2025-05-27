@@ -30,7 +30,7 @@ TableView::~TableView() {}
 void TableView::OnFocus() {
   clipboard_.active_ = false;
   viewMode_ = VM_NORMAL;
-  lastPosition_[0] = lastPosition_[1] = lastPosition_[2] = 0;
+  lastPosition_[0] = lastPosition_[1] = lastPosition_[2] = 0xFF;
   updateCursor(0, 0);
 };
 
@@ -860,34 +860,11 @@ void TableView::DrawView() {
 
 void TableView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // Since this can be called from core1 via the Observer pattern,
-  // we need to ensure we don't call any drawing functions directly
-  // Instead of drawing directly, we'll just update our state and let
-  // AnimationUpdate handle the actual drawing
-
-  // Set the consolidated flag for UI updates
+  // we just need to set the update flag and let AnimationUpdate
+  // handle the actual drawing on the main thread
   needsUIUpdate_ = true;
-
-  // Keep setting these for backward compatibility
   needsNotesUpdate_ = true;
   needsPlayPositionUpdate_ = true;
-
-  // Update the last positions for use in AnimationUpdate
-  TableHolder *th = TableHolder::GetInstance();
-  if (th) {
-    // Get current channel
-    int channel = viewData_->songX_;
-    // Table associated to the channel playerpb
-    TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
-    Table *playbackTable = tpb.GetTable();
-    // Table we're viewing
-    Table &viewTable = th->GetTable(viewData_->currentTable_);
-    if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
-      // Store positions for later use in AnimationUpdate
-      lastPosition_[0] = tpb.GetPlaybackPosition(0);
-      lastPosition_[1] = tpb.GetPlaybackPosition(1);
-      lastPosition_[2] = tpb.GetPlaybackPosition(2);
-    }
-  }
 
   // Create a memory barrier to ensure changes are visible across cores
   createMemoryBarrier();
@@ -914,46 +891,40 @@ void TableView::AnimationUpdate() {
     // Draw notes
     drawNotes();
 
-    // Draw play positions
+    // Get anchor position for drawing
     GUIPoint anchor = GetAnchor();
     GUIPoint pos = anchor;
-
-    // Clear previous positions
-    pos._x = anchor._x - 1;
-    pos._y = anchor._y + lastPosition_[0];
-    DrawString(pos._x, pos._y, " ", props);
-
-    pos._x += 9;
-    pos._y = anchor._y + lastPosition_[1];
-    DrawString(pos._x, pos._y, " ", props);
-
-    pos._x += 9;
-    pos._y = anchor._y + lastPosition_[2];
-    DrawString(pos._x, pos._y, " ", props);
+    
+    // Clear all cursor columns first (positions 0, 9, 18 from anchor)
+    for (int i = 0; i < 3; i++) {
+      pos._x = anchor._x - 1 + (i * 9);
+      for (int row = 0; row < 16; row++) {
+        pos._y = anchor._y + row;
+        DrawString(pos._x, pos._y, " ", props);
+      }
+    }
 
     // Only update play position if player is running
     if (player->IsRunning()) {
       // Get current channel
       int channel = viewData_->songX_;
-      // Table associated to the channel playerpb
+      // Table associated to the channel player
       TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
       Table *playbackTable = tpb.GetTable();
       // Table we're viewing
       Table &viewTable = th->GetTable(viewData_->currentTable_);
 
       if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
-        pos._x = anchor._x - 1;
-        pos._y = anchor._y + lastPosition_[0];
+        // Draw cursors at current positions
         SetColor(CD_ACCENT);
-        DrawString(pos._x, pos._y, ">", props);
-
-        pos._x += 9;
-        pos._y = anchor._y + lastPosition_[1];
-        DrawString(pos._x, pos._y, ">", props);
-
-        pos._x += 9;
-        pos._y = anchor._y + lastPosition_[2];
-        DrawString(pos._x, pos._y, ">", props);
+        for (int i = 0; i < 3; i++) {
+          int yPos = tpb.GetPlaybackPosition(i);
+          if (yPos >= 0 && yPos < 16) {  // Only draw if position is valid
+            pos._x = anchor._x - 1 + (i * 9);
+            pos._y = anchor._y + yPos;
+            DrawString(pos._x, pos._y, ">", props);
+          }
+        }
       }
     }
 
