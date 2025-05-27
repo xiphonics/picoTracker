@@ -172,7 +172,7 @@ void View::drawNotes() {
 }
 
 void View::drawMasterVuMeter(Player *player, GUITextProperties props,
-                             bool forceRedraw) {
+                             bool forceRedraw, uint8_t xoffset) {
   stereosample playerLevel = player->GetMasterLevel();
 
   // Convert to dB
@@ -185,7 +185,7 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();
-  pos._x += 24;
+  pos._x += xoffset;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
 
   // Use index 0 for the master VU meter
