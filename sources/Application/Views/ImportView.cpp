@@ -14,6 +14,7 @@
 #define LIST_PAGE_SIZE SCREEN_HEIGHT - 4
 
 // is single cycle macro, checks for FILE size of LGPT and AKWF file formats
+// AKWF "nes" pack 1376, AKWF "standard" 1344, LGPT pack 300
 #define IS_SINGLE_CYCLE(x) (x == 1376 || x == 1344 || x == 300)
 
 // Initialize static member
