@@ -29,14 +29,7 @@ private:
   etl::list<Variable *, 24> variables_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
-  void processParams(const char *name, int value, bool insert);
   void useDefaultConfig();
-
-  WatchedVariable lineOut_;
-  WatchedVariable midiDevice_;
-  WatchedVariable midiSync_;
-  WatchedVariable remoteUI_;
-  WatchedVariable uiFont_;
 };
 
 #endif

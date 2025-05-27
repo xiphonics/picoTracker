@@ -6,6 +6,7 @@
 #include "Application/Views/ModalDialogs/TextInputModalView.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
+#include <Application/Model/ThemeConstants.h>
 
 #define MAX_COLOR_VALUE 0xFFFFFF
 #define FONT_FIELD_LINE 3
@@ -40,6 +41,38 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   intVarField_.emplace_back(position, *v, "Font: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._y += 2;
+
+  // Get the current theme name from Config
+  Variable *configThemeVar = config->FindVariable(FourCC::VarThemeName);
+  etl::string<MAX_THEME_NAME_LENGTH> currentThemeName = "default";
+
+  // If the theme name is set in the config, use it
+  if (configThemeVar && !configThemeVar->GetString().empty()) {
+    currentThemeName = configThemeVar->GetString();
+  }
+
+  // Create a variable for the theme name field
+  Variable *themeNameVar =
+      new Variable(FourCC::ActionThemeName, currentThemeName.c_str());
+
+  // Create the label and default value as variables to avoid temporary objects
+  auto label = etl::string<MAX_UITEXTFIELD_LABEL_LENGTH>("Theme: ");
+  auto defaultValue = etl::string<MAX_THEME_NAME_LENGTH>(currentThemeName);
+
+  // Add the text field
+  textFields_.emplace_back(*themeNameVar, position, label,
+                           FourCC::ActionThemeName, defaultValue);
+  themeNameField_ = &(*textFields_.rbegin());
+  themeNameField_->AddObserver(*this);
+  fieldList_.insert(fieldList_.end(), themeNameField_);
+
+  // Initialize the edit mode flag
+  themeNameEditMode_ = false;
+
+  // Initialize the export theme name
+  exportThemeName_ = currentThemeName;
 
   // Foreground color
   position._y += 2;
@@ -278,7 +311,33 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   }
   // Handle theme export action
   case FourCC::ActionExport: {
-    exportTheme();
+    // Get the theme name from the text field
+    exportThemeName_ = themeNameField_->GetString();
+
+    // Check if the theme name is empty
+    if (exportThemeName_.empty()) {
+      exportThemeName_ = ThemeConstants::DEFAULT_THEME_NAME;
+      themeNameField_->SetVariable(
+          *new Variable(FourCC::ActionThemeName, exportThemeName_.c_str()));
+    }
+
+    // Export the theme
+    handleThemeExport();
+    return;
+  }
+  // Handle theme name field
+  case FourCC::ActionThemeName: {
+    // Update the export theme name
+    exportThemeName_ = themeNameField_->GetString();
+
+    // Update the theme name in the Config
+    Config *config = Config::GetInstance();
+    Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
+    if (themeNameVar) {
+      themeNameVar->SetString(exportThemeName_.c_str());
+      // Save the config to persist the theme name
+      config->Save();
+    }
     return;
   }
   // if font changes call redraw all fields
@@ -325,91 +384,97 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   config->Save();
 }
 
-// No need for forward declarations with lambdas
+void ThemeView::handleThemeExport() {
+  // Check if the theme name is valid
+  if (exportThemeName_.empty()) {
+    exportThemeName_ = ThemeConstants::DEFAULT_THEME_NAME;
+  }
 
-// Forward declarations for static callback functions
-static void ExportThemeInputCallback(View &v, ModalView &dialog);
-static void OverwriteThemeCallback(View &v, ModalView &dialog);
+  // Build the path to check if the theme already exists
+  char pathBuffer[MAX_THEME_EXPORT_PATH_LENGTH + 1];
+  memset(pathBuffer, 0, sizeof(pathBuffer));
 
-void ThemeView::exportTheme() {
-  // Create a text input dialog for the theme name
-  TextInputModalView *tiv = new TextInputModalView(
-      *this, "Export Theme", "Name:", MBBF_OK | MBBF_CANCEL, exportThemeName_);
+  strcpy(pathBuffer, THEMES_DIR);
+  strcat(pathBuffer, "/");
+  strcat(pathBuffer, exportThemeName_.c_str());
+  strcat(pathBuffer, THEME_FILE_EXTENSION);
 
-  DoModal(tiv, ExportThemeInputCallback);
-}
+  // Check if theme exists
+  auto fs = FileSystem::GetInstance();
+  if (fs->exists(pathBuffer)) {
+    // Theme exists, ask for confirmation
+    MessageBox *mb = new MessageBox(*this, "Theme already exists. Overwrite?",
+                                    MBBF_YES | MBBF_NO);
 
-// Callback for the theme name input dialog
-static void ExportThemeInputCallback(View &v, ModalView &dialog) {
-  ThemeView &tv = (ThemeView &)v;
-  auto retCode = dialog.GetReturnCode();
-  if (retCode == MBL_OK) {
-    // Get the text from the text field
-    TextInputModalView &inputView = (TextInputModalView &)dialog;
-    etl::string<MAX_TEXT_INPUT_LENGTH> themeName =
-        inputView.GetTextField()->GetString();
-
-    // Don't proceed if the name is empty
-    if (themeName.empty()) {
-      return;
-    }
-
-    tv.exportThemeName_ = themeName;
-
-    auto fs = FileSystem::GetInstance();
-
-    // Check if theme with this name already exists
-    etl::string<MAX_THEME_EXPORT_PATH_LENGTH> filename = themeName;
-    filename.append(THEME_FILE_EXTENSION);
-
-    etl::string<MAX_THEME_EXPORT_PATH_LENGTH> path = THEMES_DIR;
-    path.append("/");
-    path.append(filename);
-
-    if (fs->exists(path.c_str())) {
-      // Theme already exists, ask for confirmation to overwrite
-      MessageBox *mb = new MessageBox(tv, "Theme already exists. Overwrite?",
-                                      MBBF_YES | MBBF_NO);
-
-      tv.DoModal(mb, OverwriteThemeCallback);
-    } else {
-      // Theme doesn't exist, export it directly
-      // Use Config's ExportTheme method directly
-      Config *config = Config::GetInstance();
-      bool result = config->ExportTheme(tv.exportThemeName_.c_str(), false);
-
-      if (result) {
-        MessageBox *successMb =
-            new MessageBox(tv, "Theme exported successfully", MBBF_OK);
-        tv.DoModal(successMb);
-      } else {
-        MessageBox *errorMb =
-            new MessageBox(tv, "Failed to export theme", MBBF_OK);
-        tv.DoModal(errorMb);
+    // Use a lambda for the callback to avoid the static function
+    DoModal(mb, [this](View &v, ModalView &dialog) {
+      if (dialog.GetReturnCode() == MBL_YES) {
+        // User confirmed overwrite
+        exportThemeWithName(exportThemeName_.c_str(), true);
       }
-    }
+    });
+  } else {
+    // Theme doesn't exist, export directly
+    exportThemeWithName(exportThemeName_.c_str(), false);
   }
 }
 
-// Callback for the overwrite confirmation dialog
-static void OverwriteThemeCallback(View &v, ModalView &dialog) {
-  ThemeView &tv = (ThemeView &)v;
-  if (dialog.GetReturnCode() == MBL_YES) {
-    // User confirmed overwrite, export the theme
-    // Use Config's ExportTheme method directly with overwrite=true
-    Config *config = Config::GetInstance();
-    bool result = config->ExportTheme(tv.exportThemeName_.c_str(), true);
+void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
+  // Export the theme using Config
+  Config *config = Config::GetInstance();
+  bool result = config->ExportTheme(themeName, overwrite);
 
-    if (result) {
-      MessageBox *successMb = new MessageBox(tv, "Theme exported", MBBF_OK);
-      tv.DoModal(successMb);
-    } else {
-      MessageBox *errorMb =
-          new MessageBox(tv, "Failed to export theme", MBBF_OK);
-      tv.DoModal(errorMb);
+  if (result) {
+    // Update the theme name in the Config
+    Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
+    if (themeNameVar) {
+      themeNameVar->SetString(themeName);
+      // Save the config to persist the theme name
+      config->Save();
     }
+
+    // Update the theme name field
+    themeNameField_->SetVariable(
+        *new Variable(FourCC::ActionThemeName, themeName));
+    exportThemeName_ = themeName;
+  }
+
+  // Show result message
+  MessageBox *resultMb = new MessageBox(
+      *this, result ? "Theme exported successfully" : "Failed to export theme",
+      MBBF_OK);
+  DoModal(resultMb);
+}
+
+void ThemeView::updateThemeNameFromConfig() {
+  // Get the current theme name from Config
+  Config *config = Config::GetInstance();
+  Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
+
+  if (themeNameVar && !themeNameVar->GetString().empty()) {
+    // Get the theme name from Config
+    etl::string<MAX_THEME_NAME_LENGTH> themeName = themeNameVar->GetString();
+
+    // Update the theme name field
+    themeNameField_->SetVariable(
+        *new Variable(FourCC::ActionThemeName, themeName.c_str()));
+    exportThemeName_ = themeName;
   }
 }
+
+void ThemeView::OnFocus() {
+  // Update the theme name field from Config when the view gets focus
+  // This ensures the field is updated after importing a theme
+  updateThemeNameFromConfig();
+}
+
+// Keep this method for backward compatibility
+void ThemeView::exportTheme() {
+  // This now just calls handleThemeExport
+  handleThemeExport();
+}
+
+// We've replaced the static callbacks with lambdas and direct methods
 
 void ThemeView::importTheme() {
   // Switch to the theme import view
