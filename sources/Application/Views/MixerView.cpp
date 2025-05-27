@@ -3,13 +3,13 @@
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
 #include "UIController.h"
+#include <Application/AppWindow.h>
 #include <string>
 
 #define CHANNELS_X_OFFSET_ 3 // stride between each channel
 
 MixerView::MixerView(GUIWindow &w, ViewData *viewData)
-    : FieldView(w, viewData), needsPlayTimeUpdate_(false),
-      needsNotesUpdate_(false) {
+    : FieldView(w, viewData) {
 
   // Initialize the channel volume fields
   initChannelVolumeFields();
@@ -242,6 +242,17 @@ void MixerView::initChannelVolumeFields() {
     }
   }
 
+  // Add master volume field to the right of channel volumes
+  GUIPoint masterPos = position;
+  // Position to the right of channel volumes
+  masterPos._x += (SONG_CHANNEL_COUNT * CHANNELS_X_OFFSET_);
+
+  Variable *v = project->FindVariable(FourCC::VarMasterVolume);
+  if (v) {
+    masterVolumeField_.emplace_back(masterPos, *v, "%2.2d", 0, 100, 1, 5);
+    fieldList_.insert(fieldList_.end(), &(*masterVolumeField_.begin()));
+  }
+
   // Set focus to the first field if we have any fields
   if (!fieldList_.empty()) {
     SetFocus(*fieldList_.begin());
@@ -310,6 +321,15 @@ void MixerView::DrawView() {
   drawMap();
   drawNotes();
   drawMasterVuMeter(player, props);
+
+  // Draw master volume label
+  GUIPoint labelPos = GetAnchor();
+  // Align with master volume control
+  labelPos._x += (SONG_CHANNEL_COUNT * CHANNELS_X_OFFSET_);
+  labelPos._y = SCREEN_HEIGHT - 3; // Position below the volume control
+  SetColor(CD_HILITE2);
+  DrawString(labelPos._x, labelPos._y, "MB", props);
+  SetColor(CD_NORMAL);
 
   if (player->IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);

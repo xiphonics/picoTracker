@@ -22,7 +22,9 @@ const uint32_t DEFAULT_EMPHASIS = 0xFFA500;
 // const uint32_t DEFAULT_RESERVED4 = 0xFFFF00;
 
 // Font constants
-constexpr int DEFAULT_UIFONT = 0x0;
+const int DEFAULT_UIFONT = 0x0;
+// Default theme name - using inline to avoid multiple definition errors
+inline const char *DEFAULT_THEME_NAME = "Default";
 } // namespace ThemeConstants
 
 #endif // _THEME_CONSTANTS_H_

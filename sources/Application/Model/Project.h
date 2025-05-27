@@ -10,7 +10,7 @@
 #include "Foundation/Variables/VariableContainer.h"
 #include "Song.h"
 
-#define PROJECT_NUMBER "2.1-BETA2"
+#define PROJECT_NUMBER "2.1-BETA3"
 #define PROJECT_RELEASE "r"
 // BUILD_COUNT define comes from BuildNumber.h
 

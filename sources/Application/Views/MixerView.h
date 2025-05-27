@@ -36,6 +36,7 @@ private:
 
   // Channel volume UI fields
   etl::vector<UIIntVarField, SONG_CHANNEL_COUNT> channelVolumeFields_;
+  etl::vector<UIIntVarField, 1> masterVolumeField_; // Master volume field
 
   // Flags to track which UI elements need updating
   // These prevent core1 from directly updating the UI
