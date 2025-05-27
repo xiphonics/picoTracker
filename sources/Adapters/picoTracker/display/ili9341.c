@@ -117,7 +117,6 @@ void ili9341_init() {
   // MY MX MV ML RGB MH -  -
   ili9341_command_param(0xC0);
   ili9341_set_command(ILI9341_INVON);
-
 #else
   ili9341_command_param(0x88);
 #endif
@@ -129,7 +128,7 @@ void ili9341_init() {
   // frame rate; default, 70 Hz
   ili9341_set_command(ILI9341_FRMCTR1);
   ili9341_command_param(0x00);
-  ili9341_command_param(0x1B);
+  ili9341_command_param(FRAMERATE_75);
 
   // exit sleep
   ili9341_set_command(ILI9341_SLPOUT);
