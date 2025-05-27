@@ -9,9 +9,6 @@
 #include <string.h>
 #include <vector>
 
-// Define the single cycle waveform detection macro (same as in ImportView)
-#define IS_SINGLE_CYCLE(x) (x == 1344 || x == 300)
-
 // Initialize the static buffer for single cycle waveforms
 short AudioFileStreamer::singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE] = {0};
 

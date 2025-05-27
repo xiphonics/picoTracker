@@ -38,7 +38,7 @@ static GUIEventPadButtonType *eventMapping = eventMappingPico;
 picoTrackerGUIWindowImp *picoTrackerGUIWindowImp::instance_ = NULL;
 
 picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
-  mode0_init();
+  chargfx_init();
   instance_ = this;
 
   Config *config = Config::GetInstance();
@@ -55,7 +55,7 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   // register to receive updates to remoteui setting
   uiFontVar->AddObserver(*this);
   auto uifontIndex = uiFontVar->GetInt();
-  mode0_set_font_index(uifontIndex);
+  chargfx_set_font_index(uifontIndex);
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     SendFont(uifontIndex);
@@ -82,8 +82,8 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
 
   uint8_t x = pos._x / 8;
   uint8_t y = pos._y / 8;
-  mode0_set_cursor(x, y);
-  mode0_putc(c, p.invert_);
+  chargfx_set_cursor(x, y);
+  chargfx_putc(c, p.invert_);
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
@@ -103,9 +103,9 @@ void picoTrackerGUIWindowImp::DrawRect(GUIRect &r) {
 };
 
 void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
-  mode0_color_t backgroundColor = GetColor(c);
-  mode0_set_background(backgroundColor);
-  mode0_clear(backgroundColor);
+  chargfx_color_t backgroundColor = GetColor(c);
+  chargfx_set_background(backgroundColor);
+  chargfx_clear(backgroundColor);
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
@@ -126,10 +126,10 @@ void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
 // Keep track of the last RGB values set for each palette index
 static uint16_t lastPaletteRGB[16] = {0};
 
-mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
+chargfx_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
   // Palette index should always be < 16
   if (c._paletteIndex >= 16) {
-    return MODE0_NORMAL; // Default to normal color if index is invalid
+    return CHARGFX_NORMAL; // Default to normal color if index is invalid
   }
 
   // Convert the color to RGB565 format
@@ -137,16 +137,16 @@ mode0_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 
   // Only update the palette if the color has changed
   if (lastPaletteRGB[c._paletteIndex] != rgb565) {
-    mode0_set_palette_color(c._paletteIndex, rgb565);
+    chargfx_set_palette_color(c._paletteIndex, rgb565);
     lastPaletteRGB[c._paletteIndex] = rgb565;
   }
 
-  return (mode0_color_t)c._paletteIndex;
+  return (chargfx_color_t)c._paletteIndex;
 }
 
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
-  mode0_color_t color = GetColor(c);
-  mode0_set_foreground(color);
+  chargfx_color_t color = GetColor(c);
+  chargfx_set_foreground(color);
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
@@ -164,7 +164,7 @@ void picoTrackerGUIWindowImp::Lock(){};
 
 void picoTrackerGUIWindowImp::Unlock(){};
 
-void picoTrackerGUIWindowImp::Flush() { mode0_draw_changed(); };
+void picoTrackerGUIWindowImp::Flush() { chargfx_draw_changed(); };
 
 void picoTrackerGUIWindowImp::Invalidate() {
   picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent(PICO_FLUSH));
@@ -229,7 +229,7 @@ void picoTrackerGUIWindowImp::Update(Observable &o, I_ObservableData *d) {
   } break;
   case FourCC::VarUIFont: {
     auto uifont = v.GetInt();
-    mode0_set_font_index(uifont);
+    chargfx_set_font_index(uifont);
 #ifdef USB_REMOTE_UI
     if (remoteUIEnabled_) {
       SendFont(uifont);

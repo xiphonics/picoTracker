@@ -5,31 +5,9 @@
 #include <stdio.h>
 #include <string.h>
 
-/*
+static inline void cs_select() { gpio_put(DISPLAY_CS, 0); }
 
- (pin 1) VCC        5V/3.3V power input
- (pin 2) GND        Ground
- (pin 3) CS         LCD chip select signal, low level enable
- (pin 4) RESET      LCD reset signal, low level reset
- (pin 5) DC/RS      LCD register / data selection signal; high level: register,
- low level: data (pin 6) SDI(MOSI)  SPI bus write data signal (pin 7) SCK SPI
- bus clock signal (pin 8) LED        Backlight control; if not controlled,
- connect 3.3V always bright (pin 9) SDO(MISO)  SPI bus read data signal;
- optional
-
- */
-
-static inline void cs_select() {
-  asm volatile("nop \n nop \n nop");
-  gpio_put(DISPLAY_CS, 0); // Active low
-  asm volatile("nop \n nop \n nop");
-}
-
-static inline void cs_deselect() {
-  asm volatile("nop \n nop \n nop");
-  gpio_put(DISPLAY_CS, 1);
-  asm volatile("nop \n nop \n nop");
-}
+static inline void cs_deselect() { gpio_put(DISPLAY_CS, 1); }
 
 void ili9341_set_command(uint8_t cmd) {
   cs_select();
@@ -117,7 +95,6 @@ void ili9341_init() {
   // MY MX MV ML RGB MH -  -
   ili9341_command_param(0xC0);
   ili9341_set_command(ILI9341_INVON);
-
 #else
   ili9341_command_param(0x88);
 #endif
@@ -129,15 +106,13 @@ void ili9341_init() {
   // frame rate; default, 70 Hz
   ili9341_set_command(ILI9341_FRMCTR1);
   ili9341_command_param(0x00);
-  ili9341_command_param(0x1B);
+  ili9341_command_param(FRAMERATE_75);
 
   // exit sleep
   ili9341_set_command(ILI9341_SLPOUT);
 
   // display on
   ili9341_set_command(ILI9341_DISPON);
-
-  //
 
   // column address set
   ili9341_set_command(ILI9341_CASET);
