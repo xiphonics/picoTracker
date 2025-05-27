@@ -158,7 +158,6 @@ void platform_init() {
   //////////
   // MIDI //
   //////////
-#ifndef DUMMY_MIDI
   gpio_set_function(MIDI_OUT_PIN, GPIO_FUNC_UART);
   gpio_set_function(MIDI_IN_PIN, GPIO_FUNC_UART);
 
@@ -174,7 +173,6 @@ void platform_init() {
   uart_set_translate_crlf(MIDI_UART, false);
 
   Trace::Log("PLATFORM", "Init MIDI device with % i baud rate", baudrate);
-#endif
 
   ///////////
   // INPUT //
