@@ -19,8 +19,6 @@ endif()
 # add_definitions(-DSHOW_MEM_USAGE)
 # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
 # add_definitions(-DSDIO_BENCH)
-# Disable MIDI. Enable in order to use UART0 as stdio for debugging
-# add_definitions(-DDUMMY_MIDI)
 # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
 # below.
 add_definitions(-DUSB_REMOTE_UI)
