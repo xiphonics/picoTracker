@@ -1,4 +1,4 @@
-#include "mode0.h"
+#include "chargfx.h"
 #include "font.h"
 #include "hardware/spi.h"
 #include "ili9341.h"
@@ -16,8 +16,8 @@
 
 #define SWAP_BYTES(color) ((uint16_t)(color >> 8) | (uint16_t)(color << 8))
 
-static mode0_color_t screen_bg_color = MODE0_BG;
-static mode0_color_t screen_fg_color = MODE0_NORMAL;
+static chargfx_color_t screen_bg_color = CHARGFX_BG;
+static chargfx_color_t screen_fg_color = CHARGFX_NORMAL;
 static int cursor_x = 0;
 static int cursor_y = 0;
 static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
@@ -42,30 +42,30 @@ static uint16_t palette[16] = {
     SWAP_BYTES(0xA664), SWAP_BYTES(0x02B0), SWAP_BYTES(0x351E),
     SWAP_BYTES(0xB6FD)};
 
-void mode0_clear(mode0_color_t color) {
+void chargfx_clear(chargfx_color_t color) {
   int size = TEXT_WIDTH * TEXT_HEIGHT;
   memset(screen, 0, size);
   memset(colors, color, size);
-  mode0_set_cursor(0, 0);
-  mode0_draw_screen();
+  chargfx_set_cursor(0, 0);
+  chargfx_draw_screen();
 }
 
-void mode0_set_foreground(mode0_color_t color) { screen_fg_color = color; }
+void chargfx_set_foreground(chargfx_color_t color) { screen_fg_color = color; }
 
-void mode0_set_background(mode0_color_t color) { screen_bg_color = color; }
+void chargfx_set_background(chargfx_color_t color) { screen_bg_color = color; }
 
-void mode0_set_font_index(uint8_t idx) { ui_font_index = idx; }
+void chargfx_set_font_index(uint8_t idx) { ui_font_index = idx; }
 
-void mode0_set_cursor(uint8_t x, uint8_t y) {
+void chargfx_set_cursor(uint8_t x, uint8_t y) {
   cursor_x = x;
   cursor_y = y;
 }
 
-uint8_t mode0_get_cursor_x() { return cursor_x; }
+uint8_t chargfx_get_cursor_x() { return cursor_x; }
 
-uint8_t mode0_get_cursor_y() { return cursor_y; }
+uint8_t chargfx_get_cursor_y() { return cursor_y; }
 
-void mode0_putc(char c, bool invert) {
+void chargfx_putc(char c, bool invert) {
   int idx = cursor_y * TEXT_WIDTH + cursor_x;
   if (c >= 32 && c <= 127) {
     screen[idx] = c - 32;
@@ -78,32 +78,32 @@ void mode0_putc(char c, bool invert) {
   }
 }
 
-void mode0_print(const char *str, bool invert) {
+void chargfx_print(const char *str, bool invert) {
   char c;
   while ((c = *str++)) {
-    mode0_putc(c, invert);
+    chargfx_putc(c, invert);
   }
 }
 
-void mode0_write(const char *str, int len, bool invert) {
+void chargfx_write(const char *str, int len, bool invert) {
   for (int i = 0; i < len; i++) {
-    mode0_putc(*str++, invert);
+    chargfx_putc(*str++, invert);
   }
 }
 
-void mode0_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+void chargfx_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
 
   int remainder = height;
   while (remainder) {
     int sub_height = (remainder > BUFFER_CHARS) ? BUFFER_CHARS : remainder;
     int sub_y = y + height - remainder;
     remainder -= sub_height;
-    mode0_draw_sub_region(x, sub_y, width, sub_height);
+    chargfx_draw_sub_region(x, sub_y, width, sub_height);
   }
 }
 
-inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
-                                  uint8_t height) {
+inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
+                                    uint8_t height) {
   assert(height <= BUFFER_CHARS);
 
   uint16_t screen_x = x * CHAR_WIDTH;
@@ -154,7 +154,7 @@ inline void mode0_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
   ili9341_stop_writing();
 }
 
-void mode0_draw_changed() {
+void chargfx_draw_changed() {
   for (int idx = 0; idx < TEXT_HEIGHT * TEXT_WIDTH; idx++) {
     if (TestBit(changed, idx)) {
       ClearBit(changed, idx);
@@ -192,30 +192,30 @@ void mode0_draw_changed() {
         width++;
       }
     end:
-      mode0_draw_region(x, y, width, height);
+      chargfx_draw_region(x, y, width, height);
     }
   }
 }
 
-void mode0_draw_changed_simple() {
+void chargfx_draw_changed_simple() {
   // This method is better (faster) for fewer characters changed
   for (int idx = 0; idx < TEXT_HEIGHT * TEXT_WIDTH; idx++) {
     if (TestBit(changed, idx)) {
       ClearBit(changed, idx);
       uint16_t y = idx / TEXT_WIDTH;
       uint16_t x = idx - (TEXT_WIDTH * y);
-      mode0_draw_region(x, y, 1, 1);
+      chargfx_draw_region(x, y, 1, 1);
     }
   }
 }
 
-void mode0_draw_screen() {
+void chargfx_draw_screen() {
   // draw the whole screen
-  mode0_draw_region(0, 0, TEXT_WIDTH, TEXT_HEIGHT);
+  chargfx_draw_region(0, 0, TEXT_WIDTH, TEXT_HEIGHT);
 }
 
-void mode0_set_palette_color(int idx, uint16_t rgb565_color) {
+void chargfx_set_palette_color(int idx, uint16_t rgb565_color) {
   palette[idx] = SWAP_BYTES(rgb565_color);
 }
 
-void mode0_init() { ili9341_init(); }
+void chargfx_init() { ili9341_init(); }

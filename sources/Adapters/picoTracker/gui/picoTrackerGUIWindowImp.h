@@ -1,7 +1,7 @@
 #ifndef PICOTRACKERWINDOWIMP_H_
 #define PICOTRACKERWINDOWIMP_H_
 
-#include "Adapters/picoTracker/display/mode0.h"
+#include "Adapters/picoTracker/display/chargfx.h"
 #include "Foundation/Observable.h"
 #include "UIFramework/Interfaces/I_GUIWindowImp.h"
 #include "picoTrackerEventQueue.h"
@@ -34,7 +34,7 @@ public: // I_GUIWindowImp implementation
   static picoTrackerGUIWindowImp *instance_;
 
 protected:
-  static mode0_color_t GetColor(GUIColor &c);
+  static chargfx_color_t GetColor(GUIColor &c);
 
   virtual void Update(Observable &o, I_ObservableData *d);
 
