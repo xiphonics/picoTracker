@@ -160,17 +160,6 @@ static const ConfigParam configParams[] = {
      2,
      false},
 
-    // Device settings with options
-    {"LINEOUT", DEFAULT_LINEOUT, FourCC::VarLineOut, lineOutOptions, 3, false},
-    {"MIDIDEVICE", DEFAULT_MIDIDEVICE, FourCC::VarMidiDevice, midiDeviceList, 4,
-     false},
-    {"MIDISYNC", DEFAULT_MIDISYNC, FourCC::VarMidiSync, midiSendSync, 2,
-     false}, // Only using first 2 options
-    {"REMOTEUI", DEFAULT_REMOTEUI, FourCC::VarRemoteUI, remoteUIOnOff, 2,
-     false},
-    {"UIFONT", ThemeConstants::DEFAULT_UIFONT, FourCC::VarUIFont, fontOptions,
-     2, false},
-
     // {"RESERVED1", ThemeConstants::DEFAULT_RESERVED1,
     // FourCC::VarReserved1Color},
     // {"RESERVED2", ThemeConstants::DEFAULT_RESERVED2,
