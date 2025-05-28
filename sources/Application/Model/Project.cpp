@@ -54,7 +54,8 @@ Project::Project(const char *name)
 
   // Project name is now managed through the WatchedVariable
 
-  static char instrumentBankMemBuf[sizeof(InstrumentBank)];
+  alignas(
+      InstrumentBank) static char instrumentBankMemBuf[sizeof(InstrumentBank)];
   instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
 
   // look if we can find a sav file
