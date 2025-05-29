@@ -14,22 +14,25 @@
 
 #include <math.h>
 
+#define DEFAULT_VOLUME 60
+
 Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
-      masterVolume_(FourCC::VarMasterVolume, 100),
-      channelVolume1_(FourCC::VarChannel1Volume, 60),
-      channelVolume2_(FourCC::VarChannel2Volume, 60),
-      channelVolume3_(FourCC::VarChannel3Volume, 60),
-      channelVolume4_(FourCC::VarChannel4Volume, 60),
-      channelVolume5_(FourCC::VarChannel5Volume, 60),
-      channelVolume6_(FourCC::VarChannel6Volume, 60),
-      channelVolume7_(FourCC::VarChannel7Volume, 60),
-      channelVolume8_(FourCC::VarChannel8Volume, 60),
+      masterVolume_(FourCC::VarMasterVolume, DEFAULT_VOLUME),
+      channelVolume1_(FourCC::VarChannel1Volume, DEFAULT_VOLUME),
+      channelVolume2_(FourCC::VarChannel2Volume, DEFAULT_VOLUME),
+      channelVolume3_(FourCC::VarChannel3Volume, DEFAULT_VOLUME),
+      channelVolume4_(FourCC::VarChannel4Volume, DEFAULT_VOLUME),
+      channelVolume5_(FourCC::VarChannel5Volume, DEFAULT_VOLUME),
+      channelVolume6_(FourCC::VarChannel6Volume, DEFAULT_VOLUME),
+      channelVolume7_(FourCC::VarChannel7Volume, DEFAULT_VOLUME),
+      channelVolume8_(FourCC::VarChannel8Volume, DEFAULT_VOLUME),
       wrap_(FourCC::VarWrap, false), transpose_(FourCC::VarTranspose, 0),
       scale_(FourCC::VarScale, scaleNames, numScales, 0),
       scaleRoot_(FourCC::VarScaleRoot, noteNames, 12, 0),
-      projectName_(FourCC::VarProjectName, name) {
+      projectName_(FourCC::VarProjectName, name),
+      previewVolume_(FourCC::VarPreviewVolume, DEFAULT_VOLUME) {
 
   this->variables_.insert(variables_.end(), &tempo_);
   this->variables_.insert(variables_.end(), &masterVolume_);
@@ -51,6 +54,7 @@ Project::Project(const char *name)
   this->variables_.insert(variables_.end(), &scaleRoot_);
   scaleRoot_.SetInt(0); // Default to C (0)
   this->variables_.insert(variables_.end(), &projectName_);
+  this->variables_.insert(variables_.end(), &previewVolume_);
 
   // Project name is now managed through the WatchedVariable
 
