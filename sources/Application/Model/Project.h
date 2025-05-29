@@ -80,6 +80,7 @@ private:
   Variable scale_;
   Variable scaleRoot_;
   WatchedVariable projectName_;
+  Variable previewVolume_;
 };
 
 #endif

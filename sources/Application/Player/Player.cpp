@@ -35,7 +35,7 @@ Player::Player() : mixer_() {
 
 Player *Player::GetInstance() {
   if (instance_ == 0) {
-    static char playerMemBuf[sizeof(Player)];
+    alignas(Player) static char playerMemBuf[sizeof(Player)];
     instance_ = new (playerMemBuf) Player();
   }
   return instance_;
