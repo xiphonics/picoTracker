@@ -2,4 +2,4 @@
 #include "pico/time.h"
 
 // Define the static member
-RenderProfiler* Profiler::render_profiler = nullptr;
+RenderProfiler *Profiler::render_profiler = nullptr;
