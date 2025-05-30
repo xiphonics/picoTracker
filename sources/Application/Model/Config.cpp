@@ -280,6 +280,7 @@ bool Config::Save() {
   I_File *fp = fs->Open(CONFIG_FILE_PATH, "w");
   if (!fp) {
     Trace::Error("Could not open file for writing: %s", CONFIG_FILE_PATH);
+    return false;
   }
   Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s", CONFIG_FILE_PATH);
   tinyxml2::XMLPrinter printer(fp);
