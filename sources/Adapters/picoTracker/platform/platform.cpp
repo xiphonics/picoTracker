@@ -3,6 +3,7 @@
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/pll.h"
+#include "hardware/pwm.h"
 #include "hardware/spi.h"
 #include "hardware/structs/clocks.h"
 #include "hardware/uart.h"
@@ -124,11 +125,18 @@ void platform_init() {
   gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
 
   // PWM
-  // TODO: actually do PWM and detect new hardware vs old where PWM is not
-  // available
-  gpio_init(DISPLAY_PWM);
-  gpio_set_dir(DISPLAY_PWM, GPIO_OUT);
-  gpio_put(DISPLAY_PWM, 1);
+  gpio_set_function(DISPLAY_PWM, GPIO_FUNC_PWM);
+  // Find out which PWM slice is connected to GPIO 0 (it's slice 0)
+  uint slice_num = pwm_gpio_to_slice_num(DISPLAY_PWM);
+
+  // Set divider so that we have 1KHz signal
+  pwm_set_clkdiv(slice_num, 220.5 * KHZ);
+  // Set period of 256 cycles (0 to 255 inclusive)
+  pwm_set_wrap(slice_num, 255);
+  // Set channel A output high for one cycle before dropping
+  pwm_set_chan_level(slice_num, PWM_CHAN_B, 256);
+  // Set the PWM running
+  pwm_set_enabled(slice_num, true);
 
   // Chip select is active-low, so we'll initialise it to a driven-high state
   gpio_init(DISPLAY_CS);
@@ -214,5 +222,9 @@ void platform_reboot() { watchdog_reboot(0, 0, 0); }
 void platform_bootloader() { reset_usb_boot(0, 0); }
 
 SysMutex *platform_mutex() { return new picoTrackerMutex(); };
+
+void platform_brightness(uint8_t value) {
+  pwm_set_gpio_level(DISPLAY_PWM, value);
+}
 
 void pt_uart_putc(int c, void *context) { putchar(c); }
