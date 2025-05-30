@@ -9,7 +9,7 @@ target_compile_options(opal PRIVATE -Wno-aggressive-loop-optimizations)
 
 target_link_libraries(opal 
     PUBLIC application_utils
-    PRIVATE Performance
+    PRIVATE profiler
 )
 
 target_include_directories(opal PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

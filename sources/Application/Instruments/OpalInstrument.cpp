@@ -3,7 +3,7 @@
 #include "Externals/etl/include/etl/to_string.h"
 #include "I_Instrument.h"
 #include "System/Console/Trace.h"
-#include "System/Performance/Profiler.h"
+#include "System/Profiler/Profiler.h"
 #include "bit.h"
 #include <string.h>
 
