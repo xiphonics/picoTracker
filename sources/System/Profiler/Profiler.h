@@ -104,7 +104,8 @@ class Profiler {
 
 public:
   // Standard profiler constructor (one-time measurement)
-  explicit Profiler(const char *name) : Profiler(etl::string<32>(name), false) {}
+  explicit Profiler(const char *name)
+      : Profiler(etl::string<32>(name), false) {}
 
   // Constructor for moving average profiler
   static Profiler MovingAverage(const char *name) {
@@ -122,7 +123,8 @@ public:
         it->second.addSample(duration);
       }
     } else {
-      printf("[PROFILER] %-30s: %6lu us\n", name_.c_str(), (unsigned long)duration);
+      printf("[PROFILER] %-30s: %6lu us\n", name_.c_str(),
+             (unsigned long)duration);
     }
 #endif
   }
