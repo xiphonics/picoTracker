@@ -1,9 +1,12 @@
 #ifndef _PROFILER_H_
 #define _PROFILER_H_
 
+#define MAX_PROFILERS 4
+
 #include "Adapters/picoTracker/utils/utils.h"
+#include <Externals/etl/include/etl/map.h>
+#include <Externals/etl/include/etl/string.h>
 #include <cstdio>
-#include <cstring>
 
 // Helper function to safely calculate time differences with wrap-around
 inline uint32_t time_diff(uint32_t newer, uint32_t older) {
@@ -25,7 +28,7 @@ class MovingAverageProfiler {
   uint32_t samples[WINDOW_SIZE] = {0};
   int sample_count = 0;
   uint32_t last_log_time = 0;
-  const char *name_;
+  etl::string<32> name_;
 
 public:
   MovingAverageProfiler(const char *name) : name_(name) {}
@@ -62,7 +65,7 @@ public:
     }
 
     uint32_t avg = (uint32_t)(total / count);
-    printf("[PROFILER] %-30s: avg=%lu us (samples: %d)\n", name_,
+    printf("[PROFILER] %-30s: avg=%lu us (samples: %d)\n", name_.c_str(),
            (unsigned long)avg, count);
 
     // Reset for next window
@@ -72,25 +75,40 @@ public:
 };
 
 class Profiler {
-  // Static member definition
-  static MovingAverageProfiler *render_profiler;
-  const char *name_;
+  // Static map for multiple moving average profilers
+  static etl::map<etl::string<32>, MovingAverageProfiler, MAX_PROFILERS>
+      moving_avg_profilers_;
+  etl::string<32> name_;
   uint32_t start_time_;
-  bool is_render_;
+  bool use_moving_avg_;
   uint32_t total_time_;
   uint32_t call_count_;
   uint32_t last_log_time_;
 
-public:
-  Profiler(const char *name, bool is_render = false)
-      : name_(name), start_time_(0), is_render_(is_render), total_time_(0),
-        call_count_(0), last_log_time_(0) {
+  // Private constructor for moving average profilers
+  Profiler(const etl::string<32> &name, bool use_moving_avg)
+      : name_(name.c_str()), start_time_(0), use_moving_avg_(use_moving_avg),
+        total_time_(0), call_count_(0), last_log_time_(0) {
 #if ENABLE_PROFILING
     start_time_ = micros();
-    if (is_render && !render_profiler) {
-      render_profiler = new MovingAverageProfiler(name);
+    if (use_moving_avg_) {
+      // Automatically create the profiler if it doesn't exist
+      auto it = moving_avg_profilers_.find(name);
+      if (it == moving_avg_profilers_.end()) {
+        moving_avg_profilers_.insert(
+            etl::make_pair(name, MovingAverageProfiler(name.c_str())));
+      }
     }
 #endif
+  }
+
+public:
+  // Standard profiler constructor (one-time measurement)
+  explicit Profiler(const char *name) : Profiler(etl::string<32>(name), false) {}
+
+  // Constructor for moving average profiler
+  static Profiler MovingAverage(const char *name) {
+    return Profiler(etl::string<32>(name), true);
   }
 
   ~Profiler() {
@@ -98,10 +116,13 @@ public:
     uint32_t end_time = micros();
     uint32_t duration = time_diff(end_time, start_time_);
 
-    if (is_render_ && render_profiler) {
-      render_profiler->addSample(duration);
+    if (use_moving_avg_) {
+      auto it = moving_avg_profilers_.find(name_);
+      if (it != moving_avg_profilers_.end()) {
+        it->second.addSample(duration);
+      }
     } else {
-      printf("[PROFILER] %-30s: %6lu us\n", name_, (unsigned long)duration);
+      printf("[PROFILER] %-30s: %6lu us\n", name_.c_str(), (unsigned long)duration);
     }
 #endif
   }

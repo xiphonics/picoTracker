@@ -1,4 +1,5 @@
 #include "Profiler.h"
 
-// Initialize static member
-MovingAverageProfiler* Profiler::render_profiler = nullptr;
+// map to hold named profilers
+etl::map<etl::string<32>, MovingAverageProfiler, MAX_PROFILERS>
+    Profiler::moving_avg_profilers_;
