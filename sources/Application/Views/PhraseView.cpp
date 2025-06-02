@@ -383,6 +383,33 @@ void PhraseView::jumpToNextSection(int direction) {
     Trace::Debug("jumpToNextSection: to %d", current);
     row_ = current;
     isDirty_ = true;
+  } else if (col_ == 2) { // Command1 Column
+    int phraseStart = viewData_->currentPhrase_ * 16;
+    int current = row_;
+    constexpr int PHRASE_ROW_COUNT = 16;
+    bool foundGap = false;
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      FourCC instrument = phrase_->cmd1_[phraseStart + current];
+      if (foundGap && instrument != FourCC::InstrumentCommandNone) {
+        break;
+      } else {
+        if (instrument == FourCC::InstrumentCommandNone) {
+          foundGap = true;
+        }
+      }
+      current += direction;
+      if (current < 0) {
+        current += PHRASE_ROW_COUNT;
+      }
+      if (current >= PHRASE_ROW_COUNT) {
+        current -= PHRASE_ROW_COUNT;
+      }
+    }
+
+    // update viewdata position from current
+    Trace::Debug("jumpToNextSection: to %d", current);
+    row_ = current;
+    isDirty_ = true;
   } else {
     Trace::Log("PHRASEVIEW", "jumpToNextSection for col %d not implemented",
                col_);
