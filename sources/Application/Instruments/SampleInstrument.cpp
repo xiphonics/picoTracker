@@ -242,7 +242,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
   // Move slice count and debug info to the beginning of the function scope
   int sliceCount = slices_.GetInt();
-  Trace::Debug("Sample Start - Channel: %d, Note: %d, Root: %d, Slices: %d", 
+  Trace::Debug("Sample Start - Channel: %d, Note: %d, Root: %d, Slices: %d",
                channel, rp->midiNote_, rootNote_.GetInt(), sliceCount);
 
   SampleInstrumentLoopMode loopmode =
@@ -251,25 +251,27 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   rp->reverse_ = false;
   float driverRate = float(Audio::GetInstance()->GetSampleRate());
 
-  // Get the base sample rate (ignoring note parameter since it's not used in WavFile)
+  // Get the base sample rate (ignoring note parameter since it's not used in
+  // WavFile)
   float baseSampleRate = source_ ? source_->GetSampleRate(0) : 44100.0f;
 
   // Handle pitch/speed calculation for both slice and normal modes
   if (sliceCount > 1) {
     // Use the root note's sample rate for slices to prevent pitch changes
     int rootNote = rootNote_.GetInt();
-    float rootSampleRate = source_ ? source_->GetSampleRate(rootNote) : 44100.0f;
+    float rootSampleRate =
+        source_ ? source_->GetSampleRate(rootNote) : 44100.0f;
     float speed = rootSampleRate / driverRate;
     rp->baseSpeed_ = fl2fp(speed);
-    
+
     // Base speed for slice mode uses root note's sample rate
   } else {
     // For non-slice mode, apply pitch based on MIDI note
     float speed = baseSampleRate / driverRate;
     rp->baseSpeed_ = fl2fp(speed);
-    
-    Trace::Debug("NORMAL MODE - Base speed: %.4f (rate: %.1f / %.1f)", 
-                speed, baseSampleRate, driverRate);
+
+    Trace::Debug("NORMAL MODE - Base speed: %.4f (rate: %.1f / %.1f)", speed,
+                 baseSampleRate, driverRate);
 
     // Calculate pitch shift based on note difference from root
     if (rp->midiNote_ != rootNote_.GetInt()) {
@@ -277,7 +279,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
       float pitchRatio = powf(2.0f, noteDiff / 12.0f);
       float newSpeed = fp2fl(rp->baseSpeed_) * pitchRatio;
       rp->baseSpeed_ = fl2fp(newSpeed);
-      
+
       // Apply pitch shift based on MIDI note difference from root note
     }
   }
@@ -329,14 +331,15 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
       float rootSampleRate = source_->GetSampleRate(rootNote);
       float speed = rootSampleRate / driverRate;
       rp->baseSpeed_ = fl2fp(speed);
-      
-      Trace::Debug("SLICE MODE - Using root note: %d, Sample rate: %d, Speed: %d", 
-                  rootNote, (int)rootSampleRate, (int)(speed * 1000));
+
+      Trace::Debug(
+          "SLICE MODE - Using root note: %d, Sample rate: %d, Speed: %d",
+          rootNote, (int)rootSampleRate, (int)(speed * 1000));
     } else {
       // For non-slice mode, apply pitch based on MIDI note
       float speed = baseSampleRate / driverRate;
       rp->baseSpeed_ = fl2fp(speed);
-      
+
       // Base speed for normal mode uses the base sample rate
 
       // Calculate pitch shift based on note difference from root
@@ -345,9 +348,10 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
         float pitchRatio = powf(2.0f, noteDiff / 12.0f);
         float newSpeed = fp2fl(rp->baseSpeed_) * pitchRatio;
         rp->baseSpeed_ = fl2fp(newSpeed);
-        
+
         Trace::Debug("Pitch shift - Note diff: %d, Ratio: %d, New speed: %d",
-                    (int)noteDiff, (int)(pitchRatio * 1000), (int)(newSpeed * 1000));
+                     (int)noteDiff, (int)(pitchRatio * 1000),
+                     (int)(newSpeed * 1000));
       }
     }
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);
@@ -389,7 +393,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     }
     break;
   }
-  
+
   default:
     // Handle any unhandled enum values
     rp->position_ = float(rp->rendFirst_);
@@ -402,17 +406,18 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     break;
   }
 
-  // Apply fine tuning and pitch shifting (but skip pitch shifting for slice mode)
+  // Apply fine tuning and pitch shifting (but skip pitch shifting for slice
+  // mode)
   float fineTune = float(fineTune_.GetInt() - 0x7F);
   fineTune /= float(0x80);
-  
+
   if (slices_.GetInt() <= 1) {
     // Only apply pitch shifting for non-slice mode
     int offset = midinote - rootNote_.GetInt();
     while (offset > 127) {
       offset -= 12;
     }
-    
+
     fixed freqFactor = fl2fp(float(pow(2.0, (offset + fineTune) / 12.0)));
     rp->baseSpeed_ = fp_mul(rp->baseSpeed_, freqFactor);
     // Apply pitch factor based on note offset and fine tuning
@@ -426,7 +431,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
       // No pitch shifting or fine tuning needed for slice mode
     }
   }
-  
+
   rp->speed_ = rp->baseSpeed_;
 
   // Init k rate counter
