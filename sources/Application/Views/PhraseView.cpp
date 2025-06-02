@@ -337,7 +337,7 @@ void PhraseView::jumpToNextSection(int direction) {
     bool foundGap = false;
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
       uchar note = phrase_->note_[phraseStart + current];
-      if (foundGap && note != NO_NOTE_ASSIGNED){
+      if (foundGap && note != NO_NOTE_ASSIGNED) {
         break;
       } else {
         if (note == 0xFF) {
@@ -370,9 +370,9 @@ void PhraseView::jumpToNextSection(int direction) {
     Trace::Debug("jumpToNextSection: to %d", current);
     row_ = current;
     isDirty_ = true;
-  }
-  else {
-    Trace::Log("PHRASEVIEW", "jumpToNextSection for col %d not implemented", col_);
+  } else {
+    Trace::Log("PHRASEVIEW", "jumpToNextSection for col %d not implemented",
+               col_);
   }
 }
 
