@@ -11,7 +11,6 @@ public:
   virtual int GetSampleRate(int note) = 0;
   virtual int GetChannelCount(int note) = 0;
   virtual void *GetSampleBuffer(int note) = 0;
-  virtual bool IsMulti() = 0;
   virtual int GetRootNote(int note) = 0;
 };
 

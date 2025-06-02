@@ -46,8 +46,6 @@ public:
   virtual void SetTableState(TableSaveState &state);
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
-  bool IsMulti();
-
   // Engine playback  start callback
 
   virtual void OnStart();

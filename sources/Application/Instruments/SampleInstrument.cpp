@@ -154,119 +154,152 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // be evaluated on the source material and use the IsMulti call on the source
   // Explicit slicing, we tell how we want the sample file to be interpreted
   int32_t slicedStart = 0;
-  if (!source_->IsMulti()) {
-    // Check if slices are disabled or set to an invalid value
-    // -1, 0, or 1 all mean no slices
-    if (slices_.GetInt() <= 1) {
-      // single sample mode (no slices)
-      rp->rendLoopStart_ = loopStart_.GetInt();
-      rp->rendLoopEnd_ = loopEnd_.GetInt();
 
-      // If end is 0 or negative, use the full sample size
-      if (rp->rendLoopEnd_ <= 0) {
-        rp->rendLoopEnd_ = GetSampleSize(channel);
-      }
-    } else {
-      // sliced mode
-      uint32_t totalSize = GetSampleSize(channel);
-      uint8_t numSlices = (uint8_t)slices_.GetInt();
+  // Check if slices are disabled or set to an invalid value
+  // -1, 0, or 1 all mean no slices
+  if (slices_.GetInt() <= 1) {
+    // single sample mode (no slices)
+    rp->rendLoopStart_ = loopStart_.GetInt();
+    rp->rendLoopEnd_ = loopEnd_.GetInt();
 
-      // Get user-defined start and end points
-      uint32_t userStart = start_.GetInt();
-      uint32_t userEnd = loopEnd_.GetInt();
-
-      // Ensure we have enough range for the number of slices
-      // End point should be at least (numSlices) more than start point
-      if (userEnd <= userStart + numSlices) {
-        // just dont play anything in this case
-        return false;
-      }
-
-      // Calculate the effective sample range to slice
-      uint32_t effectiveStart = userStart;
-      uint32_t effectiveEnd = userEnd;
-      uint32_t effectiveSize = effectiveEnd - effectiveStart;
-
-      // Ensure we have a valid size
-      if (effectiveSize <= 0) {
-        return false;
-      }
-
-      // Ensure at least 1 sample per slice
-      uint32_t sliceSize = effectiveSize / numSlices;
-      if (sliceSize <= 0) {
-        return false;
-      }
-
-      int note = rp->midiNote_;
-      int rootNoteVal = rootNote_.GetInt();
-      int8_t sliceNum = note - rootNoteVal;
-      Trace::Debug("SLICES: Midi note %i Root %i Slice Number: %i", note,
-                   rootNoteVal, sliceNum);
-
-      if ((sliceNum < 0) || (sliceNum >= numSlices)) {
-        Trace::Debug("SLICES: Out of range, discarded");
-        return false;
-      }
-
-      // Calculate slice boundaries within the effective range
-      uint32_t sliceStart = effectiveStart + (sliceNum * sliceSize);
-      uint32_t sliceEnd = sliceStart + sliceSize;
-
-      // Ensure slice boundaries are within sample bounds
-      if (sliceEnd > totalSize) {
-        sliceEnd = totalSize;
-      }
-
-      // Set playback points for this slice
-      slicedStart = sliceStart;
-
-      // Make sure start point doesn't exceed sample end
-      if (sliceStart >= effectiveEnd) {
-        Trace::Debug("SLICES: Start point exceeds sample end");
-        return false;
-      }
-
-      // For slices, we always use one-shot mode regardless of the loop mode
-      // setting This overrides any loop mode setting when using slices
-      loopMode_.SetInt(SILM_ONESHOT);
-      Trace::Debug("SLICES: Enforcing one-shot mode for slices");
-
-      // Set the boundaries for one-shot playback of this slice
-      rp->rendLoopStart_ = sliceStart;
-      rp->rendLoopEnd_ = sliceEnd;
-
-      Trace::Debug("SLICES: Slice %i boundaries: %i to %i (one-shot mode)",
-                   sliceNum, sliceStart, sliceEnd);
+    // If end is 0 or negative, use the full sample size
+    if (rp->rendLoopEnd_ <= 0) {
+      rp->rendLoopEnd_ = GetSampleSize(channel);
     }
   } else {
-    long start = source_->GetLoopStart(rp->midiNote_);
-    if (start > 0) {
-      rp->rendLoopStart_ =
-          source_->GetLoopStart(rp->midiNote_); // hack at the moment
-      rp->rendLoopEnd_ = source_->GetLoopEnd(rp->midiNote_);
-      loopMode_.SetInt(SILM_LOOP);
-    } else {
-      rp->rendLoopStart_ = 0;                             // hack at the moment
-      rp->rendLoopEnd_ = source_->GetSize(rp->midiNote_); // hack at the moment
-      loopMode_.SetInt(SILM_ONESHOT);
-    };
+    // sliced mode
+    uint32_t totalSize = GetSampleSize(channel);
+    uint8_t numSlices = (uint8_t)slices_.GetInt();
+
+    // Get user-defined start and end points
+    uint32_t userStart = start_.GetInt();
+    uint32_t userEnd = loopEnd_.GetInt();
+
+    // Ensure we have enough range for the number of slices
+    // End point should be at least (numSlices) more than start point
+    if (userEnd <= userStart + numSlices) {
+      // just dont play anything in this case
+      return false;
+    }
+
+    // Calculate the effective sample range to slice
+    uint32_t effectiveStart = userStart;
+    uint32_t effectiveEnd = userEnd;
+    uint32_t effectiveSize = effectiveEnd - effectiveStart;
+
+    // Ensure we have a valid size
+    if (effectiveSize <= 0) {
+      return false;
+    }
+
+    // Ensure at least 1 sample per slice
+    uint32_t sliceSize = effectiveSize / numSlices;
+    if (sliceSize <= 0) {
+      return false;
+    }
+
+    int note = rp->midiNote_;
+    int rootNoteVal = rootNote_.GetInt();
+    int8_t sliceNum = note - rootNoteVal;
+    Trace::Debug("SLICES: Midi note %i Root %i Slice Number: %i", note,
+                 rootNoteVal, sliceNum);
+
+    if ((sliceNum < 0) || (sliceNum >= numSlices)) {
+      Trace::Debug("SLICES: Out of range, discarded");
+      return false;
+    }
+
+    // Calculate slice boundaries within the effective range
+    uint32_t sliceStart = effectiveStart + (sliceNum * sliceSize);
+    uint32_t sliceEnd = sliceStart + sliceSize;
+
+    // Ensure slice boundaries are within sample bounds
+    if (sliceEnd > totalSize) {
+      sliceEnd = totalSize;
+    }
+
+    // Set playback points for this slice
+    slicedStart = sliceStart;
+
+    // Make sure start point doesn't exceed sample end
+    if (sliceStart >= effectiveEnd) {
+      Trace::Debug("SLICES: Start point exceeds sample end");
+      return false;
+    }
+
+    // For slices, we always use one-shot mode regardless of the loop mode
+    // setting This overrides any loop mode setting when using slices
+    loopMode_.SetInt(SILM_ONESHOT);
+    Trace::Debug("SLICES: Enforcing one-shot mode for slices");
+
+    // Set the boundaries for one-shot playback of this slice
+    rp->rendLoopStart_ = sliceStart;
+    rp->rendLoopEnd_ = sliceEnd;
+
+    Trace::Debug("SLICES: Slice %i boundaries: %i to %i (one-shot mode)",
+                 sliceNum, sliceStart, sliceEnd);
   }
+
+  // Move slice count and debug info to the beginning of the function scope
+  int sliceCount = slices_.GetInt();
+  Trace::Debug("Sample Start - Channel: %d, Note: %d, Root: %d, Slices: %d", 
+               channel, rp->midiNote_, rootNote_.GetInt(), sliceCount);
+
   SampleInstrumentLoopMode loopmode =
       (SampleInstrumentLoopMode)loopMode_.GetInt();
 
-  /*	 if (loopmode==SILM_OSCFINE) {
-                  if (rp->rendLoopEnd_>source_->GetSize()-1) { // check for
-     older instrument that were not correctly handled
-                          rp->rendLoopEnd_=source_->GetSize()-1 ;
-                  }
-           }*/
   rp->reverse_ = false;
-
   float driverRate = float(Audio::GetInstance()->GetSampleRate());
 
+  // Get the base sample rate (ignoring note parameter since it's not used in WavFile)
+  float baseSampleRate = source_ ? source_->GetSampleRate(0) : 44100.0f;
+
+  // Handle pitch/speed calculation for both slice and normal modes
+  if (sliceCount > 1) {
+    // Use the root note's sample rate for slices to prevent pitch changes
+    int rootNote = rootNote_.GetInt();
+    float rootSampleRate = source_ ? source_->GetSampleRate(rootNote) : 44100.0f;
+    float speed = rootSampleRate / driverRate;
+    rp->baseSpeed_ = fl2fp(speed);
+    
+    // Base speed for slice mode uses root note's sample rate
+  } else {
+    // For non-slice mode, apply pitch based on MIDI note
+    float speed = baseSampleRate / driverRate;
+    rp->baseSpeed_ = fl2fp(speed);
+    
+    Trace::Debug("NORMAL MODE - Base speed: %.4f (rate: %.1f / %.1f)", 
+                speed, baseSampleRate, driverRate);
+
+    // Calculate pitch shift based on note difference from root
+    if (rp->midiNote_ != rootNote_.GetInt()) {
+      float noteDiff = float(rp->midiNote_ - rootNote_.GetInt());
+      float pitchRatio = powf(2.0f, noteDiff / 12.0f);
+      float newSpeed = fp2fl(rp->baseSpeed_) * pitchRatio;
+      rp->baseSpeed_ = fl2fp(newSpeed);
+      
+      // Apply pitch shift based on MIDI note difference from root note
+    }
+  }
+
   switch (loopmode) {
-  case SILM_ONESHOT:
+  case SILM_ONESHOT: {
+    rp->position_ = float(rp->rendFirst_);
+
+    // Ensure position stays within valid boundaries
+    if (rp->position_ < 0) {
+      rp->position_ = 0;
+    }
+
+    // For non-oneshot modes, ensure we start at loop start if needed
+    if (loopMode_.GetInt() != SILM_ONESHOT &&
+        rp->position_ < float(rp->rendLoopStart_)) {
+      rp->position_ = float(rp->rendLoopStart_);
+    }
+    rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);
+    break;
+  }
+
   case SILM_LOOP:
   case SILM_LOOP_PINGPONG:
 
@@ -288,39 +321,64 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
         rp->position_ < float(rp->rendLoopStart_)) {
       rp->position_ = float(rp->rendLoopStart_);
     }
-    rp->baseSpeed_ = fl2fp(source_->GetSampleRate(rp->midiNote_) / driverRate);
+
+    // For slice mode, use a fixed speed based on the root note's sample rate
+    if (sliceCount > 1) {
+      // Use the root note's sample rate for slices to prevent pitch changes
+      int rootNote = rootNote_.GetInt();
+      float rootSampleRate = source_->GetSampleRate(rootNote);
+      float speed = rootSampleRate / driverRate;
+      rp->baseSpeed_ = fl2fp(speed);
+      
+      Trace::Debug("SLICE MODE - Using root note: %d, Sample rate: %d, Speed: %d", 
+                  rootNote, (int)rootSampleRate, (int)(speed * 1000));
+    } else {
+      // For non-slice mode, apply pitch based on MIDI note
+      float speed = baseSampleRate / driverRate;
+      rp->baseSpeed_ = fl2fp(speed);
+      
+      // Base speed for normal mode uses the base sample rate
+
+      // Calculate pitch shift based on note difference from root
+      if (rp->midiNote_ != rootNote_.GetInt()) {
+        float noteDiff = float(rp->midiNote_ - rootNote_.GetInt());
+        float pitchRatio = powf(2.0f, noteDiff / 12.0f);
+        float newSpeed = fp2fl(rp->baseSpeed_) * pitchRatio;
+        rp->baseSpeed_ = fl2fp(newSpeed);
+        
+        Trace::Debug("Pitch shift - Note diff: %d, Ratio: %d, New speed: %d",
+                    (int)noteDiff, (int)(pitchRatio * 1000), (int)(newSpeed * 1000));
+      }
+    }
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);
 
     break;
 
-  case SILM_OSC:
-    //		case SILM_OSCFINE:
-    {
-
-      float freq = 261.6255653006f; // C3
-                                    /*			if (loopmode==SILM_OSCFINE) {
-                                                                    freq=float(pow(2.0,-0.75))*440; // C3
-                                                            }*/
-      int length = rp->rendLoopEnd_ - rp->rendLoopStart_;
-      if (length == 0)
-        length = 1;
-      if (length < 0) {
-        rp->reverse_ = true;
-        length = -length;
-      };
-      rp->baseSpeed_ = fl2fp((freq * length) / driverRate);
-      rp->rendFirst_ = rp->rendLoopStart_;
-      if (cleanstart) {
-        rp->position_ = float(rp->rendFirst_);
-      }
-      break;
+  case SILM_OSC: {
+    // Calculate frequency and length for oscillator mode
+    float freq = 261.6255653006f; // C3
+    int length = rp->rendLoopEnd_ - rp->rendLoopStart_;
+    if (length == 0)
+      length = 1;
+    if (length < 0) {
+      rp->reverse_ = true;
+      length = -length;
     }
+    rp->baseSpeed_ = fl2fp((freq * length) / driverRate);
+    rp->rendFirst_ = rp->rendLoopStart_;
+    if (cleanstart) {
+      rp->position_ = float(rp->rendFirst_);
+    }
+    break;
+  }
+
   case SILM_LOOPSYNC: {
+    // Calculate length and sync with master clock
     int length = rp->rendLoopEnd_ - rp->rendLoopStart_;
     if (length < 0) {
       rp->reverse_ = true;
       length = -length;
-    };
+    }
     SyncMaster *sm = SyncMaster::GetInstance();
     int sampleCount = int(sm->GetTickSampleCount());
     sampleCount *= (6 * 16);
@@ -331,22 +389,44 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     }
     break;
   }
+  
+  default:
+    // Handle any unhandled enum values
+    rp->position_ = float(rp->rendFirst_);
+    if (rp->position_ < 0) {
+      rp->position_ = 0;
+    }
+    break;
   case SILM_LAST:
     NAssert(0);
     break;
   }
 
-  // Compute octave & note difference from root
-
+  // Apply fine tuning and pitch shifting (but skip pitch shifting for slice mode)
   float fineTune = float(fineTune_.GetInt() - 0x7F);
   fineTune /= float(0x80);
-  int offset = midinote - rootNote;
-  while (offset > 127) {
-    offset -= 12;
+  
+  if (slices_.GetInt() <= 1) {
+    // Only apply pitch shifting for non-slice mode
+    int offset = midinote - rootNote_.GetInt();
+    while (offset > 127) {
+      offset -= 12;
+    }
+    
+    fixed freqFactor = fl2fp(float(pow(2.0, (offset + fineTune) / 12.0)));
+    rp->baseSpeed_ = fp_mul(rp->baseSpeed_, freqFactor);
+    // Apply pitch factor based on note offset and fine tuning
+  } else {
+    // For slice mode, only apply fine tuning if needed
+    if (fineTune != 0.0f) {
+      fixed fineTuneFactor = fl2fp(float(pow(2.0, fineTune / 12.0)));
+      rp->baseSpeed_ = fp_mul(rp->baseSpeed_, fineTuneFactor);
+      // For slice mode, only apply fine tuning
+    } else {
+      // No pitch shifting or fine tuning needed for slice mode
+    }
   }
-
-  fixed freqFactor = fl2fp(float(pow(2.0, (offset + fineTune) / 12.0)));
-  rp->baseSpeed_ = fp_mul(rp->baseSpeed_, freqFactor);
+  
   rp->speed_ = rp->baseSpeed_;
 
   // Init k rate counter
@@ -884,7 +964,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
       }
 
       // Ensure position stays within slice boundaries for sliced mode
-      if (slices_.GetInt() > 0 && !source_->IsMulti()) {
+      if (slices_.GetInt() > 0) {
         // If we've gone past the slice end, reset to loop start for looping
         // modes
         if (loopMode_.GetInt() != SILM_ONESHOT &&
@@ -943,7 +1023,7 @@ void SampleInstrument::updateInstrumentData(bool search) {
 
   if (index != NO_SAMPLE) {
     source_ = pool->GetSource(index);
-    if (source_ && (!source_->IsMulti())) {
+    if (source_ && slices_.GetInt() < 1) {
       instrSize = source_->GetSize(-1);
     }
   }
@@ -1318,8 +1398,6 @@ void SampleInstrument::SetTableState(TableSaveState &state) {
          sizeof(uchar) * TABLE_STEPS * 3);
   memcpy(tableState_.position_, state.position_, sizeof(int) * 3);
 };
-
-bool SampleInstrument::IsMulti() { return source_->IsMulti(); }
 
 void SampleInstrument::EnableDownsamplingLegacy() {
   useDirtyDownsampling_ = true;
