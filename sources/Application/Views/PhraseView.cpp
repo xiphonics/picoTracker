@@ -329,91 +329,131 @@ void PhraseView::pasteLast() {
 }
 
 void PhraseView::jumpToNextSection(int direction) {
-  if (col_ == 0) { // Note Column
-    int phraseStart = viewData_->currentPhrase_ * 16;
-    int current = row_;
-    constexpr int PHRASE_ROW_COUNT = 16;
-    bool foundGap = false;
+  int phraseStart = viewData_->currentPhrase_ * PHRASE_ROW_COUNT;
+  int current = row_;
+  bool foundGap = false;
+
+  // Find a gap and then find non-gap item in the chosen direction
+  switch (col_) {
+  // Note column
+  case 0: {
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
       uchar note = phrase_->note_[phraseStart + current];
       if (foundGap && note != NO_NOTE_ASSIGNED) {
         break;
-      } else {
-        if (note == NO_NOTE_ASSIGNED) {
-          foundGap = true;
-        }
+      } else if (note == NO_NOTE_ASSIGNED) {
+        foundGap = true;
       }
       current += direction;
-      if (current < 0) {
+      if (current < 0)
         current += PHRASE_ROW_COUNT;
-      }
-      if (current >= PHRASE_ROW_COUNT) {
+      if (current >= PHRASE_ROW_COUNT)
         current -= PHRASE_ROW_COUNT;
-      }
     }
+    break;
+  }
 
-    // update viewdata position from current
-    Trace::Debug("jumpToNextSection: to %d", current);
-    row_ = current;
-    isDirty_ = true;
-  } else if (col_ == 1) { // Instrument Column
-    int phraseStart = viewData_->currentPhrase_ * 16;
-    int current = row_;
-    constexpr int PHRASE_ROW_COUNT = 16;
-    bool foundGap = false;
+  // Instrument column
+  case 1: {
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
       uchar instrument = phrase_->instr_[phraseStart + current];
-      if (foundGap && instrument != NO_NOTE_ASSIGNED) {
+      if (foundGap && instrument != NO_INSTRUMENT_ASSIGNED) {
         break;
-      } else {
-        if (instrument == NO_INSTRUMENT_ASSIGNED) {
-          foundGap = true;
-        }
+      } else if (instrument == NO_INSTRUMENT_ASSIGNED) {
+        foundGap = true;
       }
       current += direction;
-      if (current < 0) {
+      if (current < 0)
         current += PHRASE_ROW_COUNT;
-      }
-      if (current >= PHRASE_ROW_COUNT) {
+      if (current >= PHRASE_ROW_COUNT)
         current -= PHRASE_ROW_COUNT;
-      }
     }
-
-    // update viewdata position from current
-    Trace::Debug("jumpToNextSection: to %d", current);
-    row_ = current;
-    isDirty_ = true;
-  } else if (col_ == 2) { // Command1 Column
-    int phraseStart = viewData_->currentPhrase_ * 16;
-    int current = row_;
-    constexpr int PHRASE_ROW_COUNT = 16;
-    bool foundGap = false;
-    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
-      FourCC instrument = phrase_->cmd1_[phraseStart + current];
-      if (foundGap && instrument != FourCC::InstrumentCommandNone) {
-        break;
-      } else {
-        if (instrument == FourCC::InstrumentCommandNone) {
-          foundGap = true;
-        }
-      }
-      current += direction;
-      if (current < 0) {
-        current += PHRASE_ROW_COUNT;
-      }
-      if (current >= PHRASE_ROW_COUNT) {
-        current -= PHRASE_ROW_COUNT;
-      }
-    }
-
-    // update viewdata position from current
-    Trace::Debug("jumpToNextSection: to %d", current);
-    row_ = current;
-    isDirty_ = true;
-  } else {
-    Trace::Log("PHRASEVIEW", "jumpToNextSection for col %d not implemented",
-               col_);
+    break;
   }
+
+  // Command1 column
+  case 2: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      FourCC command = phrase_->cmd1_[phraseStart + current];
+      if (foundGap && command != FourCC::InstrumentCommandNone) {
+        break;
+      } else if (command == FourCC::InstrumentCommandNone) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  // Param1 column
+  case 3: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      ushort param = phrase_->param1_[phraseStart + current];
+      if (foundGap && param != 0) {
+        break;
+      } else if (param == 0) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  // Command2 column
+  case 4: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      FourCC command = phrase_->cmd2_[phraseStart + current];
+      if (foundGap && command != FourCC::InstrumentCommandNone) {
+        break;
+      } else if (command == FourCC::InstrumentCommandNone) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  // Param2 column
+  case 5: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      ushort param = phrase_->param2_[phraseStart + current];
+      if (foundGap && param != 0) {
+        break;
+      } else if (param == 0) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  default: {
+    Trace::Error("PHRASEVIEW: jumpToNextSection received unexpected value for "
+                 "col %d not implemented",
+                 col_);
+    return;
+  }
+  }
+
+  // update view
+  row_ = current;
+  isDirty_ = true;
 }
 
 void PhraseView::cutPosition() {
