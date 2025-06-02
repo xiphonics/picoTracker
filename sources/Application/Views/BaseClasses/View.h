@@ -190,10 +190,7 @@ private:
 public:
   static int margin_;
   static int songRowCount_;
-
-  // Counter for animation frames, updated once per frame ie each
-  // AnimationUpdate() callback so currently ticks at 50hz
-  static uint32_t animationFrameCounter_;
+  static float voltage;
 };
 
 #endif

@@ -60,6 +60,9 @@ GUIColor AppWindow::reserved2Color_(0x55, 0x55, 0x55, 13);
 GUIColor AppWindow::reserved3Color_(0x77, 0x77, 0x77, 14);
 GUIColor AppWindow::reserved4Color_(0xFF, 0xFF, 0x00, 15);
 
+// Initialize the animation frame counter
+uint32_t AppWindow::animationFrameCounter_ = 0;
+
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
 
@@ -598,6 +601,9 @@ void AppWindow::onUpdate(bool redraw) {
 };
 
 void AppWindow::AnimationUpdate() {
+  // Increment the animation frame counter
+  animationFrameCounter_++;
+
   if (loadProject_) {
     LoadProject(projectName_);
     loadProject_ = false;
