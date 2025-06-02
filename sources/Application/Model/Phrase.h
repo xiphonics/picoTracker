@@ -4,6 +4,8 @@
 #include "Foundation/Types/Types.h"
 #define PHRASE_COUNT 0x80
 #define NO_MORE_PHRASE 0x81
+#define NO_NOTE_ASSIGNED 0xFF
+#define NO_INSTRUMENT_ASSIGNED 0xFF
 
 class Phrase {
 public:

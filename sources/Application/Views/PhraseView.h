@@ -27,6 +27,8 @@ protected:
   void cutPosition();
   void pasteLast();
 
+  void jumpToNextSection(int dir);
+
   void extendSelection();
 
   GUIRect getSelectionRect();

@@ -328,6 +328,54 @@ void PhraseView::pasteLast() {
   }
 }
 
+void PhraseView::jumpToNextSection(int direction) {
+  if (col_ == 0) {
+    int phraseStart = viewData_->currentPhrase_ * 16;
+    int current = row_;
+    // uchar note = phrase_->note_[phraseStart + row_];
+    constexpr int PHRASE_ROW_COUNT = 16;
+    bool foundGap = false;
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      uchar note = phrase_->note_[phraseStart + current];
+      if (foundGap && note != NO_NOTE_ASSIGNED){
+        break;
+      } else {
+        if (note == 0xFF) {
+          foundGap = true;
+        }
+      }
+      current += direction;
+      if (current < 0) {
+        current += PHRASE_ROW_COUNT;
+      }
+      if (current >= PHRASE_ROW_COUNT) {
+        current -= PHRASE_ROW_COUNT;
+      }
+    }
+
+    /*
+    if (direction < 0) {
+      while (current > 0) {
+        uchar note = phrase_->note_[phraseStart + current];
+        if (note == 0xFF) {
+          current++;
+          break;
+        } else {
+          current--;
+        }
+      }
+    }
+  */
+    // update viewdata position from current
+    Trace::Debug("jumpToNextSection: to %d", current);
+    row_ = current;
+    isDirty_ = true;
+  }
+  else {
+    Trace::Log("PHRASEVIEW", "jumpToNextSection for col %d not implemented", col_);
+  }
+}
+
 void PhraseView::cutPosition() {
 
   clipboard_.active_ = true;
@@ -964,7 +1012,12 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       } else {
         // L Modifier
         if (mask & EPBM_ALT) {
-
+          if (mask & EPBM_DOWN) {
+            jumpToNextSection(1);
+          }
+          if (mask & EPBM_UP) {
+            jumpToNextSection(-1);
+          }
         } else {
           // No modifier
 
