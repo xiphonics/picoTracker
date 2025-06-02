@@ -159,6 +159,8 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // -1, 0, or 1 all mean no slices
   if (slices_.GetInt() <= 1) {
     // single sample mode (no slices)
+    // Set the start position based on the start_ parameter
+    rp->rendFirst_ = start_.GetInt();
     rp->rendLoopStart_ = loopStart_.GetInt();
     rp->rendLoopEnd_ = loopEnd_.GetInt();
 
