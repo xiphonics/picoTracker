@@ -329,10 +329,9 @@ void PhraseView::pasteLast() {
 }
 
 void PhraseView::jumpToNextSection(int direction) {
-  if (col_ == 0) {
+  if (col_ == 0) { // Note Column
     int phraseStart = viewData_->currentPhrase_ * 16;
     int current = row_;
-    // uchar note = phrase_->note_[phraseStart + row_];
     constexpr int PHRASE_ROW_COUNT = 16;
     bool foundGap = false;
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
@@ -340,7 +339,7 @@ void PhraseView::jumpToNextSection(int direction) {
       if (foundGap && note != NO_NOTE_ASSIGNED) {
         break;
       } else {
-        if (note == 0xFF) {
+        if (note == NO_NOTE_ASSIGNED) {
           foundGap = true;
         }
       }
@@ -353,19 +352,33 @@ void PhraseView::jumpToNextSection(int direction) {
       }
     }
 
-    /*
-    if (direction < 0) {
-      while (current > 0) {
-        uchar note = phrase_->note_[phraseStart + current];
-        if (note == 0xFF) {
-          current++;
-          break;
-        } else {
-          current--;
+    // update viewdata position from current
+    Trace::Debug("jumpToNextSection: to %d", current);
+    row_ = current;
+    isDirty_ = true;
+  } else if (col_ == 1) { // Instrument Column
+    int phraseStart = viewData_->currentPhrase_ * 16;
+    int current = row_;
+    constexpr int PHRASE_ROW_COUNT = 16;
+    bool foundGap = false;
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      uchar instrument = phrase_->instr_[phraseStart + current];
+      if (foundGap && instrument != NO_NOTE_ASSIGNED) {
+        break;
+      } else {
+        if (instrument == NO_INSTRUMENT_ASSIGNED) {
+          foundGap = true;
         }
       }
+      current += direction;
+      if (current < 0) {
+        current += PHRASE_ROW_COUNT;
+      }
+      if (current >= PHRASE_ROW_COUNT) {
+        current -= PHRASE_ROW_COUNT;
+      }
     }
-  */
+
     // update viewdata position from current
     Trace::Debug("jumpToNextSection: to %d", current);
     row_ = current;
