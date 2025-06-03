@@ -18,19 +18,62 @@ MixerView::MixerView(GUIWindow &w, ViewData *viewData)
 MixerView::~MixerView() {}
 
 void MixerView::OnFocus() {
-  // update seleced field to match current cursor position
-  SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
+  // update selected field to match current cursor position
+  if (viewData_->songX_ <= SONG_CHANNEL_COUNT) {
+    if (viewData_->songX_ < SONG_CHANNEL_COUNT) {
+      // Channel 0-7
+      SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
+    } else {
+      // Master channel
+      SetFocus((UIField *)&masterVolumeField_.at(0));
+    }
+  }
 };
+
+void MixerView::SetFocus(UIField *field) {
+  // Call parent implementation first
+  FieldView::SetFocus(field);
+
+  // Now update songX_ based on which field has focus
+  if (!field)
+    return;
+
+  // Check if it's one of the channel volume fields
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    if (field == (UIField *)&channelVolumeFields_.at(i)) {
+      viewData_->songX_ = i;
+      return;
+    }
+  }
+
+  // Check if it's the master volume field
+  if (field == (UIField *)&masterVolumeField_.at(0)) {
+    viewData_->songX_ = SONG_CHANNEL_COUNT;
+  }
+}
 
 // keep track of currently selected channel
 void MixerView::updateCursor(int dx, int dy) {
   int x = viewData_->songX_;
   x += dx;
+
+  // Allow wrapping around from master to channel 0 and vice versa
   if (x < 0)
-    x = 0;
-  if (x > 7)
-    x = 7;
+    x = SONG_CHANNEL_COUNT; // Wrap to master channel
+  if (x > SONG_CHANNEL_COUNT)
+    x = 0; // Wrap to first channel
+
   viewData_->songX_ = x;
+
+  // Update field focus to match the selected channel
+  if (x < SONG_CHANNEL_COUNT) {
+    // Channel 0-7
+    SetFocus(&channelVolumeFields_[x]);
+  } else {
+    // Master channel
+    SetFocus(&masterVolumeField_[0]);
+  }
+
   isDirty_ = true;
 }
 
