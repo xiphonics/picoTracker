@@ -13,6 +13,13 @@
 #include <nanoprintf.h>
 #include <stdlib.h>
 
+#define NOTE_COLUMN 0
+#define INSTR_COLUMN 1
+#define CMD1_COLUMN 2
+#define PARAM1_COLUMN 3
+#define CMD2_COLUMN 4
+#define PARAM2_COLUMN 5
+
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
@@ -333,10 +340,8 @@ void PhraseView::jumpToNextSection(int direction) {
   int current = row_;
   bool foundGap = false;
 
-  // Find a gap and then find non-gap item in the chosen direction
   switch (col_) {
-  // Note column
-  case 0: {
+  case NOTE_COLUMN: {
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
       uchar note = phrase_->note_[phraseStart + current];
       if (foundGap && note != NO_NOTE_ASSIGNED) {
@@ -353,8 +358,7 @@ void PhraseView::jumpToNextSection(int direction) {
     break;
   }
 
-  // Instrument column
-  case 1: {
+  case INSTR_COLUMN: {
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
       uchar instrument = phrase_->instr_[phraseStart + current];
       if (foundGap && instrument != NO_INSTRUMENT_ASSIGNED) {
@@ -371,8 +375,9 @@ void PhraseView::jumpToNextSection(int direction) {
     break;
   }
 
-  // Command1 column
-  case 2: {
+  // find gap based on cmd1 for both columns
+  case CMD1_COLUMN:
+  case PARAM1_COLUMN: {
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
       FourCC command = phrase_->cmd1_[phraseStart + current];
       if (foundGap && command != FourCC::InstrumentCommandNone) {
@@ -389,49 +394,14 @@ void PhraseView::jumpToNextSection(int direction) {
     break;
   }
 
-  // Param1 column
-  case 3: {
-    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
-      ushort param = phrase_->param1_[phraseStart + current];
-      if (foundGap && param != 0) {
-        break;
-      } else if (param == 0) {
-        foundGap = true;
-      }
-      current += direction;
-      if (current < 0)
-        current += PHRASE_ROW_COUNT;
-      if (current >= PHRASE_ROW_COUNT)
-        current -= PHRASE_ROW_COUNT;
-    }
-    break;
-  }
-
-  // Command2 column
-  case 4: {
+  // find gap based on cmd2 for both columns
+  case CMD2_COLUMN:
+  case PARAM2_COLUMN: {
     for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
       FourCC command = phrase_->cmd2_[phraseStart + current];
       if (foundGap && command != FourCC::InstrumentCommandNone) {
         break;
       } else if (command == FourCC::InstrumentCommandNone) {
-        foundGap = true;
-      }
-      current += direction;
-      if (current < 0)
-        current += PHRASE_ROW_COUNT;
-      if (current >= PHRASE_ROW_COUNT)
-        current -= PHRASE_ROW_COUNT;
-    }
-    break;
-  }
-
-  // Param2 column
-  case 5: {
-    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
-      ushort param = phrase_->param2_[phraseStart + current];
-      if (foundGap && param != 0) {
-        break;
-      } else if (param == 0) {
         foundGap = true;
       }
       current += direction;
