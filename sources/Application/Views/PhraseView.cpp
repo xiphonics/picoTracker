@@ -1411,7 +1411,22 @@ void PhraseView::DrawView() {
     OnPlayerUpdate(PET_UPDATE);
   };
 
+  // if in one of the param columns, update cmdEdit(Field) as well
   if ((viewMode_ != VM_SELECTION) && ((col_ == 3) || (col_ == 5))) {
+    // get current (new) cursor position
+    GUIPoint p;
+    p._y = row_ + anchor._y;
+    p._x = anchor._x + ((col_ == 3) ? 12 : 21);
+
+    // update cmdEditField with current position
+    cmdEditField_->SetPosition(p);
+
+    // Update the command edit field's value with the current parameter
+    ushort *paramPtr =
+        (col_ == 3) ? &phrase_->param1_[16 * viewData_->currentPhrase_ + row_]
+                    : &phrase_->param2_[16 * viewData_->currentPhrase_ + row_];
+    cmdEdit_.SetInt(*paramPtr);
+
     cmdEditField_->SetFocus();
     cmdEditField_->Draw(w_);
   };
