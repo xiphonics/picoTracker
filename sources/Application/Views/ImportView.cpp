@@ -327,6 +327,19 @@ void ImportView::import(char *name) {
   }
 
   SamplePool *pool = SamplePool::GetInstance();
+
+  // Check if we've reached the maximum number of samples
+  int currentCount = pool->GetNameListSize();
+  if (currentCount >= MAX_SAMPLES) {
+    // Show error dialog to inform the user
+    char message[24];
+    npf_snprintf(message, sizeof(message), "Max of %d reached", MAX_SAMPLES);
+    MessageBox *mb =
+        new MessageBox(*this, "Cannot Import Sample", message, MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
   int sampleID = pool->ImportSample(name, projName);
 
   if (sampleID >= 0) {
@@ -338,6 +351,10 @@ void ImportView::import(char *name) {
     };
   } else {
     Trace::Error("failed to import sample");
+    // Show a generic error message if import failed for other reasons
+    MessageBox *mb = new MessageBox(*this, "Import Failed",
+                                    "Could not import sample", MBBF_OK);
+    DoModal(mb);
   };
   isDirty_ = true;
 };
