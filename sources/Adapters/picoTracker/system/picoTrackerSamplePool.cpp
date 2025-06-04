@@ -18,9 +18,7 @@ extern char __flash_binary_end;
 uint32_t picoTrackerSamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
 uint32_t picoTrackerSamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
 uint32_t picoTrackerSamplePool::flashLimit_ =
-    MAX_PROJECT_SAMPLE_STORAGE_MB * 1024 *
-    1024; // default 2mb for the Raspberry Pi Pico
-
+    MAX_PROJECT_SAMPLE_STORAGE_MB * 1024 * 1024;
 // From the SDK, values are not defined in the header file
 #define FLASH_RUID_DUMMY_BYTES 4
 #define FLASH_RUID_DATA_BYTES 8
