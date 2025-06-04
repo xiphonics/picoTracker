@@ -393,8 +393,3 @@ void View::drawBattery(GUITextProperties &props) {
     DrawString(battpos._x, battpos._y, battText, props);
   }
 }
-
-void View::AnimationUpdate() {
-  // Animation frame counter is now managed by AppWindow
-  // No need to increment it here
-}
