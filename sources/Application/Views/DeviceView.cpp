@@ -53,7 +53,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
-  v = config->FindVariable(FourCC::VarDisplayBrightness);
+  v = config->FindVariable(FourCC::VarBacklightLevel);
   intVarField_.emplace_back(position, *v, "Display brightness: %2.2x", 0, 255,
                             1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -137,9 +137,9 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   focus->SetFocus();
 
   // Handle brightness changes directly
-  if (fourcc == FourCC::VarDisplayBrightness) {
+  if (fourcc == FourCC::VarBacklightLevel) {
     Config *config = Config::GetInstance();
-    Variable *v = config->FindVariable(FourCC::VarDisplayBrightness);
+    Variable *v = config->FindVariable(FourCC::VarBacklightLevel);
     if (v) {
       unsigned char brightness = (unsigned char)v->GetInt();
       System::GetInstance()->SetDisplayBrightness(brightness);
