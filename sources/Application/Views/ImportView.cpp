@@ -139,12 +139,10 @@ void ImportView::DrawView() {
   // Calculate MB with one decimal place using integer math
   uint32_t mbWhole = availableFlash / (1024 * 1024);
   uint32_t mbDecimal = (availableFlash % (1024 * 1024)) * 10 / (1024 * 1024);
-  // Ensure decimal is a single digit
-  mbDecimal = mbDecimal % 10;
 
   // Create title with storage info
   char titleBuffer[40];
-  npf_snprintf(titleBuffer, sizeof(titleBuffer), "%s |Free:%d.%dMB", baseTitle,
+  npf_snprintf(titleBuffer, sizeof(titleBuffer), "%s |Free:%d.%1dMB", baseTitle,
                mbWhole, mbDecimal);
 
   SetColor(CD_INFO);
@@ -373,12 +371,10 @@ void ImportView::import(char *name) {
     // Calculate KB values using integer math with one decimal place
     uint32_t neededKB = fileSize / 1024;
     uint32_t neededDecimal = (fileSize % 1024) * 10 / 1024;
-    neededDecimal = neededDecimal % 10; // Ensure single digit
 
     uint32_t availKB = availableFlash / 1024;
     uint32_t availDecimal = (availableFlash % 1024) * 10 / 1024;
-    availDecimal = availDecimal % 10; // Ensure single digit
-    npf_snprintf(message, sizeof(message), "Need %d.%dKB, %d.%dKB free",
+    npf_snprintf(message, sizeof(message), "Need %d.%1dKB, %d.%1dKB free",
                  neededKB, neededDecimal, availKB, availDecimal);
     // pad with trailing spaces as dialog size based on title
     MessageBox *mb =
