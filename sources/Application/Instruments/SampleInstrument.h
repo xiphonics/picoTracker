@@ -70,6 +70,8 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
+  bool isSliced() { return slices_.GetInt() > 1; }
+
   etl::list<Variable *, 21> variables_;
 
   SoundSource *source_;
