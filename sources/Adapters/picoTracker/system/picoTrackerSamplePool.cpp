@@ -3,6 +3,8 @@
 #include "hardware/sync.h"
 #include "pico/multicore.h"
 
+#define MAX_PROJECT_SAMPLE_STORAGE_MB 15
+
 // #define FLASH_TARGET_OFFSET (1024 * 1024)
 //  Use all flash available after binary for samples
 //  WARNING! should be conscious to always ensure 1MB of free space
@@ -16,8 +18,7 @@ extern char __flash_binary_end;
 uint32_t picoTrackerSamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
 uint32_t picoTrackerSamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
 uint32_t picoTrackerSamplePool::flashLimit_ =
-    2 * 1024 * 1024; // default 2mb for the Raspberry Pi Pico
-
+    MAX_PROJECT_SAMPLE_STORAGE_MB * 1024 * 1024;
 // From the SDK, values are not defined in the header file
 #define FLASH_RUID_DUMMY_BYTES 4
 #define FLASH_RUID_DATA_BYTES 8
@@ -33,7 +34,10 @@ uint storage_get_flash_capacity() {
 }
 
 picoTrackerSamplePool::picoTrackerSamplePool() : SamplePool() {
-  flashLimit_ = storage_get_flash_capacity();
+  // we cant just use the currently available flash storage as in the future the
+  // firmware size may grow and then past projects may no longer fit in the
+  // available flash space
+  // flashLimit_ = storage_get_flash_capacity();
   Trace::Debug("Flash size is %i bytes", flashLimit_);
 }
 
@@ -162,3 +166,16 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 };
 
 bool picoTrackerSamplePool::unloadSample() { return false; };
+
+bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
+  // Calculate flash storage needed (round up to flash page size)
+  uint32_t flashPageSize = FLASH_PAGE_SIZE;
+  uint32_t flashNeeded =
+      ((sampleSize / flashPageSize) + ((sampleSize % flashPageSize) != 0)) *
+      flashPageSize;
+
+  // Check if there's enough space available
+  uint32_t availableFlash = flashLimit_ - flashWriteOffset_;
+
+  return flashNeeded <= availableFlash;
+}
