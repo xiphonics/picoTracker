@@ -54,7 +54,7 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarBacklightLevel);
-  intVarField_.emplace_back(position, *v, "Display brightness: %2.2x", 0, 255,
+  intVarField_.emplace_back(position, *v, "Display brightness: %2.2x", 5, 255,
                             1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
