@@ -196,14 +196,23 @@ void AppWindow::ClearRect(GUIRect &r) {
 };
 
 //
-// Redraws the screen and flush it.
+// Redraw the screen and flush it.
 //
-
 void AppWindow::Redraw() {
   if (_currentView) {
-    _currentView->Redraw();
-    Invalidate();
+    _currentView->Redraw(); // Main content drawing (e.g., SongView calls
+                            // Clear() then draws its content)
+
+    // After the main view has drawn (and possibly cleared),
+    // call AnimationUpdate on the current view.
+    // For ScreenView subclasses, this will redraw elements like the battery
+    // gauge into the _charScreen buffer, ensuring they are present before
+    // flushing. This assumes _currentView->AnimationUpdate() is safe and
+    // relatively cheap to call which is true for ScreenView subclasses
+    // drawing just the battery
+    _currentView->AnimationUpdate();
   }
+  Flush(); // Now flush the complete frame (main content + battery)
 };
 
 //
