@@ -108,6 +108,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _nullView = 0;
   _grooveView = 0;
   _closeProject = 0;
+  _needsRedraw = false;
   _lastA = 0;
   _lastB = 0;
   _mask = 0;
@@ -199,20 +200,11 @@ void AppWindow::ClearRect(GUIRect &r) {
 // Redraw the screen and flush it.
 //
 void AppWindow::Redraw() {
+  // This method is now only used internally by AnimationUpdate
+  // External code should set _needsRedraw flag instead
   if (_currentView) {
-    _currentView->Redraw(); // Main content drawing (e.g., SongView calls
-                            // Clear() then draws its content)
-
-    // After the main view has drawn (and possibly cleared),
-    // call AnimationUpdate on the current view.
-    // For ScreenView subclasses, this will redraw elements like the battery
-    // gauge into the _charScreen buffer, ensuring they are present before
-    // flushing. This assumes _currentView->AnimationUpdate() is safe and
-    // relatively cheap to call which is true for ScreenView subclasses
-    // drawing just the battery
-    _currentView->AnimationUpdate();
+    _currentView->Redraw();
   }
-  Flush(); // Now flush the complete frame (main content + battery)
 };
 
 //
@@ -590,13 +582,13 @@ bool AppWindow::onEvent(GUIEvent &event) {
   if (_closeProject) {
     CloseProject();
     _isDirty = true;
+    _needsRedraw = true;
   }
-#ifdef _SHOW_GP2X_
-  Redraw();
-#else
-  if (_isDirty)
-    Redraw();
-#endif
+  
+  // Instead of calling Redraw() directly, set the flag for AnimationUpdate
+  if (_isDirty) {
+    _needsRedraw = true;
+  }
   return false;
 };
 
@@ -604,9 +596,10 @@ void AppWindow::onUpdate(bool redraw) {
   if (redraw) {
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
-    Redraw();
+    // Instead of calling Redraw directly, set the flag for AnimationUpdate
+    _needsRedraw = true;
   }
-  Flush();
+  // No Flush here - AnimationUpdate will handle it
 };
 
 void AppWindow::AnimationUpdate() {
@@ -617,8 +610,22 @@ void AppWindow::AnimationUpdate() {
     LoadProject(projectName_);
     loadProject_ = false;
   }
-  _currentView->AnimationUpdate();
-
+  
+  // If we need a full redraw due to state changes from key events
+  if (_needsRedraw && _currentView) {
+    _currentView->Redraw();  // Draw main content
+    _needsRedraw = false;    // Reset the flag
+  }
+  
+  // Always call AnimationUpdate to handle persistent elements
+  // like the battery gauge, regardless of _needsRedraw
+  if (_currentView) {
+    _currentView->AnimationUpdate();
+  }
+  
+  // Always flush after AnimationUpdate to ensure consistent state
+  Flush();
+  
   // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_SECONDS
   // will return false if auto save was unsuccessful because eg. the sequencer
   // is running

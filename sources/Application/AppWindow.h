@@ -108,6 +108,7 @@ private:
   NullView *_nullView;
 
   bool _isDirty;
+  bool _needsRedraw;  // Flag to indicate a full redraw is needed on next AnimationUpdate
   bool _closeProject;
   bool _shouldQuit;
   unsigned short _mask;
