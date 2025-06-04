@@ -10,7 +10,7 @@ public:
   virtual void Reset();
   ~picoTrackerSamplePool() {}
   virtual bool CheckSampleFits(int sampleSize);
-  
+
   // Static method to get available flash space
   static uint32_t GetAvailableFlashSpace() {
     return flashLimit_ - flashWriteOffset_;
