@@ -29,6 +29,7 @@ public:
   bool Read(void *buff, uint32_t btr, uint32_t *bytesRead);
 
   void Close();
+  virtual bool IsMulti() { return false; };
 
 protected:
   long readBlock(long position, long count);
