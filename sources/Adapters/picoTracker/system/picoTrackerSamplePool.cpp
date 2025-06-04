@@ -162,3 +162,16 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 };
 
 bool picoTrackerSamplePool::unloadSample() { return false; };
+
+bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
+  // Calculate flash storage needed (round up to flash page size)
+  uint32_t flashPageSize = FLASH_PAGE_SIZE;
+  uint32_t flashNeeded =
+      ((sampleSize / flashPageSize) + ((sampleSize % flashPageSize) != 0)) *
+      flashPageSize;
+
+  // Check if there's enough space available
+  uint32_t availableFlash = flashLimit_ - flashWriteOffset_;
+
+  return flashNeeded <= availableFlash;
+}

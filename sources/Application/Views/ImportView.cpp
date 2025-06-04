@@ -1,11 +1,12 @@
 #include "ImportView.h"
-#include "Application/AppWindow.h"
+#include "Adapters/picoTracker/system/picoTrackerSamplePool.h"
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
+#include "System/FileSystem/FileSystem.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -129,10 +130,25 @@ void ImportView::DrawView() {
 
   auto fs = FileSystem::GetInstance();
 
-  // Draw title
-  const char *title = "Import Sample";
+  // Draw title with available storage space
+  const char *baseTitle = "Import Sample";
+
+  // Get available flash space
+  uint32_t availableFlash = picoTrackerSamplePool::GetAvailableFlashSpace();
+
+  // Calculate MB with one decimal place using integer math
+  uint32_t mbWhole = availableFlash / (1024 * 1024);
+  uint32_t mbDecimal = (availableFlash % (1024 * 1024)) * 10 / (1024 * 1024);
+  // Ensure decimal is a single digit
+  mbDecimal = mbDecimal % 10;
+
+  // Create title with storage info
+  char titleBuffer[40];
+  npf_snprintf(titleBuffer, sizeof(titleBuffer), "%s |Free:%d.%dMB", baseTitle,
+               mbWhole, mbDecimal);
+
   SetColor(CD_INFO);
-  DrawString(pos._x + 1, pos._y, title, props);
+  DrawString(pos._x + 1, pos._y, titleBuffer, props);
 
   SetColor(CD_NORMAL);
 
@@ -332,10 +348,41 @@ void ImportView::import(char *name) {
   int currentCount = pool->GetNameListSize();
   if (currentCount >= MAX_SAMPLES) {
     // Show error dialog to inform the user
-    char message[24];
-    npf_snprintf(message, sizeof(message), "Max of %d reached", MAX_SAMPLES);
+    char message[64];
+    npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
+                 MAX_SAMPLES);
+    // pad with trailing spaces as dialog size based on title
     MessageBox *mb =
-        new MessageBox(*this, "Cannot Import Sample", message, MBBF_OK);
+        new MessageBox(*this, "Cannot Import Sample      ", message, MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
+  // Check if the sample would exceed available flash storage
+  auto fs = FileSystem::GetInstance();
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  int fileSize = fs->getFileSize(fileIndex);
+
+  // Check if the sample would fit in available storage
+  if (!pool->CheckSampleFits(fileSize)) {
+    // Get available flash space for the message
+    uint32_t availableFlash = picoTrackerSamplePool::GetAvailableFlashSpace();
+
+    // Show error dialog to inform the user
+    char message[64];
+    // Calculate KB values using integer math with one decimal place
+    uint32_t neededKB = fileSize / 1024;
+    uint32_t neededDecimal = (fileSize % 1024) * 10 / 1024;
+    neededDecimal = neededDecimal % 10; // Ensure single digit
+
+    uint32_t availKB = availableFlash / 1024;
+    uint32_t availDecimal = (availableFlash % 1024) * 10 / 1024;
+    availDecimal = availDecimal % 10; // Ensure single digit
+    npf_snprintf(message, sizeof(message), "Need %d.%dKB, %d.%dKB free",
+                 neededKB, neededDecimal, availKB, availDecimal);
+    // pad with trailing spaces as dialog size based on title
+    MessageBox *mb =
+        new MessageBox(*this, "Sample Too Large       ", message, MBBF_OK);
     DoModal(mb);
     return;
   }
