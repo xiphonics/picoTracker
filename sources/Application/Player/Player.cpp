@@ -793,7 +793,7 @@ void Player::updatePhrasePos(int pos, int channel) {
 
   cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
   if (cc == FourCC::InstrumentCommandDelay) {
-    ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
+    ushort param = viewData_->song_->phrase_.param2_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
 }
