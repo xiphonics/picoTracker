@@ -57,12 +57,13 @@ void MixerView::updateCursor(int dx, int dy) {
   int x = viewData_->songX_;
   x += dx;
 
-  // Allow wrapping around from master to channel 0 and vice versa
-  if (x < 0)
-    x = SONG_CHANNEL_COUNT; // Wrap to master channel
-  if (x > SONG_CHANNEL_COUNT)
-    x = 0; // Wrap to first channel
-
+  // Prevent wrapping by clamping values
+  if (x < 0) {
+    x = 0;
+  }
+  if (x > SONG_CHANNEL_COUNT) {
+    x = SONG_CHANNEL_COUNT;
+  }
   viewData_->songX_ = x;
 
   // Update field focus to match the selected channel
