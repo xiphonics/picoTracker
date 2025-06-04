@@ -68,12 +68,16 @@ uint8_t chargfx_get_cursor_y() { return cursor_y; }
 void chargfx_putc(char c, bool invert) {
   int idx = cursor_y * TEXT_WIDTH + cursor_x;
   if (c >= 32 && c <= 127) {
-    screen[idx] = c - 32;
-    SetBit(changed, idx);
+    uint8_t color;
     if (invert) {
-      colors[idx] = ((screen_bg_color & 0xf) << 4) | (screen_fg_color & 0xf);
+      color = ((screen_bg_color & 0xf) << 4) | (screen_fg_color & 0xf);
     } else {
-      colors[idx] = ((screen_fg_color & 0xf) << 4) | (screen_bg_color & 0xf);
+      color = ((screen_fg_color & 0xf) << 4) | (screen_bg_color & 0xf);
+    }
+    if (colors[idx] != color || screen[idx] != c - 32) {
+      screen[idx] = c - 32;
+      colors[idx] = color;
+      SetBit(changed, idx);
     }
   }
 }
