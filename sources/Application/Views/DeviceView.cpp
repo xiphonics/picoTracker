@@ -136,6 +136,16 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   w_.Flush();
   focus->SetFocus();
 
+  // Handle brightness changes directly
+  if (fourcc == FourCC::VarDisplayBrightness) {
+    Config *config = Config::GetInstance();
+    Variable *v = config->FindVariable(FourCC::VarDisplayBrightness);
+    if (v) {
+      unsigned char brightness = (unsigned char)v->GetInt();
+      System::GetInstance()->SetDisplayBrightness(brightness);
+    }
+  }
+
   Player *player = Player::GetInstance();
 
   switch (fourcc) {
@@ -163,6 +173,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     DoModal(mb);
     break;
   }
+
   default:
     NInvalid;
     break;

@@ -128,6 +128,10 @@ int picoTrackerSystem::GetBatteryLevel() {
   return lastBattLevel_;
 }
 
+void picoTrackerSystem::SetDisplayBrightness(unsigned char value) {
+  platform_brightness(value);
+}
+
 void picoTrackerSystem::Sleep(int millisec) {
   //	if (millisec>0)
   //		assert(0) ;

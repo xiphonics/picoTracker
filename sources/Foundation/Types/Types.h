@@ -194,6 +194,7 @@ struct FourCC {
     // 171 is taken for SampleInstrumentSlices
     // 172 is taken for ActionThemeName
     // 173 is taken for VarThemeName
+    // 174 is taken for VarDisplayBrightness
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,

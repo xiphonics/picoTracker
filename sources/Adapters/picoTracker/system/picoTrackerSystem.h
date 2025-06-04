@@ -18,6 +18,7 @@ public:
 public: // System implementation
   virtual unsigned long GetClock();
   virtual int GetBatteryLevel();
+  virtual void SetDisplayBrightness(unsigned char value);
   virtual void Sleep(int millisec);
   virtual void *Malloc(unsigned size);
   virtual void Free(void *);
@@ -30,6 +31,7 @@ private:
   static bool invert_;
   static int lastBattLevel_;
   static unsigned int lastBeatCount_;
+
   static EventManager *eventManager_;
   std::map<void *, unsigned> mmap_;
 };
