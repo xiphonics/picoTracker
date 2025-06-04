@@ -584,7 +584,7 @@ bool AppWindow::onEvent(GUIEvent &event) {
     _isDirty = true;
     _needsRedraw = true;
   }
-  
+
   // Instead of calling Redraw() directly, set the flag for AnimationUpdate
   if (_isDirty) {
     _needsRedraw = true;
@@ -610,22 +610,22 @@ void AppWindow::AnimationUpdate() {
     LoadProject(projectName_);
     loadProject_ = false;
   }
-  
+
   // If we need a full redraw due to state changes from key events
   if (_needsRedraw && _currentView) {
-    _currentView->Redraw();  // Draw main content
-    _needsRedraw = false;    // Reset the flag
+    _currentView->Redraw(); // Draw main content
+    _needsRedraw = false;   // Reset the flag
   }
-  
+
   // Always call AnimationUpdate to handle persistent elements
   // like the battery gauge, regardless of _needsRedraw
   if (_currentView) {
     _currentView->AnimationUpdate();
   }
-  
+
   // Always flush after AnimationUpdate to ensure consistent state
   Flush();
-  
+
   // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_SECONDS
   // will return false if auto save was unsuccessful because eg. the sequencer
   // is running
