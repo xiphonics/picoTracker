@@ -35,6 +35,12 @@ This setting enables or disables sending commands to a computer attached via USB
 
 The [official picoTracker remote UI web application is available ](https://ui.xiphonics.com), it works only with Chromium based browsers.
 
+## Display Brightness
+
+The display brightness setting allows you to adjust the backlight level of the picoTracker's LCD display. The brightness can be set from `05` (minimum brightness) to `ff` (maximum brightness). The default value is `80` (medium brightness).
+
+Adjusting the brightness can help with battery life (lower brightness uses less power) and visibility in different lighting conditions.
+
 ## Theme Settings
 
 The Theme Settings screen allows you to customize the appearance of the picoTracker interface, including fonts and colors. To access the Theme Settings screen, select the "Theme settings" option on the Device screen.
