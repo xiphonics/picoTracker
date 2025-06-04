@@ -192,7 +192,7 @@ void SongView::OnFocus() {
   // eg. if the user was in master channel in mixerview and came to songview
   // we need to make sure we're not outside channel range
   if (viewData_->songX_ > SONG_CHANNEL_COUNT - 1) {
-    viewData_->songX_ = SONG_CHANNEL_COUNT - 1;
+    viewData_->songX_ = 0; // default to channel 1
   }
 };
 
