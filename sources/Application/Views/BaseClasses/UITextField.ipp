@@ -40,13 +40,19 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
   }
 
   if (focus_) {
-    char buffer[2];
-    buffer[1] = 0;
-    for (int i = 0; i < len; i++) {
-      props.invert_ = (i == currentChar_);
-      buffer[0] = value[i];
-      w.DrawString(buffer, position, props);
-      position._x += 1;
+    if (len == 0) {
+      // For empty fields, draw a cursor at the beginning position
+      props.invert_ = true;
+      w.DrawString(" ", position, props);
+    } else {
+      char buffer[2];
+      buffer[1] = 0;
+      for (int i = 0; i < len; i++) {
+        props.invert_ = (i == currentChar_);
+        buffer[0] = value[i];
+        w.DrawString(buffer, position, props);
+        position._x += 1;
+      }
     }
   } else {
     if (len != 0) {
