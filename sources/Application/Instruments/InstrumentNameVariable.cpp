@@ -4,7 +4,8 @@ InstrumentNameVariable::InstrumentNameVariable(I_Instrument *instrument)
     : Variable(FourCC::InstrumentName, instrument->GetUserSetName().c_str()),
       instrument_(instrument) {
   // Initialize with the instrument's user-set name only, not the display name
-  // This ensures we don't automatically populate the name field with the sample filename
+  // This ensures we don't automatically populate the name field with the sample
+  // filename
 }
 
 InstrumentNameVariable::~InstrumentNameVariable() {}
