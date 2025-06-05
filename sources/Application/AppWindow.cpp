@@ -108,7 +108,6 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _nullView = 0;
   _grooveView = 0;
   _closeProject = 0;
-  _needsRedraw = false;
   _lastA = 0;
   _lastB = 0;
   _mask = 0;
@@ -582,13 +581,10 @@ bool AppWindow::onEvent(GUIEvent &event) {
   if (_closeProject) {
     CloseProject();
     _isDirty = true;
-    _needsRedraw = true;
   }
 
-  // Instead of calling Redraw() directly, set the flag for AnimationUpdate
-  if (_isDirty) {
-    _needsRedraw = true;
-  }
+  // _isDirty flag will be checked in AnimationUpdate to determine if redraw is
+  // needed
   return false;
 };
 
@@ -596,8 +592,8 @@ void AppWindow::onUpdate(bool redraw) {
   if (redraw) {
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
-    // Instead of calling Redraw directly, set the flag for AnimationUpdate
-    _needsRedraw = true;
+    // Mark as dirty to trigger redraw in AnimationUpdate
+    _isDirty = true;
   }
   // No Flush here - AnimationUpdate will handle it
 };
@@ -612,13 +608,13 @@ void AppWindow::AnimationUpdate() {
   }
 
   // If we need a full redraw due to state changes from key events
-  if (_needsRedraw && _currentView) {
+  if (_isDirty && _currentView) {
     _currentView->Redraw(); // Draw main content
-    _needsRedraw = false;   // Reset the flag
+    _isDirty = false;       // Reset the flag
   }
 
   // Always call AnimationUpdate to handle persistent elements
-  // like the battery gauge, regardless of _needsRedraw
+  // like the battery gauge, regardless of dirty state
   if (_currentView) {
     _currentView->AnimationUpdate();
   }
