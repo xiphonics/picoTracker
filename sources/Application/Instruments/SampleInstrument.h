@@ -63,6 +63,7 @@ public:
 
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName();
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() override;
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetSampleFileName();
 
   static void EnableDownsamplingLegacy();
 
