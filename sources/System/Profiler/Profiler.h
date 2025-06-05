@@ -34,7 +34,6 @@ private:
   etl::string<32> name_;
 };
 
-
 class Profiler {
 public:
   // Standard profiler constructor (one-time measurement)
@@ -49,7 +48,7 @@ private:
   // Static map for multiple moving average profilers
   static etl::map<etl::string<32>, MovingAverageProfiler, MAX_PROFILERS>
       moving_avg_profilers_;
-  
+
   // Private constructor for moving average profilers
   Profiler(const etl::string<32> &name, bool use_moving_avg);
 

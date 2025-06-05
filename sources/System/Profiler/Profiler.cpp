@@ -2,7 +2,8 @@
 
 // Helper function to safely calculate time differences with wrap-around
 uint32_t time_diff(uint32_t newer, uint32_t older) {
-  return newer - older; // This works correctly for uint32_t even with wrap-around
+  return newer -
+         older; // This works correctly for uint32_t even with wrap-around
 }
 
 // MovingAverageProfiler implementation
@@ -53,8 +54,7 @@ etl::map<etl::string<32>, MovingAverageProfiler, MAX_PROFILERS>
     Profiler::moving_avg_profilers_;
 
 // Profiler implementation
-Profiler::Profiler(const char *name)
-    : Profiler(etl::string<32>(name), false) {}
+Profiler::Profiler(const char *name) : Profiler(etl::string<32>(name), false) {}
 
 Profiler::Profiler(const etl::string<32> &name, bool use_moving_avg)
     : name_(name.c_str()), start_time_(0), use_moving_avg_(use_moving_avg),
@@ -97,9 +97,7 @@ Profiler::~Profiler() {
 AverageProfiler::AverageProfiler(const char *name)
     : name_(name), total_time_(0), call_count_(0), last_log_time_(0) {}
 
-AverageProfiler::~AverageProfiler() {
-  logStats();
-}
+AverageProfiler::~AverageProfiler() { logStats(); }
 
 void AverageProfiler::addSample(uint32_t duration) {
   static uint32_t sample_count = 0;
