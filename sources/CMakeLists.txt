@@ -71,6 +71,7 @@ link_libraries(
   hardware_pll
   hardware_adc
   hardware_flash
+  hardware_pwm
 )
 
 add_subdirectory(Adapters/picoTracker)

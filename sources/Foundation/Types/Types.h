@@ -194,6 +194,7 @@ struct FourCC {
     // 171 is taken for SampleInstrumentSlices
     // 172 is taken for ActionThemeName
     // 173 is taken for VarThemeName
+    // 174 is taken for VarBacklightLevel
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -226,6 +227,7 @@ struct FourCC {
     ActionShowTheme = 159,
     ActionThemeName = 172,
     SampleInstrumentSlices = 171,
+    VarBacklightLevel = 174,
 
     Default = 255, // "    "
   };
@@ -379,6 +381,7 @@ struct FourCC {
   ETL_ENUM_TYPE(ActionExport, "export")
   ETL_ENUM_TYPE(ActionImport, "import")
   ETL_ENUM_TYPE(ActionThemeName, "themename")
+  ETL_ENUM_TYPE(VarBacklightLevel, "backlightLevel")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

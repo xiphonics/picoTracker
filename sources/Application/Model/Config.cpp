@@ -36,6 +36,7 @@ constexpr int DEFAULT_LINEOUT = 0x2;
 constexpr int DEFAULT_MIDIDEVICE = 0x0;
 constexpr int DEFAULT_MIDISYNC = 0x0;
 constexpr int DEFAULT_REMOTEUI = 0x1;
+constexpr int DEFAULT_BACKLIGHT_LEVEL = 0xFF; // Default to max brightness (255)
 
 // Use a struct to define parameter information
 struct ConfigParam {
@@ -175,6 +176,14 @@ static const ConfigParam configParams[] = {
      nullptr,
      0,
      true},
+
+    // Display brightness setting
+    {"BACKLIGHTLEVEL",
+     {.intValue = DEFAULT_BACKLIGHT_LEVEL},
+     FourCC::VarBacklightLevel,
+     nullptr,
+     0,
+     false},
 };
 
 Config::Config() : VariableContainer(&variables_) {
