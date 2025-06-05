@@ -26,7 +26,7 @@ public:
 
   uint32_t GetDiskSize(int note);
   bool Rewind();
-  bool Read(void *buff, uint32_t btr, uint32_t *bytesRead);
+  bool Read(void *buff, uint32_t btr, uint32_t *br);
 
   void Close();
   virtual bool IsMulti() { return false; };

@@ -284,41 +284,31 @@ bool WavFile::Rewind() {
 };
 
 // incrementally read file, use rewind method to go to beginning
-bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
-  // Calculate read size based on byte per sample
-  uint32_t readSize = (bytePerSample_ == 1) ? btr / 2 : btr;
+bool WavFile::Read(void *buff, uint32_t btr, uint32_t *br) {
 
-  // Adjust for bytes remaining
+  uint32_t readSize = (bytePerSample_ == 1) ? btr / 2 : btr;
+  // Adjust for bytes remaning
   readSize = readCount_ > readSize ? readSize : readCount_;
 
-  // Read from file
-  *bytesRead = file_->Read(buff, readSize);
-
-  // For 8-bit samples, we'll expand to 16-bit
+  *br = file_->Read(buff, readSize);
   if (bytePerSample_ == 1) {
-    // Process 8-bit samples, converting them to 16-bit
-    uint8_t *src = (uint8_t *)buff;
-    uint16_t *dst = (uint16_t *)buff;
-
-    // We need to process from end to beginning to avoid overwriting data
-    for (int i = *bytesRead - 1; i >= 0; i--) {
+    *br = *br * 2;
+  }
+  // Have to expand 8 bit data (if needed) before writing
+  uint8_t *src = (uint8_t *)buff;
+  uint16_t *dst = (uint16_t *)buff;
+  for (int i = readSize - 1; i >= 0; i--) {
+    if (bytePerSample_ == 1) {
       dst[i] = (src[i] - 128) * 256;
-    }
-
-    // Adjust bytes read count for 16-bit output
-    *bytesRead = *bytesRead * 2;
-  } else {
-    // Process 16-bit samples (byte swap if needed)
-    uint16_t *data = (uint16_t *)buff;
-    uint32_t sampleCount = *bytesRead / 2; // 16-bit = 2 bytes per sample
-
-    // Process all samples with proper bounds checking
-    for (uint32_t i = 0; i < sampleCount; i++) {
-      data[i] = Swap16(data[i]);
+    } else {
+      *dst = Swap16(*dst);
+      dst++;
+      if (channelCount_ > 1) {
+        *dst = Swap16(*dst);
+        dst++;
+      }
     }
   }
-
-  // Update remaining bytes counter
   readCount_ -= readSize;
   return true;
 }
