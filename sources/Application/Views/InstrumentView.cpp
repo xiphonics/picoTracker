@@ -1096,12 +1096,3 @@ void InstrumentView::handleInstrumentExport() {
     }
   }
 }
-
-// Redraw all UI fields to reflect updated variable values
-void InstrumentView::redrawAllFields() {
-  for (auto field : fieldList_) {
-    if (field) {
-      field->Draw(w_);
-    }
-  }
-}
