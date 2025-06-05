@@ -107,7 +107,8 @@ private:
   SelectProjectView *_selectProjectView;
   NullView *_nullView;
 
-  bool _isDirty;
+  bool _isDirty; // Flag to indicate a full redraw is needed on next
+                 // AnimationUpdate
   bool _closeProject;
   bool _shouldQuit;
   unsigned short _mask;
@@ -145,6 +146,13 @@ private:
   bool loadProject_ = false;
 
   uint32_t lastAutoSave = 0;
+
+  // Counter for animation frames, updated once per frame at 50hz
+  static uint32_t animationFrameCounter_;
+
+public:
+  // Static accessor for the animation frame counter
+  static uint32_t GetAnimationFrameCounter() { return animationFrameCounter_; }
 };
 
 #endif

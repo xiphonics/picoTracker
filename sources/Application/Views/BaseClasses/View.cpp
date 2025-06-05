@@ -10,8 +10,8 @@
 bool View::initPrivate_ = false;
 
 int View::margin_ = 0;
-uint32_t View::animationFrameCounter_ = 0;
-int View::songRowCount_; //=21 ;
+int View::songRowCount_ = 16;
+float View::voltage = 0;
 
 View::View(GUIWindow &w, ViewData *viewData)
     : w_(w), viewData_(viewData), viewMode_(VM_NORMAL) {
@@ -362,16 +362,15 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 };
 
 void View::drawBattery(GUITextProperties &props) {
-  // Update battery gauge only once per second
-  if (animationFrameCounter_ % 50 != 0) {
-    return;
+  // only update the voltage once per second
+  if (AppWindow::GetAnimationFrameCounter() % 50 == 0) {
+    System *sys = System::GetInstance();
+    voltage = sys->GetBatteryLevel() / 1000.0;
   }
 
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
   battpos._x = 27;
-  System *sys = System::GetInstance();
-  float voltage = sys->GetBatteryLevel() / 1000.0;
 
   if (voltage >= 0) {
     SetColor(CD_INFO);
@@ -394,5 +393,3 @@ void View::drawBattery(GUITextProperties &props) {
     DrawString(battpos._x, battpos._y, battText, props);
   }
 }
-
-void View::AnimationUpdate() { animationFrameCounter_++; }
