@@ -15,6 +15,7 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
   virtual void AnimationUpdate();
+  virtual void SetFocus(UIField *field); // Override to keep songX_ in sync
 
 protected:
   void processNormalButtonMask(unsigned int mask);

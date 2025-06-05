@@ -18,19 +18,63 @@ MixerView::MixerView(GUIWindow &w, ViewData *viewData)
 MixerView::~MixerView() {}
 
 void MixerView::OnFocus() {
-  // update seleced field to match current cursor position
-  SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
+  // update selected field to match current cursor position
+  if (viewData_->songX_ <= SONG_CHANNEL_COUNT) {
+    if (viewData_->songX_ < SONG_CHANNEL_COUNT) {
+      // Channel 0-7
+      SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
+    } else {
+      // Master channel
+      SetFocus((UIField *)&masterVolumeField_.at(0));
+    }
+  }
 };
+
+void MixerView::SetFocus(UIField *field) {
+  // Call parent implementation first
+  FieldView::SetFocus(field);
+
+  // Now update songX_ based on which field has focus
+  if (!field)
+    return;
+
+  // Check if it's one of the channel volume fields
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    if (field == (UIField *)&channelVolumeFields_.at(i)) {
+      viewData_->songX_ = i;
+      return;
+    }
+  }
+
+  // Check if it's the master volume field
+  if (field == (UIField *)&masterVolumeField_.at(0)) {
+    viewData_->songX_ = SONG_CHANNEL_COUNT;
+  }
+}
 
 // keep track of currently selected channel
 void MixerView::updateCursor(int dx, int dy) {
   int x = viewData_->songX_;
   x += dx;
-  if (x < 0)
+
+  // Prevent wrapping by clamping values
+  if (x < 0) {
     x = 0;
-  if (x > 7)
-    x = 7;
+  }
+  if (x > SONG_CHANNEL_COUNT) {
+    x = SONG_CHANNEL_COUNT;
+  }
   viewData_->songX_ = x;
+
+  // Update field focus to match the selected channel
+  if (x < SONG_CHANNEL_COUNT) {
+    // Channel 0-7
+    SetFocus(&channelVolumeFields_[x]);
+  } else {
+    // Master channel
+    SetFocus(&masterVolumeField_[0]);
+  }
+
   isDirty_ = true;
 }
 
@@ -89,6 +133,12 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
     };
     return;
   };
+
+  // Ignore up/down arrow keys when pressed by themselves in MixerView
+  // We only want left/right to navigate between channels
+  if (mask == EPBM_UP || mask == EPBM_DOWN) {
+    return;
+  }
 
   // Fieldview gets first go at the button event
   FieldView::ProcessButtonMask(mask, pressed);
