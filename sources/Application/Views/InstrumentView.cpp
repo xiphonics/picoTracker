@@ -58,16 +58,16 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 InstrumentView::~InstrumentView() {}
 
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
-  // Create a NameVariable that bridges between the UITextField and the
-  // instrument's name
   nameVariables_.emplace_back(instr);
   Variable &nameVar = *nameVariables_.rbegin();
 
   auto label =
       etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
 
-  // Create a default name based on the instrument's display name
-  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName = instr->GetDisplayName();
+  // Use an empty default name - we don't want to populate with sample filename
+  // The display name will still be shown on the phrase screen via
+  // GetDisplayName()
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName;
 
   nameTextField_.emplace_back(nameVar, position, label, FourCC::InstrumentName,
                               defaultName);

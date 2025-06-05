@@ -963,23 +963,6 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
 
   switch (id) {
   case FourCC::SampleInstrumentSample: {
-    // Get the sample name to use as the default instrument name if no custom
-    // name is set
-    Variable *sampleVar = FindVariable(FourCC::SampleInstrumentSample);
-    Variable *nameVar = FindVariable(FourCC::InstrumentName);
-
-    if (sampleVar && nameVar) {
-      // Only update the name if it's empty or matches the previous sample
-      // name
-      etl::string<MAX_INSTRUMENT_NAME_LENGTH> currentName =
-          nameVar->GetString();
-      if (currentName.empty()) {
-        // Set the instrument name to the sample name (without extension)
-        etl::string<MAX_INSTRUMENT_NAME_LENGTH> sampleName = GetDisplayName();
-        nameVar->SetString(sampleName.c_str());
-      }
-    }
-
     if (running_) {
       dirty_ = true; // we'll update later, when instrument gets re-triggered
     } else {
