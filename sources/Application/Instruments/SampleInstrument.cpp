@@ -1269,6 +1269,11 @@ etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
   // No user-set name, use the sample file name without file extension
   auto sampleFileName = GetSampleFileName();
 
+  // If no sample is set (empty filename), return "NONE"
+  if (sampleFileName.empty()) {
+    return etl::string<MAX_INSTRUMENT_NAME_LENGTH>("NONE");
+  }
+
   // Strip .wav extension if present
   size_t dotPos = sampleFileName.find_last_of('.');
   if (dotPos != etl::string<MAX_INSTRUMENT_NAME_LENGTH>::npos) {
