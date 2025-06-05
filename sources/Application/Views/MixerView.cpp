@@ -134,6 +134,12 @@ void MixerView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   };
 
+  // Ignore up/down arrow keys when pressed by themselves in MixerView
+  // We only want left/right to navigate between channels
+  if (mask == EPBM_UP || mask == EPBM_DOWN) {
+    return;
+  }
+
   // Fieldview gets first go at the button event
   FieldView::ProcessButtonMask(mask, pressed);
 
