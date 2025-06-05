@@ -18,6 +18,7 @@
 
 static chargfx_color_t screen_bg_color = CHARGFX_BG;
 static chargfx_color_t screen_fg_color = CHARGFX_NORMAL;
+static bool palette_changed = false; // Flag to track palette changes
 static int cursor_x = 0;
 static int cursor_y = 0;
 static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
@@ -50,9 +51,38 @@ void chargfx_clear(chargfx_color_t color) {
   chargfx_draw_screen();
 }
 
-void chargfx_set_foreground(chargfx_color_t color) { screen_fg_color = color; }
+void chargfx_set_foreground(chargfx_color_t color) { 
+  if (screen_fg_color != color) {
+    screen_fg_color = color;
+    palette_changed = true; // Mark palette as changed
+  }
+}
 
-void chargfx_set_background(chargfx_color_t color) { screen_bg_color = color; }
+void chargfx_set_background(chargfx_color_t color) { 
+  if (screen_bg_color != color) {
+    screen_bg_color = color;
+    palette_changed = true; // Mark palette as changed
+  }
+}
+
+void chargfx_set_bg_color(chargfx_color_t color) {
+  if (screen_bg_color != color) {
+    screen_bg_color = color;
+    palette_changed = true; // Mark palette as changed
+  }
+}
+
+void chargfx_set_fg_color(chargfx_color_t color) {
+  if (screen_fg_color != color) {
+    screen_fg_color = color;
+    palette_changed = true; // Mark palette as changed
+  }
+}
+
+// Function to reset the palette_changed flag after a full redraw
+void chargfx_reset_palette_changed() {
+  palette_changed = false;
+}
 
 void chargfx_set_font_index(uint8_t idx) { ui_font_index = idx; }
 
@@ -74,7 +104,9 @@ void chargfx_putc(char c, bool invert) {
     } else {
       color = ((screen_fg_color & 0xf) << 4) | (screen_bg_color & 0xf);
     }
-    if (colors[idx] != color || screen[idx] != c - 32) {
+    
+    // Check if character or color has changed, OR if palette has changed
+    if (colors[idx] != color || screen[idx] != c - 32 || palette_changed) {
       screen[idx] = c - 32;
       colors[idx] = color;
       SetBit(changed, idx);
@@ -216,10 +248,17 @@ void chargfx_draw_changed_simple() {
 void chargfx_draw_screen() {
   // draw the whole screen
   chargfx_draw_region(0, 0, TEXT_WIDTH, TEXT_HEIGHT);
+  
+  // Reset the palette_changed flag after a full screen redraw
+  palette_changed = false;
 }
 
 void chargfx_set_palette_color(int idx, uint16_t rgb565_color) {
-  palette[idx] = SWAP_BYTES(rgb565_color);
+  uint16_t new_color = SWAP_BYTES(rgb565_color);
+  if (palette[idx] != new_color) {
+    palette[idx] = new_color;
+    palette_changed = true; // Mark palette as changed
+  }
 }
 
 void chargfx_init() { ili9341_init(); }

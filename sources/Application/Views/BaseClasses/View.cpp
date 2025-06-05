@@ -324,7 +324,7 @@ void View::Redraw() {
   isDirty_ = false;
 };
 
-void View::SetDirty(bool isDirty) { isDirty_ = true; };
+void View::SetDirty(bool isDirty) { isDirty_ = isDirty; };
 
 void View::ProcessButton(unsigned short mask, bool pressed) {
   isDirty_ = false;
