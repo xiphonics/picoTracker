@@ -47,7 +47,6 @@ void chargfx_write(const char *s, int len, bool invert);
 void chargfx_putc(char c, bool invert);
 void chargfx_set_palette_color(int idx, uint16_t rgb565_color);
 void chargfx_set_font_index(uint8_t idx);
-void chargfx_reset_palette_changed();
 
 #ifdef __cplusplus
 }
