@@ -845,23 +845,6 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
 
   switch (id) {
   case FourCC::SampleInstrumentSample: {
-    // Get the sample name to use as the default instrument name if no custom
-    // name is set
-    Variable *sampleVar = FindVariable(FourCC::SampleInstrumentSample);
-    Variable *nameVar = FindVariable(FourCC::InstrumentName);
-
-    if (sampleVar && nameVar) {
-      // Only update the name if it's empty or matches the previous sample
-      // name
-      etl::string<MAX_INSTRUMENT_NAME_LENGTH> currentName =
-          nameVar->GetString();
-      if (currentName.empty()) {
-        // Set the instrument name to the sample name (without extension)
-        etl::string<MAX_INSTRUMENT_NAME_LENGTH> sampleName = GetDisplayName();
-        nameVar->SetString(sampleName.c_str());
-      }
-    }
-
     if (running_) {
       dirty_ = true; // we'll update later, when instrument gets re-triggered
     } else {
@@ -1144,25 +1127,43 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 };
 
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetUserSetName() {
-  Variable *v = FindVariable(FourCC::SampleInstrumentSample);
-  return v->GetString();
+  // Return the user-set name from the base class
+  return I_Instrument::GetUserSetName();
+};
+
+// Get the sample file name from the SampleInstrumentSample variable
+etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetSampleFileName() {
+  Variable *v = this->FindVariable(FourCC::SampleInstrumentSample);
+  if (v) {
+    return v->GetString();
+  }
+  return etl::string<MAX_INSTRUMENT_NAME_LENGTH>();
 };
 
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
-  // Get the name from the base class method
-  auto name = I_Instrument::GetDisplayName();
-
-  // Strip .wav extension if present
-  size_t dotPos = name.find_last_of('.');
-  if (dotPos != etl::string<MAX_INSTRUMENT_NAME_LENGTH>::npos) {
-    // Check if the extension is .wav (case insensitive)
-    const char *ext = name.c_str() + dotPos;
-    if (strcasecmp(ext, ".wav") == 0) {
-      return name.substr(0, dotPos);
-    }
+  // Check if user has explicitly set a name
+  auto userSetName = I_Instrument::GetUserSetName();
+  if (!userSetName.empty()) {
+    // User has set a custom name, use that
+    return userSetName;
   }
 
-  return name;
+  // No user-set name, use the sample file name without file extension
+  auto sampleFileName = GetSampleFileName();
+
+  // If no sample is set (empty filename), return "NONE"
+  if (sampleFileName.empty()) {
+    return etl::string<MAX_INSTRUMENT_NAME_LENGTH>("NONE");
+  }
+
+  // Strip .wav extension if present
+  size_t dotPos = sampleFileName.find_last_of('.');
+  if (dotPos != etl::string<MAX_INSTRUMENT_NAME_LENGTH>::npos) {
+    // remove the filename extension
+    return sampleFileName.substr(0, dotPos);
+  }
+
+  return sampleFileName;
 };
 
 void SampleInstrument::Purge() {
