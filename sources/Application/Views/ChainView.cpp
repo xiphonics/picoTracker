@@ -758,15 +758,14 @@ void ChainView::AnimationUpdate() {
     return;
   }
 
+  // Always update VU meter even if other parts of UI dont need updating
+  drawMasterVuMeter(player, props);
+
   // Handle any pending updates from OnPlayerUpdate
   // This ensures all UI drawing happens on the "main" thread (core0)
-
   if (needsUIUpdate_) {
     // Draw notes
     drawNotes();
-
-    // Draw master VU meter
-    drawMasterVuMeter(player, props);
 
     // Handle position updates
     GUIPoint anchor = GetAnchor();
