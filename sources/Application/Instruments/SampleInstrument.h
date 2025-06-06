@@ -63,7 +63,6 @@ public:
 
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName();
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() override;
-  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetSampleFileName();
 
   static void EnableDownsamplingLegacy();
 
@@ -73,6 +72,8 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
+  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetSampleFileName();
+
   etl::list<Variable *, 21> variables_;
 
   SoundSource *source_;
