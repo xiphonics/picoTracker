@@ -8,7 +8,7 @@
 #include "Foundation/T_Singleton.h"
 #include "WavFile.h"
 
-#define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
+#define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT * 4
 
 enum SamplePoolEventType { SPET_INSERT, SPET_DELETE };
 

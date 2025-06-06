@@ -90,7 +90,6 @@ private:
   Variable crush_;
   Variable drive_;
   Variable downsample_;
-  Variable slices_;
   Variable rootNote_;
   Variable fineTune_;
   Variable pan_;
