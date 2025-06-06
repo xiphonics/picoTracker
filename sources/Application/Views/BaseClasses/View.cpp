@@ -365,7 +365,11 @@ void View::drawBattery(GUITextProperties &props) {
   // only update the voltage once per second
   if (AppWindow::GetAnimationFrameCounter() % 50 == 0) {
     System *sys = System::GetInstance();
-    voltage = sys->GetBatteryLevel() / 1000.0;
+    auto v = sys->GetBatteryLevel() / 1000.0;
+    // add some hysteresis
+    if (abs(v - voltage) > 0.1) {
+      voltage = v;
+    }
   }
 
   GUIPoint battpos = GetAnchor();
