@@ -54,10 +54,6 @@ void chargfx_set_foreground(chargfx_color_t color) { screen_fg_color = color; }
 
 void chargfx_set_background(chargfx_color_t color) { screen_bg_color = color; }
 
-void chargfx_set_bg_color(chargfx_color_t color) { screen_bg_color = color; }
-
-void chargfx_set_fg_color(chargfx_color_t color) { screen_fg_color = color; }
-
 void chargfx_set_font_index(uint8_t idx) { ui_font_index = idx; }
 
 void chargfx_set_cursor(uint8_t x, uint8_t y) {
@@ -219,10 +215,7 @@ void chargfx_draw_screen() {
 }
 
 void chargfx_set_palette_color(int idx, uint16_t rgb565_color) {
-  uint16_t new_color = SWAP_BYTES(rgb565_color);
-  if (palette[idx] != new_color) {
-    palette[idx] = new_color;
-  }
+  palette[idx] = SWAP_BYTES(rgb565_color);
 }
 
 void chargfx_init() { ili9341_init(); }
