@@ -491,4 +491,6 @@ void ThemeView::AnimationUpdate() {
     DrawView();
     _forceRedraw = false;
   }
+  GUITextProperties props;
+  drawBattery(props);
 }
