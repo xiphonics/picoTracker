@@ -963,10 +963,11 @@ void SongView::AnimationUpdate() {
   // This ensures all UI drawing happens on the "main" thread (core0)
   GUITextProperties props;
 
+  // Always update VU meter even if other parts of UI dont need updating
+  drawMasterVuMeter(player, props);
+
   // Use the consolidated flag for all UI updates
   if (needsUIUpdate_) {
-    // Draw VU meter and notes
-    drawMasterVuMeter(player, props);
     drawNotes();
 
     // Only handle play time updates if needed
