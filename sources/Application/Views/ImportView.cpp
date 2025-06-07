@@ -379,6 +379,10 @@ void ImportView::import(char *name) {
     // pad with trailing spaces as dialog size based on title
     MessageBox *mb =
         new MessageBox(*this, "Sample Too Large       ", message, MBBF_OK);
+    char message[24];
+    npf_snprintf(message, sizeof(message), "Max of %d reached", MAX_SAMPLES);
+    MessageBox *mb =
+        new MessageBox(*this, "Cannot Import Sample", message, MBBF_OK);
     DoModal(mb);
     return;
   }

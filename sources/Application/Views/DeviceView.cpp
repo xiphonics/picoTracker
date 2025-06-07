@@ -52,6 +52,14 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarBacklightLevel);
+  // MIN brightness is 0xF (15)
+  intVarField_.emplace_back(position, *v, "Display brightness: %2.2x", 0xF,
+                            0xFF, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
   position._y += 2;
   actionField_.emplace_back("Theme settings", FourCC::ActionShowTheme,
                             position);
@@ -129,6 +137,16 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   w_.Flush();
   focus->SetFocus();
 
+  // Handle brightness changes directly
+  if (fourcc == FourCC::VarBacklightLevel) {
+    Config *config = Config::GetInstance();
+    Variable *v = config->FindVariable(FourCC::VarBacklightLevel);
+    if (v) {
+      unsigned char brightness = (unsigned char)v->GetInt();
+      System::GetInstance()->SetDisplayBrightness(brightness);
+    }
+  }
+
   Player *player = Player::GetInstance();
 
   switch (fourcc) {
@@ -156,6 +174,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     DoModal(mb);
     break;
   }
+
   default:
     NInvalid;
     break;

@@ -29,6 +29,8 @@ public:
   // Observer for action callback
   void Update(Observable &, I_ObservableData *);
 
+  void AnimationUpdate() override;
+
   // For storing export theme name during modal callbacks
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> exportThemeName_;
 
@@ -53,5 +55,9 @@ private:
   void importTheme();
   void exportThemeWithName(const char *themeName, bool overwrite);
   void updateThemeNameFromConfig(); // Update the theme name field from Config
+
+  // need separate flag for force because isDirty_ won't work for this because
+  // it gets reset before AnimationUpdate is called in ThemeViews case
+  bool _forceRedraw = false;
 };
 #endif

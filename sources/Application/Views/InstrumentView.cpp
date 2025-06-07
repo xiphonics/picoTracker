@@ -58,16 +58,16 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 InstrumentView::~InstrumentView() {}
 
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
-  // Create a NameVariable that bridges between the UITextField and the
-  // instrument's name
   nameVariables_.emplace_back(instr);
   Variable &nameVar = *nameVariables_.rbegin();
 
   auto label =
       etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
 
-  // Create a default name based on the instrument's display name
-  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName = instr->GetDisplayName();
+  // Use an empty default name - we don't want to populate with sample filename
+  // The display name will still be shown on the phrase screen via
+  // GetDisplayName()
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName;
 
   nameTextField_.emplace_back(nameVar, position, label, FourCC::InstrumentName,
                               defaultName);
@@ -141,7 +141,7 @@ void InstrumentView::onInstrumentChange() {
   refreshInstrumentFields();
 };
 
-void InstrumentView::refreshInstrumentFields(FourCC focus) {
+void InstrumentView::refreshInstrumentFields() {
   for (auto &f : intVarField_) {
     f.RemoveObserver(*this);
   }
@@ -167,7 +167,7 @@ void InstrumentView::refreshInstrumentFields(FourCC focus) {
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
-  lastFocusID_ = focus;
+  lastFocusID_ = FourCC::VarInstrumentType;
 
   // Re-add the action fields for export and import only if not IT_NONE
   if (instrumentType_.GetInt() != IT_NONE) {
@@ -269,15 +269,6 @@ void InstrumentView::fillSampleParameters() {
   intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._x += 10;
-  Variable *s = instrument->FindVariable(FourCC::SampleInstrumentSlices);
-  intVarOffField_.emplace_back(position, *s, "Slices: %d", 2, 64, 1, 8);
-  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
-
-  // add observer
-  (*intVarOffField_.rbegin()).AddObserver(*this);
-
-  position._x -= 10;
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentRootNote);
   noteVarField_.emplace_back(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C);
@@ -342,39 +333,20 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentStart);
-  // Calculate max value for start field - use full sample size if no slices
-  int maxStartValue = instrument->GetSampleSize() - 1;
-  if (s->GetInt() > 0) {
-    // If slices are enabled, we still allow editing the full range
-    // The actual slice boundaries will be enforced during playback
-  }
   bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0,
-                               maxStartValue, 16);
+                               instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
-  // Calculate max value for loop start field - use full sample size if no
-  // slices
-  int maxLoopStartValue = instrument->GetSampleSize() - 1;
-  if (s->GetInt() > 0) {
-    // If slices are enabled, we still allow editing the full range
-    // The actual slice boundaries will be enforced during playback
-  }
   bigHexVarField_.emplace_back(position, *v, 7, "loop start: %7.7X", 0,
-                               maxLoopStartValue, 16);
+                               instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentEnd);
-  // Calculate max value for loop end field - use full sample size if no slices
-  int maxLoopEndValue = instrument->GetSampleSize() - 1;
-  if (s->GetInt() > 0) {
-    // If slices are enabled, we still allow editing the full range
-    // The actual slice boundaries will be enforced during playback
-  }
   bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
-                               maxLoopEndValue, 16);
+                               instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
@@ -988,22 +960,6 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     SetChanged();
     NotifyObservers(&ve);
   } break;
-  case FourCC::SampleInstrumentSlices: {
-    // We are assuming we can only get here when instrument is Sample, safe?
-    Trace::Debug("INSTRUMENTVIEW", "slice changed, redraw!");
-    I_Instrument *instrument = getInstrument();
-    // In slice change, reset markers for start and loop start
-    Variable *ls = instrument->FindVariable(FourCC::SampleInstrumentStart);
-    ls->SetInt(0, true);
-    ls = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
-    ls->SetInt(0, true);
-    Variable *slices = instrument->FindVariable(FourCC::SampleInstrumentSlices);
-    ls = instrument->FindVariable(FourCC::SampleInstrumentEnd);
-    ls->SetInt((((SampleInstrument *)instrument)->GetSampleSize() - 1) /
-                   slices->GetInt(),
-               true);
-    refreshInstrumentFields(FourCC::SampleInstrumentSlices);
-  } break;
   case FourCC::MidiInstrumentProgram: {
     // When program value changes, send a MIDI Program Change message
     I_Instrument *instr = getInstrument();
@@ -1137,15 +1093,6 @@ void InstrumentView::handleInstrumentExport() {
       // Show export result message
       MessageBox *mb = new MessageBox(*this, message, MBBF_OK);
       DoModal(mb);
-    }
-  }
-}
-
-// Redraw all UI fields to reflect updated variable values
-void InstrumentView::redrawAllFields() {
-  for (auto field : fieldList_) {
-    if (field) {
-      field->Draw(w_);
     }
   }
 }

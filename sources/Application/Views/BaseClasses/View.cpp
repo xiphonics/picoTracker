@@ -10,8 +10,8 @@
 bool View::initPrivate_ = false;
 
 int View::margin_ = 0;
-uint32_t View::animationFrameCounter_ = 0;
-int View::songRowCount_; //=21 ;
+int View::songRowCount_ = 16;
+float View::voltage = 0;
 
 View::View(GUIWindow &w, ViewData *viewData)
     : w_(w), viewData_(viewData), viewMode_(VM_NORMAL) {
@@ -324,7 +324,7 @@ void View::Redraw() {
   isDirty_ = false;
 };
 
-void View::SetDirty(bool isDirty) { isDirty_ = true; };
+void View::SetDirty(bool isDirty) { isDirty_ = isDirty; };
 
 void View::ProcessButton(unsigned short mask, bool pressed) {
   isDirty_ = false;
@@ -362,16 +362,19 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 };
 
 void View::drawBattery(GUITextProperties &props) {
-  // Update battery gauge only once per second
-  if (animationFrameCounter_ % 50 != 0) {
-    return;
+  // only update the voltage once per second
+  if (AppWindow::GetAnimationFrameCounter() % 50 == 0) {
+    System *sys = System::GetInstance();
+    auto v = sys->GetBatteryLevel() / 1000.0;
+    // add some hysteresis
+    if (abs(v - voltage) > 0.1) {
+      voltage = v;
+    }
   }
 
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
   battpos._x = 27;
-  System *sys = System::GetInstance();
-  float voltage = sys->GetBatteryLevel() / 1000.0;
 
   if (voltage >= 0) {
     SetColor(CD_INFO);
@@ -394,5 +397,3 @@ void View::drawBattery(GUITextProperties &props) {
     DrawString(battpos._x, battpos._y, battText, props);
   }
 }
-
-void View::AnimationUpdate() { animationFrameCounter_++; }

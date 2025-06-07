@@ -186,7 +186,15 @@ void SongView::extendSelection() {
         called when current view is becoming active
  ******************************************************/
 
-void SongView::OnFocus() { clipboard_.active_ = false; };
+void SongView::OnFocus() {
+  clipboard_.active_ = false;
+
+  // eg. if the user was in master channel in mixerview and came to songview
+  // we need to make sure we're not outside channel range
+  if (viewData_->songX_ > SONG_CHANNEL_COUNT - 1) {
+    viewData_->songX_ = 0; // default to channel 1
+  }
+};
 
 GUIRect SongView::getSelectionRect() {
 
@@ -955,10 +963,11 @@ void SongView::AnimationUpdate() {
   // This ensures all UI drawing happens on the "main" thread (core0)
   GUITextProperties props;
 
+  // Always update VU meter even if other parts of UI dont need updating
+  drawMasterVuMeter(player, props);
+
   // Use the consolidated flag for all UI updates
   if (needsUIUpdate_) {
-    // Draw VU meter and notes
-    drawMasterVuMeter(player, props);
     drawNotes();
 
     // Only handle play time updates if needed
