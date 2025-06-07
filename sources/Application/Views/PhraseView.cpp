@@ -1312,16 +1312,15 @@ void PhraseView::AnimationUpdate() {
     return;
   }
 
+  GUITextProperties props;
+  // Always update VU meter even if other parts of UI dont need updating
+  drawMasterVuMeter(player, props, false, 25);
+
   // Handle any pending updates from OnPlayerUpdate using the consolidated flag
   // This ensures all UI drawing happens on the "main" thread (core0)
   if (needsUIUpdate_) {
-    GUITextProperties props;
-
     // Draw notes
     drawNotes();
-
-    // Draw VU meter
-    drawMasterVuMeter(player, props, false, 25);
 
     // Draw play position marker
     GUIPoint anchor = GetAnchor();
