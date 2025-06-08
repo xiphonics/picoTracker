@@ -28,9 +28,7 @@ public:
   int GetNameListSize();
   int ImportSample(char *name, const char *projectName);
   void PurgeSample(int i, const char *projectName);
-  virtual bool CheckSampleFits(int sampleSize) {
-    return true;
-  } // Default implementation always returns true
+  virtual bool CheckSampleFits(int sampleSize) = 0;
 
 protected:
   virtual bool loadSample(const char *name) = 0;

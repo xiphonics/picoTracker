@@ -347,7 +347,7 @@ void ImportView::import(char *name) {
   int currentCount = pool->GetNameListSize();
   if (currentCount >= MAX_SAMPLES) {
     // Show error dialog to inform the user
-    char message[64];
+    char message[SCREEN_WIDTH];
     npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
                  MAX_SAMPLES);
     // pad with trailing spaces as dialog size based on title
