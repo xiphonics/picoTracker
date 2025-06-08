@@ -3,22 +3,27 @@
 #include "hardware/sync.h"
 #include "pico/multicore.h"
 
-#define MAX_PROJECT_SAMPLE_STORAGE_MB 15
+// Maximum sample storage per project (8MB limit for now)
+#define MAX_PROJECT_SAMPLE_STORAGE_MB 8
 
-// #define FLASH_TARGET_OFFSET (1024 * 1024)
-//  Use all flash available after binary for samples
-//  WARNING! should be conscious to always ensure 1MB of free space
+// Define where sample storage begins in flash
+// Use all flash available after binary for samples
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
   ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
    1) *                                                                        \
       FLASH_SECTOR_SIZE
-// #define FLASH_LIMIT (2 * 1024 * 1024)
+
+// Total flash size depends on hardware:
+// - Raspberry Pi Pico: 2MB
+// - picoTracker custom hardware: up to 16MB
+// We'll detect actual size at runtime if needed
 
 uint32_t picoTrackerSamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
 uint32_t picoTrackerSamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
-uint32_t picoTrackerSamplePool::flashLimit_ =
-    MAX_PROJECT_SAMPLE_STORAGE_MB * 1024 * 1024;
+// Initial default value - will be properly set in the constructor based on
+// actual flash size
+uint32_t picoTrackerSamplePool::flashLimit_ = 0;
 // From the SDK, values are not defined in the header file
 #define FLASH_RUID_DUMMY_BYTES 4
 #define FLASH_RUID_DATA_BYTES 8
@@ -34,11 +39,29 @@ uint storage_get_flash_capacity() {
 }
 
 picoTrackerSamplePool::picoTrackerSamplePool() : SamplePool() {
-  // we cant just use the currently available flash storage as in the future the
-  // firmware size may grow and then past projects may no longer fit in the
-  // available flash space
-  // flashLimit_ = storage_get_flash_capacity();
-  Trace::Debug("Flash size is %i bytes", flashLimit_);
+  // Detect the actual flash size at runtime
+  uint32_t totalFlashSize = storage_get_flash_capacity();
+
+  // Calculate the maximum usable flash for samples
+  // This is either the 8MB limit or the actual available flash, whichever is
+  // smaller
+  uint32_t maxUsableFlash = MAX_PROJECT_SAMPLE_STORAGE_MB * 1024 * 1024;
+
+  // Ensure we don't exceed the actual flash size
+  uint32_t availableFlash = totalFlashSize - FLASH_TARGET_OFFSET;
+  if (availableFlash < maxUsableFlash) {
+    // If the available flash is less than our desired limit, adjust the limit
+    maxUsableFlash = availableFlash;
+  }
+
+  // Set the flash limit to be the start offset plus the usable flash size
+  flashLimit_ = FLASH_TARGET_OFFSET + maxUsableFlash;
+
+  Trace::Debug("Total flash size: %u bytes", totalFlashSize);
+  Trace::Debug("Flash target offset: %u bytes", FLASH_TARGET_OFFSET);
+  Trace::Debug("Available flash: %u bytes", availableFlash);
+  Trace::Debug("Max usable flash: %u bytes", maxUsableFlash);
+  Trace::Debug("Flash limit set to: %u bytes", flashLimit_);
 }
 
 void picoTrackerSamplePool::Reset() {
