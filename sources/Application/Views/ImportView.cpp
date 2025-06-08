@@ -134,7 +134,8 @@ void ImportView::DrawView() {
   const char *baseTitle = "Import Sample";
 
   // Get available flash space
-  uint32_t availableFlash = picoTrackerSamplePool::GetAvailableFlashSpace();
+  uint32_t availableFlash =
+      picoTrackerSamplePool::GetAvailableSampleStorageSpace();
 
   // Calculate MB with one decimal place using integer math
   uint32_t mbWhole = availableFlash / (1024 * 1024);
@@ -364,7 +365,8 @@ void ImportView::import(char *name) {
   // Check if the sample would fit in available storage
   if (!pool->CheckSampleFits(fileSize)) {
     // Get available flash space for the message
-    uint32_t availableFlash = picoTrackerSamplePool::GetAvailableFlashSpace();
+    uint32_t availableFlash =
+        picoTrackerSamplePool::GetAvailableSampleStorageSpace();
 
     // Show error dialog to inform the user
     char message[24];

@@ -12,7 +12,7 @@ public:
   virtual bool CheckSampleFits(int sampleSize);
 
   // Static method to get available flash space
-  static uint32_t GetAvailableFlashSpace() {
+  static uint32_t GetAvailableSampleStorageSpace() {
     return flashLimit_ - flashWriteOffset_;
   }
 
