@@ -146,9 +146,9 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
                                ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
                               FLASH_SECTOR_SIZE;
-    Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
-                 sectorsToErase, flashEraseOffset_,
-                 flashEraseOffset_ + sectorsToErase);
+    // Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
+    //              sectorsToErase, flashEraseOffset_,
+    //              flashEraseOffset_ + sectorsToErase);
     // Erase required number of sectors
     flash_range_erase(flashEraseOffset_, sectorsToErase);
     // Move erase pointer to new position
@@ -163,7 +163,7 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
   wave->Rewind();
   wave->Read(&readBuffer, BUFFER_SIZE, &br);
   while (br > 0) {
-    Trace::Debug("Read %i bytes", br);
+    // Trace::Debug("Read %i bytes", br);
     // We need to write double the bytes if we needed to expand to 16 bit
     // Write size will be either 256 (which is the flash page size) or 512
     uint32_t writeSize = br;
