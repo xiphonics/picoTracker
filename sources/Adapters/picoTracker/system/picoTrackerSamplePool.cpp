@@ -174,9 +174,9 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 
     // There will be trash at the end, but sampleBufferSize_ gives me the
     // bounds
-    Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
-                 writeSize, flashWriteOffset_ + offset,
-                 flashWriteOffset_ + offset + writeSize);
+    // Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
+    //              writeSize, flashWriteOffset_ + offset,
+    //              flashWriteOffset_ + offset + writeSize);
 
     flash_range_program(flashWriteOffset_, (uint8_t *)readBuffer, writeSize);
     flashWriteOffset_ += writeSize;
