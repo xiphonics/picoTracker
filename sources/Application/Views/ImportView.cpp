@@ -199,11 +199,20 @@ void ImportView::DrawView() {
   SetColor(CD_HILITE2);
   props.invert_ = true;
   y = 0;
-  int filesize = 0;
+  uint32_t filesize = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
+
+  uint32_t availableSpace =
+      picoTrackerSamplePool::GetAvailableSampleStorageSpace();
   // only get file size if it's a file not a dir
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
     filesize = fs->getFileSize(currentFileIndex);
+    // if file size is larger than available space, set color to warning
+    if (filesize > availableSpace) {
+      SetColor(CD_WARN);
+    }
+  } else {
+    SetColor(CD_INFO);
   }
 
   // Get the current preview volume
@@ -218,8 +227,7 @@ void ImportView::DrawView() {
   tempBuffer[SCREEN_WIDTH - 1] = '\0';
 
   npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% size:%i/%i",
-               previewVolume, filesize,
-               picoTrackerSamplePool::GetAvailableSampleStorageSpace());
+               previewVolume, filesize, availableSpace);
 
   // pad status line buffer with trailing space chars to ensure the invert
   // color is applied to entire line
