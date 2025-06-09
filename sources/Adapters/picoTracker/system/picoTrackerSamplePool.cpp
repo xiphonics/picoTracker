@@ -8,7 +8,7 @@
 #define VERBOSE_FLASH_DEBUG 0
 
 // Maximum sample storage per project (8MB limit for now)
-#define MAX_PROJECT_SAMPLE_STORAGE_MB 8
+#define SAMPLE_STORAGE_START_MB 8
 
 // Define where sample storage begins in flash
 // Use all flash available after binary for samples
@@ -49,16 +49,15 @@ picoTrackerSamplePool::picoTrackerSamplePool() : SamplePool() {
   // Calculate the maximum usable flash for samples
   // This is either the 8MB limit or the actual available flash, whichever is
   // smaller
-  uint32_t maxUsableFlash = MAX_PROJECT_SAMPLE_STORAGE_MB * MB;
+  uint32_t maxUsableFlash = SAMPLE_STORAGE_START_MB * MB;
 
   flashLimit_ = totalFlashSize;
 
   // Set the flash offset to maximum usable flash back from the top of the flash
   // or immediately after the firmware
   flashWriteOffset_ = flashEraseOffset_ =
-      flashLimit_ < MAX_PROJECT_SAMPLE_STORAGE_MB * MB
-          ? FLASH_TARGET_OFFSET
-          : MAX_PROJECT_SAMPLE_STORAGE_MB * MB;
+      flashLimit_ < SAMPLE_STORAGE_START_MB * MB ? FLASH_TARGET_OFFSET
+                                                 : SAMPLE_STORAGE_START_MB * MB;
 
   Trace::Debug("Total flash size: %u bytes", totalFlashSize);
   Trace::Debug("Flash target offset: %u bytes", FLASH_TARGET_OFFSET);
@@ -199,10 +198,9 @@ bool picoTrackerSamplePool::unloadSample() { return false; };
 
 bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
   // Calculate flash storage needed (round up to flash page size)
-  uint32_t flashPageSize = FLASH_PAGE_SIZE;
   uint32_t flashNeeded =
-      ((sampleSize / flashPageSize) + ((sampleSize % flashPageSize) != 0)) *
-      flashPageSize;
+      ((sampleSize / FLASH_PAGE_SIZE) + ((sampleSize % FLASH_PAGE_SIZE) != 0)) *
+      FLASH_PAGE_SIZE;
 
   // Check if there's enough space available
   uint32_t availableFlash = flashLimit_ - flashWriteOffset_;
