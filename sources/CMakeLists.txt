@@ -19,9 +19,9 @@ endif()
 # add_definitions(-DSHOW_MEM_USAGE)
 # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
 # add_definitions(-DSDIO_BENCH)
-# Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
-# below.
-# add_definitions(-DUSB_REMOTE_UI)
+
+# Use USB for UI: keyboardinput & Display output.
+add_definitions(-DUSB_REMOTE_UI)
 #disabled for now as USB **input** is not yet fully implemented
 #add_definitions(USB_REMOTE_UI_INPUT)
 # enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
