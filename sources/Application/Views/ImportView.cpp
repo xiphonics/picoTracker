@@ -367,17 +367,11 @@ void ImportView::import(char *name) {
         picoTrackerSamplePool::GetAvailableSampleStorageSpace();
 
     // Show error dialog to inform the user
-    char message[24];
+    char message[SCREEN_WIDTH];
 
-    // Calculate KB values using integer math with one decimal place
-    uint32_t neededKB = fileSize / 1024;
-    uint32_t neededDecimal = (fileSize % 1024) * 10 / 1024;
-
-    uint32_t availKB = availableFlash / 1024;
-    uint32_t availDecimal = (availableFlash % 1024) * 10 / 1024;
-    npf_snprintf(message, sizeof(message), "Need %d.%1dKB, %d.%1dKB free",
-                 neededKB, neededDecimal, availKB, availDecimal);
-    // pad with trailing spaces as dialog size based on title
+    uint32_t availBytes = availableFlash;
+    npf_snprintf(message, sizeof(message), "Only %d bytes free", availBytes);
+    // pad with trailing spaces as dialog width based on title length
     MessageBox *mb =
         new MessageBox(*this, "Sample Too Large       ", message, MBBF_OK);
     DoModal(mb);
