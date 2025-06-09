@@ -9,6 +9,12 @@ public:
   picoTrackerSamplePool();
   virtual void Reset();
   ~picoTrackerSamplePool() {}
+  virtual bool CheckSampleFits(int sampleSize);
+
+  // Static method to get available flash space in bytes
+  static uint32_t GetAvailableSampleStorageSpace() {
+    return (flashLimit_ - flashWriteOffset_);
+  }
 
 protected:
   virtual bool loadSample(const char *name);
