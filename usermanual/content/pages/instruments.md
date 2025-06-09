@@ -69,7 +69,7 @@ When you're done in the Import Screen, you can press `NAV`+`LEFT` to return to t
 
 Note: sub-directories will be sorted before files, but otherwise the files will be listed in an unspecified order (ie. not necessarily alphabetical order).
 
-![screen capture of sample screen](image/browser-files-screen-small.png)
+![screen capture of sample screen](image/import-subscreen-small.png)
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
@@ -82,7 +82,7 @@ A great collection of single cycle waveforms can be found in the [Adventure Kid 
 The status bar at the bottom of the screen shows additional information about the selected file and other information such as:
 - Current preview volume (vol:XX%)
 - File size in bytes
-- For single cycle waveforms, a [1 Cycle] indicator
+- Available project sample storage size in bytes
 
 ### Basic Controls
 
