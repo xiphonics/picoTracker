@@ -133,18 +133,9 @@ void ImportView::DrawView() {
   // Draw title with available storage space
   const char *baseTitle = "Import Sample";
 
-  // Get available flash space
-  uint32_t availableFlash =
-      picoTrackerSamplePool::GetAvailableSampleStorageSpace();
-
-  // Calculate MB with one decimal place using integer math
-  uint32_t mbWhole = availableFlash / (1024 * 1024);
-  uint32_t mbDecimal = (availableFlash % (1024 * 1024)) * 10 / (1024 * 1024);
-
   // Create title with storage info
   char titleBuffer[40];
-  npf_snprintf(titleBuffer, sizeof(titleBuffer), "%s |Free:%d.%1dMB", baseTitle,
-               mbWhole, mbDecimal);
+  npf_snprintf(titleBuffer, sizeof(titleBuffer), "%s", baseTitle);
 
   SetColor(CD_INFO);
   DrawString(pos._x + 1, pos._y, titleBuffer, props);
@@ -222,22 +213,16 @@ void ImportView::DrawView() {
     }
 
     // Create a temporary buffer for formatting
-    char tempBuffer[PFILENAME_SIZE];
+    char tempBuffer[SCREEN_WIDTH];
+    tempBuffer[SCREEN_WIDTH - 1] = '\0';
 
-    if (isSingleCycle) {
-      npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% [size: %i] [1C]",
-                   previewVolume, filesize);
-    } else {
-      npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% [size: %i]",
-                   previewVolume, filesize);
-    }
-
-    // Convert to etl::string for consistency
-    etl::string<PFILENAME_SIZE> statusText = tempBuffer;
+    npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% size:%i/%i",
+                 previewVolume, filesize,
+                 picoTrackerSamplePool::GetAvailableSampleStorageSpace());
 
     x = 1;  // align with rest screen title & file list
     y = 23; // bottom line
-    DrawString(x, y, statusText.c_str(), props);
+    DrawString(x, y, tempBuffer, props);
   }
 
   SetColor(CD_NORMAL);

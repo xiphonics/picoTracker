@@ -11,9 +11,9 @@ public:
   ~picoTrackerSamplePool() {}
   virtual bool CheckSampleFits(int sampleSize);
 
-  // Static method to get available flash space
+  // Static method to get available flash space in bytes
   static uint32_t GetAvailableSampleStorageSpace() {
-    return flashLimit_ - flashWriteOffset_;
+    return (flashLimit_ - flashWriteOffset_);
   }
 
 protected:

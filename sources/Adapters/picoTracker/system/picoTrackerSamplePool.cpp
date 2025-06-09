@@ -3,7 +3,9 @@
 #include "hardware/sync.h"
 #include "pico/multicore.h"
 
-#define VERBOSE_FLASH_DEBUG 1
+#define MB 1024 * 1024
+
+#define VERBOSE_FLASH_DEBUG 0
 
 // Maximum sample storage per project (8MB limit for now)
 #define MAX_PROJECT_SAMPLE_STORAGE_MB 8
@@ -47,23 +49,22 @@ picoTrackerSamplePool::picoTrackerSamplePool() : SamplePool() {
   // Calculate the maximum usable flash for samples
   // This is either the 8MB limit or the actual available flash, whichever is
   // smaller
-  uint32_t maxUsableFlash = MAX_PROJECT_SAMPLE_STORAGE_MB * 1024 * 1024;
+  uint32_t maxUsableFlash = MAX_PROJECT_SAMPLE_STORAGE_MB * MB;
 
-  // Ensure we don't exceed the actual flash size
-  uint32_t availableFlash = totalFlashSize - FLASH_TARGET_OFFSET;
-  if (availableFlash < maxUsableFlash) {
-    // If the available flash is less than our desired limit, adjust the limit
-    maxUsableFlash = availableFlash;
-  }
+  flashLimit_ = totalFlashSize;
 
-  // Set the flash limit to be the start offset plus the usable flash size
-  flashLimit_ = FLASH_TARGET_OFFSET + maxUsableFlash;
+  // Set the flash offset to maximum usable flash back from the top of the flash
+  // or immediately after the firmware
+  flashWriteOffset_ = flashEraseOffset_ =
+      flashLimit_ < MAX_PROJECT_SAMPLE_STORAGE_MB * MB
+          ? FLASH_TARGET_OFFSET
+          : MAX_PROJECT_SAMPLE_STORAGE_MB * MB;
 
   Trace::Debug("Total flash size: %u bytes", totalFlashSize);
   Trace::Debug("Flash target offset: %u bytes", FLASH_TARGET_OFFSET);
-  Trace::Debug("Available flash: %u bytes", availableFlash);
   Trace::Debug("Max usable flash: %u bytes", maxUsableFlash);
   Trace::Debug("Flash limit set to: %u bytes", flashLimit_);
+  Trace::Debug("Flash write offset set to: %u bytes", flashWriteOffset_);
 }
 
 void picoTrackerSamplePool::Reset() {
@@ -148,9 +149,9 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
                                ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
                               FLASH_SECTOR_SIZE;
-    // Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
-    //              sectorsToErase, flashEraseOffset_,
-    //              flashEraseOffset_ + sectorsToErase);
+    Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
+                 sectorsToErase, flashEraseOffset_,
+                 flashEraseOffset_ + sectorsToErase);
     // Erase required number of sectors
     flash_range_erase(flashEraseOffset_, sectorsToErase);
     // Move erase pointer to new position
