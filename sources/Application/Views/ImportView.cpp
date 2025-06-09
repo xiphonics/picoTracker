@@ -199,36 +199,36 @@ void ImportView::DrawView() {
   SetColor(CD_HILITE2);
   props.invert_ = true;
   y = 0;
+  int filesize = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
+  // only get file size if it's a file not a dir
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
-    int filesize = fs->getFileSize(currentFileIndex);
-    // check for LGPT or AKWF standard file sizes
-    bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
-
-    // Get the current preview volume
-    int previewVolume = 0;
-    Variable *v = viewData_->project_->FindVariable(FourCC::VarPreviewVolume);
-    if (v) {
-      previewVolume = v->GetInt();
-    }
-
-    // Create a temporary buffer for formatting
-    char tempBuffer[SCREEN_WIDTH];
-    tempBuffer[SCREEN_WIDTH - 1] = '\0';
-
-    npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% size:%i/%i",
-                 previewVolume, filesize,
-                 picoTrackerSamplePool::GetAvailableSampleStorageSpace());
-
-    // pad status line buffer with trailing space chars to ensure the invert
-    // color is applied to entire line
-    npf_snprintf(tempBuffer, sizeof(tempBuffer), "%s%*s", tempBuffer,
-                 SCREEN_WIDTH - strlen(tempBuffer), " ");
-
-    x = 1;  // align with rest screen title & file list
-    y = 23; // bottom line
-    DrawString(x, y, tempBuffer, props);
+    filesize = fs->getFileSize(currentFileIndex);
   }
+
+  // Get the current preview volume
+  int previewVolume = 0;
+  Variable *v = viewData_->project_->FindVariable(FourCC::VarPreviewVolume);
+  if (v) {
+    previewVolume = v->GetInt();
+  }
+
+  // Create a temporary buffer for formatting
+  char tempBuffer[SCREEN_WIDTH];
+  tempBuffer[SCREEN_WIDTH - 1] = '\0';
+
+  npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% size:%i/%i",
+               previewVolume, filesize,
+               picoTrackerSamplePool::GetAvailableSampleStorageSpace());
+
+  // pad status line buffer with trailing space chars to ensure the invert
+  // color is applied to entire line
+  npf_snprintf(tempBuffer, sizeof(tempBuffer), "%s%*s", tempBuffer,
+               SCREEN_WIDTH - strlen(tempBuffer), " ");
+
+  x = 1;  // align with rest screen title & file list
+  y = 23; // bottom line
+  DrawString(x, y, tempBuffer, props);
 
   SetColor(CD_NORMAL);
 };
