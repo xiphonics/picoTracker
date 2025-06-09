@@ -220,6 +220,11 @@ void ImportView::DrawView() {
                  previewVolume, filesize,
                  picoTrackerSamplePool::GetAvailableSampleStorageSpace());
 
+    // pad status line buffer with trailing space chars to ensure the invert
+    // color is applied to entire line
+    npf_snprintf(tempBuffer, sizeof(tempBuffer), "%s%*s", tempBuffer,
+                 SCREEN_WIDTH - strlen(tempBuffer), " ");
+
     x = 1;  // align with rest screen title & file list
     y = 23; // bottom line
     DrawString(x, y, tempBuffer, props);
