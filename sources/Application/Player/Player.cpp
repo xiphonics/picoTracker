@@ -1110,8 +1110,13 @@ void Player::moveToNextChain(int channel, int hop) {
         for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
           mixer_.StopChannel(i);
         }
-        // Stop the player completely
-        Stop();
+
+        isRunning_ = false;
+        SetChanged();
+        PlayerEvent pe(PET_STOP);
+        NotifyObservers(&pe);
+        // We're already inside a locked context, so we don't need to call
+        // Stop() as that will cause a deadlock
         return;
       }
 
