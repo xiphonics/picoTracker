@@ -15,9 +15,9 @@ MidiInstrument::MidiInstrument()
     : I_Instrument(&variables_), channel_(FourCC::MidiInstrumentChannel, 0),
       noteLen_(FourCC::MidiInstrumentNoteLength, 0),
       volume_(FourCC::MidiInstrumentVolume, 255),
-      table_(FourCC::MidiInstrumentTable, -1),
+      table_(FourCC::MidiInstrumentTable, VAR_OFF),
       tableAuto_(FourCC::MidiInstrumentTableAutomation, false),
-      program_(FourCC::MidiInstrumentProgram, 0) {
+      program_(FourCC::MidiInstrumentProgram, VAR_OFF) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
@@ -51,7 +51,7 @@ void MidiInstrument::OnStart() {
 
   // Only send program change if a valid program is set
   // 0x80 is used to indicate "OFF"
-  if (program >= 0 && program <= 0x7F) {
+  if (program != VAR_OFF && program >= 0 && program <= 0x7F) {
     SendProgramChange(channel_.GetInt(), program);
   }
 
