@@ -43,7 +43,17 @@ bool MidiInstrument::Init() {
   return true;
 };
 
-void MidiInstrument::OnStart() { tableState_.Reset(); };
+void MidiInstrument::OnStart() {
+  tableState_.Reset();
+
+  // Send program change message at the start of playback
+  int program = program_.GetInt();
+
+  // Only send program change if a valid program is set
+  if (program >= 0) {
+    SendProgramChange(channel_.GetInt(), program);
+  }
+};
 
 bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
@@ -70,11 +80,6 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
     msg.data2_ = volume / 2;
     svc_->QueueMessage(msg);
   }
-
-  // send program change message
-  v = FindVariable(FourCC::MidiInstrumentProgram);
-  int program = v->GetInt();
-  SendProgramChange(channel, program);
 
   // set initial velocity (changed via InstrumentCommandVelocity)
   velocity_ = INITIAL_NOTE_VELOCITY;
