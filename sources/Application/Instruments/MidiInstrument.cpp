@@ -53,6 +53,16 @@ void MidiInstrument::OnStart() {
   if (program >= 0) {
     SendProgramChange(channel_.GetInt(), program);
   }
+
+  MidiMessage msg;
+  // send instrument volume for this midi channel when it's not zero
+  int volume = volume_.GetInt();
+  if (volume > 0) {
+    msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel_.GetInt();
+    msg.data1_ = MidiCC::CC_VOLUME;
+    msg.data2_ = volume / 2;
+    svc_->QueueMessage(msg);
+  }
 };
 
 bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
@@ -67,18 +77,6 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   remainingTicks_ = v->GetInt();
   if (remainingTicks_ == 0) {
     remainingTicks_ = -1;
-  }
-
-  MidiMessage msg;
-
-  // send instrument volume for this midi channel when it's not zero
-  v = FindVariable(FourCC::MidiInstrumentVolume);
-  int volume = v->GetInt();
-  if (volume > 0) {
-    msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
-    msg.data1_ = MidiCC::CC_VOLUME;
-    msg.data2_ = volume / 2;
-    svc_->QueueMessage(msg);
   }
 
   // set initial velocity (changed via InstrumentCommandVelocity)
