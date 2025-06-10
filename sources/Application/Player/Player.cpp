@@ -1110,16 +1110,13 @@ void Player::moveToNextChain(int channel, int hop) {
         for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
           mixer_.StopChannel(i);
         }
-        
-        // The Stop() method will set isRunning_ = false and notify observers with PET_STOP
-        // We need to make sure this happens properly
+
         isRunning_ = false;
         SetChanged();
         PlayerEvent pe(PET_STOP);
         NotifyObservers(&pe);
-        
-        // Now call Stop() to handle any additional cleanup
-        Stop();
+        // We're already inside a locked context, so we don't need to call Stop()
+        // as that will cause a deadlock
         return;
       }
 
