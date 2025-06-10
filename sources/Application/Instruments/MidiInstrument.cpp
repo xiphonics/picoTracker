@@ -50,7 +50,8 @@ void MidiInstrument::OnStart() {
   int program = program_.GetInt();
 
   // Only send program change if a valid program is set
-  if (program >= 0) {
+  // 0x80 is used to indicate "OFF"
+  if (program >= 0 && program <= 0x7F) {
     SendProgramChange(channel_.GetInt(), program);
   }
 
