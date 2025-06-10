@@ -504,10 +504,10 @@ void InstrumentView::fillMidiParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentProgram);
-  intVarField_.emplace_back(
-      UIIntVarField(position, *v, "program: %2.2X", 0, 0x7F, 1, 0x10));
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  (*intVarField_.rbegin()).AddObserver(*this);
+  intVarOffField_.emplace_back(
+      UIIntVarOffField(position, *v, "program: %2.2X", 0, 0x7F, 1, 0x10));
+  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
+  (*intVarOffField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentTableAutomation);
