@@ -613,10 +613,16 @@ void AppWindow::AnimationUpdate() {
     _isDirty = false;       // Reset the flag
   }
 
-  // Always call AnimationUpdate to handle persistent elements
-  // like the battery gauge, regardless of dirty state
+  // Handle view updates - check for modal view first
   if (_currentView) {
     _currentView->AnimationUpdate();
+
+    // Check if there's an active modal view
+    ModalView *modalView = _currentView->GetModalView();
+    if (modalView) {
+      // Update the modal view
+      modalView->AnimationUpdate();
+    }
   }
 
   // Always flush after AnimationUpdate to ensure consistent state
