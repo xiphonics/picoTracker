@@ -1115,8 +1115,8 @@ void Player::moveToNextChain(int channel, int hop) {
         SetChanged();
         PlayerEvent pe(PET_STOP);
         NotifyObservers(&pe);
-        // We're already inside a locked context, so we don't need to call Stop()
-        // as that will cause a deadlock
+        // We're already inside a locked context, so we don't need to call
+        // Stop() as that will cause a deadlock
         return;
       }
 
