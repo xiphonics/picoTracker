@@ -1110,7 +1110,15 @@ void Player::moveToNextChain(int channel, int hop) {
         for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
           mixer_.StopChannel(i);
         }
-        // Stop the player completely
+        
+        // The Stop() method will set isRunning_ = false and notify observers with PET_STOP
+        // We need to make sure this happens properly
+        isRunning_ = false;
+        SetChanged();
+        PlayerEvent pe(PET_STOP);
+        NotifyObservers(&pe);
+        
+        // Now call Stop() to handle any additional cleanup
         Stop();
         return;
       }
