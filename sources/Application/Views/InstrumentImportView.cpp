@@ -158,6 +158,21 @@ void InstrumentImportView::warpToNextInstrument(bool goUp) {
 void InstrumentImportView::importInstrument(char *name) {
   // TODO: check that current instrument is not modified
 
+  // Check if the filename exceeds the maximum allowed length
+  if (strlen(name) > MAX_INSTRUMENT_FILENAME_LENGTH) {
+    Trace::Error("INSTRUMENTIMPORT: Instrument filename exceeds maximum "
+                 "length: %s (%zu > %d)",
+                 name, strlen(name), MAX_INSTRUMENT_FILENAME_LENGTH);
+
+    char sizeMesg[32];
+    npf_snprintf(sizeMesg, sizeof(sizeMesg), "Max is %d chars",
+                 MAX_INSTRUMENT_FILENAME_LENGTH);
+    MessageBox *mb =
+        new MessageBox(*this, "Filename too long", sizeMesg, MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
   // Get the current instrument bank
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
