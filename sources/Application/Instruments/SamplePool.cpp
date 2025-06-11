@@ -42,12 +42,13 @@ void SamplePool::Load(const char *projectName) {
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
       // Check if the filename exceeds the maximum allowed length
       if (strlen(name) > MAX_INSTRUMENT_FILENAME_LENGTH) {
-        Trace::Error("SAMPLEPOOL: Sample filename exceeds maximum length: %s (%zu > %d)",
-                     name, strlen(name), MAX_INSTRUMENT_FILENAME_LENGTH);
+        Trace::Error(
+            "SAMPLEPOOL: Sample filename exceeds maximum length: %s (%zu > %d)",
+            name, strlen(name), MAX_INSTRUMENT_FILENAME_LENGTH);
         // Skip this sample and continue with the next one
         continue;
       }
-      
+
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
       Status::Set("Copying:%s (%d%%)", name, progress);
