@@ -190,7 +190,7 @@ void picoTrackerEventManager::ProcessInputEvent() {
 #ifdef SERIAL_REPL
   serialDebugUI_.readSerialIn(inBuffer, INPUT_BUFFER_SIZE);
 #endif
-
+#ifdef USB_REMOTE_UI
   char inBuffer[16];
   auto readbytes = readFromUSBCDC(inBuffer, 16);
   if (readbytes > 0) {
@@ -210,4 +210,5 @@ void picoTrackerEventManager::ProcessInputEvent() {
       break;
     }
   }
+#endif
 }

@@ -8,7 +8,7 @@
 #include "Foundation/T_Singleton.h"
 #include "WavFile.h"
 
-#define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT
+#define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT * 4
 
 enum SamplePoolEventType { SPET_INSERT, SPET_DELETE };
 
@@ -28,6 +28,7 @@ public:
   int GetNameListSize();
   int ImportSample(char *name, const char *projectName);
   void PurgeSample(int i, const char *projectName);
+  virtual bool CheckSampleFits(int sampleSize) = 0;
 
 protected:
   virtual bool loadSample(const char *name) = 0;

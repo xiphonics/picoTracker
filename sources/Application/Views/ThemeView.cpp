@@ -253,6 +253,9 @@ void ThemeView::ProcessButtonMask(unsigned short mask, bool pressed) {
       SetChanged();
       NotifyObservers(&ve);
     }
+  } else if (mask & EPBM_PLAY) {
+    Player *player = Player::GetInstance();
+    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
   }
 }
 
@@ -369,8 +372,7 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
       ((AppWindow &)w_).UpdateColorsFromConfig();
 
       // Force a redraw of the entire screen to update all colors
-      ForceClear();
-      DrawView();
+      _forceRedraw = true;
       break;
     }
   default:
@@ -482,4 +484,13 @@ void ThemeView::importTheme() {
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
   SetChanged();
   NotifyObservers(&ve);
+}
+void ThemeView::AnimationUpdate() {
+  if (_forceRedraw) {
+    ForceClear();
+    DrawView();
+    _forceRedraw = false;
+  }
+  GUITextProperties props;
+  drawBattery(props);
 }

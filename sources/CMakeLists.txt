@@ -19,13 +19,16 @@ endif()
 # add_definitions(-DSHOW_MEM_USAGE)
 # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
 # add_definitions(-DSDIO_BENCH)
-# Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
-# below.
+
+# Use USB for UI: keyboardinput & Display output.
 add_definitions(-DUSB_REMOTE_UI)
 #disabled for now as USB **input** is not yet fully implemented
 #add_definitions(USB_REMOTE_UI_INPUT)
 # enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
 # add_definitions(-DSERIAL_REPL)
+
+# enable profiling
+# add_definitions(-DENABLE_PROFILING)
 
 # ST7789 controller based LCD instead of a ILI9341 controller
 # for CI builds this will be set via command line
@@ -71,6 +74,7 @@ link_libraries(
   hardware_pll
   hardware_adc
   hardware_flash
+  hardware_pwm
 )
 
 add_subdirectory(Adapters/picoTracker)
@@ -120,7 +124,7 @@ target_compile_definitions(picoTracker PUBLIC
 
 # Debug output with USB uses +6K memory
 pico_enable_stdio_usb(${PROJECT_NAME} 0)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
 
 # This is the default, but better to make it explicit
 pico_set_float_implementation(${PROJECT_NAME} pico)

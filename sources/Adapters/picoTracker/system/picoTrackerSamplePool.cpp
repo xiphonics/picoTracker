@@ -3,21 +3,31 @@
 #include "hardware/sync.h"
 #include "pico/multicore.h"
 
-// #define FLASH_TARGET_OFFSET (1024 * 1024)
-//  Use all flash available after binary for samples
-//  WARNING! should be conscious to always ensure 1MB of free space
+#define MB 1024 * 1024
+
+#define VERBOSE_FLASH_DEBUG 0
+
+// Maximum sample storage per project (8MB limit for now)
+#define SAMPLE_STORAGE_START_MB 8
+
+// Define where sample storage begins in flash
+// Use all flash available after binary for samples
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
   ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
    1) *                                                                        \
       FLASH_SECTOR_SIZE
-// #define FLASH_LIMIT (2 * 1024 * 1024)
+
+// Total flash size depends on hardware:
+// - Raspberry Pi Pico: 2MB
+// - picoTracker custom hardware: up to 16MB
+// We'll detect actual size at runtime if needed
 
 uint32_t picoTrackerSamplePool::flashEraseOffset_ = FLASH_TARGET_OFFSET;
 uint32_t picoTrackerSamplePool::flashWriteOffset_ = FLASH_TARGET_OFFSET;
-uint32_t picoTrackerSamplePool::flashLimit_ =
-    2 * 1024 * 1024; // default 2mb for the Raspberry Pi Pico
-
+// Initial default value - will be properly set in the constructor based on
+// actual flash size
+uint32_t picoTrackerSamplePool::flashLimit_ = 0;
 // From the SDK, values are not defined in the header file
 #define FLASH_RUID_DUMMY_BYTES 4
 #define FLASH_RUID_DATA_BYTES 8
@@ -33,8 +43,27 @@ uint storage_get_flash_capacity() {
 }
 
 picoTrackerSamplePool::picoTrackerSamplePool() : SamplePool() {
-  flashLimit_ = storage_get_flash_capacity();
-  Trace::Debug("Flash size is %i bytes", flashLimit_);
+  // Detect the actual flash size at runtime
+  uint32_t totalFlashSize = storage_get_flash_capacity();
+
+  // Calculate the maximum usable flash for samples
+  // This is either the 8MB limit or the actual available flash, whichever is
+  // smaller
+  uint32_t maxUsableFlash = SAMPLE_STORAGE_START_MB * MB;
+
+  flashLimit_ = totalFlashSize;
+
+  // Set the flash offset to maximum usable flash back from the top of the flash
+  // or immediately after the firmware
+  flashWriteOffset_ = flashEraseOffset_ =
+      flashLimit_ < SAMPLE_STORAGE_START_MB * MB ? FLASH_TARGET_OFFSET
+                                                 : SAMPLE_STORAGE_START_MB * MB;
+
+  Trace::Debug("Total flash size: %u bytes", totalFlashSize);
+  Trace::Debug("Flash target offset: %u bytes", FLASH_TARGET_OFFSET);
+  Trace::Debug("Max usable flash: %u bytes", maxUsableFlash);
+  Trace::Debug("Flash limit set to: %u bytes", flashLimit_);
+  Trace::Debug("Flash write offset set to: %u bytes", flashWriteOffset_);
 }
 
 void picoTrackerSamplePool::Reset() {
@@ -136,7 +165,9 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
   wave->Rewind();
   wave->Read(&readBuffer, BUFFER_SIZE, &br);
   while (br > 0) {
+#if VERBOSE_FLASH_DEBUG
     Trace::Debug("Read %i bytes", br);
+#endif
     // We need to write double the bytes if we needed to expand to 16 bit
     // Write size will be either 256 (which is the flash page size) or 512
     uint32_t writeSize = br;
@@ -147,9 +178,11 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 
     // There will be trash at the end, but sampleBufferSize_ gives me the
     // bounds
+#if VERBOSE_FLASH_DEBUG
     Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
                  writeSize, flashWriteOffset_ + offset,
                  flashWriteOffset_ + offset + writeSize);
+#endif
 
     flash_range_program(flashWriteOffset_, (uint8_t *)readBuffer, writeSize);
     flashWriteOffset_ += writeSize;
@@ -162,3 +195,15 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 };
 
 bool picoTrackerSamplePool::unloadSample() { return false; };
+
+bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
+  // Calculate flash storage needed (round up to flash page size)
+  uint32_t flashNeeded =
+      ((sampleSize / FLASH_PAGE_SIZE) + ((sampleSize % FLASH_PAGE_SIZE) != 0)) *
+      FLASH_PAGE_SIZE;
+
+  // Check if there's enough space available
+  uint32_t availableFlash = flashLimit_ - flashWriteOffset_;
+
+  return flashNeeded <= availableFlash;
+}

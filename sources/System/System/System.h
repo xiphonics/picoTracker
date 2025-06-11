@@ -10,6 +10,7 @@ class System : public T_Factory<System> {
 public:                                 // Override in implementation
   virtual unsigned long GetClock() = 0; // millisecs
   virtual int GetBatteryLevel() = 0;
+  virtual void SetDisplayBrightness(unsigned char value) = 0;
   virtual void *Malloc(unsigned size) = 0;
   virtual void Free(void *) = 0;
   virtual void Memset(void *addr, char value, int size) = 0;

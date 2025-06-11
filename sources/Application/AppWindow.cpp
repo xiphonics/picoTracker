@@ -60,6 +60,9 @@ GUIColor AppWindow::reserved2Color_(0x55, 0x55, 0x55, 13);
 GUIColor AppWindow::reserved3Color_(0x77, 0x77, 0x77, 14);
 GUIColor AppWindow::reserved4Color_(0xFF, 0xFF, 0x00, 15);
 
+// Initialize the animation frame counter
+uint32_t AppWindow::animationFrameCounter_ = 0;
+
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
 
@@ -193,13 +196,13 @@ void AppWindow::ClearRect(GUIRect &r) {
 };
 
 //
-// Redraws the screen and flush it.
+// Redraw the screen and flush it.
 //
-
 void AppWindow::Redraw() {
+  // This method is now only used internally by AnimationUpdate
+  // External code should set _needsRedraw flag instead
   if (_currentView) {
     _currentView->Redraw();
-    Invalidate();
   }
 };
 
@@ -579,12 +582,9 @@ bool AppWindow::onEvent(GUIEvent &event) {
     CloseProject();
     _isDirty = true;
   }
-#ifdef _SHOW_GP2X_
-  Redraw();
-#else
-  if (_isDirty)
-    Redraw();
-#endif
+
+  // _isDirty flag will be checked in AnimationUpdate to determine if redraw is
+  // needed
   return false;
 };
 
@@ -592,17 +592,42 @@ void AppWindow::onUpdate(bool redraw) {
   if (redraw) {
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
-    Redraw();
+    // Mark as dirty to trigger redraw in AnimationUpdate
+    _isDirty = true;
   }
-  Flush();
+  // No Flush here - AnimationUpdate will handle it
 };
 
 void AppWindow::AnimationUpdate() {
+  // Increment the animation frame counter
+  animationFrameCounter_++;
+
   if (loadProject_) {
     LoadProject(projectName_);
     loadProject_ = false;
   }
-  _currentView->AnimationUpdate();
+
+  // If we need a full redraw due to state changes from key events
+  if (_isDirty && _currentView) {
+    _currentView->Redraw(); // Draw main content
+    _isDirty = false;       // Reset the flag
+  }
+
+  // Handle view updates - check for modal view first
+  if (_currentView) {
+    // Check if there's an active modal view
+    ModalView *modalView = _currentView->GetModalView();
+    if (modalView) {
+      // Update the modal view first
+      modalView->AnimationUpdate();
+    }
+    // Always update the main view even if modal is active because things like
+    // batt gauge still need redrawing and visibility even with modal onscreen
+    _currentView->AnimationUpdate();
+  }
+
+  // Always flush after AnimationUpdate to ensure consistent state
+  Flush();
 
   // *attempt* to auto save every AUTOSAVE_INTERVAL_IN_SECONDS
   // will return false if auto save was unsuccessful because eg. the sequencer

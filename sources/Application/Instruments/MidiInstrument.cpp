@@ -15,9 +15,9 @@ MidiInstrument::MidiInstrument()
     : I_Instrument(&variables_), channel_(FourCC::MidiInstrumentChannel, 0),
       noteLen_(FourCC::MidiInstrumentNoteLength, 0),
       volume_(FourCC::MidiInstrumentVolume, 255),
-      table_(FourCC::MidiInstrumentTable, -1),
+      table_(FourCC::MidiInstrumentTable, VAR_OFF),
       tableAuto_(FourCC::MidiInstrumentTableAutomation, false),
-      program_(FourCC::MidiInstrumentProgram, 0) {
+      program_(FourCC::MidiInstrumentProgram, VAR_OFF) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
@@ -43,7 +43,28 @@ bool MidiInstrument::Init() {
   return true;
 };
 
-void MidiInstrument::OnStart() { tableState_.Reset(); };
+void MidiInstrument::OnStart() {
+  tableState_.Reset();
+
+  // Send program change message at the start of playback
+  int program = program_.GetInt();
+
+  // Only send program change if a valid program is set
+  // 0x80 is used to indicate "OFF"
+  if (program != VAR_OFF && program >= 0 && program <= 0x7F) {
+    SendProgramChange(channel_.GetInt(), program);
+  }
+
+  MidiMessage msg;
+  // send instrument volume for this midi channel when it's not zero
+  int volume = volume_.GetInt();
+  if (volume > 0) {
+    msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel_.GetInt();
+    msg.data1_ = MidiCC::CC_VOLUME;
+    msg.data2_ = volume / 2;
+    svc_->QueueMessage(msg);
+  }
+};
 
 bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
@@ -58,23 +79,6 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   if (remainingTicks_ == 0) {
     remainingTicks_ = -1;
   }
-
-  MidiMessage msg;
-
-  // send instrument volume for this midi channel when it's not zero
-  v = FindVariable(FourCC::MidiInstrumentVolume);
-  int volume = v->GetInt();
-  if (volume > 0) {
-    msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
-    msg.data1_ = MidiCC::CC_VOLUME;
-    msg.data2_ = volume / 2;
-    svc_->QueueMessage(msg);
-  }
-
-  // send program change message
-  v = FindVariable(FourCC::MidiInstrumentProgram);
-  int program = v->GetInt();
-  SendProgramChange(channel, program);
 
   // set initial velocity (changed via InstrumentCommandVelocity)
   velocity_ = INITIAL_NOTE_VELOCITY;
