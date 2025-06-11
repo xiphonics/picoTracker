@@ -47,55 +47,68 @@ void RenderProgressModal::DrawView() {
   DrawString(x, y, "OK", props);
 }
 
-void RenderProgressModal::OnPlayerUpdate(PlayerEventType,
+void RenderProgressModal::OnPlayerUpdate(PlayerEventType eventType,
                                          unsigned int currentTick) {
-  int width = title_.size() > message_.size() ? title_.size() : message_.size();
-  width = width > 16 ? width : 16; // Minimum width for time display
-  int y = 2;
-  GUITextProperties props;
-  SetColor(CD_WARN);
-  // Song has looped, end the rendering
+  // This runs on core1 (audio thread)
   Player *player = Player::GetInstance();
-  if (!player->IsRunning()) {
-    // Show completion message
-    SetColor(CD_INFO);
-    message_ = "Render Complete!";
-    int x = (width - message_.size()) / 2;
-    DrawString(x, y - 1, message_.c_str(), props);
+
+  // Check if player has stopped and we haven't marked as complete yet
+  if (!player->IsRunning() && !renderComplete_) {
+    renderComplete_ = true;
+    message_ = "Render Complete!"; // Update the message
+    isDirty_ = true;               // Mark view as dirty to trigger redraw
   }
-
-  // Each time OnPlayerUpdate is called, a buffer of audio has been processed
-  // Get the current tempo to calculate the actual number of samples in this
-  // buffer
-  // Calculate samples for this buffer based on the tempo
-  float samplesThisBuffer = calculateSamplesPerBuffer(tempo_);
-
-  // Add to our total sample count
-  totalSamples_ += samplesThisBuffer;
-
-  // Redraw just the render progress display
-  GUIPoint progressPos(width / 2 - 2, y); // Center the progress display
-  SetColor(CD_NORMAL);
-  drawRenderProgress(progressPos, props);
+  // Only update progress if we're still rendering
+  else if (player->IsRunning()) {
+    // Calculate samples for this buffer based on the tempo
+    float samplesThisBuffer = calculateSamplesPerBuffer(tempo_);
+    // Add to our total sample count and mark as dirty for redraw
+    totalSamples_ += samplesThisBuffer;
+    isDirty_ = true;
+  }
 }
 
 void RenderProgressModal::OnFocus() {}
 
 void RenderProgressModal::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_ENTER && pressed) {
-    // Stop the player when OK is pressed
+    // If player is still running, stop it first
     Player *player = Player::GetInstance();
     if (player && player->IsRunning()) {
       player->Stop();
     }
+    // Always allow closing the modal, whether rendering is complete or not
     EndModal(MBL_OK);
+    return; // Return early to prevent setting dirty flag unnecessarily
   }
+  // Only set dirty if we didn't handle the button press
   isDirty_ = true;
 }
 
 void RenderProgressModal::AnimationUpdate() {
-  // Mark as dirty to update the render progress display
-  isDirty_ = true;
+  // This runs on core0 (UI thread)
+  if (isDirty_) {
+    isDirty_ = false;
+
+    int width =
+        title_.size() > message_.size() ? title_.size() : message_.size();
+    width = width > 16 ? width : 16; // Minimum width for time display
+    int y = 2;
+    GUITextProperties props;
+
+    // Update completion message if needed
+    if (renderComplete_) {
+      SetColor(CD_INFO);
+      message_ = "Render Complete!";
+      int x = (width - message_.size()) / 2;
+      DrawString(x, y - 1, message_.c_str(), props);
+    }
+
+    // Always redraw the progress display
+    GUIPoint progressPos(width / 2 - 2, y);
+    SetColor(CD_NORMAL);
+    drawRenderProgress(progressPos, props);
+  }
 }
 
 void RenderProgressModal::drawRenderProgress(GUIPoint &pos,

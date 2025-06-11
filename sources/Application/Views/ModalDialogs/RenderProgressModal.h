@@ -38,6 +38,7 @@ private:
 
   // Track total rendered samples (calculated from player updates)
   float totalSamples_;
+  bool renderComplete_ = false;
 
   int tempo_ = 0;
   unsigned char spinner_ = 0;

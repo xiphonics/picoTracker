@@ -3,6 +3,7 @@
 #include "Externals/etl/include/etl/to_string.h"
 #include "I_Instrument.h"
 #include "System/Console/Trace.h"
+#include "System/Profiler/Profiler.h"
 #include "bit.h"
 #include <string.h>
 
@@ -154,6 +155,7 @@ void OpalInstrument::Stop(int c) {
 
 bool OpalInstrument::Render(int channel, fixed *buffer, int size,
                             bool updateTick) {
+  PROFILE_SCOPE("OpalInstrument::Render");
 
   // optimise to remove function calls in hot loop
   opl_.SampleBuffer(buffer, size);

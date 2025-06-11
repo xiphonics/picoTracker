@@ -41,13 +41,11 @@ protected:
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
-  void refreshInstrumentFields(FourCC focus = FourCC::VarInstrumentType);
+  void refreshInstrumentFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void handleInstrumentExport();
 
 private:
-  // Redraw all fields to reflect updated variable values
-  void redrawAllFields();
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
@@ -58,7 +56,7 @@ private:
 
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIActionField, 2> actionField_;
-  etl::vector<UIIntVarField, 39> intVarField_;
+  etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;

@@ -1,11 +1,12 @@
 #include "ImportView.h"
-#include "Application/AppWindow.h"
+#include "Adapters/picoTracker/system/picoTrackerSamplePool.h"
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
+#include "System/FileSystem/FileSystem.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -129,10 +130,15 @@ void ImportView::DrawView() {
 
   auto fs = FileSystem::GetInstance();
 
-  // Draw title
-  const char *title = "Import Sample";
+  // Draw title with available storage space
+  const char *baseTitle = "Import Sample";
+
+  // Create title with storage info
+  char titleBuffer[40];
+  npf_snprintf(titleBuffer, sizeof(titleBuffer), "%s", baseTitle);
+
   SetColor(CD_INFO);
-  DrawString(pos._x + 1, pos._y, title, props);
+  DrawString(pos._x + 1, pos._y, titleBuffer, props);
 
   SetColor(CD_NORMAL);
 
@@ -193,37 +199,44 @@ void ImportView::DrawView() {
   SetColor(CD_HILITE2);
   props.invert_ = true;
   y = 0;
+  uint32_t filesize = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
+
+  uint32_t availableSpace =
+      picoTrackerSamplePool::GetAvailableSampleStorageSpace();
+  // only get file size if it's a file not a dir
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
-    int filesize = fs->getFileSize(currentFileIndex);
-    // check for LGPT or AKWF standard file sizes
-    bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
-
-    // Get the current preview volume
-    int previewVolume = 0;
-    Variable *v = viewData_->project_->FindVariable(FourCC::VarPreviewVolume);
-    if (v) {
-      previewVolume = v->GetInt();
+    filesize = fs->getFileSize(currentFileIndex);
+    // if file size is larger than available space, set color to warning
+    if (filesize > availableSpace) {
+      SetColor(CD_WARN);
     }
-
-    // Create a temporary buffer for formatting
-    char tempBuffer[PFILENAME_SIZE];
-
-    if (isSingleCycle) {
-      npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% [size: %i] [1C]",
-                   previewVolume, filesize);
-    } else {
-      npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% [size: %i]",
-                   previewVolume, filesize);
-    }
-
-    // Convert to etl::string for consistency
-    etl::string<PFILENAME_SIZE> statusText = tempBuffer;
-
-    x = 1;  // align with rest screen title & file list
-    y = 23; // bottom line
-    DrawString(x, y, statusText.c_str(), props);
+  } else {
+    SetColor(CD_INFO);
   }
+
+  // Get the current preview volume
+  int previewVolume = 0;
+  Variable *v = viewData_->project_->FindVariable(FourCC::VarPreviewVolume);
+  if (v) {
+    previewVolume = v->GetInt();
+  }
+
+  // Create a temporary buffer for formatting
+  char tempBuffer[SCREEN_WIDTH];
+  tempBuffer[SCREEN_WIDTH - 1] = '\0';
+
+  npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% size:%i/%i",
+               previewVolume, filesize, availableSpace);
+
+  // pad status line buffer with trailing space chars to ensure the invert
+  // color is applied to entire line
+  npf_snprintf(tempBuffer, sizeof(tempBuffer), "%s%*s", tempBuffer,
+               SCREEN_WIDTH - strlen(tempBuffer), " ");
+
+  x = 1;  // align with rest screen title & file list
+  y = 23; // bottom line
+  DrawString(x, y, tempBuffer, props);
 
   SetColor(CD_NORMAL);
 };
@@ -327,6 +340,44 @@ void ImportView::import(char *name) {
   }
 
   SamplePool *pool = SamplePool::GetInstance();
+
+  // Check if we've reached the maximum number of samples
+  int currentCount = pool->GetNameListSize();
+  if (currentCount >= MAX_SAMPLES) {
+    // Show error dialog to inform the user
+    char message[SCREEN_WIDTH];
+    npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
+                 MAX_SAMPLES);
+    // pad with trailing spaces as dialog size based on title
+    MessageBox *mb =
+        new MessageBox(*this, "Cannot Import Sample      ", message, MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
+  // Check if the sample would exceed available flash storage
+  auto fs = FileSystem::GetInstance();
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  int fileSize = fs->getFileSize(fileIndex);
+
+  // Check if the sample would fit in available storage
+  if (!pool->CheckSampleFits(fileSize)) {
+    // Get available flash space for the message
+    uint32_t availableFlash =
+        picoTrackerSamplePool::GetAvailableSampleStorageSpace();
+
+    // Show error dialog to inform the user
+    char message[SCREEN_WIDTH];
+
+    uint32_t availBytes = availableFlash;
+    npf_snprintf(message, sizeof(message), "Only %d bytes free", availBytes);
+    // pad with trailing spaces as dialog width based on title length
+    MessageBox *mb =
+        new MessageBox(*this, "Sample Too Large       ", message, MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
   int sampleID = pool->ImportSample(name, projName);
 
   if (sampleID >= 0) {
@@ -338,6 +389,10 @@ void ImportView::import(char *name) {
     };
   } else {
     Trace::Error("failed to import sample");
+    // Show a generic error message if import failed for other reasons
+    MessageBox *mb = new MessageBox(*this, "Import Failed",
+                                    "Could not import sample", MBBF_OK);
+    DoModal(mb);
   };
   isDirty_ = true;
 };

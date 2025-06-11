@@ -69,7 +69,7 @@ When you're done in the Import Screen, you can press `NAV`+`LEFT` to return to t
 
 Note: sub-directories will be sorted before files, but otherwise the files will be listed in an unspecified order (ie. not necessarily alphabetical order).
 
-![screen capture of sample screen](image/browser-files-screen-small.png)
+![screen capture of sample screen](image/import-subscreen-small.png)
 
 When entering the import file browser, the current folder is the library root folder `/samples`. All samples (`.wav` files) in that folder are listed.
 
@@ -82,7 +82,7 @@ A great collection of single cycle waveforms can be found in the [Adventure Kid 
 The status bar at the bottom of the screen shows additional information about the selected file and other information such as:
 - Current preview volume (vol:XX%)
 - File size in bytes
-- For single cycle waveforms, a [1 Cycle] indicator
+- Available project sample storage size in bytes
 
 ### Basic Controls
 
@@ -134,6 +134,7 @@ A MIDI instrument has the following settings:
 
 - **Channel** - This can be set `01`-`16` (in **decimal** not hex!) which is midi channel 1-16 respectively
 - **Volume** - The volume any NOTE ON will be sent to your device: FF=127, 00=00
+- **Program** - MIDI program change value to send (0x00-0x7F). Program changes for *each* MIDI instrument are sent only once at sequencer start. Setting this to `--` will disable sending program change messages entirely.
 - **Length** - Sets note gate length in number of ticks
 - **Automation** - When on, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is `Off`, table behavior is normal (play arrows will move at the speed of 1 row per tick)
 - **Table**- As above, select a table the instrument will always run. Clone a table here: `NAV`+`EDIT`,`ENTER`. Make a new table by selecting a higher number not yet in use.

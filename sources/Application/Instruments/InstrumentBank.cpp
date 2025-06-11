@@ -12,6 +12,8 @@
 #include "SIDInstrument.h"
 #include "System/io/Status.h"
 
+#define XML_DEBUG_LOGGING 0
+
 // Contain all instrument definition
 InstrumentBank::InstrumentBank()
     : Persistent("INSTRUMENTBANK"), sampleInstrumentPool_(),
@@ -66,11 +68,15 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
           unsigned char b1 = (c2h__(doc->attrval_[0])) << 4;
           unsigned char b2 = c2h__(doc->attrval_[1]);
           id = b1 + b2;
+#if XML_DEBUG_LOGGING
           Trace::Log("INSTRUMENTBANK", "instrument ID from xml:%d", id);
+#endif
         }
         if (!strcasecmp(doc->attrname_, "TYPE")) {
           instype = doc->attrval_;
+#if XML_DEBUG_LOGGING
           Trace::Log("INSTRUMENTBANK", "instrument type from xml:%s", instype);
+#endif
         }
         hasAttr = doc->NextAttribute();
       }
