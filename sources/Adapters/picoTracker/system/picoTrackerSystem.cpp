@@ -139,7 +139,7 @@ void picoTrackerSystem::GetBatteryState(BatteryState &state) {
   } else {
     state.percentage = 100;
   }
-  state.charging = state.voltage_mv > 4010 ? true : false;
+  state.charging = state.voltage_mv > 4000 ? true : false;
 }
 
 void picoTrackerSystem::SetDisplayBrightness(unsigned char value) {
