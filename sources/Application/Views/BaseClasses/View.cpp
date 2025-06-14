@@ -378,9 +378,23 @@ void View::drawBattery(GUITextProperties &props) {
   battpos._y = 0;
   battpos._x = 27;
 
+  // use define to choose between drawing battery percentage or battery level as
+  // "+" bars
   SetColor(CD_INFO);
-
   char *battText;
+#if BATTERY_LEVEL_AS_PERCENTAGE
+  battText = new char[8]; // [XX%] + null terminator
+  if (batteryState_.charging) {
+    SetColor(CD_ACCENT);
+    npf_snprintf(battText, 8, "[CHG]");
+  } else {
+    if (batteryState_.percentage == 100) {
+      npf_snprintf(battText, 8, "[FUL]");
+    } else {
+      npf_snprintf(battText, 8, "[%d%%]", batteryState_.percentage);
+    }
+  }
+#else
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     battText = (char *)"[CHG]";
@@ -395,6 +409,11 @@ void View::drawBattery(GUITextProperties &props) {
     SetColor(CD_ERROR);
     battText = (char *)"[   ]";
   }
+#endif
 
   DrawString(battpos._x, battpos._y, battText, props);
+
+#if BATTERY_LEVEL_AS_PERCENTAGE
+  delete[] battText;
+#endif
 }
