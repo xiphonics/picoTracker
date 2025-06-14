@@ -17,7 +17,7 @@ public:
 
 public: // System implementation
   virtual unsigned long GetClock();
-  virtual int GetBatteryLevel();
+  virtual void GetBatteryState(BatteryState &state);
   virtual void SetDisplayBrightness(unsigned char value);
   virtual void Sleep(int millisec);
   virtual void *Malloc(unsigned size);
@@ -29,7 +29,6 @@ public: // System implementation
 
 private:
   static bool invert_;
-  static int lastBattLevel_;
   static unsigned int lastBeatCount_;
 
   // Update brightness from config

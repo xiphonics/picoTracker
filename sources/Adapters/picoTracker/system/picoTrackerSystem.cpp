@@ -28,7 +28,6 @@
 
 EventManager *picoTrackerSystem::eventManager_ = NULL;
 bool picoTrackerSystem::invert_ = false;
-int picoTrackerSystem::lastBattLevel_ = 100;
 unsigned int picoTrackerSystem::lastBeatCount_ = 0;
 
 int picoTrackerSystem::MainLoop() {
@@ -120,15 +119,27 @@ unsigned long picoTrackerSystem::GetClock() {
   return long((tp.tv_sec - secbase) * 1000 + tp.tv_usec / 1000.0);
 }
 
-int picoTrackerSystem::GetBatteryLevel() {
-  int lastBattLevel_ = -1;
-
+void picoTrackerSystem::GetBatteryState(BatteryState &state) {
   u_int16_t adc_reading = adc_read(); // raw voltage from ADC
 
   int adc_voltage = adc_reading * 0.8; // 0.8mV per unit of ADC
   // *2 because picoTracker use voltage divider for voltage on ADC pin
-  lastBattLevel_ = adc_voltage * 2;
-  return lastBattLevel_;
+  state.voltage_mv = adc_voltage * 2;
+
+  // we just do a very basic percentage estimation based on several voltage
+  // thresholds
+  if (state.voltage_mv < 3400) {
+    state.percentage = 0;
+  } else if (state.voltage_mv < 3500) {
+    state.percentage = 30;
+  } else if (state.voltage_mv < 3700) {
+    state.percentage = 60;
+  } else if (state.voltage_mv < 3900) {
+    state.percentage = 90;
+  } else {
+    state.percentage = 100;
+  }
+  state.charging = adc_voltage > 4000 ? true : false;
 }
 
 void picoTrackerSystem::SetDisplayBrightness(unsigned char value) {

@@ -3,13 +3,21 @@
 
 #include "Foundation/T_Factory.h"
 #include "typedefs.h"
+#include <stdint.h>
 #include <stdlib.h>
+
+struct BatteryState {
+  uint8_t percentage;
+  uint16_t voltage_mv;   // millivolts
+  int16_t temperature_c; // celsius
+  bool charging;
+};
 
 class System : public T_Factory<System> {
 
 public:                                 // Override in implementation
   virtual unsigned long GetClock() = 0; // millisecs
-  virtual int GetBatteryLevel() = 0;
+  virtual void GetBatteryState(BatteryState &state) = 0;
   virtual void SetDisplayBrightness(unsigned char value) = 0;
   virtual void *Malloc(unsigned size) = 0;
   virtual void Free(void *) = 0;
