@@ -27,6 +27,9 @@ add_definitions(-DUSB_REMOTE_UI)
 # enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
 # add_definitions(-DSERIAL_REPL)
 
+# define to use battery level as percentage instead of battery level as "+" bars
+# add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
+
 # enable profiling
 # add_definitions(-DENABLE_PROFILING)
 

@@ -190,7 +190,7 @@ private:
 public:
   static int margin_;
   static int songRowCount_;
-  static float voltage;
+  static BatteryState batteryState_;
 };
 
 #endif
