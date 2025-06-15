@@ -11,7 +11,12 @@ bool View::initPrivate_ = false;
 
 int View::margin_ = 0;
 int View::songRowCount_ = 16;
-float View::voltage = 0;
+BatteryState View::batteryState_ = {
+    .percentage = 0,
+    .voltage_mv = 0,
+    .temperature_c = 0,
+    .charging = false,
+};
 
 View::View(GUIWindow &w, ViewData *viewData)
     : w_(w), viewData_(viewData), viewMode_(VM_NORMAL) {
@@ -365,35 +370,51 @@ void View::drawBattery(GUITextProperties &props) {
   // only update the voltage once per second
   if (AppWindow::GetAnimationFrameCounter() % 50 == 0) {
     System *sys = System::GetInstance();
-    auto v = sys->GetBatteryLevel() / 1000.0;
-    // add some hysteresis
-    if (abs(v - voltage) > 0.1) {
-      voltage = v;
-    }
+    sys->GetBatteryState(batteryState_);
+    // Trace::Debug("Battery: %d%%", batteryState_.percentage);
   }
 
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
   battpos._x = 27;
 
-  if (voltage >= 0) {
-    SetColor(CD_INFO);
-
-    char *battText;
-    if (voltage > 4.0) {
-      battText = (char *)"[CHG]";
-    } else if (voltage > 3.7) {
-      battText = (char *)"[+++]";
-    } else if (voltage > 3.5) {
-      battText = (char *)"[++ ]";
-    } else if (voltage > 3.4) {
-      SetColor(CD_WARN);
-      battText = (char *)"[+  ]";
+  // use define to choose between drawing battery percentage or battery level as
+  // "+" bars
+  SetColor(CD_INFO);
+  char *battText;
+#if BATTERY_LEVEL_AS_PERCENTAGE
+  static char battTextBuffer[8];
+  battText = battTextBuffer;
+  if (batteryState_.charging) {
+    SetColor(CD_ACCENT);
+    npf_snprintf(battText, 8, "[CHG]");
+  } else {
+    if (batteryState_.percentage == 100) {
+      npf_snprintf(battText, 8, "[FUL]");
     } else {
-      SetColor(CD_ERROR);
-      battText = (char *)"[   ]";
+      npf_snprintf(battText, 8, "[%d%%]", batteryState_.percentage);
     }
-
-    DrawString(battpos._x, battpos._y, battText, props);
   }
+#else
+  if (batteryState_.charging) {
+    SetColor(CD_ACCENT);
+    battText = (char *)"[CHG]";
+  } else if (batteryState_.percentage >= 90) {
+    battText = (char *)"[+++]";
+  } else if (batteryState_.percentage >= 60) {
+    battText = (char *)"[++ ]";
+  } else if (batteryState_.percentage >= 30) {
+    SetColor(CD_WARN);
+    battText = (char *)"[+  ]";
+  } else {
+    SetColor(CD_ERROR);
+    battText = (char *)"[   ]";
+  }
+#endif
+
+  DrawString(battpos._x, battpos._y, battText, props);
+
+#if BATTERY_LEVEL_AS_PERCENTAGE
+  delete[] battText;
+#endif
 }
