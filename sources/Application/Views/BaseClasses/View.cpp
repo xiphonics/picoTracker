@@ -383,7 +383,8 @@ void View::drawBattery(GUITextProperties &props) {
   SetColor(CD_INFO);
   char *battText;
 #if BATTERY_LEVEL_AS_PERCENTAGE
-  battText = new char[8]; // [XX%] + null terminator
+  static char battTextBuffer[8];
+  battText = battTextBuffer;
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     npf_snprintf(battText, 8, "[CHG]");
