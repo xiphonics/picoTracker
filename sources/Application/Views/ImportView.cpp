@@ -1,5 +1,4 @@
 #include "ImportView.h"
-#include "Adapters/picoTracker/system/picoTrackerSamplePool.h"
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
@@ -146,6 +145,9 @@ void ImportView::DrawView() {
   int x = 1;
   int y = pos._y + 2;
 
+  uint32_t availableSpace =
+      SamplePool::GetInstance()->GetAvailableSampleStorageSpace();
+
   // Loop through visible files in the list
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
@@ -202,8 +204,6 @@ void ImportView::DrawView() {
   uint32_t filesize = 0;
   auto currentFileIndex = fileIndexList_[currentIndex_];
 
-  uint32_t availableSpace =
-      picoTrackerSamplePool::GetAvailableSampleStorageSpace();
   // only get file size if it's a file not a dir
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
     filesize = fs->getFileSize(currentFileIndex);
@@ -364,7 +364,7 @@ void ImportView::import(char *name) {
   if (!pool->CheckSampleFits(fileSize)) {
     // Get available flash space for the message
     uint32_t availableFlash =
-        picoTrackerSamplePool::GetAvailableSampleStorageSpace();
+        SamplePool::GetInstance()->GetAvailableSampleStorageSpace();
 
     // Show error dialog to inform the user
     char message[SCREEN_WIDTH];
