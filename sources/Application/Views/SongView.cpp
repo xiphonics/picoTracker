@@ -447,9 +447,10 @@ void SongView::jumpToNextSection(int direction) {
       current -= SONG_ROW_COUNT;
     }
   }
-  // If we go backwards, we stil have to go to the beginning of the block
 
-  if (direction < 0) {
+  // In live mode, when we go backwards, we still have to go to the beginning of
+  // the block
+  if (Player::GetInstance()->GetSequencerMode() == SM_LIVE && direction < 0) {
     while (current > 0) {
       unsigned char *start = viewData_->song_->data_ + viewData_->songX_ +
                              SONG_CHANNEL_COUNT * current;
