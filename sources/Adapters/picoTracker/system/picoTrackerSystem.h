@@ -26,6 +26,7 @@ public: // System implementation
   virtual void *Memcpy(void *s1, const void *s2, int n);
   virtual void PostQuitMessage();
   virtual unsigned int GetMemoryUsage();
+  virtual void PowerDown(){};
 
 private:
   static bool invert_;

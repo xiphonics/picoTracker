@@ -25,6 +25,7 @@ public:                                 // Override in implementation
   virtual void *Memcpy(void *s1, const void *s2, int n) = 0;
   virtual void PostQuitMessage() = 0;
   virtual unsigned int GetMemoryUsage() = 0;
+  virtual void PowerDown() = 0;
 };
 
 #define SYS_MEMSET(a, b, c)                                                    \
