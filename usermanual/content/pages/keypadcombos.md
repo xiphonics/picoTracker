@@ -89,9 +89,55 @@ Once a selection is started you can do a few more things:
 | Change chain at cursor position by 0x01                    | `ENTER + (RIGHT / LEFT)` | ![enter + right/left keys](image/pt-buttons-enter_left_right.jpg) |
 | cut the current cursor position if filled, paste otherwise | `ALT + ENTER`            | ![enter + alt keys](image/pt-buttons-alt_enter.jpg)               |
 
-[//]: # (TODO:)
+## Chain View
 
-[//]: # (chain)
+### No Modifier
+
+| function                                  | key combination | image                                               |
+|:------------------------------------------|:----------------|:------------------------------------------:|
+| Move cursor on screen                     | `ARROW` keys    | ![arrow keys](image/pt-buttons-arrows.jpg) |
+| Start/stop playback of current chain      | `PLAY`          | ![play key](image/pt-buttons-play.jpg)     |
+| enter last used phrase or start with `00` | `ENTER`         | ![enter key](image/pt-buttons-enter.jpg)   |
+
+### NAV Modifier
+
+| function              | key combination | image                                              |
+|:----------------------|:----------------|:--------------------------------------------:|
+| switch to song view   | `NAV + LEFT`    | ![enter key](image/pt-buttons-nav_left.jpg)  |
+| switch to phrase view | `NAV + RIGHT`   | ![enter key](image/pt-buttons-nav_right.jpg) |
+| play chain in song    | `NAV + PLAY`    | ![enter key](image/pt-buttons-nav_play.jpg)  |
+| unmute all            | `NAV + ALT`     | ![enter key](image/pt-buttons-nav_alt.jpg)   |
+| toggle mute           | `EDIT + NAV`    | ![enter key](image/pt-buttons-nav_edit.jpg)  |
+| switch solo mode      | `ENTER + NAV`   | ![enter key](image/pt-buttons-nav_enter.jpg) |
+
+### ALT Modifier
+
+| function               | key combination      | image                                             |
+|:-----------------------|:---------------------|:-------------------------------------------------:|
+| unmute all             | `NAV + ALT`          | ![enter key](image/pt-buttons-nav_alt.jpg)        |
+| clone current position | `EDIT + ALT + ENTER` | ![enter key](image/pt-buttons-alt_edit_enter.jpg) |
+| paste clipboard        | `ENTER + ALT`        | ![enter key](image/pt-buttons-alt_enter.jpg)      |
+
+### EDIT Modifier
+
+| function                                           | key combination         | image                                              |
+|:---------------------------------------------------|:------------------------|:--------------------------------------------------:|
+| warp to (previous / next) channel                  | `EDIT + (LEFT / RIGHT)` | ![enter key](image/pt-buttons-edit_leftright.jpg) |
+| warp to (previous / next) chain of current channel | `EDIT + (UP / DOWN)`    | ![enter key](image/pt-buttons-edit_updown.jpg)    |
+| cut current position into clipboard                | `EDIT + ENTER`          | ![enter key](image/pt-buttons-edit_enter.jpg)     | 
+| clone current position                             | `EDIT + ALT + ENTER`    | ![enter key](image/pt-buttons-alt_edit_enter.jpg) |
+| toggle mute                                        | `EDIT + NAV`            | ![enter key](image/pt-buttons-nav_edit.jpg)       |
+
+### ENTER Key Combinations
+
+| function                                                 | key combination          | image                                               |
+|:---------------------------------------------------------|:-------------------------|:---------------------------------------------------:|
+| update cursor value by +/- 0x10                          | `ENTER + (UP / DOWN)`    | ![enter key](image/pt-buttons-enter_up_down.jpg)    |
+| update cursor value by +/- 0x01                          | `ENTER + (LEFT / RIGHT)` | ![enter key](image/pt-buttons-enter_left_right.jpg) |
+| paste clipboard                                          | `ENTER + ALT`            | ![enter key](image/pt-buttons-alt_enter.jpg)        |
+| switch solo mode                                         | `ENTER + NAV`            | ![enter key](image/pt-buttons-nav_enter.jpg)        |
+
+[//]: # (TODO:)
 
 [//]: # (phrase)
 
