@@ -1,3 +1,12 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2018 Discodirt
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #include "Trace.h"
 #include "Externals/etl/include/etl/error_handler.h"
 #include "platform.h"

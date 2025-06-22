@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 // SD card access using SDIO for RP2040 platform.
 // This module contains the low-level SDIO bus implementation using
 // the PIO peripheral. The high-level commands are in sd_card_sdio.cpp.

@@ -1,3 +1,12 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2018 Discodirt
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #include "WavFileWriter.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"

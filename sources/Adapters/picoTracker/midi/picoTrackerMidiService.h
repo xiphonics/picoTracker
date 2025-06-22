@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #ifndef _PICOTRACKERMIDISERVICE_H_
 #define _PICOTRACKERMIDISERVICE_H_
 

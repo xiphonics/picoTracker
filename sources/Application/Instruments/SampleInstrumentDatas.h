@@ -1,3 +1,12 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2018 Discodirt
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #define SEMITONE_FREQ_INTERVAL 1.0594630943592952645618252949461F
 
 const char *loopTypes[SILM_LAST] = {"none", "loop", "pingpong", "oscillator",

@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #include "critical_error_message.h"
 #include "Adapters/picoTracker/display/chargfx.h"
 #include <System/Console/nanoprintf.h>
