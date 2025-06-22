@@ -103,39 +103,44 @@ Once a selection is started you can do a few more things:
 
 | function              | key combination | image                                              |
 |:----------------------|:----------------|:--------------------------------------------:|
-| switch to song view   | `NAV + LEFT`    | ![enter key](image/pt-buttons-nav_left.jpg)  |
-| switch to phrase view | `NAV + RIGHT`   | ![enter key](image/pt-buttons-nav_right.jpg) |
-| play chain in song    | `NAV + PLAY`    | ![enter key](image/pt-buttons-nav_play.jpg)  |
-| unmute all            | `NAV + ALT`     | ![enter key](image/pt-buttons-nav_alt.jpg)   |
-| toggle mute           | `EDIT + NAV`    | ![enter key](image/pt-buttons-nav_edit.jpg)  |
-| switch solo mode      | `ENTER + NAV`   | ![enter key](image/pt-buttons-nav_enter.jpg) |
+| switch to song view   | `NAV + LEFT`    | ![nav and left key](image/pt-buttons-nav_left.jpg)  |
+| switch to phrase view | `NAV + RIGHT`   | ![nav and right key](image/pt-buttons-nav_right.jpg) |
+| play chain in song    | `NAV + PLAY`    | ![nav and play key](image/pt-buttons-nav_play.jpg)  |
+| unmute all            | `NAV + ALT`     | ![nav and alt key](image/pt-buttons-nav_alt.jpg)   |
+| toggle mute           | `EDIT + NAV`    | ![nav and edit key](image/pt-buttons-nav_edit.jpg)  |
+| switch solo mode      | `ENTER + NAV`   | ![nav and enter key](image/pt-buttons-nav_enter.jpg) |
 
 ### ALT Modifier
 
 | function               | key combination      | image                                             |
 |:-----------------------|:---------------------|:-------------------------------------------------:|
-| unmute all             | `NAV + ALT`          | ![enter key](image/pt-buttons-nav_alt.jpg)        |
-| clone current position | `EDIT + ALT + ENTER` | ![enter key](image/pt-buttons-alt_edit_enter.jpg) |
-| paste clipboard        | `ENTER + ALT`        | ![enter key](image/pt-buttons-alt_enter.jpg)      |
+| unmute all             | `NAV + ALT`          | ![nav and alt key](image/pt-buttons-nav_alt.jpg)        |
+| clone current position | `EDIT + ALT + ENTER` | ![edit and alt and enter key](image/pt-buttons-alt_edit_enter.jpg) |
+| paste clipboard        | `ALT + ENTER`        | ![alter and enter key](image/pt-buttons-alt_enter.jpg)      |
+| start selection        | `ALT + EDIT`         | ![alt and edit key](image/pt-buttons-alt_edit.jpg)       |
 
 ### EDIT Modifier
 
-| function                                           | key combination         | image                                              |
-|:---------------------------------------------------|:------------------------|:--------------------------------------------------:|
-| warp to (previous / next) channel                  | `EDIT + (LEFT / RIGHT)` | ![enter key](image/pt-buttons-edit_leftright.jpg) |
-| warp to (previous / next) chain of current channel | `EDIT + (UP / DOWN)`    | ![enter key](image/pt-buttons-edit_updown.jpg)    |
-| cut current position into clipboard                | `EDIT + ENTER`          | ![enter key](image/pt-buttons-edit_enter.jpg)     | 
-| clone current position                             | `EDIT + ALT + ENTER`    | ![enter key](image/pt-buttons-alt_edit_enter.jpg) |
-| toggle mute                                        | `EDIT + NAV`            | ![enter key](image/pt-buttons-nav_edit.jpg)       |
+| function                                           | key combination            | image                                                                  |
+|:---------------------------------------------------|:---------------------------|:----------------------------------------------------------------------:|
+| warp to (previous / next) channel                  | `EDIT + (LEFT / RIGHT)`    | ![edit and horizontal arrow keys](image/pt-buttons-edit_leftright.jpg) |
+| warp to (previous / next) chain of current channel | `EDIT + (UP / DOWN)`       | ![edit and vertical arrow keys](image/pt-buttons-edit_updown.jpg)      |
+| cut current position into clipboard                | `EDIT + ENTER`             | ![edit and enter key](image/pt-buttons-edit_enter.jpg)                 |
+| clone current position                             | `EDIT + ALT + ENTER`       | ![edit and alt and enter key](image/pt-buttons-alt_edit_enter.jpg)     |
+| toggle mute                                        | `EDIT + NAV`               | ![edit and naventer key](image/pt-buttons-nav_edit.jpg)                |
+| start selection                                    | `ALT + EDIT`               | ![alt and edit key](image/pt-buttons-alt_edit.jpg)                     |
+| start selection with row selected                  | `ALT + EDIT + EDIT`        | ![alt and edit twice keys](image/pt-buttons-alt_edit2.jpg)             |
+| start selection with current screen selected       | `ALT + EDIT + EDIT + EDIT` | ![alt and edit thrice keys](image/pt-buttons-alt_edit3.jpg)            |
+
 
 ### ENTER Key Combinations
 
 | function                                                 | key combination          | image                                               |
 |:---------------------------------------------------------|:-------------------------|:---------------------------------------------------:|
-| update cursor value by +/- 0x10                          | `ENTER + (UP / DOWN)`    | ![enter key](image/pt-buttons-enter_up_down.jpg)    |
-| update cursor value by +/- 0x01                          | `ENTER + (LEFT / RIGHT)` | ![enter key](image/pt-buttons-enter_left_right.jpg) |
-| paste clipboard                                          | `ENTER + ALT`            | ![enter key](image/pt-buttons-alt_enter.jpg)        |
-| switch solo mode                                         | `ENTER + NAV`            | ![enter key](image/pt-buttons-nav_enter.jpg)        |
+| update cursor value by +/- 0x10                          | `ENTER + (UP / DOWN)`    | ![enter and vertical arrow keys](image/pt-buttons-enter_up_down.jpg)    |
+| update cursor value by +/- 0x01                          | `ENTER + (LEFT / RIGHT)` | ![enter and horizontal arrow keys](image/pt-buttons-enter_left_right.jpg) |
+| paste clipboard                                          | `ENTER + ALT`            | ![enter and alt key](image/pt-buttons-alt_enter.jpg)        |
+| switch solo mode                                         | `ENTER + NAV`            | ![enter and nav key](image/pt-buttons-nav_enter.jpg)        |
 
 [//]: # (TODO:)
 
