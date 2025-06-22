@@ -132,6 +132,24 @@ Once a selection is started you can do a few more things:
 | start selection with row selected                  | `ALT + EDIT + EDIT`        | ![alt and edit twice keys](image/pt-buttons-alt_edit2.jpg)             |
 | start selection with current screen selected       | `ALT + EDIT + EDIT + EDIT` | ![alt and edit thrice keys](image/pt-buttons-alt_edit3.jpg)            |
 
+#### Use Selection
+
+Once a selection is started you can do a few more things:
+
+| Description                                                | Key Names                |                     Image                                                     |
+|------------------------------------------------------------|--------------------------|:-----------------------------------------------------------------------------:|
+| change selection                                           | `ARROWS`                 | ![arrow keys](image/pt-buttons-arrows.jpg)                                    |
+| copy selection to clipboard                                | `EDIT`                   | ![edit key](image/pt-buttons-edit.jpg)                                        |
+| toggle mute                                                | `EDIT + NAV`             | ![enter and nav key](image/pt-buttons-nav_edit.jpg)                           |
+| update selection values by +/- 0x10                        | `ENTER + (UP + DOWN)`    | ![enter and vertical arrow keys](image/pt-buttons-enter_up_down.jpg)          |
+| update selection values by +/- 0x01                        | `ENTER + (LEFT + RIGHT)` | ![enter key and horizontal arrow keys](image/pt-buttons-enter_left_right.jpg) |
+| cut the current selection                                  | `ALT + ENTER`            | ![alt and enter key](image/pt-buttons-alt_enter.jpg)                       |
+| switch solo mode                                           | `NAV + ENTER`            | ![nav and enter key](image/pt-buttons-nav_enter.jpg)                                |
+| switch to song view                                        | `NAV + LEFT`             | ![nav and left key](image/pt-buttons-nav_left.jpg)                                   |
+| switch to phrase view                                      | `NAV + RIGHT`            | ![nav and right key](image/pt-buttons-nav_right.jpg)                                  |
+| play chain                                                 | `PLAY`                   | ![play key](image/pt-buttons-play.jpg)                                      |
+| play chain in song                                         | `NAV + PLAY`             | ![nav and play key](image/pt-buttons-nav_play.jpg)                            |
+| unmute all                                                 | `ALT + NAV`              | ![alt and nav key](image/pt-buttons-nav_alt.jpg)                                  |
 
 ### ENTER Key Combinations
 
