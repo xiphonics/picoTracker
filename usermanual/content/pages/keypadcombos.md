@@ -7,14 +7,9 @@ template: page
 
 The keyboard layout resembles a typical old console game controller (controller button names in brackets):
 
-|   Key Names    |                   Image                    |
-|:--------------:|:------------------------------------------:|
-|  `ARROW` keys  | ![arrow keys](image/pt-buttons-arrows.jpg) |
-|   `NAV` (RT)   |  ![arrow keys](image/pt-buttons-nav.jpg)   |
-|   `ALT` (LT)   |  ![arrow keys](image/pt-buttons-alt.jpg)   |
-|  `ENTER` (A)   | ![arrow keys](image/pt-buttons-enter.jpg)  |
-|   `EDIT` (B)   |  ![arrow keys](image/pt-buttons-edit.jpg)  |
-| `PLAY` (Start) |  ![arrow keys](image/pt-buttons-play.jpg)  |
+| `ARROW` keys                               | `NAV` (RT)                              | `ALT` (LT)                              | `ENTER` (A)                               | `EDIT` (B)                               | `PLAY` (Start)                           |
+|:-------------------------------------------|:----------------------------------------|:----------------------------------------|:------------------------------------------|:-----------------------------------------|:-----------------------------------------|
+| ![arrow keys](image/pt-buttons-arrows.jpg) | ![arrow keys](image/pt-buttons-nav.jpg) | ![arrow keys](image/pt-buttons-alt.jpg) | ![arrow keys](image/pt-buttons-enter.jpg) | ![arrow keys](image/pt-buttons-edit.jpg) | ![arrow keys](image/pt-buttons-play.jpg) |
 
 The `NAV` (`[]`) and `ALT` keys are modifier keys for the `ENTER`, `EDIT` and `ARROW` keys. They are designed to modify
 the opposite keys to their location, so `ALT` will modify the `ARROW` keys and `NAV` will modify `ENTER` and `EDIT` (
