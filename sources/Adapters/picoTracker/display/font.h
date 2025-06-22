@@ -1,4 +1,12 @@
 /*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
+/*
     MIT License
     Copyright (c) 2018-2019, Alexey Dynda
     Permission is hereby granted, free of charge, to any person obtaining a copy

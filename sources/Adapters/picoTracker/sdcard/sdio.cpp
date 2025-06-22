@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 // Implementation of SDIO communication for RP2040
 //
 // The RP2040 official work-in-progress code at

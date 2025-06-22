@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #include "picoTrackerSamplePool.h"
 #include "hardware/flash.h"
 #include "hardware/sync.h"

@@ -1,3 +1,12 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2018 Discodirt
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 // Helper function to convert linear amplitude to dB
 inline int amplitudeToDb(int amplitude) {
   if (amplitude <= 0) {

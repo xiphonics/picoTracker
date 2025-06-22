@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2018 Discodirt
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
 
 #ifndef _SAMPLE_RENDER_PARAMS_H_
 #define _SAMPLE_RENDER_PARAMS_H_
