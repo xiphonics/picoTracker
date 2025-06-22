@@ -46,7 +46,7 @@ When `NAV` is released first, the (solo / mute) mode will be kept active until r
 |:---------------------------|:----------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------|
 | `ALT + (UP / DOWN)`        |     ![alt + up/down keys](image/pt-buttons-alt_up_down.jpg)      | Jump up/down to next populated row after a blank row                                                  |
 | `ALT + (LEFT / RIGHT)`     |  ![nav + alt + left/right](image/pt-buttons-alt_left_right.jpg)  | Nudge tempo down/up                                                                                   |
-| `ALT + PLAY`               |        ![nav + alt + play](image/pt-buttons-alt_play.jpg)        | quere current row for playbck                                                                         |
+| `ALT + PLAY`               |        ![nav + alt + play](image/pt-buttons-alt_play.jpg)        | query current row for playbck                                                                         |
 | `ALT + NAV`                |        ![nav + alt + enter](image/pt-buttons-nav_alt.jpg)        | reset all muted & soloed teacks                                                                       |
 | `ALT + ENTER`              |          ![arrow keys](image/pt-buttons-alt_enter.jpg)           | cut the current cursor position if filled, paste otherwise                                            |
 | `ALT + (EDIT + ENTER)`     | ![alt + (adit, enter) keys](image/pt-buttons-alt_edit_enter.jpg) | Clone: Overwrite current highlighted Item with a copy of itself using the next unused Item available. |
