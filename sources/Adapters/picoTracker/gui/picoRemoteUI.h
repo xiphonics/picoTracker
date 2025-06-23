@@ -25,8 +25,8 @@
 #define INVERT_ON 0x7F
 
 // Protocol escape character and related definitions
-#define REMOTE_UI_ESC_CHAR 0xFD  // Escape character
-#define REMOTE_UI_ESC_XOR 0x20   // XOR mask for escaped bytes
+#define REMOTE_UI_ESC_CHAR 0xFD // Escape character
+#define REMOTE_UI_ESC_XOR 0x20  // XOR mask for escaped bytes
 
 enum RemoteUICommand {
   REMOTE_UI_CMD_MARKER = 0xFE,
