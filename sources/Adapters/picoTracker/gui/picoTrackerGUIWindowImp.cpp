@@ -108,13 +108,13 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   chargfx_clear(backgroundColor);
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
-    char remoteUIBuffer[5];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = CLEAR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
-    sendToUSBCDC(remoteUIBuffer, 5);
+    // Ensure color values are within valid range for char (0-255)
+    uint8_t r = (c._r > 255) ? 255 : (uint8_t)c._r;
+    uint8_t g = (c._g > 255) ? 255 : (uint8_t)c._g;
+    uint8_t b = (c._b > 255) ? 255 : (uint8_t)c._b;
+    
+    // Use the new function that properly escapes special bytes
+    sendColorCommandWithEscaping(CLEAR_CMD, r, g, b);
   }
 #endif
 };
@@ -149,13 +149,13 @@ void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   chargfx_set_foreground(color);
 #ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
-    char remoteUIBuffer[5];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = SETCOLOR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
-    sendToUSBCDC(remoteUIBuffer, 5);
+    // Ensure color values are within valid range for char (0-255)
+    uint8_t r = (c._r > 255) ? 255 : (uint8_t)c._r;
+    uint8_t g = (c._g > 255) ? 255 : (uint8_t)c._g;
+    uint8_t b = (c._b > 255) ? 255 : (uint8_t)c._b;
+    
+    // Use the new function that properly escapes special bytes
+    sendColorCommandWithEscaping(SETCOLOR_CMD, r, g, b);
   }
 #endif
 };
