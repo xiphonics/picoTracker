@@ -97,7 +97,7 @@ Once a selection is started you can do a few more things:
 |:------------------------------------------|:----------------|:------------------------------------------:|
 | Move cursor on screen                     | `ARROW` keys    | ![arrow keys](image/pt-buttons-arrows.jpg) |
 | Start/stop playback of current chain      | `PLAY`          | ![play key](image/pt-buttons-play.jpg)     |
-| enter last used phrase or start with `00` | `ENTER`         | ![enter key](image/pt-buttons-enter.jpg)   |
+| enter last used phrase or start with 0    | `ENTER`         | ![enter key](image/pt-buttons-enter.jpg)   |
 
 ### NAV Modifier
 
