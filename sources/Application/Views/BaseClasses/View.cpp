@@ -343,20 +343,10 @@ void View::SetDirty(bool isDirty) { isDirty_ = isDirty; };
 void View::ProcessButton(unsigned short mask, bool pressed) {
   isDirty_ = false;
 
-  // Debug the mask value
-  Trace::Debug("ProcessButton mask: 0x%x, pressed: %d, EPBM_POWER: 0x%x", mask,
-               pressed, EPBM_POWER);
-
-  // Special case for power button release event
-  // When power button is released, we get mask=0 but we still need to handle it
-  if (mask == 0 && !pressed) {
+  if (!pressed) {
     powerButtonPressed_ = false;
-    Trace::Debug("Power button release detected (mask=0)");
-  }
-  // Regular power button handling
-  else if (mask & EPBM_POWER) {
+  } else if (mask & EPBM_POWER) {
     powerButtonPressed_ = pressed;
-    Trace::Debug("Power button: %s", pressed ? "pressed" : "released");
   }
 
   // Normal button processing
