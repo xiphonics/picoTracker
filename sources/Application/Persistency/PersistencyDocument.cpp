@@ -13,7 +13,7 @@
 PersistencyDocument::PersistencyDocument() {
   version_ = 0;
   yxml_init(state_, stack_, sizeof(stack_));
-  r_ = YXML_OK; // initialize to ok value
+  r_ = YXML_OK;  // initialize to ok value
   fp_ = nullptr; // Initialize file pointer to null
 }
 
