@@ -502,4 +502,5 @@ void ThemeView::AnimationUpdate() {
   }
   GUITextProperties props;
   drawBattery(props);
+  drawPowerButtonUI(props);
 }

@@ -57,6 +57,7 @@ enum GUIEventPadButtonType {
   EPBT_R,
   EPBT_START,
   EPBT_SELECT,
+  EPBT_POWER,
   EPBT_INVALID,
 };
 
