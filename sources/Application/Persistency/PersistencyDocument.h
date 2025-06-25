@@ -17,7 +17,9 @@
 class PersistencyDocument {
 public:
   PersistencyDocument();
+  ~PersistencyDocument(); // Add destructor
   bool Load(const char *filename);
+  void Close(); // Add method to explicitly close the file
 
   bool FirstChild();
   bool NextSibling();
