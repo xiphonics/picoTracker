@@ -401,7 +401,7 @@ void View::drawBattery(GUITextProperties &props) {
   SetColor(CD_INFO);
   char *battText;
 #if BATTERY_LEVEL_AS_PERCENTAGE
-  static char battTextBuffer[8];
+  char battTextBuffer[8];
   battText = battTextBuffer;
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
@@ -431,10 +431,6 @@ void View::drawBattery(GUITextProperties &props) {
 #endif
 
   DrawString(battpos._x, battpos._y, battText, props);
-
-#if BATTERY_LEVEL_AS_PERCENTAGE
-  delete[] battText;
-#endif
 }
 
 // Draw power button UI overlay
