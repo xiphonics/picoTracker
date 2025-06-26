@@ -342,6 +342,14 @@ void View::SetDirty(bool isDirty) { isDirty_ = isDirty; };
 
 void View::ProcessButton(unsigned short mask, bool pressed) {
   isDirty_ = false;
+
+  if (!pressed) {
+    powerButtonPressed_ = false;
+  } else if (mask & EPBM_POWER) {
+    powerButtonPressed_ = pressed;
+  }
+
+  // Normal button processing
   if (modalView_) {
     modalView_->ProcessButton(mask, pressed);
     if (modalView_->IsFinished()) {
@@ -355,6 +363,7 @@ void View::ProcessButton(unsigned short mask, bool pressed) {
   } else {
     ProcessButtonMask(mask, pressed);
   }
+
   if (isDirty_)
     ((AppWindow &)w_).SetDirty();
 };
@@ -392,7 +401,7 @@ void View::drawBattery(GUITextProperties &props) {
   SetColor(CD_INFO);
   char *battText;
 #if BATTERY_LEVEL_AS_PERCENTAGE
-  static char battTextBuffer[8];
+  char battTextBuffer[8];
   battText = battTextBuffer;
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
@@ -422,8 +431,61 @@ void View::drawBattery(GUITextProperties &props) {
 #endif
 
   DrawString(battpos._x, battpos._y, battText, props);
+}
 
-#if BATTERY_LEVEL_AS_PERCENTAGE
-  delete[] battText;
-#endif
+// Draw power button UI overlay
+void View::drawPowerButtonUI(GUITextProperties &props) {
+  // Only process and draw UI when power button is pressed
+  if (powerButtonPressed_) {
+    char countdownMessage[40];
+    powerButtonHoldCount_++;
+
+    int remainingSeconds = 3 - (powerButtonHoldCount_ / 50);
+    if (remainingSeconds < 0) {
+      remainingSeconds = 0;
+    }
+
+    snprintf(countdownMessage, sizeof(countdownMessage),
+             "Hold for shutdown (%d sec)", remainingSeconds);
+
+    if (remainingSeconds == 0) {
+      Trace::Debug("Power button held for threshold time, Powerdown!");
+
+      // clear screen before powerdown
+      // TODO: doesn't work at the moment, adv comes back showing last screen
+      // content
+      ForceClear();
+
+      System::GetInstance()->PowerDown();
+    }
+
+    // Calculate center position for the message
+    GUIPoint pos = GetAnchor();
+    uint16_t mesgLen = strlen(countdownMessage);
+    pos._x = (SCREEN_WIDTH - mesgLen) / 2;
+    pos._y = SCREEN_HEIGHT / 2 - 1;
+
+    // Draw a background box
+    SetColor(CD_BACKGROUND);
+    for (int y = pos._y - 1; y <= pos._y + 1; y++) {
+      for (int x = pos._x - 1; x <= (uint16_t)(pos._x + mesgLen + 1); x++) {
+        GUITextProperties invProps = props;
+        invProps.invert_ = true;
+        DrawString(x, y, " ", invProps);
+      }
+    }
+
+    // Draw the message
+    SetColor(CD_EMPHASIS);
+    DrawString(pos._x, pos._y, countdownMessage, props);
+  } else if (powerButtonHoldCount_ > 0) {
+    // Reset hold counter when button is released
+    powerButtonHoldCount_ = 0;
+
+    // Force immediate redraw by calling DrawView directly
+    // This will redraw the entire screen with the correct content
+    DrawView();
+
+    Trace::Debug("Power button released! View redrawn.");
+  }
 }

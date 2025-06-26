@@ -158,13 +158,30 @@ AppWindow::~AppWindow() { MidiService::GetInstance()->Close(); }
 void AppWindow::DrawString(const char *string, GUIPoint &pos,
                            GUITextProperties &props, bool force) {
 
+  // Safety check for null string
+  if (!string) {
+    return;
+  }
+
   // we know we don't have more than SCREEN_WIDTH chars
   char buffer[SCREEN_WIDTH + 1];
   int len = strlen(string);
+
+  // Safety checks for offset calculation
   int offset = (pos._x < 0) ? -pos._x / 8 : 0;
+  if (offset >= len) {
+    return; // Nothing to draw if offset is beyond string length
+  }
+
   len -= offset;
   int available = SCREEN_WIDTH - ((pos._x < 0) ? 0 : pos._x);
   len = std::min(len, available);
+
+  // Additional safety check
+  if (len <= 0) {
+    return;
+  }
+
   memcpy(buffer, string + offset, len);
   buffer[len] = 0;
 
