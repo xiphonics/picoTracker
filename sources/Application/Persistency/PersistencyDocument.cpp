@@ -13,7 +13,21 @@
 PersistencyDocument::PersistencyDocument() {
   version_ = 0;
   yxml_init(state_, stack_, sizeof(stack_));
-  r_ = YXML_OK; // initialize to ok value
+  r_ = YXML_OK;  // initialize to ok value
+  fp_ = nullptr; // Initialize file pointer to null
+}
+
+PersistencyDocument::~PersistencyDocument() {
+  // Ensure file is closed when object is destroyed
+  Close();
+}
+
+void PersistencyDocument::Close() {
+  if (fp_) {
+    fp_->Close();
+    fp_ = nullptr;
+    Trace::Log("PERSISTENCYDOCUMENT", "File closed");
+  }
 }
 
 bool PersistencyDocument::Load(const char *filename) {
