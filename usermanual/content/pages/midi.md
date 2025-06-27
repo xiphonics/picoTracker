@@ -3,8 +3,6 @@ title: MIDI Implementation
 template: page
 ---
 
-# MIDI Implementation
-
 ## MIDI Input
 
 picoTracker supports MIDI input for real-time playback and control. This allows you to connect a MIDI keyboard or controller to play notes and control various parameters.
