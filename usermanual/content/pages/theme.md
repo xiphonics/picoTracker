@@ -48,6 +48,33 @@ Next to each color setting, a small color swatch is displayed to show you the cu
 
 All changes to the theme settings are automatically saved to the SD card as you make them. This ensures your customized theme will be preserved even when you power off the picoTracker.
 
+## Importing and Exporting Themes
+
+picoTracker allows you to import and export theme files (.ptt), making it easy to share your custom themes with others or back up your favorite color schemes.
+
+### Exporting a Theme
+
+1. Navigate to the Theme settings screen
+2. Press the **EXPORT** button (or **NAV+EXPORT** if using a different control scheme)
+3. Enter a name for your theme using the on-screen keyboard
+4. Press **ENTER** to confirm
+
+Your theme will be saved as a `.ptt` file in the `themes` directory on your SD card. If a theme with the same name already exists, you'll be asked if you want to overwrite it.
+
+### Importing a Theme
+
+1. Navigate to the Theme settings screen
+2. Press the **IMPORT** button (or **NAV+IMPORT** if using a different control scheme)
+3. Browse the file list to find the `.ptt` file you want to import
+4. Select the file and press **PLAY** to import it
+
+The imported theme will be immediately applied to the interface. The theme name will be updated to match the imported file's name (without the .ptt extension).
+
+### Theme File Location
+
+- Exported themes are saved in: `/themes/[theme-name].ptt`
+- When importing, the system will look for `.ptt` files in the root directory and any subdirectories
+
 ## Tips for Creating Custom Themes
 
 * Be **VERY** careful when changing the foreground and background colors to not use the same or very similar color for both! 
@@ -55,3 +82,4 @@ All changes to the theme settings are automatically saved to the SD card as you 
 * Consider using complementary colors for highlights to make important elements stand out
 * If you're performing in low-light conditions, consider using darker background colors to reduce screen glare
 * For better visibility in bright environments, use higher contrast between foreground and background colors
+* When sharing themes, consider including the theme name in the filename for easy identification
