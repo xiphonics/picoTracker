@@ -19,9 +19,53 @@
 // command received to check for any transmission errors.
 //
 
+// Check if a byte needs to be escaped in the protocol
+bool needsEscape(uint8_t byte) {
+  // Escape the command marker and escape character itself
+  return (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR);
+}
+
+// Send a color command with proper byte escaping
+void sendColorCommandWithEscaping(char cmd, uint8_t r, uint8_t g, uint8_t b) {
+  // Maximum buffer size with escaping: 2 bytes for header + up to 6 bytes for
+  // RGB (if all need escaping)
+  char buffer[8];
+  int idx = 0;
+
+  // Add command marker
+  buffer[idx++] = REMOTE_UI_CMD_MARKER;
+
+  // Add command byte
+  buffer[idx++] = cmd;
+
+  // Add red component with escaping if needed
+  if (needsEscape(r)) {
+    buffer[idx++] = REMOTE_UI_ESC_CHAR;
+    buffer[idx++] = r ^ REMOTE_UI_ESC_XOR;
+  } else {
+    buffer[idx++] = r;
+  }
+
+  if (needsEscape(g)) {
+    buffer[idx++] = REMOTE_UI_ESC_CHAR;
+    buffer[idx++] = g ^ REMOTE_UI_ESC_XOR;
+  } else {
+    buffer[idx++] = g;
+  }
+
+  if (needsEscape(b)) {
+    buffer[idx++] = REMOTE_UI_ESC_CHAR;
+    buffer[idx++] = b ^ REMOTE_UI_ESC_XOR;
+  } else {
+    buffer[idx++] = b;
+  }
+
+  // Send the buffer
+  sendToUSBCDC(buffer, idx);
+}
+
 void sendToUSBCDC(char buf[], int length) {
-  // based on PICO SDk's USB STDIO stdio_usb_out_chars function
-  // https://github.com/raspberrypi/pico-sdk/blob/master/src/rp2_common/pico_stdio_usb/stdio_usb.c#L101
+  // Regular handling for non-color commands
   static uint64_t last_avail_time;
   if (tud_cdc_connected()) {
     for (int i = 0; i < length;) {

@@ -16,13 +16,19 @@ The Remote UI protocol is a communication mechanism that allows rendering the pi
 
 Every command starts with a fixed marker: `0xFE` (REMOTE_UI_CMD_MARKER). This allows clients to verify the start of a valid command.
 
-**Note:** That the use of this value as a marker to start commands means that the characters 0xFE and 0xFF from the extended ASCII range are not allowed in the protocols command parameter values.
+### Byte Escaping
 
+To handle cases where color values or other data might conflict with command markers, the protocol implements byte escaping:
+
+* Escape Character: `0xFD` (REMOTE_UI_ESC_CHAR)
+* When a data byte matches a special value (0xFE or 0xFD), it is escaped:
+  * The escape character (0xFD) is sent first
+  * Followed by the original byte XORed with 0x20 (REMOTE_UI_ESC_XOR)
+* Client implementation must detect the escape character and decode the following byte
 
 ### Command Types
 
 Note: `ASCII_SPACE_OFFSET = 0xF`
-
 
 1. TEXT_CMD (0x2): Draw a character
 
@@ -37,13 +43,16 @@ Parameters:
 
 Parameters:
 
-* Background color in RGB888 format
+* Background color in RGB888 format (Red, Green, Blue order)
 
-3. SETCOLOR_CMD (0x4): Set foreground color
+3. `SETCOLOR_CMD (0x4)`: Set foreground color
 
 Parameters:
 
-* Color in RGB888 format
+* Foreground color in RGB888 format, sent in the following order:
+  * Red component (1 byte)
+  * Green component (1 byte)
+  * Blue component (1 byte)
 
 4. SETFONT_CMD (0x5)
 

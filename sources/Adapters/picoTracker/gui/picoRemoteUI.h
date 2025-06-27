@@ -24,6 +24,10 @@
 #define ASCII_SPACE_OFFSET 0xF
 #define INVERT_ON 0x7F
 
+// Protocol escape character and related definitions
+#define REMOTE_UI_ESC_CHAR 0xFD // Escape character
+#define REMOTE_UI_ESC_XOR 0x20  // XOR mask for escaped bytes
+
 enum RemoteUICommand {
   REMOTE_UI_CMD_MARKER = 0xFE,
   TEXT_CMD = 0x02,
@@ -37,6 +41,13 @@ enum RemoteInputCommand {
   FULL_REFRESH_CMD = 0x02,
 };
 
+// Send data over USB CDC
 void sendToUSBCDC(char buf[], int length);
+
+// Check if a byte needs to be escaped in the protocol
+bool needsEscape(uint8_t byte);
+
+// Send a color command with proper byte escaping
+void sendColorCommandWithEscaping(char cmd, uint8_t r, uint8_t g, uint8_t b);
 
 #endif
