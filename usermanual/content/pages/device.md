@@ -37,7 +37,7 @@ The [official picoTracker remote UI web application is available ](https://ui.xi
 
 ## Display Brightness
 
-The display brightness setting allows you to adjust the backlight level of the picoTracker's LCD display. The brightness can be set from `05` (minimum brightness) to `ff` (maximum brightness). The default value is `80` (medium brightness).
+The display brightness setting allows you to adjust the backlight level of the picoTracker's LCD display. The brightness can be set from `05` (minimum brightness) to `ff` (maximum brightness). The default value is `ff`.
 
 Adjusting the brightness can help with battery life (lower brightness uses less power) and visibility in different lighting conditions.
 
