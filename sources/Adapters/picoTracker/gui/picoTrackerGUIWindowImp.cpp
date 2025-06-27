@@ -113,7 +113,7 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
     uint8_t g = (c._g > 255) ? 255 : (uint8_t)c._g;
     uint8_t b = (c._b > 255) ? 255 : (uint8_t)c._b;
 
-    // Use the new function that properly escapes special bytes
+    // ensure properly escaped value that match special command bytes
     sendColorCommandWithEscaping(CLEAR_CMD, r, g, b);
   }
 #endif

@@ -41,12 +41,11 @@ void sendColorCommandWithEscaping(char cmd, uint8_t r, uint8_t g, uint8_t b) {
   // Add red component with escaping if needed
   if (needsEscape(r)) {
     buffer[idx++] = REMOTE_UI_ESC_CHAR;
-    buffer[idx++] = r ^ REMOTE_UI_ESC_XOR; // XOR to make it different
+    buffer[idx++] = r ^ REMOTE_UI_ESC_XOR;
   } else {
     buffer[idx++] = r;
   }
 
-  // Add green component with escaping if needed
   if (needsEscape(g)) {
     buffer[idx++] = REMOTE_UI_ESC_CHAR;
     buffer[idx++] = g ^ REMOTE_UI_ESC_XOR;
@@ -54,7 +53,6 @@ void sendColorCommandWithEscaping(char cmd, uint8_t r, uint8_t g, uint8_t b) {
     buffer[idx++] = g;
   }
 
-  // Add blue component with escaping if needed
   if (needsEscape(b)) {
     buffer[idx++] = REMOTE_UI_ESC_CHAR;
     buffer[idx++] = b ^ REMOTE_UI_ESC_XOR;
