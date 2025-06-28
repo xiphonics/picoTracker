@@ -160,7 +160,7 @@ void SelectProjectView::setCurrentFolder() {
   fileIndexList_.clear();
 
   // Let's read all the directory in the project dir
-  fs->list(&fileIndexList_, NULL, true);
+  fs->list(&fileIndexList_, "", true);
 
   // temp hack,  filter out "." & ".."
   fileIndexList_.erase(fileIndexList_.begin());
