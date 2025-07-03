@@ -277,64 +277,37 @@ void InstrumentView::fillSampleParameters() {
   intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 2;
-  // Add our bitmap field, height and width in pixels not character cells!
-  // We want a bitmap that is 160 pixels wide and 20 pixels high
-  uint16_t bitmapWidth = 200; // Width must be a multiple of 8
-  uint16_t bitmapHeight = 40;
+  position._y += 1;
 
-  // Allocate 200x40 = 8000 bytes
-  uint8_t *buffer = (uint8_t *)malloc((bitmapWidth * bitmapHeight) / 8);
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::SampleInstrumentPan);
+  intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  // Clear the buffer
-  bitmapgfx_clear_buffer(buffer, bitmapWidth, bitmapHeight);
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::SampleInstrumentRootNote);
+  noteVarField_.emplace_back(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C);
+  fieldList_.insert(fieldList_.end(), &(*noteVarField_.rbegin()));
 
-  // draw a line lengthwise half way down the bitmap
-  bitmapgfx_draw_line(buffer, bitmapWidth, bitmapHeight, 0, bitmapHeight / 2,
-                      bitmapWidth - 1, bitmapHeight / 2, true);
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::SampleInstrumentFineTune);
+  intVarField_.emplace_back(position, *v, "detune: %2.2X", 0, 255, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  // Draw a rectangle border
-  bitmapgfx_draw_rect(buffer, bitmapWidth, bitmapHeight, 0, 0, bitmapWidth,
-                      bitmapHeight, false, true);
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::SampleInstrumentCrushVolume);
+  intVarField_.emplace_back(position, *v, "drive: %2.2X", 0, 0xFF, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  // Create the bitmap field with the test bitmap data
-  bitmapField_.emplace_back(position, bitmapWidth, bitmapHeight, buffer, 0xFFFF,
-                            0x0000); // White foreground, black background
-  fieldList_.insert(fieldList_.end(), &(*bitmapField_.rbegin()));
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::SampleInstrumentCrush);
+  intVarField_.emplace_back(position, *v, "crush: %d", 1, 0x10, 1, 4);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 2;
-
-  // commented out for now to make room to test the new bitmap field
-
-  // position._y += 1;
-  // v = instrument->FindVariable(FourCC::SampleInstrumentPan);
-  // intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
-  // fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  // position._y += 1;
-  // v = instrument->FindVariable(FourCC::SampleInstrumentRootNote);
-  // noteVarField_.emplace_back(position, *v, "root note: %s", 0, 0x7F, 1,
-  // 0x0C); fieldList_.insert(fieldList_.end(), &(*noteVarField_.rbegin()));
-
-  // position._y += 1;
-  // v = instrument->FindVariable(FourCC::SampleInstrumentFineTune);
-  // intVarField_.emplace_back(position, *v, "detune: %2.2X", 0, 255, 1, 0x10);
-  // fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  // position._y += 1;
-  // v = instrument->FindVariable(FourCC::SampleInstrumentCrushVolume);
-  // intVarField_.emplace_back(position, *v, "drive: %2.2X", 0, 0xFF, 1, 0x10);
-  // fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  // position._y += 1;
-  // v = instrument->FindVariable(FourCC::SampleInstrumentCrush);
-  // intVarField_.emplace_back(position, *v, "crush: %d", 1, 0x10, 1, 4);
-  // fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  // position._y += 1;
-  // v = instrument->FindVariable(FourCC::SampleInstrumentDownsample);
-  // intVarField_.emplace_back(position, *v, "downsample: %d", 0, 8, 1, 4);
-  // fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::SampleInstrumentDownsample);
+  intVarField_.emplace_back(position, *v, "downsample: %d", 0, 8, 1, 4);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
   staticField_.emplace_back(position, "flt cut/res:");
