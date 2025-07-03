@@ -13,6 +13,7 @@
 #include "Application/Instruments/InstrumentNameVariable.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
+#include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIBitmaskVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIIntVarOffField.h"
@@ -73,5 +74,6 @@ private:
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
   etl::vector<InstrumentNameVariable, 1> nameVariables_;
+  etl::vector<UIBitmapField, 1> bitmapField_;
 };
 #endif

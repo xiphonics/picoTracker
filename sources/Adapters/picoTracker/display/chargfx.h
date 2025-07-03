@@ -54,6 +54,7 @@ void chargfx_write(const char *s, int len, bool invert);
 void chargfx_putc(char c, bool invert);
 void chargfx_set_palette_color(int idx, uint16_t rgb565_color);
 void chargfx_set_font_index(uint8_t idx);
+void chargfx_draw_bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t height, const uint8_t *bitmap_data, uint16_t fg_color, uint16_t bg_color);
 
 #ifdef __cplusplus
 }
