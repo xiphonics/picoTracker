@@ -42,6 +42,7 @@ class InstrumentImportView;
 class InstrumentView;
 class NullView;
 class PhraseView;
+class SampleEditorView;
 class SelectProjectView;
 class SongView;
 class TableView;
@@ -112,6 +113,7 @@ private:
   ThemeView *_themeView;
   ThemeImportView *_themeImportView;
   MixerView *_mixerView;
+  SampleEditorView *_sampleEditorView;
   SelectProjectView *_selectProjectView;
   NullView *_nullView;
 

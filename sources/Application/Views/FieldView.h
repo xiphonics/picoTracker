@@ -27,8 +27,8 @@ public:
   int GetFocusIndex();
   void SetSize(int size);
 
-  etl::list<UIField *, 38> fieldList_; // adjust to maximum fields on one screen
-  // curretly max usage is themeview which has 38 fields
+  etl::list<UIField *, 40> fieldList_; // adjust to maximum fields on one screen
+  // currently max usage is themeview which has 40 fields
 
 private:
   UIField *focus_;

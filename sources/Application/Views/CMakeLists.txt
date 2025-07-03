@@ -19,6 +19,7 @@ add_library(application_views
   ViewData.cpp
   ScreenView.cpp
   MixerView.cpp
+  SampleEditorView.cpp
 )
 
 target_link_libraries(application_views PUBLIC
