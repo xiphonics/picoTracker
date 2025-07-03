@@ -26,6 +26,7 @@
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
+#include <bitmapgfx.h>
 #include <cstdint>
 #include <nanoprintf.h>
 
@@ -279,12 +280,25 @@ void InstrumentView::fillSampleParameters() {
   position._y += 2;
   // Add our bitmap field, height and width in pixels not character cells!
   // We want a bitmap that is 160 pixels wide and 20 pixels high
-  uint8_t bitmapWidth = 160; // Width must be a multiple of 8
-  uint8_t bitmapHeight = 20;
+  uint16_t bitmapWidth = 200; // Width must be a multiple of 8
+  uint16_t bitmapHeight = 40;
+
+  // Allocate 200x40 = 8000 bytes
+  uint8_t *buffer = (uint8_t *)malloc((bitmapWidth * bitmapHeight) / 8);
+
+  // Clear the buffer
+  bitmapgfx_clear_buffer(buffer, bitmapWidth, bitmapHeight);
+
+  // draw a line lengthwise half way down the bitmap
+  bitmapgfx_draw_line(buffer, bitmapWidth, bitmapHeight, 0, bitmapHeight / 2,
+                      bitmapWidth - 1, bitmapHeight / 2, true);
+
+  // Draw a rectangle border
+  bitmapgfx_draw_rect(buffer, bitmapWidth, bitmapHeight, 0, 0, bitmapWidth,
+                      bitmapHeight, false, true);
 
   // Create the bitmap field with the test bitmap data
-  bitmapField_.emplace_back(position, bitmapWidth, bitmapHeight, TEST_BITMAP,
-                            0xFFFF,
+  bitmapField_.emplace_back(position, bitmapWidth, bitmapHeight, buffer, 0xFFFF,
                             0x0000); // White foreground, black background
   fieldList_.insert(fieldList_.end(), &(*bitmapField_.rbegin()));
 

@@ -11,6 +11,8 @@
 #include "ili9341.h"
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Draw a bitmap at the specified position
 // x and y are in character cells
@@ -65,4 +67,167 @@ void bitmapgfx_draw_bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t height,
   }
 
   ili9341_stop_writing();
+}
+
+/**
+ * Clear a bitmap buffer (set all pixels to 0)
+ */
+void bitmapgfx_clear_buffer(uint8_t *buffer, uint8_t width, uint8_t height) {
+  assert(width % 8 == 0);
+  assert(buffer != NULL);
+
+  // Calculate buffer size in bytes and clear it
+  uint16_t buffer_size = (width / 8) * height;
+  memset(buffer, 0, buffer_size);
+}
+
+/**
+ * Set a pixel in a bitmap buffer
+ */
+void bitmapgfx_set_pixel(uint8_t *buffer, uint8_t width, uint8_t x, uint8_t y,
+                         bool value) {
+  assert(width % 8 == 0);
+  assert(buffer != NULL);
+  assert(x < width);
+
+  // Calculate byte index and bit position
+  uint16_t bytes_per_row = width / 8;
+  uint16_t byte_idx = (y * bytes_per_row) + (x / 8);
+  uint8_t bit_pos = 7 - (x % 8); // MSB first
+
+  if (value) {
+    // Set the bit
+    buffer[byte_idx] |= (1 << bit_pos);
+  } else {
+    // Clear the bit
+    buffer[byte_idx] &= ~(1 << bit_pos);
+  }
+}
+
+/**
+ * Get a pixel from a bitmap buffer
+ */
+bool bitmapgfx_get_pixel(const uint8_t *buffer, uint8_t width, uint8_t x,
+                         uint8_t y) {
+  assert(width % 8 == 0);
+  assert(buffer != NULL);
+  assert(x < width);
+
+  // Calculate byte index and bit position
+  uint16_t bytes_per_row = width / 8;
+  uint16_t byte_idx = (y * bytes_per_row) + (x / 8);
+  uint8_t bit_pos = 7 - (x % 8); // MSB first
+
+  // Return the bit value
+  return (buffer[byte_idx] & (1 << bit_pos)) != 0;
+}
+
+/**
+ * Draw a line in a bitmap buffer using Bresenham's algorithm
+ */
+void bitmapgfx_draw_line(uint8_t *buffer, uint8_t width, uint8_t height,
+                         uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,
+                         bool value) {
+  assert(width % 8 == 0);
+  assert(buffer != NULL);
+
+  // Bresenham's line algorithm
+  int dx = abs(x1 - x0);
+  int sx = x0 < x1 ? 1 : -1;
+  int dy = -abs(y1 - y0);
+  int sy = y0 < y1 ? 1 : -1;
+  int err = dx + dy;
+  int e2;
+
+  while (1) {
+    // Set pixel if it's within bounds
+    if (x0 < width && y0 < height) {
+      bitmapgfx_set_pixel(buffer, width, x0, y0, value);
+    }
+
+    // Check if we've reached the end point
+    if (x0 == x1 && y0 == y1) {
+      break;
+    }
+
+    e2 = 2 * err;
+    if (e2 >= dy) {
+      if (x0 == x1)
+        break;
+      err += dy;
+      x0 += sx;
+    }
+    if (e2 <= dx) {
+      if (y0 == y1)
+        break;
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
+
+/**
+ * Draw a rectangle in a bitmap buffer
+ */
+void bitmapgfx_draw_rect(uint8_t *buffer, uint8_t width, uint8_t height,
+                         uint8_t x, uint8_t y, uint8_t rect_width,
+                         uint8_t rect_height, bool filled, bool value) {
+  assert(width % 8 == 0);
+  assert(buffer != NULL);
+
+  // Ensure we don't draw outside the bitmap
+  if (x >= width)
+    return;
+  if (y >= height)
+    return;
+
+  // Clip rectangle if it extends beyond bitmap boundaries
+  if (x + rect_width > width) {
+    rect_width = width - x;
+  }
+  if (y + rect_height > height) {
+    rect_height = height - y;
+  }
+
+  // If filled, draw each row of the rectangle
+  if (filled) {
+    for (uint8_t row = 0; row < rect_height; row++) {
+      if (y + row < height) { // Check height bounds
+        for (uint8_t col = 0; col < rect_width; col++) {
+          if (x + col < width) { // Check width bounds
+            bitmapgfx_set_pixel(buffer, width, x + col, y + row, value);
+          }
+        }
+      }
+    }
+  } else {
+    // Draw the outline only
+    // Top and bottom edges
+    for (uint8_t col = 0; col < rect_width; col++) {
+      if (x + col < width) {
+        // Top edge
+        bitmapgfx_set_pixel(buffer, width, x + col, y, value);
+
+        // Bottom edge (if in bounds)
+        if (y + rect_height - 1 < height) {
+          bitmapgfx_set_pixel(buffer, width, x + col, y + rect_height - 1,
+                              value);
+        }
+      }
+    }
+
+    // Left and right edges
+    for (uint8_t row = 1; row < rect_height - 1; row++) {
+      if (y + row < height) {
+        // Left edge
+        bitmapgfx_set_pixel(buffer, width, x, y + row, value);
+
+        // Right edge (if in bounds)
+        if (x + rect_width - 1 < width) {
+          bitmapgfx_set_pixel(buffer, width, x + rect_width - 1, y + row,
+                              value);
+        }
+      }
+    }
+  }
 }
