@@ -16,12 +16,6 @@
 
 /* Character graphics mode */
 
-#define TEXT_WIDTH 32
-#define TEXT_HEIGHT 24
-#define CHAR_HEIGHT 10
-#define CHAR_WIDTH 10
-#define BUFFER_CHARS 12
-
 #define SWAP_BYTES(color) ((uint16_t)(color >> 8) | (uint16_t)(color << 8))
 
 static chargfx_color_t screen_bg_color = CHARGFX_BG;
@@ -30,7 +24,6 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint8_t colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
-static uint16_t buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
 
 static uint8_t ui_font_index = 0;
 
