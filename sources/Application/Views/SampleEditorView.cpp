@@ -23,86 +23,67 @@
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data) {
 
-  // Initialize bitmap buffer for waveform display
-  // Add our bitmap field, height and width in pixels not character cells!
-  // We want a bitmap that is 160 pixels wide and 20 pixels high
-  uint16_t bitmapWidth = 200; // Width must be a multiple of 8
-  uint16_t bitmapHeight = 40;
-
-  // Allocate 200x40 = 8000 bytes
-  uint8_t *buffer = (uint8_t *)malloc((bitmapWidth * bitmapHeight) / 8);
-
   // Clear the buffer
-  bitmapgfx_clear_buffer(buffer, bitmapWidth, bitmapHeight);
-
-  // draw a line lengthwise half way down the bitmap
-  bitmapgfx_draw_line(buffer, bitmapWidth, bitmapHeight, 0, bitmapHeight / 2,
-                      bitmapWidth - 1, bitmapHeight / 2, true);
-
-  // Draw a rectangle border
-  bitmapgfx_draw_rect(buffer, bitmapWidth, bitmapHeight, 0, 0, bitmapWidth,
-                      bitmapHeight, false, true);
+  bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
 
   GUIPoint position = GetAnchor();
 
   // Add waveform display field
   position._y = 4;
-  position._x = 1;
-  waveformField_.emplace_back(position, bitmapWidth, bitmapHeight, buffer,
-                              0xFFFF, 0x0000);
+  position._x = 4;
+  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
+                              bitmapBuffer_, 0xFFFF, 0x0000);
   fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
 
   // Get the current sample instrument
-  // currentInstrument_ = getCurrentSampleInstrument();
+  currentInstrument_ = getCurrentSampleInstrument();
 
-  // // Add sample parameters if we have a valid instrument
-  // if (currentInstrument_) {
-  //   // Add start position control
-  //   position._y = 12;
-  //   position._x = 5;
-  //   Variable *startVar =
-  //       currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-  //   if (startVar) {
-  //     intVarField_.emplace_back(position, *startVar, "Start: %d", 0, 65535,
-  //     1,
-  //                               100);
-  //     fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  //     (*intVarField_.rbegin()).AddObserver(*this);
-  //   }
+  // Add sample parameters if we have a valid instrument
+  if (currentInstrument_) {
+    // Add start position control
+    position._y = 12;
+    position._x = 5;
+    Variable *startVar =
+        currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
+    if (startVar) {
+      intVarField_.emplace_back(position, *startVar, "Start: %d", 0, 65535, 1,
+                                100);
+      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+      (*intVarField_.rbegin()).AddObserver(*this);
+    }
 
-  //   // Add end position control
-  //   position._y += 1;
-  //   Variable *endVar =
-  //       currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
-  //   if (endVar) {
-  //     intVarField_.emplace_back(position, *endVar, "End: %d", 0, 65535, 1,
-  //     100); fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  //     (*intVarField_.rbegin()).AddObserver(*this);
-  //   }
+    // Add end position control
+    position._y += 1;
+    Variable *endVar =
+        currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
+    if (endVar) {
+      intVarField_.emplace_back(position, *endVar, "End: %d", 0, 65535, 1, 100);
+      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+      (*intVarField_.rbegin()).AddObserver(*this);
+    }
 
-  //   // Add loop start control
-  //   position._y += 1;
-  //   Variable *loopStartVar =
-  //       currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
-  //   if (loopStartVar) {
-  //     intVarField_.emplace_back(position, *loopStartVar, "Loop Start: %d", 0,
-  //                               65535, 1, 100);
-  //     fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  //     (*intVarField_.rbegin()).AddObserver(*this);
-  //   }
+    // Add loop start control
+    position._y += 1;
+    Variable *loopStartVar =
+        currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
+    if (loopStartVar) {
+      intVarField_.emplace_back(position, *loopStartVar, "Loop Start: %d", 0,
+                                65535, 1, 100);
+      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+      (*intVarField_.rbegin()).AddObserver(*this);
+    }
 
-  //   // Add loop mode control
-  //   position._y += 1;
-  //   Variable *loopModeVar =
-  //       currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
-  //   if (loopModeVar) {
-  //     intVarField_.emplace_back(position, *loopModeVar, "Loop Mode: %d", 0,
-  //     2,
-  //                               1, 1);
-  //     fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  //     (*intVarField_.rbegin()).AddObserver(*this);
-  //   }
-  // }
+    // Add loop mode control
+    position._y += 1;
+    Variable *loopModeVar =
+        currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
+    if (loopModeVar) {
+      intVarField_.emplace_back(position, *loopModeVar, "Loop Mode: %d", 0, 2,
+                                1, 1);
+      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+      (*intVarField_.rbegin()).AddObserver(*this);
+    }
+  }
 }
 
 SampleEditorView::~SampleEditorView() {}
@@ -171,10 +152,10 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
 
   // Update the waveform display if needed
-  // if (forceRedraw_) {
-  //   updateWaveformDisplay();
-  //   forceRedraw_ = false;
-  // }
+  if (forceRedraw_) {
+    updateWaveformDisplay();
+    forceRedraw_ = false;
+  }
 }
 
 void SampleEditorView::AnimationUpdate() {
@@ -184,109 +165,105 @@ void SampleEditorView::AnimationUpdate() {
 void SampleEditorView::Update(Observable &o, I_ObservableData *d) {}
 
 void SampleEditorView::updateWaveformDisplay() {
-  // TODO
-
   // if (!currentInstrument_ || !bitmapBuffer_) {
   //   return;
   // }
 
-  // // Clear the bitmap buffer
-  // bitmapgfx_clear_buffer(bitmapBuffer_, bitmapWidth_, bitmapHeight_);
+  // Clear the bitmap buffer
+  bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
 
-  // // Get the sample data
-  // SoundSource *source = currentInstrument_->GetSource(0);
-  // if (!source) {
-  //   return;
-  // }
+  // draw a line lengthwise half way down the bitmap
+  bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0,
+                      BITMAPHEIGHT / 2, BITMAPWIDTH - 1, BITMAPHEIGHT / 2,
+                      true);
 
-  // // Get sample size
-  // int sampleSize = source->GetSize(0);
-  // if (sampleSize <= 0) {
-  //   // Draw a message if no sample data is available
-  //   bitmapgfx_draw_rect(bitmapBuffer_, bitmapWidth_, bitmapHeight_, 0, 0,
-  //                       bitmapWidth_ - 1, bitmapHeight_ - 1, false, true);
-  //   return;
-  // }
+  // Get sample size directly from the instrument
+  int sampleSize = currentInstrument_->GetSampleSize();
+  if (sampleSize <= 0) {
+    // TODO show some message
+    return;
+  }
 
-  // // Get sample parameters
-  // int start = 0;
-  // int end = sampleSize - 1;
-  // int loopStart = 0;
-  // int loopMode = 0;
+  // Get sample parameters
+  int start = 0;
+  int end = sampleSize - 1;
+  int loopStart = 0;
+  int loopMode = 0;
 
-  // Variable *startVar =
-  //     currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-  // if (startVar)
-  //   start = startVar->GetInt();
+  Variable *startVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
+  if (startVar)
+    start = startVar->GetInt();
 
-  // Variable *endVar =
-  //     currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
-  // if (endVar)
-  //   end = endVar->GetInt();
+  Variable *endVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
+  if (endVar)
+    end = endVar->GetInt();
 
-  // Variable *loopStartVar =
-  //     currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
-  // if (loopStartVar)
-  //   loopStart = loopStartVar->GetInt();
+  Variable *loopStartVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
+  if (loopStartVar)
+    loopStart = loopStartVar->GetInt();
 
-  // Variable *loopModeVar =
-  //     currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
-  // if (loopModeVar)
-  //   loopMode = loopModeVar->GetInt();
+  Variable *loopModeVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
+  if (loopModeVar)
+    loopMode = loopModeVar->GetInt();
 
-  // // Ensure parameters are within valid range
-  // if (start >= sampleSize)
-  //   start = sampleSize - 1;
-  // if (end >= sampleSize)
-  //   end = sampleSize - 1;
-  // if (loopStart >= sampleSize)
-  //   loopStart = sampleSize - 1;
+  // Ensure parameters are within valid range
+  if (start >= sampleSize)
+    start = sampleSize - 1;
+  if (end >= sampleSize)
+    end = sampleSize - 1;
+  if (loopStart >= sampleSize)
+    loopStart = sampleSize - 1;
 
-  // // Draw the waveform outline
-  // bitmapgfx_draw_rect(bitmapBuffer_, bitmapWidth_, bitmapHeight_, 0, 0,
-  //                     bitmapWidth_ - 1, bitmapHeight_ - 1, false, true);
+  // Draw the waveform outline
+  bitmapgfx_draw_rect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0,
+                      BITMAPWIDTH - 1, BITMAPHEIGHT - 1, false, true);
 
-  // // Draw the waveform
-  // const short *sampleData = (const short *)source->GetSampleBuffer(0);
-  // int centerY = bitmapHeight_ / 2;
+  // For now, just draw a placeholder waveform since we can't directly access
+  // the sample buffer
+  // TODO: Implement proper waveform drawing when we have access to the sample
+  // data
+  int centerY = BITMAPHEIGHT / 2;
 
-  // // Calculate the display range based on start and end positions
-  // int displayRange = end - start;
-  // if (displayRange <= 0)
-  //   displayRange = 1;
+  // Draw a simple sine wave as placeholder
+  for (int x = 1; x < BITMAPWIDTH - 1; x++) {
+    // Calculate a simple sine wave - use 2π for a complete cycle
+    double phase = (double)x / (double)(BITMAPWIDTH - 2) * 2.0 * M_PI;
+    // Use a clearer amplitude calculation for better visualization
+    int amplitude = (BITMAPHEIGHT / 2) - 2; // Leave 2 pixels margin
+    int y = centerY - (int)(amplitude * sin(phase));
 
-  // // Draw the waveform line
-  // for (int x = 1; x < bitmapWidth_ - 1; x++) {
-  //   int sampleIndex = start + (x * displayRange) / (bitmapWidth_ - 2);
-  //   if (sampleIndex >= sampleSize)
-  //     break;
+    // Ensure y is within bounds
+    if (y < 1)
+      y = 1;
+    if (y >= BITMAPHEIGHT - 1)
+      y = BITMAPHEIGHT - 2;
 
-  //   // Scale the sample value to fit in the bitmap height
-  //   int sampleValue = sampleData[sampleIndex];
-  //   int y = centerY - (sampleValue * (centerY - 2)) / 32768;
+    // y = (x < 50) ? 10 : 30;
 
-  //   // Ensure y is within bounds
-  //   if (y < 1)
-  //     y = 1;
-  //   if (y >= bitmapHeight_ - 1)
-  //     y = bitmapHeight_ - 2;
+    // Draw the sample point
+    bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, x, y, true);
+  }
 
-  //   // Draw the sample point
-  //   bitmapgfx_set_pixel(bitmapBuffer_, bitmapWidth_, x, y, true);
-  // }
+  // Draw markers for loop points if loop mode is enabled
+  if (loopMode > 0) {
+    // Calculate x position for loop start
+    int totalRange = end - start;
+    if (totalRange <= 0)
+      totalRange = 1;
 
-  // // Draw markers for loop points if loop mode is enabled
-  // if (loopMode > 0) {
-  //   // Calculate x position for loop start
-  //   int loopX = 1 + ((loopStart - start) * (bitmapWidth_ - 2)) /
-  //   displayRange; if (loopX >= 1 && loopX < bitmapWidth_ - 1) {
-  //     // Draw vertical line for loop start
-  //     for (int y = 1; y < bitmapHeight_ - 1; y++) {
-  //       bitmapgfx_set_pixel(bitmapBuffer_, bitmapWidth_, loopX, y, true);
-  //     }
-  //   }
-  // }
+    int loopX = 1 + ((loopStart - start) * (BITMAPWIDTH - 2)) / totalRange;
+    if (loopX >= 1 && loopX < BITMAPWIDTH - 1) {
+      // Draw vertical line for loop start
+      for (int y = 1; y < BITMAPHEIGHT - 1; y++) {
+        bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y, true);
+      }
+    }
+  }
 
-  // // Update the bitmap field
-  // waveformField_[0].SetBitmap(bitmapBuffer_);
+  // Update the bitmap field
+  waveformField_[0].SetBitmap(bitmapBuffer_);
 }

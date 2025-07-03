@@ -31,29 +31,29 @@ public:
 
   // Observer for action callback
   void Update(Observable &, I_ObservableData *);
-  
+
   void AnimationUpdate() override;
 
 protected:
 private:
   // Helper methods
-  SampleInstrument* getCurrentSampleInstrument();
+  SampleInstrument *getCurrentSampleInstrument();
   void updateWaveformDisplay();
-  
+
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBitmapField, 1> waveformField_;
-  
-  // Bitmap buffer for waveform display
-  uint8_t* bitmapBuffer_;
-  int bitmapWidth_;
-  int bitmapHeight_;
-  
+
+#define BITMAPWIDTH 200
+#define BITMAPHEIGHT 40
+  // Statically allocated bitmap buffer for waveform display
+  uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT / 8];
+
   // Sample data reference
-  SampleInstrument* currentInstrument_;
-  
+  SampleInstrument *currentInstrument_;
+
   // Flag to force redraw of waveform
   bool forceRedraw_;
 };
