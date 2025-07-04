@@ -269,7 +269,8 @@ void SampleEditorView::updateWaveformDisplay() {
   int fullSampleSize = currentInstrument_->GetSampleSize();
 
   // Calculate positions for start and end markers based on their actual values
-  // Map the start position to the bitmap width - start as a fraction of fullSampleSize
+  // Map the start position to the bitmap width - start as a fraction of
+  // fullSampleSize
   int startX = 1 + (int)(((float)start / fullSampleSize) * (BITMAPWIDTH - 2));
   if (startX < 1)
     startX = 1;
@@ -284,7 +285,8 @@ void SampleEditorView::updateWaveformDisplay() {
   bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, startX, 1,
                       startX, BITMAPHEIGHT - 2, true);
 
-  // Map the end position to the bitmap width - end as a fraction of fullSampleSize
+  // Map the end position to the bitmap width - end as a fraction of
+  // fullSampleSize
   int endX = 1 + (int)(((float)end / fullSampleSize) * (BITMAPWIDTH - 2));
   if (endX < 1)
     endX = 1;
@@ -299,14 +301,19 @@ void SampleEditorView::updateWaveformDisplay() {
                       BITMAPHEIGHT - 2, true);
 
   // Draw markers for loop points if loop mode is enabled
+  // draw loop start marker as dashed line
   if (loopMode > 0) {
     // Calculate x position for loop start using the same scaling as start/end
     // markers - loopStart as a fraction of fullSampleSize
-    int loopX = 1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2));
+    int loopX =
+        1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2));
     if (loopX >= 1 && loopX < BITMAPWIDTH - 1) {
-      // Draw a simple vertical line for loop start
-      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, loopX, 1,
-                          loopX, BITMAPHEIGHT - 2, true);
+      // Draw a dashed vertical line for loop start
+      for (int y = 1; y < BITMAPHEIGHT - 2; y += 3) {
+        // Draw 2-pixel dash, then 1-pixel gap
+        bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y, true);
+        bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y + 1, true);
+      }
       printf("DEBUG: Drawing loop start line at x=%d (loopStart=%d, "
              "fullSampleSize=%d)\n",
              loopX, loopStart, fullSampleSize);
