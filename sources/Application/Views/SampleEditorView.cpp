@@ -203,6 +203,23 @@ void SampleEditorView::updateWaveformDisplay() {
     waveformField_[0].SetBitmap(bitmapBuffer_);
     return;
   }
+  
+  // Get the sample data from the instrument
+  int sampleIndex = currentInstrument_->GetSampleIndex();
+  if (sampleIndex < 0) {
+    // No valid sample index, just update the bitmap and return
+    waveformField_[0].SetBitmap(bitmapBuffer_);
+    return;
+  }
+  
+  // Get the sample source from the sample pool
+  SamplePool *pool = SamplePool::GetInstance();
+  SoundSource *source = pool->GetSource(sampleIndex);
+  if (!source) {
+    // No valid source, just update the bitmap and return
+    waveformField_[0].SetBitmap(bitmapBuffer_);
+    return;
+  }
 
   // Get sample parameters
   int start = 0;
@@ -238,32 +255,48 @@ void SampleEditorView::updateWaveformDisplay() {
   if (loopStart >= sampleSize)
     loopStart = sampleSize - 1;
 
-  // For now, just draw a placeholder waveform since we can't directly access
-  // the sample buffer
+  // Get the sample buffer
+  void* sampleBufferVoid = source->GetSampleBuffer(0); // Use note 0 as default
+  if (!sampleBufferVoid) {
+    // No sample buffer, just update the bitmap and return
+    waveformField_[0].SetBitmap(bitmapBuffer_);
+    return;
+  }
+  
+  // Cast to short* as samples are typically 16-bit
+  short* sampleBuffer = (short*)sampleBufferVoid;
+  
+  // Calculate the range for mapping sample positions to screen coordinates
+  int totalRange = end - start;
+  if (totalRange <= 0) totalRange = 1;
+  
+  // Calculate how many samples to skip between each pixel
+  float samplesPerPixel = (float)totalRange / (BITMAPWIDTH - 2);
+  
+  // Draw the actual waveform from the sample data
   int centerY = BITMAPHEIGHT / 2;
-
-  // Draw a simple sine wave as placeholder
+  
   for (int x = 1; x < BITMAPWIDTH - 1; x++) {
-    // Calculate a simple sine wave - use 2π for a complete cycle
-    double phase = (double)x / (double)(BITMAPWIDTH - 2) * 2.0 * M_PI;
-    // Use a clearer amplitude calculation for better visualization
-    int amplitude = (BITMAPHEIGHT / 2) - 2; // Leave 2 pixels margin
-    int y = centerY - (int)(amplitude * sin(phase));
-
+    // Calculate the sample index for this x position
+    int sampleIndex = start + (int)((x - 1) * samplesPerPixel);
+    
+    // Ensure the sample index is within bounds
+    if (sampleIndex < 0) sampleIndex = 0;
+    if (sampleIndex >= sampleSize) sampleIndex = sampleSize - 1;
+    
+    // Get the sample value and map it to the bitmap height
+    short sampleValue = sampleBuffer[sampleIndex];
+    
+    // Map the 16-bit sample (-32768 to 32767) to the bitmap height
+    int y = centerY - (int)((sampleValue * (BITMAPHEIGHT - 4)) / 65536);
+    
     // Ensure y is within bounds
-    if (y < 1)
-      y = 1;
-    if (y >= BITMAPHEIGHT - 1)
-      y = BITMAPHEIGHT - 2;
-
+    if (y < 1) y = 1;
+    if (y >= BITMAPHEIGHT - 1) y = BITMAPHEIGHT - 2;
+    
     // Draw the sample point
     bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, x, y, true);
   }
-
-  // Calculate the range for mapping sample positions to screen coordinates
-  int totalRange = end - start;
-  if (totalRange <= 0)
-    totalRange = 1;
 
   // Get the full sample range for proper scaling
   int fullSampleSize = currentInstrument_->GetSampleSize();
