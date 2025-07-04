@@ -39,3 +39,4 @@ usermanual/output
 usermanual/bin
 
 optbuild/**
+.windsurf/rules/**

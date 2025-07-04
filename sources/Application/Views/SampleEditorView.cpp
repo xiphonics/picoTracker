@@ -13,6 +13,7 @@
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Views/BaseClasses/ViewEvent.h"
+#include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
@@ -21,7 +22,7 @@
 #include <nanoprintf.h>
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data) {
+    : FieldView(w, data), forceRedraw_(true) {
 
   // Clear the buffer
   bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
@@ -40,26 +41,18 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
 
   // Add sample parameters if we have a valid instrument
   if (currentInstrument_) {
+    int sampleSize = currentInstrument_->GetSampleSize();
+
     // Add start position control
     position._y = 12;
     position._x = 5;
     Variable *startVar =
         currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
     if (startVar) {
-      intVarField_.emplace_back(position, *startVar, "Start: %d", 0, 65535, 1,
-                                100);
-      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-      (*intVarField_.rbegin()).AddObserver(*this);
-    }
-
-    // Add end position control
-    position._y += 1;
-    Variable *endVar =
-        currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
-    if (endVar) {
-      intVarField_.emplace_back(position, *endVar, "End: %d", 0, 65535, 1, 100);
-      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-      (*intVarField_.rbegin()).AddObserver(*this);
+      bigHexVarField_.emplace_back(position, *startVar, 7, "start: %7.7X", 0,
+                                   sampleSize - 1, 16);
+      fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+      (*bigHexVarField_.rbegin()).AddObserver(*this);
     }
 
     // Add loop start control
@@ -67,10 +60,21 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     Variable *loopStartVar =
         currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
     if (loopStartVar) {
-      intVarField_.emplace_back(position, *loopStartVar, "Loop Start: %d", 0,
-                                65535, 1, 100);
-      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-      (*intVarField_.rbegin()).AddObserver(*this);
+      bigHexVarField_.emplace_back(position, *loopStartVar, 7,
+                                   "loop start: %7.7X", 0, sampleSize - 1, 16);
+      fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+      (*bigHexVarField_.rbegin()).AddObserver(*this);
+    }
+
+    // Add end position control
+    position._y += 1;
+    Variable *endVar =
+        currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
+    if (endVar) {
+      bigHexVarField_.emplace_back(position, *endVar, 7, "loop end: %7.7X", 0,
+                                   sampleSize - 1, 16);
+      fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+      (*bigHexVarField_.rbegin()).AddObserver(*this);
     }
 
     // Add loop mode control
@@ -78,7 +82,7 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     Variable *loopModeVar =
         currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
     if (loopModeVar) {
-      intVarField_.emplace_back(position, *loopModeVar, "Loop Mode: %d", 0, 2,
+      intVarField_.emplace_back(position, *loopModeVar, "loop mode: %s", 0, 2,
                                 1, 1);
       fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
       (*intVarField_.rbegin()).AddObserver(*this);
@@ -135,6 +139,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 }
 
 void SampleEditorView::DrawView() {
+  printf("DEBUG: DrawView called\n");
   Clear();
 
   GUITextProperties props;
@@ -151,36 +156,51 @@ void SampleEditorView::DrawView() {
 
   SetColor(CD_NORMAL);
 
-  // Update the waveform display if needed
+  // DrawView should not directly update the waveform
+  // That's now handled in AnimationUpdate
+  printf("DEBUG: DrawView completed (forceRedraw_=%d)\n", forceRedraw_);
+}
+
+void SampleEditorView::AnimationUpdate() {
+  // Check if we need to update the waveform display
   if (forceRedraw_) {
+    printf("DEBUG: AnimationUpdate - updating waveform display\n");
     updateWaveformDisplay();
     forceRedraw_ = false;
   }
 }
 
-void SampleEditorView::AnimationUpdate() {
-  // No animation needed for now
+void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
+  // When any of our observed variables change, force a redraw of the waveform
+  forceRedraw_ = true;
+
+  // Simple debug logging
+  printf("DEBUG: Update called, setting forceRedraw_ flag\n");
 }
 
-void SampleEditorView::Update(Observable &o, I_ObservableData *d) {}
-
 void SampleEditorView::updateWaveformDisplay() {
-  // if (!currentInstrument_ || !bitmapBuffer_) {
-  //   return;
-  // }
-
   // Clear the bitmap buffer
-  bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
+  memset(bitmapBuffer_, 0, BITMAPWIDTH * BITMAPHEIGHT / 8);
 
-  // draw a line lengthwise half way down the bitmap
-  bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0,
-                      BITMAPHEIGHT / 2, BITMAPWIDTH - 1, BITMAPHEIGHT / 2,
-                      true);
+  // Draw a border around the waveform display
+  bitmapgfx_draw_rect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0,
+                      BITMAPWIDTH - 1, BITMAPHEIGHT - 1, false, true);
+
+  // We don't need the debug lines anymore since we confirmed they work
+  // Now let's draw the start and end point markers
+
+  // Check if we have a valid instrument
+  if (!currentInstrument_) {
+    // No instrument, just update the bitmap and return
+    waveformField_[0].SetBitmap(bitmapBuffer_);
+    return;
+  }
 
   // Get sample size directly from the instrument
   int sampleSize = currentInstrument_->GetSampleSize();
   if (sampleSize <= 0) {
-    // TODO show some message
+    // No sample data, just update the bitmap and return
+    waveformField_[0].SetBitmap(bitmapBuffer_);
     return;
   }
 
@@ -218,14 +238,8 @@ void SampleEditorView::updateWaveformDisplay() {
   if (loopStart >= sampleSize)
     loopStart = sampleSize - 1;
 
-  // Draw the waveform outline
-  bitmapgfx_draw_rect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0,
-                      BITMAPWIDTH - 1, BITMAPHEIGHT - 1, false, true);
-
   // For now, just draw a placeholder waveform since we can't directly access
   // the sample buffer
-  // TODO: Implement proper waveform drawing when we have access to the sample
-  // data
   int centerY = BITMAPHEIGHT / 2;
 
   // Draw a simple sine wave as placeholder
@@ -242,28 +256,68 @@ void SampleEditorView::updateWaveformDisplay() {
     if (y >= BITMAPHEIGHT - 1)
       y = BITMAPHEIGHT - 2;
 
-    // y = (x < 50) ? 10 : 30;
-
     // Draw the sample point
     bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, x, y, true);
   }
 
+  // Calculate the range for mapping sample positions to screen coordinates
+  int totalRange = end - start;
+  if (totalRange <= 0)
+    totalRange = 1;
+
+  // Get the full sample range for proper scaling
+  int fullSampleSize = currentInstrument_->GetSampleSize();
+
+  // Calculate positions for start and end markers based on their actual values
+  // Map the start position to the bitmap width - start as a fraction of fullSampleSize
+  int startX = 1 + (int)(((float)start / fullSampleSize) * (BITMAPWIDTH - 2));
+  if (startX < 1)
+    startX = 1;
+  if (startX >= BITMAPWIDTH - 1)
+    startX = BITMAPWIDTH - 2;
+
+  printf(
+      "DEBUG: Drawing start point line at x=%d (start=%d, fullSampleSize=%d)\n",
+      startX, start, fullSampleSize);
+
+  // Draw the start marker line
+  bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, startX, 1,
+                      startX, BITMAPHEIGHT - 2, true);
+
+  // Map the end position to the bitmap width - end as a fraction of fullSampleSize
+  int endX = 1 + (int)(((float)end / fullSampleSize) * (BITMAPWIDTH - 2));
+  if (endX < 1)
+    endX = 1;
+  if (endX >= BITMAPWIDTH - 1)
+    endX = BITMAPWIDTH - 2;
+
+  printf("DEBUG: Drawing end point line at x=%d (end=%d, fullSampleSize=%d)\n",
+         endX, end, fullSampleSize);
+
+  // Draw the end marker line
+  bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, endX, 1, endX,
+                      BITMAPHEIGHT - 2, true);
+
   // Draw markers for loop points if loop mode is enabled
   if (loopMode > 0) {
-    // Calculate x position for loop start
-    int totalRange = end - start;
-    if (totalRange <= 0)
-      totalRange = 1;
-
-    int loopX = 1 + ((loopStart - start) * (BITMAPWIDTH - 2)) / totalRange;
+    // Calculate x position for loop start using the same scaling as start/end
+    // markers - loopStart as a fraction of fullSampleSize
+    int loopX = 1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2));
     if (loopX >= 1 && loopX < BITMAPWIDTH - 1) {
-      // Draw vertical line for loop start
-      for (int y = 1; y < BITMAPHEIGHT - 1; y++) {
-        bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y, true);
-      }
+      // Draw a simple vertical line for loop start
+      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, loopX, 1,
+                          loopX, BITMAPHEIGHT - 2, true);
+      printf("DEBUG: Drawing loop start line at x=%d (loopStart=%d, "
+             "fullSampleSize=%d)\n",
+             loopX, loopStart, fullSampleSize);
     }
   }
 
   // Update the bitmap field
-  waveformField_[0].SetBitmap(bitmapBuffer_);
+  if (waveformField_.size() > 0) {
+    printf("DEBUG: Updating bitmap field with new bitmap data\n");
+    waveformField_[0].SetBitmap(bitmapBuffer_);
+    printf("DEBUG: Setting view dirty flag to force redraw\n");
+    SetDirty(true);
+  }
 }

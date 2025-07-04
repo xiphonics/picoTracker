@@ -12,6 +12,7 @@
 
 #include "Application/Instruments/SampleInstrument.h"
 #include "BaseClasses/UIActionField.h"
+#include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
@@ -42,6 +43,7 @@ private:
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
+  etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBitmapField, 1> waveformField_;
