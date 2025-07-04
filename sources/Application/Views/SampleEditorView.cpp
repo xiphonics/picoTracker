@@ -168,6 +168,10 @@ void SampleEditorView::AnimationUpdate() {
     updateWaveformDisplay();
     forceRedraw_ = false;
   }
+
+  GUITextProperties props;
+  drawBattery(props);
+  drawPowerButtonUI(props);
 }
 
 void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
