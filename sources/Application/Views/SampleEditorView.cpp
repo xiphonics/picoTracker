@@ -190,9 +190,6 @@ void SampleEditorView::updateWaveformDisplay() {
   bitmapgfx_draw_rect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0,
                       BITMAPWIDTH - 1, BITMAPHEIGHT - 1, false, true);
 
-  // We don't need the debug lines anymore since we confirmed they work
-  // Now let's draw the start and end point markers
-
   // Check if we have a valid instrument
   if (!currentInstrument_) {
     // No instrument, just update the bitmap and return
@@ -205,6 +202,7 @@ void SampleEditorView::updateWaveformDisplay() {
   if (sampleSize <= 0) {
     // No sample data, just update the bitmap and return
     waveformField_[0].SetBitmap(bitmapBuffer_);
+    Trace::Debug("No sample data, just update the bitmap");
     return;
   }
 
@@ -252,12 +250,15 @@ void SampleEditorView::updateWaveformDisplay() {
     loopMode = loopModeVar->GetInt();
 
   // Ensure parameters are within valid range
-  if (start >= sampleSize)
+  if (start >= sampleSize) {
     start = sampleSize - 1;
-  if (end >= sampleSize)
+  }
+  if (end >= sampleSize) {
     end = sampleSize - 1;
-  if (loopStart >= sampleSize)
+  }
+  if (loopStart >= sampleSize) {
     loopStart = sampleSize - 1;
+  }
 
   // Get the sample buffer
   void *sampleBufferVoid = source->GetSampleBuffer(0); // Use note 0 as default
@@ -267,23 +268,19 @@ void SampleEditorView::updateWaveformDisplay() {
     return;
   }
 
-  // Cast to short* as samples are typically 16-bit
+  // For now just assume 16-bit samples
   short *sampleBuffer = (short *)sampleBufferVoid;
 
-  // Calculate the range for mapping sample positions to screen coordinates
-  int totalRange = end - start;
-  if (totalRange <= 0)
-    totalRange = 1;
-
   // Calculate how many samples to skip between each pixel
-  float samplesPerPixel = (float)totalRange / (BITMAPWIDTH - 2);
+  // Use the full sample size to maintain scale
+  float samplesPerPixel = (float)sampleSize / (BITMAPWIDTH - 2);
 
   // Draw the actual waveform from the sample data
   int centerY = BITMAPHEIGHT / 2;
 
   for (int x = 1; x < BITMAPWIDTH - 1; x++) {
     // Calculate the sample index for this x position
-    int sampleIndex = start + (int)((x - 1) * samplesPerPixel);
+    int sampleIndex = (int)((x - 1) * samplesPerPixel);
 
     // Ensure the sample index is within bounds
     if (sampleIndex < 0)
