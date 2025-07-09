@@ -22,7 +22,8 @@
 #include <nanoprintf.h>
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data), forceRedraw_(true) {
+    : FieldView(w, data), forceRedraw_(true), isPlaying_(false),
+      isSingleCycle_(false), playbackPosition_(0.0f) {
 
   // Clear the buffer
   bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
@@ -117,11 +118,25 @@ void SampleEditorView::OnFocus() {
 }
 
 void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
-  if (!pressed) {
+  // Handle button release for PLAY button
+  if (!pressed && isPlaying_) {
+    // Stop playback when PLAY button is released
+    if (Player::GetInstance()->IsPlaying()) {
+      Player::GetInstance()->StopStreaming();
+      isPlaying_ = false;
+
+      // Force redraw to remove the playhead
+      forceRedraw_ = true;
+      updateWaveformDisplay();
+    }
     return;
   }
 
-  FieldView::ProcessButtonMask(mask, pressed);
+  // If not pressed, let parent handle it and return
+  if (!pressed) {
+    FieldView::ProcessButtonMask(mask, pressed);
+    return;
+  }
 
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
@@ -133,8 +148,71 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       return;
     }
   } else if (mask & EPBM_PLAY) {
-    Player *player = Player::GetInstance();
-    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
+    // Start sample playback if we have a valid instrument
+    if (currentInstrument_ && !isPlaying_) {
+      // Get the sample file name from the instrument's variable
+      Variable *sampleVar =
+          currentInstrument_->FindVariable(FourCC::SampleInstrumentSample);
+
+      if (sampleVar && sampleVar->GetInt() >= 0) {
+        // Get the sample filename from the variable
+        etl::string<MAX_INSTRUMENT_NAME_LENGTH> sampleFileName =
+            sampleVar->GetString();
+
+        // Get sample size to check if it's a single cycle waveform
+        int sampleSize = currentInstrument_->GetSampleSize();
+        isSingleCycle_ = (sampleSize <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
+
+        // Reset playback position
+        playbackPosition_ = 0.0f;
+
+        // If something is already playing, stop it first
+        if (Player::GetInstance()->IsPlaying()) {
+          Player::GetInstance()->StopStreaming();
+        }
+
+        // First change to the current project directory
+        auto fs = FileSystem::GetInstance();
+        fs->chdir("projects");
+
+        // Get the current project name from view data
+        if (viewData_ && viewData_->project_) {
+          char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+          viewData_->project_->GetProjectName(projectName);
+
+          // Change to the project directory
+          if (fs->chdir(projectName)) {
+            // Change to the samples directory
+            fs->chdir("samples");
+          } else {
+            Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
+                         projectName);
+          }
+        } else {
+          Trace::Error("SampleEditorView: No project data available");
+          return;
+        }
+
+        // Need to copy to a non-const char array since the Player expects char*
+        char fileNameBuffer[MAX_INSTRUMENT_NAME_LENGTH];
+        strncpy(fileNameBuffer, sampleFileName.c_str(),
+                sizeof(fileNameBuffer) - 1);
+        fileNameBuffer[sizeof(fileNameBuffer) - 1] = '\0';
+
+        // Start playing the sample with just the filename
+        if (isSingleCycle_) {
+          Player::GetInstance()->StartLoopingStreaming(fileNameBuffer);
+        } else {
+          Player::GetInstance()->StartStreaming(fileNameBuffer);
+        }
+
+        isPlaying_ = true;
+
+        // Force redraw to show the playhead
+        forceRedraw_ = true;
+        updateWaveformDisplay();
+      }
+    }
   }
 }
 
@@ -162,9 +240,43 @@ void SampleEditorView::DrawView() {
 }
 
 void SampleEditorView::AnimationUpdate() {
+  // Update playhead position if sample is playing
+  if (isPlaying_ && currentInstrument_) {
+    // Check if the Player is still playing the sample
+    if (!Player::GetInstance()->IsPlaying()) {
+      // Playback has stopped (reached the end of non-looping sample)
+      isPlaying_ = false;
+      playbackPosition_ = 0.0f;
+      forceRedraw_ = true;
+      updateWaveformDisplay();
+    } else {
+      // Advance the playback position for visualization
+      if (isSingleCycle_) {
+        // dont try to show playhead for single cycle waveforms
+      } else {
+        // For regular samples, calculate advancement based on known rates
+        // Animation update runs at 50Hz and sample rate is 44.1kHz
+        // So in one animation frame, we advance by (44100 / 50) = 882 samples
+        int sampleSize = currentInstrument_->GetSampleSize();
+        if (sampleSize > 0) {
+          float samplesPerFrame = 882.0f; // 44100 / 50
+          float advanceAmount = samplesPerFrame / sampleSize;
+          playbackPosition_ += advanceAmount;
+          if (playbackPosition_ >= 1.0f) {
+            playbackPosition_ = 1.0f;
+            isPlaying_ = false; // Reached end of sample
+          }
+          forceRedraw_ = true;
+        }
+      }
+
+      // Force redraw to update the playhead position
+      forceRedraw_ = true;
+    }
+  }
+
   // Check if we need to update the waveform display
   if (forceRedraw_) {
-    printf("DEBUG: AnimationUpdate - updating waveform display\n");
     updateWaveformDisplay();
     forceRedraw_ = false;
   }
@@ -339,6 +451,21 @@ void SampleEditorView::updateWaveformDisplay() {
   bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, endX, 1, endX,
                       BITMAPHEIGHT - 2, true);
 
+  // Draw playhead if we're playing
+  if (isPlaying_) {
+    // Calculate playhead position based on playbackPosition_
+    int playheadX = 1 + (int)(playbackPosition_ * (BITMAPWIDTH - 2));
+    if (playheadX < 1)
+      playheadX = 1;
+    if (playheadX >= BITMAPWIDTH - 1)
+      playheadX = BITMAPWIDTH - 2;
+
+    // Draw the playhead with a different pattern (dashed line)
+    for (int y = 1; y < BITMAPHEIGHT - 2; y += 2) {
+      bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, playheadX, y, true);
+    }
+  }
+
   // Draw markers for loop points if loop mode is enabled
   // draw loop start marker as dashed line
   if (loopMode > 0) {
@@ -359,11 +486,43 @@ void SampleEditorView::updateWaveformDisplay() {
     }
   }
 
-  // Update the bitmap field
+  // Draw the playhead indicator if the sample is playing
+  if (isPlaying_) {
+    // Calculate the x position for the playhead based on the playbackPosition_
+    int playheadX = 1 + (int)(playbackPosition_ * (BITMAPWIDTH - 2));
+    if (playheadX < 1)
+      playheadX = 1;
+    if (playheadX >= BITMAPWIDTH - 1)
+      playheadX = BITMAPWIDTH - 2;
+
+    // Draw a thick vertical line for better visibility
+    for (int offset = -1; offset <= 1; offset++) {
+      int x = playheadX + offset;
+      if (x >= 1 && x < BITMAPWIDTH - 1) {
+        bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 1, x,
+                            BITMAPHEIGHT - 2, true);
+      }
+    }
+
+    // Draw a triangle at the top of the playhead
+    for (int y = 0; y < 3; y++) {
+      for (int x = -y; x <= y; x++) {
+        int px = playheadX + x;
+        int py = y;
+        if (px >= 1 && px < BITMAPWIDTH - 1 && py < BITMAPHEIGHT - 2) {
+          bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, px, py, true);
+        }
+      }
+    }
+  }
+
+  // Update the bitmap field and request redraw
   if (waveformField_.size() > 0) {
-    printf("DEBUG: Updating bitmap field with new bitmap data\n");
     waveformField_[0].SetBitmap(bitmapBuffer_);
-    printf("DEBUG: Setting view dirty flag to force redraw\n");
     SetDirty(true);
+    // Force immediate redraw of the view
+    if (isPlaying_) {
+      Redraw();
+    }
   }
 }

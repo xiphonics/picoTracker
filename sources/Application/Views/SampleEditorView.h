@@ -58,5 +58,10 @@ private:
 
   // Flag to force redraw of waveform
   bool forceRedraw_;
+  
+  // Playback state
+  bool isPlaying_;
+  bool isSingleCycle_; // Whether the sample is a single cycle waveform
+  float playbackPosition_; // Current playback position as a fraction (0.0-1.0)
 };
 #endif
