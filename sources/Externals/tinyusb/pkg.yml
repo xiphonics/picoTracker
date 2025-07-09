@@ -1,0 +1,14 @@
+pkg.name: tinyusb
+pkg.description: An open source cross-platform USB stack for embedded system
+pkg.author: "Ha Thach <thach@tinyusb.org>"
+pkg.homepage: "https://github.com/hathach/tinyusb"
+pkg.keywords:
+    - usb
+
+pkg.type: sdk
+
+pkg.deps:
+    - "@apache-mynewt-core/kernel/os"
+
+pkg.include_dirs:
+    - src

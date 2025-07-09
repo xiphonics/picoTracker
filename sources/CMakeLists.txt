@@ -193,7 +193,8 @@ else()
 
   add_subdirectory(Externals/FreeRTOS-Kernel)
   add_subdirectory(Externals/FatFs)
-
+  add_subdirectory(Externals/tinyusb)
+  
   # TODO: Add ETL here
   # cubemx and freertos is included on all targets
   link_libraries(stm32cubemx freertos_kernel)
