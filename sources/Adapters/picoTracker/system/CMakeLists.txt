@@ -16,6 +16,7 @@ target_link_libraries(platform_system INTERFACE system_system PUBLIC
   platform_display
   etl
   platform_usb
+  sdfat
 )
 
 
