@@ -23,7 +23,7 @@
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), forceRedraw_(true), isPlaying_(false),
-      isSingleCycle_(false), playbackPosition_(0.0f) {
+      isSingleCycle_(false), playbackPosition_(0), positionScale_(0) {
 
   // Clear the buffer
   bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
@@ -162,13 +162,22 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         // Get sample size to check if it's a single cycle waveform
         int sampleSize = currentInstrument_->GetSampleSize();
         isSingleCycle_ = (sampleSize <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
-        
-        printf("DEBUG: Starting playback of sample '%s' (size=%d, singleCycle=%s)\n", 
-               sampleFileName.c_str(), sampleSize, isSingleCycle_ ? "true" : "false");
+
+        printf("DEBUG: Starting playback of sample '%s' (size=%d, "
+               "singleCycle=%s)\n",
+               sampleFileName.c_str(), sampleSize,
+               isSingleCycle_ ? "true" : "false");
 
         // Reset playback state
         isPlaying_ = true;
-        playbackPosition_ = 0.0f;
+        playbackPosition_ = 0;
+        // Set position scale based on sample size (samples per pixel)
+        positionScale_ = sampleSize / (BITMAPWIDTH - 2);
+        if (positionScale_ == 0)
+          positionScale_ = 1; // Avoid division by zero
+        printf("DEBUG: Playback initialized - sampleSize: %d, positionScale_: "
+               "%u\n",
+               sampleSize, positionScale_);
         forceRedraw_ = true;
 
         // If something is already playing, stop it first
@@ -246,7 +255,7 @@ void SampleEditorView::AnimationUpdate() {
     if (!Player::GetInstance()->IsPlaying()) {
       // Playback has stopped (reached the end of non-looping sample)
       isPlaying_ = false;
-      playbackPosition_ = 0.0f;
+      playbackPosition_ = 0;
       forceRedraw_ = true;
       printf("DEBUG: Playback stopped, resetting playhead\n");
     } else {
@@ -255,19 +264,19 @@ void SampleEditorView::AnimationUpdate() {
         // For regular samples, calculate advancement based on known rates
         // Animation update runs at 50Hz and sample rate is 44.1kHz
         // So in one animation frame, we advance by (44100 / 50) = 882 samples
-        int sampleSize = currentInstrument_->GetSampleSize();
+        uint32_t sampleSize = currentInstrument_->GetSampleSize();
         if (sampleSize > 0) {
-          float samplesPerFrame = 882.0f; // 44100 / 50
-          float advanceAmount = samplesPerFrame / sampleSize;
-          playbackPosition_ += advanceAmount;
-          
-          if (playbackPosition_ >= 1.0f) {
-            playbackPosition_ = 1.0f;
-            isPlaying_ = false; // Reached end of sample
+          // Update position (in samples)
+          playbackPosition_ += 882;
+
+          // Check if we've reached/passed the end of the sample
+          if (playbackPosition_ >= sampleSize) {
+            playbackPosition_ = sampleSize - 1; // Stay at last sample
+            isPlaying_ = false;                 // Reached end of sample
             printf("DEBUG: Reached end of sample, stopping playback\n");
           }
-          
-          printf("DEBUG: Updated playhead position: %.4f\n", playbackPosition_);
+
+          printf("DEBUG: Updated playhead position: %u\n", playbackPosition_);
           forceRedraw_ = true;
         }
       }
@@ -487,19 +496,24 @@ void SampleEditorView::updateWaveformDisplay() {
 
   // Draw the playhead indicator if the sample is playing
   if (isPlaying_) {
-    // Calculate the x position for the playhead based on the playbackPosition_
-    int playheadX = 1 + (int)(playbackPosition_ * (BITMAPWIDTH - 2));
-    if (playheadX < 1) playheadX = 1;
-    if (playheadX >= BITMAPWIDTH - 1) playheadX = BITMAPWIDTH - 2;
-    
-    printf("DEBUG: Drawing playhead at x=%d (position=%.4f)\n", playheadX, playbackPosition_);
+    // Calculate the x position for the playhead using integer division
+    int playheadX = 1 + (playbackPosition_ / positionScale_);
+
+    // Clamp the position to valid range
+    if (playheadX < 1)
+      playheadX = 1;
+    if (playheadX >= BITMAPWIDTH - 1)
+      playheadX = BITMAPWIDTH - 2;
+
+    printf("DEBUG: Drawing playhead at x=%d (sample=%u, scale=%u)\n", playheadX,
+           playbackPosition_, positionScale_);
 
     // Draw a thick vertical line for better visibility
     for (int offset = -1; offset <= 1; offset++) {
       int x = playheadX + offset;
       if (x >= 1 && x < BITMAPWIDTH - 1) {
-        bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 
-                           x, 1, x, BITMAPHEIGHT - 2, true);
+        bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 1, x,
+                            BITMAPHEIGHT - 2, true);
       }
     }
 

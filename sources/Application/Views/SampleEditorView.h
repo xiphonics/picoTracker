@@ -62,6 +62,8 @@ private:
   // Playback state
   bool isPlaying_;
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
-  float playbackPosition_; // Current playback position as a fraction (0.0-1.0)
+
+  uint32_t playbackPosition_;
+  uint32_t positionScale_;
 };
 #endif
