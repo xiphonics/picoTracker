@@ -176,7 +176,7 @@ void picoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
   }
   */
 
-  int32_t index = 0;
+  uint32_t index = 0;
   FILINFO fno;
   uint16_t count = 0;
 
@@ -236,7 +236,7 @@ void picoFileSystem::getFileName(int index, char *name, int length) {
 FILINFO picoFileSystem::fileFromIndex(int index) {
   FILINFO fno;
   FRESULT res = f_getcwd(filepath, 256);
-  uint32_t count = 0;
+  int32_t count = 0;
   if (res == FR_OK) {
     DIR dir;
     res = f_opendir(&dir, filepath);
@@ -493,6 +493,7 @@ void PI_File::Seek(long offset, int whence) {
   }
   */
   FRESULT res;
+  UNUSED(res);
   switch (whence) {
   case SEEK_SET:
     res = f_lseek(&file_, offset);

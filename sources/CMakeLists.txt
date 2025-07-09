@@ -3,6 +3,27 @@ cmake_minimum_required(VERSION 3.13)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile_commands.json")
+
+add_compile_options(
+  -Werror
+  -Wall
+  -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+  -fstack-usage
+  -fcallgraph-info=su # include above info in callgraph
+  -Wstack-usage=2048 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
+  # TODO: SHOULD FIX
+  -Wno-int-to-pointer-cast
+  
+  # braids
+  -Wno-unused-variable
+  -Wno-array-bounds
+
+  # stm HAL
+  -Wno-unused-parameter
+  -Wno-missing-field-initializers
+)
+
 if (NOT DEFINED ADV)
   set(ADV false)
 endif()
@@ -220,17 +241,3 @@ add_subdirectory(Externals)
 add_subdirectory(Services)
 add_subdirectory(Foundation)
 
-add_compile_options(
-  -Werror
-  -Wall
-  -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
-  -fstack-usage
-  -fcallgraph-info=su # include above info in callgraph
-  -Wstack-usage=2048 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
-  # TODO: SHOULD FIX
-  -Wno-int-to-pointer-cast
-  
-  # braids
-  -Wno-unused-variable
-  -Wno-array-bounds
-)

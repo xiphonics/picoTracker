@@ -14,6 +14,7 @@
 #include "ltdc.h"
 
 /* USER CODE BEGIN 0 */
+#include <string.h>
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
 uint32_t framebuffer[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT];
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))

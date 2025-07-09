@@ -15,9 +15,10 @@ void advUSBMidiOutDevice::Stop() {}
 
 void advUSBMidiOutDevice::SendMessage(MidiMessage &msg) {
   uint8_t midicmd[3] = {0, 0, 0};
+  UNUSED(midicmd);
 
   // TODO(stm): implement this
-  midicmd[0] = msg.status_;
+  //  midicmd[0] = msg.status_;
   if (msg.status_ < 0xF0) {
     midicmd[1] = msg.data1_;
     midicmd[2] = msg.data2_;

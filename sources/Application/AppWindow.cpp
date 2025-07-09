@@ -821,7 +821,7 @@ void AppWindow::Print(char *line) {
 
 void AppWindow::SetColor(ColorDefinition cd) {
   // Ensure color index is within valid range (0-15)
-  if (cd >= 0 && cd <= CD_EMPHASIS) {
+  if (cd <= CD_EMPHASIS) {
     colorIndex_ = cd;
   } else {
     Trace::Error("APPWINDOW", "Invalid color index: %d", cd);
