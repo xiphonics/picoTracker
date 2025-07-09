@@ -3,7 +3,7 @@
 
 #define MAX_PROFILERS 4
 
-#include "Adapters/picoTracker/utils/utils.h"
+#include "platform.h"
 #include <Externals/etl/include/etl/map.h>
 #include <Externals/etl/include/etl/string.h>
 #include <System/Console/Trace.h>
