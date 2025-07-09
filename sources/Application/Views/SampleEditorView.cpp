@@ -162,12 +162,18 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         // Get sample size to check if it's a single cycle waveform
         int sampleSize = currentInstrument_->GetSampleSize();
         isSingleCycle_ = (sampleSize <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
+        
+        printf("DEBUG: Starting playback of sample '%s' (size=%d, singleCycle=%s)\n", 
+               sampleFileName.c_str(), sampleSize, isSingleCycle_ ? "true" : "false");
 
-        // Reset playback position
+        // Reset playback state
+        isPlaying_ = true;
         playbackPosition_ = 0.0f;
+        forceRedraw_ = true;
 
         // If something is already playing, stop it first
         if (Player::GetInstance()->IsPlaying()) {
+          printf("DEBUG: Stopping existing playback\n");
           Player::GetInstance()->StopStreaming();
         }
 
@@ -193,17 +199,11 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
           return;
         }
 
-        // Need to copy to a non-const char array since the Player expects char*
-        char fileNameBuffer[MAX_INSTRUMENT_NAME_LENGTH];
-        strncpy(fileNameBuffer, sampleFileName.c_str(),
-                sizeof(fileNameBuffer) - 1);
-        fileNameBuffer[sizeof(fileNameBuffer) - 1] = '\0';
-
         // Start playing the sample with just the filename
         if (isSingleCycle_) {
-          Player::GetInstance()->StartLoopingStreaming(fileNameBuffer);
+          Player::GetInstance()->StartLoopingStreaming(sampleFileName.c_str());
         } else {
-          Player::GetInstance()->StartStreaming(fileNameBuffer);
+          Player::GetInstance()->StartStreaming(sampleFileName.c_str());
         }
 
         isPlaying_ = true;
@@ -248,12 +248,10 @@ void SampleEditorView::AnimationUpdate() {
       isPlaying_ = false;
       playbackPosition_ = 0.0f;
       forceRedraw_ = true;
-      updateWaveformDisplay();
+      printf("DEBUG: Playback stopped, resetting playhead\n");
     } else {
       // Advance the playback position for visualization
-      if (isSingleCycle_) {
-        // dont try to show playhead for single cycle waveforms
-      } else {
+      if (!isSingleCycle_) {
         // For regular samples, calculate advancement based on known rates
         // Animation update runs at 50Hz and sample rate is 44.1kHz
         // So in one animation frame, we advance by (44100 / 50) = 882 samples
@@ -262,16 +260,17 @@ void SampleEditorView::AnimationUpdate() {
           float samplesPerFrame = 882.0f; // 44100 / 50
           float advanceAmount = samplesPerFrame / sampleSize;
           playbackPosition_ += advanceAmount;
+          
           if (playbackPosition_ >= 1.0f) {
             playbackPosition_ = 1.0f;
             isPlaying_ = false; // Reached end of sample
+            printf("DEBUG: Reached end of sample, stopping playback\n");
           }
+          
+          printf("DEBUG: Updated playhead position: %.4f\n", playbackPosition_);
           forceRedraw_ = true;
         }
       }
-
-      // Force redraw to update the playhead position
-      forceRedraw_ = true;
     }
   }
 
@@ -490,17 +489,17 @@ void SampleEditorView::updateWaveformDisplay() {
   if (isPlaying_) {
     // Calculate the x position for the playhead based on the playbackPosition_
     int playheadX = 1 + (int)(playbackPosition_ * (BITMAPWIDTH - 2));
-    if (playheadX < 1)
-      playheadX = 1;
-    if (playheadX >= BITMAPWIDTH - 1)
-      playheadX = BITMAPWIDTH - 2;
+    if (playheadX < 1) playheadX = 1;
+    if (playheadX >= BITMAPWIDTH - 1) playheadX = BITMAPWIDTH - 2;
+    
+    printf("DEBUG: Drawing playhead at x=%d (position=%.4f)\n", playheadX, playbackPosition_);
 
     // Draw a thick vertical line for better visibility
     for (int offset = -1; offset <= 1; offset++) {
       int x = playheadX + offset;
       if (x >= 1 && x < BITMAPWIDTH - 1) {
-        bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 1, x,
-                            BITMAPHEIGHT - 2, true);
+        bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 
+                           x, 1, x, BITMAPHEIGHT - 2, true);
       }
     }
 

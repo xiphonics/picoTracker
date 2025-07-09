@@ -38,7 +38,7 @@ AudioFileStreamer::AudioFileStreamer() {
 
 AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
 
-bool AudioFileStreamer::Start(char *name) {
+bool AudioFileStreamer::Start(const char *name) {
   Trace::Debug("Starting to stream:%s", name);
   strcpy(name_, name);
   newPath_ = true;
@@ -46,7 +46,7 @@ bool AudioFileStreamer::Start(char *name) {
   return true;
 };
 
-bool AudioFileStreamer::StartLooping(char *name) {
+bool AudioFileStreamer::StartLooping(const char *name) {
   Trace::Debug("Starting to loop:%s", name);
   strcpy(name_, name);
   newPath_ = true;

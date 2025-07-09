@@ -166,9 +166,11 @@ bool PlayerMixer::IsChannelMuted(int channel) {
   return channel_[channel]->IsMuted();
 }
 
-void PlayerMixer::StartStreaming(char *name) { fileStreamer_.Start(name); };
+void PlayerMixer::StartStreaming(const char *name) {
+  fileStreamer_.Start(name);
+};
 
-void PlayerMixer::StartLoopingStreaming(char *name) {
+void PlayerMixer::StartLoopingStreaming(const char *name) {
   fileStreamer_.StartLooping(name);
 };
 

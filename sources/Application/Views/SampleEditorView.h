@@ -58,7 +58,7 @@ private:
 
   // Flag to force redraw of waveform
   bool forceRedraw_;
-  
+
   // Playback state
   bool isPlaying_;
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
