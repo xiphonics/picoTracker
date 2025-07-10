@@ -19,7 +19,6 @@
 #include "BaseClasses/UIStaticField.h"
 #include <bitmapgfx.h>
 #include <cstdint>
-#include <nanoprintf.h>
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), forceRedraw_(true), isPlaying_(false),
@@ -271,12 +270,21 @@ void SampleEditorView::AnimationUpdate() {
 
           // Check if we've reached/passed the end of the sample
           if (playbackPosition_ >= sampleSize) {
-            playbackPosition_ = sampleSize - 1; // Stay at last sample
-            isPlaying_ = false;                 // Reached end of sample
-            printf("DEBUG: Reached end of sample, stopping playback\n");
+            playbackPosition_ = sampleSize; // Stay at last sample
+            isPlaying_ = false;             // Reached end of sample
+
+            // Calculate and log the final playhead X position
+            int finalX = 1 + (playbackPosition_ / positionScale_);
+            if (finalX >= BITMAPWIDTH - 1)
+              finalX = BITMAPWIDTH - 2;
+
+            Trace::Debug(
+                "DEBUG: Reached end at sample %u, final X=%d (BITMAPWIDTH=%d)",
+                playbackPosition_, finalX, BITMAPWIDTH);
           }
 
-          printf("DEBUG: Updated playhead position: %u\n", playbackPosition_);
+          Trace::Debug("DEBUG: Updated playhead position: %u",
+                       playbackPosition_);
           forceRedraw_ = true;
         }
       }
@@ -299,7 +307,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   forceRedraw_ = true;
 
   // Simple debug logging
-  printf("DEBUG: Update called, setting forceRedraw_ flag\n");
+  Trace::Debug("DEBUG: Update called, setting forceRedraw_ flag");
 }
 
 void SampleEditorView::updateWaveformDisplay() {
@@ -436,8 +444,8 @@ void SampleEditorView::updateWaveformDisplay() {
   if (startX >= BITMAPWIDTH - 1)
     startX = BITMAPWIDTH - 2;
 
-  printf(
-      "DEBUG: Drawing start point line at x=%d (start=%d, fullSampleSize=%d)\n",
+  Trace::Debug(
+      "DEBUG: Drawing start point line at x=%d (start=%d, fullSampleSize=%d)",
       startX, start, fullSampleSize);
 
   // Draw the start marker line
@@ -452,8 +460,9 @@ void SampleEditorView::updateWaveformDisplay() {
   if (endX >= BITMAPWIDTH - 1)
     endX = BITMAPWIDTH - 2;
 
-  printf("DEBUG: Drawing end point line at x=%d (end=%d, fullSampleSize=%d)\n",
-         endX, end, fullSampleSize);
+  Trace::Debug(
+      "DEBUG: Drawing end point line at x=%d (end=%d, fullSampleSize=%d)", endX,
+      end, fullSampleSize);
 
   // Draw the end marker line
   bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, endX, 1, endX,
@@ -488,9 +497,9 @@ void SampleEditorView::updateWaveformDisplay() {
         bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y, true);
         bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y + 1, true);
       }
-      printf("DEBUG: Drawing loop start line at x=%d (loopStart=%d, "
-             "fullSampleSize=%d)\n",
-             loopX, loopStart, fullSampleSize);
+      Trace::Debug("DEBUG: Drawing loop start line at x=%d (loopStart=%d, "
+                   "fullSampleSize=%d)\n",
+                   loopX, loopStart, fullSampleSize);
     }
   }
 
@@ -505,8 +514,8 @@ void SampleEditorView::updateWaveformDisplay() {
     if (playheadX >= BITMAPWIDTH - 1)
       playheadX = BITMAPWIDTH - 2;
 
-    printf("DEBUG: Drawing playhead at x=%d (sample=%u, scale=%u)\n", playheadX,
-           playbackPosition_, positionScale_);
+    Trace::Debug("DEBUG: Drawing playhead at x=%d (sample=%u, scale=%u)\n",
+                 playheadX, playbackPosition_, positionScale_);
 
     // Draw a thick vertical line for better visibility
     for (int offset = -1; offset <= 1; offset++) {
