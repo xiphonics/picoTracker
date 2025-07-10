@@ -15,11 +15,13 @@ add_library(application_views_baseclasses
   UIBitmaskVarField.cpp
   View.cpp
   ViewEvent.cpp
+  UIBitmapField.cpp
 )
 
 target_link_libraries(application_views_baseclasses PUBLIC
   application_utils
   system_console
+  platform_display
 )
 
 target_include_directories(application_views_baseclasses PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
