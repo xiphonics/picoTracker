@@ -9,6 +9,7 @@
 #include "platform.h"
 #include "tim.h"
 #include "timers.h"
+#include "tusb.h"
 
 #ifdef SERIAL_REPL
 #include "SerialDebugUI.h"
@@ -166,7 +167,7 @@ void timerStatsHandler(TimerHandle_t xTimer) {
   if (ulTotalRunTime > 0) {
     // For each populated position in the pxTaskStatusArray array,
     // format the raw data as human readable ASCII data.
-    for (x = 0; x < uxArraySize; x++) {
+    for (uint32_t x = 0; x < uxArraySize; x++) {
       if (stats.contains(pxTaskStatusArray[x].pcTaskName)) {
         deltaPercentage = (pxTaskStatusArray[x].ulRunTimeCounter -
                            stats[pxTaskStatusArray[x].pcTaskName]) /
@@ -226,6 +227,13 @@ void ProcessEvent(void *) {
     // waiting for an event
     vTaskDelay(50 / portTICK_PERIOD_MS);
     //    Trace::Debug("Process event");
+  }
+}
+
+void USBDevice(void *) {
+  for (;;) {
+    tud_task();                    // Handle USB device events
+    vTaskDelay(pdMS_TO_TICKS(10)); // TODO: What's needed here?
   }
 }
 
@@ -305,34 +313,15 @@ int advEventManager::MainLoop() {
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(ProcessEvent, "ProcEvent", 1000, NULL, 1, ProcessEventStack,
                     &ProcessEventTCB);
+
+  static StackType_t USBDeviceStack[512];
+  static StaticTask_t USBDeviceTCB;
+  xTaskCreateStatic(USBDevice, "USB Device", 512, NULL, tskIDLE_PRIORITY + 2,
+                    USBDeviceStack, &USBDeviceTCB);
+
   vTaskStartScheduler();
   // we never get here
 
-  while (!finished_) {
-    loops++;
-
-    // process usb interrupts, should this be done somewhere else??
-    //    handleUSBInterrupts();
-
-    //    ProcessInputEvent();
-    if (!queue->empty()) {
-      advEvent event(advEventType::LAST);
-      queue->pop_into(event);
-      events++;
-      redrawing_ = true;
-      advGUIWindowImp::ProcessEvent(event);
-      redrawing_ = false;
-    }
-#ifdef PICOSTATS
-    if (loops == 100000) {
-      Trace::Debug("Usage %.1f% CPU\n", ((float)events / loops) * 100);
-      events = 0;
-      loops = 0;
-      //      measure_freqs();
-      measure_free_mem();
-    }
-#endif
-  }
   // TODO: HW Shutdown
   return 0;
 }
