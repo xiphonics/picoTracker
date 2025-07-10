@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  *
  */
-// #include "pico/unique_id.h"
+#include "serial.h"
 #include "tusb.h"
 
 #define USB_VID 0x2E8A
