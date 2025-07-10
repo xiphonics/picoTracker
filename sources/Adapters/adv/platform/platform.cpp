@@ -1,9 +1,18 @@
 #include "platform.h"
 #include "Adapters/adv/mutex/advMutex.h"
+#include "System/Console/Trace.h"
+#include "rng.h"
 #include "tim.h"
 
-// TODO(democloid): implement this
-int32_t platform_get_rand() { return 0; };
+int32_t platform_get_rand() {
+  uint32_t random32;
+  if (HAL_RNG_GenerateRandomNumber(&hrng, &random32) == HAL_OK) {
+    return (int32_t)random32;
+  } else {
+    Trace::Error("Error generating random number");
+    return 0;
+  }
+};
 
 void platform_reboot() { NVIC_SystemReset(); };
 
