@@ -36,7 +36,7 @@ static void SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram) {
   /* Send the command */
   HAL_StatusTypeDef status =
       HAL_SDRAM_SendCommand(hsdram, &command, SDRAM_TIMEOUT);
-  //  Trace::Log("INFO", "Status clock config: %i\r\n", status);
+  UNUSED(status);
 
   /* Step 2: Insert 100 us minimum delay */
   /* Inserted delay is equal to 1 ms due to systick time base unit (ms) */

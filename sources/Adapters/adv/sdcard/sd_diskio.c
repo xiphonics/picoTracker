@@ -106,7 +106,7 @@ static DRESULT SD_DMA_read(BYTE lun, BYTE *buff, LBA_t sector, UINT count) {
   DRESULT res = RES_ERROR;
   uint32_t timeout;
   uint8_t ret;
-  int i;
+  uint32_t i;
 
   if (SD_check_status_with_timeout(SD_TIMEOUT) < 0) {
     return res;
@@ -192,7 +192,7 @@ static DRESULT SD_DMA_write(BYTE lun, const BYTE *buff, LBA_t sector,
   DRESULT res = RES_ERROR;
   uint32_t timeout;
   uint8_t ret;
-  int i;
+  uint32_t i;
 
   if (SD_check_status_with_timeout(SD_TIMEOUT) < 0) {
     return res;
