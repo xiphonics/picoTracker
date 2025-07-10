@@ -1,6 +1,11 @@
 #include "platform.h"
 #include "Adapters/adv/mutex/advMutex.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "tim.h"
+
+SemaphoreHandle_t sd_semaphore = NULL;
+StaticSemaphore_t sd_semaphoreBuffer;
 
 // TODO(democloid): implement this
 int32_t platform_get_rand() { return 0; };
@@ -61,4 +66,19 @@ uint32_t micros(void) { return __HAL_TIM_GET_COUNTER(&htim2); }
 
 void pt_uart_putc(int c, void *context) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
+}
+
+// TODO: What's the right place for this?
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == SD_DET_Pin) {
+    if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
+      // SD card inserted
+      BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+      xSemaphoreGiveFromISR(sd_semaphore, &xHigherPriorityTaskWoken);
+      portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    } else {
+      // We don't yet do anything for SD Card removed, could actually unlink FS
+      // on removal
+    }
+  }
 }

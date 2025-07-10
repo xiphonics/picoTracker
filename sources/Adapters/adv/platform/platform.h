@@ -10,12 +10,17 @@
 #include "System/Process/SysMutex.h"
 #include <cstdint>
 
+#include "FreeRTOS.h"
 #include "main.h"
+#include "semphr.h"
 #include "usart.h"
 
 #define BOOTLOADER_ADDR 0x81e0000U
 
 typedef void (*pFunction)(void);
+
+extern SemaphoreHandle_t sd_semaphore;
+extern StaticSemaphore_t sd_semaphoreBuffer;
 
 int32_t platform_get_rand();
 
