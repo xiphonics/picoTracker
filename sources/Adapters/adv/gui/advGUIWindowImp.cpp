@@ -198,7 +198,7 @@ void advGUIWindowImp::ProcessButtonChange(uint16_t changeMask,
   int e = 1;
   System *system = System::GetInstance();
   unsigned long now = system->GetClock();
-  for (int i = 0; i < sizeof(eventMappingPico); i++) {
+  for (uint32_t i = 0; i < sizeof(eventMappingPico); i++) {
     if (changeMask & e) {
       GUIEventType type = (buttonMask & e) ? ET_PADBUTTONDOWN : ET_PADBUTTONUP;
 
