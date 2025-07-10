@@ -13,6 +13,7 @@
 #include "critical_error_message.h"
 #include "i2c.h"
 #include "input.h"
+#include "platform.h"
 #include "tim.h"
 #include <assert.h>
 #include <fcntl.h>
@@ -129,8 +130,7 @@ void advSystem::GetBatteryState(BatteryState &state) {
 }
 
 void advSystem::SetDisplayBrightness(unsigned char value) {
-  // TODO: Implement display brightness control for advPlus
-  // using PWM control of the backlight
+  platform_brightness(value);
 }
 
 void advSystem::Sleep(int millisec) {
