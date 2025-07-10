@@ -51,7 +51,7 @@ void TIM8_UP_TIM13_IRQHandler(void);
 void SDMMC1_IRQHandler(void);
 void DMA2D_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-
+void OTG_HS_IRQHandler(void);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

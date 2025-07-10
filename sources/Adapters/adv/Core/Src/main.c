@@ -32,6 +32,7 @@
 #include "Application/Application.h"
 #include "Trace.h"
 #include "display.h"
+#include "tusb.h"
 #include <cstdio>
 /* USER CODE END Includes */
 
@@ -139,6 +140,10 @@ int main(void) {
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   Trace::Log("INFO", "picoTracker Advance init...");
+
+  tusb_rhport_init_t dev_init = {.role = TUSB_ROLE_DEVICE,
+                                 .speed = TUSB_SPEED_AUTO};
+  tusb_init(1, &dev_init);
 
   advSystem::Boot();
 
