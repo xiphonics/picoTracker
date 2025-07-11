@@ -69,6 +69,8 @@ void SampleEditorView::addAllFields() {
   intVarField_.clear();
   actionField_.clear();
   waveformField_.clear();
+  nameTextField_.clear();
+  nameVariables_.clear();
   // no need to clear staticField_ as they are not added to fieldList_
 
   GUIPoint position = GetAnchor();
@@ -77,7 +79,7 @@ void SampleEditorView::addAllFields() {
   // initially Add sample parameters if we have a valid instrument
   if (currentInstrument_) {
     // Add waveform display field
-    position._y = 4;
+    position._y = 2;
     position._x = 0; // start at the left edge of the window
     waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
                                 bitmapBuffer_, 0xFFFF, 0x0000);
@@ -85,10 +87,26 @@ void SampleEditorView::addAllFields() {
 
     int sampleSize = currentInstrument_->GetSampleSize();
 
-    // Add start position control
-    GUIPoint position;
-    position._y = 15; // offset enough for bitmap field
+    position._y = 12; // offset enough for bitmap field
     position._x = 5;
+
+    nameVariables_.emplace_back(currentInstrument_);
+    Variable &nameVar = *nameVariables_.rbegin();
+
+    auto label =
+        etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
+
+    // Use an empty default name - we don't want to populate with sample
+    // filename The display name will still be shown on the phrase screen via
+    // GetDisplayName()
+    etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName;
+
+    nameTextField_.emplace_back(nameVar, position, label,
+                                FourCC::InstrumentName, defaultName);
+    fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
+
+    position._y += 1;
+
     Variable *startVar =
         currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
     if (startVar) {

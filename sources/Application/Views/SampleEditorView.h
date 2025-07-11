@@ -10,12 +10,14 @@
 #ifndef _SAMPLE_EDITOR_VIEW_H_
 #define _SAMPLE_EDITOR_VIEW_H_
 
+#include "Application/Instruments/InstrumentNameVariable.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
+#include "BaseClasses/UITextField.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "ViewData.h"
@@ -41,6 +43,7 @@ private:
   SampleInstrument *getCurrentSampleInstrument();
   void updateWaveformDisplay();
   void addAllFields();
+  void addNameTextField(I_Instrument *instr, GUIPoint &position);
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
@@ -48,6 +51,8 @@ private:
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBitmapField, 1> waveformField_;
+  etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
+  etl::vector<InstrumentNameVariable, 1> nameVariables_;
 
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
