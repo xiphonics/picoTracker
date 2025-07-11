@@ -106,6 +106,7 @@ void Error_Handler(void);
 #define INPUT_DOWN_GPIO_Port GPIOG
 #define SD_DET_Pin GPIO_PIN_11
 #define SD_DET_GPIO_Port GPIOA
+#define SD_DET_EXTI_IRQn EXTI15_10_IRQn
 #define HP_DET_Pin GPIO_PIN_12
 #define HP_DET_GPIO_Port GPIOA
 #define USB_INT_Pin GPIO_PIN_15

@@ -407,3 +407,16 @@ void advEventManager::ProcessInputEvent(void *) {
     //    Trace::Debug("Inputs task");
   }
 }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == SD_DET_Pin) {
+    if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
+      // SD card inserted
+      queue = advEventQueue::GetInstance();
+      queue->push(advEvent(PICO_SD_DET));
+    } else {
+      // We don't yet do anything for SD Card removed, could actually unlink FS
+      // on removal
+    }
+  }
+}

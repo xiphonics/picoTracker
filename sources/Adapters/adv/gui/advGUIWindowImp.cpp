@@ -11,6 +11,7 @@
 #ifdef USB_REMOTE_UI
 #include "picoRemoteUI.h"
 #endif
+#include "Adapters/adv/filesystem/picoFileSystem.h"
 #include <string>
 
 #define to_rgb565(color)                                                       \
@@ -188,6 +189,14 @@ void advGUIWindowImp::ProcessEvent(advEvent &event) {
   case PICO_CLOCK:
     instance_->_window->ClockTick();
     break;
+  case PICO_SD_DET:
+    // SD reinit
+    FATFS_UnLinkDriver(SDPath);
+    HAL_SD_DeInit(&hsd1);
+    __HAL_RCC_SDMMC1_FORCE_RESET();
+    __HAL_RCC_SDMMC1_RELEASE_RESET();
+    MX_SDMMC1_SD_Init();
+    FATFS_LinkDriver(&SD_DMA_Driver, SDPath);
   case LAST:
     break;
   }

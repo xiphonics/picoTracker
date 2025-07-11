@@ -96,8 +96,8 @@ void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(DISPLAY_SDA_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : POWER_Pin SD_DET_Pin HP_DET_Pin USB_INT_Pin */
-  GPIO_InitStruct.Pin = POWER_Pin | SD_DET_Pin | HP_DET_Pin | USB_INT_Pin;
+  /*Configure GPIO pins : POWER_Pin HP_DET_Pin USB_INT_Pin */
+  GPIO_InitStruct.Pin = POWER_Pin | HP_DET_Pin | USB_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -141,6 +141,12 @@ void MX_GPIO_Init(void) {
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SD_DET_Pin */
+  GPIO_InitStruct.Pin = SD_DET_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SD_DET_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : CHARGER_INT_Pin */
   GPIO_InitStruct.Pin = CHARGER_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -155,6 +161,10 @@ void MX_GPIO_Init(void) {
 
   /*AnalogSwitch Config */
   HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PA0, SYSCFG_SWITCH_PA0_CLOSE);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 /* USER CODE BEGIN 2 */
