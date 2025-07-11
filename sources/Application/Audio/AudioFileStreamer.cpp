@@ -38,11 +38,12 @@ AudioFileStreamer::AudioFileStreamer() {
 
 AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
 
-bool AudioFileStreamer::Start(const char *name) {
-  Trace::Debug("Starting to stream:%s", name);
+bool AudioFileStreamer::Start(const char *name, int startSample) {
+  Trace::Debug("Starting to stream:%s from sample %d", name, startSample);
   strcpy(name_, name);
   newPath_ = true;
   mode_ = AFSM_PLAYING;
+  position_ = (startSample > 0) ? float(startSample) : 0.0f;
   return true;
 };
 
@@ -90,7 +91,10 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       mode_ = AFSM_STOPPED;
       return false;
     }
-    position_ = 0;
+    // Only reset position if we're not starting from a specific sample
+    if (position_ == 0.0f) {
+      position_ = 0.0f;
+    }
 
     // Get sample rate information and calculate speed factor
     fileSampleRate_ = wav_->GetSampleRate(-1);

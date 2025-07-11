@@ -182,7 +182,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
             sampleVar->GetString();
 
         // Get sample size to check if it's a single cycle waveform
-        int sampleSize = currentInstrument_->GetSampleSize();
+        uint32_t sampleSize = currentInstrument_->GetSampleSize();
         isSingleCycle_ = (sampleSize <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
 
         Trace::Debug("DEBUG: Starting playback of sample '%s' (size=%d, "
@@ -196,10 +196,10 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         // Get the start position which is where playback will begin
         Variable *startVar =
             currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-        if (startVar && startVar->GetInt() >= 0 &&
-            startVar->GetInt() < sampleSize) {
+        uint32_t startSample = startVar->GetInt();
+        if (startVar && startSample >= 0 && startSample < sampleSize) {
           // Initialize normalized playback position (0.0 - 1.0)
-          playbackPosition_ = (float)startVar->GetInt() / sampleSize;
+          playbackPosition_ = (float)startSample / sampleSize;
         } else {
           playbackPosition_ = 0.0f;
         }
@@ -239,7 +239,9 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (isSingleCycle_) {
           Player::GetInstance()->StartLoopingStreaming(sampleFileName.c_str());
         } else {
-          Player::GetInstance()->StartStreaming(sampleFileName.c_str());
+          // Start playback from the specified start position
+          Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
+                                                startSample);
         }
 
         isPlaying_ = true;
@@ -312,45 +314,30 @@ void SampleEditorView::AnimationUpdate() {
           if (start > end)
             start = end;
 
-          // Get the current animation frame counter
+          // Get the current frame count since playback started
           uint32_t currentFrame = AppWindow::GetAnimationFrameCounter();
-
-          // Calculate elapsed frames since playback started
           uint32_t elapsedFrames = currentFrame - playbackStartFrame_;
-
-          // Get the length in seconds directly from the instrument
-          float sampleDurationSec = currentInstrument_->GetLengthInSec();
-
-          // Calculate total sample duration in frames
-          uint32_t sampleDurationFrames =
-              (uint32_t)(sampleDurationSec * SCREEN_REDRAW_RATE);
-
-          // Ensure we have at least one frame duration
-          if (sampleDurationFrames == 0)
-            sampleDurationFrames = 1;
-
-          if (sampleDurationFrames > 0) {
-            // Calculate normalized position (0.0 - 1.0) based on elapsed time
-            float newPosition = (float)elapsedFrames / sampleDurationFrames;
-
-            // Apply start offset
-            if (start > 0) {
-              float startOffset = (float)start / sampleSize;
-              newPosition = startOffset + newPosition * (1.0f - startOffset);
-            }
-
-            // Check if we've reached the end
-            if (newPosition >= 1.0f ||
-                (end < sampleSize - 1 &&
-                 newPosition >= (float)end / sampleSize)) {
-              newPosition = (float)end / sampleSize;
-              isPlaying_ = false; // Reached end of sample
-            }
-
-            // Update position
-            playbackPosition_ = newPosition;
-            forceRedraw_ = true;
+          
+          // Get the sample duration in seconds
+          float duration = currentInstrument_->GetLengthInSec();
+          
+          // Calculate the normalized playback position (0.0 to 1.0) based on full sample duration
+          // Using a fixed frame rate for consistent playback speed
+          const float FRAME_RATE = 25.0f;
+          float normalizedPos = (float)elapsedFrames / (duration * FRAME_RATE);
+          
+          // Calculate the position in the sample, accounting for the start position
+          float samplePos = start + normalizedPos * sampleSize;
+          
+          // Check if we've reached the end
+          if (samplePos >= end || samplePos >= sampleSize) {
+            samplePos = end;
+            isPlaying_ = false;
           }
+          
+          // Update position (normalized to full sample range)
+          playbackPosition_ = samplePos / sampleSize;
+          forceRedraw_ = true;
         }
       }
     }

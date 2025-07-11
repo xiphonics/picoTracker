@@ -1182,7 +1182,9 @@ PlayerEventType PlayerEvent::GetType() { return type_; };
 
 unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
-void Player::StartStreaming(const char *name) { mixer_.StartStreaming(name); }
+void Player::StartStreaming(const char *name, int startSample) { 
+  mixer_.StartStreaming(name, startSample); 
+}
 
 void Player::StartLoopingStreaming(const char *name) {
   mixer_.StartLoopingStreaming(name);

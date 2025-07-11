@@ -82,7 +82,7 @@ public:
   void ProcessCommands();
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
 
-  void StartStreaming(const char *name);
+  void StartStreaming(const char *name, int startSample = 0);
   void StartLoopingStreaming(const char *name);
   void StopStreaming();
 

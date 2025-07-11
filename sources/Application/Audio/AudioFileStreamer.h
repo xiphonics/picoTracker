@@ -23,7 +23,7 @@ public:
   AudioFileStreamer();
   virtual ~AudioFileStreamer();
   virtual bool Render(fixed *buffer, int samplecount);
-  bool Start(const char *name); // Automatically detects single cycle waveforms
+  bool Start(const char *name, int startSample = 0); // Automatically detects single cycle waveforms, optional start sample position
   void Stop();
   bool IsPlaying();
 
