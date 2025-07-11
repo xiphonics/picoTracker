@@ -106,5 +106,10 @@ subject to its own license. Below is a summary of included external code:
    SPDX-License-Identifier: Ubuntu-font-1.0
    License file: sources/Adapters/adv/display/Ubuntu-Font-Licence-1.0.txt
 
+15. ZX-Origins fonts
+   Path: sources/Adapters/picoTracker/display/font.h
+   SPDX-License-Identifier: custom
+   License file: sources/Adapters/picoTracker/display/FONT-LICENSE.md
+
 The license texts for the above components are available in their respective
 folders. This project does not relicense or modify the terms of those licenses.
