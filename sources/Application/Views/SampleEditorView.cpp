@@ -317,24 +317,25 @@ void SampleEditorView::AnimationUpdate() {
           // Get the current frame count since playback started
           uint32_t currentFrame = AppWindow::GetAnimationFrameCounter();
           uint32_t elapsedFrames = currentFrame - playbackStartFrame_;
-          
+
           // Get the sample duration in seconds
           float duration = currentInstrument_->GetLengthInSec();
-          
-          // Calculate the normalized playback position (0.0 to 1.0) based on full sample duration
-          // Using a fixed frame rate for consistent playback speed
-          const float FRAME_RATE = 25.0f;
-          float normalizedPos = (float)elapsedFrames / (duration * FRAME_RATE);
-          
-          // Calculate the position in the sample, accounting for the start position
+
+          // Calculate the normalized playback position (0.0 to 1.0) based on
+          // full sample duration
+          float normalizedPos =
+              (float)elapsedFrames / (duration * SCREEN_REDRAW_RATE);
+
+          // Calculate the position in the sample, accounting for the start
+          // position
           float samplePos = start + normalizedPos * sampleSize;
-          
+
           // Check if we've reached the end
           if (samplePos >= end || samplePos >= sampleSize) {
             samplePos = end;
             isPlaying_ = false;
           }
-          
+
           // Update position (normalized to full sample range)
           playbackPosition_ = samplePos / sampleSize;
           forceRedraw_ = true;
