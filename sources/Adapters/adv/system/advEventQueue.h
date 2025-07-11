@@ -11,7 +11,7 @@
 #include "Externals/etl/include/etl/deque.h"
 #include "Foundation/T_Singleton.h"
 
-enum advEventType { PICO_REDRAW, PICO_FLUSH, PICO_CLOCK, LAST };
+enum advEventType { PICO_REDRAW, PICO_FLUSH, PICO_CLOCK, PICO_SD_DET, LAST };
 
 class advEvent {
 public:

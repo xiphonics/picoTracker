@@ -305,6 +305,7 @@ int advEventManager::MainLoop() {
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(ProcessEvent, "ProcEvent", 1000, NULL, 1, ProcessEventStack,
                     &ProcessEventTCB);
+
   vTaskStartScheduler();
   // we never get here
 
@@ -416,5 +417,18 @@ void advEventManager::ProcessInputEvent(void *) {
     //    Trace::Debug("Tick count: %lu\n", xTaskGetTickCount());
     vTaskDelay(pdMS_TO_TICKS(50)); // check input at 20Hz
     //    Trace::Debug("Inputs task");
+  }
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == SD_DET_Pin) {
+    if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
+      // SD card inserted
+      queue = advEventQueue::GetInstance();
+      queue->push(advEvent(PICO_SD_DET));
+    } else {
+      // We don't yet do anything for SD Card removed, could actually unlink FS
+      // on removal
+    }
   }
 }

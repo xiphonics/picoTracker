@@ -1,6 +1,4 @@
 #include "picoFileSystem.h"
-#include "ff_gen_drv.h"
-#include "sd_diskio.h"
 
 FATFS SDFatFS;
 char SDPath[4];
