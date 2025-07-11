@@ -12,17 +12,22 @@
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
-#include "Application/Views/BaseClasses/ViewEvent.h"
+#include "Application/Utils/char.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
+#include "Foundation/Types/Types.h"
+#include "Services/Midi/MidiService.h"
+#include "System/Console/Trace.h"
+#include "UIController.h"
 #include <bitmapgfx.h>
 #include <cstdint>
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data), forceRedraw_(true), isPlaying_(false),
-      isSingleCycle_(false), playbackPosition_(0), positionScale_(0) {
+    : FieldView(w, data), currentInstrument_(NULL), forceRedraw_(false),
+      isPlaying_(false), isSingleCycle_(false), playbackPosition_(0.0f),
+      playbackStartFrame_(0) {
 
   // Clear the buffer
   bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
@@ -165,26 +170,31 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         int sampleSize = currentInstrument_->GetSampleSize();
         isSingleCycle_ = (sampleSize <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
 
-        printf("DEBUG: Starting playback of sample '%s' (size=%d, "
-               "singleCycle=%s)\n",
-               sampleFileName.c_str(), sampleSize,
-               isSingleCycle_ ? "true" : "false");
+        Trace::Debug("DEBUG: Starting playback of sample '%s' (size=%d, "
+                     "singleCycle=%s)\n",
+                     sampleFileName.c_str(), sampleSize,
+                     isSingleCycle_ ? "true" : "false");
 
         // Reset playback state
         isPlaying_ = true;
-        playbackPosition_ = 0;
-        // Set position scale based on sample size (samples per pixel)
-        positionScale_ = sampleSize / (BITMAPWIDTH - 2);
-        if (positionScale_ == 0)
-          positionScale_ = 1; // Avoid division by zero
-        printf("DEBUG: Playback initialized - sampleSize: %d, positionScale_: "
-               "%u\n",
-               sampleSize, positionScale_);
+
+        // Get the start position which is where playback will begin
+        Variable *startVar =
+            currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
+        if (startVar && startVar->GetInt() >= 0 &&
+            startVar->GetInt() < sampleSize) {
+          // Initialize normalized playback position (0.0 - 1.0)
+          playbackPosition_ = (float)startVar->GetInt() / sampleSize;
+        } else {
+          playbackPosition_ = 0.0f;
+        }
+
+        // Store the current animation frame as our start frame
+        playbackStartFrame_ = AppWindow::GetAnimationFrameCounter();
         forceRedraw_ = true;
 
         // If something is already playing, stop it first
         if (Player::GetInstance()->IsPlaying()) {
-          printf("DEBUG: Stopping existing playback\n");
           Player::GetInstance()->StopStreaming();
         }
 
@@ -226,13 +236,12 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
     return;
   }
-  
+
   // For all other button presses, let the parent class handle navigation
   FieldView::ProcessButtonMask(mask, pressed);
 }
 
 void SampleEditorView::DrawView() {
-  printf("DEBUG: DrawView called\n");
   Clear();
 
   GUITextProperties props;
@@ -248,10 +257,6 @@ void SampleEditorView::DrawView() {
   FieldView::Redraw();
 
   SetColor(CD_NORMAL);
-
-  // DrawView should not directly update the waveform
-  // That's now handled in AnimationUpdate
-  printf("DEBUG: DrawView completed (forceRedraw_=%d)\n", forceRedraw_);
 }
 
 void SampleEditorView::AnimationUpdate() {
@@ -263,36 +268,74 @@ void SampleEditorView::AnimationUpdate() {
       isPlaying_ = false;
       playbackPosition_ = 0;
       forceRedraw_ = true;
-      printf("DEBUG: Playback stopped, resetting playhead\n");
+      Trace::Debug("DEBUG: Playback stopped, resetting playhead\n");
     } else {
-      // Advance the playback position for visualization
-      if (!isSingleCycle_) {
-        // For regular samples, calculate advancement based on known rates
-        // Animation update runs at 50Hz and sample rate is 44.1kHz
-        // So in one animation frame, we advance by (44100 / 50) = 882 samples
+      // Get the current instrument
+      SampleInstrument *currentInstrument_ = getCurrentSampleInstrument();
+      if (currentInstrument_) {
         uint32_t sampleSize = currentInstrument_->GetSampleSize();
         if (sampleSize > 0) {
-          // Update position (in samples)
-          playbackPosition_ += 882;
+          // Get the start and end positions for the active sample range
+          uint32_t start = 0;
+          uint32_t end = sampleSize - 1;
 
-          // Check if we've reached/passed the end of the sample
-          if (playbackPosition_ >= sampleSize) {
-            playbackPosition_ = sampleSize; // Stay at last sample
-            isPlaying_ = false;             // Reached end of sample
+          Variable *startVar =
+              currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
+          if (startVar)
+            start = startVar->GetInt();
 
-            // Calculate and log the final playhead X position
-            int finalX = 1 + (playbackPosition_ / positionScale_);
-            if (finalX >= BITMAPWIDTH - 1)
-              finalX = BITMAPWIDTH - 2;
+          Variable *endVar =
+              currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
+          if (endVar)
+            end = endVar->GetInt();
 
-            Trace::Debug(
-                "DEBUG: Reached end at sample %u, final X=%d (BITMAPWIDTH=%d)",
-                playbackPosition_, finalX, BITMAPWIDTH);
+          // Ensure parameters are within valid range
+          if (start >= sampleSize)
+            start = sampleSize - 1;
+          if (end >= sampleSize)
+            end = sampleSize - 1;
+          if (start > end)
+            start = end;
+
+          // Get the current animation frame counter
+          uint32_t currentFrame = AppWindow::GetAnimationFrameCounter();
+
+          // Calculate elapsed frames since playback started
+          uint32_t elapsedFrames = currentFrame - playbackStartFrame_;
+
+          // Get the length in seconds directly from the instrument
+          float sampleDurationSec = currentInstrument_->GetLengthInSec();
+
+          // Calculate total sample duration in frames
+          uint32_t sampleDurationFrames =
+              (uint32_t)(sampleDurationSec * SCREEN_REDRAW_RATE);
+
+          // Ensure we have at least one frame duration
+          if (sampleDurationFrames == 0)
+            sampleDurationFrames = 1;
+
+          if (sampleDurationFrames > 0) {
+            // Calculate normalized position (0.0 - 1.0) based on elapsed time
+            float newPosition = (float)elapsedFrames / sampleDurationFrames;
+
+            // Apply start offset
+            if (start > 0) {
+              float startOffset = (float)start / sampleSize;
+              newPosition = startOffset + newPosition * (1.0f - startOffset);
+            }
+
+            // Check if we've reached the end
+            if (newPosition >= 1.0f ||
+                (end < sampleSize - 1 &&
+                 newPosition >= (float)end / sampleSize)) {
+              newPosition = (float)end / sampleSize;
+              isPlaying_ = false; // Reached end of sample
+            }
+
+            // Update position
+            playbackPosition_ = newPosition;
+            forceRedraw_ = true;
           }
-
-          Trace::Debug("DEBUG: Updated playhead position: %u",
-                       playbackPosition_);
-          forceRedraw_ = true;
         }
       }
     }
@@ -312,9 +355,6 @@ void SampleEditorView::AnimationUpdate() {
 void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   // When any of our observed variables change, force a redraw of the waveform
   forceRedraw_ = true;
-
-  // Simple debug logging
-  Trace::Debug("DEBUG: Update called, setting forceRedraw_ flag");
 }
 
 void SampleEditorView::updateWaveformDisplay() {
@@ -408,7 +448,7 @@ void SampleEditorView::updateWaveformDisplay() {
 
   // Get the full sample range for proper scaling
   int fullSampleSize = currentInstrument_->GetSampleSize();
-  
+
   // Calculate how many samples to skip between each pixel
   // Use the full sample size to maintain scale
   float samplesPerPixel = (float)sampleSize / (BITMAPWIDTH - 2);
@@ -451,10 +491,6 @@ void SampleEditorView::updateWaveformDisplay() {
   if (startX >= BITMAPWIDTH - 1)
     startX = BITMAPWIDTH - 2;
 
-  Trace::Debug(
-      "DEBUG: Drawing start point line at x=%d (start=%d, fullSampleSize=%d)",
-      startX, start, fullSampleSize);
-
   // Draw the start marker line
   bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, startX, 1,
                       startX, BITMAPHEIGHT - 2, true);
@@ -467,43 +503,19 @@ void SampleEditorView::updateWaveformDisplay() {
   if (endX >= BITMAPWIDTH - 1)
     endX = BITMAPWIDTH - 2;
 
-  Trace::Debug(
-      "DEBUG: Drawing end point line at x=%d (end=%d, fullSampleSize=%d)", endX,
-      end, fullSampleSize);
-
   // Draw the end marker line
   bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, endX, 1, endX,
                       BITMAPHEIGHT - 2, true);
 
-  // Draw playhead if we're playing
-  if (isPlaying_) {
-    // Calculate playhead position based on playbackPosition_
-    // playbackPosition_ is a normalized value (0.0 to 1.0) representing position in the sample
-    // We need to map it to the bitmap width based on the full sample size
-    // First, calculate the actual sample position
-    int currentSamplePos = start + (int)(playbackPosition_ * (end - start));
-    // Then map it to the bitmap width using the same scaling as the markers
-    int playheadX = 1 + (int)(((float)currentSamplePos / fullSampleSize) * (BITMAPWIDTH - 2));
-    if (playheadX < 1)
-      playheadX = 1;
-    if (playheadX >= BITMAPWIDTH - 1)
-      playheadX = BITMAPWIDTH - 2;
-      
-    Trace::Debug("DEBUG: Drawing playhead at x=%d (playbackPosition_=%f, fullSampleSize=%d)",
-                 playheadX, playbackPosition_, fullSampleSize);
-
-    // Draw the playhead with a different pattern (dashed line)
-    for (int y = 1; y < BITMAPHEIGHT - 2; y += 2) {
-      bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, playheadX, y, true);
-    }
-  }
+  // First playhead drawing section - removed
 
   // Draw markers for loop points if loop mode is enabled
   // draw loop start marker as dashed line
   if (loopMode > 0) {
     // Calculate x position for loop start using the same scaling as start/end
     // markers - loopStart as a fraction of fullSampleSize
-    int loopX = 1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2));
+    int loopX =
+        1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2));
     if (loopX >= 1 && loopX < BITMAPWIDTH - 1) {
       // Draw a dashed vertical line for loop start
       for (int y = 1; y < BITMAPHEIGHT - 2; y += 3) {
@@ -511,25 +523,20 @@ void SampleEditorView::updateWaveformDisplay() {
         bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y, true);
         bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y + 1, true);
       }
-      Trace::Debug("DEBUG: Drawing loop start line at x=%d (loopStart=%d, "
-                   "fullSampleSize=%d)\n",
-                   loopX, loopStart, fullSampleSize);
     }
   }
 
   // Draw the playhead indicator if the sample is playing
   if (isPlaying_) {
-    // Calculate the x position for the playhead using integer division
-    int playheadX = 1 + (playbackPosition_ / positionScale_);
+    // Calculate the x position for the playhead using the normalized position
+    // (0.0-1.0) Map the normalized position directly to bitmap width
+    int playheadX = 1 + (int)(playbackPosition_ * (BITMAPWIDTH - 2));
 
-    // Clamp the position to valid range
+    // Ensure the playhead stays within bounds
     if (playheadX < 1)
       playheadX = 1;
     if (playheadX >= BITMAPWIDTH - 1)
       playheadX = BITMAPWIDTH - 2;
-
-    Trace::Debug("DEBUG: Drawing playhead at x=%d (sample=%u, scale=%u)\n",
-                 playheadX, playbackPosition_, positionScale_);
 
     // Draw a thick vertical line for better visibility
     for (int offset = -1; offset <= 1; offset++) {

@@ -63,7 +63,7 @@ private:
   bool isPlaying_;
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
 
-  uint32_t playbackPosition_;
-  uint32_t positionScale_;
+  float playbackPosition_; // Current playback position as normalized value (0.0 - 1.0)
+  uint32_t playbackStartFrame_; // Animation frame when playback started
 };
 #endif

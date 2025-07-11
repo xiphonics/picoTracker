@@ -22,6 +22,7 @@ public:
   virtual void *GetSampleBuffer(int note) = 0;
   virtual bool IsMulti() = 0;
   virtual int GetRootNote(int note) = 0;
+  virtual float GetLengthInSec() = 0;
 };
 
 #endif
