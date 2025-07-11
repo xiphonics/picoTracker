@@ -26,8 +26,8 @@
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), currentInstrument_(NULL), forceRedraw_(false),
-      isPlaying_(false), isSingleCycle_(false), playbackPosition_(0.0f),
-      playbackStartFrame_(0) {
+      isPlaying_(false), isSingleCycle_(false), playKeyHeld_(false),
+      playbackPosition_(0.0f), playbackStartFrame_(0) {
 
   // Clear the buffer
   bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
@@ -155,18 +155,24 @@ void SampleEditorView::addAllFields() {
 }
 
 void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
-  // Handle button release for PLAY button
-  if (!pressed && isPlaying_) {
-    // Stop playback when PLAY button is released
-    if (Player::GetInstance()->IsPlaying()) {
-      Player::GetInstance()->StopStreaming();
-      isPlaying_ = false;
+  // Check for key release events
+  if (!pressed) {
+    // Check if play key was released (exactly like ImportView approach)
+    if (playKeyHeld_ && !(mask & EPBM_PLAY)) {
+      // Play key no longer pressed so should stop playback
+      playKeyHeld_ = false;
 
-      // Force redraw to remove the playhead
-      forceRedraw_ = true;
-      updateWaveformDisplay();
+      if (Player::GetInstance()->IsPlaying()) {
+        // Stop playback regardless of whether it's regular or looping
+        Player::GetInstance()->StopStreaming();
+        isPlaying_ = false;
+
+        // Force redraw to remove the playhead
+        forceRedraw_ = true;
+        updateWaveformDisplay();
+      }
+      return;
     }
-    return;
   }
 
   // If not pressed, let parent handle it and return
@@ -188,6 +194,9 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     FieldView::ProcessButtonMask(mask, pressed);
     return;
   } else if (mask & EPBM_PLAY) {
+    // Set flag to track that play key is being held down (like in ImportView)
+    playKeyHeld_ = true;
+
     // Start sample playback if we have a valid instrument
     if (currentInstrument_ && !isPlaying_) {
       // Get the sample file name from the instrument's variable
@@ -500,8 +509,8 @@ void SampleEditorView::updateWaveformDisplay() {
       y = BITMAPHEIGHT - 2;
 
     // Draw a line from the center to the sample point
-    bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 
-                       x, centerY, x, y, true);
+    bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, centerY, x,
+                        y, true);
   }
 
   // Calculate positions for start and end markers based on their actual values

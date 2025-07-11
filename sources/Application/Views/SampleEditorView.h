@@ -68,6 +68,7 @@ private:
   // Playback state
   bool isPlaying_;
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
+  bool playKeyHeld_; // Flag to track when the play key is being held down
 
   float playbackPosition_; // Current playback position as normalized value (0.0
                            // - 1.0)
