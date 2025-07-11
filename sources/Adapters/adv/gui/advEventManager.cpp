@@ -162,7 +162,8 @@ void timerStatsHandler(TimerHandle_t xTimer) {
   ulTotalRunTime /= 100UL;
   //  Avoid divide by zero errors.
 
-  Trace::Debug("Name\t\ttime\t\tlife\t\t5sec\t\tstack high watermark");
+  Trace::Debug("%-16s %12s %12s %12s %12s", "Name", "time", "life", "5sec",
+               "stack high watermark");
   if (ulTotalRunTime > 0) {
     // For each populated position in the pxTaskStatusArray array,
     // format the raw data as human readable ASCII data.
@@ -180,7 +181,7 @@ void timerStatsHandler(TimerHandle_t xTimer) {
       //         ulTotalRunTimeDiv100 has already been divided by 100.
       ulStatsAsPercentage =
           pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;
-      Trace::Debug("%s\t\t%lu\t\t%lu%%\t\t%lu%%\t\t%lu",
+      Trace::Debug("%-16s %12lu %11lu%% %11lu%% %12lu",
                    pxTaskStatusArray[x].pcTaskName,
                    pxTaskStatusArray[x].ulRunTimeCounter, ulStatsAsPercentage,
                    deltaPercentage, pxTaskStatusArray[x].usStackHighWaterMark);
