@@ -13,6 +13,7 @@ target_link_libraries(platform_gui PUBLIC uiframework_simplebaseclasses
                                    PUBLIC platform_display
                                    PUBLIC platform_system
                                    PRIVATE platform_utils
+                                   tinyusb
 )
 
 target_include_directories(platform_gui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
