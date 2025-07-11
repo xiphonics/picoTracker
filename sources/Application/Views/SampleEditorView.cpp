@@ -146,6 +146,9 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       NotifyObservers(&ve);
       return;
     }
+    // For other NAV combinations, let parent handle it
+    FieldView::ProcessButtonMask(mask, pressed);
+    return;
   } else if (mask & EPBM_PLAY) {
     // Start sample playback if we have a valid instrument
     if (currentInstrument_ && !isPlaying_) {
@@ -221,7 +224,11 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         updateWaveformDisplay();
       }
     }
+    return;
   }
+  
+  // For all other button presses, let the parent class handle navigation
+  FieldView::ProcessButtonMask(mask, pressed);
 }
 
 void SampleEditorView::DrawView() {
@@ -399,6 +406,9 @@ void SampleEditorView::updateWaveformDisplay() {
   // For now just assume 16-bit samples
   short *sampleBuffer = (short *)sampleBufferVoid;
 
+  // Get the full sample range for proper scaling
+  int fullSampleSize = currentInstrument_->GetSampleSize();
+  
   // Calculate how many samples to skip between each pixel
   // Use the full sample size to maintain scale
   float samplesPerPixel = (float)sampleSize / (BITMAPWIDTH - 2);
@@ -431,9 +441,6 @@ void SampleEditorView::updateWaveformDisplay() {
     // Draw the sample point
     bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, x, y, true);
   }
-
-  // Get the full sample range for proper scaling
-  int fullSampleSize = currentInstrument_->GetSampleSize();
 
   // Calculate positions for start and end markers based on their actual values
   // Map the start position to the bitmap width - start as a fraction of
@@ -471,11 +478,19 @@ void SampleEditorView::updateWaveformDisplay() {
   // Draw playhead if we're playing
   if (isPlaying_) {
     // Calculate playhead position based on playbackPosition_
-    int playheadX = 1 + (int)(playbackPosition_ * (BITMAPWIDTH - 2));
+    // playbackPosition_ is a normalized value (0.0 to 1.0) representing position in the sample
+    // We need to map it to the bitmap width based on the full sample size
+    // First, calculate the actual sample position
+    int currentSamplePos = start + (int)(playbackPosition_ * (end - start));
+    // Then map it to the bitmap width using the same scaling as the markers
+    int playheadX = 1 + (int)(((float)currentSamplePos / fullSampleSize) * (BITMAPWIDTH - 2));
     if (playheadX < 1)
       playheadX = 1;
     if (playheadX >= BITMAPWIDTH - 1)
       playheadX = BITMAPWIDTH - 2;
+      
+    Trace::Debug("DEBUG: Drawing playhead at x=%d (playbackPosition_=%f, fullSampleSize=%d)",
+                 playheadX, playbackPosition_, fullSampleSize);
 
     // Draw the playhead with a different pattern (dashed line)
     for (int y = 1; y < BITMAPHEIGHT - 2; y += 2) {
@@ -488,8 +503,7 @@ void SampleEditorView::updateWaveformDisplay() {
   if (loopMode > 0) {
     // Calculate x position for loop start using the same scaling as start/end
     // markers - loopStart as a fraction of fullSampleSize
-    int loopX =
-        1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2));
+    int loopX = 1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2));
     if (loopX >= 1 && loopX < BITMAPWIDTH - 1) {
       // Draw a dashed vertical line for loop start
       for (int y = 1; y < BITMAPHEIGHT - 2; y += 3) {
