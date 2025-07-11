@@ -40,6 +40,7 @@ private:
   // Helper methods
   SampleInstrument *getCurrentSampleInstrument();
   void updateWaveformDisplay();
+  void addAllFields();
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
@@ -63,7 +64,8 @@ private:
   bool isPlaying_;
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
 
-  float playbackPosition_; // Current playback position as normalized value (0.0 - 1.0)
+  float playbackPosition_; // Current playback position as normalized value (0.0
+                           // - 1.0)
   uint32_t playbackStartFrame_; // Animation frame when playback started
 };
 #endif

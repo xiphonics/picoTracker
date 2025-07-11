@@ -32,23 +32,61 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
   // Clear the buffer
   bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
 
-  GUIPoint position = GetAnchor();
+  addAllFields();
+}
 
-  // Add waveform display field
-  position._y = 4;
-  position._x = 0; // start at the left edge of the window
-  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
-                              bitmapBuffer_, 0xFFFF, 0x0000);
-  fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
+SampleEditorView::~SampleEditorView() {}
 
-  // Get the current sample instrument
+SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
+  int id = viewData_->currentInstrumentID_;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  I_Instrument *instr = bank->GetInstrument(id);
+
+  // Check if this is a sample instrument
+  if (instr && instr->GetType() == IT_SAMPLE) {
+    return static_cast<SampleInstrument *>(instr);
+  }
+
+  return nullptr;
+}
+
+void SampleEditorView::OnFocus() {
+  // Update the current instrument reference
   currentInstrument_ = getCurrentSampleInstrument();
 
-  // Add sample parameters if we have a valid instrument
+  // Force redraw of waveform
+  forceRedraw_ = true;
+
+  addAllFields();
+}
+
+void SampleEditorView::addAllFields() {
+  // We currently have no way to update fields with the variable they are
+  // assinged so instead we need to first clear out all the previous fields
+  // and then re-add them just like we do on the InstrumentView
+  fieldList_.clear();
+  bigHexVarField_.clear();
+  intVarField_.clear();
+  actionField_.clear();
+  waveformField_.clear();
+  // no need to clear staticField_ as they are not added to fieldList_
+
+  GUIPoint position = GetAnchor();
+
+  // update the other fields using the current instrument just like we do
+  // initially Add sample parameters if we have a valid instrument
   if (currentInstrument_) {
+    // Add waveform display field
+    position._y = 4;
+    position._x = 0; // start at the left edge of the window
+    waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
+                                bitmapBuffer_, 0xFFFF, 0x0000);
+    fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
+
     int sampleSize = currentInstrument_->GetSampleSize();
 
     // Add start position control
+    GUIPoint position;
     position._y = 15; // offset enough for bitmap field
     position._x = 5;
     Variable *startVar =
@@ -93,29 +131,6 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       (*intVarField_.rbegin()).AddObserver(*this);
     }
   }
-}
-
-SampleEditorView::~SampleEditorView() {}
-
-SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
-  int id = viewData_->currentInstrumentID_;
-  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  I_Instrument *instr = bank->GetInstrument(id);
-
-  // Check if this is a sample instrument
-  if (instr && instr->GetType() == IT_SAMPLE) {
-    return static_cast<SampleInstrument *>(instr);
-  }
-
-  return nullptr;
-}
-
-void SampleEditorView::OnFocus() {
-  // Update the current instrument reference
-  currentInstrument_ = getCurrentSampleInstrument();
-
-  // Force redraw of waveform
-  forceRedraw_ = true;
 
   // Update the waveform display
   updateWaveformDisplay();
