@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #include "platform.h"
 #include "Adapters/adv/mutex/advMutex.h"
 #include "System/Console/Trace.h"
