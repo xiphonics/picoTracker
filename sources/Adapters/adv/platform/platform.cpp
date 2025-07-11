@@ -1,7 +1,5 @@
 #include "platform.h"
 #include "Adapters/adv/mutex/advMutex.h"
-#include "FreeRTOS.h"
-#include "semphr.h"
 #include "tim.h"
 
 // TODO(democloid): implement this

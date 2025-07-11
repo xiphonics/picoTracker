@@ -10,9 +10,7 @@
 #include "System/Process/SysMutex.h"
 #include <cstdint>
 
-#include "FreeRTOS.h"
 #include "main.h"
-#include "semphr.h"
 #include "usart.h"
 
 #define BOOTLOADER_ADDR 0x81e0000U

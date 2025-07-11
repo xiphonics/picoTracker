@@ -11,15 +11,12 @@
 #ifdef USB_REMOTE_UI
 #include "picoRemoteUI.h"
 #endif
-#include "ff_gen_drv.h"
-#include "sd_diskio.h"
+#include "Adapters/adv/filesystem/picoFileSystem.h"
 #include <string>
 
 #define to_rgb565(color)                                                       \
   ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
       (color._b >> 3)
-
-extern char SDPath[4]; /* SD logical drive path */
 
 // classic picotracker mapping
 static GUIEventPadButtonType eventMappingPico[11] = {

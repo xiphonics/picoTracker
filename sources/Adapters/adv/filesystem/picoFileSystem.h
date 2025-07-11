@@ -15,6 +15,8 @@
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
+#include "ff_gen_drv.h"
+#include "sd_diskio.h"
 
 #define MAX_FILE_INDEX_SIZE 256
 #define PFILENAME_SIZE 128
