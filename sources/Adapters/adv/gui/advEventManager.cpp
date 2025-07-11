@@ -40,7 +40,7 @@ SerialDebugUI advEventManager::serialDebugUI_ = SerialDebugUI();
 char advEventManager::inBuffer[INPUT_BUFFER_SIZE] = {0};
 #endif
 
-advEventQueue *queue;
+QueueHandle_t eventQueue;
 
 #ifdef SERIAL_REPL
 #define INPUT_BUFFER_SIZE 80
@@ -166,7 +166,7 @@ void timerStatsHandler(TimerHandle_t xTimer) {
   if (ulTotalRunTime > 0) {
     // For each populated position in the pxTaskStatusArray array,
     // format the raw data as human readable ASCII data.
-    for (x = 0; x < uxArraySize; x++) {
+    for (uint32_t x = 0; x < uxArraySize; x++) {
       if (stats.contains(pxTaskStatusArray[x].pcTaskName)) {
         deltaPercentage = (pxTaskStatusArray[x].ulRunTimeCounter -
                            stats[pxTaskStatusArray[x].pcTaskName]) /
@@ -193,10 +193,8 @@ void timerStatsHandler(TimerHandle_t xTimer) {
 // timer callback at a rate of 50Hz
 void timerHandler(TimerHandle_t xTimer) {
   UNUSED(xTimer);
-  queue = advEventQueue::GetInstance();
-
-  // send a clock (PICO_CLOCK)
-  queue->push(advEvent(PICO_CLOCK));
+  Event ev(CLOCK);
+  xQueueSend(eventQueue, &ev, 0);
 }
 
 /*
@@ -211,21 +209,15 @@ int readFromUSBCDC(char *buf, int len) {
 */
 
 void ProcessEvent(void *) {
-  auto queue = advEventQueue::GetInstance();
+  uint8_t eventQueueStorage[EVENT_QUEUE_LENGTH * EVENT_QUEUE_ITEM_SIZE];
+  eventQueue = xQueueCreateStatic(EVENT_QUEUE_LENGTH, EVENT_QUEUE_ITEM_SIZE,
+                                  eventQueueStorage, &eventQueueBuffer);
+
+  Event event(EventType::LAST);
   for (;;) {
-    if (!queue->empty()) {
-      advEvent event(advEventType::LAST);
-      queue->pop_into(event);
-      //      redrawing_ = true;
+    if (xQueueReceive(eventQueue, &event, portMAX_DELAY) == pdTRUE) {
       advGUIWindowImp::ProcessEvent(event);
-      //      redrawing_ = false;
     }
-    //    Trace::Debug("Event task running, stack free: %d\n",
-    //                 uxTaskGetStackHighWaterMark(NULL));
-    // TODO: the event queue should be a FreeRTOS queue and this should halt
-    // waiting for an event
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-    //    Trace::Debug("Process event");
   }
 }
 
@@ -281,7 +273,6 @@ bool advEventManager::Init() {
 }
 
 int advEventManager::MainLoop() {
-  queue = advEventQueue::GetInstance();
   int loops = 0;
   int events = 0;
 #ifdef SDIO_BENCH
@@ -309,31 +300,6 @@ int advEventManager::MainLoop() {
   vTaskStartScheduler();
   // we never get here
 
-  while (!finished_) {
-    loops++;
-
-    // process usb interrupts, should this be done somewhere else??
-    //    handleUSBInterrupts();
-
-    //    ProcessInputEvent();
-    if (!queue->empty()) {
-      advEvent event(advEventType::LAST);
-      queue->pop_into(event);
-      events++;
-      redrawing_ = true;
-      advGUIWindowImp::ProcessEvent(event);
-      redrawing_ = false;
-    }
-#ifdef PICOSTATS
-    if (loops == 100000) {
-      Trace::Debug("Usage %.1f% CPU\n", ((float)events / loops) * 100);
-      events = 0;
-      loops = 0;
-      //      measure_freqs();
-      measure_free_mem();
-    }
-#endif
-  }
   // TODO: HW Shutdown
   return 0;
 }
@@ -408,8 +374,8 @@ void advEventManager::ProcessInputEvent(void *) {
       Trace::Debug("Received %d bytes from UART", sizeof(uartBuffer));
       // For now, we'll just trigger a redraw when any data is received
       // You can add more sophisticated command handling here as needed
-      queue = advEventQueue::GetInstance();
-      queue->push(advEvent(PICO_REDRAW));
+      Event ev(REDRAW);
+      xQueueSend(eventQueue, &ev, 0);
     }
 #endif // USB_REMOTE_UI
     //    Trace::Debug("Input task running, stack free: %d\n",
@@ -425,11 +391,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   if (GPIO_Pin == SD_DET_Pin) {
     if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
       // SD card inserted
-      queue = advEventQueue::GetInstance();
-      queue->push(advEvent(PICO_SD_DET));
+      Event ev(SD_DET);
+      xQueueSend(eventQueue, &ev, 0);
     } else {
-      // We don't yet do anything for SD Card removed, could actually unlink FS
-      // on removal
+      // We don't yet do anything for SD Card removed, could actually unlink
+      // FS on removal
     }
   }
 }

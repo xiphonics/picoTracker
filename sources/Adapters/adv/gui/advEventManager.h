@@ -14,6 +14,8 @@
 #endif
 #include "Services/Controllers/KeyboardControllerSource.h"
 #include "UIFramework/SimpleBaseClasses/EventManager.h"
+#include "eventQueue.h"
+#include "queue.h"
 #include <string>
 
 #ifdef __cplusplus

@@ -11,7 +11,7 @@
 #include "Adapters/adv/display/display.h"
 #include "Foundation/Observable.h"
 #include "UIFramework/Interfaces/I_GUIWindowImp.h"
-#include "advEventQueue.h"
+#include "eventQueue.h"
 #include <string>
 
 class advGUIWindowImp : public I_GUIWindowImp, public I_Observer {
@@ -35,7 +35,7 @@ public: // I_GUIWindowImp implementation
   virtual void ClearRect(GUIRect &);
   virtual void PushEvent(GUIEvent &event);
 
-  static void ProcessEvent(advEvent &event);
+  static void ProcessEvent(Event &event);
   static void ProcessButtonChange(uint16_t changeMask, uint16_t buttonMask);
 
 protected:
