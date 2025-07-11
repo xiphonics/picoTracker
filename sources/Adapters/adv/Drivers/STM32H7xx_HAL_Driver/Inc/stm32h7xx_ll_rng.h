@@ -1,13 +1,3 @@
-/* USER CODE BEGIN Header */
-/*
- * SPDX-License-Identifier: BSD-3-Clause
- *
- * Copyright (c) 2025 STMicroelectronics.
- * Copyright (c) 2025 xiphonics, inc.
- *
- * This file is part of the picoTracker firmware
- */
-/* USER CODE END Header */
 /**
  ******************************************************************************
  * @file    stm32h7xx_ll_rng.h

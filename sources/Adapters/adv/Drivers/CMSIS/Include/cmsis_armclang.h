@@ -1,13 +1,3 @@
-/* USER CODE BEGIN Header */
-/*
- * SPDX-License-Identifier: BSD-3-Clause
- *
- * Copyright (c) 2025 STMicroelectronics.
- * Copyright (c) 2025 xiphonics, inc.
- *
- * This file is part of the picoTracker firmware
- */
-/* USER CODE END Header */
 /**************************************************************************/ /**
                                                                               * @file     cmsis_armclang.h
                                                                               * @brief    CMSIS compiler armclang (Arm Compiler 6) header file
