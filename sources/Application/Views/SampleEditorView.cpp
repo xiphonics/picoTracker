@@ -434,9 +434,7 @@ void SampleEditorView::updateWaveformCache() {
   if (peakAmplitude < 15000) {
     scalingFactor = 3.0f;
   } else if (peakAmplitude < 25000) {
-    scalingFactor = 2.0f;
-  } else if (peakAmplitude < 35000) {
-    scalingFactor = 1.0f;
+    scalingFactor = 1.5f;
   }
 
   // Now, calculate the RMS for each column and apply the chosen scaling
@@ -558,17 +556,18 @@ void SampleEditorView::updateWaveformDisplay() {
   int centerY = BITMAPHEIGHT / 2;
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
     int pixelHeight = waveformCache_[x];
-    
-    // Always draw at least a 1-pixel line for visibility, even for very quiet signals
+
+    // Always draw at least a 1-pixel line for visibility, even for very quiet
+    // signals
     if (pixelHeight < 1) {
       // For very quiet signals, draw a single pixel line
-      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 
-                         centerY, x, centerY, true);
+      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, centerY,
+                          x, centerY, true);
     } else {
       // For non-zero signals, draw the full height
       bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x,
-                         centerY - pixelHeight, x, centerY + pixelHeight,
-                         true);
+                          centerY - pixelHeight, x, centerY + pixelHeight,
+                          true);
     }
   }
 
