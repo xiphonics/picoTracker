@@ -14,7 +14,7 @@
 
 class UIBitmapField : public UIField {
 public:
-  UIBitmapField(GUIPoint &position, uint8_t width, uint8_t height,
+  UIBitmapField(GUIPoint &position, uint16_t width, uint16_t height,
                 const uint8_t *bitmap_data, uint16_t fg_color,
                 uint16_t bg_color);
 
@@ -30,8 +30,8 @@ public:
   void SetColors(uint16_t fg_color, uint16_t bg_color);
 
 private:
-  uint8_t width_;
-  uint8_t height_;
+  uint16_t width_;
+  uint16_t height_;
   const uint8_t *bitmap_data_;
   uint16_t fg_color_;
   uint16_t bg_color_;

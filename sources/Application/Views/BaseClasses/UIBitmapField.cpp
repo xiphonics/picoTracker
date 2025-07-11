@@ -9,7 +9,7 @@
 #include "UIBitmapField.h"
 #include "Adapters/picoTracker/display/bitmapgfx.h"
 
-UIBitmapField::UIBitmapField(GUIPoint &position, uint8_t width, uint8_t height,
+UIBitmapField::UIBitmapField(GUIPoint &position, uint16_t width, uint16_t height,
                              const uint8_t *bitmap_data, uint16_t fg_color,
                              uint16_t bg_color)
     : UIField(position), width_(width), height_(height),

@@ -48,8 +48,8 @@ private:
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBitmapField, 1> waveformField_;
 
-#define BITMAPWIDTH 200
-#define BITMAPHEIGHT 40
+#define BITMAPWIDTH 320
+#define BITMAPHEIGHT 80
   // Statically allocated bitmap buffer for waveform display
   uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT / 8];
 

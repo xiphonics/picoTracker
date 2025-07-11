@@ -31,7 +31,7 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
 
   // Add waveform display field
   position._y = 4;
-  position._x = 5;
+  position._x = 0; // start at the left edge of the window
   waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
                               bitmapBuffer_, 0xFFFF, 0x0000);
   fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
@@ -44,7 +44,7 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     int sampleSize = currentInstrument_->GetSampleSize();
 
     // Add start position control
-    position._y = 10;
+    position._y = 15; // offset enough for bitmap field
     position._x = 5;
     Variable *startVar =
         currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
