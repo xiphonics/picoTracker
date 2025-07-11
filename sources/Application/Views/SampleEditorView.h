@@ -70,6 +70,14 @@ private:
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
   bool playKeyHeld_; // Flag to track when the play key is being held down
 
+private:
+  // Waveform data cache
+  static const int WAVEFORM_CACHE_SIZE = 320; // Match BITMAPWIDTH
+  uint8_t waveformCache_[WAVEFORM_CACHE_SIZE]; // Store pre-calculated pixel heights
+  bool waveformCacheValid_;
+
+  void updateWaveformCache();
+
   float playbackPosition_; // Current playback position as normalized value (0.0
                            // - 1.0)
   uint32_t playbackStartFrame_; // Animation frame when playback started

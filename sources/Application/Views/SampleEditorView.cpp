@@ -22,12 +22,16 @@
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include <bitmapgfx.h>
+#include <cmath>
 #include <cstdint>
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), currentInstrument_(NULL), forceRedraw_(false),
       isPlaying_(false), isSingleCycle_(false), playKeyHeld_(false),
-      playbackPosition_(0.0f), playbackStartFrame_(0) {
+      waveformCacheValid_(false), playbackPosition_(0.0f),
+      playbackStartFrame_(0) {
+  // Initialize waveform cache to zero
+  memset(waveformCache_, 0, sizeof(waveformCache_));
 
   // Clear the buffer
   bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
@@ -57,6 +61,10 @@ void SampleEditorView::OnFocus() {
   // Force redraw of waveform
   forceRedraw_ = true;
 
+  // Invalidate cache on focus to ensure we always have the right waveform
+  updateWaveformCache();
+
+  FieldView::OnFocus();
   addAllFields();
 }
 
@@ -387,6 +395,60 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   forceRedraw_ = true;
 }
 
+void SampleEditorView::updateWaveformCache() {
+  if (!currentInstrument_) {
+    waveformCacheValid_ = false;
+    return;
+  }
+
+  SamplePool *pool = SamplePool::GetInstance();
+  SoundSource *source = pool->GetSource(currentInstrument_->GetSampleIndex());
+
+  if (!source) {
+    waveformCacheValid_ = false;
+    return;
+  }
+
+  int sampleSize = source->GetSize(0);
+  short *sampleBuffer = (short *)source->GetSampleBuffer(0);
+
+  if (!sampleBuffer || sampleSize == 0) {
+    waveformCacheValid_ = false;
+    return;
+  }
+
+  float samplesPerPixel = (float)sampleSize / (WAVEFORM_CACHE_SIZE - 2);
+  int maxHeight = (BITMAPHEIGHT / 2) - 2;
+
+  for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
+    int startSampleIndex = (int)(x * samplesPerPixel);
+    int endSampleIndex = (int)((x + 1) * samplesPerPixel);
+
+    if (endSampleIndex <= startSampleIndex) {
+      endSampleIndex = startSampleIndex + 1;
+    }
+
+    if (startSampleIndex < 0)
+      startSampleIndex = 0;
+    if (endSampleIndex >= sampleSize)
+      endSampleIndex = sampleSize - 1;
+
+    double sumSquares = 0.0;
+    int sampleCount = 0;
+
+    for (int i = startSampleIndex; i <= endSampleIndex; i++) {
+      float normalizedSample = sampleBuffer[i] / 32768.0f;
+      sumSquares += normalizedSample * normalizedSample;
+      sampleCount++;
+    }
+
+    float rmsValue = (sampleCount > 0) ? sqrt(sumSquares / sampleCount) : 0.0f;
+    waveformCache_[x] = (uint8_t)(rmsValue * maxHeight);
+  }
+
+  waveformCacheValid_ = true;
+}
+
 void SampleEditorView::updateWaveformDisplay() {
   // Clear the bitmap buffer
   memset(bitmapBuffer_, 0, BITMAPWIDTH * BITMAPHEIGHT / 8);
@@ -465,53 +527,23 @@ void SampleEditorView::updateWaveformDisplay() {
     loopStart = sampleSize - 1;
   }
 
-  // Get the sample buffer
-  void *sampleBufferVoid = source->GetSampleBuffer(0); // Use note 0 as default
-  if (!sampleBufferVoid) {
-    // No sample buffer, just update the bitmap and return
-    waveformField_[0].SetBitmap(bitmapBuffer_);
-    return;
-  }
-
-  // For now just assume 16-bit samples
-  short *sampleBuffer = (short *)sampleBufferVoid;
-
-  // Get the full sample range for proper scaling
-  int fullSampleSize = currentInstrument_->GetSampleSize();
-
-  // Calculate how many samples to skip between each pixel
-  // Use the full sample size to maintain scale
-  float samplesPerPixel = (float)sampleSize / (BITMAPWIDTH - 2);
-
-  // Draw the actual waveform from the sample data
+  // Draw the waveform from the cache
   int centerY = BITMAPHEIGHT / 2;
-
-  for (int x = 1; x < BITMAPWIDTH - 1; x++) {
-    // Calculate the sample index for this x position
-    int sampleIndex = (int)((x - 1) * samplesPerPixel);
-
-    // Ensure the sample index is within bounds
-    if (sampleIndex < 0)
-      sampleIndex = 0;
-    if (sampleIndex >= sampleSize)
-      sampleIndex = sampleSize - 1;
-
-    // Get the sample value and map it to the bitmap height
-    short sampleValue = sampleBuffer[sampleIndex];
-
-    // Map the 16-bit sample (-32768 to 32767) to the bitmap height
-    int y = centerY - (int)((sampleValue * (BITMAPHEIGHT - 4)) / 65536);
-
-    // Ensure y is within bounds
-    if (y < 1)
-      y = 1;
-    if (y >= BITMAPHEIGHT - 1)
-      y = BITMAPHEIGHT - 2;
-
-    // Draw a line from the center to the sample point
-    bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, centerY, x,
-                        y, true);
+  for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
+    int pixelHeight = waveformCache_[x];
+    if (pixelHeight > 0) { // Draw only if there's something to see
+      // Ensure minimum height for visibility
+      if (pixelHeight < 1)
+        pixelHeight = 1;
+      // Draw the waveform as vertical lines from center
+      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x,
+                          centerY - pixelHeight, x, centerY + pixelHeight,
+                          true);
+    }
   }
+
+  // Get the full sample range for proper scaling of markers
+  int fullSampleSize = currentInstrument_->GetSampleSize();
 
   // Calculate positions for start and end markers based on their actual values
   // Map the start position to the bitmap width - start as a fraction of
