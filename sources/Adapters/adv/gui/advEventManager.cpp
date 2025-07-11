@@ -6,9 +6,7 @@
 #include "advGUIWindowImp.h"
 // #include "usb_utils.h"
 #include "etl/map.h"
-#include "ff_gen_drv.h"
 #include "platform.h"
-#include "sd_diskio.h"
 #include "tim.h"
 #include "timers.h"
 
@@ -48,8 +46,6 @@ advEventQueue *queue;
 #define INPUT_BUFFER_SIZE 80
 char inBuffer[INPUT_BUFFER_SIZE];
 #endif
-
-extern char SDPath[4]; /* SD logical drive path */
 
 /* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
  * implementation of vApplicationGetIdleTaskMemory() to provide the memory that
@@ -233,21 +229,6 @@ void ProcessEvent(void *) {
   }
 }
 
-void SDMonitor(void *) {
-  sd_semaphore = xSemaphoreCreateBinaryStatic(&sd_semaphoreBuffer);
-  for (;;) {
-    if (xSemaphoreTake(sd_semaphore, portMAX_DELAY) == pdTRUE) {
-      // SD reinit
-      FATFS_UnLinkDriver(SDPath);
-      HAL_SD_DeInit(&hsd1);
-      __HAL_RCC_SDMMC1_FORCE_RESET();
-      __HAL_RCC_SDMMC1_RELEASE_RESET();
-      MX_SDMMC1_SD_Init();
-      FATFS_LinkDriver(&SD_DMA_Driver, SDPath);
-    }
-  }
-}
-
 advEventManager::advEventManager() {}
 
 advEventManager::~advEventManager() {}
@@ -324,11 +305,6 @@ int advEventManager::MainLoop() {
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(ProcessEvent, "ProcEvent", 1000, NULL, 1, ProcessEventStack,
                     &ProcessEventTCB);
-
-  static StackType_t SDMonitorStack[1024];
-  static StaticTask_t SDMonitorTCB;
-  xTaskCreateStatic(SDMonitor, "SD Monitor", 1024, NULL, 1, SDMonitorStack,
-                    &SDMonitorTCB);
 
   vTaskStartScheduler();
   // we never get here
@@ -441,5 +417,19 @@ void advEventManager::ProcessInputEvent(void *) {
     //    Trace::Debug("Tick count: %lu\n", xTaskGetTickCount());
     vTaskDelay(pdMS_TO_TICKS(50)); // check input at 20Hz
     //    Trace::Debug("Inputs task");
+  }
+}
+
+// TODO: What's the right place for this?
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == SD_DET_Pin) {
+    if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
+      // SD card inserted
+      queue = advEventQueue::GetInstance();
+      queue->push(advEvent(PICO_SD_DET));
+    } else {
+      // We don't yet do anything for SD Card removed, could actually unlink FS
+      // on removal
+    }
   }
 }

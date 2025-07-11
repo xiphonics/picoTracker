@@ -19,9 +19,6 @@
 
 typedef void (*pFunction)(void);
 
-extern SemaphoreHandle_t sd_semaphore;
-extern StaticSemaphore_t sd_semaphoreBuffer;
-
 int32_t platform_get_rand();
 
 void platform_reboot();
