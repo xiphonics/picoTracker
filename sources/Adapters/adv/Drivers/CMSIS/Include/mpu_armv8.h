@@ -1,13 +1,3 @@
-/* USER CODE BEGIN Header */
-/*
- * SPDX-License-Identifier: BSD-3-Clause
- *
- * Copyright (c) 2025 STMicroelectronics.
- * Copyright (c) 2025 xiphonics, inc.
- *
- * This file is part of the picoTracker firmware
- */
-/* USER CODE END Header */
 /******************************************************************************
  * @file     mpu_armv8.h
  * @brief    CMSIS MPU API for Armv8-M and Armv8.1-M MPU
