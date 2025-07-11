@@ -13,6 +13,7 @@
 #include "Application/Model/Config.h"
 #include "advGUIWindowImp.h"
 // #include "usb_utils.h"
+#include "Adapters/adv/audio/record.h"
 #include "etl/map.h"
 #include "platform.h"
 #include "tim.h"
@@ -314,6 +315,9 @@ int advEventManager::MainLoop() {
   xTaskCreateStatic(ProcessEvent, "ProcEvent", 1000, NULL, 1, ProcessEventStack,
                     &ProcessEventTCB);
 
+  RecordHandle = xTaskCreateStatic(Record, "Record", 1000, NULL, 1, RecordStack,
+                                   &RecordTCB);
+
   vTaskStartScheduler();
   // we never get here
 
@@ -435,8 +439,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       queue = advEventQueue::GetInstance();
       queue->push(advEvent(PICO_SD_DET));
     } else {
-      // We don't yet do anything for SD Card removed, could actually unlink FS
-      // on removal
+      // We don't yet do anything for SD Card removed, could actually unlink
+      // FS on removal
     }
   }
 }
