@@ -386,7 +386,6 @@ void advEventManager::ProcessInputEvent(void *) {
   }
 }
 
-// TODO: What's the right place for this?
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   if (GPIO_Pin == SD_DET_Pin) {
     if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {

@@ -10,9 +10,7 @@
 #include "System/Process/SysMutex.h"
 #include <cstdint>
 
-#include "FreeRTOS.h"
 #include "main.h"
-#include "semphr.h"
 #include "usart.h"
 
 #define BOOTLOADER_ADDR 0x81e0000U
@@ -29,6 +27,8 @@ SysMutex *platform_mutex();
 
 uint32_t millis(void);
 uint32_t micros(void);
+
+void platform_brightness(uint8_t value);
 
 void pt_uart_putc(int c, void *context);
 #endif

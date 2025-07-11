@@ -1,11 +1,18 @@
 #include "platform.h"
 #include "Adapters/adv/mutex/advMutex.h"
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "System/Console/Trace.h"
+#include "rng.h"
 #include "tim.h"
 
-// TODO(democloid): implement this
-int32_t platform_get_rand() { return 0; };
+int32_t platform_get_rand() {
+  uint32_t random32;
+  if (HAL_RNG_GenerateRandomNumber(&hrng, &random32) == HAL_OK) {
+    return (int32_t)random32;
+  } else {
+    Trace::Error("Error generating random number");
+    return 0;
+  }
+};
 
 void platform_reboot() { NVIC_SystemReset(); };
 
@@ -60,6 +67,25 @@ SysMutex *platform_mutex() { return new advMutex(); };
 
 uint32_t millis(void) { return __HAL_TIM_GET_COUNTER(&htim2) / 1000; }
 uint32_t micros(void) { return __HAL_TIM_GET_COUNTER(&htim2); }
+
+void platform_brightness(uint8_t value) {
+  uint8_t min_brightness = 20;
+
+  // Calculate effective range: from min_percent up to 100%
+  float effective_range = 100.0f - min_brightness;
+
+  // Normalize value (0–255) to a 0.0–1.0 range
+  float normalized = (float)value / 255.0f;
+
+  // Final percentage to set
+  float pwm_percent = min_brightness + normalized * effective_range;
+
+  // Convert to timer pulse (assuming Period = 999 for 100%)
+  uint32_t pulse = (uint32_t)((pwm_percent / 100.0f) *
+                              (__HAL_TIM_GET_AUTORELOAD(&htim13) + 1));
+
+  __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse);
+}
 
 void pt_uart_putc(int c, void *context) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
