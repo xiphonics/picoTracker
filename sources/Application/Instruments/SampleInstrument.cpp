@@ -818,6 +818,14 @@ int SampleInstrument::GetSampleSize(int channel) {
     return source_->GetSize(rp->midiNote_);
   };
   return 0;
+}
+
+float SampleInstrument::GetLengthInSec() {
+  if (source_) {
+    return source_->GetLengthInSec();
+  } else {
+    return 0.0f;
+  }
 };
 
 bool SampleInstrument::IsInitialized() { return (source_ != 0); };

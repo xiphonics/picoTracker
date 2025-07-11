@@ -69,6 +69,7 @@ public:
   int GetVolume();
   void SetVolume(int);
   int GetSampleSize(int channel = -1);
+  float GetLengthInSec();
 
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName();
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() override;

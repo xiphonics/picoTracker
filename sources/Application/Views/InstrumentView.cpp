@@ -15,7 +15,6 @@
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Views/ImportView.h"
-#include "Application/Views/TestBitmap.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
@@ -155,6 +154,7 @@ void InstrumentView::onInstrumentChange() {
 };
 
 void InstrumentView::refreshInstrumentFields() {
+  // Remove this view as an observer from all fields
   for (auto &f : intVarField_) {
     f.RemoveObserver(*this);
   }
@@ -167,6 +167,11 @@ void InstrumentView::refreshInstrumentFields() {
   for (auto &f : bitmaskVarField_) {
     f.RemoveObserver(*this);
   }
+  for (auto &f : actionField_) {
+    f.RemoveObserver(*this);
+  }
+  // Note: we don't remove observer from instrument type field as its always
+  // visible!
 
   fieldList_.clear();
   intVarField_.clear();
@@ -177,6 +182,11 @@ void InstrumentView::refreshInstrumentFields() {
   bitmaskVarField_.clear();
   nameTextField_.clear();
   nameVariables_.clear();
+
+  // only clear if not NONE type
+  if (instrumentType_.GetInt() != IT_NONE) {
+    actionField_.clear();
+  }
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -193,7 +203,9 @@ void InstrumentView::refreshInstrumentFields() {
     // bit of a hack !!since we just assume that import is the first action
     // field
     fieldList_.insert(fieldList_.end(), &(*actionField_.begin()));
-    (*actionField_.rbegin()).AddObserver(*this);
+    // Fix: Add observer to the same field that's being displayed (first one,
+    // not last one)
+    (*actionField_.begin()).AddObserver(*this);
   }
 
   // Create a new nameTextField_ if the instrument type supports it
@@ -278,6 +290,10 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
+  actionField_.emplace_back("Sample Editor", FourCC::ActionShowSampleEditor,
+                            position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentPan);
@@ -995,6 +1011,13 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         midiInstr->SendProgramChangeWithNote(channel, program);
       }
     }
+  } break;
+  case FourCC::ActionShowSampleEditor: {
+    // Switch to the SampleEditorView
+    ViewType vt = VT_SAMPLE_EDITOR;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
   } break;
   default:
     break;

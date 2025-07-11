@@ -204,6 +204,7 @@ struct FourCC {
     // 172 is taken for ActionThemeName
     // 173 is taken for VarThemeName
     // 174 is taken for VarBacklightLevel
+    // 175 is taken for ActionShowSampleEditor
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -234,6 +235,7 @@ struct FourCC {
     ActionRenderMixdown = 149,
     ActionRenderStems = 150,
     ActionShowTheme = 159,
+    ActionShowSampleEditor = 175,
     ActionThemeName = 172,
     SampleInstrumentSlices = 171,
     VarBacklightLevel = 174,
