@@ -499,8 +499,9 @@ void SampleEditorView::updateWaveformDisplay() {
     if (y >= BITMAPHEIGHT - 1)
       y = BITMAPHEIGHT - 2;
 
-    // Draw the sample point
-    bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, x, y, true);
+    // Draw a line from the center to the sample point
+    bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 
+                       x, centerY, x, y, true);
   }
 
   // Calculate positions for start and end markers based on their actual values
