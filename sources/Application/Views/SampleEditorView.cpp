@@ -558,14 +558,17 @@ void SampleEditorView::updateWaveformDisplay() {
   int centerY = BITMAPHEIGHT / 2;
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
     int pixelHeight = waveformCache_[x];
-    if (pixelHeight > 0) { // Draw only if there's something to see
-      // Ensure minimum height for visibility
-      if (pixelHeight < 1)
-        pixelHeight = 1;
-      // Draw the waveform as vertical lines from center
+    
+    // Always draw at least a 1-pixel line for visibility, even for very quiet signals
+    if (pixelHeight < 1) {
+      // For very quiet signals, draw a single pixel line
+      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 
+                         centerY, x, centerY, true);
+    } else {
+      // For non-zero signals, draw the full height
       bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x,
-                          centerY - pixelHeight, x, centerY + pixelHeight,
-                          true);
+                         centerY - pixelHeight, x, centerY + pixelHeight,
+                         true);
     }
   }
 
