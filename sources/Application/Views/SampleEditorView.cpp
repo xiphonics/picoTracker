@@ -420,6 +420,26 @@ void SampleEditorView::updateWaveformCache() {
   float samplesPerPixel = (float)sampleSize / (WAVEFORM_CACHE_SIZE - 2);
   int maxHeight = (BITMAPHEIGHT / 2) - 2;
 
+  // First, find the peak amplitude of the sample to determine scaling
+  short peakAmplitude = 0;
+  for (int i = 0; i < sampleSize; i++) {
+    short sampleValue = abs(sampleBuffer[i]);
+    if (sampleValue > peakAmplitude) {
+      peakAmplitude = sampleValue;
+    }
+  }
+
+  // Choose a scaling factor based on the peak amplitude
+  float scalingFactor = 1.0f;
+  if (peakAmplitude < 15000) {
+    scalingFactor = 3.0f;
+  } else if (peakAmplitude < 25000) {
+    scalingFactor = 2.0f;
+  } else if (peakAmplitude < 35000) {
+    scalingFactor = 1.0f;
+  }
+
+  // Now, calculate the RMS for each column and apply the chosen scaling
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
     int startSampleIndex = (int)(x * samplesPerPixel);
     int endSampleIndex = (int)((x + 1) * samplesPerPixel);
@@ -443,7 +463,14 @@ void SampleEditorView::updateWaveformCache() {
     }
 
     float rmsValue = (sampleCount > 0) ? sqrt(sumSquares / sampleCount) : 0.0f;
-    waveformCache_[x] = (uint8_t)(rmsValue * maxHeight);
+    float scaledRms = rmsValue * scalingFactor;
+
+    // Clamp the value to prevent overflow
+    if (scaledRms > 1.0f) {
+      scaledRms = 1.0f;
+    }
+
+    waveformCache_[x] = (uint8_t)(scaledRms * maxHeight);
   }
 
   waveformCacheValid_ = true;
