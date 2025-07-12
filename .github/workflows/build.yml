@@ -90,3 +90,24 @@ jobs:
       with:
         name: picoTracker_st7789-uf2
         path: ${{github.workspace}}/build-st7789/Adapters/picoTracker/main/picoTracker.uf2 
+
+
+ # Advance Build Steps
+    - name: Create Build Environment for Advance
+      working-directory: ${{github.workspace}}
+      run:  cmake -E make_directory ${{github.workspace}}/build-advance
+
+    - name: Configure CMake for Advance
+      shell: bash
+      working-directory: ${{github.workspace}}/build-advance
+      run: cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DADV=true
+
+    - name: Build Advance Firmware
+      working-directory: ${{github.workspace}}/build-advance
+      shell: bash
+      run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: picoTracker_advance
+        path: ${{github.workspace}}/build-advance/Adapters/adv/picoTrackerAdvance.elf
