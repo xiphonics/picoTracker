@@ -93,21 +93,21 @@ jobs:
 
 
  # Advance Build Steps
- - name: Create Build Environment for Advance
- working-directory: ${{github.workspace}}
- run:  cmake -E make_directory ${{github.workspace}}/build-advance
+    - name: Create Build Environment for Advance
+      working-directory: ${{github.workspace}}
+      run:  cmake -E make_directory ${{github.workspace}}/build-advance
 
-- name: Configure CMake for Advance
- shell: bash
- working-directory: ${{github.workspace}}/build-advance
- run: cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DADV=true
+    - name: Configure CMake for Advance
+      shell: bash
+      working-directory: ${{github.workspace}}/build-advance
+      run: cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DADV=true
 
-- name: Build Advance Firmware
- working-directory: ${{github.workspace}}/build-advance
- shell: bash
- run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
+    - name: Build Advance Firmware
+      working-directory: ${{github.workspace}}/build-advance
+      shell: bash
+      run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
 
-- uses: actions/upload-artifact@v4
- with:
-   name: picoTracker_advance
-   path: ${{github.workspace}}/build-advance/Adapters/adv/picoTrackerAdvance.elf
+    - uses: actions/upload-artifact@v4
+      with:
+        name: picoTracker_advance
+        path: ${{github.workspace}}/build-advance/Adapters/adv/picoTrackerAdvance.elf
