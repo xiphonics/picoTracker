@@ -175,7 +175,7 @@ void timerStatsHandler(TimerHandle_t xTimer) {
   if (ulTotalRunTime > 0) {
     // For each populated position in the pxTaskStatusArray array,
     // format the raw data as human readable ASCII data.
-    for (x = 0; x < uxArraySize; x++) {
+    for (uint32_t x = 0; x < uxArraySize; x++) {
       if (stats.contains(pxTaskStatusArray[x].pcTaskName)) {
         deltaPercentage = (pxTaskStatusArray[x].ulRunTimeCounter -
                            stats[pxTaskStatusArray[x].pcTaskName]) /
