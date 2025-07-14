@@ -11,7 +11,9 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
-#define RECORD_BUFFER_SIZE 32768 // Adjust based on sample rate and latency
+#define RECORD_BUFFER_SIZE                                                     \
+  35280 // Resolution is 200ms, we want buffer to be relatively big for disk
+        // writing efficiency
 extern uint16_t recordBuffer[RECORD_BUFFER_SIZE];
 
 static StackType_t RecordStack[1024];
@@ -19,6 +21,8 @@ static StaticTask_t RecordTCB;
 extern TaskHandle_t RecordHandle;
 
 void Record(void *);
-bool StartRecording(const char *filename);
+bool StartRecording(const char *filename, uint8_t threshold,
+                    uint32_t milliseconds);
+void stopRecording();
 
 #endif

@@ -15,6 +15,7 @@
 #include "Application/Model/Project.h"
 #include "Application/Utils/fixed.h"
 #include "Application/Views/ViewData.h"
+#include "Application/audio/RecordStreamer.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "PlayerChannel.h"
@@ -57,6 +58,9 @@ public:
   void StartLoopingStreaming(char *name);
   void StopStreaming();
 
+  void StartRecordStreaming(uint16_t *srcBuffer, uint32_t size, bool stereo);
+  void StopRecordStreaming();
+
   stereosample GetMasterOutLevel();
 
   void Update(Observable &o, I_ObservableData *d);
@@ -86,6 +90,7 @@ private:
   bool isChannelPlaying_[SONG_CHANNEL_COUNT];
 
   AudioFileStreamer fileStreamer_;
+  RecordStreamer recordStreamer_;
   PlayerChannel *channel_[SONG_CHANNEL_COUNT];
 
   // store trigger notes, 0xFF = none
