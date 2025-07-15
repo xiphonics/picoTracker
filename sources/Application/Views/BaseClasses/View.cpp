@@ -14,6 +14,7 @@
 #include "Application/Utils/mathutils.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
+#include <UIFramework/SimpleBaseClasses/EventManager.h>
 #include <nanoprintf.h>
 
 bool View::initPrivate_ = false;
@@ -437,10 +438,10 @@ void View::drawBattery(GUITextProperties &props) {
 void View::drawPowerButtonUI(GUITextProperties &props) {
   // Only process and draw UI when power button is pressed
   if (powerButtonPressed_) {
-    char countdownMessage[40];
+    char countdownMessage[SCREEN_WIDTH];
     powerButtonHoldCount_++;
 
-    int remainingSeconds = 3 - (powerButtonHoldCount_ / 50);
+    int remainingSeconds = 3 - (powerButtonHoldCount_ / PICO_CLOCK_HZ);
     if (remainingSeconds < 0) {
       remainingSeconds = 0;
     }
