@@ -28,6 +28,7 @@ if (NOT DEFINED ADV)
   set(ADV false)
 endif()
 
+# pico
 if (NOT ${ADV})
   set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
   # Pull in SDK (must be before project)
@@ -127,6 +128,7 @@ if (NOT ${ADV})
   # This is the default, but better to make it explicit
   pico_set_float_implementation(${PROJECT_NAME} pico)
 
+# Advance
 else()
   message("picoTracker Advance Build")
   add_definitions(-DADV)
