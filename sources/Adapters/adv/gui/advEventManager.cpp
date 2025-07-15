@@ -18,6 +18,8 @@
 #include "platform.h"
 #include "tim.h"
 #include "timers.h"
+#include "tusb.h"
+#include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #ifdef SERIAL_REPL
 #include "SerialDebugUI.h"
@@ -49,7 +51,7 @@ SerialDebugUI advEventManager::serialDebugUI_ = SerialDebugUI();
 char advEventManager::inBuffer[INPUT_BUFFER_SIZE] = {0};
 #endif
 
-advEventQueue *queue;
+QueueHandle_t eventQueue;
 
 #ifdef SERIAL_REPL
 #define INPUT_BUFFER_SIZE 80
@@ -171,7 +173,8 @@ void timerStatsHandler(TimerHandle_t xTimer) {
   ulTotalRunTime /= 100UL;
   //  Avoid divide by zero errors.
 
-  Trace::Debug("Name\t\ttime\t\tlife\t\t5sec\t\tstack high watermark");
+  Trace::Debug("%-16s %12s %12s %12s %12s", "Name", "time", "life", "5sec",
+               "stack high watermark");
   if (ulTotalRunTime > 0) {
     // For each populated position in the pxTaskStatusArray array,
     // format the raw data as human readable ASCII data.
@@ -189,7 +192,7 @@ void timerStatsHandler(TimerHandle_t xTimer) {
       //         ulTotalRunTimeDiv100 has already been divided by 100.
       ulStatsAsPercentage =
           pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;
-      Trace::Debug("%s\t\t%lu\t\t%lu%%\t\t%lu%%\t\t%lu",
+      Trace::Debug("%-16s %12lu %11lu%% %11lu%% %12lu",
                    pxTaskStatusArray[x].pcTaskName,
                    pxTaskStatusArray[x].ulRunTimeCounter, ulStatsAsPercentage,
                    deltaPercentage, pxTaskStatusArray[x].usStackHighWaterMark);
@@ -202,10 +205,8 @@ void timerStatsHandler(TimerHandle_t xTimer) {
 // timer callback at a rate of 50Hz
 void timerHandler(TimerHandle_t xTimer) {
   UNUSED(xTimer);
-  queue = advEventQueue::GetInstance();
-
-  // send a clock (PICO_CLOCK)
-  queue->push(advEvent(PICO_CLOCK));
+  Event ev(CLOCK);
+  xQueueSend(eventQueue, &ev, 0);
 }
 
 /*
@@ -220,21 +221,22 @@ int readFromUSBCDC(char *buf, int len) {
 */
 
 void ProcessEvent(void *) {
-  auto queue = advEventQueue::GetInstance();
+  uint8_t eventQueueStorage[EVENT_QUEUE_LENGTH * EVENT_QUEUE_ITEM_SIZE];
+  eventQueue = xQueueCreateStatic(EVENT_QUEUE_LENGTH, EVENT_QUEUE_ITEM_SIZE,
+                                  eventQueueStorage, &eventQueueBuffer);
+
+  Event event(EventType::LAST);
   for (;;) {
-    if (!queue->empty()) {
-      advEvent event(advEventType::LAST);
-      queue->pop_into(event);
-      //      redrawing_ = true;
+    if (xQueueReceive(eventQueue, &event, portMAX_DELAY) == pdTRUE) {
       advGUIWindowImp::ProcessEvent(event);
-      //      redrawing_ = false;
     }
-    //    Trace::Debug("Event task running, stack free: %d\n",
-    //                 uxTaskGetStackHighWaterMark(NULL));
-    // TODO: the event queue should be a FreeRTOS queue and this should halt
-    // waiting for an event
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-    //    Trace::Debug("Process event");
+  }
+}
+
+void USBDevice(void *) {
+  for (;;) {
+    tud_task();                    // Handle USB device events
+    vTaskDelay(pdMS_TO_TICKS(10)); // TODO: What's needed here?
   }
 }
 
@@ -257,16 +259,15 @@ bool advEventManager::Init() {
   // this keyRepeat logic is already implemented in the eventdispatcher
   // Application/Commands/EventDispatcher.cpp
   //  add_repeating_timer_ms(1, timerHandler, NULL, &timer_);
-
-  // 50Hz timer for timeHanlder to create UI redraw events
-  int ticks = pdMS_TO_TICKS(20);
   timer =
       xTimerCreateStatic(/* Just a text name, not used by the RTOS kernel. */
                          "advTimer",
                          /* The timer period in ticks, must be greater than
                          0.
                           */
-                         ticks, // 20ms = 50Hz
+                         PICO_CLOCK_INTERVAL, // 50Hz timer for timeHanlder to
+                                              // create UI redraw events
+
                          /* The timers will auto-reload themselves when they
                           * expire.
                           */
@@ -284,13 +285,12 @@ bool advEventManager::Init() {
     Trace::Error("Failed to start timer");
     return false;
   } else {
-    Trace::Debug("Timer started with period: %d ticks", ticks);
+    Trace::Debug("Timer started with period: %d ticks", PICO_CLOCK_INTERVAL);
     return true;
   }
 }
 
 int advEventManager::MainLoop() {
-  queue = advEventQueue::GetInstance();
   int loops = 0;
   int events = 0;
 #ifdef SDIO_BENCH
@@ -318,34 +318,14 @@ int advEventManager::MainLoop() {
   RecordHandle = xTaskCreateStatic(Record, "Record", 1000, NULL, 1, RecordStack,
                                    &RecordTCB);
 
+  static StackType_t USBDeviceStack[512];
+  static StaticTask_t USBDeviceTCB;
+  xTaskCreateStatic(USBDevice, "USB Device", 512, NULL, tskIDLE_PRIORITY + 2,
+                    USBDeviceStack, &USBDeviceTCB);
+
   vTaskStartScheduler();
   // we never get here
 
-  while (!finished_) {
-    loops++;
-
-    // process usb interrupts, should this be done somewhere else??
-    //    handleUSBInterrupts();
-
-    //    ProcessInputEvent();
-    if (!queue->empty()) {
-      advEvent event(advEventType::LAST);
-      queue->pop_into(event);
-      events++;
-      redrawing_ = true;
-      advGUIWindowImp::ProcessEvent(event);
-      redrawing_ = false;
-    }
-#ifdef PICOSTATS
-    if (loops == 100000) {
-      Trace::Debug("Usage %.1f% CPU\n", ((float)events / loops) * 100);
-      events = 0;
-      loops = 0;
-      //      measure_freqs();
-      measure_free_mem();
-    }
-#endif
-  }
   // TODO: HW Shutdown
   return 0;
 }
@@ -420,8 +400,8 @@ void advEventManager::ProcessInputEvent(void *) {
       Trace::Debug("Received %d bytes from UART", sizeof(uartBuffer));
       // For now, we'll just trigger a redraw when any data is received
       // You can add more sophisticated command handling here as needed
-      queue = advEventQueue::GetInstance();
-      queue->push(advEvent(PICO_REDRAW));
+      Event ev(REDRAW);
+      xQueueSend(eventQueue, &ev, 0);
     }
 #endif // USB_REMOTE_UI
     //    Trace::Debug("Input task running, stack free: %d\n",
@@ -436,8 +416,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   if (GPIO_Pin == SD_DET_Pin) {
     if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
       // SD card inserted
-      queue = advEventQueue::GetInstance();
-      queue->push(advEvent(PICO_SD_DET));
+      Event ev(SD_DET);
+      xQueueSend(eventQueue, &ev, 0);
     } else {
       // We don't yet do anything for SD Card removed, could actually unlink
       // FS on removal

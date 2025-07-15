@@ -171,6 +171,7 @@ set(PICOTRACKER_LINK_LIBS
   platform_system
   system_console
   platform_mutex
+  tinyusb
 )
 # Interface library for includes and symbols
 add_library(stm32cubemx INTERFACE)
@@ -265,3 +266,4 @@ add_subdirectory(filesystem)
 add_subdirectory(platform)
 add_subdirectory(mutex)
 add_subdirectory(sdcard)
+add_subdirectory(usb)

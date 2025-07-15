@@ -28,6 +28,7 @@ if (NOT DEFINED ADV)
   set(ADV false)
 endif()
 
+# pico
 if (NOT ${ADV})
   set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
   # Pull in SDK (must be before project)
@@ -127,6 +128,7 @@ if (NOT ${ADV})
   # This is the default, but better to make it explicit
   pico_set_float_implementation(${PROJECT_NAME} pico)
 
+# Advance
 else()
   message("picoTracker Advance Build")
   add_definitions(-DADV)
@@ -184,7 +186,9 @@ else()
 
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TARGET_FLAGS}")
   set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp -MMD -MP")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections")
+  # TODO(democloid): reenable Wpedantic? (disabled due to tinyUSB
+  #  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -fdata-sections -ffunction-sections")
 
   set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
   set(CMAKE_C_FLAGS_RELEASE "-Os -g0")
@@ -214,7 +218,8 @@ else()
 
   add_subdirectory(Externals/FreeRTOS-Kernel)
   add_subdirectory(Externals/FatFs)
-
+  add_subdirectory(Externals/tinyusb)
+  
   # TODO: Add ETL here
   # cubemx and freertos is included on all targets
   link_libraries(stm32cubemx freertos_kernel)
