@@ -25,7 +25,7 @@
 #include "serial.h"
 #include "tusb.h"
 
-#define USB_VID 0x2E8A
+#define USB_VID 0x1D50
 #define USB_BCD 0x0200
 
 /* A combination of interfaces must have a unique product id, since PC will save
@@ -36,7 +36,7 @@
  *   [MSB]       MIDI | HID | MSC | CDC          [LSB]
  */
 #define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
-#define USB_PID 0x000A
+#define USB_PID 0x6192
 //--------------------------------------------------------------------+
 // Device Descriptors
 //--------------------------------------------------------------------+
