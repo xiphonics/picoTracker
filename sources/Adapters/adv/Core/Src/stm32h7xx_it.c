@@ -17,6 +17,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Adapters/adv/system/critical_error_message.h"
+#include "tusb.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -229,5 +230,11 @@ void DMA2D_IRQHandler(void) {
 }
 
 /* USER CODE BEGIN 1 */
-
+/**
+ * @brief This function handles USB On The Go HS global interrupt.
+ */
+void OTG_HS_IRQHandler(void) {
+  // USB_HS is port 1 in tinyusb
+  tusb_int_handler(1, true);
+}
 /* USER CODE END 1 */

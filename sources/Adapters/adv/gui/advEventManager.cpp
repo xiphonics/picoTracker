@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #include "advEventManager.h"
 #include "Adapters/adv/system/input.h"
 #include "Adapters/adv/utils/utils.h"
@@ -9,6 +17,7 @@
 #include "platform.h"
 #include "tim.h"
 #include "timers.h"
+#include "tusb.h"
 
 #ifdef SERIAL_REPL
 #include "SerialDebugUI.h"
@@ -222,6 +231,13 @@ void ProcessEvent(void *) {
   }
 }
 
+void USBDevice(void *) {
+  for (;;) {
+    tud_task();                    // Handle USB device events
+    vTaskDelay(pdMS_TO_TICKS(10)); // TODO: What's needed here?
+  }
+}
+
 advEventManager::advEventManager() {}
 
 advEventManager::~advEventManager() {}
@@ -297,6 +313,11 @@ int advEventManager::MainLoop() {
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(ProcessEvent, "ProcEvent", 1000, NULL, 1, ProcessEventStack,
                     &ProcessEventTCB);
+
+  static StackType_t USBDeviceStack[512];
+  static StaticTask_t USBDeviceTCB;
+  xTaskCreateStatic(USBDevice, "USB Device", 512, NULL, tskIDLE_PRIORITY + 2,
+                    USBDeviceStack, &USBDeviceTCB);
 
   vTaskStartScheduler();
   // we never get here
