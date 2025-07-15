@@ -18,6 +18,7 @@
 #include "tim.h"
 #include "timers.h"
 #include "tusb.h"
+#include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #ifdef SERIAL_REPL
 #include "SerialDebugUI.h"
@@ -257,16 +258,15 @@ bool advEventManager::Init() {
   // this keyRepeat logic is already implemented in the eventdispatcher
   // Application/Commands/EventDispatcher.cpp
   //  add_repeating_timer_ms(1, timerHandler, NULL, &timer_);
-
-  // 50Hz timer for timeHanlder to create UI redraw events
-  int ticks = pdMS_TO_TICKS(20);
   timer =
       xTimerCreateStatic(/* Just a text name, not used by the RTOS kernel. */
                          "advTimer",
                          /* The timer period in ticks, must be greater than
                          0.
                           */
-                         ticks, // 20ms = 50Hz
+                         PICO_CLOCK_INTERVAL, // 50Hz timer for timeHanlder to
+                                              // create UI redraw events
+
                          /* The timers will auto-reload themselves when they
                           * expire.
                           */
@@ -284,7 +284,7 @@ bool advEventManager::Init() {
     Trace::Error("Failed to start timer");
     return false;
   } else {
-    Trace::Debug("Timer started with period: %d ticks", ticks);
+    Trace::Debug("Timer started with period: %d ticks", PICO_CLOCK_INTERVAL);
     return true;
   }
 }
