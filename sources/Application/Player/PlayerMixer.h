@@ -11,11 +11,11 @@
 #define _APPLICATION_MIXER_H_
 
 #include "Application/Audio/AudioFileStreamer.h"
+#include "Application/Audio/RecordStreamer.h"
 #include "Application/Mixer/MixerService.h"
 #include "Application/Model/Project.h"
 #include "Application/Utils/fixed.h"
 #include "Application/Views/ViewData.h"
-#include "Application/audio/RecordStreamer.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "PlayerChannel.h"
