@@ -438,7 +438,7 @@ void View::drawBattery(GUITextProperties &props) {
 void View::drawPowerButtonUI(GUITextProperties &props) {
   // Only process and draw UI when power button is pressed
   if (powerButtonPressed_) {
-    char countdownMessage[40];
+    char countdownMessage[SCREEN_WIDTH];
     powerButtonHoldCount_++;
 
     int remainingSeconds = 3 - (powerButtonHoldCount_ / PICO_CLOCK_HZ);
@@ -451,11 +451,6 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
 
     if (remainingSeconds == 0) {
       Trace::Debug("Power button held for threshold time, Powerdown!");
-
-      // clear screen before powerdown
-      // TODO: doesn't work at the moment, adv comes back showing last screen
-      // content
-      ForceClear();
 
       System::GetInstance()->PowerDown();
     }
