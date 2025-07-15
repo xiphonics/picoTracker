@@ -224,16 +224,11 @@ void ProcessEvent(void *) {
     if (!queue->empty()) {
       advEvent event(advEventType::LAST);
       queue->pop_into(event);
-      //      redrawing_ = true;
       advGUIWindowImp::ProcessEvent(event);
-      //      redrawing_ = false;
     }
-    //    Trace::Debug("Event task running, stack free: %d\n",
-    //                 uxTaskGetStackHighWaterMark(NULL));
     // TODO: the event queue should be a FreeRTOS queue and this should halt
     // waiting for an event
     vTaskDelay(20 / portTICK_PERIOD_MS);
-    //    Trace::Debug("Process event");
   }
 }
 
