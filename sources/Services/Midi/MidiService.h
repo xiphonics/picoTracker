@@ -78,8 +78,6 @@ private:
   int currentOutQueue_;
 
   MidiInMerger *merger_;
-  int midiDelay_;
-  int tickToFlush_;
   bool sendSync_;
 };
 #endif
