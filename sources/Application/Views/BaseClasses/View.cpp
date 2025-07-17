@@ -438,6 +438,15 @@ void View::drawBattery(GUITextProperties &props) {
 void View::drawPowerButtonUI(GUITextProperties &props) {
   // Only process and draw UI when power button is pressed
   if (powerButtonPressed_) {
+    if (System::GetInstance()->isShutdown()) {
+      powerButtonHoldCount_++;
+
+      int remainingSeconds = 1 - (powerButtonHoldCount_ / PICO_CLOCK_HZ);
+      if (remainingSeconds < 0) {
+        System::GetInstance()->PowerUp();
+      }
+    }
+
     char countdownMessage[SCREEN_WIDTH];
     powerButtonHoldCount_++;
 

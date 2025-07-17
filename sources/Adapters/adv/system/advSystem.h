@@ -34,12 +34,15 @@ public: // System implementation
   virtual void PostQuitMessage();
   virtual unsigned int GetMemoryUsage();
   virtual void PowerDown();
+  virtual bool isShutdown();
+  virtual void PowerUp();
 
 private:
   static bool invert_;
   static int lastBattLevel_;
   static unsigned int lastBeatCount_;
   static EventManager *eventManager_;
+  static bool shutdown_;
   std::map<void *, unsigned> mmap_;
 
   void setCharging(void);

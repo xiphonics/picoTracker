@@ -16,8 +16,10 @@
 #include "Application/Commands/NodeList.h"
 #include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
+#include "Application/Player/Player.h"
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"
+#include "batteryCharger.h"
 #include "critical_error_message.h"
 #include "i2c.h"
 #include "input.h"
@@ -37,6 +39,7 @@ EventManager *advSystem::eventManager_ = NULL;
 bool advSystem::invert_ = false;
 int advSystem::lastBattLevel_ = 100;
 unsigned int advSystem::lastBeatCount_ = 0;
+bool advSystem::shutdown_ = false;
 
 int advSystem::MainLoop() {
 
@@ -98,6 +101,7 @@ void advSystem::Boot() {
 
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
+  configureCharger();
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
@@ -168,7 +172,33 @@ unsigned int advSystem::GetMemoryUsage() {
   return m.uordblks;
 }
 
+bool advSystem::isShutdown() { return shutdown_; }
+
+void advSystem::PowerUp() {
+  platform_brightness(255);
+  advSystem::shutdown_ = false;
+}
+
 void advSystem::PowerDown() {
+  // stop sequencer
+  Player *player = Player::GetInstance();
+  if (player->IsRunning()) {
+    player->Stop();
+  }
+  // save project
+  // TODO: HOW? we don't have project name info
+  /*  PersistencyService *ps = PersistencyService::GetInstance();
+  auto result = ps->AutoSaveProjectData(projectName_);
+  if (result != PERSIST_SAVED) {
+    Trace::Error("SHUTDOWN", "Failed to auto-save project data");
+  }
+  */
+  // We shutdown the screen, periodic task will take care of completely shutdown
+  // if no power shutdown screen
+  __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, 0);
+  advSystem::shutdown_ = true;
+
+  /*
   // Ship mode
   uint8_t value = 0x64;
   HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
@@ -189,6 +219,7 @@ void advSystem::PowerDown() {
   };
   HAL_PWREx_EnableWakeUpPin(&sPinParams);
   HAL_PWR_EnterSTANDBYMode();
+  */
 }
 
 void advSystem::setCharging(void) {

@@ -13,7 +13,9 @@
 #include "Application/Model/Config.h"
 #include "advGUIWindowImp.h"
 // #include "usb_utils.h"
+#include "batteryCharger.h"
 #include "etl/map.h"
+#include "i2c.h"
 #include "platform.h"
 #include "tim.h"
 #include "timers.h"
@@ -40,6 +42,8 @@ unsigned int advEventManager::keyKill_ = 5;
 // repeating_timer_t advEventManager::timer_ =    repeating_timer_t();
 static TimerHandle_t timer;
 static StaticTimer_t timerBuffer;
+static TimerHandle_t watchdogResetTimer;
+static StaticTimer_t watchdogResetTimerBuffer;
 #ifdef RTOS_STATS
 static TimerHandle_t timerStats;
 static StaticTimer_t timerStatsBuffer;
@@ -201,6 +205,20 @@ void timerStatsHandler(TimerHandle_t xTimer) {
 }
 #endif
 
+void watchdogResetTimerHandler(TimerHandle_t xTimer) {
+  UNUSED(xTimer);
+  if (!resetWatchdog()) {
+    Trace::Error("Failed to reset charger watchdog!");
+  }
+
+  // TODO: This should happen on interrupt
+  if (!powerGood() & System::GetInstance()->isShutdown()) {
+    Trace::Log("CHARGER", "Power disconnected in power down mode, SHUTDOWN");
+    shipMode();
+  }
+  // Check battery level and shutdown if < 5%
+}
+
 // timer callback at a rate of 50Hz
 void timerHandler(TimerHandle_t xTimer) {
   UNUSED(xTimer);
@@ -246,6 +264,12 @@ advEventManager::~advEventManager() {}
 bool advEventManager::Init() {
   EventManager::Init();
   keyboardCS_ = new KeyboardControllerSource("keyboard");
+
+  // We need to periodically reset the watchdog timer for the charger
+  watchdogResetTimer = xTimerCreateStatic(
+      "StatsTimer", 5000 / portTICK_PERIOD_MS, pdTRUE, (void *)0,
+      watchdogResetTimerHandler, &watchdogResetTimerBuffer);
+  xTimerStart(watchdogResetTimer, 100);
 
 #ifdef RTOS_STATS
   timerStats =
@@ -409,14 +433,23 @@ void advEventManager::ProcessInputEvent(void *) {
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == SD_DET_Pin) {
+  switch (GPIO_Pin) {
+  case SD_DET_Pin: {
     if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
       // SD card inserted
+      Trace::Log("SDCARD", "inserted");
       Event ev(SD_DET);
-      xQueueSend(eventQueue, &ev, 0);
+      xQueueSendFromISR(eventQueue, &ev, 0);
+      portYIELD_FROM_ISR(pdFALSE);
     } else {
+      Trace::Log("SDCARD", "removed");
       // We don't yet do anything for SD Card removed, could actually unlink
       // FS on removal
     }
+  } break;
+
+  case CHARGER_INT_Pin: {
+    // TODO: Charger events
+  } break;
   }
 }

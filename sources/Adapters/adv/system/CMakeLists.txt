@@ -4,6 +4,7 @@ add_library(platform_system
   critical_error_message.c
   advSamplePool.cpp
   BatteryGauge.cpp
+  batteryCharger.cpp
 )
 
 target_link_libraries(platform_system PUBLIC

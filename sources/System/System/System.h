@@ -35,6 +35,8 @@ public:                                 // Override in implementation
   virtual void PostQuitMessage() = 0;
   virtual unsigned int GetMemoryUsage() = 0;
   virtual void PowerDown() = 0;
+  virtual void PowerUp() = 0;
+  virtual bool isShutdown() = 0;
 };
 
 #define SYS_MEMSET(a, b, c)                                                    \
