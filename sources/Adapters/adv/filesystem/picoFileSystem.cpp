@@ -11,6 +11,9 @@
 FATFS SDFatFS;
 char SDPath[4];
 
+// use max int value for parent dir marker
+#define PARENT_DIR_MARKER_INDEX (std::numeric_limits<int>::max())
+
 picoFileSystem::picoFileSystem() {
 
   // Link FatFs driver
@@ -99,6 +102,11 @@ PicoFileType picoFileSystem::getFileType(int index) {
 
   return isDir ? PFT_DIR : PFT_FILE;
   */
+  // special case for parent dir marker
+  if (index == PARENT_DIR_MARKER_INDEX) {
+    return PFT_DIR;
+  }
+
   FILINFO fno;
   fno = fileFromIndex(index);
   if (fno.fattrib & AM_DIR)
@@ -111,10 +119,9 @@ void picoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
 
   fileIndexes->clear();
 
-  // HACK: there is an assumption that "." and ".." will be present, add indexes
+  // HACK: there is an assumption that ".." will be present, add indexes
   // for them
-  fileIndexes->push_back(0);
-  fileIndexes->push_back(0);
+  fileIndexes->push_back(PARENT_DIR_MARKER_INDEX);
   /*
   File cwd;
   if (!cwd.openCwd()) {
@@ -235,6 +242,11 @@ void picoFileSystem::getFileName(int index, char *name, int length) {
   entry.close();
   cwd.close();
   */
+  // special case for parent dir marker
+  if (index == PARENT_DIR_MARKER_INDEX) {
+    strcpy(name, "..");
+    return;
+  }
   FILINFO fno = fileFromIndex(index);
   strcpy(name, fno.fname);
 }
