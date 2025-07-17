@@ -85,7 +85,7 @@ bool advSamplePool::Load(WavFile *wave) {
   wave->Rewind();
   wave->Read(sampleStore1 + writeOffset1_, BUFFER_SIZE, &br);
   while (br > 0) {
-    Trace::Debug("Wrote %i bytes", br);
+    // Trace::Debug("Wrote %i bytes", br);
     writeOffset1_ += br;
     wave->Read(sampleStore1 + writeOffset1_, BUFFER_SIZE, &br);
   }
