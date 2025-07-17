@@ -9,9 +9,9 @@
 #include "advSamplePool.h"
 
 // TODO: Only using sampleStore1 for now
-__attribute__((section(".SDRAM1"))) __attribute__((aligned(32)))
-uint8_t sampleStore1[STORE1_SIZE];
 __attribute__((section(".SDRAM2"))) __attribute__((aligned(32)))
+uint8_t sampleStore1[STORE1_SIZE];
+__attribute__((section(".SDRAM1"))) __attribute__((aligned(32)))
 uint8_t sampleStore2[STORE2_SIZE];
 
 uint32_t advSamplePool::writeOffset1_ = 0;
