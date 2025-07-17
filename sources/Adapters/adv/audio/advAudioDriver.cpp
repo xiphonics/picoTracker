@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #include "advAudioDriver.h"
 #include "Adapters/adv/utils/utils.h"
 #include "Application/Model/Config.h"
