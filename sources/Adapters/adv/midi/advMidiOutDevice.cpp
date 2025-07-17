@@ -30,11 +30,11 @@ void advMidiOutDevice::SendMessage(MidiMessage &msg) {
   if (msg.status_ < 0xF0) {
     //    uart_putc_raw(MIDI_UART, msg.data1_);
     uint8_t data1 = msg.data1_;
-    HAL_UART_Transmit(&MIDI_UART, &data1, 1, 100);
+    HAL_UART_Transmit(&MIDI_UART, &data1, 1, 10);
     if (msg.data2_ != MidiMessage::UNUSED_BYTE) {
       // uart_putc_raw(MIDI_UART, msg.data2_);
       uint8_t data2 = msg.data2_;
-      HAL_UART_Transmit(&MIDI_UART, &data2, 1, 100);
+      HAL_UART_Transmit(&MIDI_UART, &data2, 1, 10);
     }
   }
 }
