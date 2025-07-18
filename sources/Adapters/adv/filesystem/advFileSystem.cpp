@@ -87,21 +87,6 @@ bool advFileSystem::chdir(const char *name) {
 }
 
 PicoFileType advFileSystem::getFileType(int index) {
-  /*
-  FsBaseFile cwd;
-  if (!cwd.openCwd()) {
-    char name[PFILENAME_SIZE];
-    cwd.getName(name, PFILENAME_SIZE);
-    Trace::Error("Failed to open cwd: %s", name);
-    return PFT_UNKNOWN;
-  }
-  FsBaseFile entry;
-  entry.open(index);
-  auto isDir = entry.isDirectory();
-  entry.close();
-
-  return isDir ? PFT_DIR : PFT_FILE;
-  */
   // special case for parent dir marker
   if (index == PARENT_DIR_MARKER_INDEX) {
     return PFT_DIR;
@@ -119,22 +104,9 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
 
   fileIndexes->clear();
 
-  // HACK: there is an assumption that ".." will be present, add indexes
-  // for them
+  // HACK: there is an assumption that ".." will be present, so add index
+  // for it
   fileIndexes->push_back(PARENT_DIR_MARKER_INDEX);
-  /*
-  File cwd;
-  if (!cwd.openCwd()) {
-    char name[PFILENAME_SIZE];
-    cwd.getName(name, PFILENAME_SIZE);
-    Trace::Error("Failed to open cwd");
-    return;
-  }
-
-  char buffer[PFILENAME_SIZE];
-  cwd.getName(buffer, PFILENAME_SIZE);
-  Trace::Log("PICOFILESYSTEM", "LIST DIR:%s", buffer);
-  */
 
   TCHAR path[PFILENAME_SIZE];
   FRESULT res = f_getcwd(path, 128);
@@ -150,45 +122,6 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     return;
   }
 
-  /*
-  if (!cwd.isDir()) {
-    Trace::Error("Path is not a directory");
-    return;
-  }
-  */
-
-  /*
-  // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
-  while (entry.openNext(&cwd, O_READ) && (count < fileIndexes->capacity())) {
-    uint32_t index = entry.dirIndex();
-    entry.getName(buffer, PFILENAME_SIZE);
-
-    bool matchesFilter = true;
-    if (strlen(filter) > 0) {
-      tolowercase(buffer);
-      matchesFilter = (strstr(buffer, filter) != nullptr);
-      Trace::Log("PICOFILESYSTEM", "FILTER: %s=%s [%d]\n", buffer, filter,
-                 matchesFilter);
-    }
-    // filter out "." and files that dont match filter if a filter is given
-    if ((entry.isDirectory() && entry.dirIndex() != 0) ||
-        (!entry.isHidden() && matchesFilter)) {
-      if (subDirOnly) {
-        if (entry.isDirectory()) {
-          fileIndexes->push_back(index);
-        }
-      } else {
-        fileIndexes->push_back(index);
-      }
-      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, buffer);
-      count++;
-    } else {
-      Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", buffer);
-    }
-    entry.close();
-  }
-  */
-
   uint32_t index = 0;
   FILINFO fno;
   uint16_t count = 0;
@@ -196,9 +129,9 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
   while (index < fileIndexes->capacity()) {
     index = count;
     count++;
-    res = f_readdir(&dir, &fno); /* Read a directory item */
+    res = f_readdir(&dir, &fno); // Read a directory item
     if (res != FR_OK || fno.fname[0] == 0)
-      break; /* Error or end of dir */
+      break; // Error or end of dir
 
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
@@ -228,20 +161,6 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
 }
 
 void advFileSystem::getFileName(int index, char *name, int length) {
-  /*
-  FsFile cwd;
-  char dirname[PFILENAME_SIZE];
-  if (!cwd.openCwd()) {
-    cwd.getName(dirname, PFILENAME_SIZE);
-    Trace::Error("Failed to open cwd:%s", dirname);
-    return;
-  }
-  FsFile entry;
-  entry.open(index);
-  entry.getName(name, length);
-  entry.close();
-  cwd.close();
-  */
   // special case for parent dir marker
   if (index == PARENT_DIR_MARKER_INDEX) {
     strcpy(name, "..");
@@ -276,31 +195,11 @@ FILINFO advFileSystem::fileFromIndex(int index) {
 }
 
 bool advFileSystem::isParentRoot() {
-  /*
-  FsFile cwd;
-  char dirname[PFILENAME_SIZE];
-  if (!cwd.openCwd()) {
-    cwd.getName(dirname, PFILENAME_SIZE);
-    Trace::Error("Failed to open cwd:%s", dirname);
-    return false;
-  }
-
-  FsFile root;
-  root.openRoot(sd.vol());
-  FsFile up;
-  up.open(1);
-  // check the index=1 entry, aka ".." if its firstSector  matches
-  // the root dirs firstSector, ie they are the same dir
-  bool result = root.firstSector() == up.firstSector();
-  root.close();
-  up.close();
-  cwd.close();
-  return result;
-  */
+  // TODO: implement
   return false;
 }
 
-bool advFileSystem::DeleteFile(const char *path) { /*return sd.remove(path);*/
+bool advFileSystem::DeleteFile(const char *path) {
   FILINFO fil;
   FRESULT res;
   res = f_stat(path, &fil);
@@ -318,10 +217,6 @@ bool advFileSystem::DeleteFile(const char *path) { /*return sd.remove(path);*/
 
 // directory has to be empty
 bool advFileSystem::DeleteDir(const char *path) {
-  /*
-  auto delDir = sd.open(path, O_READ);
-  return delDir.rmdir();
-  */
   FILINFO fil;
   FRESULT res;
   res = f_stat(path, &fil);
@@ -337,7 +232,7 @@ bool advFileSystem::DeleteDir(const char *path) {
   return res == FR_OK;
 }
 
-bool advFileSystem::exists(const char *path) { /*return sd.exists(path);*/
+bool advFileSystem::exists(const char *path) {
   FILINFO fno;
   FRESULT res = f_stat(path, &fno);
   return res == FR_OK;
@@ -385,78 +280,38 @@ bool advFileSystem::makeDir(const char *path, bool pFlag) {
 }
 
 uint64_t advFileSystem::getFileSize(const int index) {
-  /*
-  FsBaseFile cwd;
-  FsBaseFile entry;
-  if (!entry.open(index)) {
-    char name[PFILENAME_SIZE];
-    cwd.getName(name, PFILENAME_SIZE);
-    Trace::Error("Failed to open file: %d", index);
-  }
-  auto size = entry.fileSize();
-  if (size == 0) {
-    size = entry.fileSize();
-  }
-  entry.close();
-  cwd.close();
-  return size;
-  */
   FILINFO fno = fileFromIndex(index);
 
   return fno.fsize;
 }
 
 bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
-  /*
-  auto fSrc = sd.open(srcPath, O_READ);
-  auto fDest = sd.open(destPath, O_WRITE | O_CREAT);
-
-  int n = 0;
-  int bufferSize = sizeof(fileBuffer_);
-  while (true) {
-    n = fSrc.read(fileBuffer_, bufferSize);
-    // check for read error and only write if no error
-    if (n >= 0) {
-      fDest.write(fileBuffer_, n);
-    } else {
-      Trace::Error("Failed to read file: %s", srcPath);
-      return false;
-    }
-    if (n < bufferSize) {
-      break;
-    }
-  }
-  fSrc.close();
-  fDest.close();
-  return true;
-  */
-
-  FIL fsrc, fdst; /* File objects */
-  UINT br, bw;    /* File read/write count */
+  FIL fsrc, fdst; // File objects
+  UINT br, bw;    // File read/write count
   FRESULT res;
-  /* Open source file on the drive 1 */
+  // Open source file on the drive 1
   res = f_open(&fsrc, srcPath, FA_READ);
   if (res != FR_OK)
     return false;
 
-  /* Create destination file on the drive 0 */
+  // Create destination file on the drive 0
   res = f_open(&fdst, destPath, FA_WRITE | FA_CREATE_ALWAYS);
   if (res != FR_OK)
     return false;
 
-  /* Copy source to destination */
+  // Copy source to destination
   for (;;) {
     res = f_read(&fsrc, fileBuffer_, sizeof(fileBuffer_),
-                 &br); /* Read a chunk of data from the source file */
+                 &br); // Read a chunk of data from the source file
     if (br == 0)
-      break; /* error or eof */
+      break; // error or eof
     res = f_write(&fdst, fileBuffer_, br,
-                  &bw); /* Write it to the destination file */
+                  &bw); // Write it to the destination file
     if (bw < br)
-      break; /* error or disk full */
+      break; // error or disk full
   }
 
-  /* Close open files */
+  // Close open files
   f_close(&fsrc);
   f_close(&fdst);
 
@@ -488,28 +343,13 @@ PI_File::PI_File(FIL file) { file_ = file; };
  * read() called before a file has been opened, corrupt file system
  * or an I/O error occurred.
  */
-int PI_File::Read(void *ptr, int size) { /*return file_.read(ptr, size);*/
+int PI_File::Read(void *ptr, int size) {
   UINT read;
   FRESULT res = f_read(&file_, ptr, size, &read);
   return read;
 }
 
 void PI_File::Seek(long offset, int whence) {
-  /*
-  switch (whence) {
-  case SEEK_SET:
-    file_.seek(offset);
-    break;
-  case SEEK_CUR:
-    file_.seekCur(offset);
-    break;
-  case SEEK_END:
-    file_.seekEnd(offset);
-    break;
-  default:
-    Trace::Error("Invalid seek whence: %s", whence);
-  }
-  */
   FRESULT res;
   UNUSED(res);
   switch (whence) {
@@ -527,36 +367,29 @@ void PI_File::Seek(long offset, int whence) {
   }
 }
 
-bool PI_File::DeleteFile() { /*return file_.remove();*/
+bool PI_File::DeleteFile() {
+  // TODO: implement
   // f_unlink();                //????
-
   return false;
 }
 
-int PI_File::GetC() { /*return file_.read();*/
+int PI_File::GetC() {
   TCHAR c[2];
   f_gets(c, 2, &file_);
   return c[0];
 }
 
 int PI_File::Write(const void *ptr, int size, int nmemb) {
-  /*
-  return file_.write(ptr, size * nmemb);
-  */
   UINT written;
   FRESULT res = f_write(&file_, ptr, size * nmemb, &written);
   return written;
 }
 
-long PI_File::Tell() { /*return file_.curPosition(); */
-  return f_tell(&file_);
-}
+long PI_File::Tell() { return f_tell(&file_); }
 
-int PI_File::Error() { /*return file_.getError();*/
-  return f_error(&file_);
-}
+int PI_File::Error() { return f_error(&file_); }
 
-bool PI_File::Close() { /*return file_.close();*/
+bool PI_File::Close() {
   FRESULT res = f_close(&file_);
   return res == FR_OK;
 }
