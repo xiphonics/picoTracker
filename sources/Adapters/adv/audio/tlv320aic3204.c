@@ -127,3 +127,50 @@ DOSR 128
   // Unmute the DAC digital volume control
   tlv320write(0x40, 0x00);
 }
+
+void tlv320_enable_linein(void) {
+
+  // Initialize to Page 0
+  tlv320write(0, 0);
+  // Power up NADC divider with value 1
+  tlv320write(0x12, 0x81);
+  // Power up MADC divider with value 2
+  tlv320write(0x13, 0x82);
+  // Program OSR for ADC to 128
+  tlv320write(0x14, 0x80);
+  // Select ADC PRB_R1
+  tlv320write(0x3d, 0x01);
+
+  // shouldn't be necessary but configuring dout explicitly
+  tlv320write(0x35, 0x12);
+
+  // Select Page 1
+  tlv320write(0x00, 0x01);
+  // Select ADC PTM_R4
+  tlv320write(0x3d, 0x00);
+  // Set MicPGA startup delay to 3.1ms
+  tlv320write(0x47, 0x32);
+  // Route IN1L to LEFT_P with 20K input impedance
+  tlv320write(0x34, 0x80);
+  // Route Common Mode to LEFT_M with impedance of 20K
+  tlv320write(0x36, 0x80);
+  // Route IN1R to RIGHT_P with input impedance of 20K
+  tlv320write(0x37, 0x80);
+  // Route Common Mode to RIGHT_M with impedance of 20K
+  tlv320write(0x39, 0x80);
+  // Unmute Left MICPGA, Gain selection of 6dB to make channel gain 0dB
+  // Register of 6dB with input impedance of 20K = > Channel Gain of 0dB
+  tlv320write(0x3b, 0x0c);
+  // Unmute Right MICPGA, Gain selection of 6dB to make channel gain 0dB
+  // Register of 6dB with input impedance of 20K = > Channel Gain of 0dB
+  tlv320write(0x3c, 0x0c);
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  // Power up Left and Right ADC Channels
+  tlv320write(0x51, 0xc0);
+  // Unmute Left and Right ADC Digital Volume Control.
+  tlv320write(0x52, 0x00);
+}
+void tlv320_enable_mic(void) {}
+void tlv320_disable_linein(void) {}
+void tlv320_disable_mic(void) {}

@@ -25,6 +25,10 @@ extern "C" {
 
 void tlv320_init();
 
+void tlv320_enable_linein(void);
+void tlv320_enable_mic(void);
+void tlv320_disable_linein(void);
+void tlv320_disable_mic(void);
 #ifdef __cplusplus
 }
 #endif
