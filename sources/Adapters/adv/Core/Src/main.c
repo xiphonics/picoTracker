@@ -20,7 +20,6 @@
 #include "ltdc.h"
 #include "memorymap.h"
 #include "rng.h"
-#include "rtc.h"
 #include "sai.h"
 #include "sdmmc.h"
 #include "tim.h"
@@ -139,7 +138,6 @@ int main(void) {
   MX_DMA2D_Init();
   MX_RNG_Init();
   MX_TIM2_Init();
-  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   Trace::Log("INFO", "picoTracker Advance init...");
 
@@ -194,13 +192,12 @@ void SystemClock_Config(void) {
   /** Initializes the RCC Oscillators according to the specified parameters
    * in the RCC_OscInitTypeDef structure.
    */
-  RCC_OscInitStruct.OscillatorType =
-      RCC_OSCILLATORTYPE_HSI48 | RCC_OSCILLATORTYPE_HSI |
-      RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48 |
+                                     RCC_OSCILLATORTYPE_HSI |
+                                     RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
