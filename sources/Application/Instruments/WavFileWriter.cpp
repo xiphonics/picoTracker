@@ -8,6 +8,7 @@
  */
 
 #include "WavFileWriter.h"
+#include "WavHeaderWriter.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 #include "System/System/System.h"
@@ -16,48 +17,13 @@ WavFileWriter::WavFileWriter(const char *path)
     : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
-
-    // RIFF chunk
-    unsigned int chunk;
-    chunk = Swap32(0x46464952);
-    file_->Write(&chunk, 1, 4);
-    unsigned int size;
-    size = 0; // to be filled later
-    file_->Write(&size, 1, 4);
-
-    // WAVE chunk
-    chunk = Swap32(0x45564157);
-    file_->Write(&chunk, 1, 4);
-    chunk = Swap32(0x20746D66);
-    file_->Write(&chunk, 1, 4);
-    size = Swap32(16);
-    file_->Write(&size, 1, 4);
-
-    unsigned short ushort;
-    ushort = Swap16(1); // compression
-    file_->Write(&ushort, 1, 2);
-    ushort = Swap16(2); // nChannels
-    file_->Write(&ushort, 1, 2);
-    unsigned int sampleRate = Swap32(44100);
-    file_->Write(&sampleRate, 1, 4);
-
-    unsigned int byteRate = Swap32(4 * 44100);
-    file_->Write(&byteRate, 1, 4);
-
-    ushort = Swap16(4); //  blockalign
-    file_->Write(&ushort, 1, 2);
-
-    ushort = Swap16(16); // bitPerSample
-    file_->Write(&ushort, 1, 2);
-
-    // data subchunk
-
-    chunk = Swap32(0x61746164);
-    file_->Write(&chunk, 1, 4);
-
-    size = 0; // to be updated later
-    file_->Write(&chunk, 1, 4);
-  };
+    // Use WavHeaderWriter to write the header
+    if (!WavHeaderWriter::WriteHeader(file_, 44100, 2, 16)) {
+      Trace::Log("WAVWRITER", "Failed to write WAV header");
+      file_->Close();
+      SAFE_DELETE(file_);
+    }
+  }
 };
 
 WavFileWriter::~WavFileWriter() { Close(); }
@@ -104,16 +70,10 @@ void WavFileWriter::Close() {
   if (!file_)
     return;
 
-  size_t len = file_->Tell();
-  len = Swap32(len - 8);
-  file_->Seek(4, SEEK_SET);
-  file_->Write(&len, 4, 1);
-
-  file_->Seek(40, SEEK_SET);
-  sampleCount_ = Swap32(sampleCount_ * 4);
-  file_->Write(&sampleCount_, 4, 1);
-
-  file_->Seek(0, SEEK_END);
+  // Use WavHeaderWriter to update file size
+  if (!WavHeaderWriter::UpdateFileSize(file_, sampleCount_)) {
+    Trace::Log("WAVWRITER", "Failed to update WAV header");
+  }
 
   file_->Close();
   SAFE_DELETE(file_);
