@@ -1,7 +1,7 @@
 #include "record.h"
+#include "Application/Instruments/WavHeaderWriter.h"
 #include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
-#include "Application/Instruments/WavHeaderWriter.h"
 #include "System/FileSystem/FileSystem.h"
 #include "sai.h"
 #include "sd_diskio.h"
@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <cstring>
 
-static I_File* RecordFile = nullptr;
+static I_File *RecordFile = nullptr;
 
 uint8_t *activeBuffer;
 uint8_t *writeBuffer;
@@ -32,7 +32,7 @@ bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds) {
   thresholdOK = false;
   first_pass = true;
-  
+
   // Create or truncate the file using FileSystem
   RecordFile = FileSystem::GetInstance()->Open(filename, "wb");
   if (!RecordFile) {
@@ -86,19 +86,19 @@ void Record(void *) {
 
     if (!recordingActive) {
       HAL_SAI_DMAStop(&hsai_BlockB1);
-      
+
       if (RecordFile) {
         // Update WAV header with final file size
         if (!WavHeaderWriter::UpdateFileSize(RecordFile, totalSamplesWritten)) {
           Trace::Log("RECORD", "Failed to update WAV header");
         }
-        
+
         // Close file
         RecordFile->Close();
         delete RecordFile;
         RecordFile = nullptr;
       }
-      
+
       Player::GetInstance()->StopRecordStreaming();
       vTaskSuspend(nullptr); // Suspend self until StartRecording resumes it
     }
@@ -122,12 +122,14 @@ void Record(void *) {
     writeInProgress = true;
     // Write raw audio data (uint16_t samples as bytes)
     if (RecordFile) {
-      int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset), RECORD_BUFFER_SIZE, 1);
+      int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
+                                           RECORD_BUFFER_SIZE, 1);
       writeInProgress = false;
       if (bytesWritten != RECORD_BUFFER_SIZE) {
         Trace::Error("write failed\r\n");
       } else {
-        // Track total samples written (RECORD_BUFFER_SIZE bytes = RECORD_BUFFER_SIZE/4 stereo samples)
+        // Track total samples written (RECORD_BUFFER_SIZE bytes =
+        // RECORD_BUFFER_SIZE/4 stereo samples)
         totalSamplesWritten += RECORD_BUFFER_SIZE / 4;
       }
     } else {
