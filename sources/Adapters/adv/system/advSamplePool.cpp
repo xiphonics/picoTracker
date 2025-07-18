@@ -78,7 +78,7 @@ bool advSamplePool::Load(WavFile *wave) {
 
   // Ensure 4-byte alignment for SDRAM access at start of each file
   writeOffset1_ = (writeOffset1_ + 3) & ~3;
-  
+
   // Set wave base
   wave->SetSampleBuffer((short *)(sampleStore1 + writeOffset1_));
 
