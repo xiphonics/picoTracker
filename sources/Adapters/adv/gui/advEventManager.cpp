@@ -297,9 +297,9 @@ int advEventManager::MainLoop() {
   sd_bench();
 #endif
 
-  static StackType_t InputEventsStack[1000];
+  static StackType_t InputEventsStack[2000];
   static StaticTask_t InputEventsTCB;
-  xTaskCreateStatic(ProcessInputEvent, "InEvent", 1000, NULL, 2,
+  xTaskCreateStatic(ProcessInputEvent, "InEvent", 2000, NULL, 2,
                     InputEventsStack, &InputEventsTCB);
 
 #ifdef SERIAL_REPL
