@@ -21,7 +21,6 @@ public:
   virtual void Seek(long offset, int whence) = 0;
   virtual long Tell() = 0;
   virtual bool Close() = 0;
-  virtual bool DeleteFile() = 0;
   virtual int Error() = 0;
 };
 

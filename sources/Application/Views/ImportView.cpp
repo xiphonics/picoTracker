@@ -193,6 +193,8 @@ void ImportView::DrawView() {
       // Handle directories
       char tempBuffer[PFILENAME_SIZE];
       displayName = "/";
+      // clear temp buffer
+      memset(tempBuffer, 0, PFILENAME_SIZE);
       fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
       displayName += tempBuffer;
     }

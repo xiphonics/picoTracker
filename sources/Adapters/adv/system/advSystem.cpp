@@ -8,7 +8,7 @@
 
 #include "advSystem.h"
 #include "Adapters/adv/audio/advAudio.h"
-#include "Adapters/adv/filesystem/picoFileSystem.h"
+#include "Adapters/adv/filesystem/advFileSystem.h"
 #include "Adapters/adv/gui/GUIFactory.h"
 #include "Adapters/adv/midi/advMidiService.h"
 #include "Adapters/adv/system/advSamplePool.h"
@@ -69,8 +69,8 @@ void advSystem::Boot() {
 
   // Install FileSystem
   __attribute__((
-      section(".DATA_RAM"))) static char fsMemBuf[sizeof(picoFileSystem)];
-  FileSystem::Install(new (fsMemBuf) picoFileSystem());
+      section(".DATA_RAM"))) static char fsMemBuf[sizeof(advFileSystem)];
+  FileSystem::Install(new (fsMemBuf) advFileSystem());
 
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
