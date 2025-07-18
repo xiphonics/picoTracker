@@ -195,8 +195,27 @@ FILINFO advFileSystem::fileFromIndex(int index) {
 }
 
 bool advFileSystem::isParentRoot() {
-  // TODO: implement
-  return false;
+  FRESULT res = f_getcwd(filepath, sizeof(filepath));
+  if (res != FR_OK) {
+    Trace::Error("Failed to get current directory");
+    return false;
+  }
+
+  // If current path is root ("/"), then parent is also root
+  if (strcmp(filepath, "/") == 0) {
+    return true;
+  }
+
+  // Check if we're in a direct subdirectory of root
+  // Count the number of '/' characters - if only 1, we're in root's child
+  int slashCount = 0;
+  for (int i = 0; filepath[i] != '\0'; i++) {
+    if (filepath[i] == '/') {
+      slashCount++;
+    }
+  }
+  // If path is "/dirname", slashCount will be 1, meaning parent is root
+  return (slashCount == 1);
 }
 
 bool advFileSystem::DeleteFile(const char *path) {
