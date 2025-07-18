@@ -6,7 +6,7 @@
  * This file is part of the picoTracker firmware
  */
 
-#include "picoFileSystem.h"
+#include "advFileSystem.h"
 
 FATFS SDFatFS;
 char SDPath[4];
@@ -14,7 +14,7 @@ char SDPath[4];
 // use max int value for parent dir marker
 #define PARENT_DIR_MARKER_INDEX (std::numeric_limits<int>::max())
 
-picoFileSystem::picoFileSystem() {
+advFileSystem::advFileSystem() {
 
   // Link FatFs driver
   FATFS_LinkDriver(&SD_DMA_Driver, SDPath);
@@ -33,7 +33,7 @@ picoFileSystem::picoFileSystem() {
   //  }
 }
 
-I_File *picoFileSystem::Open(const char *name, const char *mode) {
+I_File *advFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   BYTE rmode;
   switch (*mode) {
@@ -59,7 +59,7 @@ I_File *picoFileSystem::Open(const char *name, const char *mode) {
   return wFile;
 }
 
-bool picoFileSystem::chdir(const char *name) {
+bool advFileSystem::chdir(const char *name) {
   Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
 
   FRESULT res = f_chdir(name);
@@ -86,7 +86,7 @@ bool picoFileSystem::chdir(const char *name) {
   return (res == FR_OK);
 }
 
-PicoFileType picoFileSystem::getFileType(int index) {
+PicoFileType advFileSystem::getFileType(int index) {
   /*
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
@@ -114,8 +114,8 @@ PicoFileType picoFileSystem::getFileType(int index) {
   return PFT_FILE;
 }
 
-void picoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
-                          bool subDirOnly) {
+void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
+                         bool subDirOnly) {
 
   fileIndexes->clear();
 
@@ -227,7 +227,7 @@ void picoFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
              fileIndexes->size());
 }
 
-void picoFileSystem::getFileName(int index, char *name, int length) {
+void advFileSystem::getFileName(int index, char *name, int length) {
   /*
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
@@ -251,7 +251,7 @@ void picoFileSystem::getFileName(int index, char *name, int length) {
   strcpy(name, fno.fname);
 }
 
-FILINFO picoFileSystem::fileFromIndex(int index) {
+FILINFO advFileSystem::fileFromIndex(int index) {
   FILINFO fno;
   FRESULT res = f_getcwd(filepath, 256);
   int32_t count = 0;
@@ -275,7 +275,7 @@ FILINFO picoFileSystem::fileFromIndex(int index) {
   return fno;
 }
 
-bool picoFileSystem::isParentRoot() {
+bool advFileSystem::isParentRoot() {
   /*
   FsFile cwd;
   char dirname[PFILENAME_SIZE];
@@ -300,7 +300,7 @@ bool picoFileSystem::isParentRoot() {
   return false;
 }
 
-bool picoFileSystem::DeleteFile(const char *path) { /*return sd.remove(path);*/
+bool advFileSystem::DeleteFile(const char *path) { /*return sd.remove(path);*/
   FILINFO fil;
   FRESULT res;
   res = f_stat(path, &fil);
@@ -317,7 +317,7 @@ bool picoFileSystem::DeleteFile(const char *path) { /*return sd.remove(path);*/
 }
 
 // directory has to be empty
-bool picoFileSystem::DeleteDir(const char *path) {
+bool advFileSystem::DeleteDir(const char *path) {
   /*
   auto delDir = sd.open(path, O_READ);
   return delDir.rmdir();
@@ -337,7 +337,7 @@ bool picoFileSystem::DeleteDir(const char *path) {
   return res == FR_OK;
 }
 
-bool picoFileSystem::exists(const char *path) { /*return sd.exists(path);*/
+bool advFileSystem::exists(const char *path) { /*return sd.exists(path);*/
   FILINFO fno;
   FRESULT res = f_stat(path, &fno);
   return res == FR_OK;
@@ -351,7 +351,7 @@ bool picoFileSystem::exists(const char *path) { /*return sd.exists(path);*/
  *
  * \return true if the directory was successfully created, false otherwise.
  */
-bool picoFileSystem::makeDir(const char *path, bool pFlag) {
+bool advFileSystem::makeDir(const char *path, bool pFlag) {
   if (!pFlag) {
     FRESULT res = f_mkdir(path);
     return res == FR_OK;
@@ -384,7 +384,7 @@ bool picoFileSystem::makeDir(const char *path, bool pFlag) {
   return (res == FR_OK || res == FR_EXIST);
 }
 
-uint64_t picoFileSystem::getFileSize(const int index) {
+uint64_t advFileSystem::getFileSize(const int index) {
   /*
   FsBaseFile cwd;
   FsBaseFile entry;
@@ -406,7 +406,7 @@ uint64_t picoFileSystem::getFileSize(const int index) {
   return fno.fsize;
 }
 
-bool picoFileSystem::CopyFile(const char *srcPath, const char *destPath) {
+bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   /*
   auto fSrc = sd.open(srcPath, O_READ);
   auto fDest = sd.open(destPath, O_WRITE | O_CREAT);
@@ -463,7 +463,7 @@ bool picoFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   return res == FR_OK;
 }
 
-void picoFileSystem::tolowercase(char *temp) {
+void advFileSystem::tolowercase(char *temp) {
   // Convert to upper case
   char *s = temp;
   while (*s != '\0') {

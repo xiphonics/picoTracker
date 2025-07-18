@@ -42,10 +42,10 @@ private:
   FIL file_;
 };
 
-class picoFileSystem : public FileSystem {
+class advFileSystem : public FileSystem {
 public:
-  picoFileSystem(); // OK
-  virtual ~picoFileSystem(){};
+  advFileSystem(); // OK
+  virtual ~advFileSystem(){};
   virtual I_File *Open(const char *name, const char *mode) override; // OK
   virtual bool chdir(const char *path) override;                     // OK
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
