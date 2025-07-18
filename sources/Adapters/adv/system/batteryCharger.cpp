@@ -102,4 +102,7 @@ bool powerGood() {
   }
   return false;
 }
-void shipMode() { setMask(0x07, BQ25601_BATFET_DIS); }
+void shipMode() {
+  Trace::Log("BATTERY", "Enter ship mode");
+  setMask(0x07, BQ25601_BATFET_DIS);
+}

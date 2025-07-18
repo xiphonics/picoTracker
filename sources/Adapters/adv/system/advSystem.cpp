@@ -197,29 +197,6 @@ void advSystem::PowerDown() {
   // if no power shutdown screen
   __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, 0);
   advSystem::shutdown_ = true;
-
-  /*
-  // Ship mode
-  uint8_t value = 0x64;
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
-      &hi2c4, 0x6b << 1, 0x07, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
-  if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
-  }
-
-  setCharging();
-
-  HAL_GPIO_DeInit(POWER_GPIO_Port, POWER_Pin);
-  HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2);
-  __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU); // always clear before enabling again
-  PWREx_WakeupPinTypeDef sPinParams = {
-      .WakeUpPin = PWR_WAKEUP_PIN2,
-      .PinPolarity = PWR_PIN_POLARITY_LOW, // Rising edge triggers wakeup
-      .PinPull = PWR_PIN_NO_PULL // Pulldown to ensure low level before press
-  };
-  HAL_PWREx_EnableWakeUpPin(&sPinParams);
-  HAL_PWR_EnterSTANDBYMode();
-  */
 }
 
 void advSystem::setCharging(void) {

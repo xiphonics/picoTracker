@@ -8,6 +8,7 @@
  */
 
 #include "View.h"
+#include "Adapters/adv/Core/Inc/main.h"
 #include "Application/AppWindow.h"
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
@@ -443,7 +444,10 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
 
       int remainingSeconds = 1 - (powerButtonHoldCount_ / PICO_CLOCK_HZ);
       if (remainingSeconds < 0) {
-        System::GetInstance()->PowerUp();
+        // TODO: Hack, wait until release
+        while (!HAL_GPIO_ReadPin(POWER_GPIO_Port, POWER_Pin)) {
+          System::GetInstance()->PowerUp();
+        }
       }
     }
 
@@ -455,8 +459,10 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
       remainingSeconds = 0;
     }
 
-    snprintf(countdownMessage, sizeof(countdownMessage),
-             "Hold for shutdown (%d sec)", remainingSeconds);
+    if (!System::GetInstance()->isShutdown()) {
+      snprintf(countdownMessage, sizeof(countdownMessage),
+               "Hold for shutdown (%d sec)", remainingSeconds);
+    }
 
     if (remainingSeconds == 0) {
       Trace::Debug("Power button held for threshold time, Powerdown!");
@@ -465,8 +471,10 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
       // TODO: doesn't work at the moment, adv comes back showing last screen
       // content
       ForceClear();
-
-      System::GetInstance()->PowerDown();
+      // TODO: Hack, wait until release
+      while (!HAL_GPIO_ReadPin(POWER_GPIO_Port, POWER_Pin)) {
+        System::GetInstance()->PowerDown();
+      }
     }
 
     // Calculate center position for the message
