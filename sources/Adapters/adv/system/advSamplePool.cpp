@@ -87,6 +87,8 @@ bool advSamplePool::Load(WavFile *wave) {
   while (br > 0) {
     // Trace::Debug("Wrote %i bytes", br);
     writeOffset1_ += br;
+    // Ensure 4-byte alignment for SDRAM access
+    writeOffset1_ = (writeOffset1_ + 3) & ~3;
     wave->Read(sampleStore1 + writeOffset1_, BUFFER_SIZE, &br);
   }
   return true;
