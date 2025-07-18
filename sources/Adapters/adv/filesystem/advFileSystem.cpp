@@ -367,12 +367,6 @@ void PI_File::Seek(long offset, int whence) {
   }
 }
 
-bool PI_File::DeleteFile() {
-  // TODO: implement
-  // f_unlink();                //????
-  return false;
-}
-
 int PI_File::GetC() {
   TCHAR c[2];
   f_gets(c, 2, &file_);
