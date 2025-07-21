@@ -20,7 +20,7 @@
   },
   {
     "label": "CMake configure Debug and build",
-    "command": "cmake -DCMAKE_BUILD_TYPE=Debug  -S sources/ -B build/  && cmake --build build/",
+    "command": "cmake -DCMAKE_BUILD_TYPE=Debug -S sources/ -B build/ && cmake --build build/",
     "args": [],
     "env": {},
     "use_new_terminal": false,
@@ -29,7 +29,7 @@
   },
   {
     "label": "CMake configure Release and build",
-    "command": "cmake -DCMAKE_BUILD_TYPE=Release -B build/ && cmake --build build/",
+    "command": "cmake -DCMAKE_BUILD_TYPE=Release -S sources/ -B optbuild/ && cmake --build optbuild/",
     "args": [],
     "env": {},
     "use_new_terminal": false,
