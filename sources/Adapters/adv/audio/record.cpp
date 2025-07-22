@@ -34,7 +34,7 @@ bool StartRecording(const char *filename, uint8_t threshold,
   first_pass = true;
 
   // Create or truncate the file using FileSystem
-  RecordFile = FileSystem::GetInstance()->Open(filename, "wb");
+  RecordFile = FileSystem::GetInstance()->Open(filename, "w");
   if (!RecordFile) {
     Trace::Log("RECORD", "Could not create file");
     return false;
@@ -44,7 +44,6 @@ bool StartRecording(const char *filename, uint8_t threshold,
   if (!WavHeaderWriter::WriteHeader(RecordFile, 44100, 2, 16)) {
     Trace::Log("RECORD", "Failed to write WAV header");
     RecordFile->Close();
-    delete RecordFile;
     RecordFile = nullptr;
     return false;
   }
@@ -95,7 +94,6 @@ void Record(void *) {
 
         // Close file
         RecordFile->Close();
-        delete RecordFile;
         RecordFile = nullptr;
       }
 
