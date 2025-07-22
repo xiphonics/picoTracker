@@ -9,9 +9,9 @@
 #include "advSamplePool.h"
 
 // TODO: Only using sampleStore1 for now
-__attribute__((section(".SDRAM1"))) __attribute__((aligned(32)))
-uint8_t sampleStore1[STORE1_SIZE];
 __attribute__((section(".SDRAM2"))) __attribute__((aligned(32)))
+uint8_t sampleStore1[STORE1_SIZE];
+__attribute__((section(".SDRAM1"))) __attribute__((aligned(32)))
 uint8_t sampleStore2[STORE2_SIZE];
 
 uint32_t advSamplePool::writeOffset1_ = 0;
@@ -76,6 +76,9 @@ bool advSamplePool::Load(WavFile *wave) {
     return false;
   }
 
+  // Ensure 4-byte alignment for SDRAM access at start of each file
+  writeOffset1_ = (writeOffset1_ + 3) & ~3;
+
   // Set wave base
   wave->SetSampleBuffer((short *)(sampleStore1 + writeOffset1_));
 
@@ -85,7 +88,7 @@ bool advSamplePool::Load(WavFile *wave) {
   wave->Rewind();
   wave->Read(sampleStore1 + writeOffset1_, BUFFER_SIZE, &br);
   while (br > 0) {
-    Trace::Debug("Wrote %i bytes", br);
+    // Trace::Debug("Wrote %i bytes", br);
     writeOffset1_ += br;
     wave->Read(sampleStore1 + writeOffset1_, BUFFER_SIZE, &br);
   }

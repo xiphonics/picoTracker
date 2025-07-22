@@ -63,7 +63,6 @@ public:
   virtual void Seek(long offset, int whence) override;
   virtual long Tell() override;
   virtual bool Close() override;
-  virtual bool DeleteFile() override;
   virtual int Error() override;
 
 private:
