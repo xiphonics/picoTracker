@@ -141,7 +141,7 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
     first_[channel] = false;
   }
 
-  // If the instrument is not playing, we don't need to do anything// Update pitch bend.
+  // Update pitch bend.
   if (updateTick) {
     if (pitchBend_) {
       int prev = pitchBendCurrent_;
