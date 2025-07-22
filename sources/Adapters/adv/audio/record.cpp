@@ -73,17 +73,11 @@ bool StartRecording(const char *filename, uint8_t threshold,
   return true;
 }
 
-void stopRecording() { recordingActive = false; }
+void StopRecording() { recordingActive = false; }
 
 void Record(void *) {
   UINT bw;
   for (;;) {
-    if ((xTaskGetTickCount() - start) > 20000) {
-      Trace::Log("RECORD", "(%i) stop recording",
-                 (xTaskGetTickCount() - start));
-      recordingActive = false;
-    }
-
     if (!recordingActive) {
       HAL_SAI_DMAStop(&hsai_BlockB1);
 
@@ -92,6 +86,9 @@ void Record(void *) {
         if (!WavHeaderWriter::UpdateFileSize(RecordFile, totalSamplesWritten)) {
           Trace::Log("RECORD", "Failed to update WAV header");
         }
+
+        Trace::Log("RECORD", "(%i) stop recording",
+                   (xTaskGetTickCount() - start));
 
         // Close file
         RecordFile->Close();
@@ -118,9 +115,9 @@ void Record(void *) {
         }
       }
       }*/
-    writeInProgress = true;
     // Write raw audio data (uint16_t samples as bytes)
     if (RecordFile) {
+      writeInProgress = true;
       int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
                                            RECORD_BUFFER_SIZE, 1);
       // sync immediately after writing the buffer for consistent if not fastest
@@ -135,6 +132,10 @@ void Record(void *) {
         // Track total samples written (RECORD_BUFFER_SIZE bytes =
         // RECORD_BUFFER_SIZE/4 stereo samples)
         totalSamplesWritten += RECORD_BUFFER_SIZE / 4;
+
+        if (xTaskGetTickCount() % 1000) {
+          Trace::Debug("RECORDING...");
+        }
       }
     } else {
       writeInProgress = false;

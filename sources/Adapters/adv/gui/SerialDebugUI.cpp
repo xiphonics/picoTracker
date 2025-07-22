@@ -8,6 +8,7 @@
 
 #include "SerialDebugUI.h"
 #include "../system/advSystem.h"
+#include "Adapters/adv/audio/record.h"
 #include "Application/Model/Config.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
@@ -137,6 +138,17 @@ void SerialDebugUI::dispatchCmd(char *input) {
     shutdown();
   } else if (strcmp(cmd, "battery") == 0) {
     readBattery();
+  } else if (strcmp(cmd, "startrec") == 0) {
+    // char *filename = strtok(NULL, " ");
+    // uint32_t milliseconds = atoi(strtok(NULL, " "));
+    // uint32_t threshold = atoi(strtok(NULL, " "));
+
+    FileSystem::GetInstance()->chdir("/");
+
+    const char *filename = "testrecord.wav";
+    StartRecording(filename, 1, 0);
+  } else if (strcmp(cmd, "stoprec") == 0) {
+    StopRecording();
   } else if (strcmp(cmd, "help") == 0) {
     Trace::Log("SERIALDEBUG", "cat, ls, rm, mkdir, rmdir, save, battery, help");
   } else {

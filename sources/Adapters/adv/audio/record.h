@@ -23,6 +23,6 @@ extern TaskHandle_t RecordHandle;
 void Record(void *);
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds);
-void stopRecording();
+void StopRecording();
 
 #endif
