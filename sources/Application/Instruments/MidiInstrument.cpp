@@ -93,6 +93,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   velocity_ = INITIAL_NOTE_VELOCITY;
   playing_ = true;
   retrig_ = false;
+  pitchBend_ = false;
 
   return true;
 };
@@ -139,6 +140,48 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
 
     first_[channel] = false;
   }
+
+  // If the instrument is not playing, we don't need to do anything// Update pitch bend.
+  if (updateTick) {
+    if (pitchBend_) {
+      int prev = pitchBendCurrent_;
+      if (pitchBendSpeed_ == 0) {
+        pitchBendCurrent_ = pitchBendTarget_;
+      } else if (pitchBendSpeed_ == 255) {
+        if (pitchBendCurrent_ < pitchBendTarget_) {
+          pitchBendCurrent_++;
+        } else if (pitchBendCurrent_ > pitchBendTarget_) {
+          pitchBendCurrent_--;
+        }
+      } else {
+        int diff = pitchBendTarget_ - pitchBendCurrent_;
+        int step = (diff > 0 ? 1 : -1) * std::max(1, abs(diff) / pitchBendSpeed_);
+        if (abs(diff) < abs(step)) {
+          pitchBendCurrent_ = pitchBendTarget_;
+        } else {
+          pitchBendCurrent_ += step;
+        }
+      }
+      if (pitchBendCurrent_ != prev) {
+        int midiValue = ((pitchBendCurrent_ - 127) * 8192) / 127;
+        int bend = midiValue + 8192;
+        if (bend < 0) {
+          bend = 0;
+        } else if (bend > 16383) {
+          bend = 16383;
+        }
+        MidiMessage msg;
+        msg.status_ = MidiMessage::MIDI_PITCH_BEND + mchannel;
+        msg.data1_ = bend & 0x7F;
+        msg.data2_ = (bend >> 7) & 0x7F;
+        svc_->QueueMessage(msg);
+      }
+      if (pitchBendCurrent_ == pitchBendTarget_) {
+        pitchBend_ = false;
+      }
+    }
+  }
+
   if (remainingTicks_ > 0) {
     remainingTicks_--;
     if (remainingTicks_ == 0) {
@@ -181,6 +224,14 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     } else {
       retrig_ = false;
     }
+  } break;
+
+  case FourCC::InstrumentCommandPitchSlide: {
+    int target = (char)(value & 0xFF);
+    float speed = float(value >> 8);
+    pitchBend_ = true;
+    pitchBendTarget_ = target;
+    pitchBendSpeed_ = speed;
   } break;
 
   case FourCC::InstrumentCommandVelocity: {

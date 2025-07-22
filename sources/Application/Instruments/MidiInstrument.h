@@ -80,6 +80,10 @@ private:
   char velocity_ = 127;
   TableSaveState tableState_;
   bool first_[SONG_CHANNEL_COUNT];
+  bool pitchBend_;
+  int pitchBendTarget_;
+  int pitchBendSpeed_;
+  float pitchBendCurrent_;
 
   Variable channel_;
   Variable noteLen_;
