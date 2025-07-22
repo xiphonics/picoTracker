@@ -71,8 +71,8 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
   if (file->Write(&size, 1, 4) != 4)
     return false;
 
-  // TODO: need to add Sync() to FileSystem interface API
-  // file->Sync();
+  // explicit file sync
+  file->Sync();
   return true;
 }
 

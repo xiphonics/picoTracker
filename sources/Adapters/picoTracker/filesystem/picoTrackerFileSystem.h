@@ -64,6 +64,7 @@ public:
   virtual long Tell() override;
   virtual bool Close() override;
   virtual int Error() override;
+  virtual bool Sync() override;
 
 private:
   FsBaseFile file_;

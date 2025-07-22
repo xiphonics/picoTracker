@@ -320,3 +320,8 @@ bool picoTrackerFile::Close() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.close();
 }
+
+bool picoTrackerFile::Sync() {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.sync();
+}

@@ -125,8 +125,7 @@ void Record(void *) {
                                            RECORD_BUFFER_SIZE, 1);
       // sync immediately after writing the buffer for consistent if not fastest
       // perf
-      // TODO: need to add Sync() to FileSystem interface API
-      // RecordFile->Sync();
+      RecordFile->Sync();
       writeInProgress = false;
       if (bytesWritten != RECORD_BUFFER_SIZE) {
         Trace::Error("write failed\r\n");
