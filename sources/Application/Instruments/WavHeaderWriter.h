@@ -19,10 +19,6 @@ public:
 
   // Update file size in WAV header for I_File
   static bool UpdateFileSize(I_File *file, uint32_t sampleCount);
-
-private:
-  static uint32_t Swap32(uint32_t value);
-  static uint16_t Swap16(uint16_t value);
 };
 
 #endif

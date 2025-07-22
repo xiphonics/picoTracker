@@ -9,15 +9,7 @@
 #include "WavHeaderWriter.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
-
-uint32_t WavHeaderWriter::Swap32(uint32_t value) {
-  return ((value & 0xFF) << 24) | ((value & 0xFF00) << 8) |
-         ((value & 0xFF0000) >> 8) | ((value & 0xFF000000) >> 24);
-}
-
-uint16_t WavHeaderWriter::Swap16(uint16_t value) {
-  return ((value & 0xFF) << 8) | ((value & 0xFF00) >> 8);
-}
+#include "WavFile.h"
 
 bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
                                   uint16_t channels, uint16_t bitsPerSample) {
