@@ -71,15 +71,19 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
   if (file->Write(&size, 1, 4) != 4)
     return false;
 
+  // TODO: need to add Sync() to FileSystem interface API
+  // file->Sync();
   return true;
 }
 
-bool WavHeaderWriter::UpdateFileSize(I_File *file, uint32_t sampleCount) {
+bool WavHeaderWriter::UpdateFileSize(I_File *file, uint32_t sampleCount,
+                                     uint16_t channels,
+                                     uint16_t bytesPerSample) {
   if (!file)
     return false;
 
   // Calculate data size (sampleCount * channels * bytes per sample)
-  uint32_t dataSize = sampleCount * 2 * 2; // stereo * 16-bit
+  uint32_t dataSize = sampleCount * channels * bytesPerSample;
 
   // Update total file size (file size - 8 bytes for RIFF header)
   size_t currentPos = file->Tell();

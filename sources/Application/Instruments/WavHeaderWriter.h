@@ -18,7 +18,9 @@ public:
                           uint16_t channels = 2, uint16_t bitsPerSample = 16);
 
   // Update file size in WAV header for I_File
-  static bool UpdateFileSize(I_File *file, uint32_t sampleCount);
+  static bool UpdateFileSize(I_File *file, uint32_t sampleCount,
+                             uint16_t channels = 2,
+                             uint16_t bytesPerSample = 16);
 };
 
 #endif

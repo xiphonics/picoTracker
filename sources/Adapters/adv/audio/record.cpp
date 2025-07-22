@@ -74,6 +74,7 @@ bool StartRecording(const char *filename, uint8_t threshold,
 }
 
 void stopRecording() { recordingActive = false; }
+
 void Record(void *) {
   UINT bw;
   for (;;) {
@@ -122,9 +123,15 @@ void Record(void *) {
     if (RecordFile) {
       int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
                                            RECORD_BUFFER_SIZE, 1);
+      // sync immediately after writing the buffer for consistent if not fastest
+      // perf
+      // TODO: need to add Sync() to FileSystem interface API
+      // RecordFile->Sync();
       writeInProgress = false;
       if (bytesWritten != RECORD_BUFFER_SIZE) {
         Trace::Error("write failed\r\n");
+        // for now just give up and error out
+        return;
       } else {
         // Track total samples written (RECORD_BUFFER_SIZE bytes =
         // RECORD_BUFFER_SIZE/4 stereo samples)
@@ -133,6 +140,7 @@ void Record(void *) {
     } else {
       writeInProgress = false;
       Trace::Error("RecordFile is null\r\n");
+      return;
     }
     // start playing
     if (first_pass) {
