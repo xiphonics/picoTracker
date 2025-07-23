@@ -8,13 +8,16 @@
  */
 
 #include "InstrumentView.h"
+#include "Adapters/picoTracker/display/chargfx.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Views/ImportView.h"
+#include "Application/Views/TestBitmap.h"
 #include "BaseClasses/UIBigHexVarField.h"
+#include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
@@ -23,6 +26,7 @@
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
+#include <bitmapgfx.h>
 #include <cstdint>
 #include <nanoprintf.h>
 
@@ -272,6 +276,8 @@ void InstrumentView::fillSampleParameters() {
   v = instrument->FindVariable(FourCC::SampleInstrumentVolume);
   intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentPan);
