@@ -47,6 +47,10 @@ void advAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 void AudioThread(void *) {
   while (true) {
     xSemaphoreTake(core1_audio, portMAX_DELAY);
+
+    // Process MIDI
+    MidiService::GetInstance()->Flush();
+
     advAudioDriver::BufferNeeded();
   }
 }
@@ -129,9 +133,6 @@ void advAudioDriver::StopDriver() {
 
 void advAudioDriver::OnChunkDone() {
   if (isPlaying_) {
-
-    // Process MIDI
-    MidiService::GetInstance()->Flush();
 
     // We got an IRQ so we know we finished playing from poolPlayPosition_
     // We mark it as empty and inspect the next buffer, if the buffer is not

@@ -29,23 +29,23 @@ class PI_File : public I_File {
 public:
   PI_File(FIL file); // OK
   ~PI_File(){};
-  int Read(void *ptr, int size); // OK
-  int GetC();
-  int Write(const void *ptr, int size, int nmemb);
-  void Seek(long offset, int whence); // OK
-  long Tell();
-  bool Close();
-  bool DeleteFile();
-  int Error();
+  int Read(void *ptr, int size) override; // OK
+  int GetC() override;
+  int Write(const void *ptr, int size, int nmemb) override;
+  void Seek(long offset, int whence) override; // OK
+  long Tell() override;
+  bool Close() override;
+  int Error() override;
+  bool Sync() override;
 
 private:
   FIL file_;
 };
 
-class picoFileSystem : public FileSystem {
+class advFileSystem : public FileSystem {
 public:
-  picoFileSystem(); // OK
-  virtual ~picoFileSystem(){};
+  advFileSystem(); // OK
+  virtual ~advFileSystem(){};
   virtual I_File *Open(const char *name, const char *mode) override; // OK
   virtual bool chdir(const char *path) override;                     // OK
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,

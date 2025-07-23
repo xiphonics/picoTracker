@@ -202,7 +202,7 @@ void timerStatsHandler(TimerHandle_t xTimer) {
 }
 #endif
 
-// timer callback at a rate of 50Hz
+// timer callback at a rate of PICO_CLOCK_HZ
 void timerHandler(TimerHandle_t xTimer) {
   UNUSED(xTimer);
   Event ev(CLOCK);
@@ -265,8 +265,9 @@ bool advEventManager::Init() {
                          /* The timer period in ticks, must be greater than
                          0.
                           */
-                         PICO_CLOCK_INTERVAL, // 50Hz timer for timeHanlder to
-                                              // create UI redraw events
+                         PICO_CLOCK_INTERVAL, // PICO_CLOCK_HZ timer for
+                                              // timeHandler to create UI redraw
+                                              // events
 
                          /* The timers will auto-reload themselves when they
                           * expire.
@@ -298,9 +299,9 @@ int advEventManager::MainLoop() {
   sd_bench();
 #endif
 
-  static StackType_t InputEventsStack[1000];
+  static StackType_t InputEventsStack[2000];
   static StaticTask_t InputEventsTCB;
-  xTaskCreateStatic(ProcessInputEvent, "InEvent", 1000, NULL, 2,
+  xTaskCreateStatic(ProcessInputEvent, "InEvent", 2000, NULL, 2,
                     InputEventsStack, &InputEventsTCB);
 
 #ifdef SERIAL_REPL
