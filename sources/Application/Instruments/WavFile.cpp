@@ -227,6 +227,8 @@ int WavFile::GetChannelCount(int note) { return channelCount_; };
 
 int WavFile::GetSampleRate(int note) { return sampleRate_; };
 
+float WavFile::GetLengthInSec() { return (float)size_ / sampleRate_; };
+
 long WavFile::readBlock(long start, long size) {
   if (size > readBufferSize_) {
     readBufferSize_ = size;

@@ -27,6 +27,7 @@
 #define BATTERY_GAUGE_WIDTH 5
 #define SCREEN_CHARS SCREEN_WIDTH *SCREEN_HEIGHT
 #define MAX_FIELD_WIDTH 26
+#define SCREEN_REDRAW_RATE 50 // in Hz
 
 // need this forward declaration to break out of circular dependency as
 // ProjectView uses a UITextfield which in turn had dependency on AppWindow
@@ -42,6 +43,7 @@ class InstrumentImportView;
 class InstrumentView;
 class NullView;
 class PhraseView;
+class SampleEditorView;
 class SelectProjectView;
 class SongView;
 class TableView;
@@ -112,6 +114,7 @@ private:
   ThemeView *_themeView;
   ThemeImportView *_themeImportView;
   MixerView *_mixerView;
+  SampleEditorView *_sampleEditorView;
   SelectProjectView *_selectProjectView;
   NullView *_nullView;
 

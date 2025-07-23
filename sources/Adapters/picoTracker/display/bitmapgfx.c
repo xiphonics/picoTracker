@@ -20,19 +20,20 @@
 // pixel_data is a pointer to the bitmap data, each byte is 8 monochrome pixels
 // of a column, MSB first
 // fg_color and bg_color are the colors to use for the bitmap
-void bitmapgfx_draw_bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t height,
-                           const uint8_t *pixel_data, uint16_t fg_color,
-                           uint16_t bg_color) {
+void bitmapgfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t width,
+                           uint16_t height, const uint8_t *pixel_data,
+                           uint16_t fg_color, uint16_t bg_color) {
   // Convert character cell coordinates to pixel coordinates
   uint16_t x_pixel = x * CHAR_WIDTH;
   uint16_t y_pixel = y * CHAR_HEIGHT;
 
   // Because of the rotated display swap x & y when sending commands to display
-  uint16_t display_x = 240 - y_pixel - height;
+  // Use ILI9341_TFTWIDTH (240) for the calculation
+  uint16_t display_x = ILI9341_TFTWIDTH - y_pixel - height;
   uint16_t display_y = x_pixel;
 
-  // Ensure width is a multiple of 8 pixels for bitmap byte alignment because
-  assert(width % 8 == 0);
+  // Width must be a multiple of 8 pixels for bitmap byte alignment
+  // This is a requirement for our bitmap format
   int bytes_per_row = width / 8;
 
   // Set display window with swapped dimensions for rotation
@@ -72,20 +73,23 @@ void bitmapgfx_draw_bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t height,
 /**
  * Clear a bitmap buffer (set all pixels to 0)
  */
-void bitmapgfx_clear_buffer(uint8_t *buffer, uint8_t width, uint8_t height) {
-  assert(width % 8 == 0);
+void bitmapgfx_clear_buffer(uint8_t *buffer, uint16_t width, uint16_t height) {
   assert(buffer != NULL);
 
-  // Calculate buffer size in bytes and clear it
-  uint16_t buffer_size = (width / 8) * height;
+  // For our bitmap format, width must be rounded up to the nearest multiple of
+  // 8 to calculate the correct buffer size in bytes
+  uint16_t bytes_per_row = (width + 7) / 8; // Round up to nearest byte
+  uint16_t buffer_size = bytes_per_row * height;
+
+  // Clear the buffer
   memset(buffer, 0, buffer_size);
 }
 
 /**
  * Set a pixel in a bitmap buffer
  */
-void bitmapgfx_set_pixel(uint8_t *buffer, uint8_t width, uint8_t x, uint8_t y,
-                         bool value) {
+void bitmapgfx_set_pixel(uint8_t *buffer, uint16_t width, uint16_t x,
+                         uint16_t y, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
@@ -107,8 +111,8 @@ void bitmapgfx_set_pixel(uint8_t *buffer, uint8_t width, uint8_t x, uint8_t y,
 /**
  * Get a pixel from a bitmap buffer
  */
-bool bitmapgfx_get_pixel(const uint8_t *buffer, uint8_t width, uint8_t x,
-                         uint8_t y) {
+bool bitmapgfx_get_pixel(const uint8_t *buffer, uint16_t width, uint16_t x,
+                         uint16_t y) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
@@ -125,8 +129,8 @@ bool bitmapgfx_get_pixel(const uint8_t *buffer, uint8_t width, uint8_t x,
 /**
  * Draw a line in a bitmap buffer using Bresenham's algorithm
  */
-void bitmapgfx_draw_line(uint8_t *buffer, uint8_t width, uint8_t height,
-                         uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,
+void bitmapgfx_draw_line(uint8_t *buffer, uint16_t width, uint16_t height,
+                         uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
                          bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
@@ -169,9 +173,9 @@ void bitmapgfx_draw_line(uint8_t *buffer, uint8_t width, uint8_t height,
 /**
  * Draw a rectangle in a bitmap buffer
  */
-void bitmapgfx_draw_rect(uint8_t *buffer, uint8_t width, uint8_t height,
-                         uint8_t x, uint8_t y, uint8_t rect_width,
-                         uint8_t rect_height, bool filled, bool value) {
+void bitmapgfx_draw_rect(uint8_t *buffer, uint16_t width, uint16_t height,
+                         uint16_t x, uint16_t y, uint16_t rect_width,
+                         uint16_t rect_height, bool filled, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
 
@@ -191,9 +195,9 @@ void bitmapgfx_draw_rect(uint8_t *buffer, uint8_t width, uint8_t height,
 
   // If filled, draw each row of the rectangle
   if (filled) {
-    for (uint8_t row = 0; row < rect_height; row++) {
+    for (uint16_t row = 0; row < rect_height; row++) {
       if (y + row < height) { // Check height bounds
-        for (uint8_t col = 0; col < rect_width; col++) {
+        for (uint16_t col = 0; col < rect_width; col++) {
           if (x + col < width) { // Check width bounds
             bitmapgfx_set_pixel(buffer, width, x + col, y + row, value);
           }
@@ -203,7 +207,7 @@ void bitmapgfx_draw_rect(uint8_t *buffer, uint8_t width, uint8_t height,
   } else {
     // Draw the outline only
     // Top and bottom edges
-    for (uint8_t col = 0; col < rect_width; col++) {
+    for (uint16_t col = 0; col < rect_width; col++) {
       if (x + col < width) {
         // Top edge
         bitmapgfx_set_pixel(buffer, width, x + col, y, value);
@@ -217,7 +221,7 @@ void bitmapgfx_draw_rect(uint8_t *buffer, uint8_t width, uint8_t height,
     }
 
     // Left and right edges
-    for (uint8_t row = 1; row < rect_height - 1; row++) {
+    for (uint16_t row = 1; row < rect_height - 1; row++) {
       if (y + row < height) {
         // Left edge
         bitmapgfx_set_pixel(buffer, width, x, y + row, value);

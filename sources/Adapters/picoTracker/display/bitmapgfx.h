@@ -27,9 +27,9 @@ extern "C" {
  * @param fg_color Foreground color (for 1 bits)
  * @param bg_color Background color (for 0 bits)
  */
-void bitmapgfx_draw_bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t height,
-                           const uint8_t *bitmap_data, uint16_t fg_color,
-                           uint16_t bg_color);
+void bitmapgfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t width,
+                           uint16_t height, const uint8_t *bitmap_data,
+                           uint16_t fg_color, uint16_t bg_color);
 
 /**
  * Clear a bitmap buffer (set all pixels to 0)
@@ -37,7 +37,7 @@ void bitmapgfx_draw_bitmap(uint8_t x, uint8_t y, uint8_t width, uint8_t height,
  * @param width Width in pixels (must be multiple of 8)
  * @param height Height in pixels
  */
-void bitmapgfx_clear_buffer(uint8_t *buffer, uint8_t width, uint8_t height);
+void bitmapgfx_clear_buffer(uint8_t *buffer, uint16_t width, uint16_t height);
 
 /**
  * Set a pixel in a bitmap buffer
@@ -47,8 +47,8 @@ void bitmapgfx_clear_buffer(uint8_t *buffer, uint8_t width, uint8_t height);
  * @param y Y coordinate of the pixel
  * @param value Pixel value (true = set, false = clear)
  */
-void bitmapgfx_set_pixel(uint8_t *buffer, uint8_t width, uint8_t x, uint8_t y,
-                         bool value);
+void bitmapgfx_set_pixel(uint8_t *buffer, uint16_t width, uint16_t x,
+                         uint16_t y, bool value);
 
 /**
  * Get a pixel from a bitmap buffer
@@ -58,8 +58,8 @@ void bitmapgfx_set_pixel(uint8_t *buffer, uint8_t width, uint8_t x, uint8_t y,
  * @param y Y coordinate of the pixel
  * @return Pixel value (true = set, false = clear)
  */
-bool bitmapgfx_get_pixel(const uint8_t *buffer, uint8_t width, uint8_t x,
-                         uint8_t y);
+bool bitmapgfx_get_pixel(const uint8_t *buffer, uint16_t width, uint16_t x,
+                         uint16_t y);
 
 /**
  * Draw a line in a bitmap buffer using Bresenham's algorithm
@@ -72,8 +72,8 @@ bool bitmapgfx_get_pixel(const uint8_t *buffer, uint8_t width, uint8_t x,
  * @param y1 Ending Y coordinate
  * @param value Pixel value (true = set, false = clear)
  */
-void bitmapgfx_draw_line(uint8_t *buffer, uint8_t width, uint8_t height,
-                         uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,
+void bitmapgfx_draw_line(uint8_t *buffer, uint16_t width, uint16_t height,
+                         uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
                          bool value);
 
 /**
@@ -88,9 +88,9 @@ void bitmapgfx_draw_line(uint8_t *buffer, uint8_t width, uint8_t height,
  * @param filled Whether to fill the rectangle
  * @param value Pixel value (true = set, false = clear)
  */
-void bitmapgfx_draw_rect(uint8_t *buffer, uint8_t width, uint8_t height,
-                         uint8_t x, uint8_t y, uint8_t rect_width,
-                         uint8_t rect_height, bool filled, bool value);
+void bitmapgfx_draw_rect(uint8_t *buffer, uint16_t width, uint16_t height,
+                         uint16_t x, uint16_t y, uint16_t rect_width,
+                         uint16_t rect_height, bool filled, bool value);
 
 #ifdef __cplusplus
 }

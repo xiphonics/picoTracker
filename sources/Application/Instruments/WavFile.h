@@ -30,7 +30,8 @@ public:
   virtual int GetSampleRate(int note);
   virtual int GetChannelCount(int note);
   virtual int GetRootNote(int note);
-  bool GetBuffer(long start, long sampleCount); // values in smples
+  bool GetBuffer(long start, long sampleCount); // values in samples
+  virtual float GetLengthInSec();
 
   uint32_t GetDiskSize(int note);
   bool Rewind();
