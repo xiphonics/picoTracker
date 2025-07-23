@@ -20,8 +20,10 @@
 #include "pico/bootrom.h"
 #include "pico/rand.h"
 #include "pico/stdlib.h"
+#include "Adapters/picoTracker/display/picoBitmapGraphics.h"
 #include <System/Console/Trace.h>
 #include <System/Console/nanoprintf.h>
+#include <System/Display/BitmapGraphics.h>
 #include <cstdio>
 
 #define RP2040_RAM_BASE 0x20000000U
@@ -29,6 +31,8 @@
 void platform_init() {
   // Platform setup
   stdio_init_all();
+
+  BitmapGraphics::Install(new picoBitmapGraphics());
 
   ////////////
   // CLOCKS //

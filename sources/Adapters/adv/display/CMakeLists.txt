@@ -1,5 +1,6 @@
 add_library(platform_display
   display.c
+  advBitmapGraphics.cpp
 )
 
 #target_link_libraries(platform_display
