@@ -8,7 +8,6 @@
  */
 
 #include "SampleEditorView.h"
-#include "Adapters/picoTracker/display/chargfx.h"
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
@@ -20,8 +19,8 @@
 #include "Foundation/Types/Types.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/Display/BitmapGraphics.h"
 #include "UIController.h"
-#include <bitmapgfx.h>
 #include <cmath>
 #include <cstdint>
 
@@ -34,7 +33,10 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
   memset(waveformCache_, 0, sizeof(waveformCache_));
 
   // Clear the buffer
-  bitmapgfx_clear_buffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
+  BitmapGraphics *gfx = BitmapGraphics::GetInstance();
+
+  // TODO: enable after fixing crash on advance
+  // gfx->clearBuffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
 
   addAllFields();
 }
@@ -158,8 +160,9 @@ void SampleEditorView::addAllFields() {
     }
   }
 
+  // TODO: enable after fixing crash on advance
   // Update the waveform display
-  updateWaveformDisplay();
+  // updateWaveformDisplay();
 }
 
 void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
@@ -232,7 +235,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         Variable *startVar =
             currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
         uint32_t startSample = startVar->GetInt();
-        if (startVar && startSample >= 0 && startSample < sampleSize) {
+        if (startVar && startSample < sampleSize) {
           // Initialize normalized playback position (0.0 - 1.0)
           playbackPosition_ = (float)startSample / sampleSize;
         } else {
@@ -479,8 +482,9 @@ void SampleEditorView::updateWaveformDisplay() {
   memset(bitmapBuffer_, 0, BITMAPWIDTH * BITMAPHEIGHT / 8);
 
   // Draw a border around the waveform display
-  bitmapgfx_draw_rect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0,
-                      BITMAPWIDTH - 1, BITMAPHEIGHT - 1, false, true);
+  BitmapGraphics *gfx = BitmapGraphics::GetInstance();
+  gfx->drawRect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH - 1,
+               BITMAPHEIGHT - 1, false, true);
 
   // Check if we have a valid instrument
   if (!currentInstrument_) {
@@ -556,18 +560,17 @@ void SampleEditorView::updateWaveformDisplay() {
   int centerY = BITMAPHEIGHT / 2;
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
     int pixelHeight = waveformCache_[x];
-
+   
     // Always draw at least a 1-pixel line for visibility, even for very quiet
     // signals
     if (pixelHeight < 1) {
-      // For very quiet signals, draw a single pixel line
-      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, centerY,
-                          x, centerY, true);
+      // For very quiet signals, draw a single pixel line      
+      gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, centerY, x,
+                   centerY, true);
     } else {
       // For non-zero signals, draw the full height
-      bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x,
-                          centerY - pixelHeight, x, centerY + pixelHeight,
-                          true);
+      gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x,
+                   centerY - pixelHeight, x, centerY + pixelHeight, true);
     }
   }
 
@@ -584,8 +587,8 @@ void SampleEditorView::updateWaveformDisplay() {
     startX = BITMAPWIDTH - 2;
 
   // Draw the start marker line
-  bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, startX, 1,
-                      startX, BITMAPHEIGHT - 2, true);
+  gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, startX, 1, startX,
+               BITMAPHEIGHT - 2, true);
 
   // Map the end position to the bitmap width - end as a fraction of
   // fullSampleSize
@@ -596,8 +599,8 @@ void SampleEditorView::updateWaveformDisplay() {
     endX = BITMAPWIDTH - 2;
 
   // Draw the end marker line
-  bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, endX, 1, endX,
-                      BITMAPHEIGHT - 2, true);
+  gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, endX, 1, endX,
+               BITMAPHEIGHT - 2, true);
 
   // First playhead drawing section - removed
 
@@ -612,8 +615,8 @@ void SampleEditorView::updateWaveformDisplay() {
       // Draw a dashed vertical line for loop start
       for (int y = 1; y < BITMAPHEIGHT - 2; y += 3) {
         // Draw 2-pixel dash, then 1-pixel gap
-        bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y, true);
-        bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, loopX, y + 1, true);
+        gfx->setPixel(bitmapBuffer_, BITMAPWIDTH, loopX, y, true);
+        gfx->setPixel(bitmapBuffer_, BITMAPWIDTH, loopX, y + 1, true);
       }
     }
   }
@@ -634,8 +637,8 @@ void SampleEditorView::updateWaveformDisplay() {
     for (int offset = -1; offset <= 1; offset++) {
       int x = playheadX + offset;
       if (x >= 1 && x < BITMAPWIDTH - 1) {
-        bitmapgfx_draw_line(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 1, x,
-                            BITMAPHEIGHT - 2, true);
+        gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 1, x,
+                     BITMAPHEIGHT - 2, true);
       }
     }
 
@@ -645,7 +648,7 @@ void SampleEditorView::updateWaveformDisplay() {
         int px = playheadX + x;
         int py = y;
         if (px >= 1 && px < BITMAPWIDTH - 1 && py < BITMAPHEIGHT - 2) {
-          bitmapgfx_set_pixel(bitmapBuffer_, BITMAPWIDTH, px, py, true);
+          gfx->setPixel(bitmapBuffer_, BITMAPWIDTH, px, py, true);
         }
       }
     }

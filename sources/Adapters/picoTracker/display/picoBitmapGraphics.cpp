@@ -6,24 +6,15 @@
  * This file is part of the picoTracker firmware
  */
 
-#include "bitmapgfx.h"
-#include "chargfx.h"
-#include "ili9341.h"
-#include <assert.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include "picoBitmapGraphics.h"
+#include "picoDisplay.h"
+#include "pico/stdlib.h"
+#include <cstring>
 
-// Draw a bitmap at the specified position
-// x and y are in character cells
-// width and height are in pixels
-// pixel_data is a pointer to the bitmap data, each byte is 8 monochrome pixels
-// of a column, MSB first
-// fg_color and bg_color are the colors to use for the bitmap
-void bitmapgfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t width,
-                           uint16_t height, const uint8_t *pixel_data,
-                           uint16_t fg_color, uint16_t bg_color) {
-  // Convert character cell coordinates to pixel coordinates
+void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
+                                uint16_t height, const uint8_t *bitmap_data,
+                                uint16_t fg_color, uint16_t bg_color) {
+  /// Convert character cell coordinates to pixel coordinates
   uint16_t x_pixel = x * CHAR_WIDTH;
   uint16_t y_pixel = y * CHAR_HEIGHT;
 
@@ -50,13 +41,14 @@ void bitmapgfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t width,
 
   // Process bitmap column by column for rotated display
   for (int col = 0; col < width; col++) {
+    uint16_t buffer[height];
     uint16_t *buffer_ptr = buffer;
 
     for (int row = 0; row < height; row++) {
       // Extract the bit from the bitmap data
       int byte_idx = col / 8;
       int bit_pos = 7 - (col % 8); // MSB first
-      uint8_t byte_data = pixel_data[row * bytes_per_row + byte_idx];
+      uint8_t byte_data = bitmap_data[row * bytes_per_row + byte_idx];
       bool pixel_set = (byte_data & (1 << bit_pos)) != 0;
 
       // Store the pixel color
@@ -64,16 +56,14 @@ void bitmapgfx_draw_bitmap(uint16_t x, uint16_t y, uint16_t width,
     }
 
     // Write this column to the display
-    ili9341_write_data_continuous(buffer, height * sizeof(uint16_t));
+    picoDisplay.ili9341_write_data_continuous(buffer, height * sizeof(uint16_t));
   }
 
   ili9341_stop_writing();
 }
 
-/**
- * Clear a bitmap buffer (set all pixels to 0)
- */
-void bitmapgfx_clear_buffer(uint8_t *buffer, uint16_t width, uint16_t height) {
+void picoBitmapGraphics::clearBuffer(uint8_t *buffer, uint16_t width,
+                                 uint16_t height) {
   assert(buffer != NULL);
 
   // For our bitmap format, width must be rounded up to the nearest multiple of
@@ -85,11 +75,8 @@ void bitmapgfx_clear_buffer(uint8_t *buffer, uint16_t width, uint16_t height) {
   memset(buffer, 0, buffer_size);
 }
 
-/**
- * Set a pixel in a bitmap buffer
- */
-void bitmapgfx_set_pixel(uint8_t *buffer, uint16_t width, uint16_t x,
-                         uint16_t y, bool value) {
+void picoBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width, uint16_t x,
+                              uint16_t y, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
@@ -108,11 +95,8 @@ void bitmapgfx_set_pixel(uint8_t *buffer, uint16_t width, uint16_t x,
   }
 }
 
-/**
- * Get a pixel from a bitmap buffer
- */
-bool bitmapgfx_get_pixel(const uint8_t *buffer, uint16_t width, uint16_t x,
-                         uint16_t y) {
+bool picoBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width, uint16_t x,
+                              uint16_t y) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
@@ -126,12 +110,9 @@ bool bitmapgfx_get_pixel(const uint8_t *buffer, uint16_t width, uint16_t x,
   return (buffer[byte_idx] & (1 << bit_pos)) != 0;
 }
 
-/**
- * Draw a line in a bitmap buffer using Bresenham's algorithm
- */
-void bitmapgfx_draw_line(uint8_t *buffer, uint16_t width, uint16_t height,
-                         uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
-                         bool value) {
+void picoBitmapGraphics::drawLine(uint8_t *buffer, uint16_t width, uint16_t height,
+                              uint16_t x0, uint16_t y0, uint16_t x1,
+                              uint16_t y1, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
 
@@ -146,7 +127,7 @@ void bitmapgfx_draw_line(uint8_t *buffer, uint16_t width, uint16_t height,
   while (1) {
     // Set pixel if it's within bounds
     if (x0 < width && y0 < height) {
-      bitmapgfx_set_pixel(buffer, width, x0, y0, value);
+      setPixel(buffer, width, x0, y0, value);
     }
 
     // Check if we've reached the end point
@@ -170,12 +151,9 @@ void bitmapgfx_draw_line(uint8_t *buffer, uint16_t width, uint16_t height,
   }
 }
 
-/**
- * Draw a rectangle in a bitmap buffer
- */
-void bitmapgfx_draw_rect(uint8_t *buffer, uint16_t width, uint16_t height,
-                         uint16_t x, uint16_t y, uint16_t rect_width,
-                         uint16_t rect_height, bool filled, bool value) {
+void picoBitmapGraphics::drawRect(uint8_t *buffer, uint16_t width, uint16_t height,
+                              uint16_t x, uint16_t y, uint16_t rect_width,
+                              uint16_t rect_height, bool filled, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
 
@@ -199,7 +177,7 @@ void bitmapgfx_draw_rect(uint8_t *buffer, uint16_t width, uint16_t height,
       if (y + row < height) { // Check height bounds
         for (uint16_t col = 0; col < rect_width; col++) {
           if (x + col < width) { // Check width bounds
-            bitmapgfx_set_pixel(buffer, width, x + col, y + row, value);
+            setPixel(buffer, width, x + col, y + row, value);
           }
         }
       }
@@ -210,25 +188,21 @@ void bitmapgfx_draw_rect(uint8_t *buffer, uint16_t width, uint16_t height,
     for (uint16_t col = 0; col < rect_width; col++) {
       if (x + col < width) {
         // Top edge
-        bitmapgfx_set_pixel(buffer, width, x + col, y, value);
+        setPixel(buffer, width, x + col, y, value);
 
         // Bottom edge (if in bounds)
         if (y + rect_height - 1 < height) {
-          bitmapgfx_set_pixel(buffer, width, x + col, y + rect_height - 1,
-                              value);
-        }
-      }
     }
 
     // Left and right edges
     for (uint16_t row = 1; row < rect_height - 1; row++) {
       if (y + row < height) {
         // Left edge
-        bitmapgfx_set_pixel(buffer, width, x, y + row, value);
+        setPixel(buffer, width, x, y + row, value);
 
         // Right edge (if in bounds)
         if (x + rect_width - 1 < width) {
-          bitmapgfx_set_pixel(buffer, width, x + rect_width - 1, y + row,
+          setPixel(buffer, width, x + rect_width - 1, y + row,
                               value);
         }
       }

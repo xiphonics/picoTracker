@@ -8,7 +8,6 @@
  */
 
 #include "InstrumentView.h"
-#include "Adapters/picoTracker/display/chargfx.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -25,7 +24,6 @@
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
-#include <bitmapgfx.h>
 #include <cstdint>
 #include <nanoprintf.h>
 

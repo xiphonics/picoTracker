@@ -7,7 +7,7 @@
  */
 
 #include "UIBitmapField.h"
-#include "Adapters/picoTracker/display/bitmapgfx.h"
+#include "System/Display/BitmapGraphics.h"
 
 UIBitmapField::UIBitmapField(GUIPoint &position, uint16_t width,
                              uint16_t height, const uint8_t *bitmap_data,
@@ -21,8 +21,8 @@ UIBitmapField::~UIBitmapField() {
 
 void UIBitmapField::Draw(GUIWindow &w, int offset) {
   // Draw the bitmap using our new chargfx_draw_bitmap function
-  bitmapgfx_draw_bitmap(x_, y_, width_, height_, bitmap_data_, fg_color_,
-                        bg_color_);
+  BitmapGraphics *gfx = BitmapGraphics::GetInstance();
+  gfx->drawBitmap(x_, y_, width_, height_, bitmap_data_, fg_color_, bg_color_);
 }
 
 void UIBitmapField::OnClick() {

@@ -1,9 +1,16 @@
 add_library(platform_display
   ili9341.c
   chargfx.c
-  bitmapgfx.c
+  picoBitmapGraphics.cpp
+  picoGraphicsFactory.cpp
 )
 
-target_include_directories(platform_display PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(platform_display PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}
+)
 
-include_directories(${PROJECT_SOURCE_DIR})
+target_link_libraries(platform_display PUBLIC
+    pico_stdlib
+    hardware_spi
+)

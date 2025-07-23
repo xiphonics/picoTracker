@@ -9,7 +9,6 @@
 #ifndef _UI_BITMAP_FIELD_H_
 #define _UI_BITMAP_FIELD_H_
 
-#include "Adapters/picoTracker/display/chargfx.h"
 #include "UIField.h"
 
 class UIBitmapField : public UIField {
