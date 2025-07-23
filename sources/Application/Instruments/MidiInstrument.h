@@ -84,6 +84,7 @@ private:
   int pitchBendTarget_;
   int pitchBendSpeed_;
   float pitchBendCurrent_;
+  bool useLogCurve_;
 
   Variable channel_;
   Variable noteLen_;

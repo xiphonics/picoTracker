@@ -94,6 +94,7 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   playing_ = true;
   retrig_ = false;
   pitchBend_ = false;
+  useLogCurve_ = false;
 
   return true;
 };
@@ -154,13 +155,23 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
           pitchBendCurrent_--;
         }
       } else {
-        int diff = pitchBendTarget_ - pitchBendCurrent_;
-        int step = (diff > 0 ? 1 : -1) * std::max(1, abs(diff) / pitchBendSpeed_);
-        if (abs(diff) < abs(step)) {
-          pitchBendCurrent_ = pitchBendTarget_;
+        if (useLogCurve_) {
+          int diff = pitchBendTarget_ - pitchBendCurrent_;
+          if (diff > 0) {
+            pitchBendCurrent_ += std::max(1, diff * pitchBendSpeed_);
+          } else {
+            pitchBendCurrent_ -= std::max(1, -diff * pitchBendSpeed_);
+          }
         } else {
-          pitchBendCurrent_ += step;
+          int diff = pitchBendTarget_ - pitchBendCurrent_;
+          int step = (diff > 0 ? 1 : -1) * std::max(1, abs(diff) / pitchBendSpeed_);
+          if (abs(diff) < abs(step)) {
+            pitchBendCurrent_ = pitchBendTarget_;
+          } else {
+            pitchBendCurrent_ += step;
+          }
         }
+        
       }
       if (pitchBendCurrent_ != prev) {
         int midiValue = ((pitchBendCurrent_ - 127) * 8192) / 127;
@@ -232,7 +243,17 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     pitchBend_ = true;
     pitchBendTarget_ = target;
     pitchBendSpeed_ = speed;
+    useLogCurve_ = false;
   } break;
+
+  case FourCC::InstrumentCommandLegato:{
+    int target = (char)(value & 0xFF);
+    float speed = float(value >> 8);
+    pitchBend_ = true;
+    pitchBendTarget_ = target;
+    pitchBendSpeed_ = speed;
+    useLogCurve_ = true;
+  }
 
   case FourCC::InstrumentCommandVelocity: {
     // VELM cmds set velocity for MIDI steps
