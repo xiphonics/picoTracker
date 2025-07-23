@@ -231,6 +231,9 @@ void platform_bootloader() { reset_usb_boot(0, 0); }
 
 SysMutex *platform_mutex() { return new picoTrackerMutex(); };
 
+uint32_t millis(void) { return to_ms_since_boot(get_absolute_time()); }
+uint32_t micros(void) { return to_us_since_boot(get_absolute_time()); }
+
 void platform_brightness(uint8_t value) {
   pwm_set_gpio_level(DISPLAY_PWM, value);
 }

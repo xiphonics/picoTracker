@@ -28,3 +28,88 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-------------------------------------------------------------------------------
+Third-Party Software and Licenses
+-------------------------------------------------------------------------------
+
+This project includes third-party software components. Each component is
+subject to its own license. Below is a summary of included external code:
+
+1. FatFs
+   Path: sources/Externals/FatFs
+   SPDX-License-Identifier: BSD 1-Clause License (or equivalent)
+   License file: sources/Externals/FatFs/LICENSE.txt
+
+2. FreeRTOS
+   Path: sources/Externals/FreeRTOS-Kernel
+   SPDX-License-Identifier: MIT
+   License file: sources/Externals/FreeRTOS-Kernel/LICENSE.md
+
+3. SdFat
+   Path: sources/Externals/SdFat
+   SPDX-License-Identifier: MIT
+   License file: sources/Externals/SdFat/LICENSE.md
+
+4. SdFat
+   Path: sources/Externals/TinyXML2
+   SPDX-License-Identifier: Zlib
+   License file: sources/Externals/TinyXML2/LICENSE.txt
+
+5. braids
+   Path: sources/Externals/braids
+   SPDX-License-Identifier: MIT
+   License file: sources/Externals/braids/LICENSE
+
+6. cRSID
+   Path: sources/Externals/cRSID
+   SPDX-License-Identifier: WTFPL (or equivalent)
+   License file: sources/Externals/cRSID/README.txt
+
+7. etl
+   Path: sources/Externals/etl
+   SPDX-License-Identifier: MIT
+   License file: sources/Externals/etl/LICENSE
+
+8. lvgl
+   Path: sources/Externals/lvgl
+   SPDX-License-Identifier: MIT
+   License file: sources/Externals/lvgl/LICENCE.txt
+
+9. opal
+   Path: sources/Externals/opal
+   SPDX-License-Identifier: Unlicense (or equivalent)
+   License file: sources/Externals/opal/LICENSE.md
+
+10. pico-sdk
+   Path: sources/Externals/pico-sdk
+   SPDX-License-Identifier: BSD-3-Clause
+   License file: sources/Externals/pico-sdk/LICENSE.TXT
+
+11. opal
+   Path: sources/Externals/yxml
+   SPDX-License-Identifier: MIT
+   License file: sources/Externals/yxml/COPYING
+
+12. STM32 CMSIS
+   Path: sources/Adapters/adv/Drivers/CMSIS
+   SPDX-License-Identifier: Apache-2.0
+   License file: sources/Adapters/adv/Drivers/CMSIS/LICENSE.txt
+
+13. STM32 HAL
+   Path: sources/Adapters/adv/Drivers/STM32H7xx_HAL_Driver
+   SPDX-License-Identifier: BSD-3-Clause
+   License file: sources/Adapters/adv/Drivers/STM32H7xx_HAL_Driver/LICENSE.txt
+
+14. Ubuntu Mono font
+   Path: sources/Adapters/adv/display/font.h
+   SPDX-License-Identifier: Ubuntu-font-1.0
+   License file: sources/Adapters/adv/display/Ubuntu-Font-Licence-1.0.txt
+
+15. ZX-Origins fonts
+   Path: sources/Adapters/picoTracker/display/font.h
+   SPDX-License-Identifier: custom
+   License file: sources/Adapters/picoTracker/display/FONT-LICENSE.md
+
+The license texts for the above components are available in their respective
+folders. This project does not relicense or modify the terms of those licenses.

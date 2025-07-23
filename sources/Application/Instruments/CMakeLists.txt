@@ -15,6 +15,7 @@ add_library(application_instruments
   SoundSource.cpp
   WavFile.cpp
   WavFileWriter.cpp
+  WavHeaderWriter.cpp
 )
 
 target_link_libraries(application_instruments PUBLIC
