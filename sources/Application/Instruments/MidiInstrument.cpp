@@ -162,7 +162,7 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
             pitchBendCurrent_ += static_cast<int>(sign * pitchBendStep_);
             pitchBendStep_ *= growthFactor_;
           } else {
-            pitchBendStep_ = (diff > 0 ? 1 : -1) * std::max(1, abs(diff) / pitchBendSpeed_);
+            pitchBendStep_ = (diff > 0 ? 1 : -1) * (abs(diff) / static_cast<float>(pitchBendSpeed_));
             pitchBendCurrent_ += pitchBendStep_;
           }
         }  

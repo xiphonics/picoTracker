@@ -85,8 +85,8 @@ private:
   int pitchBendSpeed_;
   float pitchBendCurrent_;
   float pitchBendStep_;
-  float minGrowth_ = 1.01f;
-  float maxGrowth_ = 1.2f;
+  float minGrowth_ = 1.001f;
+  float maxGrowth_ = 1.5f;
   float growthFactor_ = 1.0f;
   bool useLogCurve_;
 
