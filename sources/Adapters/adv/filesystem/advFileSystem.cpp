@@ -406,3 +406,8 @@ bool PI_File::Close() {
   FRESULT res = f_close(&file_);
   return res == FR_OK;
 }
+
+bool PI_File::Sync() {
+  FRESULT res = f_sync(&file_);
+  return res == FR_OK;
+}

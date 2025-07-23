@@ -133,7 +133,7 @@ else()
   message("picoTracker Advance Build")
   add_definitions(-DADV)
   # Enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
-  # add_definitions(-DSERIAL_REPL)
+  add_definitions(-DSERIAL_REPL)
 
   # Advance displays battery level as percentage instead of bars
   add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)

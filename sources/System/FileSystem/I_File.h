@@ -22,6 +22,7 @@ public:
   virtual long Tell() = 0;
   virtual bool Close() = 0;
   virtual int Error() = 0;
+  virtual bool Sync() = 0;
 };
 
 #endif // _I_FILE_H_

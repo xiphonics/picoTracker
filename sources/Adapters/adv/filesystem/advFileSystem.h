@@ -36,6 +36,7 @@ public:
   long Tell() override;
   bool Close() override;
   int Error() override;
+  bool Sync() override;
 
 private:
   FIL file_;

@@ -13,6 +13,7 @@
 #include "Application/Model/Config.h"
 #include "advGUIWindowImp.h"
 // #include "usb_utils.h"
+#include "Adapters/adv/audio/record.h"
 #include "etl/map.h"
 #include "platform.h"
 #include "tim.h"
@@ -314,6 +315,9 @@ int advEventManager::MainLoop() {
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(ProcessEvent, "ProcEvent", 1000, NULL, 1, ProcessEventStack,
                     &ProcessEventTCB);
+
+  RecordHandle = xTaskCreateStatic(Record, "Record", 1000, NULL, 1, RecordStack,
+                                   &RecordTCB);
 
   static StackType_t USBDeviceStack[512];
   static StaticTask_t USBDeviceTCB;
