@@ -7,16 +7,14 @@
  */
 
 #include "utils.h"
+#ifdef SDIO_BENCH
 #include "Externals/SdFat/src/SdFat.h"
+#endif
 #include "System/System/System.h"
 #include "hardware/clocks.h"
 #include "hardware/structs/clocks.h"
 #include <System/Console/Trace.h>
 #include <stdio.h>
-
-uint32_t millis(void) { return to_ms_since_boot(get_absolute_time()); }
-
-uint32_t micros(void) { return to_us_since_boot(get_absolute_time()); }
 
 uint32_t measure_free_mem(void) {
   void *buff[256];

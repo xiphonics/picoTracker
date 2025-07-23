@@ -83,9 +83,9 @@ public:
 
   GUIEventType GetType();
   long GetValue() { return _value; };
-  ;
+
   long When() { return _when; };
-  ;
+
   bool IsShiftPressed() { return _shift; };
   bool IsCtrlPressed() { return _ctrl; };
   bool IsBtnPressed() { return _btn; };
