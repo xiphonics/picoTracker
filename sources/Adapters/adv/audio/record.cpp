@@ -77,6 +77,7 @@ void StopRecording() { recordingActive = false; }
 
 void Record(void *) {
   UINT bw;
+  uint32_t lastLoggedTime = xTaskGetTickCount();
   for (;;) {
     if (!recordingActive) {
       HAL_SAI_DMAStop(&hsai_BlockB1);
@@ -133,8 +134,10 @@ void Record(void *) {
         // RECORD_BUFFER_SIZE/4 stereo samples)
         totalSamplesWritten += RECORD_BUFFER_SIZE / 4;
 
-        if (xTaskGetTickCount() % 1000) {
-          Trace::Debug("RECORDING...");
+        auto now = xTaskGetTickCount();
+        if ((now - lastLoggedTime) > 1000) { // log every sec
+          Trace::Debug("RECORDING [%i]s", (xTaskGetTickCount() - start) / 1000);
+          lastLoggedTime = now;
         }
       }
     } else {
