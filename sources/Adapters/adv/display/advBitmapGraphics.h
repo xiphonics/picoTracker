@@ -10,7 +10,6 @@
 #define _ADV_BITMAPGRAPHICS_H
 
 #include "System/Display/BitmapGraphics.h"
-#include "display.h"
 #include <cstdint>
 
 class advBitmapGraphics : public BitmapGraphics {

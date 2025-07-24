@@ -15,12 +15,10 @@ extern "C" {
 #include "ltdc.h"
 #include <stdbool.h>
 
-
-#define TEXT_WIDTH 32
+#define TEXT_WIDTH 33 // extra half empty char
 #define TEXT_HEIGHT 24
-#define CHAR_HEIGHT 10
-#define CHAR_WIDTH 10
-#define BUFFER_CHARS 12
+#define CHAR_HEIGHT 30
+#define CHAR_WIDTH 22
 
 // ARNE-16 palette converted to RGB565 --
 // https://lospec.com/palette-list/arne-16
@@ -56,6 +54,8 @@ void display_draw_screen();
 void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 void display_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
                              uint8_t height);
+
+uint32_t rgb565_to_abgr8888(uint16_t rgb565);
 
 #ifdef __cplusplus
 }
