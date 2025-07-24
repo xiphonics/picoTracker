@@ -8,7 +8,6 @@
 
 #include "picoBitmapGraphics.h"
 #include "pico/stdlib.h"
-#include "picoDisplay.h"
 #include <cstring>
 
 void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
