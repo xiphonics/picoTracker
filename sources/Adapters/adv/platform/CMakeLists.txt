@@ -1,5 +1,6 @@
 add_library(platform
  platform.cpp
+ serial.c
 )
 
 target_link_libraries(platform PUBLIC

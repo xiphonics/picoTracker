@@ -11,6 +11,7 @@
 #define _APPLICATION_MIXER_H_
 
 #include "Application/Audio/AudioFileStreamer.h"
+#include "Application/Audio/RecordStreamer.h"
 #include "Application/Mixer/MixerService.h"
 #include "Application/Model/Project.h"
 #include "Application/Utils/fixed.h"
@@ -57,6 +58,9 @@ public:
   void StartLoopingStreaming(const char *name);
   void StopStreaming();
 
+  void StartRecordStreaming(uint16_t *srcBuffer, uint32_t size, bool stereo);
+  void StopRecordStreaming();
+
   stereosample GetMasterOutLevel();
 
   void Update(Observable &o, I_ObservableData *d);
@@ -86,6 +90,7 @@ private:
   bool isChannelPlaying_[SONG_CHANNEL_COUNT];
 
   AudioFileStreamer fileStreamer_;
+  RecordStreamer recordStreamer_;
   PlayerChannel *channel_[SONG_CHANNEL_COUNT];
 
   // store trigger notes, 0xFF = none

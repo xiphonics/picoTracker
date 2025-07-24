@@ -45,6 +45,9 @@ bool PlayerMixer::Init(Project *project) {
 
   project_ = project;
 
+  // Add the record mixer
+  audioMixer->Insert(recordStreamer_);
+
   // Init states
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     lastInstrument_[i] = 0;
@@ -175,6 +178,13 @@ void PlayerMixer::StartLoopingStreaming(const char *name) {
 };
 
 void PlayerMixer::StopStreaming() { fileStreamer_.Stop(); };
+
+void PlayerMixer::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
+                                       bool stereo) {
+  recordStreamer_.Start(srcBuffer, size, stereo);
+};
+
+void PlayerMixer::StopRecordStreaming() { recordStreamer_.Stop(); };
 
 bool PlayerMixer::IsPlaying() { return fileStreamer_.IsPlaying(); }
 

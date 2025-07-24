@@ -158,7 +158,7 @@ private:
 
   uint32_t lastAutoSave = 0;
 
-  // Counter for animation frames, updated once per frame at 50hz
+  // Counter for animation frames, updated once per frame at PICO_CLOCK_HZ
   static uint32_t animationFrameCounter_;
 
 public:

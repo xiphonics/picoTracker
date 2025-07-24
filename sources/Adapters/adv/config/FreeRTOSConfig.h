@@ -145,7 +145,13 @@ standard names. */
 #define configUSE_TRACE_FACILITY 1
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()                               \
   {} // configured by cube
+#ifdef __cplusplus
+extern "C" {
+#endif
 uint32_t GetRuntimeCounterValue(void);
+#ifdef __cplusplus
+}
+#endif
 #define portALT_GET_RUN_TIME_COUNTER_VALUE(ulCountValue)                       \
   { ulCountValue = GetRuntimeCounterValue(); }
 #endif

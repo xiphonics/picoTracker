@@ -86,6 +86,9 @@ public:
   void StartLoopingStreaming(const char *name);
   void StopStreaming();
 
+  void StartRecordStreaming(uint16_t *srcBuffer, uint32_t size, bool stereo);
+  void StopRecordStreaming();
+
   // Channel data
 
   bool IsChannelPlaying(int channel);

@@ -11,8 +11,8 @@
 #include "Application/Instruments/WavFile.h"
 #include "System/Console/Trace.h"
 
-#define STORE1_SIZE 16 * 1024 * 1024
-#define STORE2_SIZE 32 * 1024 * 1024
+#define STORE1_SIZE 32 * 1024 * 1024
+#define STORE2_SIZE 16 * 1024 * 1024
 
 extern uint8_t sampleStore1[];
 extern uint8_t sampleStore2[];

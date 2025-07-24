@@ -296,11 +296,6 @@ void picoTrackerFile::Seek(long offset, int whence) {
   }
 }
 
-bool picoTrackerFile::DeleteFile() {
-  std::lock_guard<Mutex> lock(mutex);
-  return file_.remove();
-}
-
 int picoTrackerFile::GetC() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.read();
@@ -324,4 +319,9 @@ int picoTrackerFile::Error() {
 bool picoTrackerFile::Close() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.close();
+}
+
+bool picoTrackerFile::Sync() {
+  std::lock_guard<Mutex> lock(mutex);
+  return file_.sync();
 }

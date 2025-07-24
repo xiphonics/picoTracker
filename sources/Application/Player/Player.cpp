@@ -1192,6 +1192,13 @@ void Player::StartLoopingStreaming(const char *name) {
 
 void Player::StopStreaming() { mixer_.StopStreaming(); }
 
+void Player::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
+                                  bool stereo) {
+  mixer_.StartRecordStreaming(srcBuffer, size, stereo);
+}
+
+void Player::StopRecordStreaming() { mixer_.StopRecordStreaming(); }
+
 bool Player::IsPlaying() { return mixer_.IsPlaying(); }
 
 std::string Player::GetAudioAPI() {

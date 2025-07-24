@@ -19,7 +19,7 @@
 #ifdef USB_REMOTE_UI
 #include "picoRemoteUI.h"
 #endif
-#include "Adapters/adv/filesystem/picoFileSystem.h"
+#include "Adapters/adv/filesystem/advFileSystem.h"
 #include <string>
 
 #define to_rgb565(color)                                                       \
@@ -165,7 +165,8 @@ void advGUIWindowImp::Unlock(){};
 void advGUIWindowImp::Flush() { display_draw_changed(); };
 
 void advGUIWindowImp::Invalidate() {
-  advEventQueue::GetInstance()->push(advEvent(PICO_FLUSH));
+  Event ev(FLUSH);
+  xQueueSend(eventQueue, &ev, 0);
 };
 
 void advGUIWindowImp::PushEvent(GUIEvent &event) {
@@ -177,9 +178,9 @@ GUIRect advGUIWindowImp::GetRect() {
   return GUIRect(0, 0, 320, 240);
 }
 
-void advGUIWindowImp::ProcessEvent(advEvent &event) {
+void advGUIWindowImp::ProcessEvent(Event &event) {
   switch (event.type_) {
-  case PICO_REDRAW:
+  case REDRAW:
     instance_->_window->Update(true);
 #ifdef USB_REMOTE_UI
     // send font update
@@ -191,13 +192,13 @@ void advGUIWindowImp::ProcessEvent(advEvent &event) {
     }
 #endif
     break;
-  case PICO_FLUSH:
+  case FLUSH:
     instance_->_window->Update(false);
     break;
-  case PICO_CLOCK:
+  case CLOCK:
     instance_->_window->ClockTick();
     break;
-  case PICO_SD_DET:
+  case SD_DET:
     // SD reinit
     FATFS_UnLinkDriver(SDPath);
     HAL_SD_DeInit(&hsd1);
