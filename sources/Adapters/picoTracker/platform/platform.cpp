@@ -7,6 +7,7 @@
  */
 
 #include "platform.h"
+#include "Adapters/picoTracker/display/picoBitmapGraphics.h"
 #include "Adapters/picoTracker/mutex/picoTrackerMutex.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
@@ -20,7 +21,6 @@
 #include "pico/bootrom.h"
 #include "pico/rand.h"
 #include "pico/stdlib.h"
-#include "Adapters/picoTracker/display/picoBitmapGraphics.h"
 #include <System/Console/Trace.h>
 #include <System/Console/nanoprintf.h>
 #include <System/Display/BitmapGraphics.h>
