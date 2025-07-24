@@ -7,7 +7,6 @@
  */
 
 #include "picoBitmapGraphics.h"
-#include "picoDisplay.h"
 #include "pico/stdlib.h"
 #include <cstring>
 
