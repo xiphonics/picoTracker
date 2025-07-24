@@ -8,11 +8,15 @@
 
 #include "picoBitmapGraphics.h"
 #include "pico/stdlib.h"
+#include <cstdlib>
 #include <cstring>
 
 void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
                                     uint16_t height, const uint8_t *bitmap_data,
                                     uint16_t fg_color, uint16_t bg_color) {
+  // max height because screen is rotated on picoTracker devices
+  assert(height > ILI9341_TFTWIDTH);
+
   /// Convert character cell coordinates to pixel coordinates
   uint16_t x_pixel = x * CHAR_WIDTH;
   uint16_t y_pixel = y * CHAR_HEIGHT;
@@ -40,7 +44,7 @@ void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
 
   // Process bitmap column by column for rotated display
   for (int col = 0; col < width; col++) {
-    uint16_t buffer[height];
+    uint16_t buffer[ILI9341_TFTWIDTH];
     uint16_t *buffer_ptr = buffer;
 
     for (int row = 0; row < height; row++) {
@@ -55,8 +59,7 @@ void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
     }
 
     // Write this column to the display
-    picoDisplay.ili9341_write_data_continuous(buffer,
-                                              height * sizeof(uint16_t));
+    ili9341_write_data_continuous(buffer, height * sizeof(uint16_t));
   }
 
   ili9341_stop_writing();
@@ -209,3 +212,5 @@ void picoBitmapGraphics::drawRect(uint8_t *buffer, uint16_t width,
         }
       }
     }
+  }
+}
