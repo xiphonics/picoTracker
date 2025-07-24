@@ -2,7 +2,6 @@ add_library(platform_display
   ili9341.c
   chargfx.c
   picoBitmapGraphics.cpp
-  picoGraphicsFactory.cpp
 )
 
 target_include_directories(platform_display PUBLIC
