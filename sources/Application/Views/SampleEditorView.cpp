@@ -484,7 +484,7 @@ void SampleEditorView::updateWaveformDisplay() {
   // Draw a border around the waveform display
   BitmapGraphics *gfx = BitmapGraphics::GetInstance();
   gfx->drawRect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH - 1,
-               BITMAPHEIGHT - 1, false, true);
+                BITMAPHEIGHT - 1, false, true);
 
   // Check if we have a valid instrument
   if (!currentInstrument_) {
@@ -560,17 +560,17 @@ void SampleEditorView::updateWaveformDisplay() {
   int centerY = BITMAPHEIGHT / 2;
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
     int pixelHeight = waveformCache_[x];
-   
+
     // Always draw at least a 1-pixel line for visibility, even for very quiet
     // signals
     if (pixelHeight < 1) {
-      // For very quiet signals, draw a single pixel line      
+      // For very quiet signals, draw a single pixel line
       gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, centerY, x,
-                   centerY, true);
+                    centerY, true);
     } else {
       // For non-zero signals, draw the full height
       gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x,
-                   centerY - pixelHeight, x, centerY + pixelHeight, true);
+                    centerY - pixelHeight, x, centerY + pixelHeight, true);
     }
   }
 
@@ -588,7 +588,7 @@ void SampleEditorView::updateWaveformDisplay() {
 
   // Draw the start marker line
   gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, startX, 1, startX,
-               BITMAPHEIGHT - 2, true);
+                BITMAPHEIGHT - 2, true);
 
   // Map the end position to the bitmap width - end as a fraction of
   // fullSampleSize
@@ -600,7 +600,7 @@ void SampleEditorView::updateWaveformDisplay() {
 
   // Draw the end marker line
   gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, endX, 1, endX,
-               BITMAPHEIGHT - 2, true);
+                BITMAPHEIGHT - 2, true);
 
   // First playhead drawing section - removed
 
@@ -638,7 +638,7 @@ void SampleEditorView::updateWaveformDisplay() {
       int x = playheadX + offset;
       if (x >= 1 && x < BITMAPWIDTH - 1) {
         gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 1, x,
-                     BITMAPHEIGHT - 2, true);
+                      BITMAPHEIGHT - 2, true);
       }
     }
 

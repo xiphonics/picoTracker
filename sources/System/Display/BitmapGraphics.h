@@ -28,9 +28,9 @@ public:
    * @param fg_color Foreground color (for 1 bits)
    * @param bg_color Background color (for 0 bits)
    */
-  virtual void drawBitmap(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
-                  const uint8_t *bitmap_data, uint16_t fg_color,
-                  uint16_t bg_color) = 0;
+  virtual void drawBitmap(uint16_t x, uint16_t y, uint16_t width,
+                          uint16_t height, const uint8_t *bitmap_data,
+                          uint16_t fg_color, uint16_t bg_color) = 0;
 
   /**
    * Clear a bitmap buffer (set all pixels to 0)
@@ -38,7 +38,8 @@ public:
    * @param width Width in pixels (must be multiple of 8)
    * @param height Height in pixels
    */
-  virtual void clearBuffer(uint8_t *buffer, uint16_t width, uint16_t height) = 0;
+  virtual void clearBuffer(uint8_t *buffer, uint16_t width,
+                           uint16_t height) = 0;
 
   /**
    * Set a pixel in a bitmap buffer
@@ -49,7 +50,7 @@ public:
    * @param value Pixel value (true = set, false = clear)
    */
   virtual void setPixel(uint8_t *buffer, uint16_t width, uint16_t x, uint16_t y,
-                bool value) = 0;
+                        bool value) = 0;
 
   /**
    * Get a pixel from a bitmap buffer
@@ -59,7 +60,8 @@ public:
    * @param y Y coordinate of the pixel
    * @return Pixel value (true = set, false = clear)
    */
-  virtual bool getPixel(const uint8_t *buffer, uint16_t width, uint16_t x, uint16_t y) = 0;
+  virtual bool getPixel(const uint8_t *buffer, uint16_t width, uint16_t x,
+                        uint16_t y) = 0;
 
   /**
    * Draw a line in a bitmap buffer using Bresenham's algorithm
@@ -72,8 +74,9 @@ public:
    * @param y1 Ending Y coordinate
    * @param value Pixel value (true = set, false = clear)
    */
-  virtual void drawLine(uint8_t *buffer, uint16_t width, uint16_t height, uint16_t x0,
-                uint16_t y0, uint16_t x1, uint16_t y1, bool value) = 0;
+  virtual void drawLine(uint8_t *buffer, uint16_t width, uint16_t height,
+                        uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
+                        bool value) = 0;
 
   /**
    * Draw a rectangle in a bitmap buffer
@@ -87,9 +90,9 @@ public:
    * @param filled Whether to fill the rectangle
    * @param value Pixel value (true = set, false = clear)
    */
-  virtual void drawRect(uint8_t *buffer, uint16_t width, uint16_t height, uint16_t x,
-                uint16_t y, uint16_t rect_width, uint16_t rect_height,
-                bool filled, bool value) = 0;
+  virtual void drawRect(uint8_t *buffer, uint16_t width, uint16_t height,
+                        uint16_t x, uint16_t y, uint16_t rect_width,
+                        uint16_t rect_height, bool filled, bool value) = 0;
 };
 
 #endif // _BITMAPGRAPHICS_H

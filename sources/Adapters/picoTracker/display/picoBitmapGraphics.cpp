@@ -7,13 +7,13 @@
  */
 
 #include "picoBitmapGraphics.h"
-#include "picoDisplay.h"
 #include "pico/stdlib.h"
+#include "picoDisplay.h"
 #include <cstring>
 
 void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
-                                uint16_t height, const uint8_t *bitmap_data,
-                                uint16_t fg_color, uint16_t bg_color) {
+                                    uint16_t height, const uint8_t *bitmap_data,
+                                    uint16_t fg_color, uint16_t bg_color) {
   /// Convert character cell coordinates to pixel coordinates
   uint16_t x_pixel = x * CHAR_WIDTH;
   uint16_t y_pixel = y * CHAR_HEIGHT;
@@ -56,14 +56,15 @@ void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
     }
 
     // Write this column to the display
-    picoDisplay.ili9341_write_data_continuous(buffer, height * sizeof(uint16_t));
+    picoDisplay.ili9341_write_data_continuous(buffer,
+                                              height * sizeof(uint16_t));
   }
 
   ili9341_stop_writing();
 }
 
 void picoBitmapGraphics::clearBuffer(uint8_t *buffer, uint16_t width,
-                                 uint16_t height) {
+                                     uint16_t height) {
   assert(buffer != NULL);
 
   // For our bitmap format, width must be rounded up to the nearest multiple of
@@ -76,7 +77,7 @@ void picoBitmapGraphics::clearBuffer(uint8_t *buffer, uint16_t width,
 }
 
 void picoBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width, uint16_t x,
-                              uint16_t y, bool value) {
+                                  uint16_t y, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
@@ -95,8 +96,8 @@ void picoBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width, uint16_t x,
   }
 }
 
-bool picoBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width, uint16_t x,
-                              uint16_t y) {
+bool picoBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width,
+                                  uint16_t x, uint16_t y) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
@@ -110,9 +111,9 @@ bool picoBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width, uint16_
   return (buffer[byte_idx] & (1 << bit_pos)) != 0;
 }
 
-void picoBitmapGraphics::drawLine(uint8_t *buffer, uint16_t width, uint16_t height,
-                              uint16_t x0, uint16_t y0, uint16_t x1,
-                              uint16_t y1, bool value) {
+void picoBitmapGraphics::drawLine(uint8_t *buffer, uint16_t width,
+                                  uint16_t height, uint16_t x0, uint16_t y0,
+                                  uint16_t x1, uint16_t y1, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
 
@@ -151,9 +152,10 @@ void picoBitmapGraphics::drawLine(uint8_t *buffer, uint16_t width, uint16_t heig
   }
 }
 
-void picoBitmapGraphics::drawRect(uint8_t *buffer, uint16_t width, uint16_t height,
-                              uint16_t x, uint16_t y, uint16_t rect_width,
-                              uint16_t rect_height, bool filled, bool value) {
+void picoBitmapGraphics::drawRect(uint8_t *buffer, uint16_t width,
+                                  uint16_t height, uint16_t x, uint16_t y,
+                                  uint16_t rect_width, uint16_t rect_height,
+                                  bool filled, bool value) {
   assert(width % 8 == 0);
   assert(buffer != NULL);
 
@@ -192,20 +194,19 @@ void picoBitmapGraphics::drawRect(uint8_t *buffer, uint16_t width, uint16_t heig
 
         // Bottom edge (if in bounds)
         if (y + rect_height - 1 < height) {
-    }
+        }
 
-    // Left and right edges
-    for (uint16_t row = 1; row < rect_height - 1; row++) {
-      if (y + row < height) {
-        // Left edge
-        setPixel(buffer, width, x, y + row, value);
+        // Left and right edges
+        for (uint16_t row = 1; row < rect_height - 1; row++) {
+          if (y + row < height) {
+            // Left edge
+            setPixel(buffer, width, x, y + row, value);
 
-        // Right edge (if in bounds)
-        if (x + rect_width - 1 < width) {
-          setPixel(buffer, width, x + rect_width - 1, y + row,
-                              value);
+            // Right edge (if in bounds)
+            if (x + rect_width - 1 < width) {
+              setPixel(buffer, width, x + rect_width - 1, y + row, value);
+            }
+          }
         }
       }
     }
-  }
-}
