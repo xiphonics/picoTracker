@@ -151,7 +151,8 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
       } else {
         int diff = pitchBendTarget_ - pitchBendCurrent_;
         int sign = (diff > 0) ? 1 : -1;
-        int nextValue = pitchBendCurrent_ + static_cast<int>(sign * pitchBendStep_);
+        int nextValue =
+            pitchBendCurrent_ + static_cast<int>(sign * pitchBendStep_);
         if ((sign > 0 && nextValue >= pitchBendTarget_) ||
             (sign < 0 && nextValue <= pitchBendTarget_)) {
           pitchBendCurrent_ = pitchBendTarget_;
@@ -162,10 +163,11 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
             pitchBendCurrent_ += static_cast<int>(sign * pitchBendStep_);
             pitchBendStep_ *= growthFactor_;
           } else {
-            pitchBendStep_ = (diff > 0 ? 1 : -1) * (abs(diff) / static_cast<float>(pitchBendSpeed_));
+            pitchBendStep_ = (diff > 0 ? 1 : -1) *
+                             (abs(diff) / static_cast<float>(pitchBendSpeed_));
             pitchBendCurrent_ += pitchBendStep_;
           }
-        }  
+        }
       }
       if (pitchBendCurrent_ != prev) {
         int midiValue = ((pitchBendCurrent_ - 127) * 8192) / 127;
@@ -232,7 +234,8 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     pitchBendTarget_ = (char)(value & 0xFF);
     pitchBendSpeed_ = float(value >> 8);
     pitchBend_ = true;
-    growthFactor_ = minGrowth_ + (maxGrowth_ - minGrowth_) * ((pitchBendSpeed_ - 1) / 253.0f);
+    growthFactor_ = minGrowth_ + (maxGrowth_ - minGrowth_) *
+                                     ((pitchBendSpeed_ - 1) / 253.0f);
     pitchBendStep_ = 1.0f;
     useLogCurve_ = true;
   } break;
