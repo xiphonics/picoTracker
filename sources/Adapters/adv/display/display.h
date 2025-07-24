@@ -15,6 +15,13 @@ extern "C" {
 #include "ltdc.h"
 #include <stdbool.h>
 
+
+#define TEXT_WIDTH 32
+#define TEXT_HEIGHT 24
+#define CHAR_HEIGHT 10
+#define CHAR_WIDTH 10
+#define BUFFER_CHARS 12
+
 // ARNE-16 palette converted to RGB565 --
 // https://lospec.com/palette-list/arne-16
 typedef enum {

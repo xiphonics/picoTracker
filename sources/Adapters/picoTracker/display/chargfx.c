@@ -16,12 +16,6 @@
 
 /* Character graphics mode */
 
-#define TEXT_WIDTH 32
-#define TEXT_HEIGHT 24
-#define CHAR_HEIGHT 10
-#define CHAR_WIDTH 10
-#define BUFFER_CHARS 12
-
 #define SWAP_BYTES(color) ((uint16_t)(color >> 8) | (uint16_t)(color << 8))
 
 static chargfx_color_t screen_bg_color = CHARGFX_BG;
