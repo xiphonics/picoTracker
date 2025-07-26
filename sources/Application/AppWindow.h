@@ -27,6 +27,7 @@
 #define BATTERY_GAUGE_WIDTH 5
 #define SCREEN_CHARS SCREEN_WIDTH *SCREEN_HEIGHT
 #define MAX_FIELD_WIDTH 26
+#define SCREEN_REDRAW_RATE 50 // in Hz
 
 // need this forward declaration to break out of circular dependency as
 // ProjectView uses a UITextfield which in turn had dependency on AppWindow
@@ -49,6 +50,7 @@ class ScreenView;
 class MixerView;
 class ThemeView;
 class ThemeImportView;
+class SampleEditorView;
 class View;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
@@ -113,6 +115,7 @@ private:
   ThemeImportView *_themeImportView;
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
+  SampleEditorView *_sampleEditorView;
   NullView *_nullView;
 
   bool _isDirty; // Flag to indicate a full redraw is needed on next

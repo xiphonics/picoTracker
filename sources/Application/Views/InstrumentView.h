@@ -64,7 +64,7 @@ private:
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> exportName_;
 
   etl::vector<UIIntVarField, 1> typeIntVarField_;
-  etl::vector<UIActionField, 2> actionField_;
+  etl::vector<UIActionField, 3> actionField_;
   etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 4> staticField_;

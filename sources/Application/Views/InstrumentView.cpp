@@ -274,6 +274,12 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
+  actionField_.emplace_back("Sample Editor", FourCC::ActionShowSampleEditor,
+                            position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentPan);
   intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -989,6 +995,13 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         midiInstr->SendProgramChangeWithNote(channel, program);
       }
     }
+  } break;
+  case FourCC::ActionShowSampleEditor: {
+    // Switch to the SampleEditorView
+    ViewType vt = VT_SAMPLE_EDITOR;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
   } break;
   default:
     break;
