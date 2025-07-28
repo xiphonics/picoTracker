@@ -74,29 +74,31 @@ if (NOT ${ADV})
   # Initialize the SDK
   pico_sdk_init()
 
-  # Link pico
-  link_libraries(
-    pico_stdlib
-    pico_sync
-    pico_multicore
-    pico_rand
-    tinyusb_board
-    tinyusb_device
-    hardware_pio
-    hardware_irq
-    hardware_clocks
-    hardware_dma
-    hardware_gpio
-    hardware_spi
-    hardware_watchdog
-    hardware_vreg
-    hardware_uart
-    hardware_pll
-#    sdfat
-    hardware_adc
-    hardware_flash
-    hardware_pwm
-  )
+  add_subdirectory(sdk_bundle)
+
+#   # Link pico
+#   link_libraries(
+#     pico_stdlib
+#     pico_sync
+#     pico_multicore
+#     pico_rand
+#     tinyusb_board
+#     tinyusb_device
+#     hardware_pio
+#     hardware_irq
+#     hardware_clocks
+#     hardware_dma
+#     hardware_gpio
+#     hardware_spi
+#     hardware_watchdog
+#     hardware_vreg
+#     hardware_uart
+#     hardware_pll
+# #    sdfat
+#     hardware_adc
+#     hardware_flash
+#     hardware_pwm
+#   )
 
   add_subdirectory(Adapters/picoTracker)
   add_subdirectory(Externals/SdFat)
