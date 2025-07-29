@@ -3,12 +3,44 @@ add_executable(picoTracker
 )
 
 target_link_libraries(picoTracker PUBLIC
-  platform_system
-  platform
-  tinyusb_board
-  tinyusb_device
-  platform_usb
-  platform_filesystem
+
+    # --- Platform-specific Adapter Libraries (Highest Level) ---
+    # These depend on the System and Foundation interfaces
+    platform_system
+    platform_audio
+    platform_gui
+    platform_timer
+    platform_mutex
+    platform_display
+    platform_usb
+    platform_midi
+    platform_utils
+    platform_filesystem 
+
+    # --- Application Libraries ---
+    # These depend on Services and Foundation
+    application_controllers
+    application_views
+    application_views_baseclasses
+    application_model
+
+    # --- Service Libraries ---
+    services_audio
+
+    # --- System Libraries ---
+    # These define interfaces that the adapters implement
+    system_timer
+    system_console
+    system_errors
+    profiler
+
+    # --- Foundation Libraries (Lowest-level, most things depend on these) ---
+    foundation_services
+    foundation
+
+    # --- External and SDK libraries ---
+    sdfat_fatlib
+    pico_sdk_bundle
 )
 
 target_include_directories(picoTracker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

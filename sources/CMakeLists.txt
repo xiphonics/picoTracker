@@ -74,29 +74,7 @@ if (NOT ${ADV})
   # Initialize the SDK
   pico_sdk_init()
 
-  # Link pico
-  link_libraries(
-    pico_stdlib
-    pico_sync
-    pico_multicore
-    pico_rand
-    tinyusb_board
-    tinyusb_device
-    hardware_pio
-    hardware_irq
-    hardware_clocks
-    hardware_dma
-    hardware_gpio
-    hardware_spi
-    hardware_watchdog
-    hardware_vreg
-    hardware_uart
-    hardware_pll
-#    sdfat
-    hardware_adc
-    hardware_flash
-    hardware_pwm
-  )
+  add_subdirectory(sdk_bundle)
 
   add_subdirectory(Adapters/picoTracker)
   add_subdirectory(Externals/SdFat)
@@ -123,7 +101,7 @@ if (NOT ${ADV})
 
   # Debug output with USB uses +6K memory
   pico_enable_stdio_usb(${PROJECT_NAME} 0)
-  pico_enable_stdio_uart(${PROJECT_NAME} 0)
+  pico_enable_stdio_uart(${PROJECT_NAME} 1)
   
   # This is the default, but better to make it explicit
   pico_set_float_implementation(${PROJECT_NAME} pico)
@@ -186,9 +164,6 @@ else()
 
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TARGET_FLAGS}")
   set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp -MMD -MP")
-  # TODO(democloid): reenable Wpedantic? (disabled due to tinyUSB
-  #  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -fdata-sections -ffunction-sections")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -fdata-sections -ffunction-sections")
 
   set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
   set(CMAKE_C_FLAGS_RELEASE "-Os -g0")
@@ -201,16 +176,6 @@ else()
     set(CMAKE_BUILD_TYPE "Debug")
   endif()
   
-  set(CMAKE_C_LINK_FLAGS "${TARGET_FLAGS}")
-  set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -T \"${CMAKE_CURRENT_SOURCE_DIR}/Adapters/adv/STM32H743XX_FLASH.ld\"")
-  # TODO: check if --specs=nosys.specs is needed, not part of original files, helps pass _gettimeofday error
-  set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} --specs=nano.specs --specs=nosys.specs")
-  set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--gc-sections")
-  set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,--start-group -lc -lm -Wl,--end-group")
-  set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,--print-memory-usage")
-  # printf prints float (do we even need printf?)
-  set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -u _printf_float")
-
   set(CMAKE_CXX_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,--start-group -lstdc++ -lsupc++ -Wl,--end-group")
   # ------- cmake/gcc-arm-none-eabi.cmake STOP -------
 

@@ -194,3 +194,13 @@ unsigned int picoTrackerSystem::GetMemoryUsage() {
   struct mallinfo m = mallinfo();
   return m.uordblks;
 }
+
+void picoTrackerSystem::SystemPutChar(int c) { putchar(c); }
+
+int32_t picoTrackerSystem::GetRandomNumber() { return platform_get_rand(); }
+
+void picoTrackerSystem::SystemBootloader() { platform_bootloader(); }
+
+void picoTrackerSystem::SystemReboot() { platform_reboot(); }
+
+uint32_t picoTrackerSystem::Micros() { return micros(); }

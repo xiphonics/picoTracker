@@ -94,7 +94,3 @@ void platform_brightness(uint8_t value) {
 
   __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse);
 }
-
-void pt_uart_putc(int c, void *context) {
-  HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
-}
