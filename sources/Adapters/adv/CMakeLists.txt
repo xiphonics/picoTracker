@@ -31,7 +31,10 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 #enable_language(C ASM)
 
 # Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
+add_executable(${CMAKE_PROJECT_NAME}
+
+  system/syscalls.c
+)
 
 # Add .bin output
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
@@ -194,6 +197,13 @@ message(STATUS "${A_INTERFACE_INCLUDE}")
 # Create STM32_Drivers static library
 add_library(STM32_Drivers OBJECT)
 target_sources(STM32_Drivers PRIVATE ${STM32_Drivers_Src})
+
+target_link_options(picoTrackerAdvance PRIVATE
+    "-T${CMAKE_CURRENT_SOURCE_DIR}/STM32H743XX_FLASH.ld"
+    # FLAG to show the memory report
+    "-Wl,--print-memory-usage"
+)
+
 target_link_libraries(STM32_Drivers PUBLIC stm32cubemx)
 
 # Create FatFs static library
