@@ -9,7 +9,7 @@
 
 #include "Trace.h"
 #include "Externals/etl/include/etl/error_handler.h"
-#include "platform.h"
+#include "System/System/System.h"
 #include <string.h>
 
 // be explicit about the nanoprintf configuration
@@ -24,15 +24,20 @@
 
 Trace::Trace() {}
 
+void Trace::trace_uart_putc(int c, void *context) {
+  System *sys = System::GetInstance();
+  sys->SystemPutChar(c);
+}
+
 //------------------------------------------------------------------------------
 
 void Trace::VLog(const char *category, const char *fmt, va_list &args) {
   // first prepend the category
-  npf_pprintf(&pt_uart_putc, NULL, "[%s] ", category);
+  npf_pprintf(&trace_uart_putc, NULL, "[%s] ", category);
 
-  npf_vpprintf(&pt_uart_putc, NULL, fmt, args);
+  npf_vpprintf(&trace_uart_putc, NULL, fmt, args);
   // end with NL+CR as thats how it previously worked using stdio' printf
-  npf_pprintf(&pt_uart_putc, NULL, "\r\n");
+  npf_pprintf(&trace_uart_putc, NULL, "\r\n");
 }
 
 //------------------------------------------------------------------------------

@@ -30,5 +30,4 @@ uint32_t micros(void);
 
 void platform_brightness(uint8_t value);
 
-void pt_uart_putc(int c, void *context);
 #endif

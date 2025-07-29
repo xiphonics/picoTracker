@@ -139,7 +139,9 @@ int main(void) {
   MX_RNG_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  Trace::Log("INFO", "picoTracker Advance init...");
+
+  // can't use Trace here as its not been initialised yet
+  printf("INFO: picoTracker Advance init...");
 
   tusb_rhport_init_t dev_init = {.role = TUSB_ROLE_DEVICE,
                                  .speed = TUSB_SPEED_AUTO};

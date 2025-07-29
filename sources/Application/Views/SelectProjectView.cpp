@@ -9,7 +9,6 @@
 
 #include "SelectProjectView.h"
 #include "Application/AppWindow.h"
-#include "platform.h"
 
 #define LIST_PAGE_SIZE 14
 #define LIST_WIDTH 26
@@ -106,7 +105,8 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       ps->ClearAutosave(selection_);
 
       // now reboot!
-      platform_reboot();
+      System *sys = System::GetInstance();
+      sys->SystemReboot();
       return;
     } else {
       // R Modifier

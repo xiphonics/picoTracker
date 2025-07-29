@@ -131,7 +131,8 @@ void platform_init() {
   // This example will use SPI0 at 0.5MHz.
   spi_init(DISPLAY_SPI, 500 * 1000);
   int baudrate = spi_set_baudrate(DISPLAY_SPI, 75000 * 1000);
-  Trace::Log("PLATFORM", "SPI Baudrate: %i", baudrate);
+  // cannot use regular logging here as its not yet been init'd
+  printf("PLATFORM: SPI Baudrate: %i", baudrate);
 
   gpio_set_function(DISPLAY_SCK, GPIO_FUNC_SPI);
   gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
@@ -192,7 +193,8 @@ void platform_init() {
   uart_set_format(MIDI_UART, 8, 1, UART_PARITY_NONE);
   uart_set_translate_crlf(MIDI_UART, false);
 
-  Trace::Log("PLATFORM", "Init MIDI device with % i baud rate", baudrate);
+  // cannot use regular logging here as its not yet been init'd
+  printf("PLATFORM: Init MIDI device with % i baud rate", baudrate);
 
   ///////////
   // INPUT //
@@ -241,5 +243,3 @@ uint32_t micros(void) { return to_us_since_boot(get_absolute_time()); }
 void platform_brightness(uint8_t value) {
   pwm_set_gpio_level(DISPLAY_PWM, value);
 }
-
-void pt_uart_putc(int c, void *context) { putchar(c); }

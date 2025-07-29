@@ -19,6 +19,7 @@
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"
 #include "critical_error_message.h"
+#include "gpio.h"
 #include "i2c.h"
 #include "input.h"
 #include "platform.h"
@@ -200,3 +201,15 @@ void advSystem::setCharging(void) {
   }
   HAL_GPIO_WritePin(CHARGER_OTG_GPIO_Port, CHARGER_OTG_Pin, GPIO_PIN_RESET);
 }
+
+void advSystem::SystemPutChar(int c) {
+  HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
+}
+
+int32_t advSystem::GetRandomNumber() { return platform_get_rand(); }
+
+void advSystem::SystemBootloader() { platform_bootloader(); }
+
+void advSystem::SystemReboot() { platform_reboot(); }
+
+uint32_t advSystem::Micros() { return micros(); }
