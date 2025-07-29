@@ -6,8 +6,7 @@
 // required by the C library but not provided on bare-metal systems.
 // This implementation signals an error (EIO) and returns -1, which
 // is a safe default for applications that do not require true random
-// number generation. For cryptographic purposes, this should be replaced
-// with an implementation that uses a hardware random number generator.
+// number generation.
 int _getentropy(void *buffer, size_t length) {
   // Set the error number to EIO (I/O error) to indicate that
   // we don't have a source of entropy.

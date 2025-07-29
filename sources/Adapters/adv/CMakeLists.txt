@@ -32,7 +32,7 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
-
+  # has implementation for _gettimeofday, _getentropy otherwise we get linker errors
   system/syscalls.c
 )
 
