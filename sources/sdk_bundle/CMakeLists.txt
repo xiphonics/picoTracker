@@ -22,8 +22,6 @@ set(PICO_COMPONENTS
     hardware_adc
     tinyusb_device
     tinyusb_board
-    # hardware_watchdog
-    # hardware_vreg
     )
 
 # Link against the components to pull in their sources and usage requirements.
