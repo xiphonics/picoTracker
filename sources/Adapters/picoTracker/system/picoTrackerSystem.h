@@ -35,6 +35,11 @@ public: // System implementation
   virtual void PostQuitMessage();
   virtual unsigned int GetMemoryUsage();
   virtual void PowerDown(){};
+  virtual void SystemBootloader();
+  virtual void SystemReboot();
+  virtual void SystemPutChar(int c);
+  virtual int32_t GetRandom();
+  virtual uint32_t Micros();
 
 private:
   static bool invert_;

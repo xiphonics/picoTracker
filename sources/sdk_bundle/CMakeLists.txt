@@ -28,6 +28,3 @@ set(PICO_COMPONENTS
 
 # Link against the components to pull in their sources and usage requirements.
 target_link_libraries(pico_sdk_bundle PUBLIC ${PICO_COMPONENTS})
-
-# --- DELETE OR COMMENT OUT THE LINE BELOW ---
-# pico_add_extra_outputs(pico_sdk_bundle)

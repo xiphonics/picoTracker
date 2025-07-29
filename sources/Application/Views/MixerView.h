@@ -29,8 +29,8 @@ public:
 protected:
   void processNormalButtonMask(unsigned int mask);
   void processSelectionButtonMask(unsigned int mask);
-  void onStart();
-  void onStop();
+  void onStart(){};
+  void onStop(){};
   void updateCursor(int dx, int dy);
 
   void unMuteAll();

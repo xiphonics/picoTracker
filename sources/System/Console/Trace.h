@@ -29,6 +29,8 @@ public:
   static void Error(const char *fmt, ...);
   static void RegisterEtlErrorHandler();
 
+  static void trace_uart_putc(int c, void *context);
+
   //--------------------------------------
 
   Trace();

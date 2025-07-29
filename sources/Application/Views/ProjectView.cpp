@@ -22,7 +22,6 @@
 #include "BaseClasses/ViewEvent.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
-#include "platform.h"
 #include <nanoprintf.h>
 
 static void LoadCallback(View &v, ModalView &dialog) {
@@ -42,13 +41,15 @@ static void CreateNewProjectCallback(View &v, ModalView &dialog) {
     PersistencyService::GetInstance()->PurgeUnnamedProject();
 
     // now reboot!
-    platform_reboot();
+    System *sys = System::GetInstance();
+    sys->SystemReboot();
   }
 };
 
 static void BootselCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    platform_bootloader();
+    System *sys = System::GetInstance();
+    sys->SystemBootloader();
   }
 };
 
@@ -296,13 +297,16 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     DoModal(mb, PurgeCallback);
     break;
   }
-  case FourCC::ActionRandomName:
+  case FourCC::ActionRandomName: {
     char name[12];
-    getRandomName(name);
+    System *sys = System::GetInstance();
+    auto randNum = sys->GetRandom();
+    getRandomName(name, randNum);
     printf("random:%s", name);
     project_->SetProjectName(name);
     saveAsFlag_ = true;
     break;
+  }
   case FourCC::ActionSave: {
     PersistencyService *persist = PersistencyService::GetInstance();
     char projName[MAX_PROJECT_NAME_LENGTH];

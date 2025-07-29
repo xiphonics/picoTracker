@@ -1,4 +1,5 @@
 #include "Profiler.h"
+#include "System/System/System.h"
 
 // Helper function to safely calculate time differences with wrap-around
 uint32_t time_diff(uint32_t newer, uint32_t older) {
@@ -14,7 +15,8 @@ void MovingAverageProfiler::addSample(uint32_t duration) {
   samples[sample_count % WINDOW_SIZE] = duration;
   sample_count++;
 
-  uint32_t current_time = micros();
+  System *sys = System::GetInstance();
+  uint32_t current_time = sys->Micros();
 
   // Initialize last_log_time on first call
   if (last_log_time == 0) {
@@ -114,7 +116,8 @@ void AverageProfiler::addSample(uint32_t duration) {
 
   // Log stats every 1 second (1,000,000 microseconds)
   static uint32_t last_log_time = 0;
-  uint32_t current_time = micros();
+  System *sys = System::GetInstance();
+  uint32_t current_time = sys->Micros();
   if (time_diff(current_time, last_log_time) > 1000000) { // 1 second
     logStats();
     last_log_time = current_time;
