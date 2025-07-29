@@ -76,30 +76,6 @@ if (NOT ${ADV})
 
   add_subdirectory(sdk_bundle)
 
-#   # Link pico
-#   link_libraries(
-#     pico_stdlib
-#     pico_sync
-#     pico_multicore
-#     pico_rand
-#     tinyusb_board
-#     tinyusb_device
-#     hardware_pio
-#     hardware_irq
-#     hardware_clocks
-#     hardware_dma
-#     hardware_gpio
-#     hardware_spi
-#     hardware_watchdog
-#     hardware_vreg
-#     hardware_uart
-#     hardware_pll
-# #    sdfat
-#     hardware_adc
-#     hardware_flash
-#     hardware_pwm
-#   )
-
   add_subdirectory(Adapters/picoTracker)
   add_subdirectory(Externals/SdFat)
 
@@ -125,7 +101,7 @@ if (NOT ${ADV})
 
   # Debug output with USB uses +6K memory
   pico_enable_stdio_usb(${PROJECT_NAME} 0)
-  pico_enable_stdio_uart(${PROJECT_NAME} 0)
+  pico_enable_stdio_uart(${PROJECT_NAME} 1)
   
   # This is the default, but better to make it explicit
   pico_set_float_implementation(${PROJECT_NAME} pico)
