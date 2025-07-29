@@ -38,7 +38,7 @@ public: // System implementation
   virtual void SystemBootloader();
   virtual void SystemReboot();
   virtual void SystemPutChar(int c);
-  virtual int32_t GetRandom();
+  virtual int32_t GetRandomNumber();
   virtual uint32_t Micros();
 
 private:
