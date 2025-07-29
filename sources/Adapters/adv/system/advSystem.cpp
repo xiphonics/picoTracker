@@ -206,7 +206,7 @@ void advSystem::SystemPutChar(int c) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
 }
 
-uint32_t advSystem::GetRandom() { return platform_get_rand(); }
+int32_t advSystem::GetRandom() { return platform_get_rand(); }
 
 void advSystem::SystemBootloader() { platform_bootloader(); }
 

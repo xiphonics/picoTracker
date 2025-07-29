@@ -38,7 +38,7 @@ public: // System implementation
   virtual void SystemReboot();
   virtual void SystemPutChar(int c);
   virtual int32_t GetRandom();
-  virtual u_int32_t Micros();
+  virtual uint32_t Micros();
 
 private:
   static bool invert_;
