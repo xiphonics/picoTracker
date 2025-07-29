@@ -198,10 +198,32 @@ message(STATUS "${A_INTERFACE_INCLUDE}")
 add_library(STM32_Drivers OBJECT)
 target_sources(STM32_Drivers PRIVATE ${STM32_Drivers_Src})
 
+target_compile_options(picoTrackerAdvance PRIVATE
+    -mcpu=cortex-m7
+    -mfpu=fpv5-d16
+    -mfloat-abi=hard
+)
+
+
 target_link_options(picoTrackerAdvance PRIVATE
+    # Use the nano C library spec
+    --specs=nano.specs
+
+    # Linker script
     "-T${CMAKE_CURRENT_SOURCE_DIR}/STM32H743XX_FLASH.ld"
-    # FLAG to show the memory report
-    "-Wl,--print-memory-usage"
+
+    # Generate a map file and enable garbage collection
+    -Wl,-Map=${CMAKE_PROJECT_NAME}.map
+    -Wl,--gc-sections
+
+    # Print memory usage statistics
+    -Wl,--print-memory-usage
+
+    # Link against the standard C and math libraries
+    -Wl,--start-group
+    -lc
+    -lm
+    -Wl,--end-group
 )
 
 target_link_libraries(STM32_Drivers PUBLIC stm32cubemx)
