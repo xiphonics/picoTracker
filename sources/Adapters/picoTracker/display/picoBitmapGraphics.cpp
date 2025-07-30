@@ -26,9 +26,17 @@ void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
   uint16_t display_x = ILI9341_TFTWIDTH - y_pixel - height;
   uint16_t display_y = x_pixel;
 
-  // Width must be a multiple of 8 pixels for bitmap byte alignment
-  // This is a requirement for our bitmap format
-  int bytes_per_row = width / 8;
+  // For our bitmap format, width must be rounded up to the nearest multiple of
+  // 8 to calculate the correct buffer size in bytes
+  // This is a int div trick:
+  // By adding 7 (which is 8 - 1), we ensure that any width that is not a
+  // perfect multiple of 8 gets "bumped up" into the next integer range before
+  // the division happens. If the width is already a perfect multiple of 8,
+  // adding 7 is not enough to bump it to the next multiple, so it gives the
+  // correct, non-rounded-up result after the division.
+  // on the RP2040 we do these sort of things to avoid any float conversion that
+  // would be required to use eg ceil()
+  int bytes_per_row = (width + 7) / 8; // Round up to nearest byte
 
   // Set display window with swapped dimensions for rotation
   ili9341_set_command(ILI9341_CASET);
@@ -80,12 +88,11 @@ void picoBitmapGraphics::clearBuffer(uint8_t *buffer, uint16_t width,
 
 void picoBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width, uint16_t x,
                                   uint16_t y, bool value) {
-  assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
 
   // Calculate byte index and bit position
-  uint16_t bytes_per_row = width / 8;
+  uint16_t bytes_per_row = (width + 7) / 8;
   uint16_t byte_idx = (y * bytes_per_row) + (x / 8);
   uint8_t bit_pos = 7 - (x % 8); // MSB first
 
@@ -100,12 +107,11 @@ void picoBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width, uint16_t x,
 
 bool picoBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width,
                                   uint16_t x, uint16_t y) {
-  assert(width % 8 == 0);
   assert(buffer != NULL);
   assert(x < width);
 
   // Calculate byte index and bit position
-  uint16_t bytes_per_row = width / 8;
+  uint16_t bytes_per_row = (width + 7) / 8;
   uint16_t byte_idx = (y * bytes_per_row) + (x / 8);
   uint8_t bit_pos = 7 - (x % 8); // MSB first
 
@@ -116,7 +122,6 @@ bool picoBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width,
 void picoBitmapGraphics::drawLine(uint8_t *buffer, uint16_t width,
                                   uint16_t height, uint16_t x0, uint16_t y0,
                                   uint16_t x1, uint16_t y1, bool value) {
-  assert(width % 8 == 0);
   assert(buffer != NULL);
 
   // Bresenham's line algorithm
@@ -154,7 +159,7 @@ void picoBitmapGraphics::drawLine(uint8_t *buffer, uint16_t width,
   }
 }
 
-void picoBitmapGraphics::drawRect(uint8_t *buffer, uint16_t width,
+void picoBitmapGraphics::drawRect(const uint8_t *buffer, uint16_t width,
                                   uint16_t height, uint16_t x, uint16_t y,
                                   uint16_t rect_width, uint16_t rect_height,
                                   bool filled, bool value) {
