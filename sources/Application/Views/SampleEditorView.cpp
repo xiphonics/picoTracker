@@ -36,7 +36,7 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
   BitmapGraphics *gfx = BitmapGraphics::GetInstance();
 
   // TODO: enable after fixing crash on advance
-  // gfx->clearBuffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
+  gfx->clearBuffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
 
   addAllFields();
 }
@@ -91,11 +91,11 @@ void SampleEditorView::addAllFields() {
     // TODO: enable after fixing crash on advance
 
     // Add waveform display field
-    // position._y = 2;
-    // position._x = 0; // start at the left edge of the window
-    // waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
-    //                             bitmapBuffer_, 0xFFFF, 0x0000);
-    // fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
+    position._y = 2;
+    position._x = 0; // start at the left edge of the window
+    waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
+                                bitmapBuffer_, 0xFFFF, 0x0000);
+    fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
 
     int sampleSize = currentInstrument_->GetSampleSize();
 
@@ -383,7 +383,7 @@ void SampleEditorView::AnimationUpdate() {
 
     // TODO: enable after fixing crash on advance
     // Update the waveform display
-    // updateWaveformDisplay();
+    updateWaveformDisplay();
     forceRedraw_ = false;
   }
 

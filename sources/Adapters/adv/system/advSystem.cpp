@@ -8,6 +8,7 @@
 
 #include "advSystem.h"
 #include "Adapters/adv/audio/advAudio.h"
+#include "Adapters/adv/display/advBitmapGraphics.h"
 #include "Adapters/adv/filesystem/advFileSystem.h"
 #include "Adapters/adv/gui/GUIFactory.h"
 #include "Adapters/adv/midi/advMidiService.h"
@@ -69,6 +70,9 @@ void advSystem::Boot() {
   __attribute__((
       section(".DATA_RAM"))) static char fsMemBuf[sizeof(advFileSystem)];
   FileSystem::Install(new (fsMemBuf) advFileSystem());
+
+  // Install Bitmap graphics
+  BitmapGraphics::Install(new advBitmapGraphics());
 
   // First check for SDCard
   auto fs = FileSystem::GetInstance();

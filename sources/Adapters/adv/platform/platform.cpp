@@ -12,7 +12,6 @@
 #include "System/Console/Trace.h"
 #include "rng.h"
 #include "tim.h"
-#include <System/Display/BitmapGraphics.h>
 
 int32_t platform_get_rand() {
   uint32_t random32;
@@ -68,9 +67,6 @@ void platform_bootloader() {
 
   // Set MSP
   __set_MSP(appStack);
-
-  // setup bitmap graphics access
-  BitmapGraphics::Install(new advBitmapGraphics());
 
   // Jump to application
   appEntry();
