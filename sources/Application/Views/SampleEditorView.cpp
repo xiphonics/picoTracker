@@ -66,6 +66,9 @@ void SampleEditorView::OnFocus() {
   // Invalidate cache on focus to ensure we always have the right waveform
   updateWaveformCache();
 
+  // make sure we do initial draw of the waveform into bitmap for display
+  updateWaveformDisplay();
+
   FieldView::OnFocus();
   addAllFields();
 }
