@@ -15,7 +15,8 @@ void picoBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
                                     uint16_t height, const uint8_t *bitmap_data,
                                     uint16_t fg_color, uint16_t bg_color) {
 
-  assert(height > ILI9341_TFTWIDTH);
+  // check width const because the physical screen is actually rotated 90deg
+  assert(height < ILI9341_TFTWIDTH);
 
   /// Convert character cell coordinates to pixel coordinates
   uint16_t x_pixel = x * CHAR_WIDTH;
