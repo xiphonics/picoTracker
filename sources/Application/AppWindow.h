@@ -16,6 +16,7 @@
 #include "System/Process/SysMutex.h"
 #include "System/io/Status.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
+#include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #define PROP_INVERT 0x80
 #define CHAR_WIDTH 10
@@ -27,7 +28,7 @@
 #define BATTERY_GAUGE_WIDTH 5
 #define SCREEN_CHARS SCREEN_WIDTH *SCREEN_HEIGHT
 #define MAX_FIELD_WIDTH 26
-#define SCREEN_REDRAW_RATE 50 // in Hz
+#define SCREEN_REDRAW_RATE PICO_CLOCK_HZ
 
 // need this forward declaration to break out of circular dependency as
 // ProjectView uses a UITextfield which in turn had dependency on AppWindow

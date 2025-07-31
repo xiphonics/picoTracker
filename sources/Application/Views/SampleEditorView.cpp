@@ -96,8 +96,17 @@ void SampleEditorView::addAllFields() {
     // Add waveform display field
     position._y = 2;
     position._x = 0; // start at the left edge of the window
+#ifdef ADV
+    const int scale = 2;
+    const int scaled_width = BITMAPWIDTH * scale;
+    const int scaled_height = BITMAPHEIGHT * scale;
+    uint8_t *scaled_buffer = new uint8_t[scaled_width * scaled_height / 8];
+    waveformField_.emplace_back(position, scaled_width, scaled_height,
+                                scaled_buffer, 0xFFFF, 0x0000);
+#else
     waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
                                 bitmapBuffer_, 0xFFFF, 0x0000);
+#endif
     fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
 
     int sampleSize = currentInstrument_->GetSampleSize();
@@ -361,7 +370,7 @@ void SampleEditorView::AnimationUpdate() {
           // Calculate the normalized playback position (0.0 to 1.0) based on
           // full sample duration
           float normalizedPos =
-              (float)elapsedFrames / (duration * SCREEN_REDRAW_RATE);
+              (float)elapsedFrames / (duration * SCREEN_REDRAW_RATE) * 3;
 
           // Calculate the position in the sample, accounting for the start
           // position
@@ -480,6 +489,16 @@ void SampleEditorView::updateWaveformCache() {
 }
 
 void SampleEditorView::updateWaveformDisplay() {
+#ifdef ADV
+  const int scale = 2;
+  const int scaled_width = BITMAPWIDTH * scale;
+  const int scaled_height = BITMAPHEIGHT * scale;
+  uint8_t *scaled_buffer = new uint8_t[scaled_width * scaled_height / 8];
+  memset(scaled_buffer, 0, scaled_width * scaled_height / 8);
+#else
+  const int scale = 1;
+#endif
+
   // Clear the bitmap buffer
   memset(bitmapBuffer_, 0, BITMAPWIDTH * BITMAPHEIGHT / 8);
 
@@ -576,6 +595,23 @@ void SampleEditorView::updateWaveformDisplay() {
     }
   }
 
+#ifdef ADV
+  // Scale the bitmap
+  for (int y = 0; y < BITMAPHEIGHT; ++y) {
+    for (int x = 0; x < BITMAPWIDTH; ++x) {
+      if (gfx->getPixel(bitmapBuffer_, BITMAPWIDTH, x, y)) {
+        int sx = x * scale;
+        int sy = y * scale;
+        for (int i = 0; i < scale; ++i) {
+          for (int j = 0; j < scale; ++j) {
+            gfx->setPixel(scaled_buffer, scaled_width, sx + i, sy + j, true);
+          }
+        }
+      }
+    }
+  }
+#endif
+
   // Get the full sample range for proper scaling of markers
   int fullSampleSize = currentInstrument_->GetSampleSize();
 
@@ -626,19 +662,40 @@ void SampleEditorView::updateWaveformDisplay() {
   // Draw the playhead indicator if the sample is playing
   if (isPlaying_) {
     // Calculate the x position for the playhead using the normalized position
-    // (0.0-1.0) Map the normalized position directly to bitmap width
-    int playheadX = 1 + (int)(playbackPosition_ * (BITMAPWIDTH - 2));
+    // (0.0-1.0) Map the normalized position directly to the scaled bitmap width
+    int playheadX = (int)(playbackPosition_ * (BITMAPWIDTH * scale - 1));
 
     // Ensure the playhead stays within bounds
-    if (playheadX < 1)
-      playheadX = 1;
-    if (playheadX >= BITMAPWIDTH - 1)
-      playheadX = BITMAPWIDTH - 2;
+    if (playheadX < 0)
+      playheadX = 0;
+    if (playheadX >= BITMAPWIDTH * scale)
+      playheadX = BITMAPWIDTH * scale - 1;
 
+#ifdef ADV
     // Draw a thick vertical line for better visibility
     for (int offset = -1; offset <= 1; offset++) {
       int x = playheadX + offset;
-      if (x >= 1 && x < BITMAPWIDTH - 1) {
+      if (x >= 0 && x < scaled_width) {
+        gfx->drawLine(scaled_buffer, scaled_width, scaled_height, x, 1, x,
+                      scaled_height - 2, true);
+      }
+    }
+
+    // Draw a triangle at the top of the playhead
+    for (int y = 0; y < 3 * scale; y++) {
+      for (int x = -y; x <= y; x++) {
+        int px = playheadX + x;
+        int py = y;
+        if (px >= 0 && px < scaled_width && py < scaled_height - 2) {
+          gfx->setPixel(scaled_buffer, scaled_width, px, py, true);
+        }
+      }
+    }
+#else
+    // Draw a thick vertical line for better visibility
+    for (int offset = -1; offset <= 1; offset++) {
+      int x = playheadX + offset;
+      if (x >= 0 && x < BITMAPWIDTH) {
         gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x, 1, x,
                       BITMAPHEIGHT - 2, true);
       }
@@ -649,20 +706,28 @@ void SampleEditorView::updateWaveformDisplay() {
       for (int x = -y; x <= y; x++) {
         int px = playheadX + x;
         int py = y;
-        if (px >= 1 && px < BITMAPWIDTH - 1 && py < BITMAPHEIGHT - 2) {
+        if (px >= 0 && px < BITMAPWIDTH && py < BITMAPHEIGHT - 2) {
           gfx->setPixel(bitmapBuffer_, BITMAPWIDTH, px, py, true);
         }
       }
     }
+#endif
   }
 
   // Update the bitmap field and request redraw
   if (waveformField_.size() > 0) {
+#ifdef ADV
+    waveformField_[0].SetBitmap(scaled_buffer);
+#else
     waveformField_[0].SetBitmap(bitmapBuffer_);
+#endif
     SetDirty(true);
     // Force immediate redraw of the view
     if (isPlaying_) {
       Redraw();
     }
   }
+#ifdef ADV
+  delete[] scaled_buffer;
+#endif
 }
