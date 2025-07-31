@@ -370,7 +370,7 @@ void SampleEditorView::AnimationUpdate() {
           // Calculate the normalized playback position (0.0 to 1.0) based on
           // full sample duration
           float normalizedPos =
-              (float)elapsedFrames / (duration * SCREEN_REDRAW_RATE) * 3;
+              (float)elapsedFrames / (duration * SCREEN_REDRAW_RATE);
 
           // Calculate the position in the sample, accounting for the start
           // position
