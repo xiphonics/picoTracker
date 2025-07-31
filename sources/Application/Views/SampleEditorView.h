@@ -83,5 +83,7 @@ private:
   float playbackPosition_; // Current playback position as normalized value (0.0
                            // - 1.0)
   uint32_t playbackStartFrame_; // Animation frame when playback started
+  uint32_t lastAnimationTime_;  // Timestamp of the last animation frame
+  System *sys_;
 };
 #endif

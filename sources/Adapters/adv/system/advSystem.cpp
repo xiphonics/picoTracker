@@ -217,3 +217,5 @@ void advSystem::SystemBootloader() { platform_bootloader(); }
 void advSystem::SystemReboot() { platform_reboot(); }
 
 uint32_t advSystem::Micros() { return micros(); }
+
+uint32_t advSystem::Millis() { return millis(); }

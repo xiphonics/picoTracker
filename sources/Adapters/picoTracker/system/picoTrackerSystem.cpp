@@ -204,3 +204,5 @@ void picoTrackerSystem::SystemBootloader() { platform_bootloader(); }
 void picoTrackerSystem::SystemReboot() { platform_reboot(); }
 
 uint32_t picoTrackerSystem::Micros() { return micros(); }
+
+uint32_t picoTrackerSystem::Micros() { return millis(); }

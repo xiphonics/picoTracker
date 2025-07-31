@@ -40,6 +40,7 @@ public: // System implementation
   virtual void SystemPutChar(int c);
   virtual int32_t GetRandomNumber();
   virtual uint32_t Micros();
+  virtual uint32_t Millis();
 
 private:
   static bool invert_;
