@@ -91,7 +91,6 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       mode_ = AFSM_STOPPED;
       return false;
     }
-    position_ = 0;
 
     // Get sample rate information and calculate speed factor
     fileSampleRate_ = wav_->GetSampleRate(-1);
