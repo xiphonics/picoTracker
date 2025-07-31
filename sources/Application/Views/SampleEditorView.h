@@ -57,6 +57,10 @@ private:
 
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
+#ifdef ADV
+  // Statically allocated bitmap buffer for scaled waveform display
+  uint8_t *scaledBitmapBuffer_;
+#endif
   // Statically allocated bitmap buffer for waveform display
   uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT / 8];
 

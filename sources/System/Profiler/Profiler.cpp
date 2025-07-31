@@ -62,7 +62,7 @@ Profiler::Profiler(const etl::string<32> &name, bool use_moving_avg)
     : name_(name.c_str()), start_time_(0), use_moving_avg_(use_moving_avg),
       total_time_(0), call_count_(0), last_log_time_(0) {
 #if ENABLE_PROFILING
-  start_time_ = micros();
+  start_time_ = System::GetInstance()->Micros();
   if (use_moving_avg_) {
     // Automatically create the profiler if it doesn't exist
     auto it = moving_avg_profilers_.find(name);
@@ -80,7 +80,8 @@ Profiler Profiler::MovingAverage(const char *name) {
 
 Profiler::~Profiler() {
 #if ENABLE_PROFILING
-  uint32_t end_time = micros();
+
+  uint32_t end_time = System::GetInstance()->Micros();
   uint32_t duration = time_diff(end_time, start_time_);
 
   if (use_moving_avg_) {
