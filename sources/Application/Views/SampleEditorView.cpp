@@ -569,23 +569,6 @@ void SampleEditorView::updateWaveformDisplay() {
   int sampleSize = currentInstrument_->GetSampleSize();
   int start = 0, end = sampleSize - 1, loopStart = 0, loopMode = 0;
 
-  Variable *startVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-  if (startVar)
-    start = startVar->GetInt();
-  Variable *endVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
-  if (endVar)
-    end = endVar->GetInt();
-  Variable *loopStartVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
-  if (loopStartVar)
-    loopStart = loopStartVar->GetInt();
-  Variable *loopModeVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
-  if (loopModeVar)
-    loopMode = loopModeVar->GetInt();
-
   // Draw markers directly to the final buffer
   {
     Profiler p("updateWaveformDisplay: draw markers");
@@ -653,7 +636,8 @@ void SampleEditorView::updateWaveformDisplay() {
 #endif
     SetDirty(true);
     if (isPlaying_) {
-      Redraw();
+      Profiler p("updateWaveformDisplay: REDRAW");
+      waveformField_.rbegin()->Draw(w_);
     }
   }
 }
