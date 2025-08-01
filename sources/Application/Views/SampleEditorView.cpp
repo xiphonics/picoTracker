@@ -555,11 +555,10 @@ void SampleEditorView::updateWaveformDisplay() {
   // Draw a border around the waveform display
 #ifdef ADV
   // Draw rectangle using direct buffer access for 8bpp
-  for (int x = 0; x < scaled_width; x++) {
-    buffer[x] = 1;                                      // Top edge
-    buffer[(scaled_height - 1) * scaled_width + x] = 1; // Bottom edge
-  }
-  for (int y = 0; y < scaled_height; y++) {
+  memset(buffer, 1, scaled_width); // Top edge
+  memset(buffer + (scaled_height - 1) * scaled_width, 1,
+         scaled_width); // Bottom edge
+  for (int y = 1; y < scaled_height - 1; y++) {
     buffer[y * scaled_width] = 1;                    // Left edge
     buffer[y * scaled_width + scaled_width - 1] = 1; // Right edge
   }
@@ -592,15 +591,13 @@ void SampleEditorView::updateWaveformDisplay() {
 #ifdef ADV
       if (pixelHeight < 1) {
         // For very quiet signals, draw a single pixel line
-        for (int i = 0; i < scale; i++) {
-          buffer[(centerY * scaled_width) + scaledX + i] = 1;
-        }
+        memset(buffer + (centerY * scaled_width) + scaledX, 1, scale);
       } else {
         // For non-zero signals, draw the full height
-        for (int i = 0; i < scale; i++) {
-          for (int y = centerY - pixelHeight; y <= centerY + pixelHeight; y++) {
-            buffer[(y * scaled_width) + scaledX + i] = 1;
-          }
+        int startY = centerY - pixelHeight;
+        int endY = centerY + pixelHeight;
+        for (int y = startY; y <= endY; y++) {
+          memset(buffer + (y * scaled_width) + scaledX, 1, scale);
         }
       }
 #else
