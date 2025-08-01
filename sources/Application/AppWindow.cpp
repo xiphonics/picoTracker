@@ -27,6 +27,7 @@
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
 #include "Application/Views/ProjectView.h"
+#include "Application/Views/SampleEditorView.h"
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
@@ -114,6 +115,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _instrumentView = 0;
   _tableView = 0;
   _mixerView = 0;
+  _sampleEditorView = 0;
   _nullView = 0;
   _grooveView = 0;
   _closeProject = 0;
@@ -467,6 +469,12 @@ void AppWindow::LoadProject(const char *projectName) {
   _mixerView = new (mixerViewMemBuf) MixerView((*this), _viewData);
   _mixerView->AddObserver((*this));
 
+  alignas(SampleEditorView) static char
+      sampleEditorViewMemBuf[sizeof(SampleEditorView)];
+  _sampleEditorView =
+      new (sampleEditorViewMemBuf) SampleEditorView((*this), _viewData);
+  _sampleEditorView->AddObserver((*this));
+
   _currentView = _songView;
   _currentView->OnFocus();
 
@@ -742,6 +750,8 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     case VT_SELECTTHEME:
       _currentView = _themeView;
       break;
+    case VT_SAMPLE_EDITOR:
+      _currentView = _sampleEditorView;
     default:
       break;
     }

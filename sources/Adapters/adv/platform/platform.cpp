@@ -7,6 +7,7 @@
  */
 
 #include "platform.h"
+#include "Adapters/adv/display/advBitmapGraphics.h"
 #include "Adapters/adv/mutex/advMutex.h"
 #include "System/Console/Trace.h"
 #include "rng.h"

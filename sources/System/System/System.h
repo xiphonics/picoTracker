@@ -40,6 +40,7 @@ public:                                 // Override in implementation
   virtual void SystemReboot() = 0;
   virtual int32_t GetRandomNumber() = 0;
   virtual uint32_t Micros() = 0;
+  virtual uint32_t Millis() = 0;
 };
 
 #define SYS_MEMSET(a, b, c)                                                    \

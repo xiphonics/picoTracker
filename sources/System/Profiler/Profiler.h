@@ -14,7 +14,7 @@ uint32_t time_diff(uint32_t newer, uint32_t older);
 // Enable/disable profiling with a preprocessor flag
 // defaults to disabled
 #ifndef ENABLE_PROFILING
-#define ENABLE_PROFILING 0
+#define ENABLE_PROFILING 1
 #endif
 
 // Moving average window size (1 second at 60fps)

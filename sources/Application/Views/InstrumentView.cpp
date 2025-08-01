@@ -52,15 +52,15 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   // add ui action fields for exporting and importing instrument settings
   position._y = 2;
 
-  actionField_.emplace_back("Import", FourCC::ActionImport, position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
+  persistentActionField_.emplace_back("Import", FourCC::ActionImport, position);
+  fieldList_.insert(fieldList_.end(), &(*persistentActionField_.rbegin()));
+  (*persistentActionField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::ActionImport;
 
   position._x += 8;
-  actionField_.emplace_back("Export", FourCC::ActionExport, position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
+  persistentActionField_.emplace_back("Export", FourCC::ActionExport, position);
+  fieldList_.insert(fieldList_.end(), &(*persistentActionField_.rbegin()));
+  (*persistentActionField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::ActionExport;
 }
 
@@ -173,6 +173,7 @@ void InstrumentView::refreshInstrumentFields() {
   bitmaskVarField_.clear();
   nameTextField_.clear();
   nameVariables_.clear();
+  actionField_.clear();
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -180,7 +181,7 @@ void InstrumentView::refreshInstrumentFields() {
 
   // Re-add the action fields for export and import only if not IT_NONE
   if (instrumentType_.GetInt() != IT_NONE) {
-    for (auto &action : actionField_) {
+    for (auto &action : persistentActionField_) {
       fieldList_.insert(fieldList_.end(), &action);
       action.AddObserver(*this); // Make sure observers are re-added
     }
@@ -188,8 +189,8 @@ void InstrumentView::refreshInstrumentFields() {
     // add back only the import field for IT_NONE
     // bit of a hack !!since we just assume that import is the first action
     // field
-    fieldList_.insert(fieldList_.end(), &(*actionField_.begin()));
-    (*actionField_.rbegin()).AddObserver(*this);
+    fieldList_.insert(fieldList_.end(), &(*persistentActionField_.begin()));
+    (*persistentActionField_.rbegin()).AddObserver(*this);
   }
 
   // Create a new nameTextField_ if the instrument type supports it
@@ -272,6 +273,12 @@ void InstrumentView::fillSampleParameters() {
   v = instrument->FindVariable(FourCC::SampleInstrumentVolume);
   intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  actionField_.emplace_back("Sample Editor", FourCC::ActionShowSampleEditor,
+                            position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentPan);
@@ -989,6 +996,13 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         midiInstr->SendProgramChangeWithNote(channel, program);
       }
     }
+  } break;
+  case FourCC::ActionShowSampleEditor: {
+    // Switch to the SampleEditorView
+    ViewType vt = VT_SAMPLE_EDITOR;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
   } break;
   default:
     break;

@@ -23,7 +23,8 @@ public:
   AudioFileStreamer();
   virtual ~AudioFileStreamer();
   virtual bool Render(fixed *buffer, int samplecount);
-  bool Start(char *name); // Automatically detects single cycle waveforms
+  // Automatically detects single cycle waveforms
+  bool Start(const char *name, int startSample = 0);
   void Stop();
   bool IsPlaying();
 
@@ -54,7 +55,7 @@ public:
   void SetProject(Project *project) { project_ = project; }
 
   // Single cycle waveform methods
-  bool StartLooping(char *name);
+  bool StartLooping(const char *name);
   void StopLooping() { mode_ = AFSM_STOPPED; }
 };
 

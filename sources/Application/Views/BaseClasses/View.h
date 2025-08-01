@@ -55,7 +55,8 @@ enum ViewType {
   VT_SELECTPROJECT,     // Select project
   VT_THEME,             // Theme settings
   VT_SELECTTHEME,       // Theme selection
-  VT_THEME_IMPORT       // Theme file import
+  VT_THEME_IMPORT,      // Theme file import
+  VT_SAMPLE_EDITOR      // Sample Editor
 };
 
 enum ViewMode {

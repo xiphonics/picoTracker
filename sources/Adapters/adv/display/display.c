@@ -14,11 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TEXT_WIDTH 33 // extra half empty char
-#define TEXT_HEIGHT 24
-#define CHAR_HEIGHT 30
-#define CHAR_WIDTH 22
-
 static color_t screen_bg_color = COLOR_BG;
 static color_t screen_fg_color = COLOR_NORMAL;
 static int cursor_x = 0;

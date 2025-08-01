@@ -2,7 +2,7 @@ add_library(platform
   platform.cpp
 )
 
-target_link_libraries(platform PUBLIC pico_sdk_bundle)
+target_link_libraries(platform PUBLIC pico_sdk_bundle platform_display)
 
 target_include_directories(platform PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
