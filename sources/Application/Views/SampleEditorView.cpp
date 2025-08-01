@@ -31,6 +31,11 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       waveformCacheValid_(false), playbackPosition_(0.0f),
       playbackStartFrame_(0), lastAnimationTime_(0),
       sys_(System::GetInstance()) {
+  // Initialize cached sample parameters
+  start_ = 0;
+  end_ = 0;
+  loopStart_ = 0;
+  loopMode_ = 0;
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, sizeof(waveformCache_));
 
@@ -38,14 +43,14 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
   const int scale = 2;
   const int scaled_width = BITMAPWIDTH * scale;
   const int scaled_height = BITMAPHEIGHT * scale;
-  scaledBitmapBuffer_ = new uint8_t[scaled_width * scaled_height / 8];
-#endif
-
+  scaledBitmapBuffer_ = new uint8_t[scaled_width * scaled_height];
+  // Clear the buffer
+  memset(scaledBitmapBuffer_, 0, scaled_width * scaled_height);
+#else
   // Clear the buffer
   BitmapGraphics *gfx = BitmapGraphics::GetInstance();
-
-  // TODO: enable after fixing crash on advance
   gfx->clearBuffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
+#endif
 
   addAllFields();
 }
@@ -72,6 +77,9 @@ SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
 void SampleEditorView::OnFocus() {
   // Update the current instrument reference
   currentInstrument_ = getCurrentSampleInstrument();
+
+  // Update cached sample parameters
+  updateSampleParameters();
 
   // Force redraw of waveform
   forceRedraw_ = true;
@@ -352,26 +360,8 @@ void SampleEditorView::AnimationUpdate() {
         uint32_t sampleSize = currentInstrument_->GetSampleSize();
         if (sampleSize > 0) {
           // Get the start and end positions for the active sample range
-          uint32_t start = 0;
-          uint32_t end = sampleSize - 1;
-
-          Variable *startVar =
-              currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-          if (startVar)
-            start = startVar->GetInt();
-
-          Variable *endVar =
-              currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
-          if (endVar)
-            end = endVar->GetInt();
-
-          // Ensure parameters are within valid range
-          if (start >= sampleSize)
-            start = sampleSize - 1;
-          if (end >= sampleSize)
-            end = sampleSize - 1;
-          if (start > end)
-            start = end;
+          uint32_t start = start_;
+          uint32_t end = end_;
 
           // Calculate the time elapsed since the last animation frame
           uint32_t currentTime = sys_->Millis();
@@ -419,7 +409,9 @@ void SampleEditorView::AnimationUpdate() {
 }
 
 void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
-  // When any of our observed variables change, force a redraw of the waveform
+  // When any of our observed variables change, update the cached parameters
+  updateSampleParameters();
+  // Then force a redraw of the waveform
   forceRedraw_ = true;
 }
 
@@ -502,6 +494,46 @@ void SampleEditorView::updateWaveformCache() {
   waveformCacheValid_ = true;
 }
 
+void SampleEditorView::updateSampleParameters() {
+  if (!currentInstrument_) {
+    return;
+  }
+
+  int sampleSize = currentInstrument_->GetSampleSize();
+
+  Variable *startVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
+  if (startVar)
+    start_ = startVar->GetInt();
+
+  Variable *endVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
+  if (endVar)
+    end_ = endVar->GetInt();
+
+  Variable *loopStartVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
+  if (loopStartVar)
+    loopStart_ = loopStartVar->GetInt();
+
+  Variable *loopModeVar =
+      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
+  if (loopModeVar)
+    loopMode_ = loopModeVar->GetInt();
+
+  // Ensure parameters are within valid range
+  if (start_ >= sampleSize)
+    start_ = sampleSize - 1;
+  if (end_ >= sampleSize)
+    end_ = sampleSize - 1;
+  if (start_ > end_)
+    start_ = end_;
+  if (loopStart_ > end_)
+    loopStart_ = end_;
+  if (loopStart_ < start_)
+    loopStart_ = start_;
+}
+
 void SampleEditorView::updateWaveformDisplay() {
   Profiler p("updateWaveformDisplay");
   BitmapGraphics *gfx = BitmapGraphics::GetInstance();
@@ -511,7 +543,7 @@ void SampleEditorView::updateWaveformDisplay() {
   const int scaled_width = BITMAPWIDTH * scale;
   const int scaled_height = BITMAPHEIGHT * scale;
   uint8_t *buffer = scaledBitmapBuffer_;
-  memset(buffer, 0, scaled_width * scaled_height / 8);
+  memset(buffer, 0, scaled_width * scaled_height);
 #else
   const int scale = 1;
   const int scaled_width = BITMAPWIDTH;
@@ -521,8 +553,20 @@ void SampleEditorView::updateWaveformDisplay() {
 #endif
 
   // Draw a border around the waveform display
+#ifdef ADV
+  // Draw rectangle using direct buffer access for 8bpp
+  for (int x = 0; x < scaled_width; x++) {
+    buffer[x] = 1;                                      // Top edge
+    buffer[(scaled_height - 1) * scaled_width + x] = 1; // Bottom edge
+  }
+  for (int y = 0; y < scaled_height; y++) {
+    buffer[y * scaled_width] = 1;                    // Left edge
+    buffer[y * scaled_width + scaled_width - 1] = 1; // Right edge
+  }
+#else
   gfx->drawRect(buffer, scaled_width, scaled_height, 0, 0, scaled_width - 1,
                 scaled_height - 1, false, true);
+#endif
 
   // Check if we have a valid instrument
   if (!currentInstrument_ || currentInstrument_->GetSampleSize() <= 0 ||
@@ -534,9 +578,6 @@ void SampleEditorView::updateWaveformDisplay() {
       waveformField_[0].SetBitmap(bitmapBuffer_);
 #endif
     }
-#ifdef ADV
-    delete[] buffer;
-#endif
     return;
   }
 
@@ -548,6 +589,21 @@ void SampleEditorView::updateWaveformDisplay() {
       int pixelHeight = waveformCache_[x] * scale;
       int scaledX = x * scale;
 
+#ifdef ADV
+      if (pixelHeight < 1) {
+        // For very quiet signals, draw a single pixel line
+        for (int i = 0; i < scale; i++) {
+          buffer[(centerY * scaled_width) + scaledX + i] = 1;
+        }
+      } else {
+        // For non-zero signals, draw the full height
+        for (int i = 0; i < scale; i++) {
+          for (int y = centerY - pixelHeight; y <= centerY + pixelHeight; y++) {
+            buffer[(y * scaled_width) + scaledX + i] = 1;
+          }
+        }
+      }
+#else
       if (pixelHeight < 1) {
         // For very quiet signals, draw a single pixel line (or scaled
         // equivalent)
@@ -562,12 +618,16 @@ void SampleEditorView::updateWaveformDisplay() {
                         centerY + pixelHeight, true);
         }
       }
+#endif
     }
   }
 
-  // Get sample parameters
+  // Use cached sample parameters
   int sampleSize = currentInstrument_->GetSampleSize();
-  int start = 0, end = sampleSize - 1, loopStart = 0, loopMode = 0;
+  int start = start_;
+  int end = end_;
+  int loopStart = loopStart_;
+  int loopMode = loopMode_;
 
   // Draw markers directly to the final buffer
   {
@@ -576,23 +636,42 @@ void SampleEditorView::updateWaveformDisplay() {
     int startX =
         (1 + (int)(((float)start / fullSampleSize) * (BITMAPWIDTH - 2))) *
         scale;
+#ifdef ADV
+    for (int y = 1; y < scaled_height - 2; y++) {
+      buffer[y * scaled_width + startX] = 1;
+    }
+#else
     gfx->drawLine(buffer, scaled_width, scaled_height, startX, 1, startX,
                   scaled_height - 2, true);
+#endif
 
     int endX =
         (1 + (int)(((float)end / fullSampleSize) * (BITMAPWIDTH - 2))) * scale;
+#ifdef ADV
+    for (int y = 1; y < scaled_height - 2; y++) {
+      buffer[y * scaled_width + endX] = 1;
+    }
+#else
     gfx->drawLine(buffer, scaled_width, scaled_height, endX, 1, endX,
                   scaled_height - 2, true);
+#endif
 
     if (loopMode > 0) {
       int loopX =
           (1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2))) *
           scale;
       if (loopX >= 1 && loopX < scaled_width - 1) {
+#ifdef ADV
+        for (int y = 1; y < scaled_height - 2; y += 3) {
+          buffer[y * scaled_width + loopX] = 1;
+          buffer[(y + 1) * scaled_width + loopX] = 1;
+        }
+#else
         for (int y = 1; y < scaled_height - 2; y += 3) {
           gfx->setPixel(buffer, scaled_width, loopX, y, true);
           gfx->setPixel(buffer, scaled_width, loopX, y + 1, true);
         }
+#endif
       }
     }
   }
@@ -610,8 +689,14 @@ void SampleEditorView::updateWaveformDisplay() {
     for (int offset = -1; offset <= 1; offset++) {
       int x = playheadX + offset;
       if (x >= 0 && x < scaled_width) {
+#ifdef ADV
+        for (int y = 1; y < scaled_height - 2; y++) {
+          buffer[y * scaled_width + x] = 1;
+        }
+#else
         gfx->drawLine(buffer, scaled_width, scaled_height, x, 1, x,
                       scaled_height - 2, true);
+#endif
       }
     }
 
@@ -621,7 +706,11 @@ void SampleEditorView::updateWaveformDisplay() {
         int px = playheadX + x;
         int py = y;
         if (px >= 0 && px < scaled_width && py < scaled_height - 2) {
+#ifdef ADV
+          buffer[py * scaled_width + px] = 1;
+#else
           gfx->setPixel(buffer, scaled_width, px, py, true);
+#endif
         }
       }
     }

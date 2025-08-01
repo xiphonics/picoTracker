@@ -45,6 +45,7 @@ private:
   void updateWaveformDisplay();
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
+  void updateSampleParameters();
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
@@ -60,9 +61,12 @@ private:
 #ifdef ADV
   // Statically allocated bitmap buffer for scaled waveform display
   uint8_t *scaledBitmapBuffer_;
-#endif
+  // Statically allocated bitmap buffer for waveform display
+  uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT];
+#else
   // Statically allocated bitmap buffer for waveform display
   uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT / 8];
+#endif
 
   // Sample data reference
   SampleInstrument *currentInstrument_;
@@ -74,6 +78,12 @@ private:
   bool isPlaying_;
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
   bool playKeyHeld_;   // Flag to track when the play key is being held down
+
+  // Cached sample parameters
+  int start_;
+  int end_;
+  int loopStart_;
+  int loopMode_;
 
 private:
   // Waveform data cache

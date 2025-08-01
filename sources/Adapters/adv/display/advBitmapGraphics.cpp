@@ -7,8 +7,10 @@
  */
 
 #include "advBitmapGraphics.h"
+#include "System/Profiler/Profiler.h"
 #include "display.h"
 #include "dma2d.h"
+#include "platform.h"
 #include <cassert>
 #include <cmath>   // For std::abs
 #include <cstring> // For std::memset
@@ -22,8 +24,13 @@
 #define CHAR_WIDTH 22
 #define CHAR_HEIGHT 30
 
-void advBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width, uint16_t x,
-                                 uint16_t y, bool value) {
+inline void advBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width,
+                                        uint16_t x, uint16_t y, bool value) {
+#ifdef ADV
+  if (x < width) {
+    buffer[y * width + x] = value;
+  }
+#else
   // Ensure we are drawing within the horizontal bounds of the buffer
   if (x >= width) {
     return;
@@ -43,10 +50,11 @@ void advBitmapGraphics::setPixel(uint8_t *buffer, uint16_t width, uint16_t x,
     // Clear the bit to 0
     buffer[byte_index] &= ~(1 << bit_position);
   }
+#endif
 }
 
-bool advBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width,
-                                 uint16_t x, uint16_t y) {
+inline bool advBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width,
+                                        uint16_t x, uint16_t y) {
   if (x >= width) {
     return false;
   }
@@ -61,8 +69,12 @@ bool advBitmapGraphics::getPixel(const uint8_t *buffer, uint16_t width,
 
 void advBitmapGraphics::clearBuffer(uint8_t *buffer, uint16_t width,
                                     uint16_t height) {
+#ifdef ADV
+  std::memset(buffer, 0, width * height);
+#else
   uint32_t buffer_size_bytes = (width / 8) * height;
   std::memset(buffer, 0, buffer_size_bytes);
+#endif
 }
 
 void advBitmapGraphics::drawLine(uint8_t *buffer, uint16_t width,
@@ -121,38 +133,27 @@ void advBitmapGraphics::drawRect(uint8_t *buffer, uint16_t width,
 void advBitmapGraphics::drawBitmap(uint16_t x, uint16_t y, uint16_t width,
                                    uint16_t height, const uint8_t *bitmap_data,
                                    uint16_t fg_color, uint16_t bg_color) {
-  // Convert character cell coordinates to the top-left pixel coordinate on
-  // screen
+  Profiler p("advBitmapGraphics::drawBitmap");
+
   uint16_t start_x = x * CHAR_WIDTH;
   uint16_t start_y = y * CHAR_HEIGHT;
 
-  // Pre-convert the 16-bit colors to the 32-bit format of the framebuffer
   uint32_t final_fg_color = rgb565_to_abgr8888(fg_color);
   uint32_t final_bg_color = rgb565_to_abgr8888(bg_color);
 
-  // Iterate over every pixel of the source bitmap
   for (uint16_t h = 0; h < height; ++h) {
     uint16_t dest_y = start_y + h;
-
-    // Clip vertically: if we're outside the screen, stop drawing
     if (dest_y >= FRAMEBUFFER_HEIGHT) {
       break;
     }
 
     for (uint16_t w = 0; w < width; ++w) {
       uint16_t dest_x = start_x + w;
-
-      // Clip horizontally: if we're outside the screen, skip this pixel
       if (dest_x >= FRAMEBUFFER_WIDTH) {
         continue;
       }
 
-      // Read the bit from the source bitmap to see if the pixel is "on" or
-      // "off"
-      bool pixel_is_set = getPixel(bitmap_data, width, w, h);
-
-      // Select the appropriate color and write it directly to the framebuffer
-      if (pixel_is_set) {
+      if (bitmap_data[h * width + w]) {
         framebuffer[dest_y * FRAMEBUFFER_WIDTH + dest_x] = final_fg_color;
       } else {
         framebuffer[dest_y * FRAMEBUFFER_WIDTH + dest_x] = final_bg_color;
