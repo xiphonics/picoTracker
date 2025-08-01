@@ -655,7 +655,11 @@ void SongView::processNormalButtonMask(unsigned int mask) {
         }
 
         if (mask & EPBM_PLAY) {
-          onStop();
+          // NAV+PLAY switches to recording view
+          ViewType vt = VT_RECORD;
+          ViewEvent ve(VET_SWITCH_VIEW, &vt);
+          SetChanged();
+          NotifyObservers(&ve);
         }
 
       } else {

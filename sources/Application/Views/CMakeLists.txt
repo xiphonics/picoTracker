@@ -11,6 +11,7 @@ add_library(application_views
   NullView.cpp
   PhraseView.cpp
   ProjectView.cpp
+  RecordView.cpp
   SelectProjectView.cpp
   SongView.cpp
   TableView.cpp

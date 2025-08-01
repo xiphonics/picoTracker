@@ -237,6 +237,7 @@ struct FourCC {
     ActionThemeName = 172,
     SampleInstrumentSlices = 171,
     VarBacklightLevel = 174,
+    VarRecordSource = 175,
 
     Default = 255, // "    "
   };

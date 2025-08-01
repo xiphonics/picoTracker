@@ -36,6 +36,8 @@ static const char *remoteUIOnOff[2] = {"Off", "On"};
 
 static const char *fontOptions[2] = {"Standard", "Bold"};
 
+static const char *recordSourceOptions[2] = {"Line In", "Mic"};
+
 // Param keys MUST fit in this length limit!
 typedef etl::string<13> ParamString;
 
@@ -192,6 +194,13 @@ static const ConfigParam configParams[] = {
      FourCC::VarBacklightLevel,
      nullptr,
      0,
+     false},
+
+    {"RECORDSOURCE",
+     {.intValue = 0},
+     FourCC::VarRecordSource,
+     recordSourceOptions,
+     2,
      false},
 };
 
