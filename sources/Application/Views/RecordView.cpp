@@ -52,6 +52,17 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
+  // TODO: temp hack to always nav back to song screen
+  if (mask & EPBM_NAV) {
+    if (mask & EPBM_LEFT) {
+      ViewType vt = VT_SONG;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+      return;
+    }
+  }
+
   // Handle PLAY button for start/stop recording
   if (mask & EPBM_PLAY) {
     if (isRecording_) {
