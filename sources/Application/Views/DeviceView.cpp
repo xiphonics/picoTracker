@@ -18,14 +18,14 @@
 #include "BaseClasses/UITempoField.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
-#include "platform.h"
 #include <nanoprintf.h>
 
 #define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
 
 static void BootselCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    platform_bootloader();
+    System *sys = System::GetInstance();
+    sys->SystemBootloader();
   }
 };
 

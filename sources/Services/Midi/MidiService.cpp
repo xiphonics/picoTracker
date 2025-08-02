@@ -129,21 +129,9 @@ void MidiService::Update(Observable &o, I_ObservableData *d) {
   }
 }
 
-void MidiService::onAudioTick() {
-  if (tickToFlush_ > 0) {
-    if (--tickToFlush_ == 0) {
-      flushOutQueue();
-    }
-  }
-}
+void MidiService::onAudioTick() { flushOutQueue(); }
 
-void MidiService::Flush() {
-
-  tickToFlush_ = midiDelay_;
-  if (tickToFlush_ == 0) {
-    flushOutQueue();
-  }
-};
+void MidiService::Flush() { flushOutQueue(); };
 
 void MidiService::OnMidiStart() {
   // Start the Player in song mode

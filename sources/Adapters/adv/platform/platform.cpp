@@ -7,6 +7,7 @@
  */
 
 #include "platform.h"
+#include "Adapters/adv/display/advBitmapGraphics.h"
 #include "Adapters/adv/mutex/advMutex.h"
 #include "System/Console/Trace.h"
 #include "rng.h"
@@ -93,8 +94,4 @@ void platform_brightness(uint8_t value) {
                               (__HAL_TIM_GET_AUTORELOAD(&htim13) + 1));
 
   __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse);
-}
-
-void pt_uart_putc(int c, void *context) {
-  HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
 }

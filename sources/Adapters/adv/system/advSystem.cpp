@@ -8,7 +8,8 @@
 
 #include "advSystem.h"
 #include "Adapters/adv/audio/advAudio.h"
-#include "Adapters/adv/filesystem/picoFileSystem.h"
+#include "Adapters/adv/display/advBitmapGraphics.h"
+#include "Adapters/adv/filesystem/advFileSystem.h"
 #include "Adapters/adv/gui/GUIFactory.h"
 #include "Adapters/adv/midi/advMidiService.h"
 #include "Adapters/adv/system/advSamplePool.h"
@@ -19,6 +20,7 @@
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"
 #include "critical_error_message.h"
+#include "gpio.h"
 #include "i2c.h"
 #include "input.h"
 #include "platform.h"
@@ -66,8 +68,11 @@ void advSystem::Boot() {
 
   // Install FileSystem
   __attribute__((
-      section(".DATA_RAM"))) static char fsMemBuf[sizeof(picoFileSystem)];
-  FileSystem::Install(new (fsMemBuf) picoFileSystem());
+      section(".DATA_RAM"))) static char fsMemBuf[sizeof(advFileSystem)];
+  FileSystem::Install(new (fsMemBuf) advFileSystem());
+
+  // Install Bitmap graphics
+  BitmapGraphics::Install(new advBitmapGraphics());
 
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
@@ -200,3 +205,17 @@ void advSystem::setCharging(void) {
   }
   HAL_GPIO_WritePin(CHARGER_OTG_GPIO_Port, CHARGER_OTG_Pin, GPIO_PIN_RESET);
 }
+
+void advSystem::SystemPutChar(int c) {
+  HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
+}
+
+int32_t advSystem::GetRandomNumber() { return platform_get_rand(); }
+
+void advSystem::SystemBootloader() { platform_bootloader(); }
+
+void advSystem::SystemReboot() { platform_reboot(); }
+
+uint32_t advSystem::Micros() { return micros(); }
+
+uint32_t advSystem::Millis() { return millis(); }

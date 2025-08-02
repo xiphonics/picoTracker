@@ -1,13 +1,15 @@
 #include "record.h"
+#include "Application/Instruments/WavHeaderWriter.h"
 #include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "sai.h"
 #include "sd_diskio.h"
 #include "tlv320aic3204.h"
 #include <cstdio>
 #include <cstring>
 
-static FIL RecordFile;
+static I_File *RecordFile = nullptr;
 
 uint8_t *activeBuffer;
 uint8_t *writeBuffer;
@@ -24,21 +26,30 @@ static volatile bool isHalfBuffer = false;
 static volatile bool thresholdOK = false;
 static bool first_pass = true;
 static uint32_t start = 0;
+static uint32_t totalSamplesWritten = 0;
 
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds) {
   thresholdOK = false;
   first_pass = true;
-  // Create or truncate the file
-  auto fs_status =
-      f_open(&RecordFile, filename, FA_READ | FA_WRITE | FA_CREATE_ALWAYS);
-  if (fs_status != FR_OK) {
+
+  // Create or truncate the file using FileSystem
+  RecordFile = FileSystem::GetInstance()->Open(filename, "w");
+  if (!RecordFile) {
     Trace::Log("RECORD", "Could not create file");
     return false;
   }
 
-  // If file already exists, truncate it
-  f_truncate(&RecordFile);
+  // Write WAV header (44.1kHz, 16-bit, stereo)
+  if (!WavHeaderWriter::WriteHeader(RecordFile, 44100, 2, 16)) {
+    Trace::Log("RECORD", "Failed to write WAV header");
+    RecordFile->Close();
+    RecordFile = nullptr;
+    return false;
+  }
+
+  // Reset sample counter
+  totalSamplesWritten = 0;
 
   // Setup the codec
   tlv320_enable_linein();
@@ -62,21 +73,29 @@ bool StartRecording(const char *filename, uint8_t threshold,
   return true;
 }
 
-void stopRecording() { recordingActive = false; }
+void StopRecording() { recordingActive = false; }
+
 void Record(void *) {
   UINT bw;
+  uint32_t lastLoggedTime = xTaskGetTickCount();
   for (;;) {
-    if ((xTaskGetTickCount() - start) > 20000) {
-      Trace::Log("RECORD", "(%i) stop recording",
-                 (xTaskGetTickCount() - start));
-      recordingActive = false;
-    }
-
     if (!recordingActive) {
       HAL_SAI_DMAStop(&hsai_BlockB1);
-      // sync file and close (if open)
-      f_sync(&RecordFile);
-      f_close(&RecordFile);
+
+      if (RecordFile) {
+        // Update WAV header with final file size
+        if (!WavHeaderWriter::UpdateFileSize(RecordFile, totalSamplesWritten)) {
+          Trace::Log("RECORD", "Failed to update WAV header");
+        }
+
+        Trace::Log("RECORD", "(%i) stop recording",
+                   (xTaskGetTickCount() - start));
+
+        // Close file
+        RecordFile->Close();
+        RecordFile = nullptr;
+      }
+
       Player::GetInstance()->StopRecordStreaming();
       vTaskSuspend(nullptr); // Suspend self until StartRecording resumes it
     }
@@ -97,14 +116,34 @@ void Record(void *) {
         }
       }
       }*/
-    writeInProgress = true;
-    // full buffer length as uint8_t (which is half of the uint16_t buffer)
-    f_write(&RecordFile, (uint8_t *)(recordBuffer + offset), RECORD_BUFFER_SIZE,
-            &bw);
-    f_sync(&RecordFile);
-    writeInProgress = false;
-    if (bw != RECORD_BUFFER_SIZE) {
-      Trace::Error("write failed\r\n");
+    // Write raw audio data (uint16_t samples as bytes)
+    if (RecordFile) {
+      writeInProgress = true;
+      int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
+                                           RECORD_BUFFER_SIZE, 1);
+      // sync immediately after writing the buffer for consistent if not fastest
+      // perf
+      RecordFile->Sync();
+      writeInProgress = false;
+      if (bytesWritten != RECORD_BUFFER_SIZE) {
+        Trace::Error("write failed\r\n");
+        // for now just give up and error out
+        return;
+      } else {
+        // Track total samples written (RECORD_BUFFER_SIZE bytes =
+        // RECORD_BUFFER_SIZE/4 stereo samples)
+        totalSamplesWritten += RECORD_BUFFER_SIZE / 4;
+
+        auto now = xTaskGetTickCount();
+        if ((now - lastLoggedTime) > 1000) { // log every sec
+          Trace::Debug("RECORDING [%i]s", (xTaskGetTickCount() - start) / 1000);
+          lastLoggedTime = now;
+        }
+      }
+    } else {
+      writeInProgress = false;
+      Trace::Error("RecordFile is null\r\n");
+      return;
     }
     // start playing
     if (first_pass) {

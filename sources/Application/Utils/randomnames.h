@@ -10,7 +10,6 @@
 #ifndef _RANDOMNAMES_H_
 #define _RANDOMNAMES_H_
 
-#include "platform.h"
 #include <string.h>
 
 const char *adjectives[] = {"bad",  "mad",  "sad",   "big",  "hot",  "red",
@@ -34,14 +33,14 @@ const char *verbs[] = {
 // Generate a random name made in the format of: "adjective-verb"
 // chosen from small word lists of words 3-4 chars in length
 // eg. "fast-sea", "wet-pea", "mad-paw" etc
-void getRandomName(char *name) {
+void getRandomName(char *name, int32_t randomNumber) {
 
   int adjectivesCount = sizeof(adjectives) / sizeof(char *);
   int verbsCount = sizeof(verbs) / sizeof(char *);
-  int rndIndex = (uint8_t)platform_get_rand() % adjectivesCount;
+  int rndIndex = randomNumber % adjectivesCount;
   strcpy(name, adjectives[rndIndex]);
   strcat(name, "-");
-  rndIndex = (uint8_t)platform_get_rand() % verbsCount;
+  rndIndex = randomNumber % verbsCount;
   strcat(name, verbs[rndIndex]);
 }
 

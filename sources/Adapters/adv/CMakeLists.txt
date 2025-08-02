@@ -31,7 +31,10 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 #enable_language(C ASM)
 
 # Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
+add_executable(${CMAKE_PROJECT_NAME}
+  # has implementation for _gettimeofday, _getentropy otherwise we get linker errors
+  system/syscalls.c
+)
 
 # Add .bin output
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
@@ -194,6 +197,57 @@ message(STATUS "${A_INTERFACE_INCLUDE}")
 # Create STM32_Drivers static library
 add_library(STM32_Drivers OBJECT)
 target_sources(STM32_Drivers PRIVATE ${STM32_Drivers_Src})
+
+target_compile_options(picoTrackerAdvance PRIVATE
+    # MCU and FPU flags (apply to both C and C++)
+    -mcpu=cortex-m7
+    -mfpu=fpv5-d16
+    -mfloat-abi=hard
+
+    # General compiler flags (apply to both C and C++)
+    -Wall
+    -Wextra
+    -fdata-sections
+    -ffunction-sections
+
+    # --- C++ SPECIFIC FLAGS ---
+    # Use a generator expression to apply these only to C++ files
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
+)
+
+target_link_options(picoTrackerAdvance PRIVATE
+    -mcpu=cortex-m7
+    -mfpu=fpv5-d16
+    -mfloat-abi=hard
+
+    # --specs=nosys.specs
+    # Use the nano C library spec
+    --specs=nano.specs
+
+    # Linker script
+    "-T${CMAKE_CURRENT_SOURCE_DIR}/STM32H743XX_FLASH.ld"
+
+    # Generate a map file and enable garbage collection
+    -Wl,-Map=${CMAKE_PROJECT_NAME}.map
+    -Wl,--gc-sections
+
+    # Print memory usage statistics
+    -Wl,--print-memory-usage
+
+  # This is required to link the newlib-nano floating-point libraries
+    -u _printf_float
+
+    # Link against the standard C and math libraries
+    -Wl,--start-group
+    -lc
+    -lm
+    -lstdc++
+    -lsupc++
+    -Wl,--end-group
+)
+
 target_link_libraries(STM32_Drivers PUBLIC stm32cubemx)
 
 # Create FatFs static library
