@@ -41,13 +41,13 @@ private:
   bool isRecording_;
   uint32_t recordingStartTime_;
   uint32_t recordingDuration_;
-  
+
   // Helper methods
   void startRecording();
   void stopRecording();
   void updateTimeDisplay();
   void generateFilename(char *buffer, size_t bufferSize);
-  
+
   // Time display helpers
   void formatTime(uint32_t milliseconds, char *buffer, size_t bufferSize);
 };
