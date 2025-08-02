@@ -43,8 +43,8 @@ private:
   uint32_t recordingDuration_;
 
   // Helper methods
-  void startRecording();
-  void stopRecording();
+  void record();
+  void stop();
   void updateTimeDisplay();
   void generateFilename(char *buffer, size_t bufferSize);
 

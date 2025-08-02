@@ -13,7 +13,7 @@
 #include "UIController.h"
 #include "ViewData.h"
 
-#ifdef PLATFORM_ADV
+#ifdef ADV
 #include "Adapters/adv/audio/record.h"
 #endif
 
@@ -42,7 +42,7 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
 RecordView::~RecordView() {
   if (isRecording_) {
-    stopRecording();
+    stop();
   }
 }
 
@@ -66,9 +66,9 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // Handle PLAY button for start/stop recording
   if (mask & EPBM_PLAY) {
     if (isRecording_) {
-      stopRecording();
+      stop();
     } else {
-      startRecording();
+      record();
     }
     isDirty_ = true;
     return;
@@ -100,11 +100,11 @@ void RecordView::DrawView() {
   SetColor(CD_NORMAL);
 
   if (isRecording_) {
-    SetColor(CD_HILITE1);
-    DrawString(pos._x, pos._y, "REC", props);
+    SetColor(CD_ERROR);
+    DrawString(pos._x, pos._y, "[REC]", props);
     SetColor(CD_NORMAL);
   } else {
-    DrawString(pos._x, pos._y, "---", props);
+    DrawString(pos._x, pos._y, "[---]", props);
   }
 
   // Draw time display
@@ -122,13 +122,7 @@ void RecordView::DrawView() {
   SetColor(CD_NORMAL);
 }
 
-void RecordView::OnFocus() {
-  // Reset recording state when view gains focus
-  if (isRecording_) {
-    stopRecording();
-  }
-  isDirty_ = true;
-}
+void RecordView::OnFocus() { isDirty_ = true; }
 
 void RecordView::Update(Observable &o, I_ObservableData *d) {
   // Handle field updates
@@ -139,9 +133,10 @@ void RecordView::Update(Observable &o, I_ObservableData *d) {
 void RecordView::AnimationUpdate() {
   if (isRecording_) {
     // Update recording duration
-    uint32_t currentTime = System::GetInstance()->GetClock();
-    recordingDuration_ = currentTime - recordingStartTime_;
+    uint32_t currentTime = System::GetInstance()->Millis();
+    recordingDuration_ = (currentTime - recordingStartTime_);
     isDirty_ = true;
+    DrawView();
   }
 
   // Draw battery and power button UI
@@ -150,8 +145,8 @@ void RecordView::AnimationUpdate() {
   drawPowerButtonUI(props);
 }
 
-void RecordView::startRecording() {
-#ifdef PLATFORM_ADV
+void RecordView::record() {
+#ifdef ADV
   if (isRecording_) {
     return;
   }
@@ -161,35 +156,36 @@ void RecordView::startRecording() {
   generateFilename(filename, sizeof(filename));
 
   // Get audio source setting (0 = Line In, 1 = Mic)
-  int audioSource = intVarField_[0].GetInt();
-
+  auto config = Config::GetInstance();
+  Variable *v = config->FindVariable(FourCC::VarRecordSource);
+  int audioSource = v->GetInt();
   Trace::Log("RECORD", "Starting recording to %s, source: %s", filename,
              audioSource == 0 ? "Line In" : "Mic");
 
   // Start recording with threshold and duration
-  // Using 20 second duration for now (20000 ms)
-  bool success = StartRecording(filename, 10, 20000);
+  // Using 20 second duration for now (10000 ms)
+  bool success = StartRecording(filename, 10, 10000);
 
   if (success) {
     isRecording_ = true;
-    recordingStartTime_ = System::GetInstance()->GetClock();
+    recordingStartTime_ = System::GetInstance()->Millis();
     recordingDuration_ = 0;
     Trace::Log("RECORD", "Recording started successfully");
   } else {
     Trace::Error("RECORD", "Failed to start recording");
   }
 #else
-  Trace::Log("RECORD", "Recording not supported on this platform");
+  Trace::Log("RECORD", "Recording not supported on pico");
 #endif
 }
 
-void RecordView::stopRecording() {
-#ifdef PLATFORM_ADV
+void RecordView::stop() {
+#ifdef ADV
   if (!isRecording_) {
     return;
   }
 
-  stopRecording();
+  StopRecording();
   isRecording_ = false;
 
   Trace::Log("RECORD", "Recording stopped");
