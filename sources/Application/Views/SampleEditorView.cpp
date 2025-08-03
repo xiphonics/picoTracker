@@ -456,6 +456,7 @@ void SampleEditorView::updateWaveformCache() {
   } else if (peakAmplitude < 25000) {
     scalingFactor = 1.5f;
   }
+  Trace::Debug("== Wav samples:%d, peak:%d", sampleSize, peakAmplitude);
 
   // Now, calculate the RMS for each column and apply the chosen scaling
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {

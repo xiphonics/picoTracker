@@ -88,8 +88,8 @@ void Record(void *) {
           Trace::Log("RECORD", "Failed to update WAV header");
         }
 
-        Trace::Log("RECORD", "(%i) stop recording",
-                   (xTaskGetTickCount() - start));
+        Trace::Log("RECORD", "(%i) STOP Recording: dur:%d samples:%d",
+                   (xTaskGetTickCount() - start), totalSamplesWritten);
 
         // Close file
         RecordFile->Close();
