@@ -40,11 +40,7 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   position._y += 2;
 }
 
-RecordView::~RecordView() {
-  if (isRecording_) {
-    stop();
-  }
-}
+RecordView::~RecordView() {}
 
 void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
@@ -67,6 +63,12 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_PLAY) {
     if (isRecording_) {
       stop();
+      // Automatically switch to SampleEditor view after recording stops
+      ViewType vt = VT_SAMPLE_EDITOR;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+      return;
     } else {
       record();
     }
@@ -187,15 +189,14 @@ void RecordView::stop() {
 
   StopRecording();
   isRecording_ = false;
-
   Trace::Log("RECORD", "Recording stopped");
 #endif
 }
 
 void RecordView::generateFilename(char *buffer, size_t bufferSize) {
-  // Generate auto filename like REC001.wav, REC002.wav, etc.
-  static int recordCounter = 1;
-  snprintf(buffer, bufferSize, "REC%03d.wav", recordCounter++);
+  // TODO: for now just hardcode counter to 1
+  int recordCounter = 1;
+  snprintf(buffer, bufferSize, "REC%03d.wav", recordCounter);
 }
 
 void RecordView::formatTime(uint32_t milliseconds, char *buffer,

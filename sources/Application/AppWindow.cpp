@@ -758,8 +758,10 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_SAMPLE_EDITOR:
       _currentView = _sampleEditorView;
+      break;
     case VT_RECORD:
       _currentView = _recordView;
+      break;
     default:
       break;
     }
