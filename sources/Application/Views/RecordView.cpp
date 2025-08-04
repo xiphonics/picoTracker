@@ -157,9 +157,9 @@ void RecordView::record() {
   Trace::Log("RECORD", "Starting recording to %s, source: %s", filename,
              audioSource == 0 ? "Line In" : "Mic");
 
-  // Start recording with threshold and duration
-  // Using 20 second duration for now (10000 ms)
-  bool success = StartRecording(filename, 10, 10000);
+  // Start recording with threshold and no duration set, ie. unlimited
+  // recording time
+  bool success = StartRecording(filename, 10, 0);
 
   if (success) {
     isRecording_ = true;

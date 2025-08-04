@@ -27,11 +27,19 @@ static volatile bool thresholdOK = false;
 static bool first_pass = true;
 static uint32_t start = 0;
 static uint32_t totalSamplesWritten = 0;
+static uint32_t recordDuration_ = MAX_INT32;
 
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds) {
   thresholdOK = false;
   first_pass = true;
+
+  // TODO 0 milliseconds indicates unlimited duration recording
+  if (milliseconds != 0) {
+    recordDuration_ = milliseconds;
+  } else {
+    recordDuration_ = MAX_INT32;
+  }
 
   // Create or truncate the file using FileSystem
   RecordFile = FileSystem::GetInstance()->Open(filename, "w");
@@ -79,6 +87,10 @@ void Record(void *) {
   UINT bw;
   uint32_t lastLoggedTime = xTaskGetTickCount();
   for (;;) {
+    if (xTaskGetTickCount() - start > recordDuration_) {
+      StopRecording();
+    }
+
     if (!recordingActive) {
       HAL_SAI_DMAStop(&hsai_BlockB1);
 
@@ -88,7 +100,7 @@ void Record(void *) {
           Trace::Log("RECORD", "Failed to update WAV header");
         }
 
-        Trace::Log("RECORD", "(%i) STOP Recording: dur:%d samples:%d",
+        Trace::Log("RECORD", "STOP Recording: dur:%d samples:%d",
                    (xTaskGetTickCount() - start), totalSamplesWritten);
 
         // Close file
@@ -99,6 +111,7 @@ void Record(void *) {
       Player::GetInstance()->StopRecordStreaming();
       vTaskSuspend(nullptr); // Suspend self until StartRecording resumes it
     }
+
     // Interrupt return
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     // DMA transmit finished, dump to file
@@ -130,13 +143,14 @@ void Record(void *) {
         // for now just give up and error out
         return;
       } else {
-        // Track total samples written (RECORD_BUFFER_SIZE bytes =
-        // RECORD_BUFFER_SIZE/4 stereo samples)
-        totalSamplesWritten += RECORD_BUFFER_SIZE / 4;
+        // Total samples written totalSamplesWritten/4 for stereo 16bit samples
+        totalSamplesWritten += bytesWritten / 4;
 
         auto now = xTaskGetTickCount();
         if ((now - lastLoggedTime) > 1000) { // log every sec
-          Trace::Debug("RECORDING [%i]s", (xTaskGetTickCount() - start) / 1000);
+          Trace::Debug("RECORDING [%i]s [%d]",
+                       (xTaskGetTickCount() - start) / 1000,
+                       totalSamplesWritten);
           lastLoggedTime = now;
         }
       }
