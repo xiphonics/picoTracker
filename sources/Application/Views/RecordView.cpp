@@ -187,9 +187,12 @@ void RecordView::stop() {
 }
 
 void RecordView::generateFilename(char *buffer, size_t bufferSize) {
+  char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+  viewData_->project_->GetProjectName(projectName);
   // TODO: for now just hardcode counter to 1
   int recordCounter = 1;
-  snprintf(buffer, bufferSize, "REC%03d.wav", recordCounter);
+  snprintf(buffer, bufferSize, "/projects/%s/samples/REC%03d.wav", projectName,
+           recordCounter);
 }
 
 void RecordView::formatTime(uint32_t milliseconds, char *buffer,
