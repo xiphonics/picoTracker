@@ -36,8 +36,6 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   intVarField_.emplace_back(position, *v, "Audio source: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
-
-  position._y += 2;
 }
 
 RecordView::~RecordView() {}
@@ -92,9 +90,6 @@ void RecordView::DrawView() {
   DrawString(pos._x, pos._y, "Record", props);
   props.invert_ = false;
 
-  // Draw fields
-  FieldView::DrawView();
-
   // Draw recording status and time
   pos = GetAnchor();
   pos._y += 3;
@@ -119,7 +114,10 @@ void RecordView::DrawView() {
   pos._y += 2;
   pos._x = GetAnchor()._x;
   SetColor(CD_NORMAL);
-  DrawString(pos._x, pos._y, "PLAY: Start/Stop", props);
+  DrawString(pos._x, pos._y, "PRESS PLAY TO Start/Stop", props);
+
+  // Draw fields
+  FieldView::Redraw();
 
   SetColor(CD_NORMAL);
 }
@@ -140,11 +138,6 @@ void RecordView::AnimationUpdate() {
     isDirty_ = true;
     DrawView();
   }
-
-  // Draw battery and power button UI
-  GUITextProperties props;
-  drawBattery(props);
-  drawPowerButtonUI(props);
 }
 
 void RecordView::record() {

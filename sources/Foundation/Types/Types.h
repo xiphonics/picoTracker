@@ -394,6 +394,7 @@ struct FourCC {
   ETL_ENUM_TYPE(ActionImport, "import")
   ETL_ENUM_TYPE(ActionThemeName, "themename")
   ETL_ENUM_TYPE(VarBacklightLevel, "backlightLevel")
+  ETL_ENUM_TYPE(VarRecordSource, "recordsource")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE
