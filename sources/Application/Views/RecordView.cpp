@@ -49,6 +49,9 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // TODO: temp hack to always nav back to song screen
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
+      char filename[64];
+      generateFilename(filename, sizeof(filename));
+      viewData_->sampleEditorFilename = filename;
       ViewType vt = VT_SONG;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();

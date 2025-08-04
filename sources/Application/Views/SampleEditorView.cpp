@@ -78,6 +78,15 @@ void SampleEditorView::OnFocus() {
   // Update the current instrument reference
   currentInstrument_ = getCurrentSampleInstrument();
 
+  if (currentInstrument_ == nullptr) {
+    const char *newSampleFile = viewData_->sampleEditorFilename.c_str();
+    // Load the sample using this filename...
+    loadSample(newSampleFile);
+
+    // Clear the field so it's not used again
+    viewData_->sampleEditorFilename.clear();
+  }
+
   // Update cached sample parameters
   updateSampleParameters();
 
@@ -500,7 +509,16 @@ void SampleEditorView::updateSampleParameters() {
     return;
   }
 
-  int sampleSize = currentInstrument_->GetSampleSize();
+  int sampleSize = 0;
+  if (tempSampleSize_ > 0) {
+    // --- use the temporary sample's size ---
+    sampleSize = tempSampleSize_;
+  } else if (currentInstrument_) {
+    // --- Fallback to the saved instrument's sample size ---
+    sampleSize = currentInstrument_->GetSampleSize();
+  } else {
+    return; // No sample loaded
+  }
 
   Variable *startVar =
       currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
@@ -727,4 +745,151 @@ void SampleEditorView::updateWaveformDisplay() {
       waveformField_.rbegin()->Draw(w_);
     }
   }
+}
+
+short SampleEditorView::chunkBuffer_[512 * 2];
+
+void SampleEditorView::loadSample(const char *filename) {
+  // These large arrays are now static, so they are not allocated on the stack.
+  static double sumSquares[WAVEFORM_CACHE_SIZE];
+  static int samplesInPixel[WAVEFORM_CACHE_SIZE];
+
+  // We must clear them at the start of each call since they are static.
+  memset(sumSquares, 0, sizeof(sumSquares));
+  memset(samplesInPixel, 0, sizeof(samplesInPixel));
+
+  // Reset temporary sample state
+  tempSampleSize_ = 0;
+  waveformCacheValid_ = false;
+
+  if (!filename || filename[0] == '\0') {
+    Trace::Error("missing sample filename");
+    return;
+  }
+
+  auto fs = FileSystem::GetInstance();
+
+  // First, navigate to the root projects directory
+  fs->chdir("/");
+  fs->chdir("projects");
+  // Then, navigate into the current project's directory
+  if (viewData_ && viewData_->project_) {
+    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+    viewData_->project_->GetProjectName(projectName);
+
+    if (fs->chdir(projectName)) {
+      // Finally, navigate into the samples subdirectory
+      fs->chdir("samples");
+    } else {
+      Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
+                   projectName);
+      // It's good practice to return to the root to avoid being in an unknown
+      // state
+      fs->chdir("/");
+      return; // Abort if we can't find the project directory
+    }
+  } else {
+    Trace::Error(
+        "SampleEditorView: No project data available to find samples dir.");
+    fs->chdir("/");
+    return; // Abort if project data is missing
+  }
+
+  I_File *file = FileSystem::GetInstance()->Open(filename, "r");
+  if (!file) {
+    Trace::Error("SampleEditorView: Failed to open file: %s", filename);
+    return;
+  }
+
+  // --- 1. Read Header & Get Size ---
+  char header[44];
+  if (file->Read(header, 44) != 44) {
+    Trace::Error("SampleEditorView: Failed to read WAV header from %s",
+                 filename);
+    file->Close();
+    return;
+  }
+
+  uint16_t numChannels = *reinterpret_cast<uint16_t *>(&header[22]);
+  uint16_t bitsPerSample = *reinterpret_cast<uint16_t *>(&header[34]);
+  uint32_t dataChunkSize = *reinterpret_cast<uint32_t *>(&header[40]);
+
+  // Added a check to ensure we don't try to use more channels than our buffer
+  // supports
+  if (numChannels > 2 || numChannels == 0 || bitsPerSample == 0 ||
+      dataChunkSize == 0) {
+    Trace::Error("SampleEditorView: Invalid or unsupported WAV header in %s",
+                 filename);
+    file->Close();
+    return;
+  }
+  int bytesPerFrame = numChannels * (bitsPerSample / 8);
+  tempSampleSize_ = dataChunkSize / bytesPerFrame;
+
+  // --- 2. Prepare for Single-Pass Processing ---
+  Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
+             tempSampleSize_, numChannels);
+  float samplesPerPixel = (float)tempSampleSize_ / WAVEFORM_CACHE_SIZE;
+
+  short peakAmplitude = 0;
+  uint32_t currentFrame = 0;
+
+  const int CHUNK_FRAMES = 512;
+
+  // --- 3. The Single-Pass Read Loop ---
+  while (currentFrame < tempSampleSize_) {
+    int framesToRead =
+        std::min(CHUNK_FRAMES, (int)(tempSampleSize_ - currentFrame));
+    int bytesToRead = framesToRead * bytesPerFrame;
+    int bytesRead = file->Read(chunkBuffer_, bytesToRead);
+
+    int framesRead = (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
+    if (framesRead == 0) {
+      break;
+    }
+
+    for (int i = 0; i < framesRead; ++i) {
+      short sampleValue = chunkBuffer_[i * numChannels];
+
+      if (abs(sampleValue) > peakAmplitude) {
+        peakAmplitude = abs(sampleValue);
+      }
+
+      int cacheIndex = (currentFrame + i) / samplesPerPixel;
+      if (cacheIndex < WAVEFORM_CACHE_SIZE) {
+        float normalizedSample = sampleValue / 32768.0f;
+        sumSquares[cacheIndex] += normalizedSample * normalizedSample;
+        samplesInPixel[cacheIndex]++;
+      }
+    }
+    currentFrame += framesRead;
+
+    if (bytesRead < bytesToRead) {
+      break; // Reached end of file
+    }
+  }
+  file->Close();
+
+  // --- 4. Finalize Waveform Cache ---
+  float scalingFactor = (peakAmplitude < 15000)   ? 3.0f
+                        : (peakAmplitude < 25000) ? 1.5f
+                                                  : 1.0f;
+  int maxHeight = (BITMAPHEIGHT / 2) - 2;
+
+  for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
+    if (samplesInPixel[x] > 0) {
+      float rms = sqrt(sumSquares[x] / samplesInPixel[x]);
+      float scaledRms = std::min(1.0f, rms * scalingFactor);
+      waveformCache_[x] = (uint8_t)(scaledRms * maxHeight);
+    } else {
+      waveformCache_[x] = 0;
+    }
+  }
+  waveformCacheValid_ = true;
+
+  // --- 5. Update UI ---
+  updateSampleParameters();
+  addAllFields();
+  updateWaveformDisplay();
+  forceRedraw_ = true;
 }

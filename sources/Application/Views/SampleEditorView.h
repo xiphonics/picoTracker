@@ -46,6 +46,7 @@ private:
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
+  void loadSample(const char *path);
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
@@ -99,5 +100,7 @@ private:
   uint32_t playbackStartFrame_; // Animation frame when playback started
   uint32_t lastAnimationTime_;  // Timestamp of the last animation frame
   System *sys_;
+  uint32_t tempSampleSize_ = 0;
+  static short chunkBuffer_[512 * 2];
 };
 #endif
