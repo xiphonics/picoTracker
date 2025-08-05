@@ -26,11 +26,14 @@
 #include <cstdint>
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data), currentInstrument_(NULL), forceRedraw_(false),
-      isPlaying_(false), isSingleCycle_(false), playKeyHeld_(false),
-      waveformCacheValid_(false), playbackPosition_(0.0f),
-      playbackStartFrame_(0), lastAnimationTime_(0),
-      sys_(System::GetInstance()) {
+    : FieldView(w, data), forceRedraw_(false), isPlaying_(false),
+      isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
+      playbackPosition_(0.0f), playbackStartFrame_(0), lastAnimationTime_(0),
+      sys_(System::GetInstance()), startVar_(FourCC::VarSampleEditStart, 0),
+      endVar_(FourCC::VarSampleEditEnd, 0),
+      // bit of a hack to use InstrumentName but we never actually persist this
+      // in any config file here
+      filenameVar_(FourCC::InstrumentName, "") {
   // Initialize cached sample parameters
   start_ = 0;
   end_ = 0;
@@ -75,26 +78,17 @@ SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
 }
 
 void SampleEditorView::OnFocus() {
-  // Update the current instrument reference
-  currentInstrument_ = getCurrentSampleInstrument();
-
-  if (currentInstrument_ == nullptr) {
-    const char *newSampleFile = viewData_->sampleEditorFilename.c_str();
-    // Load the sample using this filename...
-    loadSample(newSampleFile);
-
-    // Clear the field so it's not used again
-    viewData_->sampleEditorFilename.clear();
-  }
+  const auto newSampleFile = viewData_->sampleEditorFilename;
+  // Load the sample using this filename and will fill in the wave data cache
+  loadSample(newSampleFile);
+  // Clear the field so it's not used again
+  viewData_->sampleEditorFilename.clear();
 
   // Update cached sample parameters
   updateSampleParameters();
 
   // Force redraw of waveform
   forceRedraw_ = true;
-
-  // Invalidate cache on focus to ensure we always have the right waveform
-  updateWaveformCache();
 
   // make sure we do initial draw of the waveform into bitmap for display
   updateWaveformDisplay();
@@ -113,95 +107,66 @@ void SampleEditorView::addAllFields() {
   actionField_.clear();
   waveformField_.clear();
   nameTextField_.clear();
-  nameVariables_.clear();
   // no need to clear staticField_ as they are not added to fieldList_
 
   GUIPoint position = GetAnchor();
 
-  // update the other fields using the current instrument just like we do
-  // initially Add sample parameters if we have a valid instrument
-  if (currentInstrument_) {
-    // TODO: enable after fixing crash on advance
-
-    // Add waveform display field
-    position._y = 2;
-    position._x = 0; // start at the left edge of the window
+  // Add waveform display field
+  position._y = 2;
+  position._x = 0; // start at the left edge of the window
 #ifdef ADV
-    const int scale = 2;
-    const int scaled_width = BITMAPWIDTH * scale;
-    const int scaled_height = BITMAPHEIGHT * scale;
-    waveformField_.emplace_back(position, scaled_width, scaled_height,
-                                scaledBitmapBuffer_, 0xFFFF, 0x0000);
+  const int scale = 2;
+  const int scaled_width = BITMAPWIDTH * scale;
+  const int scaled_height = BITMAPHEIGHT * scale;
+  waveformField_.emplace_back(position, scaled_width, scaled_height,
+                              scaledBitmapBuffer_, 0xFFFF, 0x0000);
 #else
-    waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
-                                bitmapBuffer_, 0xFFFF, 0x0000);
+  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
+                              bitmapBuffer_, 0xFFFF, 0x0000);
 #endif
-    fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
+  fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
 
-    int sampleSize = currentInstrument_->GetSampleSize();
+  position._y = 12; // offset enough for bitmap field
+  position._x = 5;
 
-    position._y = 12; // offset enough for bitmap field
-    position._x = 5;
+  auto label =
+      etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
 
-    nameVariables_.emplace_back(currentInstrument_);
-    Variable &nameVar = *nameVariables_.rbegin();
+  // Use an empty default name - we don't want to populate with sample
+  // filename The display name will still be shown on the phrase screen via
+  // GetDisplayName()
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName;
 
-    auto label =
-        etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
+  nameTextField_.emplace_back(filenameVar_, position, label,
+                              FourCC::InstrumentName, defaultName);
+  fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
-    // Use an empty default name - we don't want to populate with sample
-    // filename The display name will still be shown on the phrase screen via
-    // GetDisplayName()
-    etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName;
+  position._y += 1;
+  bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
+                               tempSampleSize_ - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-    nameTextField_.emplace_back(nameVar, position, label,
-                                FourCC::InstrumentName, defaultName);
-    fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
+  // TODO: add functionality for adding loop point markers
+  // Add loop point control
+  // position._y += 1;
+  // Variable *loopStartVar =
+  //     currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
+  // if (loopStartVar) {
+  //   bigHexVarField_.emplace_back(position, *loopStartVar, 7,
+  //                                "loop start: %7.7X", 0, tempSampleSize_ - 1,
+  //                                16);
+  //   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  //   (*bigHexVarField_.rbegin()).AddObserver(*this);
+  // }
 
-    position._y += 1;
+  // Add end position control
+  position._y += 1;
 
-    Variable *startVar =
-        currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-    if (startVar) {
-      bigHexVarField_.emplace_back(position, *startVar, 7, "start: %7.7X", 0,
-                                   sampleSize - 1, 16);
-      fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-      (*bigHexVarField_.rbegin()).AddObserver(*this);
-    }
-
-    // Add loop start control
-    position._y += 1;
-    Variable *loopStartVar =
-        currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
-    if (loopStartVar) {
-      bigHexVarField_.emplace_back(position, *loopStartVar, 7,
-                                   "loop start: %7.7X", 0, sampleSize - 1, 16);
-      fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-      (*bigHexVarField_.rbegin()).AddObserver(*this);
-    }
-
-    // Add end position control
-    position._y += 1;
-    Variable *endVar =
-        currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
-    if (endVar) {
-      bigHexVarField_.emplace_back(position, *endVar, 7, "loop end: %7.7X", 0,
-                                   sampleSize - 1, 16);
-      fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-      (*bigHexVarField_.rbegin()).AddObserver(*this);
-    }
-
-    // Add loop mode control
-    position._y += 1;
-    Variable *loopModeVar =
-        currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
-    if (loopModeVar) {
-      intVarField_.emplace_back(position, *loopModeVar, "loop mode: %s", 0, 2,
-                                1, 1);
-      fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-      (*intVarField_.rbegin()).AddObserver(*this);
-    }
-  }
+  bigHexVarField_.emplace_back(position, endVar_, 7, "loop end: %7.7X", 0,
+                               tempSampleSize_ - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
 }
 
 void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
@@ -246,86 +211,74 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // Set flag to track that play key is being held down (like in ImportView)
     playKeyHeld_ = true;
 
-    // Start sample playback if we have a valid instrument
-    if (currentInstrument_ && !isPlaying_) {
-      // Get the sample file name from the instrument's variable
-      Variable *sampleVar =
-          currentInstrument_->FindVariable(FourCC::SampleInstrumentSample);
+    // Start sample playback if no already playing
+    if (!isPlaying_) {
+      // Get the sample file name
+      const auto sampleFileName = viewData_->sampleEditorFilename;
+      isSingleCycle_ = (tempSampleSize_ <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
 
-      if (sampleVar && sampleVar->GetInt() >= 0) {
-        // Get the sample filename from the variable
-        etl::string<MAX_INSTRUMENT_NAME_LENGTH> sampleFileName =
-            sampleVar->GetString();
+      Trace::Debug("DEBUG: Starting playback of sample '%s' (size=%d, "
+                   "singleCycle=%s)\n",
+                   sampleFileName.c_str(), tempSampleSize_,
+                   isSingleCycle_ ? "true" : "false");
 
-        // Get sample size to check if it's a single cycle waveform
-        uint32_t sampleSize = currentInstrument_->GetSampleSize();
-        isSingleCycle_ = (sampleSize <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
+      // Reset playback state
+      isPlaying_ = true;
 
-        Trace::Debug("DEBUG: Starting playback of sample '%s' (size=%d, "
-                     "singleCycle=%s)\n",
-                     sampleFileName.c_str(), sampleSize,
-                     isSingleCycle_ ? "true" : "false");
-
-        // Reset playback state
-        isPlaying_ = true;
-
-        // Get the start position which is where playback will begin
-        Variable *startVar =
-            currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-        uint32_t startSample = startVar->GetInt();
-        if (startVar && startSample < sampleSize) {
-          // Initialize normalized playback position (0.0 - 1.0)
-          playbackPosition_ = (float)startSample / sampleSize;
-        } else {
-          playbackPosition_ = 0.0f;
-        }
-
-        // Store the current animation frame as our start frame
-        playbackStartFrame_ = AppWindow::GetAnimationFrameCounter();
-        lastAnimationTime_ = sys_->Millis();
-        forceRedraw_ = true;
-
-        // If something is already playing, stop it first
-        if (Player::GetInstance()->IsPlaying()) {
-          Player::GetInstance()->StopStreaming();
-        }
-
-        // First change to the current project directory
-        auto fs = FileSystem::GetInstance();
-        fs->chdir("projects");
-
-        // Get the current project name from view data
-        if (viewData_ && viewData_->project_) {
-          char projectName[MAX_PROJECT_NAME_LENGTH + 1];
-          viewData_->project_->GetProjectName(projectName);
-
-          // Change to the project directory
-          if (fs->chdir(projectName)) {
-            // Change to the samples directory
-            fs->chdir("samples");
-          } else {
-            Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
-                         projectName);
-          }
-        } else {
-          Trace::Error("SampleEditorView: No project data available");
-          return;
-        }
-
-        // Start playing the sample with just the filename
-        if (isSingleCycle_) {
-          Player::GetInstance()->StartLoopingStreaming(sampleFileName.c_str());
-        } else {
-          // Start playback from the specified start position
-          Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
-                                                startSample);
-        }
-
-        isPlaying_ = true;
-
-        // Force redraw to show the playhead
-        forceRedraw_ = true;
+      // Get the start position which is where playback will begin
+      uint32_t startSample = startVar_.GetInt();
+      if (startSample < tempSampleSize_) {
+        // Initialize normalized playback position (0.0 - 1.0)
+        playbackPosition_ = (float)startSample / tempSampleSize_;
+      } else {
+        playbackPosition_ = 0.0f;
       }
+
+      // Store the current animation frame as our start frame
+      playbackStartFrame_ = AppWindow::GetAnimationFrameCounter();
+      lastAnimationTime_ = sys_->Millis();
+      forceRedraw_ = true;
+
+      // If something is already playing, stop it first
+      if (Player::GetInstance()->IsPlaying()) {
+        Player::GetInstance()->StopStreaming();
+      }
+
+      // First change to the current project directory
+      auto fs = FileSystem::GetInstance();
+      fs->chdir("projects");
+
+      // Get the current project name from view data
+      if (viewData_ && viewData_->project_) {
+        char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+        viewData_->project_->GetProjectName(projectName);
+
+        // Change to the project directory
+        if (fs->chdir(projectName)) {
+          // Change to the samples directory
+          fs->chdir("samples");
+        } else {
+          Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
+                       projectName);
+        }
+      } else {
+        Trace::Error("SampleEditorView: No project data available");
+        return;
+      }
+
+      // Start playing the sample with just the filename
+      if (isSingleCycle_) {
+        Player::GetInstance()->StartLoopingStreaming(sampleFileName.c_str());
+      } else {
+        // Start playback from the specified start position
+        Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
+                                              startSample);
+      }
+
+      isPlaying_ = true;
+
+      // Force redraw to show the playhead
+      forceRedraw_ = true;
     }
     return;
   }
@@ -354,7 +307,7 @@ void SampleEditorView::DrawView() {
 
 void SampleEditorView::AnimationUpdate() {
   // Update playhead position if sample is playing
-  if (isPlaying_ && currentInstrument_) {
+  if (isPlaying_) {
     // Check if the Player is still playing the sample
     if (!Player::GetInstance()->IsPlaying()) {
       // Playback has stopped (reached the end of non-looping sample)
@@ -424,121 +377,16 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   forceRedraw_ = true;
 }
 
-void SampleEditorView::updateWaveformCache() {
-  if (!currentInstrument_) {
-    waveformCacheValid_ = false;
-    return;
-  }
-
-  SamplePool *pool = SamplePool::GetInstance();
-  SoundSource *source = pool->GetSource(currentInstrument_->GetSampleIndex());
-
-  if (!source) {
-    waveformCacheValid_ = false;
-    return;
-  }
-
-  int sampleSize = source->GetSize(0);
-  short *sampleBuffer = (short *)source->GetSampleBuffer(0);
-
-  if (!sampleBuffer || sampleSize == 0) {
-    waveformCacheValid_ = false;
-    return;
-  }
-
-  float samplesPerPixel = (float)sampleSize / (WAVEFORM_CACHE_SIZE - 2);
-  int maxHeight = (BITMAPHEIGHT / 2) - 2;
-
-  // First, find the peak amplitude of the sample to determine scaling
-  short peakAmplitude = 0;
-  for (int i = 0; i < sampleSize; i++) {
-    short sampleValue = abs(sampleBuffer[i]);
-    if (sampleValue > peakAmplitude) {
-      peakAmplitude = sampleValue;
-    }
-  }
-
-  // Choose a scaling factor based on the peak amplitude
-  float scalingFactor = 1.0f;
-  if (peakAmplitude < 15000) {
-    scalingFactor = 3.0f;
-  } else if (peakAmplitude < 25000) {
-    scalingFactor = 1.5f;
-  }
-  Trace::Debug("== Wav samples:%d, peak:%d", sampleSize, peakAmplitude);
-
-  // Now, calculate the RMS for each column and apply the chosen scaling
-  for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-    int startSampleIndex = (int)(x * samplesPerPixel);
-    int endSampleIndex = (int)((x + 1) * samplesPerPixel);
-
-    if (endSampleIndex <= startSampleIndex) {
-      endSampleIndex = startSampleIndex + 1;
-    }
-
-    if (startSampleIndex < 0)
-      startSampleIndex = 0;
-    if (endSampleIndex >= sampleSize)
-      endSampleIndex = sampleSize - 1;
-
-    double sumSquares = 0.0;
-    int sampleCount = 0;
-
-    for (int i = startSampleIndex; i <= endSampleIndex; i++) {
-      float normalizedSample = sampleBuffer[i] / 32768.0f;
-      sumSquares += normalizedSample * normalizedSample;
-      sampleCount++;
-    }
-
-    float rmsValue = (sampleCount > 0) ? sqrt(sumSquares / sampleCount) : 0.0f;
-    float scaledRms = rmsValue * scalingFactor;
-
-    // Clamp the value to prevent overflow
-    if (scaledRms > 1.0f) {
-      scaledRms = 1.0f;
-    }
-
-    waveformCache_[x] = (uint8_t)(scaledRms * maxHeight);
-  }
-
-  waveformCacheValid_ = true;
-}
-
 void SampleEditorView::updateSampleParameters() {
-  if (!currentInstrument_) {
-    return;
-  }
 
   int sampleSize = 0;
   if (tempSampleSize_ > 0) {
     // --- use the temporary sample's size ---
     sampleSize = tempSampleSize_;
-  } else if (currentInstrument_) {
-    // --- Fallback to the saved instrument's sample size ---
-    sampleSize = currentInstrument_->GetSampleSize();
-  } else {
-    return; // No sample loaded
   }
 
-  Variable *startVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentStart);
-  if (startVar)
-    start_ = startVar->GetInt();
-
-  Variable *endVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentEnd);
-  if (endVar)
-    end_ = endVar->GetInt();
-
-  Variable *loopStartVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
-  if (loopStartVar)
-    loopStart_ = loopStartVar->GetInt();
-
-  Variable *loopModeVar =
-      currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopMode);
-  if (loopModeVar)
-    loopMode_ = loopModeVar->GetInt();
+  start_ = startVar_.GetInt();
+  end_ = endVar_.GetInt();
 
   // Ensure parameters are within valid range
   if (start_ >= sampleSize)
@@ -547,10 +395,6 @@ void SampleEditorView::updateSampleParameters() {
     end_ = sampleSize - 1;
   if (start_ > end_)
     start_ = end_;
-  if (loopStart_ > end_)
-    loopStart_ = end_;
-  if (loopStart_ < start_)
-    loopStart_ = start_;
 }
 
 void SampleEditorView::updateWaveformDisplay() {
@@ -587,8 +431,7 @@ void SampleEditorView::updateWaveformDisplay() {
 #endif
 
   // Check if we have a valid instrument
-  if (!currentInstrument_ || currentInstrument_->GetSampleSize() <= 0 ||
-      currentInstrument_->GetSampleIndex() < 0) {
+  if (tempSampleSize_ <= 0) {
     if (waveformField_.size() > 0) {
 #ifdef ADV
       waveformField_[0].SetBitmap(buffer);
@@ -639,7 +482,6 @@ void SampleEditorView::updateWaveformDisplay() {
   }
 
   // Use cached sample parameters
-  int sampleSize = currentInstrument_->GetSampleSize();
   int start = start_;
   int end = end_;
   int loopStart = loopStart_;
@@ -648,7 +490,7 @@ void SampleEditorView::updateWaveformDisplay() {
   // Draw markers directly to the final buffer
   {
     Profiler p("updateWaveformDisplay: draw markers");
-    int fullSampleSize = currentInstrument_->GetSampleSize();
+    int fullSampleSize = tempSampleSize_;
     int startX =
         (1 + (int)(((float)start / fullSampleSize) * (BITMAPWIDTH - 2))) *
         scale;
@@ -749,7 +591,10 @@ void SampleEditorView::updateWaveformDisplay() {
 
 short SampleEditorView::chunkBuffer_[512 * 2];
 
-void SampleEditorView::loadSample(const char *filename) {
+// Load sample from the current projects samples subdir
+// ONLY filename for samples subidr (not full path!!) is supported for now
+void SampleEditorView::loadSample(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename) {
   // These large arrays are now static, so they are not allocated on the stack.
   static double sumSquares[WAVEFORM_CACHE_SIZE];
   static int samplesInPixel[WAVEFORM_CACHE_SIZE];
@@ -762,7 +607,7 @@ void SampleEditorView::loadSample(const char *filename) {
   tempSampleSize_ = 0;
   waveformCacheValid_ = false;
 
-  if (!filename || filename[0] == '\0') {
+  if (filename.empty()) {
     Trace::Error("missing sample filename");
     return;
   }
@@ -795,11 +640,12 @@ void SampleEditorView::loadSample(const char *filename) {
     return; // Abort if project data is missing
   }
 
-  I_File *file = FileSystem::GetInstance()->Open(filename, "r");
+  I_File *file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
   if (!file) {
     Trace::Error("SampleEditorView: Failed to open file: %s", filename);
     return;
   }
+  Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename);
 
   // --- 1. Read Header & Get Size ---
   char header[44];
@@ -891,5 +737,9 @@ void SampleEditorView::loadSample(const char *filename) {
   updateSampleParameters();
   addAllFields();
   updateWaveformDisplay();
+
+  // log duration, sample count, peak vol for file
+  Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
+             tempSampleSize_, peakAmplitude, filename);
   forceRedraw_ = true;
 }

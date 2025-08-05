@@ -206,6 +206,8 @@ struct FourCC {
     // 174 is taken for VarBacklightLevel
     // 175 is taken for ActionShowSampleEditor
     // 176 is taken for VarRecordSource
+    // 177 is taken for VarSampleEditStart
+    // 178 is taken for VarSampleEditStop
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -241,6 +243,8 @@ struct FourCC {
     VarBacklightLevel = 174,
     ActionShowSampleEditor = 175,
     VarRecordSource = 176,
+    VarSampleEditStart = 177,
+    VarSampleEditEnd = 178,
 
     Default = 255, // "    "
   };

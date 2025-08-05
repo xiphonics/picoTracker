@@ -13,6 +13,8 @@
 #include "UIController.h"
 #include "ViewData.h"
 
+#define RECORDING_FILENAME "REC01.wav"
+
 #ifdef ADV
 #include "Adapters/adv/audio/record.h"
 #endif
@@ -49,9 +51,6 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // TODO: temp hack to always nav back to song screen
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
-      char filename[64];
-      generateFilename(filename, sizeof(filename));
-      viewData_->sampleEditorFilename = filename;
       ViewType vt = VT_SONG;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
@@ -64,6 +63,9 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_PLAY) {
     if (isRecording_) {
       stop();
+      // set the current file for sample editor before switching view
+      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
+      viewData_->sampleEditorFilename = filename;
       // Automatically switch to SampleEditor view after recording stops
       ViewType vt = VT_SAMPLE_EDITOR;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -149,9 +151,10 @@ void RecordView::record() {
     return;
   }
 
-  // Generate filename
-  char filename[64];
-  generateFilename(filename, sizeof(filename));
+  // Generate full path
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
+  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> fullpath;
+  generateFullPath(filename, fullpath);
 
   // Get audio source setting (0 = Line In, 1 = Mic)
   auto config = Config::GetInstance();
@@ -162,7 +165,7 @@ void RecordView::record() {
 
   // Start recording with threshold and no duration set, ie. unlimited
   // recording time
-  bool success = StartRecording(filename, 10, 0);
+  bool success = StartRecording(filename.c_str(), 10, 0);
 
   if (success) {
     isRecording_ = true;
@@ -189,13 +192,16 @@ void RecordView::stop() {
 #endif
 }
 
-void RecordView::generateFilename(char *buffer, size_t bufferSize) {
+void RecordView::generateFullPath(
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
+    etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> fullpath) {
   char projectName[MAX_PROJECT_NAME_LENGTH + 1];
   viewData_->project_->GetProjectName(projectName);
-  // TODO: for now just hardcode counter to 1
-  int recordCounter = 1;
-  snprintf(buffer, bufferSize, "/projects/%s/samples/REC%03d.wav", projectName,
-           recordCounter);
+
+  fullpath.append("/projects/")
+      .append(projectName)
+      .append("/")
+      .append(filename);
 }
 
 void RecordView::formatTime(uint32_t milliseconds, char *buffer,

@@ -46,7 +46,7 @@ private:
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
-  void loadSample(const char *path);
+  void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path);
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
@@ -55,7 +55,6 @@ private:
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBitmapField, 1> waveformField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
-  etl::vector<InstrumentNameVariable, 1> nameVariables_;
 
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
@@ -68,9 +67,6 @@ private:
   // Statically allocated bitmap buffer for waveform display
   uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT / 8];
 #endif
-
-  // Sample data reference
-  SampleInstrument *currentInstrument_;
 
   // Flag to force redraw of waveform
   bool forceRedraw_;
@@ -102,5 +98,10 @@ private:
   System *sys_;
   uint32_t tempSampleSize_ = 0;
   static short chunkBuffer_[512 * 2];
+
+  // Variables to back the UI fields
+  Variable startVar_;
+  Variable endVar_;
+  Variable filenameVar_;
 };
 #endif
