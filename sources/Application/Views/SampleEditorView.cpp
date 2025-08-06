@@ -25,6 +25,21 @@
 #include <cmath>
 #include <cstdint>
 
+static void drawVerticalMarker(uint8_t *buffer, BitmapGraphics *gfx, int x) {
+  constexpr int w = BITMAPWIDTH;
+  constexpr int h = BITMAPHEIGHT;
+
+#ifdef ADV
+  /* Write a 1‑pixel‑high line directly into the 8‑bit buffer. */
+  for (int y = 1; y < h - 1; ++y) {
+    buffer[y * w + x] = 1;
+  }
+#else
+  /* Use the existing graphics helper for the non‑ADV build. */
+  gfx->drawLine(buffer, w, h, x, 1, x, h - 2, true);
+#endif
+}
+
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), forceRedraw_(false), isPlaying_(false),
       isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
@@ -335,32 +350,30 @@ void SampleEditorView::updateWaveformDisplay() {
                 scaled_height - 1, false, true);
 #endif
 
-  // Draw markers directly to the final buffer
-  {
-    Profiler p("updateWaveformDisplay: draw markers");
-    int fullSampleSize = tempSampleSize_;
-    int startX =
-        (1 + (int)(((float)start_ / fullSampleSize) * (BITMAPWIDTH - 2))) *
-        scale;
-#ifdef ADV
-    for (int y = 1; y < BITMAPHEIGHT - 2; y++) {
-      bitmapBuffer_[y * BITMAPWIDTH + startX] = 1;
-    }
-#else
-    gfx->drawLine(buffer, scaled_width, scaled_height, startX, 1, startX,
-                  scaled_height - 2, true);
-#endif
+  // Draw start / end markers
+  const int fullSampleSize = tempSampleSize_;
+  const int startX =
+      (1 + static_cast<int>((static_cast<float>(start_) / fullSampleSize) *
+                            (BITMAPWIDTH - 2))) *
+      scale;
+  const int endX =
+      (1 + static_cast<int>((static_cast<float>(end_) / fullSampleSize) *
+                            (BITMAPWIDTH - 2))) *
+      scale;
 
-    int endX =
-        (1 + (int)(((float)end_ / fullSampleSize) * (BITMAPWIDTH - 2))) * scale;
-#ifdef ADV
-    for (int y = 1; y < BITMAPHEIGHT - 2; y++) {
-      bitmapBuffer_[y * BITMAPWIDTH + endX] = 1;
+  drawVerticalMarker(bitmapBuffer_, gfx, startX);
+  drawVerticalMarker(bitmapBuffer_, gfx, endX);
+
+  if (isPlaying_) {
+    Profiler p("updateWaveformDisplay: draw playhead");
+    int playheadX = (int)(playbackPosition_ * (BITMAPWIDTH - 1));
+    if (playheadX < 0) {
+      playheadX = 0;
     }
-#else
-    gfx->drawLine(buffer, scaled_width, scaled_height, endX, 1, endX,
-                  scaled_height - 2, true);
-#endif
+    if (playheadX >= BITMAPWIDTH) {
+      playheadX = BITMAPWIDTH - 1;
+    }
+    drawVerticalMarker(bitmapBuffer_, gfx, playheadX);
   }
 
   // =====
