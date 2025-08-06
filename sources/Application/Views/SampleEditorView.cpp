@@ -511,20 +511,13 @@ void SampleEditorView::loadSample(
   file->Close();
 
   // --- 4. Finalize Waveform Cache ---
-  float scalingFactor = (peakAmplitude < 15000)   ? 3.0f
-                        : (peakAmplitude < 25000) ? 1.5f
-                                                  : 1.0f;
-
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
     if (samplesPerPixel >= 1) {
       // Calculate the Root Mean Square (RMS)
       float rms = sqrt(sumSquares[x] / samplesPerPixel);
 
-      // Apply a scaling factor to make quiet waveforms more visible
-      float scaledRms = std::min(1.0f, rms * scalingFactor);
-
       // Scale the final value to the display height
-      waveformCache_[x] = (uint8_t)(scaledRms * BITMAPHEIGHT);
+      waveformCache_[x] = (uint8_t)(rms * BITMAPHEIGHT);
     } else {
       waveformCache_[x] = 0;
     }
