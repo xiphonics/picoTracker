@@ -56,17 +56,17 @@ private:
   etl::vector<UIBitmapField, 1> waveformField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
 
+#ifdef ADV
+#define BITMAPWIDTH 720
+#define BITMAPHEIGHT 160
+#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT)
+#else
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
-#ifdef ADV
-  // Statically allocated bitmap buffer for scaled waveform display
-  uint8_t *scaledBitmapBuffer_;
-  // Statically allocated bitmap buffer for waveform display
-  uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT];
-#else
-  // Statically allocated bitmap buffer for waveform display
-  uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT / 8];
+#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT) / 8
+
 #endif
+  uint8_t bitmapBuffer_[BITMAPBUFFERSIZE];
 
   // Flag to force redraw of waveform
   bool forceRedraw_;
@@ -79,14 +79,13 @@ private:
   // Cached sample parameters
   int start_;
   int end_;
-  int loopStart_;
-  int loopMode_;
 
 private:
+  bool goProjectSamplesDir();
+
   // Waveform data cache
-  static const int WAVEFORM_CACHE_SIZE = 320; // Match BITMAPWIDTH
-  uint8_t
-      waveformCache_[WAVEFORM_CACHE_SIZE]; // Store pre-calculated pixel heights
+  static const int WAVEFORM_CACHE_SIZE = BITMAPWIDTH;
+  uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
 
   void updateWaveformCache();

@@ -47,7 +47,7 @@ private:
   void stop();
   void updateTimeDisplay();
   void generateFullPath(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
-                        etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> fullpath);
+                        etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> *fullpath);
 
   // Time display helpers
   void formatTime(uint32_t milliseconds, char *buffer, size_t bufferSize);

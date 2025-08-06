@@ -37,52 +37,18 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
   // Initialize cached sample parameters
   start_ = 0;
   end_ = 0;
-  loopStart_ = 0;
-  loopMode_ = 0;
   // Initialize waveform cache to zero
-  memset(waveformCache_, 0, sizeof(waveformCache_));
-
-#ifdef ADV
-  const int scale = 2;
-  const int scaled_width = BITMAPWIDTH * scale;
-  const int scaled_height = BITMAPHEIGHT * scale;
-  scaledBitmapBuffer_ = new uint8_t[scaled_width * scaled_height];
+  memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
   // Clear the buffer
-  memset(scaledBitmapBuffer_, 0, scaled_width * scaled_height);
-#else
-  // Clear the buffer
-  BitmapGraphics *gfx = BitmapGraphics::GetInstance();
-  gfx->clearBuffer(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT);
-#endif
-
-  addAllFields();
+  memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
 }
 
-SampleEditorView::~SampleEditorView() {
-#ifdef ADV
-  delete[] scaledBitmapBuffer_;
-#endif
-}
-
-SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
-  int id = viewData_->currentInstrumentID_;
-  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-  I_Instrument *instr = bank->GetInstrument(id);
-
-  // Check if this is a sample instrument
-  if (instr && instr->GetType() == IT_SAMPLE) {
-    return static_cast<SampleInstrument *>(instr);
-  }
-
-  return nullptr;
-}
+SampleEditorView::~SampleEditorView() {}
 
 void SampleEditorView::OnFocus() {
   const auto newSampleFile = viewData_->sampleEditorFilename;
   // Load the sample using this filename and will fill in the wave data cache
   loadSample(newSampleFile);
-  // Clear the field so it's not used again
-  viewData_->sampleEditorFilename.clear();
 
   // Update cached sample parameters
   updateSampleParameters();
@@ -90,10 +56,13 @@ void SampleEditorView::OnFocus() {
   // Force redraw of waveform
   forceRedraw_ = true;
 
+  GUIPoint position(0, 3);
+  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
+                              bitmapBuffer_, 0xFFFF, 0x0000);
+
   // make sure we do initial draw of the waveform into bitmap for display
   updateWaveformDisplay();
 
-  FieldView::OnFocus();
   addAllFields();
 }
 
@@ -105,26 +74,11 @@ void SampleEditorView::addAllFields() {
   bigHexVarField_.clear();
   intVarField_.clear();
   actionField_.clear();
-  waveformField_.clear();
   nameTextField_.clear();
-  // no need to clear staticField_ as they are not added to fieldList_
+  // no need to clear staticField_ and waveform as they are not added to
+  // fieldList_
 
   GUIPoint position = GetAnchor();
-
-  // Add waveform display field
-  position._y = 2;
-  position._x = 0; // start at the left edge of the window
-#ifdef ADV
-  const int scale = 2;
-  const int scaled_width = BITMAPWIDTH * scale;
-  const int scaled_height = BITMAPHEIGHT * scale;
-  waveformField_.emplace_back(position, scaled_width, scaled_height,
-                              scaledBitmapBuffer_, 0xFFFF, 0x0000);
-#else
-  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
-                              bitmapBuffer_, 0xFFFF, 0x0000);
-#endif
-  fieldList_.insert(fieldList_.end(), &(*waveformField_.rbegin()));
 
   position._y = 12; // offset enough for bitmap field
   position._x = 5;
@@ -147,23 +101,10 @@ void SampleEditorView::addAllFields() {
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  // TODO: add functionality for adding loop point markers
-  // Add loop point control
-  // position._y += 1;
-  // Variable *loopStartVar =
-  //     currentInstrument_->FindVariable(FourCC::SampleInstrumentLoopStart);
-  // if (loopStartVar) {
-  //   bigHexVarField_.emplace_back(position, *loopStartVar, 7,
-  //                                "loop start: %7.7X", 0, tempSampleSize_ - 1,
-  //                                16);
-  //   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  //   (*bigHexVarField_.rbegin()).AddObserver(*this);
-  // }
-
   // Add end position control
   position._y += 1;
 
-  bigHexVarField_.emplace_back(position, endVar_, 7, "loop end: %7.7X", 0,
+  bigHexVarField_.emplace_back(position, endVar_, 7, "end: %7.7X", 0,
                                tempSampleSize_ - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
@@ -245,24 +186,8 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
 
       // First change to the current project directory
-      auto fs = FileSystem::GetInstance();
-      fs->chdir("projects");
-
-      // Get the current project name from view data
-      if (viewData_ && viewData_->project_) {
-        char projectName[MAX_PROJECT_NAME_LENGTH + 1];
-        viewData_->project_->GetProjectName(projectName);
-
-        // Change to the project directory
-        if (fs->chdir(projectName)) {
-          // Change to the samples directory
-          fs->chdir("samples");
-        } else {
-          Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
-                       projectName);
-        }
-      } else {
-        Trace::Error("SampleEditorView: No project data available");
+      if (!goProjectSamplesDir()) {
+        Trace::Error("couldnt change to project samples dir!");
         return;
       }
 
@@ -274,9 +199,6 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
                                               startSample);
       }
-
-      isPlaying_ = true;
-
       // Force redraw to show the playhead
       forceRedraw_ = true;
     }
@@ -316,50 +238,39 @@ void SampleEditorView::AnimationUpdate() {
       forceRedraw_ = true;
       Trace::Debug("DEBUG: Playback stopped, resetting playhead\n");
     } else {
-      // Get the current instrument
-      SampleInstrument *currentInstrument_ = getCurrentSampleInstrument();
-      if (currentInstrument_) {
-        uint32_t sampleSize = currentInstrument_->GetSampleSize();
-        if (sampleSize > 0) {
-          // Get the start and end positions for the active sample range
-          uint32_t start = start_;
-          uint32_t end = end_;
+      // Calculate the time elapsed since the last animation frame
+      uint32_t currentTime = sys_->Millis();
+      uint32_t elapsedTime = currentTime - lastAnimationTime_;
+      lastAnimationTime_ = currentTime;
 
-          // Calculate the time elapsed since the last animation frame
-          uint32_t currentTime = sys_->Millis();
-          uint32_t elapsedTime = currentTime - lastAnimationTime_;
-          lastAnimationTime_ = currentTime;
+      // Get the sample duration in milliseconds, assuming 44.1kHz sample rate
+      float durationMs = (float)tempSampleSize_ / 44100.0f * 1000.0f;
 
-          // Get the sample duration in milliseconds
-          float durationMs = currentInstrument_->GetLengthInSec() * 1000.0f;
+      // Calculate the normalized playback position increment
+      float positionIncrement = (float)elapsedTime / durationMs;
 
-          // Calculate the normalized playback position increment
-          float positionIncrement = (float)elapsedTime / durationMs;
+      // Update the playback position
+      playbackPosition_ += positionIncrement;
 
-          // Update the playback position
-          playbackPosition_ += positionIncrement;
+      // Calculate the position in the sample
+      float samplePos = playbackPosition_ * tempSampleSize_;
 
-          // Calculate the position in the sample
-          float samplePos = playbackPosition_ * sampleSize;
-
-          // Check if we've reached the end
-          if (samplePos >= end || samplePos >= sampleSize) {
-            samplePos = end;
-            isPlaying_ = false;
-          }
-
-          // Update position (normalized to full sample range)
-          playbackPosition_ = samplePos / sampleSize;
-          forceRedraw_ = true;
-        }
+      // Check if we've reached the end
+      if (samplePos >= end_ || samplePos >= tempSampleSize_) {
+        samplePos = end_;
+        isPlaying_ = false;
+        Trace::Debug("PLayback stopped at end!");
       }
+
+      // Update position (normalized to full sample range)
+      playbackPosition_ = samplePos / tempSampleSize_;
+      Trace::Debug("pos:%d", playbackPosition_);
+      forceRedraw_ = true;
     }
   }
 
   // Check if we need to update the waveform display
   if (forceRedraw_) {
-
-    // TODO: enable after fixing crash on advance
     // Update the waveform display
     updateWaveformDisplay();
     forceRedraw_ = false;
@@ -403,100 +314,37 @@ void SampleEditorView::updateWaveformDisplay() {
 
 #ifdef ADV
   const int scale = 2;
-  const int scaled_width = BITMAPWIDTH * scale;
-  const int scaled_height = BITMAPHEIGHT * scale;
-  uint8_t *buffer = scaledBitmapBuffer_;
-  memset(buffer, 0, scaled_width * scaled_height);
 #else
   const int scale = 1;
-  const int scaled_width = BITMAPWIDTH;
-  const int scaled_height = BITMAPHEIGHT;
-  uint8_t *buffer = bitmapBuffer_;
-  memset(buffer, 0, scaled_width * scaled_height / 8);
 #endif
+
+  memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
 
   // Draw a border around the waveform display
 #ifdef ADV
   // Draw rectangle using direct buffer access for 8bpp
-  memset(buffer, 1, scaled_width); // Top edge
-  memset(buffer + (scaled_height - 1) * scaled_width, 1,
-         scaled_width); // Bottom edge
-  for (int y = 1; y < scaled_height - 1; y++) {
-    buffer[y * scaled_width] = 1;                    // Left edge
-    buffer[y * scaled_width + scaled_width - 1] = 1; // Right edge
+  memset(bitmapBuffer_, 1, BITMAPWIDTH); // Top edge
+  memset(bitmapBuffer_ + (BITMAPHEIGHT - 1) * BITMAPWIDTH, 1,
+         BITMAPWIDTH); // Bottom edge
+  for (int y = 1; y < BITMAPHEIGHT - 1; y++) {
+    bitmapBuffer_[y * BITMAPWIDTH] = 1;                     // Left edge
+    bitmapBuffer_[(y * BITMAPWIDTH) + BITMAPWIDTH - 1] = 1; // Right edge
   }
 #else
   gfx->drawRect(buffer, scaled_width, scaled_height, 0, 0, scaled_width - 1,
                 scaled_height - 1, false, true);
 #endif
 
-  // Check if we have a valid instrument
-  if (tempSampleSize_ <= 0) {
-    if (waveformField_.size() > 0) {
-#ifdef ADV
-      waveformField_[0].SetBitmap(buffer);
-#else
-      waveformField_[0].SetBitmap(bitmapBuffer_);
-#endif
-    }
-    return;
-  }
-
-  // Draw the waveform from the cache, scaled directly
-  {
-    Profiler p("updateWaveformDisplay: draw waveform");
-    int centerY = scaled_height / 2;
-    for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-      int pixelHeight = waveformCache_[x] * scale;
-      int scaledX = x * scale;
-
-#ifdef ADV
-      if (pixelHeight < 1) {
-        // For very quiet signals, draw a single pixel line
-        memset(buffer + (centerY * scaled_width) + scaledX, 1, scale);
-      } else {
-        // For non-zero signals, draw the full height
-        int startY = centerY - pixelHeight;
-        int endY = centerY + pixelHeight;
-        for (int y = startY; y <= endY; y++) {
-          memset(buffer + (y * scaled_width) + scaledX, 1, scale);
-        }
-      }
-#else
-      if (pixelHeight < 1) {
-        // For very quiet signals, draw a single pixel line (or scaled
-        // equivalent)
-        for (int i = 0; i < scale; i++) {
-          gfx->setPixel(buffer, scaled_width, scaledX + i, centerY, true);
-        }
-      } else {
-        // For non-zero signals, draw the full height
-        for (int i = 0; i < scale; i++) {
-          gfx->drawLine(buffer, scaled_width, scaled_height, scaledX + i,
-                        centerY - pixelHeight, scaledX + i,
-                        centerY + pixelHeight, true);
-        }
-      }
-#endif
-    }
-  }
-
-  // Use cached sample parameters
-  int start = start_;
-  int end = end_;
-  int loopStart = loopStart_;
-  int loopMode = loopMode_;
-
   // Draw markers directly to the final buffer
   {
     Profiler p("updateWaveformDisplay: draw markers");
     int fullSampleSize = tempSampleSize_;
     int startX =
-        (1 + (int)(((float)start / fullSampleSize) * (BITMAPWIDTH - 2))) *
+        (1 + (int)(((float)start_ / fullSampleSize) * (BITMAPWIDTH - 2))) *
         scale;
 #ifdef ADV
-    for (int y = 1; y < scaled_height - 2; y++) {
-      buffer[y * scaled_width + startX] = 1;
+    for (int y = 1; y < BITMAPHEIGHT - 2; y++) {
+      bitmapBuffer_[y * BITMAPWIDTH + startX] = 1;
     }
 #else
     gfx->drawLine(buffer, scaled_width, scaled_height, startX, 1, startX,
@@ -504,89 +352,27 @@ void SampleEditorView::updateWaveformDisplay() {
 #endif
 
     int endX =
-        (1 + (int)(((float)end / fullSampleSize) * (BITMAPWIDTH - 2))) * scale;
+        (1 + (int)(((float)end_ / fullSampleSize) * (BITMAPWIDTH - 2))) * scale;
 #ifdef ADV
-    for (int y = 1; y < scaled_height - 2; y++) {
-      buffer[y * scaled_width + endX] = 1;
+    for (int y = 1; y < BITMAPHEIGHT - 2; y++) {
+      bitmapBuffer_[y * BITMAPWIDTH + endX] = 1;
     }
 #else
     gfx->drawLine(buffer, scaled_width, scaled_height, endX, 1, endX,
                   scaled_height - 2, true);
 #endif
-
-    if (loopMode > 0) {
-      int loopX =
-          (1 + (int)(((float)loopStart / fullSampleSize) * (BITMAPWIDTH - 2))) *
-          scale;
-      if (loopX >= 1 && loopX < scaled_width - 1) {
-#ifdef ADV
-        for (int y = 1; y < scaled_height - 2; y += 3) {
-          buffer[y * scaled_width + loopX] = 1;
-          buffer[(y + 1) * scaled_width + loopX] = 1;
-        }
-#else
-        for (int y = 1; y < scaled_height - 2; y += 3) {
-          gfx->setPixel(buffer, scaled_width, loopX, y, true);
-          gfx->setPixel(buffer, scaled_width, loopX, y + 1, true);
-        }
-#endif
-      }
-    }
   }
 
-  // Draw the playhead indicator if the sample is playing
-  if (isPlaying_) {
-    Profiler p("updateWaveformDisplay: draw playhead");
-    int playheadX = (int)(playbackPosition_ * (scaled_width - 1));
-    if (playheadX < 0)
-      playheadX = 0;
-    if (playheadX >= scaled_width)
-      playheadX = scaled_width - 1;
+  // =====
 
-    // Draw a thick vertical line for better visibility
-    for (int offset = -1; offset <= 1; offset++) {
-      int x = playheadX + offset;
-      if (x >= 0 && x < scaled_width) {
-#ifdef ADV
-        for (int y = 1; y < scaled_height - 2; y++) {
-          buffer[y * scaled_width + x] = 1;
-        }
-#else
-        gfx->drawLine(buffer, scaled_width, scaled_height, x, 1, x,
-                      scaled_height - 2, true);
-#endif
-      }
-    }
-
-    // Draw a triangle at the top of the playhead
-    for (int y = 0; y < 3 * scale; y++) {
-      for (int x = -y; x <= y; x++) {
-        int px = playheadX + x;
-        int py = y;
-        if (px >= 0 && px < scaled_width && py < scaled_height - 2) {
-#ifdef ADV
-          buffer[py * scaled_width + px] = 1;
-#else
-          gfx->setPixel(buffer, scaled_width, px, py, true);
-#endif
-        }
-      }
-    }
-  }
-
+  auto field = waveformField_.front();
   // Update the bitmap field and request redraw
-  if (waveformField_.size() > 0) {
-#ifdef ADV
-    waveformField_[0].SetBitmap(buffer);
-#else
-    waveformField_[0].SetBitmap(bitmapBuffer_);
-#endif
-    SetDirty(true);
-    if (isPlaying_) {
-      Profiler p("updateWaveformDisplay: REDRAW");
-      waveformField_.rbegin()->Draw(w_);
-    }
-  }
+  field.SetBitmap(bitmapBuffer_);
+
+  SetDirty(true);
+
+  Profiler p1("updateWaveformDisplay: REDRAW");
+  field.Draw(w_);
 }
 
 short SampleEditorView::chunkBuffer_[512 * 2];
@@ -595,49 +381,22 @@ short SampleEditorView::chunkBuffer_[512 * 2];
 // ONLY filename for samples subidr (not full path!!) is supported for now
 void SampleEditorView::loadSample(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename) {
-  // These large arrays are now static, so they are not allocated on the stack.
-  static double sumSquares[WAVEFORM_CACHE_SIZE];
-  static int samplesInPixel[WAVEFORM_CACHE_SIZE];
-
-  // We must clear them at the start of each call since they are static.
-  memset(sumSquares, 0, sizeof(sumSquares));
-  memset(samplesInPixel, 0, sizeof(samplesInPixel));
 
   // Reset temporary sample state
   tempSampleSize_ = 0;
   waveformCacheValid_ = false;
+  static float sumSquares[WAVEFORM_CACHE_SIZE];
+  memset(sumSquares, 0, sizeof(sumSquares));
 
   if (filename.empty()) {
     Trace::Error("missing sample filename");
     return;
   }
 
-  auto fs = FileSystem::GetInstance();
-
-  // First, navigate to the root projects directory
-  fs->chdir("/");
-  fs->chdir("projects");
-  // Then, navigate into the current project's directory
-  if (viewData_ && viewData_->project_) {
-    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
-    viewData_->project_->GetProjectName(projectName);
-
-    if (fs->chdir(projectName)) {
-      // Finally, navigate into the samples subdirectory
-      fs->chdir("samples");
-    } else {
-      Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
-                   projectName);
-      // It's good practice to return to the root to avoid being in an unknown
-      // state
-      fs->chdir("/");
-      return; // Abort if we can't find the project directory
-    }
-  } else {
-    Trace::Error(
-        "SampleEditorView: No project data available to find samples dir.");
-    fs->chdir("/");
-    return; // Abort if project data is missing
+  // First, navigate to the root projects samples subdir directory
+  if (!goProjectSamplesDir()) {
+    Trace::Error("couldnt change to project samples dir!");
+    return;
   }
 
   I_File *file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
@@ -682,6 +441,7 @@ void SampleEditorView::loadSample(
 
   const int CHUNK_FRAMES = 512;
 
+  uint32_t waveCacheValueAccum = 0;
   // --- 3. The Single-Pass Read Loop ---
   while (currentFrame < tempSampleSize_) {
     int framesToRead =
@@ -703,9 +463,10 @@ void SampleEditorView::loadSample(
 
       int cacheIndex = (currentFrame + i) / samplesPerPixel;
       if (cacheIndex < WAVEFORM_CACHE_SIZE) {
+        // Normalize the sample to a -1.0 to 1.0 range
         float normalizedSample = sampleValue / 32768.0f;
+        // Add the square of the sample to the accumulator for this cache index
         sumSquares[cacheIndex] += normalizedSample * normalizedSample;
-        samplesInPixel[cacheIndex]++;
       }
     }
     currentFrame += framesRead;
@@ -720,26 +481,57 @@ void SampleEditorView::loadSample(
   float scalingFactor = (peakAmplitude < 15000)   ? 3.0f
                         : (peakAmplitude < 25000) ? 1.5f
                                                   : 1.0f;
-  int maxHeight = (BITMAPHEIGHT / 2) - 2;
 
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
-    if (samplesInPixel[x] > 0) {
-      float rms = sqrt(sumSquares[x] / samplesInPixel[x]);
+    if (samplesPerPixel >= 1) {
+      // Calculate the Root Mean Square (RMS)
+      float rms = sqrt(sumSquares[x] / samplesPerPixel);
+
+      // Apply a scaling factor to make quiet waveforms more visible
       float scaledRms = std::min(1.0f, rms * scalingFactor);
-      waveformCache_[x] = (uint8_t)(scaledRms * maxHeight);
+
+      // Scale the final value to the display height
+      waveformCache_[x] = (uint8_t)(scaledRms * BITMAPHEIGHT);
     } else {
       waveformCache_[x] = 0;
     }
   }
   waveformCacheValid_ = true;
 
-  // --- 5. Update UI ---
-  updateSampleParameters();
-  addAllFields();
-  updateWaveformDisplay();
+  // set end point variable
+  endVar_.SetInt(tempSampleSize_);
 
   // log duration, sample count, peak vol for file
   Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
-             tempSampleSize_, peakAmplitude, filename);
+             tempSampleSize_, peakAmplitude, filename.c_str());
   forceRedraw_ = true;
+}
+
+bool SampleEditorView::goProjectSamplesDir() {
+  auto fs = FileSystem::GetInstance();
+  fs->chdir("/");
+  fs->chdir("projects");
+  // Then, navigate into the current project's directory
+  if (viewData_ && viewData_->project_) {
+    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+    viewData_->project_->GetProjectName(projectName);
+
+    if (fs->chdir(projectName)) {
+      // Finally, navigate into the samples subdirectory
+      fs->chdir("samples");
+    } else {
+      Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
+                   projectName);
+      // It's good practice to return to the root to avoid being in an unknown
+      // state
+      fs->chdir("/");
+      return false; // Abort if we can't find the project directory
+    }
+  } else {
+    Trace::Error(
+        "SampleEditorView: No project data available to find samples dir.");
+    fs->chdir("/");
+    return false; // Abort if project data is missing
+  }
+  return true;
 }
