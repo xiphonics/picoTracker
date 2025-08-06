@@ -49,9 +49,6 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       // bit of a hack to use InstrumentName but we never actually persist this
       // in any config file here
       filenameVar_(FourCC::InstrumentName, "") {
-  // Initialize cached sample parameters
-  start_ = 0;
-  end_ = 0;
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
   // Clear the buffer
@@ -89,7 +86,7 @@ void SampleEditorView::addAllFields() {
   bigHexVarField_.clear();
   intVarField_.clear();
   actionField_.clear();
-  nameTextField_.clear();
+  // nameTextField_.clear();
   // no need to clear staticField_ and waveform as they are not added to
   // fieldList_
 
@@ -106,9 +103,9 @@ void SampleEditorView::addAllFields() {
   // GetDisplayName()
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName;
 
-  nameTextField_.emplace_back(filenameVar_, position, label,
-                              FourCC::InstrumentName, defaultName);
-  fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
+  // nameTextField_.emplace_back(filenameVar_, position, label,
+  //                             FourCC::InstrumentName, defaultName);
+  // fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
   position._y += 1;
   bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
@@ -327,12 +324,6 @@ void SampleEditorView::updateWaveformDisplay() {
   Profiler p("updateWaveformDisplay");
   BitmapGraphics *gfx = BitmapGraphics::GetInstance();
 
-#ifdef ADV
-  const int scale = 2;
-#else
-  const int scale = 1;
-#endif
-
   memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
 
   // Draw a border around the waveform display
@@ -346,20 +337,50 @@ void SampleEditorView::updateWaveformDisplay() {
     bitmapBuffer_[(y * BITMAPWIDTH) + BITMAPWIDTH - 1] = 1; // Right edge
   }
 #else
-  gfx->drawRect(buffer, scaled_width, scaled_height, 0, 0, scaled_width - 1,
-                scaled_height - 1, false, true);
+  gfx->drawRect(buffer, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH - 1,
+                BITMAPHEIGHT - 1, false, true);
 #endif
+
+  // == draw waveform
+  {
+    Profiler p("updateWaveformDisplay: draw waveform");
+    int centerY = BITMAPHEIGHT / 2;
+    for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
+      int pixelHeight = waveformCache_[x];
+#ifdef ADV
+      // For non-zero signals, draw the full height
+      int startY = centerY - pixelHeight;
+      int endY = centerY + pixelHeight;
+
+      // Clamp the y-coordinates to the bitmap's bounds
+      if (startY < 0) {
+        startY = 0;
+      }
+      if (endY >= BITMAPHEIGHT) {
+        endY = BITMAPHEIGHT - 1;
+      }
+
+      for (int y = startY; y <= endY; y++) {
+        memset(bitmapBuffer_ + (y * BITMAPWIDTH) + x, 1, 1);
+      }
+#else
+      // For non-zero signals, draw the full height
+      for (int i = 0; i < scale; i++) {
+        gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x + i,
+                      centerY - pixelHeight, x + i, centerY + pixelHeight,
+                      true);
+      }
+#endif
+    }
+  }
+  // ====
 
   // Draw start / end markers
   const int fullSampleSize = tempSampleSize_;
   const int startX =
-      (1 + static_cast<int>((static_cast<float>(start_) / fullSampleSize) *
-                            (BITMAPWIDTH - 2))) *
-      scale;
+      (1 + static_cast<int>(start_ / fullSampleSize) * (BITMAPWIDTH - 2));
   const int endX =
-      (1 + static_cast<int>((static_cast<float>(end_) / fullSampleSize) *
-                            (BITMAPWIDTH - 2))) *
-      scale;
+      (1 + static_cast<int>(end_ / fullSampleSize) * (BITMAPWIDTH - 2));
 
   drawVerticalMarker(bitmapBuffer_, gfx, startX);
   drawVerticalMarker(bitmapBuffer_, gfx, endX);
@@ -375,8 +396,6 @@ void SampleEditorView::updateWaveformDisplay() {
     }
     drawVerticalMarker(bitmapBuffer_, gfx, playheadX);
   }
-
-  // =====
 
   auto field = waveformField_.front();
   // Update the bitmap field and request redraw
@@ -448,6 +467,7 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
              tempSampleSize_, numChannels);
   float samplesPerPixel = (float)tempSampleSize_ / WAVEFORM_CACHE_SIZE;
+  Trace::Log("SAMPLEEDITOR", "samples/p/p: %f", samplesPerPixel);
 
   short peakAmplitude = 0;
   uint32_t currentFrame = 0;

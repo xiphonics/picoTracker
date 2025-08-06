@@ -77,8 +77,8 @@ private:
   bool playKeyHeld_;   // Flag to track when the play key is being held down
 
   // Cached sample parameters
-  int start_;
-  int end_;
+  int start_ = 0;
+  int end_ = 0;
 
 private:
   bool goProjectSamplesDir();
