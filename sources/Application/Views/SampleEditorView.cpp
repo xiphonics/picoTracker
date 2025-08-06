@@ -377,10 +377,10 @@ void SampleEditorView::updateWaveformDisplay() {
 
   // Draw start / end markers
   const int fullSampleSize = tempSampleSize_;
-  const int startX =
-      (1 + static_cast<int>(start_ / fullSampleSize) * (BITMAPWIDTH - 2));
-  const int endX =
-      (1 + static_cast<int>(end_ / fullSampleSize) * (BITMAPWIDTH - 2));
+  const int startX = static_cast<int>(
+      (static_cast<float>(start_) / fullSampleSize) * (BITMAPWIDTH - 2));
+  const int endX = static_cast<int>(
+      (static_cast<float>(end_) / fullSampleSize) * (BITMAPWIDTH - 2));
 
   drawVerticalMarker(bitmapBuffer_, gfx, startX);
   drawVerticalMarker(bitmapBuffer_, gfx, endX);
