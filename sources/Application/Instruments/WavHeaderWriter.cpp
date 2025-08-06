@@ -21,7 +21,7 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
-  uint32_t size = 0; // to be filled later
+  uint32_t size = 0; // Placeholder, to be filled later
   if (file->Write(&size, 1, 4) != 4)
     return false;
 
@@ -30,35 +30,35 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
+  // "fmt " subchunk
   chunk = Swap32(0x20746D66); // "fmt "
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
-  size = Swap32(16); // fmt chunk size
+  size = 16; // fmt chunk size for PCM
   if (file->Write(&size, 1, 4) != 4)
     return false;
 
-  uint16_t ushort = Swap16(1); // PCM compression
+  uint16_t ushort = 1; // PCM compression
   if (file->Write(&ushort, 1, 2) != 2)
     return false;
 
-  ushort = Swap16(channels); // number of channels
+  ushort = channels; // number of channels
   if (file->Write(&ushort, 1, 2) != 2)
     return false;
 
-  uint32_t swappedSampleRate = Swap32(sampleRate);
-  if (file->Write(&swappedSampleRate, 1, 4) != 4)
+  if (file->Write(&sampleRate, 1, 4) != 4)
     return false;
 
-  uint32_t byteRate = Swap32((bitsPerSample / 8) * channels * sampleRate);
+  uint32_t byteRate = (bitsPerSample / 8) * channels * sampleRate;
   if (file->Write(&byteRate, 1, 4) != 4)
     return false;
 
-  ushort = Swap16((bitsPerSample / 8) * channels); // block align
+  ushort = (bitsPerSample / 8) * channels; // block align
   if (file->Write(&ushort, 1, 2) != 2)
     return false;
 
-  ushort = Swap16(bitsPerSample); // bits per sample
+  ushort = bitsPerSample; // bits per sample
   if (file->Write(&ushort, 1, 2) != 2)
     return false;
 
@@ -67,11 +67,10 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
-  size = 0; // to be updated later
+  size = 0; // Placeholder, to be updated later
   if (file->Write(&size, 1, 4) != 4)
     return false;
 
-  // explicit file sync
   file->Sync();
   return true;
 }
@@ -79,23 +78,29 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
 bool WavHeaderWriter::UpdateFileSize(I_File *file, uint32_t sampleCount,
                                      uint16_t channels,
                                      uint16_t bytesPerSample) {
-  if (!file)
+  if (!file) {
     return false;
+  }
 
-  // Calculate data size (sampleCount * channels * bytes per sample)
-  uint32_t dataSize = sampleCount * channels * bytesPerSample;
+  // Get the current position, which is the total file size
+  uint32_t totalFileSize = file->Tell();
 
-  // Update total file size (file size - 8 bytes for RIFF header)
-  size_t currentPos = file->Tell();
+  // Calculate the two size fields required by the WAV header
+  uint32_t chunk_size = totalFileSize - 8;
+  uint32_t subchunk2_size = sampleCount * channels * bytesPerSample;
+
+  // Update ChunkSize (Total file size - 8)
   file->Seek(4, SEEK_SET);
-  uint32_t totalSize = Swap32(currentPos - 8);
-  file->Write(&totalSize, 4, 1);
+  file->Write(&chunk_size, 4, 1);
 
-  // Update data chunk size
+  // Update Subchunk2Size (the size of the raw data)
   file->Seek(40, SEEK_SET);
-  uint32_t swappedDataSize = Swap32(dataSize);
-  file->Write(&swappedDataSize, 4, 1);
+  file->Write(&subchunk2_size, 4, 1);
 
-  file->Seek(currentPos, SEEK_SET);
+  // Return the file pointer to its original position at the end of the file
+  file->Seek(totalFileSize, SEEK_SET);
+
+  // Force a sync to write all cached data to the disk before closing.
+  file->Sync();
   return true;
 }

@@ -29,10 +29,13 @@ static uint32_t start = 0;
 static uint32_t totalSamplesWritten = 0;
 static uint32_t recordDuration_ = MAX_INT32;
 
+SemaphoreHandle_t g_recordingFinishedSemaphore = NULL;
+
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds) {
   thresholdOK = false;
   first_pass = true;
+  g_recordingFinishedSemaphore = xSemaphoreCreateBinary();
 
   // TODO 0 milliseconds indicates unlimited duration recording
   if (milliseconds != 0) {
@@ -81,7 +84,23 @@ bool StartRecording(const char *filename, uint8_t threshold,
   return true;
 }
 
-void StopRecording() { recordingActive = false; }
+void StopRecording() {
+  if (!recordingActive) {
+    return; // Already stopping/stopped
+  }
+
+  recordingActive = false;
+
+  // Notify the Record task to wake it up
+  if (RecordHandle != NULL) {
+    xTaskNotifyGive(RecordHandle);
+  }
+
+  // Now, wait here until the Record task signals it's done
+  if (g_recordingFinishedSemaphore != NULL) {
+    xSemaphoreTake(g_recordingFinishedSemaphore, portMAX_DELAY);
+  }
+}
 
 void Record(void *) {
   UINT bw;
@@ -95,6 +114,7 @@ void Record(void *) {
       HAL_SAI_DMAStop(&hsai_BlockB1);
 
       if (RecordFile) {
+        Trace::Log("RECORD", "About to update WAV header");
         // Update WAV header with final file size
         if (!WavHeaderWriter::UpdateFileSize(RecordFile, totalSamplesWritten)) {
           Trace::Log("RECORD", "Failed to update WAV header");
@@ -106,6 +126,8 @@ void Record(void *) {
         // Close file
         RecordFile->Close();
         RecordFile = nullptr;
+        // Signal that all file operations are complete.
+        xSemaphoreGive(g_recordingFinishedSemaphore);
       }
 
       Player::GetInstance()->StopRecordStreaming();

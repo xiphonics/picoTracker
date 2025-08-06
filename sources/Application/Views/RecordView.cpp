@@ -186,7 +186,13 @@ void RecordView::stop() {
     return;
   }
 
+  GUITextProperties props;
+  SetColor(CD_NORMAL);
+  DrawString(10, 18, "Saving...", props);
+
+  // will BLOCK until rec file is safely saved
   StopRecording();
+
   isRecording_ = false;
   Trace::Log("RECORD", "Recording stopped");
 #endif
@@ -200,7 +206,7 @@ void RecordView::generateFullPath(
 
   fullpath->append("/projects/")
       .append(projectName)
-      .append("/")
+      .append("/samples/")
       .append(filename);
 }
 
