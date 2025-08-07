@@ -17,6 +17,8 @@
 
 #ifdef ADV
 #include "Adapters/adv/audio/record.h"
+#else
+#include "Adapters/picoTracker/audio/record.h"
 #endif
 
 #include <cstdio>
