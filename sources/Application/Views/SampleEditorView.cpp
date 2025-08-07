@@ -53,6 +53,10 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
   // Clear the buffer
   memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
+
+  GUIPoint position(0, 3);
+  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
+                              bitmapBuffer_, 0xFFFF, 0x0000);
 }
 
 SampleEditorView::~SampleEditorView() {}
@@ -67,10 +71,6 @@ void SampleEditorView::OnFocus() {
 
   // Force redraw of waveform
   forceRedraw_ = true;
-
-  GUIPoint position(0, 3);
-  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
-                              bitmapBuffer_, 0xFFFF, 0x0000);
 
   // make sure we do initial draw of the waveform into bitmap for display
   updateWaveformDisplay();
