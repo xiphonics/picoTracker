@@ -93,6 +93,8 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   velocity_ = INITIAL_NOTE_VELOCITY;
   playing_ = true;
   retrig_ = false;
+  pitchBend_ = false;
+  useLogCurve_ = false;
 
   return true;
 };
@@ -139,6 +141,51 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
 
     first_[channel] = false;
   }
+
+  // Update pitch bend.
+  if (updateTick) {
+    if (pitchBend_) {
+      int prev = pitchBendCurrent_;
+      if (pitchBendSpeed_ == 0) {
+        pitchBendCurrent_ = pitchBendTarget_;
+      } else {
+        int diff = pitchBendTarget_ - pitchBendCurrent_;
+        int sign = (diff > 0) ? 1 : -1;
+        int nextValue =
+            pitchBendCurrent_ + static_cast<int>(sign * pitchBendStep_);
+        if ((sign > 0 && nextValue >= pitchBendTarget_) ||
+            (sign < 0 && nextValue <= pitchBendTarget_)) {
+          pitchBendCurrent_ = pitchBendTarget_;
+          pitchBend_ = false;
+          pitchBendStep_ = 1.0f;
+        } else {
+          if (useLogCurve_) {
+            pitchBendCurrent_ += static_cast<int>(sign * pitchBendStep_);
+            pitchBendStep_ *= growthFactor_;
+          } else {
+            pitchBendStep_ = (diff > 0 ? 1 : -1) *
+                             (abs(diff) / static_cast<float>(pitchBendSpeed_));
+            pitchBendCurrent_ += pitchBendStep_;
+          }
+        }
+      }
+      if (pitchBendCurrent_ != prev) {
+        int midiValue = ((pitchBendCurrent_ - 127) * 8192) / 127;
+        int bend = midiValue + 8192;
+        if (bend < 0) {
+          bend = 0;
+        } else if (bend > 16383) {
+          bend = 16383;
+        }
+        MidiMessage msg;
+        msg.status_ = MidiMessage::MIDI_PITCH_BEND + mchannel;
+        msg.data1_ = bend & 0x7F;
+        msg.data2_ = (bend >> 7) & 0x7F;
+        svc_->QueueMessage(msg);
+      }
+    }
+  }
+
   if (remainingTicks_ > 0) {
     remainingTicks_--;
     if (remainingTicks_ == 0) {
@@ -181,6 +228,24 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     } else {
       retrig_ = false;
     }
+  } break;
+
+  case FourCC::InstrumentCommandLegato: {
+    pitchBendTarget_ = (char)(value & 0xFF);
+    pitchBendSpeed_ = float(value >> 8);
+    pitchBend_ = true;
+    growthFactor_ = minGrowth_ + (maxGrowth_ - minGrowth_) *
+                                     ((pitchBendSpeed_ - 1) / 253.0f);
+    pitchBendStep_ = 1.0f;
+    useLogCurve_ = true;
+  } break;
+
+  case FourCC::InstrumentCommandPitchSlide: {
+    pitchBendTarget_ = (char)(value & 0xFF);
+    pitchBendSpeed_ = float(value >> 8);
+    pitchBend_ = true;
+    pitchBendStep_ = 1.0f;
+    useLogCurve_ = false;
   } break;
 
   case FourCC::InstrumentCommandVelocity: {
