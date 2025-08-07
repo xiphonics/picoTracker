@@ -26,5 +26,7 @@ void Record(void *);
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds);
 void StopRecording();
+void StartMonitoring();
+void StopMonitoring();
 
 #endif

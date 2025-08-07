@@ -21,6 +21,9 @@ TaskHandle_t RecordHandle = NULL;
 
 static volatile bool recordingActive = false;
 static volatile bool writeInProgress = false;
+
+static volatile bool g_monitoringOnly = false;
+
 // Tracking which half is ready
 static volatile bool isHalfBuffer = false;
 static volatile bool thresholdOK = false;
@@ -31,8 +34,41 @@ static uint32_t recordDuration_ = MAX_INT32;
 
 SemaphoreHandle_t g_recordingFinishedSemaphore = NULL;
 
+void StartMonitoring() {
+  // 1. Enable line in on the codec
+  tlv320_enable_linein();
+
+  // 2. Set the flag for monitoring-only mode
+  g_monitoringOnly = true;
+  recordingActive = true; // Use this to keep the task loop active
+  first_pass = true;      // Ensure StartRecordStreaming is called
+
+  // 3. Clear the buffer and start the SAI DMA
+  memset(recordBuffer, 0, RECORD_BUFFER_SIZE * sizeof(uint16_t));
+  HAL_SAI_Receive_DMA(&hsai_BlockB1, (uint8_t *)recordBuffer,
+                      RECORD_BUFFER_SIZE);
+
+  // 4. Wake up the Record task to handle the stream
+  vTaskResume(RecordHandle);
+  Trace::Log("RECORD", "Monitoring started");
+}
+
+void StopMonitoring() { // Use the main 'recordingActive' flag to trigger the
+                        // task's cleanup routine
+  recordingActive = false;
+  g_monitoringOnly = false; // Also reset our monitoring flag
+
+  // Notify the Record task to wake it from its wait state so it can clean up
+  if (RecordHandle != NULL) {
+    xTaskNotifyGive(RecordHandle);
+  }
+  Trace::Log("RECORD", "Monitoring stopped");
+}
+
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds) {
+  g_monitoringOnly = false;
+
   thresholdOK = false;
   first_pass = true;
   g_recordingFinishedSemaphore = xSemaphoreCreateBinary();
@@ -61,9 +97,6 @@ bool StartRecording(const char *filename, uint8_t threshold,
 
   // Reset sample counter
   totalSamplesWritten = 0;
-
-  // Setup the codec
-  tlv320_enable_linein();
 
   // Signal task to start recording
   recordingActive = true;
@@ -152,34 +185,36 @@ void Record(void *) {
       }
       }*/
     // Write raw audio data (uint16_t samples as bytes)
-    if (RecordFile) {
-      writeInProgress = true;
-      int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
-                                           RECORD_BUFFER_SIZE, 1);
-      // sync immediately after writing the buffer for consistent if not fastest
-      // perf
-      RecordFile->Sync();
-      writeInProgress = false;
-      if (bytesWritten != RECORD_BUFFER_SIZE) {
-        Trace::Error("write failed\r\n");
-        // for now just give up and error out
-        return;
-      } else {
-        // Total samples written totalSamplesWritten/4 for stereo 16bit samples
-        totalSamplesWritten += bytesWritten / 4;
+    if (!g_monitoringOnly) {
+      if (RecordFile) {
+        writeInProgress = true;
+        int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
+                                             RECORD_BUFFER_SIZE, 1);
+        // sync immediately after writing the buffer for consistent if not
+        // fastest perf
+        RecordFile->Sync();
+        writeInProgress = false;
+        if (bytesWritten != RECORD_BUFFER_SIZE) {
+          Trace::Error("write failed\r\n");
+          // for now just give up and error out
+          return;
+        } else {
+          // Total samples written totalSamplesWritten/4 for stereo 16bit
+          // samples
+          totalSamplesWritten += bytesWritten / 4;
 
-        auto now = xTaskGetTickCount();
-        if ((now - lastLoggedTime) > 1000) { // log every sec
-          Trace::Debug("RECORDING [%i]s [%d]",
-                       (xTaskGetTickCount() - start) / 1000,
-                       totalSamplesWritten);
-          lastLoggedTime = now;
+          auto now = xTaskGetTickCount();
+          if ((now - lastLoggedTime) > 1000) { // log every sec
+            Trace::Debug("RECORDING [%i]s [%d]",
+                         (xTaskGetTickCount() - start) / 1000,
+                         totalSamplesWritten);
+            lastLoggedTime = now;
+          }
         }
+      } else {
+        writeInProgress = false;
+        Trace::Error("RecordFile is null");
       }
-    } else {
-      writeInProgress = false;
-      Trace::Error("RecordFile is null\r\n");
-      return;
     }
     // start playing
     if (first_pass) {

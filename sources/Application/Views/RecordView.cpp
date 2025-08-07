@@ -55,6 +55,7 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
+      StopMonitoring();
       return;
     }
   }
@@ -127,7 +128,10 @@ void RecordView::DrawView() {
   SetColor(CD_NORMAL);
 }
 
-void RecordView::OnFocus() { isDirty_ = true; }
+void RecordView::OnFocus() {
+  isDirty_ = true;
+  StartMonitoring();
+}
 
 void RecordView::Update(Observable &o, I_ObservableData *d) {
   // Handle field updates
