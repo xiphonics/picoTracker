@@ -11,6 +11,7 @@ add_library(application_views
   NullView.cpp
   PhraseView.cpp
   ProjectView.cpp
+  RecordView.cpp
   SelectProjectView.cpp
   SongView.cpp
   TableView.cpp
@@ -29,6 +30,13 @@ target_link_libraries(application_views PUBLIC
   application_utils
   platform_display
 )
+
+# only need to add platform_audio for pico builds
+if(NOT ADV)
+  target_link_libraries(application_views PUBLIC
+    platform_audio
+  )
+endif()
 
 target_include_directories(application_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

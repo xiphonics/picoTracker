@@ -52,6 +52,7 @@ class MixerView;
 class ThemeView;
 class ThemeImportView;
 class SampleEditorView;
+class RecordView;
 class View;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
@@ -117,6 +118,7 @@ private:
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   SampleEditorView *_sampleEditorView;
+  RecordView *_recordView;
   NullView *_nullView;
 
   bool _isDirty; // Flag to indicate a full redraw is needed on next

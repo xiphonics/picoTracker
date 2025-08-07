@@ -36,6 +36,8 @@ static const char *remoteUIOnOff[2] = {"Off", "On"};
 
 static const char *fontOptions[2] = {"Standard", "Bold"};
 
+static const char *recordSourceOptions[2] = {"Line In", "Mic"};
+
 // Param keys MUST fit in this length limit!
 typedef etl::string<13> ParamString;
 
@@ -46,6 +48,7 @@ constexpr int DEFAULT_MIDIDEVICE = 0x0;
 constexpr int DEFAULT_MIDISYNC = 0x0;
 constexpr int DEFAULT_REMOTEUI = 0x1;
 constexpr int DEFAULT_BACKLIGHT_LEVEL = 0xFF; // Default to max brightness (255)
+constexpr int DEFAULT_REC_SOURCE = 0x0;
 
 // Use a struct to define parameter information
 struct ConfigParam {
@@ -192,6 +195,13 @@ static const ConfigParam configParams[] = {
      FourCC::VarBacklightLevel,
      nullptr,
      0,
+     false},
+
+    {"RECORDSOURCE",
+     {.intValue = 0},
+     FourCC::VarRecordSource,
+     recordSourceOptions,
+     2,
      false},
 };
 
@@ -510,7 +520,7 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
     to_upper_case(elemName);
 
     printer->OpenElement(elemName.c_str());
-    // these settings need to be saved as thier Int values not as String
+    // these settings need to be saved as the Int values not as String
     // values hence we *dont* use GetString() !
     if (var->GetType() == Variable::CHAR_LIST) {
       printer->PushAttribute("VALUE", std::to_string(var->GetInt()).c_str());

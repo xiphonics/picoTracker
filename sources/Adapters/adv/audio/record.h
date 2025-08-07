@@ -11,6 +11,8 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
+#define MAX_INT32 0xFFFFFFFF
+
 #define RECORD_BUFFER_SIZE                                                     \
   35280 // Resolution is 200ms, we want buffer to be relatively big for disk
         // writing efficiency
@@ -24,5 +26,7 @@ void Record(void *);
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds);
 void StopRecording();
+void StartMonitoring();
+void StopMonitoring();
 
 #endif

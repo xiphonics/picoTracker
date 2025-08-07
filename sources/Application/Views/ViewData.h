@@ -87,5 +87,7 @@ public:
   int phrasePlayPos_[SONG_CHANNEL_COUNT]; // .Play position in phrase for each
                                           // channel
   int phraseCurPos_;                      // current UI cursor row position
+
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> sampleEditorFilename;
 };
 #endif

@@ -46,6 +46,7 @@ private:
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
+  void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path);
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;
@@ -54,22 +55,18 @@ private:
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBitmapField, 1> waveformField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
-  etl::vector<InstrumentNameVariable, 1> nameVariables_;
 
+#ifdef ADV
+#define BITMAPWIDTH 720
+#define BITMAPHEIGHT 160
+#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT)
+#else
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
-#ifdef ADV
-  // Statically allocated bitmap buffer for scaled waveform display
-  uint8_t *scaledBitmapBuffer_;
-  // Statically allocated bitmap buffer for waveform display
-  uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT];
-#else
-  // Statically allocated bitmap buffer for waveform display
-  uint8_t bitmapBuffer_[BITMAPWIDTH * BITMAPHEIGHT / 8];
-#endif
+#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT) / 8
 
-  // Sample data reference
-  SampleInstrument *currentInstrument_;
+#endif
+  uint8_t bitmapBuffer_[BITMAPBUFFERSIZE];
 
   // Flag to force redraw of waveform
   bool forceRedraw_;
@@ -80,16 +77,15 @@ private:
   bool playKeyHeld_;   // Flag to track when the play key is being held down
 
   // Cached sample parameters
-  int start_;
-  int end_;
-  int loopStart_;
-  int loopMode_;
+  int start_ = 0;
+  int end_ = 0;
 
 private:
+  bool goProjectSamplesDir();
+
   // Waveform data cache
-  static const int WAVEFORM_CACHE_SIZE = 320; // Match BITMAPWIDTH
-  uint8_t
-      waveformCache_[WAVEFORM_CACHE_SIZE]; // Store pre-calculated pixel heights
+  static const int WAVEFORM_CACHE_SIZE = BITMAPWIDTH;
+  uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
 
   void updateWaveformCache();
@@ -99,5 +95,16 @@ private:
   uint32_t playbackStartFrame_; // Animation frame when playback started
   uint32_t lastAnimationTime_;  // Timestamp of the last animation frame
   System *sys_;
+  uint32_t tempSampleSize_ = 0;
+  static short chunkBuffer_[512 * 2];
+  // Use an empty default name - we don't want to populate with sample
+  // filename The display name will still be shown on the phrase screen via
+  // GetDisplayName()
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> filename;
+
+  // Variables to back the UI fields
+  Variable startVar_;
+  Variable endVar_;
+  Variable filenameVar_;
 };
 #endif

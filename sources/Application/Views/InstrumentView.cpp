@@ -998,6 +998,18 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     }
   } break;
   case FourCC::ActionShowSampleEditor: {
+    // set the current file for sample editor before switching view
+    SampleInstrument *instrument = (SampleInstrument *)getInstrument();
+    auto filename = instrument->GetSampleFileName();
+    viewData_->sampleEditorFilename = filename;
+
+    if (filename.empty()) {
+      // If it's empty, show an error message to the user
+      MessageBox *mb = new MessageBox(*this, "No sample file loaded", MBBF_OK);
+      DoModal(mb);
+      return;
+    }
+
     // Switch to the SampleEditorView
     ViewType vt = VT_SAMPLE_EDITOR;
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
