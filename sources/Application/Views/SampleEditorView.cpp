@@ -86,7 +86,7 @@ void SampleEditorView::addAllFields() {
   bigHexVarField_.clear();
   intVarField_.clear();
   actionField_.clear();
-  // nameTextField_.clear();
+  nameTextField_.clear();
   // no need to clear staticField_ and waveform as they are not added to
   // fieldList_
 
@@ -98,14 +98,9 @@ void SampleEditorView::addAllFields() {
   auto label =
       etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
 
-  // Use an empty default name - we don't want to populate with sample
-  // filename The display name will still be shown on the phrase screen via
-  // GetDisplayName()
-  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName;
-
-  // nameTextField_.emplace_back(filenameVar_, position, label,
-  //                             FourCC::InstrumentName, defaultName);
-  // fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
+  nameTextField_.emplace_back(filenameVar_, position, label,
+                              FourCC::InstrumentName, filename);
+  fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
   position._y += 1;
   bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,

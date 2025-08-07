@@ -97,6 +97,10 @@ private:
   System *sys_;
   uint32_t tempSampleSize_ = 0;
   static short chunkBuffer_[512 * 2];
+  // Use an empty default name - we don't want to populate with sample
+  // filename The display name will still be shown on the phrase screen via
+  // GetDisplayName()
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> filename;
 
   // Variables to back the UI fields
   Variable startVar_;
