@@ -337,7 +337,7 @@ void SampleEditorView::updateWaveformDisplay() {
     bitmapBuffer_[(y * BITMAPWIDTH) + BITMAPWIDTH - 1] = 1; // Right edge
   }
 #else
-  gfx->drawRect(buffer, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH - 1,
+  gfx->drawRect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH - 1,
                 BITMAPHEIGHT - 1, false, true);
 #endif
 
