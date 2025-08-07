@@ -130,6 +130,7 @@ void RecordView::DrawView() {
 
 void RecordView::OnFocus() {
   isDirty_ = true;
+  recordingDuration_ = 0;
   StartMonitoring();
 }
 
