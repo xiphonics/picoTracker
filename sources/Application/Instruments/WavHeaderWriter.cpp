@@ -93,6 +93,9 @@ bool WavHeaderWriter::UpdateFileSize(I_File *file, uint32_t sampleCount,
   file->Seek(4, SEEK_SET);
   file->Write(&chunk_size, 4, 1);
 
+  Trace::Log("WAVHEADER", "Updating header: FileSize=%u, DataSize=%u",
+             chunk_size, subchunk2_size);
+
   // Update Subchunk2Size (the size of the raw data)
   file->Seek(40, SEEK_SET);
   file->Write(&subchunk2_size, 4, 1);

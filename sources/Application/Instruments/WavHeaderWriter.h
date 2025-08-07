@@ -15,12 +15,12 @@ class WavHeaderWriter {
 public:
   // Write WAV header to I_File
   static bool WriteHeader(I_File *file, uint32_t sampleRate = 44100,
-                          uint16_t channels = 2, uint16_t bitsPerSample = 16);
+                          uint16_t channels = 2, uint16_t bytesPerSample = 2);
 
   // Update file size in WAV header for I_File
   static bool UpdateFileSize(I_File *file, uint32_t sampleCount,
                              uint16_t channels = 2,
-                             uint16_t bytesPerSample = 16);
+                             uint16_t bytesPerSample = 2);
 };
 
 #endif
