@@ -122,7 +122,7 @@ void RecordView::DrawView() {
   pos._y += 2;
   pos._x = GetAnchor()._x;
   SetColor(CD_NORMAL);
-  DrawString(pos._x, pos._y, "PRESS PLAY TO Start/Stop", props);
+  DrawString(pos._x, pos._y, "PRESS PLAY TO RECORD", props);
 
   // Draw fields
   FieldView::Redraw();
@@ -150,6 +150,17 @@ void RecordView::AnimationUpdate() {
     isDirty_ = true;
     DrawView();
   }
+
+  // Get player instance safely
+  Player *player = Player::GetInstance();
+  // Only process updates if we're fully initialized
+  if (!player) {
+    return;
+  }
+  GUITextProperties props;
+
+  // Always update VU meter even if other parts of UI dont need updating
+  drawMasterVuMeter(player, props);
 }
 
 void RecordView::record() {
@@ -169,6 +180,13 @@ void RecordView::record() {
   int audioSource = v->GetInt();
   Trace::Log("RECORD", "Starting recording to %s, source: %s", fullpath.c_str(),
              audioSource == 0 ? "Line In" : "Mic");
+
+  // Draw instructions
+  GUITextProperties props;
+  auto pos = GetAnchor();
+  pos._y += 2;
+  SetColor(CD_NORMAL);
+  DrawString(pos._x, pos._y, "PRESS PLAY TO STOP", props);
 
   // Start recording with threshold and no duration set, ie. unlimited
   // recording time
