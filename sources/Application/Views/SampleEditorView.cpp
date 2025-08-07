@@ -365,7 +365,7 @@ void SampleEditorView::updateWaveformDisplay() {
       }
 #else
       // For non-zero signals, draw the full height
-      for (int i = 0; i < scale; i++) {
+      for (int i = 0; i < WAVEFORM_CACHE_SIZE; i++) {
         gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x + i,
                       centerY - pixelHeight, x + i, centerY + pixelHeight,
                       true);
