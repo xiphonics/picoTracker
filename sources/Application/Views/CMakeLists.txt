@@ -29,6 +29,7 @@ target_link_libraries(application_views PUBLIC
   etl
   application_utils
   platform_display
+  platform_audio
 )
 
 target_include_directories(application_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

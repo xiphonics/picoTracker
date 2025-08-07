@@ -8,6 +8,8 @@
 #ifndef _RECORD_H_
 #define _RECORD_H_
 
+#include <cstdint>
+
 void Record(void *);
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds);
