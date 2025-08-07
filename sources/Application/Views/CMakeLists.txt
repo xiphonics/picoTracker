@@ -29,8 +29,14 @@ target_link_libraries(application_views PUBLIC
   etl
   application_utils
   platform_display
-  platform_audio
 )
+
+# only need to add platform_audio for pico builds
+if(NOT ADV)
+  target_link_libraries(application_views PUBLIC
+    platform_audio
+  )
+endif()
 
 target_include_directories(application_views PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
