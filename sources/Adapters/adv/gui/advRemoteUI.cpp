@@ -6,9 +6,17 @@
  * This file is part of the picoTracker firmware
  */
 
-#include "picoRemoteUI.h"
-#include "tusb.h"
+#include "advRemoteUI.h"
+#include <System/Console/Trace.h>
 #include <cstdint>
+#include <cstdio>
+#include <cstring>
+
+#include "stm32h7xx_hal.h" // Change to your specific STM32 series HAL header
+// #include "usbd_cdc_if.h"   // Header for the USB CDC Interface
+
+// Define a timeout in milliseconds to prevent getting stuck
+#define USB_TX_TIMEOUT_MS 50
 
 // The Remote UI protocol consists of sending ASCII messages over the USB serial
 // connection to a client to render the UI shown by the picotracker and then
@@ -28,30 +36,15 @@
 //
 
 void sendToUSBCDC(char buf[], int length) {
-  // based on PICO SDk's USB STDIO stdio_usb_out_chars function
-  // https://github.com/raspberrypi/pico-sdk/blob/master/src/rp2_common/pico_stdio_usb/stdio_usb.c#L101
-  static uint64_t last_avail_time;
-  if (tud_cdc_connected()) {
-    for (int i = 0; i < length;) {
-      int n = length - i;
-      int avail = (int)tud_cdc_write_available();
-      if (n > avail)
-        n = avail;
-      if (n) {
-        int n2 = (int)tud_cdc_write(buf + i, (uint32_t)n);
-        tud_task();
-        tud_cdc_write_flush();
-        i += n2;
-        last_avail_time = time_us_64();
-      } else {
-        tud_task();
-        tud_cdc_write_flush();
-        if (!tud_cdc_connected() ||
-            (!tud_cdc_write_available() &&
-             time_us_64() > last_avail_time + USB_TIMEOUT_US)) {
-          break;
-        }
-      }
-    }
-  }
+  // The STM32 middleware function requires a uint8_t pointer, so we cast the
+  // buffer.
+
+  // Get the current time using the HAL tick (which is in milliseconds).
+  uint32_t startTime = HAL_GetTick();
+
+  // CDC_Transmit_FS returns USBD_BUSY if the previous transmission is not
+  // complete. We loop until it returns USBD_OK, indicating the data has been
+  // accepted.
+  while (CDC_Transmit_HS((uint8_t *)buf, strlen(buf)) == USBD_BUSY)
+    ;
 }

@@ -3,7 +3,7 @@ add_library(platform_gui
   advGUIWindowImp.cpp
   advEventManager.cpp
   SerialDebugUI.h SerialDebugUI.cpp
-#  picoRemoteUI.h picoRemoteUI.cpp
+  advRemoteUI.h advRemoteUI.cpp
 )
 
 target_link_libraries(platform_gui PUBLIC uiframework_simplebaseclasses
