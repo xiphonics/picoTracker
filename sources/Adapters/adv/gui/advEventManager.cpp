@@ -26,7 +26,7 @@
 #endif
 
 #ifdef USB_REMOTE_UI
-#include "picoRemoteUI.h"
+#include "advRemoteUI.h"
 #endif
 
 bool advEventManager::finished_ = false;

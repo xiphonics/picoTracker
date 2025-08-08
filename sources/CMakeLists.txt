@@ -113,6 +113,9 @@ else()
   # Enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
   add_definitions(-DSERIAL_REPL)
 
+  #enable remote UI over usb cdc
+  add_definitions(-DUSB_REMOTE_UI)
+
   # Advance displays battery level as percentage instead of bars
   add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
 
