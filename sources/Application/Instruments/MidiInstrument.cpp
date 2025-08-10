@@ -145,13 +145,13 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
   // Update pitch bend.
   if (updateTick) {
     if (pitchBend_) {
-      int prev = pitchBendCurrent_;
+      int8_t prev = pitchBendCurrent_;
       if (pitchBendSpeed_ == 0) {
         pitchBendCurrent_ = pitchBendTarget_;
       } else {
-        int diff = pitchBendTarget_ - pitchBendCurrent_;
-        int sign = (diff > 0) ? 1 : -1;
-        int nextValue =
+        int8_t diff = pitchBendTarget_ - pitchBendCurrent_;
+        int8_t sign = (diff > 0) ? 1 : -1;
+        int8_t nextValue =
             pitchBendCurrent_ + static_cast<int>(sign * pitchBendStep_);
         if ((sign > 0 && nextValue >= pitchBendTarget_) ||
             (sign < 0 && nextValue <= pitchBendTarget_)) {
@@ -170,12 +170,13 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
         }
       }
       if (pitchBendCurrent_ != prev) {
-        int midiValue = ((pitchBendCurrent_ - 127) * 8192) / 127;
-        int bend = midiValue + 8192;
+        int16_t midiValue =
+            ((pitchBendCurrent_ - PB_7BIT_MAX) * PB_CENTER) / PB_7BIT_MAX;
+        int16_t bend = midiValue + PB_CENTER;
         if (bend < 0) {
           bend = 0;
-        } else if (bend > 16383) {
-          bend = 16383;
+        } else if (bend > PB_MAX) {
+          bend = PB_MAX;
         }
         MidiMessage msg;
         msg.status_ = MidiMessage::MIDI_PITCH_BEND + mchannel;
@@ -231,18 +232,20 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   } break;
 
   case FourCC::InstrumentCommandLegato: {
-    pitchBendTarget_ = (char)(value & 0xFF);
-    pitchBendSpeed_ = float(value >> 8);
+    pitchBendTarget_ = uint8_t(value & 0xFF);
+    pitchBendSpeed_ = uint8_t(value >> 8);
     pitchBend_ = true;
-    growthFactor_ = minGrowth_ + (maxGrowth_ - minGrowth_) *
-                                     ((pitchBendSpeed_ - 1) / 253.0f);
+    growthFactor_ =
+        PB_MIN_GROWTH_FACTOR + (PB_MAX_GROWTH_FACTOR - PB_MIN_GROWTH_FACTOR) *
+                                   ((pitchBendSpeed_ - 1) / 253.0f);
+
     pitchBendStep_ = 1.0f;
     useLogCurve_ = true;
   } break;
 
   case FourCC::InstrumentCommandPitchSlide: {
-    pitchBendTarget_ = (char)(value & 0xFF);
-    pitchBendSpeed_ = float(value >> 8);
+    pitchBendTarget_ = uint8_t(value & 0xFF);
+    pitchBendSpeed_ = uint8_t(value >> 8);
     pitchBend_ = true;
     pitchBendStep_ = 1.0f;
     useLogCurve_ = false;
