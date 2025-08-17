@@ -7,46 +7,164 @@ template: page
 
 The keyboard layout resembles a typical old console game controller (controller button names in brackets):
 
-* `ARROW` keys
-* `NAV` (RT)
-* `ALT` (LT)
-* `ENTER` (A)
-* `EDIT` (B)
-* `PLAY` (Start)
+| `ARROW` keys                               | `NAV` (RT)                              | `ALT` (LT)                              | `ENTER` (A)                               | `EDIT` (B)                               | `PLAY` (Start)                           |
+|:-------------------------------------------|:----------------------------------------|:----------------------------------------|:------------------------------------------|:-----------------------------------------|:-----------------------------------------|
+| ![arrow keys](image/pt-buttons-arrows.jpg) | ![arrow keys](image/pt-buttons-nav.jpg) | ![arrow keys](image/pt-buttons-alt.jpg) | ![arrow keys](image/pt-buttons-enter.jpg) | ![arrow keys](image/pt-buttons-edit.jpg) | ![arrow keys](image/pt-buttons-play.jpg) |
 
-The `NAV` (`[]`) and `ALT` keys are modifier keys for the `ENTER`, `EDIT` and `ARROW` keys. They are designed to modify the opposite keys to their location, so `ALT` will modify the `ARROW` keys and `NAV` will modify `ENTER` and `EDIT` (though there are exceptions).
+The `NAV` (`[]`) and `ALT` keys are modifier keys for the `ENTER`, `EDIT` and `ARROW` keys. They are designed to modify
+the opposite keys to their location, so `ALT` will modify the `ARROW` keys and `NAV` will modify `ENTER` and `EDIT` (
+though there are exceptions).
 
+## Song View
 
-## Basic Editing & Navigation
+### No Modifier
 
-- `ARROW`s: In screen navigation.
-- `ENTER`: Insert Chain/Phrase/Note.
-- `ENTER`, `ENTER`: Insert next unused Chain/Phrase/Instrument.
-- `ALT`+(`EDIT`,`ENTER`): Clone. This will overwrite the current Highlighted Item with a copy of itself using the next unused Item available.
-- `EDIT`+`ENTER`: Cuts the current Highlighted Item .
-- `ENTER`+`ARROWS`: Updates Highlighted Item value.
-  - `ENTER+UP/DOWN`: +/- 0x10.
-  - `ENTER`+`RIGHT`/`LEFT`: +/- 1.
-- `EDIT`+`ARROWS`: Rapid Navigation.
-- `EDIT`+`UP`/`DOWN`: Page up/down in Song Screen, Next/Previous Phrase in Current Chain in Phrase Screen. Navigation +/- 0x10 in Instrument/Table Screen. In Import Screen, adjusts preview volume up/down.
-- `EDIT`+`LEFT`/`RIGHT`: Next/Previous Channel in Chain/Phrase Screen. Navigation +/- 1 in Instrument/Table Screen. Switch between Song and Live Modes in Song Screen.
-- `NAV`+`ARROWS`: Navigate between the Screens.
-- `ALT`+`UP`/`DOWN`: Jump up/down to next populated row after a blank row (great for live mode entire row queuing!)
+| Function              | Key Combination |                   Image                    |
+|:----------------------|:---------------:|:------------------------------------------:|
+| Move cursor on screen | `ARROW` keys    | ![arrow keys](image/pt-buttons-arrows.jpg) |
+| Start/stop playback   | `PLAY`          | ![play key](image/pt-buttons-play.jpg)     |
 
-## Selections
+### NAV Modifier
 
-A selection can be started in few different ways:
+| Function                                               | Key Combination |                       Image                        |
+|:-------------------------------------------------------|:---------------:|:--------------------------------------------------:|
+| Switch to Project view                                 | `NAV + UP`      | ![nav + up key](image/pt-buttons-nav_up.jpg)       |
+| Switch to Mixer view                                   | `NAV + DOWN`    | ![nav + down key](image/pt-buttons-nav_down.jpg)   |
+| Switch to Chain view (if current position has a chain) | `NAV + RIGHT`   | ![nav + right key](image/pt-buttons-nav_right.jpg) |
+| Stop playback of selected chain, once it finished      | `NAV + PLAY`    | ![nav + play key](image/pt-buttons-nav_play.jpg)   |
+| solo selected track                                    | `NAV + ENTER`   | ![nav + enter key](image/pt-buttons-nav_enter.jpg) |
+| mute selected track                                    | `NAV + EDIT`    | ![nav + edit keys](image/pt-buttons-nav_edit.jpg)  |
+| reset all muted & soloed tracks                        | `NAV + ALT`     | ![nav + edit keys](image/pt-buttons-nav_alt.jpg)   |
 
-- `ALT`+`EDIT`: Starts selection mode with only the data at the cursor selected
-- `ALT`+`EDIT`+`EDIT`: Starts selection mode with the cursor's row selected
-- `ALT`+`EDIT`+`EDIT`+`EDIT`: Starts selection mode with the entire screen selected
+#### Solo & Mute
+
+When `NAV` is released first, the (solo / mute) mode will be kept active until reset with `NAV + ALT`.
+
+### ALT Modifier
+
+| Function                                                                                              | Key Combination            |                              Image                               |
+|:------------------------------------------------------------------------------------------------------|:---------------------------|:----------------------------------------------------------------:|
+| Jump up/down to next populated row after a blank row                                                  | `ALT + (UP / DOWN)`        | ![alt + up/down keys](image/pt-buttons-alt_up_down.jpg)          |
+| Nudge tempo down/up                                                                                   | `ALT + (LEFT / RIGHT)`     | ![nav + alt + left/right](image/pt-buttons-alt_left_right.jpg)   |
+| query current row for playbck                                                                         | `ALT + PLAY`               | ![nav + alt + play](image/pt-buttons-alt_play.jpg)               |
+| reset all muted & soloed teacks                                                                       | `ALT + NAV`                | ![nav + alt + enter](image/pt-buttons-nav_alt.jpg)               |
+| cut the current cursor position if filled, paste otherwise                                            | `ALT + ENTER`              | ![arrow keys](image/pt-buttons-alt_enter.jpg)                    |
+| Clone: Overwrite current highlighted Item with a copy of itself using the next unused Item available. | `ALT + (EDIT + ENTER)`     | ![alt + (adit, enter) keys](image/pt-buttons-alt_edit_enter.jpg) |
+| start selection                                                                                       | `ALT + EDIT `              | ![edit + alt keys](image/pt-buttons-alt_edit.jpg)                |
+| start selection with row selected                                                                     | `ALT + EDIT + EDIT`        | ![edit + alt keys](image/pt-buttons-alt_edit2.jpg)               |
+| start selection with current screen selected                                                          | `ALT + EDIT + EDIT + EDIT` | ![edit + alt keys](image/pt-buttons-alt_edit3.jpg)               |
+
+#### Use Selection
 
 Once a selection is started you can do a few more things:
 
-- `ARROWS`: will make an existing selection bigger or smaller
-- `EDIT`: will copy a selection to buffer, or
-- `ALT`+`ENTER`: will cut the current selection
+| Description                                                | Key Names     |                     Image                      |
+|------------------------------------------------------------|---------------|:----------------------------------------------:|
+| change selection                                           | `ARROWS`      | ![arrow keys](image/pt-buttons-arrows.jpg)     |
+| copy selection to clipboard                                | `EDIT`        | ![arrow keys](image/pt-buttons-edit.jpg)       |
+| queue selection for playback                               | `PLAY`        | ![arrow keys](image/pt-buttons-play.jpg)       |
+| stop                                                       | `NAV + PLAY`  | ![arrow keys](image/pt-buttons-nav_play.jpg)   |
+| cut the current cursor position if filled, paste otherwise | `ALT + ENTER` | ![arrow keys](image/pt-buttons-alt_enter.jpg)  |
+| switch solo mode                                           | `NAV + ENTER` | ![nav + enter](image/pt-buttons-nav_enter.jpg) |
+| unmute all                                                 | `ALT + NAV`   | ![nav + enter](image/pt-buttons-nav_alt.jpg)   |
 
-And then:
+### EDIT Modifier
 
-- `ALT`+`ENTER`: will paste the clipboard contents at the current cursor location
+| Function                           | Key Combination         |                             Image                              |
+|:-----------------------------------|:------------------------|:--------------------------------------------------------------:|
+| Cuts the current Highlighted Item. | `EDIT + ENTER`          | ![edit + enter keys](image/pt-buttons-edit_enter.jpg)          |
+| start selection                    | `ALT + EDIT`            | ![edit + alt keys](image/pt-buttons-alt_edit.jpg)              |
+| Start immediate playback           | `EDIT + PLAY`           | ![edit + play keys](image/pt-buttons-edit_play.jpg)            |
+| Page up/down in Song Screen.       | `EDIT + (UP / DOWN)`    | ![edit + up/down keys](image/pt-buttons-edit_updown.jpg)       |
+| Switch between Song and Live Mode  | `EDIT + (LEFT / RIGHT)` | ![edit + left/right keys](image/pt-buttons-edit_leftright.jpg) |
+
+### ENTER Key Combinations
+
+| Function                                                   | Key Combination          |                               Image                               |
+|:-----------------------------------------------------------|:-------------------------|:-----------------------------------------------------------------:|
+| insert if cursor position is empty                         | `ENTER`                  | ![enter key](image/pt-buttons-enter.jpg)                          |
+| Insert next unused chain                                   | `ENTER, ENTER`           | ![enter key twice](image/pt-buttons-enter2.jpg)                   |
+| Change chain at cursor position by 0x10                    | `ENTER + (UP / DOWN)`    | ![enter + arrow keys](image/pt-buttons-enter_up_down.jpg)         |
+| Change chain at cursor position by 0x01                    | `ENTER + (RIGHT / LEFT)` | ![enter + right/left keys](image/pt-buttons-enter_left_right.jpg) |
+| cut the current cursor position if filled, paste otherwise | `ALT + ENTER`            | ![enter + alt keys](image/pt-buttons-alt_enter.jpg)               |
+
+## Chain View
+
+### No Modifier
+
+| function                                  | key combination | image                                               |
+|:------------------------------------------|:----------------|:------------------------------------------:|
+| Move cursor on screen                     | `ARROW` keys    | ![arrow keys](image/pt-buttons-arrows.jpg) |
+| Start/stop playback of current chain      | `PLAY`          | ![play key](image/pt-buttons-play.jpg)     |
+| enter last used phrase or start with 0    | `ENTER`         | ![enter key](image/pt-buttons-enter.jpg)   |
+
+### NAV Modifier
+
+| function              | key combination | image                                              |
+|:----------------------|:----------------|:--------------------------------------------:|
+| switch to song view   | `NAV + LEFT`    | ![nav and left key](image/pt-buttons-nav_left.jpg)  |
+| switch to phrase view | `NAV + RIGHT`   | ![nav and right key](image/pt-buttons-nav_right.jpg) |
+| play chain in song    | `NAV + PLAY`    | ![nav and play key](image/pt-buttons-nav_play.jpg)  |
+| unmute all            | `NAV + ALT`     | ![nav and alt key](image/pt-buttons-nav_alt.jpg)   |
+| toggle mute           | `EDIT + NAV`    | ![nav and edit key](image/pt-buttons-nav_edit.jpg)  |
+| switch solo mode      | `ENTER + NAV`   | ![nav and enter key](image/pt-buttons-nav_enter.jpg) |
+
+### ALT Modifier
+
+| function               | key combination      | image                                             |
+|:-----------------------|:---------------------|:-------------------------------------------------:|
+| unmute all             | `NAV + ALT`          | ![nav and alt key](image/pt-buttons-nav_alt.jpg)        |
+| clone current position | `EDIT + ALT + ENTER` | ![edit and alt and enter key](image/pt-buttons-alt_edit_enter.jpg) |
+| paste clipboard        | `ALT + ENTER`        | ![alter and enter key](image/pt-buttons-alt_enter.jpg)      |
+| start selection        | `ALT + EDIT`         | ![alt and edit key](image/pt-buttons-alt_edit.jpg)       |
+
+### EDIT Modifier
+
+| function                                           | key combination            | image                                                                  |
+|:---------------------------------------------------|:---------------------------|:----------------------------------------------------------------------:|
+| warp to (previous / next) channel                  | `EDIT + (LEFT / RIGHT)`    | ![edit and horizontal arrow keys](image/pt-buttons-edit_leftright.jpg) |
+| warp to (previous / next) chain of current channel | `EDIT + (UP / DOWN)`       | ![edit and vertical arrow keys](image/pt-buttons-edit_updown.jpg)      |
+| cut current position into clipboard                | `EDIT + ENTER`             | ![edit and enter key](image/pt-buttons-edit_enter.jpg)                 |
+| clone current position                             | `EDIT + ALT + ENTER`       | ![edit and alt and enter key](image/pt-buttons-alt_edit_enter.jpg)     |
+| toggle mute                                        | `EDIT + NAV`               | ![edit and naventer key](image/pt-buttons-nav_edit.jpg)                |
+| start selection                                    | `ALT + EDIT`               | ![alt and edit key](image/pt-buttons-alt_edit.jpg)                     |
+| start selection with row selected                  | `ALT + EDIT + EDIT`        | ![alt and edit twice keys](image/pt-buttons-alt_edit2.jpg)             |
+| start selection with current screen selected       | `ALT + EDIT + EDIT + EDIT` | ![alt and edit thrice keys](image/pt-buttons-alt_edit3.jpg)            |
+
+#### Use Selection
+
+Once a selection is started you can do a few more things:
+
+| Description                                                | Key Names                |                     Image                                                     |
+|------------------------------------------------------------|--------------------------|:-----------------------------------------------------------------------------:|
+| change selection                                           | `ARROWS`                 | ![arrow keys](image/pt-buttons-arrows.jpg)                                    |
+| copy selection to clipboard                                | `EDIT`                   | ![edit key](image/pt-buttons-edit.jpg)                                        |
+| toggle mute                                                | `EDIT + NAV`             | ![enter and nav key](image/pt-buttons-nav_edit.jpg)                           |
+| update selection values by +/- 0x10                        | `ENTER + (UP + DOWN)`    | ![enter and vertical arrow keys](image/pt-buttons-enter_up_down.jpg)          |
+| update selection values by +/- 0x01                        | `ENTER + (LEFT + RIGHT)` | ![enter key and horizontal arrow keys](image/pt-buttons-enter_left_right.jpg) |
+| cut the current selection                                  | `ALT + ENTER`            | ![alt and enter key](image/pt-buttons-alt_enter.jpg)                       |
+| switch solo mode                                           | `NAV + ENTER`            | ![nav and enter key](image/pt-buttons-nav_enter.jpg)                                |
+| switch to song view                                        | `NAV + LEFT`             | ![nav and left key](image/pt-buttons-nav_left.jpg)                                   |
+| switch to phrase view                                      | `NAV + RIGHT`            | ![nav and right key](image/pt-buttons-nav_right.jpg)                                  |
+| play chain                                                 | `PLAY`                   | ![play key](image/pt-buttons-play.jpg)                                      |
+| play chain in song                                         | `NAV + PLAY`             | ![nav and play key](image/pt-buttons-nav_play.jpg)                            |
+| unmute all                                                 | `ALT + NAV`              | ![alt and nav key](image/pt-buttons-nav_alt.jpg)                                  |
+
+### ENTER Key Combinations
+
+| function                                                 | key combination          | image                                               |
+|:---------------------------------------------------------|:-------------------------|:---------------------------------------------------:|
+| update cursor value by +/- 0x10                          | `ENTER + (UP / DOWN)`    | ![enter and vertical arrow keys](image/pt-buttons-enter_up_down.jpg)    |
+| update cursor value by +/- 0x01                          | `ENTER + (LEFT / RIGHT)` | ![enter and horizontal arrow keys](image/pt-buttons-enter_left_right.jpg) |
+| paste clipboard                                          | `ENTER + ALT`            | ![enter and alt key](image/pt-buttons-alt_enter.jpg)        |
+| switch solo mode                                         | `ENTER + NAV`            | ![enter and nav key](image/pt-buttons-nav_enter.jpg)        |
+
+[//]: # (TODO:)
+
+[//]: # (phrase)
+
+[//]: # (instrument)
+
+[//]: # (table)
+
+[//]: # (project)
