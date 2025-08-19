@@ -21,7 +21,7 @@
 #define INITIAL_NOTE_VELOCITY 0x7F
 
 // Constants for MIDI pitch bend.
-#define PB_MAX_GROWTH_FACTOR 1.5f
+#define PB_MAX_GROWTH_FACTOR 2.0f
 #define PB_MIN_GROWTH_FACTOR 1.0001f
 #define PB_CENTER 8192
 #define PB_MAX 16383
@@ -87,7 +87,7 @@ private:
   char velocity_ = 127;
   TableSaveState tableState_;
   bool first_[SONG_CHANNEL_COUNT];
-  uint8_t pitchBendTarget_;
+  int pitchBendTarget_;
   uint8_t pitchBendSpeed_;
   float pitchBendCurrent_;
   float pitchBendStep_;

@@ -142,13 +142,14 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
     first_[channel] = false;
   }
 
-  // Update pitch bend.
+  // Update pitch bend logic if a pitch bend is active.
   if (updateTick) {
     if (pitchBend_) {
       int8_t prev = pitchBendCurrent_;
       if (pitchBendSpeed_ == 0) {
         pitchBendCurrent_ = pitchBendTarget_;
       } else {
+        // Calculate the difference and sign for pitch bend direction.
         int8_t diff = pitchBendTarget_ - pitchBendCurrent_;
         int8_t sign = (diff > 0) ? 1 : -1;
         int8_t nextValue =
@@ -160,24 +161,30 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
           pitchBendStep_ = 1.0f;
         } else {
           if (useLogCurve_) {
+            // Apply logarithmic or linear pitch bend curve.
             pitchBendCurrent_ += static_cast<int>(sign * pitchBendStep_);
             pitchBendStep_ *= growthFactor_;
           } else {
+            // Linear pitch bend calculation.
             pitchBendStep_ = (diff > 0 ? 1 : -1) *
                              (abs(diff) / static_cast<float>(pitchBendSpeed_));
             pitchBendCurrent_ += pitchBendStep_;
           }
         }
       }
+      // If pitch bend value changed, send MIDI pitch bend message.
       if (pitchBendCurrent_ != prev) {
+        // Convert internal pitch bend value to MIDI pitch bend range (0-16383).
         int16_t midiValue =
             ((pitchBendCurrent_ - PB_7BIT_MAX) * PB_CENTER) / PB_7BIT_MAX;
         int16_t bend = midiValue + PB_CENTER;
+        // Clamp bend value to valid MIDI range.
         if (bend < 0) {
           bend = 0;
         } else if (bend > PB_MAX) {
           bend = PB_MAX;
         }
+        // Create and queue MIDI pitch bend message.
         MidiMessage msg;
         msg.status_ = MidiMessage::MIDI_PITCH_BEND + mchannel;
         msg.data1_ = bend & 0x7F;
@@ -237,7 +244,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     pitchBend_ = true;
     growthFactor_ =
         PB_MIN_GROWTH_FACTOR + (PB_MAX_GROWTH_FACTOR - PB_MIN_GROWTH_FACTOR) *
-                                   ((pitchBendSpeed_ - 1) / 253.0f);
+                                   (1.0f - ((pitchBendSpeed_ - 1) / 253.0f));
 
     pitchBendStep_ = 1.0f;
     useLogCurve_ = true;
