@@ -247,6 +247,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     pitchBendTarget_ = uint8_t(value & 0xFF);
     pitchBendSpeed_ = uint8_t(value >> 8);
     pitchBend_ = true;
+    useLogCurve_ = true;
 
     // Convert to interpolation alpha using a nonlinear curve.
     float growthFactor =
