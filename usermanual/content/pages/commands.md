@@ -93,7 +93,7 @@ When used with MIDI instruments, the LEG command also acts as an exponential MID
   - 7F is the center (no bend).
   - 00 is full downward bend.
   - FF is full upward bend.
-- MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually - reset the bend to center.
+- MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually reset the bend to center.
   - This can be done by sending the aabb value `LEG 007F` on the next note or at any time.
 - MIDI pitch bend can be sent without triggering a note, allowing for continuous pitch control.
  
@@ -161,7 +161,7 @@ The PSL command also acts as a linear MIDI pitch bend controller for MIDI instru
   - 7F is the center (no bend).
   - 00 is full downward bend.
   - FF is full upward bend.
-- MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually - reset the bend to center.
+- MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually reset the bend to center.
   - This can be done by sending the aabb value `PSL 007F` on the next note or at any time.
 - MIDI pitch bend can be sent without triggering a note, allowing for continuous pitch control.
 
