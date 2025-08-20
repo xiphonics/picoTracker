@@ -161,9 +161,16 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
           pitchBendStep_ = 1.0f;
         } else {
           if (useLogCurve_) {
-            // Apply logarithmic or linear pitch bend curve.
-            pitchBendCurrent_ += static_cast<int>(sign * pitchBendStep_);
-            pitchBendStep_ *= growthFactor_;
+            // Apply exponential growth/decay to step based on direction.
+            if (sign > 0) {
+              pitchBendStep_ *= growthFactor_;
+            } else {
+              pitchBendStep_ /= growthFactor_;
+              // Ensure step doesn't become infinitesimally small.
+              if (pitchBendStep_ < 0.001f) {
+                pitchBendStep_ = 0.001f;
+              }
+            }
           } else {
             // Linear pitch bend calculation.
             pitchBendStep_ = (diff > 0 ? 1 : -1) *
