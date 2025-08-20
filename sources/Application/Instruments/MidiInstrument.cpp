@@ -150,10 +150,9 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
         pitchBendCurrent_ = pitchBendTarget_;
       } else {
         // Calculate the difference and sign for pitch bend direction.
-        int8_t diff = pitchBendTarget_ - pitchBendCurrent_;
-        int8_t sign = (diff > 0) ? 1 : -1;
-        int8_t nextValue =
-            pitchBendCurrent_ + static_cast<int>(sign * pitchBendStep_);
+        float diff = pitchBendTarget_ - pitchBendCurrent_;
+        float sign = (diff > 0) ? 1.0f : -1.0f;
+        float nextValue = pitchBendCurrent_ + (sign * pitchBendStep_);
         if ((sign > 0 && nextValue >= pitchBendTarget_) ||
             (sign < 0 && nextValue <= pitchBendTarget_)) {
           pitchBendCurrent_ = pitchBendTarget_;
@@ -161,15 +160,14 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
           pitchBendStep_ = 1.0f;
         } else {
           if (useLogCurve_) {
-            // Apply exponential growth/decay to step based on direction.
-            if (sign > 0) {
-              pitchBendStep_ *= growthFactor_;
-            } else {
-              pitchBendStep_ /= growthFactor_;
-              // Ensure step doesn't become infinitesimally small.
-              if (pitchBendStep_ < 0.001f) {
-                pitchBendStep_ = 0.001f;
-              }
+            // Exponential pitch bend calculation.
+            float diff = pitchBendTarget_ - pitchBendCurrent_;
+            pitchBendCurrent_ += diff * interpolationAlpha_;
+            // If the pitch is close enough to the target, snap to target and
+            // stop bending.
+            if (fabs(diff) < PB_MAX_ALPHA) {
+              pitchBendCurrent_ = pitchBendTarget_;
+              pitchBend_ = false;
             }
           } else {
             // Linear pitch bend calculation.
@@ -249,12 +247,13 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     pitchBendTarget_ = uint8_t(value & 0xFF);
     pitchBendSpeed_ = uint8_t(value >> 8);
     pitchBend_ = true;
-    growthFactor_ =
+
+    // Convert to interpolation alpha using a nonlinear curve.
+    float growthFactor =
         PB_MIN_GROWTH_FACTOR + (PB_MAX_GROWTH_FACTOR - PB_MIN_GROWTH_FACTOR) *
                                    (1.0f - ((pitchBendSpeed_ - 1) / 253.0f));
-
-    pitchBendStep_ = 1.0f;
-    useLogCurve_ = true;
+    float normalized = (growthFactor - 1.0f) / (PB_MAX_GROWTH_FACTOR - 1.0f);
+    interpolationAlpha_ = powf(normalized, PB_CURVE_SHAPE) * PB_MAX_ALPHA;
   } break;
 
   case FourCC::InstrumentCommandPitchSlide: {
