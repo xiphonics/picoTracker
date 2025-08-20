@@ -86,6 +86,18 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 - If an instrument is not triggered on the same row as LEG, the command will re-trigger the previous instrument (unless the previous instrument is still playing).
 - LEG does exponential pitch change (i;e. it goes at same speed through all octaves) while PITCH is linear
 
+When used with MIDI instruments, the LEG command also acts as an exponential MIDI pitch bend controller:
+
+- As with internal instruments, aa sets the speed (with 00 being instant).
+- bb sets the target pitch bend position, scaled to the MIDI 14-bit pitch bend range (0–16383):
+  - 7F is the center (no bend).
+  - 00 is full downward bend.
+  - FF is full upward bend.
+- MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually - reset the bend to center.
+  - This can be done by sending the aabb value `LEG 007F` on the next note or at any time.
+- MIDI pitch bend can be sent without triggering a note, allowing for continuous pitch control.
+ 
+
 ## LOF aaaa (LPOF in lgpt)
 
 **LooP OFset: Shift both the loop start & loop end values aaaa digits**
@@ -141,6 +153,17 @@ sends a program change command on the current channel. 0000 is program change 1
 **PitchSLide performs a linear pitch slide from previous note value to pitch bb at speed aa**
 - PSL is also time for the first two byte nibble
 - PITCH is linear pitch change
+
+The PSL command also acts as a linear MIDI pitch bend controller for MIDI instruments.
+
+- As with internal instruments, aa sets the speed (with 00 being instant).
+- bb sets the target pitch bend position, scaled to the MIDI 14-bit pitch bend range (0–16383):
+  - 7F is the center (no bend).
+  - 00 is full downward bend.
+  - FF is full upward bend.
+- MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually - reset the bend to center.
+  - This can be done by sending the aabb value `PSL 007F` on the next note or at any time.
+- MIDI pitch bend can be sent without triggering a note, allowing for continuous pitch control.
 
 ## RTG aabb (RTRG in lgpt)
 
