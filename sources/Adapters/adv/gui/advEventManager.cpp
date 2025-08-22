@@ -14,6 +14,8 @@
 #include "advGUIWindowImp.h"
 // #include "usb_utils.h"
 #include "Adapters/adv/audio/record.h"
+#include "Adapters/adv/midi/advMidiService.h"
+#include "Services/Midi/MidiService.h"
 #include "etl/map.h"
 #include "platform.h"
 #include "tim.h"
@@ -240,6 +242,21 @@ void USBDevice(void *) {
   }
 }
 
+void MIDITRSPoll(void *) {
+  MidiService *midiService = MidiService::GetInstance();
+
+  for (;;) {
+    // Poll MIDI service to process any pending MIDI messages
+    if (midiService) {
+      advMidiService *ptMidiService = (advMidiService *)midiService;
+      if (ptMidiService) {
+        ptMidiService->poll();
+      }
+    }
+    vTaskDelay(pdMS_TO_TICKS(10)); // TODO: What's needed here?
+  }
+}
+
 advEventManager::advEventManager() {}
 
 advEventManager::~advEventManager() {}
@@ -323,6 +340,11 @@ int advEventManager::MainLoop() {
   static StaticTask_t USBDeviceTCB;
   xTaskCreateStatic(USBDevice, "USB Device", 512, NULL, tskIDLE_PRIORITY + 2,
                     USBDeviceStack, &USBDeviceTCB);
+
+  static StackType_t MIDITRSPollStack[512];
+  static StaticTask_t MIDITRSPollTCB;
+  xTaskCreateStatic(MIDITRSPoll, "MIDITRSPoll", 512, NULL, tskIDLE_PRIORITY + 2,
+                    MIDITRSPollStack, &MIDITRSPollTCB);
 
   vTaskStartScheduler();
   // we never get here
