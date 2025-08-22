@@ -14,7 +14,6 @@
 #include "advGUIWindowImp.h"
 // #include "usb_utils.h"
 #include "Adapters/adv/audio/record.h"
-#include "BatteryGauge.h"
 #include "etl/map.h"
 #include "platform.h"
 #include "tim.h"
@@ -241,18 +240,6 @@ void USBDevice(void *) {
   }
 }
 
-// This runs only once at startup
-void InitializationTask(void *) {
-  Trace::Debug("Initialization task running");
-
-  // Configure the battery fuel gauge - will only actually update batt gauge if
-  // the required battery capacity is not already programmed into the gauge
-  configureBatteryGauge();
-
-  // Once initialization is complete, delete this task
-  vTaskDelete(NULL);
-}
-
 advEventManager::advEventManager() {}
 
 advEventManager::~advEventManager() {}
@@ -336,12 +323,6 @@ int advEventManager::MainLoop() {
   static StaticTask_t USBDeviceTCB;
   xTaskCreateStatic(USBDevice, "USB Device", 512, NULL, tskIDLE_PRIORITY + 2,
                     USBDeviceStack, &USBDeviceTCB);
-
-  // Create one-time initialization task
-  static StackType_t InitializationStack[512];
-  static StaticTask_t InitializationTCB;
-  xTaskCreateStatic(InitializationTask, "Init", 512, NULL, 1,
-                    InitializationStack, &InitializationTCB);
 
   vTaskStartScheduler();
   // we never get here
