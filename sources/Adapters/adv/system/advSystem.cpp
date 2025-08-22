@@ -101,9 +101,6 @@ void advSystem::Boot() {
   static char samplePoolMemBuf[sizeof(advSamplePool)];
   SamplePool::Install(new (samplePoolMemBuf) advSamplePool());
 
-  // Configure the battery fuel gauge - will only update if ITPOR bit is set
-  configureBatteryGauge();
-
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
 };
