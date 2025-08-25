@@ -6,8 +6,9 @@
  * This file is part of the picoTracker firmware
  */
 
-#include "picoRemoteUI.h"
+#include "advRemoteUI.h"
 #include "tusb.h"
+#include <Adapters/adv/platform/platform.h>
 #include <cstdint>
 
 // The Remote UI protocol consists of sending ASCII messages over the USB serial
@@ -27,31 +28,31 @@
 // command received to check for any transmission errors.
 //
 
-void sendToUSBCDC(char buf[], int length) {
-  // based on PICO SDk's USB STDIO stdio_usb_out_chars function
-  // https://github.com/raspberrypi/pico-sdk/blob/master/src/rp2_common/pico_stdio_usb/stdio_usb.c#L101
-  static uint64_t last_avail_time;
-  if (tud_cdc_connected()) {
-    for (int i = 0; i < length;) {
-      int n = length - i;
-      int avail = (int)tud_cdc_write_available();
-      if (n > avail)
-        n = avail;
-      if (n) {
-        int n2 = (int)tud_cdc_write(buf + i, (uint32_t)n);
-        tud_task();
-        tud_cdc_write_flush();
-        i += n2;
-        last_avail_time = time_us_64();
-      } else {
-        tud_task();
-        tud_cdc_write_flush();
-        if (!tud_cdc_connected() ||
-            (!tud_cdc_write_available() &&
-             time_us_64() > last_avail_time + USB_TIMEOUT_US)) {
-          break;
-        }
-      }
-    }
+void sendToUSBCDC(char data[], uint32_t length) {
+  if (!tud_cdc_connected()) {
+    return;
   }
+
+  uint32_t sent = 0;
+  while (sent < length) {
+    // tud_task() is called by the USB FreeRTOS task
+    // to process outgoing data, freeing up buffer space
+
+    uint32_t available = tud_cdc_write_available();
+    if (available > 0) {
+      uint32_t to_send = length - sent;
+      if (to_send > available) {
+        to_send = available; // Only send what fits
+      }
+
+      // tud_cdc_write() returns the number of bytes actually written
+      uint32_t written = tud_cdc_write(data + sent, to_send);
+      sent += written;
+    }
+    // If the buffer is full (available == 0), the loop will spin after a delay
+    vTaskDelay(1);
+  }
+
+  // After the entire message is queued, flush it.
+  tud_cdc_write_flush();
 }

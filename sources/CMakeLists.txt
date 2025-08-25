@@ -110,6 +110,9 @@ if (NOT ${ADV})
 else()
   message("picoTracker Advance Build")
   add_definitions(-DADV)
+  
+  add_definitions(-DUSB_REMOTE_UI)
+
   # Enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
   add_definitions(-DSERIAL_REPL)
 
