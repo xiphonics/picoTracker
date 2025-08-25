@@ -2,6 +2,7 @@ add_library(platform_midi
   advMidiService.cpp
   advMidiOutDevice.cpp
   advUSBMidiOutDevice.cpp
+  advMidiInDevice.cpp
 )
 
 target_link_libraries(platform_midi PRIVATE

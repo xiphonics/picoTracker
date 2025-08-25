@@ -9,6 +9,7 @@
 #define _ADVMIDISERVICE_H_
 
 #include "Services/Midi/MidiService.h"
+#include "advMidiInDevice.h"
 #include "advMidiOutDevice.h"
 #include "advUSBMidiOutDevice.h"
 
@@ -18,11 +19,13 @@ public:
   ~advMidiService();
 
   // Poll MIDI input devices for new messages
-  void poll(){};
+  void poll();
 
 private:
   advMidiOutDevice midiOutDevice_;
   advUSBMidiOutDevice usbMidiOutDevice_;
+  advMidiInDevice midiInDevice_;
+  // advUSBMidiInDevice usbMidiInDevice_;
 };
 
 #endif

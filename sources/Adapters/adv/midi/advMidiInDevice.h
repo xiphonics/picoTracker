@@ -6,13 +6,15 @@
  * This file is part of the picoTracker firmware
  */
 
-#pragma once
+#ifndef _ADV_MIDI_IN_DEVICE_H_
+#define _ADV_MIDI_IN_DEVICE_H_
+
 #include "Services/Midi/MidiInDevice.h"
 
-class picoTrackerMidiInDevice : public MidiInDevice {
+class advMidiInDevice : public MidiInDevice {
 public:
-  picoTrackerMidiInDevice(const char *name);
-  virtual ~picoTrackerMidiInDevice();
+  advMidiInDevice(const char *name);
+  virtual ~advMidiInDevice();
 
   // Poll the MIDI input buffer for new messages
   virtual void poll();
@@ -27,3 +29,4 @@ protected:
   virtual bool startDriver();
   virtual void stopDriver();
 };
+#endif
