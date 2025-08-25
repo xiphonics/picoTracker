@@ -44,6 +44,6 @@ enum RemoteInputCommand {
   FULL_REFRESH_CMD = 0x02,
 };
 
-void sendToUSBCDC(char buf[], int length);
+void sendToUSBCDC(char buf[], uint32_t length);
 
 #endif

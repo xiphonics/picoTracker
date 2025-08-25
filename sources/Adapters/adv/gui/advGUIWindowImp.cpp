@@ -17,7 +17,7 @@
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include <string.h>
 #ifdef USB_REMOTE_UI
-#include "picoRemoteUI.h"
+#include "advRemoteUI.h"
 #endif
 #include "Adapters/adv/filesystem/advFileSystem.h"
 #include <string>
