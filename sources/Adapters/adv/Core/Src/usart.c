@@ -133,6 +133,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle) {
     GPIO_InitStruct.Alternate = GPIO_AF7_UART7;
     HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
+    /* UART7 interrupt Init */
+    HAL_NVIC_SetPriority(UART7_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(UART7_IRQn);
     /* USER CODE BEGIN UART7_MspInit 1 */
 
     /* USER CODE END UART7_MspInit 1 */
@@ -185,6 +188,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle) {
     */
     HAL_GPIO_DeInit(GPIOF, MIDI_IN_Pin | MIDI_OUT_Pin);
 
+    /* UART7 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(UART7_IRQn);
     /* USER CODE BEGIN UART7_MspDeInit 1 */
 
     /* USER CODE END UART7_MspDeInit 1 */

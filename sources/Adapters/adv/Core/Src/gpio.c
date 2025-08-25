@@ -163,7 +163,7 @@ void MX_GPIO_Init(void) {
   HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PA0, SYSCFG_SWITCH_PA0_CLOSE);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 7, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 13, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
