@@ -236,7 +236,7 @@ void ProcessEvent(void *) {
 void USBDevice(void *) {
   for (;;) {
     tud_task();                    // Handle USB device events
-    vTaskDelay(pdMS_TO_TICKS(10)); // TODO: What's needed here?
+    vTaskDelay(pdMS_TO_TICKS(1));  // 1ms to minimise latency handling USB
   }
 }
 

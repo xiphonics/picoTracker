@@ -19,15 +19,9 @@
 // essentially just relay the existing draw, clear and setcolor commands that
 // already exist in picTrackerGUIWidowImp.cpp
 //
-// Note that to avoid issues with non-printing chars being mishandled by either
-// the pico SDK or client serial port drivers, most command param "values" have
-// been attempted to be offset to push them into the printable char range.
-//
 // Remote UI clients should pay careful attention to using the
 // REMOTE_UI_CMD_MARKER and also verify the expected byte count length of each
 // command received to check for any transmission errors.
-//
-
 void sendToUSBCDC(char data[], uint32_t length) {
   if (!tud_cdc_connected()) {
     return;
@@ -35,22 +29,21 @@ void sendToUSBCDC(char data[], uint32_t length) {
 
   uint32_t sent = 0;
   while (sent < length) {
-    // tud_task() is called by the USB FreeRTOS task
-    // to process outgoing data, freeing up buffer space
-
+    // tud_task() is called by its own USBDevice FreeRTOS task which will cause
+    // processing of outgoing data, freeing up tinyusb buffer space
     uint32_t available = tud_cdc_write_available();
     if (available > 0) {
       uint32_t to_send = length - sent;
       if (to_send > available) {
         to_send = available; // Only send what fits
       }
-
       // tud_cdc_write() returns the number of bytes actually written
       uint32_t written = tud_cdc_write(data + sent, to_send);
       sent += written;
     }
-    // If the buffer is full (available == 0), the loop will spin after a delay
-    vTaskDelay(1);
+    // give back control to RTOS while we wait for tinyusb to free up its tx
+    // buffer space
+    vTaskDelay(pdMS_TO_TICKS(1));
   }
 
   // After the entire message is queued, flush it.

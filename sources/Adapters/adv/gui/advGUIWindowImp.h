@@ -46,5 +46,12 @@ protected:
 private:
   void SendFont(uint8_t uifontIndex);
   bool remoteUIEnabled_ = 0;
+
+  // buffer remoteUI draw cmds for better USB CDC perf
+  char remoteUIDrawBuffer_[256];
+  uint32_t remoteUIBufferPos_ = 0;
+
+  void sendToUSBCDCBuffered(const char *buf, uint32_t len);
+  void flushRemoteUIBuffer();
 };
 #endif
