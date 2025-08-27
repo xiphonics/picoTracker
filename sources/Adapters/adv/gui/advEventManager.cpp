@@ -7,15 +7,14 @@
  */
 
 #include "advEventManager.h"
+#include "Adapters/adv/audio/record.h"
+#include "Adapters/adv/midi/advMidiService.h"
 #include "Adapters/adv/system/input.h"
 #include "Adapters/adv/utils/utils.h"
 #include "Application/Application.h"
 #include "Application/Model/Config.h"
-#include "advGUIWindowImp.h"
-// #include "usb_utils.h"
-#include "Adapters/adv/audio/record.h"
-#include "Adapters/adv/midi/advMidiService.h"
 #include "Services/Midi/MidiService.h"
+#include "advGUIWindowImp.h"
 #include "etl/map.h"
 #include "platform.h"
 #include "tim.h"
@@ -30,6 +29,8 @@
 #ifdef USB_REMOTE_UI
 #include "picoRemoteUI.h"
 #endif
+
+#define PROCESSING_DELAY_MS 10
 
 bool advEventManager::finished_ = false;
 bool advEventManager::redrawing_ = false;
@@ -237,8 +238,8 @@ void ProcessEvent(void *) {
 
 void USBDevice(void *) {
   for (;;) {
-    tud_task();                    // Handle USB device events
-    vTaskDelay(pdMS_TO_TICKS(10)); // TODO: What's needed here?
+    tud_task(); // Handle USB device events
+    vTaskDelay(pdMS_TO_TICKS(PROCESSING_DELAY_MS));
   }
 }
 
@@ -253,7 +254,7 @@ void MIDITRSPoll(void *) {
         ptMidiService->poll();
       }
     }
-    vTaskDelay(pdMS_TO_TICKS(10)); // TODO: What's needed here?
+    vTaskDelay(pdMS_TO_TICKS(PROCESSING_DELAY_MS));
   }
 }
 
