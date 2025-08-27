@@ -52,11 +52,9 @@ public:
 
 protected:
   static void ProcessInputEvent(void *);
-  static void ProcessSerialDebugInputEvent(void *);
+  static void ProcessSerialInputEvent(void *);
 
 private:
-  //  static repeating_timer_t timer_;
-
   static bool finished_;
   static bool redrawing_;
   static uint16_t buttonMask_;

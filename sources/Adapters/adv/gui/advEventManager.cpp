@@ -243,21 +243,6 @@ void USBDevice(void *) {
   }
 }
 
-void MIDITRSPoll(void *) {
-  MidiService *midiService = MidiService::GetInstance();
-
-  for (;;) {
-    // Poll MIDI service to process any pending MIDI messages
-    if (midiService) {
-      advMidiService *ptMidiService = (advMidiService *)midiService;
-      if (ptMidiService) {
-        ptMidiService->poll();
-      }
-    }
-    vTaskDelay(pdMS_TO_TICKS(PROCESSING_DELAY_MS));
-  }
-}
-
 advEventManager::advEventManager() {}
 
 advEventManager::~advEventManager() {}
@@ -325,8 +310,8 @@ int advEventManager::MainLoop() {
 #ifdef SERIAL_REPL
   static StackType_t SerialDebugInputStack[1000];
   static StaticTask_t SerialDebugInputTCB;
-  xTaskCreateStatic(ProcessSerialDebugInputEvent, "SerialDebugInEvent", 1000,
-                    NULL, 2, SerialDebugInputStack, &SerialDebugInputTCB);
+  xTaskCreateStatic(ProcessSerialInputEvent, "SerialInEvent", 1000, NULL, 2,
+                    SerialDebugInputStack, &SerialDebugInputTCB);
 #endif
 
   static StackType_t ProcessEventStack[1000];
@@ -342,11 +327,6 @@ int advEventManager::MainLoop() {
   xTaskCreateStatic(USBDevice, "USB Device", 512, NULL, tskIDLE_PRIORITY + 2,
                     USBDeviceStack, &USBDeviceTCB);
 
-  static StackType_t MIDITRSPollStack[512];
-  static StaticTask_t MIDITRSPollTCB;
-  xTaskCreateStatic(MIDITRSPoll, "MIDITRSPoll", 512, NULL, tskIDLE_PRIORITY + 2,
-                    MIDITRSPollStack, &MIDITRSPollTCB);
-
   vTaskStartScheduler();
   // we never get here
 
@@ -361,16 +341,39 @@ void advEventManager::PostQuitMessage() {
 
 int advEventManager::GetKeyCode(const char *name) { return -1; }
 
-#ifdef SERIAL_REPL
-void advEventManager::ProcessSerialDebugInputEvent(void *) {
+void advEventManager::ProcessSerialInputEvent(void *) {
+  MidiService *midiService = MidiService::GetInstance();
   for (;;) {
+#ifdef SERIAL_REPL
     // Process serial debug input
     serialDebugUI_.readSerialIn(inBuffer, INPUT_BUFFER_SIZE);
 
-    vTaskDelay(pdMS_TO_TICKS(50)); // check input at 20Hz
+    vTaskDelay(pdMS_TO_TICKS(50)); // process at approx 20Hz
+#endif
+
+    // Process UART input for remote UI if enabled
+#ifdef USB_REMOTE_UI
+    uint8_t uartBuffer[16];
+    HAL_StatusTypeDef status =
+        HAL_UART_Receive(&huart1, uartBuffer, sizeof(uartBuffer), 0);
+    if (status == HAL_OK) {
+      Trace::Debug("Received %d bytes from UART", sizeof(uartBuffer));
+      // For now, we'll just trigger a redraw when any data is received
+      // You can add more sophisticated command handling here as needed
+      Event ev(REDRAW);
+      xQueueSend(eventQueue, &ev, 0);
+    }
+#endif // USB_REMOTE_UI
+
+    // Poll MIDI service to process any pending MIDI messages
+    if (midiService) {
+      advMidiService *ptMidiService = (advMidiService *)midiService;
+      if (ptMidiService) {
+        ptMidiService->poll();
+      }
+    }
   }
 }
-#endif
 
 void advEventManager::ProcessInputEvent(void *) {
   for (;;) {
@@ -414,20 +417,6 @@ void advEventManager::ProcessInputEvent(void *) {
       //            Trace::Debug("%d: mask=%x",gTime_,sendMask) ;
       //                Trace::Debug("~Pe") ;
     }
-
-// Process UART input for remote UI if enabled
-#ifdef USB_REMOTE_UI
-    uint8_t uartBuffer[16];
-    HAL_StatusTypeDef status =
-        HAL_UART_Receive(&huart1, uartBuffer, sizeof(uartBuffer), 0);
-    if (status == HAL_OK) {
-      Trace::Debug("Received %d bytes from UART", sizeof(uartBuffer));
-      // For now, we'll just trigger a redraw when any data is received
-      // You can add more sophisticated command handling here as needed
-      Event ev(REDRAW);
-      xQueueSend(eventQueue, &ev, 0);
-    }
-#endif // USB_REMOTE_UI
     //    Trace::Debug("Input task running, stack free: %d\n",
     //                 uxTaskGetStackHighWaterMark(NULL));
     //    Trace::Debug("Tick count: %lu\n", xTaskGetTickCount());
