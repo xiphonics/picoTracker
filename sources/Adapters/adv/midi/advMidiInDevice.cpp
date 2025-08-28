@@ -8,12 +8,13 @@
 
 #include "advMidiInDevice.h"
 #include "Adapters/adv/platform/platform.h"
+#include "Externals/etl/include/etl/queue_spsc_atomic.h"
 #include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
 #include "main.h"
 
-// Ring buffer size for MIDI input
-#define MIDI_UART_BUFFER_SIZE 128
+// ETL queue for MIDI input
+static etl::queue_spsc_atomic<uint8_t, 128> midi_rx_queue;
 
 // Static pointer to the UART handle for use in the callback
 static UART_HandleTypeDef *g_midi_huart = &MIDI_UART;
@@ -24,21 +25,13 @@ static uint8_t g_rx_byte;
 // Static pointer to the MIDI device instance
 static advMidiInDevice *g_midiInDevice = nullptr;
 
-// Ring buffer for MIDI input
-static uint8_t midi_rx_buffer[MIDI_UART_BUFFER_SIZE];
-static volatile uint32_t midi_rx_head = 0;
-static volatile uint32_t midi_rx_tail = 0;
-
 // --- STM32 HAL UART Receive Complete Callback ---
-// This function is called by the HAL driver's ISR when a byte is received.
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   // Check if the interrupt is from our MIDI UART
   if (huart->Instance == g_midi_huart->Instance) {
-    // Store the received byte in the ring buffer
-    uint32_t next_head = (midi_rx_head + 1) % MIDI_UART_BUFFER_SIZE;
-    if (next_head != midi_rx_tail) {
-      midi_rx_buffer[midi_rx_head] = g_rx_byte;
-      midi_rx_head = next_head;
+    // Store the received byte in the ETL queue
+    if (!midi_rx_queue.full()) {
+      midi_rx_queue.push(g_rx_byte);
     }
     // IMPORTANT: Re-arm the UART interrupt to receive the next byte
     HAL_UART_Receive_IT(g_midi_huart, &g_rx_byte, 1);
@@ -78,13 +71,10 @@ bool advMidiInDevice::Start() { return startDriver(); }
 void advMidiInDevice::Stop() { stopDriver(); }
 
 bool advMidiInDevice::startDriver() {
-  // Reset the ring buffer
-  midi_rx_head = 0;
-  midi_rx_tail = 0;
+  // Clear the queue
+  midi_rx_queue.clear();
 
   // Start the UART receive in interrupt mode.
-  // The HAL will now listen for 1 byte. When it arrives, it will call
-  // HAL_UART_RxCpltCallback, where we re-arm it to continue listening.
   HAL_StatusTypeDef status = HAL_UART_Receive_IT(g_midi_huart, &g_rx_byte, 1);
 
   if (status != HAL_OK) {
@@ -106,26 +96,9 @@ void advMidiInDevice::stopDriver() {
 }
 
 void advMidiInDevice::poll() {
-  // processes any data that the HAL_UART_RxCpltCallback has placed in the
-  // ring buffer.
-  while (true) {
-    // Use a critical section to safely read head and tail on
-    // multicore/preemptive systems For STM32, this prevents an interrupt from
-    // modifying midi_rx_head while we read it.
-    uint32_t primask_state = __get_PRIMASK();
-    __disable_irq();
-
-    if (midi_rx_head == midi_rx_tail) {
-      __set_PRIMASK(primask_state); // Re-enable interrupts
-      break;
-    }
-
-    // Get data and update tail
-    auto data = midi_rx_buffer[midi_rx_tail];
-    midi_rx_tail = (midi_rx_tail + 1) % MIDI_UART_BUFFER_SIZE;
-
-    __set_PRIMASK(primask_state); // Re-enable interrupts
-
+  uint8_t data;
+  // processes any data that the HAL_UART_RxCpltCallback has placed in the queue
+  while (midi_rx_queue.pop(data)) {
     // Process the MIDI data
     processMidiData(data);
   }
