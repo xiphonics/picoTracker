@@ -30,7 +30,7 @@
 #include "picoRemoteUI.h"
 #endif
 
-#define PROCESSING_DELAY_MS 10
+#define USB_PROCESSING_INTERVAL_MS 10
 
 bool advEventManager::finished_ = false;
 bool advEventManager::redrawing_ = false;
@@ -239,7 +239,7 @@ void ProcessEvent(void *) {
 void USBDevice(void *) {
   for (;;) {
     tud_task(); // Handle USB device events
-    vTaskDelay(pdMS_TO_TICKS(PROCESSING_DELAY_MS));
+    vTaskDelay(pdMS_TO_TICKS(USB_PROCESSING_INTERVAL_MS));
   }
 }
 
