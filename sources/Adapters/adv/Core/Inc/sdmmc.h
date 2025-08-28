@@ -22,7 +22,7 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+static char SDcardInitError = 0;
 /* USER CODE END Includes */
 
 extern SD_HandleTypeDef hsd1;
