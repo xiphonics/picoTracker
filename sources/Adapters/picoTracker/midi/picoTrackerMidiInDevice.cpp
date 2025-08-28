@@ -8,9 +8,9 @@
 
 #include "picoTrackerMidiInDevice.h"
 #include "Adapters/picoTracker/platform/platform.h"
+#include "Externals/etl/include/etl/queue_spsc_atomic.h"
 #include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
-#include "etl/queue_spsc_atomic.h"
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/sync.h"
