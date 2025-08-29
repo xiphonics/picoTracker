@@ -27,7 +27,7 @@
 #endif
 
 #ifdef USB_REMOTE_UI
-#include "picoRemoteUI.h"
+#include "advRemoteUI.h"
 #endif
 
 #define USB_PROCESSING_INTERVAL_MS 10
@@ -212,16 +212,13 @@ void timerHandler(TimerHandle_t xTimer) {
   xQueueSend(eventQueue, &ev, 0);
 }
 
-/*
-int readFromUSBCDC(char *buf, int len) {
-  int rc = PICO_ERROR_NO_DATA;
+uint32_t readFromUSBCDC(char *buf, int len) {
+  int count = 0;
   if (tud_cdc_available()) {
-    int count = (int)tud_cdc_read(buf, (uint32_t)len);
-    rc = count ? count : PICO_ERROR_NO_DATA;
+    count = tud_cdc_read(buf, (uint32_t)len);
   }
-  return rc;
+  return count;
 }
-*/
 
 void ProcessEvent(void *) {
   uint8_t eventQueueStorage[EVENT_QUEUE_LENGTH * EVENT_QUEUE_ITEM_SIZE];
@@ -347,16 +344,13 @@ void advEventManager::ProcessSerialInputEvent(void *) {
 #ifdef SERIAL_REPL
     // Process serial debug input
     serialDebugUI_.readSerialIn(inBuffer, INPUT_BUFFER_SIZE);
-
-    vTaskDelay(pdMS_TO_TICKS(50)); // process at approx 20Hz
 #endif
 
     // Process UART input for remote UI if enabled
 #ifdef USB_REMOTE_UI
-    uint8_t uartBuffer[16];
-    HAL_StatusTypeDef status =
-        HAL_UART_Receive(&huart1, uartBuffer, sizeof(uartBuffer), 0);
-    if (status == HAL_OK) {
+    char uartBuffer[16];
+    int readBytes = readFromUSBCDC(uartBuffer, 16);
+    if (readBytes > 0) {
       Trace::Debug("Received %d bytes from UART", sizeof(uartBuffer));
       // For now, we'll just trigger a redraw when any data is received
       // You can add more sophisticated command handling here as needed
@@ -372,6 +366,7 @@ void advEventManager::ProcessSerialInputEvent(void *) {
         ptMidiService->poll();
       }
     }
+    vTaskDelay(pdMS_TO_TICKS(50)); // process at approx 20Hz
   }
 }
 

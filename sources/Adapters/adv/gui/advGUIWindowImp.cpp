@@ -17,7 +17,7 @@
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include <string.h>
 #ifdef USB_REMOTE_UI
-#include "picoRemoteUI.h"
+#include "advRemoteUI.h"
 #endif
 #include "Adapters/adv/filesystem/advFileSystem.h"
 #include <string>
@@ -76,7 +76,7 @@ void advGUIWindowImp::SendFont(uint8_t uifontIndex) {
   remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
   remoteUIBuffer[1] = SETFONT_CMD;
   remoteUIBuffer[2] = uifontIndex + ASCII_SPACE_OFFSET;
-  sendToUSBCDC(remoteUIBuffer, 3);
+  sendToUSBCDCBuffered(remoteUIBuffer, 3);
 }
 #endif
 
@@ -98,7 +98,7 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
     remoteUIBuffer[3] = x + ASCII_SPACE_OFFSET; // to avoid sending NUL (aka 0)
     remoteUIBuffer[4] = y + ASCII_SPACE_OFFSET;
     remoteUIBuffer[5] = p.invert_ ? 127 : 0;
-    sendToUSBCDC(remoteUIBuffer, 6);
+    sendToUSBCDCBuffered(remoteUIBuffer, 6); // Use the buffered function
   }
 #endif
 }
@@ -126,7 +126,7 @@ void advGUIWindowImp::Clear(GUIColor &c, bool overlay) {
     remoteUIBuffer[2] = c._r;
     remoteUIBuffer[3] = c._g;
     remoteUIBuffer[4] = c._b;
-    sendToUSBCDC(remoteUIBuffer, 5);
+    sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
   }
 #endif
 };
@@ -153,7 +153,7 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
     remoteUIBuffer[2] = c._r;
     remoteUIBuffer[3] = c._g;
     remoteUIBuffer[4] = c._b;
-    sendToUSBCDC(remoteUIBuffer, 5);
+    sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
   }
 #endif
 };
@@ -162,7 +162,15 @@ void advGUIWindowImp::Lock(){};
 
 void advGUIWindowImp::Unlock(){};
 
-void advGUIWindowImp::Flush() { display_draw_changed(); };
+void advGUIWindowImp::Flush() {
+  display_draw_changed();
+#ifdef USB_REMOTE_UI
+  // send buffered UI draw cmds out over USB
+  if (remoteUIEnabled_) {
+    flushRemoteUIBuffer();
+  }
+#endif
+};
 
 void advGUIWindowImp::Invalidate() {
   Event ev(FLUSH);
@@ -243,5 +251,29 @@ void advGUIWindowImp::Update(Observable &o, I_ObservableData *d) {
     }
 #endif
   } break;
+  }
+}
+
+// Buffer draw commands to be sent to remote UI over USB
+void advGUIWindowImp::sendToUSBCDCBuffered(const char *buf, uint32_t len) {
+  if (!remoteUIEnabled_ || len == 0)
+    return;
+
+  // If the new data won't fit, flush the buffer first to make space.
+  if ((remoteUIBufferPos_ + len) > sizeof(remoteUIDrawBuffer_)) {
+    flushRemoteUIBuffer();
+  }
+
+  // Copy data into the buffer
+  memcpy(remoteUIDrawBuffer_ + remoteUIBufferPos_, buf, len);
+  remoteUIBufferPos_ += len;
+}
+
+void advGUIWindowImp::flushRemoteUIBuffer() {
+  if (remoteUIBufferPos_ > 0) {
+    // This is the function you were already using, which calls tud_cdc_write,
+    // etc.
+    sendToUSBCDC(remoteUIDrawBuffer_, remoteUIBufferPos_);
+    remoteUIBufferPos_ = 0; // Reset the buffer position
   }
 }
