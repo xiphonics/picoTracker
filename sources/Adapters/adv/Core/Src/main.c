@@ -31,6 +31,7 @@
 #include "Adapters/adv/system/advSystem.h"
 #include "Application/Application.h"
 #include "Trace.h"
+#include "critical_error_message.h"
 #include "display.h"
 #include "tusb.h"
 #include <cstdio>
@@ -139,6 +140,13 @@ int main(void) {
   MX_RNG_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+
+  if (SDcardInitError != 0) {
+    Trace::Log("MAIN", "SDCARD MISSING!!\n");
+    critical_error_message("SDCARD MISSING !", 0x01);
+    while (false) {
+    }
+  }
 
   // can't use Trace here as its not been initialised yet
   printf("INFO: picoTracker Advance init...");

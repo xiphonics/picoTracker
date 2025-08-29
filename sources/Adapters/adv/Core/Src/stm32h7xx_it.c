@@ -71,6 +71,7 @@ extern DMA_HandleTypeDef hdma_sai1_a;
 extern DMA_HandleTypeDef hdma_sai1_b;
 extern SD_HandleTypeDef hsd1;
 extern TIM_HandleTypeDef htim13;
+extern UART_HandleTypeDef huart7;
 extern TIM_HandleTypeDef htim8;
 
 /* USER CODE BEGIN EV */
@@ -228,6 +229,19 @@ void SDMMC1_IRQHandler(void) {
   /* USER CODE BEGIN SDMMC1_IRQn 1 */
 
   /* USER CODE END SDMMC1_IRQn 1 */
+}
+
+/**
+ * @brief This function handles UART7 global interrupt.
+ */
+void UART7_IRQHandler(void) {
+  /* USER CODE BEGIN UART7_IRQn 0 */
+
+  /* USER CODE END UART7_IRQn 0 */
+  HAL_UART_IRQHandler(&huart7);
+  /* USER CODE BEGIN UART7_IRQn 1 */
+
+  /* USER CODE END UART7_IRQn 1 */
 }
 
 /**

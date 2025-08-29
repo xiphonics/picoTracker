@@ -10,6 +10,7 @@
 
 #include "System/Console/Trace.h"
 #include "i2c.h"
+#include "platform.h"
 
 #define I2C_TIMEOUT_DELAY_MS 100
 
@@ -69,6 +70,15 @@
 // According to the datasheet, Design Capacity is a standard data command (0x3C)
 // that can be accessed in SEALED mode
 #define BQ27441_DESIGN_CAPACITY 0x3C
+
+// need to use this as HAL_Delay() not available when configureBatteryGauge is
+// called during early bootup
+void busywait(uint32_t delay) {
+  auto start = millis();
+  while ((millis() - start) < delay) {
+    ;
+  }
+}
 
 // Battery gauge configuration
 bool configureBatteryGauge() {
@@ -142,7 +152,7 @@ bool configureBatteryGauge() {
   Trace::Log("BATTERY",
              "Sent second unseal command, device should now be unsealed");
 
-  HAL_Delay(10);
+  busywait(10);
 
   // Step 2: Enter CONFIG UPDATE mode
   Trace::Log("BATTERY", "Step 2: Entering CONFIG UPDATE mode");
@@ -161,7 +171,7 @@ bool configureBatteryGauge() {
   // Step 3: Verify CONFIG UPDATE mode by checking FLAGS register (bit 4 should
   // be set) This matches step 3 in the datasheet example
   Trace::Log("BATTERY", "Step 3: Verifying CONFIG UPDATE mode");
-  HAL_Delay(100); // Wait for mode to change
+  busywait(100); // Wait for mode to change
 
   // Try up to 10 times to confirm CFGUPMODE flag is set
   bool cfgUpdateMode = false;
@@ -172,7 +182,7 @@ bool configureBatteryGauge() {
     if (status != HAL_OK) {
       Trace::Error("Failed to send FLAGS register read command (attempt %d)",
                    i + 1);
-      HAL_Delay(100);
+      busywait(100);
       continue;
     }
 
@@ -180,7 +190,7 @@ bool configureBatteryGauge() {
                                     HAL_MAX_DELAY);
     if (status != HAL_OK) {
       Trace::Error("Failed to read FLAGS register (attempt %d)", i + 1);
-      HAL_Delay(100);
+      busywait(100);
       continue;
     }
 
@@ -194,7 +204,7 @@ bool configureBatteryGauge() {
     }
 
     Trace::Log("BATTERY", "CONFIG UPDATE mode flag not set yet, waiting...");
-    HAL_Delay(100);
+    busywait(100);
   }
 
   if (!cfgUpdateMode) {
@@ -246,7 +256,7 @@ bool configureBatteryGauge() {
 
   // Add a longer delay (100ms) after setting block offset as recommended online
   // This helps ensure the battery gauge has time to prepare data
-  HAL_Delay(100);
+  busywait(100);
 
   // Step 6: Read the current checksum
   Trace::Log("BATTERY", "Step 6: Reading current checksum");
@@ -259,7 +269,7 @@ bool configureBatteryGauge() {
     return false;
   }
 
-  HAL_Delay(10); // Increased from 1ms to 10ms
+  busywait(10); // Increased from 1ms to 10ms
 
   status = HAL_I2C_Master_Receive(&hi2c4, BQ27441_I2C_ADDR << 1, rxBuf, 1,
                                   HAL_MAX_DELAY);
@@ -291,7 +301,7 @@ bool configureBatteryGauge() {
     return false;
   }
 
-  HAL_Delay(10);
+  busywait(10);
 
   status = HAL_I2C_Master_Receive(&hi2c4, BQ27441_I2C_ADDR << 1, &rxBuf[0], 1,
                                   HAL_MAX_DELAY);
@@ -311,7 +321,7 @@ bool configureBatteryGauge() {
     return false;
   }
 
-  HAL_Delay(10);
+  busywait(10);
 
   status = HAL_I2C_Master_Receive(&hi2c4, BQ27441_I2C_ADDR << 1, &rxBuf[1], 1,
                                   HAL_MAX_DELAY);
@@ -346,7 +356,7 @@ bool configureBatteryGauge() {
   }
   Trace::Log("BATTERY", "Design Capacity MSB written: 0x%02X", txBuf[1]);
 
-  HAL_Delay(10);
+  busywait(10);
 
   // Write LSB to 0x4B
   txBuf[0] = 0x4B;                   // 0x40 + (11 % 32) = 0x4B
@@ -395,7 +405,7 @@ bool configureBatteryGauge() {
   Trace::Log("BATTERY", "Step 10: Writing new checksum (0x%02X)", newChecksum);
 
   // Add a longer delay before writing the checksum
-  HAL_Delay(50);
+  busywait(50);
 
   // Write the checksum directly to register 0x60 (BLOCKDATACHECK)
   txBuf[0] = BQ27441_BLOCK_DATA_CHECKSUM;
@@ -416,7 +426,7 @@ bool configureBatteryGauge() {
   Trace::Log("BATTERY", "Checksum write successful");
 
   // Add a longer delay after writing the checksum
-  HAL_Delay(50);
+  busywait(50);
 
   txBuf[0] = BQ27441_BLOCK_DATA_CHECKSUM;
   status = HAL_I2C_Master_Transmit(&hi2c4, BQ27441_I2C_ADDR << 1, txBuf, 1,
@@ -456,7 +466,7 @@ bool configureBatteryGauge() {
 
   // Wait for CONFIG UPDATE mode flag to clear
   Trace::Log("BATTERY", "Waiting for CONFIG UPDATE mode to exit");
-  HAL_Delay(100);
+  busywait(100);
   Trace::Log("BATTERY",
              "Sent exit CONFIG UPDATE command, checking if flag is cleared");
 
@@ -476,7 +486,7 @@ bool configureBatteryGauge() {
       continue;
     }
 
-    HAL_Delay(1);
+    busywait(1);
 
     status = HAL_I2C_Master_Receive(&hi2c4, BQ27441_I2C_ADDR << 1, rxBuf, 2,
                                     HAL_MAX_DELAY);
@@ -497,7 +507,7 @@ bool configureBatteryGauge() {
                i + 1, rxBuf[0]);
 
     // 100ms delay to give us a total of 1 second of retries (10 attempts)
-    HAL_Delay(100);
+    busywait(100);
   }
 
   if (!exitedCfgMode) {
@@ -542,7 +552,7 @@ uint8_t getBatterySOC() {
     return 0;
   }
 
-  HAL_Delay(1); // Small delay to ensure command processing
+  busywait(1); // Small delay to ensure command processing
 
   // Read the SOC data (2 bytes)
   status = HAL_I2C_Master_Receive(&I2C, BQ27441_I2C_ADDR << 1, rxData, 2,
@@ -580,7 +590,7 @@ uint32_t getBatteryVoltage() {
   }
 
   // According to datasheet, need to wait briefly between command and read
-  HAL_Delay(1);
+  busywait(1);
 
   // Read the voltage data (2 bytes)
   status = HAL_I2C_Master_Receive(&hi2c4, BQ27441_I2C_ADDR << 1, rxData, 2,
