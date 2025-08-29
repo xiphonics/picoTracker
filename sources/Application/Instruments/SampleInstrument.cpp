@@ -654,15 +654,21 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         // get input sample to interpolate from
         // s= left channel
         // t= right channel
-
         short *i1 = input;
         if (dsMask != 0xFFFFFFFF) {
           if (useDirtyDownsampling_) {
             i1 = (short *)(((uintptr_t)input) & dsMask);
           } else {
-            unsigned int distance =
-                (unsigned int)(input - dsBasePtr) / channelCount;
-            i1 = dsBasePtr + (distance & dsMask) * channelCount;
+            // prevent input ever being lower mem address then dsBasePtr (sample
+            // start point) this can occur eg. if doing reverse playback and
+            // using RTG cmds
+            if (input < dsBasePtr) {
+              i1 = dsBasePtr;
+            } else {
+              unsigned int distance =
+                  (unsigned int)(input - dsBasePtr) / channelCount;
+              i1 = dsBasePtr + (distance & dsMask) * channelCount;
+            }
           }
         }
 
