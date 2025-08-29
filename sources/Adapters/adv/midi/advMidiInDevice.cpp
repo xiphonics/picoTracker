@@ -32,6 +32,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     // Store the received byte in the ETL queue
     if (!midi_rx_queue.full()) {
       midi_rx_queue.push(g_rx_byte);
+    } else {
+      // MIDI RX Queue full!
+      NAssert(false);
     }
     // IMPORTANT: Re-arm the UART interrupt to receive the next byte
     HAL_UART_Receive_IT(g_midi_huart, &g_rx_byte, 1);

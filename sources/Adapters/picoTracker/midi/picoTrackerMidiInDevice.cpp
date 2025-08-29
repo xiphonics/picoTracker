@@ -35,6 +35,9 @@ void __isr __time_critical_func(midi_uart_irq_handler)() {
       // Store in ETL queue
       if (!midi_rx_queue.full()) {
         midi_rx_queue.push(data);
+      } else {
+        // MIDI RX Queue full!
+        NAssert(false);
       }
     }
   }
