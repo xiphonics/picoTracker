@@ -232,7 +232,7 @@ void ProcessEvent(void *) {
 
 void USBDevice(void *) {
   for (;;) {
-    tud_task();                   // Handle USB device events
+    tud_task();                    // Handle USB device events
     vTaskDelay(pdMS_TO_TICKS(10)); // 10ms to minimise latency handling USB
   }
 }
