@@ -111,7 +111,7 @@ void MidiInstrument::Stop(int c) {
     msg.data1_ = lastNotes_[c][i];
     msg.data2_ = 0x00;
     svc_->QueueMessage(msg);
-    Trace::Debug("MIDI chord note OFF[%d]:%d", i, msg.data1_);
+    // Trace::Debug("MIDI chord note OFF[%d]:%d", i, msg.data1_);
   }
   // clear last notes array
   lastNotes_[c].fill(0);
@@ -227,8 +227,8 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
       // use the existing steps note to calculate each notes offset
       uint8_t note = rootNote + scaledOffset;
-      Trace::Debug("MIDI SCALE note:%d root:%d offset: %d", note, rootNote,
-                   noteOffset);
+      // Trace::Debug("MIDI SCALE note:%d root:%d offset: %d", note, rootNote,
+      //              noteOffset);
 
       // save the chord note for sending a note off later
       lastNotes_[channel][i + 1] = note;
@@ -238,7 +238,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
         msg.status_ = MidiMessage::MIDI_NOTE_ON + mchannel;
         msg.data1_ = note;
         msg.data2_ = velocity_;
-        Trace::Debug("MIDI chord note ON[%d]: %d", i, msg.data1_);
+        // Trace::Debug("MIDI chord note ON[%d]: %d", i, msg.data1_);
         svc_->QueueMessage(msg);
       }
     }
