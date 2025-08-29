@@ -8,6 +8,7 @@
 
 #include "picoTrackerMidiInDevice.h"
 #include "Adapters/picoTracker/platform/platform.h"
+#include "Externals/etl/include/etl/queue_spsc_atomic.h"
 #include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
 #include "hardware/gpio.h"
@@ -16,16 +17,11 @@
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
 
-// Ring buffer size for MIDI input
-#define MIDI_UART_BUFFER_SIZE 128
+// ETL queue for MIDI input
+static etl::queue_spsc_atomic<uint8_t, 128> midi_rx_queue;
 
 // Static pointer to the MIDI device instance
 static picoTrackerMidiInDevice *g_midiInDevice = nullptr;
-
-// Ring buffer for MIDI input
-static uint8_t midi_rx_buffer[MIDI_UART_BUFFER_SIZE];
-static volatile uint32_t midi_rx_head = 0;
-static volatile uint32_t midi_rx_tail = 0;
 
 // UART interrupt handler - called directly from the IRQ
 void __isr __time_critical_func(midi_uart_irq_handler)() {
@@ -36,11 +32,12 @@ void __isr __time_critical_func(midi_uart_irq_handler)() {
     // Process all available data
     while (uart_is_readable(MIDI_UART)) {
       uint8_t data = uart_getc(MIDI_UART);
-      // Store in ring buffer
-      uint32_t next_head = (midi_rx_head + 1) % MIDI_UART_BUFFER_SIZE;
-      if (next_head != midi_rx_tail) {
-        midi_rx_buffer[midi_rx_head] = data;
-        midi_rx_head = next_head;
+      // Store in ETL queue
+      if (!midi_rx_queue.full()) {
+        midi_rx_queue.push(data);
+      } else {
+        // MIDI RX Queue full!
+        NAssert(false);
       }
     }
   }
@@ -75,10 +72,8 @@ bool picoTrackerMidiInDevice::Start() { return startDriver(); }
 void picoTrackerMidiInDevice::Stop() { stopDriver(); }
 
 bool picoTrackerMidiInDevice::startDriver() {
-
-  // Reset the ring buffer
-  midi_rx_head = 0;
-  midi_rx_tail = 0;
+  // Clear the queue
+  midi_rx_queue.clear();
 
   // Set up the interrupt handler
   irq_set_exclusive_handler(MIDI_UART_IRQ, midi_uart_irq_handler);
@@ -100,17 +95,9 @@ void picoTrackerMidiInDevice::stopDriver() {
 }
 
 void picoTrackerMidiInDevice::poll() {
-  // Check if there's any data to process
-  // Process any data in the ring buffer
-  while (true) {
-    if (midi_rx_head == midi_rx_tail) {
-      break;
-    }
-    // Get data and update tail
-    auto data = midi_rx_buffer[midi_rx_tail];
-    midi_rx_tail = (midi_rx_tail + 1) % MIDI_UART_BUFFER_SIZE;
-    // Process the MIDI data
-    // Trace::Debug("Processing byte: 0x%02X", data[j]);
+  uint8_t data;
+  // Process any data that the interrupt handler has placed in the queue
+  while (midi_rx_queue.pop(data)) {
     processMidiData(data);
   }
 }
