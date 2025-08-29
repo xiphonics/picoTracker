@@ -49,9 +49,6 @@ if (NOT ${ADV})
   # add_definitions(-DSDIO_BENCH)
   # Enable loading samples into Flash
   add_definitions(-DLOAD_IN_FLASH)
-  # Use USB for UI: keyboardinput & Display output. USB Uart MUST also be enabled
-  # below.
-  add_definitions(-DUSB_REMOTE_UI)
   # define to use battery level as percentage instead of battery level as "+" bars
   #add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
 
@@ -111,8 +108,6 @@ else()
   message("picoTracker Advance Build")
   add_definitions(-DADV)
   
-  add_definitions(-DUSB_REMOTE_UI)
-
   # Enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
   add_definitions(-DSERIAL_REPL)
 

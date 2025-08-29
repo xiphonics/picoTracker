@@ -13,12 +13,9 @@
 #include "Application/Application.h"
 #include "Application/Model/Config.h"
 #include "Services/Midi/MidiService.h"
+#include "picoRemoteUI.h"
 #include "picoTrackerGUIWindowImp.h"
 #include "usb_utils.h"
-
-#ifdef USB_REMOTE_UI
-#include "picoRemoteUI.h"
-#endif
 
 // Key debounce time in milliseconds. No state changes for this amount of time
 // means we accept the new key state.
@@ -198,7 +195,6 @@ void picoTrackerEventManager::ProcessInputEvent() {
 #ifdef SERIAL_REPL
   serialDebugUI_.readSerialIn(inBuffer, INPUT_BUFFER_SIZE);
 #endif
-#ifdef USB_REMOTE_UI
   char inBuffer[16];
   auto readbytes = readFromUSBCDC(inBuffer, 16);
   if (readbytes > 0) {
@@ -218,5 +214,4 @@ void picoTrackerEventManager::ProcessInputEvent() {
       break;
     }
   }
-#endif
 }

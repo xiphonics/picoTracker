@@ -7,6 +7,7 @@
  */
 
 #include "advGUIWindowImp.h"
+#include "Adapters/adv/filesystem/advFileSystem.h"
 #include "Adapters/adv/utils/utils.h"
 #include "Application/Model/Config.h"
 #include "Application/Utils/char.h"
@@ -15,11 +16,8 @@
 #include "System/System/System.h"
 #include "UIFramework/BasicDatas/GUIEvent.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
-#include <string.h>
-#ifdef USB_REMOTE_UI
 #include "advRemoteUI.h"
-#endif
-#include "Adapters/adv/filesystem/advFileSystem.h"
+#include <string.h>
 #include <string>
 
 #define to_rgb565(color)                                                       \
@@ -61,16 +59,13 @@ advGUIWindowImp::advGUIWindowImp(GUICreateWindowParams &p) {
   uiFontVar->AddObserver(*this);
   auto uifontIndex = uiFontVar->GetInt();
   display_set_font_index(uifontIndex);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     SendFont(uifontIndex);
   }
-#endif
 };
 
 advGUIWindowImp::~advGUIWindowImp() {}
 
-#ifdef USB_REMOTE_UI
 void advGUIWindowImp::SendFont(uint8_t uifontIndex) {
   char remoteUIBuffer[3];
   remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -78,7 +73,6 @@ void advGUIWindowImp::SendFont(uint8_t uifontIndex) {
   remoteUIBuffer[2] = uifontIndex + ASCII_SPACE_OFFSET;
   sendToUSBCDCBuffered(remoteUIBuffer, 3);
 }
-#endif
 
 void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
                                GUITextProperties &p) {
@@ -89,7 +83,6 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   uint8_t y = pos._y / 8;
   display_set_cursor(x, y);
   display_putc(c, p.invert_);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -100,7 +93,6 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
     remoteUIBuffer[5] = p.invert_ ? 127 : 0;
     sendToUSBCDCBuffered(remoteUIBuffer, 6); // Use the buffered function
   }
-#endif
 }
 
 void advGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
@@ -118,7 +110,6 @@ void advGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   color_t backgroundColor = GetColor(c);
   display_set_background(backgroundColor);
   display_clear(backgroundColor);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -128,7 +119,6 @@ void advGUIWindowImp::Clear(GUIColor &c, bool overlay) {
     remoteUIBuffer[4] = c._b;
     sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
   }
-#endif
 };
 
 void advGUIWindowImp::ClearRect(GUIRect &r) {
@@ -145,7 +135,6 @@ color_t advGUIWindowImp::GetColor(GUIColor &c) {
 void advGUIWindowImp::SetColor(GUIColor &c) {
   color_t color = GetColor(c);
   display_set_foreground(color);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -155,7 +144,6 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
     remoteUIBuffer[4] = c._b;
     sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
   }
-#endif
 };
 
 void advGUIWindowImp::Lock(){};
@@ -164,12 +152,10 @@ void advGUIWindowImp::Unlock(){};
 
 void advGUIWindowImp::Flush() {
   display_draw_changed();
-#ifdef USB_REMOTE_UI
   // send buffered UI draw cmds out over USB
   if (remoteUIEnabled_) {
     flushRemoteUIBuffer();
   }
-#endif
 };
 
 void advGUIWindowImp::Invalidate() {
@@ -190,7 +176,6 @@ void advGUIWindowImp::ProcessEvent(Event &event) {
   switch (event.type_) {
   case REDRAW:
     instance_->_window->Update(true);
-#ifdef USB_REMOTE_UI
     // send font update
     if (instance_->remoteUIEnabled_) {
       Config *config = Config::GetInstance();
@@ -198,7 +183,6 @@ void advGUIWindowImp::ProcessEvent(Event &event) {
       int uifontIndex = uiFontVar->GetInt();
       instance_->SendFont(uifontIndex);
     }
-#endif
     break;
   case FLUSH:
     instance_->_window->Update(false);
@@ -245,11 +229,9 @@ void advGUIWindowImp::Update(Observable &o, I_ObservableData *d) {
   case FourCC::VarUIFont: {
     auto uifont = v.GetInt();
     display_set_font_index(uifont);
-#ifdef USB_REMOTE_UI
     if (remoteUIEnabled_) {
       SendFont(uifont);
     }
-#endif
   } break;
   }
 }
