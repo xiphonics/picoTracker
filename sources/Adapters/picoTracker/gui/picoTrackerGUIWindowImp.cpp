@@ -15,11 +15,9 @@
 #include "UIFramework/BasicDatas/GUIPoint.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 #include "pico/stdlib.h"
+#include "picoRemoteUI.h"
 #include <stdio.h>
 #include <string.h>
-#ifdef USB_REMOTE_UI
-#include "picoRemoteUI.h"
-#endif
 #include <string>
 
 #define to_rgb565(color)                                                       \
@@ -64,16 +62,13 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   uiFontVar->AddObserver(*this);
   auto uifontIndex = uiFontVar->GetInt();
   chargfx_set_font_index(uifontIndex);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     SendFont(uifontIndex);
   }
-#endif
 };
 
 picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}
 
-#ifdef USB_REMOTE_UI
 void picoTrackerGUIWindowImp::SendFont(uint8_t uifontIndex) {
   char remoteUIBuffer[3];
   remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -81,7 +76,6 @@ void picoTrackerGUIWindowImp::SendFont(uint8_t uifontIndex) {
   remoteUIBuffer[2] = uifontIndex + ASCII_SPACE_OFFSET;
   sendToUSBCDC(remoteUIBuffer, 3);
 }
-#endif
 
 void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
                                        GUITextProperties &p) {
@@ -92,7 +86,6 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   uint8_t y = pos._y / 8;
   chargfx_set_cursor(x, y);
   chargfx_putc(c, p.invert_);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -103,7 +96,6 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
     remoteUIBuffer[5] = p.invert_ ? 127 : 0;
     sendToUSBCDC(remoteUIBuffer, 6);
   }
-#endif
 }
 
 void picoTrackerGUIWindowImp::DrawRect(GUIRect &r) {
@@ -114,7 +106,6 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   chargfx_color_t backgroundColor = GetColor(c);
   chargfx_set_background(backgroundColor);
   chargfx_clear(backgroundColor);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -124,7 +115,6 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
     remoteUIBuffer[4] = c._b;
     sendToUSBCDC(remoteUIBuffer, 5);
   }
-#endif
 };
 
 void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
@@ -155,7 +145,6 @@ chargfx_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   chargfx_color_t color = GetColor(c);
   chargfx_set_foreground(color);
-#ifdef USB_REMOTE_UI
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
@@ -165,7 +154,6 @@ void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
     remoteUIBuffer[4] = c._b;
     sendToUSBCDC(remoteUIBuffer, 5);
   }
-#endif
 };
 
 void picoTrackerGUIWindowImp::Lock(){};
@@ -191,7 +179,6 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
   switch (event.type_) {
   case PICO_REDRAW:
     instance_->_window->Update(true);
-#ifdef USB_REMOTE_UI
     // send font update
     if (instance_->remoteUIEnabled_) {
       Config *config = Config::GetInstance();
@@ -199,7 +186,6 @@ void picoTrackerGUIWindowImp::ProcessEvent(picoTrackerEvent &event) {
       int uifontIndex = uiFontVar->GetInt();
       instance_->SendFont(uifontIndex);
     }
-#endif
     break;
   case PICO_FLUSH:
     instance_->_window->Update(false);
@@ -238,11 +224,9 @@ void picoTrackerGUIWindowImp::Update(Observable &o, I_ObservableData *d) {
   case FourCC::VarUIFont: {
     auto uifont = v.GetInt();
     chargfx_set_font_index(uifont);
-#ifdef USB_REMOTE_UI
     if (remoteUIEnabled_) {
       SendFont(uifont);
     }
-#endif
   } break;
   }
 }
