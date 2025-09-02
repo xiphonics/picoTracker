@@ -24,7 +24,7 @@ public:
           is to send every message one after the other using sendmessage
   */
 
-  virtual void SendQueue(etl::vector<MidiMessage, 10> &queue);
+  virtual void SendQueue(etl::vector<MidiMessage, MIDI_MAX_MESG_QUEUE> &queue);
   virtual void SendMessage(MidiMessage &m) = 0;
 
 private:

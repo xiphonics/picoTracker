@@ -2,7 +2,10 @@
 
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
-#include "MidiMessage.h"
+
+// if all 8 channels play a 4 note chord at once and we also send clock &
+// start/stop messages & CCs
+#define MIDI_MAX_MESG_QUEUE 8 * 4 + 2 + 3
 
 struct MidiMessage : public I_ObservableData {
   enum Type {

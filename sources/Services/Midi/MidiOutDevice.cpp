@@ -8,7 +8,8 @@ const char *MidiOutDevice::GetName() { return name_.c_str(); };
 
 void MidiOutDevice::SetName(const char *name) { name_ = name; }
 
-void MidiOutDevice::SendQueue(etl::vector<MidiMessage, 10> &queue) {
+void MidiOutDevice::SendQueue(
+    etl::vector<MidiMessage, MIDI_MAX_MESG_QUEUE> &queue) {
   for (auto &msg : queue) {
     SendMessage(msg);
   }

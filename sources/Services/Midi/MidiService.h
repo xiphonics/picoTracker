@@ -63,7 +63,8 @@ private:
 private:
   etl::vector<MidiOutDevice *, 2> activeOutDevices_;
 
-  etl::array<etl::vector<MidiMessage, 10>, MIDI_MAX_BUFFERS> queues_;
+  etl::array<etl::vector<MidiMessage, MIDI_MAX_MESG_QUEUE>, MIDI_MAX_BUFFERS>
+      queues_;
 
   int currentPlayQueue_;
   int currentOutQueue_;
