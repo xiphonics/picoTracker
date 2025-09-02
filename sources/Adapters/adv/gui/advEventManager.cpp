@@ -26,9 +26,7 @@
 #include "SerialDebugUI.h"
 #endif
 
-#ifdef USB_REMOTE_UI
 #include "advRemoteUI.h"
-#endif
 
 #define USB_PROCESSING_INTERVAL_MS 10
 
@@ -347,7 +345,6 @@ void advEventManager::ProcessSerialInputEvent(void *) {
 #endif
 
     // Process UART input for remote UI if enabled
-#ifdef USB_REMOTE_UI
     char uartBuffer[16];
     int readBytes = readFromUSBCDC(uartBuffer, 16);
     if (readBytes > 0) {
@@ -357,7 +354,6 @@ void advEventManager::ProcessSerialInputEvent(void *) {
       Event ev(REDRAW);
       xQueueSend(eventQueue, &ev, 0);
     }
-#endif // USB_REMOTE_UI
 
     // Poll MIDI service to process any pending MIDI messages
     if (midiService) {
