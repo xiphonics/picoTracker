@@ -28,11 +28,12 @@
 /** Configure pins
      PH0-OSC_IN (PH0)   ------> RCC_OSC_IN
      PH1-OSC_OUT (PH1)   ------> RCC_OSC_OUT
-     PB12   ------> USB_OTG_HS_ID
-     PB14   ------> USB_OTG_HS_DM
-     PB15   ------> USB_OTG_HS_DP
+     PA10   ------> USB_OTG_FS_ID
+     PA11   ------> USB_OTG_FS_DM
+     PA12   ------> USB_OTG_FS_DP
      PA13 (JTMS/SWDIO)   ------> DEBUG_JTMS-SWDIO
      PA14 (JTCK/SWCLK)   ------> DEBUG_JTCK-SWCLK
+     PB3 (JTDO/TRACESWO)   ------> DEBUG_JTDO-SWO
      PB4 (NJTRST)   ------> DEBUG_JTRST
 */
 void MX_GPIO_Init(void) {
@@ -61,11 +62,10 @@ void MX_GPIO_Init(void) {
   HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(DISPLAY_SDA_GPIO_Port, DISPLAY_SDA_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DISPLAY_SDA_Pin | CHARGER_OTG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, DISPLAY_CS_Pin | DISPLAY_SCK_Pin | CHARGER_OTG_Pin,
-                    GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, DISPLAY_CS_Pin | DISPLAY_SCK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : CODEC_RESET_Pin CHARGER_PSEL_Pin CHARGER_CE_Pin
      OSC_EN_Pin AMP_EN_Pin */
@@ -89,41 +89,31 @@ void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(DISPLAY_RST_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : DISPLAY_SDA_Pin */
-  GPIO_InitStruct.Pin = DISPLAY_SDA_Pin;
+  /*Configure GPIO pins : DISPLAY_SDA_Pin CHARGER_OTG_Pin */
+  GPIO_InitStruct.Pin = DISPLAY_SDA_Pin | CHARGER_OTG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DISPLAY_SDA_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : POWER_Pin HP_DET_Pin USB_INT_Pin */
-  GPIO_InitStruct.Pin = POWER_Pin | HP_DET_Pin | USB_INT_Pin;
+  /*Configure GPIO pins : POWER_Pin USB_INT_Pin */
+  GPIO_InitStruct.Pin = POWER_Pin | USB_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DISPLAY_CS_Pin DISPLAY_SCK_Pin CHARGER_OTG_Pin */
-  GPIO_InitStruct.Pin = DISPLAY_CS_Pin | DISPLAY_SCK_Pin | CHARGER_OTG_Pin;
+  /*Configure GPIO pins : DISPLAY_CS_Pin DISPLAY_SCK_Pin */
+  GPIO_InitStruct.Pin = DISPLAY_CS_Pin | DISPLAY_SCK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_12;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pin : SD_DET_Pin */
+  GPIO_InitStruct.Pin = SD_DET_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-  GPIO_InitStruct.Alternate = GPIO_AF12_OTG2_FS;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB14 PB15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_14 | GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF12_OTG2_FS;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(SD_DET_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : INPUT_LEFT_Pin INPUT_RIGHT_Pin INPUT_UP_Pin
    * INPUT_ALT_Pin */
@@ -141,11 +131,13 @@ void MX_GPIO_Init(void) {
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : SD_DET_Pin */
-  GPIO_InitStruct.Pin = SD_DET_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  /*Configure GPIO pins : PA10 PA11 PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SD_DET_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF10_OTG1_FS;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : CHARGER_INT_Pin */
   GPIO_InitStruct.Pin = CHARGER_INT_Pin;

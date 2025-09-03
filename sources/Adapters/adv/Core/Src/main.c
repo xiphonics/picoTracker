@@ -133,12 +133,12 @@ int main(void) {
   MX_SDMMC1_SD_Init();
   MX_UART7_Init();
   MX_USART1_UART_Init();
-  MX_USB_OTG_HS_USB_Init();
   MX_TIM1_Init();
   MX_TIM13_Init();
   MX_DMA2D_Init();
   MX_RNG_Init();
   MX_TIM2_Init();
+  MX_USB_OTG_FS_USB_Init();
   /* USER CODE BEGIN 2 */
 
   if (SDcardInitError != 0) {
