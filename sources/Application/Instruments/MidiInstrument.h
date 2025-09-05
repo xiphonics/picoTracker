@@ -20,6 +20,16 @@
 #define MAX_MIDI_CHORD_NOTES 4
 #define INITIAL_NOTE_VELOCITY 0x7F
 
+// Constants for MIDI pitch bend.
+#define PB_CENTER 8192
+#define PB_MAX 16383
+#define PB_7BIT_MAX 127
+// Pitch bend constants for exponential interpolation.
+#define PB_MAX_GROWTH_FACTOR 2.0f
+#define PB_MIN_GROWTH_FACTOR 1.0001f
+#define PB_MAX_ALPHA 0.5f
+#define PB_CURVE_SHAPE 2.0f
+
 class MidiInstrument : public I_Instrument {
 
 public:
@@ -80,6 +90,13 @@ private:
   char velocity_ = 127;
   TableSaveState tableState_;
   bool first_[SONG_CHANNEL_COUNT];
+  uint8_t pitchBendTarget_;
+  uint8_t pitchBendSpeed_;
+  float pitchBendCurrent_;
+  float pitchBendStep_;
+  float interpolationAlpha_ = 0.1f;
+  bool pitchBend_;
+  bool useLogCurve_;
 
   Variable channel_;
   Variable noteLen_;

@@ -93,6 +93,8 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
   velocity_ = INITIAL_NOTE_VELOCITY;
   playing_ = true;
   retrig_ = false;
+  pitchBend_ = false;
+  useLogCurve_ = false;
 
   return true;
 };
@@ -139,6 +141,64 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
 
     first_[channel] = false;
   }
+
+  // Update pitch bend logic if a pitch bend is active.
+  if (updateTick) {
+    if (pitchBend_) {
+      int8_t prev = pitchBendCurrent_;
+      if (pitchBendSpeed_ == 0) {
+        pitchBendCurrent_ = pitchBendTarget_;
+      } else {
+        // Calculate the difference and sign for pitch bend direction.
+        float diff = pitchBendTarget_ - pitchBendCurrent_;
+        float sign = (diff > 0) ? 1.0f : -1.0f;
+        float nextValue = pitchBendCurrent_ + (sign * pitchBendStep_);
+        if ((sign > 0 && nextValue >= pitchBendTarget_) ||
+            (sign < 0 && nextValue <= pitchBendTarget_)) {
+          pitchBendCurrent_ = pitchBendTarget_;
+          pitchBend_ = false;
+          pitchBendStep_ = 1.0f;
+        } else {
+          if (useLogCurve_) {
+            // Exponential pitch bend calculation.
+            float diff = pitchBendTarget_ - pitchBendCurrent_;
+            pitchBendCurrent_ += diff * interpolationAlpha_;
+            // If the pitch is close enough to the target, snap to target and
+            // stop bending.
+            if (fabs(diff) < PB_MAX_ALPHA) {
+              pitchBendCurrent_ = pitchBendTarget_;
+              pitchBend_ = false;
+            }
+          } else {
+            // Linear pitch bend calculation.
+            pitchBendStep_ = (diff > 0 ? 1 : -1) *
+                             (abs(diff) / static_cast<float>(pitchBendSpeed_));
+            pitchBendCurrent_ += pitchBendStep_;
+          }
+        }
+      }
+      // If pitch bend value changed, send MIDI pitch bend message.
+      if (pitchBendCurrent_ != prev) {
+        // Convert internal pitch bend value to MIDI pitch bend range (0-16383).
+        int16_t midiValue =
+            ((pitchBendCurrent_ - PB_7BIT_MAX) * PB_CENTER) / PB_7BIT_MAX;
+        int16_t bend = midiValue + PB_CENTER;
+        // Clamp bend value to valid MIDI range.
+        if (bend < 0) {
+          bend = 0;
+        } else if (bend > PB_MAX) {
+          bend = PB_MAX;
+        }
+        // Create and queue MIDI pitch bend message.
+        MidiMessage msg;
+        msg.status_ = MidiMessage::MIDI_PITCH_BEND + mchannel;
+        msg.data1_ = bend & 0x7F;
+        msg.data2_ = (bend >> 7) & 0x7F;
+        svc_->QueueMessage(msg);
+      }
+    }
+  }
+
   if (remainingTicks_ > 0) {
     remainingTicks_--;
     if (remainingTicks_ == 0) {
@@ -181,6 +241,28 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     } else {
       retrig_ = false;
     }
+  } break;
+
+  case FourCC::InstrumentCommandLegato: {
+    pitchBendTarget_ = uint8_t(value & 0xFF);
+    pitchBendSpeed_ = uint8_t(value >> 8);
+    pitchBend_ = true;
+    useLogCurve_ = true;
+
+    // Convert to interpolation alpha using a nonlinear curve.
+    float growthFactor =
+        PB_MIN_GROWTH_FACTOR + (PB_MAX_GROWTH_FACTOR - PB_MIN_GROWTH_FACTOR) *
+                                   (1.0f - ((pitchBendSpeed_ - 1) / 253.0f));
+    float normalized = (growthFactor - 1.0f) / (PB_MAX_GROWTH_FACTOR - 1.0f);
+    interpolationAlpha_ = powf(normalized, PB_CURVE_SHAPE) * PB_MAX_ALPHA;
+  } break;
+
+  case FourCC::InstrumentCommandPitchSlide: {
+    pitchBendTarget_ = uint8_t(value & 0xFF);
+    pitchBendSpeed_ = uint8_t(value >> 8);
+    pitchBend_ = true;
+    pitchBendStep_ = 1.0f;
+    useLogCurve_ = false;
   } break;
 
   case FourCC::InstrumentCommandVelocity: {
