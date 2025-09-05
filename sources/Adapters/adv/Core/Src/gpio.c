@@ -51,15 +51,14 @@ void MX_GPIO_Init(void) {
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(
-      GPIOC, CODEC_RESET_Pin | CHARGER_PSEL_Pin | CHARGER_CE_Pin | OSC_EN_Pin,
-      GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, CODEC_RESET_Pin | CHARGER_PSEL_Pin | CHARGER_CE_Pin,
+                    GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(DISPLAY_RST_GPIO_Port, DISPLAY_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, OSC_EN_Pin | AMP_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, DISPLAY_SDA_Pin | CHARGER_OTG_Pin, GPIO_PIN_RESET);

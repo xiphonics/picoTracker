@@ -27,7 +27,6 @@ DMA_HandleTypeDef hdma_sai1_b;
 void MX_SAI1_Init(void) {
 
   /* USER CODE BEGIN SAI1_Init 0 */
-  HAL_GPIO_WritePin(OSC_EN_GPIO_Port, OSC_EN_Pin, GPIO_PIN_SET);
 
   /* USER CODE END SAI1_Init 0 */
 
