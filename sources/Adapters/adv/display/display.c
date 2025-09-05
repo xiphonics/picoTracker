@@ -198,3 +198,43 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
     }
   }
 }
+
+void display_fill_rect(uint16_t x, uint16_t y, uint16_t width,
+                       uint16_t height) {
+  // Get the RGB565 color from the current foreground palette index
+  uint16_t color = palette_[screen_fg_color];
+
+  // Clip the rectangle to the screen dimensions
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) {
+    return;
+  }
+  if (x + width > DISPLAY_WIDTH) {
+    width = DISPLAY_WIDTH - x;
+  }
+  if (y + height > DISPLAY_HEIGHT) {
+    height = DISPLAY_HEIGHT - y;
+  }
+  if (width == 0 || height == 0) {
+    return;
+  }
+
+  uint32_t destination = (uint32_t)framebuffer + 2 * (y * DISPLAY_WIDTH + x);
+
+  hdma2d.Instance = &hdma2d;
+  hdma2d.Init.Mode = DMA2D_R2M; // Register to memory mode
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
+  hdma2d.Init.OutputOffset =
+      DISPLAY_WIDTH - width; // Offset to next line in destination
+  hdma2d.LayerCfg[1].InputColorMode =
+      DMA2D_INPUT_RGB565; // Dummy value, not used in R2M mode
+
+  if (HAL_DMA2D_Init(&hdma2d) == HAL_OK) {
+    if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) == HAL_OK) {
+      if (HAL_DMA2D_Start_IT(&hdma2d, color, destination, width, height) ==
+          HAL_OK) {
+        // Wait for transfer to finish
+        osSemaphoreAcquire(dma2dSemaphore, 100);
+      }
+    }
+  }
+}

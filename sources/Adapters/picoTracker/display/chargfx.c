@@ -104,6 +104,58 @@ void chargfx_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   }
 }
 
+void chargfx_fill_rect(uint16_t x, uint16_t y, uint16_t width,
+                       uint16_t height) {
+  // Get the RGB565 color from the current foreground palette index
+  uint16_t color = screen_fg_color;
+
+  // Clip the rectangle to the screen dimensions
+  if (x >= ILI9341_TFTWIDTH || y >= ILI9341_TFTHEIGHT) {
+    return;
+  }
+  if (x + width > ILI9341_TFTWIDTH) {
+    width = ILI9341_TFTWIDTH - x;
+  }
+  if (y + height > ILI9341_TFTHEIGHT) {
+    height = ILI9341_TFTHEIGHT - y;
+  }
+
+  if (width == 0 || height == 0) {
+    return;
+  }
+
+  // Transform coordinates for the rotated physical display
+  uint16_t display_x = ILI9341_TFTWIDTH - y - height;
+  uint16_t display_y = x;
+  uint16_t display_w = height;
+  uint16_t display_h = width;
+
+  // Set display window
+  ili9341_set_command(ILI9341_CASET);
+  ili9341_command_param16(display_x);
+  ili9341_command_param16(display_x + display_w - 1);
+
+  ili9341_set_command(ILI9341_PASET);
+  ili9341_command_param16(display_y);
+  ili9341_command_param16(display_y + display_h - 1);
+
+  ili9341_set_command(ILI9341_RAMWR);
+  ili9341_start_writing();
+
+  // just use the char cell buffer for our line buffer as its more than big
+  // enough
+  for (uint16_t i = 0; i < display_w; i++) {
+    buffer[i] = color;
+  }
+
+  // Write the buffer for each column
+  for (uint16_t i = 0; i < display_h; i++) {
+    ili9341_write_data_continuous(buffer, display_w * sizeof(uint16_t));
+  }
+
+  ili9341_stop_writing();
+}
+
 inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
                                     uint8_t height) {
   assert(height <= BUFFER_CHARS);
