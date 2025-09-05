@@ -54,7 +54,7 @@ void SDMMC1_IRQHandler(void);
 void UART7_IRQHandler(void);
 void DMA2D_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-void OTG_HS_IRQHandler(void);
+void OTG_FS_IRQHandler(void);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

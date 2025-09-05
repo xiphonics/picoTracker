@@ -25,7 +25,24 @@ void MX_USB_OTG_FS_USB_Init(void) {
   /* USER CODE END USB_OTG_FS_Init 0 */
 
   /* USER CODE BEGIN USB_OTG_FS_Init 1 */
-
+  /** Initializes the peripherals clock
+   */
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USB;
+  PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+    Error_Handler();
+  }
+  /** Enable USB Voltage detector
+   */
+  HAL_PWREx_EnableUSBVoltageDetector();
+  /* USB_OTG_FS clock enable */
+  __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
+  /* USB_OTG_FS interrupt Init */
+  // 5 is the maximum interrupt priority allowed by FreeRTOS config
+  // (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY) for external calls
+  HAL_NVIC_SetPriority(OTG_FS_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
   /* USER CODE END USB_OTG_FS_Init 1 */
   /* USER CODE BEGIN USB_OTG_FS_Init 2 */
 
