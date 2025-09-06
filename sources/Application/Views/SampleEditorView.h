@@ -15,7 +15,6 @@
 #include "Application/Instruments/SampleInstrument.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
-#include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "BaseClasses/UITextField.h"
@@ -42,7 +41,6 @@ protected:
 private:
   // Helper methods
   SampleInstrument *getCurrentSampleInstrument();
-  void updateWaveformDisplay();
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
@@ -53,7 +51,6 @@ private:
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
-  etl::vector<UIBitmapField, 1> waveformField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
 
 #ifdef ADV
@@ -106,5 +103,7 @@ private:
   Variable startVar_;
   Variable endVar_;
   Variable filenameVar_;
+
+  GUIWindow &win;
 };
 #endif

@@ -12,6 +12,7 @@
 #include "Adapters/picoTracker/display/chargfx.h"
 #include "Foundation/Observable.h"
 #include "UIFramework/Interfaces/I_GUIWindowImp.h"
+#include "View.h"
 #include "picoTrackerEventQueue.h"
 #include <string>
 
@@ -23,7 +24,7 @@ public:
 
 public: // I_GUIWindowImp implementation
   virtual void SetColor(GUIColor &) override;
-  virtual void DrawRect(GUIRect &) override;
+  virtual void DrawRect(uint8_t colorIdx, GUIRect &) override;
   virtual void DrawChar(const char c, GUIPoint &pos, GUITextProperties &);
   virtual void DrawString(const char *string, GUIPoint &pos,
                           GUITextProperties &, bool overlay = false){};

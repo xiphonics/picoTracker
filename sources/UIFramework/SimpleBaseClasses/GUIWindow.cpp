@@ -36,6 +36,10 @@ void GUIWindow::DrawString(const char *string, GUIPoint &pos,
   _imp->DrawString(string, pos, props, overlay);
 }
 
+void GUIWindow::DrawRect(uint8_t colorIdx, GUIRect &r) {
+  _imp->DrawRect(colorIdx, r);
+}
+
 void GUIWindow::DrawChar(const char c, GUIPoint &pos,
                          GUITextProperties &props) {
   _imp->DrawChar(c, pos, props);

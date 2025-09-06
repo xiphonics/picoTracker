@@ -50,7 +50,8 @@ void chargfx_draw_changed_simple();
 void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
                              uint8_t height);
 void chargfx_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
-void chargfx_fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
+                       uint16_t width, uint16_t height);
 void chargfx_set_foreground(chargfx_color_t color);
 void chargfx_set_background(chargfx_color_t color);
 void chargfx_set_cursor(uint8_t x, uint8_t y);

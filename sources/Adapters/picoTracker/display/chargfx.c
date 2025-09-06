@@ -26,6 +26,8 @@ static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint8_t colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint16_t buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
 
+static uint16_t rectbuffer[ILI9341_TFTWIDTH] = {0};
+
 static uint8_t ui_font_index = 0;
 
 // Using a bit array in order to save memory, there is a slight performance
@@ -104,10 +106,10 @@ void chargfx_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   }
 }
 
-void chargfx_fill_rect(uint16_t x, uint16_t y, uint16_t width,
-                       uint16_t height) {
+void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
+                       uint16_t width, uint16_t height) {
   // Get the RGB565 color from the current foreground palette index
-  uint16_t color = screen_fg_color;
+  uint16_t color = palette[color_index];
 
   // Clip the rectangle to the screen dimensions
   if (x >= ILI9341_TFTWIDTH || y >= ILI9341_TFTHEIGHT) {
@@ -145,12 +147,12 @@ void chargfx_fill_rect(uint16_t x, uint16_t y, uint16_t width,
   // just use the char cell buffer for our line buffer as its more than big
   // enough
   for (uint16_t i = 0; i < display_w; i++) {
-    buffer[i] = color;
+    rectbuffer[i] = color;
   }
 
   // Write the buffer for each column
   for (uint16_t i = 0; i < display_h; i++) {
-    ili9341_write_data_continuous(buffer, display_w * sizeof(uint16_t));
+    ili9341_write_data_continuous(rectbuffer, display_w * sizeof(uint16_t));
   }
 
   ili9341_stop_writing();

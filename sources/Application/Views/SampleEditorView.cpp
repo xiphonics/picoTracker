@@ -13,32 +13,30 @@
 #include "Application/Model/Config.h"
 #include "Application/Utils/char.h"
 #include "BaseClasses/UIBigHexVarField.h"
-#include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "Foundation/Types/Types.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
-#include "System/Display/BitmapGraphics.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
 #include <cmath>
 #include <cstdint>
 
-static void drawVerticalMarker(uint8_t *buffer, BitmapGraphics *gfx, int x) {
-  constexpr int w = BITMAPWIDTH;
-  constexpr int h = BITMAPHEIGHT;
+// static void drawVerticalMarker(uint8_t *buffer, BitmapGraphics *gfx, int x) {
+//   constexpr int w = BITMAPWIDTH;
+//   constexpr int h = BITMAPHEIGHT;
 
-#ifdef ADV
-  /* Write a 1‑pixel‑high line directly into the 8‑bit buffer. */
-  for (int y = 1; y < h - 1; ++y) {
-    buffer[y * w + x] = 1;
-  }
-#else
-  /* Use the existing graphics helper for the non‑ADV build. */
-  gfx->drawLine(buffer, w, h, x, 1, x, h - 2, true);
-#endif
-}
+// #ifdef ADV
+//   /* Write a 1‑pixel‑high line directly into the 8‑bit buffer. */
+//   for (int y = 1; y < h - 1; ++y) {
+//     buffer[y * w + x] = 1;
+//   }
+// #else
+//   /* Use the existing graphics helper for the non‑ADV build. */
+//   gfx->drawLine(buffer, w, h, x, 1, x, h - 2, true);
+// #endif
+// }
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), forceRedraw_(false), isPlaying_(false),
@@ -48,15 +46,11 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       endVar_(FourCC::VarSampleEditEnd, 0),
       // bit of a hack to use InstrumentName but we never actually persist this
       // in any config file here
-      filenameVar_(FourCC::InstrumentName, "") {
+      filenameVar_(FourCC::InstrumentName, ""), win(w) {
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
   // Clear the buffer
   memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
-
-  GUIPoint position(0, 3);
-  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
-                              bitmapBuffer_, 0xFFFF, 0x0000);
 }
 
 SampleEditorView::~SampleEditorView() {}
@@ -73,7 +67,7 @@ void SampleEditorView::OnFocus() {
   forceRedraw_ = true;
 
   // make sure we do initial draw of the waveform into bitmap for display
-  updateWaveformDisplay();
+  // updateWaveformDisplay();
 
   addAllFields();
 }
@@ -229,6 +223,67 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, titleString, props);
 
+  pos._x += 2;
+  pos._y += 2;
+
+  // Draw background for the waveform area
+  GUIRect bgRect(pos._x * 10, pos._y * 10, 200, 80);
+  win.DrawRect(CD_NORMAL, bgRect);
+
+  // InstrumentBank *bank = InstrumentBank::GetInstance();
+  // int active_instrument = view_.GetViewData()->GetInstrument();
+  // I_Instrument *instrument = bank->GetInstrument(active_instrument);
+
+  // if (instrument && instrument->GetType() == IT_SAMPLE) {
+  //   SampleInstrument *si = (SampleInstrument *)instrument;
+  //   Sample *s = si->GetSample();
+
+  //   if (s && s->length_ > 0) {
+  //     // Draw waveform
+  //     w.SetColor(waveformColor);
+  //     int wl = 1 << zoom_; // zoom level
+  //     for (int i = 0; i < BORDER_WIDTH; i++) {
+  //       long samplePos = (offset_ + i) * wl;
+  //       if (samplePos >= s->length_)
+  //         break;
+  //       int y = (s->data_[samplePos] * BORDER_HEIGHT) / 512;
+  //       int y1 = (BORDER_HEIGHT / 2) - y;
+  //       int y2 = (BORDER_HEIGHT / 2) + y;
+  //       if (y1 < 0)
+  //         y1 = 0;
+  //       if (y2 > BORDER_HEIGHT)
+  //         y2 = BORDER_HEIGHT;
+  //       GUIRect line(X_OFFSET + i, Y_OFFSET + y1, 1, y2 - y1);
+  //       w.DrawRect(line);
+  //     }
+
+  //     // Draw loop points
+  //     w.SetColor(loopColor);
+  //     long loop_start = si->GetLoopStart();
+  //     long loop_end = si->GetLoopEnd();
+
+  //     int x_start = (loop_start - offset_) / wl;
+  //     if (x_start >= 0 && x_start < BORDER_WIDTH) {
+  //       GUIRect start_marker(X_OFFSET + x_start, Y_OFFSET, 1, BORDER_HEIGHT);
+  //       w.DrawRect(start_marker);
+  //     }
+
+  //     int x_end = (loop_end - offset_) / wl;
+  //     if (x_end >= 0 && x_end < BORDER_WIDTH) {
+  //       GUIRect end_marker(X_OFFSET + x_end, Y_OFFSET, 1, BORDER_HEIGHT);
+  //       w.DrawRect(end_marker);
+  //     }
+
+  //     // Draw cursor
+  //     w.SetColor(cursorColor);
+  //     int x_cursor = (getCursor() - offset_) / wl;
+  //     if (x_cursor >= 0 && x_cursor < BORDER_WIDTH) {
+  //       GUIRect cursor_marker(X_OFFSET + x_cursor, Y_OFFSET, 1,
+  //       BORDER_HEIGHT); w.DrawRect(cursor_marker);
+  //     }
+  //   }
+  // }
+
   FieldView::Redraw();
 
   SetColor(CD_NORMAL);
@@ -279,7 +334,7 @@ void SampleEditorView::AnimationUpdate() {
   // Check if we need to update the waveform display
   if (forceRedraw_) {
     // Update the waveform display
-    updateWaveformDisplay();
+    // updateWaveformDisplay();
     forceRedraw_ = false;
   }
 
@@ -315,92 +370,93 @@ void SampleEditorView::updateSampleParameters() {
     start_ = end_;
 }
 
-void SampleEditorView::updateWaveformDisplay() {
-  Profiler p("updateWaveformDisplay");
-  BitmapGraphics *gfx = BitmapGraphics::GetInstance();
+// void SampleEditorView::updateWaveformDisplay() {
+//   Profiler p("updateWaveformDisplay");
+//   BitmapGraphics *gfx = BitmapGraphics::GetInstance();
 
-  memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
+//   memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
 
-  // Draw a border around the waveform display
-#ifdef ADV
-  // Draw rectangle using direct buffer access for 8bpp
-  memset(bitmapBuffer_, 1, BITMAPWIDTH); // Top edge
-  memset(bitmapBuffer_ + (BITMAPHEIGHT - 1) * BITMAPWIDTH, 1,
-         BITMAPWIDTH); // Bottom edge
-  for (int y = 1; y < BITMAPHEIGHT - 1; y++) {
-    bitmapBuffer_[y * BITMAPWIDTH] = 1;                     // Left edge
-    bitmapBuffer_[(y * BITMAPWIDTH) + BITMAPWIDTH - 1] = 1; // Right edge
-  }
-#else
-  gfx->drawRect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH - 1,
-                BITMAPHEIGHT - 1, false, true);
-#endif
+//   // Draw a border around the waveform display
+// #ifdef ADV
+//   // Draw rectangle using direct buffer access for 8bpp
+//   memset(bitmapBuffer_, 1, BITMAPWIDTH); // Top edge
+//   memset(bitmapBuffer_ + (BITMAPHEIGHT - 1) * BITMAPWIDTH, 1,
+//          BITMAPWIDTH); // Bottom edge
+//   for (int y = 1; y < BITMAPHEIGHT - 1; y++) {
+//     bitmapBuffer_[y * BITMAPWIDTH] = 1;                     // Left edge
+//     bitmapBuffer_[(y * BITMAPWIDTH) + BITMAPWIDTH - 1] = 1; // Right edge
+//   }
+// #else
+//   gfx->drawRect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH -
+//   1,
+//                 BITMAPHEIGHT - 1, false, true);
+// #endif
 
-  // == draw waveform
-  {
-    Profiler p("updateWaveformDisplay: draw waveform");
-    int centerY = BITMAPHEIGHT / 2;
-    for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-      int pixelHeight = waveformCache_[x];
-#ifdef ADV
-      // For non-zero signals, draw the full height
-      int startY = centerY - pixelHeight;
-      int endY = centerY + pixelHeight;
+//   // == draw waveform
+//   {
+//     Profiler p("updateWaveformDisplay: draw waveform");
+//     int centerY = BITMAPHEIGHT / 2;
+//     for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
+//       int pixelHeight = waveformCache_[x];
+// #ifdef ADV
+//       // For non-zero signals, draw the full height
+//       int startY = centerY - pixelHeight;
+//       int endY = centerY + pixelHeight;
 
-      // Clamp the y-coordinates to the bitmap's bounds
-      if (startY < 0) {
-        startY = 0;
-      }
-      if (endY >= BITMAPHEIGHT) {
-        endY = BITMAPHEIGHT - 1;
-      }
+//       // Clamp the y-coordinates to the bitmap's bounds
+//       if (startY < 0) {
+//         startY = 0;
+//       }
+//       if (endY >= BITMAPHEIGHT) {
+//         endY = BITMAPHEIGHT - 1;
+//       }
 
-      for (int y = startY; y <= endY; y++) {
-        memset(bitmapBuffer_ + (y * BITMAPWIDTH) + x, 1, 1);
-      }
-#else
-      // For non-zero signals, draw the full height
-      for (int i = 0; i < WAVEFORM_CACHE_SIZE; i++) {
-        gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x + i,
-                      centerY - pixelHeight, x + i, centerY + pixelHeight,
-                      true);
-      }
-#endif
-    }
-  }
-  // ====
+//       for (int y = startY; y <= endY; y++) {
+//         memset(bitmapBuffer_ + (y * BITMAPWIDTH) + x, 1, 1);
+//       }
+// #else
+//       // For non-zero signals, draw the full height
+//       for (int i = 0; i < WAVEFORM_CACHE_SIZE; i++) {
+//         gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x + i,
+//                       centerY - pixelHeight, x + i, centerY + pixelHeight,
+//                       true);
+//       }
+// #endif
+//     }
+//   }
+//   // ====
 
-  // Draw start / end markers
-  const int fullSampleSize = tempSampleSize_;
-  const int startX = static_cast<int>(
-      (static_cast<float>(start_) / fullSampleSize) * (BITMAPWIDTH - 2));
-  const int endX = static_cast<int>(
-      (static_cast<float>(end_) / fullSampleSize) * (BITMAPWIDTH - 2));
+//   // Draw start / end markers
+//   const int fullSampleSize = tempSampleSize_;
+//   const int startX = static_cast<int>(
+//       (static_cast<float>(start_) / fullSampleSize) * (BITMAPWIDTH - 2));
+//   const int endX = static_cast<int>(
+//       (static_cast<float>(end_) / fullSampleSize) * (BITMAPWIDTH - 2));
 
-  drawVerticalMarker(bitmapBuffer_, gfx, startX);
-  drawVerticalMarker(bitmapBuffer_, gfx, endX);
+//   drawVerticalMarker(bitmapBuffer_, gfx, startX);
+//   drawVerticalMarker(bitmapBuffer_, gfx, endX);
 
-  if (isPlaying_) {
-    Profiler p("updateWaveformDisplay: draw playhead");
-    int playheadX = (int)(playbackPosition_ * (BITMAPWIDTH - 1));
-    if (playheadX < 0) {
-      playheadX = 0;
-    }
-    if (playheadX >= BITMAPWIDTH) {
-      playheadX = BITMAPWIDTH - 1;
-    }
-    drawVerticalMarker(bitmapBuffer_, gfx, playheadX);
-  }
+//   if (isPlaying_) {
+//     Profiler p("updateWaveformDisplay: draw playhead");
+//     int playheadX = (int)(playbackPosition_ * (BITMAPWIDTH - 1));
+//     if (playheadX < 0) {
+//       playheadX = 0;
+//     }
+//     if (playheadX >= BITMAPWIDTH) {
+//       playheadX = BITMAPWIDTH - 1;
+//     }
+//     drawVerticalMarker(bitmapBuffer_, gfx, playheadX);
+//   }
 
-  auto field = waveformField_.front();
-  // Update the bitmap field and request redraw
-  field.SetBitmap(bitmapBuffer_);
+//   auto field = waveformField_.front();
+//   // Update the bitmap field and request redraw
+//   field.SetBitmap(bitmapBuffer_);
 
-  SetDirty(true);
+//   SetDirty(true);
 
-  Profiler p1("updateWaveformDisplay: REDRAW");
-  field.Draw(w_);
-}
+//   Profiler p1("updateWaveformDisplay: REDRAW");
+//   field.Draw(w_);
+// }
 
 short SampleEditorView::chunkBuffer_[512 * 2];
 

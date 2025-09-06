@@ -98,9 +98,9 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   }
 }
 
-void picoTrackerGUIWindowImp::DrawRect(GUIRect &r) {
+void picoTrackerGUIWindowImp::DrawRect(uint8_t colorIdx, GUIRect &r) {
   Trace::Debug("GUI DrawRect call");
-  chargfx_fill_rect(r.Top(), r.Left(), r.Width(), r.Height());
+  chargfx_fill_rect(colorIdx, r.Top(), r.Left(), r.Width(), r.Height());
 };
 
 void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
