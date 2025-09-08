@@ -106,31 +106,40 @@ void chargfx_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   }
 }
 
+// NOTE: we make life easier for ourselves by using the LCD controllers
+// orientation command to let us treat the x,y coords passed into this function
+// as the visual x & y instead of trying to transform them to the LCDs physical
+// x,y coords to compensate for the fact that on the picoTracker the screen is
+// mounted rotated 90deg clockwise, ie. the "bottom" of the LCD with the flex
+// pcb connector is actually on the left instead of its normal orientation of
+// being mounted on the bottom of the LCD
 void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
                        uint16_t width, uint16_t height) {
   // Get the RGB565 color from the current foreground palette index
   uint16_t color = palette[color_index];
 
   // Clip the rectangle to the screen dimensions
-  if (x >= ILI9341_TFTWIDTH || y >= ILI9341_TFTHEIGHT) {
+  if (x >= ILI9341_TFTHEIGHT || y >= ILI9341_TFTWIDTH) {
     return;
   }
-  if (x + width > ILI9341_TFTWIDTH) {
-    width = ILI9341_TFTWIDTH - x;
+  if (x + width > ILI9341_TFTHEIGHT) {
+    width = ILI9341_TFTHEIGHT;
   }
-  if (y + height > ILI9341_TFTHEIGHT) {
-    height = ILI9341_TFTHEIGHT - y;
-  }
-
-  if (width == 0 || height == 0) {
-    return;
+  if (y + height > ILI9341_TFTWIDTH) {
+    height = ILI9341_TFTWIDTH;
   }
 
-  // Transform coordinates for the rotated physical display
-  uint16_t display_x = ILI9341_TFTWIDTH - y - height;
-  uint16_t display_y = x;
-  uint16_t display_w = height;
-  uint16_t display_h = width;
+  // display_x is from right hand edge and since the picoTracker LCD is mounted
+  // rotated 90deg clockwise, the LCDs "physical height" is actually visually
+  // speaking the width
+  uint16_t display_x = ILI9341_TFTHEIGHT - x - width;
+  uint16_t display_y = y;
+  uint16_t display_w = width;
+  uint16_t display_h = height;
+
+  // Set rotation for rectangle drawing
+  ili9341_set_command(ILI9341_MADCTL);
+  ili9341_command_param(0x28); // 90-degree clockwise rotation
 
   // Set display window
   ili9341_set_command(ILI9341_CASET);
@@ -156,6 +165,10 @@ void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
   }
 
   ili9341_stop_writing();
+
+  // Restore original rotation
+  ili9341_set_command(ILI9341_MADCTL);
+  ili9341_command_param(0xC0);
 }
 
 inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,

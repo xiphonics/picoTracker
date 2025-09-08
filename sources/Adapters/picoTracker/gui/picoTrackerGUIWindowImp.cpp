@@ -99,8 +99,18 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
 }
 
 void picoTrackerGUIWindowImp::DrawRect(uint8_t colorIdx, GUIRect &r) {
-  Trace::Debug("GUI DrawRect call");
-  chargfx_fill_rect(colorIdx, r.Top(), r.Left(), r.Width(), r.Height());
+  chargfx_fill_rect(colorIdx, r.Left(), r.Top(), r.Width(), r.Height());
+  if (remoteUIEnabled_) {
+    char remoteUIBuffer[7];
+    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[1] = DRAWRECT_CMD;
+    remoteUIBuffer[2] = colorIdx;
+    remoteUIBuffer[3] = r.Left();
+    remoteUIBuffer[4] = r.Top();
+    remoteUIBuffer[5] = r.Width();
+    remoteUIBuffer[6] = r.Height();
+    sendToUSBCDC(remoteUIBuffer, 7);
+  }
 };
 
 void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {

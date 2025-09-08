@@ -37,7 +37,8 @@ enum RemoteUICommand {
   TEXT_CMD = 0x02,
   CLEAR_CMD = 0x03,
   SETCOLOR_CMD = 0x04,
-  SETFONT_CMD = 0x05
+  SETFONT_CMD = 0x05,
+  DRAWRECT_CMD = 0x06,
 };
 
 enum RemoteInputCommand {

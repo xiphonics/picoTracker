@@ -77,7 +77,6 @@ private:
   int start_ = 0;
   int end_ = 0;
 
-private:
   bool goProjectSamplesDir();
 
   // Waveform data cache
@@ -86,6 +85,7 @@ private:
   bool waveformCacheValid_;
 
   void updateWaveformCache();
+  void DrawWaveForm();
 
   float playbackPosition_; // Current playback position as normalized value (0.0
                            // - 1.0)
@@ -105,5 +105,11 @@ private:
   Variable filenameVar_;
 
   GUIWindow &win;
+
+  int last_start_x_ = -1;
+  int last_end_x_ = -1;
+  int last_playhead_x_ = -1;
+
+  bool redraw_;
 };
 #endif
