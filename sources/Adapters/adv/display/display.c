@@ -6,17 +6,13 @@
  * This file is part of the picoTracker firmware
  */
 #include "display.h"
-#include "FreeRTOS.h"
 #include "dma2d.h"
 #include "font.h"
-#include "semphr.h"
 #include "usart.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
-extern SemaphoreHandle_t dma2dSemaphore;
 
 static color_t screen_bg_color = COLOR_BG;
 static color_t screen_fg_color = COLOR_NORMAL;
