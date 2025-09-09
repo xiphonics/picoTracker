@@ -66,12 +66,11 @@ void SampleEditorView::addAllFields() {
   intVarField_.clear();
   actionField_.clear();
   nameTextField_.clear();
-  // no need to clear staticField_ and waveform as they are not added to
-  // fieldList_
+  // no need to clear staticField_  as its not added to fieldList_
 
   GUIPoint position = GetAnchor();
 
-  position._y = 12; // offset enough for bitmap field
+  position._y = 12; // offset enough for waveform display
   position._x = 5;
 
   auto label =
@@ -216,7 +215,11 @@ void SampleEditorView::DrawView() {
 
 void SampleEditorView::DrawWaveForm() {
   const int X_OFFSET = 0;
+#ifdef ADV
+  const int Y_OFFSET = 2 * CHAR_HEIGHT * 4;
+#else
   const int Y_OFFSET = 2 * CHAR_HEIGHT;
+#endif
 
   GUIRect rrect;
 
