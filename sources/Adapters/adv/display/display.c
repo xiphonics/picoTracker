@@ -6,13 +6,17 @@
  * This file is part of the picoTracker firmware
  */
 #include "display.h"
+#include "FreeRTOS.h"
 #include "dma2d.h"
 #include "font.h"
+#include "semphr.h"
 #include "usart.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+extern SemaphoreHandle_t dma2dSemaphore;
 
 static color_t screen_bg_color = COLOR_BG;
 static color_t screen_fg_color = COLOR_NORMAL;
@@ -199,10 +203,10 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   }
 }
 
-void display_fill_rect(uint16_t x, uint16_t y, uint16_t width,
-                       uint16_t height) {
-  // Get the RGB565 color from the current foreground palette index
-  uint16_t color = palette_[screen_fg_color];
+void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
+                       uint16_t width, uint16_t height) {
+  // Get the ABGR8888 color from the palette
+  uint32_t color = palette[color_index];
 
   // Clip the rectangle to the screen dimensions
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) {
@@ -218,23 +222,9 @@ void display_fill_rect(uint16_t x, uint16_t y, uint16_t width,
     return;
   }
 
-  uint32_t destination = (uint32_t)framebuffer + 2 * (y * DISPLAY_WIDTH + x);
-
-  hdma2d.Instance = &hdma2d;
-  hdma2d.Init.Mode = DMA2D_R2M; // Register to memory mode
-  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
-  hdma2d.Init.OutputOffset =
-      DISPLAY_WIDTH - width; // Offset to next line in destination
-  hdma2d.LayerCfg[1].InputColorMode =
-      DMA2D_INPUT_RGB565; // Dummy value, not used in R2M mode
-
-  if (HAL_DMA2D_Init(&hdma2d) == HAL_OK) {
-    if (HAL_DMA2D_ConfigLayer(&hdma2d, 1) == HAL_OK) {
-      if (HAL_DMA2D_Start_IT(&hdma2d, color, destination, width, height) ==
-          HAL_OK) {
-        // Wait for transfer to finish
-        osSemaphoreAcquire(dma2dSemaphore, 100);
-      }
+  for (uint16_t j = y; j < y + height; j++) {
+    for (uint16_t i = x; i < x + width; i++) {
+      framebuffer[j * DISPLAY_WIDTH + i] = color;
     }
   }
 }
