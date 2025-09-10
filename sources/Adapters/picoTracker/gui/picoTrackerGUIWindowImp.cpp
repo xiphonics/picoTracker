@@ -101,15 +101,21 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
 void picoTrackerGUIWindowImp::DrawRect(uint8_t colorIdx, GUIRect &r) {
   chargfx_fill_rect(colorIdx, r.Left(), r.Top(), r.Width(), r.Height());
   if (remoteUIEnabled_) {
-    char remoteUIBuffer[7];
+    const auto BUFSIZE = 11;
+    char remoteUIBuffer[BUFSIZE];
     remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
     remoteUIBuffer[1] = DRAWRECT_CMD;
     remoteUIBuffer[2] = colorIdx;
-    remoteUIBuffer[3] = r.Left();
-    remoteUIBuffer[4] = r.Top();
-    remoteUIBuffer[5] = r.Width();
-    remoteUIBuffer[6] = r.Height();
-    sendToUSBCDC(remoteUIBuffer, 7);
+    // Send coordinates as 2 bytes
+    remoteUIBuffer[3] = r.Left() & 0xFF;           // low byte
+    remoteUIBuffer[4] = (r.Left() >> 8) & 0xFF;    // high byte
+    remoteUIBuffer[5] = r.Top() & 0xFF;            // low byte
+    remoteUIBuffer[6] = (r.Top() >> 8) & 0xFF;     // high byte
+    remoteUIBuffer[7] = r.Width() & 0xFF;          // low byte
+    remoteUIBuffer[8] = (r.Width() >> 8) & 0xFF;   // high byte
+    remoteUIBuffer[9] = r.Height() & 0xFF;         // low byte
+    remoteUIBuffer[10] = (r.Height() >> 8) & 0xFF; // high byte
+    sendToUSBCDC(remoteUIBuffer, BUFSIZE);
   }
 };
 
@@ -124,6 +130,8 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
     remoteUIBuffer[2] = c._r;
     remoteUIBuffer[3] = c._g;
     remoteUIBuffer[4] = c._b;
+    // log sent buffer values
+    Trace::Debug("sent clear command: %d,%d,%d", c._r, c._g, c._b);
     sendToUSBCDC(remoteUIBuffer, 5);
   }
 };
