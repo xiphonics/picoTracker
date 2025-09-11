@@ -56,14 +56,11 @@ private:
 #ifdef ADV
 #define BITMAPWIDTH 720
 #define BITMAPHEIGHT 160
-#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT)
 #else
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
-#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT) / 8
 
 #endif
-  uint8_t bitmapBuffer_[BITMAPBUFFERSIZE];
 
   // Flag to force redraw of waveform
   bool forceRedraw_;

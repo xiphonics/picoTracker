@@ -34,8 +34,6 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       filenameVar_(FourCC::InstrumentName, ""), win(w), redraw_(false) {
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
-  // Clear the buffer
-  memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
 }
 
 SampleEditorView::~SampleEditorView() {}
@@ -235,7 +233,8 @@ void SampleEditorView::DrawWaveForm() {
     // borders
     rrect = GUIRect(x_coord, Y_OFFSET + 1, x_coord + 1,
                     Y_OFFSET + BITMAPHEIGHT - 1);
-    win.DrawRect(CD_BACKGROUND, rrect);
+    win.SetCurrentRectColor(AppWindow::GetColor(CD_BACKGROUND));
+    win.DrawRect(rrect);
 
     // 2. Redraw the waveform in that column
     int waveform_idx =
@@ -255,7 +254,8 @@ void SampleEditorView::DrawWaveForm() {
 
         if (startY <= endY) {
           rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
-          win.DrawRect(CD_NORMAL, rrect);
+          win.SetCurrentRectColor(AppWindow::GetColor(CD_NORMAL));
+          win.DrawRect(rrect);
         }
       }
     }
@@ -266,14 +266,16 @@ void SampleEditorView::DrawWaveForm() {
     // Clear the entire waveform area
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
                     Y_OFFSET + BITMAPHEIGHT);
-    win.DrawRect(CD_BACKGROUND, rrect);
+    win.SetCurrentRectColor(AppWindow::GetColor(CD_BACKGROUND));
+    win.DrawRect(rrect);
 
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
     // Draw borders
-    win.DrawRect(CD_HILITE1, rrect); // Top
+    win.SetCurrentRectColor(AppWindow::GetColor(CD_HILITE1));
+    win.DrawRect(rrect); // Top
     rrect = GUIRect(X_OFFSET, Y_OFFSET + BITMAPHEIGHT - 1,
                     X_OFFSET + BITMAPWIDTH, Y_OFFSET + BITMAPHEIGHT);
-    win.DrawRect(CD_HILITE1, rrect); // Bottom
+    win.DrawRect(rrect); // Bottom
 
     // Draw full waveform
     if (waveformCacheValid_) {
@@ -292,7 +294,8 @@ void SampleEditorView::DrawWaveForm() {
 
           if (startY <= endY) {
             rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
-            win.DrawRect(CD_NORMAL, rrect);
+            win.SetCurrentRectColor(AppWindow::GetColor(CD_NORMAL));
+            win.DrawRect(rrect);
           }
         }
       }
@@ -335,17 +338,20 @@ void SampleEditorView::DrawWaveForm() {
   if (current_startX != -1) { // Only draw if valid
     rrect = GUIRect(current_startX, Y_OFFSET + 2, current_startX + 1,
                     Y_OFFSET + BITMAPHEIGHT - 3);
-    win.DrawRect(CD_CURSOR, rrect);
+    win.SetCurrentRectColor(AppWindow::GetColor(CD_CURSOR));
+    win.DrawRect(rrect);
   }
   if (current_endX != -1) { // Only draw if valid
     rrect = GUIRect(current_endX, Y_OFFSET + 2, current_endX + 1,
                     Y_OFFSET + BITMAPHEIGHT - 3);
-    win.DrawRect(CD_CURSOR, rrect);
+    win.SetCurrentRectColor(AppWindow::GetColor(CD_CURSOR));
+    win.DrawRect(rrect);
   }
   if (current_playheadX != -1) { // Only draw if valid and playing
     rrect = GUIRect(current_playheadX, Y_OFFSET + 2, current_playheadX + 1,
                     Y_OFFSET + BITMAPHEIGHT - 3);
-    win.DrawRect(CD_CURSOR, rrect);
+    win.SetCurrentRectColor(AppWindow::GetColor(CD_CURSOR));
+    win.DrawRect(rrect);
   }
 
   // Update last known positions
@@ -394,7 +400,7 @@ void SampleEditorView::AnimationUpdate() {
 
       // Update position (normalized to full sample range)
       playbackPosition_ = samplePos / tempSampleSize_;
-      Trace::Debug("pos:%d", playbackPosition_);
+      // Trace::Debug("pos:%d", playbackPosition_);
       redraw_ = true;
     }
   }

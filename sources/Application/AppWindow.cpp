@@ -867,3 +867,46 @@ bool AppWindow::autoSave() {
   }
   return false;
 }
+
+GUIColor AppWindow::GetColor(ColorDefinition cd) {
+  switch (cd) {
+  case CD_NORMAL:
+    return AppWindow::normalColor_;
+
+  case CD_BACKGROUND:
+    return AppWindow::backgroundColor_;
+
+  case CD_HILITE1:
+    return AppWindow::highlightColor_;
+  case CD_HILITE2:
+    return AppWindow::highlight2Color_;
+  case CD_CONSOLE:
+    return AppWindow::consoleColor_;
+  case CD_CURSOR:
+    return AppWindow::cursorColor_;
+  case CD_INFO:
+    return AppWindow::infoColor_;
+  case CD_WARN:
+    return AppWindow::warnColor_;
+  case CD_ERROR:
+    return AppWindow::errorColor_;
+  case CD_ACCENT:
+    return AppWindow::accentColor_;
+  case CD_ACCENTALT:
+    return AppWindow::accentAltColor_;
+  case CD_EMPHASIS:
+    return AppWindow::emphasisColor_;
+  case CD_RESERVED1:
+    return AppWindow::reserved1Color_;
+  case CD_RESERVED2:
+    return AppWindow::reserved2Color_;
+  case CD_RESERVED3:
+    return AppWindow::reserved3Color_;
+  case CD_RESERVED4:
+    return AppWindow::reserved4Color_;
+
+  default:
+    break;
+  }
+  return AppWindow::normalColor_;
+}

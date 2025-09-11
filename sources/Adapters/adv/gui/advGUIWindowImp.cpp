@@ -39,10 +39,12 @@ static GUIEventPadButtonType eventMappingPico[11] = {
     EPBT_POWER   // Power button
 };
 
-advGUIWindowImp *instance_;
+// Keep track of the last "SetColor()" call to track the current color palette
+// index, used by DrawRect() to know which color to use when drawing to the
+// devices LCD
+static uint8_t lastRemoteColorIdx = 255;
 
 advGUIWindowImp::advGUIWindowImp(GUICreateWindowParams &p) {
-  instance_ = this;
 
   Config *config = Config::GetInstance();
 
@@ -103,21 +105,36 @@ void advGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
 };
 
 void advGUIWindowImp::DrawRect(GUIRect &r) {
-  Trace::Debug("GUI DrawRect call");
-};
-
-void advGUIWindowImp::DrawRect(uint8_t colorIdx, GUIRect &r) {
-  display_fill_rect(colorIdx, r.Left(), r.Top(), r.Width(), r.Height());
+  // This is the local drawing command for the device's own screen.
+  display_fill_rect(lastRemoteColorIdx, r.Left(), r.Top(), r.Width(),
+                    r.Height());
   if (remoteUIEnabled_) {
-    char remoteUIBuffer[7];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = DRAWRECT_CMD;
-    remoteUIBuffer[2] = colorIdx;
-    remoteUIBuffer[3] = r.Left();
-    remoteUIBuffer[4] = r.Top();
-    remoteUIBuffer[5] = r.Width();
-    remoteUIBuffer[6] = r.Height();
-    sendToUSBCDC(remoteUIBuffer, 7);
+    // Now, send the DrawRect command with full byte-escaping.
+    // Worst-case buffer: 2 (header) + 4 * 2-byte-values * 2 (if all are
+    // escaped) = 18 bytes.
+    char remoteUIBuffer[20];
+    int bufferIndex = 0;
+    remoteUIBuffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[bufferIndex++] = DRAWRECT_CMD;
+    // Helper lambda for byte escaping.
+    auto addByteEscaped = [&](char byte) {
+      if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
+        remoteUIBuffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
+        remoteUIBuffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
+      } else {
+        remoteUIBuffer[bufferIndex++] = byte;
+      }
+    };
+    // Helper lambda to add a 16-bit value, escaping each of its two bytes.
+    auto add16bitEscaped = [&](uint16_t val) {
+      addByteEscaped(val & 0xFF);        // Add LSB
+      addByteEscaped((val >> 8) & 0xFF); // Add MSB
+    };
+    add16bitEscaped(r.Left());
+    add16bitEscaped(r.Top());
+    add16bitEscaped(r.Width());
+    add16bitEscaped(r.Height());
+    sendToUSBCDCBuffered(remoteUIBuffer, bufferIndex);
   }
 }
 
@@ -149,15 +166,31 @@ color_t advGUIWindowImp::GetColor(GUIColor &c) {
 
 void advGUIWindowImp::SetColor(GUIColor &c) {
   color_t color = GetColor(c);
+  lastRemoteColorIdx = color;
   display_set_foreground(color);
   if (remoteUIEnabled_) {
-    char remoteUIBuffer[5];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = SETCOLOR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
-    sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
+    // Buffer must be large enough for the worst case where all 3 color bytes
+    // are escaped. Header (2) + 3 color components * 2 bytes/escaped_component
+    // = 8 bytes.
+    char remoteUIBuffer[8];
+    int bufferIndex = 0;
+    remoteUIBuffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[bufferIndex++] = SETCOLOR_CMD;
+    // Helper lambda to handle escaping and adding a byte to the buffer.
+    // Assumes REMOTE_UI_ESC_CHAR and REMOTE_UI_ESC_XOR are defined.
+    auto addByte = [&](char byte) {
+      if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
+        remoteUIBuffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
+        remoteUIBuffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
+      } else {
+        remoteUIBuffer[bufferIndex++] = byte;
+      }
+    };
+    addByte(c._r);
+    addByte(c._g);
+    addByte(c._b);
+    sendToUSBCDCBuffered(remoteUIBuffer,
+                         bufferIndex); // Use the buffered function
   }
 };
 

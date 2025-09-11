@@ -24,6 +24,14 @@
   ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
       (color._b >> 3)
 
+// Keep track of the last RGB values set for each palette index
+static uint16_t lastPaletteRGB[16] = {0};
+
+// Keep track of the last "SetColor()" call to track the current color palette
+// index, used by DrawRect() to know which color to use when drawing to the
+// devices LCD
+static uint8_t lastRemoteColorIdx = 255;
+
 // classic picotracker mapping
 static GUIEventPadButtonType eventMappingPico[10] = {
     EPBT_LEFT,  // SW1
@@ -98,24 +106,37 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   }
 }
 
-void picoTrackerGUIWindowImp::DrawRect(uint8_t colorIdx, GUIRect &r) {
-  chargfx_fill_rect(colorIdx, r.Left(), r.Top(), r.Width(), r.Height());
+void picoTrackerGUIWindowImp::DrawRect(GUIRect &r) {
+  // This is the local drawing command for the device's own screen.
+  chargfx_fill_rect(lastRemoteColorIdx, r.Left(), r.Top(), r.Width(),
+                    r.Height());
   if (remoteUIEnabled_) {
-    const auto BUFSIZE = 11;
-    char remoteUIBuffer[BUFSIZE];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = DRAWRECT_CMD;
-    remoteUIBuffer[2] = colorIdx;
-    // Send coordinates as 2 bytes
-    remoteUIBuffer[3] = r.Left() & 0xFF;           // low byte
-    remoteUIBuffer[4] = (r.Left() >> 8) & 0xFF;    // high byte
-    remoteUIBuffer[5] = r.Top() & 0xFF;            // low byte
-    remoteUIBuffer[6] = (r.Top() >> 8) & 0xFF;     // high byte
-    remoteUIBuffer[7] = r.Width() & 0xFF;          // low byte
-    remoteUIBuffer[8] = (r.Width() >> 8) & 0xFF;   // high byte
-    remoteUIBuffer[9] = r.Height() & 0xFF;         // low byte
-    remoteUIBuffer[10] = (r.Height() >> 8) & 0xFF; // high byte
-    sendToUSBCDC(remoteUIBuffer, BUFSIZE);
+    // Now, send the DrawRect command with full byte-escaping.
+    // Worst-case buffer: 2 (header) + 9 payload bytes * 2 (if all are escaped)
+    // = 20  bytes.
+    char remoteUIBuffer[20];
+    int bufferIndex = 0;
+    remoteUIBuffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[bufferIndex++] = DRAWRECT_CMD;
+    // Helper lambda for byte escaping.
+    auto addByteEscaped = [&](char byte) {
+      if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
+        remoteUIBuffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
+        remoteUIBuffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
+      } else {
+        remoteUIBuffer[bufferIndex++] = byte;
+      }
+    };
+    // Helper lambda to add a 16-bit value, escaping each of its two bytes.
+    auto add16bitEscaped = [&](uint16_t val) {
+      addByteEscaped(val & 0xFF);        // Add LSB
+      addByteEscaped((val >> 8) & 0xFF); // Add MSB
+    };
+    add16bitEscaped(r.Left());
+    add16bitEscaped(r.Top());
+    add16bitEscaped(r.Width());
+    add16bitEscaped(r.Height());
+    sendToUSBCDC(remoteUIBuffer, bufferIndex);
   }
 };
 
@@ -140,9 +161,6 @@ void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
   Trace::Debug("GUI ClearRect call");
 };
 
-// Keep track of the last RGB values set for each palette index
-static uint16_t lastPaletteRGB[16] = {0};
-
 chargfx_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
   // Palette index should always be < 16
   if (c._paletteIndex >= 16) {
@@ -163,15 +181,35 @@ chargfx_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
 
 void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   chargfx_color_t color = GetColor(c);
+  lastRemoteColorIdx = color;
+
+  NAssert(c._r < 255);
+  NAssert(c._g < 255);
+  NAssert(c._b < 255);
   chargfx_set_foreground(color);
   if (remoteUIEnabled_) {
-    char remoteUIBuffer[5];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = SETCOLOR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
-    sendToUSBCDC(remoteUIBuffer, 5);
+    // Buffer must be large enough for the worst case where all 3 color bytes
+    // are escaped. Header (2) + 3 color components * 2 bytes/escaped_component
+    // = 8 bytes.
+    char remoteUIBuffer[8];
+    int bufferIndex = 0;
+    remoteUIBuffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
+    remoteUIBuffer[bufferIndex++] = SETCOLOR_CMD;
+    // Helper lambda to handle escaping and adding a byte to the buffer.
+    // Assumes REMOTE_UI_ESC_CHAR and REMOTE_UI_ESC_XOR are defined.
+    auto addByte = [&](char byte) {
+      if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
+        remoteUIBuffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
+        remoteUIBuffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
+      } else {
+        remoteUIBuffer[bufferIndex++] = byte;
+      }
+    };
+    addByte(c._r);
+    addByte(c._g);
+    addByte(c._b);
+    sendToUSBCDC(remoteUIBuffer, bufferIndex);
+    // Trace::Debug("sent set color: %d,%d,%d", c._r, c._g, c._b);
   }
 };
 
