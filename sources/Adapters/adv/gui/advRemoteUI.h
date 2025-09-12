@@ -30,6 +30,8 @@
 #define USB_TIMEOUT_US 500000
 #define ASCII_SPACE_OFFSET 0xF
 #define INVERT_ON 0x7F
+#define REMOTE_UI_ESC_CHAR 0xFD
+#define REMOTE_UI_ESC_XOR 0x20
 
 enum RemoteUICommand {
   REMOTE_UI_CMD_MARKER = 0xFE,

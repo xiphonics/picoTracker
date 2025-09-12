@@ -44,7 +44,12 @@ static GUIEventPadButtonType eventMappingPico[11] = {
 // devices LCD
 static uint8_t lastRemoteColorIdx = 255;
 
+advGUIWindowImp *instance_;
+
 advGUIWindowImp::advGUIWindowImp(GUICreateWindowParams &p) {
+
+  // stash ref to singleton for use in static methods
+  instance_ = this;
 
   Config *config = Config::GetInstance();
 
