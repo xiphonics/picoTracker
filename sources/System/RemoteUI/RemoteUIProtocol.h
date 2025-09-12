@@ -49,17 +49,18 @@ enum RemoteInputCommand {
 };
 
 // classic picotracker mapping
-static GUIEventPadButtonType eventMappingPico[10] = {
-    EPBT_LEFT,  // SW1
-    EPBT_DOWN,  // SW2
-    EPBT_RIGHT, // SW3
-    EPBT_UP,    // SW4
-    EPBT_L,     // SW5
-    EPBT_B,     // SW6
-    EPBT_A,     // SW7
-    EPBT_R,     // SW8
-    EPBT_START, // SW9
-    EPBT_SELECT // No SW
+static GUIEventPadButtonType eventMappingPico[11] = {
+    EPBT_LEFT,   // SW1
+    EPBT_DOWN,   // SW2
+    EPBT_RIGHT,  // SW3
+    EPBT_UP,     // SW4
+    EPBT_L,      // SW5
+    EPBT_B,      // SW6
+    EPBT_A,      // SW7
+    EPBT_R,      // SW8
+    EPBT_START,  // SW9
+    EPBT_SELECT, // No SW
+    EPBT_POWER   // Power button
 };
 
 #define to_rgb565(color)                                                       \
