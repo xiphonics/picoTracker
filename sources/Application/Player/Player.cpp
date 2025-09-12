@@ -202,7 +202,10 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   mixer_.Unlock();
 }
 
-// set nolock to true when calling from code that ALREADY hold the mixer lock
+// DANGER! WILL ROBINSON DANGER!
+// set nolock to true ONLY when calling from code that ALREADY hold the mixer
+// lock currently that only place that can occur is when processing the STP
+// command
 void Player::Stop(bool nolock) {
 
   if (!nolock) {
