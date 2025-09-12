@@ -263,6 +263,9 @@ void SampleEditorView::DrawWaveForm() {
 
   // --- Full Redraw Logic ---
   if (forceRedraw_) {
+    // clear flag immediately to prevent race condition between event triggered
+    // from input event and the animation update callback
+    forceRedraw_ = false;
     // Clear the entire waveform area
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
                     Y_OFFSET + BITMAPHEIGHT);
@@ -359,8 +362,8 @@ void SampleEditorView::DrawWaveForm() {
   last_end_x_ = current_endX;
   last_playhead_x_ = current_playheadX;
 
-  // Reset forceRedraw_ flag
-  forceRedraw_ = false;
+  // Reset redraw flags
+  redraw_ = false;
 }
 
 void SampleEditorView::AnimationUpdate() {
