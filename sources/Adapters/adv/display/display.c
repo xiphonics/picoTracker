@@ -198,3 +198,29 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
     }
   }
 }
+
+void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
+                       uint16_t width, uint16_t height) {
+  // Get the ABGR8888 color from the palette
+  uint32_t color = palette[color_index];
+
+  // Clip the rectangle to the screen dimensions
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) {
+    return;
+  }
+  if (x + width > DISPLAY_WIDTH) {
+    width = DISPLAY_WIDTH - x;
+  }
+  if (y + height > DISPLAY_HEIGHT) {
+    height = DISPLAY_HEIGHT - y;
+  }
+  if (width == 0 || height == 0) {
+    return;
+  }
+
+  for (uint16_t j = y; j < y + height; j++) {
+    for (uint16_t i = x; i < x + width; i++) {
+      framebuffer[j * DISPLAY_WIDTH + i] = color;
+    }
+  }
+}

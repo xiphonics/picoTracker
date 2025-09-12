@@ -36,6 +36,10 @@ void GUIWindow::DrawString(const char *string, GUIPoint &pos,
   _imp->DrawString(string, pos, props, overlay);
 }
 
+void GUIWindow::SetCurrentRectColor(GUIColor color) { _imp->SetColor(color); }
+
+void GUIWindow::DrawRect(GUIRect &r) { _imp->DrawRect(r); }
+
 void GUIWindow::DrawChar(const char c, GUIPoint &pos,
                          GUITextProperties &props) {
   _imp->DrawChar(c, pos, props);

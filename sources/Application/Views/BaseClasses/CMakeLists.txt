@@ -13,7 +13,6 @@ add_library(application_views_baseclasses
   UITempoField.cpp
   UISwatchField.cpp
   UIBitmaskVarField.cpp
-  UIBitmapField.cpp
   View.cpp
   ViewEvent.cpp
 )

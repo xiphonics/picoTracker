@@ -28,21 +28,6 @@
 
 #define ITF_NUM_CDC_0 0
 #define USB_TIMEOUT_US 500000
-#define ASCII_SPACE_OFFSET 0xF
-#define INVERT_ON 0x7F
-
-enum RemoteUICommand {
-  REMOTE_UI_CMD_MARKER = 0xFE,
-  TEXT_CMD = 0x02,
-  CLEAR_CMD = 0x03,
-  SETCOLOR_CMD = 0x04,
-  SETFONT_CMD = 0x05
-};
-
-enum RemoteInputCommand {
-  REMOTE_INPUT_CMD_MARKER = 0xFE,
-  FULL_REFRESH_CMD = 0x02,
-};
 
 void sendToUSBCDC(char buf[], uint32_t length);
 
