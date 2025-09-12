@@ -14,30 +14,10 @@
 #include "Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
-#include "UIFramework/BasicDatas/GUIEvent.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "advRemoteUI.h"
 #include <string.h>
 #include <string>
-
-#define to_rgb565(color)                                                       \
-  ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
-      (color._b >> 3)
-
-// classic picotracker mapping
-static GUIEventPadButtonType eventMappingPico[11] = {
-    EPBT_LEFT,   // SW1
-    EPBT_DOWN,   // SW2
-    EPBT_RIGHT,  // SW3
-    EPBT_UP,     // SW4
-    EPBT_L,      // SW5
-    EPBT_B,      // SW6
-    EPBT_A,      // SW7
-    EPBT_R,      // SW8
-    EPBT_START,  // SW9
-    EPBT_SELECT, // No SW
-    EPBT_POWER   // Power button
-};
 
 // Keep track of the last "SetColor()" call to track the current color palette
 // index, used by DrawRect() to know which color to use when drawing to the

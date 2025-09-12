@@ -11,7 +11,6 @@
 #include "Application/Model/Config.h"
 #include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
-#include "UIFramework/BasicDatas/GUIEvent.h"
 #include "UIFramework/BasicDatas/GUIPoint.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 #include "pico/stdlib.h"
@@ -20,10 +19,6 @@
 #include <string.h>
 #include <string>
 
-#define to_rgb565(color)                                                       \
-  ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
-      (color._b >> 3)
-
 // Keep track of the last RGB values set for each palette index
 static uint16_t lastPaletteRGB[16] = {0};
 
@@ -31,20 +26,6 @@ static uint16_t lastPaletteRGB[16] = {0};
 // index, used by DrawRect() to know which color to use when drawing to the
 // devices LCD
 static uint8_t lastRemoteColorIdx = 255;
-
-// classic picotracker mapping
-static GUIEventPadButtonType eventMappingPico[10] = {
-    EPBT_LEFT,  // SW1
-    EPBT_DOWN,  // SW2
-    EPBT_RIGHT, // SW3
-    EPBT_UP,    // SW4
-    EPBT_L,     // SW5
-    EPBT_B,     // SW6
-    EPBT_A,     // SW7
-    EPBT_R,     // SW8
-    EPBT_START, // SW9
-    EPBT_SELECT // No SW
-};
 
 static GUIEventPadButtonType *eventMapping = eventMappingPico;
 

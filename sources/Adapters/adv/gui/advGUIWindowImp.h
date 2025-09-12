@@ -10,6 +10,7 @@
 
 #include "Adapters/adv/display/display.h"
 #include "Foundation/Observable.h"
+#include "System/RemoteUI/RemoteUIProtocol.h"
 #include "UIFramework/Interfaces/I_GUIWindowImp.h"
 #include "eventQueue.h"
 #include <string>

@@ -1,13 +1,14 @@
 /*
  * SPDX-License-Identifier: BSD-3-Clause
  *
+ * Copyright (c) 2018 Discodirt
  * Copyright (c) 2024 xiphonics, inc.
  *
  * This file is part of the picoTracker firmware
  */
-#include <cstdint>
-#ifndef PICO_REMOTE_UI_H_
-#define PICO_REMOTE_UI_H_
+
+#ifndef _REMOTEUIPROTOCOL_H_
+#define _REMOTEUIPROTOCOL_H_
 
 // The Remote UI protocol consists of sending ASCII messages over the USB serial
 // connection to a client to render the UI shown by the picotracker and then
@@ -26,9 +27,43 @@
 // command received to check for any transmission errors.
 //
 
-#define ITF_NUM_CDC_0 0
-#define USB_TIMEOUT_US 500000
+#include "UIFramework/BasicDatas/GUIEvent.h"
 
-void sendToUSBCDC(char buf[], uint32_t length);
+#define ASCII_SPACE_OFFSET 0xF
+#define INVERT_ON 0x7F
+#define REMOTE_UI_ESC_CHAR 0xFD
+#define REMOTE_UI_ESC_XOR 0x20
+
+enum RemoteUICommand {
+  REMOTE_UI_CMD_MARKER = 0xFE,
+  TEXT_CMD = 0x02,
+  CLEAR_CMD = 0x03,
+  SETCOLOR_CMD = 0x04,
+  SETFONT_CMD = 0x05,
+  DRAWRECT_CMD = 0x06
+};
+
+enum RemoteInputCommand {
+  REMOTE_INPUT_CMD_MARKER = 0xFE,
+  FULL_REFRESH_CMD = 0x02,
+};
+
+// classic picotracker mapping
+static GUIEventPadButtonType eventMappingPico[10] = {
+    EPBT_LEFT,  // SW1
+    EPBT_DOWN,  // SW2
+    EPBT_RIGHT, // SW3
+    EPBT_UP,    // SW4
+    EPBT_L,     // SW5
+    EPBT_B,     // SW6
+    EPBT_A,     // SW7
+    EPBT_R,     // SW8
+    EPBT_START, // SW9
+    EPBT_SELECT // No SW
+};
+
+#define to_rgb565(color)                                                       \
+  ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
+      (color._b >> 3)
 
 #endif
