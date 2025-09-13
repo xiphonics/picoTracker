@@ -179,7 +179,8 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
       const uint8_t *glyph = &FONT[char_index][0][0];
 
       uint32_t *dest = (uint32_t *)framebuffer +
-                       (h * CHAR_HEIGHT * FRAMEBUFFER_WIDTH) + (w * CHAR_WIDTH);
+                       (h * CHAR_HEIGHT * FRAMEBUFFER_WIDTH) +
+                       (w * CHAR_WIDTH + OFFSET);
 
       /* Most of what happens here is defined on the peripheral configuration.
        * Perpheral is configured in memory to memory mode with blending and

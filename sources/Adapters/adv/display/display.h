@@ -19,6 +19,7 @@ extern "C" {
 #define TEXT_HEIGHT 24
 #define CHAR_HEIGHT 30
 #define CHAR_WIDTH 22
+#define OFFSET 8
 
 // ARNE-16 palette converted to RGB565 --
 // https://lospec.com/palette-list/arne-16
