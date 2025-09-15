@@ -20,9 +20,6 @@ extern "C" {
 #define CHAR_HEIGHT 30
 #define CHAR_WIDTH 22
 
-#define DISPLAY_WIDTH 720
-#define DISPLAY_HEIGHT 720
-
 // ARNE-16 palette converted to RGB565 --
 // https://lospec.com/palette-list/arne-16
 typedef enum {

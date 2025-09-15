@@ -22,8 +22,8 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-#define FRAMEBUFFER_WIDTH 720
-#define FRAMEBUFFER_HEIGHT 720
+#define DISPLAY_WIDTH 720
+#define DISPLAY_WIDTH 720
 extern uint32_t framebuffer[];
 extern uint32_t placeholder_framebuffer_layer2[];
 /* USER CODE END Includes */
