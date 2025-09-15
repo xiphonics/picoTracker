@@ -55,9 +55,7 @@ advGUIWindowImp::~advGUIWindowImp() {}
 
 void advGUIWindowImp::SendFont(uint8_t uifontIndex) {
   char remoteUIBuffer[3];
-  remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-  remoteUIBuffer[1] = SETFONT_CMD;
-  remoteUIBuffer[2] = uifontIndex + ASCII_SPACE_OFFSET;
+  remoteUIFontCommand(uifontIndex, remoteUIBuffer);
   sendToUSBCDCBuffered(remoteUIBuffer, 3);
 }
 
@@ -72,12 +70,7 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   display_putc(c, p.invert_);
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = TEXT_CMD;
-    remoteUIBuffer[2] = c;
-    remoteUIBuffer[3] = x + ASCII_SPACE_OFFSET; // to avoid sending NUL (aka 0)
-    remoteUIBuffer[4] = y + ASCII_SPACE_OFFSET;
-    remoteUIBuffer[5] = p.invert_ ? 127 : 0;
+    remoteUIDrawCharCommand(c, x, y, p.invert_, remoteUIBuffer);
     sendToUSBCDCBuffered(remoteUIBuffer, 6); // Use the buffered function
   }
 }
@@ -98,27 +91,8 @@ void advGUIWindowImp::DrawRect(GUIRect &r) {
     // Worst-case buffer: 2 (header) + 4 * 2-byte-values * 2 (if all are
     // escaped) = 18 bytes.
     char remoteUIBuffer[20];
-    int bufferIndex = 0;
-    remoteUIBuffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[bufferIndex++] = DRAWRECT_CMD;
-    // Helper lambda for byte escaping.
-    auto addByteEscaped = [&](char byte) {
-      if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
-        remoteUIBuffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
-        remoteUIBuffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
-      } else {
-        remoteUIBuffer[bufferIndex++] = byte;
-      }
-    };
-    // Helper lambda to add a 16-bit value, escaping each of its two bytes.
-    auto add16bitEscaped = [&](uint16_t val) {
-      addByteEscaped(val & 0xFF);        // Add LSB
-      addByteEscaped((val >> 8) & 0xFF); // Add MSB
-    };
-    add16bitEscaped(r.Left());
-    add16bitEscaped(r.Top());
-    add16bitEscaped(r.Width());
-    add16bitEscaped(r.Height());
+    auto bufferIndex = remoteUIDrawRectCommand(r.Left(), r.Top(), r.Width(),
+                                               r.Height(), remoteUIBuffer);
     sendToUSBCDCBuffered(remoteUIBuffer, bufferIndex);
   }
 }
@@ -129,11 +103,7 @@ void advGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   display_clear(backgroundColor);
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = CLEAR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
+    remoteUIClearCommand(c._r, c._g, c._b, remoteUIBuffer);
     sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
   }
 };
@@ -158,22 +128,9 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
     // are escaped. Header (2) + 3 color components * 2 bytes/escaped_component
     // = 8 bytes.
     char remoteUIBuffer[8];
-    int bufferIndex = 0;
-    remoteUIBuffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[bufferIndex++] = SETCOLOR_CMD;
-    // Helper lambda to handle escaping and adding a byte to the buffer.
-    // Assumes REMOTE_UI_ESC_CHAR and REMOTE_UI_ESC_XOR are defined.
-    auto addByte = [&](char byte) {
-      if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
-        remoteUIBuffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
-        remoteUIBuffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
-      } else {
-        remoteUIBuffer[bufferIndex++] = byte;
-      }
-    };
-    addByte(c._r);
-    addByte(c._g);
-    addByte(c._b);
+    auto bufferIndex =
+        remoteUISetColorCommand(c._r, c._g, c._b, remoteUIBuffer);
+    sendToUSBCDC(remoteUIBuffer, bufferIndex);
     sendToUSBCDCBuffered(remoteUIBuffer,
                          bufferIndex); // Use the buffered function
   }
