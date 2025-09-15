@@ -198,11 +198,15 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
     }
   }
 }
-
+// TODO: update this to a use DMA2D call ASAP
 void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
                        uint16_t width, uint16_t height) {
   // Get the ABGR8888 color from the palette
   uint32_t color = palette[color_index];
+
+  if (width == 0 || height == 0) {
+    return;
+  }
 
   // Clip the rectangle to the screen dimensions
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) {
@@ -213,9 +217,6 @@ void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
   }
   if (y + height > DISPLAY_HEIGHT) {
     height = DISPLAY_HEIGHT - y;
-  }
-  if (width == 0 || height == 0) {
-    return;
   }
 
   for (uint16_t j = y; j < y + height; j++) {
