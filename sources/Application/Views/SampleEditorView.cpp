@@ -233,8 +233,7 @@ void SampleEditorView::DrawWaveForm() {
     // borders
     rrect = GUIRect(x_coord, Y_OFFSET + 1, x_coord + 1,
                     Y_OFFSET + BITMAPHEIGHT - 1);
-    win.SetCurrentRectColor(AppWindow::GetColor(CD_BACKGROUND));
-    win.DrawRect(rrect);
+    DrawRect(rrect, CD_BACKGROUND);
 
     // 2. Redraw the waveform in that column
     int waveform_idx =
@@ -254,8 +253,7 @@ void SampleEditorView::DrawWaveForm() {
 
         if (startY <= endY) {
           rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
-          win.SetCurrentRectColor(AppWindow::GetColor(CD_NORMAL));
-          win.DrawRect(rrect);
+          DrawRect(rrect, CD_NORMAL);
         }
       }
     }
@@ -269,16 +267,14 @@ void SampleEditorView::DrawWaveForm() {
     // Clear the entire waveform area
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
                     Y_OFFSET + BITMAPHEIGHT);
-    win.SetCurrentRectColor(AppWindow::GetColor(CD_BACKGROUND));
-    win.DrawRect(rrect);
+    DrawRect(rrect, CD_BACKGROUND);
 
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
     // Draw borders
-    win.SetCurrentRectColor(AppWindow::GetColor(CD_HILITE1));
-    win.DrawRect(rrect); // Top
+    DrawRect(rrect, CD_HILITE1); // Top
     rrect = GUIRect(X_OFFSET, Y_OFFSET + BITMAPHEIGHT - 1,
                     X_OFFSET + BITMAPWIDTH, Y_OFFSET + BITMAPHEIGHT);
-    win.DrawRect(rrect); // Bottom
+    DrawRect(rrect, CD_HILITE1); // Bottom
 
     // Draw full waveform
     if (waveformCacheValid_) {
@@ -297,8 +293,7 @@ void SampleEditorView::DrawWaveForm() {
 
           if (startY <= endY) {
             rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
-            win.SetCurrentRectColor(AppWindow::GetColor(CD_NORMAL));
-            win.DrawRect(rrect);
+            DrawRect(rrect, CD_NORMAL);
           }
         }
       }
@@ -341,20 +336,17 @@ void SampleEditorView::DrawWaveForm() {
   if (current_startX != -1) { // Only draw if valid
     rrect = GUIRect(current_startX, Y_OFFSET + 2, current_startX + 1,
                     Y_OFFSET + BITMAPHEIGHT - 3);
-    win.SetCurrentRectColor(AppWindow::GetColor(CD_CURSOR));
-    win.DrawRect(rrect);
+    DrawRect(rrect, CD_CURSOR);
   }
   if (current_endX != -1) { // Only draw if valid
     rrect = GUIRect(current_endX, Y_OFFSET + 2, current_endX + 1,
                     Y_OFFSET + BITMAPHEIGHT - 3);
-    win.SetCurrentRectColor(AppWindow::GetColor(CD_CURSOR));
-    win.DrawRect(rrect);
+    DrawRect(rrect, CD_CURSOR);
   }
   if (current_playheadX != -1) { // Only draw if valid and playing
     rrect = GUIRect(current_playheadX, Y_OFFSET + 2, current_playheadX + 1,
                     Y_OFFSET + BITMAPHEIGHT - 3);
-    win.SetCurrentRectColor(AppWindow::GetColor(CD_CURSOR));
-    win.DrawRect(rrect);
+    DrawRect(rrect, CD_CURSOR);
   }
 
   // Update last known positions
