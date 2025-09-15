@@ -29,7 +29,7 @@ GUIWindow::~GUIWindow() { delete _imp; }
 
 void GUIWindow::SetColor(GUIColor &color) { _imp->SetColor(color); }
 
-void GUIWindow::ClearRect(GUIRect &r) { _imp->ClearRect(r); }
+void GUIWindow::ClearTextRect(GUIRect &r) { _imp->ClearTextRect(r); }
 
 void GUIWindow::DrawString(const char *string, GUIPoint &pos,
                            GUITextProperties &props, bool overlay) {

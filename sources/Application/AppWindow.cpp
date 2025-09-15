@@ -206,7 +206,7 @@ void AppWindow::Clear(bool all) {
   };
 };
 
-void AppWindow::ClearRect(GUIRect &r) {
+void AppWindow::ClearTextRect(GUIRect &r) {
 
   int x = r.Left();
   int y = r.Top();

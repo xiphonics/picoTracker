@@ -108,8 +108,8 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   }
 };
 
-void picoTrackerGUIWindowImp::ClearRect(GUIRect &r) {
-  Trace::Debug("GUI ClearRect call");
+void picoTrackerGUIWindowImp::ClearTextRect(GUIRect &r) {
+  Trace::Debug("GUI ClearTextRect call");
 };
 
 chargfx_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {

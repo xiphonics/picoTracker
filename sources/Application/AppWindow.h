@@ -69,7 +69,7 @@ public:
   void CloseProject();
 
   virtual void Clear(bool all = false);
-  virtual void ClearRect(GUIRect &rect);
+  virtual void ClearTextRect(GUIRect &rect);
   virtual void SetColor(ColorDefinition cd);
 
   void SetDirty();

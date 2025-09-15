@@ -108,8 +108,8 @@ void advGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   }
 };
 
-void advGUIWindowImp::ClearRect(GUIRect &r) {
-  Trace::Debug("GUI ClearRect call");
+void advGUIWindowImp::ClearTextRect(GUIRect &r) {
+  Trace::Debug("GUI ClearTextRect call");
 };
 
 color_t advGUIWindowImp::GetColor(GUIColor &c) {
