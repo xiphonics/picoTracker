@@ -1,6 +1,26 @@
 // Just the RemoteUIProtocol header for now
 #include "RemoteUIProtocol.h"
 
+// Helper function for byte escaping.
+static uint16_t addByteEscaped(char *buffer, uint16_t bufferIndex, char byte) {
+  if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
+    buffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
+    buffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
+  } else {
+    buffer[bufferIndex++] = byte;
+  }
+  return bufferIndex;
+}
+
+// Helper function to add a 16-bit value, escaping each of its two bytes.
+static uint16_t add16bitEscaped(char *buffer, uint16_t bufferIndex,
+                                uint16_t val) {
+  bufferIndex = addByteEscaped(buffer, bufferIndex, val & 0xFF); // Add LSB
+  bufferIndex =
+      addByteEscaped(buffer, bufferIndex, (val >> 8) & 0xFF); // Add MSB
+  return bufferIndex;
+}
+
 void remoteUIFontCommand(uint8_t uifontIndex, char *buffer) {
   buffer[0] = REMOTE_UI_CMD_MARKER;
   buffer[1] = SETFONT_CMD;
@@ -22,24 +42,10 @@ uint16_t remoteUIDrawRectCommand(int left, int top, int width, int height,
   uint16_t bufferIndex = 0;
   buffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
   buffer[bufferIndex++] = DRAWRECT_CMD;
-  // Helper lambda for byte escaping.
-  auto addByteEscaped = [&](char byte) {
-    if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
-      buffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
-      buffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
-    } else {
-      buffer[bufferIndex++] = byte;
-    }
-  };
-  // Helper lambda to add a 16-bit value, escaping each of its two bytes.
-  auto add16bitEscaped = [&](uint16_t val) {
-    addByteEscaped(val & 0xFF);        // Add LSB
-    addByteEscaped((val >> 8) & 0xFF); // Add MSB
-  };
-  add16bitEscaped(left);
-  add16bitEscaped(top);
-  add16bitEscaped(width);
-  add16bitEscaped(height);
+  bufferIndex = add16bitEscaped(buffer, bufferIndex, left);
+  bufferIndex = add16bitEscaped(buffer, bufferIndex, top);
+  bufferIndex = add16bitEscaped(buffer, bufferIndex, width);
+  bufferIndex = add16bitEscaped(buffer, bufferIndex, height);
   return bufferIndex;
 }
 
@@ -54,21 +60,11 @@ void remoteUIClearCommand(unsigned short r, unsigned short g, unsigned short b,
 
 uint16_t remoteUISetColorCommand(unsigned short r, unsigned short g,
                                  unsigned short b, char *buffer) {
-  int bufferIndex = 0;
+  uint16_t bufferIndex = 0;
   buffer[bufferIndex++] = REMOTE_UI_CMD_MARKER;
   buffer[bufferIndex++] = SETCOLOR_CMD;
-  // Helper lambda to handle escaping and adding a byte to the buffer.
-  // Assumes REMOTE_UI_ESC_CHAR and REMOTE_UI_ESC_XOR are defined.
-  auto addByte = [&](char byte) {
-    if (byte == REMOTE_UI_CMD_MARKER || byte == REMOTE_UI_ESC_CHAR) {
-      buffer[bufferIndex++] = REMOTE_UI_ESC_CHAR;
-      buffer[bufferIndex++] = byte ^ REMOTE_UI_ESC_XOR;
-    } else {
-      buffer[bufferIndex++] = byte;
-    }
-  };
-  addByte(r);
-  addByte(g);
-  addByte(b);
+  bufferIndex = addByteEscaped(buffer, bufferIndex, r);
+  bufferIndex = addByteEscaped(buffer, bufferIndex, g);
+  bufferIndex = addByteEscaped(buffer, bufferIndex, b);
   return bufferIndex;
 }
