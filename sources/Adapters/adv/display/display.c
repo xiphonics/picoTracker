@@ -179,7 +179,7 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
       const uint8_t *glyph = &FONT[char_index][0][0];
 
       uint32_t *dest = (uint32_t *)framebuffer +
-                       (h * CHAR_HEIGHT * FRAMEBUFFER_WIDTH) + (w * CHAR_WIDTH);
+                       (h * CHAR_HEIGHT * DISPLAY_WIDTH) + (w * CHAR_WIDTH);
 
       /* Most of what happens here is defined on the peripheral configuration.
        * Perpheral is configured in memory to memory mode with blending and
@@ -187,7 +187,7 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
        * which we have to update to each region. BG color is defined as a static
        * address with the color in it, so this works as a register to memory
        * DMA2D mode. Char array is contiguous in memory for a single char, but
-       * frame buffer needs to have a stride if FRAMEBUFFER_WIDTH - CHAR_WIDTH
+       * frame buffer needs to have a stride if DISPLAY_WIDTH - CHAR_WIDTH
        * for each line rendered, this is also configured in the peripheral.
        */
       HAL_DMA2D_BlendingStart(&hdma2d, (uint32_t)glyph, bg_color,
