@@ -28,6 +28,7 @@
 //
 
 #include "UIFramework/BasicDatas/GUIEvent.h"
+#include <cstdint>
 
 #define ASCII_SPACE_OFFSET 0xF
 #define INVERT_ON 0x7F
@@ -66,5 +67,19 @@ static GUIEventPadButtonType eventMappingPico[11] = {
 #define to_rgb565(color)                                                       \
   ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
       (color._b >> 3)
+
+void remoteUIFontCommand(uint8_t uifontIndex, char *buffer);
+
+void remoteUIDrawCharCommand(const char c, uint8_t x, uint8_t y, bool invert,
+                             char *buffer);
+
+uint16_t remoteUIDrawRectCommand(int left, int top, int width, int height,
+                                 char *buffer);
+
+void remoteUIClearCommand(unsigned short r, unsigned short g, unsigned short b,
+                          char *buffer);
+
+uint16_t remoteUISetColorCommand(unsigned short r, unsigned short g,
+                                 unsigned short b, char *buffer);
 
 #endif

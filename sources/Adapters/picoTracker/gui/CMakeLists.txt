@@ -14,6 +14,7 @@ target_link_libraries(platform_gui PUBLIC
   platform_display
   platform_system
   platform_usb
+  remote_ui
 )
 
 target_include_directories(platform_gui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
