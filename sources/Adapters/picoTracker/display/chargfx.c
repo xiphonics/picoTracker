@@ -26,8 +26,6 @@ static uint8_t screen[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint8_t colors[TEXT_HEIGHT * TEXT_WIDTH] = {0};
 static uint16_t buffer[CHAR_HEIGHT * CHAR_WIDTH * BUFFER_CHARS] = {0};
 
-static uint16_t rectbuffer[ILI9341_TFTWIDTH] = {0};
-
 static uint8_t ui_font_index = 0;
 
 // Using a bit array in order to save memory, there is a slight performance
@@ -156,12 +154,12 @@ void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
   // just use the char cell buffer for our line buffer as its more than big
   // enough
   for (uint16_t i = 0; i < display_w; i++) {
-    rectbuffer[i] = color;
+    buffer[i] = color;
   }
 
   // Write the buffer for each column
   for (uint16_t i = 0; i < display_h; i++) {
-    ili9341_write_data_continuous(rectbuffer, display_w * sizeof(uint16_t));
+    ili9341_write_data_continuous(buffer, display_w * sizeof(uint16_t));
   }
 
   ili9341_stop_writing();
