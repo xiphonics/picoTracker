@@ -394,7 +394,6 @@ void SampleEditorView::AnimationUpdate() {
 
       // Update position (normalized to full sample range)
       playbackPosition_ = samplePos / tempSampleSize_;
-      // Trace::Debug("pos:%d", playbackPosition_);
       redraw_ = true;
     }
   }
@@ -448,7 +447,7 @@ void SampleEditorView::loadSample(
   // Reset temporary sample state
   tempSampleSize_ = 0;
   waveformCacheValid_ = false;
-  static float sumSquares[WAVEFORM_CACHE_SIZE];
+  static int64_t sumSquares[WAVEFORM_CACHE_SIZE];
   memset(sumSquares, 0, sizeof(sumSquares));
 
   if (filename.empty()) {
@@ -458,7 +457,7 @@ void SampleEditorView::loadSample(
 
   // First, navigate to the root projects samples subdir directory
   if (!goProjectSamplesDir()) {
-    Trace::Error("couldnt change to project samples dir!");
+    Trace::Error("couldn't change to project samples dir!");
     return;
   }
 
@@ -527,10 +526,10 @@ void SampleEditorView::loadSample(
 
       int cacheIndex = (currentFrame + i) / samplesPerPixel;
       if (cacheIndex < WAVEFORM_CACHE_SIZE) {
-        // Normalize the sample to a -1.0 to 1.0 range
-        float normalizedSample = sampleValue / 32768.0f;
-        // Add the square of the sample to the accumulator for this cache index
-        sumSquares[cacheIndex] += normalizedSample * normalizedSample;
+        // Accumulate sum of squares using integer arithmetic for performance.
+        // Floating point conversion will be done once for each cache entry
+        // later.
+        sumSquares[cacheIndex] += (int64_t)sampleValue * sampleValue;
       }
     }
     currentFrame += framesRead;
@@ -545,7 +544,14 @@ void SampleEditorView::loadSample(
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
     if (samplesPerPixel >= 1) {
       // Calculate the Root Mean Square (RMS)
-      float rms = sqrt(sumSquares[x] / samplesPerPixel);
+      // 1. Calculate mean of squares from our accumulated integer values.
+      float mean_square = (float)sumSquares[x] / samplesPerPixel;
+
+      // 2. Take the square root.
+      float rms_unscaled = sqrt(mean_square);
+
+      // 3. Normalize from 16-bit sample range to [-1.0, 1.0]
+      float rms = rms_unscaled / 32768.0f;
 
       // Scale the final value to the display height
       waveformCache_[x] = (uint8_t)(rms * BITMAPHEIGHT);
