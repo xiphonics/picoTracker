@@ -65,7 +65,9 @@ private:
 #define WAVEFORM_CACHE_SIZE BITMAPWIDTH
 
   // Flag to force redraw of waveform
-  bool forceRedraw_;
+  // This is required because we try to not redraw the full waveform as doing so
+  // is quite slow
+  bool fullWaveformRedraw_;
 
   // Playback state
   bool isPlaying_;

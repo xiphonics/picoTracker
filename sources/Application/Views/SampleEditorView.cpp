@@ -24,7 +24,7 @@
 #include <cstdint>
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data), forceRedraw_(false), isPlaying_(false),
+    : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
       isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
       playbackPosition_(0.0f), playbackStartFrame_(0), lastAnimationTime_(0),
       sys_(System::GetInstance()), startVar_(FourCC::VarSampleEditStart, 0),
@@ -47,10 +47,7 @@ void SampleEditorView::OnFocus() {
   updateSampleParameters();
 
   // Force redraw of waveform
-  forceRedraw_ = true;
-
-  // make sure we do initial draw of the waveform into bitmap for display
-  // updateWaveformDisplay();
+  fullWaveformRedraw_ = true;
 
   addAllFields();
 }
@@ -262,11 +259,10 @@ void SampleEditorView::DrawWaveForm() {
 
   GUIRect rrect;
 
-  // --- Full Redraw Logic ---
-  if (forceRedraw_) {
+  if (fullWaveformRedraw_) {
     // clear flag immediately to prevent race condition between event triggered
     // from input event and the animation update callback
-    forceRedraw_ = false;
+    fullWaveformRedraw_ = false;
     // Clear the entire waveform area
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
                     Y_OFFSET + BITMAPHEIGHT);
@@ -565,7 +561,7 @@ void SampleEditorView::loadSample(
   // log duration, sample count, peak vol for file
   Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
              tempSampleSize_, peakAmplitude, filename.c_str());
-  forceRedraw_ = true;
+  fullWaveformRedraw_ = true;
 }
 
 bool SampleEditorView::goProjectSamplesDir() {
