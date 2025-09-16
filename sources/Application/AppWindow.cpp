@@ -868,14 +868,15 @@ bool AppWindow::autoSave() {
   return false;
 }
 
+// Maps the ColorDefinition used in View classes to a GUIColor that is needed by
+// DrawRect which unlike the text grid based drawing code works in terms of
+// GUIColor and not definitions
 GUIColor AppWindow::GetColor(ColorDefinition cd) {
   switch (cd) {
   case CD_NORMAL:
     return AppWindow::normalColor_;
-
   case CD_BACKGROUND:
     return AppWindow::backgroundColor_;
-
   case CD_HILITE1:
     return AppWindow::highlightColor_;
   case CD_HILITE2:
