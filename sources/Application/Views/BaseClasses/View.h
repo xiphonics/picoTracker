@@ -138,9 +138,10 @@ public:
   // Char based draw routines
 
   virtual void SetColor(ColorDefinition cd);
-  virtual void ClearRect(int x, int y, int w, int h);
+  virtual void ClearTextRect(int x, int y, int w, int h);
   virtual void DrawString(int x, int y, const char *txt,
                           GUITextProperties &props);
+  virtual void DrawRect(GUIRect &r, ColorDefinition color);
 
   void DoModal(ModalView *view, ModalViewCallback cb = 0);
 
@@ -203,6 +204,7 @@ private:
   static bool initPrivate_;
   ModalView *modalView_;
   ModalViewCallback modalViewCallback_;
+  static ColorDefinition currentRectColor_;
 
 public:
   static int margin_;

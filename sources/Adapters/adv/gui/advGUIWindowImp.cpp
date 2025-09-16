@@ -14,34 +14,21 @@
 #include "Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
-#include "UIFramework/BasicDatas/GUIEvent.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "advRemoteUI.h"
 #include <string.h>
 #include <string>
 
-#define to_rgb565(color)                                                       \
-  ((color._r & 0b11111000) << 8) | ((color._g & 0b11111100) << 3) |            \
-      (color._b >> 3)
-
-// classic picotracker mapping
-static GUIEventPadButtonType eventMappingPico[11] = {
-    EPBT_LEFT,   // SW1
-    EPBT_DOWN,   // SW2
-    EPBT_RIGHT,  // SW3
-    EPBT_UP,     // SW4
-    EPBT_L,      // SW5
-    EPBT_B,      // SW6
-    EPBT_A,      // SW7
-    EPBT_R,      // SW8
-    EPBT_START,  // SW9
-    EPBT_SELECT, // No SW
-    EPBT_POWER   // Power button
-};
+// Keep track of the last "SetColor()" call to track the current color palette
+// index, used by DrawRect() to know which color to use when drawing to the
+// devices LCD
+static uint8_t lastRemoteColorIdx = 255;
 
 advGUIWindowImp *instance_;
 
 advGUIWindowImp::advGUIWindowImp(GUICreateWindowParams &p) {
+
+  // stash ref to singleton for use in static methods
   instance_ = this;
 
   Config *config = Config::GetInstance();
@@ -68,9 +55,7 @@ advGUIWindowImp::~advGUIWindowImp() {}
 
 void advGUIWindowImp::SendFont(uint8_t uifontIndex) {
   char remoteUIBuffer[3];
-  remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-  remoteUIBuffer[1] = SETFONT_CMD;
-  remoteUIBuffer[2] = uifontIndex + ASCII_SPACE_OFFSET;
+  remoteUIFontCommand(uifontIndex, remoteUIBuffer);
   sendToUSBCDCBuffered(remoteUIBuffer, 3);
 }
 
@@ -85,12 +70,7 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   display_putc(c, p.invert_);
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = TEXT_CMD;
-    remoteUIBuffer[2] = c;
-    remoteUIBuffer[3] = x + ASCII_SPACE_OFFSET; // to avoid sending NUL (aka 0)
-    remoteUIBuffer[4] = y + ASCII_SPACE_OFFSET;
-    remoteUIBuffer[5] = p.invert_ ? 127 : 0;
+    remoteUIDrawCharCommand(c, x, y, p.invert_, remoteUIBuffer);
     sendToUSBCDCBuffered(remoteUIBuffer, 6); // Use the buffered function
   }
 }
@@ -103,8 +83,19 @@ void advGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
 };
 
 void advGUIWindowImp::DrawRect(GUIRect &r) {
-  Trace::Debug("GUI DrawRect call");
-};
+  // This is the local drawing command for the device's own screen.
+  display_fill_rect(lastRemoteColorIdx, r.Left(), r.Top(), r.Width(),
+                    r.Height());
+  if (remoteUIEnabled_) {
+    // Now, send the DrawRect command with full byte-escaping.
+    // Worst-case buffer: 2 (header) + 4 * 2-byte-values * 2 (if all are
+    // escaped) = 18 bytes.
+    char remoteUIBuffer[20];
+    auto bufferIndex = remoteUIDrawRectCommand(r.Left(), r.Top(), r.Width(),
+                                               r.Height(), remoteUIBuffer);
+    sendToUSBCDCBuffered(remoteUIBuffer, bufferIndex);
+  }
+}
 
 void advGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   color_t backgroundColor = GetColor(c);
@@ -112,17 +103,13 @@ void advGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   display_clear(backgroundColor);
   if (remoteUIEnabled_) {
     char remoteUIBuffer[5];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = CLEAR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
+    remoteUIClearCommand(c._r, c._g, c._b, remoteUIBuffer);
     sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
   }
 };
 
-void advGUIWindowImp::ClearRect(GUIRect &r) {
-  Trace::Debug("GUI ClearRect call");
+void advGUIWindowImp::ClearTextRect(GUIRect &r) {
+  Trace::Debug("GUI ClearTextRect call");
 };
 
 color_t advGUIWindowImp::GetColor(GUIColor &c) {
@@ -134,15 +121,18 @@ color_t advGUIWindowImp::GetColor(GUIColor &c) {
 
 void advGUIWindowImp::SetColor(GUIColor &c) {
   color_t color = GetColor(c);
+  lastRemoteColorIdx = color;
   display_set_foreground(color);
   if (remoteUIEnabled_) {
-    char remoteUIBuffer[5];
-    remoteUIBuffer[0] = REMOTE_UI_CMD_MARKER;
-    remoteUIBuffer[1] = SETCOLOR_CMD;
-    remoteUIBuffer[2] = c._r;
-    remoteUIBuffer[3] = c._g;
-    remoteUIBuffer[4] = c._b;
-    sendToUSBCDCBuffered(remoteUIBuffer, 5); // Use the buffered function
+    // Buffer must be large enough for the worst case where all 3 color bytes
+    // are escaped. Header (2) + 3 color components * 2 bytes/escaped_component
+    // = 8 bytes.
+    char remoteUIBuffer[8];
+    auto bufferIndex =
+        remoteUISetColorCommand(c._r, c._g, c._b, remoteUIBuffer);
+    sendToUSBCDC(remoteUIBuffer, bufferIndex);
+    sendToUSBCDCBuffered(remoteUIBuffer,
+                         bufferIndex); // Use the buffered function
   }
 };
 

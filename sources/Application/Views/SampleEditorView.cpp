@@ -13,50 +13,27 @@
 #include "Application/Model/Config.h"
 #include "Application/Utils/char.h"
 #include "BaseClasses/UIBigHexVarField.h"
-#include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "Foundation/Types/Types.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
-#include "System/Display/BitmapGraphics.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
 #include <cmath>
 #include <cstdint>
 
-static void drawVerticalMarker(uint8_t *buffer, BitmapGraphics *gfx, int x) {
-  constexpr int w = BITMAPWIDTH;
-  constexpr int h = BITMAPHEIGHT;
-
-#ifdef ADV
-  /* Write a 1‑pixel‑high line directly into the 8‑bit buffer. */
-  for (int y = 1; y < h - 1; ++y) {
-    buffer[y * w + x] = 1;
-  }
-#else
-  /* Use the existing graphics helper for the non‑ADV build. */
-  gfx->drawLine(buffer, w, h, x, 1, x, h - 2, true);
-#endif
-}
-
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data), forceRedraw_(false), isPlaying_(false),
+    : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
       isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
       playbackPosition_(0.0f), playbackStartFrame_(0), lastAnimationTime_(0),
       sys_(System::GetInstance()), startVar_(FourCC::VarSampleEditStart, 0),
       endVar_(FourCC::VarSampleEditEnd, 0),
       // bit of a hack to use InstrumentName but we never actually persist this
       // in any config file here
-      filenameVar_(FourCC::InstrumentName, "") {
+      filenameVar_(FourCC::InstrumentName, ""), win(w), redraw_(false) {
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
-  // Clear the buffer
-  memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
-
-  GUIPoint position(0, 3);
-  waveformField_.emplace_back(position, BITMAPWIDTH, BITMAPHEIGHT,
-                              bitmapBuffer_, 0xFFFF, 0x0000);
 }
 
 SampleEditorView::~SampleEditorView() {}
@@ -70,10 +47,7 @@ void SampleEditorView::OnFocus() {
   updateSampleParameters();
 
   // Force redraw of waveform
-  forceRedraw_ = true;
-
-  // make sure we do initial draw of the waveform into bitmap for display
-  updateWaveformDisplay();
+  fullWaveformRedraw_ = true;
 
   addAllFields();
 }
@@ -87,12 +61,11 @@ void SampleEditorView::addAllFields() {
   intVarField_.clear();
   actionField_.clear();
   nameTextField_.clear();
-  // no need to clear staticField_ and waveform as they are not added to
-  // fieldList_
+  // no need to clear staticField_  as its not added to fieldList_
 
   GUIPoint position = GetAnchor();
 
-  position._y = 12; // offset enough for bitmap field
+  position._y = 12; // offset enough for waveform display
   position._x = 5;
 
   auto label =
@@ -131,7 +104,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         isPlaying_ = false;
 
         // Force redraw to remove the playhead
-        forceRedraw_ = true;
+        redraw_ = true;
       }
       return;
     }
@@ -185,7 +158,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // Store the current animation frame as our start frame
       playbackStartFrame_ = AppWindow::GetAnimationFrameCounter();
       lastAnimationTime_ = sys_->Millis();
-      forceRedraw_ = true;
+      redraw_ = true;
 
       // If something is already playing, stop it first
       if (Player::GetInstance()->IsPlaying()) {
@@ -206,14 +179,55 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
                                               startSample);
       }
-      // Force redraw to show the playhead
-      forceRedraw_ = true;
+      // redraw to show the playhead
+      redraw_ = true;
     }
     return;
   }
 
   // For all other button presses, let the parent class handle navigation
   FieldView::ProcessButtonMask(mask, pressed);
+}
+
+// Helper to redraw the content of a single column (waveform or just
+// background) This function will clear a 1-pixel wide column and redraw the
+// waveform in it.
+void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
+                  int x_offset, int y_offset) {
+  if (x_coord < 0)
+    return; // Invalid coordinate
+
+  GUIRect rrect;
+
+  // 1. Clear the column
+  // The Y range for clearing should cover the entire waveform area, including
+  // borders
+  rrect =
+      GUIRect(x_coord, y_offset + 1, x_coord + 1, y_offset + BITMAPHEIGHT - 1);
+  view.DrawRect(rrect, CD_BACKGROUND);
+
+  // 2. Redraw the waveform in that column
+  int waveform_idx =
+      x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
+  if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
+    int pixelHeight = waveformCache[waveform_idx];
+    if (pixelHeight > 0) {
+      int centerY = y_offset + BITMAPHEIGHT / 2;
+      int startY = centerY - pixelHeight / 2;
+      int endY = startY + pixelHeight;
+
+      // Clamp to inside the border
+      if (startY < y_offset + 1)
+        startY = y_offset + 1;
+      if (endY > y_offset + BITMAPHEIGHT - 2)
+        endY = y_offset + BITMAPHEIGHT - 2;
+
+      if (startY <= endY) {
+        rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
+        view.DrawRect(rrect, CD_NORMAL);
+      }
+    }
+  }
 }
 
 void SampleEditorView::DrawView() {
@@ -229,9 +243,118 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, titleString, props);
 
-  FieldView::Redraw();
+  DrawWaveForm();
 
-  SetColor(CD_NORMAL);
+  // Let the base class draw all the text fields
+  FieldView::Redraw();
+}
+
+void SampleEditorView::DrawWaveForm() {
+  const int X_OFFSET = 0;
+#ifdef ADV
+  const int Y_OFFSET = 2 * CHAR_HEIGHT * 4;
+#else
+  const int Y_OFFSET = 2 * CHAR_HEIGHT;
+#endif
+
+  GUIRect rrect;
+
+  if (fullWaveformRedraw_) {
+    // clear flag immediately to prevent race condition between event triggered
+    // from input event and the animation update callback
+    fullWaveformRedraw_ = false;
+    // Clear the entire waveform area
+    rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
+                    Y_OFFSET + BITMAPHEIGHT);
+    DrawRect(rrect, CD_BACKGROUND);
+
+    rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
+    // Draw borders
+    DrawRect(rrect, CD_HILITE1); // Top
+    rrect = GUIRect(X_OFFSET, Y_OFFSET + BITMAPHEIGHT - 1,
+                    X_OFFSET + BITMAPWIDTH, Y_OFFSET + BITMAPHEIGHT);
+    DrawRect(rrect, CD_HILITE1); // Bottom
+
+    // Draw full waveform
+    if (waveformCacheValid_) {
+      int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
+      for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
+        int pixelHeight = waveformCache_[x];
+        if (pixelHeight > 0) {
+          int startY = centerY - pixelHeight / 2;
+          int endY = startY + pixelHeight;
+
+          // Clamp to inside the border
+          if (startY < Y_OFFSET + 1)
+            startY = Y_OFFSET + 1;
+          if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
+            endY = Y_OFFSET + BITMAPHEIGHT - 2;
+
+          if (startY <= endY) {
+            rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
+            DrawRect(rrect, CD_NORMAL);
+          }
+        }
+      }
+    }
+    // After a full redraw, invalidate last positions to ensure markers are
+    // drawn fresh
+    last_start_x_ = -1;
+    last_end_x_ = -1;
+    last_playhead_x_ = -1;
+  }
+
+  // --- Incremental Marker Update Logic ---
+
+  // Calculate current marker positions
+  const int current_startX =
+      X_OFFSET + 1 +
+      static_cast<int>((static_cast<float>(start_) / tempSampleSize_) *
+                       (BITMAPWIDTH - 2));
+  const int current_endX =
+      X_OFFSET + 1 +
+      static_cast<int>((static_cast<float>(end_) / tempSampleSize_) *
+                       (BITMAPWIDTH - 2));
+  const int current_playheadX =
+      isPlaying_ ? (X_OFFSET + 1 +
+                    static_cast<int>(playbackPosition_ * (BITMAPWIDTH - 2)))
+                 : -1;
+
+  // Erase old markers if they have moved or disappeared
+  if (last_start_x_ != -1 && last_start_x_ != current_startX) {
+    redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET);
+  }
+  if (last_end_x_ != -1 && last_end_x_ != current_endX) {
+    redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET);
+  }
+  if (last_playhead_x_ != -1 && last_playhead_x_ != current_playheadX) {
+    redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET);
+  }
+
+  // Draw new markers
+  if (current_startX != -1) { // Only draw if valid
+    rrect = GUIRect(current_startX, Y_OFFSET + 2, current_startX + 1,
+                    Y_OFFSET + BITMAPHEIGHT - 3);
+    DrawRect(rrect, CD_CURSOR);
+  }
+  if (current_endX != -1) { // Only draw if valid
+    rrect = GUIRect(current_endX, Y_OFFSET + 2, current_endX + 1,
+                    Y_OFFSET + BITMAPHEIGHT - 3);
+    DrawRect(rrect, CD_CURSOR);
+  }
+  if (current_playheadX != -1) { // Only draw if valid and playing
+    rrect = GUIRect(current_playheadX, Y_OFFSET + 2, current_playheadX + 1,
+                    Y_OFFSET + BITMAPHEIGHT - 3);
+    DrawRect(rrect, CD_CURSOR);
+  }
+
+  // Update last known positions
+  last_start_x_ = current_startX;
+  last_end_x_ = current_endX;
+  last_playhead_x_ = current_playheadX;
+
+  // Reset redraw flags
+  redraw_ = false;
 }
 
 void SampleEditorView::AnimationUpdate() {
@@ -242,7 +365,7 @@ void SampleEditorView::AnimationUpdate() {
       // Playback has stopped (reached the end of non-looping sample)
       isPlaying_ = false;
       playbackPosition_ = 0;
-      forceRedraw_ = true;
+      // forceRedraw_ = true;
       Trace::Debug("DEBUG: Playback stopped, resetting playhead\n");
     } else {
       // Calculate the time elapsed since the last animation frame
@@ -271,16 +394,15 @@ void SampleEditorView::AnimationUpdate() {
 
       // Update position (normalized to full sample range)
       playbackPosition_ = samplePos / tempSampleSize_;
-      Trace::Debug("pos:%d", playbackPosition_);
-      forceRedraw_ = true;
+      redraw_ = true;
     }
   }
 
   // Check if we need to update the waveform display
-  if (forceRedraw_) {
+  if (redraw_) {
     // Update the waveform display
-    updateWaveformDisplay();
-    forceRedraw_ = false;
+    DrawWaveForm();
+    redraw_ = false;
   }
 
   GUITextProperties props;
@@ -291,8 +413,8 @@ void SampleEditorView::AnimationUpdate() {
 void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   // When any of our observed variables change, update the cached parameters
   updateSampleParameters();
-  // Then force a redraw of the waveform
-  forceRedraw_ = true;
+  // Then do a redraw of the waveform markers only
+  redraw_ = true;
 }
 
 void SampleEditorView::updateSampleParameters() {
@@ -315,93 +437,6 @@ void SampleEditorView::updateSampleParameters() {
     start_ = end_;
 }
 
-void SampleEditorView::updateWaveformDisplay() {
-  Profiler p("updateWaveformDisplay");
-  BitmapGraphics *gfx = BitmapGraphics::GetInstance();
-
-  memset(bitmapBuffer_, 0, BITMAPBUFFERSIZE * sizeof(uint8_t));
-
-  // Draw a border around the waveform display
-#ifdef ADV
-  // Draw rectangle using direct buffer access for 8bpp
-  memset(bitmapBuffer_, 1, BITMAPWIDTH); // Top edge
-  memset(bitmapBuffer_ + (BITMAPHEIGHT - 1) * BITMAPWIDTH, 1,
-         BITMAPWIDTH); // Bottom edge
-  for (int y = 1; y < BITMAPHEIGHT - 1; y++) {
-    bitmapBuffer_[y * BITMAPWIDTH] = 1;                     // Left edge
-    bitmapBuffer_[(y * BITMAPWIDTH) + BITMAPWIDTH - 1] = 1; // Right edge
-  }
-#else
-  gfx->drawRect(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, 0, 0, BITMAPWIDTH - 1,
-                BITMAPHEIGHT - 1, false, true);
-#endif
-
-  // == draw waveform
-  {
-    Profiler p("updateWaveformDisplay: draw waveform");
-    int centerY = BITMAPHEIGHT / 2;
-    for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-      int pixelHeight = waveformCache_[x];
-#ifdef ADV
-      // For non-zero signals, draw the full height
-      int startY = centerY - pixelHeight;
-      int endY = centerY + pixelHeight;
-
-      // Clamp the y-coordinates to the bitmap's bounds
-      if (startY < 0) {
-        startY = 0;
-      }
-      if (endY >= BITMAPHEIGHT) {
-        endY = BITMAPHEIGHT - 1;
-      }
-
-      for (int y = startY; y <= endY; y++) {
-        memset(bitmapBuffer_ + (y * BITMAPWIDTH) + x, 1, 1);
-      }
-#else
-      // For non-zero signals, draw the full height
-      for (int i = 0; i < WAVEFORM_CACHE_SIZE; i++) {
-        gfx->drawLine(bitmapBuffer_, BITMAPWIDTH, BITMAPHEIGHT, x + i,
-                      centerY - pixelHeight, x + i, centerY + pixelHeight,
-                      true);
-      }
-#endif
-    }
-  }
-  // ====
-
-  // Draw start / end markers
-  const int fullSampleSize = tempSampleSize_;
-  const int startX = static_cast<int>(
-      (static_cast<float>(start_) / fullSampleSize) * (BITMAPWIDTH - 2));
-  const int endX = static_cast<int>(
-      (static_cast<float>(end_) / fullSampleSize) * (BITMAPWIDTH - 2));
-
-  drawVerticalMarker(bitmapBuffer_, gfx, startX);
-  drawVerticalMarker(bitmapBuffer_, gfx, endX);
-
-  if (isPlaying_) {
-    Profiler p("updateWaveformDisplay: draw playhead");
-    int playheadX = (int)(playbackPosition_ * (BITMAPWIDTH - 1));
-    if (playheadX < 0) {
-      playheadX = 0;
-    }
-    if (playheadX >= BITMAPWIDTH) {
-      playheadX = BITMAPWIDTH - 1;
-    }
-    drawVerticalMarker(bitmapBuffer_, gfx, playheadX);
-  }
-
-  auto field = waveformField_.front();
-  // Update the bitmap field and request redraw
-  field.SetBitmap(bitmapBuffer_);
-
-  SetDirty(true);
-
-  Profiler p1("updateWaveformDisplay: REDRAW");
-  field.Draw(w_);
-}
-
 short SampleEditorView::chunkBuffer_[512 * 2];
 
 // Load sample from the current projects samples subdir
@@ -412,7 +447,7 @@ void SampleEditorView::loadSample(
   // Reset temporary sample state
   tempSampleSize_ = 0;
   waveformCacheValid_ = false;
-  static float sumSquares[WAVEFORM_CACHE_SIZE];
+  static int64_t sumSquares[WAVEFORM_CACHE_SIZE];
   memset(sumSquares, 0, sizeof(sumSquares));
 
   if (filename.empty()) {
@@ -422,7 +457,7 @@ void SampleEditorView::loadSample(
 
   // First, navigate to the root projects samples subdir directory
   if (!goProjectSamplesDir()) {
-    Trace::Error("couldnt change to project samples dir!");
+    Trace::Error("couldn't change to project samples dir!");
     return;
   }
 
@@ -491,10 +526,10 @@ void SampleEditorView::loadSample(
 
       int cacheIndex = (currentFrame + i) / samplesPerPixel;
       if (cacheIndex < WAVEFORM_CACHE_SIZE) {
-        // Normalize the sample to a -1.0 to 1.0 range
-        float normalizedSample = sampleValue / 32768.0f;
-        // Add the square of the sample to the accumulator for this cache index
-        sumSquares[cacheIndex] += normalizedSample * normalizedSample;
+        // Accumulate sum of squares using integer arithmetic for performance.
+        // Floating point conversion will be done once for each cache entry
+        // later.
+        sumSquares[cacheIndex] += (int64_t)sampleValue * sampleValue;
       }
     }
     currentFrame += framesRead;
@@ -509,7 +544,14 @@ void SampleEditorView::loadSample(
   for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
     if (samplesPerPixel >= 1) {
       // Calculate the Root Mean Square (RMS)
-      float rms = sqrt(sumSquares[x] / samplesPerPixel);
+      // 1. Calculate mean of squares from our accumulated integer values.
+      float mean_square = (float)sumSquares[x] / samplesPerPixel;
+
+      // 2. Take the square root.
+      float rms_unscaled = sqrt(mean_square);
+
+      // 3. Normalize from 16-bit sample range to [-1.0, 1.0]
+      float rms = rms_unscaled / 32768.0f;
 
       // Scale the final value to the display height
       waveformCache_[x] = (uint8_t)(rms * BITMAPHEIGHT);
@@ -525,7 +567,7 @@ void SampleEditorView::loadSample(
   // log duration, sample count, peak vol for file
   Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
              tempSampleSize_, peakAmplitude, filename.c_str());
-  forceRedraw_ = true;
+  fullWaveformRedraw_ = true;
 }
 
 bool SampleEditorView::goProjectSamplesDir() {

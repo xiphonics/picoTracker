@@ -10,6 +10,7 @@
 
 #include "Adapters/adv/display/display.h"
 #include "Foundation/Observable.h"
+#include "System/RemoteUI/RemoteUIProtocol.h"
 #include "UIFramework/Interfaces/I_GUIWindowImp.h"
 #include "eventQueue.h"
 #include <string>
@@ -32,7 +33,7 @@ public: // I_GUIWindowImp implementation
   virtual void Lock();
   virtual void Unlock();
   virtual void Clear(GUIColor &, bool overlay = false);
-  virtual void ClearRect(GUIRect &);
+  virtual void ClearTextRect(GUIRect &);
   virtual void PushEvent(GUIEvent &event);
 
   static void ProcessEvent(Event &event);

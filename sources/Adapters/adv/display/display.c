@@ -179,7 +179,7 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
       const uint8_t *glyph = &FONT[char_index][0][0];
 
       uint32_t *dest = (uint32_t *)framebuffer +
-                       (h * CHAR_HEIGHT * FRAMEBUFFER_WIDTH) + (w * CHAR_WIDTH);
+                       (h * CHAR_HEIGHT * DISPLAY_WIDTH) + (w * CHAR_WIDTH);
 
       /* Most of what happens here is defined on the peripheral configuration.
        * Perpheral is configured in memory to memory mode with blending and
@@ -187,7 +187,7 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
        * which we have to update to each region. BG color is defined as a static
        * address with the color in it, so this works as a register to memory
        * DMA2D mode. Char array is contiguous in memory for a single char, but
-       * frame buffer needs to have a stride if FRAMEBUFFER_WIDTH - CHAR_WIDTH
+       * frame buffer needs to have a stride if DISPLAY_WIDTH - CHAR_WIDTH
        * for each line rendered, this is also configured in the peripheral.
        */
       HAL_DMA2D_BlendingStart(&hdma2d, (uint32_t)glyph, bg_color,
@@ -195,6 +195,33 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
       // We could check for return status here, but if it's not returning HAL_OK
       // here we have big problems
       HAL_DMA2D_PollForTransfer(&hdma2d, HAL_MAX_DELAY);
+    }
+  }
+}
+// TODO: update this to a use DMA2D call ASAP
+void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
+                       uint16_t width, uint16_t height) {
+  // Get the ABGR8888 color from the palette
+  uint32_t color = palette[color_index];
+
+  if (width == 0 || height == 0) {
+    return;
+  }
+
+  // Clip the rectangle to the screen dimensions
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) {
+    return;
+  }
+  if (x + width > DISPLAY_WIDTH) {
+    width = DISPLAY_WIDTH - x;
+  }
+  if (y + height > DISPLAY_HEIGHT) {
+    height = DISPLAY_HEIGHT - y;
+  }
+
+  for (uint16_t j = y; j < y + height; j++) {
+    for (uint16_t i = x; i < x + width; i++) {
+      framebuffer[j * DISPLAY_WIDTH + i] = color;
     }
   }
 }
