@@ -95,4 +95,49 @@ bool advSamplePool::Load(WavFile *wave) {
   return true;
 };
 
-bool advSamplePool::unloadSample() { return false; };
+bool advSamplePool::unloadSample(int i) {
+  if (i < 0 || i >= count_)
+    return false;
+
+  std::free(names_[i]);
+  names_[i] = nullptr;
+
+  // Get information about how we should do the memmove
+  uint32_t deletedSize = ((WavFile *)wav_[i])->GetDiskSize(0);
+  uint32_t bufferSize = 0;
+  void *moveDst = wav_[i]->GetSampleBuffer(0);
+  void *moveSrc = nullptr;
+  if (i < count_ - 1) {
+    moveSrc = wav_[i + 1]->GetSampleBuffer(0);
+  }
+
+  // Update each SoundSource
+  for (int j = i; j < count_ - 1; ++j) {
+    void *dstBuffer = wav_[j]->GetSampleBuffer(0);
+    wav_[j] = wav_[j + 1];
+    names_[j] = names_[j + 1];
+    ((WavFile *)wav_[j])->SetSampleBuffer(static_cast<short *>(dstBuffer));
+    // this gives us the total size to be moved
+    bufferSize += ((WavFile *)wav_[j])->GetDiskSize(0);
+  }
+
+  // finally we correct the write pointer
+  writeOffset1_ -= deletedSize;
+  // Ensure 4-byte alignment for SDRAM access at start of each file
+  writeOffset1_ = (writeOffset1_ + 3) & ~3;
+
+  // If there was anything to move (i.e: it's not the last sample) we do so now
+  // in a sigle chunk
+  if (bufferSize > 0) {
+    std::memmove(moveDst, moveSrc, bufferSize);
+  }
+
+  // clear the last slot (now unused)
+  wav_[count_ - 1] = nullptr;
+  names_[count_ - 1] = nullptr;
+
+  // decrement sample count
+  --count_;
+
+  return true;
+}
