@@ -192,6 +192,47 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
   FieldView::ProcessButtonMask(mask, pressed);
 }
 
+// Helper to redraw the content of a single column (waveform or just
+// background) This function will clear a 1-pixel wide column and redraw the
+// waveform in it.
+void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
+                  int x_offset, int y_offset) {
+  if (x_coord < 0)
+    return; // Invalid coordinate
+
+  GUIRect rrect;
+
+  // 1. Clear the column
+  // The Y range for clearing should cover the entire waveform area, including
+  // borders
+  rrect =
+      GUIRect(x_coord, y_offset + 1, x_coord + 1, y_offset + BITMAPHEIGHT - 1);
+  view.DrawRect(rrect, CD_BACKGROUND);
+
+  // 2. Redraw the waveform in that column
+  int waveform_idx =
+      x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
+  if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
+    int pixelHeight = waveformCache[waveform_idx];
+    if (pixelHeight > 0) {
+      int centerY = y_offset + BITMAPHEIGHT / 2;
+      int startY = centerY - pixelHeight / 2;
+      int endY = startY + pixelHeight;
+
+      // Clamp to inside the border
+      if (startY < y_offset + 1)
+        startY = y_offset + 1;
+      if (endY > y_offset + BITMAPHEIGHT - 2)
+        endY = y_offset + BITMAPHEIGHT - 2;
+
+      if (startY <= endY) {
+        rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
+        view.DrawRect(rrect, CD_NORMAL);
+      }
+    }
+  }
+}
+
 void SampleEditorView::DrawView() {
   Clear();
 
@@ -220,44 +261,6 @@ void SampleEditorView::DrawWaveForm() {
 #endif
 
   GUIRect rrect;
-
-  // Helper to redraw the content of a single column (waveform or just
-  // background) This function will clear a 1-pixel wide column and redraw the
-  // waveform in it.
-  auto redrawColumn = [&](int x_coord) {
-    if (x_coord < 0)
-      return; // Invalid coordinate
-
-    // 1. Clear the column
-    // The Y range for clearing should cover the entire waveform area, including
-    // borders
-    rrect = GUIRect(x_coord, Y_OFFSET + 1, x_coord + 1,
-                    Y_OFFSET + BITMAPHEIGHT - 1);
-    DrawRect(rrect, CD_BACKGROUND);
-
-    // 2. Redraw the waveform in that column
-    int waveform_idx =
-        x_coord - X_OFFSET - 1; // Adjust for X_OFFSET and 1-pixel border
-    if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
-      int pixelHeight = waveformCache_[waveform_idx];
-      if (pixelHeight > 0) {
-        int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
-        int startY = centerY - pixelHeight / 2;
-        int endY = startY + pixelHeight;
-
-        // Clamp to inside the border
-        if (startY < Y_OFFSET + 1)
-          startY = Y_OFFSET + 1;
-        if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
-          endY = Y_OFFSET + BITMAPHEIGHT - 2;
-
-        if (startY <= endY) {
-          rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
-          DrawRect(rrect, CD_NORMAL);
-        }
-      }
-    }
-  };
 
   // --- Full Redraw Logic ---
   if (forceRedraw_) {
@@ -323,13 +326,13 @@ void SampleEditorView::DrawWaveForm() {
 
   // Erase old markers if they have moved or disappeared
   if (last_start_x_ != -1 && last_start_x_ != current_startX) {
-    redrawColumn(last_start_x_);
+    redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET);
   }
   if (last_end_x_ != -1 && last_end_x_ != current_endX) {
-    redrawColumn(last_end_x_);
+    redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET);
   }
   if (last_playhead_x_ != -1 && last_playhead_x_ != current_playheadX) {
-    redrawColumn(last_playhead_x_);
+    redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET);
   }
 
   // Draw new markers

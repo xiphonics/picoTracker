@@ -59,8 +59,10 @@ private:
 #else
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
-
 #endif
+
+// Waveform data cache
+#define WAVEFORM_CACHE_SIZE BITMAPWIDTH
 
   // Flag to force redraw of waveform
   bool forceRedraw_;
@@ -76,8 +78,6 @@ private:
 
   bool goProjectSamplesDir();
 
-  // Waveform data cache
-  static const int WAVEFORM_CACHE_SIZE = BITMAPWIDTH;
   uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
 
