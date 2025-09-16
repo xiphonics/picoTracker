@@ -16,9 +16,9 @@
 /* USER CODE BEGIN 0 */
 #include <string.h>
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t framebuffer[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT];
+uint32_t framebuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t placeholder_framebuffer_layer2[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT];
+uint32_t placeholder_framebuffer_layer2[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
 void init_display(void);
 /* USER CODE END 0 */

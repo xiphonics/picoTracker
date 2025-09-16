@@ -15,7 +15,6 @@
 #include "Application/Instruments/SampleInstrument.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
-#include "BaseClasses/UIBitmapField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "BaseClasses/UITextField.h"
@@ -42,7 +41,6 @@ protected:
 private:
   // Helper methods
   SampleInstrument *getCurrentSampleInstrument();
-  void updateWaveformDisplay();
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
@@ -53,23 +51,23 @@ private:
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
-  etl::vector<UIBitmapField, 1> waveformField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
 
 #ifdef ADV
 #define BITMAPWIDTH 720
 #define BITMAPHEIGHT 160
-#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT)
 #else
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80
-#define BITMAPBUFFERSIZE (BITMAPWIDTH * BITMAPHEIGHT) / 8
-
 #endif
-  uint8_t bitmapBuffer_[BITMAPBUFFERSIZE];
+
+// Waveform data cache
+#define WAVEFORM_CACHE_SIZE BITMAPWIDTH
 
   // Flag to force redraw of waveform
-  bool forceRedraw_;
+  // This is required because we try to not redraw the full waveform as doing so
+  // is quite slow
+  bool fullWaveformRedraw_;
 
   // Playback state
   bool isPlaying_;
@@ -80,15 +78,13 @@ private:
   int start_ = 0;
   int end_ = 0;
 
-private:
   bool goProjectSamplesDir();
 
-  // Waveform data cache
-  static const int WAVEFORM_CACHE_SIZE = BITMAPWIDTH;
   uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
 
   void updateWaveformCache();
+  void DrawWaveForm();
 
   float playbackPosition_; // Current playback position as normalized value (0.0
                            // - 1.0)
@@ -106,5 +102,13 @@ private:
   Variable startVar_;
   Variable endVar_;
   Variable filenameVar_;
+
+  GUIWindow &win;
+
+  int last_start_x_ = -1;
+  int last_end_x_ = -1;
+  int last_playhead_x_ = -1;
+
+  bool redraw_;
 };
 #endif

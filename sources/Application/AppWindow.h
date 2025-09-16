@@ -62,12 +62,16 @@ protected:
 
 public:
   static AppWindow *Create(GUICreateWindowParams &, const char *projectName);
+
+  static GUIColor GetColor(ColorDefinition cd);
+
   void LoadProject(const char *name);
   void CloseProject();
 
   virtual void Clear(bool all = false);
-  virtual void ClearRect(GUIRect &rect);
+  virtual void ClearTextRect(GUIRect &rect);
   virtual void SetColor(ColorDefinition cd);
+
   void SetDirty();
   void UpdateColorsFromConfig();
 

@@ -22,7 +22,7 @@ public:
 
 protected:
   void SetWindow(int width, int height);
-  virtual void ClearRect(int x, int y, int w, int h);
+  virtual void ClearTextRect(int x, int y, int w, int h);
   virtual void DrawString(int x, int y, const char *txt,
                           GUITextProperties &props);
   void EndModal(int returnCode);

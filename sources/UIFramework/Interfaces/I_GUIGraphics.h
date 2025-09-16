@@ -22,7 +22,7 @@ public:
   virtual ~I_GUIGraphics(){};
   virtual void Clear(GUIColor &, bool overlay = false) = 0;
   virtual void SetColor(GUIColor &) = 0;
-  virtual void ClearRect(GUIRect &) = 0;
+  virtual void ClearTextRect(GUIRect &) = 0;
   virtual void DrawString(const char *string, GUIPoint &pos,
                           GUITextProperties &p, bool overlay) = 0;
   virtual void DrawChar(const char c, GUIPoint &pos, GUITextProperties &) = 0;
