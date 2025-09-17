@@ -133,12 +133,12 @@ int main(void) {
   MX_SDMMC1_SD_Init();
   MX_UART7_Init();
   MX_USART1_UART_Init();
-  MX_USB_OTG_HS_USB_Init();
   MX_TIM1_Init();
   MX_TIM13_Init();
   MX_DMA2D_Init();
   MX_RNG_Init();
   MX_TIM2_Init();
+  MX_USB_OTG_FS_USB_Init();
   /* USER CODE BEGIN 2 */
 
   if (SDcardInitError != 0) {
@@ -153,7 +153,7 @@ int main(void) {
 
   tusb_rhport_init_t dev_init = {.role = TUSB_ROLE_DEVICE,
                                  .speed = TUSB_SPEED_AUTO};
-  tusb_init(1, &dev_init);
+  tusb_init(0, &dev_init);
 
   advSystem::Boot();
 
@@ -210,12 +210,12 @@ void SystemClock_Config(void) {
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 60;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 85;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 24;
-  RCC_OscInitStruct.PLL.PLLR = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 20;
+  RCC_OscInitStruct.PLL.PLLR = 24;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
   RCC_OscInitStruct.PLL.PLLFRACN = 0;

@@ -29,7 +29,7 @@ extern "C" {
 
 /* USER CODE END Private defines */
 
-void MX_USB_OTG_HS_USB_Init(void);
+void MX_USB_OTG_FS_USB_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
