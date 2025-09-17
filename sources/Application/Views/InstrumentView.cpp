@@ -275,12 +275,6 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
-  actionField_.emplace_back("Sample Editor", FourCC::ActionShowSampleEditor,
-                            position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
-
-  position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentPan);
   intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
