@@ -119,7 +119,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       // Go back to Instrument view with NAV+LEFT
-      ViewType vt = VT_INSTRUMENT;
+      ViewType vt = VT_IMPORT;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
