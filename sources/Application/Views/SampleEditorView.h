@@ -44,7 +44,8 @@ private:
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
-  void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path);
+  void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
+                  bool isProjectSampleFile);
 
   // UI fields
   etl::vector<UIIntVarField, 10> intVarField_;

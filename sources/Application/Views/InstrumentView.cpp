@@ -1002,6 +1002,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     SampleInstrument *instrument = (SampleInstrument *)getInstrument();
     auto filename = instrument->GetSampleFileName();
     viewData_->sampleEditorFilename = filename;
+    viewData_->sampleEditorProjectList = false;
 
     if (filename.empty()) {
       // If it's empty, show an error message to the user
