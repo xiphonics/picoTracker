@@ -214,7 +214,7 @@ void SystemClock_Config(void) {
   RCC_OscInitStruct.PLL.PLLM = 1;
   RCC_OscInitStruct.PLL.PLLN = 85;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 20;
+  RCC_OscInitStruct.PLL.PLLQ = 30;
   RCC_OscInitStruct.PLL.PLLR = 24;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
