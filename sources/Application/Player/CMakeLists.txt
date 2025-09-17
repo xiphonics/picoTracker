@@ -11,7 +11,6 @@ target_link_libraries(application_player PUBLIC
   application_mixer
   application_audio
   application_model
-  pico_stdlib
 )
 
 target_include_directories(application_player PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

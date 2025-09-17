@@ -32,6 +32,7 @@ typedef int16_t q15_t;
  */
 typedef int32_t q31_t;
 
+#if !defined(__SSAT)
 __STATIC_INLINE int32_t __SSAT(int32_t val, uint32_t sat) {
   if ((sat >= 1U) && (sat <= 32U)) {
     const int32_t max = (int32_t)((1U << (sat - 1U)) - 1U);
@@ -44,6 +45,7 @@ __STATIC_INLINE int32_t __SSAT(int32_t val, uint32_t sat) {
   }
   return val;
 }
+#endif
 
 #define Q31_MAX ((q31_t)(0x7FFFFFFFL))
 #define Q15_MAX ((q15_t)(0x7FFF))
