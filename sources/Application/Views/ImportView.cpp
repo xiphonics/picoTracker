@@ -20,7 +20,7 @@
 
 #define LIST_WIDTH SCREEN_WIDTH - 2
 // -4 to allow for title, filesize & spacers
-#define LIST_PAGE_SIZE SCREEN_HEIGHT - 4
+#define LIST_PAGE_SIZE SCREEN_HEIGHT - 5
 
 // is single cycle macro, checks for FILE size of LGPT and AKWF file formats
 // AKWF "nes" pack 1376, AKWF "standard" 1344, LGPT pack 300
@@ -62,10 +62,11 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // Handle key press events
   if (pressed) {
+    auto fs = FileSystem::GetInstance();
+    unsigned fileIndex = fileIndexList_[currentIndex_];
+
     if (mask & EPBM_PLAY) {
-      auto fs = FileSystem::GetInstance();
       char name[PFILENAME_SIZE];
-      unsigned fileIndex = fileIndexList_[currentIndex_];
       fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
       // Set flag to track that play key is being held
@@ -73,7 +74,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
       if (mask & EPBM_ALT) {
         Trace::Log("PICOIMPORT", "SHIFT play - import");
-        import(name);
+        import();
       } else {
         Trace::Log("PICOIMPORT", "play key pressed - start preview");
         preview(name);
@@ -95,6 +96,27 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
         adjustPreviewVolume(false);
         return;
       }
+    }
+
+    if (mask & EPBM_ENTER) {
+      if (selectedButton_ == 0) {
+        // check if selected file not a dir
+        if (fs->getFileType(fileIndex) != PFT_DIR) {
+          import();
+        }
+      } else {
+        char name[PFILENAME_SIZE];
+        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+        showSampleEditor(name, false);
+      }
+    }
+
+    // handle changing selected "bottom button", note: ignore if this is a
+    // nav+arrow combo
+    if ((mask & EPBM_LEFT || mask & EPBM_RIGHT) && !(mask & EPBM_NAV)) {
+      // toggle the selected button
+      selectedButton_ = (selectedButton_ == 0) ? 1 : 0;
+      isDirty_ = true;
     }
   }
 
@@ -208,6 +230,14 @@ void ImportView::DrawView() {
     y += 1;
   };
 
+  y = SCREEN_HEIGHT - 2;
+  props.invert_ = (selectedButton_ == 0) ? true : false;
+  DrawString(x, y, "[Import]", props);
+  props.invert_ = (selectedButton_ == 1) ? true : false;
+  DrawString(x + 10, y, "[Edit]", props);
+  props.invert_ = false;
+  y += 1;
+
   // draw current selected file size, preview volume and single cycle indicator
   SetColor(CD_HILITE2);
   props.invert_ = true;
@@ -314,7 +344,7 @@ void ImportView::preview(char *name) {
   }
 }
 
-void ImportView::import(char *name) {
+void ImportView::import() {
   // stop playing before trying to import
   if (Player::GetInstance()->IsPlaying()) {
     MessageBox *mb =
@@ -322,6 +352,11 @@ void ImportView::import(char *name) {
     DoModal(mb);
     return;
   }
+
+  auto fs = FileSystem::GetInstance();
+  char name[PFILENAME_SIZE];
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
   // Check if the filename is too long
   size_t nameLength = strlen(name);
@@ -367,8 +402,6 @@ void ImportView::import(char *name) {
   }
 
   // Check if the sample would exceed available flash storage
-  auto fs = FileSystem::GetInstance();
-  unsigned fileIndex = fileIndexList_[currentIndex_];
   int fileSize = fs->getFileSize(fileIndex);
 
   // Check if the sample would fit in available storage
@@ -481,4 +514,15 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
     // We're navigating up, so we're no longer in the project's sample directory
     inProjectSampleDir_ = false;
   }
+}
+
+void ImportView::showSampleEditor(
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
+    bool isProjectSample) {
+
+  // Switch to the SampleEditorView
+  ViewType vt = VT_SAMPLE_EDITOR;
+  ViewEvent ve(VET_SWITCH_VIEW, &vt);
+  SetChanged();
+  NotifyObservers(&ve);
 }
