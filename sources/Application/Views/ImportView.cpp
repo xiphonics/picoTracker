@@ -111,7 +111,15 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
     if (mask & EPBM_ENTER) {
       if (inProjectSampleDir_) {
-        removeProjectSample(fileIndex, fs);
+        // NOTE: the order of buttons in project pool is: edit, remove
+        // while in file browser its: import, edit
+        if (selectedButton_ == 0) {
+          char name[PFILENAME_SIZE];
+          fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+          showSampleEditor(name, false);
+        } else {
+          removeProjectSample(fileIndex, fs);
+        }
         return;
       }
       // we can't import or edit dirs!
@@ -246,21 +254,27 @@ void ImportView::DrawView() {
     y += 1;
   };
 
+  y = SCREEN_HEIGHT - 2;
   if (!inProjectSampleDir_) {
-    y = SCREEN_HEIGHT - 2;
     props.invert_ = (selectedButton_ == 0) ? true : false;
     DrawString(x, y, "[Import]", props);
     props.invert_ = (selectedButton_ == 1) ? true : false;
     DrawString(x + 10, y, "[Edit]", props);
-    props.invert_ = false;
-    y += 1;
   } else {
-#ifdef ADV
-    y = SCREEN_HEIGHT - 2;
+    // we make edit the first button to make things easier because remove is
+    // only available for now on the Advance and even on Advance we dont want
+    // remove to be the default button
     props.invert_ = (selectedButton_ == 0) ? true : false;
-    DrawString(x, y, "[Remove]", props);
+    DrawString(x, y, "[Edit]", props);
+    props.invert_ = (selectedButton_ == 1) ? true : false;
+#ifdef ADV
+    DrawString(x + 10, y, "[Remove]", props);
+#else
+    DrawString(x + 10, y, "[N/A]", props);
 #endif
   }
+  props.invert_ = false;
+  y += 1;
 
   // draw current selected file size, preview volume and single cycle indicator
   SetColor(CD_HILITE2);
