@@ -123,6 +123,7 @@ bool advAudioDriver::StartDriver() {
 
   startTime_ = HAL_GetTick();
 
+  tlv320_unmute();
   return true;
 };
 

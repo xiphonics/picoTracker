@@ -125,7 +125,30 @@ DOSR 128
   // data to Left Channel DAC and Right Audio digital data to Right Channel DAC
   tlv320write(0x3f, 0xd6);
   // Unmute the DAC digital volume control
-  tlv320write(0x40, 0x00);
+  //  tlv320write(0x40, 0x00);
+}
+
+void tlv320_mute(void) {
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  uint8_t value;
+  tlv320read(0x00, 0x40, &value);
+
+  value |= 0x0C;
+  // Mute the DAC digital volume control
+  tlv320write(0x40, value);
+}
+
+void tlv320_unmute(void) {
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  uint8_t value;
+  tlv320read(0x00, 0x40, &value);
+
+  value &= ~(1 << 2);
+  value &= ~(1 << 3);
+  // unmute the DAC digital volume control
+  tlv320write(0x40, value);
 }
 
 void tlv320_enable_linein(void) {

@@ -24,6 +24,7 @@
 #include "input.h"
 #include "platform.h"
 #include "tim.h"
+#include "tlv320aic3204.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <malloc.h>
@@ -170,6 +171,8 @@ unsigned int advSystem::GetMemoryUsage() {
 }
 
 void advSystem::PowerDown() {
+  tlv320_mute();
+
   // Ship mode
   uint8_t value = 0x64;
   HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
