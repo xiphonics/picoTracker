@@ -196,6 +196,21 @@ bool picoTrackerFileSystem::isParentRoot() {
   return result;
 }
 
+bool picoTrackerFileSystem::isCurrentRoot() {
+  std::lock_guard<Mutex> lock(mutex);
+  FsBaseFile cwd;
+  char dirname[PFILENAME_SIZE];
+  cwd.getName(dirname, PFILENAME_SIZE);
+  if (!cwd.openCwd()) {
+    Trace::Error("Failed to open cwd:%s", dirname);
+    return false;
+  }
+
+  cwd.getName(dirname, PFILENAME_SIZE);
+  // If current path is root then its "/"
+  return (strcmp(dirname, "/") == 0);
+}
+
 bool picoTrackerFileSystem::DeleteFile(const char *path) {
   std::lock_guard<Mutex> lock(mutex);
   return sd.remove(path);

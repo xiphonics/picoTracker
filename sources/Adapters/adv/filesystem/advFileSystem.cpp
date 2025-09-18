@@ -218,6 +218,17 @@ bool advFileSystem::isParentRoot() {
   return (slashCount == 1);
 }
 
+bool advFileSystem::isCurrentRoot() {
+  FRESULT res = f_getcwd(filepath, sizeof(filepath));
+  if (res != FR_OK) {
+    Trace::Error("Failed to get current directory");
+    return false;
+  }
+
+  // If current path is root ("/"), then it is root.
+  return (strcmp(filepath, "/") == 0);
+}
+
 bool advFileSystem::DeleteFile(const char *path) {
   FILINFO fil;
   FRESULT res;

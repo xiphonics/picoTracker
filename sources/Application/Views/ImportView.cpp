@@ -161,7 +161,8 @@ void ImportView::DrawView() {
   auto fs = FileSystem::GetInstance();
 
   // Draw title with available storage space
-  const char *baseTitle = "Import Sample";
+  const char *baseTitle =
+      inProjectSampleDir_ ? "Project Pool" : "Import Sample";
 
   // Create title with storage info
   char titleBuffer[40];
@@ -230,13 +231,18 @@ void ImportView::DrawView() {
     y += 1;
   };
 
-  y = SCREEN_HEIGHT - 2;
-  props.invert_ = (selectedButton_ == 0) ? true : false;
-  DrawString(x, y, "[Import]", props);
-  props.invert_ = (selectedButton_ == 1) ? true : false;
-  DrawString(x + 10, y, "[Edit]", props);
-  props.invert_ = false;
-  y += 1;
+  if (!inProjectSampleDir_) {
+    y = SCREEN_HEIGHT - 2;
+    props.invert_ = (selectedButton_ == 0) ? true : false;
+    DrawString(x, y, "[Import]", props);
+    props.invert_ = (selectedButton_ == 1) ? true : false;
+    DrawString(x + 10, y, "[Edit]", props);
+    props.invert_ = false;
+    y += 1;
+  } else {
+    // TODO: show "remove" button to remove individual samples from the pool
+    // only on the Advance
+  }
 
   // draw current selected file size, preview volume and single cycle indicator
   SetColor(CD_HILITE2);
@@ -288,8 +294,17 @@ void ImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
 
   toInstr_ = viewData_->currentInstrumentID_;
+  inProjectSampleDir_ = viewData_->sampleEditorProjectList;
 
-  setCurrentFolder(fs, SAMPLES_LIB_DIR);
+  if (inProjectSampleDir_) {
+    fs->chdir(PROJECTS_DIR);
+    char projName[MAX_PROJECT_NAME_LENGTH];
+    viewData_->project_->GetProjectName(projName);
+    fs->chdir(projName);
+    setCurrentFolder(fs, PROJECT_SAMPLES_DIR);
+  } else {
+    setCurrentFolder(fs, SAMPLES_LIB_DIR);
+  }
 };
 
 void ImportView::warpToNextSample(bool goUp) {
@@ -489,6 +504,18 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   currentIndex_ = 0;
   // Update list of file indexes in this new dir
   fs->list(&fileIndexList_, ".wav", false);
+
+  // If is root or we are showing project samples dir, remove the ".." entry
+  if (fs->isCurrentRoot() || inProjectSampleDir_) {
+    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
+      char filename[PFILENAME_SIZE];
+      fs->getFileName(*it, filename, PFILENAME_SIZE);
+      if (strcmp(filename, "..") == 0) {
+        fileIndexList_.erase(it);
+        break;
+      }
+    }
+  }
 
   // Check if we're in the projects directory
   // and if trying to go into the same dir as current project and if so dont

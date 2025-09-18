@@ -40,6 +40,7 @@ public:
   virtual void getFileName(int index, char *name, int length) = 0;
   virtual PicoFileType getFileType(int index) = 0;
   virtual bool isParentRoot() = 0;
+  virtual bool isCurrentRoot() = 0;
   virtual bool DeleteFile(const char *name) = 0;
   virtual bool DeleteDir(const char *name) = 0;
   virtual bool exists(const char *path) = 0;
