@@ -19,6 +19,7 @@ extern "C" {
 #define TEXT_HEIGHT 24
 #define CHAR_HEIGHT 30
 #define CHAR_WIDTH 22
+#define OFFSET 8
 
 // ARNE-16 palette converted to RGB565 --
 // https://lospec.com/palette-list/arne-16
@@ -51,6 +52,8 @@ void display_clear(color_t color);
 void display_set_palette_color(int idx, uint16_t rgb565_color);
 void display_draw_changed();
 void display_draw_screen();
+void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
+                       uint16_t width, uint16_t height);
 void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 void display_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
                              uint8_t height);

@@ -16,9 +16,9 @@
 /* USER CODE BEGIN 0 */
 #include <string.h>
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t framebuffer[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT];
+uint32_t framebuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t placeholder_framebuffer_layer2[FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT];
+uint32_t placeholder_framebuffer_layer2[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
 void init_display(void);
 /* USER CODE END 0 */
@@ -99,13 +99,13 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef *ltdcHandle) {
     /** Initializes the peripherals clock
      */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
-    PeriphClkInitStruct.PLL3.PLL3M = 26;
-    PeriphClkInitStruct.PLL3.PLL3N = 76;
+    PeriphClkInitStruct.PLL3.PLL3M = 4;
+    PeriphClkInitStruct.PLL3.PLL3N = 185;
     PeriphClkInitStruct.PLL3.PLL3P = 32;
     PeriphClkInitStruct.PLL3.PLL3Q = 32;
-    PeriphClkInitStruct.PLL3.PLL3R = 5;
+    PeriphClkInitStruct.PLL3.PLL3R = 14;
     PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
-    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOMEDIUM;
+    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
     PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
       Error_Handler();

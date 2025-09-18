@@ -23,8 +23,8 @@ void ModalView::EndModal(int returnCode) {
   finished_ = true;
 };
 
-void ModalView::ClearRect(int x, int y, int w, int h) {
-  View::ClearRect(x + left_, y + top_, w, h);
+void ModalView::ClearTextRect(int x, int y, int w, int h) {
+  View::ClearTextRect(x + left_, y + top_, w, h);
 }
 void ModalView::DrawString(int x, int y, const char *txt,
                            GUITextProperties &props) {
@@ -56,7 +56,7 @@ void ModalView::SetWindow(int width, int height) {
   if (top_ < 2) {
     top_ = 2;
   }
-  ClearRect(-1, -1, width + 2, height + 2);
+  ClearTextRect(-1, -1, width + 2, height + 2);
 
   SetColor(CD_HILITE2);
   GUITextProperties props;

@@ -259,10 +259,10 @@ void DMA2D_IRQHandler(void) {
 
 /* USER CODE BEGIN 1 */
 /**
- * @brief This function handles USB On The Go HS global interrupt.
+ * @brief This function handles USB On The Go FS global interrupt.
  */
-void OTG_HS_IRQHandler(void) {
-  // USB_HS is port 1 in tinyusb
-  tusb_int_handler(1, true);
+void OTG_FS_IRQHandler(void) {
+  // USB_FS is port 0 in tinyusb
+  tusb_int_handler(0, true);
 }
 /* USER CODE END 1 */

@@ -118,26 +118,26 @@ bool advSamplePool::Load(WavFile *wave) {
   return true;
 };
 
-bool advSamplePool::unloadSample(int i) {
+bool advSamplePool::unloadSample(int index) {
   // Will only optimize samples within the sample pool where the sample resides
   // TODO (democloid): potentially optimize across sample pools
-  if (i < 0 || i >= count_)
+  if (index < 0 || index >= count_)
     return false;
 
-  std::free(names_[i]);
-  names_[i] = nullptr;
+  std::free(names_[index]);
+  names_[index] = nullptr;
 
   // Get information about how we should do the memmove
-  uint32_t deletedSize = ((WavFile *)wav_[i])->GetDiskSize(0);
+  uint32_t deletedSize = ((WavFile *)wav_[index])->GetDiskSize(0);
   uint32_t bufferSize = 0;
-  void *moveDst = wav_[i]->GetSampleBuffer(0);
+  void *moveDst = wav_[index]->GetSampleBuffer(0);
   void *moveSrc = nullptr;
-  if (i < count_ - 1) {
-    moveSrc = wav_[i + 1]->GetSampleBuffer(0);
+  if (index < count_ - 1) {
+    moveSrc = wav_[index + 1]->GetSampleBuffer(0);
   }
 
   // Update each SoundSource
-  for (int j = i; j < count_ - 1; ++j) {
+  for (int j = index; j < count_ - 1; ++j) {
     void *dstBuffer = wav_[j]->GetSampleBuffer(0);
     wav_[j] = wav_[j + 1];
     names_[j] = names_[j + 1];

@@ -98,17 +98,17 @@ void Error_Handler(void);
 #define POWER_GPIO_Port GPIOA
 #define DISPLAY_CS_Pin GPIO_PIN_2
 #define DISPLAY_CS_GPIO_Port GPIOB
+#define SD_DET_Pin GPIO_PIN_12
+#define SD_DET_GPIO_Port GPIOB
+#define SD_DET_EXTI_IRQn EXTI15_10_IRQn
 #define DISPLAY_SCK_Pin GPIO_PIN_13
 #define DISPLAY_SCK_GPIO_Port GPIOB
 #define INPUT_LEFT_Pin GPIO_PIN_11
 #define INPUT_LEFT_GPIO_Port GPIOD
 #define INPUT_DOWN_Pin GPIO_PIN_3
 #define INPUT_DOWN_GPIO_Port GPIOG
-#define SD_DET_Pin GPIO_PIN_11
-#define SD_DET_GPIO_Port GPIOA
-#define SD_DET_EXTI_IRQn EXTI15_10_IRQn
-#define HP_DET_Pin GPIO_PIN_12
-#define HP_DET_GPIO_Port GPIOA
+#define CHARGER_OTG_Pin GPIO_PIN_9
+#define CHARGER_OTG_GPIO_Port GPIOA
 #define USB_INT_Pin GPIO_PIN_15
 #define USB_INT_GPIO_Port GPIOA
 #define INPUT_RIGHT_Pin GPIO_PIN_4
@@ -125,8 +125,6 @@ void Error_Handler(void);
 #define INPUT_NAV_GPIO_Port GPIOG
 #define INPUT_PLAY_Pin GPIO_PIN_14
 #define INPUT_PLAY_GPIO_Port GPIOG
-#define CHARGER_OTG_Pin GPIO_PIN_3
-#define CHARGER_OTG_GPIO_Port GPIOB
 #define CHARGER_INT_Pin GPIO_PIN_7
 #define CHARGER_INT_GPIO_Port GPIOB
 

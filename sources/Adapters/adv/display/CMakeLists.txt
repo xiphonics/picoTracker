@@ -1,6 +1,5 @@
 add_library(platform_display
   display.c
-  advBitmapGraphics.cpp
 )
 
 target_include_directories(platform_display PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

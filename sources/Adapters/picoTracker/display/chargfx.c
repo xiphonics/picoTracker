@@ -104,6 +104,71 @@ void chargfx_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   }
 }
 
+// NOTE: we make life easier for ourselves by using the LCD controllers
+// orientation command to let us treat the x,y coords passed into this function
+// as the visual x & y instead of trying to transform them to the LCDs physical
+// x,y coords to compensate for the fact that on the picoTracker the screen is
+// mounted rotated 90deg clockwise, ie. the "bottom" of the LCD with the flex
+// pcb connector is actually on the left instead of its normal orientation of
+// being mounted on the bottom of the LCD
+void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
+                       uint16_t width, uint16_t height) {
+  // Get the RGB565 color from the current foreground palette index
+  uint16_t color = palette[color_index];
+
+  // Clip the rectangle to the screen dimensions
+  if (x >= ILI9341_TFTHEIGHT || y >= ILI9341_TFTWIDTH) {
+    return;
+  }
+  if (x + width > ILI9341_TFTHEIGHT) {
+    width = ILI9341_TFTHEIGHT;
+  }
+  if (y + height > ILI9341_TFTWIDTH) {
+    height = ILI9341_TFTWIDTH;
+  }
+
+  // display_x is from right hand edge and since the picoTracker LCD is mounted
+  // rotated 90deg clockwise, the LCDs "physical height" is actually visually
+  // speaking the width
+  uint16_t display_x = ILI9341_TFTHEIGHT - x - width;
+  uint16_t display_y = y;
+  uint16_t display_w = width;
+  uint16_t display_h = height;
+
+  // Set rotation for rectangle drawing
+  ili9341_set_command(ILI9341_MADCTL);
+  ili9341_command_param(0x28); // 90-degree clockwise rotation
+
+  // Set display window
+  ili9341_set_command(ILI9341_CASET);
+  ili9341_command_param16(display_x);
+  ili9341_command_param16(display_x + display_w - 1);
+
+  ili9341_set_command(ILI9341_PASET);
+  ili9341_command_param16(display_y);
+  ili9341_command_param16(display_y + display_h - 1);
+
+  ili9341_set_command(ILI9341_RAMWR);
+  ili9341_start_writing();
+
+  // just use the char cell buffer for our line buffer as its more than big
+  // enough
+  for (uint16_t i = 0; i < display_w; i++) {
+    buffer[i] = color;
+  }
+
+  // Write the buffer for each column
+  for (uint16_t i = 0; i < display_h; i++) {
+    ili9341_write_data_continuous(buffer, display_w * sizeof(uint16_t));
+  }
+
+  ili9341_stop_writing();
+
+  // Restore original rotation
+  ili9341_set_command(ILI9341_MADCTL);
+  ili9341_command_param(0xC0);
+}
+
 inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
                                     uint8_t height) {
   assert(height <= BUFFER_CHARS);
