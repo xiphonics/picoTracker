@@ -98,6 +98,17 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
     }
 
+    if (mask & EPBM_NAV && mask & EPBM_EDIT) {
+      // toggle from sdcard "import sample" & project pool listing
+      if (inProjectSampleDir_) {
+        inProjectSampleDir_ = false;
+        setCurrentFolder(fs, SAMPLES_LIB_DIR);
+      } else {
+        inProjectSampleDir_ = true;
+        setCurrentFolder(fs, PROJECT_SAMPLES_DIR);
+      }
+    }
+
     if (mask & EPBM_ENTER) {
       // we can't import or edit dirs!
       if (fs->getFileType(fileIndex) != PFT_DIR) {
