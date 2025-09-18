@@ -110,6 +110,10 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
 
     if (mask & EPBM_ENTER) {
+      if (inProjectSampleDir_) {
+        removeProjectSample(fileIndex, fs);
+        return;
+      }
       // we can't import or edit dirs!
       if (fs->getFileType(fileIndex) != PFT_DIR) {
         if (selectedButton_ == 0) {
@@ -251,8 +255,11 @@ void ImportView::DrawView() {
     props.invert_ = false;
     y += 1;
   } else {
-    // TODO: show "remove" button to remove individual samples from the pool
-    // only on the Advance
+#ifdef ADV
+    y = SCREEN_HEIGHT - 2;
+    props.invert_ = (selectedButton_ == 0) ? true : false;
+    DrawString(x, y, "[Remove]", props);
+#endif
   }
 
   // draw current selected file size, preview volume and single cycle indicator
@@ -562,4 +569,36 @@ void ImportView::showSampleEditor(
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
   SetChanged();
   NotifyObservers(&ve);
+}
+
+void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
+  char filename[PFILENAME_SIZE];
+  fs->getFileName(fileIndex, filename, PFILENAME_SIZE);
+
+  // TODO: first check if a instrument uses this sample
+  bool inUse = viewData_->project_->SampleInUse(
+      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filename));
+
+  if (inUse) {
+    MessageBox *mb =
+        new MessageBox(*this, "Cannot remove", "Sample in use!", MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
+  // add spacing for basic way to size dialog wider to give Ok/cancel
+  // buttons between space
+  MessageBox *mb = new MessageBox(*this, "    Remove sample?    ", filename,
+                                  MBBF_OK | MBBF_CANCEL);
+  DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
+    if (dialog.GetReturnCode() == MBL_OK) {
+      // delete file
+      fs->DeleteFile(filename);
+      // and unload it from ram
+      SamplePool::GetInstance()->unloadSample(fileIndex);
+      if (currentIndex_ != 0) {
+        this->currentIndex_--;
+      }
+    }
+  });
 }

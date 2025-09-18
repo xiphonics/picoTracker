@@ -247,6 +247,24 @@ void Project::Purge() {
   }
 };
 
+// Returns true if sample is used by at least 1 Sampler instrument
+bool Project::SampleInUse(
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename) {
+  InstrumentBank *bank = GetInstrumentBank();
+
+  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
+    I_Instrument *instrument = bank->GetInstrument(i);
+    if (instrument->GetType() == IT_SAMPLE) {
+      SampleInstrument *si = (SampleInstrument *)instrument;
+      auto instrSample = si->GetSampleFileName();
+      if (instrSample == filename) {
+        return true;
+      }
+    };
+  }
+  return false;
+}
+
 void Project::PurgeInstruments(bool removeFromDisk) {
 
   bool used[MAX_INSTRUMENT_COUNT] = {false};

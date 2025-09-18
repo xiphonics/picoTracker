@@ -24,10 +24,10 @@ public:
   ~advSamplePool() {}
   virtual bool CheckSampleFits(int sampleSize);
   virtual uint32_t GetAvailableSampleStorageSpace();
+  virtual bool unloadSample(int i);
 
 protected:
   virtual bool loadSample(const char *name);
-  virtual bool unloadSample(int i);
 
 private:
   bool Load(WavFile *wave);
