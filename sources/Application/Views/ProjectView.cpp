@@ -401,7 +401,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   case FourCC::ActionImport:
-    // Switch to the ImportView  BUT to show the Project Pool by default
+    // Switch to the ImportView **BUT** to show the Project Pool by default
     if (!player->IsRunning()) {
       // First check if the samplelib exists
       bool samplelibExists = FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);

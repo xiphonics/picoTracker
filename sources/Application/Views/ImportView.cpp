@@ -308,10 +308,6 @@ void ImportView::OnFocus() {
   inProjectSampleDir_ = viewData_->sampleEditorProjectList;
 
   if (inProjectSampleDir_) {
-    fs->chdir(PROJECTS_DIR);
-    char projName[MAX_PROJECT_NAME_LENGTH];
-    viewData_->project_->GetProjectName(projName);
-    fs->chdir(projName);
     setCurrentFolder(fs, PROJECT_SAMPLES_DIR);
   } else {
     setCurrentFolder(fs, SAMPLES_LIB_DIR);
@@ -506,6 +502,16 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
       // Navigate directly to root instead of using ".."
       fs->chdir("/");
     }
+  }
+
+  // chdir to current project dir and we expect name param to be
+  // PROJECT_SAMPLES_DIR so that will then correctly set the project sample
+  // "pool" subdir
+  if (inProjectSampleDir_) {
+    fs->chdir(PROJECTS_DIR);
+    char projName[MAX_PROJECT_NAME_LENGTH];
+    viewData_->project_->GetProjectName(projName);
+    fs->chdir(projName);
   }
 
   // Normal directory navigation
