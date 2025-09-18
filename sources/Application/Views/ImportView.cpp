@@ -471,9 +471,6 @@ void ImportView::adjustPreviewVolume(bool increase) {
 }
 
 void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
-  // Reset the project sample directory flag
-  inProjectSampleDir_ = false;
-
   // Special case: if we're trying to go up (..) from a top-level directory
   if (strcmp(name, "..") == 0) {
     // Check if we're in a top-level directory (parent is root)
@@ -493,26 +490,20 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Update list of file indexes in this new dir
   fs->list(&fileIndexList_, ".wav", false);
 
-  // Check if we're in the project's sample directory
-  // This is a simple check - if we're in a directory called "samples"
-  // and its parent is a directory with the same name as the current project
+  // Check if we're in the projects directory
+  // and if trying to go into the same dir as current project and if so dont
+  // allow it
   char projName[MAX_PROJECT_NAME_LENGTH];
   viewData_->project_->GetProjectName(projName);
 
-  if (strcmp(name, PROJECT_SAMPLES_DIR) == 0) {
-    // We just navigated to a directory called "samples"
-    // Check if its parent directory has the same name as the current project
+  if (strcmp(projName, name) == 0) {
+    // We just navigated to a current project directory, not allowed!
     etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> expectedPath(PROJECTS_DIR);
-    expectedPath.append("/");
-    expectedPath.append(projName);
+    // so instead go back out into the projects dir
+    setCurrentFolder(fs, PROJECTS_DIR);
 
-    // If we can navigate to this path from the root, and then to samples,
-    // and that's where we are now, then we're in the project's sample directory
-    inProjectSampleDir_ = true;
-    Trace::Log("PICOIMPORT", "Now in project sample directory");
-  } else if (strcmp(name, "..") == 0) {
-    // We're navigating up, so we're no longer in the project's sample directory
-    inProjectSampleDir_ = false;
+    Trace::Log("PICOIMPORT",
+               "NOT allowed to browse into current project sample directory");
   }
 }
 
