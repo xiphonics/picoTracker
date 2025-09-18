@@ -27,7 +27,7 @@ public:
 
 protected:
   virtual bool loadSample(const char *name);
-  virtual bool unloadSample(int i);
+  virtual bool unloadSample(int index);
 
 private:
   bool Load(WavFile *wave);

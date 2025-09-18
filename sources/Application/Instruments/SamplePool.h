@@ -41,7 +41,7 @@ public:
 
 protected:
   virtual bool loadSample(const char *name) = 0;
-  virtual bool unloadSample(int i) = 0;
+  virtual bool unloadSample(int index) = 0;
   bool loadSoundFont(const char *path);
   int count_;
   char *names_[MAX_SAMPLES];
