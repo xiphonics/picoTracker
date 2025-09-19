@@ -142,7 +142,8 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     }
 
     // filter out "." and files that dont match filter if a filter is given
-    if (!(fno.fattrib & AM_HID) || matchesFilter) {
+    if (((fno.fattrib & AM_DIR) && index != 0) ||
+        (!(fno.fattrib & AM_HID) && matchesFilter)) {
       if (subDirOnly) {
         if (fno.fattrib & AM_DIR) {
           fileIndexes->push_back(index);
