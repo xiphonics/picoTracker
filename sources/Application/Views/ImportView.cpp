@@ -118,7 +118,9 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
           fs->getFileName(fileIndex, name, PFILENAME_SIZE);
           showSampleEditor(name, false);
         } else {
+#ifdef ADV
           removeProjectSample(fileIndex, fs);
+#endif
         }
         return;
       }
@@ -139,7 +141,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if ((mask & EPBM_LEFT || mask & EPBM_RIGHT) && !(mask & EPBM_NAV)) {
       // toggle the selected button
       selectedButton_ = (selectedButton_ == 0) ? 1 : 0;
-      isDirty_ = true;
+      DrawView();
     }
   }
 
@@ -254,6 +256,7 @@ void ImportView::DrawView() {
     y += 1;
   };
 
+  SetColor(CD_NORMAL);
   y = SCREEN_HEIGHT - 2;
   if (!inProjectSampleDir_) {
     props.invert_ = (selectedButton_ == 0) ? true : false;
