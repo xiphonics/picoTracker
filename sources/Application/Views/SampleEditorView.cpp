@@ -41,7 +41,7 @@ SampleEditorView::~SampleEditorView() {}
 void SampleEditorView::OnFocus() {
   const auto newSampleFile = viewData_->sampleEditorFilename;
   // Load the sample using this filename and will fill in the wave data cache
-  loadSample(newSampleFile);
+  loadSample(newSampleFile, viewData_->sampleEditorProjectList);
 
   // Update cached sample parameters
   updateSampleParameters();
@@ -119,7 +119,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       // Go back to Instrument view with NAV+LEFT
-      ViewType vt = VT_INSTRUMENT;
+      ViewType vt = VT_IMPORT;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
@@ -442,7 +442,8 @@ short SampleEditorView::chunkBuffer_[512 * 2];
 // Load sample from the current projects samples subdir
 // ONLY filename for samples subidr (not full path!!) is supported for now
 void SampleEditorView::loadSample(
-    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename) {
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
+    bool isProjectSampleFile) {
 
   // Reset temporary sample state
   tempSampleSize_ = 0;
@@ -455,10 +456,15 @@ void SampleEditorView::loadSample(
     return;
   }
 
-  // First, navigate to the root projects samples subdir directory
-  if (!goProjectSamplesDir()) {
-    Trace::Error("couldn't change to project samples dir!");
-    return;
+  if (isProjectSampleFile) {
+    // First, navigate to the root projects samples subdir directory
+    if (!goProjectSamplesDir()) {
+      Trace::Error("couldn't change to project samples dir!");
+      return;
+    }
+  } else {
+    // do nothing, we rely on the current directory being correctly set for the
+    // sample file we are trying to edit
   }
 
   I_File *file = FileSystem::GetInstance()->Open(filename.c_str(), "r");

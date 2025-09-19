@@ -99,15 +99,15 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
 
     if (mask & EPBM_ENTER) {
-      if (selectedButton_ == 0) {
-        // check if selected file not a dir
-        if (fs->getFileType(fileIndex) != PFT_DIR) {
+      // we can't import or edit dirs!
+      if (fs->getFileType(fileIndex) != PFT_DIR) {
+        if (selectedButton_ == 0) {
           import();
+        } else {
+          char name[PFILENAME_SIZE];
+          fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+          showSampleEditor(name, false);
         }
-      } else {
-        char name[PFILENAME_SIZE];
-        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-        showSampleEditor(name, false);
       }
     }
 
@@ -519,6 +519,8 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
 void ImportView::showSampleEditor(
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
     bool isProjectSample) {
+
+  viewData_->sampleEditorFilename = filename;
 
   // Switch to the SampleEditorView
   ViewType vt = VT_SAMPLE_EDITOR;

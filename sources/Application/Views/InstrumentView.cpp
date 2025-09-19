@@ -173,7 +173,6 @@ void InstrumentView::refreshInstrumentFields() {
   bitmaskVarField_.clear();
   nameTextField_.clear();
   nameVariables_.clear();
-  actionField_.clear();
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -273,12 +272,6 @@ void InstrumentView::fillSampleParameters() {
   v = instrument->FindVariable(FourCC::SampleInstrumentVolume);
   intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
-  actionField_.emplace_back("Sample Editor", FourCC::ActionShowSampleEditor,
-                            position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentPan);
@@ -996,25 +989,6 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         midiInstr->SendProgramChangeWithNote(channel, program);
       }
     }
-  } break;
-  case FourCC::ActionShowSampleEditor: {
-    // set the current file for sample editor before switching view
-    SampleInstrument *instrument = (SampleInstrument *)getInstrument();
-    auto filename = instrument->GetSampleFileName();
-    viewData_->sampleEditorFilename = filename;
-
-    if (filename.empty()) {
-      // If it's empty, show an error message to the user
-      MessageBox *mb = new MessageBox(*this, "No sample file loaded", MBBF_OK);
-      DoModal(mb);
-      return;
-    }
-
-    // Switch to the SampleEditorView
-    ViewType vt = VT_SAMPLE_EDITOR;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
-    SetChanged();
-    NotifyObservers(&ve);
   } break;
   default:
     break;

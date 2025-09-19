@@ -88,6 +88,8 @@ public:
                                           // channel
   int phraseCurPos_;                      // current UI cursor row position
 
+  // Sample Editor
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> sampleEditorFilename;
+  bool sampleEditorProjectList = false;
 };
 #endif
