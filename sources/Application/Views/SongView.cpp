@@ -660,6 +660,7 @@ void SongView::processNormalButtonMask(unsigned int mask) {
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();
           NotifyObservers(&ve);
+          return;
         }
 
       } else {
