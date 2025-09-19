@@ -19,6 +19,7 @@
 #include "platform.h"
 #include "tim.h"
 #include "timers.h"
+#include "tlv320aic3204.h"
 #include "tusb.h"
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
 
@@ -208,6 +209,10 @@ void timerHandler(TimerHandle_t xTimer) {
   UNUSED(xTimer);
   Event ev(CLOCK);
   xQueueSend(eventQueue, &ev, 0);
+
+  // We use this call to poll for potential change of inputs
+  // TODO: what's the ideal timing? this may be too long
+  tlv320_select_output();
 }
 
 uint32_t readFromUSBCDC(char *buf, int len) {
