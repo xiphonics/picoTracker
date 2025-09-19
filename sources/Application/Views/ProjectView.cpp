@@ -142,7 +142,7 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
 
   position._y += 2;
-  actionFields_.emplace_back("Import Sample", FourCC::ActionImport, position);
+  actionFields_.emplace_back("Sample Pool", FourCC::ActionImport, position);
   fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
   (*actionFields_.rbegin()).AddObserver(*this);
 
@@ -401,7 +401,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   case FourCC::ActionImport:
-    // Switch to the ImportView for sample import
+    // Switch to the ImportView **BUT** to show the Project Pool by default
     if (!player->IsRunning()) {
       // First check if the samplelib exists
       bool samplelibExists = FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
@@ -413,6 +413,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       } else {
         // Set the source view type before switching to ImportView
         ImportView::SetSourceViewType(VT_PROJECT);
+        viewData_->sampleEditorProjectList = true;
 
         // Go to import sample
         ViewType vt = VT_IMPORT;

@@ -38,10 +38,10 @@ public:
   void PurgeSample(int i, const char *projectName);
   virtual bool CheckSampleFits(int sampleSize) = 0;
   virtual uint32_t GetAvailableSampleStorageSpace() = 0;
+  virtual bool unloadSample(int i) = 0;
 
 protected:
   virtual bool loadSample(const char *name) = 0;
-  virtual bool unloadSample(int index) = 0;
   bool loadSoundFont(const char *path);
   int count_;
   char *names_[MAX_SAMPLES];

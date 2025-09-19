@@ -98,7 +98,32 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
     }
 
+    if (mask & EPBM_NAV && mask & EPBM_EDIT) {
+      // toggle from sdcard "import sample" & project pool listing
+      if (inProjectSampleDir_) {
+        inProjectSampleDir_ = false;
+        setCurrentFolder(fs, SAMPLES_LIB_DIR);
+      } else {
+        inProjectSampleDir_ = true;
+        setCurrentFolder(fs, PROJECT_SAMPLES_DIR);
+      }
+    }
+
     if (mask & EPBM_ENTER) {
+      if (inProjectSampleDir_) {
+        // NOTE: the order of buttons in project pool is: edit, remove
+        // while in file browser its: import, edit
+        if (selectedButton_ == 0) {
+          char name[PFILENAME_SIZE];
+          fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+          showSampleEditor(name, false);
+        } else {
+#ifdef ADV
+          removeProjectSample(fileIndex, fs);
+#endif
+        }
+        return;
+      }
       // we can't import or edit dirs!
       if (fs->getFileType(fileIndex) != PFT_DIR) {
         if (selectedButton_ == 0) {
@@ -116,7 +141,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if ((mask & EPBM_LEFT || mask & EPBM_RIGHT) && !(mask & EPBM_NAV)) {
       // toggle the selected button
       selectedButton_ = (selectedButton_ == 0) ? 1 : 0;
-      isDirty_ = true;
+      DrawView();
     }
   }
 
@@ -161,7 +186,8 @@ void ImportView::DrawView() {
   auto fs = FileSystem::GetInstance();
 
   // Draw title with available storage space
-  const char *baseTitle = "Import Sample";
+  const char *baseTitle =
+      inProjectSampleDir_ ? "Project Pool" : "Import Sample";
 
   // Create title with storage info
   char titleBuffer[40];
@@ -230,11 +256,26 @@ void ImportView::DrawView() {
     y += 1;
   };
 
+  SetColor(CD_NORMAL);
   y = SCREEN_HEIGHT - 2;
-  props.invert_ = (selectedButton_ == 0) ? true : false;
-  DrawString(x, y, "[Import]", props);
-  props.invert_ = (selectedButton_ == 1) ? true : false;
-  DrawString(x + 10, y, "[Edit]", props);
+  if (!inProjectSampleDir_) {
+    props.invert_ = (selectedButton_ == 0) ? true : false;
+    DrawString(x, y, "[Import]", props);
+    props.invert_ = (selectedButton_ == 1) ? true : false;
+    DrawString(x + 10, y, "[Edit]", props);
+  } else {
+    // we make edit the first button to make things easier because remove is
+    // only available for now on the Advance and even on Advance we dont want
+    // remove to be the default button
+    props.invert_ = (selectedButton_ == 0) ? true : false;
+    DrawString(x, y, "[Edit]", props);
+    props.invert_ = (selectedButton_ == 1) ? true : false;
+#ifdef ADV
+    DrawString(x + 10, y, "[Remove]", props);
+#else
+    DrawString(x + 10, y, "[N/A]", props);
+#endif
+  }
   props.invert_ = false;
   y += 1;
 
@@ -288,8 +329,13 @@ void ImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
 
   toInstr_ = viewData_->currentInstrumentID_;
+  inProjectSampleDir_ = viewData_->sampleEditorProjectList;
 
-  setCurrentFolder(fs, SAMPLES_LIB_DIR);
+  if (inProjectSampleDir_) {
+    setCurrentFolder(fs, PROJECT_SAMPLES_DIR);
+  } else {
+    setCurrentFolder(fs, SAMPLES_LIB_DIR);
+  }
 };
 
 void ImportView::warpToNextSample(bool goUp) {
@@ -471,9 +517,6 @@ void ImportView::adjustPreviewVolume(bool increase) {
 }
 
 void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
-  // Reset the project sample directory flag
-  inProjectSampleDir_ = false;
-
   // Special case: if we're trying to go up (..) from a top-level directory
   if (strcmp(name, "..") == 0) {
     // Check if we're in a top-level directory (parent is root)
@@ -485,6 +528,16 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
     }
   }
 
+  // chdir to current project dir and we expect name param to be
+  // PROJECT_SAMPLES_DIR so that will then correctly set the project sample
+  // "pool" subdir
+  if (inProjectSampleDir_) {
+    fs->chdir(PROJECTS_DIR);
+    char projName[MAX_PROJECT_NAME_LENGTH];
+    viewData_->project_->GetProjectName(projName);
+    fs->chdir(projName);
+  }
+
   // Normal directory navigation
   if (!fs->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
@@ -493,26 +546,32 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Update list of file indexes in this new dir
   fs->list(&fileIndexList_, ".wav", false);
 
-  // Check if we're in the project's sample directory
-  // This is a simple check - if we're in a directory called "samples"
-  // and its parent is a directory with the same name as the current project
+  // If is root or we are showing project samples dir, remove the ".." entry
+  if (fs->isCurrentRoot() || inProjectSampleDir_) {
+    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
+      char filename[PFILENAME_SIZE];
+      fs->getFileName(*it, filename, PFILENAME_SIZE);
+      if (strcmp(filename, "..") == 0) {
+        fileIndexList_.erase(it);
+        break;
+      }
+    }
+  }
+
+  // Check if we're in the projects directory
+  // and if trying to go into the same dir as current project and if so dont
+  // allow it
   char projName[MAX_PROJECT_NAME_LENGTH];
   viewData_->project_->GetProjectName(projName);
 
-  if (strcmp(name, PROJECT_SAMPLES_DIR) == 0) {
-    // We just navigated to a directory called "samples"
-    // Check if its parent directory has the same name as the current project
+  if (strcmp(projName, name) == 0) {
+    // We just navigated to a current project directory, not allowed!
     etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> expectedPath(PROJECTS_DIR);
-    expectedPath.append("/");
-    expectedPath.append(projName);
+    // so instead go back out into the projects dir
+    setCurrentFolder(fs, PROJECTS_DIR);
 
-    // If we can navigate to this path from the root, and then to samples,
-    // and that's where we are now, then we're in the project's sample directory
-    inProjectSampleDir_ = true;
-    Trace::Log("PICOIMPORT", "Now in project sample directory");
-  } else if (strcmp(name, "..") == 0) {
-    // We're navigating up, so we're no longer in the project's sample directory
-    inProjectSampleDir_ = false;
+    Trace::Log("PICOIMPORT",
+               "NOT allowed to browse into current project sample directory");
   }
 }
 
@@ -527,4 +586,36 @@ void ImportView::showSampleEditor(
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
   SetChanged();
   NotifyObservers(&ve);
+}
+
+void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
+  char filename[PFILENAME_SIZE];
+  fs->getFileName(fileIndex, filename, PFILENAME_SIZE);
+
+  // TODO: first check if a instrument uses this sample
+  bool inUse = viewData_->project_->SampleInUse(
+      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filename));
+
+  if (inUse) {
+    MessageBox *mb =
+        new MessageBox(*this, "Cannot remove", "Sample in use!", MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
+  // add spacing for basic way to size dialog wider to give Ok/cancel
+  // buttons between space
+  MessageBox *mb = new MessageBox(*this, "    Remove sample?    ", filename,
+                                  MBBF_OK | MBBF_CANCEL);
+  DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
+    if (dialog.GetReturnCode() == MBL_OK) {
+      // delete file
+      fs->DeleteFile(filename);
+      // and unload it from ram
+      SamplePool::GetInstance()->unloadSample(fileIndex);
+      if (currentIndex_ != 0) {
+        this->currentIndex_--;
+      }
+    }
+  });
 }

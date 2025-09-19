@@ -49,6 +49,7 @@ public:
   int GetTranspose();
   void GetProjectName(char *name);
   void SetProjectName(char *name);
+  bool SampleInUse(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename);
 
   void Trigger();
 

@@ -35,6 +35,7 @@ public:
   virtual void getFileName(int index, char *name, int length) override;
   virtual PicoFileType getFileType(int index) override;
   virtual bool isParentRoot() override;
+  virtual bool isCurrentRoot() override;
   virtual bool DeleteFile(const char *name) override;
   virtual bool DeleteDir(const char *name) override;
   virtual bool exists(const char *path) override;
