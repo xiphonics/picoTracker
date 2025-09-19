@@ -34,15 +34,17 @@ public:
 protected:
   void setCurrentFolder(FileSystem *fs, const char *name);
   void warpToNextSample(bool goUp);
-  void import(char *name);
+  void import();
   void preview(char *name);
   void adjustPreviewVolume(bool increase);
+  void showSampleEditor(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
+                        bool isProjectSample);
 
 private:
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
   size_t previewPlayingIndex_ = 0;
-  short selected_ = 0;
+  short selectedButton_ = 0;
   int toInstr_ = 0;
   bool playKeyHeld_ =
       false; // Flag to track when the play key is being held down
