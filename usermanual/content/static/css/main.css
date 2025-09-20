@@ -218,3 +218,21 @@ body>div#cover {
     text-align: center;
     margin: 5%;
 }
+
+.minikeys {
+    border: 1px #ccc solid;
+    border-radius: 4px;
+    box-sizing: border-box;
+    display: inline-block;
+    margin: 0;
+    padding: 0 5px;
+    text-transform: uppercase;
+    font-family: monospace;
+}
+
+.minikeys img {
+    margin: 0;
+    padding: 0;
+    filter: none;
+    vertical-align: middle;
+}
