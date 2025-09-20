@@ -47,6 +47,8 @@ static StaticTimer_t timerBuffer;
 static TimerHandle_t timerStats;
 static StaticTimer_t timerStatsBuffer;
 #endif
+static TimerHandle_t timer500ms;
+static StaticTimer_t timer500msBuffer;
 
 #ifdef SERIAL_REPL
 SerialDebugUI advEventManager::serialDebugUI_ = SerialDebugUI();
@@ -204,15 +206,18 @@ void timerStatsHandler(TimerHandle_t xTimer) {
 }
 #endif
 
+void timer500msHandler(TimerHandle_t xTimer) {
+  UNUSED(xTimer);
+  // We use this call to poll for potential change of inputs
+  // TODO: what's the ideal timing? this may be too short
+  tlv320_select_output();
+}
+
 // timer callback at a rate of PICO_CLOCK_HZ
 void timerHandler(TimerHandle_t xTimer) {
   UNUSED(xTimer);
   Event ev(CLOCK);
   xQueueSend(eventQueue, &ev, 0);
-
-  // We use this call to poll for potential change of inputs
-  // TODO: what's the ideal timing? this may be too long
-  tlv320_select_output();
 }
 
 uint32_t readFromUSBCDC(char *buf, int len) {
@@ -257,6 +262,11 @@ bool advEventManager::Init() {
                          (void *)0, timerStatsHandler, &timerStatsBuffer);
   xTimerStart(timerStats, 100);
 #endif
+
+  timer500ms =
+      xTimerCreateStatic("500msTimer", 500 / portTICK_PERIOD_MS, pdTRUE,
+                         (void *)0, timer500msHandler, &timer500msBuffer);
+  xTimerStart(timer500ms, 100);
 
   // TODO: fix this, there is a timer service that should be used. Also all of
   // this keyRepeat logic is already implemented in the eventdispatcher

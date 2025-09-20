@@ -87,6 +87,7 @@ Default settings used.
 PLL Disabled
 DOSR 128
   */
+
   // Initialize to Page 0
   tlv320write(0, 0);
   // Initialize the device through software reset
@@ -110,6 +111,16 @@ DOSR 128
   // Enable Master Analog Power Control
   //  TODO Check this
   tlv320write(0x02, 0x00);
+
+  // configure HP detect
+  // Configure MFP3 GPIO disabled
+  tlv320write(0, 0);
+  tlv320write(0x38, 0x0);
+  // enable MICBIAS
+  tlv320write(0x33, 0x40);
+  // Configure headset detect (64ms debounce time)
+  tlv320write(0x43, 0x88);
+
   // Set the REF charging time to 40ms
   tlv320write(0x7b, 0x01);
   // HP soft stepping settings for optimal pop performance at power up Rpop used
@@ -120,18 +131,9 @@ DOSR 128
   // Set the Input Common Mode to 0.9V and Output Common Mode for Headphone to
   // Input Common Mode
   tlv320write(0x0a, 0x00);
-
-  // configure HP detect
-  // Configure MFP3 GPIO disabled
-  tlv320write(0, 0);
-  tlv320write(0x38, 0x0);
-
-  // Configure headset detect (64ms debounce time)
-  tlv320write(0x43, 0x88);
 }
 
 void tlv320_enable_hp(void) {
-
   // Select Page 1
   tlv320write(0x00, 0x01);
   // Route Left DAC to HPL
@@ -194,19 +196,16 @@ void tlv320_enable_spkr(void) {
 void tlv320_select_output(void) {
   uint8_t value;
   tlv320read(0x00, 0x43, &value);
-  //  printf("output check: %i\r\n", value);
 
   if (value & 0x20) {
     if (output != HP) {
       tlv320_enable_hp();
       output = HP;
-      printf("headphone output\r\n");
     }
   } else {
     if (output != SPKR) {
       tlv320_enable_spkr();
       output = SPKR;
-      printf("speaker output\r\n");
     }
   }
 }

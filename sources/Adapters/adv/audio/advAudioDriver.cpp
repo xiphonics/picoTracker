@@ -85,6 +85,7 @@ bool advAudioDriver::InitDriver() {
 
   // Configure codec
   tlv320_init();
+  tlv320_select_output();
 
   static StackType_t AudioStack[4000];
   static StaticTask_t ProcessEventTCB;
@@ -123,7 +124,6 @@ bool advAudioDriver::StartDriver() {
 
   startTime_ = HAL_GetTick();
 
-  tlv320_select_output();
   tlv320_unmute();
   return true;
 };
