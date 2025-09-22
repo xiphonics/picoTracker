@@ -34,7 +34,7 @@ public:
   SoundSource *GetSource(int i);
   char **GetNameList();
   int GetNameListSize();
-  int ImportSample(char *name, const char *projectName);
+  int ImportSample(const char *name, const char *projectName);
   void PurgeSample(int i, const char *projectName);
   virtual bool CheckSampleFits(int sampleSize) = 0;
   virtual uint32_t GetAvailableSampleStorageSpace() = 0;
