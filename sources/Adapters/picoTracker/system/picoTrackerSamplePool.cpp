@@ -104,7 +104,20 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
     names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
     strcpy(names_[count_], name);
     count_++;
-    LoadInFlash(wave);
+
+    if (!LoadInFlash(wave)) {
+      Trace::Error("Failed to load sample into flash: %s", name);
+      count_--;
+      SYS_FREE(names_[count_]);
+      names_[count_] = nullptr;
+      delete wav_[count_];
+      wav_[count_] = nullptr;
+      if (multicore_lockout_victim_is_initialized(1)) {
+        multicore_lockout_end_blocking();
+      }
+      return false;
+    }
+
     wave->Close();
 
     if (multicore_lockout_victim_is_initialized(1)) {
