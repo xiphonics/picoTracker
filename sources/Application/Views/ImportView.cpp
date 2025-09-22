@@ -404,21 +404,6 @@ void ImportView::import() {
   unsigned fileIndex = fileIndexList_[currentIndex_];
   fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
-  // Check if the filename is too long
-  size_t nameLength = strlen(name);
-
-  if (nameLength > MAX_INSTRUMENT_FILENAME_LENGTH) {
-    Trace::Log("PICOIMPORT", "Filename too long: %s (%zu chars, max is %d)",
-               name, nameLength, MAX_INSTRUMENT_FILENAME_LENGTH);
-    char sizeMesg[20];
-    npf_snprintf(sizeMesg, sizeof(sizeMesg), "Max is %02d chars",
-                 MAX_INSTRUMENT_FILENAME_LENGTH);
-    MessageBox *mb =
-        new MessageBox(*this, "Filename too long", sizeMesg, MBBF_OK);
-    DoModal(mb);
-    return;
-  }
-
   // Get current project name
   char projName[MAX_PROJECT_NAME_LENGTH];
   viewData_->project_->GetProjectName(projName);
@@ -477,6 +462,16 @@ void ImportView::import() {
       SampleInstrument *sinstr = (SampleInstrument *)instr;
       sinstr->AssignSample(sampleID);
     };
+
+    // check if we had to truncate filename
+    size_t nameLength = strlen(name);
+    if (nameLength > MAX_INSTRUMENT_FILENAME_LENGTH) {
+      Trace::Log("PICOIMPORT", "Filename too long: %s (%zu chars, max is %d)",
+                 name, nameLength, MAX_INSTRUMENT_FILENAME_LENGTH);
+      MessageBox *mb = new MessageBox(*this, "Sample name Truncated!",
+                                      "Max filename length:24", MBBF_OK);
+      DoModal(mb);
+    }
   } else {
     Trace::Error("failed to import sample");
     // Show a generic error message if import failed for other reasons

@@ -118,10 +118,9 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   // the project is with filename length limit
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> projSampleFilename(name);
   if (projSampleFilename.is_truncated()) {
-    // Truncate the string in-place and then append the extension.
-    // This avoids creating and assigning temporary string objects, which may have
-    // been triggering a subtle bug in the ETL library.
-    projSampleFilename.resize(MAX_INSTRUMENT_FILENAME_LENGTH - 4);
+    // Truncate the string in-place and then append the extension
+    projSampleFilename =
+        projSampleFilename.substr(0, MAX_INSTRUMENT_FILENAME_LENGTH - 4);
     projSampleFilename.append(".wav");
   }
 
@@ -156,7 +155,9 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   };
 
   // now load the sample into memory/flash
-  bool status = loadSample(projSampleFilename.c_str());
+  // make sure to use orig name because we are loading the og file, not the
+  // potentially truncated filename now in the projectes sampels subdir
+  bool status = loadSample(name);
 
   fin->Close();
   fout->Close();
