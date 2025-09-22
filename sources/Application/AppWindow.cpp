@@ -817,8 +817,6 @@ void AppWindow::onQuitApp() {
 }
 
 void AppWindow::Print(char *line) {
-
-  //	GUIWindow::Clear(View::backgroundColor_,true) ;
   Clear();
   strcpy(_statusLine, line);
   // unwrapped for gcc
@@ -834,6 +832,46 @@ void AppWindow::Print(char *line) {
   npf_snprintf(buildString, sizeof(buildString), "picoTracker build %s%s_%s",
                PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
   pos._y = 22;
+  pos._x = (32 - strlen(buildString)) / 2;
+  DrawString(buildString, pos, props);
+  Flush();
+};
+
+void AppWindow::PrintMultiLine(char *line) {
+  Clear();
+  GUITextProperties props;
+  SetColor(CD_NORMAL);
+
+  int current_y = 11; // Start near the middle of the screen
+
+  // Use strtok to split the string by newline characters. This modifies the
+  // input 'line' buffer, which is acceptable here.
+  char *token = strtok(line, "\n");
+
+  while (token != NULL) {
+    // Stop if we are about to overwrite the build string line
+    if (current_y >= 22) {
+      break;
+    }
+
+    // Horizontally center the current line of text
+    int position = 32; // Assumes a screen width of 32 characters
+    position -= strlen(token);
+    position /= 2;
+
+    GUIPoint pos(position, current_y);
+    DrawString(token, pos, props);
+
+    // Get the next line
+    token = strtok(NULL, "\n");
+    current_y++;
+  }
+
+  // Preserve the build string at the bottom of the screen
+  char buildString[SCREEN_WIDTH + 1];
+  npf_snprintf(buildString, sizeof(buildString), "picoTracker build %s%s_%s",
+               PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
+  GUIPoint pos(0, 22);
   pos._x = (32 - strlen(buildString)) / 2;
   DrawString(buildString, pos, props);
   Flush();
