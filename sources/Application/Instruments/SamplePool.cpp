@@ -60,7 +60,7 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      Status::Set("Copying:%s (%d%%)", name, progress);
+      Status::SetMultiLine("Copying:\n%s (%d%%)", name, progress);
       loadSample(name);
     }
     if (i == MAX_SAMPLES) {
@@ -96,7 +96,7 @@ int SamplePool::GetNameListSize() { return count_; };
 
 #define IMPORT_CHUNK_SIZE 1000
 
-int SamplePool::ImportSample(char *name, const char *projectName) {
+int SamplePool::ImportSample(const char *name, const char *projectName) {
 
   if (count_ == MAX_SAMPLES) {
     return -1;
@@ -114,11 +114,21 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
   long size = fin->Tell();
   fin->Seek(0, SEEK_SET);
 
+  // will truncate too long filenames to make sure the filename imported into
+  // the project is with filename length limit
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> projSampleFilename(name);
+  if (projSampleFilename.is_truncated()) {
+    // Truncate the string in-place and then append the extension
+    projSampleFilename =
+        projSampleFilename.substr(0, MAX_INSTRUMENT_FILENAME_LENGTH - 4);
+    projSampleFilename.append(".wav");
+  }
+
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> projectSamplePath("/projects/");
   projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
-  projectSamplePath.append(name);
-  Status::Set("Loading %s->", name);
+  projectSamplePath.append(projSampleFilename);
+  Status::SetMultiLine("Loading %s->\n%s", name, projSampleFilename);
 
   I_File *fout =
       FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
@@ -141,10 +151,13 @@ int SamplePool::ImportSample(char *name, const char *projectName) {
 
     // Update progress indicator
     int progress = (int)(((totalSize - size) * 100) / totalSize);
-    Status::Set("Loading %s: %d%%", name, progress);
+    Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
+                         progress);
   };
 
   // now load the sample into memory/flash
+  // make sure to use orig name because we are loading the og file, not the
+  // potentially truncated filename now in the projectes sampels subdir
   bool status = loadSample(name);
 
   fin->Close();

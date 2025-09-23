@@ -688,6 +688,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
             DoModal(mb);
           } else {
             ImportView::SetSourceViewType(VT_INSTRUMENT);
+            // set the browser to defautlt into sample import mode
+            viewData_->sampleEditorProjectList = false;
 
             // Go to import sample
             ViewType vt = VT_IMPORT;

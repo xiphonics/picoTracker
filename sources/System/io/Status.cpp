@@ -27,3 +27,18 @@ void Status::Set(const char *fmt, ...) {
 
   va_end(args);
 }
+
+void Status::SetMultiLine(const char *fmt, ...) {
+  Status *status = Status::GetInstance();
+  if (!status)
+    return;
+
+  char buffer[128];
+  va_list args;
+  va_start(args, fmt);
+
+  npf_vsnprintf(buffer, sizeof(buffer), fmt, args);
+  status->PrintMultiLine(buffer);
+
+  va_end(args);
+}
