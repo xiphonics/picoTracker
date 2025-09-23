@@ -60,7 +60,7 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      Status::Set("Copying:%s (%d%%)", name, progress);
+      Status::SetMultiLine("Copying:\n%s (%d%%)", name, progress);
       loadSample(name);
     }
     if (i == MAX_SAMPLES) {
@@ -128,7 +128,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
   projectSamplePath.append(projSampleFilename);
-  Status::Set("Loading %s->%s", name, projSampleFilename);
+  Status::SetMultiLine("Loading %s->\n%s", name, projSampleFilename);
 
   I_File *fout =
       FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
@@ -151,7 +151,8 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
 
     // Update progress indicator
     int progress = (int)(((totalSize - size) * 100) / totalSize);
-    Status::Set("Loading %s: %d%%", projSampleFilename.c_str(), progress);
+    Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
+                         progress);
   };
 
   // now load the sample into memory/flash
