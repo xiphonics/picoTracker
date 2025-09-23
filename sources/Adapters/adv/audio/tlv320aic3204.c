@@ -9,7 +9,11 @@
 #include "gpio.h"
 #include "i2c.h"
 #include "stm32h7xx_hal.h"
+#include "tim.h"
 #include <stdio.h>
+
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "usart.h"
 #ifdef __GNUC__ /* __GNUC__ */
@@ -154,11 +158,13 @@ void tlv320_enable_hp(void) {
   // Wait for 2.5 sec for soft stepping to take effect
   // Else read Page 1, Register 63d, D(7 : 6).When = “11” soft - stepping is
   // complete
-  HAL_Delay(2500);
+  // typical under 5ms
+  vTaskDelay(pdMS_TO_TICKS(150));
   // Select Page 0
   tlv320write(0x00, 0x00);
-  // Power up the Left and Right DAC Channels with route the Left Audio digital
-  // data to Left Channel DAC and Right Audio digital data to Right Channel DAC
+  // Power up the Left and Right DAC Channels with route the Left Audio
+  // digital data to Left Channel DAC and Right Audio digital data to
+  // Right Channel DAC
   tlv320write(0x3f, 0xd6);
 }
 
@@ -185,11 +191,12 @@ void tlv320_enable_spkr(void) {
   // Wait for 2.5 sec for soft stepping to take effect
   // Else read Page 1, Register 63d, D(7 : 6).When = “11” soft - stepping is
   // complete
-  HAL_Delay(2500);
+  // typical under 5ms - up to 50ms on turn on
+  vTaskDelay(pdMS_TO_TICKS(150));
   // Select Page 0
   tlv320write(0x00, 0x00);
-  // Power up the Right DAC Channel and mix both data channels to right dac
-  // (left disabled)
+  // Power up the Right DAC Channel and mix both data channels to right
+  // dac (left disabled)
   tlv320write(0x3f, 0x4e);
 }
 
