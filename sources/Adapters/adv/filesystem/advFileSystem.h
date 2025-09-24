@@ -62,13 +62,15 @@ public:
   virtual bool CopyFile(const char *src, const char *dest) override;   // OK
 
 private:
-  //  SdFs sd;
-  void tolowercase(char *temp);
   FILINFO fileFromIndex(int index);
-  // buffer needs to be allocated here as too big for allocation as local
-  // variable on the stack
-  uint8_t fileBuffer_[512];
-  TCHAR filepath[256];
+  void tolowercase(char *temp);
+  void updateCache();
+  char filepath[PFILENAME_SIZE];
+  BYTE fileBuffer_[4096];
+
+  // TODO: this is quit big, need move it out to external RAM
+  // cache for fileFromIndex
+  etl::vector<FILINFO, 256> file_cache_;
 };
 
 #endif
