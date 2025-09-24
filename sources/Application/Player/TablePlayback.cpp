@@ -175,8 +175,8 @@ void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
           TableSaveState state;
           instrument_->GetTableState(state);
           memcpy(hopCount_, state.hopCount_,
-                 sizeof(uchar) * TABLE_STEPS * TABLE_COUMNS);
-          memcpy(position_, state.position_, sizeof(int) * TABLE_COUMNS);
+                 sizeof(uchar) * TABLE_STEPS * TABLE_COLUMNS);
+          memcpy(position_, state.position_, sizeof(int) * TABLE_COLUMNS);
         }
 
         // try local processing for if it changes current table or position
@@ -224,8 +224,8 @@ void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
         if (automated_) {
           TableSaveState state;
           memcpy(state.hopCount_, hopCount_,
-                 sizeof(uchar) * TABLE_STEPS * TABLE_COUMNS);
-          memcpy(state.position_, position_, sizeof(int) * TABLE_COUMNS);
+                 sizeof(uchar) * TABLE_STEPS * TABLE_COLUMNS);
+          memcpy(state.position_, position_, sizeof(int) * TABLE_COLUMNS);
           instrument_->SetTableState(state);
         }
       }
