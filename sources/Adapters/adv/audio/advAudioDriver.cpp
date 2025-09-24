@@ -103,13 +103,13 @@ bool advAudioDriver::InitDriver() {
   xTaskCreateStatic(AudioOutput, "Audio Output", 1000, NULL, 1,
                     AudioOutputStack, &AudioOutputTCB);
 
+  core1_audio = xSemaphoreCreateCountingStatic(SOUND_BUFFER_COUNT - 1, 0,
+                                               &xSemaphoreBuffer);
+
   static StackType_t AudioStack[4000];
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(AudioThread, "Audio", 4000, NULL, 6, AudioStack,
                     &ProcessEventTCB);
-
-  core1_audio = xSemaphoreCreateCountingStatic(SOUND_BUFFER_COUNT - 1, 0,
-                                               &xSemaphoreBuffer);
 
   return true;
 };
