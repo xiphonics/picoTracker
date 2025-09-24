@@ -16,6 +16,7 @@
 
 #define TABLE_COUNT 0x20
 #define TABLE_STEPS 16
+#define TABLE_COLUMNS 3
 
 #define NO_MORE_TABLE TABLE_COUNT + 10
 

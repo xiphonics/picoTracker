@@ -39,13 +39,13 @@ public:
 
 private:
   Table *table_;
-  int position_[3];
-  int previous_[3];
-  bool hopped_[3];
+  int position_[TABLE_COLUMNS];
+  int previous_[TABLE_COLUMNS];
+  bool hopped_[TABLE_COLUMNS];
   I_Instrument *instrument_;
   int channel_;
   bool automated_;
-  uchar hopCount_[TABLE_STEPS][3];
+  uchar hopCount_[TABLE_STEPS][TABLE_COLUMNS];
   ChannelGroove groove_;
 
   static TablePlayback playback_[SONG_CHANNEL_COUNT];
@@ -54,8 +54,8 @@ private:
 class TableSaveState {
 public:
   void Reset();
-  uchar hopCount_[TABLE_STEPS][3];
-  int position_[3];
+  uchar hopCount_[TABLE_STEPS][TABLE_COLUMNS];
+  int position_[TABLE_COLUMNS];
 };
 
 #endif
