@@ -24,14 +24,13 @@ public:
   virtual ~AudioFileStreamer();
   virtual bool Render(fixed *buffer, int samplecount);
   // Automatically detects single cycle waveforms
-  bool Start(const char *name, int startSample = 0);
+  bool Start(const char *name, int startSample = 0, bool looping = false);
   void Stop();
   bool IsPlaying();
 
 protected:
   AudioFileStreamerMode mode_;
   char name_[256];
-  bool newPath_;
   WavFile *wav_;
   float position_;
   Project *project_;
@@ -47,16 +46,10 @@ protected:
   short *singleCycleData_; // Pointer to the current single cycle data
 
   // For matching oscillator mode in SampleInstrument
-  bool useReferencePitch_; // Whether to use the reference pitch instead of
-                           // sample rate ratio
-  float referencePitch_;   // Reference pitch in Hz (C3 = 130.81 Hz)
+  float referencePitch_; // Reference pitch in Hz (C3 = 130.81 Hz)
 
 public:
   void SetProject(Project *project) { project_ = project; }
-
-  // Single cycle waveform methods
-  bool StartLooping(const char *name);
-  void StopLooping() { mode_ = AFSM_STOPPED; }
 };
 
 #endif
