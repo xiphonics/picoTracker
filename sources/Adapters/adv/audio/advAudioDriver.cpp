@@ -55,6 +55,13 @@ void AudioThread(void *) {
   }
 }
 
+void AudioOutput(void *) {
+  while (true) {
+    tlv320_select_output();
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+}
+
 void advAudioDriver::BufferNeeded() {
   // Audio tick processes MIDI among other things
   // TODO: understand tick and buffer size relationship. currently not constant
@@ -85,6 +92,16 @@ bool advAudioDriver::InitDriver() {
 
   // Configure codec
   tlv320_init();
+  // Takes some time between configuring HP detect and actually detecting
+  vTaskDelay(pdMS_TO_TICKS(250));
+
+  // Run a task that will periodically poll for output change. Cannot do this
+  // easily on a timer due to de-pop wait times and timers being single
+  // threaded. A delay on a timer can stall other timers.
+  static StackType_t AudioOutputStack[1000];
+  static StaticTask_t AudioOutputTCB;
+  xTaskCreateStatic(AudioOutput, "Audio Output", 1000, NULL, 1,
+                    AudioOutputStack, &AudioOutputTCB);
 
   static StackType_t AudioStack[4000];
   static StaticTask_t ProcessEventTCB;
@@ -123,6 +140,7 @@ bool advAudioDriver::StartDriver() {
 
   startTime_ = HAL_GetTick();
 
+  tlv320_unmute();
   return true;
 };
 

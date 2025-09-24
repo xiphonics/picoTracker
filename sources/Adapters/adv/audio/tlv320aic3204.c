@@ -9,6 +9,28 @@
 #include "gpio.h"
 #include "i2c.h"
 #include "stm32h7xx_hal.h"
+#include "tim.h"
+#include <stdio.h>
+
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "usart.h"
+#ifdef __GNUC__ /* __GNUC__ */
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+
+PUTCHAR_PROTOTYPE {
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the USART3 and Loop until the end of
+             transmission */
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0x000F);
+  return ch;
+}
+
+enum TLVOutput { INIT, HP, SPKR } output = INIT;
 
 HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value) {
   // Write to the register
@@ -69,6 +91,7 @@ Default settings used.
 PLL Disabled
 DOSR 128
   */
+
   // Initialize to Page 0
   tlv320write(0, 0);
   // Initialize the device through software reset
@@ -92,6 +115,16 @@ DOSR 128
   // Enable Master Analog Power Control
   //  TODO Check this
   tlv320write(0x02, 0x00);
+
+  // configure HP detect
+  // Configure MFP3 GPIO disabled
+  tlv320write(0, 0);
+  tlv320write(0x38, 0x0);
+  // enable MICBIAS
+  tlv320write(0x33, 0x40);
+  // Configure headset detect (64ms debounce time)
+  tlv320write(0x43, 0x88);
+
   // Set the REF charging time to 40ms
   tlv320write(0x7b, 0x01);
   // HP soft stepping settings for optimal pop performance at power up Rpop used
@@ -102,13 +135,20 @@ DOSR 128
   // Set the Input Common Mode to 0.9V and Output Common Mode for Headphone to
   // Input Common Mode
   tlv320write(0x0a, 0x00);
+}
+
+void tlv320_enable_hp(void) {
+  // Select Page 1
+  tlv320write(0x00, 0x01);
   // Route Left DAC to HPL
   tlv320write(0x0c, 0x08);
   // Route Right DAC to HPR
   tlv320write(0x0d, 0x08);
+
   // Set the DAC PTM mode to PTM_P3 / 4
   tlv320write(0x03, 0x00);
   tlv320write(0x04, 0x00);
+
   // Set the HPL gain to 0d
   tlv320write(0x10, 0x00);
   // Set the HPR gain to 0dB
@@ -118,14 +158,86 @@ DOSR 128
   // Wait for 2.5 sec for soft stepping to take effect
   // Else read Page 1, Register 63d, D(7 : 6).When = “11” soft - stepping is
   // complete
-  HAL_Delay(2500);
+  // typical under 5ms
+  vTaskDelay(pdMS_TO_TICKS(150));
   // Select Page 0
   tlv320write(0x00, 0x00);
-  // Power up the Left and Right DAC Channels with route the Left Audio digital
-  // data to Left Channel DAC and Right Audio digital data to Right Channel DAC
+  // Power up the Left and Right DAC Channels with route the Left Audio
+  // digital data to Left Channel DAC and Right Audio digital data to
+  // Right Channel DAC
   tlv320write(0x3f, 0xd6);
-  // Unmute the DAC digital volume control
-  tlv320write(0x40, 0x00);
+}
+
+void tlv320_enable_spkr(void) {
+
+  // Select Page 1
+  tlv320write(0x00, 0x01);
+  // Route Right DAC negative to LOL
+  tlv320write(0x0e, 0x10);
+  // Route Right DAC to LOR
+  tlv320write(0x0f, 0x08);
+
+  // Set the DAC PTM mode to PTM_P3 / 4
+  tlv320write(0x03, 0x00);
+  tlv320write(0x04, 0x00);
+
+  // Set the LOL gain to 0dB
+  tlv320write(0x12, 0x00);
+  // Set the LOR gain to 0dB
+  tlv320write(0x13, 0x00);
+
+  // Power up LOL and LOR drivers
+  tlv320write(0x09, 0x0c);
+  // Wait for 2.5 sec for soft stepping to take effect
+  // Else read Page 1, Register 63d, D(7 : 6).When = “11” soft - stepping is
+  // complete
+  // typical under 5ms - up to 50ms on turn on
+  vTaskDelay(pdMS_TO_TICKS(150));
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  // Power up the Right DAC Channel and mix both data channels to right
+  // dac (left disabled)
+  tlv320write(0x3f, 0x4e);
+}
+
+void tlv320_select_output(void) {
+  uint8_t value;
+  tlv320read(0x00, 0x43, &value);
+
+  if (value & 0x20) {
+    if (output != HP) {
+      tlv320_enable_hp();
+      output = HP;
+    }
+  } else {
+    if (output != SPKR) {
+      tlv320_enable_spkr();
+      output = SPKR;
+    }
+  }
+}
+
+void tlv320_mute(void) {
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  uint8_t value;
+  tlv320read(0x00, 0x40, &value);
+
+  value |= 0x0C;
+  // Mute the DAC digital volume control
+  tlv320write(0x40, value);
+}
+
+void tlv320_unmute(void) {
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  uint8_t value;
+  tlv320read(0x00, 0x40, &value);
+
+  value &= ~(1 << 2);
+  value &= ~(1 << 3);
+  // unmute the DAC digital volume control
+  tlv320write(0x40, value);
 }
 
 void tlv320_enable_linein(void) {

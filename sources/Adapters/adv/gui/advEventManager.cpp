@@ -19,6 +19,7 @@
 #include "platform.h"
 #include "tim.h"
 #include "timers.h"
+#include "tlv320aic3204.h"
 #include "tusb.h"
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
 

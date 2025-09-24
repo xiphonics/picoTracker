@@ -8,9 +8,8 @@
 #ifndef _PICOTRACKERINPUT_H_
 #define _PICOTRACKERINPUT_H_
 
+#include "utils.h"
 #include <cstdint>
-
-#define BIT(n) (1 << (n))
 
 typedef enum KEYPAD_BITS {
   KEY_LEFT = BIT(0),   //!< Keypad LEFT button.

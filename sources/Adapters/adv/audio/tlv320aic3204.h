@@ -14,8 +14,6 @@
 // #define CODEC_RESET_PIN GPIO_PIN_13
 #define I2C_MEMADD_SIZE_8BIT (0x00000001U)
 
-#define BIT(n) 1 << n
-
 #define REFERENCE_PWR_UP_SLOW BIT(2)
 #define COMMON_MODE_09V BIT(6)
 
@@ -25,6 +23,9 @@ extern "C" {
 
 void tlv320_init();
 
+void tlv320_select_output(void);
+void tlv320_unmute(void);
+void tlv320_mute(void);
 void tlv320_enable_linein(void);
 void tlv320_enable_mic(void);
 void tlv320_disable_linein(void);
