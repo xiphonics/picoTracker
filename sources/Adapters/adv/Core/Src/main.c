@@ -162,6 +162,8 @@ int main(void) {
 
   Application::GetInstance()->Init(params);
 
+  is_booting_ = 0;
+
   advSystem::MainLoop();
   // WE NEVER GET HERE
 

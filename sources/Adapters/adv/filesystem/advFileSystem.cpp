@@ -7,6 +7,9 @@
  */
 
 #include "advFileSystem.h"
+#include "FreeRTOS.h"
+#include "main.h"
+#include "task.h"
 
 FATFS SDFatFS;
 char SDPath[4];
@@ -15,7 +18,6 @@ char SDPath[4];
 #define PARENT_DIR_MARKER_INDEX (std::numeric_limits<int>::max())
 
 advFileSystem::advFileSystem() {
-
   // Link FatFs driver
   FATFS_LinkDriver(&SD_DMA_Driver, SDPath);
 
@@ -23,7 +25,6 @@ advFileSystem::advFileSystem() {
   Trace::Log("FILESYSTEM", "Try to mount SD Card");
   if (f_mount(&SDFatFS, (TCHAR const *)SDPath, 0) == FR_OK) {
     Trace::Log("FILESYSTEM", "Mounted SD Card FAT Filesystem first partition");
-    updateCache();
     return;
   }
   // Do we have any kind of card?
@@ -170,6 +171,7 @@ void advFileSystem::updateCache() {
   DIR dir;
   res = f_opendir(&dir, path);
   if (res == FR_OK) {
+    int file_count = 0;
     for (;;) {
       FILINFO fno;
       res = f_readdir(&dir, &fno);
@@ -180,6 +182,10 @@ void advFileSystem::updateCache() {
       } else {
         Trace::Error("file cache is full");
         break;
+      }
+      // make sure not to block audio task for too long
+      if ((file_count++ % 4) == 0 && is_booting_ != 1) {
+        vTaskDelay(1);
       }
     }
     f_closedir(&dir);
