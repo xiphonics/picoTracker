@@ -898,8 +898,24 @@ void Player::playCursorPosition(int channel) {
         if (instrument->GetTableAutomation()) {
           TablePlayerChange tpc;
           tpc.timeToLive_ = timeToLive_[channel];
+          tpc.instrRetrigger_ = -1;
           tpb.ProcessStep(tpc);
           timeToLive_[channel] = tpc.timeToLive_;
+          if (tpc.instrRetrigger_ >= 0) {
+            int note = mixer_.GetChannelNote(channel);
+            I_Instrument *instr = mixer_.GetInstrument(channel);
+            if ((note != 0xFF) && (instr != 0)) {
+              // TODO: should we instead allow for transposing notes *down* with
+              // values over 64?
+              note += (tpc.instrRetrigger_ > 80) ? 80 : tpc.instrRetrigger_;
+              while (note > 127) {
+                note -= 12;
+              };
+              mixer_.StopInstrument(channel);
+              // NOTE: 'newIntrument' bool flag is really the "retrigger" flag
+              mixer_.StartInstrument(channel, instr, note, false);
+            };
+          };
         }
       }
     }
