@@ -36,6 +36,8 @@ typedef struct {
   uint32_t crc32;   // CRC of the firmware (excluding this struct)
   uint32_t type;    // type of firmware
 } firmware_info_t;
+
+static uint8_t is_booting_ = 1;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
