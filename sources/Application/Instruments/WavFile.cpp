@@ -68,14 +68,6 @@ WavFile *WavFile::Open(const char *name) {
 
   WavFile *wav = new WavFile(file);
 
-  // Get data
-
-  /*        file->Seek(0,SEEK_SET) ;
-          file->Read(fileBuffer,filesize,1) ;
-          uchar *ptr=fileBuffer ;*/
-
-  // Trace::Dump("Loading sample from %s",path) ;
-
   long position = 0;
 
   // Read 'RIFF'
@@ -85,7 +77,7 @@ WavFile *WavFile::Open(const char *name) {
   memcpy(&chunk, wav->readBuffer_, 4);
   chunk = Swap32(chunk);
 
-  if (chunk != 0x46464952) {
+  if (chunk != 0x46464952) { // 'RIFF' in little-endian
     Trace::Error("Bad RIFF format %x", chunk);
     delete (wav);
     return 0;
@@ -97,33 +89,50 @@ WavFile *WavFile::Open(const char *name) {
   memcpy(&size, wav->readBuffer_, 4);
   size = Swap32(size);
 
+  unsigned int riffSize = size; // This is basically FileSize - 8
+
   // Read WAVE
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
   chunk = Swap32(chunk);
 
-  if (chunk != 0x45564157) {
+  if (chunk != 0x45564157) { // 'WAVE' in little-endian
     Trace::Error("Bad WAV format");
     delete wav;
     return 0;
   }
 
-  // Read fmt
-  position += wav->readBlock(position, 4);
-  memcpy(&chunk, wav->readBuffer_, 4);
-  chunk = Swap32(chunk);
+  // Search for the 'fmt ' chunk, skipping any other chunks like 'JUNK'
+  bool fmt_found = false;
+  while (!fmt_found) {
+    // If our current position exceeds the file size, the 'fmt ' chunk is
+    // missing.
+    if (position >= (long)riffSize + 8) {
+      Trace::Error("Could not find 'fmt ' chunk in header");
+      delete wav;
+      return 0;
+    }
 
-  if (chunk != 0x20746D66) {
-    Trace::Error("Bad WAV/fmt format");
-    delete wav;
-    return 0;
+    // Read the next chunk's ID
+    position += wav->readBlock(position, 4);
+    memcpy(&chunk, wav->readBuffer_, 4);
+    size = Swap32(size);
+
+    // Read the next chunk's size
+    position += wav->readBlock(position, 4);
+    memcpy(&size, wav->readBuffer_, 4);
+    size = Swap32(size);
+
+    if (chunk == 0x20746D66) { // 'fmt ' in little-endian
+      fmt_found = true;
+    } else {
+      // It's not the 'fmt ' chunk, so skip its content
+      position += size;
+    }
   }
 
-  // Read subchunk size
-  position += wav->readBlock(position, 4);
-  memcpy(&size, wav->readBuffer_, 4);
-  size = Swap32(size);
-
+  // Now that 'fmt ' is found, 'size' holds the fmt subchunk size.
+  // The file position is at the start of the format data.
   if (size < 16) {
     Trace::Error("Bad fmt size format");
     delete wav;
