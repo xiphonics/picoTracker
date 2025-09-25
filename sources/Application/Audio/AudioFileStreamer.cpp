@@ -61,7 +61,7 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
   // Calculate the speed factor for sample rate conversion
   float ratio;
 
-  if (mode_ == AFSM_LOOPING) {
+  if (looping) {
     // For single cycle waveforms, calculate speed based on the reference
     // pitch this matches how SampleInstrument plays in oscillator mode
     float cyclesPerSecond = referencePitch_;
