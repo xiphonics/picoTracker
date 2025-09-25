@@ -174,7 +174,7 @@ void PlayerMixer::StartStreaming(const char *name, int startSample) {
 };
 
 void PlayerMixer::StartLoopingStreaming(const char *name) {
-  fileStreamer_.StartLooping(name);
+  fileStreamer_.Start(name, 0, true);
 };
 
 void PlayerMixer::StopStreaming() { fileStreamer_.Stop(); };
