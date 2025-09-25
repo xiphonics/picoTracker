@@ -13,9 +13,9 @@
 #include <string.h>
 
 Phrase::Phrase() {
-  for (int i = 0; i < PHRASE_COUNT * 16; i++) {
-    note_[i] = 0xFF;
-    instr_[i] = 0xFF;
+  for (int i = 0; i < PHRASE_COUNT * PHRASE_ROW_COUNT; i++) {
+    note_[i] = NO_NOTE_ASSIGNED;
+    instr_[i] = NO_INSTRUMENT_ASSIGNED;
     cmd1_[i] = FourCC::InstrumentCommandNone;
     param1_[i] = 0x00;
     cmd2_[i] = FourCC::InstrumentCommandNone;

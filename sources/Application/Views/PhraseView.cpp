@@ -22,6 +22,13 @@
 #include <nanoprintf.h>
 #include <stdlib.h>
 
+#define NOTE_COLUMN 0
+#define INSTR_COLUMN 1
+#define CMD1_COLUMN 2
+#define PARAM1_COLUMN 3
+#define CMD2_COLUMN 4
+#define PARAM2_COLUMN 5
+
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
@@ -335,6 +342,97 @@ void PhraseView::pasteLast() {
     */
     break;
   }
+}
+
+void PhraseView::jumpToNextSection(int direction) {
+  int phraseStart = viewData_->currentPhrase_ * PHRASE_ROW_COUNT;
+  int current = row_;
+  bool foundGap = false;
+
+  switch (col_) {
+  case NOTE_COLUMN: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      uchar note = phrase_->note_[phraseStart + current];
+      if (foundGap && note != NO_NOTE_ASSIGNED) {
+        break;
+      } else if (note == NO_NOTE_ASSIGNED) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  case INSTR_COLUMN: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      uchar instrument = phrase_->instr_[phraseStart + current];
+      if (foundGap && instrument != NO_INSTRUMENT_ASSIGNED) {
+        break;
+      } else if (instrument == NO_INSTRUMENT_ASSIGNED) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  // find gap based on cmd1 for both columns
+  case CMD1_COLUMN:
+  case PARAM1_COLUMN: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      FourCC command = phrase_->cmd1_[phraseStart + current];
+      if (foundGap && command != FourCC::InstrumentCommandNone) {
+        break;
+      } else if (command == FourCC::InstrumentCommandNone) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  // find gap based on cmd2 for both columns
+  case CMD2_COLUMN:
+  case PARAM2_COLUMN: {
+    for (int i = 0; i < PHRASE_ROW_COUNT; i++) {
+      FourCC command = phrase_->cmd2_[phraseStart + current];
+      if (foundGap && command != FourCC::InstrumentCommandNone) {
+        break;
+      } else if (command == FourCC::InstrumentCommandNone) {
+        foundGap = true;
+      }
+      current += direction;
+      if (current < 0)
+        current += PHRASE_ROW_COUNT;
+      if (current >= PHRASE_ROW_COUNT)
+        current -= PHRASE_ROW_COUNT;
+    }
+    break;
+  }
+
+  default: {
+    Trace::Error("PHRASEVIEW: jumpToNextSection received unexpected value for "
+                 "col %d not implemented",
+                 col_);
+    return;
+  }
+  }
+
+  // update view
+  row_ = current;
+  isDirty_ = true;
 }
 
 void PhraseView::cutPosition() {
@@ -973,7 +1071,12 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       } else {
         // L Modifier
         if (mask & EPBM_ALT) {
-
+          if (mask & EPBM_DOWN) {
+            jumpToNextSection(1);
+          }
+          if (mask & EPBM_UP) {
+            jumpToNextSection(-1);
+          }
         } else {
           // No modifier
 
@@ -1287,7 +1390,22 @@ void PhraseView::DrawView() {
     OnPlayerUpdate(PET_UPDATE);
   };
 
+  // if in one of the param columns, update cmdEdit(Field) as well
   if ((viewMode_ != VM_SELECTION) && ((col_ == 3) || (col_ == 5))) {
+    // get current (new) cursor position
+    GUIPoint p;
+    p._y = row_ + anchor._y;
+    p._x = anchor._x + ((col_ == 3) ? 12 : 21);
+
+    // update cmdEditField with current position
+    cmdEditField_->SetPosition(p);
+
+    // Update the command edit field's value with the current parameter
+    ushort *paramPtr =
+        (col_ == 3) ? &phrase_->param1_[16 * viewData_->currentPhrase_ + row_]
+                    : &phrase_->param2_[16 * viewData_->currentPhrase_ + row_];
+    cmdEdit_.SetInt(*paramPtr);
+
     cmdEditField_->SetFocus();
     cmdEditField_->Draw(w_);
   };
