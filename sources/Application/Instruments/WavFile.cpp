@@ -88,8 +88,7 @@ WavFile *WavFile::Open(const char *name) {
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
   size = Swap32(size);
-
-  unsigned int riffSize = size; // This is basically FileSize - 8
+  unsigned int fileSize = size;
 
   // Read WAVE
   position += wav->readBlock(position, 4);
@@ -107,7 +106,7 @@ WavFile *WavFile::Open(const char *name) {
   while (!fmt_found) {
     // If our current position exceeds the file size, the 'fmt ' chunk is
     // missing.
-    if (position >= (long)riffSize + 8) {
+    if (position >= (long)fileSize) {
       Trace::Error("Could not find 'fmt ' chunk in header");
       delete wav;
       return 0;
