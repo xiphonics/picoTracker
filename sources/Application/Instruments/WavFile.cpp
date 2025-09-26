@@ -17,30 +17,6 @@
 int WavFile::bufferChunkSize_ = -1;
 unsigned char WavFile::readBuffer_[BUFFER_SIZE];
 
-short Swap16(short from) {
-#ifdef __ppc__
-  short result;
-  ((char *)&result)[0] = ((char *)&from)[1];
-  ((char *)&result)[1] = ((char *)&from)[0];
-  return result;
-#else
-  return from;
-#endif
-}
-
-int Swap32(int from) {
-#ifdef __ppc__
-  int result;
-  ((char *)&result)[0] = ((char *)&from)[3];
-  ((char *)&result)[1] = ((char *)&from)[2];
-  ((char *)&result)[2] = ((char *)&from)[1];
-  ((char *)&result)[3] = ((char *)&from)[0];
-  return result;
-#else
-  return from;
-#endif
-}
-
 WavFile::WavFile(I_File *file) {
   samples_ = 0;
   size_ = 0;
@@ -68,14 +44,6 @@ WavFile *WavFile::Open(const char *name) {
 
   WavFile *wav = new WavFile(file);
 
-  // Get data
-
-  /*        file->Seek(0,SEEK_SET) ;
-          file->Read(fileBuffer,filesize,1) ;
-          uchar *ptr=fileBuffer ;*/
-
-  // Trace::Dump("Loading sample from %s",path) ;
-
   long position = 0;
 
   // Read 'RIFF'
@@ -83,9 +51,8 @@ WavFile *WavFile::Open(const char *name) {
 
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
-  chunk = Swap32(chunk);
 
-  if (chunk != 0x46464952) {
+  if (chunk != 0x46464952) { // 'RIFF' in little-endian
     Trace::Error("Bad RIFF format %x", chunk);
     delete (wav);
     return 0;
@@ -95,35 +62,47 @@ WavFile *WavFile::Open(const char *name) {
   unsigned int size;
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
-  size = Swap32(size);
+  unsigned int fileSize = size;
 
   // Read WAVE
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
-  chunk = Swap32(chunk);
 
-  if (chunk != 0x45564157) {
+  if (chunk != 0x45564157) { // 'WAVE' in little-endian
     Trace::Error("Bad WAV format");
     delete wav;
     return 0;
   }
 
-  // Read fmt
-  position += wav->readBlock(position, 4);
-  memcpy(&chunk, wav->readBuffer_, 4);
-  chunk = Swap32(chunk);
+  // Search for the 'fmt ' chunk, skipping any other chunks like 'JUNK'
+  bool fmt_found = false;
+  while (!fmt_found) {
+    // If our current position exceeds the file size, the 'fmt ' chunk is
+    // missing.
+    if (position >= (long)fileSize) {
+      Trace::Error("Could not find 'fmt ' chunk in header");
+      delete wav;
+      return 0;
+    }
 
-  if (chunk != 0x20746D66) {
-    Trace::Error("Bad WAV/fmt format");
-    delete wav;
-    return 0;
+    // Read the next chunk's ID
+    position += wav->readBlock(position, 4);
+    memcpy(&chunk, wav->readBuffer_, 4);
+
+    // Read the next chunk's size
+    position += wav->readBlock(position, 4);
+    memcpy(&size, wav->readBuffer_, 4);
+
+    if (chunk == 0x20746D66) { // 'fmt ' in little-endian
+      fmt_found = true;
+    } else {
+      // It's not the 'fmt ' chunk, so skip its content
+      position += size;
+    }
   }
 
-  // Read subchunk size
-  position += wav->readBlock(position, 4);
-  memcpy(&size, wav->readBuffer_, 4);
-  size = Swap32(size);
-
+  // Now that 'fmt ' is found, 'size' holds the fmt subchunk size.
+  // The file position is at the start of the format data.
   if (size < 16) {
     Trace::Error("Bad fmt size format");
     delete wav;
@@ -135,7 +114,6 @@ WavFile *WavFile::Open(const char *name) {
   unsigned short comp;
   position += wav->readBlock(position, 2);
   memcpy(&comp, wav->readBuffer_, 2);
-  comp = Swap16(comp);
 
   if (comp != 1) {
     Trace::Error("Unsupported compression");
@@ -147,14 +125,12 @@ WavFile *WavFile::Open(const char *name) {
   unsigned short nChannels;
   position += wav->readBlock(position, 2);
   memcpy(&nChannels, wav->readBuffer_, 2);
-  nChannels = Swap16(nChannels);
 
   // Read Sample rate
   unsigned int sampleRate;
 
   position += wav->readBlock(position, 4);
   memcpy(&sampleRate, wav->readBuffer_, 4);
-  sampleRate = Swap32(sampleRate);
 
   // Skip byteRate & blockalign
   position += 6;
@@ -162,7 +138,6 @@ WavFile *WavFile::Open(const char *name) {
   short bitPerSample;
   position += wav->readBlock(position, 2);
   memcpy(&bitPerSample, wav->readBuffer_, 2);
-  bitPerSample = Swap16(bitPerSample);
 
   if ((bitPerSample != 16) && (bitPerSample != 8)) {
     Trace::Error("Only 8/16 bit supported");
@@ -182,17 +157,14 @@ WavFile *WavFile::Open(const char *name) {
 
   position += wav->readBlock(position, 4);
   memcpy(&chunk, wav->readBuffer_, 4);
-  chunk = Swap32(chunk);
 
   while (chunk != 0x61746164) {
     position += wav->readBlock(position, 4);
     memcpy(&size, wav->readBuffer_, 4);
-    size = Swap32(size);
 
     position += size;
     position += wav->readBlock(position, 4);
     memcpy(&chunk, wav->readBuffer_, 4);
-    chunk = Swap32(chunk);
   }
 
   wav->sampleRate_ = sampleRate;
@@ -202,7 +174,6 @@ WavFile *WavFile::Open(const char *name) {
 
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
-  size = Swap32(size);
   Trace::Debug("File size: %i", size);
 
   wav->size_ =
@@ -273,10 +244,8 @@ bool WavFile::GetBuffer(long start, long size) {
     if (bytePerSample_ == 1) {
       dst[i] = (src[i] - 128) * 256;
     } else {
-      *dst = Swap16(*dst);
       dst++;
       if (channelCount_ > 1) {
-        *dst = Swap16(*dst);
         dst++;
       }
     }
@@ -318,14 +287,9 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
     // Adjust bytes read count for 16-bit output
     *bytesRead = *bytesRead * 2;
   } else {
-    // Process 16-bit samples (byte swap if needed)
+    // Process 16-bit samples
     uint16_t *data = (uint16_t *)buff;
     uint32_t sampleCount = *bytesRead / 2; // 16-bit = 2 bytes per sample
-
-    // Process all samples with proper bounds checking
-    for (uint32_t i = 0; i < sampleCount; i++) {
-      data[i] = Swap16(data[i]);
-    }
   }
 
   // Update remaining bytes counter

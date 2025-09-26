@@ -17,7 +17,7 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
     return false;
 
   // RIFF chunk
-  uint32_t chunk = Swap32(0x46464952); // "RIFF"
+  uint32_t chunk = 0x46464952; // "RIFF"
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
@@ -26,12 +26,12 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
     return false;
 
   // WAVE chunk
-  chunk = Swap32(0x45564157); // "WAVE"
+  chunk = 0x45564157; // "WAVE"
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
   // "fmt " subchunk
-  chunk = Swap32(0x20746D66); // "fmt "
+  chunk = 0x20746D66; // "fmt "
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
@@ -63,7 +63,7 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
     return false;
 
   // data subchunk
-  chunk = Swap32(0x61746164); // "data"
+  chunk = 0x61746164; // "data"
   if (file->Write(&chunk, 1, 4) != 4)
     return false;
 
