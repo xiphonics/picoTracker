@@ -27,10 +27,6 @@ Song::Song() : Persistent("SONG"), chain_(), phrase_() {
 Song::~Song(){};
 
 void Song::SaveContent(tinyxml2::XMLPrinter *printer) {
-  for (int i = 0; i < PHRASE_COUNT * 16; i++) {
-    phrase_.param1_[i] = Swap16(phrase_.param1_[i]);
-    phrase_.param2_[i] = Swap16(phrase_.param2_[i]);
-  }
   saveHexBuffer(printer, "SONG", data_, SONG_ROW_COUNT * SONG_CHANNEL_COUNT);
   saveHexBuffer(printer, "CHAINS", chain_.data_, CHAIN_COUNT * 16);
   saveHexBuffer(printer, "TRANSPOSES", chain_.transpose_, CHAIN_COUNT * 16);
@@ -66,18 +62,12 @@ void Song::RestoreContent(PersistencyDocument *doc) {
     };
     if (!strcmp("PARAM1", doc->ElemName())) {
       restoreHexBuffer(doc, (uchar *)phrase_.param1_);
-      for (int i = 0; i < PHRASE_COUNT * 16; i++) {
-        phrase_.param1_[i] = Swap16(phrase_.param1_[i]);
-      }
     };
     if (!strcmp("COMMAND2", doc->ElemName())) {
       restoreHexBuffer(doc, (uchar *)phrase_.cmd2_);
     };
     if (!strcmp("PARAM2", doc->ElemName())) {
       restoreHexBuffer(doc, (uchar *)phrase_.param2_);
-      for (int i = 0; i < PHRASE_COUNT * 16; i++) {
-        phrase_.param2_[i] = Swap16(phrase_.param2_[i]);
-      }
     };
     elem = doc->NextSibling();
   }
