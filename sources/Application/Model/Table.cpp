@@ -83,11 +83,6 @@ void TableHolder::SaveContent(tinyxml2::XMLPrinter *printer) {
     Table &table = table_[i];
     if (!table.IsEmpty()) {
       //      TiXmlNode *dataNode = node->InsertEndChild(data);
-      for (int i = 0; i < 16; i++) {
-        table.param1_[i] = Swap16(table.param1_[i]);
-        table.param2_[i] = Swap16(table.param2_[i]);
-        table.param3_[i] = Swap16(table.param3_[i]);
-      }
       saveHexBuffer(printer, "CMD1", table.cmd1_, TABLE_STEPS);
       saveHexBuffer(printer, "PARAM1", table.param1_, TABLE_STEPS);
       saveHexBuffer(printer, "CMD2", table.cmd2_, TABLE_STEPS);
@@ -141,12 +136,6 @@ void TableHolder::RestoreContent(PersistencyDocument *doc) {
         if (!strcmp("PARAM3", doc->ElemName())) {
           restoreHexBuffer(doc, (unsigned char *)table.param3_);
         };
-
-        for (int i = 0; i < 16; i++) {
-          table.param1_[i] = Swap16(table.param1_[i]);
-          table.param2_[i] = Swap16(table.param2_[i]);
-          table.param3_[i] = Swap16(table.param3_[i]);
-        }
         subelem = doc->NextSibling();
       }
       allocation_[id] = !table.IsEmpty();
