@@ -10,40 +10,40 @@ WavFileWriter::WavFileWriter(const char *path)
 
     // RIFF chunk
     unsigned int chunk;
-    chunk = Swap32(0x46464952);
+    chunk = 0x46464952;
     file_->Write(&chunk, 1, 4);
     unsigned int size;
     size = 0; // to be filled later
     file_->Write(&size, 1, 4);
 
     // WAVE chunk
-    chunk = Swap32(0x45564157);
+    chunk = 0x45564157;
     file_->Write(&chunk, 1, 4);
-    chunk = Swap32(0x20746D66);
+    chunk = 0x20746D66;
     file_->Write(&chunk, 1, 4);
-    size = Swap32(16);
+    size = 16;
     file_->Write(&size, 1, 4);
 
     unsigned short ushort;
-    ushort = Swap16(1); // compression
+    ushort = 1; // compression
     file_->Write(&ushort, 1, 2);
-    ushort = Swap16(2); // nChannels
+    ushort = 2; // nChannels
     file_->Write(&ushort, 1, 2);
-    unsigned int sampleRate = Swap32(44100);
+    unsigned int sampleRate = 44100;
     file_->Write(&sampleRate, 1, 4);
 
-    unsigned int byteRate = Swap32(4 * 44100);
+    unsigned int byteRate = 4 * 44100;
     file_->Write(&byteRate, 1, 4);
 
-    ushort = Swap16(4); //  blockalign
+    ushort = 4; //  blockalign
     file_->Write(&ushort, 1, 2);
 
-    ushort = Swap16(16); // bitPerSample
+    ushort = 16; // bitPerSample
     file_->Write(&ushort, 1, 2);
 
     // data subchunk
 
-    chunk = Swap32(0x61746164);
+    chunk = 0x61746164;
     file_->Write(&chunk, 1, 4);
 
     size = 0; // to be updated later
@@ -96,12 +96,12 @@ void WavFileWriter::Close() {
     return;
 
   size_t len = file_->Tell();
-  len = Swap32(len - 8);
+  len = len - 8;
   file_->Seek(4, SEEK_SET);
   file_->Write(&len, 4, 1);
 
   file_->Seek(40, SEEK_SET);
-  sampleCount_ = Swap32(sampleCount_ * 4);
+  sampleCount_ = sampleCount_ * 4;
   file_->Write(&sampleCount_, 4, 1);
 
   file_->Seek(0, SEEK_END);
