@@ -18,8 +18,6 @@
 #include "ff_gen_drv.h"
 #include "sd_diskio.h"
 
-#define MAX_FILE_INDEX_SIZE 256
-#define PFILENAME_SIZE 128
 #define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
 extern FATFS SDFatFS;
@@ -65,12 +63,12 @@ private:
   FILINFO fileFromIndex(int index);
   void tolowercase(char *temp);
   void updateCache();
-  char filepath[PFILENAME_SIZE];
-  BYTE fileBuffer_[4096];
+  TCHAR filepath[PFILENAME_SIZE];
+  BYTE fileBuffer_[512];
 
-  // TODO: this is quit big, need move it out to external RAM
+  // TODO: this is quite big! need move it out to external RAM
   // cache for fileFromIndex
-  etl::vector<FILINFO, 256> file_cache_;
+  etl::vector<FILINFO, MAX_FILE_INDEX_SIZE> file_cache_;
 };
 
 #endif
