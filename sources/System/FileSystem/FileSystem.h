@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 #define MAX_FILE_INDEX_SIZE 256
-#define PFILENAME_SIZE 128
+#define PFILENAME_SIZE 256                 // per FAT32 spec for LFNs
 #define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
 enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };

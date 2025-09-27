@@ -23,6 +23,7 @@ advFileSystem::advFileSystem() {
   Trace::Log("FILESYSTEM", "Try to mount SD Card");
   if (f_mount(&SDFatFS, (TCHAR const *)SDPath, 0) == FR_OK) {
     Trace::Log("FILESYSTEM", "Mounted SD Card FAT Filesystem first partition");
+    updateCache();
     return;
   }
   // Do we have any kind of card?
@@ -65,8 +66,12 @@ bool advFileSystem::chdir(const char *name) {
   FRESULT res = f_chdir(name);
   if (res != FR_OK) {
     Trace::Error("failed to chdir into %s", name);
+    file_cache_.clear(); // Invalidate on failure
     return false;
   }
+
+  updateCache();
+
   char path[MAX_PROJECT_SAMPLE_PATH_LENGTH];
   res = f_getcwd(path, MAX_PROJECT_SAMPLE_PATH_LENGTH);
   if (res != FR_OK) {
@@ -74,14 +79,6 @@ bool advFileSystem::chdir(const char *name) {
     return false;
   }
   Trace::Log("FS", "Current path is %s", path);
-
-  DIR dir;
-  FILINFO fno;
-  res = f_opendir(&dir, path);
-  if (res == FR_OK) {
-    res = f_readdir(&dir, &fno);
-  }
-  f_closedir(&dir);
 
   return (res == FR_OK);
 }
@@ -108,57 +105,44 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
   // for it
   fileIndexes->push_back(PARENT_DIR_MARKER_INDEX);
 
-  TCHAR path[PFILENAME_SIZE];
-  FRESULT res = f_getcwd(path, 128);
-  if (res != FR_OK) {
-    Trace::Error("Directory not set");
-    return;
-  }
+  char path[PFILENAME_SIZE];
+  f_getcwd(path, PFILENAME_SIZE);
   Trace::Log("PICOFILESYSTEM", "LIST DIR:%s", path);
-  DIR dir;
-  res = f_opendir(&dir, path);
-  if (res != FR_OK) {
-    Trace::Error("Failed to open cwd");
-    return;
-  }
 
-  uint32_t index = 0;
-  FILINFO fno;
-  uint16_t count = 0;
-
-  while (index < fileIndexes->capacity()) {
-    index = count;
-    count++;
-    res = f_readdir(&dir, &fno); // Read a directory item
-    if (res != FR_OK || fno.fname[0] == 0)
-      break; // Error or end of dir
+  for (size_t i = 0; i < file_cache_.size(); ++i) {
+    if (fileIndexes->full()) {
+      Trace::Error("PICOFILESYSTEM: fileIndexes is full, breaking list");
+      break;
+    }
+    const FILINFO &fno = file_cache_[i];
 
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
-      tolowercase(fno.fname);
-      matchesFilter = (strstr(fno.fname, filter) != nullptr);
-      Trace::Log("PICOFILESYSTEM", "FILTER: %s=%s [%d]\n", fno.fname, filter,
+      char temp_name[FF_LFN_BUF + 1];
+      strcpy(temp_name, fno.fname);
+      tolowercase(temp_name);
+      matchesFilter = (strstr(temp_name, filter) != nullptr);
+      Trace::Log("PICOFILESYSTEM", "FILTER: %s=%s [%d]\n", temp_name, filter,
                  matchesFilter);
     }
 
     // filter out "." and files that dont match filter if a filter is given
-    if (((fno.fattrib & AM_DIR) && index != 0) ||
+    if (((fno.fattrib & AM_DIR) && i != 0) ||
         (!(fno.fattrib & AM_HID) && matchesFilter)) {
       if (subDirOnly) {
         if (fno.fattrib & AM_DIR) {
-          fileIndexes->push_back(index);
+          fileIndexes->push_back(i);
         }
       } else {
-        fileIndexes->push_back(index);
+        fileIndexes->push_back(i);
       }
-      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", index, fno.fname);
+      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", i, fno.fname);
     } else {
       Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", fno.fname);
     }
   }
-  f_closedir(&dir);
-  Trace::Log("PICOFILESYSTEM", "scanned: %d, added file indexes:%d", count,
-             fileIndexes->size());
+  Trace::Log("PICOFILESYSTEM", "scanned: %d, added file indexes:%d",
+             file_cache_.size(), fileIndexes->size());
 }
 
 void advFileSystem::getFileName(int index, char *name, int length) {
@@ -171,28 +155,47 @@ void advFileSystem::getFileName(int index, char *name, int length) {
   strcpy(name, fno.fname);
 }
 
-FILINFO advFileSystem::fileFromIndex(int index) {
-  FILINFO fno;
-  FRESULT res = f_getcwd(filepath, 256);
-  int32_t count = 0;
+void advFileSystem::updateCache() {
+  char path[PFILENAME_SIZE];
+  FRESULT res = f_getcwd(path, PFILENAME_SIZE);
+  if (res != FR_OK) {
+    Trace::Error("updateCache: failed to get current dir");
+    file_cache_.clear();
+    return;
+  }
+
+  Trace::Log("FILESYSTEM", "Rebuilding cache for %s", path);
+  file_cache_.clear();
+
+  DIR dir;
+  res = f_opendir(&dir, path);
   if (res == FR_OK) {
-    DIR dir;
-    res = f_opendir(&dir, filepath);
-    if (res == FR_OK) {
-      for (;;) {
-        res = f_readdir(&dir, &fno);
-        if (res != FR_OK || fno.fname[0] == 0)
-          break;
-        if (count == index) {
-          f_closedir(&dir);
-          return fno;
-        }
-        count++;
+    for (;;) {
+      FILINFO fno;
+      res = f_readdir(&dir, &fno);
+      if (res != FR_OK || fno.fname[0] == 0)
+        break;
+      if (!file_cache_.full()) {
+        file_cache_.push_back(fno);
+      } else {
+        Trace::Error("file cache is full");
+        break;
       }
     }
     f_closedir(&dir);
+  } else {
+    Trace::Error("updateCache: failed to open dir %s", path);
   }
-  return fno;
+  Trace::Log("FILESYSTEM", "Cache rebuilt, %d entries", file_cache_.size());
+}
+
+FILINFO advFileSystem::fileFromIndex(int index) {
+  if (index >= 0 && (size_t)index < file_cache_.size()) {
+    return file_cache_[index];
+  }
+
+  Trace::Error("fileFromIndex: index out of bounds: %d", index);
+  return FILINFO(); // return empty fno
 }
 
 bool advFileSystem::isParentRoot() {
@@ -243,6 +246,9 @@ bool advFileSystem::DeleteFile(const char *path) {
     return false;
   }
   res = f_unlink(path);
+  if (res == FR_OK) {
+    updateCache();
+  }
   return res == FR_OK;
 }
 
@@ -260,6 +266,9 @@ bool advFileSystem::DeleteDir(const char *path) {
     return false;
   }
   res = f_unlink(path);
+  if (res == FR_OK) {
+    updateCache();
+  }
   return res == FR_OK;
 }
 
@@ -280,6 +289,9 @@ bool advFileSystem::exists(const char *path) {
 bool advFileSystem::makeDir(const char *path, bool pFlag) {
   if (!pFlag) {
     FRESULT res = f_mkdir(path);
+    if (res == FR_OK) {
+      updateCache();
+    }
     return res == FR_OK;
   }
 
@@ -307,7 +319,11 @@ bool advFileSystem::makeDir(const char *path, bool pFlag) {
 
   // Make final directory
   FRESULT res = f_mkdir(tempPath);
-  return (res == FR_OK || res == FR_EXIST);
+  if (res == FR_OK || res == FR_EXIST) {
+    updateCache();
+    return true;
+  }
+  return false;
 }
 
 uint64_t advFileSystem::getFileSize(const int index) {
@@ -345,6 +361,10 @@ bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   // Close open files
   f_close(&fsrc);
   f_close(&fdst);
+
+  if (res == FR_OK) {
+    updateCache();
+  }
 
   return res == FR_OK;
 }
