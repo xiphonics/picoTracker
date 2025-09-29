@@ -135,6 +135,34 @@ DOSR 128
   // Set the Input Common Mode to 0.9V and Output Common Mode for Headphone to
   // Input Common Mode
   tlv320write(0x0a, 0x00);
+
+  // INIT INPUT
+  // Initialize to Page 0
+  tlv320write(0, 0);
+  // Power up NADC divider with value 1
+  tlv320write(0x12, 0x81);
+  // Power up MADC divider with value 2
+  tlv320write(0x13, 0x82);
+  // Program OSR for ADC to 128
+  tlv320write(0x14, 0x80);
+  // Select ADC PRB_R1
+  tlv320write(0x3d, 0x01);
+
+  // shouldn't be necessary but configuring dout explicitly
+  tlv320write(0x35, 0x12);
+
+  // MFP4 MIC CLOCK OUT
+  tlv320write(0x37, 0x0e);
+  // MFP5 MIC DATA IN
+  tlv320write(0x34, 0x04);
+
+  // Select Page 1
+  tlv320write(0x00, 0x01);
+  // Select ADC PTM_R4
+  tlv320write(0x3d, 0x00);
+
+  // Set MicPGA startup delay to 3.1ms
+  tlv320write(0x47, 0x32);
 }
 
 void tlv320_enable_hp(void) {
@@ -241,27 +269,8 @@ void tlv320_unmute(void) {
 }
 
 void tlv320_enable_linein(void) {
-
-  // Initialize to Page 0
-  tlv320write(0, 0);
-  // Power up NADC divider with value 1
-  tlv320write(0x12, 0x81);
-  // Power up MADC divider with value 2
-  tlv320write(0x13, 0x82);
-  // Program OSR for ADC to 128
-  tlv320write(0x14, 0x80);
-  // Select ADC PRB_R1
-  tlv320write(0x3d, 0x01);
-
-  // shouldn't be necessary but configuring dout explicitly
-  tlv320write(0x35, 0x12);
-
   // Select Page 1
   tlv320write(0x00, 0x01);
-  // Select ADC PTM_R4
-  tlv320write(0x3d, 0x00);
-  // Set MicPGA startup delay to 3.1ms
-  tlv320write(0x47, 0x32);
   // Route IN1L to LEFT_P with 20K input impedance
   tlv320write(0x34, 0x80);
   // Route Common Mode to LEFT_M with impedance of 20K
@@ -283,6 +292,69 @@ void tlv320_enable_linein(void) {
   // Unmute Left and Right ADC Digital Volume Control.
   tlv320write(0x52, 0x00);
 }
-void tlv320_enable_mic(void) {}
-void tlv320_disable_linein(void) {}
-void tlv320_disable_mic(void) {}
+void tlv320_enable_mic(void) {
+  // Select Page 1
+  tlv320write(0x00, 0x01);
+  // Route IN2L to LEFT_P with 10K input impedance
+  tlv320write(0x34, 0x10);
+  // Route Common Mode to LEFT_M with impedance of 20K
+  tlv320write(0x36, 0x02);
+
+  // MICBIAS 2.5V
+  // TODO: check this, we enable it for HP detect, shouldn't be needed here
+  //  tlv320write(0x33, 0x60);
+
+  // Unmute Left MICPGA, Gain selection of 6dB to make channel gain 0dB
+  // Register of 6dB with input impedance of 20K = > Channel Gain of 0dB
+  tlv320write(0x3b, 0xd0);
+
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+
+  // Power up Left ADC Channels // GPIO serves as Digital Microphone Input //
+  // Left Channel ADC configured for Digital Microphone
+  tlv320write(0x51, 0x88);
+  // Unmute Left ADC Digital Volume Control.
+  tlv320write(0x52, 0x08);
+}
+
+void tlv320_disable_linein(void) {
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  // Mute Left and Right ADC Digital Volume Control.
+  tlv320write(0x52, 0x88);
+  // Power down Left and Right ADC Channels
+  tlv320write(0x51, 0x00);
+
+  // Select Page 1
+  tlv320write(0x00, 0x01);
+  // Mute Right MICPGA
+  tlv320write(0x3c, 0x80);
+  // Mute Left MICPGA
+  tlv320write(0x3b, 0x80);
+  // Unroute Right MICPGA
+  tlv320write(0x39, 0x00);
+  // Unroute IN1R to RIGHT_P
+  tlv320write(0x37, 0x00);
+  // Unroute Left MICPGA
+  tlv320write(0x36, 0x00);
+  // Unroute IN1L to LEFT_P
+  tlv320write(0x34, 0x00);
+}
+void tlv320_disable_mic(void) {
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  // Mute Left ADC Digital Volume Control.
+  tlv320write(0x52, 0x88);
+  // Power down Left ADC Channels
+  tlv320write(0x51, 0x00);
+
+  // Select Page 1
+  tlv320write(0x00, 0x01);
+  // Mute Left MICPGA
+  tlv320write(0x3b, 0x80);
+  // Unroute Left MICPGA
+  tlv320write(0x36, 0x00);
+  // Route IN2L to LEFT_P
+  tlv320write(0x34, 0x00);
+}
