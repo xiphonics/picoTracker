@@ -23,7 +23,6 @@ advFileSystem::advFileSystem() {
   Trace::Log("FILESYSTEM", "Try to mount SD Card");
   if (f_mount(&SDFatFS, (TCHAR const *)SDPath, 0) == FR_OK) {
     Trace::Log("FILESYSTEM", "Mounted SD Card FAT Filesystem first partition");
-    updateCache();
     return;
   }
   // Do we have any kind of card?
@@ -79,7 +78,6 @@ bool advFileSystem::chdir(const char *name) {
     return false;
   }
   Trace::Log("FILESYSTEM", "Current path is %s", path);
-
   return (res == FR_OK);
 }
 
@@ -144,7 +142,7 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
       } else {
         fileIndexes->push_back(i);
       }
-      Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", i, fno.fname);
+      Trace::Log("FILESYSTEM", "[%d] got file: %s", index, fno.fname);
     } else {
       Trace::Log("FILESYSTEM", "skipped hidden: %s", fno.fname);
     }
