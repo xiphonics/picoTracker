@@ -176,7 +176,9 @@ void Record(void *) {
                    (xTaskGetTickCount() - start), totalSamplesWritten);
 
         // Close file
-        RecordFile->Close();
+        if (!RecordFile->Close()) {
+          Trace::Error("failed to close recording file");
+        }
         RecordFile = nullptr;
         // Signal that all file operations are complete.
         xSemaphoreGive(g_recordingFinishedSemaphore);

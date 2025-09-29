@@ -61,7 +61,7 @@ I_File *advFileSystem::Open(const char *name, const char *mode) {
 }
 
 bool advFileSystem::chdir(const char *name) {
-  Trace::Log("PICOFILESYSTEM", "chdir:%s", name);
+  Trace::Log("FILESYSTEM", "chdir:%s", name);
 
   FRESULT res = f_chdir(name);
   if (res != FR_OK) {
@@ -78,7 +78,7 @@ bool advFileSystem::chdir(const char *name) {
     Trace::Error("failed to get current dir");
     return false;
   }
-  Trace::Log("FS", "Current path is %s", path);
+  Trace::Log("FILESYSTEM", "Current path is %s", path);
 
   return (res == FR_OK);
 }
@@ -105,9 +105,19 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
   // for it
   fileIndexes->push_back(PARENT_DIR_MARKER_INDEX);
 
-  char path[PFILENAME_SIZE];
-  f_getcwd(path, PFILENAME_SIZE);
-  Trace::Log("PICOFILESYSTEM", "LIST DIR:%s", path);
+  TCHAR path[PFILENAME_SIZE];
+  FRESULT res = f_getcwd(path, 128);
+  if (res != FR_OK) {
+    Trace::Error("Directory not set");
+    return;
+  }
+  Trace::Log("FILESYSTEM", "LIST DIR:%s", path);
+  DIR dir;
+  res = f_opendir(&dir, path);
+  if (res != FR_OK) {
+    Trace::Error("Failed to open cwd");
+    return;
+  }
 
   for (size_t i = 0; i < file_cache_.size(); ++i) {
     if (fileIndexes->full()) {
@@ -118,11 +128,9 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
 
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
-      char temp_name[FF_LFN_BUF + 1];
-      strcpy(temp_name, fno.fname);
-      tolowercase(temp_name);
-      matchesFilter = (strstr(temp_name, filter) != nullptr);
-      Trace::Log("PICOFILESYSTEM", "FILTER: %s=%s [%d]\n", temp_name, filter,
+      tolowercase((char *)fno.fname);
+      matchesFilter = (strstr(fno.fname, filter) != nullptr);
+      Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", fno.fname, filter,
                  matchesFilter);
     }
 
@@ -138,11 +146,11 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
       }
       Trace::Log("PICOFILESYSTEM", "[%d] got file: %s", i, fno.fname);
     } else {
-      Trace::Log("PICOFILESYSTEM", "skipped hidden: %s", fno.fname);
+      Trace::Log("FILESYSTEM", "skipped hidden: %s", fno.fname);
     }
   }
-  Trace::Log("PICOFILESYSTEM", "scanned: %d, added file indexes:%d",
-             file_cache_.size(), fileIndexes->size());
+  f_closedir(&dir);
+  Trace::Log("FILESYSTEM", "added file indexes:%d", fileIndexes->size());
 }
 
 void advFileSystem::getFileName(int index, char *name, int length) {
@@ -435,6 +443,7 @@ long PI_File::Tell() { return f_tell(&file_); }
 int PI_File::Error() { return f_error(&file_); }
 
 bool PI_File::Close() {
+  Trace::Log("FILESYSTEM", "Close file:%s", file_);
   FRESULT res = f_close(&file_);
   return res == FR_OK;
 }
