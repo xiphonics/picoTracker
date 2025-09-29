@@ -363,6 +363,7 @@ void SampleEditorView::AnimationUpdate() {
     // Check if the Player is still playing the sample
     if (!Player::GetInstance()->IsPlaying()) {
       // Playback has stopped (reached the end of non-looping sample)
+      Player::GetInstance()->StopStreaming();
       isPlaying_ = false;
       playbackPosition_ = 0;
       // forceRedraw_ = true;
@@ -388,8 +389,7 @@ void SampleEditorView::AnimationUpdate() {
       // Check if we've reached the end
       if (samplePos >= end_ || samplePos >= tempSampleSize_) {
         samplePos = end_;
-        isPlaying_ = false;
-        Trace::Debug("PLayback stopped at end!");
+        Trace::Debug("Playback stopped at end!");
       }
 
       // Update position (normalized to full sample range)

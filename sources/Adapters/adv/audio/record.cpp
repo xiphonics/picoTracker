@@ -180,11 +180,14 @@ void Record(void *) {
           Trace::Error("failed to close recording file");
         }
         RecordFile = nullptr;
-        // Signal that all file operations are complete.
-        xSemaphoreGive(g_recordingFinishedSemaphore);
       }
 
       Player::GetInstance()->StopRecordStreaming();
+
+      if (g_recordingFinishedSemaphore != NULL) {
+        xSemaphoreGive(g_recordingFinishedSemaphore);
+      }
+
       vTaskSuspend(nullptr); // Suspend self until StartRecording resumes it
     }
 
