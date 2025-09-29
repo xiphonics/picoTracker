@@ -36,6 +36,7 @@ static const char *remoteUIOnOff[2] = {"Off", "On"};
 
 static const char *fontOptions[2] = {"Standard", "Bold"};
 
+// NOTE: these match up to the RecordSource enum in record.h
 static const char *recordSourceOptions[2] = {"Line In", "Mic"};
 
 // Param keys MUST fit in this length limit!

@@ -31,24 +31,43 @@ static bool first_pass = true;
 static uint32_t start = 0;
 static uint32_t totalSamplesWritten = 0;
 static uint32_t recordDuration_ = MAX_INT32;
+static RecordSource source_ = LineIn;
 
 SemaphoreHandle_t g_recordingFinishedSemaphore = NULL;
 
-void StartMonitoring() {
-  // 1. Enable line in on the codec
-  tlv320_enable_linein();
+void SetInputSource(RecordSource source) {
+  source_ = source;
+  switch (source) {
+  case LineIn:
+    tlv320_disable_mic();
+    tlv320_enable_linein();
+    break;
+  case Mic:
+    tlv320_disable_linein();
+    tlv320_enable_mic();
+    break;
+  case USBIn:
+    // TODO:
+    NAssert(false);
+    break;
+  default:
+    NAssert(false); // should never not be one of the above options
+    break;
+  }
+}
 
-  // 2. Set the flag for monitoring-only mode
+void StartMonitoring() {
+  // Set the flag for monitoring-only mode
   g_monitoringOnly = true;
   recordingActive = true; // Use this to keep the task loop active
   first_pass = true;      // Ensure StartRecordStreaming is called
 
-  // 3. Clear the buffer and start the SAI DMA
+  // Clear the buffer and start the SAI DMA
   memset(recordBuffer, 0, RECORD_BUFFER_SIZE * sizeof(uint16_t));
   HAL_SAI_Receive_DMA(&hsai_BlockB1, (uint8_t *)recordBuffer,
                       RECORD_BUFFER_SIZE);
 
-  // 4. Wake up the Record task to handle the stream
+  // Wake up the Record task to handle the stream
   vTaskResume(RecordHandle);
   Trace::Log("RECORD", "Monitoring started");
 }
@@ -67,12 +86,6 @@ void StopMonitoring() { // Use the main 'recordingActive' flag to trigger the
 
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds) {
-  g_monitoringOnly = false;
-
-  thresholdOK = false;
-  first_pass = true;
-  g_recordingFinishedSemaphore = xSemaphoreCreateBinary();
-
   // TODO 0 milliseconds indicates unlimited duration recording
   if (milliseconds != 0) {
     recordDuration_ = milliseconds;
@@ -94,6 +107,12 @@ bool StartRecording(const char *filename, uint8_t threshold,
     RecordFile = nullptr;
     return false;
   }
+
+  // only set if recording file could be opened
+  g_monitoringOnly = false;
+  thresholdOK = false;
+  first_pass = true;
+  g_recordingFinishedSemaphore = xSemaphoreCreateBinary();
 
   // Reset sample counter
   totalSamplesWritten = 0;

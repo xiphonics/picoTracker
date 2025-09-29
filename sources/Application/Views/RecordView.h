@@ -51,6 +51,8 @@ private:
 
   // Time display helpers
   void formatTime(uint32_t milliseconds, char *buffer, size_t bufferSize);
+
+  void updateRecordingSource();
 };
 
 #endif

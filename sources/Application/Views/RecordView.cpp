@@ -133,10 +133,26 @@ void RecordView::DrawView() {
 void RecordView::OnFocus() {
   isDirty_ = true;
   recordingDuration_ = 0;
+
+  updateRecordingSource();
   StartMonitoring();
 }
 
-void RecordView::Update(Observable &o, I_ObservableData *d) {
+void RecordView::Update(Observable &o, I_ObservableData *data) {
+  if (!hasFocus_) {
+    return;
+  }
+
+  uintptr_t fourcc = (uintptr_t)data;
+
+  switch (fourcc) {
+  case FourCC::VarRecordSource:
+    StopMonitoring();
+    updateRecordingSource();
+    StartMonitoring();
+    break;
+  }
+
   // Handle field updates
   isDirty_ = true;
   Config::GetInstance()->Save();
@@ -196,9 +212,9 @@ void RecordView::record() {
     isRecording_ = true;
     recordingStartTime_ = System::GetInstance()->Millis();
     recordingDuration_ = 0;
-    Trace::Log("RECORD", "Recording started successfully");
+    Trace::Log("RECORDVIEW", "Recording started successfully");
   } else {
-    Trace::Error("RECORD", "Failed to start recording");
+    Trace::Error("RECORDVIEW: Failed to start recording");
   }
 #else
   Trace::Log("RECORD", "Recording not supported on pico");
@@ -242,4 +258,10 @@ void RecordView::formatTime(uint32_t milliseconds, char *buffer,
   seconds = seconds % 60;
 
   snprintf(buffer, bufferSize, "%02d:%02d", (int)minutes, (int)seconds);
+}
+
+void RecordView::updateRecordingSource() {
+  auto config = Config::GetInstance();
+  auto source = config->FindVariable(FourCC::VarRecordSource)->GetInt();
+  SetInputSource((RecordSource)source);
 }

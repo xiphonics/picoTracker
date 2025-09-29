@@ -22,11 +22,14 @@ static StackType_t RecordStack[1024];
 static StaticTask_t RecordTCB;
 extern TaskHandle_t RecordHandle;
 
+enum RecordSource { LineIn, Mic, USBIn };
+
 void Record(void *);
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds);
 void StopRecording();
 void StartMonitoring();
 void StopMonitoring();
+void SetInputSource(RecordSource source);
 
 #endif
