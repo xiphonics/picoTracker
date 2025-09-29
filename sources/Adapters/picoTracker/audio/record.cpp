@@ -8,3 +8,5 @@ bool StartRecording(const char *filename, uint8_t threshold,
   return false;
 }
 void StopRecording() {}
+
+void SetInputSource(RecordSource source) {}
