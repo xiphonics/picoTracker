@@ -141,6 +141,29 @@ int main(void) {
   MX_USB_OTG_FS_USB_Init();
   /* USER CODE BEGIN 2 */
 
+  // Check for ENTER key hold on boot to force load untitled project
+  {
+    int enter_held_counter = 0;
+    const int check_interval_ms = 10;
+    const int num_checks = 20;      // check for 200ms
+    const int required_checks = 15; // require 150ms of hold time
+
+    for (int i = 0; i < num_checks; i++) {
+      if (HAL_GPIO_ReadPin(INPUT_ENTER_GPIO_Port, INPUT_ENTER_Pin) ==
+          GPIO_PIN_SET) {
+        enter_held_counter++;
+      } else {
+        enter_held_counter = 0;
+      }
+
+      if (enter_held_counter >= required_checks) {
+        forceLoadUntitledProject = true;
+        break;
+      }
+      HAL_Delay(check_interval_ms);
+    }
+  }
+
   if (SDcardInitError != 0) {
     Trace::Log("MAIN", "SDCARD MISSING!!\n");
     critical_error_message("SDCARD MISSING !", 0x01);
