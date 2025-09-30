@@ -33,6 +33,7 @@ static uint32_t totalSamplesWritten = 0;
 static uint32_t recordDuration_ = MAX_INT32;
 static RecordSource source_ = LineIn;
 
+StaticSemaphore_t xSemaphoreBuffer;
 SemaphoreHandle_t g_recordingFinishedSemaphore = NULL;
 
 void SetInputSource(RecordSource source) {
@@ -112,7 +113,8 @@ bool StartRecording(const char *filename, uint8_t threshold,
   g_monitoringOnly = false;
   thresholdOK = false;
   first_pass = true;
-  g_recordingFinishedSemaphore = xSemaphoreCreateBinary();
+  g_recordingFinishedSemaphore =
+      xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer);
 
   // Reset sample counter
   totalSamplesWritten = 0;
