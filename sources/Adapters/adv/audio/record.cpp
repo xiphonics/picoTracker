@@ -33,7 +33,7 @@ static uint32_t totalSamplesWritten = 0;
 static uint32_t recordDuration_ = MAX_INT32;
 static RecordSource source_ = LineIn;
 
-SemaphoreHandle_t g_recordingFinishedSemaphore = xSemaphoreCreateBinary();
+SemaphoreHandle_t g_recordingFinishedSemaphore = NULL;
 
 void SetInputSource(RecordSource source) {
   source_ = source;
@@ -112,6 +112,7 @@ bool StartRecording(const char *filename, uint8_t threshold,
   g_monitoringOnly = false;
   thresholdOK = false;
   first_pass = true;
+  g_recordingFinishedSemaphore = xSemaphoreCreateBinary();
 
   // Reset sample counter
   totalSamplesWritten = 0;
@@ -148,7 +149,9 @@ void StopRecording() {
   }
 
   // Now, wait here until the Record task signals it's done
-  xSemaphoreTake(g_recordingFinishedSemaphore, portMAX_DELAY);
+  if (g_recordingFinishedSemaphore != NULL) {
+    xSemaphoreTake(g_recordingFinishedSemaphore, portMAX_DELAY);
+  }
 }
 
 void Record(void *) {
@@ -181,7 +184,9 @@ void Record(void *) {
 
       Player::GetInstance()->StopRecordStreaming();
 
-      xSemaphoreGive(g_recordingFinishedSemaphore);
+      if (g_recordingFinishedSemaphore != NULL) {
+        xSemaphoreGive(g_recordingFinishedSemaphore);
+      }
 
       vTaskSuspend(nullptr); // Suspend self until StartRecording resumes it
     }
