@@ -143,7 +143,7 @@ int main(void) {
 
   // Check for ENTER key hold on boot to force load untitled project
   {
-    if (HAL_GPIO_ReadPin(INPUT_ENTER_GPIO_Port, INPUT_ENTER_Pin) ==
+    if (HAL_GPIO_ReadPin(INPUT_ENTER_GPIO_Port, INPUT_EDIT_Pin) ==
         GPIO_PIN_SET) {
       forceLoadUntitledProject = true;
     }

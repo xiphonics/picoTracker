@@ -41,10 +41,10 @@ int main(int argc, char *argv[]) {
   // tinyusb subsystem init
   platform_init();
 
-  // Check for ENTER key hold on boot to force load untitled project
+  // Check for EDIT key hold on boot to force load untitled project
   {
     uint16_t keys = scanKeys();
-    if (keys & (1 << 6)) { // Check for INPUT_ENTER (bit 6)
+    if (keys & KEY_EDIT) { // Check for INPUT_EDIT (bit 6)
       forceLoadUntitledProject = true;
     }
   }
