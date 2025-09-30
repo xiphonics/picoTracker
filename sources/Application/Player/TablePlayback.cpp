@@ -154,6 +154,9 @@ bool TablePlayback::ProcessLocalCommand(int row, FourCC *commandList,
     groove_.position_ = 0;
     groove_.ticks_ = 0;
     break;
+  case FourCC::InstrumentCommandStop:
+    Stop();
+    break;
   }
   return hopped;
 }

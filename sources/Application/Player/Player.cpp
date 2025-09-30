@@ -703,19 +703,6 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
       gr->SetGroove(channel, param);
     }
   } break;
-  case FourCC::InstrumentCommandStop: {
-    switch (GetSequencerMode()) {
-    case SM_SONG:
-      Stop(true);
-      break;
-    case SM_LIVE:
-      //            QueueChannel(channel,QM_CHAINSTOP,0) ;
-
-      mixer_.StopChannel(channel);
-      liveQueueingMode_[channel] = QM_NONE;
-      break;
-    }
-  } break;
   default:
     break;
   };
