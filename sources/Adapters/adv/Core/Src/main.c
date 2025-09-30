@@ -141,6 +141,14 @@ int main(void) {
   MX_USB_OTG_FS_USB_Init();
   /* USER CODE BEGIN 2 */
 
+  // Check for ENTER key hold on boot to force load untitled project
+  {
+    if (HAL_GPIO_ReadPin(INPUT_ENTER_GPIO_Port, INPUT_EDIT_Pin) ==
+        GPIO_PIN_SET) {
+      forceLoadUntitledProject = true;
+    }
+  }
+
   if (SDcardInitError != 0) {
     Trace::Log("MAIN", "SDCARD MISSING!!\n");
     critical_error_message("SDCARD MISSING !", 0x01);

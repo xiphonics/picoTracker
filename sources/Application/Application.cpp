@@ -15,9 +15,11 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Services/Audio/Audio.h"
 #include "Services/Midi/MidiService.h"
-#include "UIFramework/Interfaces/I_GUIWindowFactory.h"
+#include "System/FileSystem/FileSystem.h"
 
 #include <math.h>
+
+bool forceLoadUntitledProject = false;
 
 Application *Application::instance_ = NULL;
 
@@ -41,6 +43,13 @@ bool Application::Init(GUICreateWindowParams &params) {
 // will put the current project name into the passed in char buffer projectName
 // will return true if a new project was created (vs loading prev open project)
 bool Application::initProject(char *projectName) {
+
+  if (forceLoadUntitledProject) {
+    Trace::Log("APPLICATION", "Force loading untitled project");
+    FileSystem::GetInstance()->DeleteFile("/.current");
+    forceLoadUntitledProject = false; // Reset the flag
+  }
+
   // read new proj name after reboot
   if (PersistencyService::GetInstance()->LoadCurrentProjectName(projectName) !=
       PERSIST_LOAD_FAILED) {

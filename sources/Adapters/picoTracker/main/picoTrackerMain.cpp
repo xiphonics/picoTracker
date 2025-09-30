@@ -13,8 +13,11 @@
 #include "hardware/clocks.h"
 #include "hardware/pll.h"
 #include "pico/stdlib.h"
+#include "pico/time.h"
 #include "tusb.h"
 #include <System/Console/Trace.h>
+
+#include "../system/input.h"
 
 // this prevents a really annoying linker warning due to newlib and >gcc13
 // ref:
@@ -37,6 +40,14 @@ int main(int argc, char *argv[]) {
   // Do remaining pT init, this needs to be done *after* above hardware and
   // tinyusb subsystem init
   platform_init();
+
+  // Check for EDIT key hold on boot to force load untitled project
+  {
+    uint16_t keys = scanKeys();
+    if (keys & KEY_EDIT) { // Check for INPUT_EDIT (bit 6)
+      forceLoadUntitledProject = true;
+    }
+  }
 
   // Make sure we get ETL logs
   Trace::RegisterEtlErrorHandler();

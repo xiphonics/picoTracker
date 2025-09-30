@@ -12,7 +12,7 @@ The picoTracker user interface is made up of a series of screens, which are laye
 
 ![image of screen map](image/screenmap.png)
 
-On bootup, the picoTracker will start on the Song screen of the last previously opened project.
+The picoTracker boots into the Song screen of your most recently opened project. Press and hold ENTER while restarting to instead launch a new, untitled project instead.
 
 The picoTrackers keypad layout resembles a typical old console game controller.
 

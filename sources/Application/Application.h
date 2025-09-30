@@ -14,6 +14,8 @@
 #include "System/FileSystem/FileSystem.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 
+extern bool forceLoadUntitledProject;
+
 class Application : public T_Singleton<Application> {
 
 public:

@@ -16,11 +16,11 @@ typedef enum KEYPAD_BITS {
   KEY_DOWN = BIT(1),   //!< Keypad DOWN button.
   KEY_RIGHT = BIT(2),  //!< Keypad RIGHT button.
   KEY_UP = BIT(3),     //!< Keypad UP button.
-  KEY_L = BIT(4),      //!< Left shoulder button.
-  KEY_B = BIT(5),      //!< Keypad B button.
-  KEY_A = BIT(6),      //!< Keypad A button.
-  KEY_R = BIT(7),      //!< Right shoulder button.
-  KEY_START = BIT(8),  //!< Keypad START button.
+  KEY_ALT = BIT(4),    //!< Keypad ALT button.
+  KEY_EDIT = BIT(5),   //!< Keypad EDIT button.
+  KEY_ENTER = BIT(6),  //!< Keypad ENTER button.
+  KEY_NAV = BIT(7),    //!< Keypad NAV button.
+  KEY_PLAY = BIT(8),   //!< Keypad PLAY button.
   KEY_SELECT = BIT(9), //!< Keypad SELECT button.
   KEY_POWER = BIT(10), //!< Power button (active low on GPIOA, GPIO_PIN_2).
 } KEYPAD_BITS;

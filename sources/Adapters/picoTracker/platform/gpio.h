@@ -63,10 +63,10 @@
 #define INPUT_DOWN 9
 #define INPUT_RIGHT 10
 #define INPUT_UP 11
-#define INPUT_LT 12
-#define INPUT_B 13
-#define INPUT_A 14
-#define INPUT_RT 15
+#define INPUT_ALT 12
+#define INPUT_EDIT 13
+#define INPUT_ENTER 14
+#define INPUT_NAV 15
 #define INPUT_PLAY 16
 
 // Sound
