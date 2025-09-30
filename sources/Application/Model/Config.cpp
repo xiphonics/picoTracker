@@ -36,7 +36,10 @@ static const char *remoteUIOnOff[2] = {"Off", "On"};
 
 static const char *fontOptions[2] = {"Standard", "Bold"};
 
-static const char *recordSourceOptions[2] = {"Line In", "Mic"};
+// NOTE: these MUST match up to the RecordSource enum in record.h (of all
+// adapters) also note we *dont* show "All Off" as a UI option for now
+static const char *recordSourceOptions[4] = {"All Off", "Line In", "Mic",
+                                             "USB In"};
 
 // Param keys MUST fit in this length limit!
 typedef etl::string<13> ParamString;
@@ -198,10 +201,10 @@ static const ConfigParam configParams[] = {
      false},
 
     {"RECORDSOURCE",
-     {.intValue = 0},
+     {.intValue = 1},
      FourCC::VarRecordSource,
      recordSourceOptions,
-     2,
+     4,
      false},
 };
 

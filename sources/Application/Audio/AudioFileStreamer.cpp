@@ -160,6 +160,7 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
 
 void AudioFileStreamer::Stop() {
   mode_ = AFSM_STOPPED;
+  SAFE_DELETE(wav_);
   Trace::Debug("Streaming stopped");
 };
 

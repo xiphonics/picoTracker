@@ -35,9 +35,9 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   recordingStartTime_ = 0;
   recordingDuration_ = 0;
 
-  // Audio source selection field (Line In = 0, Mic = 1)
+  // Audio source selection field (Line In = 1, Mic = 2)
   Variable *v = config->FindVariable(FourCC::VarRecordSource);
-  intVarField_.emplace_back(position, *v, "Audio source: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Audio source: %s", 1, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 }
@@ -69,6 +69,9 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // set the current file for sample editor before switching view
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
       viewData_->sampleEditorFilename = filename;
+
+      // recording file is in current projects sample pool dir:
+      viewData_->sampleEditorProjectList = true;
       // Automatically switch to SampleEditor view after recording stops
       ViewType vt = VT_SAMPLE_EDITOR;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -133,10 +136,26 @@ void RecordView::DrawView() {
 void RecordView::OnFocus() {
   isDirty_ = true;
   recordingDuration_ = 0;
+
+  updateRecordingSource();
   StartMonitoring();
 }
 
-void RecordView::Update(Observable &o, I_ObservableData *d) {
+void RecordView::Update(Observable &o, I_ObservableData *data) {
+  if (!hasFocus_) {
+    return;
+  }
+
+  uintptr_t fourcc = (uintptr_t)data;
+
+  switch (fourcc) {
+  case FourCC::VarRecordSource:
+    StopMonitoring();
+    updateRecordingSource();
+    StartMonitoring();
+    break;
+  }
+
   // Handle field updates
   isDirty_ = true;
   Config::GetInstance()->Save();
@@ -196,9 +215,9 @@ void RecordView::record() {
     isRecording_ = true;
     recordingStartTime_ = System::GetInstance()->Millis();
     recordingDuration_ = 0;
-    Trace::Log("RECORD", "Recording started successfully");
+    Trace::Log("RECORDVIEW", "Recording started successfully");
   } else {
-    Trace::Error("RECORD", "Failed to start recording");
+    Trace::Error("RECORDVIEW: Failed to start recording");
   }
 #else
   Trace::Log("RECORD", "Recording not supported on pico");
@@ -242,4 +261,10 @@ void RecordView::formatTime(uint32_t milliseconds, char *buffer,
   seconds = seconds % 60;
 
   snprintf(buffer, bufferSize, "%02d:%02d", (int)minutes, (int)seconds);
+}
+
+void RecordView::updateRecordingSource() {
+  auto config = Config::GetInstance();
+  auto source = config->FindVariable(FourCC::VarRecordSource)->GetInt();
+  SetInputSource((RecordSource)source);
 }
