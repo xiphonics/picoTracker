@@ -51,8 +51,10 @@ void SetInputSource(RecordSource source) {
     // TODO:
     NAssert(false);
     break;
-  default:
-    NAssert(false); // should never not be one of the above options
+  case AllOff:
+    // default to all off
+    tlv320_disable_linein();
+    tlv320_disable_mic();
     break;
   }
 }

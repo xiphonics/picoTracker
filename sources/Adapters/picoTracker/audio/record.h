@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-enum RecordSource { LineIn, Mic, USBIn };
+enum RecordSource { AllOff, LineIn, Mic, USBIn };
 
 void Record(void *);
 bool StartRecording(const char *filename, uint8_t threshold,

@@ -35,9 +35,9 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   recordingStartTime_ = 0;
   recordingDuration_ = 0;
 
-  // Audio source selection field (Line In = 0, Mic = 1)
+  // Audio source selection field (Line In = 1, Mic = 2)
   Variable *v = config->FindVariable(FourCC::VarRecordSource);
-  intVarField_.emplace_back(position, *v, "Audio source: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Audio source: %s", 1, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 }
