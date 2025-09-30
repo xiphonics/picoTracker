@@ -85,6 +85,9 @@ void StopMonitoring() { // Use the main 'recordingActive' flag to trigger the
   if (RecordHandle != NULL) {
     xTaskNotifyGive(RecordHandle);
   }
+  // disable all inputs when we stop monitoring
+  tlv320_disable_linein();
+  tlv320_disable_mic();
   Trace::Log("RECORD", "Monitoring stopped");
 }
 
@@ -157,6 +160,9 @@ void StopRecording() {
   if (g_recordingFinishedSemaphore != NULL) {
     xSemaphoreTake(g_recordingFinishedSemaphore, portMAX_DELAY);
   }
+  // disable all inputs when we finish recording
+  tlv320_disable_linein();
+  tlv320_disable_mic();
 }
 
 void Record(void *) {
