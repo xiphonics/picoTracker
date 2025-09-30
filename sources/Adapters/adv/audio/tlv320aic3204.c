@@ -31,6 +31,7 @@ PUTCHAR_PROTOTYPE {
 }
 
 enum TLVOutput { INIT, HP, SPKR } output = INIT;
+enum TLVInput { NONE, MIC, LINEIN } input = NONE;
 
 static volatile char overrideSpkr = 0;
 
@@ -231,18 +232,11 @@ void tlv320_enable_spkr(void) {
 }
 
 void tlv320_select_output(void) {
-  if (overrideSpkr) {
-    if (output != HP) {
-      tlv320_enable_hp();
-      output = HP;
-    }
-    return;
-  }
 
   uint8_t value;
   tlv320read(0x00, 0x43, &value);
 
-  if (value & 0x20) {
+  if (value & 0x20 || input == MIC) {
     if (output != HP) {
       tlv320_enable_hp();
       output = HP;
@@ -279,6 +273,11 @@ void tlv320_unmute(void) {
 }
 
 void tlv320_enable_linein(void) {
+  if (input == NONE) {
+    input = LINEIN;
+  } else {
+    return;
+  }
   // Select Page 1
   tlv320write(0x00, 0x01);
   // Route IN1L to LEFT_P with 20K input impedance
@@ -303,6 +302,11 @@ void tlv320_enable_linein(void) {
   tlv320write(0x52, 0x00);
 }
 void tlv320_enable_mic(void) {
+  if (input == NONE) {
+    input = MIC;
+  } else {
+    return;
+  }
   // Select Page 1
   tlv320write(0x00, 0x01);
   // Route IN2L to LEFT_P with 10K input impedance
@@ -326,9 +330,17 @@ void tlv320_enable_mic(void) {
   tlv320write(0x51, 0x88);
   // Unmute Left ADC Digital Volume Control.
   tlv320write(0x52, 0x08);
+
+  // Recheck output in case Speaker needs to be mutted
+  tlv320_select_output();
 }
 
 void tlv320_disable_linein(void) {
+  if (input == LINEIN) {
+    input = NONE;
+  } else {
+    return;
+  }
   // Select Page 0
   tlv320write(0x00, 0x00);
   // Mute Left and Right ADC Digital Volume Control.
@@ -352,6 +364,11 @@ void tlv320_disable_linein(void) {
   tlv320write(0x34, 0x00);
 }
 void tlv320_disable_mic(void) {
+  if (input == MIC) {
+    input = NONE;
+  } else {
+    return;
+  }
   // Select Page 0
   tlv320write(0x00, 0x00);
   // Mute Left ADC Digital Volume Control.
@@ -367,8 +384,7 @@ void tlv320_disable_mic(void) {
   tlv320write(0x36, 0x00);
   // Route IN2L to LEFT_P
   tlv320write(0x34, 0x00);
-}
 
-// Corner case: we need to be able to override the normal state of the speaker
-// being on while we are monitoring the mic input to prevent feedback
-void tlv320_override_spkr(char enable) { overrideSpkr = enable; }
+  // Recheck output in case Speaker needs to be unmutted
+  tlv320_select_output();
+}

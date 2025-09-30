@@ -60,10 +60,6 @@ void SetInputSource(RecordSource source) {
 }
 
 void StartMonitoring() {
-  // do NOT allow speaker to be on while monitoring mic!
-  if (source_ == Mic) {
-    tlv320_override_spkr(1);
-  }
 
   // Set the flag for monitoring-only mode
   g_monitoringOnly = true;
@@ -88,10 +84,6 @@ void StopMonitoring() { // Use the main 'recordingActive' flag to trigger the
   // Notify the Record task to wake it from its wait state so it can clean up
   if (RecordHandle != NULL) {
     xTaskNotifyGive(RecordHandle);
-  }
-  // allow output to go back to normal value based on headphone detect
-  if (source_ == Mic) {
-    tlv320_override_spkr(0);
   }
   Trace::Log("RECORD", "Monitoring stopped");
 }
@@ -164,11 +156,6 @@ void StopRecording() {
   // Now, wait here until the Record task signals it's done
   if (g_recordingFinishedSemaphore != NULL) {
     xSemaphoreTake(g_recordingFinishedSemaphore, portMAX_DELAY);
-  }
-
-  // allow output to go back to normal value based on headphone detect
-  if (source_ == Mic) {
-    tlv320_override_spkr(0);
   }
 }
 
