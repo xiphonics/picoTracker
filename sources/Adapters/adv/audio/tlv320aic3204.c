@@ -32,6 +32,8 @@ PUTCHAR_PROTOTYPE {
 
 enum TLVOutput { INIT, HP, SPKR } output = INIT;
 
+static volatile char overrideSpkr = 0;
+
 HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value) {
   // Write to the register
   return HAL_I2C_Mem_Write(&I2C, CODEC_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &value,
@@ -229,6 +231,14 @@ void tlv320_enable_spkr(void) {
 }
 
 void tlv320_select_output(void) {
+  if (overrideSpkr) {
+    if (output != HP) {
+      tlv320_enable_hp();
+      output = HP;
+    }
+    return;
+  }
+
   uint8_t value;
   tlv320read(0x00, 0x43, &value);
 
@@ -358,3 +368,7 @@ void tlv320_disable_mic(void) {
   // Route IN2L to LEFT_P
   tlv320write(0x34, 0x00);
 }
+
+// Corner case: we need to be able to override the normal state of the speaker
+// being on while we are monitoring the mic input to prevent feedback
+void tlv320_override_spkr(char enable) { overrideSpkr = enable; }
