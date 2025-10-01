@@ -202,15 +202,9 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   mixer_.Unlock();
 }
 
-// DANGER! WILL ROBINSON DANGER!
-// set nolock to true ONLY when calling from code that ALREADY hold the mixer
-// lock currently that only place that can occur is when processing the STP
-// command
-void Player::Stop(bool nolock) {
+void Player::Stop() {
 
-  if (!nolock) {
-    mixer_.Lock();
-  }
+  mixer_.Lock();
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     mixer_.StopChannel(i);
@@ -224,9 +218,7 @@ void Player::Stop(bool nolock) {
   PlayerEvent pe(PET_STOP);
   NotifyObservers(&pe);
 
-  if (!nolock) {
-    mixer_.Unlock();
-  }
+  mixer_.Unlock();
 }
 
 const char *Player::GetPlayedNote(int channel) {
@@ -597,6 +589,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
     now_ = system->GetClock();
 
     // Notify refresh
+
     PlayerEvent pe(PET_UPDATE, 0);
     SetChanged();
     NotifyObservers(&pe);
@@ -701,19 +694,6 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
       }
     } else {
       gr->SetGroove(channel, param);
-    }
-  } break;
-  case FourCC::InstrumentCommandStop: {
-    switch (GetSequencerMode()) {
-    case SM_SONG:
-      Stop(true);
-      break;
-    case SM_LIVE:
-      //            QueueChannel(channel,QM_CHAINSTOP,0) ;
-
-      mixer_.StopChannel(channel);
-      liveQueueingMode_[channel] = QM_NONE;
-      break;
     }
   } break;
   default:

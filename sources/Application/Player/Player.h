@@ -61,7 +61,7 @@ public:
 
   void Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
              bool stopAtEnd = false);
-  void Stop(bool nolock = false);
+  void Stop();
 
   void SetSequencerMode(SequencerMode mode);
   SequencerMode GetSequencerMode();
