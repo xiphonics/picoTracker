@@ -47,6 +47,10 @@
 
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 
+#define MINIMUM_ALLOWED_BATTERY_PERCENTAGE 2
+
+#define MIN_BATT_DETECT_DELAY_SECONDS (10 * PICO_CLOCK_HZ)
+
 AppWindow *instance = 0;
 
 unsigned char AppWindow::_charScreen[SCREEN_CHARS];
@@ -125,6 +129,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _lastB = 0;
   _mask = 0;
   colorIndex_ = CD_NORMAL;
+  lowBatteryWarningCounter_ = 0;
 
   EventDispatcher *ed = EventDispatcher::GetInstance();
   ed->SetWindow(this);
@@ -604,13 +609,18 @@ bool AppWindow::onEvent(GUIEvent &event) {
 
     /*		case ET_KEYDOWN:
             if
-       (event.GetValue()==EKT_ESCAPE&&!Player::GetInstance()->IsRunning()) { if
-       (_currentView!=_listView) { CloseProject() ; _isDirty=true ; } else {
+       (event.GetValue()==EKT_ESCAPE&&!Player::GetInstance()->IsRunning()) {
+       if
+       (_currentView!=_listView) {
+       CloseProject() ;
+       _isDirty=true ;
+       } else {
                             System::GetInstance()->PostQuitMessage() ;
                     };
-            } ;*/
+            } ;
+		*/
 
-  default:
+default:
     break;
   }
   //  ms->Unlock();
@@ -645,6 +655,20 @@ void AppWindow::AnimationUpdate() {
   if (loadProject_) {
     LoadProject(projectName_);
     loadProject_ = false;
+  }
+
+  // Check battery level
+  BatteryState batteryState;
+  System::GetInstance()->GetBatteryState(batteryState);
+  if (batteryState.percentage < MINIMUM_ALLOWED_BATTERY_PERCENTAGE) {
+    lowBatteryWarningCounter_++;
+  } else {
+    lowBatteryWarningCounter_ = 0;
+  }
+
+  if (lowBatteryWarningCounter_ > MIN_BATT_DETECT_DELAY_SECONDS) {
+    drawLowBatteryMessage();
+    return; // Skip the rest of the drawing logic
   }
 
   // If we need a full redraw due to state changes from key events
@@ -814,6 +838,23 @@ void AppWindow::onQuitApp() {
 
   player->Reset();
   System::GetInstance()->PostQuitMessage();
+}
+
+void AppWindow::drawLowBatteryMessage() {
+  Clear();
+  GUITextProperties props;
+  SetColor(CD_ERROR);
+
+  // show in center of screen
+  GUIPoint pos(0, 11);
+  const char *line1 = "Low battery!";
+  pos._x = (SCREEN_WIDTH - strlen(line1)) / 2;
+  DrawString(line1, pos, props);
+  const char *line2 = "Please connect to charger";
+  pos._y += 1;
+  pos._x = (SCREEN_WIDTH - strlen(line2)) / 2;
+  DrawString(line2, pos, props);
+  Flush();
 }
 
 void AppWindow::Print(char *line) { PrintMultiLine(line); }
