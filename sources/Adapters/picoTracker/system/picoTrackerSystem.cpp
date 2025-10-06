@@ -107,9 +107,6 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
 
   Trace::Log("PICOTRACKERSYSTEM", "ADC INIT DONE");
 #endif
-
-  // Initialize display brightness from config
-  UpdateBrightnessFromConfig();
 };
 
 void picoTrackerSystem::Shutdown() { delete Audio::GetInstance(); };
@@ -152,20 +149,6 @@ void picoTrackerSystem::GetBatteryState(BatteryState &state) {
 
 void picoTrackerSystem::SetDisplayBrightness(unsigned char value) {
   platform_brightness(value);
-}
-
-void picoTrackerSystem::UpdateBrightnessFromConfig() {
-  // Get the brightness value from config and apply it
-  Config *config = Config::GetInstance();
-  if (config) {
-    Variable *v = config->FindVariable(FourCC::VarBacklightLevel);
-    if (v) {
-      unsigned char brightness = (unsigned char)v->GetInt();
-      platform_brightness(brightness);
-      Trace::Log("PICOTRACKERSYSTEM", "Set display brightness to %d",
-                 brightness);
-    }
-  }
 }
 
 void picoTrackerSystem::Sleep(int millisec) {
