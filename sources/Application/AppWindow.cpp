@@ -49,7 +49,9 @@ const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 
 #define MINIMUM_ALLOWED_BATTERY_PERCENTAGE 2
 
-#define MIN_BATT_DETECT_DELAY_SECONDS (10 * PICO_CLOCK_HZ)
+#define MIN_BATT_DETECT_DELAY_SECONDS (3 * PICO_CLOCK_HZ)
+
+#define MIN_BATT_POWEROFF_DELAY_SECONDS (MIN_BATT_DETECT_DELAY_SECONDS * 2)
 
 AppWindow *instance = 0;
 
@@ -668,6 +670,11 @@ void AppWindow::AnimationUpdate() {
 
   if (lowBatteryWarningCounter_ > MIN_BATT_DETECT_DELAY_SECONDS) {
     drawLowBatteryMessage();
+
+    if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_DELAY_SECONDS) {
+      System::GetInstance()->PowerDown();
+    }
+
     return; // Skip the rest of the drawing logic
   }
 
