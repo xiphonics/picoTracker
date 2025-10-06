@@ -396,7 +396,7 @@ void View::DrawRect(GUIRect &r, ColorDefinition color) {
 
 void View::drawBattery(GUITextProperties &props) {
   // only update the voltage once per second
-  if (AppWindow::GetAnimationFrameCounter() % 50 == 0) {
+  if (AppWindow::GetAnimationFrameCounter() % PICO_CLOCK_HZ == 0) {
     System *sys = System::GetInstance();
     sys->GetBatteryState(batteryState_);
     // Trace::Debug("Battery: %d%%", batteryState_.percentage);
@@ -460,11 +460,6 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
 
     if (remainingSeconds == 0) {
       Trace::Debug("Power button held for threshold time, Powerdown!");
-
-      // clear screen before powerdown
-      // TODO: doesn't work at the moment, adv comes back showing last screen
-      // content
-      ForceClear();
 
       System::GetInstance()->PowerDown();
     }
