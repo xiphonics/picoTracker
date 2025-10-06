@@ -46,9 +46,6 @@ private:
   static bool invert_;
   static unsigned int lastBeatCount_;
 
-  // Update brightness from config
-  static void UpdateBrightnessFromConfig();
-
   static EventManager *eventManager_;
   std::map<void *, unsigned> mmap_;
 };

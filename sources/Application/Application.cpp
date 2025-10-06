@@ -37,6 +37,19 @@ bool Application::Init(GUICreateWindowParams &params) {
   Audio *audio = Audio::GetInstance();
   audio->Init();
 
+  // Initialize display brightness from config
+  // Get the brightness value from config and apply it
+  Config *config = Config::GetInstance();
+  if (config) {
+    Variable *v = config->FindVariable(FourCC::VarBacklightLevel);
+    if (v) {
+      unsigned char brightness = (unsigned char)v->GetInt();
+      System::GetInstance()->SetDisplayBrightness(brightness);
+      Trace::Log("PICOTRACKERSYSTEM", "Set display brightness to %d",
+                 brightness);
+    }
+  }
+
   return true;
 };
 
