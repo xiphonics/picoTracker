@@ -620,9 +620,9 @@ bool AppWindow::onEvent(GUIEvent &event) {
                             System::GetInstance()->PostQuitMessage() ;
                     };
             } ;
-		*/
+                */
 
-default:
+  default:
     break;
   }
   //  ms->Unlock();
