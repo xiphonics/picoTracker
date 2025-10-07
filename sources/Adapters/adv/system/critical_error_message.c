@@ -29,8 +29,8 @@ static void delay_ms(uint32_t ms) { delay_us(ms * 1000); }
 // show this message and then power down after the given delay (in seconds) so
 // only for critical errors where we need to show user a message and cannot
 // continue until a reboot
-void critical_error_message(const char *message, int guruId,
-                            int shutdownDelay) {
+void critical_error_message(const char *message, int guruId, int shutdownDelay,
+                            bool showGuru) {
   display_set_font_index(0);
 
   display_set_palette_color(15, 0x0000); // BLACK
@@ -57,13 +57,15 @@ void critical_error_message(const char *message, int guruId,
   }
   // halt
   for (;;) {
-    for (int y = 0; y < 4; y++) {
+    for (int y = 0; y < (showGuru == true ? 4 : 3); y++) {
       for (int x = 0; x < 32; x++) {
         display_set_cursor(x, y + 10);
-        if (y == 0 || y == 3) {
+        if (y == 0 || y == (showGuru == true ? 3 : 2)) {
           display_putc('#', false);
         } else if (y == 2) {
-          display_putc(gurumsgbuffer[x], false);
+          if (showGuru) {
+            display_putc(gurumsgbuffer[x], false);
+          }
         } else {
           display_putc(msgbuffer[x], false);
         }
@@ -81,7 +83,11 @@ void critical_error_message(const char *message, int guruId,
       display_set_cursor(x, 11);
       display_putc(msgbuffer[x], false);
       display_set_cursor(x, 12);
-      display_putc(gurumsgbuffer[x], false);
+      if (showGuru) {
+        display_putc(gurumsgbuffer[x], false);
+      } else {
+        display_putc(' ', false);
+      }
     }
     display_draw_changed();
     delay_ms(1000);

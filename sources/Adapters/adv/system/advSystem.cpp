@@ -77,7 +77,7 @@ void advSystem::Boot() {
   if (!fs->chdir("/")) {
     Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
     critical_error_message("SDCARD MISSING", 0x01,
-                           DEFAULT_ERROR_MESSAGE_DELAY_SEC);
+                           DEFAULT_ERROR_MESSAGE_DELAY_SEC, false);
   }
 
   // Install MIDI
@@ -111,7 +111,7 @@ void advSystem::Boot() {
     Trace::Log("PICOTRACKERSYSTEM", "Low Batt: %d%%\n",
                batteryState.percentage);
     critical_error_message("!! LOW BATTERY !!", 0x01,
-                           DISPLAY_LOWBATT_DELAY_IN_SEC);
+                           DISPLAY_LOWBATT_DELAY_IN_SEC, false);
     // then power off
     System::GetInstance()->PowerDown();
   }

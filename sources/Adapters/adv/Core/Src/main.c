@@ -152,7 +152,7 @@ int main(void) {
   if (SDcardInitError != 0) {
     Trace::Log("MAIN", "SDCARD MISSING!!\n");
     critical_error_message("SDCARD MISSING !", 0x01,
-                           DEFAULT_ERROR_MESSAGE_DELAY_SEC);
+                           DEFAULT_ERROR_MESSAGE_DELAY_SEC, false);
     while (false) {
     }
   }
