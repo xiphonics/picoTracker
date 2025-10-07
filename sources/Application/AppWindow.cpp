@@ -49,9 +49,9 @@ const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 
 #define MINIMUM_ALLOWED_BATTERY_PERCENTAGE 2
 
-#define MIN_BATT_DETECT_DELAY_SECONDS (3 * PICO_CLOCK_HZ)
+#define MIN_BATT_DETECT_DELAY_FRAMES_COUNT (3 * PICO_CLOCK_HZ)
 
-#define MIN_BATT_POWEROFF_DELAY_SECONDS (MIN_BATT_DETECT_DELAY_SECONDS * 2)
+#define MIN_BATT_POWEROFF_FRAMES_COUNT (MIN_BATT_DETECT_DELAY_FRAMES_COUNT * 2)
 
 AppWindow *instance = 0;
 
@@ -659,23 +659,26 @@ void AppWindow::AnimationUpdate() {
     loadProject_ = false;
   }
 
-  // Check battery level
-  BatteryState batteryState;
-  System::GetInstance()->GetBatteryState(batteryState);
-  if (batteryState.percentage < MINIMUM_ALLOWED_BATTERY_PERCENTAGE) {
-    lowBatteryWarningCounter_++;
-  } else {
-    lowBatteryWarningCounter_ = 0;
-  }
-
-  if (lowBatteryWarningCounter_ > MIN_BATT_DETECT_DELAY_SECONDS) {
-    drawLowBatteryMessage();
-
-    if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_DELAY_SECONDS) {
-      System::GetInstance()->PowerDown();
+  // run at 1Hz
+  if (animationFrameCounter_ % PICO_CLOCK_HZ == 0) {
+    // Check battery level
+    BatteryState batteryState;
+    System::GetInstance()->GetBatteryState(batteryState);
+    if (batteryState.percentage < MINIMUM_ALLOWED_BATTERY_PERCENTAGE) {
+      lowBatteryWarningCounter_++;
+    } else {
+      lowBatteryWarningCounter_ = 0;
     }
 
-    return; // Skip the rest of the drawing logic
+    if (lowBatteryWarningCounter_ > MIN_BATT_DETECT_DELAY_FRAMES_COUNT) {
+      drawLowBatteryMessage();
+
+      if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_FRAMES_COUNT) {
+        System::GetInstance()->PowerDown();
+      }
+
+      return; // Skip the rest of the drawing logic
+    }
   }
 
   // If we need a full redraw due to state changes from key events

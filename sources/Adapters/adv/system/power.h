@@ -5,16 +5,15 @@
  *
  * This file is part of the picoTracker firmware
  */
-#ifndef _CRITICALERRORMESSAGE_H_
-#define _CRITICALERRORMESSAGE_H_
+#ifndef _ADV_POWER_H_
+#define _ADV_POWER_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define DEFAULT_ERROR_MESSAGE_DELAY_SEC 5
-
-void critical_error_message(const char *message, int guruId, int shutdownDelay);
+void set_charging(void);
+void power_off();
 
 #ifdef __cplusplus
 }

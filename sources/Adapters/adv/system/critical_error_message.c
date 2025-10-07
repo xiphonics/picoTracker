@@ -7,13 +7,30 @@
  */
 #include "critical_error_message.h"
 #include "Adapters/adv/display/display.h"
+#include "power.h"
 #include "stm32h7xx_hal.h"
+#include "tim.h"
 #include <System/Console/nanoprintf.h>
 #include <string.h>
 
-// show this message and basically crash, so only for critical errors where
-// we need to show user a message and cannot continue until a reboot
-void critical_error_message(const char *message, int guruId) {
+// This function assumes TIM2 is configured to have a 1MHz clock (1us tick)
+// Need to use this instead of HAL_Delay() as critical_error_message() can get
+// called in early boot before time for Hal_Delay is configured
+static void delay_us(uint32_t us) {
+  uint32_t start = __HAL_TIM_GET_COUNTER(&htim2);
+  while ((__HAL_TIM_GET_COUNTER(&htim2) - start) < us) {
+    // Loop until the desired number of microseconds have passed.
+    // This handles counter wrapping correctly because of unsigned arithmetic.
+  }
+}
+
+static void delay_ms(uint32_t ms) { delay_us(ms * 1000); }
+
+// show this message and then power down after the given delay (in seconds) so
+// only for critical errors where we need to show user a message and cannot
+// continue until a reboot
+void critical_error_message(const char *message, int guruId,
+                            int shutdownDelay) {
   display_set_font_index(0);
 
   display_set_palette_color(15, 0x0000); // BLACK
@@ -53,7 +70,10 @@ void critical_error_message(const char *message, int guruId) {
       }
     }
     display_draw_changed();
-    HAL_Delay(1000);
+    delay_ms(1000);
+    if (shutdownDelay-- < 0) {
+      power_off();
+    }
     display_clear(COLOR_GURU_BG);
 
     // draw just the message
@@ -64,6 +84,9 @@ void critical_error_message(const char *message, int guruId) {
       display_putc(gurumsgbuffer[x], false);
     }
     display_draw_changed();
-    HAL_Delay(1000);
+    delay_ms(1000);
+    if (shutdownDelay-- < 0) {
+      power_off();
+    }
   }
 }
