@@ -137,6 +137,7 @@ private:
 
   bool lowBatteryState_;
   bool lowBatteryMessageShown_;
+  uint16_t lowBatteryWarningCounter_;
 
   static unsigned char _charScreen[SCREEN_CHARS];
   static unsigned char _charScreenProp[SCREEN_CHARS];

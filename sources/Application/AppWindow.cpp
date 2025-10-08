@@ -129,8 +129,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _lastA = 0;
   _lastB = 0;
   _mask = 0;
-  colorIndex_ = CD_NORMAL;
   lowBatteryMessageShown_ = false;
+  lowBatteryWarningCounter_ = 0;
 
   EventDispatcher *ed = EventDispatcher::GetInstance();
   ed->SetWindow(this);
@@ -666,13 +666,15 @@ void AppWindow::AnimationUpdate() {
     if (batteryState.percentage < MINIMUM_ALLOWED_BATTERY_PERCENTAGE &&
         !batteryState.charging) {
       lowBatteryState_ = true;
+      lowBatteryWarningCounter_++;
     } else {
       lowBatteryState_ = false;
+      lowBatteryWarningCounter_ = 0;
     }
 
-    // if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_SEC) {
-    //   // System::GetInstance()->PowerDown();
-    // }
+    if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_SEC) {
+      System::GetInstance()->PowerDown();
+    }
   }
 
   if (lowBatteryState_ && !lowBatteryMessageShown_) {
