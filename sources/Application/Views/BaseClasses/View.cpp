@@ -328,6 +328,16 @@ void View::DoModal(ModalView *view, ModalViewCallback cb) {
   isDirty_ = true;
 };
 
+void View::DismissModal() {
+  if (modalView_ && modalView_->IsFinished()) {
+    if (modalViewCallback_) {
+      modalViewCallback_(*this, *modalView_);
+    }
+    SAFE_DELETE(modalView_);
+    isDirty_ = true;
+  }
+};
+
 void View::Redraw() {
   if (modalView_) {
     if (isDirty_) {
@@ -354,14 +364,8 @@ void View::ProcessButton(unsigned short mask, bool pressed) {
   // Normal button processing
   if (modalView_) {
     modalView_->ProcessButton(mask, pressed);
-    if (modalView_->IsFinished()) {
-      // process callback sending the modal dialog
-      if (modalViewCallback_) {
-        modalViewCallback_(*this, *modalView_);
-      }
-      SAFE_DELETE(modalView_);
-      isDirty_ = true;
-    }
+    // checks if modal is done and if it is disposes of it:
+    DismissModal();
   } else {
     ProcessButtonMask(mask, pressed);
   }

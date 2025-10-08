@@ -34,6 +34,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#define ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE 3
 #define DISPLAY_LOWBATT_DELAY_IN_SEC 3
 
 EventManager *advSystem::eventManager_ = NULL;
@@ -106,14 +107,12 @@ void advSystem::Boot() {
   // check for low batt
   BatteryState batteryState;
   System::GetInstance()->GetBatteryState(batteryState);
-  if (batteryState.percentage < 3) {
+  if (batteryState.percentage < ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE) {
     // show low battery message on screen
     Trace::Log("PICOTRACKERSYSTEM", "Low Batt: %d%%\n",
                batteryState.percentage);
     critical_error_message("!! LOW BATTERY !!", 0x01,
                            DISPLAY_LOWBATT_DELAY_IN_SEC, false);
-    // then power off
-    System::GetInstance()->PowerDown();
   }
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();

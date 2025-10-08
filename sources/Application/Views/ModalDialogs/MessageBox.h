@@ -40,7 +40,7 @@ public:
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void AnimationUpdate(){};
 
-private:
+protected:
   etl::string<SCREEN_WIDTH - 2> line1_ = "";
   etl::string<SCREEN_WIDTH - 2> line2_ = "";
   int button_[4];
