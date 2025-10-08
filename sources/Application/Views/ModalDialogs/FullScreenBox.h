@@ -15,7 +15,7 @@ class FullScreenBox : public MessageBox {
 public:
   FullScreenBox(View &view, const char *message, int btnFlags = MBBF_OK);
   FullScreenBox(View &view, const char *message, const char *message2,
-             int btnFlags = MBBF_OK);
+                int btnFlags = MBBF_OK);
   virtual ~FullScreenBox();
 
   virtual void DrawView();

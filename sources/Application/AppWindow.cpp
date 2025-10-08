@@ -679,8 +679,8 @@ void AppWindow::AnimationUpdate() {
 
   if (lowBatteryState_ && !lowBatteryMessageShown_) {
     if (!_currentView->HasModalView()) {
-      FullScreenBox *mb =
-          new FullScreenBox(*_currentView, "Low battery!", "Connect charger", 0);
+      FullScreenBox *mb = new FullScreenBox(*_currentView, "Low battery!",
+                                            "Connect charger", 0);
       _currentView->DoModal(mb);
       lowBatteryMessageShown_ = true;
       _isDirty = true;
@@ -864,8 +864,6 @@ void AppWindow::onQuitApp() {
   player->Reset();
   System::GetInstance()->PostQuitMessage();
 }
-
-
 
 void AppWindow::Print(char *line) { PrintMultiLine(line); }
 
