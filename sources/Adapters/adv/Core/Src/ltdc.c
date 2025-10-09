@@ -103,7 +103,7 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef *ltdcHandle) {
     PeriphClkInitStruct.PLL3.PLL3N = 185;
     PeriphClkInitStruct.PLL3.PLL3P = 32;
     PeriphClkInitStruct.PLL3.PLL3Q = 32;
-    PeriphClkInitStruct.PLL3.PLL3R = 14;
+    PeriphClkInitStruct.PLL3.PLL3R = 28;
     PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
     PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
     PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
