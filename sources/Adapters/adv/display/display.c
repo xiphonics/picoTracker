@@ -178,7 +178,7 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
       uint8_t char_index = screen[h * TEXT_WIDTH + w];
       const uint8_t *glyph = &FONT[char_index][0][0];
 
-      uint32_t *dest = (uint32_t *)framebuffer +
+      uint16_t *dest = (uint16_t *)framebuffer +
                        (h * CHAR_HEIGHT * DISPLAY_WIDTH) +
                        (w * CHAR_WIDTH + OFFSET);
 

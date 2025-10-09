@@ -16,9 +16,9 @@
 /* USER CODE BEGIN 0 */
 #include <string.h>
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t framebuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+uint16_t framebuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t placeholder_framebuffer_layer2[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+uint16_t placeholder_framebuffer_layer2[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
 void init_display(void);
 /* USER CODE END 0 */
@@ -60,7 +60,7 @@ void MX_LTDC_Init(void) {
   pLayerCfg.WindowX1 = 720;
   pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 720;
-  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
+  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
