@@ -325,15 +325,27 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNext(*cc);
+      }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNextAlpha(*cc);
+      }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrev(*cc);
+      }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrevAlpha(*cc);
+      }
       break;
     }
     lastCmd_ = *cc;
@@ -368,15 +380,27 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNext(*cc);
+      }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNextAlpha(*cc);
+      }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrev(*cc);
+      }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrevAlpha(*cc);
+      }
       break;
     }
     lastCmd_ = *cc;
@@ -411,15 +435,27 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNext(*cc);
+      }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNextAlpha(*cc);
+      }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrev(*cc);
+      }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrevAlpha(*cc);
+      }
       break;
     }
     lastCmd_ = *cc;
