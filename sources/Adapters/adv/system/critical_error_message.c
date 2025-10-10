@@ -7,7 +7,7 @@
  */
 #include "critical_error_message.h"
 #include "Adapters/adv/display/display.h"
-#include "power.h"
+#include "charger.h"
 #include "stm32h7xx_hal.h"
 #include "tim.h"
 #include <System/Console/nanoprintf.h>

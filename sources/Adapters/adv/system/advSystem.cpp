@@ -18,10 +18,10 @@
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"
+#include "charger.h"
 #include "critical_error_message.h"
 #include "input.h"
 #include "platform.h"
-#include "power.h"
 #include "tim.h"
 #include "tlv320aic3204.h"
 #include <assert.h>

@@ -1,4 +1,4 @@
-#include "power.h"
+#include "charger.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "platform.h"

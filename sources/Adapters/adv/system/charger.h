@@ -5,8 +5,8 @@
  *
  * This file is part of the picoTracker firmware
  */
-#ifndef _ADV_POWER_H_
-#define _ADV_POWER_H_
+#ifndef _ADV_CHARGER_H_
+#define _ADV_CHARGER_H_
 
 #ifdef __cplusplus
 extern "C" {

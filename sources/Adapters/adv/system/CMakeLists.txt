@@ -5,7 +5,7 @@ add_library(platform_system
   advSamplePool.cpp
   BatteryGauge.cpp
   syscalls.c
-  power.cpp
+  charger.cpp
 )
 
 target_link_libraries(platform_system PUBLIC
