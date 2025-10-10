@@ -61,7 +61,8 @@ typedef struct {
 
 void hard_fault_c_handler(HardFaultStackFrame *stackFrame) {
   // TODO: we could put something useful here
-  critical_error_message("Hard Fault", stackFrame->PC);
+  critical_error_message("Hard Fault", stackFrame->PC,
+                         DEFAULT_ERROR_MESSAGE_DELAY_SEC, true);
 }
 /* USER CODE END 0 */
 
@@ -99,7 +100,8 @@ void NMI_Handler(void) {
  */
 void HardFault_Handler(void) {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-  critical_error_message("HARDFAULT", 0x00);
+  critical_error_message("HARDFAULT", 0x00, DEFAULT_ERROR_MESSAGE_DELAY_SEC,
+                         true);
   /* USER CODE END HardFault_IRQn 0 */
   while (1) {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */

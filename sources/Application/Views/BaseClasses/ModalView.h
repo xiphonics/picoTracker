@@ -20,12 +20,13 @@ public:
   bool IsFinished();
   int GetReturnCode();
 
+  void EndModal(int returnCode);
+
 protected:
   void SetWindow(int width, int height);
   virtual void ClearTextRect(int x, int y, int w, int h);
   virtual void DrawString(int x, int y, const char *txt,
                           GUITextProperties &props);
-  void EndModal(int returnCode);
 
   // Override GetAnchor to account for modal window position
   virtual GUIPoint GetAnchor();
