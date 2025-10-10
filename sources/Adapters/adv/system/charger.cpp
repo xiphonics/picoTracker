@@ -1,3 +1,10 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2025 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
 #include "charger.h"
 #include "gpio.h"
 #include "i2c.h"
