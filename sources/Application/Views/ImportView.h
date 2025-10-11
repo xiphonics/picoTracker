@@ -11,6 +11,7 @@
 #define _IMPORT_VIEW_H_
 
 #include "Application/Views/ScreenView.h"
+#include "Application/Instruments/WavFile.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"

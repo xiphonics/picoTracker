@@ -196,6 +196,8 @@ int WavFile::GetSize(int note) { return size_; };
 
 int WavFile::GetChannelCount(int note) { return channelCount_; };
 
+int WavFile::GetBitDepth(int note) { return bytePerSample_ * 8; };
+
 int WavFile::GetSampleRate(int note) { return sampleRate_; };
 
 float WavFile::GetLengthInSec() { return (float)size_ / sampleRate_; };

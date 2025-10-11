@@ -453,6 +453,28 @@ void ImportView::import() {
     return;
   }
 
+  WavFile *wav = WavFile::Open(name);
+  if (wav == nullptr) {
+    MessageBox *mb =
+        new MessageBox(*this, "Import Failed", "Could not open file", MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
+  auto samplerate = wav->GetSampleRate(0);
+  auto bitrate = wav->GetBitDepth(0);
+  // Check if sample rate is above 44.1kHz or bit depth is above 16-bit
+  if (samplerate > 44100 || bitrate > 16) {
+    MessageBox *mb =
+        new MessageBox(*this, "Import Failed", "Unsupported Format", MBBF_OK);
+    DoModal(mb);
+    wav->Close();
+    delete wav;
+    return;
+  }
+  wav->Close();
+  delete wav;
+
   int sampleID = pool->ImportSample(name, projName);
 
   if (sampleID >= 0) {

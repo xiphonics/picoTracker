@@ -29,6 +29,7 @@ public:
   virtual int GetSize(int note);
   virtual int GetSampleRate(int note);
   virtual int GetChannelCount(int note);
+  virtual int GetBitDepth(int note);
   virtual int GetRootNote(int note);
   bool GetBuffer(long start, long sampleCount); // values in samples
   virtual float GetLengthInSec();
