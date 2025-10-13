@@ -16,6 +16,17 @@
 
 #define BUFFER_SIZE 512
 
+enum WAVEFILE_ERROR {
+  WAVEFILE_SUCCESS = 0,
+  INVALID_FILE,
+  UNSUPPORTED_FILE_FORMAT,
+  INVALID_HEADER,
+  UNSUPPORTED_WAV_FORMAT,
+  UNSUPPORTED_COMPRESSION,
+  UNSUPPORTED_BITDEPTH,
+  UNSUPPORTED_SAMPLERATE,
+};
+
 class WavFile : public SoundSource {
 
 protected: // Factory - see Load method
@@ -23,7 +34,7 @@ protected: // Factory - see Load method
 
 public:
   virtual ~WavFile();
-  static WavFile *Open(const char *);
+  static WAVEFILE_ERROR Open(WavFile *wavefile, const char *name);
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);
   virtual int GetSize(int note);

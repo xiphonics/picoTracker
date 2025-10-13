@@ -48,7 +48,8 @@ bool advSamplePool::loadSample(const char *name) {
   if (count_ == MAX_SAMPLES)
     return false;
 
-  WavFile *wave = WavFile::Open(name);
+  WavFile *wave = nullptr;
+  auto error = WavFile::Open(wave, name);
   if (wave) {
     wav_[count_] = wave;
     names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
@@ -56,10 +57,11 @@ bool advSamplePool::loadSample(const char *name) {
     count_++;
     Load(wave);
     wave->Close();
-
+    delete wave;
     return true;
   } else {
     Trace::Error("Failed to load sample:%s", name);
+    delete wave;
     return false;
   }
 };

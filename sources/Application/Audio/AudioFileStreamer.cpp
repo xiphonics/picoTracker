@@ -45,7 +45,8 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
     SAFE_DELETE(wav_);
   }
   Trace::Log("", "wave open:%s", name_);
-  wav_ = WavFile::Open(name_);
+  WavFile *wav = nullptr;
+  WavFile::Open(wav, name_);
   if (!wav_) {
     Trace::Error("Failed to open streaming of file:%s", name_);
     mode_ = AFSM_STOPPED;

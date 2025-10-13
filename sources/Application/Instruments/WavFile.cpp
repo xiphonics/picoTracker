@@ -32,17 +32,23 @@ WavFile::~WavFile() {
   }
 };
 
-WavFile *WavFile::Open(const char *name) {
+/**
+ * The caller is expected to delete heap allocated object assigned to *wav
+ * only if the wav was successfully assigned, ie success error code (0) is
+ * returned
+ */
+WAVEFILE_ERROR WavFile::Open(WavFile *wav, const char *name) {
   // Trace::Log("WAVFILE", "wave open from %s", name);
 
   // open file
   FileSystem *fs = FileSystem::GetInstance();
   I_File *file = fs->Open(name, "r");
 
-  if (!file)
-    return 0;
+  if (!file) {
+    return INVALID_FILE;
+  }
 
-  WavFile *wav = new WavFile(file);
+  wav = new WavFile(file);
 
   long position = 0;
 
@@ -55,7 +61,7 @@ WavFile *WavFile::Open(const char *name) {
   if (chunk != 0x46464952) { // 'RIFF' in little-endian
     Trace::Error("Bad RIFF format %x", chunk);
     delete (wav);
-    return 0;
+    return UNSUPPORTED_FILE_FORMAT;
   }
 
   // Read size
@@ -71,7 +77,7 @@ WavFile *WavFile::Open(const char *name) {
   if (chunk != 0x45564157) { // 'WAVE' in little-endian
     Trace::Error("Bad WAV format");
     delete wav;
-    return 0;
+    return UNSUPPORTED_WAV_FORMAT;
   }
 
   // Search for the 'fmt ' chunk, skipping any other chunks like 'JUNK'
@@ -82,7 +88,7 @@ WavFile *WavFile::Open(const char *name) {
     if (position >= (long)fileSize) {
       Trace::Error("Could not find 'fmt ' chunk in header");
       delete wav;
-      return 0;
+      return INVALID_HEADER;
     }
 
     // Read the next chunk's ID
@@ -106,7 +112,7 @@ WavFile *WavFile::Open(const char *name) {
   if (size < 16) {
     Trace::Error("Bad fmt size format");
     delete wav;
-    return 0;
+    return INVALID_HEADER;
   }
   int offset = size - 16;
 
@@ -118,7 +124,7 @@ WavFile *WavFile::Open(const char *name) {
   if (comp != 1) {
     Trace::Error("Unsupported compression");
     delete wav;
-    return 0;
+    return UNSUPPORTED_COMPRESSION;
   }
 
   // Read NumChannels (mono/Stereo)
@@ -141,8 +147,7 @@ WavFile *WavFile::Open(const char *name) {
 
   if ((bitPerSample != 16) && (bitPerSample != 8)) {
     Trace::Error("Only 8/16 bit supported");
-    delete wav;
-    return 0;
+    return UNSUPPORTED_BITDEPTH;
   };
   bitPerSample /= 8;
   wav->bytePerSample_ = bitPerSample;
@@ -171,7 +176,6 @@ WavFile *WavFile::Open(const char *name) {
   wav->channelCount_ = nChannels;
 
   // Read data size in byte
-
   position += wav->readBlock(position, 4);
   memcpy(&size, wav->readBuffer_, 4);
   Trace::Debug("File size: %i", size);
@@ -185,7 +189,7 @@ WavFile *WavFile::Open(const char *name) {
   wav->readCount_ = size;
 
   wav->dataPosition_ = position;
-  return wav;
+  return WAVEFILE_SUCCESS;
 };
 
 void *WavFile::GetSampleBuffer(int note) { return samples_; };
