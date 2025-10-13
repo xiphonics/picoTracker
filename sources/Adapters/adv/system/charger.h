@@ -15,6 +15,15 @@ extern "C" {
 void set_charging(void);
 void power_off();
 
+typedef enum {
+  NOT_CHARGING,
+  PRE_CHARGE,
+  FAST_CHARGE,
+  CHARGE_DONE
+} ChargingStatus;
+
+ChargingStatus get_charging_status();
+
 #ifdef __cplusplus
 }
 #endif
