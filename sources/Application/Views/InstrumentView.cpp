@@ -115,7 +115,7 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
 
   if (result == NO_MORE_INSTRUMENT) {
     Trace::Error("INSTRUMENTVIEW", "Failed to assign new instrument type: %d",
-               nuType);
+                 nuType);
 
     // Show a dialog to the user
     char message[40];
