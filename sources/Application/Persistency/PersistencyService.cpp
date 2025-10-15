@@ -223,7 +223,16 @@ PersistencyService::LoadCurrentProjectName(char *projectName) {
     current->Close();
     projectName[len] = '\0';
     Trace::Log("APPLICATION", "read [%d] load proj name: %s", len, projectName);
-    return PERSIST_LOADED;
+    if (Exists(projectName)) {
+      return PERSIST_LOADED;
+    } else {
+      Trace::Log("APPLICATION",
+                 "Project '%s' not found, loading untitled project",
+                 projectName);
+      fs->DeleteFile(PROJECT_STATE_FILE);
+      strcpy(projectName, UNNAMED_PROJECT_NAME);
+      return PERSIST_LOADED;
+    }
   } else {
     return PERSIST_LOAD_FAILED;
   }
