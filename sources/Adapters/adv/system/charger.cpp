@@ -6,6 +6,7 @@
  * This file is part of the picoTracker firmware
  */
 #include "charger.h"
+#include "System/Console/Trace.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "platform.h"
@@ -18,14 +19,15 @@
 #define BQ25601_I2C_ADDR 0x6B
 #define BQ25601_STATUS_REG 0x08
 
-ChargingStatus get_charging_status() {
+// Note: NOT_CHARGING enum is specifically made to be 0 (ie. false)
+ChargingStatus getChargingStatus() {
   uint8_t reg_value = 0;
   HAL_StatusTypeDef status =
       HAL_I2C_Mem_Read(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_STATUS_REG,
                        I2C_MEMADD_SIZE_8BIT, &reg_value, 1, HAL_MAX_DELAY);
 
   if (status != HAL_OK) {
-    printf("i2c read error: %i\r\n", status);
+    Trace::Error("GetCharginStatus: i2c read error: %i", status);
     return NOT_CHARGING;
   }
 
@@ -46,7 +48,7 @@ ChargingStatus get_charging_status() {
   }
 }
 
-void power_off() {
+void powerOff() {
   tlv320_mute();
 
   // Ship mode
@@ -55,7 +57,7 @@ void power_off() {
       HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, 0x07,
                         I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
   if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
+    Trace::Error("PowerOff: i2c write error: %i", status);
   }
 
   HAL_GPIO_DeInit(POWER_GPIO_Port, POWER_Pin);
@@ -72,7 +74,7 @@ void power_off() {
 
 // TODO:
 // use in future to configure max charging current and turn OTG off
-void configure_charging(void) {
+void configureCharging(void) {
   uint8_t value = 0x1a;
   HAL_StatusTypeDef status =
       HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, 0x01,

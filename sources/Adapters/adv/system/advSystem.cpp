@@ -139,7 +139,7 @@ void advSystem::GetBatteryState(BatteryState &state) {
   state.percentage = getBatterySOC();
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
-  state.charging = get_charging_status();
+  state.charging = getChargingStatus();
 }
 
 void advSystem::SetDisplayBrightness(unsigned char value) {
@@ -173,7 +173,7 @@ unsigned int advSystem::GetMemoryUsage() {
   return m.uordblks;
 }
 
-void advSystem::PowerDown() { power_off(); }
+void advSystem::PowerDown() { powerOff(); }
 
 void advSystem::SystemPutChar(int c) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);

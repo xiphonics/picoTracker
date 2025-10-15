@@ -12,8 +12,8 @@
 extern "C" {
 #endif
 
-void set_charging(void);
-void power_off();
+void configureCharging(void);
+void powerOff();
 
 typedef enum {
   NOT_CHARGING,
@@ -22,7 +22,7 @@ typedef enum {
   CHARGE_DONE
 } ChargingStatus;
 
-ChargingStatus get_charging_status();
+ChargingStatus getChargingStatus();
 
 #ifdef __cplusplus
 }
