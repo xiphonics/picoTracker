@@ -10,6 +10,7 @@
 #include "UINoteVarField.h"
 #include "Application/AppWindow.h"
 #include "Application/Utils/char.h"
+#include "ViewUtils.h"
 #include <System/Console/nanoprintf.h>
 
 UINoteVarField::UINoteVarField(GUIPoint &position, Variable &v,
@@ -23,13 +24,6 @@ void UINoteVarField::Draw(GUIWindow &w, int offset) {
   GUIPoint position = GetPosition();
   position._y += offset;
 
-  if (focus_) {
-    ((AppWindow &)w).SetColor(CD_HILITE2);
-    props.invert_ = true;
-  } else {
-    ((AppWindow &)w).SetColor(CD_NORMAL);
-  }
-
   char buffer[MAX_FIELD_WIDTH + 1];
   char note[5];
 
@@ -37,5 +31,12 @@ void UINoteVarField::Draw(GUIWindow &w, int offset) {
   note2char(pitch, note);
   note[4] = 0;
   npf_snprintf(buffer, sizeof(buffer), format_, note);
-  w.DrawString(buffer, position, props);
+
+  if (focus_) {
+    ((AppWindow &)w).SetColor(CD_HILITE2);
+    props.invert_ = true;
+    w.DrawString(buffer, position, props);
+  } else {
+    DrawColoredField(w, position, buffer);
+  }
 };

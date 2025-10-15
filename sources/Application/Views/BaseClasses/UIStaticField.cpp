@@ -9,6 +9,8 @@
 
 #include "UIStaticField.h"
 #include "Application/AppWindow.h"
+#include "ViewUtils.h"
+#include <string.h>
 
 UIStaticField::UIStaticField(GUIPoint &position, const char *string)
     : UIField(position) {
@@ -17,12 +19,13 @@ UIStaticField::UIStaticField(GUIPoint &position, const char *string)
 
 void UIStaticField::Draw(GUIWindow &w, int offset) {
 
-  GUITextProperties props;
   GUIPoint position = GetPosition();
   position._y += offset;
 
-  ((AppWindow &)w).SetColor(CD_NORMAL);
-  w.DrawString(string_, position, props);
+  char buffer[MAX_FIELD_WIDTH + 1];
+  strncpy(buffer, string_, MAX_FIELD_WIDTH);
+  buffer[MAX_FIELD_WIDTH] = '\0';
+  DrawColoredField(w, position, buffer);
 };
 
 void UIStaticField::ProcessArrow(unsigned short mask){};
