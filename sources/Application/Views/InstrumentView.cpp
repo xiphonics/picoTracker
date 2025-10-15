@@ -114,8 +114,38 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
   unsigned short result = bank->GetNextAndAssignID(nuType, id);
 
   if (result == NO_MORE_INSTRUMENT) {
-    Trace::Log("INSTRUMENTVIEW", "Failed to assign new instrument type");
-    // TODO: need to show user some sort of error message here
+    Trace::Error("INSTRUMENTVIEW", "Failed to assign new instrument type: %d",
+                 nuType);
+
+    // Show a dialog to the user
+    char message[40];
+    npf_snprintf(message, sizeof(message), "%s instruments exhausted!",
+                 InstrumentTypeNames[nuType]);
+    MessageBox *mb = new MessageBox(*this, message, "Trying next...", MBBF_OK);
+    DoModal(mb);
+
+    // Try to find the next available instrument type
+    bool found = false;
+    for (int i = nuType + 1; i < IT_LAST; i++) {
+      InstrumentType nextType = (InstrumentType)i;
+      result = bank->GetNextAndAssignID(nextType, id);
+      if (result != NO_MORE_INSTRUMENT) {
+        Trace::Log("INSTRUMENTVIEW", "Assigned next available type: %d",
+                   nextType);
+        instrumentType_.SetInt(nextType, false);
+        found = true;
+        break; // Exit loop on success
+      }
+    }
+
+    if (!found) {
+      Trace::Log("INSTRUMENTVIEW",
+                 "No other instrument types available, setting to NONE");
+      instrumentType_.SetInt(IT_NONE, false);
+    }
+
+    refreshInstrumentFields();
+    isDirty_ = true;
     return;
   }
 
