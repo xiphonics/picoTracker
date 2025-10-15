@@ -28,8 +28,7 @@ enum PersistencyResult {
 };
 
 #define UNNAMED_PROJECT_NAME ".untitled"
-#define LEGACY_PROJECT_DATA_FILE "lgptsav.dat"
-#define PROJECT_DATA_FILE "ptsav.dat"
+#define PROJECT_DATA_FILE "lgptsav.dat"
 #define AUTO_SAVE_FILENAME "autosave.dat"
 
 class PersistencyService : public Service,
@@ -60,7 +59,6 @@ private:
   void CreatePath(etl::istring &path,
                   const etl::ivector<const char *> &segments);
   PersistencyResult SaveProjectData(const char *projectName, bool autosave);
-  void HandleLegacyProjectFile(const char *projectName);
 
   // need these as statically allocated buffers as too big for stack
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes_;

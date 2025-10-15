@@ -171,8 +171,6 @@ bool PersistencyService::Exists(const char *projectName) {
 }
 
 PersistencyResult PersistencyService::Load(const char *projectName) {
-  HandleLegacyProjectFile(projectName);
-
   // first check if autosave exists
   etl::string<128> autoSavePath(PROJECTS_DIR);
   autoSavePath.append("/");
@@ -464,43 +462,4 @@ PersistencyResult PersistencyService::ImportInstrument(I_Instrument *instrument,
   Trace::Log("PERSISTENCYSERVICE", "Set instrument name to: %s",
              instrumentName.c_str());
   return PERSIST_LOADED;
-}
-
-// Check for legacy filename and rename if exists
-void PersistencyService::HandleLegacyProjectFile(const char *projectName) {
-
-  // +2 for "/", +4 for ".dat"
-#define MAX_PROJECT_PATH_LEN                                                   \
-  sizeof(PROJECTS_DIR) + MAX_PROJECT_NAME_LENGTH + 2 + 4
-  etl::string<MAX_PROJECT_PATH_LEN> path(PROJECTS_DIR);
-  path.append("/");
-  path.append(projectName);
-  path.append("/");
-  path.append(LEGACY_PROJECT_DATA_FILE);
-
-  auto fs = FileSystem::GetInstance();
-
-  if (!fs->exists(path.c_str())) {
-    // nothing to do
-    return;
-  }
-
-  auto pos = path.find_last_of('/');
-  if (pos != etl::string<MAX_PROJECT_PATH_LEN>::npos) {
-    path.erase(pos); // Remove last '/' and all following characters
-  }
-
-  fs->chdir(path.c_str());
-
-  Trace::Log("PERSISTENCYSERVICE",
-             "Found legacy project file, renaming to new name");
-
-  fs->CopyFile(LEGACY_PROJECT_DATA_FILE, PROJECT_DATA_FILE);
-
-  // Delete the old file
-  if (fs->DeleteFile(LEGACY_PROJECT_DATA_FILE) != 0) {
-    Trace::Error("PERSISTENCYSERVICE: Failed to remove legacy file");
-  } else {
-    Trace::Log("PERSISTENCYSERVICE", "removed legacy project file");
-  }
 }
