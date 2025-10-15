@@ -98,7 +98,8 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
   if (count_ == MAX_SAMPLES)
     return false;
 
-  WavFile *wave = WavFile::Open(name);
+  WavFile *wave;
+  WavFile::Open(wave, name);
   if (wave) {
     wav_[count_] = wave;
     names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
