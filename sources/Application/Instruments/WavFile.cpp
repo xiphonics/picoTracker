@@ -32,7 +32,7 @@ WavFile::~WavFile() {
   }
 };
 
-WavFile *WavFile::Open(const char *name) {
+std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   // Trace::Log("WAVFILE", "wave open from %s", name);
 
   // open file
@@ -40,7 +40,7 @@ WavFile *WavFile::Open(const char *name) {
   I_File *file = fs->Open(name, "r");
 
   if (!file)
-    return 0;
+    return std::unexpected(INVALID_FILE);
 
   WavFile *wav = new WavFile(file);
 
@@ -55,7 +55,7 @@ WavFile *WavFile::Open(const char *name) {
   if (chunk != 0x46464952) { // 'RIFF' in little-endian
     Trace::Error("Bad RIFF format %x", chunk);
     delete (wav);
-    return 0;
+    return std::unexpected(UNSUPPORTED_FILE_FORMAT);
   }
 
   // Read size
@@ -71,7 +71,7 @@ WavFile *WavFile::Open(const char *name) {
   if (chunk != 0x45564157) { // 'WAVE' in little-endian
     Trace::Error("Bad WAV format");
     delete wav;
-    return 0;
+    return std::unexpected(UNSUPPORTED_WAV_FORMAT);
   }
 
   // Search for the 'fmt ' chunk, skipping any other chunks like 'JUNK'
@@ -82,7 +82,7 @@ WavFile *WavFile::Open(const char *name) {
     if (position >= (long)fileSize) {
       Trace::Error("Could not find 'fmt ' chunk in header");
       delete wav;
-      return 0;
+      return std::unexpected(INVALID_HEADER);
     }
 
     // Read the next chunk's ID
@@ -106,7 +106,7 @@ WavFile *WavFile::Open(const char *name) {
   if (size < 16) {
     Trace::Error("Bad fmt size format");
     delete wav;
-    return 0;
+    return std::unexpected(INVALID_HEADER);
   }
   int offset = size - 16;
 
@@ -118,7 +118,7 @@ WavFile *WavFile::Open(const char *name) {
   if (comp != 1) {
     Trace::Error("Unsupported compression");
     delete wav;
-    return 0;
+    return std::unexpected(UNSUPPORTED_COMPRESSION);
   }
 
   // Read NumChannels (mono/Stereo)
@@ -142,7 +142,7 @@ WavFile *WavFile::Open(const char *name) {
   if ((bitPerSample != 16) && (bitPerSample != 8)) {
     Trace::Error("Only 8/16 bit supported");
     delete wav;
-    return 0;
+    return std::unexpected(UNSUPPORTED_BITDEPTH);
   };
   bitPerSample /= 8;
   wav->bytePerSample_ = bitPerSample;
