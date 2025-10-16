@@ -40,6 +40,10 @@ SampleEditorView::~SampleEditorView() {}
 
 void SampleEditorView::OnFocus() {
   const auto newSampleFile = viewData_->sampleEditorFilename;
+  // Use the passed in filename to fill in our filename variable with the last 4
+  // chars (".wav") removed
+  filenameVar_.SetString(
+      newSampleFile.substr(0, newSampleFile.length() - 4).c_str());
   // Load the sample using this filename and will fill in the wave data cache
   loadSample(newSampleFile, viewData_->sampleEditorProjectList);
 
