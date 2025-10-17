@@ -36,7 +36,9 @@ void UIActionField::Draw(GUIWindow &w, int offset) {
     char buffer[MAX_FIELD_WIDTH + 1];
     strncpy(buffer, name_, MAX_FIELD_WIDTH);
     buffer[MAX_FIELD_WIDTH] = '\0';
-    DrawLabeledField(w, position, buffer);
+
+    ((AppWindow &)w).SetColor(CD_EMPHASIS);
+    w.DrawString(buffer, position, props);
   }
 };
 
