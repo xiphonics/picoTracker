@@ -15,6 +15,7 @@
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/FileSystem/FileSystem.h"
+#include "ViewUtils.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -155,6 +156,9 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else if (mask & EPBM_DOWN) {
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
+    // clear this flag on leaving this screen
+    viewData_->sampleEditorProjectList = false;
+
     // Go back to the source view that opened the ImportView
     ViewEvent ve(VET_SWITCH_VIEW, &sourceViewType_);
     SetChanged();
@@ -329,12 +333,14 @@ void ImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
 
   toInstr_ = viewData_->currentInstrumentID_;
+
   inProjectSampleDir_ = viewData_->sampleEditorProjectList;
 
-  if (inProjectSampleDir_) {
-    setCurrentFolder(fs, PROJECT_SAMPLES_DIR);
+  if (viewData_->sampleEditorProjectList) {
+    goProjectSamplesDir(viewData_);
+    setCurrentFolder(fs, ".");
   } else {
-    setCurrentFolder(fs, SAMPLES_LIB_DIR);
+    setCurrentFolder(fs, viewData_->importViewStartDir);
   }
 };
 
@@ -551,16 +557,6 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
       // Navigate directly to root instead of using ".."
       fs->chdir("/");
     }
-  }
-
-  // chdir to current project dir and we expect name param to be
-  // PROJECT_SAMPLES_DIR so that will then correctly set the project sample
-  // "pool" subdir
-  if (inProjectSampleDir_) {
-    fs->chdir(PROJECTS_DIR);
-    char projName[MAX_PROJECT_NAME_LENGTH];
-    viewData_->project_->GetProjectName(projName);
-    fs->chdir(projName);
   }
 
   // Normal directory navigation
