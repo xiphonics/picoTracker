@@ -35,7 +35,7 @@
 #include <unistd.h>
 
 #define ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE 3
-#define DISPLAY_LOWBATT_DELAY_IN_SEC 3
+#define DISPLAY_LOWBATT_DELAY_IN_SEC 5
 
 EventManager *advSystem::eventManager_ = NULL;
 bool advSystem::invert_ = false;
@@ -107,7 +107,8 @@ void advSystem::Boot() {
   // check for low batt
   BatteryState batteryState;
   System::GetInstance()->GetBatteryState(batteryState);
-  if (batteryState.percentage < ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE) {
+  if (batteryState.percentage < ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE &&
+      !batteryState.charging) {
     // show low battery message on screen
     Trace::Log("PICOTRACKERSYSTEM", "Low Batt: %d%%\n",
                batteryState.percentage);
@@ -138,19 +139,7 @@ void advSystem::GetBatteryState(BatteryState &state) {
   state.percentage = getBatterySOC();
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
-
-  // TODO: in future just get that actual charging state from the chargerIC
-  int16_t current = getBatteryCurrent();
-  if (current != CURRENT_READ_ERROR) {
-    if (current > 50) {
-      state.charging = true;
-    } else {
-      state.charging = false;
-    }
-  } else {
-    // default to false on error
-    state.charging = false;
-  }
+  state.charging = getChargingStatus();
 }
 
 void advSystem::SetDisplayBrightness(unsigned char value) {
@@ -184,7 +173,7 @@ unsigned int advSystem::GetMemoryUsage() {
   return m.uordblks;
 }
 
-void advSystem::PowerDown() { power_off(); }
+void advSystem::PowerDown() { powerOff(); }
 
 void advSystem::SystemPutChar(int c) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);

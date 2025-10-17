@@ -74,7 +74,7 @@ void critical_error_message(const char *message, int guruId, int shutdownDelay,
     display_draw_changed();
     delay_ms(1000);
     if (shutdownDelay-- < 0) {
-      power_off();
+      powerOff();
     }
     display_clear(COLOR_GURU_BG);
 

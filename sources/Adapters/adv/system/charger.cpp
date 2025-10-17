@@ -6,6 +6,7 @@
  * This file is part of the picoTracker firmware
  */
 #include "charger.h"
+#include "System/Console/Trace.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "platform.h"
@@ -15,28 +16,52 @@
 #include <cstdio>
 #include <stdlib.h>
 
-void set_charging(void) {
-  uint8_t value = 0x1a;
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
-      &hi2c4, 0x6b << 1, 0x01, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
+#define BQ25601_I2C_ADDR 0x6B
+#define BQ25601_CHARGING_REG 0x01
+#define BQ25601_SHIPMODE_REG 0x07
+#define BQ25601_STATUS_REG 0x08
+
+// Note: NOT_CHARGING enum is specifically made to be 0 (ie. false)
+ChargingStatus getChargingStatus() {
+  uint8_t reg_value = 0;
+  HAL_StatusTypeDef status =
+      HAL_I2C_Mem_Read(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_STATUS_REG,
+                       I2C_MEMADD_SIZE_8BIT, &reg_value, 1, HAL_MAX_DELAY);
+
   if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
+    Trace::Error("GetCharginStatus: i2c read error: %i", status);
+    return NOT_CHARGING;
   }
-  HAL_GPIO_WritePin(CHARGER_OTG_GPIO_Port, CHARGER_OTG_Pin, GPIO_PIN_RESET);
+
+  // Extract CHG_STAT bits (4 and 5)
+  uint8_t chg_stat = (reg_value >> 4) & 0x03;
+
+  switch (chg_stat) {
+  case 0x00:
+    return NOT_CHARGING;
+  case 0x01:
+    return PRE_CHARGE;
+  case 0x02:
+    return FAST_CHARGE;
+  case 0x03:
+    return CHARGE_DONE;
+  default:
+    return NOT_CHARGING; // Should not happen
+  }
 }
 
-void power_off() {
+void powerOff() {
   tlv320_mute();
 
   // Ship mode
+  // BATFET_DIS = 1 as well as: BATFET_RST_EN = 1, TMR2X_EN = 1
   uint8_t value = 0x64;
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
-      &hi2c4, 0x6b << 1, 0x07, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
+  HAL_StatusTypeDef status =
+      HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_SHIPMODE_REG,
+                        I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
   if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
+    Trace::Error("PowerOff: i2c write error: %i", status);
   }
-
-  set_charging();
 
   HAL_GPIO_DeInit(POWER_GPIO_Port, POWER_Pin);
   HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2);
@@ -48,4 +73,17 @@ void power_off() {
   };
   HAL_PWREx_EnableWakeUpPin(&sPinParams);
   HAL_PWR_EnterSTANDBYMode();
+}
+
+// TODO:
+// use in future to configure max charging current and turn OTG off
+void configureCharging(void) {
+  uint8_t value = 0x1a;
+  HAL_StatusTypeDef status =
+      HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_CHARGING_REG,
+                        I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
+  if (status != HAL_OK) {
+    printf("i2c write error: %i\r\n", status);
+  }
+  HAL_GPIO_WritePin(CHARGER_OTG_GPIO_Port, CHARGER_OTG_Pin, GPIO_PIN_RESET);
 }
