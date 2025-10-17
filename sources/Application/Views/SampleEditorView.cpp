@@ -24,6 +24,9 @@
 #include <cmath>
 #include <cstdint>
 
+// Initialize static member
+ViewType SampleEditorView::sourceViewType_ = VT_IMPORT;
+
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
       isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
@@ -38,6 +41,9 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
 }
 
 SampleEditorView::~SampleEditorView() {}
+
+// Static method to set the source view type before opening SampleEditorView
+void SampleEditorView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 
 void SampleEditorView::OnFocus() {
   const auto newSampleFile = viewData_->sampleEditorFilename;
@@ -138,7 +144,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       // Go back to sample browser NAV+LEFT
-      ViewType vt = VT_IMPORT;
+      ViewType vt = SampleEditorView::sourceViewType_;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
