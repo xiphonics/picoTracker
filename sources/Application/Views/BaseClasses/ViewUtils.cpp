@@ -4,6 +4,9 @@
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
 #include <string.h>
 
+#define LABEL_COLOR CD_NORMAL
+#define VALUE_COLOR CD_INFO
+
 void DrawColoredField(GUIWindow &w, GUIPoint position, char *buffer) {
   GUITextProperties props;
 
@@ -11,11 +14,11 @@ void DrawColoredField(GUIWindow &w, GUIPoint position, char *buffer) {
   if (colon) {
     *colon = '\0';
     // color used for the field label text:
-    ((AppWindow &)w).SetColor(CD_INFO);
+    ((AppWindow &)w).SetColor(LABEL_COLOR);
     w.DrawString(buffer, position, props);
     position._x += strlen(buffer);
     *colon = ':';
-    ((AppWindow &)w).SetColor(CD_NORMAL);
+    ((AppWindow &)w).SetColor(VALUE_COLOR);
     w.DrawString(colon, position, props);
   } else {
     ((AppWindow &)w).SetColor(CD_NORMAL);
