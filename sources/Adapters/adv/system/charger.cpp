@@ -17,6 +17,8 @@
 #include <stdlib.h>
 
 #define BQ25601_I2C_ADDR 0x6B
+#define BQ25601_CHARGING_REG 0x01
+#define BQ25601_SHIPMODE_REG 0x07
 #define BQ25601_STATUS_REG 0x08
 
 // Note: NOT_CHARGING enum is specifically made to be 0 (ie. false)
@@ -52,9 +54,10 @@ void powerOff() {
   tlv320_mute();
 
   // Ship mode
+  // BATFET_DIS = 1 as well as: BATFET_RST_EN = 1, TMR2X_EN = 1
   uint8_t value = 0x64;
   HAL_StatusTypeDef status =
-      HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, 0x07,
+      HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_SHIPMODE_REG,
                         I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
   if (status != HAL_OK) {
     Trace::Error("PowerOff: i2c write error: %i", status);
@@ -77,7 +80,7 @@ void powerOff() {
 void configureCharging(void) {
   uint8_t value = 0x1a;
   HAL_StatusTypeDef status =
-      HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, 0x01,
+      HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_CHARGING_REG,
                         I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
   if (status != HAL_OK) {
     printf("i2c write error: %i\r\n", status);
