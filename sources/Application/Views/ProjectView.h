@@ -57,14 +57,13 @@ private:
   unsigned long lastClock_;
 
   // Statically allocated field vectors
-  etl::vector<UITempoField, 1> tempoFields_;
-  etl::vector<UIIntVarField, 4> intVarFields_;
-  etl::vector<UIActionField, 8> actionFields_;
-  etl::vector<UIStaticField, 1> staticFields_;
-  etl::vector<UITextField<MAX_PROJECT_NAME_LENGTH>, 1> textFields_;
+  etl::vector<UITempoField, 1> tempoField_;
+  etl::vector<UIIntVarField, 4> intVarField_;
+  etl::vector<UIActionField, 8> actionField_;
+  etl::vector<UIStaticField, 1> staticField_;
+  etl::vector<UITextField<MAX_PROJECT_NAME_LENGTH>, 1> textField_;
 
   // References to specific fields that need direct access
-  UIField *tempoField_;
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
   bool saveAsFlag_ = false;
   etl::string<MAX_PROJECT_NAME_LENGTH> oldProjName_;

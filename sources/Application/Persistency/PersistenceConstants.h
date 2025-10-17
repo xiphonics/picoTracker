@@ -25,7 +25,10 @@
 #define INSTRUMENTS_DIR "/instruments"
 #define RENDERS_DIR "/renders"
 #define THEMES_DIR "/themes"
+#define RECORDINGS_DIR "/recordings"
 #define INSTRUMENT_FILE_EXTENSION ".pti"
 #define THEME_FILE_EXTENSION ".ptt"
+
+#define RECORDING_FILENAME "REC01.wav"
 
 #endif // _PERSISTENCE_CONSTANTS_H_

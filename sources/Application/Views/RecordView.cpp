@@ -8,12 +8,11 @@
 
 #include "RecordView.h"
 #include "Application/Model/Config.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include "UIController.h"
 #include "ViewData.h"
-
-#define RECORDING_FILENAME "REC01.wav"
 
 #ifdef ADV
 #include "Adapters/adv/audio/record.h"

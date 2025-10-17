@@ -48,8 +48,8 @@ private:
                   bool isProjectSampleFile);
 
   // UI fields
-  etl::vector<UIIntVarField, 10> intVarField_;
-  etl::vector<UIBigHexVarField, 4> bigHexVarField_;
+  etl::vector<UIIntVarField, 1> intVarField_;
+  etl::vector<UIBigHexVarField, 2> bigHexVarField_;
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
