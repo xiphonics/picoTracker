@@ -20,6 +20,7 @@
 #include "System/Console/Trace.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
+#include "ViewUtils.h"
 #include <cmath>
 #include <cstdint>
 
@@ -44,6 +45,10 @@ void SampleEditorView::OnFocus() {
   // chars (".wav") removed
   filenameVar_.SetString(
       newSampleFile.substr(0, newSampleFile.length() - 4).c_str());
+
+  // NOTE: we rely on the prior view to have set the current working dir to the
+  // one containing the sampleEditorFilename file
+
   // Load the sample using this filename and will fill in the wave data cache
   loadSample(newSampleFile, viewData_->sampleEditorProjectList);
 
@@ -177,12 +182,6 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // If something is already playing, stop it first
       if (Player::GetInstance()->IsPlaying()) {
         Player::GetInstance()->StopStreaming();
-      }
-
-      // First change to the current project directory
-      if (!goProjectSamplesDir()) {
-        Trace::Error("couldnt change to project samples dir!");
-        return;
       }
 
       // Start playing the sample with just the filename
@@ -453,11 +452,13 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     if (isOverwrite) {
       // TODO: for now this is a no op
       Trace::Error("saving existing file in sample editor not supported yet");
+      // TODO: Display a modal error to the user
+      return;
     }
 
     // Navigate to the project's samples directory if necessary
-    if (viewData_->sampleEditorProjectList) {
-      if (!goProjectSamplesDir()) {
+    if (strcmp(viewData_->importViewStartDir, PROJECT_SAMPLES_DIR) == 0) {
+      if (!goProjectSamplesDir(viewData_)) {
         Trace::Error("SampleEditorView: Save failed, couldn't change to "
                      "project samples dir!");
         // TODO: Display a modal error to the user
@@ -465,22 +466,20 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       }
     }
     fs->CopyFile(originalFilename.c_str(), newFilename.c_str());
-    Trace::Log("SampleEditor", "Saved %s->%s", originalFilename, newFilename);
-    // If we just saved a newly recorded sample, go back to the song view
+    Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
+               newFilename.c_str());
+    // If we just saved a newly recorded sample, go to the importview in the
+    // recordings dir
     if (originalFilename.compare(RECORDING_FILENAME) == 0) {
-      ViewType vt = VT_SONG;
-      ViewEvent ve(VET_SWITCH_VIEW, &vt);
-      SetChanged();
-      NotifyObservers(&ve);
-      return;
-    } else {
-      // otherwise go back to sample browser
-      ViewType vt = VT_IMPORT;
-      ViewEvent ve(VET_SWITCH_VIEW, &vt);
-      SetChanged();
-      NotifyObservers(&ve);
-      return;
+      fs->chdir(RECORDINGS_DIR);
+      viewData_->importViewStartDir = RECORDINGS_DIR;
     }
+    // otherwise go back to sample browser
+    ViewType vt = VT_IMPORT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+    return;
   }
   }
 
@@ -529,8 +528,8 @@ void SampleEditorView::loadSample(
 
   if (isProjectSampleFile) {
     // First, navigate to the root projects samples subdir directory
-    if (!goProjectSamplesDir()) {
-      Trace::Error("couldn't change to project samples dir!");
+    if (!goProjectSamplesDir(viewData_)) {
+      Trace::Error("couldn't change to project pool samples dir!");
       return;
     }
   } else {
@@ -645,33 +644,4 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
              tempSampleSize_, peakAmplitude, filename.c_str());
   fullWaveformRedraw_ = true;
-}
-
-bool SampleEditorView::goProjectSamplesDir() {
-  auto fs = FileSystem::GetInstance();
-  fs->chdir("/");
-  fs->chdir("projects");
-  // Then, navigate into the current project's directory
-  if (viewData_ && viewData_->project_) {
-    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
-    viewData_->project_->GetProjectName(projectName);
-
-    if (fs->chdir(projectName)) {
-      // Finally, navigate into the samples subdirectory
-      fs->chdir("samples");
-    } else {
-      Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
-                   projectName);
-      // It's good practice to return to the root to avoid being in an unknown
-      // state
-      fs->chdir("/");
-      return false; // Abort if we can't find the project directory
-    }
-  } else {
-    Trace::Error(
-        "SampleEditorView: No project data available to find samples dir.");
-    fs->chdir("/");
-    return false; // Abort if project data is missing
-  }
-  return true;
 }

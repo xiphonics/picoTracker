@@ -69,8 +69,6 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
       viewData_->sampleEditorFilename = filename;
 
-      // recording file is in current projects sample pool dir:
-      viewData_->sampleEditorProjectList = true;
       // Automatically switch to SampleEditor view after recording stops
       ViewType vt = VT_SAMPLE_EDITOR;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -187,17 +185,12 @@ void RecordView::record() {
     return;
   }
 
-  // Generate full path
-  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
-  etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> fullpath;
-  generateFullPath(filename, &fullpath);
-
   // Get audio source setting (0 = Line In, 1 = Mic)
   auto config = Config::GetInstance();
   Variable *v = config->FindVariable(FourCC::VarRecordSource);
   int audioSource = v->GetInt();
-  Trace::Log("RECORD", "Starting recording to %s, source: %s", fullpath.c_str(),
-             audioSource == 0 ? "Line In" : "Mic");
+  Trace::Log("RECORD", "Starting recording to %s, source: %s",
+             RECORDING_FILENAME, audioSource == 0 ? "Line In" : "Mic");
 
   // Draw instructions
   GUITextProperties props;
@@ -208,7 +201,7 @@ void RecordView::record() {
 
   // Start recording with threshold and no duration set, ie. unlimited
   // recording time
-  bool success = StartRecording(fullpath.c_str(), 10, 0);
+  bool success = StartRecording(RECORDING_FILENAME, 10, 0);
 
   if (success) {
     isRecording_ = true;
@@ -239,18 +232,6 @@ void RecordView::stop() {
   isRecording_ = false;
   Trace::Log("RECORD", "Recording stopped");
 #endif
-}
-
-void RecordView::generateFullPath(
-    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
-    etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> *fullpath) {
-  char projectName[MAX_PROJECT_NAME_LENGTH + 1];
-  viewData_->project_->GetProjectName(projectName);
-
-  fullpath->append("/projects/")
-      .append(projectName)
-      .append("/samples/")
-      .append(filename);
 }
 
 void RecordView::formatTime(uint32_t milliseconds, char *buffer,

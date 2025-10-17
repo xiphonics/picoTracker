@@ -718,8 +718,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
             DoModal(mb);
           } else {
             ImportView::SetSourceViewType(VT_INSTRUMENT);
-            // set the browser to defautlt into sample import mode
-            viewData_->sampleEditorProjectList = false;
+            // set browser into sample import mode in top level samples dir
+            viewData_->importViewStartDir = SAMPLES_LIB_DIR;
 
             // Go to import sample
             ViewType vt = VT_IMPORT;

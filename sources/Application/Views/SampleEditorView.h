@@ -79,8 +79,6 @@ private:
   int start_ = 0;
   int end_ = 0;
 
-  bool goProjectSamplesDir();
-
   uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
 

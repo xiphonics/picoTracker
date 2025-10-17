@@ -91,7 +91,8 @@ public:
   // Sample Editor
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> sampleEditorFilename;
 
-  // Used by Sample Editor and "import" file browser
+  // Used by import" file browser
+  const char *importViewStartDir = nullptr;
   bool sampleEditorProjectList = false;
 };
 #endif
