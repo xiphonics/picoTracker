@@ -98,7 +98,6 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
   if (count_ == MAX_SAMPLES)
     return false;
 
-  //  WavFile *wave = WavFile::Open(name);
   auto wave = WavFile::Open(name);
   if (!wave) {
     Trace::Error("Failed to load sample:%s", name);
