@@ -128,9 +128,15 @@ std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
 
   // Read Sample rate
   unsigned int sampleRate;
-
   position += wav->readBlock(position, 4);
   memcpy(&sampleRate, wav->readBuffer_, 4);
+
+  // Check that sample rate is upto 44.1kHz
+  if (sampleRate > 44100) {
+    Trace::Error("Unsupported sample rate: %u Hz", sampleRate);
+    delete wav;
+    return std::unexpected(UNSUPPORTED_SAMPLERATE);
+  }
 
   // Skip byteRate & blockalign
   position += 6;

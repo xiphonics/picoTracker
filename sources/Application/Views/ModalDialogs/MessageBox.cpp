@@ -46,7 +46,9 @@ MessageBox::~MessageBox(){};
 
 void MessageBox::DrawView() {
   // message size
-  int size = line1_.size();
+  int size1 = line1_.size();
+  int size2 = line2_.size();
+  int size = (size1 > size2) ? size1 : size2;
 
   // compute space needed for buttons
   // and set window size

@@ -453,6 +453,36 @@ void ImportView::import() {
     return;
   }
 
+  // Check if wave file is in a supported format
+  auto wav = WavFile::Open(name);
+  MessageBox *mb = nullptr;
+  if (!wav) {
+    auto error = wav.error();
+    switch (error) {
+    case INVALID_FILE:
+      mb = new MessageBox(*this, "Import Failed", "Could not open file",
+                          MBBF_OK);
+      break;
+    case UNSUPPORTED_FILE_FORMAT:
+    case INVALID_HEADER:
+    case UNSUPPORTED_WAV_FORMAT:
+      mb = new MessageBox(*this, "Import Failed", "invalid file", MBBF_OK);
+    case UNSUPPORTED_COMPRESSION:
+    case UNSUPPORTED_BITDEPTH:
+    case UNSUPPORTED_SAMPLERATE:
+      mb =
+          new MessageBox(*this, "Import Failed", "unsupported format", MBBF_OK);
+      break;
+    }
+  } else {
+    wav.value()->Close();
+  }
+
+  if (mb != nullptr) {
+    DoModal(mb);
+    return;
+  }
+
   int sampleID = pool->ImportSample(name, projName);
 
   if (sampleID >= 0) {
