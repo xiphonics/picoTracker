@@ -108,22 +108,21 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   GUIPoint position = GetAnchor();
 
   Variable *v = project_->FindVariable(FourCC::VarTempo);
-  tempoFields_.emplace_back(FourCC::ActionTempoChanged, position, *v,
-                            "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
-  fieldList_.insert(fieldList_.end(), &(*tempoFields_.rbegin()));
-  (*tempoFields_.rbegin()).AddObserver(*this);
-  tempoField_ = &(*tempoFields_.rbegin());
+  tempoField_.emplace_back(FourCC::ActionTempoChanged, position, *v,
+                           "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
+  fieldList_.insert(fieldList_.end(), &(*tempoField_.rbegin()));
+  (*tempoField_.rbegin()).AddObserver(*this);
 
   v = project_->FindVariable(FourCC::VarMasterVolume);
   position._y += 1;
-  intVarFields_.emplace_back(position, *v, "master vol: %d%%", 0, 100, 1, 5);
-  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
+  intVarField_.emplace_back(position, *v, "master vol: %d%%", 0, 100, 1, 5);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
-  intVarFields_.emplace_back(position, *v, "transpose: %3.2d", -48, 48, 0x1,
-                             0xC);
-  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
+  intVarField_.emplace_back(position, *v, "transpose: %3.2d", -48, 48, 0x1,
+                            0xC);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   v = project_->FindVariable(FourCC::VarScale);
   // if scale name is not found, set the default chromatic scale
@@ -131,26 +130,25 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
     v->SetInt(0);
   }
   position._y += 1;
-  intVarFields_.emplace_back(position, *v, "scale: %s", 0, numScales - 1, 1,
-                             10);
-  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
+  intVarField_.emplace_back(position, *v, "scale: %s", 0, numScales - 1, 1, 10);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   // Add Scale Root field
   position._y += 1;
   v = project_->FindVariable(FourCC::VarScaleRoot);
-  intVarFields_.emplace_back(position, *v, "scale root: %s", 0, 11, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarFields_.rbegin()));
+  intVarField_.emplace_back(position, *v, "scale root: %s", 0, 11, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
-  actionFields_.emplace_back("Sample Pool", FourCC::ActionImport, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Sample Pool", FourCC::ActionImport, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
-  actionFields_.emplace_back("Compact Instruments",
-                             FourCC::ActionPurgeInstrument, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Compact Instruments",
+                            FourCC::ActionPurgeInstrument, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 2;
 
@@ -162,51 +160,51 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
       etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("project: ");
   auto defaultName = etl::make_string_with_capacity<MAX_PROJECT_NAME_LENGTH>(
       UNNAMED_PROJECT_NAME);
-  textFields_.emplace_back(*v, position, label, FourCC::ActionProjectRename,
-                           defaultName);
-  nameField_ = &(*textFields_.rbegin());
+  textField_.emplace_back(*v, position, label, FourCC::ActionProjectRename,
+                          defaultName);
+  nameField_ = &(*textField_.rbegin());
 
   nameField_->AddObserver(*this);
   fieldList_.insert(fieldList_.end(), nameField_);
 
   position._y += 1;
-  actionFields_.emplace_back("Load", FourCC::ActionLoad, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Load", FourCC::ActionLoad, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._x += 5;
-  actionFields_.emplace_back("Save", FourCC::ActionSave, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Save", FourCC::ActionSave, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._x += 5;
-  actionFields_.emplace_back("New", FourCC::ActionNewProject, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("New", FourCC::ActionNewProject, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._x += 5;
-  actionFields_.emplace_back("Random", FourCC::ActionRandomName, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Random", FourCC::ActionRandomName, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
   position._x = xalign;
 
   // Add rendering action fields
   position._y += 2;
 
   // Add a static field as a label for the render actions
-  staticFields_.emplace_back(position, "Render:");
-  fieldList_.insert(fieldList_.end(), &(*staticFields_.rbegin()));
+  staticField_.emplace_back(position, "Render:");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   // Position the Mixdown action field to the right of the label
   position._x += 8;
-  actionFields_.emplace_back("Mixdown", FourCC::ActionRenderMixdown, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Mixdown", FourCC::ActionRenderMixdown, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 
   position._x += 8;
-  actionFields_.emplace_back("Stems", FourCC::ActionRenderStems, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Stems", FourCC::ActionRenderStems, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
   position._x = xalign;
 }
 
@@ -283,7 +281,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     w_.Flush();
     focus->SetFocus();
   } else {
-    focus = tempoField_;
+    focus = &tempoField_[0];
   }
   Player *player = Player::GetInstance();
 

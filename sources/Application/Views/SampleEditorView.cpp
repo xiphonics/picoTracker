@@ -61,9 +61,9 @@ void SampleEditorView::addAllFields() {
   // assigned so instead we need to first clear out all the previous fields
   // and then re-add them just like we do on the InstrumentView
   fieldList_.clear();
-  bigHexVarFields_.clear();
-  intVarFields_.clear();
-  actionFields_.clear();
+  bigHexVarField_.clear();
+  intVarField_.clear();
+  actionField_.clear();
   nameTextField_.clear();
   // no need to clear staticField_  as its not added to fieldList_
 
@@ -85,23 +85,23 @@ void SampleEditorView::addAllFields() {
   fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
   position._y += 1;
-  bigHexVarFields_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
-                                tempSampleSize_ - 1, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarFields_.rbegin()));
-  (*bigHexVarFields_.rbegin()).AddObserver(*this);
+  bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
+                               tempSampleSize_ - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
 
   // Add end position control
   position._y += 1;
-  bigHexVarFields_.emplace_back(position, endVar_, 7, "end: %7.7X", 0,
-                                tempSampleSize_ - 1, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarFields_.rbegin()));
-  (*bigHexVarFields_.rbegin()).AddObserver(*this);
+  bigHexVarField_.emplace_back(position, endVar_, 7, "end: %7.7X", 0,
+                               tempSampleSize_ - 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+  (*bigHexVarField_.rbegin()).AddObserver(*this);
 
   // save button
   position._y += 2;
-  actionFields_.emplace_back("Save", FourCC::ActionSave, position);
-  fieldList_.insert(fieldList_.end(), &(*actionFields_.rbegin()));
-  (*actionFields_.rbegin()).AddObserver(*this);
+  actionField_.emplace_back("Save", FourCC::ActionSave, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 }
 
 void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
