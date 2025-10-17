@@ -19,6 +19,7 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
   GUIPoint position = GetPosition();
   position._y += offset;
 
+  ((AppWindow &)w).SetColor(CD_NORMAL);
   w.DrawString(label_.c_str(), position, props);
   position._x += label_.length();
 
