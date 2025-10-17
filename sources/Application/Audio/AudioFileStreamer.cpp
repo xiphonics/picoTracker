@@ -45,12 +45,13 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
     SAFE_DELETE(wav_);
   }
   Trace::Log("", "wave open:%s", name_);
-  wav_ = WavFile::Open(name_);
-  if (!wav_) {
+  auto res = WavFile::Open(name_);
+  if (!res) {
     Trace::Error("Failed to open streaming of file:%s", name_);
     mode_ = AFSM_STOPPED;
     return false;
   }
+  wav_ = res.value();
 
   // Get sample rate information and calculate speed factor
   fileSampleRate_ = wav_->GetSampleRate(-1);

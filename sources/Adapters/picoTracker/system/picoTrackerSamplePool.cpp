@@ -98,39 +98,39 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
   if (count_ == MAX_SAMPLES)
     return false;
 
-  WavFile *wave = WavFile::Open(name);
-  if (wave) {
-    wav_[count_] = wave;
-    names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
-    strcpy(names_[count_], name);
-    count_++;
-
-    if (!LoadInFlash(wave)) {
-      Trace::Error("Failed to load sample into flash: %s", name);
-      count_--;
-      SYS_FREE(names_[count_]);
-      names_[count_] = nullptr;
-      delete wav_[count_];
-      wav_[count_] = nullptr;
-      if (multicore_lockout_victim_is_initialized(1)) {
-        multicore_lockout_end_blocking();
-      }
-      return false;
-    }
-
-    wave->Close();
-
-    if (multicore_lockout_victim_is_initialized(1)) {
-      multicore_lockout_end_blocking();
-    }
-    return true;
-  } else {
+  //  WavFile *wave = WavFile::Open(name);
+  auto wave = WavFile::Open(name);
+  if (!wave) {
     Trace::Error("Failed to load sample:%s", name);
     if (multicore_lockout_victim_is_initialized(1)) {
       multicore_lockout_end_blocking();
     }
     return false;
   }
+  wav_[count_] = wave.value();
+  names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
+  strcpy(names_[count_], name);
+  count_++;
+
+  if (!LoadInFlash(wave.value())) {
+    Trace::Error("Failed to load sample into flash: %s", name);
+    count_--;
+    SYS_FREE(names_[count_]);
+    names_[count_] = nullptr;
+    delete wav_[count_];
+    wav_[count_] = nullptr;
+    if (multicore_lockout_victim_is_initialized(1)) {
+      multicore_lockout_end_blocking();
+    }
+    return false;
+  }
+
+  wave.value()->Close();
+
+  if (multicore_lockout_victim_is_initialized(1)) {
+    multicore_lockout_end_blocking();
+  }
+  return true;
 };
 
 bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
