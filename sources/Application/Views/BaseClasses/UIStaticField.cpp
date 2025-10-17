@@ -25,7 +25,7 @@ void UIStaticField::Draw(GUIWindow &w, int offset) {
   char buffer[MAX_FIELD_WIDTH + 1];
   strncpy(buffer, string_, MAX_FIELD_WIDTH);
   buffer[MAX_FIELD_WIDTH] = '\0';
-  DrawColoredField(w, position, buffer);
+  DrawLabeledField(w, position, buffer);
 };
 
 void UIStaticField::ProcessArrow(unsigned short mask){};

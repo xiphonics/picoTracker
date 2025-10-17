@@ -7,7 +7,7 @@
 #define LABEL_COLOR CD_NORMAL
 #define VALUE_COLOR CD_INFO
 
-void DrawColoredField(GUIWindow &w, GUIPoint position, char *buffer) {
+void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer) {
   GUITextProperties props;
 
   char *colon = strchr(buffer, ':');

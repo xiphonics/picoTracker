@@ -50,7 +50,7 @@ void UIBitmaskVarField::Draw(GUIWindow &w, int offset) {
       w.DrawString(buffer + offset, position, props);
     }
   } else {
-    DrawColoredField(w, position, buffer);
+    DrawLabeledField(w, position, buffer);
   }
 };
 

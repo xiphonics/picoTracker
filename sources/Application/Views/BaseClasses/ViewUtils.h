@@ -4,6 +4,6 @@
 class GUIWindow;
 struct GUIPoint;
 
-void DrawColoredField(GUIWindow &w, GUIPoint position, char *buffer);
+void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer);
 
 #endif

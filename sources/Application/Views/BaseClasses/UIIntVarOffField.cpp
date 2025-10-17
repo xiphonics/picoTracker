@@ -101,6 +101,6 @@ void UIIntVarOffField::Draw(GUIWindow &w, int offset) {
     props.invert_ = true;
     w.DrawString(buffer, position, props);
   } else {
-    DrawColoredField(w, position, buffer);
+    DrawLabeledField(w, position, buffer);
   }
 };

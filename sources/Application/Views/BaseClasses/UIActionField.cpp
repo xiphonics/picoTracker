@@ -36,7 +36,7 @@ void UIActionField::Draw(GUIWindow &w, int offset) {
     char buffer[MAX_FIELD_WIDTH + 1];
     strncpy(buffer, name_, MAX_FIELD_WIDTH);
     buffer[MAX_FIELD_WIDTH] = '\0';
-    DrawColoredField(w, position, buffer);
+    DrawLabeledField(w, position, buffer);
   }
 };
 
