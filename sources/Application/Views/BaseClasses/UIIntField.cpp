@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "System/Console/Trace.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
+#include "ViewUtils.h"
 #include <System/Console/nanoprintf.h>
 
 #define abs(x) (x < 0 ? -x : x)
@@ -31,17 +32,18 @@ void UIIntField::Draw(GUIWindow &w) {
   GUITextProperties props;
   GUIPoint position = GetPosition();
 
-  if (focus_) {
-    ((AppWindow &)w).SetColor(CD_HILITE2);
-    props.invert_ = true;
-  } else {
-    ((AppWindow &)w).SetColor(CD_NORMAL);
-  }
-
+  // ensure max field length
   char buffer[MAX_FIELD_WIDTH + 1];
   int value = *src_;
   npf_snprintf(buffer, sizeof(buffer), format_, value);
-  w.DrawString(buffer, position, props);
+
+  if (focus_) {
+    ((AppWindow &)w).SetColor(CD_HILITE2);
+    props.invert_ = true;
+    w.DrawString(buffer, position, props);
+  } else {
+    DrawLabeledField(w, position, buffer);
+  }
 };
 
 void UIIntField::ProcessArrow(unsigned short mask) {
