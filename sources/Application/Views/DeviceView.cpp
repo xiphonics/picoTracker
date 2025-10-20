@@ -93,19 +93,26 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   FieldView::ProcessButtonMask(mask, pressed);
 
-  if (mask & EPBM_NAV) {
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+  } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_PROJECT;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
     }
-  } else {
-    if (mask & EPBM_PLAY) {
-      Player *player = Player::GetInstance();
-      player->OnStartButton(PM_SONG, viewData_->songX_, false,
-                            viewData_->songX_);
-    }
+  } else if (mask & EPBM_PLAY) {
+    Player *player = Player::GetInstance();
+    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
   };
 };
 

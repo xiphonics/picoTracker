@@ -217,7 +217,17 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   FieldView::ProcessButtonMask(mask, pressed);
 
-  if (mask & EPBM_NAV) {
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+  } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN || mask & EPBM_UP) {
       if (saveAsFlag_) {
         MessageBox *mb =

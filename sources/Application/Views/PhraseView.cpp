@@ -860,9 +860,10 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 }
 
 void PhraseView::processNormalButtonMask(unsigned short mask) {
+  Player *player = Player::GetInstance();
 
-  // B Modifier
   if (mask & EPBM_EDIT) {
+    // EDIT Modifier
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
     if (mask & EPBM_RIGHT)
@@ -879,121 +880,120 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     };
     if (mask & EPBM_NAV)
       toggleMute();
-  } else {
-    Player *player = Player::GetInstance();
-
-    // A Modifer
-    if (mask & EPBM_ENTER) {
-      if (mask & EPBM_DOWN)
-        updateCursorValue(VUD_DOWN);
-      if (mask & EPBM_UP)
-        updateCursorValue(VUD_UP);
-      if (mask & EPBM_LEFT)
-        updateCursorValue(VUD_LEFT);
-      if (mask & EPBM_RIGHT)
-        updateCursorValue(VUD_RIGHT);
-      if (mask & EPBM_ALT)
-        pasteClipboard();
-      if (mask & EPBM_NAV)
-        switchSoloMode();
-      if (mask == EPBM_ENTER) {
-        pasteLast();
-        if ((col_ == 1) || (col_ == 3) || (col_ == 5))
-          viewMode_ = VM_NEW;
-        if (col_ == 0 || col_ == 1) {
-          // Start auditionq, note stopping audition happens in
-          // processButtonMask on key up
-          stopAudition();
-          startAudition(true);
-        }
-      }
-    } else {
-      // R Modifier
-      if (mask & EPBM_NAV) {
-        if (mask & EPBM_LEFT) {
-          ViewType vt = VT_CHAIN;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-        if (mask & EPBM_RIGHT) {
-          unsigned char *c =
-              phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
-          if (*c != 0xFF) {
-            viewData_->currentInstrumentID_ = *c;
-          } else {
-            viewData_->currentInstrumentID_ = lastInstr_;
-          }
-          if (viewData_->currentInstrumentID_ != 0xFF) {
-            ViewType vt = VT_INSTRUMENT;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            SetChanged();
-            NotifyObservers(&ve);
-          }
-        }
-        if (mask & EPBM_DOWN) {
-          // Go to table view
-
-          ViewType vt = VT_TABLE;
-
-          FourCC *cmd =
-              phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_);
-          ushort *param =
-              phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
-
-          if (*cmd != FourCC::SampleInstrumentTable) {
-            cmd = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_);
-            param = phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
-          }
-          if (*cmd == FourCC::SampleInstrumentTable) {
-            viewData_->currentTable_ = (*param) & (TABLE_COUNT - 1);
-          }
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_UP) {
-          // Go to groove view
-          stopAudition();
-
-          ViewType vt = VT_GROOVE;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                                viewData_->chainRow_);
-        }
-        if (mask & EPBM_ALT)
-          unMuteAll();
-
-      } else {
-        // L Modifier
-        if (mask & EPBM_ALT) {
-
-        } else {
-          // No modifier
-
-          if (mask & EPBM_DOWN)
-            updateCursor(0, 1);
-          if (mask & EPBM_UP)
-            updateCursor(0, -1);
-          if (mask & EPBM_LEFT)
-            updateCursor(-1, 0);
-          if (mask & EPBM_RIGHT)
-            updateCursor(1, 0);
-          if (mask & EPBM_PLAY) {
-            player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                                  viewData_->chainRow_);
-          }
-        }
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
       }
     }
+  } else if (mask & EPBM_ENTER) {
+    // ENTER Modifer
+    if (mask & EPBM_DOWN)
+      updateCursorValue(VUD_DOWN);
+    if (mask & EPBM_UP)
+      updateCursorValue(VUD_UP);
+    if (mask & EPBM_LEFT)
+      updateCursorValue(VUD_LEFT);
+    if (mask & EPBM_RIGHT)
+      updateCursorValue(VUD_RIGHT);
+    if (mask & EPBM_ALT)
+      pasteClipboard();
+    if (mask & EPBM_NAV)
+      switchSoloMode();
+    if (mask == EPBM_ENTER) {
+      pasteLast();
+      if ((col_ == 1) || (col_ == 3) || (col_ == 5))
+        viewMode_ = VM_NEW;
+      if (col_ == 0 || col_ == 1) {
+        // Start auditionq, note stopping audition happens in
+        // processButtonMask on key up
+        stopAudition();
+        startAudition(true);
+      }
+    }
+  } else if (mask & EPBM_NAV) {
+    // NAV Modifier
+    if (mask & EPBM_LEFT) {
+      ViewType vt = VT_CHAIN;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+    if (mask & EPBM_RIGHT) {
+      unsigned char *c =
+          phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
+      if (*c != 0xFF) {
+        viewData_->currentInstrumentID_ = *c;
+      } else {
+        viewData_->currentInstrumentID_ = lastInstr_;
+      }
+      if (viewData_->currentInstrumentID_ != 0xFF) {
+        ViewType vt = VT_INSTRUMENT;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+    if (mask & EPBM_DOWN) {
+      // Go to table view
+
+      ViewType vt = VT_TABLE;
+
+      FourCC *cmd = phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_);
+      ushort *param =
+          phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
+
+      if (*cmd != FourCC::SampleInstrumentTable) {
+        cmd = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_);
+        param = phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
+      }
+      if (*cmd == FourCC::SampleInstrumentTable) {
+        viewData_->currentTable_ = (*param) & (TABLE_COUNT - 1);
+      }
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_UP) {
+      // Go to groove view
+      stopAudition();
+
+      ViewType vt = VT_GROOVE;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                            viewData_->chainRow_);
+    }
+    if (mask & EPBM_ALT)
+      unMuteAll();
+
+  } else if (mask & EPBM_ALT) {
+    // ALT Modifier
+
+  } else {
+    // No modifier
+    if (mask & EPBM_DOWN)
+      updateCursor(0, 1);
+    if (mask & EPBM_UP)
+      updateCursor(0, -1);
+    if (mask & EPBM_LEFT)
+      updateCursor(-1, 0);
+    if (mask & EPBM_RIGHT)
+      updateCursor(1, 0);
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                            viewData_->chainRow_);
+    }
   }
-};
+}
 
 void PhraseView::processSelectionButtonMask(unsigned short mask) {
 
