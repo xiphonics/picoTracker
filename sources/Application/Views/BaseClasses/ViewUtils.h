@@ -3,7 +3,10 @@
 
 class GUIWindow;
 struct GUIPoint;
+class ViewData;
 
 void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer);
+
+bool goProjectSamplesDir(ViewData *viewData_);
 
 #endif

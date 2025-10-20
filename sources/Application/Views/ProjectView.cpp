@@ -409,8 +409,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
             new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
         DoModal(mb);
       } else {
-        // Set the source view type before switching to ImportView
         ImportView::SetSourceViewType(VT_PROJECT);
+        // Set to show project pool dir in ImportView
         viewData_->sampleEditorProjectList = true;
 
         // Go to import sample
