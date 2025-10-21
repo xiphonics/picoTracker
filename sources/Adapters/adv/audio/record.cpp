@@ -100,8 +100,11 @@ bool StartRecording(const char *filename, uint8_t threshold,
     recordDuration_ = MAX_INT32;
   }
 
+  auto fs = FileSystem::GetInstance();
+  fs->chdir(RECORDINGS_DIR);
+
   // Create or truncate the file using FileSystem
-  RecordFile = FileSystem::GetInstance()->Open(filename, "w");
+  RecordFile = fs->Open(filename, "w");
   if (!RecordFile) {
     Trace::Log("RECORD", "Could not create file");
     return false;

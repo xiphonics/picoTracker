@@ -144,6 +144,7 @@ public:
   virtual void DrawRect(GUIRect &r, ColorDefinition color);
 
   void DoModal(ModalView *view, ModalViewCallback cb = 0);
+  void DismissModal();
 
 protected:
   virtual void ProcessButtonMask(unsigned short mask, bool pressed) = 0;

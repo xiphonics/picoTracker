@@ -114,8 +114,38 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
   unsigned short result = bank->GetNextAndAssignID(nuType, id);
 
   if (result == NO_MORE_INSTRUMENT) {
-    Trace::Log("INSTRUMENTVIEW", "Failed to assign new instrument type");
-    // TODO: need to show user some sort of error message here
+    Trace::Error("INSTRUMENTVIEW", "Failed to assign new instrument type: %d",
+                 nuType);
+
+    // Show a dialog to the user
+    char message[40];
+    npf_snprintf(message, sizeof(message), "%s instruments exhausted!",
+                 InstrumentTypeNames[nuType]);
+    MessageBox *mb = new MessageBox(*this, message, "Trying next...", MBBF_OK);
+    DoModal(mb);
+
+    // Try to find the next available instrument type
+    bool found = false;
+    for (int i = nuType + 1; i < IT_LAST; i++) {
+      InstrumentType nextType = (InstrumentType)i;
+      result = bank->GetNextAndAssignID(nextType, id);
+      if (result != NO_MORE_INSTRUMENT) {
+        Trace::Log("INSTRUMENTVIEW", "Assigned next available type: %d",
+                   nextType);
+        instrumentType_.SetInt(nextType, false);
+        found = true;
+        break; // Exit loop on success
+      }
+    }
+
+    if (!found) {
+      Trace::Log("INSTRUMENTVIEW",
+                 "No other instrument types available, setting to NONE");
+      instrumentType_.SetInt(IT_NONE, false);
+    }
+
+    refreshInstrumentFields();
+    isDirty_ = true;
     return;
   }
 
@@ -688,8 +718,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
             DoModal(mb);
           } else {
             ImportView::SetSourceViewType(VT_INSTRUMENT);
-            // set the browser to defautlt into sample import mode
-            viewData_->sampleEditorProjectList = false;
+            // set browser into sample import mode in top level samples dir
+            viewData_->importViewStartDir = SAMPLES_LIB_DIR;
 
             // Go to import sample
             ViewType vt = VT_IMPORT;
@@ -791,49 +821,56 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;
     };
-  } else {
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+  } else if (mask & EPBM_NAV) {
     // NAV Modifier
-    if (mask & EPBM_NAV) {
-      if (mask & EPBM_LEFT) {
-        ViewType vt = VT_PHRASE;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    if (mask & EPBM_LEFT) {
+      ViewType vt = VT_PHRASE;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
 
-        // remove listening when leaving this screen
-        getInstrument()->RemoveObserver(*this);
-        ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
+      // remove listening when leaving this screen
+      getInstrument()->RemoveObserver(*this);
+      ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
 
-        SetChanged();
-        NotifyObservers(&ve);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_DOWN) {
+
+      // Go to table view
+
+      ViewType vt = VT_TABLE2;
+
+      int i = viewData_->currentInstrumentID_;
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      I_Instrument *instr = bank->GetInstrument(i);
+      int table = instr->GetTable();
+      if (table != VAR_OFF) {
+        viewData_->currentTable_ = table;
       }
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
 
-      if (mask & EPBM_DOWN) {
-
-        // Go to table view
-
-        ViewType vt = VT_TABLE2;
-
-        int i = viewData_->currentInstrumentID_;
-        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        I_Instrument *instr = bank->GetInstrument(i);
-        int table = instr->GetTable();
-        if (table != VAR_OFF) {
-          viewData_->currentTable_ = table;
-        }
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
-      }
-
-      if (mask & EPBM_PLAY) {
-        player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                              viewData_->chainRow_);
-      }
-    } else {
-      // No modifier
-      if (mask & EPBM_PLAY) {
-        player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                              viewData_->chainRow_);
-      }
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                            viewData_->chainRow_);
+    }
+  } else {
+    // No modifier
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                            viewData_->chainRow_);
     }
   }
 

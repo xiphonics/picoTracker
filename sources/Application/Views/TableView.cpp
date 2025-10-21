@@ -325,15 +325,27 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNext(*cc);
+      }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNextAlpha(*cc);
+      }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrev(*cc);
+      }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrevAlpha(*cc);
+      }
       break;
     }
     lastCmd_ = *cc;
@@ -368,15 +380,27 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNext(*cc);
+      }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNextAlpha(*cc);
+      }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrev(*cc);
+      }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrevAlpha(*cc);
+      }
       break;
     }
     lastCmd_ = *cc;
@@ -411,15 +435,27 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNext(*cc);
+      }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetNextAlpha(*cc);
+      }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrev(*cc);
+      }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
+      if (*cc == FourCC::InstrumentCommandTable) {
+        *cc = CommandList::GetPrevAlpha(*cc);
+      }
       break;
     }
     lastCmd_ = *cc;
@@ -550,77 +586,71 @@ void TableView::processNormalButtonMask(unsigned short mask) {
       cutPosition();
     if (mask & EPBM_ALT)
       viewMode_ = VM_SELECTION;
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+  } else if (mask & EPBM_ENTER) {
+    // ENTER modifier
+    if (mask & EPBM_DOWN)
+      updateCursorValue(-0x10);
+    if (mask & EPBM_UP)
+      updateCursorValue(0x10);
+    if (mask & EPBM_LEFT)
+      updateCursorValue(-0x01);
+    if (mask & EPBM_RIGHT)
+      updateCursorValue(0x01);
+    if (mask == EPBM_ENTER)
+      pasteLast();
+    if (mask & EPBM_ALT)
+      pasteClipboard();
+  } else if (mask & EPBM_NAV) {
+    // NAV Modifier
+    if (mask & EPBM_UP) {
+      ViewType vt = (viewType_ == VT_TABLE ? VT_PHRASE : VT_INSTRUMENT);
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+    if (mask & EPBM_LEFT) {
+      if (viewType_ == VT_TABLE2) {
+        ViewType vt = VT_TABLE;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+    if (mask & EPBM_RIGHT) {
+      if (viewType_ == VT_TABLE) {
+        ViewType vt = VT_TABLE2;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                            viewData_->chainRow_);
+    }
 
   } else {
-
-    // A modifier
-
-    if (mask & EPBM_ENTER) {
-      if (mask & EPBM_DOWN)
-        updateCursorValue(-0x10);
-      if (mask & EPBM_UP)
-        updateCursorValue(0x10);
-      if (mask & EPBM_LEFT)
-        updateCursorValue(-0x01);
-      if (mask & EPBM_RIGHT)
-        updateCursorValue(0x01);
-      if (mask == EPBM_ENTER)
-        pasteLast();
-      if (mask & EPBM_ALT)
-        pasteClipboard();
-    } else {
-
-      // R Modifier
-
-      if (mask & EPBM_NAV) {
-        if (mask & EPBM_UP) {
-          ViewType vt = (viewType_ == VT_TABLE ? VT_PHRASE : VT_INSTRUMENT);
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-        if (mask & EPBM_LEFT) {
-          if (viewType_ == VT_TABLE2) {
-            ViewType vt = VT_TABLE;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            SetChanged();
-            NotifyObservers(&ve);
-          }
-        }
-        if (mask & EPBM_RIGHT) {
-          if (viewType_ == VT_TABLE) {
-            ViewType vt = VT_TABLE2;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            SetChanged();
-            NotifyObservers(&ve);
-          }
-        }
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                                viewData_->chainRow_);
-        }
-
-      } else {
-        // L MOdifier
-        if (mask & EPBM_NAV) {
-        } else {
-
-          // No modifier
-
-          if (mask & EPBM_DOWN)
-            updateCursor(0, 1);
-          if (mask & EPBM_UP)
-            updateCursor(0, -1);
-          if (mask & EPBM_LEFT)
-            updateCursor(-1, 0);
-          if (mask & EPBM_RIGHT)
-            updateCursor(1, 0);
-          if (mask & EPBM_PLAY) {
-            player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                                  viewData_->chainRow_);
-          }
-        }
-      }
+    // No modifier
+    if (mask & EPBM_DOWN)
+      updateCursor(0, 1);
+    if (mask & EPBM_UP)
+      updateCursor(0, -1);
+    if (mask & EPBM_LEFT)
+      updateCursor(-1, 0);
+    if (mask & EPBM_RIGHT)
+      updateCursor(1, 0);
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                            viewData_->chainRow_);
     }
   }
 }

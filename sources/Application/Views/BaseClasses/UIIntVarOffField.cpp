@@ -9,7 +9,9 @@
 
 #include "UIIntVarOffField.h"
 #include "Application/AppWindow.h"
+#include "ViewUtils.h"
 #include <System/Console/nanoprintf.h>
+#include <string.h>
 
 UIIntVarOffField::UIIntVarOffField(GUIPoint &position, Variable &v,
                                    const char *format, int min, int max,
@@ -58,13 +60,8 @@ void UIIntVarOffField::Draw(GUIWindow &w, int offset) {
 
   GUITextProperties props;
   GUIPoint position = GetPosition();
+  position._y += offset;
 
-  if (focus_) {
-    ((AppWindow &)w).SetColor(CD_HILITE2);
-    props.invert_ = true;
-  } else {
-    ((AppWindow &)w).SetColor(CD_NORMAL);
-  }
   Variable::Type type = src_.GetType();
   char buffer[MAX_FIELD_WIDTH + 1];
   switch (type) {
@@ -98,5 +95,12 @@ void UIIntVarOffField::Draw(GUIWindow &w, int offset) {
   default:
     strcpy(buffer, "++wtf++");
   }
-  w.DrawString(buffer, position, props);
+
+  if (focus_) {
+    ((AppWindow &)w).SetColor(CD_HILITE2);
+    props.invert_ = true;
+    w.DrawString(buffer, position, props);
+  } else {
+    DrawLabeledField(w, position, buffer);
+  }
 };

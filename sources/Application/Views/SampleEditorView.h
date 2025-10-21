@@ -37,6 +37,12 @@ public:
 
   void AnimationUpdate() override;
 
+  // Static method to set which view will open the ImportView
+  static void SetSourceViewType(ViewType vt);
+
+  // Track which view opened the ImportView (default to project view)
+  static ViewType sourceViewType_;
+
 protected:
 private:
   // Helper methods
@@ -48,8 +54,8 @@ private:
                   bool isProjectSampleFile);
 
   // UI fields
-  etl::vector<UIIntVarField, 10> intVarField_;
-  etl::vector<UIBigHexVarField, 4> bigHexVarField_;
+  etl::vector<UIIntVarField, 1> intVarField_;
+  etl::vector<UIBigHexVarField, 2> bigHexVarField_;
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
@@ -78,8 +84,6 @@ private:
   // Cached sample parameters
   int start_ = 0;
   int end_ = 0;
-
-  bool goProjectSamplesDir();
 
   uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;

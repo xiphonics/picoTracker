@@ -20,8 +20,12 @@
 #include "System/Console/Trace.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
+#include "ViewUtils.h"
 #include <cmath>
 #include <cstdint>
+
+// Initialize static member
+ViewType SampleEditorView::sourceViewType_ = VT_IMPORT;
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
@@ -38,8 +42,19 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
 
 SampleEditorView::~SampleEditorView() {}
 
+// Static method to set the source view type before opening SampleEditorView
+void SampleEditorView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
+
 void SampleEditorView::OnFocus() {
   const auto newSampleFile = viewData_->sampleEditorFilename;
+  // Use the passed in filename to fill in our filename variable with the last 4
+  // chars (".wav") removed
+  filenameVar_.SetString(
+      newSampleFile.substr(0, newSampleFile.length() - 4).c_str());
+
+  // NOTE: we rely on the prior view to have set the current working dir to the
+  // one containing the sampleEditorFilename file
+
   // Load the sample using this filename and will fill in the wave data cache
   loadSample(newSampleFile, viewData_->sampleEditorProjectList);
 
@@ -54,7 +69,7 @@ void SampleEditorView::OnFocus() {
 
 void SampleEditorView::addAllFields() {
   // We currently have no way to update fields with the variable they are
-  // assinged so instead we need to first clear out all the previous fields
+  // assigned so instead we need to first clear out all the previous fields
   // and then re-add them just like we do on the InstrumentView
   fieldList_.clear();
   bigHexVarField_.clear();
@@ -71,8 +86,13 @@ void SampleEditorView::addAllFields() {
   auto label =
       etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("name: ");
 
+  auto defaultRecName =
+      etl::make_string_with_capacity<MAX_INSTRUMENT_NAME_LENGTH>(
+          RECORDING_FILENAME)
+          .substr(0, strlen(RECORDING_FILENAME) - 4);
+
   nameTextField_.emplace_back(filenameVar_, position, label,
-                              FourCC::InstrumentName, filename);
+                              FourCC::InstrumentName, defaultRecName);
   fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
   position._y += 1;
@@ -83,11 +103,16 @@ void SampleEditorView::addAllFields() {
 
   // Add end position control
   position._y += 1;
-
   bigHexVarField_.emplace_back(position, endVar_, 7, "end: %7.7X", 0,
                                tempSampleSize_ - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
+
+  // save button
+  position._y += 2;
+  actionField_.emplace_back("Save", FourCC::ActionSave, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
 }
 
 void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
@@ -118,8 +143,8 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
-      // Go back to Instrument view with NAV+LEFT
-      ViewType vt = VT_IMPORT;
+      // Go back to sample browser NAV+LEFT
+      ViewType vt = SampleEditorView::sourceViewType_;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
@@ -163,12 +188,6 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // If something is already playing, stop it first
       if (Player::GetInstance()->IsPlaying()) {
         Player::GetInstance()->StopStreaming();
-      }
-
-      // First change to the current project directory
-      if (!goProjectSamplesDir()) {
-        Trace::Error("couldnt change to project samples dir!");
-        return;
       }
 
       // Start playing the sample with just the filename
@@ -413,6 +432,63 @@ void SampleEditorView::AnimationUpdate() {
 void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   // When any of our observed variables change, update the cached parameters
   updateSampleParameters();
+
+  if (!hasFocus_) {
+    return;
+  }
+
+  uintptr_t fourcc = (uintptr_t)d;
+
+  switch (fourcc) {
+  case FourCC::ActionSave: {
+    // Get FileSystem instance
+    auto fs = FileSystem::GetInstance();
+
+    // Get the new filename from the UI variable and add the .wav extension
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> newFilename(
+        filenameVar_.GetString());
+    newFilename.append(".wav");
+
+    const auto &originalFilename = viewData_->sampleEditorFilename;
+
+    // Determine if we are overwriting the original file
+    bool isOverwrite = (newFilename == originalFilename);
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> writeFilename = newFilename;
+
+    if (isOverwrite) {
+      // TODO: for now this is a no op
+      Trace::Error("saving existing file in sample editor not supported yet");
+      // TODO: Display a modal error to the user
+      return;
+    }
+
+    // Navigate to the project's samples directory if necessary
+    if (strcmp(viewData_->importViewStartDir, PROJECT_SAMPLES_DIR) == 0) {
+      if (!goProjectSamplesDir(viewData_)) {
+        Trace::Error("SampleEditorView: Save failed, couldn't change to "
+                     "project samples dir!");
+        // TODO: Display a modal error to the user
+        break;
+      }
+    }
+    fs->CopyFile(originalFilename.c_str(), newFilename.c_str());
+    Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
+               newFilename.c_str());
+    // If we just saved a newly recorded sample, go to the importview in the
+    // recordings dir
+    if (originalFilename.compare(RECORDING_FILENAME) == 0) {
+      fs->chdir(RECORDINGS_DIR);
+      viewData_->importViewStartDir = RECORDINGS_DIR;
+    }
+    // otherwise go back to sample browser
+    ViewType vt = VT_IMPORT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+    return;
+  }
+  }
+
   // Then do a redraw of the waveform markers only
   redraw_ = true;
 }
@@ -458,8 +534,8 @@ void SampleEditorView::loadSample(
 
   if (isProjectSampleFile) {
     // First, navigate to the root projects samples subdir directory
-    if (!goProjectSamplesDir()) {
-      Trace::Error("couldn't change to project samples dir!");
+    if (!goProjectSamplesDir(viewData_)) {
+      Trace::Error("couldn't change to project pool samples dir!");
       return;
     }
   } else {
@@ -574,33 +650,4 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
              tempSampleSize_, peakAmplitude, filename.c_str());
   fullWaveformRedraw_ = true;
-}
-
-bool SampleEditorView::goProjectSamplesDir() {
-  auto fs = FileSystem::GetInstance();
-  fs->chdir("/");
-  fs->chdir("projects");
-  // Then, navigate into the current project's directory
-  if (viewData_ && viewData_->project_) {
-    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
-    viewData_->project_->GetProjectName(projectName);
-
-    if (fs->chdir(projectName)) {
-      // Finally, navigate into the samples subdirectory
-      fs->chdir("samples");
-    } else {
-      Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
-                   projectName);
-      // It's good practice to return to the root to avoid being in an unknown
-      // state
-      fs->chdir("/");
-      return false; // Abort if we can't find the project directory
-    }
-  } else {
-    Trace::Error(
-        "SampleEditorView: No project data available to find samples dir.");
-    fs->chdir("/");
-    return false; // Abort if project data is missing
-  }
-  return true;
 }

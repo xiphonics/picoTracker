@@ -8,11 +8,16 @@
 #ifndef _CRITICALERRORMESSAGE_H_
 #define _CRITICALERRORMESSAGE_H_
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void critical_error_message(const char *message, int guruId);
+#define DEFAULT_ERROR_MESSAGE_DELAY_SEC 5
+
+void critical_error_message(const char *message, int guruId, int shutdownDelay,
+                            bool showGuru);
 
 #ifdef __cplusplus
 }

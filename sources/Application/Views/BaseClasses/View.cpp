@@ -328,6 +328,16 @@ void View::DoModal(ModalView *view, ModalViewCallback cb) {
   isDirty_ = true;
 };
 
+void View::DismissModal() {
+  if (modalView_ && modalView_->IsFinished()) {
+    if (modalViewCallback_) {
+      modalViewCallback_(*this, *modalView_);
+    }
+    SAFE_DELETE(modalView_);
+    isDirty_ = true;
+  }
+};
+
 void View::Redraw() {
   if (modalView_) {
     if (isDirty_) {
@@ -354,14 +364,8 @@ void View::ProcessButton(unsigned short mask, bool pressed) {
   // Normal button processing
   if (modalView_) {
     modalView_->ProcessButton(mask, pressed);
-    if (modalView_->IsFinished()) {
-      // process callback sending the modal dialog
-      if (modalViewCallback_) {
-        modalViewCallback_(*this, *modalView_);
-      }
-      SAFE_DELETE(modalView_);
-      isDirty_ = true;
-    }
+    // checks if modal is done and if it is disposes of it:
+    DismissModal();
   } else {
     ProcessButtonMask(mask, pressed);
   }
@@ -396,7 +400,7 @@ void View::DrawRect(GUIRect &r, ColorDefinition color) {
 
 void View::drawBattery(GUITextProperties &props) {
   // only update the voltage once per second
-  if (AppWindow::GetAnimationFrameCounter() % 50 == 0) {
+  if (AppWindow::GetAnimationFrameCounter() % PICO_CLOCK_HZ == 0) {
     System *sys = System::GetInstance();
     sys->GetBatteryState(batteryState_);
     // Trace::Debug("Battery: %d%%", batteryState_.percentage);
@@ -460,11 +464,6 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
 
     if (remainingSeconds == 0) {
       Trace::Debug("Power button held for threshold time, Powerdown!");
-
-      // clear screen before powerdown
-      // TODO: doesn't work at the moment, adv comes back showing last screen
-      // content
-      ForceClear();
 
       System::GetInstance()->PowerDown();
     }

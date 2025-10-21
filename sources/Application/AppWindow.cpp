@@ -23,6 +23,7 @@
 #include "Application/Views/InstrumentImportView.h"
 #include "Application/Views/InstrumentView.h"
 #include "Application/Views/MixerView.h"
+#include "Application/Views/ModalDialogs/FullScreenBox.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/NullView.h"
 #include "Application/Views/PhraseView.h"
@@ -46,6 +47,10 @@
 #include <string.h>
 
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
+
+#define MINIMUM_ALLOWED_BATTERY_PERCENTAGE 2
+
+#define MIN_BATT_POWEROFF_SEC 15
 
 AppWindow *instance = 0;
 
@@ -124,7 +129,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _lastA = 0;
   _lastB = 0;
   _mask = 0;
-  colorIndex_ = CD_NORMAL;
+  lowBatteryMessageShown_ = false;
+  lowBatteryWarningCounter_ = 0;
 
   EventDispatcher *ed = EventDispatcher::GetInstance();
   ed->SetWindow(this);
@@ -604,11 +610,16 @@ bool AppWindow::onEvent(GUIEvent &event) {
 
     /*		case ET_KEYDOWN:
             if
-       (event.GetValue()==EKT_ESCAPE&&!Player::GetInstance()->IsRunning()) { if
-       (_currentView!=_listView) { CloseProject() ; _isDirty=true ; } else {
+       (event.GetValue()==EKT_ESCAPE&&!Player::GetInstance()->IsRunning()) {
+       if
+       (_currentView!=_listView) {
+       CloseProject() ;
+       _isDirty=true ;
+       } else {
                             System::GetInstance()->PostQuitMessage() ;
                     };
-            } ;*/
+            } ;
+                */
 
   default:
     break;
@@ -645,6 +656,44 @@ void AppWindow::AnimationUpdate() {
   if (loadProject_) {
     LoadProject(projectName_);
     loadProject_ = false;
+  }
+
+  // run at 1Hz
+  if (animationFrameCounter_ % PICO_CLOCK_HZ == 0) {
+    // Check battery level
+    BatteryState batteryState;
+    System::GetInstance()->GetBatteryState(batteryState);
+    if (batteryState.percentage < MINIMUM_ALLOWED_BATTERY_PERCENTAGE &&
+        !batteryState.charging) {
+      lowBatteryState_ = true;
+      lowBatteryWarningCounter_++;
+    } else {
+      lowBatteryState_ = false;
+      lowBatteryWarningCounter_ = 0;
+    }
+
+    if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_SEC) {
+      System::GetInstance()->PowerDown();
+    }
+  }
+
+  if (lowBatteryState_ && !lowBatteryMessageShown_) {
+    if (!_currentView->HasModalView()) {
+      FullScreenBox *mb = new FullScreenBox(*_currentView, "Low battery!",
+                                            "Connect charger", 0);
+      _currentView->DoModal(mb);
+      lowBatteryMessageShown_ = true;
+      _isDirty = true;
+    }
+  } else if (!lowBatteryState_ && lowBatteryMessageShown_) {
+    ModalView *modal = _currentView->GetModalView();
+    if (modal) {
+      modal->EndModal(0);
+      _currentView->DismissModal();
+      Trace::Debug("CLose Low Batt dialog");
+    }
+    lowBatteryMessageShown_ = false;
+    _isDirty = true;
   }
 
   // If we need a full redraw due to state changes from key events

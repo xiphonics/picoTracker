@@ -18,9 +18,8 @@
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"
+#include "charger.h"
 #include "critical_error_message.h"
-#include "gpio.h"
-#include "i2c.h"
 #include "input.h"
 #include "platform.h"
 #include "tim.h"
@@ -34,6 +33,9 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+
+#define ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE 3
+#define DISPLAY_LOWBATT_DELAY_IN_SEC 5
 
 EventManager *advSystem::eventManager_ = NULL;
 bool advSystem::invert_ = false;
@@ -75,7 +77,8 @@ void advSystem::Boot() {
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir("/")) {
     Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!\n");
-    critical_error_message("SDCARD MISSING", 0x01);
+    critical_error_message("SDCARD MISSING", 0x01,
+                           DEFAULT_ERROR_MESSAGE_DELAY_SEC, false);
   }
 
   // Install MIDI
@@ -101,6 +104,18 @@ void advSystem::Boot() {
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
 
+  // check for low batt
+  BatteryState batteryState;
+  System::GetInstance()->GetBatteryState(batteryState);
+  if (batteryState.percentage < ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE &&
+      !batteryState.charging) {
+    // show low battery message on screen
+    Trace::Log("PICOTRACKERSYSTEM", "Low Batt: %d%%\n",
+               batteryState.percentage);
+    critical_error_message("!! LOW BATTERY !!", 0x01,
+                           DISPLAY_LOWBATT_DELAY_IN_SEC, false);
+  }
+
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
 };
@@ -124,19 +139,7 @@ void advSystem::GetBatteryState(BatteryState &state) {
   state.percentage = getBatterySOC();
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
-
-  // TODO: in future just get that actual charging state from the chargerIC
-  int16_t current = getBatteryCurrent();
-  if (current != CURRENT_READ_ERROR) {
-    if (current > 50) {
-      state.charging = true;
-    } else {
-      state.charging = false;
-    }
-  } else {
-    // default to false on error
-    state.charging = false;
-  }
+  state.charging = getChargingStatus();
 }
 
 void advSystem::SetDisplayBrightness(unsigned char value) {
@@ -170,40 +173,7 @@ unsigned int advSystem::GetMemoryUsage() {
   return m.uordblks;
 }
 
-void advSystem::PowerDown() {
-  tlv320_mute();
-
-  // Ship mode
-  uint8_t value = 0x64;
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
-      &hi2c4, 0x6b << 1, 0x07, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
-  if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
-  }
-
-  setCharging();
-
-  HAL_GPIO_DeInit(POWER_GPIO_Port, POWER_Pin);
-  HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2);
-  __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU); // always clear before enabling again
-  PWREx_WakeupPinTypeDef sPinParams = {
-      .WakeUpPin = PWR_WAKEUP_PIN2,
-      .PinPolarity = PWR_PIN_POLARITY_LOW, // Rising edge triggers wakeup
-      .PinPull = PWR_PIN_NO_PULL // Pulldown to ensure low level before press
-  };
-  HAL_PWREx_EnableWakeUpPin(&sPinParams);
-  HAL_PWR_EnterSTANDBYMode();
-}
-
-void advSystem::setCharging(void) {
-  uint8_t value = 0x1a;
-  HAL_StatusTypeDef status = HAL_I2C_Mem_Write(
-      &hi2c4, 0x6b << 1, 0x01, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
-  if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
-  }
-  HAL_GPIO_WritePin(CHARGER_OTG_GPIO_Port, CHARGER_OTG_Pin, GPIO_PIN_RESET);
-}
+void advSystem::PowerDown() { powerOff(); }
 
 void advSystem::SystemPutChar(int c) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);

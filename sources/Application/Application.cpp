@@ -96,10 +96,6 @@ bool Application::initProject(char *projectName) {
 }
 
 // ensure that all the directories required by picoTracker exist:
-// /samples
-// /projects
-// /instruments
-// /renders
 void Application::ensurePTDirsExist() {
   auto fs = FileSystem::GetInstance();
 
@@ -108,6 +104,7 @@ void Application::ensurePTDirsExist() {
   createIfNotExists(fs, INSTRUMENTS_DIR);
   createIfNotExists(fs, RENDERS_DIR);
   createIfNotExists(fs, THEMES_DIR);
+  createIfNotExists(fs, RECORDINGS_DIR);
 }
 
 void Application::createIfNotExists(FileSystem *fs, const char *path) {

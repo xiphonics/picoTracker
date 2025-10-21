@@ -9,7 +9,9 @@
 
 #include "UIBitmaskVarField.h"
 #include "Application/AppWindow.h"
+#include "ViewUtils.h"
 #include <System/Console/nanoprintf.h>
+#include <string.h>
 
 UIBitmaskVarField::UIBitmaskVarField(GUIPoint &position, Variable &v,
                                      const char *format, int len)
@@ -24,31 +26,31 @@ void UIBitmaskVarField::Draw(GUIWindow &w, int offset) {
   GUIPoint position = GetPosition();
   position._y += offset;
 
-  if (focus_) {
-    ((AppWindow &)w).SetColor(CD_HILITE2);
-    props.invert_ = true;
-  } else {
-    ((AppWindow &)w).SetColor(CD_NORMAL);
-  }
-
   char buffer[MAX_FIELD_WIDTH + 1];
   int value = src_.GetInt();
   npf_snprintf(buffer, sizeof(buffer), format_, value);
-  w.DrawString(buffer, position, props);
 
-  int percentPos = -1;
-  for (unsigned int i = 0; i < strlen(format_); i++) {
-    if (format_[i] == '%') {
-      percentPos = i;
-      break;
+  if (focus_) {
+    ((AppWindow &)w).SetColor(CD_HILITE2);
+    props.invert_ = true;
+    w.DrawString(buffer, position, props);
+
+    int percentPos = -1;
+    for (unsigned int i = 0; i < strlen(format_); i++) {
+      if (format_[i] == '%') {
+        percentPos = i;
+        break;
+      };
     };
-  };
-  if (percentPos >= 0) {
-    int offset = (len_ - position_) + percentPos;
-    buffer[offset + 1] = 0;
-    position._x += offset;
-    ((AppWindow &)w).SetColor(CD_NORMAL);
-    w.DrawString(buffer + offset, position, props);
+    if (percentPos >= 0) {
+      int offset = (len_ - position_) + percentPos;
+      buffer[offset + 1] = 0;
+      position._x += offset;
+      ((AppWindow &)w).SetColor(CD_NORMAL);
+      w.DrawString(buffer + offset, position, props);
+    }
+  } else {
+    DrawLabeledField(w, position, buffer);
   }
 };
 

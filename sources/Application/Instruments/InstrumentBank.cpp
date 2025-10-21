@@ -125,8 +125,8 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
     SampleInstrument *si = sampleInstrumentPool_.create();
     if (si == nullptr) {
       Trace::Log("INSTRUMENTBANK", "Sample INSTRUMENT EXHAUSTED!");
+      return NO_MORE_INSTRUMENT;
     }
-    // TODO: pool exhastion: show user UI message about it!
     si->Init();
 
     Variable *sample = si->FindVariable(FourCC::SampleInstrumentSample);
@@ -144,9 +144,9 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
   case IT_MIDI: {
     MidiInstrument *mi = midiInstrumentPool_.create();
     if (mi == nullptr) {
-      Trace::Error("MIDI INSTRUMENT EXHAUSTED!!!!!!");
+      Trace::Error("MIDI INSTRUMENT EXHAUSTED!");
+      return NO_MORE_INSTRUMENT;
     }
-    // TODO check for pool exhastion AND show user UI message about it!!!
     mi->Init();
     instruments_[id] = mi;
     return id;
@@ -155,18 +155,18 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
     // TODO need to figure out how to properly manage sid oc count
     SIDInstrument *si = sidInstrumentPool_.create(SID1);
     if (si == nullptr) {
-      Trace::Error("SID INSTRUMENT EXHAUSTED!!!!!!");
+      Trace::Error("SID INSTRUMENT EXHAUSTED!");
+      return NO_MORE_INSTRUMENT;
     }
-    // TODO check for pool exhastion AND show user UI message about it!!!
     si->Init();
     instruments_[id] = si;
     return id;
   } break;
   case IT_OPAL: {
     OpalInstrument *oi = opalInstrumentPool_.create();
-    // TODO check for pool exhastion AND show user UI message about it!!!
     if (oi == nullptr) {
-      Trace::Error("Opal INSTRUMENT EXHAUSTED!!!!!!");
+      Trace::Error("Opal INSTRUMENT EXHAUSTED!");
+      return NO_MORE_INSTRUMENT;
     }
     oi->Init();
     instruments_[id] = oi;

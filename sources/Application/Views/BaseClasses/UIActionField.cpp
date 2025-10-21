@@ -9,6 +9,8 @@
 
 #include "UIActionField.h"
 #include "Application/AppWindow.h"
+#include "ViewUtils.h"
+#include <string.h>
 
 UIActionField::UIActionField(const char *name, unsigned int fourcc,
                              GUIPoint &position)
@@ -17,22 +19,27 @@ UIActionField::UIActionField(const char *name, unsigned int fourcc,
   fourcc_ = fourcc;
 };
 
-UIActionField::~UIActionField(){
+UIActionField::~UIActionField(){};
 
-};
 void UIActionField::Draw(GUIWindow &w, int offset) {
 
   GUITextProperties props;
+
   GUIPoint position(x_, y_ + offset);
 
   if (focus_) {
     ((AppWindow &)w).SetColor(CD_HILITE2);
     props.invert_ = true;
+    w.DrawString(name_, position, props);
   } else {
-    ((AppWindow &)w).SetColor(CD_NORMAL);
-  }
+    // enforce max field length
+    char buffer[MAX_FIELD_WIDTH + 1];
+    strncpy(buffer, name_, MAX_FIELD_WIDTH);
+    buffer[MAX_FIELD_WIDTH] = '\0';
 
-  w.DrawString(name_, position, props);
+    ((AppWindow &)w).SetColor(CD_EMPHASIS);
+    w.DrawString(buffer, position, props);
+  }
 };
 
 void UIActionField::OnClick() {
