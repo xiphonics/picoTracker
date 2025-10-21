@@ -47,7 +47,7 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // Font selection
   position._y = FONT_FIELD_LINE;
   v = config->FindVariable(FourCC::VarUIFont);
-  intVarField_.emplace_back(position, *v, "Font: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Font: %s", 0, ThemeConstants::FONT_COUNT - 1, 1, ThemeConstants::FONT_COUNT - 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
