@@ -566,15 +566,14 @@ void SongView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
 void SongView::processNormalButtonMask(unsigned int mask) {
 
-  // B Modifier
-
   if (mask & EPBM_EDIT) {
+    // EDIT Modifier
+    Player *player = Player::GetInstance();
     if (mask & EPBM_DOWN)
       updateSongOffset(View::songRowCount_);
     if (mask & EPBM_UP)
       updateSongOffset(-View::songRowCount_);
     if (mask & (EPBM_RIGHT | EPBM_LEFT)) {
-      Player *player = Player::GetInstance();
       switch (player->GetSequencerMode()) {
       case SM_SONG:
         player->SetSequencerMode(SM_LIVE);
@@ -594,114 +593,107 @@ void SongView::processNormalButtonMask(unsigned int mask) {
       toggleMute();
     };
     if (mask & EPBM_PLAY) {
-      startImmediate();
-    }
-  } else {
-
-    // A modifier
-
-    if (mask & EPBM_ENTER) {
-
-      if (mask & EPBM_DOWN)
-        updateChain(-0x10);
-      if (mask & EPBM_UP)
-        updateChain(0x10);
-      if (mask & EPBM_LEFT)
-        updateChain(-0x01);
-      if (mask & EPBM_RIGHT)
-        updateChain(0x01);
-      if (mask & EPBM_ALT)
-        pasteClipboard();
-      if (mask == EPBM_ENTER) {
-        pasteLast();
-        viewMode_ = VM_NEW;
-      }
-      if (mask & EPBM_NAV) {
-        switchSoloMode();
-      };
-    } else {
-
-      // R Modifier
-
-      if (mask & EPBM_NAV) {
-
-        if (mask & EPBM_ALT) {
-          unMuteAll();
-        }
-
-        if (mask & EPBM_RIGHT) {
-          unsigned char *data = viewData_->GetCurrentSongPointer();
-          if (*data != 0xFF) {
-            ViewType vt = VT_CHAIN;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            viewData_->currentChain_ = *data;
-            SetChanged();
-            NotifyObservers(&ve);
-          }
-        }
-
-        if (mask & EPBM_UP) {
-          ViewType vt = VT_PROJECT;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_DOWN) {
-          ViewType vt = VT_MIXER;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_PLAY) {
-          // NAV+PLAY switches to recording view
+      if (player->GetSequencerMode() == SM_LIVE) {
+        startImmediate();
+      } else {
+        // recording screen
+        if (!player->IsRunning()) {
           ViewType vt = VT_RECORD;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();
           NotifyObservers(&ve);
-          return;
-        }
-
-      } else {
-
-        // L Modifier
-
-        if (mask & EPBM_ALT) {
-          if (mask & EPBM_DOWN) {
-            jumpToNextSection(1);
-          }
-          if (mask & EPBM_UP) {
-            jumpToNextSection(-1);
-          }
-          if (mask & EPBM_PLAY) {
-            startCurrentRow();
-          }
-          if (mask & EPBM_LEFT) {
-            nudgeTempo(-1);
-          }
-          if (mask & EPBM_RIGHT) {
-            nudgeTempo(1);
-          }
-        } else {
-          // No modifier
-          if (mask & EPBM_DOWN) {
-            updateCursor(0, 1);
-          }
-          if (mask & EPBM_UP) {
-            updateCursor(0, -1);
-          }
-          if (mask & EPBM_LEFT) {
-            updateCursor(-1, 0);
-          }
-          if (mask & EPBM_RIGHT) {
-            updateCursor(1, 0);
-          }
-          if (mask & EPBM_PLAY) {
-            onStart();
-          }
         }
       }
+    }
+  } else if (mask & EPBM_ENTER) {
+    // ENTER modifier
+
+    if (mask & EPBM_DOWN)
+      updateChain(-0x10);
+    if (mask & EPBM_UP)
+      updateChain(0x10);
+    if (mask & EPBM_LEFT)
+      updateChain(-0x01);
+    if (mask & EPBM_RIGHT)
+      updateChain(0x01);
+    if (mask & EPBM_ALT)
+      pasteClipboard();
+    if (mask == EPBM_ENTER) {
+      pasteLast();
+      viewMode_ = VM_NEW;
+    }
+    if (mask & EPBM_NAV) {
+      switchSoloMode();
+    };
+  } else if (mask & EPBM_NAV) {
+    // NAV Modifier
+
+    if (mask & EPBM_ALT) {
+      unMuteAll();
+    }
+
+    if (mask & EPBM_RIGHT) {
+      unsigned char *data = viewData_->GetCurrentSongPointer();
+      if (*data != 0xFF) {
+        ViewType vt = VT_CHAIN;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        viewData_->currentChain_ = *data;
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+
+    if (mask & EPBM_UP) {
+      ViewType vt = VT_PROJECT;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_DOWN) {
+      ViewType vt = VT_MIXER;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_PLAY) {
+      onStop();
+    }
+
+  } else if (mask & EPBM_ALT) {
+    // ALT Modifier
+    if (mask & EPBM_DOWN) {
+      jumpToNextSection(1);
+    }
+    if (mask & EPBM_UP) {
+      jumpToNextSection(-1);
+    }
+    if (mask & EPBM_PLAY) {
+      startCurrentRow();
+    }
+    if (mask & EPBM_LEFT) {
+      nudgeTempo(-1);
+    }
+    if (mask & EPBM_RIGHT) {
+      nudgeTempo(1);
+    }
+  } else {
+    // No modifier
+    if (mask & EPBM_DOWN) {
+      updateCursor(0, 1);
+    }
+    if (mask & EPBM_UP) {
+      updateCursor(0, -1);
+    }
+    if (mask & EPBM_LEFT) {
+      updateCursor(-1, 0);
+    }
+    if (mask & EPBM_RIGHT) {
+      updateCursor(1, 0);
+    }
+    if (mask & EPBM_PLAY) {
+      onStart();
     }
   }
 
@@ -721,9 +713,8 @@ void SongView::processNormalButtonMask(unsigned int mask) {
 
 void SongView::processSelectionButtonMask(unsigned int mask) {
 
-  // B Modifier
-
   if (mask & EPBM_EDIT) {
+    // EDIT Modifier
     if (mask & EPBM_NAV) {
       toggleMute();
     };
@@ -734,72 +725,61 @@ void SongView::processSelectionButtonMask(unsigned int mask) {
       copySelection();
     }
 
+  } else if (mask & EPBM_ENTER) {
+    // ENTER modifier
+    if (mask & EPBM_ALT) {
+      cutSelection();
+    }
+    if (mask & EPBM_NAV) {
+      switchSoloMode();
+    };
+  } else if (mask & EPBM_NAV) {
+    // NAV Modifier
+    if (mask & EPBM_ALT) {
+      unMuteAll();
+    }
+
+    if (mask & EPBM_RIGHT) {
+      unsigned char *data = viewData_->GetCurrentSongPointer();
+      if (*data != 0xFF) {
+        ViewType vt = VT_CHAIN;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        viewData_->currentChain_ = *data;
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+
+    if (mask & EPBM_UP) {
+      ViewType vt = VT_PROJECT;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_DOWN) {
+      ViewType vt = VT_MIXER;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_PLAY) {
+      onStop();
+    }
   } else {
+    // No modifier
 
-    // A modifier
-
-    if (mask & EPBM_ENTER) {
-      if (mask & EPBM_ALT) {
-        cutSelection();
-      }
-      if (mask & EPBM_NAV) {
-        switchSoloMode();
-      };
-    } else {
-
-      // R Modifier
-
-      if (mask & EPBM_NAV) {
-
-        if (mask & EPBM_ALT) {
-          unMuteAll();
-        }
-
-        if (mask & EPBM_RIGHT) {
-          unsigned char *data = viewData_->GetCurrentSongPointer();
-          if (*data != 0xFF) {
-            ViewType vt = VT_CHAIN;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            viewData_->currentChain_ = *data;
-            SetChanged();
-            NotifyObservers(&ve);
-          }
-        }
-
-        if (mask & EPBM_UP) {
-          ViewType vt = VT_PROJECT;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_DOWN) {
-          ViewType vt = VT_MIXER;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_PLAY) {
-          onStop();
-        }
-
-      } else {
-
-        // No modifier
-
-        if (mask & EPBM_DOWN)
-          updateCursor(0, 1);
-        if (mask & EPBM_UP)
-          updateCursor(0, -1);
-        if (mask & EPBM_LEFT)
-          updateCursor(-1, 0);
-        if (mask & EPBM_RIGHT)
-          updateCursor(1, 0);
-        if (mask & EPBM_PLAY) {
-          onStart();
-        }
-      }
+    if (mask & EPBM_DOWN)
+      updateCursor(0, 1);
+    if (mask & EPBM_UP)
+      updateCursor(0, -1);
+    if (mask & EPBM_LEFT)
+      updateCursor(-1, 0);
+    if (mask & EPBM_RIGHT)
+      updateCursor(1, 0);
+    if (mask & EPBM_PLAY) {
+      onStart();
     }
   }
 }

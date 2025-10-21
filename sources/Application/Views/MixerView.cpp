@@ -205,6 +205,15 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
     if (mask & EPBM_NAV) {
       toggleMute();
     }
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
   } else if (mask & EPBM_ENTER) {
     if (mask & EPBM_NAV) {
       switchSoloMode();

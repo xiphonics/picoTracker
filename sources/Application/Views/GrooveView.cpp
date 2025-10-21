@@ -96,54 +96,56 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_ENTER) {
       clearCursorValue();
     };
-  } else {
-
-    // A modifier
-    if (mask & EPBM_ENTER) {
-      if (mask & EPBM_LEFT) {
-        updateCursorValue(-1);
-      }
-      if (mask & EPBM_RIGHT) {
-        updateCursorValue(1);
-      }
-      if (mask & EPBM_DOWN) {
-        updateCursorValue(-1, true);
-      }
-      if (mask & EPBM_UP) {
-        updateCursorValue(1, true);
-      }
-      if (mask == EPBM_ENTER) {
-        initCursorValue();
-      };
-    } else {
-      // R Modifier
-
-      if (mask & EPBM_NAV) {
-        if (mask & EPBM_DOWN) {
-          ViewType vt = VT_PHRASE;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                                viewData_->chainRow_);
-        }
-
-      } else {
-        // No modifier
-        if (mask & EPBM_DOWN)
-          updateCursor(1);
-        if (mask & EPBM_UP)
-          updateCursor(-1);
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                                viewData_->chainRow_);
-        }
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
       }
     }
+  } else if (mask & EPBM_ENTER) {
+    // ENTER modifier
+    if (mask & EPBM_LEFT) {
+      updateCursorValue(-1);
+    }
+    if (mask & EPBM_RIGHT) {
+      updateCursorValue(1);
+    }
+    if (mask & EPBM_DOWN) {
+      updateCursorValue(-1, true);
+    }
+    if (mask & EPBM_UP) {
+      updateCursorValue(1, true);
+    }
+    if (mask == EPBM_ENTER) {
+      initCursorValue();
+    };
+  } else if (mask & EPBM_NAV) {
+    // NAV Modifier
+    if (mask & EPBM_DOWN) {
+      ViewType vt = VT_PHRASE;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                            viewData_->chainRow_);
+    }
+  } else {
+    // No modifier
+    if (mask & EPBM_DOWN)
+      updateCursor(1);
+    if (mask & EPBM_UP)
+      updateCursor(-1);
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                            viewData_->chainRow_);
+    }
   }
-};
+}
 
 void GrooveView::DrawView() {
 
