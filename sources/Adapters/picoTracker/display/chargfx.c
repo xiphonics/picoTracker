@@ -197,7 +197,7 @@ inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
     uint16_t *buffer_idx = buffer;
 
     for (int bit = CHAR_WIDTH - 1; bit >= 0; bit--) {
-      uint8_t mask = 1 << (CHAR_WIDTH - 1 - bit);
+      uint16_t mask = 1 << (CHAR_WIDTH - 1 - bit);
       for (int col = y + height - 1; col >= y; col--) {
         int16_t idx = col * TEXT_WIDTH + page;
         uint8_t character = screen[idx];
