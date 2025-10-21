@@ -163,6 +163,10 @@ void RecordView::Update(Observable &o, I_ObservableData *data) {
 }
 
 void RecordView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge, power
+  // off etc
+  ScreenView::AnimationUpdate();
+
   if (isRecording_) {
     // Update recording duration
     uint32_t currentTime = System::GetInstance()->Millis();
