@@ -83,20 +83,23 @@ Once a selection is started you can do a few more things:
 | Function                                                                     |     Key Combination     |                             Image                              |
 |:-----------------------------------------------------------------------------|:-----------------------:|:--------------------------------------------------------------:|
 | Cuts the current Highlighted Item.                                           |     `EDIT + ENTER`      |     ![edit + enter keys](image/pt-buttons-edit_enter.jpg)      |
-| start selection                                                              |      `ALT + EDIT`       |       ![edit + alt keys](image/pt-buttons-alt_edit.jpg)        |
+| start selection                                                              |      `EDIT + ALT`       |       ![edit + alt keys](image/pt-buttons-alt_edit.jpg)        |
 | Start immediate playback                                                     |      `EDIT + PLAY`      |      ![edit + play keys](image/pt-buttons-edit_play.jpg)       |
 | Page up/down in Song Screen.                                                 |  `EDIT + (UP / DOWN)`   |    ![edit + up/down keys](image/pt-buttons-edit_updown.jpg)    |
 | Switch between Song and Live Mode                                            | `EDIT + (LEFT / RIGHT)` | ![edit + left/right keys](image/pt-buttons-edit_leftright.jpg) |
+| mute selected track                                                          |      `EDIT + NAV`       |       ![nav + edit keys](image/pt-buttons-nav_edit.jpg)        |
 | \[advance only\] Sample recording, only accessible when sequencer is stopped |     `EDIT` + `PLAY`     |      ![edit + play keys](image/pt-buttons-edit_play.jpg)       |
 
 ### ENTER Key Combinations
 
-| Function                                |     Key Combination      |                               Image                               |
-|:----------------------------------------|:------------------------:|:-----------------------------------------------------------------:|
-| insert if cursor position is empty      |         `ENTER`          |             ![enter key](image/pt-buttons-enter.jpg)              |
-| Insert next unused chain                |      `ENTER, ENTER`      |          ![enter key twice](image/pt-buttons-enter2.jpg)          |
-| Change chain at cursor position by 0x10 |  `ENTER + (UP / DOWN)`   |     ![enter + arrow keys](image/pt-buttons-enter_up_down.jpg)     |
-| Change chain at cursor position by 0x01 | `ENTER + (RIGHT / LEFT)` | ![enter + right/left keys](image/pt-buttons-enter_left_right.jpg) |
+| Function                                                   |     Key Combination      |                               Image                               |
+|:-----------------------------------------------------------|:------------------------:|:-----------------------------------------------------------------:|
+| insert if cursor position is empty                         |         `ENTER`          |             ![enter key](image/pt-buttons-enter.jpg)              |
+| Insert next unused chain                                   |      `ENTER, ENTER`      |          ![enter key twice](image/pt-buttons-enter2.jpg)          |
+| cut the current cursor position if filled, paste otherwise |      `ENTER + ALT`       |           ![arrow keys](image/pt-buttons-alt_enter.jpg)           |
+| Change chain at cursor position by 0x10                    |  `ENTER + (UP / DOWN)`   |     ![enter + arrow keys](image/pt-buttons-enter_up_down.jpg)     |
+| Change chain at cursor position by 0x01                    | `ENTER + (RIGHT / LEFT)` | ![enter + right/left keys](image/pt-buttons-enter_left_right.jpg) |
+| solo selected track                                        |      `ENTER + NAV`       |        ![nav + enter key](image/pt-buttons-nav_enter.jpg)         |
 
 ## Chain View
 
@@ -116,8 +119,8 @@ Once a selection is started you can do a few more things:
 | switch to phrase view |  `NAV + RIGHT`  | ![nav + right key](image/pt-buttons-nav_right.jpg) |
 | play chain in song    |  `NAV + PLAY`   | ![nav + right key](image/pt-buttons-nav_right.jpg) |
 | unmute all            |   `NAV + ALT`   |   ![nav + alt key](image/pt-buttons-nav_alt.jpg)   |
-| toggle mute           |  `EDIT + NAV`   |  ![nav + edit key](image/pt-buttons-nav_edit.jpg)  |
-| switch solo mode      |  `ENTER + NAV`  | ![nav + enter key](image/pt-buttons-nav_enter.jpg) |
+| toggle mute           |  `NAV + EDIT`   |  ![nav + edit key](image/pt-buttons-nav_edit.jpg)  |
+| switch solo mode      |  `NAV + ENTER`  | ![nav + enter key](image/pt-buttons-nav_enter.jpg) |
 
 ### ALT Modifier
 
