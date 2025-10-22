@@ -388,3 +388,111 @@ void tlv320_disable_mic(void) {
   // Recheck output in case Speaker needs to be unmutted
   tlv320_select_output();
 }
+
+void tlv320_sleep(void) {
+  // -- TABLE 1, STEP 1a: Configure amplifier gains to -6dB
+  // w 30 00 01 # Switch to Page 1
+  tlv320write(0x00, 0x01);
+  // w 30 10 3A # HPL = -6dB, unmuted
+  tlv320write(0x10, 0x3A);
+  // w 30 11 3A # HPR = -6dB, unmuted
+  tlv320write(0x11, 0x3A);
+  // w 30 12 3A # LOL = -6dB, unmuted
+  tlv320write(0x12, 0x3A);
+  // w 30 13 3A # LOR = -6dB, unmuted
+  tlv320write(0x13, 0x3A);
+  // # f 30 3F 1111xxxx # Wait for p1_r63_b7-b4 to set
+  //  tlv320write(0x3F, 0x);
+  // # -- TABLE 1, STEP 1b: Power down internal amplifiers
+  // w 30 10 7A # HPL = -6dB, muted
+  tlv320write(0x10, 0x7A);
+  // w 30 11 7A # HPR = -6dB, muted
+  tlv320write(0x11, 0x7A);
+  // w 30 12 7A # LOL = -6dB, muted
+  tlv320write(0x12, 0x7A);
+  // w 30 13 7A # LOR = -6dB, muted
+  tlv320write(0x13, 0x7A);
+  // w 30 09 00 # Power off HP/LO/MA amps
+  tlv320write(0x09, 0x00);
+  // w 30 00 00 # Switch to Page 0
+  tlv320write(0x00, 0x00);
+  // # f 30 25 x00xx00x # Wait for p0_r37_b6-5/2-1 to clear
+  //  tlv320write(0x, 0x);
+  // # -- TABLE 1, STEP 1c: Configure MicPGA
+  // w 30 00 01 # Switch to Page 1
+  tlv320write(0x00, 0x01);
+  // w 30 3B 00 # Set MicPGA_L Gain D7 = 0
+  tlv320write(0x3B, 0x00);
+  // w 30 3C 00 # Set MicPGA_R Gain D7 = 0
+  tlv320write(0x3C, 0x00);
+  // # -- TABLE 1, STEP 2a: Set reference to automatic mode
+  // w 30 7b 01 # Set the REF charging time to 40ms (automatic)
+  tlv320write(0x7B, 0x01);
+  // # -- TABLE 1, STEP 3: Disable AGCs
+  // w 30 00 00 # Switch to Page 0
+  tlv320write(0x00, 0x00);
+  // w 30 57 00 # Disable LAGC noise gate
+  tlv320write(0x57, 0x00);
+  // w 30 56 00 # Disable LAGC
+  tlv320write(0x56, 0x00);
+  // w 30 5f 00 # Disable RAGC noise gate
+  tlv320write(0x5f, 0x00);
+  // w 30 5e 00 # Disable RAGC
+  tlv320write(0x5E, 0x00);
+  // # -- TABLE 1, STEP 4: Power off ADCs
+  // w 30 51 00 # Power off LADC/RADC
+  tlv320write(0x51, 0x00);
+  // # f 30 24 x0xxx0xx # Wait for p0_r36_b6/b2 to clear
+  //  tlv320write(0x, 0x);
+  // # -- TABLE 1, STEP 5: Power off DACs
+  // w 30 3F 14 # Power off LDAC/RDAC
+  tlv320write(0x3F, 0x14);
+  // # f 30 25 0xxx0xxx # Wait for p0_r37_b7/3 to clear
+  //  tlv320write(0x, 0x);
+  // # -- TABLE 1, STEP 6: Disconnect all output amplifier routings
+  // w 30 00 01 # Switch to Page 1
+  tlv320write(0x00, 0x01);
+  // w 30 0C 00 # Disconnect HPL routings
+  tlv320write(0x0C, 0x00);
+  // w 30 0D 00 # Disconnect HPR routings
+  tlv320write(0x0D, 0x00);
+  // w 30 0E 00 # Disconnect LOL routings
+  tlv320write(0x0E, 0x00);
+  // w 30 0F 00 # Disconnect LOR routings
+  tlv320write(0x0F, 0x00);
+  // # -- TABLE 1, STEP 7: Power off additional blocks
+  // w 30 33 00 # Power off MICBIAS
+  tlv320write(0x33, 0x00);
+  // w 30 3A 00 # Disable weak input common mode
+  tlv320write(0x3A, 0x00);
+  // w 30 00 00 # Switch to Page 0
+  tlv320write(0x00, 0x00);
+  // w 30 1D 00 # Disable forced ASI output
+  tlv320write(0x1D, 0x00);
+  // w 30 1A 01 # Power down CDIV_CLKIN M divider
+  tlv320write(0x1A, 0x01);
+  // w 30 1E 01 # Power down BCLK N divider
+  tlv320write(0x1E, 0x01);
+  // w 30 43 00 # Disable headset detection
+  tlv320write(0x43, 0x00);
+  // # -- TABLE 1, STEP 8: Power off clock generation tree
+  // w 30 13 08 # Power down MADC = 8
+  tlv320write(0x13, 0x08);
+  // w 30 0C 08 # Power down MDAC = 8
+  tlv320write(0x0C, 0x08);
+  // w 30 12 02 # Power down NADC = 2
+  tlv320write(0x12, 0x02);
+  // w 30 0B 02 # Power down NDAC = 2
+  tlv320write(0x0B, 0x02);
+  // w 30 05 11 # Power down PLL
+  tlv320write(0x05, 0x11);
+  // # -- TABLE 1, STEP 9a: Configure AVDD
+  // w 30 00 01 # Switch to Page 1
+  tlv320write(0x00, 0x01);
+  // w 30 02 09 # Disable Master Analog Power Control (write 0x08 if using
+  // external AVDD)
+  tlv320write(0x02, 0x09);
+  //  w 30 01 00 # Enable weak AVDD to DVDD connection w 30 02 08
+  tlv320write(0x01, 0x00);
+  // # Power down ALDO (skip if using external AVDD)
+}
