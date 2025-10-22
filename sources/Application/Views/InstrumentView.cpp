@@ -14,6 +14,7 @@
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Views/ImportView.h"
+#include "Application/Views/SampleEditorView.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIIntVarOffField.h"
@@ -824,6 +825,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_INSTRUMENT);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();

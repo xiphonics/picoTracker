@@ -10,6 +10,7 @@
 #include "SongView.h"
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/SampleEditorView.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include "UIController.h"
@@ -598,6 +599,7 @@ void SongView::processNormalButtonMask(unsigned int mask) {
       } else {
         // recording screen
         if (!player->IsRunning()) {
+          SampleEditorView::SetSourceViewType(VT_SONG);
           ViewType vt = VT_RECORD;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
           SetChanged();

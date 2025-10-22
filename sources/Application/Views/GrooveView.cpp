@@ -10,6 +10,7 @@
 #include "GrooveView.h"
 #include "Application/Model/Groove.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/SampleEditorView.h"
 #include "ViewData.h"
 #include <Application/AppWindow.h>
 #include <nanoprintf.h>
@@ -99,6 +100,7 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_GROOVE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();

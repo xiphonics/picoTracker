@@ -161,9 +161,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_LEFT) {
       // Go back to sample browser NAV+LEFT
       ViewType vt = SampleEditorView::sourceViewType_;
-      ViewEvent ve(VET_SWITCH_VIEW, &vt);
-      SetChanged();
-      NotifyObservers(&ve);
+      navigateToView(vt);
       return;
     }
     // For other NAV combinations, let parent handle it
@@ -472,6 +470,9 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       }
       ViewType vt = SampleEditorView::sourceViewType_;
       navigateToView(vt);
+    } else {
+      // TODO: show user error dialog
+      Trace::Error("SampleEditorView: Failed to save file!");
     }
     return;
   }
@@ -537,10 +538,12 @@ bool SampleEditorView::saveSample(
     }
   }
 
-  if (!fs->CopyFile(originalFilename.c_str(), savedFilename.c_str())) {
-    Trace::Error("SampleEditorView: Save failed copying %s -> %s",
-                 originalFilename.c_str(), savedFilename.c_str());
-    return false;
+  if (originalFilename != savedFilename) {
+    if (!fs->CopyFile(originalFilename.c_str(), savedFilename.c_str())) {
+      Trace::Error("SampleEditorView: Save failed copying %s -> %s",
+                   originalFilename.c_str(), savedFilename.c_str());
+      return false;
+    }
   }
 
   Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
