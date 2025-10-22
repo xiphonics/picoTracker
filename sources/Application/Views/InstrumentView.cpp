@@ -821,49 +821,56 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;
     };
-  } else {
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+  } else if (mask & EPBM_NAV) {
     // NAV Modifier
-    if (mask & EPBM_NAV) {
-      if (mask & EPBM_LEFT) {
-        ViewType vt = VT_PHRASE;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    if (mask & EPBM_LEFT) {
+      ViewType vt = VT_PHRASE;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
 
-        // remove listening when leaving this screen
-        getInstrument()->RemoveObserver(*this);
-        ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
+      // remove listening when leaving this screen
+      getInstrument()->RemoveObserver(*this);
+      ((WatchedVariable *)&instrumentType_)->RemoveObserver(*this);
 
-        SetChanged();
-        NotifyObservers(&ve);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_DOWN) {
+
+      // Go to table view
+
+      ViewType vt = VT_TABLE2;
+
+      int i = viewData_->currentInstrumentID_;
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      I_Instrument *instr = bank->GetInstrument(i);
+      int table = instr->GetTable();
+      if (table != VAR_OFF) {
+        viewData_->currentTable_ = table;
       }
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
 
-      if (mask & EPBM_DOWN) {
-
-        // Go to table view
-
-        ViewType vt = VT_TABLE2;
-
-        int i = viewData_->currentInstrumentID_;
-        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        I_Instrument *instr = bank->GetInstrument(i);
-        int table = instr->GetTable();
-        if (table != VAR_OFF) {
-          viewData_->currentTable_ = table;
-        }
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
-      }
-
-      if (mask & EPBM_PLAY) {
-        player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                              viewData_->chainRow_);
-      }
-    } else {
-      // No modifier
-      if (mask & EPBM_PLAY) {
-        player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                              viewData_->chainRow_);
-      }
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                            viewData_->chainRow_);
+    }
+  } else {
+    // No modifier
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                            viewData_->chainRow_);
     }
   }
 

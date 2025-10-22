@@ -16,9 +16,9 @@
 /* USER CODE BEGIN 0 */
 #include <string.h>
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t framebuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+uint16_t framebuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint32_t placeholder_framebuffer_layer2[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+uint16_t placeholder_framebuffer_layer2[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
 void init_display(void);
 /* USER CODE END 0 */
@@ -60,7 +60,7 @@ void MX_LTDC_Init(void) {
   pLayerCfg.WindowX1 = 720;
   pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 720;
-  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
+  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
@@ -103,7 +103,7 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef *ltdcHandle) {
     PeriphClkInitStruct.PLL3.PLL3N = 185;
     PeriphClkInitStruct.PLL3.PLL3P = 32;
     PeriphClkInitStruct.PLL3.PLL3Q = 32;
-    PeriphClkInitStruct.PLL3.PLL3R = 14;
+    PeriphClkInitStruct.PLL3.PLL3R = 28;
     PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
     PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
     PeriphClkInitStruct.PLL3.PLL3FRACN = 0;

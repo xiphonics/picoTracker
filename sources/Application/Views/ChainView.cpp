@@ -443,9 +443,8 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
 
   Player *player = Player::GetInstance();
 
-  // B Modifier
-
   if (mask & EPBM_EDIT) {
+    // EDIT Modifier
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
     if (mask & EPBM_RIGHT)
@@ -461,83 +460,79 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
     };
     if (mask & EPBM_NAV)
       toggleMute();
-  } else {
-
-    // A Modifier
-
-    if (mask & EPBM_ENTER) {
-      if (mask & EPBM_DOWN)
-        updateCursorValue(viewData_->chainCol_ == 0 ? -0x10 : -0x0C);
-      if (mask & EPBM_UP)
-        updateCursorValue(viewData_->chainCol_ == 0 ? 0x10 : 0x0C);
-      if (mask & EPBM_LEFT)
-        updateCursorValue(-0x01);
-      if (mask & EPBM_RIGHT)
-        updateCursorValue(0x01);
-      if (mask & EPBM_ALT)
-        pasteClipboard();
-      if (mask == EPBM_ENTER) {
-        pasteLastPhrase();
-        if (viewData_->chainCol_ == 0)
-          viewMode_ = VM_NEW;
-      }
-      if (mask & EPBM_NAV)
-        switchSoloMode();
-    } else {
-
-      // R Modifier
-
-      if (mask & EPBM_NAV) {
-
-        if (mask & EPBM_LEFT) {
-          ViewType vt = VT_SONG;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
-        }
-
-        if (mask & EPBM_RIGHT) {
-          unsigned char *data = viewData_->GetCurrentChainPointer();
-          if (*data != 0xFF) {
-            ViewType vt = VT_PHRASE;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            viewData_->currentPhrase_ = *data;
-            SetChanged();
-            NotifyObservers(&ve);
-          }
-        }
-
-        // We toggle full chain start only if we"re not in live mode
-        // or if the player ain't playing yet
-
-        if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
-                                viewData_->chainRow_);
-        }
-        if (mask & EPBM_ALT)
-          unMuteAll();
-      } else {
-        // L Modifier
-        if (mask & EPBM_ALT) {
-
-        } else {
-          // NO modifier
-          if (mask & EPBM_DOWN)
-            updateCursor(0, 1);
-          if (mask & EPBM_UP)
-            updateCursor(0, -1);
-          if (mask & EPBM_LEFT)
-            updateCursor(-1, 0);
-          if (mask & EPBM_RIGHT)
-            updateCursor(1, 0);
-          if (mask & EPBM_PLAY) {
-            player->OnStartButton(PM_CHAIN, viewData_->songX_, false,
-                                  viewData_->chainRow_);
-          }
-        }
+    if (mask & EPBM_PLAY) {
+      // recording screen
+      if (!Player::GetInstance()->IsRunning()) {
+        ViewType vt = VT_RECORD;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        SetChanged();
+        NotifyObservers(&ve);
       }
     }
+  } else if (mask & EPBM_ENTER) {
+    // ENTER Modifier
+    if (mask & EPBM_DOWN)
+      updateCursorValue(viewData_->chainCol_ == 0 ? -0x10 : -0x0C);
+    if (mask & EPBM_UP)
+      updateCursorValue(viewData_->chainCol_ == 0 ? 0x10 : 0x0C);
+    if (mask & EPBM_LEFT)
+      updateCursorValue(-0x01);
+    if (mask & EPBM_RIGHT)
+      updateCursorValue(0x01);
+    if (mask & EPBM_ALT)
+      pasteClipboard();
+    if (mask == EPBM_ENTER) {
+      pasteLastPhrase();
+      if (viewData_->chainCol_ == 0)
+        viewMode_ = VM_NEW;
+    }
+    if (mask & EPBM_NAV)
+      switchSoloMode();
+  } else if (mask & EPBM_NAV) {
+    // NAV Modifier
+    if (mask & EPBM_LEFT) {
+      ViewType vt = VT_SONG;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
+
+    if (mask & EPBM_RIGHT) {
+      unsigned char *data = viewData_->GetCurrentChainPointer();
+      if (*data != 0xFF) {
+        ViewType vt = VT_PHRASE;
+        ViewEvent ve(VET_SWITCH_VIEW, &vt);
+        viewData_->currentPhrase_ = *data;
+        SetChanged();
+        NotifyObservers(&ve);
+      }
+    }
+
+    // We toggle full chain start only if we"re not in live mode
+    // or if the player ain't playing yet
+
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
+                            viewData_->chainRow_);
+    }
+    if (mask & EPBM_ALT)
+      unMuteAll();
+  } else {
+    // NO modifier
+    if (mask & EPBM_DOWN)
+      updateCursor(0, 1);
+    if (mask & EPBM_UP)
+      updateCursor(0, -1);
+    if (mask & EPBM_LEFT)
+      updateCursor(-1, 0);
+    if (mask & EPBM_RIGHT)
+      updateCursor(1, 0);
+    if (mask & EPBM_PLAY) {
+      player->OnStartButton(PM_CHAIN, viewData_->songX_, false,
+                            viewData_->chainRow_);
+    }
   }
+
   if ((!(mask & EPBM_ENTER)) && updatingPhrase_) {
     unsigned char *c = viewData_->song_->chain_.data_ +
                        (16 * viewData_->currentChain_ + updateRow_);
