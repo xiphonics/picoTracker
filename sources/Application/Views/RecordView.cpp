@@ -126,7 +126,9 @@ void RecordView::DrawView() {
   pos._y += 2;
   pos._x = GetAnchor()._x;
   SetColor(CD_NORMAL);
-  DrawString(pos._x, pos._y, "PRESS PLAY TO RECORD", props);
+  const char *instruction =
+      isRecording_ ? "PRESS PLAY TO STOP" : "PRESS PLAY TO RECORD";
+  DrawString(pos._x, pos._y, instruction, props);
 
   // Draw fields
   FieldView::Redraw();
@@ -163,6 +165,10 @@ void RecordView::Update(Observable &o, I_ObservableData *data) {
 }
 
 void RecordView::AnimationUpdate() {
+  // First call the parent class implementation to draw the battery gauge, power
+  // off etc
+  ScreenView::AnimationUpdate();
+
   if (isRecording_) {
     // Update recording duration
     uint32_t currentTime = System::GetInstance()->Millis();
@@ -195,13 +201,6 @@ void RecordView::record() {
   int audioSource = v->GetInt();
   Trace::Log("RECORD", "Starting recording to %s, source: %s",
              RECORDING_FILENAME, audioSource == 0 ? "Line In" : "Mic");
-
-  // Draw instructions
-  GUITextProperties props;
-  auto pos = GetAnchor();
-  pos._y += 2;
-  SetColor(CD_NORMAL);
-  DrawString(pos._x, pos._y, "PRESS PLAY TO STOP", props);
 
   // Start recording with threshold and no duration set, ie. unlimited
   // recording time
