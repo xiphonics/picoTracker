@@ -244,9 +244,41 @@ Once a selection is started you can do a few more things:
 | paste clipboard                 |      `ENTER + ALT`       |           ![enter + alt key](image/pt-buttons-alt_enter.jpg)            |
 | switch solo mode                |      `ENTER + NAV`       |           ![enter + nav key](image/pt-buttons-nav_enter.jpg)            |
 
-[//]: # (TODO:)
+## Instrument View
 
-[//]: # (instrument)
+### No Modifier
+
+| Function              | Key Combination |                   Image                    |
+|:----------------------|:---------------:|:------------------------------------------:|
+| Move cursor on screen |  `ARROW` keys   | ![arrow keys](image/pt-buttons-arrows.jpg) |
+| Start/stop playback   |     `PLAY`      |   ![play key](image/pt-buttons-play.jpg)   |
+
+### ENTER Key
+
+| Function                                                  | Key Combination |                   Image                   |
+|:----------------------------------------------------------|:---------------:|:-----------------------------------------:|
+| Import sample from samplelib (double-tap on sample field) | `ENTER, ENTER`  | ![enter key](image/pt-buttons-enter2.jpg) |
+| Get next available table (on table field)                 |     `ENTER`     | ![enter key](image/pt-buttons-enter.jpg)  |
+
+### NAV Modifier
+
+| Function                                       | Key Combination |                      Image                       |
+|:-----------------------------------------------|:---------------:|:------------------------------------------------:|
+| Switch to Phrase view                          |  `NAV + LEFT`   | ![nav + left key](image/pt-buttons-nav_left.jpg) |
+| Switch to Table view (if instrument has table) |  `NAV + DOWN`   | ![nav + down key](image/pt-buttons-nav_down.jpg) |
+| Start playback (phrase mode)                   |  `NAV + PLAY`   | ![nav + play key](image/pt-buttons-nav_play.jpg) |
+
+### EDIT Modifier
+
+| Function                                                                     |     Key Combination     |                               Image                               |
+|:-----------------------------------------------------------------------------|:-----------------------:|:-----------------------------------------------------------------:|
+| Previous/Next instrument (-1/+1)                                             | `EDIT + (LEFT / RIGHT)` | ![edit + (left / right) key](image/pt-buttons-edit_leftright.jpg) |
+| Previous/Next instrument (-16/+16)                                           |  `EDIT + (DOWN / UP)`   |       ![edit + down key](image/pt-buttons-edit_updown.jpg)        |
+| Cut/purge instrument (sample) or clear table                                 |     `EDIT + ENTER`      |       ![edit + enter key](image/pt-buttons-edit_enter.jpg)        |
+| clone current table                                                          |  `EDIT + ALT + ENTER`   |      ![edit + alt key](image/pt-buttons-alt_edit_enter.jpg)       |
+| \[advance only\] Sample recording, only accessible when sequencer is stopped |     `EDIT` + `PLAY`     |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
+
+[//]: # (TODO:)
 
 [//]: # (table)
 
