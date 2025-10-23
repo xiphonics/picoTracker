@@ -65,7 +65,6 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   //  %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
   display_set_cursor(pos._x, pos._x);
   display_putc(c, p.invert_);
-  
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
     remoteUIDrawCharCommand(c, pos._x, pos._y, p.invert_, remoteUIBuffer);
@@ -134,9 +133,9 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
   }
 };
 
-void advGUIWindowImp::Lock(){};
+void advGUIWindowImp::Lock() {};
 
-void advGUIWindowImp::Unlock(){};
+void advGUIWindowImp::Unlock() {};
 
 void advGUIWindowImp::Flush() {
   display_draw_changed();
