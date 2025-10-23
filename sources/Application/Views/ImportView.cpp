@@ -564,20 +564,7 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
     Trace::Error("FAILED to chdir to %s", name);
   }
   currentIndex_ = 0;
-  // Update list of file indexes in this new dir
-  fs->list(&fileIndexList_, ".wav", false);
-
-  // If is root or we are showing project samples dir, remove the ".." entry
-  if (fs->isCurrentRoot() || inProjectSampleDir_) {
-    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
-      char filename[PFILENAME_SIZE];
-      fs->getFileName(*it, filename, PFILENAME_SIZE);
-      if (strcmp(filename, "..") == 0) {
-        fileIndexList_.erase(it);
-        break;
-      }
-    }
-  }
+  refreshFileIndexList(fs);
 
   // Check if we're in the projects directory
   // and if trying to go into the same dir as current project and if so dont
@@ -631,12 +618,40 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
     if (dialog.GetReturnCode() == MBL_OK) {
       // delete file
-      fs->DeleteFile(filename);
+      if (!fs->DeleteFile(filename)) {
+        Trace::Error("Failed to delete sample %s", filename);
+        return;
+      }
       // and unload it from ram
       SamplePool::GetInstance()->unloadSample(fileIndex);
-      if (currentIndex_ != 0) {
-        this->currentIndex_--;
+
+      if (currentIndex_ > 0) {
+        --currentIndex_;
       }
+
+      // refresh directory listing to avoid stale indexes
+      refreshFileIndexList(fs);
+
+      isDirty_ = true;
     }
   });
+}
+
+void ImportView::refreshFileIndexList(FileSystem *fs) {
+  fs->list(&fileIndexList_, ".wav", false);
+
+  if (fs->isCurrentRoot() || inProjectSampleDir_) {
+    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
+      char entryName[PFILENAME_SIZE];
+      fs->getFileName(*it, entryName, PFILENAME_SIZE);
+      if (strcmp(entryName, "..") == 0) {
+        fileIndexList_.erase(it);
+        break;
+      }
+    }
+  }
+
+  if (currentIndex_ >= fileIndexList_.size()) {
+    currentIndex_ = fileIndexList_.empty() ? 0 : fileIndexList_.size() - 1;
+  }
 }
