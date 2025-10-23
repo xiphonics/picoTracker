@@ -31,5 +31,6 @@ void StopRecording();
 void StartMonitoring();
 void StopMonitoring();
 void SetInputSource(RecordSource source);
+bool IsRecordingActive();
 
 #endif
