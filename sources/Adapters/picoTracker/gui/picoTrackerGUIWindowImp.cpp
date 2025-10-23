@@ -54,7 +54,7 @@ picoTrackerGUIWindowImp::picoTrackerGUIWindowImp(GUICreateWindowParams &p) {
   if (remoteUIEnabled_) {
     SendFont(uifontIndex);
   }
-};
+}
 
 picoTrackerGUIWindowImp::~picoTrackerGUIWindowImp() {}
 
@@ -90,7 +90,7 @@ void picoTrackerGUIWindowImp::DrawRect(GUIRect &r) {
                                                r.Height(), remoteUIBuffer);
     sendToUSBCDC(remoteUIBuffer, bufferIndex);
   }
-};
+}
 
 void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
   chargfx_color_t backgroundColor = GetColor(c);
@@ -103,11 +103,11 @@ void picoTrackerGUIWindowImp::Clear(GUIColor &c, bool overlay) {
     Trace::Debug("sent clear command: %d,%d,%d", c._r, c._g, c._b);
     sendToUSBCDC(remoteUIBuffer, 5);
   }
-};
+}
 
 void picoTrackerGUIWindowImp::ClearTextRect(GUIRect &r) {
   Trace::Debug("GUI ClearTextRect call");
-};
+}
 
 chargfx_color_t picoTrackerGUIWindowImp::GetColor(GUIColor &c) {
   // Palette index should always be < 16
@@ -145,21 +145,21 @@ void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
     sendToUSBCDC(remoteUIBuffer, bufferIndex);
     // Trace::Debug("sent set color: %d,%d,%d", c._r, c._g, c._b);
   }
-};
+}
 
-void picoTrackerGUIWindowImp::Lock() {};
+void picoTrackerGUIWindowImp::Lock() {}
 
-void picoTrackerGUIWindowImp::Unlock() {};
+void picoTrackerGUIWindowImp::Unlock() {}
 
-void picoTrackerGUIWindowImp::Flush() { chargfx_draw_changed(); };
+void picoTrackerGUIWindowImp::Flush() { chargfx_draw_changed(); }
 
 void picoTrackerGUIWindowImp::Invalidate() {
   picoTrackerEventQueue::GetInstance()->push(picoTrackerEvent(PICO_FLUSH));
-};
+}
 
 void picoTrackerGUIWindowImp::PushEvent(GUIEvent &event) {
   Trace::Debug("GUI PushEvent");
-};
+}
 
 GUIRect picoTrackerGUIWindowImp::GetRect() {
   Trace::Debug("GUI GetRect");
