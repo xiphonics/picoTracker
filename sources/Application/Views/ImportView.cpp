@@ -600,7 +600,7 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   char filename[PFILENAME_SIZE];
   fs->getFileName(fileIndex, filename, PFILENAME_SIZE);
 
-  // TODO: first check if a instrument uses this sample
+  // first check if a instrument uses this sample
   bool inUse = viewData_->project_->SampleInUse(
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filename));
 
