@@ -68,14 +68,12 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
                                        GUITextProperties &p) {
   //  Trace::Debug("Draw char \"%c\" at pos x:%ld (%ld), y:%ld (%ld) - invert:
   //  %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
-
-  uint8_t x = pos._x / 8;
-  uint8_t y = pos._y / 8;
-  chargfx_set_cursor(x, y);
+  chargfx_set_cursor(pos._x, pos._y);
   chargfx_putc(c, p.invert_);
+  
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
-    remoteUIDrawCharCommand(c, x, y, p.invert_, remoteUIBuffer);
+    remoteUIDrawCharCommand(c, pos._x, pos._y, p.invert_, remoteUIBuffer);
     sendToUSBCDC(remoteUIBuffer, 6);
   }
 }
