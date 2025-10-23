@@ -70,7 +70,7 @@ void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   //  %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
   chargfx_set_cursor(pos._x, pos._y);
   chargfx_putc(c, p.invert_);
-  
+
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
     remoteUIDrawCharCommand(c, pos._x, pos._y, p.invert_, remoteUIBuffer);
@@ -148,9 +148,9 @@ void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   }
 };
 
-void picoTrackerGUIWindowImp::Lock(){};
+void picoTrackerGUIWindowImp::Lock() {};
 
-void picoTrackerGUIWindowImp::Unlock(){};
+void picoTrackerGUIWindowImp::Unlock() {};
 
 void picoTrackerGUIWindowImp::Flush() { chargfx_draw_changed(); };
 
