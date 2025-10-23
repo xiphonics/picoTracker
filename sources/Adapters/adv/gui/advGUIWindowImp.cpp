@@ -63,14 +63,11 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
                                GUITextProperties &p) {
   //  Trace::Debug("Draw char \"%c\" at pos x:%ld (%ld), y:%ld (%ld) - invert:
   //  %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
-
-  uint8_t x = pos._x / 8;
-  uint8_t y = pos._y / 8;
-  display_set_cursor(x, y);
+  display_set_cursor(pos._x, pos._x);
   display_putc(c, p.invert_);
   if (remoteUIEnabled_) {
     char remoteUIBuffer[6];
-    remoteUIDrawCharCommand(c, x, y, p.invert_, remoteUIBuffer);
+    remoteUIDrawCharCommand(c, pos._x, pos._y, p.invert_, remoteUIBuffer);
     sendToUSBCDCBuffered(remoteUIBuffer, 6); // Use the buffered function
   }
 }
@@ -136,9 +133,9 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
   }
 };
 
-void advGUIWindowImp::Lock(){};
+void advGUIWindowImp::Lock() {};
 
-void advGUIWindowImp::Unlock(){};
+void advGUIWindowImp::Unlock() {};
 
 void advGUIWindowImp::Flush() {
   display_draw_changed();
