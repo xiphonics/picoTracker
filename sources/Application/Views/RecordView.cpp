@@ -69,10 +69,6 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
       viewData_->sampleEditorFilename = filename;
 
-      // to make sure if user "goes back" from Sample Editor they come back here
-      // to Record again
-      SampleEditorView::SetSourceViewType(VT_RECORD);
-
       // Automatically switch to SampleEditor view after recording stops
       ViewType vt = VT_SAMPLE_EDITOR;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
