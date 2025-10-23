@@ -24,6 +24,8 @@ static volatile bool writeInProgress = false;
 
 static volatile bool g_monitoringOnly = false;
 
+bool IsRecordingActive() { return recordingActive; }
+
 // Tracking which half is ready
 static volatile bool isHalfBuffer = false;
 static volatile bool thresholdOK = false;
