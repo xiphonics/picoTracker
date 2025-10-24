@@ -790,6 +790,9 @@ void SampleEditorView::loadSample(
   }
   waveformCacheValid_ = true;
 
+  // set start point variable to 0
+  startVar_.SetInt(0);
+
   // set end point variable
   endVar_.SetInt(tempSampleSize_);
 
