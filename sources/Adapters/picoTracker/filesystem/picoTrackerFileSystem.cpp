@@ -7,7 +7,7 @@
  */
 
 #include "picoTrackerFileSystem.h"
-
+#include <cstring>
 #include "pico/multicore.h"
 
 // Global mutex for thread safety
@@ -39,18 +39,24 @@ picoTrackerFileSystem::picoTrackerFileSystem() {
 I_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   std::lock_guard<Mutex> lock(mutex);
-  oflag_t rmode;
+  const bool hasPlus = (mode != nullptr) && (std::strchr(mode, '+') != nullptr);
+
+  if (!mode || !*mode) {
+    Trace::Error("Invalid mode: %s", mode ? mode : "(null)");
+    return nullptr;
+  }
+
+  oflag_t rmode = 0;
   switch (*mode) {
   case 'r':
-    rmode = O_RDONLY;
+    rmode = hasPlus ? O_RDWR : O_RDONLY;
     break;
   case 'w':
-    rmode = O_WRONLY | O_CREAT | O_TRUNC;
+    rmode = (hasPlus ? O_RDWR : O_WRONLY) | O_CREAT | O_TRUNC;
     break;
   default:
-    rmode = O_RDONLY;
-    Trace::Error("Invalid mode: %s [%d]", mode, rmode);
-    return 0;
+    Trace::Error("Invalid mode: %s", mode);
+    return nullptr;
   }
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
