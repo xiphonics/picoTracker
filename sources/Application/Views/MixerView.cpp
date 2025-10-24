@@ -11,6 +11,7 @@
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
+#include "Application/Views/SampleEditorView.h"
 #include "UIController.h"
 #include <Application/AppWindow.h>
 #include <string>
@@ -208,6 +209,7 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_MIXER);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();

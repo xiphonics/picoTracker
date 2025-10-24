@@ -12,6 +12,7 @@
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/SampleEditorView.h"
 #include "ViewData.h"
 #include <nanoprintf.h>
 
@@ -589,6 +590,7 @@ void TableView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_TABLE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();

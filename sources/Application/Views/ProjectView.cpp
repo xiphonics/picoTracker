@@ -14,6 +14,7 @@
 #include "Application/Views/ImportView.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/ModalDialogs/RenderProgressModal.h"
+#include "Application/Views/SampleEditorView.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
@@ -221,6 +222,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_PROJECT);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();

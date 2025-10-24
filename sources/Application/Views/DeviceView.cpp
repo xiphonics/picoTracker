@@ -13,6 +13,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/SampleEditorView.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
@@ -97,6 +98,7 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_DEVICE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();
