@@ -54,6 +54,8 @@ private:
   bool saveSample(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool loadSampleToPool(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
+  bool applySelectedOperation();
+  bool applyTrimOperation(uint32_t startFrame, uint32_t endFrame);
   void navigateToView(ViewType vt);
   int findSampleIndexByName(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
@@ -62,7 +64,7 @@ private:
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;
   etl::vector<UIBigHexVarField, 2> bigHexVarField_;
-  etl::vector<UIActionField, 3> actionField_;
+  etl::vector<UIActionField, 4> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
 
@@ -113,6 +115,11 @@ private:
   Variable startVar_;
   Variable endVar_;
   Variable filenameVar_;
+  enum class SampleEditOperation : int {
+    Trim = 0,
+    Count,
+  };
+  Variable operationVar_;
 
   GUIWindow &win;
 

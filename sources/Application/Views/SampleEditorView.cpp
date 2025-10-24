@@ -17,6 +17,7 @@
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
+#include "ModalDialogs/MessageBox.h"
 #include "Foundation/Types/Types.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
@@ -24,12 +25,19 @@
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
 #include "ViewUtils.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
+
+namespace {
+constexpr const char *const kSampleEditOperationNames[] = {"Trim"};
+constexpr int kSampleEditOperationCount =
+    sizeof(kSampleEditOperationNames) / sizeof(kSampleEditOperationNames[0]);
+} // namespace
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
@@ -39,7 +47,11 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       endVar_(FourCC::VarSampleEditEnd, 0),
       // bit of a hack to use InstrumentName but we never actually persist this
       // in any config file here
-      filenameVar_(FourCC::InstrumentName, ""), win(w), redraw_(false) {
+      filenameVar_(FourCC::InstrumentName, ""),
+      operationVar_(FourCC::VarSampleEditOperation, kSampleEditOperationNames,
+                    kSampleEditOperationCount,
+                    static_cast<int>(SampleEditOperation::Trim)),
+      win(w), redraw_(false) {
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
 }
@@ -99,6 +111,8 @@ void SampleEditorView::addAllFields() {
                               FourCC::InstrumentName, defaultRecName);
   fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
+  const int baseX = position._x;
+
   position._y += 1;
   bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
                                tempSampleSize_ - 1, 16);
@@ -112,8 +126,27 @@ void SampleEditorView::addAllFields() {
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  // save button
-  position._y += 2;
+  // Operation selector
+  position._y += 1;
+  position._x = baseX;
+  int maxOperationIndex = operationVar_.GetListSize() > 0
+                              ? operationVar_.GetListSize() - 1
+                              : 0;
+  intVarField_.emplace_back(position, operationVar_, "operation: %s", 0,
+                            maxOperationIndex, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  // Apply button
+  position._y += 1;
+  position._x = baseX;
+  actionField_.emplace_back("Apply", FourCC::ActionOK, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  // Save button row
+  position._y += 1;
+  position._x = baseX;
   actionField_.emplace_back("Save", FourCC::ActionSave, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -454,6 +487,34 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   uintptr_t fourcc = (uintptr_t)d;
 
   switch (fourcc) {
+  case FourCC::ActionOK: {
+    // Stop playback if active before applying any destructive operation
+    if (Player::GetInstance()->IsPlaying()) {
+      Player::GetInstance()->StopStreaming();
+    }
+    isPlaying_ = false;
+    playKeyHeld_ = false;
+
+    auto opName = operationVar_.GetString();
+    etl::string<SCREEN_WIDTH - 2> confirmLine("Apply ");
+    confirmLine.append(opName.c_str());
+    confirmLine.append("?");
+
+    MessageBox *mb =
+        new MessageBox(*this, confirmLine.c_str(), "This overwrites the file",
+                       MBBF_YES | MBBF_NO);
+
+    DoModal(mb, [this](View & /*view*/, ModalView &dialog) {
+      if (dialog.GetReturnCode() == MBL_YES) {
+        if (!applySelectedOperation()) {
+          MessageBox *error =
+              new MessageBox(*this, "Operation failed", MBBF_OK);
+          DoModal(error);
+        }
+      }
+    });
+    return;
+  }
   case FourCC::ActionSave: {
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> savedFilename;
     if (saveSample(savedFilename)) {
@@ -504,6 +565,217 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
 
   // Then do a redraw of the waveform markers only
   redraw_ = true;
+}
+
+bool SampleEditorView::applySelectedOperation() {
+  updateSampleParameters();
+
+  int opIndex = operationVar_.GetInt();
+  if (opIndex < 0 ||
+      opIndex >= static_cast<int>(SampleEditOperation::Count)) {
+    Trace::Error("SampleEditorView: Invalid operation index %d", opIndex);
+    return false;
+  }
+
+  auto op = static_cast<SampleEditOperation>(opIndex);
+  switch (op) {
+  case SampleEditOperation::Trim: {
+    int startFrame = std::max(start_, 0);
+    int endFrame = std::max(end_, 0);
+    return applyTrimOperation(static_cast<uint32_t>(startFrame),
+                              static_cast<uint32_t>(endFrame));
+  }
+  default:
+    Trace::Error("SampleEditorView: Unsupported operation %d", opIndex);
+    break;
+  }
+  return false;
+}
+
+bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
+                                          uint32_t endFrame) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return false;
+  }
+
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+  }
+  isPlaying_ = false;
+  playKeyHeld_ = false;
+
+  if (!viewData_) {
+    Trace::Error("SampleEditorView: View data unavailable");
+    return false;
+  }
+
+  const auto &filename = viewData_->sampleEditorFilename;
+  if (filename.empty()) {
+    Trace::Error("SampleEditorView: No filename available for trim");
+    return false;
+  }
+
+  if (tempSampleSize_ == 0) {
+    Trace::Error("SampleEditorView: Cannot trim empty sample");
+    return false;
+  }
+
+  if (endFrame < startFrame) {
+    Trace::Error("SampleEditorView: Trim range invalid (%u < %u)", endFrame,
+                 startFrame);
+    return false;
+  }
+
+  I_File *file = fs->Open(filename.c_str(), "r+");
+  if (!file) {
+    Trace::Error("SampleEditorView: Failed to open %s for trimming",
+                 filename.c_str());
+    return false;
+  }
+
+  char header[44];
+  if (file->Read(header, sizeof(header)) != static_cast<int>(sizeof(header))) {
+    Trace::Error("SampleEditorView: Failed to read WAV header from %s",
+                 filename.c_str());
+    file->Close();
+    return false;
+  }
+
+  uint16_t numChannels = 0;
+  uint16_t bitsPerSample = 0;
+  uint32_t dataChunkSize = 0;
+  memcpy(&numChannels, &header[22], sizeof(numChannels));
+  memcpy(&bitsPerSample, &header[34], sizeof(bitsPerSample));
+  memcpy(&dataChunkSize, &header[40], sizeof(dataChunkSize));
+
+  if (numChannels == 0 || bitsPerSample == 0) {
+    Trace::Error("SampleEditorView: Unsupported WAV format (channels=%u, "
+                 "bits=%u) in %s",
+                 numChannels, bitsPerSample, filename.c_str());
+    file->Close();
+    return false;
+  }
+
+  uint32_t bytesPerSample = bitsPerSample / 8;
+  if (bytesPerSample == 0) {
+    Trace::Error("SampleEditorView: Invalid bits per sample %u in %s",
+                 bitsPerSample, filename.c_str());
+    file->Close();
+    return false;
+  }
+
+  uint32_t bytesPerFrame = numChannels * bytesPerSample;
+  if (bytesPerFrame == 0) {
+    Trace::Error("SampleEditorView: Invalid bytes per frame for %s",
+                 filename.c_str());
+    file->Close();
+    return false;
+  }
+
+  uint32_t totalFrames =
+      bytesPerFrame ? (dataChunkSize / bytesPerFrame) : 0;
+  if (totalFrames == 0) {
+    Trace::Error("SampleEditorView: Sample has no audio frames in %s",
+                 filename.c_str());
+    file->Close();
+    return false;
+  }
+
+  uint32_t clampedStart =
+      std::min(startFrame, totalFrames > 0 ? totalFrames - 1 : 0);
+  uint32_t clampedEnd =
+      std::min(endFrame, totalFrames > 0 ? totalFrames - 1 : 0);
+
+  if (clampedStart > clampedEnd) {
+    clampedStart = clampedEnd;
+  }
+
+  uint32_t framesToKeep = (clampedEnd >= clampedStart)
+                              ? (clampedEnd - clampedStart + 1)
+                              : 0;
+  if (framesToKeep == 0) {
+    Trace::Error("SampleEditorView: Trim would result in empty sample");
+    file->Close();
+    return false;
+  }
+
+  if (clampedStart == 0 && framesToKeep == totalFrames) {
+    // Selection spans the entire sample; nothing to do.
+    file->Close();
+    Trace::Log("SAMPLEEDITOR",
+               "Trim skipped because selection spans entire sample");
+    startVar_.SetInt(0);
+    endVar_.SetInt(totalFrames > 0 ? static_cast<int>(totalFrames - 1) : 0);
+    updateSampleParameters();
+    fullWaveformRedraw_ = true;
+    redraw_ = true;
+    return true;
+  }
+
+  const uint32_t dataOffset = 44;
+  uint32_t readOffset = dataOffset + clampedStart * bytesPerFrame;
+  uint32_t writeOffset = dataOffset;
+  uint32_t bytesRemaining = framesToKeep * bytesPerFrame;
+
+  while (bytesRemaining > 0) {
+    uint32_t chunkSize =
+        std::min<uint32_t>(bytesRemaining,
+                           static_cast<uint32_t>(sizeof(chunkBuffer_)));
+
+    file->Seek(readOffset, SEEK_SET);
+    int bytesRead = file->Read(chunkBuffer_, chunkSize);
+    if (bytesRead <= 0) {
+      Trace::Error("SampleEditorView: Failed reading sample data during trim");
+      file->Close();
+      return false;
+    }
+
+    file->Seek(writeOffset, SEEK_SET);
+    int bytesWritten = file->Write(chunkBuffer_, 1, bytesRead);
+    if (bytesWritten != bytesRead) {
+      Trace::Error("SampleEditorView: Failed writing trimmed data");
+      file->Close();
+      return false;
+    }
+
+    readOffset += bytesRead;
+    writeOffset += bytesRead;
+    bytesRemaining -= static_cast<uint32_t>(bytesRead);
+  }
+
+  uint32_t newDataSize = framesToKeep * bytesPerFrame;
+  uint32_t newRiffSize = 36 + newDataSize;
+  memcpy(&header[4], &newRiffSize, sizeof(newRiffSize));
+  memcpy(&header[40], &newDataSize, sizeof(newDataSize));
+
+  file->Seek(0, SEEK_SET);
+  if (file->Write(header, 1, sizeof(header)) !=
+      static_cast<int>(sizeof(header))) {
+    Trace::Error("SampleEditorView: Failed updating WAV header after trim");
+    file->Close();
+    return false;
+  }
+  file->Sync();
+  file->Close();
+
+  loadSample(viewData_->sampleEditorFilename,
+             viewData_->sampleEditorProjectList);
+  int refreshedSize = static_cast<int>(tempSampleSize_);
+  int newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
+  startVar_.SetInt(0);
+  endVar_.SetInt(newEndValue);
+  updateSampleParameters();
+  addAllFields();
+  fullWaveformRedraw_ = true;
+  redraw_ = true;
+  playbackPosition_ = 0.0f;
+
+  Trace::Log("SAMPLEEDITOR",
+             "Trimmed sample '%s' to %u frames (start=%u, end=%u)",
+             filename.c_str(), framesToKeep, clampedStart, clampedEnd);
+  return true;
 }
 
 bool SampleEditorView::saveSample(
