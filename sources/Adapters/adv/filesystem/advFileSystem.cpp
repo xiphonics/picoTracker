@@ -132,9 +132,13 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
                  matchesFilter);
     }
 
-    // filter out "." and files that dont match filter if a filter is given
-    if (((fno.fattrib & AM_DIR) && i != 0) ||
-        (!(fno.fattrib & AM_HID) && matchesFilter)) {
+    const bool isDir = (fno.fattrib & AM_DIR) != 0;
+    const bool isFile = !isDir;
+    const bool isParentEntry = isDir && strcmp(fno.fname, "..") == 0;
+    const bool isHiddenName = (fno.fname[0] == '.') && !isParentEntry;
+
+    // filter out "." style hidden entries and files that dont match filter
+    if ((isDir || (isFile && matchesFilter)) && !isHiddenName) {
       if (subDirOnly) {
         if (fno.fattrib & AM_DIR) {
           fileIndexes->push_back(i);
