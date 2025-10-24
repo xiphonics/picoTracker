@@ -9,6 +9,7 @@
 
 #include "SampleEditorView.h"
 #include "Application/AppWindow.h"
+#include "Application/Instruments/WavFileWriter.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
@@ -594,8 +595,7 @@ bool SampleEditorView::applySelectedOperation() {
 
 bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
                                           uint32_t endFrame) {
-  auto fs = FileSystem::GetInstance();
-  if (!fs) {
+  if (!FileSystem::GetInstance()) {
     Trace::Error("SampleEditorView: FileSystem unavailable");
     return false;
   }
@@ -628,137 +628,25 @@ bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
     return false;
   }
 
-  I_File *file = fs->Open(filename.c_str(), "r+");
-  if (!file) {
-    Trace::Error("SampleEditorView: Failed to open %s for trimming",
-                 filename.c_str());
+  WavTrimResult trimResult{};
+  if (!WavFileWriter::TrimFile(filename.c_str(), startFrame, endFrame,
+                               static_cast<void *>(chunkBuffer_),
+                               sizeof(chunkBuffer_), trimResult)) {
     return false;
   }
 
-  char header[44];
-  if (file->Read(header, sizeof(header)) != static_cast<int>(sizeof(header))) {
-    Trace::Error("SampleEditorView: Failed to read WAV header from %s",
-                 filename.c_str());
-    file->Close();
-    return false;
-  }
-
-  uint16_t numChannels = 0;
-  uint16_t bitsPerSample = 0;
-  uint32_t dataChunkSize = 0;
-  memcpy(&numChannels, &header[22], sizeof(numChannels));
-  memcpy(&bitsPerSample, &header[34], sizeof(bitsPerSample));
-  memcpy(&dataChunkSize, &header[40], sizeof(dataChunkSize));
-
-  if (numChannels == 0 || bitsPerSample == 0) {
-    Trace::Error("SampleEditorView: Unsupported WAV format (channels=%u, "
-                 "bits=%u) in %s",
-                 numChannels, bitsPerSample, filename.c_str());
-    file->Close();
-    return false;
-  }
-
-  uint32_t bytesPerSample = bitsPerSample / 8;
-  if (bytesPerSample == 0) {
-    Trace::Error("SampleEditorView: Invalid bits per sample %u in %s",
-                 bitsPerSample, filename.c_str());
-    file->Close();
-    return false;
-  }
-
-  uint32_t bytesPerFrame = numChannels * bytesPerSample;
-  if (bytesPerFrame == 0) {
-    Trace::Error("SampleEditorView: Invalid bytes per frame for %s",
-                 filename.c_str());
-    file->Close();
-    return false;
-  }
-
-  uint32_t totalFrames =
-      bytesPerFrame ? (dataChunkSize / bytesPerFrame) : 0;
-  if (totalFrames == 0) {
-    Trace::Error("SampleEditorView: Sample has no audio frames in %s",
-                 filename.c_str());
-    file->Close();
-    return false;
-  }
-
-  uint32_t clampedStart =
-      std::min(startFrame, totalFrames > 0 ? totalFrames - 1 : 0);
-  uint32_t clampedEnd =
-      std::min(endFrame, totalFrames > 0 ? totalFrames - 1 : 0);
-
-  if (clampedStart > clampedEnd) {
-    clampedStart = clampedEnd;
-  }
-
-  uint32_t framesToKeep = (clampedEnd >= clampedStart)
-                              ? (clampedEnd - clampedStart + 1)
-                              : 0;
-  if (framesToKeep == 0) {
-    Trace::Error("SampleEditorView: Trim would result in empty sample");
-    file->Close();
-    return false;
-  }
-
-  if (clampedStart == 0 && framesToKeep == totalFrames) {
-    // Selection spans the entire sample; nothing to do.
-    file->Close();
-    Trace::Log("SAMPLEEDITOR",
-               "Trim skipped because selection spans entire sample");
+  if (!trimResult.trimmed) {
     startVar_.SetInt(0);
-    endVar_.SetInt(totalFrames > 0 ? static_cast<int>(totalFrames - 1) : 0);
+    endVar_.SetInt(trimResult.totalFrames > 0
+                       ? static_cast<int>(trimResult.totalFrames - 1)
+                       : 0);
     updateSampleParameters();
     fullWaveformRedraw_ = true;
     redraw_ = true;
+    Trace::Log("SAMPLEEDITOR",
+               "Trim skipped because selection spans entire sample");
     return true;
   }
-
-  const uint32_t dataOffset = 44;
-  uint32_t readOffset = dataOffset + clampedStart * bytesPerFrame;
-  uint32_t writeOffset = dataOffset;
-  uint32_t bytesRemaining = framesToKeep * bytesPerFrame;
-
-  while (bytesRemaining > 0) {
-    uint32_t chunkSize =
-        std::min<uint32_t>(bytesRemaining,
-                           static_cast<uint32_t>(sizeof(chunkBuffer_)));
-
-    file->Seek(readOffset, SEEK_SET);
-    int bytesRead = file->Read(chunkBuffer_, chunkSize);
-    if (bytesRead <= 0) {
-      Trace::Error("SampleEditorView: Failed reading sample data during trim");
-      file->Close();
-      return false;
-    }
-
-    file->Seek(writeOffset, SEEK_SET);
-    int bytesWritten = file->Write(chunkBuffer_, 1, bytesRead);
-    if (bytesWritten != bytesRead) {
-      Trace::Error("SampleEditorView: Failed writing trimmed data");
-      file->Close();
-      return false;
-    }
-
-    readOffset += bytesRead;
-    writeOffset += bytesRead;
-    bytesRemaining -= static_cast<uint32_t>(bytesRead);
-  }
-
-  uint32_t newDataSize = framesToKeep * bytesPerFrame;
-  uint32_t newRiffSize = 36 + newDataSize;
-  memcpy(&header[4], &newRiffSize, sizeof(newRiffSize));
-  memcpy(&header[40], &newDataSize, sizeof(newDataSize));
-
-  file->Seek(0, SEEK_SET);
-  if (file->Write(header, 1, sizeof(header)) !=
-      static_cast<int>(sizeof(header))) {
-    Trace::Error("SampleEditorView: Failed updating WAV header after trim");
-    file->Close();
-    return false;
-  }
-  file->Sync();
-  file->Close();
 
   loadSample(viewData_->sampleEditorFilename,
              viewData_->sampleEditorProjectList);
@@ -774,7 +662,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
 
   Trace::Log("SAMPLEEDITOR",
              "Trimmed sample '%s' to %u frames (start=%u, end=%u)",
-             filename.c_str(), framesToKeep, clampedStart, clampedEnd);
+             filename.c_str(), trimResult.framesKept, trimResult.clampedStart,
+             trimResult.clampedEnd);
   return true;
 }
 

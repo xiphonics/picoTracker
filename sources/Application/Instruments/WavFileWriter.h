@@ -12,6 +12,16 @@
 
 #include "Application/Utils/fixed.h"
 #include "System/FileSystem/FileSystem.h"
+#include <cstddef>
+#include <cstdint>
+
+struct WavTrimResult {
+  uint32_t totalFrames;
+  uint32_t clampedStart;
+  uint32_t clampedEnd;
+  uint32_t framesKept;
+  bool trimmed;
+};
 
 class WavFileWriter {
 public:
@@ -19,6 +29,9 @@ public:
   ~WavFileWriter();
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
+  static bool TrimFile(const char *path, uint32_t startFrame,
+                       uint32_t endFrame, void *scratchBuffer,
+                       size_t scratchBufferSize, WavTrimResult &result);
 
 private:
   int sampleCount_;
