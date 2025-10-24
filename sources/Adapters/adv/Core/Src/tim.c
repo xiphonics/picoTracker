@@ -154,7 +154,6 @@ void MX_TIM13_Init(void) {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM13_Init 2 */
-  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
   /* USER CODE END TIM13_Init 2 */
   HAL_TIM_MspPostInit(&htim13);
 }
