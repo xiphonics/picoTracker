@@ -8,9 +8,11 @@
 
 #include "platform.h"
 #include "Adapters/adv/mutex/advMutex.h"
+#include "Adapters/adv/system/BatteryGauge.h"
 #include "System/Console/Trace.h"
 #include "rng.h"
 #include "tim.h"
+#include <System/Console/nanoprintf.h>
 
 int32_t platform_get_rand() {
   uint32_t random32;
@@ -94,3 +96,19 @@ void platform_brightness(uint8_t value) {
 
   __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse);
 }
+
+const char *battery_health() {
+  auto soh_type = getBatteryStateOfHealthType();
+  if (soh_type == SOH_READY) {
+    auto soh = getBatteryStateOfHealth();
+    if (soh == -1) {
+      return "NA";
+    } else {
+      static char pct[5];
+      npf_snprintf(pct, sizeof(pct), "%i%%", soh);
+      return pct;
+    }
+  } else {
+    return "CALCULATING";
+  }
+};

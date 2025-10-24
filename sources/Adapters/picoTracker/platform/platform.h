@@ -28,4 +28,5 @@ uint32_t micros(void);
 
 void platform_brightness(uint8_t value);
 
+const char *battery_health();
 #endif

@@ -19,6 +19,7 @@
 #include "BaseClasses/UITempoField.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
+#include "platform.h"
 #include <nanoprintf.h>
 
 #define ACTION_BOOTSEL MAKE_FOURCC('B', 'O', 'O', 'T')
@@ -141,6 +142,14 @@ void DeviceView::DrawView() {
   pos._y = SCREEN_HEIGHT - 1;
   npf_snprintf(projectString, sizeof(projectString), "Build %s%s_%s",
                PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
+  DrawString(pos._x, pos._y, projectString, props);
+
+  // Draw battery health
+  auto soh = battery_health();
+  npf_snprintf(projectString, sizeof(projectString), "Battery health: %s", soh);
+  SetColor(CD_NORMAL);
+  pos._x = SCREEN_MAP_WIDTH + 1;
+  pos._y = 12;
   DrawString(pos._x, pos._y, projectString, props);
 };
 
