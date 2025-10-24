@@ -47,7 +47,8 @@ public:
 
   void Update(Observable &, I_ObservableData *);
 
-  void OnPurgeInstruments(bool removeFromDisk);
+  void OnPurgeInstruments();
+  void OnPurge();
   void OnQuit();
 
 private:
@@ -59,7 +60,7 @@ private:
   // Statically allocated field vectors
   etl::vector<UITempoField, 1> tempoField_;
   etl::vector<UIIntVarField, 4> intVarField_;
-  etl::vector<UIActionField, 8> actionField_;
+  etl::vector<UIActionField, 9> actionField_;
   etl::vector<UIStaticField, 1> staticField_;
   etl::vector<UITextField<MAX_PROJECT_NAME_LENGTH>, 1> textField_;
 
