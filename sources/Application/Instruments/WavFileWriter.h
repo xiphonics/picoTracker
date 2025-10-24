@@ -29,9 +29,9 @@ public:
   ~WavFileWriter();
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
-  static bool TrimFile(const char *path, uint32_t startFrame,
-                       uint32_t endFrame, void *scratchBuffer,
-                       size_t scratchBufferSize, WavTrimResult &result);
+  static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,
+                       void *scratchBuffer, size_t scratchBufferSize,
+                       WavTrimResult &result);
 
 private:
   int sampleCount_;

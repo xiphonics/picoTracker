@@ -7,8 +7,8 @@
  */
 
 #include "picoTrackerFileSystem.h"
-#include <cstring>
 #include "pico/multicore.h"
+#include <cstring>
 
 // Global mutex for thread safety
 Mutex mutex;

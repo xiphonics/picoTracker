@@ -9,8 +9,8 @@
 
 #include "SampleEditorView.h"
 #include "Application/AppWindow.h"
-#include "Application/Instruments/WavFileWriter.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Instruments/WavFileWriter.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Player/Player.h"
@@ -18,8 +18,8 @@
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
-#include "ModalDialogs/MessageBox.h"
 #include "Foundation/Types/Types.h"
+#include "ModalDialogs/MessageBox.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
@@ -135,9 +135,8 @@ void SampleEditorView::addAllFields() {
   // Operation selector
   position._y += 1;
   position._x = baseX;
-  int maxOperationIndex = operationVar_.GetListSize() > 0
-                              ? operationVar_.GetListSize() - 1
-                              : 0;
+  int maxOperationIndex =
+      operationVar_.GetListSize() > 0 ? operationVar_.GetListSize() - 1 : 0;
   intVarField_.emplace_back(position, operationVar_, "effect: %s", 0,
                             maxOperationIndex, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -574,8 +573,7 @@ bool SampleEditorView::applySelectedOperation() {
   updateSampleParameters();
 
   int opIndex = operationVar_.GetInt();
-  if (opIndex < 0 ||
-      opIndex >= static_cast<int>(SampleEditOperation::Count)) {
+  if (opIndex < 0 || opIndex >= static_cast<int>(SampleEditOperation::Count)) {
     Trace::Error("SampleEditorView: Invalid operation index %d", opIndex);
     return false;
   }

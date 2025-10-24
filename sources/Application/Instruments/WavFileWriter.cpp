@@ -151,9 +151,8 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     clampedStart = clampedEnd;
   }
 
-  uint32_t framesToKeep = (clampedEnd >= clampedStart)
-                              ? (clampedEnd - clampedStart + 1)
-                              : 0;
+  uint32_t framesToKeep =
+      (clampedEnd >= clampedStart) ? (clampedEnd - clampedStart + 1) : 0;
   if (framesToKeep == 0) {
     Trace::Error("WavFileWriter: Trim would result in empty sample");
     file->Close();
@@ -167,7 +166,8 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
 
   if (clampedStart == 0 && framesToKeep == totalFrames) {
     file->Close();
-    Trace::Log("WavFileWriter", "Trim skipped because selection spans entire sample");
+    Trace::Log("WavFileWriter",
+               "Trim skipped because selection spans entire sample");
     return true;
   }
 
@@ -177,9 +177,8 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
   uint32_t bytesRemaining = framesToKeep * bytesPerFrame;
 
   while (bytesRemaining > 0) {
-    uint32_t chunkSize =
-        std::min<uint32_t>(bytesRemaining,
-                           static_cast<uint32_t>(scratchBufferSize));
+    uint32_t chunkSize = std::min<uint32_t>(
+        bytesRemaining, static_cast<uint32_t>(scratchBufferSize));
 
     file->Seek(readOffset, SEEK_SET);
     int bytesRead = file->Read(scratchBuffer, chunkSize);
@@ -204,9 +203,8 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
 
   uint32_t newDataSize = framesToKeep * bytesPerFrame;
   file->Seek(dataOffset + newDataSize, SEEK_SET);
-  if (!WavHeaderWriter::UpdateFileSize(
-          file, framesToKeep, numChannels,
-          static_cast<uint16_t>(bytesPerSample))) {
+  if (!WavHeaderWriter::UpdateFileSize(file, framesToKeep, numChannels,
+                                       static_cast<uint16_t>(bytesPerSample))) {
     Trace::Error("WavFileWriter: Failed updating WAV header after trim");
     file->Close();
     return false;
