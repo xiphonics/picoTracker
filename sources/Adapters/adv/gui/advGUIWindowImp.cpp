@@ -133,9 +133,9 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
   }
 };
 
-void advGUIWindowImp::Lock() {};
+void advGUIWindowImp::Lock() {}
 
-void advGUIWindowImp::Unlock() {};
+void advGUIWindowImp::Unlock() {}
 
 void advGUIWindowImp::Flush() {
   display_draw_changed();
