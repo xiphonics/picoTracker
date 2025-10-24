@@ -34,11 +34,16 @@
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
 
-namespace {
 constexpr const char *const kSampleEditOperationNames[] = {"Trim"};
 constexpr int kSampleEditOperationCount =
     sizeof(kSampleEditOperationNames) / sizeof(kSampleEditOperationNames[0]);
-} // namespace
+
+#define X_OFFSET 0
+#ifdef ADV
+#define Y_OFFSET (2 * CHAR_HEIGHT * 4)
+#else
+#define Y_OFFSET 2 * CHAR_HEIGHT
+#endif
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
@@ -133,14 +138,13 @@ void SampleEditorView::addAllFields() {
   int maxOperationIndex = operationVar_.GetListSize() > 0
                               ? operationVar_.GetListSize() - 1
                               : 0;
-  intVarField_.emplace_back(position, operationVar_, "operation: %s", 0,
+  intVarField_.emplace_back(position, operationVar_, "effect: %s", 0,
                             maxOperationIndex, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
   // Apply button
-  position._y += 1;
-  position._x = baseX;
+  position._x = baseX + 20;
   actionField_.emplace_back("Apply", FourCC::ActionOK, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -317,23 +321,13 @@ void SampleEditorView::DrawView() {
 }
 
 void SampleEditorView::DrawWaveForm() {
-  const int X_OFFSET = 0;
-#ifdef ADV
-  const int Y_OFFSET = 2 * CHAR_HEIGHT * 4;
-#else
-  const int Y_OFFSET = 2 * CHAR_HEIGHT;
-#endif
-
   GUIRect rrect;
-
   if (fullWaveformRedraw_) {
     // clear flag immediately to prevent race condition between event triggered
     // from input event and the animation update callback
     fullWaveformRedraw_ = false;
-    // Clear the entire waveform area
-    rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
-                    Y_OFFSET + BITMAPHEIGHT);
-    DrawRect(rrect, CD_BACKGROUND);
+
+    clearWaveformRegion();
 
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
     // Draw borders
@@ -505,14 +499,22 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
         new MessageBox(*this, confirmLine.c_str(), "This overwrites the file",
                        MBBF_YES | MBBF_NO);
 
-    DoModal(mb, [this](View & /*view*/, ModalView &dialog) {
+    // Modal cannot properly draw over the waveform gfx area because text
+    // drawing doesn't know the area because ClearTextRect() is not yet
+    // implemented so we need to manually clear the waveform drawing
+    clearWaveformRegion();
+
+    DoModal(mb, [this](View &view, ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_YES) {
         if (!applySelectedOperation()) {
           MessageBox *error =
               new MessageBox(*this, "Operation failed", MBBF_OK);
-          DoModal(error);
+          DoModal(error, [this](View &view1, ModalView &dialog1) {
+            fullWaveformRedraw_ = true;
+          });
         }
       }
+      fullWaveformRedraw_ = true;
     });
     return;
   }
@@ -961,4 +963,12 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
              tempSampleSize_, peakAmplitude, filename.c_str());
   fullWaveformRedraw_ = true;
+}
+
+void SampleEditorView::clearWaveformRegion() {
+  // Clear the entire waveform area
+  GUIRect rrect;
+  rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
+                  Y_OFFSET + BITMAPHEIGHT);
+  DrawRect(rrect, CD_BACKGROUND);
 }

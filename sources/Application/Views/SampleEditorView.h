@@ -60,6 +60,7 @@ private:
   int findSampleIndexByName(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
   SampleInstrument *getCurrentSampleInstrument();
+  void clearWaveformRegion();
 
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;
