@@ -199,11 +199,19 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
     }
   }
 }
+
+static inline uint16_t abgr8888_to_rgb565(uint32_t color) {
+  uint8_t r = color & 0xFF;
+  uint8_t g = (color >> 8) & 0xFF;
+  uint8_t b = (color >> 16) & 0xFF;
+  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+}
 // TODO: update this to a use DMA2D call ASAP
 void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
                        uint16_t width, uint16_t height) {
   // Get the ABGR8888 color from the palette
   uint32_t color = palette[color_index];
+  uint16_t color565 = abgr8888_to_rgb565(color);
 
   if (width == 0 || height == 0) {
     return;
@@ -222,7 +230,7 @@ void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
 
   for (uint16_t j = y; j < y + height; j++) {
     for (uint16_t i = x; i < x + width; i++) {
-      framebuffer[j * DISPLAY_WIDTH + i] = color;
+      framebuffer[j * DISPLAY_WIDTH + i] = color565;
     }
   }
 }
