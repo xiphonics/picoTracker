@@ -182,8 +182,8 @@ Once a selection is started you can do a few more things:
 | Move cursor on screen                                                                      |  `ARROW` keys   | ![arrow keys](image/pt-buttons-arrows.jpg) |
 | Start/stop playback of current phrase                                                      |     `PLAY`      |   ![play key](image/pt-buttons-play.jpg)   |
 | enter last used value or start with 0                                                      |     `ENTER`     |  ![enter key](image/pt-buttons-enter.jpg)  |
-| in instrument column: insert first unused instrument number                                | `ENTER`,`ENTER` |  ![enter key](image/pt-buttons-enter.jpg)  |
-| in argument column of TBL command: insert first unused table number (TODO: see issue #753) | `ENTER`,`ENTER` |  ![enter key](image/pt-buttons-enter.jpg)  |
+| in instrument column: insert first unused instrument number                                | `ENTER, ENTER`  |  ![enter key](image/pt-buttons-enter.jpg)  |
+| in argument column of TBL command: insert first unused table number (TODO: see issue #753) | `ENTER, ENTER`  |  ![enter key](image/pt-buttons-enter.jpg)  |
 | in note / instrument column: audition note                                                 |  `ENTER` held   |  ![enter key](image/pt-buttons-enter.jpg)  |
 
 ### NAV Modifier
