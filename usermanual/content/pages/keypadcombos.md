@@ -84,7 +84,6 @@ Once a selection is started you can do a few more things:
 |:-----------------------------------------------------------------------------|:-----------------------:|:--------------------------------------------------------------:|
 | Cuts the current Highlighted Item.                                           |     `EDIT + ENTER`      |     ![edit + enter keys](image/pt-buttons-edit_enter.jpg)      |
 | start selection                                                              |      `EDIT + ALT`       |       ![edit + alt keys](image/pt-buttons-alt_edit.jpg)        |
-| Start immediate playback                                                     |      `EDIT + PLAY`      |      ![edit + play keys](image/pt-buttons-edit_play.jpg)       |
 | Page up/down in Song Screen.                                                 |  `EDIT + (UP / DOWN)`   |    ![edit + up/down keys](image/pt-buttons-edit_updown.jpg)    |
 | Switch between Song and Live Mode                                            | `EDIT + (LEFT / RIGHT)` | ![edit + left/right keys](image/pt-buttons-edit_leftright.jpg) |
 | mute selected track                                                          |      `EDIT + NAV`       |       ![nav + edit keys](image/pt-buttons-nav_edit.jpg)        |
@@ -380,13 +379,13 @@ Once a selection is started you can do a few more things:
 
 ### EDIT Modifier
 
-| Function                                       |     Key Combination     |                               Image                               |
-|:-----------------------------------------------|:-----------------------:|:-----------------------------------------------------------------:|
-| Warp to previous/next table (-1/+1)            | `EDIT + (LEFT / RIGHT)` | ![edit + (left / right) key](image/pt-buttons-edit_leftright.jpg) |
-| Warp to previous/next table (-16/+16)          |  `EDIT + (DOWN / UP)`   |       ![edit + down key](image/pt-buttons-edit_updown.jpg)        |
-| Cut current position into clipboard            |     `EDIT + ENTER`      |       ![edit + enter key](image/pt-buttons-edit_enter.jpg)        |
-| Start selection mode                           |      `EDIT + ALT`       |         ![alt + edit key](image/pt-buttons-alt_edit.jpg)          |
-| Switch to Record View (when sequencer stopped) |      `EDIT + PLAY`      |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
+| Function                                                        |     Key Combination     |                               Image                               |
+|:----------------------------------------------------------------|:-----------------------:|:-----------------------------------------------------------------:|
+| Warp to previous/next table (-1/+1)                             | `EDIT + (LEFT / RIGHT)` | ![edit + (left / right) key](image/pt-buttons-edit_leftright.jpg) |
+| Warp to previous/next table (-16/+16)                           |  `EDIT + (DOWN / UP)`   |       ![edit + down key](image/pt-buttons-edit_updown.jpg)        |
+| Cut current position into clipboard                             |     `EDIT + ENTER`      |       ![edit + enter key](image/pt-buttons-edit_enter.jpg)        |
+| Start selection mode                                            |      `EDIT + ALT`       |         ![alt + edit key](image/pt-buttons-alt_edit.jpg)          |
+| \[advance only\] Switch to Record View (when sequencer stopped) |      `EDIT + PLAY`      |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
 
 #### Use Selection
 
