@@ -88,7 +88,7 @@ Once a selection is started you can do a few more things:
 | Page up/down in Song Screen.                                                 |  `EDIT + (UP / DOWN)`   |    ![edit + up/down keys](image/pt-buttons-edit_updown.jpg)    |
 | Switch between Song and Live Mode                                            | `EDIT + (LEFT / RIGHT)` | ![edit + left/right keys](image/pt-buttons-edit_leftright.jpg) |
 | mute selected track                                                          |      `EDIT + NAV`       |       ![nav + edit keys](image/pt-buttons-nav_edit.jpg)        |
-| \[advance only\] Sample recording, only accessible when sequencer is stopped |     `EDIT` + `PLAY`     |      ![edit + play keys](image/pt-buttons-edit_play.jpg)       |
+| \[advance only\] Sample recording, only accessible when sequencer is stopped |      `EDIT + PLAY`      |      ![edit + play keys](image/pt-buttons-edit_play.jpg)       |
 
 ### ENTER Key Combinations
 
@@ -143,7 +143,7 @@ Once a selection is started you can do a few more things:
 | start selection                                                              |        `ALT + EDIT`        |           ![alt + edit key](image/pt-buttons-alt_edit.jpg)           |
 | start selection with row selected                                            |    `ALT + EDIT + EDIT`     |       ![alt + edit twice keys](image/pt-buttons-alt_edit2.jpg)       |
 | start selection with current screen selected                                 | `ALT + EDIT + EDIT + EDIT` |      ![alt + edit thrice keys](image/pt-buttons-alt_edit3.jpg)       |
-| \[advance only\] Sample recording, only accessible when sequencer is stopped |      `EDIT` + `PLAY`       |         ![edit + play keys](image/pt-buttons-edit_play.jpg)          |
+| \[advance only\] Sample recording, only accessible when sequencer is stopped |       `EDIT + PLAY`        |         ![edit + play keys](image/pt-buttons-edit_play.jpg)          |
 
 #### Use Selection
 
@@ -220,7 +220,7 @@ Once a selection is started you can do a few more things:
 | start selection                                                              |        `EDIT + ALT`        |           ![alt + edit key](image/pt-buttons-alt_edit.jpg)           |
 | start selection with row selected                                            |    `ALT + EDIT + EDIT`     |       ![alt + edit twice keys](image/pt-buttons-alt_edit2.jpg)       |
 | start selection with current screen selected                                 | `ALT + EDIT + EDIT + EDIT` |      ![alt + edit thrice keys](image/pt-buttons-alt_edit3.jpg)       |
-| \[advance only\] Sample recording, only accessible when sequencer is stopped |      `EDIT` + `PLAY`       |         ![edit + play keys](image/pt-buttons-edit_play.jpg)          |
+| \[advance only\] Sample recording, only accessible when sequencer is stopped |       `EDIT + PLAY`        |         ![edit + play keys](image/pt-buttons-edit_play.jpg)          |
 
 #### Use Selection
 
@@ -276,10 +276,58 @@ Once a selection is started you can do a few more things:
 | Previous/Next instrument (-16/+16)                                           |  `EDIT + (DOWN / UP)`   |       ![edit + down key](image/pt-buttons-edit_updown.jpg)        |
 | Cut/purge instrument (sample) or clear table                                 |     `EDIT + ENTER`      |       ![edit + enter key](image/pt-buttons-edit_enter.jpg)        |
 | clone current table                                                          |  `EDIT + ALT + ENTER`   |      ![edit + alt key](image/pt-buttons-alt_edit_enter.jpg)       |
-| \[advance only\] Sample recording, only accessible when sequencer is stopped |     `EDIT` + `PLAY`     |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
+| \[advance only\] Sample recording, only accessible when sequencer is stopped |      `EDIT + PLAY`      |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
 
-[//]: # (TODO:)
+## Table View
 
-[//]: # (table)
+### No Modifier
 
-[//]: # (project)
+| Function                                    | Key Combination |                   Image                    |
+|:--------------------------------------------|:---------------:|:------------------------------------------:|
+| Move cursor on screen                       |  `ARROW` keys   | ![arrow keys](image/pt-buttons-arrows.jpg) |
+| Start/stop playback of current phrase       |     `PLAY`      |   ![play key](image/pt-buttons-play.jpg)   |
+| Paste last used command (in command column) |     `ENTER`     |  ![enter key](image/pt-buttons-enter.jpg)  |
+
+### NAV Modifier
+
+| Function                                                             | Key Combination |                       Image                        |
+|:---------------------------------------------------------------------|:---------------:|:--------------------------------------------------:|
+| Switch to Phrase View (from Table1) or Instrument View (from Table2) |   `NAV + UP`    |    ![nav + up key](image/pt-buttons-nav_up.jpg)    |
+| Switch to Table View (from Table2)                                   |  `NAV + LEFT`   |  ![nav + left key](image/pt-buttons-nav_left.jpg)  |
+| Switch to Table2 View (from Table1)                                  |  `NAV + RIGHT`  | ![nav + right key](image/pt-buttons-nav_right.jpg) |
+| Play phrase in song context                                          |  `NAV + PLAY`   |  ![nav + play key](image/pt-buttons-nav_play.jpg)  |
+
+### ALT Modifier
+
+| Function        | Key Combination |                       Image                        |
+|:----------------|:---------------:|:--------------------------------------------------:|
+| Paste clipboard |  `ALT + ENTER`  | ![alt + enter key](image/pt-buttons-alt_enter.jpg) |
+
+### EDIT Modifier
+
+| Function                                       |     Key Combination     |                               Image                               |
+|:-----------------------------------------------|:-----------------------:|:-----------------------------------------------------------------:|
+| Warp to previous/next table (-1/+1)            | `EDIT + (LEFT / RIGHT)` | ![edit + (left / right) key](image/pt-buttons-edit_leftright.jpg) |
+| Warp to previous/next table (-16/+16)          |  `EDIT + (DOWN / UP)`   |       ![edit + down key](image/pt-buttons-edit_updown.jpg)        |
+| Cut current position into clipboard            |     `EDIT + ENTER`      |       ![edit + enter key](image/pt-buttons-edit_enter.jpg)        |
+| Start selection mode                           |      `EDIT + ALT`       |         ![alt + edit key](image/pt-buttons-alt_edit.jpg)          |
+| Switch to Record View (when sequencer stopped) |      `EDIT + PLAY`      |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
+
+#### Use Selection
+
+Once a selection is started you can do a few more things:
+
+| Function                                | Key Combination |                       Image                        |
+|:----------------------------------------|:---------------:|:--------------------------------------------------:|
+| change selection                        |  `ARROW` keys   |     ![arrow keys](image/pt-buttons-arrows.jpg)     |
+| increase selection to full row / screen |  `ALT + EDIT`   |  ![alt + edit key](image/pt-buttons-alt_edit.jpg)  |
+| copy selection to clipboard             |     `EDIT`      |       ![edit key](image/pt-buttons-edit.jpg)       |
+| cut the current selection               |  `ALT + ENTER`  | ![enter + alt key](image/pt-buttons-alt_enter.jpg) |
+
+### ENTER Modifier
+
+| Function                        |     Key Combination      |                                  Image                                  |
+|:--------------------------------|:------------------------:|:-----------------------------------------------------------------------:|
+| update cursor value by +/- 0x10 |  `ENTER + (UP / DOWN)`   |   ![enter + vertical arrow keys](image/pt-buttons-enter_up_down.jpg)    |
+| update cursor value by +/- 0x01 | `ENTER + (LEFT / RIGHT)` | ![enter + horizontal arrow keys](image/pt-buttons-enter_left_right.jpg) |
+| Paste clipboard                 |      `ENTER + ALT`       |           ![enter + alt key](image/pt-buttons-alt_enter.jpg)            |
