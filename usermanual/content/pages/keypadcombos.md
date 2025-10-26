@@ -324,6 +324,35 @@ Once a selection is started you can do a few more things:
 |:--------------|:---------------:|:------------------------------------------------:|
 | Import sample |  `ALT + PLAY`   | ![alt + play key](image/pt-buttons-alt_play.jpg) |
 
+## Sample Editor View
+
+### No Modifier
+
+| Function              | Key Combination |                   Image                    |
+|:----------------------|:---------------:|:------------------------------------------:|
+| Move cursor on screen |  `ARROW` keys   | ![arrow keys](image/pt-buttons-arrows.jpg) |
+| Preview sample (hold) |     `PLAY`      |   ![play key](image/pt-buttons-play.jpg)   |
+
+### ENTER Key
+
+| Function                        |                        Key Combination                         |                                  Image                                  |
+|:--------------------------------|:--------------------------------------------------------------:|:-----------------------------------------------------------------------:|
+| update cursor value             | `ENTER + (UP / DOWN)` (with start, end or name field selected) |   ![enter + vertical arrow keys](image/pt-buttons-enter_up_down.jpg)    |
+| update cursor position in field |                    `ENTER + (LEFT / RIGHT)`                    | ![enter + horizontal arrow keys](image/pt-buttons-enter_left_right.jpg) |
+| Save sample                     |              `ENTER` (with Save button selected)               |                ![enter key](image/pt-buttons-enter.jpg)                 |
+
+### EDIT Key
+
+| Function                            |          Key Combination          |                 Image                  |
+|:------------------------------------|:---------------------------------:|:--------------------------------------:|
+| delete character at cursor position | `EDIT` (with name field selected) | ![edit key](image/pt-buttons-edit.jpg) |
+
+### NAV Modifier
+
+| Function                 | Key Combination |                      Image                       |
+|:-------------------------|:---------------:|:------------------------------------------------:|
+| Return to sample browser |  `NAV + LEFT`   | ![nav + left key](image/pt-buttons-nav_left.jpg) |
+
 ## Table View
 
 ### No Modifier
