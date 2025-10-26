@@ -278,6 +278,52 @@ Once a selection is started you can do a few more things:
 | clone current table                                                          |  `EDIT + ALT + ENTER`   |      ![edit + alt key](image/pt-buttons-alt_edit_enter.jpg)       |
 | \[advance only\] Sample recording, only accessible when sequencer is stopped |      `EDIT + PLAY`      |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
 
+## Import View
+
+### No Modifier
+
+| Function                       | Key Combination |                         Image                         |
+|:-------------------------------|:---------------:|:-----------------------------------------------------:|
+| Move up/down in file list      |   `UP / DOWN`   |  ![arrow keys](image/pt-buttons-arrows-up_down.jpg)   |
+| Toggle selected button         | `LEFT / RIGHT`  | ![arrow keys](image/pt-buttons-arrows-left_right.jpg) |
+| Preview selected sample (hold) |     `PLAY`      |        ![play key](image/pt-buttons-play.jpg)         |
+| Navigate into directory        |     `ENTER`     |       ![enter key](image/pt-buttons-enter.jpg)        |
+
+### ENTER Key
+
+**In File Browser Mode:**
+
+| Function      | Key Combination                       |                  Image                   |
+|:--------------|:--------------------------------------|:----------------------------------------:|
+| Import sample | `ENTER` (with Import button selected) | ![enter key](image/pt-buttons-enter.jpg) |
+| Edit sample   | `ENTER` (with Edit button selected)   | ![enter key](image/pt-buttons-enter.jpg) |
+
+**In Project Pool Mode:**
+
+| Function                                    | Key Combination                       |                  Image                   |
+|:--------------------------------------------|:--------------------------------------|:----------------------------------------:|
+| Edit sample                                 | `ENTER` (with Edit button selected)   | ![enter key](image/pt-buttons-enter.jpg) |
+| \[advance only\] Remove sample from project | `ENTER` (with Remove button selected) | ![enter key](image/pt-buttons-enter.jpg) |
+
+### NAV Modifier
+
+| Function                                       | Key Combination |                      Image                       |
+|:-----------------------------------------------|:---------------:|:------------------------------------------------:|
+| Return to source view (Phrase or Instrument)   |  `NAV + LEFT`   | ![nav + left key](image/pt-buttons-nav_left.jpg) |
+| Toggle between sample library and project pool |  `NAV + EDIT`   | ![nav + edit key](image/pt-buttons-nav_edit.jpg) |
+
+### EDIT Modifier
+
+| Function                           |   Key Combination    |                            Image                             |
+|:-----------------------------------|:--------------------:|:------------------------------------------------------------:|
+| Increase / Decrease preview volume | `EDIT + (UP / DOWN)` | ![edit + (up / down) key](image/pt-buttons-edit_up_down.jpg) |
+
+### ALT Modifier
+
+| Function      | Key Combination |                      Image                       |
+|:--------------|:---------------:|:------------------------------------------------:|
+| Import sample |  `ALT + PLAY`   | ![alt + play key](image/pt-buttons-alt_play.jpg) |
+
 ## Table View
 
 ### No Modifier
