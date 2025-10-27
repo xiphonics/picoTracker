@@ -30,6 +30,8 @@ void tlv320_enable_linein(void);
 void tlv320_enable_mic(void);
 void tlv320_disable_linein(void);
 void tlv320_disable_mic(void);
+void tlv320_sleep(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -22,6 +22,7 @@
 #include "critical_error_message.h"
 #include "input.h"
 #include "platform.h"
+#include "rtc.h"
 #include "tim.h"
 #include "tlv320aic3204.h"
 #include <assert.h>
@@ -100,6 +101,25 @@ void advSystem::Boot() {
   // Install SamplePool
   static char samplePoolMemBuf[sizeof(advSamplePool)];
   SamplePool::Install(new (samplePoolMemBuf) advSamplePool());
+
+  // Handle wake up
+  if (__HAL_PWR_GET_FLAG(PWR_FLAG_SB)) {
+    // Determine actual source
+    if (PWR->WKUPFR & PWR_WKUPFR_WKUPF2) {
+      Trace::Log("POWERON", "Woke up from power button");
+      HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    } else if (__HAL_RTC_WAKEUPTIMER_GET_FLAG(&hrtc, RTC_FLAG_WUTF)) {
+      Trace::Log("POWERON", "Woke up from RTC - back to sleep");
+      powerOff();
+    } else {
+      Trace::Log("POWERON", "Woke up from unknown source");
+    }
+  } else {
+    Trace::Log("POWERON", "Woke up from deep sleep");
+  }
+
+  // Enable display PWM
+  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
 
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
