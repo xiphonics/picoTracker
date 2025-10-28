@@ -658,7 +658,7 @@ bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
     MessageBox *warning = new MessageBox(*this, "Please reload project",
                                          "To apply changes", MBBF_OK);
     DoModal(warning);
-    return;
+    return true;
 #endif
     auto pool = SamplePool::GetInstance();
     if (pool) {
