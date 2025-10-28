@@ -135,6 +135,7 @@ void DeviceView::DrawView() {
 
   FieldView::Redraw();
 
+#ifdef ADV
   // Draw battery health
   pos._x = SCREEN_MAP_WIDTH + 1;
   pos._y = 12;
@@ -148,6 +149,7 @@ void DeviceView::DrawView() {
             : npf_snprintf(sohText, sizeof(sohText), "%i%%", soh);
   SetColor(CD_INFO);
   DrawString(pos._x, pos._y, sohText, props);
+#endif
 
   SetColor(CD_NORMAL);
   drawMap();
