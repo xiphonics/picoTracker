@@ -127,6 +127,7 @@ void Error_Handler(void);
 #define INPUT_PLAY_GPIO_Port GPIOG
 #define CHARGER_INT_Pin GPIO_PIN_7
 #define CHARGER_INT_GPIO_Port GPIOB
+#define CHARGER_INT_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 #define DEBUG_UART huart1
