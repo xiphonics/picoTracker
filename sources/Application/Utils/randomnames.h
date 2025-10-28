@@ -33,10 +33,13 @@ const char *verbs[] = {
 // Generate a random name made in the format of: "adjective-verb"
 // chosen from small word lists of words 3-4 chars in length
 // eg. "fast-sea", "wet-pea", "mad-paw" etc
-void getRandomName(char *name, int32_t randomNumber) {
+void getRandomName(char *name, uint32_t randomNumber, size_t nameSize) {
 
-  int adjectivesCount = sizeof(adjectives) / sizeof(char *);
-  int verbsCount = sizeof(verbs) / sizeof(char *);
+  if (!name || nameSize < 10)
+    return; // Basic validation
+
+  int adjectivesCount = sizeof(adjectives) / sizeof(adjectives[0]);
+  int verbsCount = sizeof(verbs) / sizeof(verbs[0]);
   int rndIndex = randomNumber % adjectivesCount;
   strcpy(name, adjectives[rndIndex]);
   strcat(name, "-");

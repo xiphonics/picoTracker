@@ -12,7 +12,7 @@
 #include "rng.h"
 #include "tim.h"
 
-int32_t platform_get_rand() {
+uint32_t platform_get_rand() {
   uint32_t random32;
   if (HAL_RNG_GenerateRandomNumber(&hrng, &random32) == HAL_OK) {
     return (int32_t)random32;

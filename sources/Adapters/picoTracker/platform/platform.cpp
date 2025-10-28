@@ -225,7 +225,7 @@ void platform_init() {
   gpio_pull_up(INPUT_PLAY);
 }
 
-int32_t platform_get_rand() { return get_rand_32(); };
+uint32_t platform_get_rand() { return get_rand_32(); };
 
 void platform_reboot() { watchdog_reboot(0, 0, 0); }
 

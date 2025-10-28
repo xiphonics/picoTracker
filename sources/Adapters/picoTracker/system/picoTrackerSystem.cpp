@@ -180,7 +180,7 @@ unsigned int picoTrackerSystem::GetMemoryUsage() {
 
 void picoTrackerSystem::SystemPutChar(int c) { putchar(c); }
 
-int32_t picoTrackerSystem::GetRandomNumber() { return platform_get_rand(); }
+uint32_t picoTrackerSystem::GetRandomNumber() { return platform_get_rand(); }
 
 void picoTrackerSystem::SystemBootloader() { platform_bootloader(); }
 
