@@ -239,3 +239,5 @@ uint32_t micros(void) { return to_us_since_boot(get_absolute_time()); }
 void platform_brightness(uint8_t value) {
   pwm_set_gpio_level(DISPLAY_PWM, value);
 }
+
+int16_t battery_health() { return -1; };

@@ -71,6 +71,10 @@
 // that can be accessed in SEALED mode
 #define BQ27441_DESIGN_CAPACITY 0x3C
 
+// Commands
+#define BQ27441_CMD_SOH 0x20
+#define BQ27441_CMD_SOHT 0x21
+
 // need to use this as HAL_Delay() not available when configureBatteryGauge is
 // called during early bootup
 void busywait(uint32_t delay) {
@@ -682,4 +686,60 @@ int16_t getBatteryCurrent() {
   // Combine the two bytes into a 16-bit signed value (LSB first per datasheet)
   int16_t current = (rxData[1] << 8) | rxData[0];
   return current;
+}
+
+SOHT getBatteryStateOfHealthType() {
+  HAL_StatusTypeDef status;
+  uint8_t txData[1] = {BQ27441_CMD_SOHT};
+  uint8_t rxData[2] = {0}; // register is 16 bit
+
+  // Send the state of health type register command
+  status =
+      HAL_I2C_Master_Transmit(&hi2c4, BQ27441_I2C_ADDR << 1, txData, 1, 1000);
+  if (status != HAL_OK) {
+    Trace::Error("Failed to send state of health type read command to battery "
+                 "gauge (status: %d)",
+                 status);
+    return SOH_ERROR;
+  }
+
+  // Read the SOHT data
+  status =
+      HAL_I2C_Master_Receive(&hi2c4, BQ27441_I2C_ADDR << 1, rxData, 2, 1000);
+  if (status != HAL_OK) {
+    Trace::Error("Failed to receive state of health type data from battery "
+                 "gauge (status: %d)",
+                 status);
+    return SOH_ERROR;
+  }
+
+  return (SOHT)rxData[0];
+}
+
+int16_t getBatteryStateOfHealth() {
+  HAL_StatusTypeDef status;
+  uint8_t txData[1] = {BQ27441_CMD_SOH};
+  uint8_t rxData[2] = {0}; // register is 16 bit
+
+  // Send the state of health register command
+  status =
+      HAL_I2C_Master_Transmit(&hi2c4, BQ27441_I2C_ADDR << 1, txData, 1, 1000);
+  if (status != HAL_OK) {
+    Trace::Error("Failed to send state of health read command to battery "
+                 "gauge (status: %d)",
+                 status);
+    return -1;
+  }
+
+  // Read the state of health data
+  status =
+      HAL_I2C_Master_Receive(&hi2c4, BQ27441_I2C_ADDR << 1, rxData, 2, 1000);
+  if (status != HAL_OK) {
+    Trace::Error("Failed to receive state of health data from battery "
+                 "gauge (status: %d)",
+                 status);
+    return -1;
+  }
+
+  return rxData[0];
 }

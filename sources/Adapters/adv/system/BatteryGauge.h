@@ -23,11 +23,15 @@
 // Use max signed int16 to indicate error
 #define CURRENT_READ_ERROR 0x7FFF
 
+enum SOHT { SOH_NOT_VALID = 0, SOH_INSTANT, SOH_INITIAL, SOH_READY, SOH_ERROR };
+
 // Battery gauge configuration
 bool configureBatteryGauge();
 uint8_t getBatterySOC();
 uint32_t getBatteryVoltage();
 int32_t getBatteryTemperature();
 int16_t getBatteryCurrent();
+SOHT getBatteryStateOfHealthType();
+int16_t getBatteryStateOfHealth();
 
 #endif
