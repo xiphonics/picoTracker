@@ -38,7 +38,7 @@ public:                                 // Override in implementation
   virtual void SystemPutChar(int c) = 0;
   virtual void SystemBootloader() = 0;
   virtual void SystemReboot() = 0;
-  virtual int32_t GetRandomNumber() = 0;
+  virtual uint32_t GetRandomNumber() = 0;
   virtual uint32_t Micros() = 0;
   virtual uint32_t Millis() = 0;
 };
