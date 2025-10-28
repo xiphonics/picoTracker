@@ -97,18 +97,12 @@ void platform_brightness(uint8_t value) {
   __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse);
 }
 
-const char *battery_health() {
+// returns -1 on error, -2 for "calculating" status
+int16_t battery_health() {
   auto soh_type = getBatteryStateOfHealthType();
   if (soh_type == SOH_READY) {
-    auto soh = getBatteryStateOfHealth();
-    if (soh == -1) {
-      return "NA";
-    } else {
-      static char pct[5];
-      npf_snprintf(pct, sizeof(pct), "%i%%", soh);
-      return pct;
-    }
+    return getBatteryStateOfHealth();
   } else {
-    return "CALCULATING";
+    return -2;
   }
 };

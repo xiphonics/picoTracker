@@ -240,4 +240,4 @@ void platform_brightness(uint8_t value) {
   pwm_set_gpio_level(DISPLAY_PWM, value);
 }
 
-const char *battery_health() { return "NA"; };
+int16_t battery_health() { return -1; };
