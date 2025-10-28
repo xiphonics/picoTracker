@@ -11,7 +11,7 @@
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 #include "System/System/System.h"
-#include "WavHeaderWriter.h"
+#include "WavHeader.h"
 #include <algorithm>
 #include <cstring>
 
@@ -98,32 +98,22 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     return false;
   }
 
-  char header[44];
-  if (file->Read(header, sizeof(header)) != static_cast<int>(sizeof(header))) {
-    Trace::Error("WavFileWriter: Failed to read WAV header from %s", path);
+  auto headerInfo = WavHeaderWriter::ReadHeader(file);
+  if (!headerInfo) {
+    Trace::Error("WavFileWriter: Failed to parse WAV header from %s", path);
     file->Close();
     return false;
   }
 
-  uint16_t numChannels = 0;
-  uint16_t bitsPerSample = 0;
-  uint32_t dataChunkSize = 0;
-  std::memcpy(&numChannels, &header[22], sizeof(numChannels));
-  std::memcpy(&bitsPerSample, &header[34], sizeof(bitsPerSample));
-  std::memcpy(&dataChunkSize, &header[40], sizeof(dataChunkSize));
+  const uint16_t numChannels = headerInfo->numChannels;
+  const uint16_t bytesPerSample = headerInfo->bytesPerSample;
+  const uint16_t bitsPerSample = headerInfo->bitsPerSample;
+  const uint32_t dataChunkSize = headerInfo->dataChunkSize;
 
   if (numChannels == 0 || bitsPerSample == 0) {
     Trace::Error("WavFileWriter: Unsupported WAV format (channels=%u, bits=%u) "
                  "in %s",
                  numChannels, bitsPerSample, path);
-    file->Close();
-    return false;
-  }
-
-  uint32_t bytesPerSample = bitsPerSample / 8;
-  if (bytesPerSample == 0) {
-    Trace::Error("WavFileWriter: Invalid bits per sample %u in %s",
-                 bitsPerSample, path);
     file->Close();
     return false;
   }
@@ -171,9 +161,9 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     return true;
   }
 
-  const uint32_t dataOffset = 44;
-  uint32_t readOffset = dataOffset + clampedStart * bytesPerFrame;
-  uint32_t writeOffset = dataOffset;
+  const uint32_t headerDataOffset = headerInfo->dataOffset;
+  uint32_t readOffset = headerDataOffset + clampedStart * bytesPerFrame;
+  uint32_t writeOffset = headerDataOffset;
   uint32_t bytesRemaining = framesToKeep * bytesPerFrame;
 
   while (bytesRemaining > 0) {
@@ -201,10 +191,10 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     bytesRemaining -= static_cast<uint32_t>(bytesRead);
   }
 
-  uint32_t newDataSize = framesToKeep * bytesPerFrame;
-  file->Seek(dataOffset + newDataSize, SEEK_SET);
+  const uint32_t newDataSize = framesToKeep * bytesPerFrame;
+  file->Seek(headerDataOffset + newDataSize, SEEK_SET);
   if (!WavHeaderWriter::UpdateFileSize(file, framesToKeep, numChannels,
-                                       static_cast<uint16_t>(bytesPerSample))) {
+                                       bytesPerSample)) {
     Trace::Error("WavFileWriter: Failed updating WAV header after trim");
     file->Close();
     return false;

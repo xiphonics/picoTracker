@@ -10,6 +10,23 @@
 #define _WAV_HEADER_WRITER_H_
 
 #include "System/FileSystem/FileSystem.h"
+#include "WavFileErrors.h"
+#include <expected>
+#include <cstdint>
+
+struct WavHeaderInfo {
+  uint32_t riffChunkSize = 0;
+  uint32_t fmtChunkSize = 0;
+  uint16_t audioFormat = 0;
+  uint16_t numChannels = 0;
+  uint32_t sampleRate = 0;
+  uint32_t byteRate = 0;
+  uint16_t blockAlign = 0;
+  uint16_t bitsPerSample = 0;
+  uint16_t bytesPerSample = 0;
+  uint32_t dataChunkSize = 0;
+  uint32_t dataOffset = 0;
+};
 
 class WavHeaderWriter {
 public:
@@ -21,6 +38,9 @@ public:
   static bool UpdateFileSize(I_File *file, uint32_t sampleCount,
                              uint16_t channels = 2,
                              uint16_t bytesPerSample = 2);
+
+  static std::expected<WavHeaderInfo, WAVEFILE_ERROR>
+  ReadHeader(I_File *file);
 };
 
 #endif

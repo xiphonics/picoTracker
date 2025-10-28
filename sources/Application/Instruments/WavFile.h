@@ -10,23 +10,13 @@
 #ifndef _WAV_FILE_H_
 #define _WAV_FILE_H_
 
-#include <expected>
-
 #include "SoundSource.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
+#include "WavFileErrors.h"
+#include <expected>
 
 #define BUFFER_SIZE 512
-
-enum WAVEFILE_ERROR {
-  INVALID_FILE,
-  UNSUPPORTED_FILE_FORMAT,
-  INVALID_HEADER,
-  UNSUPPORTED_WAV_FORMAT,
-  UNSUPPORTED_COMPRESSION,
-  UNSUPPORTED_BITDEPTH,
-  UNSUPPORTED_SAMPLERATE,
-};
 
 class WavFile : public SoundSource {
 
