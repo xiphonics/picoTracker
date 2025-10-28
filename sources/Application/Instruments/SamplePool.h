@@ -39,6 +39,7 @@ public:
   virtual bool CheckSampleFits(int sampleSize) = 0;
   virtual uint32_t GetAvailableSampleStorageSpace() = 0;
   virtual bool unloadSample(int i) = 0;
+  int ReloadSample(int index, const char *name);
 
 protected:
   virtual bool loadSample(const char *name) = 0;

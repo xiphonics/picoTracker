@@ -650,6 +650,51 @@ bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
 
   loadSample(viewData_->sampleEditorFilename,
              viewData_->sampleEditorProjectList);
+
+  // need to reload from disk into ram/flash pool samples
+  if (viewData_->sampleEditorProjectList) {
+#ifndef ADV
+    // on pico we dont support unloading individual samples from flash
+    MessageBox *warning = new MessageBox(*this, "Please reload project",
+                                         "To apply changes", MBBF_OK);
+    DoModal(warning);
+    return;
+#endif
+    auto pool = SamplePool::GetInstance();
+    if (pool) {
+      if (!goProjectSamplesDir(viewData_)) {
+        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
+      } else {
+        int old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+        if (old_index >= 0) {
+          int new_index = pool->ReloadSample(
+              old_index, viewData_->sampleEditorFilename.c_str());
+          if (new_index >= 0 && old_index != new_index) {
+            auto instrumentBank = viewData_->project_->GetInstrumentBank();
+            for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+              if (instrument && instrument->GetType() == IT_SAMPLE) {
+                SampleInstrument *sampleInstrument =
+                    static_cast<SampleInstrument *>(instrument);
+                if (sampleInstrument->GetSampleIndex() == old_index) {
+                  sampleInstrument->AssignSample(new_index);
+                }
+              }
+            }
+          } else if (new_index < 0) {
+            Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+                         viewData_->sampleEditorFilename.c_str());
+          }
+        } else {
+          Trace::Error(
+              "SampleEditorView: Sample %s not found in pool for reload",
+              viewData_->sampleEditorFilename.c_str());
+        }
+      }
+    } else {
+      Trace::Error("SampleEditorView: SamplePool unavailable for reload");
+    }
+  }
+
   int refreshedSize = static_cast<int>(tempSampleSize_);
   int newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
   startVar_.SetInt(0);

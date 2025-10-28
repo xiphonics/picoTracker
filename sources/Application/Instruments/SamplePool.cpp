@@ -206,3 +206,12 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   ev.type_ = SPET_DELETE;
   NotifyObservers(&ev);
 };
+
+int SamplePool::ReloadSample(int index, const char *name) {
+  if (unloadSample(index)) {
+    if (loadSample(name)) {
+      return count_ - 1;
+    }
+  }
+  return -1;
+}

@@ -58,8 +58,8 @@ std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
 
   Trace::Debug("File data bytes: %u", header->dataChunkSize);
 
-  wav->size_ = header->dataChunkSize /
-               (header->numChannels * header->bytesPerSample);
+  wav->size_ =
+      header->dataChunkSize / (header->numChannels * header->bytesPerSample);
   Trace::Debug("File sample count: %i", wav->size_);
 
   // All samples are saved as 16bit/sample in memory
@@ -189,3 +189,5 @@ void WavFile::Close() {
 };
 
 int WavFile::GetRootNote(int note) { return 60; }
+
+
