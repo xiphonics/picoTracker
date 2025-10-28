@@ -189,5 +189,3 @@ void WavFile::Close() {
 };
 
 int WavFile::GetRootNote(int note) { return 60; }
-
-

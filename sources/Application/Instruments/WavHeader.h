@@ -11,8 +11,8 @@
 
 #include "System/FileSystem/FileSystem.h"
 #include "WavFileErrors.h"
-#include <expected>
 #include <cstdint>
+#include <expected>
 
 struct WavHeaderInfo {
   uint32_t riffChunkSize = 0;
@@ -39,8 +39,7 @@ public:
                              uint16_t channels = 2,
                              uint16_t bytesPerSample = 2);
 
-  static std::expected<WavHeaderInfo, WAVEFILE_ERROR>
-  ReadHeader(I_File *file);
+  static std::expected<WavHeaderInfo, WAVEFILE_ERROR> ReadHeader(I_File *file);
 };
 
 #endif
