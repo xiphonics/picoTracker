@@ -11,10 +11,12 @@
 #define _AUDIO_MIXER_H_
 
 #include "Application/Instruments/WavFileWriter.h"
+#include "Application/Player/Reverb.h"
 #include "AudioModule.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Foundation/T_SimpleList.h"
 #include "Services/Audio/AudioDriver.h" // for MAX_SAMPLE_COUNT
+#include <algorithm>
 
 class AudioMixer : public AudioModule, public T_SimpleList<AudioModule> {
 public:
@@ -25,6 +27,9 @@ public:
   void EnableRendering(bool enable);
   void SetVolume(fixed volume);
   void SetName(etl::string<12> name) { name_ = name; };
+  void EnableReverb(bool enable);
+  void SetReverbWet(fixed wet);
+  void ClearReverb();
 
   stereosample GetMixerLevels() { return avgMixerLevel_; }
 
@@ -39,6 +44,12 @@ private:
   // the mix
   stereosample avgMixerLevel_ = 0;
 
+  static Reverb2 reverb_;
+  bool reverb_enabled_;
+  fixed reverb_wet_;
+
   static fixed renderBuffer_[MAX_SAMPLE_COUNT * 2];
+
+  void MasterMixRender(fixed *master_mix_buffer, size_t buffer_size);
 };
 #endif

@@ -4,6 +4,7 @@ add_library(application_player
   PlayerMixer.cpp
   SyncMaster.cpp
   TablePlayback.cpp
+  Reverb.h
 )
 
 target_link_libraries(application_player PUBLIC
