@@ -540,8 +540,8 @@ bool configureBatteryGauge() {
 
 // Read battery state of charge using I2C from bq27441-G1 fuel gauge
 // returns percentage of battery charge
-uint8_t getBatterySOC() {
-
+// return < 0 on error
+int8_t getBatterySOC() {
   uint8_t cmdBuf[1] = {BQ27441_CMD_VOLTAGE}; // Command to read voltage
   uint8_t rxData[2] = {0};
 
@@ -553,7 +553,7 @@ uint8_t getBatterySOC() {
   if (status != HAL_OK) {
     Trace::Error("Failed to transmit SOC command to battery gauge");
     // Return 0 for now if SOC read fails
-    return 0;
+    return -1;
   }
 
   busywait(1); // Small delay to ensure command processing
@@ -565,7 +565,7 @@ uint8_t getBatterySOC() {
   if (status != HAL_OK) {
     Trace::Error("Failed to receive SOC data from battery gauge");
     // for now just return 0 if SOC read fails
-    return 0;
+    return -2;
   }
 
   // Combine the two bytes into a 16-bit value (LSB first per datasheet)

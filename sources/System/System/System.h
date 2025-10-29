@@ -20,6 +20,7 @@ struct BatteryState {
   uint16_t voltage_mv;   // millivolts
   int16_t temperature_c; // celsius
   bool charging;
+  bool error; // error: no available state for battery
 };
 
 class System : public T_Factory<System> {
