@@ -68,6 +68,7 @@ public:
   void LoadProject(const char *name);
   void CloseProject();
 
+  using GUIWindow::Clear;
   virtual void Clear(bool all = false);
   virtual void ClearTextRect(GUIRect &rect);
   virtual void SetColor(ColorDefinition cd);
