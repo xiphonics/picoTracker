@@ -181,11 +181,11 @@ unsigned int picoTrackerSystem::GetMemoryUsage() {
 
 void picoTrackerSystem::SystemPutChar(int c) { putchar(c); }
 
-uint32_t picoTrackerSystem::GetRandomNumber() { return platform_get_rand(); }
+uint32_t picoTrackerSystem::GetRandomNumber() { return get_rand_32(); }
 
 void picoTrackerSystem::SystemBootloader() { platform_bootloader(); }
 
-void picoTrackerSystem::SystemReboot() { get_rand_32(); }
+void picoTrackerSystem::SystemReboot() { platform_reboot(); }
 
 uint32_t picoTrackerSystem::Micros() { return micros(); }
 
