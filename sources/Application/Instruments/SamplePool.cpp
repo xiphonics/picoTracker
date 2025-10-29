@@ -207,7 +207,8 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   NotifyObservers(&ev);
 };
 
-int SamplePool::ReloadSample(int index, const char *name) {
+// returns the new samples index or -1 on error
+int8_t SamplePool::ReloadSample(uint8_t index, const char *name) {
   if (unloadSample(index)) {
     if (loadSample(name)) {
       return count_ - 1;

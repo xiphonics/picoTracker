@@ -137,7 +137,7 @@ void SampleEditorView::addAllFields() {
   position._x = baseX;
   int maxOperationIndex =
       operationVar_.GetListSize() > 0 ? operationVar_.GetListSize() - 1 : 0;
-  intVarField_.emplace_back(position, operationVar_, "effect: %s", 0,
+  intVarField_.emplace_back(position, operationVar_, "op: %s", 0,
                             maxOperationIndex, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
@@ -581,10 +581,8 @@ bool SampleEditorView::applySelectedOperation() {
   auto op = static_cast<SampleEditOperation>(opIndex);
   switch (op) {
   case SampleEditOperation::Trim: {
-    int startFrame = std::max(start_, 0);
-    int endFrame = std::max(end_, 0);
-    return applyTrimOperation(static_cast<uint32_t>(startFrame),
-                              static_cast<uint32_t>(endFrame));
+    return applyTrimOperation(static_cast<uint32_t>(start_),
+                              static_cast<uint32_t>(end_));
   }
   default:
     Trace::Error("SampleEditorView: Unsupported operation %d", opIndex);
@@ -593,8 +591,7 @@ bool SampleEditorView::applySelectedOperation() {
   return false;
 }
 
-bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
-                                          uint32_t endFrame) {
+bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   if (!FileSystem::GetInstance()) {
     Trace::Error("SampleEditorView: FileSystem unavailable");
     return false;
@@ -622,14 +619,14 @@ bool SampleEditorView::applyTrimOperation(uint32_t startFrame,
     return false;
   }
 
-  if (endFrame < startFrame) {
-    Trace::Error("SampleEditorView: Trim range invalid (%u < %u)", endFrame,
-                 startFrame);
+  if (end_ < start_) {
+    Trace::Error("SampleEditorView: Trim range invalid (%u < %u)", end_,
+                 start_);
     return false;
   }
 
   WavTrimResult trimResult{};
-  if (!WavFileWriter::TrimFile(filename.c_str(), startFrame, endFrame,
+  if (!WavFileWriter::TrimFile(filename.c_str(), start_, end_,
                                static_cast<void *>(chunkBuffer_),
                                sizeof(chunkBuffer_), trimResult)) {
     return false;
@@ -848,7 +845,7 @@ void SampleEditorView::navigateToView(ViewType vt) {
 
 void SampleEditorView::updateSampleParameters() {
 
-  int sampleSize = 0;
+  uint32_t sampleSize = 0;
   if (tempSampleSize_ > 0) {
     // --- use the temporary sample's size ---
     sampleSize = tempSampleSize_;

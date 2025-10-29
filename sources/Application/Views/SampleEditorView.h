@@ -91,8 +91,8 @@ private:
   bool playKeyHeld_;   // Flag to track when the play key is being held down
 
   // Cached sample parameters
-  int start_ = 0;
-  int end_ = 0;
+  uint32_t start_ = 0;
+  uint32_t end_ = 0;
 
   uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
