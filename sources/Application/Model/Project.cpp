@@ -320,7 +320,6 @@ void Project::PurgeInstruments() {
       Trace::Debug("Purged Unused instrument [%d]", i);
     }
   }
-
 };
 
 void Project::RestoreContent(PersistencyDocument *doc) {
