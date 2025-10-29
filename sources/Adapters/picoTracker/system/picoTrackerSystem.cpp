@@ -19,6 +19,7 @@
 #include "Application/Player/SyncMaster.h"
 #include "hardware/gpio.h"
 #include "input.h"
+#include "pico/rand.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <malloc.h>
@@ -184,7 +185,7 @@ uint32_t picoTrackerSystem::GetRandomNumber() { return platform_get_rand(); }
 
 void picoTrackerSystem::SystemBootloader() { platform_bootloader(); }
 
-void picoTrackerSystem::SystemReboot() { platform_reboot(); }
+void picoTrackerSystem::SystemReboot() { get_rand_32(); }
 
 uint32_t picoTrackerSystem::Micros() { return micros(); }
 

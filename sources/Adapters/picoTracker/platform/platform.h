@@ -15,8 +15,6 @@
 
 void platform_init();
 
-uint32_t platform_get_rand();
-
 void platform_reboot();
 
 void platform_bootloader();

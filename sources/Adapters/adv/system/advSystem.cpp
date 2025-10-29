@@ -22,6 +22,7 @@
 #include "critical_error_message.h"
 #include "input.h"
 #include "platform.h"
+#include "rng.h"
 #include "rtc.h"
 #include "tim.h"
 #include "tlv320aic3204.h"
@@ -199,7 +200,15 @@ void advSystem::SystemPutChar(int c) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
 }
 
-uint32_t advSystem::GetRandomNumber() { return platform_get_rand(); }
+uint32_t advSystem::GetRandomNumber() {
+  uint32_t random32;
+  if (HAL_RNG_GenerateRandomNumber(&hrng, &random32) == HAL_OK) {
+    return (int32_t)random32;
+  } else {
+    Trace::Error("Error generating random number");
+    return 0;
+  }
+}
 
 void advSystem::SystemBootloader() { platform_bootloader(); }
 
