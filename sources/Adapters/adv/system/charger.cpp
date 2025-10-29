@@ -195,7 +195,7 @@ bool startCharging(void) {
                        I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
 
   if (status != HAL_OK) {
-    Trace::Error("GetCharginStatus: i2c read error: %i", status);
+    Trace::Error("GetChargingStatus: i2c read error: %i", status);
     return false;
   }
 
@@ -204,7 +204,7 @@ bool startCharging(void) {
       HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_CHARGING_REG,
                         I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
   if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
+    Trace::Error("i2c write error: %i\r\n", status);
     return false;
   }
   return true;
@@ -217,7 +217,7 @@ bool stopCharging(void) {
                        I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
 
   if (status != HAL_OK) {
-    Trace::Error("GetCharginStatus: i2c read error: %i", status);
+    Trace::Error("GetChargingStatus: i2c read error: %i", status);
     return false;
   }
 
@@ -226,7 +226,7 @@ bool stopCharging(void) {
       HAL_I2C_Mem_Write(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_CHARGING_REG,
                         I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
   if (status != HAL_OK) {
-    printf("i2c write error: %i\r\n", status);
+    Trace::Error("i2c write error: %i\r\n", status);
     return false;
   }
   return true;
