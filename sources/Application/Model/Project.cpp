@@ -321,35 +321,6 @@ void Project::PurgeInstruments() {
     }
   }
 
-  // now see if any samples isn't used and get rid if them if needed
-  // clear used flag
-  bool isUsed[MAX_SAMPLES] = {false};
-
-  // flag all samples actually used
-  for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
-    I_Instrument *instrument = bank->GetInstrument(i);
-    if (instrument->GetType() == IT_SAMPLE) {
-      SampleInstrument *si = (SampleInstrument *)instrument;
-      int index = si->GetSampleIndex();
-      if (index >= 0)
-        isUsed[index] = true;
-    };
-  }
-
-  // Now remove all unused samples from disk
-  int purged = 0;
-  SamplePool *sp = SamplePool::GetInstance();
-  for (int i = 0; i < MAX_SAMPLES; i++) {
-    if ((!isUsed[i]) && (sp->GetSource(i - purged))) {
-      char projName[MAX_PROJECT_NAME_LENGTH];
-      sp->PurgeSample(i - purged, projectName_.GetString().c_str());
-      Trace::Debug("Purged sample [%d]", i - purged);
-      purged++;
-    } else {
-      Trace::Debug("Sample [%d] not purged", i);
-    }
-  };
-  Trace::Debug("Purged %d samples", purged);
 };
 
 void Project::RestoreContent(PersistencyDocument *doc) {
