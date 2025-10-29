@@ -11,7 +11,9 @@
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 #include "System/System/System.h"
-#include "WavHeaderWriter.h"
+#include "WavHeader.h"
+#include <algorithm>
+#include <cstring>
 
 WavFileWriter::WavFileWriter(const char *path)
     : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
@@ -64,6 +66,144 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
   file_->Write(buffer_, 2, size * 2);
   sampleCount_ += size;
 };
+
+bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
+                             uint32_t endFrame, void *scratchBuffer,
+                             size_t scratchBufferSize, WavTrimResult &result) {
+  result = {0, 0, 0, 0, false};
+
+  if (!path) {
+    Trace::Error("WavFileWriter: TrimFile received null path");
+    return false;
+  }
+  if (!scratchBuffer || scratchBufferSize == 0) {
+    Trace::Error("WavFileWriter: TrimFile received invalid scratch buffer");
+    return false;
+  }
+  if (endFrame < startFrame) {
+    Trace::Error("WavFileWriter: Trim range invalid (%u < %u)", endFrame,
+                 startFrame);
+    return false;
+  }
+
+  auto fs = FileSystem::GetInstance();
+  if (!fs) {
+    Trace::Error("WavFileWriter: FileSystem unavailable");
+    return false;
+  }
+
+  I_File *file = fs->Open(path, "r+");
+  if (!file) {
+    Trace::Error("WavFileWriter: Failed to open %s for trimming", path);
+    return false;
+  }
+
+  auto headerInfo = WavHeaderWriter::ReadHeader(file);
+  if (!headerInfo) {
+    Trace::Error("WavFileWriter: Failed to parse WAV header from %s", path);
+    file->Close();
+    return false;
+  }
+
+  const uint16_t numChannels = headerInfo->numChannels;
+  const uint16_t bytesPerSample = headerInfo->bytesPerSample;
+  const uint16_t bitsPerSample = headerInfo->bitsPerSample;
+  const uint32_t dataChunkSize = headerInfo->dataChunkSize;
+
+  if (numChannels == 0 || bitsPerSample == 0) {
+    Trace::Error("WavFileWriter: Unsupported WAV format (channels=%u, bits=%u) "
+                 "in %s",
+                 numChannels, bitsPerSample, path);
+    file->Close();
+    return false;
+  }
+
+  uint32_t bytesPerFrame = numChannels * bytesPerSample;
+  if (bytesPerFrame == 0) {
+    Trace::Error("WavFileWriter: Invalid bytes per frame for %s", path);
+    file->Close();
+    return false;
+  }
+
+  uint32_t totalFrames = bytesPerFrame ? (dataChunkSize / bytesPerFrame) : 0;
+  if (totalFrames == 0) {
+    Trace::Error("WavFileWriter: Sample has no audio frames in %s", path);
+    file->Close();
+    return false;
+  }
+
+  uint32_t clampedStart =
+      std::min(startFrame, totalFrames > 0 ? totalFrames - 1 : 0);
+  uint32_t clampedEnd =
+      std::min(endFrame, totalFrames > 0 ? totalFrames - 1 : 0);
+
+  if (clampedStart > clampedEnd) {
+    clampedStart = clampedEnd;
+  }
+
+  uint32_t framesToKeep =
+      (clampedEnd >= clampedStart) ? (clampedEnd - clampedStart + 1) : 0;
+  if (framesToKeep == 0) {
+    Trace::Error("WavFileWriter: Trim would result in empty sample");
+    file->Close();
+    return false;
+  }
+
+  result.totalFrames = totalFrames;
+  result.clampedStart = clampedStart;
+  result.clampedEnd = clampedEnd;
+  result.framesKept = framesToKeep;
+
+  if (clampedStart == 0 && framesToKeep == totalFrames) {
+    file->Close();
+    Trace::Log("WavFileWriter",
+               "Trim skipped because selection spans entire sample");
+    return true;
+  }
+
+  const uint32_t headerDataOffset = headerInfo->dataOffset;
+  uint32_t readOffset = headerDataOffset + clampedStart * bytesPerFrame;
+  uint32_t writeOffset = headerDataOffset;
+  uint32_t bytesRemaining = framesToKeep * bytesPerFrame;
+
+  while (bytesRemaining > 0) {
+    uint32_t chunkSize = std::min<uint32_t>(
+        bytesRemaining, static_cast<uint32_t>(scratchBufferSize));
+
+    file->Seek(readOffset, SEEK_SET);
+    int bytesRead = file->Read(scratchBuffer, chunkSize);
+    if (bytesRead <= 0) {
+      Trace::Error("WavFileWriter: Failed reading sample data during trim");
+      file->Close();
+      return false;
+    }
+
+    file->Seek(writeOffset, SEEK_SET);
+    int bytesWritten = file->Write(scratchBuffer, 1, bytesRead);
+    if (bytesWritten != bytesRead) {
+      Trace::Error("WavFileWriter: Failed writing trimmed data");
+      file->Close();
+      return false;
+    }
+
+    readOffset += bytesRead;
+    writeOffset += bytesRead;
+    bytesRemaining -= static_cast<uint32_t>(bytesRead);
+  }
+
+  const uint32_t newDataSize = framesToKeep * bytesPerFrame;
+  file->Seek(headerDataOffset + newDataSize, SEEK_SET);
+  if (!WavHeaderWriter::UpdateFileSize(file, framesToKeep, numChannels,
+                                       bytesPerSample)) {
+    Trace::Error("WavFileWriter: Failed updating WAV header after trim");
+    file->Close();
+    return false;
+  }
+
+  file->Close();
+  result.trimmed = true;
+  return true;
+}
 
 void WavFileWriter::Close() {
 

@@ -37,6 +37,11 @@ public:
   unsigned short Clone(unsigned short i);
   unsigned short GetNextFreeInstrumentSlotId();
 
+  const etl::array<I_Instrument *, MAX_INSTRUMENT_COUNT> &
+  InstrumentsList() const {
+    return instruments_;
+  }
+
 private:
   etl::array<I_Instrument *, MAX_INSTRUMENT_COUNT> instruments_;
   etl::pool<SampleInstrument, MAX_SAMPLEINSTRUMENT_COUNT> sampleInstrumentPool_;

@@ -210,6 +210,7 @@ struct FourCC {
     // 178 is taken for VarSampleEditStop
     // 179 is taken for ActionLoadAndSave
     // 180 is taken for ActionCancel
+    // 181 is taken for VarSampleEditOperation
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -249,6 +250,7 @@ struct FourCC {
     VarRecordSource = 176,
     VarSampleEditStart = 177,
     VarSampleEditEnd = 178,
+    VarSampleEditOperation = 181,
 
     Default = 255, // "    "
   };

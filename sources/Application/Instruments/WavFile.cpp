@@ -12,6 +12,7 @@
 #include "Foundation/Types/Types.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
+#include "WavHeader.h"
 #include <stdlib.h>
 
 int WavFile::bufferChunkSize_ = -1;
@@ -42,155 +43,33 @@ std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   if (!file)
     return std::unexpected(INVALID_FILE);
 
+  auto header = WavHeaderWriter::ReadHeader(file);
+  if (!header) {
+    file->Close();
+    delete file;
+    return std::unexpected(header.error());
+  }
+
   WavFile *wav = new WavFile(file);
 
-  long position = 0;
+  wav->sampleRate_ = header->sampleRate;
+  wav->channelCount_ = header->numChannels;
+  wav->bytePerSample_ = header->bytesPerSample;
 
-  // Read 'RIFF'
-  unsigned int chunk;
-
-  position += wav->readBlock(position, 4);
-  memcpy(&chunk, wav->readBuffer_, 4);
-
-  if (chunk != 0x46464952) { // 'RIFF' in little-endian
-    Trace::Error("Bad RIFF format %x", chunk);
-    delete (wav);
-    return std::unexpected(UNSUPPORTED_FILE_FORMAT);
-  }
-
-  // Read size
-  unsigned int size;
-  position += wav->readBlock(position, 4);
-  memcpy(&size, wav->readBuffer_, 4);
-  unsigned int fileSize = size;
-
-  // Read WAVE
-  position += wav->readBlock(position, 4);
-  memcpy(&chunk, wav->readBuffer_, 4);
-
-  if (chunk != 0x45564157) { // 'WAVE' in little-endian
-    Trace::Error("Bad WAV format");
-    delete wav;
-    return std::unexpected(UNSUPPORTED_WAV_FORMAT);
-  }
-
-  // Search for the 'fmt ' chunk, skipping any other chunks like 'JUNK'
-  bool fmt_found = false;
-  while (!fmt_found) {
-    // If our current position exceeds the file size, the 'fmt ' chunk is
-    // missing.
-    if (position >= (long)fileSize) {
-      Trace::Error("Could not find 'fmt ' chunk in header");
-      delete wav;
-      return std::unexpected(INVALID_HEADER);
-    }
-
-    // Read the next chunk's ID
-    position += wav->readBlock(position, 4);
-    memcpy(&chunk, wav->readBuffer_, 4);
-
-    // Read the next chunk's size
-    position += wav->readBlock(position, 4);
-    memcpy(&size, wav->readBuffer_, 4);
-
-    if (chunk == 0x20746D66) { // 'fmt ' in little-endian
-      fmt_found = true;
-    } else {
-      // It's not the 'fmt ' chunk, so skip its content
-      position += size;
-    }
-  }
-
-  // Now that 'fmt ' is found, 'size' holds the fmt subchunk size.
-  // The file position is at the start of the format data.
-  if (size < 16) {
-    Trace::Error("Bad fmt size format");
-    delete wav;
-    return std::unexpected(INVALID_HEADER);
-  }
-  int offset = size - 16;
-
-  // Read compression
-  unsigned short comp;
-  position += wav->readBlock(position, 2);
-  memcpy(&comp, wav->readBuffer_, 2);
-
-  if (comp != 1) {
-    Trace::Error("Unsupported compression");
-    delete wav;
-    return std::unexpected(UNSUPPORTED_COMPRESSION);
-  }
-
-  // Read NumChannels (mono/Stereo)
-  unsigned short nChannels;
-  position += wav->readBlock(position, 2);
-  memcpy(&nChannels, wav->readBuffer_, 2);
-
-  // Read Sample rate
-  unsigned int sampleRate;
-  position += wav->readBlock(position, 4);
-  memcpy(&sampleRate, wav->readBuffer_, 4);
-
-  // Check that sample rate is upto 44.1kHz
-  if (sampleRate > 44100) {
-    Trace::Error("Unsupported sample rate: %u Hz", sampleRate);
-    delete wav;
-    return std::unexpected(UNSUPPORTED_SAMPLERATE);
-  }
-
-  // Skip byteRate & blockalign
-  position += 6;
-
-  short bitPerSample;
-  position += wav->readBlock(position, 2);
-  memcpy(&bitPerSample, wav->readBuffer_, 2);
-
-  if ((bitPerSample != 16) && (bitPerSample != 8)) {
-    Trace::Error("Only 8/16 bit supported");
-    delete wav;
-    return std::unexpected(UNSUPPORTED_BITDEPTH);
-  };
-  bitPerSample /= 8;
-  wav->bytePerSample_ = bitPerSample;
-
-  // some bad files have bigger chunks
-  if (offset) {
-    position += offset;
-  }
-
-  // read data subchunk header
-  // Trace::Dump("data subch") ;
-
-  position += wav->readBlock(position, 4);
-  memcpy(&chunk, wav->readBuffer_, 4);
-
-  while (chunk != 0x61746164) {
-    position += wav->readBlock(position, 4);
-    memcpy(&size, wav->readBuffer_, 4);
-
-    position += size;
-    position += wav->readBlock(position, 4);
-    memcpy(&chunk, wav->readBuffer_, 4);
-  }
-
-  wav->sampleRate_ = sampleRate;
-  wav->channelCount_ = nChannels;
-
-  // Read data size in byte
-
-  position += wav->readBlock(position, 4);
-  memcpy(&size, wav->readBuffer_, 4);
-  Trace::Debug("File size: %i", size);
+  Trace::Debug("File data bytes: %u", header->dataChunkSize);
 
   wav->size_ =
-      size / nChannels / bitPerSample; // Size in samples (stereo/16bits)
-  Trace::Debug("File size_: %i", wav->size_);
-  // All samples are saved as 16bit/sample into disk
-  wav->sampleBufferSize_ = wav->size_ * nChannels * 2;
-  Trace::Debug("File sampleBufferSize_: %i", wav->sampleBufferSize_);
-  wav->readCount_ = size;
+      header->dataChunkSize / (header->numChannels * header->bytesPerSample);
+  Trace::Debug("File sample count: %i", wav->size_);
 
-  wav->dataPosition_ = position;
+  // All samples are saved as 16bit/sample in memory
+  wav->sampleBufferSize_ = wav->size_ * header->numChannels * 2;
+  Trace::Debug("File sampleBufferSize_: %i", wav->sampleBufferSize_);
+
+  wav->readCount_ = header->dataChunkSize;
+  wav->dataPosition_ = header->dataOffset;
+
+  file->Seek(header->dataOffset, SEEK_SET);
   return wav;
 };
 
