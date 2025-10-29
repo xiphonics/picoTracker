@@ -154,12 +154,13 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
-  actionField_.emplace_back("Compact Samples", FourCC::ActionPurge, position);
+  actionField_.emplace_back("Remove Unused Samples", FourCC::ActionPurge,
+                            position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
-  actionField_.emplace_back("Compact Instruments",
+  actionField_.emplace_back("Remove Unused Instruments",
                             FourCC::ActionPurgeInstrument, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
