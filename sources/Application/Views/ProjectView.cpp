@@ -308,10 +308,10 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   }
   case FourCC::ActionRandomName: {
-    char name[12];
+    char name[10];
     System *sys = System::GetInstance();
-    auto randNum = sys->GetRandomNumber();
-    getRandomName(name, randNum);
+    uint32_t randNum = sys->GetRandomNumber();
+    getNamesByIndex(name, randNum, 10);
     printf("random:%s", name);
     project_->SetProjectName(name);
     saveAsFlag_ = true;

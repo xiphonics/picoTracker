@@ -18,7 +18,6 @@
 #include "hardware/vreg.h"
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
-#include "pico/rand.h"
 #include "pico/stdlib.h"
 #include <System/Console/Trace.h>
 #include <System/Console/nanoprintf.h>
@@ -224,8 +223,6 @@ void platform_init() {
   gpio_set_dir(INPUT_PLAY, GPIO_IN);
   gpio_pull_up(INPUT_PLAY);
 }
-
-int32_t platform_get_rand() { return get_rand_32(); };
 
 void platform_reboot() { watchdog_reboot(0, 0, 0); }
 
