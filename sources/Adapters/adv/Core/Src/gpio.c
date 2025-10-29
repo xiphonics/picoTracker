@@ -148,7 +148,7 @@ void MX_GPIO_Init(void) {
 
   /*Configure GPIO pin : CHARGER_INT_Pin */
   GPIO_InitStruct.Pin = CHARGER_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(CHARGER_INT_GPIO_Port, &GPIO_InitStruct);
 
@@ -162,6 +162,9 @@ void MX_GPIO_Init(void) {
   HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PA0, SYSCFG_SWITCH_PA0_CLOSE);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 14, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 13, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
