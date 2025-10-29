@@ -311,7 +311,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     char name[12];
     System *sys = System::GetInstance();
     uint32_t randNum = sys->GetRandomNumber();
-    getRandomName(name, randNum, 12);
+    getNamesByIndex(name, randNum, 12);
     printf("random:%s", name);
     project_->SetProjectName(name);
     saveAsFlag_ = true;
