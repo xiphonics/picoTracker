@@ -564,8 +564,7 @@ int8_t getBatterySOC() {
 
   if (status != HAL_OK) {
     Trace::Error("Failed to receive SOC data from battery gauge");
-    // for now just return 0 if SOC read fails
-    return -2;
+    return -1;
   }
 
   // Combine the two bytes into a 16-bit value (LSB first per datasheet)
