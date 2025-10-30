@@ -157,10 +157,16 @@ unsigned long advSystem::GetClock() {
 }
 
 void advSystem::GetBatteryState(BatteryState &state) {
-  state.percentage = getBatterySOC();
+  auto soc = getBatterySOC();
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
   state.charging = getChargingStatus();
+  if (soc < 0) {
+    state.error = true;
+  } else {
+    state.percentage = soc;
+    state.error = false;
+  }
 }
 
 void advSystem::SetDisplayBrightness(unsigned char value) {

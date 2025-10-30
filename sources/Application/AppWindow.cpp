@@ -669,17 +669,19 @@ void AppWindow::AnimationUpdate() {
     // Check battery level
     BatteryState batteryState;
     System::GetInstance()->GetBatteryState(batteryState);
-    if (batteryState.percentage < MINIMUM_ALLOWED_BATTERY_PERCENTAGE &&
-        !batteryState.charging) {
-      lowBatteryState_ = true;
-      lowBatteryWarningCounter_++;
-    } else {
-      lowBatteryState_ = false;
-      lowBatteryWarningCounter_ = 0;
-    }
-
-    if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_SEC) {
-      System::GetInstance()->PowerDown();
+    if (!batteryState.error) {
+      // only process battery status if no error state
+      if (batteryState.percentage < MINIMUM_ALLOWED_BATTERY_PERCENTAGE &&
+          !batteryState.charging) {
+        lowBatteryState_ = true;
+        lowBatteryWarningCounter_++;
+      } else {
+        lowBatteryState_ = false;
+        lowBatteryWarningCounter_ = 0;
+      }
+      if (lowBatteryWarningCounter_ > MIN_BATT_POWEROFF_SEC) {
+        System::GetInstance()->PowerDown();
+      }
     }
   }
 

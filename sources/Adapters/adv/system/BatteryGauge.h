@@ -27,7 +27,7 @@ enum SOHT { SOH_NOT_VALID = 0, SOH_INSTANT, SOH_INITIAL, SOH_READY, SOH_ERROR };
 
 // Battery gauge configuration
 bool configureBatteryGauge();
-uint8_t getBatterySOC();
+int8_t getBatterySOC();
 uint32_t getBatteryVoltage();
 int32_t getBatteryTemperature();
 int16_t getBatteryCurrent();
