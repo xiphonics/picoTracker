@@ -23,6 +23,14 @@ struct WavTrimResult {
   bool trimmed;
 };
 
+struct WavNormalizeResult {
+  uint32_t totalFrames;
+  int32_t peakBefore;
+  int32_t targetPeak;
+  float gainApplied;
+  bool normalized;
+};
+
 class WavFileWriter {
 public:
   WavFileWriter(const char *path);
@@ -32,6 +40,9 @@ public:
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,
                        void *scratchBuffer, size_t scratchBufferSize,
                        WavTrimResult &result);
+  static bool NormalizeFile(const char *path, void *scratchBuffer,
+                            size_t scratchBufferSize,
+                            WavNormalizeResult &result);
 
 private:
   int sampleCount_;
