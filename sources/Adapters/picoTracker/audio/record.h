@@ -19,6 +19,8 @@ void StopRecording();
 void StartMonitoring();
 void StopMonitoring();
 void SetInputSource(RecordSource source);
+void SetLineInGain(int gainDb);
+void SetMicGain(int gainDb);
 bool IsRecordingActive();
 
 #endif

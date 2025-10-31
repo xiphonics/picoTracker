@@ -35,7 +35,7 @@ public:
 protected:
 private:
   // UI fields
-  etl::vector<UIIntVarField, 1> intVarField_;
+  etl::vector<UIIntVarField, 3> intVarField_;
 
   // Recording state
   bool isRecording_;

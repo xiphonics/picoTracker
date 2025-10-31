@@ -35,6 +35,36 @@ enum TLVInput { NONE, MIC, LINEIN } input = NONE;
 
 static volatile char overrideSpkr = 0;
 
+HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value);
+HAL_StatusTypeDef tlv320writepage(uint16_t page, uint16_t reg, uint8_t value);
+HAL_StatusTypeDef tlv320read(uint8_t page, uint8_t reg, uint8_t *value);
+
+#define LINEINBASEHALFDB 12
+#define MICBASEHALFDB 16
+#define GAINMASK 0x3F
+#define PRESERVEMASK 0xC0
+
+static uint8_t clamp_half_db(int halfDb) {
+  if (halfDb < 0) {
+    return 0;
+  }
+  if (halfDb > GAINMASK) {
+    return GAINMASK;
+  }
+  return (uint8_t)halfDb;
+}
+
+static void tlv320_update_gain_register(uint8_t reg, uint8_t baseHalfDb,
+                                        int gainDb) {
+  uint8_t current = 0;
+  if (tlv320read(0x01, reg, &current) != HAL_OK) {
+    current = 0;
+  }
+  const int desiredHalfDb = (int)baseHalfDb + gainDb * 2;
+  const uint8_t halfDbValue = clamp_half_db(desiredHalfDb);
+  const uint8_t updated = (current & PRESERVEMASK) | (halfDbValue & GAINMASK);
+  tlv320writepage(0x01, reg, updated);
+}
 HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value) {
   // Write to the register
   return HAL_I2C_Mem_Write(&I2C, CODEC_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &value,
@@ -333,6 +363,21 @@ void tlv320_enable_mic(void) {
 
   // Recheck output in case Speaker needs to be mutted
   tlv320_select_output();
+}
+
+void tlv320_set_linein_gain_db(int gainDb) {
+  if (input != LINEIN) {
+    return;
+  }
+  tlv320_update_gain_register(0x3b, LINEINBASEHALFDB, gainDb);
+  tlv320_update_gain_register(0x3c, LINEINBASEHALFDB, gainDb);
+}
+
+void tlv320_set_mic_gain_db(int gainDb) {
+  if (input != MIC) {
+    return;
+  }
+  tlv320_update_gain_register(0x3b, MICBASEHALFDB, gainDb);
 }
 
 void tlv320_disable_linein(void) {

@@ -211,6 +211,8 @@ struct FourCC {
     // 179 is taken for ActionLoadAndSave
     // 180 is taken for ActionCancel
     // 181 is taken for VarSampleEditOperation
+    // 182 is taken for VarRecordLineGain
+    // 183 is taken for VarRecordMicGain
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -251,6 +253,8 @@ struct FourCC {
     VarSampleEditStart = 177,
     VarSampleEditEnd = 178,
     VarSampleEditOperation = 181,
+    VarRecordLineGain = 182,
+    VarRecordMicGain = 183,
 
     Default = 255, // "    "
   };
@@ -405,6 +409,8 @@ struct FourCC {
   ETL_ENUM_TYPE(ActionThemeName, "themename")
   ETL_ENUM_TYPE(VarBacklightLevel, "backlightLevel")
   ETL_ENUM_TYPE(VarRecordSource, "recordsource")
+  ETL_ENUM_TYPE(VarRecordLineGain, "recordlinegain")
+  ETL_ENUM_TYPE(VarRecordMicGain, "recordmicgain")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE
