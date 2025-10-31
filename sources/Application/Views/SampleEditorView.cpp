@@ -34,7 +34,7 @@
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
 
-constexpr const char *const kSampleEditOperationNames[] = {"Trim"};
+constexpr const char *const kSampleEditOperationNames[] = {"Trim", "Normalize"};
 constexpr int kSampleEditOperationCount =
     sizeof(kSampleEditOperationNames) / sizeof(kSampleEditOperationNames[0]);
 
@@ -573,7 +573,8 @@ bool SampleEditorView::applySelectedOperation() {
   updateSampleParameters();
 
   int opIndex = operationVar_.GetInt();
-  if (opIndex < 0 || opIndex >= static_cast<int>(SampleEditOperation::Count)) {
+  if (opIndex < 0 ||
+      opIndex > static_cast<int>(SampleEditOperation::Normalize)) {
     Trace::Error("SampleEditorView: Invalid operation index %d", opIndex);
     return false;
   }
@@ -583,6 +584,9 @@ bool SampleEditorView::applySelectedOperation() {
   case SampleEditOperation::Trim: {
     return applyTrimOperation(static_cast<uint32_t>(start_),
                               static_cast<uint32_t>(end_));
+  }
+  case SampleEditOperation::Normalize: {
+    return applyNormalizeOperation();
   }
   default:
     Trace::Error("SampleEditorView: Unsupported operation %d", opIndex);
@@ -706,6 +710,131 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
              "Trimmed sample '%s' to %u frames (start=%u, end=%u)",
              filename.c_str(), trimResult.framesKept, trimResult.clampedStart,
              trimResult.clampedEnd);
+  return true;
+}
+
+bool SampleEditorView::applyNormalizeOperation() {
+  if (!FileSystem::GetInstance()) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return false;
+  }
+
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+  }
+  isPlaying_ = false;
+  playKeyHeld_ = false;
+
+  if (!viewData_) {
+    Trace::Error("SampleEditorView: View data unavailable");
+    return false;
+  }
+
+  const auto &filename = viewData_->sampleEditorFilename;
+  if (filename.empty()) {
+    Trace::Error("SampleEditorView: No filename available for normalize");
+    return false;
+  }
+
+  if (tempSampleSize_ == 0) {
+    Trace::Error("SampleEditorView: Cannot normalize empty sample");
+    return false;
+  }
+
+  WavNormalizeResult normalizeResult{};
+  if (!WavFileWriter::NormalizeFile(filename.c_str(),
+                                    static_cast<void *>(chunkBuffer_),
+                                    sizeof(chunkBuffer_), normalizeResult)) {
+    return false;
+  }
+
+  if (!normalizeResult.normalized) {
+    updateSampleParameters();
+    fullWaveformRedraw_ = true;
+    redraw_ = true;
+    Trace::Log("SAMPLEEDITOR",
+               "Normalize skipped for '%s' (peak=%d, target=%d)",
+               filename.c_str(), normalizeResult.peakBefore,
+               normalizeResult.targetPeak);
+    return true;
+  }
+
+  loadSample(viewData_->sampleEditorFilename,
+             viewData_->sampleEditorProjectList);
+
+  if (viewData_->sampleEditorProjectList) {
+#ifndef ADV
+    MessageBox *warning = new MessageBox(*this, "Please reload project",
+                                         "To apply changes", MBBF_OK);
+    DoModal(warning);
+    return true;
+#else
+    auto pool = SamplePool::GetInstance();
+    if (pool) {
+      if (!goProjectSamplesDir(viewData_)) {
+        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
+      } else {
+        int old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+        if (old_index >= 0) {
+          int new_index = pool->ReloadSample(
+              old_index, viewData_->sampleEditorFilename.c_str());
+          if (new_index >= 0 && old_index != new_index) {
+            auto instrumentBank = viewData_->project_->GetInstrumentBank();
+            for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+              if (instrument && instrument->GetType() == IT_SAMPLE) {
+                SampleInstrument *sampleInstrument =
+                    static_cast<SampleInstrument *>(instrument);
+                if (sampleInstrument->GetSampleIndex() == old_index) {
+                  sampleInstrument->AssignSample(new_index);
+                }
+              }
+            }
+          } else if (new_index < 0) {
+            Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+                         viewData_->sampleEditorFilename.c_str());
+          }
+        } else {
+          Trace::Error(
+              "SampleEditorView: Sample %s not found in pool for reload",
+              viewData_->sampleEditorFilename.c_str());
+        }
+      }
+    } else {
+      Trace::Error("SampleEditorView: SamplePool unavailable for reload");
+    }
+#endif
+  }
+
+  int refreshedSize = static_cast<int>(tempSampleSize_);
+  if (refreshedSize <= 0) {
+    Trace::Error("SampleEditorView: Failed to refresh sample after normalize");
+  } else {
+    int maxIndex = refreshedSize - 1;
+    int startVal = startVar_.GetInt();
+    int endVal = endVar_.GetInt();
+    if (startVal >= refreshedSize) {
+      startVal = maxIndex;
+    }
+    if (endVal >= refreshedSize) {
+      endVal = maxIndex;
+    }
+    if (startVal > endVal) {
+      startVal = endVal;
+    }
+    startVar_.SetInt(startVal);
+    endVar_.SetInt(endVal);
+  }
+
+  updateSampleParameters();
+  addAllFields();
+  fullWaveformRedraw_ = true;
+  redraw_ = true;
+  playbackPosition_ = 0.0f;
+
+  Trace::Log("SAMPLEEDITOR",
+             "Normalized sample '%s' (gain=%.3f peak=%d target=%d)",
+             filename.c_str(), normalizeResult.gainApplied,
+             normalizeResult.peakBefore, normalizeResult.targetPeak);
   return true;
 }
 
