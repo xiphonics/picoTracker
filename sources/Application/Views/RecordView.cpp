@@ -21,9 +21,6 @@
 #include "Adapters/picoTracker/audio/record.h"
 #endif
 
-#include <cstdio>
-#include <cstring>
-
 RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   GUIPoint position = GetAnchor();
@@ -38,6 +35,20 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // Audio source selection field (Line In = 1, Mic = 2)
   Variable *v = config->FindVariable(FourCC::VarRecordSource);
   intVarField_.emplace_back(position, *v, "Audio source: %s", 1, 2, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarRecordLineGain);
+  intVarField_.emplace_back(position, *v, "Line gain: %d dB", lineInGainMinDb,
+                            lineInGainMaxDb, 1, 2);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarRecordMicGain);
+  intVarField_.emplace_back(position, *v, "Mic gain: %d dB", micGainMinDb,
+                            micGainMaxDb, 1, 2);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 }
@@ -100,7 +111,7 @@ void RecordView::DrawView() {
 
   // Draw recording status and time
   pos = GetAnchor();
-  pos._y += 3;
+  pos._y += 4;
 
   SetColor(CD_NORMAL);
 
@@ -113,7 +124,10 @@ void RecordView::DrawView() {
   }
 
   // Draw time display
-  pos._x += 5;
+  if (isRecording_) {
+    SetColor(CD_ERROR);
+  }
+  pos._x += 6;
   char timeBuffer[16];
   formatTime(recordingDuration_, timeBuffer, sizeof(timeBuffer));
   DrawString(pos._x, pos._y, timeBuffer, props);
@@ -136,6 +150,12 @@ void RecordView::OnFocus() {
   isDirty_ = true;
   recordingDuration_ = 0;
 
+  auto config = Config::GetInstance();
+#ifdef ADV
+  SetLineInGain(config->FindVariable(FourCC::VarRecordLineGain)->GetInt());
+  SetMicGain(config->FindVariable(FourCC::VarRecordMicGain)->GetInt());
+#endif
+
   updateRecordingSource();
   StartMonitoring();
 }
@@ -147,17 +167,27 @@ void RecordView::Update(Observable &o, I_ObservableData *data) {
 
   uintptr_t fourcc = (uintptr_t)data;
 
+  auto config = Config::GetInstance();
+
   switch (fourcc) {
   case FourCC::VarRecordSource:
     StopMonitoring();
     updateRecordingSource();
     StartMonitoring();
     break;
+#ifdef ADV
+  case FourCC::VarRecordLineGain:
+    SetLineInGain(config->FindVariable(FourCC::VarRecordLineGain)->GetInt());
+    break;
+  case FourCC::VarRecordMicGain:
+    SetMicGain(config->FindVariable(FourCC::VarRecordMicGain)->GetInt());
+    break;
+#endif
   }
 
   // Handle field updates
   isDirty_ = true;
-  Config::GetInstance()->Save();
+  config->Save();
 }
 
 void RecordView::AnimationUpdate() {
