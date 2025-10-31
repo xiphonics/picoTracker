@@ -149,7 +149,7 @@ void SampleEditorView::addAllFields() {
   (*actionField_.rbegin()).AddObserver(*this);
 
   // Save button row
-  position._y += 1;
+  position._y += 2; // want extra empty row between these buttons & prev Apply
   position._x = baseX;
   actionField_.emplace_back("Save", FourCC::ActionSave, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
