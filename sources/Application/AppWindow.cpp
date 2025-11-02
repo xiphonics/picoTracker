@@ -30,6 +30,7 @@
 #include "Application/Views/ProjectView.h"
 #include "Application/Views/RecordView.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Application/Views/SampleSlicesView.h"
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
@@ -128,6 +129,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _tableView = 0;
   _mixerView = 0;
   _sampleEditorView = 0;
+  _sampleSlicesView = 0;
   _recordView = 0;
   _nullView = 0;
   _grooveView = 0;
@@ -489,6 +491,12 @@ void AppWindow::LoadProject(const char *projectName) {
       new (sampleEditorViewMemBuf) SampleEditorView((*this), _viewData);
   _sampleEditorView->AddObserver((*this));
 
+  alignas(SampleSlicesView) static char
+      sampleSlicesViewMemBuf[sizeof(SampleSlicesView)];
+  _sampleSlicesView =
+      new (sampleSlicesViewMemBuf) SampleSlicesView((*this), _viewData);
+  _sampleSlicesView->AddObserver((*this));
+
   alignas(RecordView) static char recordViewMemBuf[sizeof(RecordView)];
   _recordView = new (recordViewMemBuf) RecordView((*this), _viewData);
   _recordView->AddObserver((*this));
@@ -532,6 +540,10 @@ void AppWindow::CloseProject() {
   SAFE_DELETE(_instrumentView);
   SAFE_DELETE(_tableView);
   SAFE_DELETE(_grooveView);
+  SAFE_DELETE(_mixerView);
+  SAFE_DELETE(_sampleEditorView);
+  SAFE_DELETE(_sampleSlicesView);
+  SAFE_DELETE(_recordView);
 
   UIController *controller = UIController::GetInstance();
   controller->Reset();
@@ -815,6 +827,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_SAMPLE_EDITOR:
       _currentView = _sampleEditorView;
+      break;
+    case VT_SAMPLE_SLICES:
+      _currentView = _sampleSlicesView;
       break;
     case VT_RECORD:
       _currentView = _recordView;

@@ -74,5 +74,8 @@ struct renderParams {
   bool couldClick_;
 
   char midiNote_; // Current midi note
+  bool sliceActive_;
+  uint8_t activeSliceIndex_;
+  int loopModeValue_;
 };
 #endif
