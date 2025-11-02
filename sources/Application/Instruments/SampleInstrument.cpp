@@ -21,12 +21,12 @@
 #include "System/io/Status.h"
 #include <assert.h>
 
+#include "System/Console/nanoprintf.h"
 #include <algorithm>
 #include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "System/Console/nanoprintf.h"
 
 #include "Application/Player/SyncMaster.h"
 #include "SampleInstrumentDatas.h"
@@ -319,8 +319,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   };
   rp->channelCount_ = source_->GetChannelCount(rp->midiNote_);
   int sampleSize = source_->GetSize(rp->midiNote_);
-  uint32_t sampleSizeU =
-      sampleSize > 0 ? static_cast<uint32_t>(sampleSize) : 0;
+  uint32_t sampleSizeU = sampleSize > 0 ? static_cast<uint32_t>(sampleSize) : 0;
 
   int rootNote =
       (rootNote_.GetInt() - 60) + source_->GetRootNote(rp->midiNote_);
@@ -361,8 +360,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   }
 
   rp->sliceActive_ = sliceActive;
-  rp->activeSliceIndex_ =
-      sliceActive ? static_cast<uint8_t>(sliceIndex) : 0;
+  rp->activeSliceIndex_ = sliceActive ? static_cast<uint8_t>(sliceIndex) : 0;
 
   if (sliceActive) {
     loopmode = SILM_ONESHOT;
@@ -1433,7 +1431,8 @@ void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
     } else if (!strncasecmp(doc->attrname_, "SL", 2)) {
       int idx = atoi(doc->attrname_ + 2);
       if (idx >= 0 && idx < static_cast<int>(kMaxSlices)) {
-        uint32_t value = static_cast<uint32_t>(strtoul(doc->attrval_, nullptr, 10));
+        uint32_t value =
+            static_cast<uint32_t>(strtoul(doc->attrval_, nullptr, 10));
         slicePoints_[static_cast<size_t>(idx)] = value;
       }
     }
