@@ -21,8 +21,11 @@
 #include "System/io/Status.h"
 #include <assert.h>
 
+#include "System/Console/nanoprintf.h"
+#include <algorithm>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "Application/Player/SyncMaster.h"
@@ -99,9 +102,176 @@ SampleInstrument::SampleInstrument()
   variables_.insert(variables_.end(), &tableAuto_);
 
   tableState_.Reset();
+  slicePoints_.fill(0);
 }
 
 SampleInstrument::~SampleInstrument() {}
+
+uint32_t SampleInstrument::GetSlicePoint(size_t index) const {
+  if (index >= kMaxSlices) {
+    return 0;
+  }
+  return slicePoints_[index];
+}
+
+void SampleInstrument::SetSlicePoint(size_t index, uint32_t start) {
+  if (index >= kMaxSlices) {
+    return;
+  }
+  uint32_t clamped = start;
+  if (source_ && !source_->IsMulti()) {
+    int size = source_->GetSize(0);
+    if (size > 0) {
+      uint32_t limit = static_cast<uint32_t>(size);
+      if (clamped > limit) {
+        clamped = limit;
+      }
+    }
+  }
+  if (slicePoints_[index] == clamped) {
+    return;
+  }
+  slicePoints_[index] = clamped;
+  SetChanged();
+  NotifyObservers();
+}
+
+void SampleInstrument::ClearSlices() {
+  bool hadSlices = hasAnySliceValue();
+  slicePoints_.fill(0);
+  if (hadSlices) {
+    SetChanged();
+    NotifyObservers();
+  }
+}
+
+bool SampleInstrument::HasSlicesForPlayback() const {
+  return hasAnySliceValue();
+}
+
+bool SampleInstrument::HasSlicesForWarning() const {
+  return (slicePoints_[0] > 0) || (slicePoints_[1] > 0);
+}
+
+bool SampleInstrument::IsSliceDefined(size_t index) const {
+  return isSliceIndexActive(index);
+}
+
+bool SampleInstrument::hasAnySliceValue() const {
+  for (auto value : slicePoints_) {
+    if (value > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool SampleInstrument::isSliceIndexActive(size_t index) const {
+  if (index >= kMaxSlices) {
+    return false;
+  }
+  if (index == 0) {
+    if (slicePoints_[0] > 0) {
+      return true;
+    }
+    for (size_t i = 1; i < kMaxSlices; ++i) {
+      if (slicePoints_[i] > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+  return slicePoints_[index] > 0;
+}
+
+bool SampleInstrument::shouldUseSlice(unsigned char midinote,
+                                      size_t &sliceIndex,
+                                      uint32_t sampleSize) const {
+  if (!HasSlicesForPlayback()) {
+    return false;
+  }
+  if (source_ == nullptr || source_->IsMulti()) {
+    return false;
+  }
+  if (midinote < kSliceNoteBase) {
+    return false;
+  }
+  size_t index = midinote - kSliceNoteBase;
+  if (index >= kMaxSlices) {
+    return false;
+  }
+  if (!isSliceIndexActive(index)) {
+    return false;
+  }
+  // Ensure slice start is within range
+  uint32_t start = computeSliceStart(index, sampleSize);
+  uint32_t end = computeSliceEnd(index, sampleSize);
+  if (start >= end) {
+    return false;
+  }
+  sliceIndex = index;
+  return true;
+}
+
+uint32_t SampleInstrument::computeSliceStart(size_t index,
+                                             uint32_t sampleSize) const {
+  if (index >= kMaxSlices || sampleSize == 0) {
+    return 0;
+  }
+  uint32_t stored = slicePoints_[index];
+  if (index == 0 && stored == 0) {
+    return 0;
+  }
+  if (stored > sampleSize) {
+    return sampleSize;
+  }
+  return stored;
+}
+
+uint32_t SampleInstrument::computeSliceEnd(size_t index,
+                                           uint32_t sampleSize) const {
+  if (sampleSize == 0) {
+    return 0;
+  }
+  uint32_t start = computeSliceStart(index, sampleSize);
+  uint32_t end = sampleSize;
+  for (size_t i = index + 1; i < kMaxSlices; ++i) {
+    uint32_t candidate = slicePoints_[i];
+    if (candidate > start) {
+      if (candidate < end) {
+        end = candidate;
+      }
+      break;
+    }
+  }
+  if (end <= start) {
+    end = std::min(start + 1, sampleSize);
+  }
+  return end;
+}
+
+void SampleInstrument::clampSlicePoints(uint32_t sampleSize) {
+  bool changed = false;
+  if (sampleSize == 0) {
+    for (auto &value : slicePoints_) {
+      if (value != 0) {
+        value = 0;
+        changed = true;
+      }
+    }
+  } else {
+    for (auto &value : slicePoints_) {
+      if (value > sampleSize) {
+        value = sampleSize;
+        changed = true;
+      }
+    }
+  }
+  if (changed) {
+    SetChanged();
+    NotifyObservers();
+  }
+}
 
 bool SampleInstrument::Init() {
 
@@ -148,6 +318,8 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     return false;
   };
   rp->channelCount_ = source_->GetChannelCount(rp->midiNote_);
+  int sampleSize = source_->GetSize(rp->midiNote_);
+  uint32_t sampleSizeU = sampleSize > 0 ? static_cast<uint32_t>(sampleSize) : 0;
 
   int rootNote =
       (rootNote_.GetInt() - 60) + source_->GetRootNote(rp->midiNote_);
@@ -174,6 +346,26 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   }
   SampleInstrumentLoopMode loopmode =
       (SampleInstrumentLoopMode)loopMode_.GetInt();
+
+  size_t sliceIndex = 0;
+  bool sliceActive = shouldUseSlice(midinote, sliceIndex, sampleSizeU);
+  uint32_t sliceStart = 0;
+  uint32_t sliceEnd = 0;
+  if (sliceActive) {
+    sliceStart = computeSliceStart(sliceIndex, sampleSizeU);
+    sliceEnd = computeSliceEnd(sliceIndex, sampleSizeU);
+    if (sliceStart >= sliceEnd) {
+      sliceActive = false;
+    }
+  }
+
+  rp->sliceActive_ = sliceActive;
+  rp->activeSliceIndex_ = sliceActive ? static_cast<uint8_t>(sliceIndex) : 0;
+
+  if (sliceActive) {
+    loopmode = SILM_ONESHOT;
+  }
+  rp->loopModeValue_ = static_cast<int>(loopmode);
 
   /*	 if (loopmode==SILM_OSCFINE) {
                   if (rp->rendLoopEnd_>source_->GetSize()-1) { // check for
@@ -244,11 +436,22 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     break;
   }
 
+  if (sliceActive) {
+    rp->rendLoopStart_ = static_cast<int>(sliceStart);
+    rp->rendLoopEnd_ = static_cast<int>(sliceEnd);
+    rp->rendFirst_ = static_cast<int>(sliceStart);
+    rp->position_ = float(sliceStart);
+    rp->reverse_ = false;
+  }
+
   // Compute octave & note difference from root
 
   float fineTune = float(fineTune_.GetInt() - 0x7F);
   fineTune /= float(0x80);
   int offset = midinote - rootNote;
+  if (sliceActive) {
+    offset = 0;
+  }
   while (offset > 127) {
     offset -= 12;
   }
@@ -429,7 +632,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     // Loop mode
 
     SampleInstrumentLoopMode loopMode =
-        (SampleInstrumentLoopMode)loopMode_.GetInt();
+        (SampleInstrumentLoopMode)rp->loopModeValue_;
 
     // Interpolation
 
@@ -868,6 +1071,7 @@ void SampleInstrument::updateInstrumentData(bool search) {
   v->SetInt(0);
   v = FindVariable(FourCC::SampleInstrumentStart);
   v->SetInt(0);
+  clampSlicePoints(static_cast<uint32_t>(instrSize));
   dirty_ = false;
 };
 
@@ -1198,6 +1402,107 @@ etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
   return sampleFileName;
 };
 
+void SampleInstrument::SaveContent(tinyxml2::XMLPrinter *printer) {
+  printer->PushAttribute("VERSION", PROJECT_NUMBER);
+  printer->PushAttribute("TYPE", InstrumentTypeNames[GetType()]);
+
+  for (size_t i = 0; i < slicePoints_.size(); ++i) {
+    if (slicePoints_[i] == 0) {
+      continue;
+    }
+    char attrName[6];
+    npf_snprintf(attrName, sizeof(attrName), "SL%02u",
+                 static_cast<unsigned>(i));
+    printer->PushAttribute(attrName,
+                           static_cast<unsigned int>(slicePoints_[i]));
+  }
+
+  if (!name_.empty()) {
+    printer->OpenElement("PARAM");
+    printer->PushAttribute("NAME", "InstrumentName");
+    printer->PushAttribute("VALUE", name_.c_str());
+    printer->CloseElement();
+  }
+
+  for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+    printer->OpenElement("PARAM");
+    printer->PushAttribute("NAME", (*it)->GetName());
+    printer->PushAttribute("VALUE", (*it)->GetString().c_str());
+    printer->CloseElement();
+  }
+}
+
+void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
+  bool hasAttr = doc->NextAttribute();
+  while (hasAttr) {
+    if (!strcasecmp(doc->attrname_, "TYPE")) {
+      Trace::Log("I_INSTRUMENT", "Instrument type from XML: %s", doc->attrval_);
+    } else if (!strncasecmp(doc->attrname_, "SL", 2)) {
+      int idx = atoi(doc->attrname_ + 2);
+      if (idx >= 0 && idx < static_cast<int>(kMaxSlices)) {
+        uint32_t value =
+            static_cast<uint32_t>(strtoul(doc->attrval_, nullptr, 10));
+        slicePoints_[static_cast<size_t>(idx)] = value;
+      }
+    }
+    hasAttr = doc->NextAttribute();
+  }
+
+  bool subelem = doc->FirstChild();
+
+  while (subelem) {
+    bool attr = doc->NextAttribute();
+    char name[24] = "";
+    char value[24] = "";
+
+    while (attr) {
+      if (!strcasecmp(doc->attrname_, "NAME")) {
+        strncpy(name, doc->attrval_, sizeof(name) - 1);
+        name[sizeof(name) - 1] = '\0';
+      }
+      if (!strcasecmp(doc->attrname_, "VALUE")) {
+        strncpy(value, doc->attrval_, sizeof(value) - 1);
+        value[sizeof(value) - 1] = '\0';
+      }
+      attr = doc->NextAttribute();
+    }
+
+    if (name[0] != '\0' && value[0] != '\0') {
+      if (!strcasecmp(name, "InstrumentName")) {
+        SetName(value);
+      } else {
+        bool found = false;
+        for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+          if (!strcasecmp((*it)->GetName(), name)) {
+            (*it)->SetString(value);
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          Trace::Error("Parameter '%s' not found in instrument", name);
+        }
+      }
+    }
+
+    subelem = doc->NextSibling();
+  }
+
+  Variable *nameVar = FindVariable(FourCC::InstrumentName);
+  if (nameVar && !name_.empty()) {
+    nameVar->SetString(name_.c_str());
+  }
+}
+
+void SampleInstrument::Purge() {
+  auto it = variables_.begin();
+  for (size_t i = 0; i < variables_.size(); i++) {
+    (*it)->Reset();
+    it++;
+  }
+  source_ = NULL;
+  slicePoints_.fill(0);
+};
 bool SampleInstrument::IsEmpty() {
   Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return (v->GetInt() == -1);

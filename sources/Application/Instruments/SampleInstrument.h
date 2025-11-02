@@ -12,6 +12,7 @@
 
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
+#include "Externals/etl/include/etl/array.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
@@ -59,6 +60,15 @@ public:
   // Engine playback  start callback
 
   virtual void OnStart();
+  static constexpr size_t kMaxSlices = 16;
+  static constexpr unsigned char kSliceNoteBase = 60;
+
+  uint32_t GetSlicePoint(size_t index) const;
+  void SetSlicePoint(size_t index, uint32_t start);
+  void ClearSlices();
+  bool HasSlicesForPlayback() const;
+  bool HasSlicesForWarning() const;
+  bool IsSliceDefined(size_t index) const;
 
   // I_Observer
   virtual void Update(Observable &o, I_ObservableData *d);
@@ -75,6 +85,9 @@ public:
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetSampleFileName();
 
   static void EnableDownsamplingLegacy();
+  virtual void SaveContent(tinyxml2::XMLPrinter *printer) override;
+  virtual void RestoreContent(PersistencyDocument *doc) override;
+  void Purge();
 
 protected:
   void updateInstrumentData(bool search);
@@ -112,7 +125,15 @@ private:
   WatchedVariable loopEnd_;
   Variable table_;
   Variable tableAuto_;
+  etl::array<uint32_t, kMaxSlices> slicePoints_;
 
   static bool useDirtyDownsampling_;
+  bool isSliceIndexActive(size_t index) const;
+  bool shouldUseSlice(unsigned char midinote, size_t &sliceIndex,
+                      uint32_t sampleSize) const;
+  uint32_t computeSliceStart(size_t index, uint32_t sampleSize) const;
+  uint32_t computeSliceEnd(size_t index, uint32_t sampleSize) const;
+  bool hasAnySliceValue() const;
+  void clampSlicePoints(uint32_t sampleSize);
 };
 #endif
