@@ -23,8 +23,8 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstring>
 
@@ -36,11 +36,10 @@ constexpr int kSliceYOffset = 2 * CHAR_HEIGHT * 4;
 #else
 constexpr int kSliceYOffset = 2 * CHAR_HEIGHT;
 #endif
-}
+} // namespace
 
 SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data),
-      sliceIndexVar_(FourCC::SampleInstrumentSlices, 0),
+    : FieldView(w, data), sliceIndexVar_(FourCC::SampleInstrumentSlices, 0),
       sliceStartVar_(FourCC::SampleInstrumentStart, 0), waveformValid_(false),
       needsWaveformRedraw_(true), instrument_(nullptr), instrumentIndex_(0),
       sampleSize_(0), playKeyHeld_(false), previewActive_(false),
@@ -88,6 +87,20 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
       stopPreview();
       needsWaveformRedraw_ = true;
     }
+    FieldView::ProcessButtonMask(mask, pressed);
+    return;
+  }
+
+  if (mask & EPBM_NAV) {
+    if (mask & EPBM_LEFT) {
+      // Go back to sample browser NAV+LEFT
+      ViewType vt = VT_INSTRUMENT;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+      return;
+    }
+    // For other NAV combinations, let parent handle it
     FieldView::ProcessButtonMask(mask, pressed);
     return;
   }
@@ -162,7 +175,7 @@ void SampleSlicesView::buildFieldLayout() {
 
   GUIPoint position = GetAnchor();
   position._x += 5;
-  position._y += 1;
+  position._y = 12;
 
   intVarField_.emplace_back(position, sliceIndexVar_, "slice: %d", 0,
                             static_cast<int>(kSliceCount) - 1, 1, 1);
@@ -175,6 +188,11 @@ void SampleSlicesView::buildFieldLayout() {
                                maxStart, 16);
   fieldList_.insert(fieldList_.end(), &bigHexVarField_.back());
   bigHexVarField_.back().AddObserver(*this);
+
+  position._y += 2;
+  position._x = GetAnchor()._x + 5;
+  staticField_.emplace_back(position, "PLAY: preview slice");
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
 
   if (!fieldList_.empty()) {
     SetFocus(*fieldList_.begin());
@@ -217,8 +235,7 @@ void SampleSlicesView::rebuildWaveform() {
   std::fill_n(sumSquares, kSliceWaveformCacheSize, int64_t{0});
   std::fill_n(counts, kSliceWaveformCacheSize, uint32_t{0});
   float samplesPerPixel =
-      std::max(1.0f,
-               static_cast<float>(sampleSize_) / kSliceWaveformCacheSize);
+      std::max(1.0f, static_cast<float>(sampleSize_) / kSliceWaveformCacheSize);
 
   for (uint32_t i = 0; i < sampleSize_; ++i) {
     uint32_t pixel =
@@ -238,9 +255,8 @@ void SampleSlicesView::rebuildWaveform() {
     }
     float meanSquare = static_cast<float>(sumSquares[i]) / counts[i];
     float rms = std::sqrt(meanSquare) / 32768.0f;
-    uint8_t height =
-        static_cast<uint8_t>(std::min<float>(rms * kSliceBitmapHeight,
-                                             static_cast<float>(kSliceBitmapHeight)));
+    uint8_t height = static_cast<uint8_t>(std::min<float>(
+        rms * kSliceBitmapHeight, static_cast<float>(kSliceBitmapHeight)));
     waveformCache_[i] = height;
   }
 
@@ -249,8 +265,7 @@ void SampleSlicesView::rebuildWaveform() {
 }
 
 void SampleSlicesView::drawWaveform() {
-  GUIRect area(kSliceXOffset, kSliceYOffset,
-               kSliceXOffset + kSliceBitmapWidth,
+  GUIRect area(kSliceXOffset, kSliceYOffset, kSliceXOffset + kSliceBitmapWidth,
                kSliceYOffset + kSliceBitmapHeight);
   DrawRect(area, CD_BACKGROUND);
 
@@ -275,8 +290,9 @@ void SampleSlicesView::drawWaveform() {
     if (x < 0) {
       continue;
     }
-    ColorDefinition color =
-        (static_cast<int>(i) == sliceIndexVar_.GetInt()) ? CD_CURSOR : CD_ACCENT;
+    ColorDefinition color = (static_cast<int>(i) == sliceIndexVar_.GetInt())
+                                ? CD_CURSOR
+                                : CD_ACCENT;
     GUIRect marker(x, kSliceYOffset + 2, x + 1,
                    kSliceYOffset + kSliceBitmapHeight - 2);
     DrawRect(marker, color);
@@ -380,10 +396,10 @@ int SampleSlicesView::sliceToPixel(uint32_t start) const {
   if (sampleSize_ == 0) {
     return -1;
   }
-  uint32_t clamped =
-      std::min(start, sampleSize_ > 0 ? sampleSize_ - 1 : static_cast<uint32_t>(0));
-  float ratio =
-      static_cast<float>(clamped) / static_cast<float>(std::max<uint32_t>(1, sampleSize_));
+  uint32_t clamped = std::min(
+      start, sampleSize_ > 0 ? sampleSize_ - 1 : static_cast<uint32_t>(0));
+  float ratio = static_cast<float>(clamped) /
+                static_cast<float>(std::max<uint32_t>(1, sampleSize_));
   int local = static_cast<int>(ratio * (kSliceBitmapWidth - 2));
   return kSliceXOffset + 1 + local;
 }
