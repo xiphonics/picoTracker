@@ -440,7 +440,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       } else {
         ImportView::SetSourceViewType(VT_PROJECT);
         // Set to show project pool dir in ImportView
-        viewData_->sampleEditorProjectList = true;
+        viewData_->isShowingSampleEditorProjectPool = true;
 
         // Go to import sample
         ViewType vt = VT_IMPORT;

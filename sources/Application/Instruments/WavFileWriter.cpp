@@ -209,7 +209,13 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
 bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
                                   size_t scratchBufferSize,
                                   WavNormalizeResult &result) {
-  result = {0, 0, 0, 1.0f, false};
+  result = {
+      .totalFrames = 0,
+      .peakBefore = 0,
+      .targetPeak = 0,
+      .gainApplied = 1.0f,
+      .normalized = false,
+  };
 
   if (!path) {
     Trace::Error("WavFileWriter: NormalizeFile received null path");
@@ -337,15 +343,21 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     return true;
   }
 
+  // `targetPeak` is the desired maximum amplitude after normalization.
   uint32_t targetPeak = static_cast<uint32_t>(result.targetPeak);
-  uint32_t gainQ16 =
-      static_cast<uint32_t>((static_cast<uint64_t>(targetPeak) << 16) / peak);
-  if (gainQ16 == (1u << 16)) {
+  if (static_cast<uint32_t>(peak) >= targetPeak) {
     Trace::Log("WavFileWriter",
-               "Normalize skipped for %s because peak already at target", path);
+               "Normalize skipped for %s because peak already at or above target",
+               path);
     file->Close();
     return true;
   }
+  // `gainQ16` calculates the gain factor required to normalize the audio.
+  // It's represented in Q16 fixed-point format (multiplied by 2^16) to maintain
+  // precision for fractional gain values. The `targetPeak` is cast to `uint64_t`
+  // before the left shift to prevent overflow during the multiplication by 2^16.
+  uint32_t gainQ16 =
+      static_cast<uint32_t>((static_cast<uint64_t>(targetPeak) << 16) / peak);
 
   bytesRemaining = dataChunkSize;
   readOffset = dataOffset;

@@ -117,7 +117,7 @@ private:
   Variable startVar_;
   Variable endVar_;
   Variable filenameVar_;
-  enum class SampleEditOperation : int { Trim = 0, Normalize };
+  enum SampleEditOperation { Trim = 0, Normalize };
   Variable operationVar_;
 
   GUIWindow &win;
