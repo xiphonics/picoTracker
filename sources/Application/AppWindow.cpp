@@ -46,6 +46,12 @@
 #include <nanoprintf.h>
 #include <string.h>
 
+#ifdef ADV
+#include "Adapters/adv/audio/record.h"
+#else
+#include "Adapters/picoTracker/audio/record.h"
+#endif
+
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 
 #define MINIMUM_ALLOWED_BATTERY_PERCENTAGE 2
@@ -928,8 +934,9 @@ void AppWindow::SetColor(ColorDefinition cd) {
 
 bool AppWindow::autoSave() {
   Player *player = Player::GetInstance();
-  // only auto save when sequencer is not running
-  if (!player->IsRunning()) {
+  // only auto save when sequencer is not running and not recording
+  bool recording = IsRecordingActive();
+  if (!player->IsRunning() && !recording) {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
     // get persistence service and call autosave
     PersistencyService *ps = PersistencyService::GetInstance();

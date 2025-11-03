@@ -46,17 +46,23 @@ public:
 protected:
 private:
   // Helper methods
-  SampleInstrument *getCurrentSampleInstrument();
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
+  bool saveSample(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
+  bool loadSampleToPool(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
+  void navigateToView(ViewType vt);
+  int findSampleIndexByName(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
+  SampleInstrument *getCurrentSampleInstrument();
 
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;
   etl::vector<UIBigHexVarField, 2> bigHexVarField_;
-  etl::vector<UIActionField, 2> actionField_;
+  etl::vector<UIActionField, 3> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
 
