@@ -12,6 +12,7 @@
 #include "Application/Application.h"
 #include "Application/Model/Config.h"
 #include "Application/Model/Project.h"
+#include "Application/Player/Player.h"
 #include "Application/Player/PlayerMixer.h"
 #include "Application/Utils/char.h"
 #include "Services/Audio/Audio.h"
@@ -53,19 +54,8 @@ bool MixerService::Init() {
       out_->Insert(master_);
     }
 
-    char path[30 + MAX_PROJECT_NAME_LENGTH];
-    // Get the project name from the current project
-    char projectname[MAX_PROJECT_NAME_LENGTH];
-    Player::GetInstance()->GetProject()->GetProjectName(projectname);
-
     out_->AddObserver(*MidiService::GetInstance());
-    npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
-    out_->SetFileRenderer(path);
-    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      npf_snprintf(path, sizeof(path), "/renders/%s-channel%d.wav", projectname,
-                   i);
-      bus_[i].SetFileRenderer(path);
-    }
+    configureRenderPaths();
   }
 
   if (result) {
@@ -175,6 +165,10 @@ int MixerService::GetPlayedBufferPercentage() {
 }
 
 void MixerService::setRenderingMode(MixerServiceMode mode) {
+  if (mode != MSM_AUDIO) {
+    configureRenderPaths();
+  }
+
   switch (mode) {
   case MSM_AUDIO:
     out_->EnableRendering(false);
@@ -201,6 +195,31 @@ void MixerService::OnPlayerStop() {
   // always reset back to audio mode when stopping
   setRenderingMode(MSM_AUDIO);
 };
+
+void MixerService::configureRenderPaths() {
+  if (!out_) {
+    return;
+  }
+
+  Player *player = Player::GetInstance();
+  Project *project = player ? player->GetProject() : nullptr;
+  if (!project) {
+    Trace::Error("MIXERSERVICE", "Cannot configure render paths, project null");
+    return;
+  }
+
+  char projectname[MAX_PROJECT_NAME_LENGTH];
+  project->GetProjectName(projectname);
+
+  char path[30 + MAX_PROJECT_NAME_LENGTH];
+  npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
+  out_->SetFileRenderer(path);
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    npf_snprintf(path, sizeof(path), "/renders/%s-channel%d.wav", projectname,
+                 i);
+    bus_[i].SetFileRenderer(path);
+  }
+}
 
 void MixerService::Execute(FourCC id, float value) {
   if (value > 0.5) {

@@ -355,7 +355,8 @@ void Project::RestoreContent(PersistencyDocument *doc) {
       attr = doc->NextAttribute();
     }
     Variable *v = FindVariable(name);
-    if (v) {
+    // Project name now comes from the directory, so ignore any persisted value.
+    if (v && v->GetID() != FourCC::VarProjectName) {
       v->SetString(value);
     }
     elem = doc->NextSibling();
@@ -376,9 +377,17 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   // save all of the project's parameters
   auto it = variables_.begin();
   for (size_t i = 0; i < variables_.size(); i++) {
+    Variable *currentVar = *it;
+    // Persist everything except the project name, which is derived from the
+    // projects directory name
+    if (currentVar->GetID() == FourCC::VarProjectName) {
+      it++;
+      continue;
+    }
+
     printer->OpenElement("PARAMETER");
-    printer->PushAttribute("NAME", (*it)->GetName());
-    printer->PushAttribute("VALUE", (*it)->GetString().c_str());
+    printer->PushAttribute("NAME", currentVar->GetName());
+    printer->PushAttribute("VALUE", currentVar->GetString().c_str());
     printer->CloseElement();
     it++;
   }
