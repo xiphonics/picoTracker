@@ -11,6 +11,7 @@
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Views/SampleEditorView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
@@ -594,6 +595,9 @@ void ImportView::showSampleEditor(
     bool isProjectSample) {
 
   viewData_->sampleEditorFilename = filename;
+
+  // before going to sample editor set this view as its "source" view
+  SampleEditorView::sourceViewType_ = VT_IMPORT;
 
   // Switch to the SampleEditorView
   ViewType vt = VT_SAMPLE_EDITOR;

@@ -196,7 +196,6 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
-      // Go back to sample browser NAV+LEFT
       ViewType vt = SampleEditorView::sourceViewType_;
       navigateToView(vt);
       return;
@@ -554,8 +553,13 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     if (originalFilename.compare(RECORDING_FILENAME) == 0 &&
         !viewData_->sampleEditorProjectList) {
       auto fs = FileSystem::GetInstance();
-      if (!fs->DeleteFile(originalFilename.c_str())) {
-        Trace::Error("SampleEditorView: Failed to discard recording %s",
+      if (fs) {
+        if (!fs->DeleteFile(originalFilename.c_str())) {
+          Trace::Error("SampleEditorView: Failed to discard recording %s",
+                       originalFilename.c_str());
+        }
+      } else {
+        Trace::Error("SampleEditorView: Failed to get FS to delete: %s",
                      originalFilename.c_str());
       }
     }
