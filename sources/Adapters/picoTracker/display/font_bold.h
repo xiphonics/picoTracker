@@ -3,6 +3,15 @@
 
 #include <stdint.h>
 
+/*
+ * You Squared font by Damien Guard (https://damieng.com/zx-origins)
+ * Used in accordance with the informal permission in the project's README.
+ * Do not redistribute the font itself; this usage only embeds a converted
+ * bitmap.
+ *
+ * SPDX-License-Identifier: LicenseRef-DamienGuard-Custom
+ */
+
 // You Squared font from https://damieng.com/zx-origins
 // converted to left-to-right pixel format
 
