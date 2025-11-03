@@ -166,6 +166,7 @@ int MixerService::GetPlayedBufferPercentage() {
 
 void MixerService::setRenderingMode(MixerServiceMode mode) {
   if (mode != MSM_AUDIO) {
+    // in case proj name changed since last time paths were configured
     configureRenderPaths();
   }
 
