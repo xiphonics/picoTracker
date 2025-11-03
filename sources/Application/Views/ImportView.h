@@ -40,6 +40,7 @@ protected:
   void showSampleEditor(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
                         bool isProjectSample);
   void removeProjectSample(uint8_t fileIndex, FileSystem *fs);
+  void refreshFileIndexList(FileSystem *fs);
 
 private:
   size_t topIndex_ = 0;

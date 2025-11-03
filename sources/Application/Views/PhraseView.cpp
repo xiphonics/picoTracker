@@ -14,6 +14,7 @@
 #include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/SampleEditorView.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
@@ -883,6 +884,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_PHRASE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();

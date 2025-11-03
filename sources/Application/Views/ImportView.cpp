@@ -234,7 +234,13 @@ void ImportView::DrawView() {
 
       displayName += tempBuffer;
       // Format the display name with appropriate prefix
-      if (isSingleCycle) {
+      if (inProjectSampleDir_ &&
+          viewData_->project_->SampleInUse(
+              etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(tempBuffer))) {
+        SetColor(CD_INFO);
+        DrawString(x, y, "*", props);
+        SetColor(CD_NORMAL);
+      } else if (isSingleCycle) {
         SetColor(CD_INFO);
         DrawString(x, y, "~", props);
         SetColor(CD_NORMAL);
@@ -381,6 +387,36 @@ void ImportView::preview(char *name) {
     Player::GetInstance()->StopStreaming();
   }
 
+  auto wav = WavFile::Open(name);
+  MessageBox *mb = nullptr;
+  if (!wav) {
+    auto error = wav.error();
+    switch (error) {
+    case INVALID_FILE:
+      mb = new MessageBox(*this, "Preview Failed", "Could not open file",
+                          MBBF_OK);
+      break;
+    case UNSUPPORTED_FILE_FORMAT:
+    case INVALID_HEADER:
+    case UNSUPPORTED_WAV_FORMAT:
+      mb = new MessageBox(*this, "Preview Failed", "Invalid file", MBBF_OK);
+      break;
+    case UNSUPPORTED_COMPRESSION:
+    case UNSUPPORTED_BITDEPTH:
+    case UNSUPPORTED_SAMPLERATE:
+      mb = new MessageBox(*this, "Preview Failed", "Unsupported format",
+                          MBBF_OK);
+      break;
+    }
+  } else {
+    wav.value()->Close();
+  }
+
+  if (mb != nullptr) {
+    DoModal(mb);
+    return;
+  }
+
   // Start playing the selected sample
   Trace::Debug("Starting preview of %s (single cycle: %d)", name,
                isSingleCycle);
@@ -473,6 +509,7 @@ void ImportView::import() {
     case INVALID_HEADER:
     case UNSUPPORTED_WAV_FORMAT:
       mb = new MessageBox(*this, "Import Failed", "invalid file", MBBF_OK);
+      break;
     case UNSUPPORTED_COMPRESSION:
     case UNSUPPORTED_BITDEPTH:
     case UNSUPPORTED_SAMPLERATE:
@@ -564,20 +601,7 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
     Trace::Error("FAILED to chdir to %s", name);
   }
   currentIndex_ = 0;
-  // Update list of file indexes in this new dir
-  fs->list(&fileIndexList_, ".wav", false);
-
-  // If is root or we are showing project samples dir, remove the ".." entry
-  if (fs->isCurrentRoot() || inProjectSampleDir_) {
-    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
-      char filename[PFILENAME_SIZE];
-      fs->getFileName(*it, filename, PFILENAME_SIZE);
-      if (strcmp(filename, "..") == 0) {
-        fileIndexList_.erase(it);
-        break;
-      }
-    }
-  }
+  refreshFileIndexList(fs);
 
   // Check if we're in the projects directory
   // and if trying to go into the same dir as current project and if so dont
@@ -613,7 +637,7 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   char filename[PFILENAME_SIZE];
   fs->getFileName(fileIndex, filename, PFILENAME_SIZE);
 
-  // TODO: first check if a instrument uses this sample
+  // first check if a instrument uses this sample
   bool inUse = viewData_->project_->SampleInUse(
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filename));
 
@@ -631,12 +655,40 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
     if (dialog.GetReturnCode() == MBL_OK) {
       // delete file
-      fs->DeleteFile(filename);
+      if (!fs->DeleteFile(filename)) {
+        Trace::Error("Failed to delete sample %s", filename);
+        return;
+      }
       // and unload it from ram
       SamplePool::GetInstance()->unloadSample(fileIndex);
-      if (currentIndex_ != 0) {
-        this->currentIndex_--;
+
+      if (currentIndex_ > 0) {
+        --currentIndex_;
       }
+
+      // refresh directory listing to avoid stale indexes
+      refreshFileIndexList(fs);
+
+      isDirty_ = true;
     }
   });
+}
+
+void ImportView::refreshFileIndexList(FileSystem *fs) {
+  fs->list(&fileIndexList_, ".wav", false);
+
+  if (fs->isCurrentRoot() || inProjectSampleDir_) {
+    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
+      char entryName[PFILENAME_SIZE];
+      fs->getFileName(*it, entryName, PFILENAME_SIZE);
+      if (strcmp(entryName, "..") == 0) {
+        fileIndexList_.erase(it);
+        break;
+      }
+    }
+  }
+
+  if (currentIndex_ >= fileIndexList_.size()) {
+    currentIndex_ = fileIndexList_.empty() ? 0 : fileIndexList_.size() - 1;
+  }
 }

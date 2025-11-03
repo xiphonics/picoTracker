@@ -9,6 +9,7 @@
 
 #include "ChainView.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/SampleEditorView.h"
 #include "ScreenView.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
@@ -463,6 +464,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_CHAIN);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();

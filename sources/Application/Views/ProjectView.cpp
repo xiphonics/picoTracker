@@ -14,6 +14,7 @@
 #include "Application/Views/ImportView.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/ModalDialogs/RenderProgressModal.h"
+#include "Application/Views/SampleEditorView.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
@@ -80,7 +81,15 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
 }
 
 static void PurgeCallback(View &v, ModalView &dialog) {
-  ((ProjectView &)v).OnPurgeInstruments(dialog.GetReturnCode() == MBL_YES);
+  if (dialog.GetReturnCode() == MBL_YES) {
+    ((ProjectView &)v).OnPurge();
+  }
+};
+
+static void PurgeInstrumentsCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    ((ProjectView &)v).OnPurgeInstruments();
+  }
 };
 
 static void RenderStopCallback(View &v, ModalView &dialog) {
@@ -145,7 +154,13 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   (*actionField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
-  actionField_.emplace_back("Compact Instruments",
+  actionField_.emplace_back("Remove Unused Samples", FourCC::ActionPurge,
+                            position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
+  actionField_.emplace_back("Remove Unused Instruments",
                             FourCC::ActionPurgeInstrument, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -221,6 +236,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
+        SampleEditorView::SetSourceViewType(VT_PROJECT);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
         SetChanged();
@@ -296,20 +312,23 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   Player *player = Player::GetInstance();
 
   switch (fourcc) {
-  case FourCC::ActionPurge:
-    project_->Purge();
-    break;
-  case FourCC::ActionPurgeInstrument: {
+  case FourCC::ActionPurge: {
     MessageBox *mb =
         new MessageBox(*this, "Remove unused samples?", MBBF_YES | MBBF_NO);
     DoModal(mb, PurgeCallback);
     break;
   }
+  case FourCC::ActionPurgeInstrument: {
+    MessageBox *mb =
+        new MessageBox(*this, "Remove unused instruments?", MBBF_YES | MBBF_NO);
+    DoModal(mb, PurgeInstrumentsCallback);
+    break;
+  }
   case FourCC::ActionRandomName: {
-    char name[12];
+    char name[10];
     System *sys = System::GetInstance();
-    auto randNum = sys->GetRandomNumber();
-    getRandomName(name, randNum);
+    uint32_t randNum = sys->GetRandomNumber();
+    getNamesByIndex(name, randNum, 10);
     printf("random:%s", name);
     project_->SetProjectName(name);
     saveAsFlag_ = true;
@@ -442,9 +461,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   isDirty_ = true;
 };
 
-void ProjectView::OnPurgeInstruments(bool removeFromDisk) {
-  project_->PurgeInstruments(removeFromDisk);
-};
+void ProjectView::OnPurge() { project_->PurgeSamples(); };
+
+void ProjectView::OnPurgeInstruments() { project_->PurgeInstruments(); };
 
 void ProjectView::OnQuit() {
   ViewEvent ve(VET_QUIT_APP);

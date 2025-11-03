@@ -10,22 +10,40 @@
 #include "SampleEditorView.h"
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Instruments/WavFileWriter.h"
 #include "Application/Model/Config.h"
+#include "Application/Persistency/PersistenceConstants.h"
+#include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "Foundation/Types/Types.h"
+#include "ModalDialogs/MessageBox.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
 #include "ViewUtils.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 
 // Initialize static member
-ViewType SampleEditorView::sourceViewType_ = VT_IMPORT;
+ViewType SampleEditorView::sourceViewType_ = VT_SONG;
+
+constexpr const char *const kSampleEditOperationNames[] = {"Trim"};
+constexpr int kSampleEditOperationCount =
+    sizeof(kSampleEditOperationNames) / sizeof(kSampleEditOperationNames[0]);
+
+#define X_OFFSET 0
+#ifdef ADV
+#define Y_OFFSET (2 * CHAR_HEIGHT * 4)
+#else
+#define Y_OFFSET 2 * CHAR_HEIGHT
+#endif
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
@@ -35,7 +53,11 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       endVar_(FourCC::VarSampleEditEnd, 0),
       // bit of a hack to use InstrumentName but we never actually persist this
       // in any config file here
-      filenameVar_(FourCC::InstrumentName, ""), win(w), redraw_(false) {
+      filenameVar_(FourCC::InstrumentName, ""),
+      operationVar_(FourCC::VarSampleEditOperation, kSampleEditOperationNames,
+                    kSampleEditOperationCount,
+                    static_cast<int>(SampleEditOperation::Trim)),
+      win(w), redraw_(false) {
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
 }
@@ -95,6 +117,8 @@ void SampleEditorView::addAllFields() {
                               FourCC::InstrumentName, defaultRecName);
   fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
+  const int baseX = position._x;
+
   position._y += 1;
   bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
                                tempSampleSize_ - 1, 16);
@@ -108,9 +132,38 @@ void SampleEditorView::addAllFields() {
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
   (*bigHexVarField_.rbegin()).AddObserver(*this);
 
-  // save button
-  position._y += 2;
+  // Operation selector
+  position._y += 1;
+  position._x = baseX;
+  int maxOperationIndex =
+      operationVar_.GetListSize() > 0 ? operationVar_.GetListSize() - 1 : 0;
+  intVarField_.emplace_back(position, operationVar_, "op: %s", 0,
+                            maxOperationIndex, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  // Apply button
+  position._x = baseX + 20;
+  actionField_.emplace_back("Apply", FourCC::ActionOK, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  // Save button row
+  position._y += 1;
+  position._x = baseX;
   actionField_.emplace_back("Save", FourCC::ActionSave, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  // load & save button
+  position._x += 5;
+  actionField_.emplace_back("Save&Load", FourCC::ActionLoadAndSave, position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  // discard button
+  position._x += 12;
+  actionField_.emplace_back("Discard", FourCC::ActionCancel, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 }
@@ -145,9 +198,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_LEFT) {
       // Go back to sample browser NAV+LEFT
       ViewType vt = SampleEditorView::sourceViewType_;
-      ViewEvent ve(VET_SWITCH_VIEW, &vt);
-      SetChanged();
-      NotifyObservers(&ve);
+      navigateToView(vt);
       return;
     }
     // For other NAV combinations, let parent handle it
@@ -269,23 +320,13 @@ void SampleEditorView::DrawView() {
 }
 
 void SampleEditorView::DrawWaveForm() {
-  const int X_OFFSET = 0;
-#ifdef ADV
-  const int Y_OFFSET = 2 * CHAR_HEIGHT * 4;
-#else
-  const int Y_OFFSET = 2 * CHAR_HEIGHT;
-#endif
-
   GUIRect rrect;
-
   if (fullWaveformRedraw_) {
     // clear flag immediately to prevent race condition between event triggered
     // from input event and the animation update callback
     fullWaveformRedraw_ = false;
-    // Clear the entire waveform area
-    rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
-                    Y_OFFSET + BITMAPHEIGHT);
-    DrawRect(rrect, CD_BACKGROUND);
+
+    clearWaveformRegion();
 
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
     // Draw borders
@@ -440,51 +481,86 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   uintptr_t fourcc = (uintptr_t)d;
 
   switch (fourcc) {
-  case FourCC::ActionSave: {
-    // Get FileSystem instance
-    auto fs = FileSystem::GetInstance();
-
-    // Get the new filename from the UI variable and add the .wav extension
-    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> newFilename(
-        filenameVar_.GetString());
-    newFilename.append(".wav");
-
-    const auto &originalFilename = viewData_->sampleEditorFilename;
-
-    // Determine if we are overwriting the original file
-    bool isOverwrite = (newFilename == originalFilename);
-    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> writeFilename = newFilename;
-
-    if (isOverwrite) {
-      // TODO: for now this is a no op
-      Trace::Error("saving existing file in sample editor not supported yet");
-      // TODO: Display a modal error to the user
-      return;
+  case FourCC::ActionOK: {
+    // Stop playback if active before applying any destructive operation
+    if (Player::GetInstance()->IsPlaying()) {
+      Player::GetInstance()->StopStreaming();
     }
+    isPlaying_ = false;
+    playKeyHeld_ = false;
 
-    // Navigate to the project's samples directory if necessary
-    if (strcmp(viewData_->importViewStartDir, PROJECT_SAMPLES_DIR) == 0) {
-      if (!goProjectSamplesDir(viewData_)) {
-        Trace::Error("SampleEditorView: Save failed, couldn't change to "
-                     "project samples dir!");
-        // TODO: Display a modal error to the user
-        break;
+    auto opName = operationVar_.GetString();
+    etl::string<SCREEN_WIDTH - 2> confirmLine("Apply ");
+    confirmLine.append(opName.c_str());
+    confirmLine.append("?");
+
+    MessageBox *mb =
+        new MessageBox(*this, confirmLine.c_str(), "This overwrites the file",
+                       MBBF_YES | MBBF_NO);
+
+    // Modal cannot properly draw over the waveform gfx area because text
+    // drawing doesn't know the area because ClearTextRect() is not yet
+    // implemented so we need to manually clear the waveform drawing
+    clearWaveformRegion();
+
+    DoModal(mb, [this](View &view, ModalView &dialog) {
+      if (dialog.GetReturnCode() == MBL_YES) {
+        if (!applySelectedOperation()) {
+          MessageBox *error =
+              new MessageBox(*this, "Operation failed", MBBF_OK);
+          DoModal(error, [this](View &view1, ModalView &dialog1) {
+            fullWaveformRedraw_ = true;
+          });
+        }
+      }
+      fullWaveformRedraw_ = true;
+    });
+    return;
+  }
+  case FourCC::ActionSave: {
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> savedFilename;
+    if (saveSample(savedFilename)) {
+      // if this was a recording, need to go to the /recordings dir after saving
+      const auto &originalFilename = viewData_->sampleEditorFilename;
+      if (originalFilename.compare(RECORDING_FILENAME) == 0) {
+        auto fs = FileSystem::GetInstance();
+        if (!fs) {
+          Trace::Error("SampleEditorView: FileSystem unavailable");
+          return;
+        }
+        fs->chdir(RECORDINGS_DIR);
+        viewData_->importViewStartDir = RECORDINGS_DIR;
+      }
+      ViewType vt = SampleEditorView::sourceViewType_;
+      navigateToView(vt);
+    } else {
+      // TODO: show user error dialog
+      Trace::Error("SampleEditorView: Failed to save file!");
+    }
+    return;
+  }
+  case FourCC::ActionLoadAndSave: {
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> savedFilename;
+    if (saveSample(savedFilename) && loadSampleToPool(savedFilename)) {
+      // now nav to project pool view
+      // need to set this to show project pool dir in ImportView
+      viewData_->sampleEditorProjectList = true;
+      navigateToView(VT_IMPORT);
+    }
+    return;
+  }
+  case FourCC::ActionCancel: {
+    const auto &originalFilename = viewData_->sampleEditorFilename;
+    if (originalFilename.compare(RECORDING_FILENAME) == 0 &&
+        !viewData_->sampleEditorProjectList) {
+      auto fs = FileSystem::GetInstance();
+      if (!fs->DeleteFile(originalFilename.c_str())) {
+        Trace::Error("SampleEditorView: Failed to discard recording %s",
+                     originalFilename.c_str());
       }
     }
-    fs->CopyFile(originalFilename.c_str(), newFilename.c_str());
-    Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
-               newFilename.c_str());
-    // If we just saved a newly recorded sample, go to the importview in the
-    // recordings dir
-    if (originalFilename.compare(RECORDING_FILENAME) == 0) {
-      fs->chdir(RECORDINGS_DIR);
-      viewData_->importViewStartDir = RECORDINGS_DIR;
-    }
-    // otherwise go back to sample browser
-    ViewType vt = VT_IMPORT;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
-    SetChanged();
-    NotifyObservers(&ve);
+    ViewType vt = SampleEditorView::sourceViewType_;
+    navigateToView(vt);
     return;
   }
   }
@@ -493,9 +569,283 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   redraw_ = true;
 }
 
+bool SampleEditorView::applySelectedOperation() {
+  updateSampleParameters();
+
+  int opIndex = operationVar_.GetInt();
+  if (opIndex < 0 || opIndex >= static_cast<int>(SampleEditOperation::Count)) {
+    Trace::Error("SampleEditorView: Invalid operation index %d", opIndex);
+    return false;
+  }
+
+  auto op = static_cast<SampleEditOperation>(opIndex);
+  switch (op) {
+  case SampleEditOperation::Trim: {
+    return applyTrimOperation(static_cast<uint32_t>(start_),
+                              static_cast<uint32_t>(end_));
+  }
+  default:
+    Trace::Error("SampleEditorView: Unsupported operation %d", opIndex);
+    break;
+  }
+  return false;
+}
+
+bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
+  if (!FileSystem::GetInstance()) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return false;
+  }
+
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+  }
+  isPlaying_ = false;
+  playKeyHeld_ = false;
+
+  if (!viewData_) {
+    Trace::Error("SampleEditorView: View data unavailable");
+    return false;
+  }
+
+  const auto &filename = viewData_->sampleEditorFilename;
+  if (filename.empty()) {
+    Trace::Error("SampleEditorView: No filename available for trim");
+    return false;
+  }
+
+  if (tempSampleSize_ == 0) {
+    Trace::Error("SampleEditorView: Cannot trim empty sample");
+    return false;
+  }
+
+  if (end_ < start_) {
+    Trace::Error("SampleEditorView: Trim range invalid (%u < %u)", end_,
+                 start_);
+    return false;
+  }
+
+  WavTrimResult trimResult{};
+  if (!WavFileWriter::TrimFile(filename.c_str(), start_, end_,
+                               static_cast<void *>(chunkBuffer_),
+                               sizeof(chunkBuffer_), trimResult)) {
+    return false;
+  }
+
+  if (!trimResult.trimmed) {
+    startVar_.SetInt(0);
+    endVar_.SetInt(trimResult.totalFrames > 0
+                       ? static_cast<int>(trimResult.totalFrames - 1)
+                       : 0);
+    updateSampleParameters();
+    fullWaveformRedraw_ = true;
+    redraw_ = true;
+    Trace::Log("SAMPLEEDITOR",
+               "Trim skipped because selection spans entire sample");
+    return true;
+  }
+
+  loadSample(viewData_->sampleEditorFilename,
+             viewData_->sampleEditorProjectList);
+
+  // need to reload from disk into ram/flash pool samples
+  if (viewData_->sampleEditorProjectList) {
+#ifndef ADV
+    // on pico we dont support unloading individual samples from flash
+    MessageBox *warning = new MessageBox(*this, "Please reload project",
+                                         "To apply changes", MBBF_OK);
+    DoModal(warning);
+    return true;
+#endif
+    auto pool = SamplePool::GetInstance();
+    if (pool) {
+      if (!goProjectSamplesDir(viewData_)) {
+        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
+      } else {
+        int old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+        if (old_index >= 0) {
+          int new_index = pool->ReloadSample(
+              old_index, viewData_->sampleEditorFilename.c_str());
+          if (new_index >= 0 && old_index != new_index) {
+            auto instrumentBank = viewData_->project_->GetInstrumentBank();
+            for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+              if (instrument && instrument->GetType() == IT_SAMPLE) {
+                SampleInstrument *sampleInstrument =
+                    static_cast<SampleInstrument *>(instrument);
+                if (sampleInstrument->GetSampleIndex() == old_index) {
+                  sampleInstrument->AssignSample(new_index);
+                }
+              }
+            }
+          } else if (new_index < 0) {
+            Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+                         viewData_->sampleEditorFilename.c_str());
+          }
+        } else {
+          Trace::Error(
+              "SampleEditorView: Sample %s not found in pool for reload",
+              viewData_->sampleEditorFilename.c_str());
+        }
+      }
+    } else {
+      Trace::Error("SampleEditorView: SamplePool unavailable for reload");
+    }
+  }
+
+  int refreshedSize = static_cast<int>(tempSampleSize_);
+  int newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
+  startVar_.SetInt(0);
+  endVar_.SetInt(newEndValue);
+  updateSampleParameters();
+  addAllFields();
+  fullWaveformRedraw_ = true;
+  redraw_ = true;
+  playbackPosition_ = 0.0f;
+
+  Trace::Log("SAMPLEEDITOR",
+             "Trimmed sample '%s' to %u frames (start=%u, end=%u)",
+             filename.c_str(), trimResult.framesKept, trimResult.clampedStart,
+             trimResult.clampedEnd);
+  return true;
+}
+
+bool SampleEditorView::saveSample(
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return false;
+  }
+
+  const auto &originalFilename = viewData_->sampleEditorFilename;
+
+  savedFilename =
+      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filenameVar_.GetString());
+  if (savedFilename.empty()) {
+    Trace::Error("SampleEditorView: Cannot save sample with empty name");
+    return false;
+  }
+
+  // Ensure extension
+  savedFilename.append(".wav");
+  if (savedFilename.is_truncated()) {
+    Trace::Error("SampleEditorView: Filename too long");
+    return false;
+  }
+
+  if (viewData_->sampleEditorProjectList) {
+    if (!goProjectSamplesDir(viewData_)) {
+      Trace::Error("SampleEditorView: Save failed, couldn't chdir to project "
+                   "samples dir!");
+      return false;
+    }
+  }
+
+  if (originalFilename != savedFilename) {
+    if (!fs->CopyFile(originalFilename.c_str(), savedFilename.c_str())) {
+      Trace::Error("SampleEditorView: Save failed copying %s -> %s",
+                   originalFilename.c_str(), savedFilename.c_str());
+      return false;
+    }
+  }
+
+  Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
+             savedFilename.c_str());
+
+  return true;
+}
+
+bool SampleEditorView::loadSampleToPool(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  if (!viewData_ || !viewData_->project_) {
+    Trace::Error("SampleEditorView: Project context unavailable");
+    return false;
+  }
+
+  auto pool = SamplePool::GetInstance();
+  if (!pool) {
+    Trace::Error("SampleEditorView: SamplePool unavailable");
+    return false;
+  }
+
+  int sampleId = -1;
+
+  if (!viewData_->sampleEditorProjectList) {
+    char projectName[MAX_PROJECT_NAME_LENGTH];
+    viewData_->project_->GetProjectName(projectName);
+
+    sampleId = pool->ImportSample(savedFilename.c_str(), projectName);
+    if (sampleId < 0) {
+      Trace::Error("SampleEditorView: Import failed for %s",
+                   savedFilename.c_str());
+      return false;
+    }
+  } else {
+    sampleId = findSampleIndexByName(savedFilename);
+    if (sampleId < 0) {
+      Trace::Error("SampleEditorView: Sample %s not found in pool",
+                   savedFilename.c_str());
+      return false;
+    }
+  }
+  return true;
+}
+
+int SampleEditorView::findSampleIndexByName(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const {
+  auto pool = SamplePool::GetInstance();
+  if (!pool) {
+    return -1;
+  }
+
+  char **names = pool->GetNameList();
+  int count = pool->GetNameListSize();
+  for (int i = 0; i < count; ++i) {
+    if (names[i] && strcmp(names[i], name.c_str()) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
+  if (!viewData_ || !viewData_->project_) {
+    return nullptr;
+  }
+
+  auto instrumentBank = viewData_->project_->GetInstrumentBank();
+  if (!instrumentBank) {
+    return nullptr;
+  }
+
+  I_Instrument *instrument =
+      instrumentBank->GetInstrument(viewData_->currentInstrumentID_);
+  if (!instrument || instrument->GetType() != IT_SAMPLE) {
+    return nullptr;
+  }
+
+  return static_cast<SampleInstrument *>(instrument);
+}
+
+void SampleEditorView::navigateToView(ViewType vt) {
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+  }
+  // "clear" the prev screen by setting it to Song screen
+  // now that we are leaving this screen
+  SampleEditorView::sourceViewType_ = VT_SONG;
+
+  isPlaying_ = false;
+  playKeyHeld_ = false;
+
+  ViewEvent ve(VET_SWITCH_VIEW, &vt);
+  SetChanged();
+  NotifyObservers(&ve);
+}
+
 void SampleEditorView::updateSampleParameters() {
 
-  int sampleSize = 0;
+  uint32_t sampleSize = 0;
   if (tempSampleSize_ > 0) {
     // --- use the temporary sample's size ---
     sampleSize = tempSampleSize_;
@@ -643,6 +993,9 @@ void SampleEditorView::loadSample(
   }
   waveformCacheValid_ = true;
 
+  // set start point variable to 0
+  startVar_.SetInt(0);
+
   // set end point variable
   endVar_.SetInt(tempSampleSize_);
 
@@ -650,4 +1003,12 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
              tempSampleSize_, peakAmplitude, filename.c_str());
   fullWaveformRedraw_ = true;
+}
+
+void SampleEditorView::clearWaveformRegion() {
+  // Clear the entire waveform area
+  GUIRect rrect;
+  rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
+                  Y_OFFSET + BITMAPHEIGHT);
+  DrawRect(rrect, CD_BACKGROUND);
 }

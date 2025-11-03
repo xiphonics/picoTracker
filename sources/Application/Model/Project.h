@@ -34,7 +34,8 @@ public:
   Project(const char *name);
   ~Project();
   void Purge();
-  void PurgeInstruments(bool removeFromDisk);
+  void PurgeInstruments();
+  void PurgeSamples();
 
   Song song_;
 

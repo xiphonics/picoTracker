@@ -12,7 +12,8 @@
 extern "C" {
 #endif
 
-void configureCharging(void);
+bool startCharging(void);
+bool stopCharging(void);
 void powerOff();
 
 typedef enum {
@@ -22,7 +23,16 @@ typedef enum {
   CHARGE_DONE
 } ChargingStatus;
 
+typedef enum {
+  VBUS_OK,
+  VBUS_KO,
+  CHARGE_END,
+  CHARGE_FAULT,
+  UNKNOWN,
+} ChargerInt;
+
 ChargingStatus getChargingStatus();
+ChargerInt chargerIntReason();
 
 #ifdef __cplusplus
 }

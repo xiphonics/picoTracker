@@ -22,6 +22,8 @@
 #include "critical_error_message.h"
 #include "input.h"
 #include "platform.h"
+#include "rng.h"
+#include "rtc.h"
 #include "tim.h"
 #include "tlv320aic3204.h"
 #include <assert.h>
@@ -101,6 +103,25 @@ void advSystem::Boot() {
   static char samplePoolMemBuf[sizeof(advSamplePool)];
   SamplePool::Install(new (samplePoolMemBuf) advSamplePool());
 
+  // Handle wake up
+  if (__HAL_PWR_GET_FLAG(PWR_FLAG_SB)) {
+    // Determine actual source
+    if (PWR->WKUPFR & PWR_WKUPFR_WKUPF2) {
+      Trace::Log("POWERON", "Woke up from power button");
+      HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    } else if (__HAL_RTC_WAKEUPTIMER_GET_FLAG(&hrtc, RTC_FLAG_WUTF)) {
+      Trace::Log("POWERON", "Woke up from RTC - back to sleep");
+      powerOff();
+    } else {
+      Trace::Log("POWERON", "Woke up from unknown source");
+    }
+  } else {
+    Trace::Log("POWERON", "Woke up from deep sleep");
+  }
+
+  // Enable display PWM
+  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
+
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
 
@@ -136,10 +157,16 @@ unsigned long advSystem::GetClock() {
 }
 
 void advSystem::GetBatteryState(BatteryState &state) {
-  state.percentage = getBatterySOC();
+  auto soc = getBatterySOC();
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
   state.charging = getChargingStatus();
+  if (soc < 0) {
+    state.error = true;
+  } else {
+    state.percentage = soc;
+    state.error = false;
+  }
 }
 
 void advSystem::SetDisplayBrightness(unsigned char value) {
@@ -179,7 +206,15 @@ void advSystem::SystemPutChar(int c) {
   HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)&c, 1, 0x000F);
 }
 
-int32_t advSystem::GetRandomNumber() { return platform_get_rand(); }
+uint32_t advSystem::GetRandomNumber() {
+  uint32_t random32;
+  if (HAL_RNG_GenerateRandomNumber(&hrng, &random32) == HAL_OK) {
+    return (int32_t)random32;
+  } else {
+    Trace::Error("Error generating random number");
+    return 0;
+  }
+}
 
 void advSystem::SystemBootloader() { platform_bootloader(); }
 

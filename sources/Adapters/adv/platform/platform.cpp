@@ -8,19 +8,10 @@
 
 #include "platform.h"
 #include "Adapters/adv/mutex/advMutex.h"
+#include "Adapters/adv/system/BatteryGauge.h"
 #include "System/Console/Trace.h"
-#include "rng.h"
 #include "tim.h"
-
-int32_t platform_get_rand() {
-  uint32_t random32;
-  if (HAL_RNG_GenerateRandomNumber(&hrng, &random32) == HAL_OK) {
-    return (int32_t)random32;
-  } else {
-    Trace::Error("Error generating random number");
-    return 0;
-  }
-};
+#include <System/Console/nanoprintf.h>
 
 void platform_reboot() { NVIC_SystemReset(); };
 
@@ -94,3 +85,13 @@ void platform_brightness(uint8_t value) {
 
   __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse);
 }
+
+// returns -1 on error, -2 for "calculating" status
+int16_t battery_health() {
+  auto soh_type = getBatteryStateOfHealthType();
+  if (soh_type == SOH_READY) {
+    return getBatteryStateOfHealth();
+  } else {
+    return -2;
+  }
+};

@@ -1,5 +1,5 @@
 #include "record.h"
-#include "Application/Instruments/WavHeaderWriter.h"
+#include "Application/Instruments/WavHeader.h"
 #include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
@@ -23,6 +23,8 @@ static volatile bool recordingActive = false;
 static volatile bool writeInProgress = false;
 
 static volatile bool g_monitoringOnly = false;
+
+bool IsRecordingActive() { return recordingActive; }
 
 // Tracking which half is ready
 static volatile bool isHalfBuffer = false;

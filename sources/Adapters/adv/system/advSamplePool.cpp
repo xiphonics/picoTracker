@@ -43,7 +43,7 @@ uint32_t advSamplePool::GetAvailableSampleStorageSpace() {
 }
 
 bool advSamplePool::loadSample(const char *name) {
-  Trace::Log("SAMPLEPOOL", "Loading sample into flash: %s", name);
+  Trace::Log("SAMPLEPOOL", "Loading sample into ram: %s", name);
 
   if (count_ == MAX_SAMPLES)
     return false;

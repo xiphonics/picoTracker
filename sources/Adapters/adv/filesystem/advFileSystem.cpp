@@ -7,6 +7,7 @@
  */
 
 #include "advFileSystem.h"
+#include <cstring>
 
 FATFS SDFatFS;
 char SDPath[4];
@@ -35,18 +36,24 @@ advFileSystem::advFileSystem() {
 
 I_File *advFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
-  BYTE rmode;
+  const bool hasPlus = (mode != nullptr) && (std::strchr(mode, '+') != nullptr);
+  BYTE rmode = 0;
+
+  if (!mode || !*mode) {
+    Trace::Error("Invalid mode: %s", mode ? mode : "(null)");
+    return nullptr;
+  }
+
   switch (*mode) {
   case 'r':
-    rmode = FA_READ;
+    rmode = FA_READ | (hasPlus ? FA_WRITE : 0);
     break;
   case 'w':
-    rmode = FA_CREATE_ALWAYS | FA_WRITE;
+    rmode = FA_CREATE_ALWAYS | FA_WRITE | (hasPlus ? FA_READ : 0);
     break;
   default:
-    rmode = FA_READ;
-    Trace::Error("Invalid mode: %s [%d]", mode, rmode);
-    return 0;
+    Trace::Error("Invalid mode: %s", mode);
+    return nullptr;
   }
   FIL cwd;
   PI_File *wFile = 0;
@@ -132,9 +139,13 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
                  matchesFilter);
     }
 
-    // filter out "." and files that dont match filter if a filter is given
-    if (((fno.fattrib & AM_DIR) && i != 0) ||
-        (!(fno.fattrib & AM_HID) && matchesFilter)) {
+    const bool isDir = (fno.fattrib & AM_DIR) != 0;
+    const bool isFile = !isDir;
+    const bool isParentEntry = isDir && strcmp(fno.fname, "..") == 0;
+    const bool isHiddenName = (fno.fname[0] == '.') && !isParentEntry;
+
+    // filter out "." style hidden entries and files that dont match filter
+    if ((isDir || (isFile && matchesFilter)) && !isHiddenName) {
       if (subDirOnly) {
         if (fno.fattrib & AM_DIR) {
           fileIndexes->push_back(i);
