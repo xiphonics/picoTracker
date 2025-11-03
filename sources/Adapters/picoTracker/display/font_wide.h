@@ -105,4 +105,3 @@ static const uint16_t FONT_WIDE_BITMAP[96][10] = {
 };
 
 #endif // FONT_WIDE_H
-
