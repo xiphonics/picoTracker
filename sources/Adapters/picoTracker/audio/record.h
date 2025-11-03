@@ -10,6 +10,12 @@
 
 #include <cstdint>
 
+// DUMMY values as no linein or mic on pico
+static constexpr int lineInGainMinDb = 0;
+static constexpr int lineInGainMaxDb = 0;
+static constexpr int micGainMinDb = 0;
+static constexpr int micGainMaxDb = 0;
+
 enum RecordSource { AllOff, LineIn, Mic, USBIn };
 
 void Record(void *);
