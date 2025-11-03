@@ -17,7 +17,7 @@
 
 typedef void (*pFunction)(void);
 
-int32_t platform_get_rand();
+uint32_t platform_get_rand();
 
 void platform_reboot();
 
@@ -29,5 +29,7 @@ uint32_t millis(void);
 uint32_t micros(void);
 
 void platform_brightness(uint8_t value);
+
+int16_t battery_health();
 
 #endif

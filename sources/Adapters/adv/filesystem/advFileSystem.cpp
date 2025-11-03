@@ -7,6 +7,7 @@
  */
 
 #include "advFileSystem.h"
+#include <cstring>
 
 FATFS SDFatFS;
 char SDPath[4];
@@ -35,18 +36,24 @@ advFileSystem::advFileSystem() {
 
 I_File *advFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
-  BYTE rmode;
+  const bool hasPlus = (mode != nullptr) && (std::strchr(mode, '+') != nullptr);
+  BYTE rmode = 0;
+
+  if (!mode || !*mode) {
+    Trace::Error("Invalid mode: %s", mode ? mode : "(null)");
+    return nullptr;
+  }
+
   switch (*mode) {
   case 'r':
-    rmode = FA_READ;
+    rmode = FA_READ | (hasPlus ? FA_WRITE : 0);
     break;
   case 'w':
-    rmode = FA_CREATE_ALWAYS | FA_WRITE;
+    rmode = FA_CREATE_ALWAYS | FA_WRITE | (hasPlus ? FA_READ : 0);
     break;
   default:
-    rmode = FA_READ;
-    Trace::Error("Invalid mode: %s [%d]", mode, rmode);
-    return 0;
+    Trace::Error("Invalid mode: %s", mode);
+    return nullptr;
   }
   FIL cwd;
   PI_File *wFile = 0;

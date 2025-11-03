@@ -18,7 +18,6 @@
 #include "hardware/vreg.h"
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
-#include "pico/rand.h"
 #include "pico/stdlib.h"
 #include <System/Console/Trace.h>
 #include <System/Console/nanoprintf.h>
@@ -225,8 +224,6 @@ void platform_init() {
   gpio_pull_up(INPUT_PLAY);
 }
 
-int32_t platform_get_rand() { return get_rand_32(); };
-
 void platform_reboot() { watchdog_reboot(0, 0, 0); }
 
 void platform_bootloader() { reset_usb_boot(0, 0); }
@@ -239,3 +236,5 @@ uint32_t micros(void) { return to_us_since_boot(get_absolute_time()); }
 void platform_brightness(uint8_t value) {
   pwm_set_gpio_level(DISPLAY_PWM, value);
 }
+
+int16_t battery_health() { return -1; };

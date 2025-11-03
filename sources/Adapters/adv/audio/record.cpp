@@ -1,5 +1,5 @@
 #include "record.h"
-#include "Application/Instruments/WavHeaderWriter.h"
+#include "Application/Instruments/WavHeader.h"
 #include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"

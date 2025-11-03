@@ -9,6 +9,7 @@
 #include "advEventManager.h"
 #include "Adapters/adv/audio/record.h"
 #include "Adapters/adv/midi/advMidiService.h"
+#include "Adapters/adv/system/charger.h"
 #include "Adapters/adv/system/input.h"
 #include "Adapters/adv/utils/utils.h"
 #include "Application/Application.h"
@@ -418,7 +419,8 @@ void advEventManager::ProcessInputEvent(void *) {
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == SD_DET_Pin) {
+  switch (GPIO_Pin) {
+  case SD_DET_Pin: {
     if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
       // SD card inserted
       Event ev(SD_DET);
@@ -427,5 +429,39 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
       // We don't yet do anything for SD Card removed, could actually unlink
       // FS on removal
     }
+  } break;
+  case CHARGER_INT_Pin: {
+    Trace::Log("CHARGER INT", "interrupt!");
+    auto reason = chargerIntReason();
+    switch (reason) {
+    case VBUS_OK: {
+      // start charging (if not 100% already?)
+      Trace::Log("CHARGER INT", "VBUS connected");
+      startCharging();
+    } break;
+    case VBUS_KO: {
+      // stop charging?
+      Trace::Log("CHARGER INT", "VBUS disconnected");
+      stopCharging();
+    } break;
+    case CHARGE_END: {
+      // stop charging
+      Trace::Log("CHARGER INT", "Charge end");
+      stopCharging();
+    } break;
+    case CHARGE_FAULT: {
+      // What do? under this condition BATFET is disconnected
+      // maybe bat indicator is [-!-]
+      Trace::Log("CHARGER INT", "Charge fault");
+      stopCharging();
+    } break;
+
+    case UNKNOWN: {
+      // do nothing for now, we know we have unhandled cases
+      Trace::Log("CHARGER", "UNKNOWN INTERRUPT");
+    } break;
+    }
+    break;
+  }
   }
 }

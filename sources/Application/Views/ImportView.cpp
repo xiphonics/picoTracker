@@ -234,7 +234,13 @@ void ImportView::DrawView() {
 
       displayName += tempBuffer;
       // Format the display name with appropriate prefix
-      if (isSingleCycle) {
+      if (inProjectSampleDir_ &&
+          viewData_->project_->SampleInUse(
+              etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(tempBuffer))) {
+        SetColor(CD_INFO);
+        DrawString(x, y, "*", props);
+        SetColor(CD_NORMAL);
+      } else if (isSingleCycle) {
         SetColor(CD_INFO);
         DrawString(x, y, "~", props);
         SetColor(CD_NORMAL);
@@ -381,6 +387,36 @@ void ImportView::preview(char *name) {
     Player::GetInstance()->StopStreaming();
   }
 
+  auto wav = WavFile::Open(name);
+  MessageBox *mb = nullptr;
+  if (!wav) {
+    auto error = wav.error();
+    switch (error) {
+    case INVALID_FILE:
+      mb = new MessageBox(*this, "Preview Failed", "Could not open file",
+                          MBBF_OK);
+      break;
+    case UNSUPPORTED_FILE_FORMAT:
+    case INVALID_HEADER:
+    case UNSUPPORTED_WAV_FORMAT:
+      mb = new MessageBox(*this, "Preview Failed", "Invalid file", MBBF_OK);
+      break;
+    case UNSUPPORTED_COMPRESSION:
+    case UNSUPPORTED_BITDEPTH:
+    case UNSUPPORTED_SAMPLERATE:
+      mb = new MessageBox(*this, "Preview Failed", "Unsupported format",
+                          MBBF_OK);
+      break;
+    }
+  } else {
+    wav.value()->Close();
+  }
+
+  if (mb != nullptr) {
+    DoModal(mb);
+    return;
+  }
+
   // Start playing the selected sample
   Trace::Debug("Starting preview of %s (single cycle: %d)", name,
                isSingleCycle);
@@ -473,6 +509,7 @@ void ImportView::import() {
     case INVALID_HEADER:
     case UNSUPPORTED_WAV_FORMAT:
       mb = new MessageBox(*this, "Import Failed", "invalid file", MBBF_OK);
+      break;
     case UNSUPPORTED_COMPRESSION:
     case UNSUPPORTED_BITDEPTH:
     case UNSUPPORTED_SAMPLERATE:
