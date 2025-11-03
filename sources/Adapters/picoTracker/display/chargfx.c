@@ -192,7 +192,7 @@ inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
 
   ili9341_start_writing();
 
-  const font_t *font = fonts[ui_font_index];                                    
+  const font_t *font = fonts[ui_font_index];
 
   for (int page = x; page < x + width; page++) {
     // create one column of screen information
