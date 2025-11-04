@@ -68,7 +68,7 @@ protected:
   fixed ToLogVolume(int vol);
 
 private:
-  void configureRenderPaths();
+  bool configureRenderPaths();
 
   AudioOut *out_;
   MixBus master_;

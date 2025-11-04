@@ -55,13 +55,17 @@ bool MixerService::Init() {
     }
 
     out_->AddObserver(*MidiService::GetInstance());
-    configureRenderPaths();
+    bool pathConfigured = configureRenderPaths();
+    if (!pathConfigured) {
+      Trace::Error("[MixerService::Init] Failed to set audio render paths");
+      return false;
+    }
   }
 
   if (result) {
-    Trace::Debug("Out initialized");
+    Trace::Debug("[MixerService::Init] Out initialized");
   } else {
-    Trace::Debug("Failed to get output");
+    Trace::Error("[MixerService::Init] Failed to get output");
   }
   return (result);
 };
@@ -167,7 +171,11 @@ int MixerService::GetPlayedBufferPercentage() {
 void MixerService::setRenderingMode(MixerServiceMode mode) {
   if (mode != MSM_AUDIO) {
     // in case proj name changed since last time paths were configured
-    configureRenderPaths();
+    bool pathsResult = configureRenderPaths();
+    if (!pathsResult) {
+      Trace::Error(
+          "[MixerService::setRenderingMode] Failed to set render paths");
+    }
   }
 
   switch (mode) {
@@ -197,16 +205,16 @@ void MixerService::OnPlayerStop() {
   setRenderingMode(MSM_AUDIO);
 };
 
-void MixerService::configureRenderPaths() {
+bool MixerService::configureRenderPaths() {
   if (!out_) {
-    return;
+    return false;
   }
 
   Player *player = Player::GetInstance();
   Project *project = player ? player->GetProject() : nullptr;
   if (!project) {
     Trace::Error("MIXERSERVICE", "Cannot configure render paths, project null");
-    return;
+    return false;
   }
 
   char projectname[MAX_PROJECT_NAME_LENGTH];
@@ -220,6 +228,7 @@ void MixerService::configureRenderPaths() {
                  i);
     bus_[i].SetFileRenderer(path);
   }
+  return true;
 }
 
 void MixerService::Execute(FourCC id, float value) {
