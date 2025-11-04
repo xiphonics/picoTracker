@@ -41,7 +41,6 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   actionField_.emplace_back("Export", FourCC::ActionExport, actionPos);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
-
   actionPos._y += 1;
 
   // Font selection
@@ -52,8 +51,9 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   intVarField_.emplace_back(position, *v, "Font: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
-
   position._y += 2;
+#else
+  position._y += 1;
 #endif
 
   // Get the current theme name from Config
