@@ -676,10 +676,9 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     break;
   }
   case FourCC::InstrumentCommandTable: {
-    TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
     param = param & 0x7F;
-    Table &table = th->GetTable(param);
+    Table &table = TableHolder::instance().GetTable(param);
     tpb.Start(instr, table, false);
     return true;
     break;
@@ -808,7 +807,6 @@ void Player::playCursorPosition(int channel) {
     unsigned char note = phrase->note_[16 * currentPhrase + pos];
     unsigned char instr = phrase->instr_[16 * currentPhrase + pos];
 
-    TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
 
     if (note != 0xFF) {
@@ -858,7 +856,7 @@ void Player::playCursorPosition(int channel) {
           // we trigger the table.
 
           if ((instrTable != VAR_OFF) && (newInstrument)) {
-            Table &table = th->GetTable(instrTable);
+            Table &table = TableHolder::instance().GetTable(instrTable);
             bool automated = instrument->GetTableAutomation();
             tpb.Start(instrument, table, automated);
           } else {

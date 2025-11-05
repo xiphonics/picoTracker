@@ -106,7 +106,7 @@ void Song::RestoreContent(PersistencyDocument *doc) {
   ushort *param1 = phrase_.param1_;
   ushort *param2 = phrase_.param2_;
 
-  TableHolder *th = TableHolder::GetInstance();
+  auto &th = TableHolder::instance();
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
@@ -115,11 +115,11 @@ void Song::RestoreContent(PersistencyDocument *doc) {
       }
       if (*table1 == FourCC::InstrumentCommandTable) {
         *param1 &= 0x7F;
-        th->SetUsed((*param1));
+        th.SetUsed((*param1));
       };
       if (*table2 == FourCC::InstrumentCommandTable) {
         *param2 &= 0x7F;
-        th->SetUsed((*param2));
+        th.SetUsed((*param2));
       };
       table1++;
       table2++;

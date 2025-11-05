@@ -11,7 +11,7 @@
 #define _TABLE_H_
 
 #include "Application/Persistency/Persistent.h"
-#include "Foundation/T_Singleton.h"
+#include "Externals/etl/include/etl/singleton.h"
 #include "Foundation/Types/Types.h"
 
 #define TABLE_COUNT 0x20
@@ -36,9 +36,8 @@ public:
   ushort param3_[TABLE_STEPS];
 };
 
-class TableHolder : public T_Singleton<TableHolder>, Persistent {
+class TableHolderBase : public Persistent {
 public:
-  TableHolder();
   void Reset();
   Table &GetTable(int table);
   void SetUsed(int table);
@@ -48,8 +47,13 @@ public:
   virtual void RestoreContent(PersistencyDocument *doc);
 
 private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<TableHolderBase>;
+  TableHolderBase();
+
   Table table_[TABLE_COUNT];
   bool allocation_[TABLE_COUNT];
 };
 
+using TableHolder = etl::singleton<TableHolderBase>;
 #endif

@@ -746,7 +746,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     Variable &v = field->GetVariable();
     switch (v.GetID()) {
     case FourCC::SampleInstrumentTable: {
-      int next = TableHolder::GetInstance()->GetNext();
+      int next = TableHolder::instance().GetNext();
       if (next != NO_MORE_TABLE) {
         v.SetInt(next);
         isDirty_ = true;
@@ -775,7 +775,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
       if ((field->GetVariableID() == FourCC::SampleInstrumentTable) ||
           (field->GetVariableID() == FourCC::MidiInstrumentTable)) {
-        int next = TableHolder::GetInstance()->Clone(current);
+        int next = TableHolder::instance().Clone(current);
         if (next != NO_MORE_TABLE) {
           v.SetInt(next);
           isDirty_ = true;

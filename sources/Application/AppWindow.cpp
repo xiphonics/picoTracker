@@ -517,7 +517,7 @@ void AppWindow::CloseProject() {
   SamplePool *pool = SamplePool::GetInstance();
   pool->Reset();
 
-  TableHolder::GetInstance()->Reset();
+  TableHolder::instance().Reset();
   TablePlayback::Reset();
 
   ApplicationCommandDispatcher::GetInstance()->Close();

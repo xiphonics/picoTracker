@@ -79,7 +79,7 @@ void TableView::fillClipboardData() {
 
   // Copy the data
 
-  Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
+  Table &table = TableHolder::instance().GetTable(viewData_->currentTable_);
 
   uchar *src1 = (unsigned char *)table.cmd1_;
   uchar *dst1 = clipboard_.cmd1_;
@@ -152,7 +152,7 @@ void TableView::cutSelection() {
 
   // Loop over selection col, row & clear data inside it
 
-  Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
+  Table &table = TableHolder::instance().GetTable(viewData_->currentTable_);
   uchar *dst1 = (unsigned char *)table.cmd1_;
   ushort *dst2 = table.param1_;
   uchar *dst3 = (unsigned char *)table.cmd2_;
@@ -209,7 +209,7 @@ void TableView::pasteClipboard() {
           height=16-row_ ;
       }
     */
-  Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
+  Table &table = TableHolder::instance().GetTable(viewData_->currentTable_);
 
   uchar *dst1 = (unsigned char *)table.cmd1_;
   uchar *src1 = clipboard_.cmd1_;
@@ -268,7 +268,7 @@ void TableView::updateCursor(int dx, int dy) {
   if (row_ < 0) {
     row_ = 0;
   }
-  Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
+  Table &table = TableHolder::instance().GetTable(viewData_->currentTable_);
 
   GUIPoint anchor = GetAnchor();
   GUIPoint p(anchor);
@@ -318,7 +318,7 @@ void TableView::updateCursorValue(int offset) {
   bool wrap = false;
   FourCC *cc;
 
-  Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
+  Table &table = TableHolder::instance().GetTable(viewData_->currentTable_);
 
   switch (col_) {
   case 0:
@@ -507,7 +507,7 @@ void TableView::updateCursorValue(int offset) {
 void TableView::pasteLast() {
   uchar *c = 0;
 
-  Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
+  Table &table = TableHolder::instance().GetTable(viewData_->currentTable_);
 
   switch (col_) {
   case 0:
@@ -752,7 +752,7 @@ void TableView::DrawView() {
   GUITextProperties props;
   GUIPoint pos = GetTitlePosition();
 
-  Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
+  Table &table = TableHolder::instance().GetTable(viewData_->currentTable_);
 
   // Draw title
 
@@ -917,10 +917,9 @@ void TableView::AnimationUpdate() {
 
   // Get player instance safely
   Player *player = Player::GetInstance();
-  TableHolder *th = TableHolder::GetInstance();
 
   // Only process updates if we're fully initialized
-  if (!viewData_ || !player || !th) {
+  if (!viewData_ || !player || !TableHolder::is_valid()) {
     return;
   }
 
@@ -953,7 +952,8 @@ void TableView::AnimationUpdate() {
       TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
       Table *playbackTable = tpb.GetTable();
       // Table we're viewing
-      Table &viewTable = th->GetTable(viewData_->currentTable_);
+      Table &viewTable =
+          TableHolder::instance().GetTable(viewData_->currentTable_);
 
       if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
         // Draw cursors at current positions

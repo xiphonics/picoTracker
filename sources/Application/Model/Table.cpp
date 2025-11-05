@@ -65,9 +65,9 @@ bool Table::IsEmpty() {
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 
-TableHolder::TableHolder() : Persistent("TABLES") { Reset(); }
+TableHolderBase::TableHolderBase() : Persistent("TABLES") { Reset(); }
 
-void TableHolder::Reset() {
+void TableHolderBase::Reset() {
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     table_[i].Reset();
   }
@@ -76,12 +76,12 @@ void TableHolder::Reset() {
   };
 };
 
-Table &TableHolder::GetTable(int table) {
+Table &TableHolderBase::GetTable(int table) {
   NAssert((table >= 0) && (table < TABLE_COUNT));
   return table_[table];
 }
 
-void TableHolder::SaveContent(tinyxml2::XMLPrinter *printer) {
+void TableHolderBase::SaveContent(tinyxml2::XMLPrinter *printer) {
 
   char hex[3];
   for (int i = 0; i < TABLE_COUNT; i++) {
@@ -103,7 +103,7 @@ void TableHolder::SaveContent(tinyxml2::XMLPrinter *printer) {
   }
 };
 
-void TableHolder::RestoreContent(PersistencyDocument *doc) {
+void TableHolderBase::RestoreContent(PersistencyDocument *doc) {
 
   bool elem = doc->FirstChild();
   while (elem) {
@@ -153,14 +153,14 @@ void TableHolder::RestoreContent(PersistencyDocument *doc) {
   }
 }
 
-void TableHolder::SetUsed(int i) {
+void TableHolderBase::SetUsed(int i) {
   if (i >= TABLE_COUNT) {
     NAssert(i < 128);
   }
   allocation_[i] = true;
 };
 
-int TableHolder::GetNext() {
+int TableHolderBase::GetNext() {
   for (int i = 0; i < TABLE_COUNT; i++) {
     if (!allocation_[i]) {
       if (table_[i].IsEmpty()) {
@@ -172,7 +172,7 @@ int TableHolder::GetNext() {
   return NO_MORE_TABLE;
 };
 
-int TableHolder::Clone(int table) {
+int TableHolderBase::Clone(int table) {
   int target = GetNext();
   if (target != NO_MORE_TABLE) {
     table_[target].Copy(table_[table]);

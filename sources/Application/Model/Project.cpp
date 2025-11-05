@@ -75,7 +75,7 @@ Project::Project(const char *name)
 
   // Makes sure the tables exists for restoring
 
-  TableHolder::GetInstance();
+  TableHolder::create();
 
   Groove::GetInstance()->Clear();
 

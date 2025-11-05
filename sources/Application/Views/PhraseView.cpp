@@ -763,8 +763,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
                 FourCC::SampleInstrumentTable) {
-          TableHolder *th = TableHolder::GetInstance();
-          unsigned short next = th->GetNext();
+          unsigned short next = TableHolder::instance().GetNext();
           if (next != NO_MORE_TABLE) {
             ushort *c =
                 phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
@@ -777,8 +776,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
                 FourCC::SampleInstrumentTable) {
-          TableHolder *th = TableHolder::GetInstance();
-          unsigned short next = th->GetNext();
+          unsigned short next = TableHolder::instance().GetNext();
           if (next != NO_MORE_TABLE) {
             ushort *c =
                 phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
@@ -810,11 +808,10 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
                 FourCC::SampleInstrumentTable) {
-          TableHolder *th = TableHolder::GetInstance();
           int current =
               *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_));
           if (current != -1) {
-            unsigned short next = th->Clone(current);
+            unsigned short next = TableHolder::instance().Clone(current);
             if (next != NO_MORE_TABLE) {
               ushort *c =
                   phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
@@ -827,8 +824,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
                 FourCC::SampleInstrumentTable) {
-          TableHolder *th = TableHolder::GetInstance();
-          unsigned short next = th->Clone(
+          unsigned short next = TableHolder::instance().Clone(
               *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
           if (next != NO_MORE_TABLE) {
             ushort *c =
