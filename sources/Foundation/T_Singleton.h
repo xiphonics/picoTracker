@@ -10,7 +10,13 @@
 #ifndef _T_SINGLETON_H_
 #define _T_SINGLETON_H_
 
-#include "SingletonRegistry.h"
+// #include "SingletonRegistry.h"
+#include "T_SimpleList.h"
+
+class I_Singleton {
+public:
+  virtual ~I_Singleton(){};
+};
 
 template <class Item> class T_Singleton : public I_Singleton {
 protected:
