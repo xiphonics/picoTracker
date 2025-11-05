@@ -773,11 +773,14 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (current == -1)
         return;
 
-      int next = TableHolder::GetInstance()->Clone(current);
-      if (next != NO_MORE_TABLE) {
-        v.SetInt(next);
-        isDirty_ = true;
-      }
+      if ((field->GetVariableID() == FourCC::SampleInstrumentTable) ||
+          (field->GetVariableID() == FourCC::MidiInstrumentTable)) {
+        int next = TableHolder::GetInstance()->Clone(current);
+        if (next != NO_MORE_TABLE) {
+          v.SetInt(next);
+          isDirty_ = true;
+        }
+      };
     }
     mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
   };
