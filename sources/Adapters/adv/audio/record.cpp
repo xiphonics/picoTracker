@@ -6,6 +6,7 @@
 #include "sai.h"
 #include "sd_diskio.h"
 #include "tlv320aic3204.h"
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 
@@ -66,14 +67,14 @@ void SetInputSource(RecordSource source) {
   }
 }
 
-void SetLineInGain(int gainDb) {
+void SetLineInGain(uint8_t gainDb) {
   lineInGainDb = gainDb;
   if (source_ == LineIn) {
     tlv320_set_linein_gain_db(lineInGainDb);
   }
 }
 
-void SetMicGain(int gainDb) {
+void SetMicGain(uint8_t gainDb) {
   micGainDb = gainDb;
   if (source_ == Mic) {
     tlv320_set_mic_gain_db(micGainDb);

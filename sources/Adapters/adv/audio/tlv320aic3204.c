@@ -362,7 +362,7 @@ void tlv320_enable_mic(void) {
   tlv320_select_output();
 }
 
-void tlv320_set_linein_gain_db(int gainDb) {
+void tlv320_set_linein_gain_db(uint8_t gainDb) {
   if (input != LINEIN) {
     return;
   }
@@ -370,12 +370,12 @@ void tlv320_set_linein_gain_db(int gainDb) {
   tlv320_update_gain_register(0x3c, LINEINBASEHALFDB, gainDb);
 }
 
-void tlv320_set_mic_gain_db(int gainDb) {
+void tlv320_set_mic_gain_db(uint8_t gainDb) {
   if (input != MIC) {
     return;
   }
   // Register 0x53 encodes gain in 0.5dB steps with 0x00 = 0dB.
-  const uint8_t regValue = gainDb * 2; // reg value uses 0.5dB resolution
+  const uint8_t regValue = gainDb * 2;
   tlv320writepage(0x00, MIC_GAIN_REGISTER, regValue);
 }
 

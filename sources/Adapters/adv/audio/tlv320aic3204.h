@@ -8,6 +8,8 @@
 #ifndef _TLV320AIC3204_
 #define _TLV320AIC3204_
 
+#include <stdint.h>
+
 // #define I2C hi2c4
 #define CODEC_ADDR (0x18 << 1)
 // #define CODEC_RESET_PORT GPIOC
@@ -30,8 +32,8 @@ void tlv320_enable_linein(void);
 void tlv320_enable_mic(void);
 void tlv320_disable_linein(void);
 void tlv320_disable_mic(void);
-void tlv320_set_linein_gain_db(int gainDb);
-void tlv320_set_mic_gain_db(int gainDb);
+void tlv320_set_linein_gain_db(uint8_t gainDb);
+void tlv320_set_mic_gain_db(uint8_t gainDb);
 void tlv320_sleep(void);
 
 #ifdef __cplusplus
