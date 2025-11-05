@@ -32,15 +32,15 @@
 
 #define USB_PROCESSING_INTERVAL_MS 10
 
-bool advEventManager::finished_ = false;
-bool advEventManager::redrawing_ = false;
-uint16_t advEventManager::buttonMask_ = 0;
+bool advEventManagerBase::finished_ = false;
+bool advEventManagerBase::redrawing_ = false;
+uint16_t advEventManagerBase::buttonMask_ = 0;
 
-bool advEventManager::isRepeating_ = false;
-unsigned long advEventManager::time_ = 0;
-unsigned int advEventManager::keyRepeat_ = 25;
-unsigned int advEventManager::keyDelay_ = 500;
-unsigned int advEventManager::keyKill_ = 5;
+bool advEventManagerBase::isRepeating_ = false;
+unsigned long advEventManagerBase::time_ = 0;
+unsigned int advEventManagerBase::keyRepeat_ = 25;
+unsigned int advEventManagerBase::keyDelay_ = 500;
+unsigned int advEventManagerBase::keyKill_ = 5;
 // repeating_timer_t advEventManager::timer_ =    repeating_timer_t();
 static TimerHandle_t timer;
 static StaticTimer_t timerBuffer;
@@ -50,8 +50,8 @@ static StaticTimer_t timerStatsBuffer;
 #endif
 
 #ifdef SERIAL_REPL
-SerialDebugUI advEventManager::serialDebugUI_ = SerialDebugUI();
-char advEventManager::inBuffer[INPUT_BUFFER_SIZE] = {0};
+SerialDebugUI advEventManagerBase::serialDebugUI_ = SerialDebugUI();
+char advEventManagerBase::inBuffer[INPUT_BUFFER_SIZE] = {0};
 #endif
 
 QueueHandle_t eventQueue;
@@ -240,11 +240,7 @@ void USBDevice(void *) {
   }
 }
 
-advEventManager::advEventManager() {}
-
-advEventManager::~advEventManager() {}
-
-bool advEventManager::Init() {
+bool advEventManagerBase::Init() {
   EventManager::Init();
   keyboardCS_ = new KeyboardControllerSource("keyboard");
 
@@ -291,7 +287,7 @@ bool advEventManager::Init() {
   }
 }
 
-int advEventManager::MainLoop() {
+int advEventManagerBase::MainLoop() {
   int loops = 0;
   int events = 0;
 #ifdef SDIO_BENCH
@@ -331,14 +327,14 @@ int advEventManager::MainLoop() {
   return 0;
 }
 
-void advEventManager::PostQuitMessage() {
+void advEventManagerBase::PostQuitMessage() {
   // Trace:Log("EVENT", "quit");
   finished_ = true;
 }
 
-int advEventManager::GetKeyCode(const char *name) { return -1; }
+int advEventManagerBase::GetKeyCode(const char *name) { return -1; }
 
-void advEventManager::ProcessSerialInputEvent(void *) {
+void advEventManagerBase::ProcessSerialInputEvent(void *) {
   MidiService *midiService = MidiService::GetInstance();
   for (;;) {
 #ifdef SERIAL_REPL
@@ -368,7 +364,7 @@ void advEventManager::ProcessSerialInputEvent(void *) {
   }
 }
 
-void advEventManager::ProcessInputEvent(void *) {
+void advEventManagerBase::ProcessInputEvent(void *) {
   for (;;) {
     uint16_t newMask, sendMask;
 

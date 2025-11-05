@@ -8,7 +8,7 @@
 #ifndef _ADVEVENTMANAGER_
 #define _ADVEVENTMANAGER_
 
-#include "Foundation/T_Singleton.h"
+#include "Externals/etl/include/etl/singleton.h"
 #ifdef SERIAL_REPL
 #include "SerialDebugUI.h"
 #endif
@@ -40,11 +40,8 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
 }
 #endif
 
-class advEventManager : public T_Singleton<advEventManager>,
-                        public EventManager {
+class advEventManagerBase : public EventManager {
 public:
-  advEventManager();
-  ~advEventManager();
   virtual bool Init();
   virtual int MainLoop();
   virtual void PostQuitMessage();
@@ -55,6 +52,10 @@ protected:
   static void ProcessSerialInputEvent(void *);
 
 private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<advEventManagerBase>;
+  advEventManagerBase(){};
+
   static bool finished_;
   static bool redrawing_;
   static uint16_t buttonMask_;
@@ -71,4 +72,6 @@ private:
 #endif
   KeyboardControllerSource *keyboardCS_;
 };
+
+using advEventManager = etl::singleton<advEventManagerBase>;
 #endif

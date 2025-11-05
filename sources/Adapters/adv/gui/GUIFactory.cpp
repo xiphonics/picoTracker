@@ -10,7 +10,7 @@
 #include "advEventManager.h"
 #include "advGUIWindowImp.h"
 
-GUIFactory::GUIFactory(){};
+GUIFactory::GUIFactory() { advEventManager::create(); };
 
 I_GUIWindowImp &GUIFactory::CreateWindowImp(GUICreateWindowParams &p) {
   static char guiImpMemBuf[sizeof(advGUIWindowImp)];
@@ -18,5 +18,5 @@ I_GUIWindowImp &GUIFactory::CreateWindowImp(GUICreateWindowParams &p) {
 }
 
 EventManager *GUIFactory::GetEventManager() {
-  return advEventManager::GetInstance();
+  return &advEventManager::instance();
 }

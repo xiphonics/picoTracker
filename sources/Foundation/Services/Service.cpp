@@ -12,7 +12,8 @@
 
 Service::Service(int fourCC) {
   fourCC_ = fourCC;
-  ServiceRegistry::GetInstance()->Register(this);
+  ServiceRegistry::create();
+  ServiceRegistry::instance().Register(this);
 };
 
 Service::~Service(){};

@@ -9,9 +9,9 @@
 
 #include "ServiceRegistry.h"
 
-void ServiceRegistry::Register(Service *s) { services_.Insert(s); };
+void ServiceRegistryBase::Register(Service *s) { services_.Insert(s); };
 
-void ServiceRegistry::Register(SubService *s) {
+void ServiceRegistryBase::Register(SubService *s) {
   for (services_.Begin(); !services_.IsDone(); services_.Next()) {
     Service &current = services_.CurrentItem();
     if (current.GetFourCC() == s->GetFourCC()) {
@@ -20,7 +20,7 @@ void ServiceRegistry::Register(SubService *s) {
   };
 };
 
-void ServiceRegistry::Unregister(SubService *s) {
+void ServiceRegistryBase::Unregister(SubService *s) {
   for (services_.Begin(); !services_.IsDone(); services_.Next()) {
     Service &current = services_.CurrentItem();
     if (current.GetFourCC() == s->GetFourCC()) {

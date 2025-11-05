@@ -10,17 +10,15 @@
 #ifndef _APPLICATION_H_
 #define _APPLICATION_H_
 
-#include "Foundation/T_Singleton.h"
+#include "Externals/etl/include/etl/singleton.h"
 #include "System/FileSystem/FileSystem.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 
 extern bool forceLoadUntitledProject;
 
-class Application : public T_Singleton<Application> {
+class ApplicationBase {
 
 public:
-  Application();
-  ~Application();
   bool Init(GUICreateWindowParams &params);
 
   GUIWindow *GetWindow();
@@ -30,9 +28,14 @@ protected:
   void ensurePTDirsExist();
 
 private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<ApplicationBase>;
+  ApplicationBase(){};
+
   GUIWindow *window_;
-  static Application *instance_;
+  static ApplicationBase *instance_;
   void createIfNotExists(FileSystem *fs, const char *path);
 };
 
+using Application = etl::singleton<ApplicationBase>;
 #endif

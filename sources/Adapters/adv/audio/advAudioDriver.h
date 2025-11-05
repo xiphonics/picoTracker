@@ -8,7 +8,6 @@
 #ifndef _ADVAUDIO_DRIVER_H_
 #define _ADVAUDIO_DRIVER_H_
 
-#include "Foundation/T_Singleton.h"
 #include "Services/Audio/AudioDriver.h"
 
 #define MINI_BLANK_SIZE 256 // Samples

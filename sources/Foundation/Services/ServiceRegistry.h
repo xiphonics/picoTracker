@@ -10,11 +10,11 @@
 #ifndef _SERVICE_REGISTRY_H_
 #define _SERVICE_REGISTRY_H_
 
-#include "Foundation/T_Singleton.h"
+#include "Externals/etl/include/etl/singleton.h"
 #include "Service.h"
 #include "SubService.h"
 
-class ServiceRegistry : public T_Singleton<ServiceRegistry> {
+class ServiceRegistryBase {
 public:
   void Register(Service *);
   void Register(SubService *);
@@ -22,5 +22,12 @@ public:
 
 protected:
   T_SimpleList<Service> services_;
+
+private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<ServiceRegistryBase>;
+  ServiceRegistryBase(){};
 };
+
+using ServiceRegistry = etl::singleton<ServiceRegistryBase>;
 #endif

@@ -21,11 +21,9 @@
 
 bool forceLoadUntitledProject = false;
 
-Application *Application::instance_ = NULL;
+ApplicationBase *ApplicationBase::instance_ = NULL;
 
-Application::Application() {}
-
-bool Application::Init(GUICreateWindowParams &params) {
+bool ApplicationBase::Init(GUICreateWindowParams &params) {
   PersistencyService::GetInstance();
 
   ensurePTDirsExist();
@@ -55,7 +53,7 @@ bool Application::Init(GUICreateWindowParams &params) {
 
 // will put the current project name into the passed in char buffer projectName
 // will return true if a new project was created (vs loading prev open project)
-bool Application::initProject(char *projectName) {
+bool ApplicationBase::initProject(char *projectName) {
 
   if (forceLoadUntitledProject) {
     Trace::Log("APPLICATION", "Force loading untitled project");
@@ -96,7 +94,7 @@ bool Application::initProject(char *projectName) {
 }
 
 // ensure that all the directories required by picoTracker exist:
-void Application::ensurePTDirsExist() {
+void ApplicationBase::ensurePTDirsExist() {
   auto fs = FileSystem::GetInstance();
 
   createIfNotExists(fs, PROJECTS_DIR);
@@ -107,13 +105,11 @@ void Application::ensurePTDirsExist() {
   createIfNotExists(fs, RECORDINGS_DIR);
 }
 
-void Application::createIfNotExists(FileSystem *fs, const char *path) {
+void ApplicationBase::createIfNotExists(FileSystem *fs, const char *path) {
   if (!fs->exists(path)) {
     fs->makeDir(path);
     Trace::Log("APPLICATION", "created %s std dir", path);
   }
 }
 
-GUIWindow *Application::GetWindow() { return window_; };
-
-Application::~Application() { delete window_; }
+GUIWindow *ApplicationBase::GetWindow() { return window_; };

@@ -171,7 +171,8 @@ int main(void) {
   GUICreateWindowParams params;
   params.title = "picoTracker Advance";
 
-  Application::GetInstance()->Init(params);
+  Application::create();
+  Application::instance().Init(params);
 
   advSystem::MainLoop();
   // WE NEVER GET HERE
