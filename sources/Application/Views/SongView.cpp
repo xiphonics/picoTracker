@@ -928,8 +928,7 @@ void SongView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   // we need to ensure we don't call any drawing functions directly
   // Instead of drawing directly, we'll just update our state and let
   // AnimationUpdate handle the actual drawing
-  SyncMaster *sync = SyncMaster::GetInstance();
-  if ((eventType == PET_UPDATE) && (!sync->MajorSlice()))
+  if ((eventType == PET_UPDATE) && (!SyncMaster::instance().MajorSlice()))
     return;
 
   // Set the consolidated flag for UI updates

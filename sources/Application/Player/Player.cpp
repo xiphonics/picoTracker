@@ -60,8 +60,7 @@ bool Player::Init(Project *project, ViewData *viewData) {
   }
 
   mixer_.AddObserver((*this));
-  SyncMaster *sync = SyncMaster::GetInstance();
-  sync->SetTempo(project_->GetTempo());
+  SyncMaster::instance().SetTempo(project_->GetTempo());
   return mixer_.Start();
 }
 
@@ -133,7 +132,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 
   // Let's get started !
 
-  SyncMaster::GetInstance()->Start();
+  SyncMaster::instance().Start();
 
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;
@@ -212,7 +211,7 @@ void Player::Stop() {
   MidiService::GetInstance()->OnPlayerStop();
   mixer_.OnPlayerStop();
 
-  SyncMaster::GetInstance()->Stop();
+  SyncMaster::instance().Stop();
   isRunning_ = false;
   SetChanged();
   PlayerEvent pe(PET_STOP);
@@ -506,12 +505,12 @@ void Player::Update(Observable &o, I_ObservableData *d) {
 
   if (isRunning_) {
 
-    SyncMaster *sync = SyncMaster::GetInstance();
-    sync->SetTempo(project_->GetTempo());
+    auto &sync = SyncMaster::instance();
+    sync.SetTempo(project_->GetTempo());
 
     if (!firstPlayCycle_) {
       Groove::instance().Trigger();
-      sync->NextSlice();
+      sync.NextSlice();
       triggerLiveChains_ = false;
       if (retrigAllImmediate_) {
         for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -557,7 +556,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
     }
 
     // Do we need to kill a voice?
-    if (sync->TableSlice()) {
+    if (sync.TableSlice()) {
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
         bool stopped = false;
         if (timeToLive_[i] > 0) {
@@ -668,8 +667,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     param = std::clamp(param, MIN_TEMPO, MAX_TEMPO);
     Variable *v = project_->FindVariable(FourCC::VarTempo);
     v->SetInt(param);
-    SyncMaster *sync = SyncMaster::GetInstance();
-    sync->SetTempo(project_->GetTempo());
+    SyncMaster::instance().SetTempo(project_->GetTempo());
     return true;
     break;
   }
@@ -1162,7 +1160,7 @@ double Player::GetPlayTime() {
 };
 
 int Player::GetPlayedBufferPercentage() {
-  unsigned int beatCount = SyncMaster::GetInstance()->GetBeatCount();
+  unsigned int beatCount = SyncMaster::instance().GetBeatCount();
   if (beatCount != lastBeatCount_) {
     lastBeatCount_ = beatCount;
     lastPercentage_ = mixer_.GetPlayedBufferPercentage();

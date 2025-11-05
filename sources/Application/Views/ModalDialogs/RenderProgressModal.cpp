@@ -20,7 +20,7 @@ RenderProgressModal::RenderProgressModal(View &view, const char *title,
     : ModalView(view), title_(title), message_(message), totalSamples_(0.0f) {
 
   Player *player = Player::GetInstance();
-  tempo_ = SyncMaster::GetInstance()->GetTempo();
+  tempo_ = SyncMaster::instance().GetTempo();
 }
 
 RenderProgressModal::~RenderProgressModal() {}

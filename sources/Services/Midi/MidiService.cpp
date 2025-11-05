@@ -89,8 +89,7 @@ void MidiService::Trigger() {
   AdvancePlayQueue();
 
   if (!activeOutDevices_.empty() && sendSync_) {
-    SyncMaster *sm = SyncMaster::GetInstance();
-    if (sm->MidiSlice()) {
+    if (SyncMaster::instance().MidiSlice()) {
       MidiMessage msg;
       msg.status_ = 0xF8;
       QueueMessage(msg);

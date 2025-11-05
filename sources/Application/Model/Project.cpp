@@ -74,11 +74,13 @@ Project::Project(const char *name)
   // look if we can find a sav file
 
   // Makes sure the tables exists for restoring
-
   TableHolder::create();
 
   Groove::create();
   Groove::instance().Clear();
+
+  // init syncMaster
+  SyncMaster::create();
 
   tempoTapCount_ = 0;
 
@@ -338,7 +340,7 @@ void Project::RestoreContent(PersistencyDocument *doc) {
   }
   if (!tableRatio)
     tableRatio = (doc->version_ <= 32) ? 2 : 1;
-  SyncMaster::GetInstance()->SetTableRatio(tableRatio);
+  SyncMaster::instance().SetTableRatio(tableRatio);
 
   // Now loop on all variables
   bool elem = doc->FirstChild();
@@ -370,7 +372,7 @@ void Project::SaveContent(tinyxml2::XMLPrinter *printer) {
   printer->PushAttribute("VERSION", PROJECT_NUMBER);
 
   // store table ratio if not one
-  int tableRatio = SyncMaster::GetInstance()->GetTableRatio();
+  int tableRatio = SyncMaster::instance().GetTableRatio();
   if (tableRatio != 1) {
     printer->PushAttribute("TABLERATIO", tableRatio);
   }

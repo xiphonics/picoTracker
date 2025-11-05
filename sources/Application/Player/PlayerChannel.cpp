@@ -45,7 +45,7 @@ void PlayerChannel::StopInstrument() {
 
 bool PlayerChannel::Render(fixed *buffer, int samplecount) {
   if (instr_) {
-    bool tableSlice = SyncMaster::GetInstance()->TableSlice();
+    bool tableSlice = SyncMaster::instance().TableSlice();
     bool status = instr_->Render(index_, buffer, samplecount, tableSlice);
     return ((status) && (!muted_));
   } else {

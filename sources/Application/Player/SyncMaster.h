@@ -10,14 +10,13 @@
 #ifndef _SYNC_MASTER_H_
 #define _SYNC_MASTER_H_
 
-#include "Foundation/T_Singleton.h"
+#include "Externals/etl/include/etl/singleton.h"
 
 // Provide basic functionalities to compute various
 // setting regarding tempo, buffer sizes, ticks
 
-class SyncMaster : public T_Singleton<SyncMaster> {
+class SyncMasterBase {
 public:
-  SyncMaster();
   void Start();
   void Stop();
   void SetTempo(int tempo);
@@ -34,6 +33,10 @@ public:
   float GetTickTime();
 
 private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<SyncMasterBase>;
+  SyncMasterBase();
+
   int tempo_;
   int currentSlice_;
   int tableRatio_;
@@ -41,4 +44,6 @@ private:
   float playSampleCount_;
   float tickSampleCount_;
 };
+
+using SyncMaster = etl::singleton<SyncMasterBase>;
 #endif

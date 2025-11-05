@@ -229,8 +229,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
       rp->reverse_ = true;
       length = -length;
     };
-    SyncMaster *sm = SyncMaster::GetInstance();
-    int sampleCount = int(sm->GetTickSampleCount());
+    int sampleCount = int(SyncMaster::instance().GetTickSampleCount());
     sampleCount *= (6 * 16);
     rp->baseSpeed_ = fl2fp(length / float(sampleCount));
     rp->rendFirst_ = rp->rendLoopStart_;
@@ -395,7 +394,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         if (rp->retrigCount_ == 0) {
           int ticks = rp->retrigOffset_ - rp->retrigLoop_;
           long offset =
-              long(ticks * SyncMaster::GetInstance()->GetTickSampleCount());
+              long(ticks * SyncMaster::instance().GetTickSampleCount());
           rp->position_ += offset * fp2fl(rp->speed_);
           if (rp->position_ < 0) {
             rp->position_ = 0;
@@ -943,7 +942,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     float startVolume = fp2fl(rp->volume_);
     float baseVolume = fp2fl(rp->baseVolume_);
 
-    int sampleCount = int(4 * SyncMaster::GetInstance()->GetTickSampleCount());
+    int sampleCount = int(4 * SyncMaster::instance().GetTickSampleCount());
     speed = (speed == 0) ? 0
                          : fabs(targetVolume - startVolume) *
                                KRATE_SAMPLE_COUNT / float(speed) / sampleCount;
@@ -963,7 +962,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     float basePan = fp2fl(rp->basePan_);
     float speed = float(value >> 8);
     float startPan = fp2fl(rp->pan_);
-    int sampleCount = int(4 * SyncMaster::GetInstance()->GetTickSampleCount());
+    int sampleCount = int(4 * SyncMaster::instance().GetTickSampleCount());
     speed = (speed == 0) ? 0
                          : fabs(targetPan - startPan) * KRATE_SAMPLE_COUNT /
                                float(speed) / sampleCount;
@@ -979,7 +978,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     float speed = float(value >> 8);
     float start = fp2fl(rp->cutoff_);
     float baseCut = fp2fl(rp->baseFCut_);
-    int sampleCount = int(4 * SyncMaster::GetInstance()->GetTickSampleCount());
+    int sampleCount = int(4 * SyncMaster::instance().GetTickSampleCount());
     speed = (speed == 0) ? 0
                          : fabs(target - start) * KRATE_SAMPLE_COUNT /
                                float(speed) / sampleCount;
@@ -995,7 +994,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     float speed = float(value >> 8);
     float start = fp2fl(rp->reso_);
     float baseRes = fp2fl(rp->baseFRes_);
-    int sampleCount = int(4 * SyncMaster::GetInstance()->GetTickSampleCount());
+    int sampleCount = int(4 * SyncMaster::instance().GetTickSampleCount());
     speed = (speed == 0) ? 0
                          : fabs(target - start) * KRATE_SAMPLE_COUNT /
                                float(speed) / sampleCount;
