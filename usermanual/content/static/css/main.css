@@ -64,6 +64,14 @@ img {
     margin: 0 0 15px 0;
 }
 
+td > img {
+    margin: 0;
+}
+
+td:has(> img) {
+    width: 104px;
+}
+
 ul {
     line-height: 1.5em;
 }
