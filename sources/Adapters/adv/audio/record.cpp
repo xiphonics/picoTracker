@@ -27,18 +27,6 @@ static volatile bool monitoringOnly = false;
 static int lineInGainDb = 0;
 static int micGainDb = 0;
 
-namespace {
-int clampGain(int value, int minValue, int maxValue) {
-  if (value < minValue) {
-    return minValue;
-  }
-  if (value > maxValue) {
-    return maxValue;
-  }
-  return value;
-}
-} // namespace
-
 bool IsRecordingActive() { return recordingActive; }
 
 // Tracking which half is ready
@@ -79,14 +67,12 @@ void SetInputSource(RecordSource source) {
 }
 
 void SetLineInGain(int gainDb) {
-  lineInGainDb = clampGain(gainDb, lineInGainMinDb, lineInGainMaxDb);
   if (source_ == LineIn) {
     tlv320_set_linein_gain_db(lineInGainDb);
   }
 }
 
 void SetMicGain(int gainDb) {
-  micGainDb = clampGain(gainDb, micGainMinDb, micGainMaxDb);
   if (source_ == Mic) {
     tlv320_set_mic_gain_db(micGainDb);
   }

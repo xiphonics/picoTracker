@@ -40,15 +40,15 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarRecordLineGain);
-  intVarField_.emplace_back(position, *v, "Line gain: %d dB", lineInGainMinDb,
-                            lineInGainMaxDb, 1, 2);
+  intVarField_.emplace_back(position, *v, "Line gain: %d dB", LINEIN_GAIN_MINDB,
+                            LINEIN_GAIN_MAXDB, 1, 2);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarRecordMicGain);
-  intVarField_.emplace_back(position, *v, "Mic gain: %d dB", micGainMinDb,
-                            micGainMaxDb, 1, 2);
+  intVarField_.emplace_back(position, *v, "Mic gain: %d dB", MIC_GAIN_MINDB,
+                            MIC_GAIN_MAXDB, 1, 2);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 }

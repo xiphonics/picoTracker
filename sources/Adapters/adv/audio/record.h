@@ -18,10 +18,10 @@
         // writing efficiency
 extern uint16_t recordBuffer[RECORD_BUFFER_SIZE];
 
-static constexpr int lineInGainMinDb = -6;
-static constexpr int lineInGainMaxDb = 24;
-static constexpr int micGainMinDb = -8;
-static constexpr int micGainMaxDb = 23;
+#define LINEIN_GAIN_MINDB -6
+#define LINEIN_GAIN_MAXDB 24
+#define MIC_GAIN_MINDB -8
+#define MIC_GAIN_MAXDB 23
 
 static StackType_t RecordStack[1024];
 static StaticTask_t RecordTCB;
