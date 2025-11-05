@@ -20,8 +20,8 @@ extern uint16_t recordBuffer[RECORD_BUFFER_SIZE];
 
 #define LINEIN_GAIN_MINDB -6
 #define LINEIN_GAIN_MAXDB 24
-#define MIC_GAIN_MINDB -8
-#define MIC_GAIN_MAXDB 23
+#define MIC_GAIN_MINDB 0  // can be negitive but mic level is already very low
+#define MIC_GAIN_MAXDB 20 // per TLV320 datasheet max gain is 20dB
 
 static StackType_t RecordStack[1024];
 static StaticTask_t RecordTCB;

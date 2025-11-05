@@ -70,9 +70,9 @@ HAL_StatusTypeDef tlv320read(uint8_t page, uint8_t reg, uint8_t *value) {
 }
 
 #define LINEINBASEHALFDB 12
-#define MICBASEHALFDB 16
 #define GAINMASK 0x3F
 #define PRESERVEMASK 0xC0
+#define MIC_GAIN_REGISTER 0x53 // Left ADC digital gain
 
 static uint8_t clamp_half_db(int halfDb) {
   if (halfDb < 0) {
@@ -374,7 +374,9 @@ void tlv320_set_mic_gain_db(int gainDb) {
   if (input != MIC) {
     return;
   }
-  tlv320_update_gain_register(0x3b, MICBASEHALFDB, gainDb);
+  // Register 0x53 encodes gain in 0.5dB steps with 0x00 = 0dB.
+  const uint8_t regValue = gainDb * 2; // reg value uses 0.5dB resolution
+  tlv320writepage(0x00, MIC_GAIN_REGISTER, regValue);
 }
 
 void tlv320_disable_linein(void) {
