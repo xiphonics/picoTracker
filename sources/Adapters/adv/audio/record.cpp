@@ -67,12 +67,14 @@ void SetInputSource(RecordSource source) {
 }
 
 void SetLineInGain(int gainDb) {
+  lineInGainDb = gainDb;
   if (source_ == LineIn) {
     tlv320_set_linein_gain_db(lineInGainDb);
   }
 }
 
 void SetMicGain(int gainDb) {
+  micGainDb = gainDb;
   if (source_ == Mic) {
     tlv320_set_mic_gain_db(micGainDb);
   }
