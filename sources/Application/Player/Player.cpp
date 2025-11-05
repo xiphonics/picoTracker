@@ -129,7 +129,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 
   project_->GetInstrumentBank()->OnStart();
 
-  Groove::GetInstance()->Reset();
+  Groove::instance().Reset();
 
   // Let's get started !
 
@@ -510,7 +510,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
     sync->SetTempo(project_->GetTempo());
 
     if (!firstPlayCycle_) {
-      Groove::GetInstance()->Trigger();
+      Groove::instance().Trigger();
       sync->NextSlice();
       triggerLiveChains_ = false;
       if (retrigAllImmediate_) {
@@ -605,9 +605,6 @@ void Player::Update(Observable &o, I_ObservableData *d) {
 void Player::ProcessCommands() {
 
   // loop on all channels
-
-  Groove *gs = Groove::GetInstance();
-
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
 
     if (mixer_.IsChannelPlaying(i)) {
@@ -616,7 +613,8 @@ void Player::ProcessCommands() {
 
       uchar phrase = viewData_->currentPlayPhrase_[i];
       if (phrase != 0xFF) {
-        if (gs->TriggerChannel(i)) { // If groove says it is time to play
+        if (Groove::instance().TriggerChannel(
+                i)) { // If groove says it is time to play
           int pos = viewData_->phrasePlayPos_[i];
           FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
           ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
@@ -684,15 +682,14 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     break;
   }
   case FourCC::InstrumentCommandGroove: {
-    Groove *gr = Groove::GetInstance();
     bool all = (param & 0xFF00) != 0;
     param = param & 0xFF;
     if (all) {
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        gr->SetGroove(i, param);
+        Groove::instance().SetGroove(i, param);
       }
     } else {
-      gr->SetGroove(channel, param);
+      Groove::instance().SetGroove(channel, param);
     }
   } break;
   default:
@@ -946,12 +943,11 @@ void Player::moveToNextStep() {
       break;
     }
 
-    Groove *gs = Groove::GetInstance();
-
     if (mixer_.IsChannelPlaying(i) && !liveTriggered) {
       playingChannel = true;
 
-      if (gs->TriggerChannel(i)) { // If groove says it is time to play
+      if (Groove::instance().TriggerChannel(
+              i)) { // If groove says it is time to play
         if (viewData_->currentPlayPhrase_[i] != 0xFF) {
           int pos = (viewData_->phrasePlayPos_[i]) + 1;
           if (pos != 16) {

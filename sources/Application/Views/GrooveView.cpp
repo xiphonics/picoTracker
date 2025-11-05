@@ -34,7 +34,7 @@ void GrooveView::updateCursor(int dir) {
 
 void GrooveView::updateCursorValue(int val, bool sync) {
   unsigned char *grooveData =
-      Groove::GetInstance()->GetGrooveData(viewData_->currentGroove_);
+      Groove::instance().GetGrooveData(viewData_->currentGroove_);
   int value = grooveData[position_];
   val += value;
   if (val < 1)
@@ -60,7 +60,7 @@ void GrooveView::warpGroove(int dir) {
 
 void GrooveView::initCursorValue() {
   unsigned char *grooveData =
-      Groove::GetInstance()->GetGrooveData(viewData_->currentGroove_);
+      Groove::instance().GetGrooveData(viewData_->currentGroove_);
   if (grooveData[position_] == NO_GROOVE_DATA) {
     grooveData[position_] = 1;
   };
@@ -69,7 +69,7 @@ void GrooveView::initCursorValue() {
 
 void GrooveView::clearCursorValue() {
   unsigned char *grooveData =
-      Groove::GetInstance()->GetGrooveData(viewData_->currentGroove_);
+      Groove::instance().GetGrooveData(viewData_->currentGroove_);
   grooveData[position_] = NO_GROOVE_DATA;
   isDirty_ = true;
 }
@@ -186,7 +186,7 @@ void GrooveView::DrawView() {
   SetColor(CD_NORMAL);
 
   unsigned char *grooveData =
-      Groove::GetInstance()->GetGrooveData(viewData_->currentGroove_);
+      Groove::instance().GetGrooveData(viewData_->currentGroove_);
   for (int j = 0; j < 16; j++) {
     if (grooveData[j] != NO_GROOVE_DATA) {
       hex2char(grooveData[j], buffer);
@@ -213,14 +213,13 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
   pos._y = anchor._y + lastPosition_;
   DrawString(pos._x, pos._y, " ", props);
 
-  Groove *gr = Groove::GetInstance();
   // Get current channel
   int channel = viewData_->songX_;
 
   int groove;
   int groovepos;
 
-  gr->GetChannelData(channel, &groove, &groovepos);
+  Groove::instance().GetChannelData(channel, &groove, &groovepos);
 
   if (groove == viewData_->currentGroove_ &&
       viewData_->playMode_ != PM_AUDITION) {

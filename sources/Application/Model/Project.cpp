@@ -77,7 +77,8 @@ Project::Project(const char *name)
 
   TableHolder::create();
 
-  Groove::GetInstance()->Clear();
+  Groove::create();
+  Groove::instance().Clear();
 
   tempoTapCount_ = 0;
 

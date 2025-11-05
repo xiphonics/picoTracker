@@ -13,7 +13,7 @@
 #include "Application/Model/Song.h"
 #include "Application/Persistency/Persistent.h"
 #include "Application/Utils/HexBuffers.h"
-#include "Foundation/T_Singleton.h"
+#include "Externals/etl/include/etl/singleton.h"
 
 #define MAX_GROOVES 0x20
 #define NO_GROOVE_DATA 0xFF
@@ -24,10 +24,8 @@ struct ChannelGroove {
   unsigned char ticks_;    // number of ticks before next step
 };
 
-class Groove : public T_Singleton<Groove>, Persistent {
+class GrooveBase : Persistent {
 public:
-  Groove();
-  ~Groove();
   void Reset();
   void Clear();
   void Trigger();
@@ -40,7 +38,13 @@ public:
   virtual void RestoreContent(PersistencyDocument *doc);
 
 private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<GrooveBase>;
+  GrooveBase();
+
   ChannelGroove channelGroove_[SONG_CHANNEL_COUNT];
   static unsigned char data_[MAX_GROOVES][16];
 };
+
+using Groove = etl::singleton<GrooveBase>;
 #endif

@@ -13,7 +13,6 @@
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Foundation/Observable.h"
-#include "Foundation/T_Singleton.h"
 #include "WavFile.h"
 
 #define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT * 4

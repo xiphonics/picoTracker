@@ -163,8 +163,6 @@ bool TablePlayback::ProcessLocalCommand(int row, FourCC *commandList,
 
 void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
 
-  Groove *gs = Groove::GetInstance();
-
   if (table_ != 0) {
     if (instrument_) {
 
@@ -205,7 +203,7 @@ void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
 
       // if groove's end reached, update position
 
-      if (gs->UpdateGroove(groove_, true)) {
+      if (Groove::instance().UpdateGroove(groove_, true)) {
 
         if ((table_->cmd1_[position_[0]] != FourCC::InstrumentCommandHop) ||
             (!hopped_[0])) {
