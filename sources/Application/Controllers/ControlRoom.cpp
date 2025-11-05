@@ -64,8 +64,7 @@ bool ControlRoom::Attach(const char *nodeUrl, const char *controllerUrl) {
     acn->SetSourceChannel(mca);
   }
 
-  Channel *channel =
-      ControllerService::GetInstance()->GetChannel(controllerUrl);
+  Channel *channel = ControllerService::instance().GetChannel(controllerUrl);
 
   if (channel) {
     mca->AddChannel(*channel);

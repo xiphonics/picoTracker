@@ -16,11 +16,12 @@ ControllerSource::ControllerSource(const char *devclass, const char *name) {
 
   name_ = name;
   class_ = devclass;
-  ControllerService::GetInstance()->Insert(*this);
+  ControllerService::create();
+  ControllerService::instance().Insert(*this);
 };
 
 ControllerSource::~ControllerSource() {
-  ControllerService::GetInstance()->Remove(*this);
+  ControllerService::instance().Remove(*this);
 };
 
 const char *ControllerSource::GetClass() { return class_.c_str(); };

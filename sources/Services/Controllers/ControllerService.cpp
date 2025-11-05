@@ -16,11 +16,7 @@
 
 using namespace std;
 
-ControllerService::ControllerService() {}
-
-ControllerService::~ControllerService() {}
-
-Channel *ControllerService::GetChannel(const char *sourcePath) {
+Channel *ControllerServiceBase::GetChannel(const char *sourcePath) {
 
   string path = sourcePath;
 

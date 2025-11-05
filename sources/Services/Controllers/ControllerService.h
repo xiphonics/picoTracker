@@ -10,17 +10,21 @@
 #ifndef _CONTROLLER_SERVICE_H_
 #define _CONTROLLER_SERVICE_H_
 
+#include "Externals/etl/include/etl/singleton.h"
 #include "Foundation/T_SimpleList.h"
-#include "Foundation/T_Singleton.h"
 
 #include "ControllableVariable.h"
 #include "ControllerSource.h"
 
-class ControllerService : public T_Singleton<ControllerService>,
-                          public T_SimpleList<ControllerSource> {
+class ControllerServiceBase : public T_SimpleList<ControllerSource> {
 public:
-  ControllerService();
-  virtual ~ControllerService();
   Channel *GetChannel(const char *sourcePath);
+
+private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<ControllerServiceBase>;
+  ControllerServiceBase(){};
 };
+
+using ControllerService = etl::singleton<ControllerServiceBase>;
 #endif
