@@ -90,7 +90,7 @@ static void tlv320_update_gain_register(uint8_t reg, uint8_t baseHalfDb,
   if (tlv320read(0x01, reg, &current) != HAL_OK) {
     current = 0;
   }
-  const int desiredHalfDb = (int)baseHalfDb + gainDb * 2;
+  const uint8_t desiredHalfDb = (uint8_t)baseHalfDb + gainDb * 2;
   const uint8_t halfDbValue = clamp_half_db(desiredHalfDb);
   const uint8_t updated = (current & PRESERVEMASK) | (halfDbValue & GAINMASK);
   tlv320writepage(0x01, reg, updated);
