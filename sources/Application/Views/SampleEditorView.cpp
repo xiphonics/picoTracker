@@ -48,7 +48,8 @@ constexpr int kSampleEditOperationCount =
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
       isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
-      playbackPosition_(0.0f), playbackStartFrame_(0), lastAnimationTime_(0),
+      waveformUsesSignedDrawing_(false), playbackPosition_(0.0f),
+      playbackStartFrame_(0), lastAnimationTime_(0),
       sys_(System::GetInstance()), startVar_(FourCC::VarSampleEditStart, 0),
       endVar_(FourCC::VarSampleEditEnd, 0),
       // bit of a hack to use InstrumentName but we never actually persist this
@@ -262,7 +263,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 // background) This function will clear a 1-pixel wide column and redraw the
 // waveform in it.
 void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
-                  int x_offset, int y_offset) {
+                  int x_offset, int y_offset, bool useSignedWaveform) {
   if (x_coord < 0)
     return; // Invalid coordinate
 
@@ -279,21 +280,45 @@ void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
   int waveform_idx =
       x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
   if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
-    int pixelHeight = waveformCache[waveform_idx];
-    if (pixelHeight > 0) {
-      int centerY = y_offset + BITMAPHEIGHT / 2;
-      int startY = centerY - pixelHeight / 2;
-      int endY = startY + pixelHeight;
+    int centerY = y_offset + BITMAPHEIGHT / 2;
 
-      // Clamp to inside the border
-      if (startY < y_offset + 1)
-        startY = y_offset + 1;
-      if (endY > y_offset + BITMAPHEIGHT - 2)
-        endY = y_offset + BITMAPHEIGHT - 2;
+    if (useSignedWaveform) {
+      uint8_t encodedValue = waveformCache[waveform_idx];
+      if (encodedValue != 128) { // Don't draw for zero
+        float normalizedValue = (encodedValue / 127.5f) - 1.0f;
+        int yPos = centerY + (normalizedValue * (BITMAPHEIGHT / 2.0f));
 
-      if (startY <= endY) {
-        rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
-        view.DrawRect(rrect, CD_NORMAL);
+        int startY = std::min(centerY, yPos);
+        int endY = std::max(centerY, yPos);
+        if (startY == endY)
+          endY++;
+
+        if (startY < y_offset + 1)
+          startY = y_offset + 1;
+        if (endY > y_offset + BITMAPHEIGHT - 2)
+          endY = y_offset + BITMAPHEIGHT - 2;
+
+        if (startY <= endY) {
+          rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
+          view.DrawRect(rrect, CD_NORMAL);
+        }
+      }
+    } else {
+      int pixelHeight = waveformCache[waveform_idx];
+      if (pixelHeight > 0) {
+        int startY = centerY - pixelHeight / 2;
+        int endY = startY + pixelHeight;
+
+        // Clamp to inside the border
+        if (startY < y_offset + 1)
+          startY = y_offset + 1;
+        if (endY > y_offset + BITMAPHEIGHT - 2)
+          endY = y_offset + BITMAPHEIGHT - 2;
+
+        if (startY <= endY) {
+          rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
+          view.DrawRect(rrect, CD_NORMAL);
+        }
       }
     }
   }
@@ -338,20 +363,45 @@ void SampleEditorView::DrawWaveForm() {
     if (waveformCacheValid_) {
       int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
       for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-        int pixelHeight = waveformCache_[x];
-        if (pixelHeight > 0) {
-          int startY = centerY - pixelHeight / 2;
-          int endY = startY + pixelHeight;
+        if (waveformUsesSignedDrawing_) {
+          uint8_t encodedValue = waveformCache_[x];
+          if (encodedValue != 128) { // Don't draw for zero
+            float normalizedValue = (encodedValue / 127.5f) - 1.0f;
+            int yPos = centerY + (normalizedValue * (BITMAPHEIGHT / 2.0f));
 
-          // Clamp to inside the border
-          if (startY < Y_OFFSET + 1)
-            startY = Y_OFFSET + 1;
-          if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
-            endY = Y_OFFSET + BITMAPHEIGHT - 2;
+            int startY = std::min(centerY, yPos);
+            int endY = std::max(centerY, yPos);
+            if (startY == endY)
+              endY++;
 
-          if (startY <= endY) {
-            rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
-            DrawRect(rrect, CD_NORMAL);
+            if (startY < Y_OFFSET + 1)
+              startY = Y_OFFSET + 1;
+            if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
+              endY = Y_OFFSET + BITMAPHEIGHT - 2;
+
+            if (startY <= endY) {
+              rrect =
+                  GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
+              DrawRect(rrect, CD_NORMAL);
+            }
+          }
+        } else {
+          int pixelHeight = waveformCache_[x];
+          if (pixelHeight > 0) {
+            int startY = centerY - pixelHeight / 2;
+            int endY = startY + pixelHeight;
+
+            // Clamp to inside the border
+            if (startY < Y_OFFSET + 1)
+              startY = Y_OFFSET + 1;
+            if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
+              endY = Y_OFFSET + BITMAPHEIGHT - 2;
+
+            if (startY <= endY) {
+              rrect =
+                  GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
+              DrawRect(rrect, CD_NORMAL);
+            }
           }
         }
       }
@@ -381,13 +431,16 @@ void SampleEditorView::DrawWaveForm() {
 
   // Erase old markers if they have moved or disappeared
   if (last_start_x_ != -1 && last_start_x_ != current_startX) {
-    redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET);
+    redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET,
+                 waveformUsesSignedDrawing_);
   }
   if (last_end_x_ != -1 && last_end_x_ != current_endX) {
-    redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET);
+    redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET,
+                 waveformUsesSignedDrawing_);
   }
   if (last_playhead_x_ != -1 && last_playhead_x_ != current_playheadX) {
-    redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET);
+    redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET,
+                 waveformUsesSignedDrawing_);
   }
 
   // Draw new markers
@@ -932,7 +985,15 @@ void SampleEditorView::loadSample(
   // --- 2. Prepare for Single-Pass Processing ---
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
              tempSampleSize_, numChannels);
-  float samplesPerPixel = (float)tempSampleSize_ / WAVEFORM_CACHE_SIZE;
+  float samplesPerPixel =
+      static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
+  // use signed waveform drawing instead of RMS for short single cycle waves
+  waveformUsesSignedDrawing_ = samplesPerPixel < 1.0f;
+
+  if (waveformUsesSignedDrawing_) {
+    memset(waveformCache_, 128, sizeof(waveformCache_));
+  }
+
   Trace::Log("SAMPLEEDITOR", "samples/p/p: %f", samplesPerPixel);
 
   short peakAmplitude = 0;
@@ -940,7 +1001,6 @@ void SampleEditorView::loadSample(
 
   const int CHUNK_FRAMES = 512;
 
-  uint32_t waveCacheValueAccum = 0;
   // --- 3. The Single-Pass Read Loop ---
   while (currentFrame < tempSampleSize_) {
     int framesToRead =
@@ -960,12 +1020,21 @@ void SampleEditorView::loadSample(
         peakAmplitude = abs(sampleValue);
       }
 
-      int cacheIndex = (currentFrame + i) / samplesPerPixel;
-      if (cacheIndex < WAVEFORM_CACHE_SIZE) {
-        // Accumulate sum of squares using integer arithmetic for performance.
-        // Floating point conversion will be done once for each cache entry
-        // later.
-        sumSquares[cacheIndex] += (int64_t)sampleValue * sampleValue;
+      if (waveformUsesSignedDrawing_) {
+        // Upsampling: 1-to-1 mapping of samples to pixels, preserving sign.
+        int cacheIndex = currentFrame + i;
+        if (cacheIndex < WAVEFORM_CACHE_SIZE) {
+          float normalizedValue = (float)sampleValue / 32768.0f; // [-1, 1]
+          // Encode to [0, 255], with 128 as zero.
+          waveformCache_[cacheIndex] =
+              (uint8_t)((normalizedValue + 1.0f) * 127.5f);
+        }
+      } else {
+        int cacheIndex = (currentFrame + i) / samplesPerPixel;
+        if (cacheIndex < WAVEFORM_CACHE_SIZE) {
+          // Accumulate sum of squares for RMS calculation later.
+          sumSquares[cacheIndex] += (int64_t)sampleValue * sampleValue;
+        }
       }
     }
     currentFrame += framesRead;
@@ -977,9 +1046,9 @@ void SampleEditorView::loadSample(
   file->Close();
 
   // --- 4. Finalize Waveform Cache ---
-  for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
-    if (samplesPerPixel >= 1) {
-      // Calculate the Root Mean Square (RMS)
+  if (!waveformUsesSignedDrawing_) {
+    for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
+      // Calculate the Root Mean Mean Square (RMS)
       // 1. Calculate mean of squares from our accumulated integer values.
       float mean_square = (float)sumSquares[x] / samplesPerPixel;
 
@@ -991,8 +1060,6 @@ void SampleEditorView::loadSample(
 
       // Scale the final value to the display height
       waveformCache_[x] = (uint8_t)(rms * BITMAPHEIGHT);
-    } else {
-      waveformCache_[x] = 0;
     }
   }
   waveformCacheValid_ = true;

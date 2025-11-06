@@ -96,6 +96,7 @@ private:
 
   uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
+  bool waveformUsesSignedDrawing_;
 
   void updateWaveformCache();
   void DrawWaveForm();
