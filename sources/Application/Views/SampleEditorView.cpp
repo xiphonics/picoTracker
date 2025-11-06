@@ -34,7 +34,10 @@
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
 
-constexpr const char *const kSampleEditOperationNames[] = {"Trim", "Normalize"};
+constexpr const char *const kSampleEditOperationNames[] = {
+    "Trim",
+    "Peak Normalize",
+};
 constexpr int kSampleEditOperationCount =
     sizeof(kSampleEditOperationNames) / sizeof(kSampleEditOperationNames[0]);
 
@@ -534,7 +537,9 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       ViewType vt = SampleEditorView::sourceViewType_;
       navigateToView(vt);
     } else {
-      // TODO: show user error dialog
+      MessageBox *errorBox = new MessageBox(*this, "Save Failed",
+                                            "Unable to save sample", MBBF_OK);
+      DoModal(errorBox);
       Trace::Error("SampleEditorView: Failed to save file!");
     }
     return;
@@ -649,51 +654,12 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return true;
   }
 
-  loadSample(viewData_->sampleEditorFilename,
-             viewData_->isShowingSampleEditorProjectPool);
-
-  // need to reload from disk into ram/flash pool samples
-  if (viewData_->isShowingSampleEditorProjectPool) {
-#ifndef ADV
-    // on pico we dont support unloading individual samples from flash
-    MessageBox *warning = new MessageBox(*this, "Please reload project",
-                                         "To apply changes", MBBF_OK);
-    DoModal(warning);
-    return true;
-#endif
-    auto pool = SamplePool::GetInstance();
-    if (pool) {
-      if (!goProjectSamplesDir(viewData_)) {
-        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
-      } else {
-        int old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
-        if (old_index >= 0) {
-          int new_index = pool->ReloadSample(
-              old_index, viewData_->sampleEditorFilename.c_str());
-          if (new_index >= 0 && old_index != new_index) {
-            auto instrumentBank = viewData_->project_->GetInstrumentBank();
-            for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
-              if (instrument && instrument->GetType() == IT_SAMPLE) {
-                SampleInstrument *sampleInstrument =
-                    static_cast<SampleInstrument *>(instrument);
-                if (sampleInstrument->GetSampleIndex() == old_index) {
-                  sampleInstrument->AssignSample(new_index);
-                }
-              }
-            }
-          } else if (new_index < 0) {
-            Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
-                         viewData_->sampleEditorFilename.c_str());
-          }
-        } else {
-          Trace::Error(
-              "SampleEditorView: Sample %s not found in pool for reload",
-              viewData_->sampleEditorFilename.c_str());
-        }
-      }
-    } else {
-      Trace::Error("SampleEditorView: SamplePool unavailable for reload");
-    }
+  if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
+    MessageBox *errorBox =
+        new MessageBox(*this, "Reload Failed", "Unable to refresh sample",
+                       MBBF_OK);
+    DoModal(errorBox);
+    return false;
   }
 
   int refreshedSize = static_cast<int>(tempSampleSize_);
@@ -759,55 +725,12 @@ bool SampleEditorView::applyNormalizeOperation() {
     return true;
   }
 
-  loadSample(viewData_->sampleEditorFilename,
-             viewData_->isShowingSampleEditorProjectPool);
-
-  if (viewData_->isShowingSampleEditorProjectPool) {
-#ifndef ADV
-    MessageBox *warning = new MessageBox(*this, "Please reload project",
-                                         "To apply changes", MBBF_OK);
-    DoModal(warning);
-    return true;
-#else
-    auto pool = SamplePool::GetInstance();
-    if (pool) {
-      if (!goProjectSamplesDir(viewData_)) {
-        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
-        return false;
-      } else {
-        int32_t old_index =
-            findSampleIndexByName(viewData_->sampleEditorFilename);
-        if (old_index >= 0) {
-          int32_t new_index = pool->ReloadSample(
-              old_index, viewData_->sampleEditorFilename.c_str());
-          if (new_index >= 0 && old_index != new_index) {
-            auto instrumentBank = viewData_->project_->GetInstrumentBank();
-            for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
-              if (instrument && instrument->GetType() == IT_SAMPLE) {
-                SampleInstrument *sampleInstrument =
-                    static_cast<SampleInstrument *>(instrument);
-                if (sampleInstrument->GetSampleIndex() == old_index) {
-                  sampleInstrument->AssignSample(new_index);
-                }
-              }
-            }
-          } else if (new_index < 0) {
-            Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
-                         viewData_->sampleEditorFilename.c_str());
-            return false;
-          }
-        } else {
-          Trace::Error(
-              "SampleEditorView: Sample %s not found in pool for reload",
-              viewData_->sampleEditorFilename.c_str());
-          return false;
-        }
-      }
-    } else {
-      Trace::Error("SampleEditorView: SamplePool unavailable for reload");
-      return false;
-    }
-#endif
+  if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
+    MessageBox *errorBox =
+        new MessageBox(*this, "Reload Failed", "Unable to refresh sample",
+                       MBBF_OK);
+    DoModal(errorBox);
+    return false;
   }
 
   uint32_t maxIndex = tempSampleSize_ - 1;
@@ -836,6 +759,58 @@ bool SampleEditorView::applyNormalizeOperation() {
              filename.c_str(), normalizeResult.gainApplied,
              normalizeResult.peakBefore, normalizeResult.targetPeak);
   return true;
+}
+
+bool SampleEditorView::reloadEditedSample() {
+  loadSample(viewData_->sampleEditorFilename,
+             viewData_->isShowingSampleEditorProjectPool);
+
+#ifndef ADV
+  MessageBox *warning = new MessageBox(*this, "Please reload project",
+                                       "To apply changes", MBBF_OK);
+  DoModal(warning);
+  return true;
+#else
+  auto pool = SamplePool::GetInstance();
+  if (!pool) {
+    Trace::Error("SampleEditorView: SamplePool unavailable");
+    return false;
+  }
+
+  if (!goProjectSamplesDir(viewData_)) {
+    Trace::Error("SampleEditorView: Failed to chdir for pool reload");
+    return false;
+  }
+
+  int32_t old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+  if (old_index < 0) {
+    Trace::Error("SampleEditorView: Sample %s not found in pool for reload",
+                 viewData_->sampleEditorFilename.c_str());
+    return false;
+  }
+
+  int32_t new_index =
+      pool->ReloadSample(old_index, viewData_->sampleEditorFilename.c_str());
+  if (new_index < 0) {
+    Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+                 viewData_->sampleEditorFilename.c_str());
+    return false;
+  }
+
+  if (new_index != old_index) {
+    auto instrumentBank = viewData_->project_->GetInstrumentBank();
+    for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+      if (instrument && instrument->GetType() == IT_SAMPLE) {
+        SampleInstrument *sampleInstrument =
+            static_cast<SampleInstrument *>(instrument);
+        if (sampleInstrument->GetSampleIndex() == old_index) {
+          sampleInstrument->AssignSample(new_index);
+        }
+      }
+    }
+  }
+  return true;
+#endif
 }
 
 bool SampleEditorView::saveSample(

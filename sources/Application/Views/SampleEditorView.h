@@ -51,6 +51,7 @@ private:
   void updateSampleParameters();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
+  bool reloadEditedSample();
   bool saveSample(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool loadSampleToPool(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
