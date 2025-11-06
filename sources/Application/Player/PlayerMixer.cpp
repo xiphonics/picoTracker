@@ -19,7 +19,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-PlayerMixer::PlayerMixer() {
+PlayerMixerBase::PlayerMixerBase() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     lastInstrument_[i] = 0;
@@ -33,7 +33,7 @@ PlayerMixer::PlayerMixer() {
   }
 }
 
-bool PlayerMixer::Init(Project *project) {
+bool PlayerMixerBase::Init(Project *project) {
 
   MixerService *ms = MixerService::GetInstance();
   if (!ms->Init()) {
@@ -65,7 +65,7 @@ bool PlayerMixer::Init(Project *project) {
   return true;
 };
 
-void PlayerMixer::Close() {
+void PlayerMixerBase::Close() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     channel_[i]->Reset();
@@ -75,7 +75,7 @@ void PlayerMixer::Close() {
   ms->Close();
 }
 
-bool PlayerMixer::Start() {
+bool PlayerMixerBase::Start() {
   MixerService *ms = MixerService::GetInstance();
   ms->AddObserver(*this);
 
@@ -86,36 +86,37 @@ bool PlayerMixer::Start() {
   return ms->Start();
 };
 
-void PlayerMixer::Stop() {
+void PlayerMixerBase::Stop() {
   MixerService *ms = MixerService::GetInstance();
   ms->Stop();
   ms->RemoveObserver(*this);
 };
 
-void PlayerMixer::StartChannel(int channel) {
+void PlayerMixerBase::StartChannel(int channel) {
   isChannelPlaying_[channel] = true;
 };
 
-void PlayerMixer::StopChannel(int channel) {
+void PlayerMixerBase::StopChannel(int channel) {
 
   StopInstrument(channel);
   isChannelPlaying_[channel] = false;
 };
 
-bool PlayerMixer::IsChannelPlaying(int channel) {
+bool PlayerMixerBase::IsChannelPlaying(int channel) {
   return isChannelPlaying_[channel];
 };
 
-I_Instrument *PlayerMixer::GetLastInstrument(int channel) {
+I_Instrument *PlayerMixerBase::GetLastInstrument(int channel) {
   return lastInstrument_[channel];
 };
 
-stereosample PlayerMixer::GetMasterOutLevel() {
+stereosample PlayerMixerBase::GetMasterOutLevel() {
   MixerService *ms = MixerService::GetInstance();
   return ms->GetMasterBus()->GetMixerLevels();
 }
 
-etl::array<stereosample, SONG_CHANNEL_COUNT> *PlayerMixer::GetMixerLevels() {
+etl::array<stereosample, SONG_CHANNEL_COUNT> *
+PlayerMixerBase::GetMixerLevels() {
   MixerService *ms = MixerService::GetInstance();
 
   // Get the current mixer levels from each bus
@@ -127,7 +128,7 @@ etl::array<stereosample, SONG_CHANNEL_COUNT> *PlayerMixer::GetMixerLevels() {
   return &mixerLevels_;
 }
 
-void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
+void PlayerMixerBase::Update(Observable &o, I_ObservableData *d) {
 
   // Notifies the player so that pattern data is processed
 
@@ -140,69 +141,69 @@ void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
   ms->SetMasterVolume(project_->GetMasterVolume());
 };
 
-void PlayerMixer::StartInstrument(int channel, I_Instrument *instrument,
-                                  unsigned char note, bool newInstrument) {
+void PlayerMixerBase::StartInstrument(int channel, I_Instrument *instrument,
+                                      unsigned char note, bool newInstrument) {
   channel_[channel]->StartInstrument(instrument, note, newInstrument);
   lastInstrument_[channel] = instrument;
   notes_[channel] = note;
 };
 
-void PlayerMixer::StopInstrument(int channel) {
+void PlayerMixerBase::StopInstrument(int channel) {
   channel_[channel]->StopInstrument();
   notes_[channel] = 0xFF;
 }
 
-I_Instrument *PlayerMixer::GetInstrument(int channel) {
+I_Instrument *PlayerMixerBase::GetInstrument(int channel) {
   return channel_[channel]->GetInstrument();
 }
 
-int PlayerMixer::GetPlayedBufferPercentage() {
+int PlayerMixerBase::GetPlayedBufferPercentage() {
   MixerService *ms = MixerService::GetInstance();
   return ms->GetPlayedBufferPercentage();
 };
 
-void PlayerMixer::SetChannelMute(int channel, bool mode) {
+void PlayerMixerBase::SetChannelMute(int channel, bool mode) {
   channel_[channel]->SetMute(mode);
 }
 
-bool PlayerMixer::IsChannelMuted(int channel) {
+bool PlayerMixerBase::IsChannelMuted(int channel) {
   return channel_[channel]->IsMuted();
 }
 
-void PlayerMixer::StartStreaming(const char *name, int startSample) {
+void PlayerMixerBase::StartStreaming(const char *name, int startSample) {
   fileStreamer_.Start(name, startSample);
 };
 
-void PlayerMixer::StartLoopingStreaming(const char *name) {
+void PlayerMixerBase::StartLoopingStreaming(const char *name) {
   fileStreamer_.Start(name, 0, true);
 };
 
-void PlayerMixer::StopStreaming() { fileStreamer_.Stop(); };
+void PlayerMixerBase::StopStreaming() { fileStreamer_.Stop(); };
 
-void PlayerMixer::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
-                                       bool stereo) {
+void PlayerMixerBase::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
+                                           bool stereo) {
   recordStreamer_.Start(srcBuffer, size, stereo);
 };
 
-void PlayerMixer::StopRecordStreaming() { recordStreamer_.Stop(); };
+void PlayerMixerBase::StopRecordStreaming() { recordStreamer_.Stop(); };
 
-bool PlayerMixer::IsPlaying() { return fileStreamer_.IsPlaying(); }
+bool PlayerMixerBase::IsPlaying() { return fileStreamer_.IsPlaying(); }
 
-void PlayerMixer::OnPlayerStart(MixerServiceMode msmMode) {
+void PlayerMixerBase::OnPlayerStart(MixerServiceMode msmMode) {
   MixerService *ms = MixerService::GetInstance();
   ms->OnPlayerStart(msmMode);
 }
 
-void PlayerMixer::OnPlayerStop() {
+void PlayerMixerBase::OnPlayerStop() {
   MixerService *ms = MixerService::GetInstance();
   ms->OnPlayerStop();
 }
 
 static char noteBuffer[5];
 
-int PlayerMixer::GetChannelNote(int channel) { return notes_[channel]; }
+int PlayerMixerBase::GetChannelNote(int channel) { return notes_[channel]; }
 
-const char *PlayerMixer::GetPlayedNote(int channel) {
+const char *PlayerMixerBase::GetPlayedNote(int channel) {
 
   if (notes_[channel] != 0xFF) {
     note2visualizer(notes_[channel], noteBuffer);
@@ -211,7 +212,7 @@ const char *PlayerMixer::GetPlayedNote(int channel) {
   return "  ";
 };
 
-const char *PlayerMixer::GetPlayedOctive(int channel) {
+const char *PlayerMixerBase::GetPlayedOctive(int channel) {
   if (notes_[channel] != 0xFF) {
     if (!IsChannelMuted(channel)) {
       oct2visualizer(notes_[channel], noteBuffer);
@@ -223,17 +224,17 @@ const char *PlayerMixer::GetPlayedOctive(int channel) {
   return "  ";
 };
 
-AudioOut *PlayerMixer::GetAudioOut() {
+AudioOut *PlayerMixerBase::GetAudioOut() {
   MixerService *ms = MixerService::GetInstance();
   return ms->GetAudioOut();
 };
 
-void PlayerMixer::Lock() {
+void PlayerMixerBase::Lock() {
   MixerService *ms = MixerService::GetInstance();
   ms->Lock();
 };
 
-void PlayerMixer::Unlock() {
+void PlayerMixerBase::Unlock() {
   MixerService *ms = MixerService::GetInstance();
   ms->Unlock();
 };

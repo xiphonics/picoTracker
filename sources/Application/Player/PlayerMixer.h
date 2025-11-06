@@ -16,20 +16,15 @@
 #include "Application/Model/Project.h"
 #include "Application/Utils/fixed.h"
 #include "Application/Views/ViewData.h"
+#include "Externals/etl/include/etl/singleton.h"
 #include "Foundation/Observable.h"
-#include "Foundation/T_Singleton.h"
 #include "PlayerChannel.h"
 #include "Services/Audio/AudioOut.h"
 
 #define STREAM_MIX_BUS 8
 
-class PlayerMixer : public T_Singleton<PlayerMixer>,
-                    public Observable,
-                    public I_Observer {
+class PlayerMixerBase : public Observable, public I_Observer {
 public:
-  PlayerMixer();
-  virtual ~PlayerMixer(){};
-
   bool Start();
   void Stop();
   bool IsPlaying();
@@ -83,6 +78,10 @@ public:
   etl::array<stereosample, SONG_CHANNEL_COUNT> *GetMixerLevels();
 
 private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<PlayerMixerBase>;
+  PlayerMixerBase();
+
   Project *project_;
   etl::array<stereosample, SONG_CHANNEL_COUNT> mixerLevels_;
 
@@ -98,4 +97,8 @@ private:
   unsigned char notes_[SONG_CHANNEL_COUNT];
 };
 
+using PlayerMixerSingleton = etl::singleton<PlayerMixerBase>;
+inline PlayerMixerBase &PlayerMixer() {
+  return PlayerMixerSingleton::instance();
+}
 #endif

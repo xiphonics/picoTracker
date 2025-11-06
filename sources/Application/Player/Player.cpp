@@ -24,7 +24,7 @@
 
 // Private constructor - Singleton
 
-PlayerBase::PlayerBase() : mixer_() {
+PlayerBase::PlayerBase() {
 
   isRunning_ = false;
   viewData_ = 0;
@@ -40,6 +40,7 @@ PlayerBase::PlayerBase() : mixer_() {
     instrumentOnChannel_[i][1] = ' ';
     instrumentOnChannel_[i][2] = '\0';
   }
+  PlayerMixerSingleton::create();
 };
 
 bool PlayerBase::Init(Project *project, ViewData *viewData) {
@@ -47,39 +48,39 @@ bool PlayerBase::Init(Project *project, ViewData *viewData) {
   viewData_ = viewData;
   project_ = project;
 
-  if (!mixer_.Init(project)) {
+  if (!PlayerMixer().Init(project)) {
     return false;
   }
 
-  mixer_.AddObserver((*this));
+  PlayerMixer().AddObserver((*this));
   SyncMaster::instance().SetTempo(project_->GetTempo());
-  return mixer_.Start();
+  return PlayerMixer().Start();
 }
 
 void PlayerBase::Reset() {
   viewData_ = 0;
   project_ = 0;
-  mixer_.RemoveObserver(*this);
+  PlayerMixer().RemoveObserver(*this);
   Close();
 };
 
 void PlayerBase::Close() {
-  mixer_.Stop();
-  mixer_.Close();
+  PlayerMixer().Stop();
+  PlayerMixer().Close();
 };
 
 void PlayerBase::SetChannelMute(int channel, bool mute) {
-  mixer_.SetChannelMute(channel, mute);
+  PlayerMixer().SetChannelMute(channel, mute);
 };
 
 bool PlayerBase::IsChannelMuted(int channel) {
-  return mixer_.IsChannelMuted(channel);
+  return PlayerMixer().IsChannelMuted(channel);
 };
 
 void PlayerBase::Start(PlayMode mode, bool forceSongMode,
                        MixerServiceMode msmMode, bool stopAtEnd) {
 
-  mixer_.Lock();
+  PlayerMixer().Lock();
 
   lastBeatCount_ = 0;
   stopAtEnd_ = stopAtEnd;
@@ -109,7 +110,7 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
   // Clear all channel based data
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    mixer_.StopChannel(i);
+    PlayerMixer().StopChannel(i);
     timeToLive_[i] = 0;
     timeToStart_[i] = 0;
     TablePlayback &tpb = TablePlayback::GetTablePlayback(i);
@@ -131,7 +132,7 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
 
   // Notify MixerService about player start - this will set up rendering if
   // needed
-  mixer_.OnPlayerStart(msmMode);
+  PlayerMixer().OnPlayerStart(msmMode);
 
   MidiService *ms = MidiService::GetInstance();
   ms->OnPlayerStart();
@@ -139,7 +140,7 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
   switch (viewData_->playMode_) {
   case PM_SONG: {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      mixer_.StartChannel(i);
+      PlayerMixer().StartChannel(i);
       updateSongPos(playPos, i);
     }
   } break;
@@ -149,7 +150,7 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
       if ((liveQueueingMode_[i] == QM_CHAINSTART) ||
           (liveQueueingMode_[i] == QM_PHRASESTART) ||
           (liveQueueingMode_[i] == QM_TICKSTART)) {
-        mixer_.StartChannel(i);
+        PlayerMixer().StartChannel(i);
         updateSongPos(liveQueuePosition_[i], i, liveQueueChainPosition_[i]);
         liveQueueingMode_[i] = QM_NONE;
       }
@@ -159,7 +160,7 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
   case PM_CHAIN:
   case PM_PHRASE: {
     int currentChannel = viewData_->songX_;
-    mixer_.StartChannel(currentChannel);
+    PlayerMixer().StartChannel(currentChannel);
     ;
     int currentChainPos = viewData_->chainRow_;
     updateSongPos(playPos, currentChannel, currentChainPos);
@@ -167,7 +168,7 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
 
   case PM_AUDITION: {
     int currentChannel = viewData_->songX_;
-    mixer_.StartChannel(currentChannel);
+    PlayerMixer().StartChannel(currentChannel);
 
     int currentChainPos = viewData_->chainRow_;
     int currentPhrasePos = viewData_->phraseCurPos_;
@@ -182,7 +183,7 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
 
   ProcessCommands();
 
-  startTime_ = mixer_.GetAudioOut()->GetStreamTime();
+  startTime_ = PlayerMixer().GetAudioOut()->GetStreamTime();
 
   SetChanged();
   PlayerEvent pe(PET_START);
@@ -190,18 +191,18 @@ void PlayerBase::Start(PlayMode mode, bool forceSongMode,
 
   isRunning_ = true; // keep last !!!!
 
-  mixer_.Unlock();
+  PlayerMixer().Unlock();
 }
 
 void PlayerBase::Stop() {
 
-  mixer_.Lock();
+  PlayerMixer().Lock();
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    mixer_.StopChannel(i);
+    PlayerMixer().StopChannel(i);
   }
   MidiService::GetInstance()->OnPlayerStop();
-  mixer_.OnPlayerStop();
+  PlayerMixer().OnPlayerStop();
 
   SyncMaster::instance().Stop();
   isRunning_ = false;
@@ -209,20 +210,20 @@ void PlayerBase::Stop() {
   PlayerEvent pe(PET_STOP);
   NotifyObservers(&pe);
 
-  mixer_.Unlock();
+  PlayerMixer().Unlock();
 }
 
 const char *PlayerBase::GetPlayedNote(int channel) {
-  return mixer_.GetPlayedNote(channel);
+  return PlayerMixer().GetPlayedNote(channel);
 }
 
 const char *PlayerBase::GetPlayedOctive(int channel) {
-  return mixer_.GetPlayedOctive(channel);
+  return PlayerMixer().GetPlayedOctive(channel);
 }
 
 const char *PlayerBase::GetPlayedInstrument(int channel) {
-  if ((mixer_.GetPlayedOctive(channel))[1] == ' ') {
-    return mixer_.GetPlayedOctive(channel);
+  if ((PlayerMixer().GetPlayedOctive(channel))[1] == ' ') {
+    return PlayerMixer().GetPlayedOctive(channel);
   } else {
     if (!IsChannelMuted(channel)) {
       return (char *)(&(instrumentOnChannel_[channel][0]));
@@ -290,7 +291,7 @@ void PlayerBase::SetSequencerMode(SequencerMode mode) {
 SequencerMode PlayerBase::GetSequencerMode() { return sequencerMode_; };
 
 bool PlayerBase::IsChannelPlaying(int channel) {
-  return mixer_.IsChannelPlaying(channel);
+  return PlayerMixer().IsChannelPlaying(channel);
 };
 
 // Handles start button on any screen BUT the song screen
@@ -409,7 +410,9 @@ void PlayerBase::OnSongStartButton(unsigned int from, unsigned int to,
 
 bool PlayerBase::IsRunning() { return isRunning_; };
 
-stereosample PlayerBase::GetMasterLevel() { return mixer_.GetMasterOutLevel(); }
+stereosample PlayerBase::GetMasterLevel() {
+  return PlayerMixer().GetMasterOutLevel();
+}
 
 bool PlayerBase::isPlayable(int row, int col, int chainPos) {
 
@@ -557,22 +560,22 @@ void PlayerBase::Update(Observable &o, I_ObservableData *d) {
         bool stopped = false;
         if (timeToLive_[i] > 0) {
           if (--timeToLive_[i] == 0) {
-            mixer_.StopInstrument(i);
+            PlayerMixer().StopInstrument(i);
             stopped = true;
           }
         }
         if (!stopped) {
           if (instrRetrigger[i] >= 0) {
-            int note = mixer_.GetChannelNote(i);
-            I_Instrument *instr = mixer_.GetInstrument(i);
+            int note = PlayerMixer().GetChannelNote(i);
+            I_Instrument *instr = PlayerMixer().GetInstrument(i);
             if ((note != 0xFF) && (instr != 0)) {
               note += (instrRetrigger[i] > 80) ? instrRetrigger[i] - 256
                                                : instrRetrigger[i];
               while (note > 127) {
                 note -= 12;
               };
-              mixer_.StopInstrument(i);
-              mixer_.StartInstrument(i, instr, note, false);
+              PlayerMixer().StopInstrument(i);
+              PlayerMixer().StartInstrument(i, instr, note, false);
             };
           };
         }
@@ -602,7 +605,7 @@ void PlayerBase::ProcessCommands() {
   // loop on all channels
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
 
-    if (mixer_.IsChannelPlaying(i)) {
+    if (PlayerMixer().IsChannelPlaying(i)) {
 
       // check if there's any phrase playing
 
@@ -619,7 +622,7 @@ void PlayerBase::ProcessCommands() {
 
           if (cc != FourCC::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
-              I_Instrument *instrument = mixer_.GetInstrument(i);
+              I_Instrument *instrument = PlayerMixer().GetInstrument(i);
               if (instrument) {
                 instrument->ProcessCommand(i, cc, param);
               }
@@ -636,7 +639,7 @@ void PlayerBase::ProcessCommands() {
 
           if (cc != FourCC::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
-              I_Instrument *instrument = mixer_.GetInstrument(i);
+              I_Instrument *instrument = PlayerMixer().GetInstrument(i);
               if (instrument) {
                 instrument->ProcessCommand(i, cc, param);
               }
@@ -650,7 +653,7 @@ void PlayerBase::ProcessCommands() {
 
 bool PlayerBase::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
 
-  I_Instrument *instr = mixer_.GetInstrument(channel);
+  I_Instrument *instr = PlayerMixer().GetInstrument(channel);
 
   switch (cmd) {
   case FourCC::InstrumentCommandKill:
@@ -703,13 +706,13 @@ void PlayerBase::triggerLiveChains() {
 
   if (mode_ == PM_LIVE) {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      if (!(mixer_.IsChannelPlaying(i)) &&
+      if (!(PlayerMixer().IsChannelPlaying(i)) &&
           ((liveQueueingMode_[i] == QM_CHAINSTART) ||
            (liveQueueingMode_[i] == QM_TICKSTART) ||
            (liveQueueingMode_[i] == QM_PHRASESTART))) {
         if (findPlayable(&(liveQueuePosition_[i]), i,
                          liveQueueChainPosition_[i])) {
-          mixer_.StartChannel(i);
+          PlayerMixer().StartChannel(i);
           updateSongPos(liveQueuePosition_[i], i, liveQueueChainPosition_[i]);
         }
         liveQueueingMode_[i] = QM_NONE;
@@ -746,11 +749,11 @@ void PlayerBase::updateChainPos(int pos, int channel, int hop) {
     viewData_->currentPlayPhrase_[channel] = *data;
     if (*data == 0xFF) { // This could happen if starting in song mode on a row
                          // where a chain contains no phrase
-      mixer_.StopChannel(channel);
+      PlayerMixer().StopChannel(channel);
     }
   } else {
     viewData_->currentPlayPhrase_[channel] = 0xFF;
-    mixer_.StopChannel(channel);
+    PlayerMixer().StopChannel(channel);
   };
   updatePhrasePos((hop >= 0) ? hop : 0, channel);
 }
@@ -804,7 +807,7 @@ void PlayerBase::playCursorPosition(int channel) {
 
       // Stop instrument if playing
 
-      mixer_.StopInstrument(channel);
+      PlayerMixer().StopInstrument(channel);
       InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
       // get instrument for next note
@@ -816,7 +819,7 @@ void PlayerBase::playCursorPosition(int channel) {
         instrument = bank->GetInstrument(instr);
         newInstrument = true;
       } else {
-        instrument = mixer_.GetLastInstrument(channel);
+        instrument = PlayerMixer().GetLastInstrument(channel);
       }
 
       if (instrument == 0) {
@@ -840,7 +843,8 @@ void PlayerBase::playCursorPosition(int channel) {
         // Check if note is in acceptable midi range
 
         if (note < 128) {
-          mixer_.StartInstrument(channel, instrument, note, newInstrument);
+          PlayerMixer().StartInstrument(channel, instrument, note,
+                                        newInstrument);
           int instrTable = instrument->GetTable();
 
           // If an instrument number has been specified && instrument has table,
@@ -862,7 +866,7 @@ void PlayerBase::playCursorPosition(int channel) {
       }
     }
     if ((note != 0xFF) || (instr != 0xFF)) {
-      I_Instrument *instrument = mixer_.GetInstrument(channel);
+      I_Instrument *instrument = PlayerMixer().GetInstrument(channel);
       if (instrument) {
         if (instrument->GetTableAutomation()) {
           TablePlayerChange tpc;
@@ -871,8 +875,8 @@ void PlayerBase::playCursorPosition(int channel) {
           tpb.ProcessStep(tpc);
           timeToLive_[channel] = tpc.timeToLive_;
           if (tpc.instrRetrigger_ >= 0) {
-            int note = mixer_.GetChannelNote(channel);
-            I_Instrument *instr = mixer_.GetInstrument(channel);
+            int note = PlayerMixer().GetChannelNote(channel);
+            I_Instrument *instr = PlayerMixer().GetInstrument(channel);
             if ((note != 0xFF) && (instr != 0)) {
               // TODO: should we instead allow for transposing notes *down* with
               // values over 64?
@@ -880,9 +884,9 @@ void PlayerBase::playCursorPosition(int channel) {
               while (note > 127) {
                 note -= 12;
               };
-              mixer_.StopInstrument(channel);
+              PlayerMixer().StopInstrument(channel);
               // NOTE: 'newIntrument' bool flag is really the "retrigger" flag
-              mixer_.StartInstrument(channel, instr, note, false);
+              PlayerMixer().StartInstrument(channel, instr, note, false);
             };
           };
         }
@@ -937,7 +941,7 @@ void PlayerBase::moveToNextStep() {
       break;
     }
 
-    if (mixer_.IsChannelPlaying(i) && !liveTriggered) {
+    if (PlayerMixer().IsChannelPlaying(i) && !liveTriggered) {
       playingChannel = true;
 
       if (Groove::instance().TriggerChannel(
@@ -1001,7 +1005,7 @@ void PlayerBase::moveToNextPhrase(int channel, int hop) {
       return;
       break;
     case QM_PHRASESTOP:
-      mixer_.StopChannel(channel);
+      PlayerMixer().StopChannel(channel);
       liveQueueingMode_[channel] = QM_NONE;
       return;
     case QM_CHAINSTART:
@@ -1081,7 +1085,7 @@ void PlayerBase::moveToNextChain(int channel, int hop) {
 
     case QM_CHAINSTOP:
     case QM_PHRASESTOP:
-      mixer_.StopChannel(channel);
+      PlayerMixer().StopChannel(channel);
       liveQueueingMode_[channel] = QM_NONE;
       return;
 
@@ -1108,9 +1112,9 @@ void PlayerBase::moveToNextChain(int channel, int hop) {
       if (stopAtEnd_) {
         // Stop all channels
         for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-          mixer_.StopChannel(i);
+          PlayerMixer().StopChannel(i);
         }
-        mixer_.OnPlayerStop();
+        PlayerMixer().OnPlayerStop();
 
         isRunning_ = false;
         SetChanged();
@@ -1145,12 +1149,12 @@ void PlayerBase::moveToNextChain(int channel, int hop) {
   if (isPlayable(nextPos, channel, chainPosition)) {
     updateSongPos(nextPos, channel, chainPosition, hop);
   } else {
-    mixer_.StopChannel(channel);
+    PlayerMixer().StopChannel(channel);
   }
 };
 
 double PlayerBase::GetPlayTime() {
-  AudioOut *out = mixer_.GetAudioOut();
+  AudioOut *out = PlayerMixer().GetAudioOut();
   double currentTime = out->GetStreamTime();
   return currentTime - startTime_;
 };
@@ -1159,7 +1163,7 @@ int PlayerBase::GetPlayedBufferPercentage() {
   unsigned int beatCount = SyncMaster::instance().GetBeatCount();
   if (beatCount != lastBeatCount_) {
     lastBeatCount_ = beatCount;
-    lastPercentage_ = mixer_.GetPlayedBufferPercentage();
+    lastPercentage_ = PlayerMixer().GetPlayedBufferPercentage();
   }
   return lastPercentage_;
 };
@@ -1175,51 +1179,51 @@ PlayerEventType PlayerEvent::GetType() { return type_; };
 unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
 void PlayerBase::StartStreaming(const char *name, int startSample) {
-  mixer_.StartStreaming(name, startSample);
+  PlayerMixer().StartStreaming(name, startSample);
 }
 
 void PlayerBase::StartLoopingStreaming(const char *name) {
-  mixer_.StartLoopingStreaming(name);
+  PlayerMixer().StartLoopingStreaming(name);
 }
 
-void PlayerBase::StopStreaming() { mixer_.StopStreaming(); }
+void PlayerBase::StopStreaming() { PlayerMixer().StopStreaming(); }
 
 void PlayerBase::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
                                       bool stereo) {
-  mixer_.StartRecordStreaming(srcBuffer, size, stereo);
+  PlayerMixer().StartRecordStreaming(srcBuffer, size, stereo);
 }
 
-void PlayerBase::StopRecordStreaming() { mixer_.StopRecordStreaming(); }
+void PlayerBase::StopRecordStreaming() { PlayerMixer().StopRecordStreaming(); }
 
-bool PlayerBase::IsPlaying() { return mixer_.IsPlaying(); }
+bool PlayerBase::IsPlaying() { return PlayerMixer().IsPlaying(); }
 
 std::string PlayerBase::GetAudioAPI() {
-  AudioOut *out = mixer_.GetAudioOut();
+  AudioOut *out = PlayerMixer().GetAudioOut();
   return (out) ? out->GetAudioAPI() : "";
 };
 
 std::string PlayerBase::GetAudioDevice() {
-  AudioOut *out = mixer_.GetAudioOut();
+  AudioOut *out = PlayerMixer().GetAudioOut();
   return (out) ? out->GetAudioDevice() : "";
 };
 
 int PlayerBase::GetAudioBufferSize() {
-  AudioOut *out = mixer_.GetAudioOut();
+  AudioOut *out = PlayerMixer().GetAudioOut();
   return (out) ? out->GetAudioBufferSize() : 0;
 };
 
 int PlayerBase::GetAudioRequestedBufferSize() {
-  AudioOut *out = mixer_.GetAudioOut();
+  AudioOut *out = PlayerMixer().GetAudioOut();
   return (out) ? out->GetAudioRequestedBufferSize() : 0;
 };
 
 int PlayerBase::GetAudioPreBufferCount() {
-  AudioOut *out = mixer_.GetAudioOut();
+  AudioOut *out = PlayerMixer().GetAudioOut();
   return (out) ? out->GetAudioPreBufferCount() : 0;
 };
 
 etl::array<stereosample, SONG_CHANNEL_COUNT> *PlayerBase::GetMixerLevels() {
-  return mixer_.GetMixerLevels();
+  return PlayerMixer().GetMixerLevels();
 }
 
 // Direct note playback methods for MIDI
@@ -1238,7 +1242,7 @@ void PlayerBase::PlayNote(unsigned short instrumentIndex,
   if (instrument) {
     // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
     int playerChannel = channel % SONG_CHANNEL_COUNT;
-    mixer_.StartInstrument(playerChannel, instrument, note, true);
+    PlayerMixer().StartInstrument(playerChannel, instrument, note, true);
   }
 }
 
@@ -1246,5 +1250,5 @@ void PlayerBase::StopNote(unsigned short instrumentIndex,
                           unsigned short channel) {
   // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
   int playerChannel = channel % SONG_CHANNEL_COUNT;
-  mixer_.StopInstrument(playerChannel);
+  PlayerMixer().StopInstrument(playerChannel);
 }

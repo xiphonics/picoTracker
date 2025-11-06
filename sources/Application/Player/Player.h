@@ -145,7 +145,6 @@ private:
   friend class etl::singleton<PlayerBase>;
   PlayerBase();
 
-  PlayerMixer mixer_;
   ViewData *viewData_;
   Project *project_;
 
