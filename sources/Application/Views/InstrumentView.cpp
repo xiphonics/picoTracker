@@ -118,8 +118,11 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
     Trace::Error("INSTRUMENTVIEW", "Failed to assign new instrument type: %d",
                  nuType);
 
-    // TODO (democloid): this is a hack in order to ignore all existence if
+    // TODO (democloid): this is a hack in order to ignore all existence of
     // certain instruments and seamlessly set NONE
+    // Needed as the alternative is to change InstrumentTypeNames array plus all
+    // switch instances which reference the types that wouldn't be available on
+    // this platform
 #ifndef ADV
     // Show a dialog to the user
     char message[40];
