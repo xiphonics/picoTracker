@@ -268,6 +268,7 @@ void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
     return; // Invalid coordinate
 
   GUIRect rrect;
+  const int centerY = y_offset + BITMAPHEIGHT / 2;
 
   // 1. Clear the column
   // The Y range for clearing should cover the entire waveform area, including
@@ -276,32 +277,43 @@ void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
       GUIRect(x_coord, y_offset + 1, x_coord + 1, y_offset + BITMAPHEIGHT - 1);
   view.DrawRect(rrect, CD_BACKGROUND);
 
+  // Restore zero baseline in this column
+  rrect = GUIRect(x_coord, centerY, x_coord + 1, centerY + 1);
+  view.DrawRect(rrect, CD_HILITE2);
+
   // 2. Redraw the waveform in that column
   int waveform_idx =
       x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
   if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
-    int centerY = y_offset + BITMAPHEIGHT / 2;
-
     if (useSignedWaveform) {
       uint8_t encodedValue = waveformCache[waveform_idx];
-      if (encodedValue != 128) { // Don't draw for zero
-        float normalizedValue = (encodedValue / 127.5f) - 1.0f;
-        int yPos = centerY + (normalizedValue * (BITMAPHEIGHT / 2.0f));
+      float normalizedValue =
+          static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
+      float scaled = normalizedValue * (BITMAPHEIGHT / 2.0f);
+      int yPos =
+          static_cast<int>(std::round(static_cast<float>(centerY) + scaled));
 
-        int startY = std::min(centerY, yPos);
-        int endY = std::max(centerY, yPos);
-        if (startY == endY)
+      int startY = std::min(centerY, yPos);
+      int endY = std::max(centerY, yPos);
+      if (startY == endY) {
+        if (normalizedValue > 0.0f) {
           endY++;
-
-        if (startY < y_offset + 1)
-          startY = y_offset + 1;
-        if (endY > y_offset + BITMAPHEIGHT - 2)
-          endY = y_offset + BITMAPHEIGHT - 2;
-
-        if (startY <= endY) {
-          rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
-          view.DrawRect(rrect, CD_NORMAL);
+        } else if (normalizedValue < 0.0f) {
+          startY--;
+        } else {
+          // Pure zero amplitude – already represented by the baseline.
+          return;
         }
+      }
+
+      if (startY < y_offset + 1)
+        startY = y_offset + 1;
+      if (endY > y_offset + BITMAPHEIGHT - 2)
+        endY = y_offset + BITMAPHEIGHT - 2;
+
+      if (startY <= endY) {
+        rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
+        view.DrawRect(rrect, CD_NORMAL);
       }
     } else {
       int pixelHeight = waveformCache[waveform_idx];
@@ -351,6 +363,12 @@ void SampleEditorView::DrawWaveForm() {
     fullWaveformRedraw_ = false;
 
     clearWaveformRegion();
+    const int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
+
+    // Draw zero baseline
+    rrect = GUIRect(X_OFFSET + 1, centerY, X_OFFSET + BITMAPWIDTH - 1,
+                    centerY + 1);
+    DrawRect(rrect, CD_HILITE2);
 
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
     // Draw borders
@@ -361,29 +379,36 @@ void SampleEditorView::DrawWaveForm() {
 
     // Draw full waveform
     if (waveformCacheValid_) {
-      int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
       for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
         if (waveformUsesSignedDrawing_) {
           uint8_t encodedValue = waveformCache_[x];
-          if (encodedValue != 128) { // Don't draw for zero
-            float normalizedValue = (encodedValue / 127.5f) - 1.0f;
-            int yPos = centerY + (normalizedValue * (BITMAPHEIGHT / 2.0f));
+          float normalizedValue =
+              static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
+          float scaled = normalizedValue * (BITMAPHEIGHT / 2.0f);
+          int yPos = static_cast<int>(
+              std::round(static_cast<float>(centerY) + scaled));
 
-            int startY = std::min(centerY, yPos);
-            int endY = std::max(centerY, yPos);
-            if (startY == endY)
+          int startY = std::min(centerY, yPos);
+          int endY = std::max(centerY, yPos);
+          if (startY == endY) {
+            if (normalizedValue > 0.0f) {
               endY++;
-
-            if (startY < Y_OFFSET + 1)
-              startY = Y_OFFSET + 1;
-            if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
-              endY = Y_OFFSET + BITMAPHEIGHT - 2;
-
-            if (startY <= endY) {
-              rrect =
-                  GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
-              DrawRect(rrect, CD_NORMAL);
+            } else if (normalizedValue < 0.0f) {
+              startY--;
+            } else {
+              // Zero amplitude already represented by the baseline.
+              continue;
             }
+          }
+
+          if (startY < Y_OFFSET + 1)
+            startY = Y_OFFSET + 1;
+          if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
+            endY = Y_OFFSET + BITMAPHEIGHT - 2;
+
+          if (startY <= endY) {
+            rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
+            DrawRect(rrect, CD_NORMAL);
           }
         } else {
           int pixelHeight = waveformCache_[x];
@@ -1026,8 +1051,10 @@ void SampleEditorView::loadSample(
         if (cacheIndex < WAVEFORM_CACHE_SIZE) {
           float normalizedValue = (float)sampleValue / 32768.0f; // [-1, 1]
           // Encode to [0, 255], with 128 as zero.
+          float encoded =
+              (normalizedValue + 1.0f) * 127.5f; // map [-1,1] -> [0,255]
           waveformCache_[cacheIndex] =
-              (uint8_t)((normalizedValue + 1.0f) * 127.5f);
+              static_cast<uint8_t>(std::round(std::clamp(encoded, 0.0f, 255.0f)));
         }
       } else {
         int cacheIndex = (currentFrame + i) / samplesPerPixel;
