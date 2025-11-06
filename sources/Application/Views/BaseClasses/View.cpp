@@ -155,7 +155,7 @@ void View::drawNotes() {
   GUIPoint pos(initialX, initialY);
   GUITextProperties props;
 
-  Player *player = Player::GetInstance();
+  auto &player = Player::instance();
 
   props.invert_ = true;
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -164,14 +164,14 @@ void View::drawNotes() {
     } else {
       SetColor(CD_HILITE1);
     }
-    if (player->IsRunning() && viewData_->playMode_ != PM_AUDITION) {
-      DrawString(pos._x, pos._y, player->GetPlayedNote(i),
+    if (player.IsRunning() && viewData_->playMode_ != PM_AUDITION) {
+      DrawString(pos._x, pos._y, player.GetPlayedNote(i),
                  props); // row for the note values
       pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedOctive(i),
+      DrawString(pos._x, pos._y, player.GetPlayedOctive(i),
                  props); // row for the octive values
       pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedInstrument(i),
+      DrawString(pos._x, pos._y, player.GetPlayedInstrument(i),
                  props); // draw instrument number
     } else {
       DrawString(pos._x, pos._y, "  ", props); // row for the note
@@ -187,9 +187,9 @@ void View::drawNotes() {
   }
 }
 
-void View::drawMasterVuMeter(Player *player, GUITextProperties props,
-                             bool forceRedraw, uint8_t xoffset) {
-  stereosample playerLevel = player->GetMasterLevel();
+void View::drawMasterVuMeter(GUITextProperties props, bool forceRedraw,
+                             uint8_t xoffset) {
+  stereosample playerLevel = Player::instance().GetMasterLevel();
 
   // Convert to dB
   int leftDb = amplitudeToDb((playerLevel >> 16) & 0xFFFF);
@@ -308,13 +308,12 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   prevRightVU_[vuIndex] = rightBars;
 }
 
-void View::drawPlayTime(Player *player, GUIPoint pos,
-                        GUITextProperties &props) {
+void View::drawPlayTime(GUIPoint pos, GUITextProperties &props) {
   char strbuffer[10];
 
   SetColor(CD_NORMAL);
   props.invert_ = false;
-  int time = int(player->GetPlayTime());
+  int time = int(Player::instance().GetPlayTime());
   int mi = time / 60;
   int se = time - mi * 60;
   npf_snprintf(strbuffer, sizeof(strbuffer), "%2.2d:%2.2d", mi, se);

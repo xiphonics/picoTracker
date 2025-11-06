@@ -11,8 +11,8 @@
 #define _PLAYER_H_
 #include "Application/Views/BaseClasses/ViewEvent.h"
 #include "Application/Views/ViewData.h"
+#include "Externals/etl/include/etl/singleton.h"
 #include "Foundation/Observable.h"
-#include "Foundation/T_Singleton.h"
 #include "PlayerMixer.h"
 #include "SyncMaster.h"
 #include "System/Timer/Timer.h"
@@ -43,14 +43,8 @@ private:
   unsigned int tickCount_;
 };
 
-class Player : public I_Observer,
-               public Observable,
-               public T_Singleton<Player> {
-private: // Singleton
-  Player();
-
+class PlayerBase : public I_Observer, public Observable {
 public:
-  static Player *GetInstance();
   bool Init(Project *, ViewData *);
   void Reset();
   void Close();
@@ -147,6 +141,10 @@ protected:
   bool findPlayable(uchar *row, int col, uchar chainPos = 0);
 
 private:
+  // Only allow etl::singleton to construct
+  friend class etl::singleton<PlayerBase>;
+  PlayerBase();
+
   PlayerMixer mixer_;
   ViewData *viewData_;
   Project *project_;
@@ -181,4 +179,5 @@ private:
   unsigned char retrigPos_;
 };
 
+using Player = etl::singleton<PlayerBase>;
 #endif

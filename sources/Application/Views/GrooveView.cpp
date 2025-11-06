@@ -79,8 +79,6 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  Player *player = Player::GetInstance();
-
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_LEFT) {
       warpGroove(-1);
@@ -99,7 +97,7 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
     };
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_GROOVE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -133,8 +131,8 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
       NotifyObservers(&ve);
     }
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                                       viewData_->chainRow_);
     }
   } else {
     // No modifier
@@ -143,8 +141,8 @@ void GrooveView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_UP)
       updateCursor(-1);
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                                       viewData_->chainRow_);
     }
   }
 }

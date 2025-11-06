@@ -696,8 +696,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // Export, Import work correctly
   FieldView::ProcessButtonMask(mask, pressed);
 
-  Player *player = Player::GetInstance();
-
   if (mask == EPBM_ENTER) {
     // Get the current field to check if we're on the sample field
     UIIntVarField *currentField = (UIIntVarField *)GetFocus();
@@ -708,7 +706,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
       if (viewMode_ == VM_NEW) {
         viewMode_ = VM_NORMAL; // clear the "enter double tap" state
-        if (!player->IsRunning()) {
+        if (!Player::instance().IsRunning()) {
           // First check if the samplelib exists
           bool samplelibExists =
               FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
@@ -827,7 +825,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     };
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_INSTRUMENT);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -868,14 +866,14 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
 
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                                       viewData_->chainRow_);
     }
   } else {
     // No modifier
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                                       viewData_->chainRow_);
     }
   }
 
@@ -970,9 +968,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     // Revert the UI field back to the current type until confirmed
     instrumentType_.SetInt(currentType, false);
 
-    // Check if player is running
-    Player *player = Player::GetInstance();
-    if (!player->IsRunning()) {
+    if (!Player::instance().IsRunning()) {
       // Check if any instrument field has been modified
       bool instrumentModified = checkInstrumentModified();
       if (instrumentModified) {

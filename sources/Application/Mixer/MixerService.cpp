@@ -142,8 +142,8 @@ void MixerService::SetMasterVolume(int vol) {
   // Set the master bus volume
   master_.SetVolume(masterVolume);
 
-  Player *player = Player::GetInstance();
-  Project *project = player ? player->GetProject() : nullptr;
+  Project *project =
+      Player::is_valid() ? Player::instance().GetProject() : nullptr;
 
   // Apply channel volumes to individual channel buses
   if (project) {
@@ -210,8 +210,8 @@ bool MixerService::configureRenderPaths() {
     return false;
   }
 
-  Player *player = Player::GetInstance();
-  Project *project = player ? player->GetProject() : nullptr;
+  Project *project =
+      Player::is_valid() ? Player::instance().GetProject() : nullptr;
   if (!project) {
     Trace::Error("MIXERSERVICE", "Cannot configure render paths, project null");
     return false;

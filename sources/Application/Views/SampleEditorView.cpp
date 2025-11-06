@@ -176,9 +176,9 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // Play key no longer pressed so should stop playback
       playKeyHeld_ = false;
 
-      if (Player::GetInstance()->IsPlaying()) {
+      if (Player::instance().IsPlaying()) {
         // Stop playback regardless of whether it's regular or looping
-        Player::GetInstance()->StopStreaming();
+        Player::instance().StopStreaming();
         isPlaying_ = false;
 
         // Force redraw to remove the playhead
@@ -236,17 +236,16 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       redraw_ = true;
 
       // If something is already playing, stop it first
-      if (Player::GetInstance()->IsPlaying()) {
-        Player::GetInstance()->StopStreaming();
+      if (Player::instance().IsPlaying()) {
+        Player::instance().StopStreaming();
       }
 
       // Start playing the sample with just the filename
       if (isSingleCycle_) {
-        Player::GetInstance()->StartLoopingStreaming(sampleFileName.c_str());
+        Player::instance().StartLoopingStreaming(sampleFileName.c_str());
       } else {
         // Start playback from the specified start position
-        Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
-                                              startSample);
+        Player::instance().StartStreaming(sampleFileName.c_str(), startSample);
       }
       // redraw to show the playhead
       redraw_ = true;
@@ -420,9 +419,9 @@ void SampleEditorView::AnimationUpdate() {
   // Update playhead position if sample is playing
   if (isPlaying_) {
     // Check if the Player is still playing the sample
-    if (!Player::GetInstance()->IsPlaying()) {
+    if (!Player::instance().IsPlaying()) {
       // Playback has stopped (reached the end of non-looping sample)
-      Player::GetInstance()->StopStreaming();
+      Player::instance().StopStreaming();
       isPlaying_ = false;
       playbackPosition_ = 0;
       // forceRedraw_ = true;
@@ -482,8 +481,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   switch (fourcc) {
   case FourCC::ActionOK: {
     // Stop playback if active before applying any destructive operation
-    if (Player::GetInstance()->IsPlaying()) {
-      Player::GetInstance()->StopStreaming();
+    if (Player::instance().IsPlaying()) {
+      Player::instance().StopStreaming();
     }
     isPlaying_ = false;
     playKeyHeld_ = false;
@@ -601,8 +600,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
-  if (Player::GetInstance()->IsPlaying()) {
-    Player::GetInstance()->StopStreaming();
+  if (Player::instance().IsPlaying()) {
+    Player::instance().StopStreaming();
   }
   isPlaying_ = false;
   playKeyHeld_ = false;
@@ -832,8 +831,8 @@ SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
 }
 
 void SampleEditorView::navigateToView(ViewType vt) {
-  if (Player::GetInstance()->IsPlaying()) {
-    Player::GetInstance()->StopStreaming();
+  if (Player::instance().IsPlaying()) {
+    Player::instance().StopStreaming();
   }
   // "clear" the prev screen by setting it to Song screen
   // now that we are leaving this screen

@@ -410,9 +410,9 @@ void AppWindow::LoadProject(const char *projectName) {
   _viewData = new (viewDataMemBuf) ViewData(project);
 
   // Create & observe the player
-  Player *player = Player::GetInstance();
-  bool playerOK = player->Init(project, _viewData);
-  player->AddObserver(*this);
+  Player::create();
+  bool playerOK = Player::instance().Init(project, _viewData);
+  Player::instance().AddObserver(*this);
 
   // Create the controller
   UIController *controller = UIController::GetInstance();
@@ -508,11 +508,11 @@ void AppWindow::LoadProject(const char *projectName) {
 void AppWindow::CloseProject() {
 
   _closeProject = false;
-  Player *player = Player::GetInstance();
-  player->Stop();
-  player->RemoveObserver(*this);
+  auto &player = Player::instance();
+  player.Stop();
+  player.RemoveObserver(*this);
 
-  player->Reset();
+  player.Reset();
 
   SamplePool *pool = SamplePool::GetInstance();
   pool->Reset();
@@ -865,11 +865,11 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
 }
 
 void AppWindow::onQuitApp() {
-  Player *player = Player::GetInstance();
-  player->Stop();
-  player->RemoveObserver(*this);
+  auto &player = Player::instance();
+  player.Stop();
+  player.RemoveObserver(*this);
 
-  player->Reset();
+  player.Reset();
   System::GetInstance()->PostQuitMessage();
 }
 
@@ -935,10 +935,9 @@ void AppWindow::SetColor(ColorDefinition cd) {
 };
 
 bool AppWindow::autoSave() {
-  Player *player = Player::GetInstance();
   // only auto save when sequencer is not running and not recording
   bool recording = IsRecordingActive();
-  if (!player->IsRunning() && !recording) {
+  if (!Player::instance().IsRunning() && !recording) {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
     // get persistence service and call autosave
     PersistencyService *ps = PersistencyService::GetInstance();

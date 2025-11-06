@@ -40,8 +40,7 @@ protected:
 
 private:
   void drawChannelVUMeters(etl::array<stereosample, SONG_CHANNEL_COUNT> *levels,
-                           Player *player, GUITextProperties props,
-                           bool forceRedraw = false);
+                           GUITextProperties props, bool forceRedraw = false);
   void initChannelVolumeFields();
 
   // Channel volume UI fields

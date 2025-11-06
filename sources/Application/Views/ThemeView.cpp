@@ -266,8 +266,8 @@ void ThemeView::ProcessButtonMask(unsigned short mask, bool pressed) {
       NotifyObservers(&ve);
     }
   } else if (mask & EPBM_PLAY) {
-    Player *player = Player::GetInstance();
-    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
+    Player::instance().OnStartButton(PM_SONG, viewData_->songX_, false,
+                                     viewData_->songX_);
   }
 }
 

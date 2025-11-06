@@ -406,7 +406,6 @@ void SongView::switchSoloMode() {
 };
 
 void SongView::onStart() {
-  Player *player = Player::GetInstance();
   unsigned char from = viewData_->songX_;
   unsigned char to = from;
   if (clipboard_.active_) {
@@ -414,25 +413,22 @@ void SongView::onStart() {
     from = r.Left();
     to = r.Right();
   }
-  player->OnSongStartButton(from, to, false, false);
+  Player::instance().OnSongStartButton(from, to, false, false);
 };
 
 void SongView::startCurrentRow() {
-  Player *player = Player::GetInstance();
-  player->SetSequencerMode(SM_LIVE);
-  player->OnSongStartButton(0, 7, false, false);
+  auto &player = Player::instance();
+  player.SetSequencerMode(SM_LIVE);
+  player.OnSongStartButton(0, 7, false, false);
 }
 
 void SongView::startImmediate() {
-  Player *player = Player::GetInstance();
-
   unsigned char from = viewData_->songX_;
   unsigned char to = from;
-  player->OnSongStartButton(from, to, false, true);
+  Player::instance().OnSongStartButton(from, to, false, true);
 }
 
 void SongView::onStop() {
-  Player *player = Player::GetInstance();
   unsigned char from = viewData_->songX_;
   unsigned char to = from;
   if (clipboard_.active_) {
@@ -440,7 +436,7 @@ void SongView::onStop() {
     from = r.Left();
     to = r.Right();
   }
-  player->OnSongStartButton(from, to, true, false);
+  Player::instance().OnSongStartButton(from, to, true, false);
 };
 
 void SongView::jumpToNextSection(int direction) {
@@ -569,18 +565,17 @@ void SongView::processNormalButtonMask(unsigned int mask) {
 
   if (mask & EPBM_EDIT) {
     // EDIT Modifier
-    Player *player = Player::GetInstance();
     if (mask & EPBM_DOWN)
       updateSongOffset(View::songRowCount_);
     if (mask & EPBM_UP)
       updateSongOffset(-View::songRowCount_);
     if (mask & (EPBM_RIGHT | EPBM_LEFT)) {
-      switch (player->GetSequencerMode()) {
+      switch (Player::instance().GetSequencerMode()) {
       case SM_SONG:
-        player->SetSequencerMode(SM_LIVE);
+        Player::instance().SetSequencerMode(SM_LIVE);
         break;
       case SM_LIVE:
-        player->SetSequencerMode(SM_SONG);
+        Player::instance().SetSequencerMode(SM_SONG);
         break;
       }
       isDirty_ = true;
@@ -594,11 +589,11 @@ void SongView::processNormalButtonMask(unsigned int mask) {
       toggleMute();
     };
     if (mask & EPBM_PLAY) {
-      if (player->GetSequencerMode() == SM_LIVE) {
+      if (Player::instance().GetSequencerMode() == SM_LIVE) {
         startImmediate();
       } else {
         // recording screen
-        if (!player->IsRunning()) {
+        if (!Player::instance().IsRunning()) {
           SampleEditorView::SetSourceViewType(VT_SONG);
           ViewType vt = VT_RECORD;
           ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -812,11 +807,9 @@ void SongView::DrawView() {
   // Draw title
   SetColor(CD_NORMAL);
 
-  Player *player = Player::GetInstance();
-
   props.invert_ = true;
   const char *buffer =
-      ((player->GetSequencerMode() == SM_SONG) ? "Song" : "Live");
+      ((Player::instance().GetSequencerMode() == SM_SONG) ? "Song" : "Live");
   DrawString(pos._x, pos._y, buffer, props);
 
   props.invert_ = false;
@@ -911,7 +904,7 @@ void SongView::DrawView() {
   drawMap();
   drawNotes();
 
-  if (player->IsRunning()) {
+  if (Player::instance().IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 };
@@ -947,10 +940,8 @@ void SongView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
   ScreenView::AnimationUpdate();
 
-  // Get player instance safely
-  Player *player = Player::GetInstance();
   // Only process updates if we're fully initialized
-  if (!viewData_ || !player) {
+  if (!viewData_ || !Player::is_valid()) {
     return;
   }
 
@@ -959,7 +950,7 @@ void SongView::AnimationUpdate() {
   GUITextProperties props;
 
   // Always update VU meter even if other parts of UI dont need updating
-  drawMasterVuMeter(player, props);
+  drawMasterVuMeter(props);
 
   // Use the consolidated flag for all UI updates
   if (needsUIUpdate_) {
@@ -971,7 +962,7 @@ void SongView::AnimationUpdate() {
       timePos._x = 27;
       timePos._y += 1;
       SetColor(CD_NORMAL);
-      drawPlayTime(player, timePos, props);
+      drawPlayTime(timePos, props);
       needsPlayTimeUpdate_ = false;
     }
 
@@ -982,6 +973,7 @@ void SongView::AnimationUpdate() {
 
     SetColor(CD_CURSOR);
 
+    auto &player = Player::instance();
     // Loop on all channels
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
       // Clear all current positions
@@ -999,13 +991,13 @@ void SongView::AnimationUpdate() {
       }
 
       // For each playing position, draw current location
-      if (player->IsChannelPlaying(i)) {
+      if (player.IsChannelPlaying(i)) {
         if (viewData_->currentPlayChain_[i] != 0xFF) {
           int y = viewData_->songPlayPos_[i] - viewData_->songOffset_;
           if (y >= 0 && y < View::songRowCount_ &&
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + y;
-            if (!player->IsChannelMuted(i)) {
+            if (!player.IsChannelMuted(i)) {
               SetColor(CD_ACCENT);
               DrawString(pos._x, pos._y, ">", props);
             } else {
@@ -1019,14 +1011,14 @@ void SongView::AnimationUpdate() {
       }
 
       // If in live mode, update queued position
-      if (player->GetSequencerMode() == SM_LIVE) {
-        if (player->GetQueueingMode(i) != QM_NONE) {
-          int y = player->GetQueuePosition(i) - viewData_->songOffset_;
+      if (player.GetSequencerMode() == SM_LIVE) {
+        if (player.GetQueueingMode(i) != QM_NONE) {
+          int y = player.GetQueuePosition(i) - viewData_->songOffset_;
           if (y >= 0 && y < View::songRowCount_) {
             pos._y = anchor._y + y;
-            const char *indicator = player->GetLiveIndicator(i);
+            const char *indicator = player.GetLiveIndicator(i);
             DrawString(pos._x, pos._y, indicator, props);
-            lastQueuedPosition_[i] = player->GetQueuePosition(i);
+            lastQueuedPosition_[i] = player.GetQueuePosition(i);
           }
         }
       }

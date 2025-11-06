@@ -572,8 +572,6 @@ void TableView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
 void TableView::processNormalButtonMask(unsigned short mask) {
 
-  Player *player = Player::GetInstance();
-
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_LEFT)
       warpToNeighbour(-1);
@@ -589,7 +587,7 @@ void TableView::processNormalButtonMask(unsigned short mask) {
       viewMode_ = VM_SELECTION;
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_TABLE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -636,8 +634,8 @@ void TableView::processNormalButtonMask(unsigned short mask) {
       }
     }
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                                       viewData_->chainRow_);
     }
 
   } else {
@@ -651,15 +649,13 @@ void TableView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_RIGHT)
       updateCursor(1, 0);
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                                       viewData_->chainRow_);
     }
   }
 }
 
 void TableView::processSelectionButtonMask(unsigned short mask) {
-
-  Player *player = Player::GetInstance();
 
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_ALT) {
@@ -687,8 +683,8 @@ void TableView::processSelectionButtonMask(unsigned short mask) {
           NotifyObservers(&ve);
         }
         if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                                viewData_->chainRow_);
+          Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                                           viewData_->chainRow_);
         }
         /*			if (mask&EPBM_L) unMuteAll() ;
          */
@@ -708,8 +704,8 @@ void TableView::processSelectionButtonMask(unsigned short mask) {
           if (mask & EPBM_RIGHT)
             updateCursor(1, 0);
           if (mask & EPBM_PLAY) {
-            player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                                  viewData_->chainRow_);
+            Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_,
+                                             false, viewData_->chainRow_);
           }
         }
       }
@@ -892,9 +888,7 @@ void TableView::DrawView() {
   drawMap();
   drawNotes();
 
-  Player *player = Player::GetInstance();
-
-  if (player->IsRunning()) {
+  if (Player::instance().IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 }
@@ -915,11 +909,8 @@ void TableView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
   ScreenView::AnimationUpdate();
 
-  // Get player instance safely
-  Player *player = Player::GetInstance();
-
   // Only process updates if we're fully initialized
-  if (!viewData_ || !player || !TableHolder::is_valid()) {
+  if (!viewData_ || !Player::is_valid() || !TableHolder::is_valid()) {
     return;
   }
 
@@ -945,7 +936,7 @@ void TableView::AnimationUpdate() {
     }
 
     // Only update play position if player is running
-    if (player->IsRunning()) {
+    if (Player::instance().IsRunning()) {
       // Get current channel
       int channel = viewData_->songX_;
       // Table associated to the channel player

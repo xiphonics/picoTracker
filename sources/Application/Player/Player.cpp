@@ -24,7 +24,7 @@
 
 // Private constructor - Singleton
 
-Player::Player() : mixer_() {
+PlayerBase::PlayerBase() : mixer_() {
 
   isRunning_ = false;
   viewData_ = 0;
@@ -42,15 +42,7 @@ Player::Player() : mixer_() {
   }
 };
 
-Player *Player::GetInstance() {
-  if (instance_ == 0) {
-    alignas(Player) static char playerMemBuf[sizeof(Player)];
-    instance_ = new (playerMemBuf) Player();
-  }
-  return instance_;
-}
-
-bool Player::Init(Project *project, ViewData *viewData) {
+bool PlayerBase::Init(Project *project, ViewData *viewData) {
 
   viewData_ = viewData;
   project_ = project;
@@ -64,28 +56,28 @@ bool Player::Init(Project *project, ViewData *viewData) {
   return mixer_.Start();
 }
 
-void Player::Reset() {
+void PlayerBase::Reset() {
   viewData_ = 0;
   project_ = 0;
   mixer_.RemoveObserver(*this);
   Close();
 };
 
-void Player::Close() {
+void PlayerBase::Close() {
   mixer_.Stop();
   mixer_.Close();
 };
 
-void Player::SetChannelMute(int channel, bool mute) {
+void PlayerBase::SetChannelMute(int channel, bool mute) {
   mixer_.SetChannelMute(channel, mute);
 };
 
-bool Player::IsChannelMuted(int channel) {
+bool PlayerBase::IsChannelMuted(int channel) {
   return mixer_.IsChannelMuted(channel);
 };
 
-void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
-                   bool stopAtEnd) {
+void PlayerBase::Start(PlayMode mode, bool forceSongMode,
+                       MixerServiceMode msmMode, bool stopAtEnd) {
 
   mixer_.Lock();
 
@@ -201,7 +193,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   mixer_.Unlock();
 }
 
-void Player::Stop() {
+void PlayerBase::Stop() {
 
   mixer_.Lock();
 
@@ -220,15 +212,15 @@ void Player::Stop() {
   mixer_.Unlock();
 }
 
-const char *Player::GetPlayedNote(int channel) {
+const char *PlayerBase::GetPlayedNote(int channel) {
   return mixer_.GetPlayedNote(channel);
 }
 
-const char *Player::GetPlayedOctive(int channel) {
+const char *PlayerBase::GetPlayedOctive(int channel) {
   return mixer_.GetPlayedOctive(channel);
 }
 
-const char *Player::GetPlayedInstrument(int channel) {
+const char *PlayerBase::GetPlayedInstrument(int channel) {
   if ((mixer_.GetPlayedOctive(channel))[1] == ' ') {
     return mixer_.GetPlayedOctive(channel);
   } else {
@@ -240,7 +232,7 @@ const char *Player::GetPlayedInstrument(int channel) {
   }
 }
 
-const char *Player::GetLiveIndicator(int channel) {
+const char *PlayerBase::GetLiveIndicator(int channel) {
 
   bool blink = true;
 
@@ -281,7 +273,7 @@ const char *Player::GetLiveIndicator(int channel) {
   return " ";
 };
 
-void Player::SetSequencerMode(SequencerMode mode) {
+void PlayerBase::SetSequencerMode(SequencerMode mode) {
   if (isRunning_) {
     switch (mode) {
     case SM_LIVE:
@@ -295,17 +287,17 @@ void Player::SetSequencerMode(SequencerMode mode) {
   sequencerMode_ = mode;
 };
 
-SequencerMode Player::GetSequencerMode() { return sequencerMode_; };
+SequencerMode PlayerBase::GetSequencerMode() { return sequencerMode_; };
 
-bool Player::IsChannelPlaying(int channel) {
+bool PlayerBase::IsChannelPlaying(int channel) {
   return mixer_.IsChannelPlaying(channel);
 };
 
 // Handles start button on any screen BUT the song screen
 
-void Player::OnStartButton(PlayMode origin, unsigned int from,
-                           bool startFromPrevious, unsigned char chainPos,
-                           MixerServiceMode msmMode, bool stopAtEnd) {
+void PlayerBase::OnStartButton(PlayMode origin, unsigned int from,
+                               bool startFromPrevious, unsigned char chainPos,
+                               MixerServiceMode msmMode, bool stopAtEnd) {
 
   switch (GetSequencerMode()) {
 
@@ -328,9 +320,9 @@ void Player::OnStartButton(PlayMode origin, unsigned int from,
 }
 
 // Handles start on song screen
-void Player::OnSongStartButton(unsigned int from, unsigned int to,
-                               bool requestStop, bool forceImmediate,
-                               MixerServiceMode msmMode, bool stopAtEnd) {
+void PlayerBase::OnSongStartButton(unsigned int from, unsigned int to,
+                                   bool requestStop, bool forceImmediate,
+                                   MixerServiceMode msmMode, bool stopAtEnd) {
 
   switch (GetSequencerMode()) {
 
@@ -415,11 +407,11 @@ void Player::OnSongStartButton(unsigned int from, unsigned int to,
   }
 }
 
-bool Player::IsRunning() { return isRunning_; };
+bool PlayerBase::IsRunning() { return isRunning_; };
 
-stereosample Player::GetMasterLevel() { return mixer_.GetMasterOutLevel(); }
+stereosample PlayerBase::GetMasterLevel() { return mixer_.GetMasterOutLevel(); }
 
-bool Player::isPlayable(int row, int col, int chainPos) {
+bool PlayerBase::isPlayable(int row, int col, int chainPos) {
 
   uchar *chain = viewData_->song_->data_ + SONG_CHANNEL_COUNT * row + col;
   if (*chain != 0xFF) {
@@ -429,7 +421,7 @@ bool Player::isPlayable(int row, int col, int chainPos) {
   return false;
 }
 
-bool Player::findPlayable(uchar *row, int col, uchar chainPos) {
+bool PlayerBase::findPlayable(uchar *row, int col, uchar chainPos) {
 
   // first look if current is fine
 
@@ -475,16 +467,20 @@ bool Player::findPlayable(uchar *row, int col, uchar chainPos) {
   return (data != 0xFF);
 }
 
-QueueingMode Player::GetQueueingMode(int i) { return liveQueueingMode_[i]; };
+QueueingMode PlayerBase::GetQueueingMode(int i) {
+  return liveQueueingMode_[i];
+};
 
-unsigned char Player::GetQueuePosition(int i) { return liveQueuePosition_[i]; };
+unsigned char PlayerBase::GetQueuePosition(int i) {
+  return liveQueuePosition_[i];
+};
 
-unsigned char Player::GetQueueChainPosition(int i) {
+unsigned char PlayerBase::GetQueueChainPosition(int i) {
   return liveQueueChainPosition_[i];
 };
 
-void Player::QueueChannel(int i, QueueingMode mode, unsigned char position,
-                          unsigned char chainpos) {
+void PlayerBase::QueueChannel(int i, QueueingMode mode, unsigned char position,
+                              unsigned char chainpos) {
   liveQueueingMode_[i] = mode;
   liveQueuePosition_[i] = position;
   liveQueueChainPosition_[i] = chainpos;
@@ -496,7 +492,7 @@ void Player::QueueChannel(int i, QueueingMode mode, unsigned char position,
         a block of audio and we get room to prepare the next one
  ************************************************************/
 
-void Player::Update(Observable &o, I_ObservableData *d) {
+void PlayerBase::Update(Observable &o, I_ObservableData *d) {
 
   // Make sure sync's ok
 
@@ -601,7 +597,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
         position for all channels
  ************************************************************/
 
-void Player::ProcessCommands() {
+void PlayerBase::ProcessCommands() {
 
   // loop on all channels
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -652,7 +648,7 @@ void Player::ProcessCommands() {
   };
 };
 
-bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
+bool PlayerBase::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
 
   I_Instrument *instr = mixer_.GetInstrument(channel);
 
@@ -703,7 +699,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
                 yet active
  ********************************************************/
 
-void Player::triggerLiveChains() {
+void PlayerBase::triggerLiveChains() {
 
   if (mode_ == PM_LIVE) {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -729,7 +725,7 @@ void Player::triggerLiveChains() {
         give chain position directly (for PM_CHAIN/PM_PHRASE)
  ********************************************************/
 
-void Player::updateSongPos(int pos, int channel, int chainPos, int hop) {
+void PlayerBase::updateSongPos(int pos, int channel, int chainPos, int hop) {
   unsigned char *data =
       viewData_->song_->data_ + channel + SONG_CHANNEL_COUNT * pos;
   viewData_->songPlayPos_[channel] = pos;
@@ -742,7 +738,7 @@ void Player::updateSongPos(int pos, int channel, int chainPos, int hop) {
         sets current chain position for a give channel
  ********************************************************/
 
-void Player::updateChainPos(int pos, int channel, int hop) {
+void PlayerBase::updateChainPos(int pos, int channel, int hop) {
   unsigned char chain = viewData_->currentPlayChain_[channel];
   if (chain != 0xFF) {
     viewData_->chainPlayPos_[channel] = pos;
@@ -764,7 +760,7 @@ void Player::updateChainPos(int pos, int channel, int hop) {
         sets current phrase position for a give channel.
  ********************************************************/
 
-void Player::updatePhrasePos(int pos, int channel) {
+void PlayerBase::updatePhrasePos(int pos, int channel) {
 
   viewData_->phrasePlayPos_[channel] = pos;
 
@@ -788,7 +784,7 @@ void Player::updatePhrasePos(int pos, int channel) {
   }
 }
 
-void Player::playCursorPosition(int channel) {
+void PlayerBase::playCursorPosition(int channel) {
 
   int pos = viewData_->phrasePlayPos_[channel];
 
@@ -895,7 +891,7 @@ void Player::playCursorPosition(int channel) {
   }
 }
 
-int Player::getChannelHop(int channel, int pos) {
+int PlayerBase::getChannelHop(int channel, int pos) {
 
   int phrase = viewData_->currentPlayPhrase_[channel];
   FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
@@ -915,7 +911,7 @@ int Player::getChannelHop(int channel, int pos) {
         playing channels.
  ********************************************************/
 
-void Player::moveToNextStep() {
+void PlayerBase::moveToNextStep() {
   // we'll need to know if any channel is playing
 
   bool playingChannel = false;
@@ -985,7 +981,7 @@ void Player::moveToNextStep() {
         has reached the end
  ********************************************************/
 
-void Player::moveToNextPhrase(int channel, int hop) {
+void PlayerBase::moveToNextPhrase(int channel, int hop) {
 
   // First check if we're in live mode and the channel
   // has been trigged in immediate mode. In which case we
@@ -1050,7 +1046,7 @@ void Player::moveToNextPhrase(int channel, int hop) {
         has reached the end.
  ********************************************************/
 
-void Player::moveToNextChain(int channel, int hop) {
+void PlayerBase::moveToNextChain(int channel, int hop) {
 
   // if there's unplaying channels queue they should be started
   // once all position have been updated
@@ -1153,13 +1149,13 @@ void Player::moveToNextChain(int channel, int hop) {
   }
 };
 
-double Player::GetPlayTime() {
+double PlayerBase::GetPlayTime() {
   AudioOut *out = mixer_.GetAudioOut();
   double currentTime = out->GetStreamTime();
   return currentTime - startTime_;
 };
 
-int Player::GetPlayedBufferPercentage() {
+int PlayerBase::GetPlayedBufferPercentage() {
   unsigned int beatCount = SyncMaster::instance().GetBeatCount();
   if (beatCount != lastBeatCount_) {
     lastBeatCount_ = beatCount;
@@ -1178,58 +1174,59 @@ PlayerEventType PlayerEvent::GetType() { return type_; };
 
 unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
-void Player::StartStreaming(const char *name, int startSample) {
+void PlayerBase::StartStreaming(const char *name, int startSample) {
   mixer_.StartStreaming(name, startSample);
 }
 
-void Player::StartLoopingStreaming(const char *name) {
+void PlayerBase::StartLoopingStreaming(const char *name) {
   mixer_.StartLoopingStreaming(name);
 }
 
-void Player::StopStreaming() { mixer_.StopStreaming(); }
+void PlayerBase::StopStreaming() { mixer_.StopStreaming(); }
 
-void Player::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
-                                  bool stereo) {
+void PlayerBase::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
+                                      bool stereo) {
   mixer_.StartRecordStreaming(srcBuffer, size, stereo);
 }
 
-void Player::StopRecordStreaming() { mixer_.StopRecordStreaming(); }
+void PlayerBase::StopRecordStreaming() { mixer_.StopRecordStreaming(); }
 
-bool Player::IsPlaying() { return mixer_.IsPlaying(); }
+bool PlayerBase::IsPlaying() { return mixer_.IsPlaying(); }
 
-std::string Player::GetAudioAPI() {
+std::string PlayerBase::GetAudioAPI() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioAPI() : "";
 };
 
-std::string Player::GetAudioDevice() {
+std::string PlayerBase::GetAudioDevice() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioDevice() : "";
 };
 
-int Player::GetAudioBufferSize() {
+int PlayerBase::GetAudioBufferSize() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioBufferSize() : 0;
 };
 
-int Player::GetAudioRequestedBufferSize() {
+int PlayerBase::GetAudioRequestedBufferSize() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioRequestedBufferSize() : 0;
 };
 
-int Player::GetAudioPreBufferCount() {
+int PlayerBase::GetAudioPreBufferCount() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioPreBufferCount() : 0;
 };
 
-etl::array<stereosample, SONG_CHANNEL_COUNT> *Player::GetMixerLevels() {
+etl::array<stereosample, SONG_CHANNEL_COUNT> *PlayerBase::GetMixerLevels() {
   return mixer_.GetMixerLevels();
 }
 
 // Direct note playback methods for MIDI
 
-void Player::PlayNote(unsigned short instrumentIndex, unsigned short channel,
-                      unsigned char note, unsigned char velocity) {
+void PlayerBase::PlayNote(unsigned short instrumentIndex,
+                          unsigned short channel, unsigned char note,
+                          unsigned char velocity) {
   if (!project_)
     return;
 
@@ -1245,7 +1242,8 @@ void Player::PlayNote(unsigned short instrumentIndex, unsigned short channel,
   }
 }
 
-void Player::StopNote(unsigned short instrumentIndex, unsigned short channel) {
+void PlayerBase::StopNote(unsigned short instrumentIndex,
+                          unsigned short channel) {
   // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
   int playerChannel = channel % SONG_CHANNEL_COUNT;
   mixer_.StopInstrument(playerChannel);

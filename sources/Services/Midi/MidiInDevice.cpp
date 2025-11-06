@@ -70,10 +70,9 @@ void MidiInDevice::onMidiStart() {
   NotifyObservers();
 
   // Get the Player instance and start playback similar to SongView's onStart
-  Player *player = Player::GetInstance();
-  if (player) {
+  if (Player::is_valid()) {
     // Start playback on all channels (0-7) like the play button does
-    player->OnSongStartButton(0, 7, false, false);
+    Player::instance().OnSongStartButton(0, 7, false, false);
   }
 };
 
@@ -83,13 +82,13 @@ void MidiInDevice::onMidiStop() {
   NotifyObservers();
 
   // Get the Player instance and stop playback
-  Player *player = Player::GetInstance();
-  if (player) {
+  if (Player::is_valid()) {
+    auto &player = Player::instance();
     // Only stop if the player is currently running
-    if (player->IsRunning()) {
+    if (player.IsRunning()) {
       // Use the direct Stop() method instead of OnSongStartButton
       // to avoid toggling behavior
-      player->Stop();
+      player.Stop();
     }
   }
 };
@@ -100,12 +99,12 @@ void MidiInDevice::onMidiContinue() {
   NotifyObservers();
 
   // Get the Player instance and start playback
-  Player *player = Player::GetInstance();
-  if (player) {
+  if (Player::is_valid()) {
+    auto &player = Player::instance();
     // Only start if the player is not already running
-    if (!player->IsRunning()) {
+    if (!player.IsRunning()) {
       // Start playback on all channels (0-7) like the play button does
-      player->OnSongStartButton(0, 7, false, false);
+      player.OnSongStartButton(0, 7, false, false);
     }
   }
 };
@@ -178,8 +177,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     // Map MIDI channel directly to instrument index
     short instrumentIndex = midiChannel;
 
-    Player *player = Player::GetInstance();
-    if (player) {
+    if (Player::is_valid()) {
       // Check if this specific note is active on this MIDI channel
       if (noteTracker_.isNoteActiveOnChannel(note, midiChannel)) {
         // Get the audio channel this note is playing on
@@ -187,7 +185,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
         if (audioChannel >= 0) {
           Trace::Debug("Stopping note %d on MIDI channel %d, audio channel %d",
                        note, midiChannel, audioChannel);
-          player->StopNote(instrumentIndex, audioChannel);
+          Player::instance().StopNote(instrumentIndex, audioChannel);
         }
       } else {
         Trace::Debug("Note %d not active on MIDI channel %d, not stopping",
@@ -203,8 +201,8 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
     // Map MIDI channel directly to instrument index
     short instrumentIndex = midiChannel;
 
-    Player *player = Player::GetInstance();
-    if (player) {
+    if (Player::is_valid()) {
+      auto &player = Player::instance();
       // If velocity is 0, it's actually a note off in MIDI
       if (value == 0) {
         // Handle as note off - only stop if this note is active on this channel
@@ -214,7 +212,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
             Trace::Debug("Note off (vel=0): Stopping note %d on MIDI channel "
                          "%d, audio channel %d",
                          note, midiChannel, audioChannel);
-            player->StopNote(instrumentIndex, audioChannel);
+            player.StopNote(instrumentIndex, audioChannel);
           }
         } else {
           Trace::Debug("Note off (vel=0): Note %d not active on MIDI channel "
@@ -232,7 +230,7 @@ void MidiInDevice::treatChannelEvent(MidiMessage &event) {
             Trace::Debug("Playing note %d on MIDI channel %d (instrument %d), "
                          "audio channel %d",
                          note, midiChannel, instrumentIndex, audioChannel);
-            player->PlayNote(instrumentIndex, audioChannel, note, value);
+            player.PlayNote(instrumentIndex, audioChannel, note, value);
           } else {
             Trace::Debug("Failed to register note %d", note);
           }

@@ -19,7 +19,6 @@ RenderProgressModal::RenderProgressModal(View &view, const char *title,
                                          const char *message)
     : ModalView(view), title_(title), message_(message), totalSamples_(0.0f) {
 
-  Player *player = Player::GetInstance();
   tempo_ = SyncMaster::instance().GetTempo();
 }
 
@@ -59,16 +58,16 @@ void RenderProgressModal::DrawView() {
 void RenderProgressModal::OnPlayerUpdate(PlayerEventType eventType,
                                          unsigned int currentTick) {
   // This runs on core1 (audio thread)
-  Player *player = Player::GetInstance();
+  auto &player = Player::instance();
 
   // Check if player has stopped and we haven't marked as complete yet
-  if (!player->IsRunning() && !renderComplete_) {
+  if (!player.IsRunning() && !renderComplete_) {
     renderComplete_ = true;
     message_ = "Render Complete!"; // Update the message
     isDirty_ = true;               // Mark view as dirty to trigger redraw
   }
   // Only update progress if we're still rendering
-  else if (player->IsRunning()) {
+  else if (player.IsRunning()) {
     // Calculate samples for this buffer based on the tempo
     float samplesThisBuffer = calculateSamplesPerBuffer(tempo_);
     // Add to our total sample count and mark as dirty for redraw
@@ -82,9 +81,8 @@ void RenderProgressModal::OnFocus() {}
 void RenderProgressModal::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_ENTER && pressed) {
     // If player is still running, stop it first
-    Player *player = Player::GetInstance();
-    if (player && player->IsRunning()) {
-      player->Stop();
+    if (Player::instance().IsRunning()) {
+      Player::instance().Stop();
     }
     // Always allow closing the modal, whether rendering is complete or not
     EndModal(MBL_OK);

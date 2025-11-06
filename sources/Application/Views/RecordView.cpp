@@ -173,16 +173,14 @@ void RecordView::AnimationUpdate() {
     DrawView();
   }
 
-  // Get player instance safely
-  Player *player = Player::GetInstance();
   // Only process updates if we're fully initialized
-  if (!player) {
+  if (!Player::is_valid()) {
     return;
   }
   GUITextProperties props;
 
   // Always update VU meter even if other parts of UI dont need updating
-  drawMasterVuMeter(player, props);
+  drawMasterVuMeter(props);
 }
 
 void RecordView::record() {

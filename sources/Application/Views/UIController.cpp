@@ -32,36 +32,34 @@ void UIController::Reset() {
 
 void UIController::UnMuteAll() {
 
-  Player *player = Player::GetInstance();
+  auto &player = Player::instance();
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    player->SetChannelMute(i, false);
+    player.SetChannelMute(i, false);
   };
 };
 
 void UIController::ToggleMute(int from, int to) {
 
-  Player *player = Player::GetInstance();
+  auto &player = Player::instance();
   for (int i = from; i < to + 1; i++) {
-    bool muted = player->IsChannelMuted(i);
-    player->SetChannelMute(i, !muted);
+    bool muted = player.IsChannelMuted(i);
+    player.SetChannelMute(i, !muted);
   };
 };
 
 void UIController::SwitchSoloMode(int from, int to, bool soloing) {
 
-  Player *player = Player::GetInstance();
+  auto &player = Player::instance();
 
   // If not in solo mode, we solo current channel or selection
-
   if (soloing) {
-
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      soloMask_[i] = player->IsChannelMuted(i);
-      player->SetChannelMute(i, (i < from) || (i > to));
+      soloMask_[i] = player.IsChannelMuted(i);
+      player.SetChannelMute(i, (i < from) || (i > to));
     };
   } else {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      player->SetChannelMute(i, soloMask_[i]);
+      player.SetChannelMute(i, soloMask_[i]);
     };
   }
 };

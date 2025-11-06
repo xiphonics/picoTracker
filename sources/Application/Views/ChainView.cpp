@@ -442,8 +442,6 @@ void ChainView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
 void ChainView::processNormalButtonMask(unsigned short mask) {
 
-  Player *player = Player::GetInstance();
-
   if (mask & EPBM_EDIT) {
     // EDIT Modifier
     if (mask & EPBM_LEFT)
@@ -463,7 +461,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
       toggleMute();
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_CHAIN);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -514,8 +512,8 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
     // or if the player ain't playing yet
 
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_CHAIN, viewData_->songX_, true,
+                                       viewData_->chainRow_);
     }
     if (mask & EPBM_ALT)
       unMuteAll();
@@ -530,8 +528,8 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_RIGHT)
       updateCursor(1, 0);
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_CHAIN, viewData_->songX_, false,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_CHAIN, viewData_->songX_, false,
+                                       viewData_->chainRow_);
     }
   }
 
@@ -545,10 +543,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
 
 void ChainView::processSelectionButtonMask(unsigned short mask) {
 
-  Player *player = Player::GetInstance();
-
   // B Modifier
-
   if (mask & EPBM_EDIT) {
     if (mask == EPBM_EDIT)
       copySelection();
@@ -601,8 +596,8 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
         }
 
         if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
-                                viewData_->chainRow_);
+          Player::instance().OnStartButton(PM_CHAIN, viewData_->songX_, true,
+                                           viewData_->chainRow_);
         }
 
         if (mask & EPBM_ALT)
@@ -622,8 +617,8 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
           updateCursor(1, 0);
 
         if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_CHAIN, viewData_->songX_, false,
-                                viewData_->chainRow_);
+          Player::instance().OnStartButton(PM_CHAIN, viewData_->songX_, false,
+                                           viewData_->chainRow_);
         }
       }
     }
@@ -729,12 +724,10 @@ void ChainView::DrawView() {
     setTextProps(props, 1, j, true);
     pos._y++;
   }
-  Player *player = Player::GetInstance();
-
   drawMap();
   drawNotes();
 
-  if (player->IsRunning()) {
+  if (Player::instance().IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 };
@@ -755,17 +748,17 @@ void ChainView::AnimationUpdate() {
   GUITextProperties props;
 
   // Get player instance safely
-  Player *player = Player::GetInstance();
+  auto &player = Player::instance();
 
   // Only process updates if we're fully initialized
-  if (!viewData_ || !player) {
+  if (!viewData_ || !Player::is_valid()) {
     // Just flush the battery gauge and return
     w_.Flush();
     return;
   }
 
   // Always update VU meter even if other parts of UI dont need updating
-  drawMasterVuMeter(player, props);
+  drawMasterVuMeter(props);
 
   // Handle any pending updates from OnPlayerUpdate
   // This ensures all UI drawing happens on the "main" thread (core0)
@@ -788,14 +781,14 @@ void ChainView::AnimationUpdate() {
     DrawString(pos._x, pos._y, " ", props);
 
     // Only update play position if player is running
-    if (player->IsRunning()) {
+    if (player.IsRunning()) {
       // Loop on all channels to see if one of them is playing current chain
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        if (player->IsChannelPlaying(i)) {
+        if (player.IsChannelPlaying(i)) {
           if (viewData_->currentPlayChain_[i] == viewData_->currentChain_ &&
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + viewData_->chainPlayPos_[i];
-            if (!player->IsChannelMuted(i)) {
+            if (!player.IsChannelMuted(i)) {
               SetColor(CD_ACCENT);
               DrawString(pos._x, pos._y, ">", props);
             } else {
@@ -810,18 +803,18 @@ void ChainView::AnimationUpdate() {
     }
 
     // Handle queue position updates if in live mode
-    if (player->GetSequencerMode() == SM_LIVE) {
+    if (player.GetSequencerMode() == SM_LIVE) {
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
         // is anything queued?
-        if (player->GetQueueingMode(i) != QM_NONE) {
+        if (player.GetQueueingMode(i) != QM_NONE) {
           // find the chain queued in channel
-          unsigned char songPos = player->GetQueuePosition(i);
+          unsigned char songPos = player.GetQueuePosition(i);
           unsigned char *chain =
               viewData_->song_->data_ + i + SONG_CHANNEL_COUNT * songPos;
           if (*chain == viewData_->currentChain_) {
-            unsigned char chainPos = player->GetQueueChainPosition(i);
+            unsigned char chainPos = player.GetQueueChainPosition(i);
             pos._y = anchor._y + chainPos;
-            const char *indicator = player->GetLiveIndicator(i);
+            const char *indicator = player.GetLiveIndicator(i);
             DrawString(pos._x, pos._y, indicator, props);
             lastQueuedPos_ = chainPos;
             break;

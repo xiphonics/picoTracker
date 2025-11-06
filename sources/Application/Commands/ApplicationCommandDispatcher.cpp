@@ -42,9 +42,9 @@ void ApplicationCommandDispatcher::OnTempoTap() {
 void ApplicationCommandDispatcher::OnQueueRow() {
   if (!project_)
     return;
-  Player *player = Player::GetInstance();
-  player->SetSequencerMode(SM_LIVE);
-  player->OnSongStartButton(0, 7, false, false);
+  auto &player = Player::instance();
+  player.SetSequencerMode(SM_LIVE);
+  player.OnSongStartButton(0, 7, false, false);
 };
 
 #define TEMPO_NUDGE 3

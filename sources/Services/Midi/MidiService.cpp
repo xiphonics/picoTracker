@@ -135,13 +135,13 @@ void MidiService::Flush() { flushOutQueue(); };
 void MidiService::OnMidiStart() {
   // Start the Player in song mode
   Trace::Log("MIDI", "Received MIDI Start message");
-  Player::GetInstance()->Start(PM_SONG, true, MSM_AUDIO, false);
+  Player::instance().Start(PM_SONG, true, MSM_AUDIO, false);
 }
 
 void MidiService::OnMidiStop() {
   // Stop the Player
   Trace::Log("MIDI", "Received MIDI Stop message");
-  Player::GetInstance()->Stop();
+  Player::instance().Stop();
 }
 
 void MidiService::OnMidiClock() {

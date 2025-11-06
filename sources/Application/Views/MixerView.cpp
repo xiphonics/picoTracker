@@ -208,7 +208,7 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
     }
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_MIXER);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -274,8 +274,8 @@ void MixerView::processSelectionButtonMask(unsigned int mask) {
 
 void MixerView::initChannelVolumeFields() {
   // Get the project from the Player
-  Player *player = Player::GetInstance();
-  Project *project = player ? player->GetProject() : nullptr;
+  Project *project =
+      Player::is_valid() ? Player::instance().GetProject() : nullptr;
 
   if (!project)
     return;
@@ -339,12 +339,12 @@ void MixerView::DrawView() {
   // Draw title
   SetColor(CD_NORMAL);
 
-  Player *player = Player::GetInstance();
-  Project *project = player->GetProject(); // Use Player's GetProject method
+  Project *project =
+      Player::instance().GetProject(); // Use Player's GetProject method
 
   props.invert_ = true;
   const char *buffer =
-      ((player->GetSequencerMode() == SM_SONG) ? "Song" : "Live");
+      ((Player::instance().GetSequencerMode() == SM_SONG) ? "Song" : "Live");
   DrawString(pos._x, pos._y, buffer, props);
   props.invert_ = false;
 
@@ -376,7 +376,7 @@ void MixerView::DrawView() {
     }
 
     char state[2];
-    state[0] = player->IsChannelMuted(i) ? 'M' : '-';
+    state[0] = Player::instance().IsChannelMuted(i) ? 'M' : '-';
     state[1] = '\0';
 
     DrawString(pos._x, pos._y, state, props);
@@ -390,7 +390,7 @@ void MixerView::DrawView() {
 
   drawMap();
   drawNotes();
-  drawMasterVuMeter(player, props);
+  drawMasterVuMeter(props);
 
   // Draw master volume label
   GUIPoint labelPos = GetAnchor();
@@ -401,7 +401,7 @@ void MixerView::DrawView() {
   DrawString(labelPos._x, labelPos._y, "MB", props);
   SetColor(CD_NORMAL);
 
-  if (player->IsRunning()) {
+  if (Player::instance().IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 };
@@ -412,7 +412,6 @@ void MixerView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
 
   // Instead of drawing directly, we'll just update our state and let
   // AnimationUpdate handle the actual drawing
-  Player *player = Player::GetInstance();
 
   if (eventType != PET_STOP) {
     // Flag that play time needs to be updated
@@ -427,11 +426,8 @@ void MixerView::AnimationUpdate() {
   ScreenView::AnimationUpdate();
   GUITextProperties props;
 
-  // Get the player safely
-  Player *player = Player::GetInstance();
-
   // Only process updates below if we're fully initialized
-  if (!viewData_ || !player) {
+  if (!viewData_ || !Player::is_valid()) {
     // Just flush the battery gauge and return
     w_.Flush();
     return;
@@ -440,10 +436,10 @@ void MixerView::AnimationUpdate() {
   // Always update VU meters, whether the sequencer is running or not
   // This ensures we see VU meter updates from MIDI input even when not playing
   etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
-      player->GetMixerLevels();
+      Player::instance().GetMixerLevels();
   if (levels) {
-    drawChannelVUMeters(levels, player, props);
-    drawMasterVuMeter(player, props);
+    drawChannelVUMeters(levels, props);
+    drawMasterVuMeter(props);
   }
 
   // Handle any pending updates from OnPlayerUpdate
@@ -453,7 +449,7 @@ void MixerView::AnimationUpdate() {
     // explicitly position timer directly below the battery gauge
     pos._x = 27;
     pos._y = 1;
-    drawPlayTime(player, pos, props);
+    drawPlayTime(pos, props);
     needsPlayTimeUpdate_ = false;
   }
 
@@ -467,7 +463,7 @@ void MixerView::AnimationUpdate() {
 };
 
 void MixerView::drawChannelVUMeters(
-    etl::array<stereosample, SONG_CHANNEL_COUNT> *levels, Player *player,
+    etl::array<stereosample, SONG_CHANNEL_COUNT> *levels,
     GUITextProperties props, bool forceRedraw) {
 
   // Quick optimization: If not forcing redraw, check if any levels have changed
@@ -506,7 +502,7 @@ void MixerView::drawChannelVUMeters(
     int leftBars = 0;
     int rightBars = 0;
     // if channel is muted just use default 0 values for bars
-    if (!player->IsChannelMuted(i)) {
+    if (!Player::instance().IsChannelMuted(i)) {
       // Convert to dB
       int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
       int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
@@ -523,7 +519,6 @@ void MixerView::drawChannelVUMeters(
 }
 
 void MixerView::togglePlay() {
-  Player *player = Player::GetInstance();
-  player->OnStartButton(PM_CHAIN, viewData_->songX_, true,
-                        viewData_->chainRow_);
+  Player::instance().OnStartButton(PM_CHAIN, viewData_->songX_, true,
+                                   viewData_->chainRow_);
 };

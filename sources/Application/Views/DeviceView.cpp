@@ -98,7 +98,7 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_DEVICE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -114,8 +114,8 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
       NotifyObservers(&ve);
     }
   } else if (mask & EPBM_PLAY) {
-    Player *player = Player::GetInstance();
-    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
+    Player::instance().OnStartButton(PM_SONG, viewData_->songX_, false,
+                                     viewData_->songX_);
   };
 };
 
@@ -186,11 +186,9 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     }
   }
 
-  Player *player = Player::GetInstance();
-
   switch (fourcc) {
   case FourCC::ActionBootSelect: {
-    if (!player->IsRunning()) {
+    if (!Player::instance().IsRunning()) {
       MessageBox *mb =
           new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
       DoModal(mb, BootselCallback);

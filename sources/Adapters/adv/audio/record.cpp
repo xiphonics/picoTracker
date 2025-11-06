@@ -174,6 +174,9 @@ void Record(void *) {
   UINT bw;
   uint32_t lastLoggedTime = xTaskGetTickCount();
   for (;;) {
+    if (!Player::is_valid()) {
+      continue;
+    }
     if (xTaskGetTickCount() - start > recordDuration_) {
       StopRecording();
     }
@@ -198,7 +201,7 @@ void Record(void *) {
         RecordFile = nullptr;
       }
 
-      Player::GetInstance()->StopRecordStreaming();
+      Player::instance().StopRecordStreaming();
 
       if (g_recordingFinishedSemaphore != NULL) {
         xSemaphoreGive(g_recordingFinishedSemaphore);
@@ -259,8 +262,8 @@ void Record(void *) {
     // start playing
     if (first_pass) {
       first_pass = false;
-      Player::GetInstance()->StartRecordStreaming(recordBuffer,
-                                                  RECORD_BUFFER_SIZE, true);
+      Player::instance().StartRecordStreaming(recordBuffer, RECORD_BUFFER_SIZE,
+                                              true);
     }
   }
 }

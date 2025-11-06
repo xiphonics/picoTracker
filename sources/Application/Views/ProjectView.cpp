@@ -95,9 +95,9 @@ static void PurgeInstrumentsCallback(View &v, ModalView &dialog) {
 static void RenderStopCallback(View &v, ModalView &dialog) {
   // If the user clicked OK, stop the rendering
   if (dialog.GetReturnCode() == MBL_OK) {
-    Player *player = Player::GetInstance();
-    if (player->IsRunning()) {
-      player->Stop();
+    auto &player = Player::instance();
+    if (player.IsRunning()) {
+      player.Stop();
 
       // Show cancellation message
       MessageBox *cancelDialog =
@@ -235,7 +235,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_PROJECT);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -266,8 +266,8 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       NotifyObservers(&ve);
     }
   } else if (mask & EPBM_PLAY) {
-    Player *player = Player::GetInstance();
-    player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
+    Player::instance().OnStartButton(PM_SONG, viewData_->songX_, false,
+                                     viewData_->songX_);
   }
 };
 
@@ -309,8 +309,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   } else {
     focus = &tempoField_[0];
   }
-  Player *player = Player::GetInstance();
-
   switch (fourcc) {
   case FourCC::ActionPurge: {
     MessageBox *mb =
@@ -375,7 +373,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     saveAsFlag_ = true;
     break;
   case FourCC::ActionLoad: {
-    if (!player->IsRunning()) {
+    if (!Player::instance().IsRunning()) {
       MessageBox *mb = new MessageBox(*this, "Load song and lose changes?",
                                       MBBF_YES | MBBF_NO);
       DoModal(mb, LoadCallback);
@@ -392,7 +390,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   }
   case FourCC::ActionBootSelect: {
-    if (!player->IsRunning()) {
+    if (!Player::instance().IsRunning()) {
       MessageBox *mb =
           new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
       DoModal(mb, BootselCallback);
@@ -406,9 +404,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   case FourCC::ActionTempoChanged:
     break;
   case FourCC::ActionRenderMixdown:
-    if (!player->IsRunning()) {
+    if (!Player::instance().IsRunning()) {
       // Start playback in rendering mode with MSM_FILE
-      player->Start(PM_SONG, true, MSM_FILE, true);
+      Player::instance().Start(PM_SONG, true, MSM_FILE, true);
 
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
@@ -417,9 +415,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     }
     break;
   case FourCC::ActionRenderStems:
-    if (!player->IsRunning()) {
+    if (!Player::instance().IsRunning()) {
       // Start playback in rendering mode with MSM_FILESPLIT
-      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
+      Player::instance().Start(PM_SONG, true, MSM_FILESPLIT, true);
 
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
@@ -429,7 +427,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionImport:
     // Switch to the ImportView **BUT** to show the Project Pool by default
-    if (!player->IsRunning()) {
+    if (!Player::instance().IsRunning()) {
       // First check if the samplelib exists
       bool samplelibExists = FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 

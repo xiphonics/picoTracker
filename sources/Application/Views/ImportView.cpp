@@ -46,8 +46,8 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (playKeyHeld_ && !(mask & EPBM_PLAY)) {
       // Play key no longer pressed so should stop playback
       playKeyHeld_ = false;
-      if (Player::GetInstance()->IsPlaying()) {
-        Player::GetInstance()->StopStreaming();
+      if (Player::instance().IsPlaying()) {
+        Player::instance().StopStreaming();
         previewPlayingIndex_ = (size_t)-1;
       }
       return;
@@ -384,8 +384,8 @@ void ImportView::preview(char *name) {
   bool isSingleCycle = IS_SINGLE_CYCLE(fileSize);
 
   // If something is already playing, stop it first
-  if (Player::GetInstance()->IsPlaying()) {
-    Player::GetInstance()->StopStreaming();
+  if (Player::instance().IsPlaying()) {
+    Player::instance().StopStreaming();
   }
 
   auto wav = WavFile::Open(name);
@@ -427,15 +427,15 @@ void ImportView::preview(char *name) {
   if (isSingleCycle) {
     Trace::Debug("Looping single cycle waveform: %s (size: %d bytes)", name,
                  fileSize);
-    Player::GetInstance()->StartLoopingStreaming(name);
+    Player::instance().StartLoopingStreaming(name);
   } else {
-    Player::GetInstance()->StartStreaming(name);
+    Player::instance().StartStreaming(name);
   }
 }
 
 void ImportView::import() {
   // stop playing before trying to import
-  if (Player::GetInstance()->IsPlaying()) {
+  if (Player::instance().IsPlaying()) {
     MessageBox *mb =
         new MessageBox(*this, "Can't import while previewing", MBBF_OK);
     DoModal(mb);

@@ -663,24 +663,23 @@ void PhraseView::pasteClipboard() {
 };
 
 inline void PhraseView::startAudition(bool startIfNotRunning) {
-  Player *player = Player::GetInstance();
-  if (player->IsRunning()) {
+  auto &player = Player::instance();
+  if (player.IsRunning()) {
     // now also update if in auditioning mode
     if (viewData_->playMode_ == PM_AUDITION) {
-      player->Stop();
-      player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                            viewData_->chainRow_);
+      player.Stop();
+      player.OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                           viewData_->chainRow_);
     }
   } else if (startIfNotRunning) {
-    player->OnStartButton(PM_AUDITION, viewData_->songX_, false,
-                          viewData_->chainRow_);
+    player.OnStartButton(PM_AUDITION, viewData_->songX_, false,
+                         viewData_->chainRow_);
   }
 }
 
 inline void PhraseView::stopAudition() {
-  Player *player = Player::GetInstance();
   if (viewData_->playMode_ == PM_AUDITION) {
-    player->Stop();
+    Player::instance().Stop();
   }
 }
 
@@ -857,7 +856,6 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 }
 
 void PhraseView::processNormalButtonMask(unsigned short mask) {
-  Player *player = Player::GetInstance();
 
   if (mask & EPBM_EDIT) {
     // EDIT Modifier
@@ -879,7 +877,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       toggleMute();
     if (mask & EPBM_PLAY) {
       // recording screen
-      if (!Player::GetInstance()->IsRunning()) {
+      if (!Player::instance().IsRunning()) {
         SampleEditorView::SetSourceViewType(VT_PHRASE);
         ViewType vt = VT_RECORD;
         ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -967,8 +965,8 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     }
 
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                                       viewData_->chainRow_);
     }
     if (mask & EPBM_ALT)
       unMuteAll();
@@ -987,18 +985,15 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_RIGHT)
       updateCursor(1, 0);
     if (mask & EPBM_PLAY) {
-      player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                            viewData_->chainRow_);
+      Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, false,
+                                       viewData_->chainRow_);
     }
   }
 }
 
 void PhraseView::processSelectionButtonMask(unsigned short mask) {
 
-  Player *player = Player::GetInstance();
-
   // B modifier
-
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_ALT) {
       extendSelection();
@@ -1049,8 +1044,8 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
           NotifyObservers(&ve);
         }
         if (mask & EPBM_PLAY) {
-          player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
-                                viewData_->chainRow_);
+          Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_, true,
+                                           viewData_->chainRow_);
         }
         if (mask & EPBM_ALT)
           unMuteAll();
@@ -1071,8 +1066,8 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
           if (mask & EPBM_RIGHT)
             updateCursor(1, 0);
           if (mask & EPBM_PLAY) {
-            player->OnStartButton(PM_PHRASE, viewData_->songX_, false,
-                                  viewData_->chainRow_);
+            Player::instance().OnStartButton(PM_PHRASE, viewData_->songX_,
+                                             false, viewData_->chainRow_);
           }
         }
       }
@@ -1280,8 +1275,7 @@ void PhraseView::DrawView() {
   drawMap();
   drawNotes();
 
-  Player *player = Player::GetInstance();
-  if (player->IsRunning()) {
+  if (Player::instance().IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 
@@ -1301,8 +1295,7 @@ void PhraseView::OnPlayerUpdate(PlayerEventType eventType, unsigned int tick) {
   needsUIUpdate_ = true;
 
   // Update the play position for use in AnimationUpdate
-  Player *player = Player::GetInstance();
-  if (player && player->GetSequencerMode() == SM_LIVE) {
+  if (Player::is_valid() && Player::instance().GetSequencerMode() == SM_LIVE) {
     needsLiveIndicatorUpdate_ = true;
   }
 };
@@ -1311,17 +1304,16 @@ void PhraseView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge
   ScreenView::AnimationUpdate();
 
-  // Get player instance safely
-  Player *player = Player::GetInstance();
-
   // Only process updates if we're fully initialized
-  if (!viewData_ || !player) {
+  if (!viewData_ || !Player::is_valid()) {
     return;
   }
 
+  auto &player = Player::instance();
+
   GUITextProperties props;
   // Always update VU meter even if other parts of UI dont need updating
-  drawMasterVuMeter(player, props, false, 25);
+  drawMasterVuMeter(props, false, 25);
 
   // Handle any pending updates from OnPlayerUpdate using the consolidated flag
   // This ensures all UI drawing happens on the "main" thread (core0)
@@ -1341,14 +1333,14 @@ void PhraseView::AnimationUpdate() {
     DrawString(pos._x, pos._y, " ", props);
 
     // Only update play position if player is running
-    if (player->IsRunning()) {
+    if (player.IsRunning()) {
       // Loop on all channels to see if one of them is playing current phrase
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        if (player->IsChannelPlaying(i)) {
+        if (player.IsChannelPlaying(i)) {
           if (viewData_->currentPlayPhrase_[i] == viewData_->currentPhrase_ &&
               viewData_->playMode_ != PM_AUDITION) {
             pos._y = anchor._y + viewData_->phrasePlayPos_[i];
-            if (!player->IsChannelMuted(i)) {
+            if (!player.IsChannelMuted(i)) {
               SetColor(CD_ACCENT);
               DrawString(pos._x, pos._y, ">", props);
             } else {
@@ -1364,19 +1356,19 @@ void PhraseView::AnimationUpdate() {
     }
 
     // Draw live indicators if in live mode
-    if (player->GetSequencerMode() == SM_LIVE) {
+    if (player.GetSequencerMode() == SM_LIVE) {
       pos = anchor;
       pos._x -= 1;
       SetColor(CD_ACCENT);
 
       for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-        if (player->GetQueueingMode(i) != QM_NONE) {
+        if (player.GetQueueingMode(i) != QM_NONE) {
           // find the chain queued in channel
-          unsigned char songPos = player->GetQueuePosition(i);
+          unsigned char songPos = player.GetQueuePosition(i);
           unsigned char *chain =
               viewData_->song_->data_ + i + SONG_CHANNEL_COUNT * songPos;
           if (*chain == viewData_->currentChain_) {
-            const char *indicator = player->GetLiveIndicator(i);
+            const char *indicator = player.GetLiveIndicator(i);
             DrawString(pos._x, pos._y, indicator, props);
             break;
           }
