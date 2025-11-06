@@ -14,6 +14,18 @@
 #include "Chain.h"
 #include "Phrase.h"
 
+#ifdef ADV
+#define SONG_CHANNEL_COUNT 8
+#define SONG_ROW_COUNT 256
+
+#define MAX_SAMPLEINSTRUMENT_COUNT 0x40
+#define MAX_SIDINSTRUMENT_COUNT 0x00
+#define MAX_MIDIINSTRUMENT_COUNT 0x40
+#define MAX_OPALINSTRUMENT_COUNT 0x00
+#define MAX_MACROINSTRUMENT_COUNT 0x00
+
+#define MAX_INSTRUMENT_COUNT 0x40
+#else
 #define SONG_CHANNEL_COUNT 8
 #define SONG_ROW_COUNT 128
 
@@ -27,6 +39,7 @@
   (MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT +                     \
    MAX_SIDINSTRUMENT_COUNT + MAX_OPALINSTRUMENT_COUNT +                        \
    MAX_MACROINSTRUMENT_COUNT)
+#endif
 
 class Song : Persistent {
 public:
