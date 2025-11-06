@@ -279,7 +279,8 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
   const uint32_t totalFrames =
       bytesPerFrame ? (dataChunkSize / bytesPerFrame) : 0;
   result.totalFrames = totalFrames;
-  result.targetPeak = (bitsPerSample == 8) ? 127 : 32767;
+  const uint32_t fullScalePeak = (bitsPerSample == 8) ? 127U : 32767U;
+  result.targetPeak = static_cast<int32_t>(fullScalePeak);
 
   if (totalFrames == 0) {
     Trace::Error("WavFileWriter: Sample has no audio frames in %s", path);
@@ -343,23 +344,21 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     return true;
   }
 
-  // `targetPeak` is the desired maximum amplitude after normalization.
-  uint32_t targetPeak = static_cast<uint32_t>(result.targetPeak);
-  if (static_cast<uint32_t>(peak) >= targetPeak) {
+  if (static_cast<uint32_t>(peak) >= fullScalePeak) {
     Trace::Log(
         "WavFileWriter",
-        "Normalize skipped for %s because peak already at or above target",
+        "Normalize skipped for %s because peak already at or above full scale",
         path);
     file->Close();
     return true;
   }
   // `gainQ16` calculates the gain factor required to normalize the audio.
   // It's represented in Q16 fixed-point format (multiplied by 2^16) to maintain
-  // precision for fractional gain values. The `targetPeak` is cast to
+  // precision for fractional gain values. The fullscale peak is cast to
   // `uint64_t` before the left shift to prevent overflow during the
   // multiplication by 2^16.
-  uint32_t gainQ16 =
-      static_cast<uint32_t>((static_cast<uint64_t>(targetPeak) << 16) / peak);
+  uint32_t gainQ16 = static_cast<uint32_t>(
+      (static_cast<uint64_t>(fullScalePeak) << 16) / peak);
 
   bytesRemaining = dataChunkSize;
   readOffset = dataOffset;
