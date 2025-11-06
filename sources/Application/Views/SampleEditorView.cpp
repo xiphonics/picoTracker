@@ -655,9 +655,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   }
 
   if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
-    MessageBox *errorBox =
-        new MessageBox(*this, "Reload Failed", "Unable to refresh sample",
-                       MBBF_OK);
+    MessageBox *errorBox = new MessageBox(*this, "Reload Failed",
+                                          "Unable to refresh sample", MBBF_OK);
     DoModal(errorBox);
     return false;
   }
@@ -726,9 +725,8 @@ bool SampleEditorView::applyNormalizeOperation() {
   }
 
   if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
-    MessageBox *errorBox =
-        new MessageBox(*this, "Reload Failed", "Unable to refresh sample",
-                       MBBF_OK);
+    MessageBox *errorBox = new MessageBox(*this, "Reload Failed",
+                                          "Unable to refresh sample", MBBF_OK);
     DoModal(errorBox);
     return false;
   }
