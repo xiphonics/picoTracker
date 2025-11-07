@@ -29,15 +29,13 @@ MixerView::~MixerView() {}
 
 void MixerView::OnFocus() {
   // update selected field to match current cursor position
-  if (viewData_->songX_ <= SONG_CHANNEL_COUNT) {
-    if (viewData_->songX_ < SONG_CHANNEL_COUNT) {
-      // Channel 0-7
-      SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
-    } else {
-      // Master channel
-      SetFocus((UIField *)&masterVolumeField_.at(0));
-    }
+  if (viewData_->songX_ < 0) {
+    viewData_->songX_ = 0;
   }
+  if (viewData_->songX_ >= SONG_CHANNEL_COUNT) {
+    viewData_->songX_ = SONG_CHANNEL_COUNT - 1;
+  }
+  SetFocus((UIField *)&channelVolumeFields_.at(viewData_->songX_));
 };
 
 void MixerView::SetFocus(UIField *field) {
@@ -56,10 +54,6 @@ void MixerView::SetFocus(UIField *field) {
     }
   }
 
-  // Check if it's the master volume field
-  if (field == (UIField *)&masterVolumeField_.at(0)) {
-    viewData_->songX_ = SONG_CHANNEL_COUNT;
-  }
 }
 
 // keep track of currently selected channel
@@ -71,19 +65,13 @@ void MixerView::updateCursor(int dx, int dy) {
   if (x < 0) {
     x = 0;
   }
-  if (x > SONG_CHANNEL_COUNT) {
-    x = SONG_CHANNEL_COUNT;
+  if (x >= SONG_CHANNEL_COUNT) {
+    x = SONG_CHANNEL_COUNT - 1;
   }
   viewData_->songX_ = x;
 
   // Update field focus to match the selected channel
-  if (x < SONG_CHANNEL_COUNT) {
-    // Channel 0-7
-    SetFocus(&channelVolumeFields_[x]);
-  } else {
-    // Master channel
-    SetFocus(&masterVolumeField_[0]);
-  }
+  SetFocus(&channelVolumeFields_[x]);
 
   isDirty_ = true;
 }
@@ -312,17 +300,6 @@ void MixerView::initChannelVolumeFields() {
     }
   }
 
-  // Add master volume field to the right of channel volumes
-  GUIPoint masterPos = position;
-  // Position to the right of channel volumes
-  masterPos._x += (SONG_CHANNEL_COUNT * CHANNELS_X_OFFSET_);
-
-  Variable *v = project->FindVariable(FourCC::VarMasterVolume);
-  if (v) {
-    masterVolumeField_.emplace_back(masterPos, *v, "%2.2d", 0, 100, 1, 5);
-    fieldList_.insert(fieldList_.end(), &(*masterVolumeField_.begin()));
-  }
-
   // Set focus to the first field if we have any fields
   if (!fieldList_.empty()) {
     SetFocus(*fieldList_.begin());
@@ -391,15 +368,6 @@ void MixerView::DrawView() {
   drawMap();
   drawNotes();
   drawMasterVuMeter(player, props);
-
-  // Draw master volume label
-  GUIPoint labelPos = GetAnchor();
-  // Align with master volume control
-  labelPos._x += (SONG_CHANNEL_COUNT * CHANNELS_X_OFFSET_);
-  labelPos._y = SCREEN_HEIGHT - 3; // Position below the volume control
-  SetColor(CD_HILITE2);
-  DrawString(labelPos._x, labelPos._y, "MB", props);
-  SetColor(CD_NORMAL);
 
   if (player->IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);

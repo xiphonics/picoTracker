@@ -68,7 +68,7 @@ All audio is rendered at 44.1kHz sample rate with 16-bit depth.
 ## Tips for Rendering
 
 - Make sure your composition is complete and sounds as intended before rendering
-- Check that all channel volumes and the master volume are set appropriately
+- Check that all channel volumes are set appropriately
 - For the best quality output, avoid clipping by ensuring your levels aren't too high
 - If you need to stop a render in progress, press the "OK" button on the render progress dialog
 - Rendering will automatically stop when the song gets to the end and will *not* loop back to the beginning as it does in the song screen

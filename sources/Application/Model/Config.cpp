@@ -26,8 +26,10 @@
 #define CONFIG_VERSION_NUMBER 1
 
 #define MIDI_DEVICE_LEN 4
+#define LINEOUT_OPTION_COUNT 3
 
-static const char *lineOutOptions[3] = {"HP Low", "HP High", "Line Level"};
+static const char *lineOutOptions[LINEOUT_OPTION_COUNT] = {"HP Low", "HP High",
+                                                           "Line Level"};
 static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
                                                       "TRS+USB"};
 static const char *midiSendSync[2] = {"Off", "Send"};
@@ -44,7 +46,11 @@ typedef etl::string<13> ParamString;
 
 // Use default color values from ThemeConstants.h
 // Other default values not related to theme colors:
+#ifdef ADV
+constexpr int DEFAULT_MASTER_LEVEL = 60;
+#else
 constexpr int DEFAULT_LINEOUT = 0x2;
+#endif
 constexpr int DEFAULT_MIDIDEVICE = 0x0;
 constexpr int DEFAULT_MIDISYNC = 0x0;
 constexpr int DEFAULT_REMOTEUI = 0x1;
@@ -59,7 +65,7 @@ struct ConfigParam {
     const char *strValue;
   } defaultValue;
   FourCC::enum_type fourcc;
-  const char **options;
+  const char *const *options;
   int optionCount;
   bool isString;
 };
@@ -143,12 +149,21 @@ static const ConfigParam configParams[] = {
      false},
 
     // Device settings with options
+#ifdef ADV
+    {"MASTER",
+     {.intValue = DEFAULT_MASTER_LEVEL},
+     FourCC::VarMasterVolume,
+     nullptr,
+     0,
+     false},
+#else
     {"LINEOUT",
      {.intValue = DEFAULT_LINEOUT},
      FourCC::VarLineOut,
      lineOutOptions,
-     3,
+     LINEOUT_OPTION_COUNT,
      false},
+#endif
     {"MIDIDEVICE",
      {.intValue = DEFAULT_MIDIDEVICE},
      FourCC::VarMidiDevice,

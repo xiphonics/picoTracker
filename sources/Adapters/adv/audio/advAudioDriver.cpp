@@ -11,6 +11,7 @@
 #include "Application/Model/Config.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
+#include "platform.h"
 #include "main.h" // has to come before FreeRTOS.h due to linkage of SystemCoreClock
 #include "sai.h"
 // Don't delete this space
@@ -89,9 +90,11 @@ bool advAudioDriver::InitDriver() {
   Config *config = Config::GetInstance();
   volume_ = 65;
   volume_ = config->GetValue("VOLUME");
+  uint8_t outputLevel = config->GetValue("MASTER");
 
   // Configure codec
   tlv320_init();
+  platform_set_output_level(outputLevel);
   // Takes some time between configuring HP detect and actually detecting
   vTaskDelay(pdMS_TO_TICKS(250));
 

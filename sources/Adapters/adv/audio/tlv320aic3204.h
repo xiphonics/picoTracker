@@ -17,6 +17,8 @@
 #define REFERENCE_PWR_UP_SLOW BIT(2)
 #define COMMON_MODE_09V BIT(6)
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,6 +26,7 @@ extern "C" {
 void tlv320_init();
 
 void tlv320_select_output(void);
+void tlv320_set_output_gain_db(int8_t gain_db);
 void tlv320_unmute(void);
 void tlv320_mute(void);
 void tlv320_enable_linein(void);

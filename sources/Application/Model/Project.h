@@ -39,7 +39,6 @@ public:
 
   Song song_;
 
-  int GetMasterVolume();
   int GetChannelVolume(int channel);
   bool Wrap();
   void OnTempoTap();
@@ -74,7 +73,6 @@ private:
 
   // variables
   WatchedVariable tempo_;
-  Variable masterVolume_;
   // Individual channel volume variables instead of using an array
   // as initialization of such a large array causes in constructors causes stack
   // overflow issues

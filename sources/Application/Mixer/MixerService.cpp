@@ -134,13 +134,10 @@ fixed MixerService::ToLogVolume(int vol) {
   return fp_mul(normalizedVol, normalizedVol);
 }
 
-void MixerService::SetMasterVolume(int vol) {
-  // Apply logarithmic scaling for better volume control
-  // vol is 0-100, where 100 is unity gain (1.0)
-  fixed masterVolume = ToLogVolume(vol);
-
-  // Set the master bus volume
-  master_.SetVolume(masterVolume);
+void MixerService::UpdateMixVolumes() {
+  // Always run the master bus at unity gain now that channel trims exist
+  // and we set output level via device hardware
+  master_.SetVolume(FP_ONE);
 
   Player *player = Player::GetInstance();
   Project *project = player ? player->GetProject() : nullptr;
@@ -154,7 +151,7 @@ void MixerService::SetMasterVolume(int vol) {
       // Convert channel volume to non-linear scale (0.0-1.0)
       fixed channelVolume = ToLogVolume(channelVol);
 
-      // Set the channel volume directly (not multiplied by master volume)
+      // Set the channel volume directly
       bus_[i].SetVolume(channelVolume);
       // Trace::Debug("Set channel %d volume to %d", i, channelVol);
     }

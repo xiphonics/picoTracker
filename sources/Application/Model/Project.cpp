@@ -28,7 +28,6 @@
 Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
-      masterVolume_(FourCC::VarMasterVolume, DEFAULT_VOLUME),
       channelVolume1_(FourCC::VarChannel1Volume, DEFAULT_VOLUME),
       channelVolume2_(FourCC::VarChannel2Volume, DEFAULT_VOLUME),
       channelVolume3_(FourCC::VarChannel3Volume, DEFAULT_VOLUME),
@@ -44,8 +43,6 @@ Project::Project(const char *name)
       previewVolume_(FourCC::VarPreviewVolume, DEFAULT_VOLUME) {
 
   this->variables_.insert(variables_.end(), &tempo_);
-  this->variables_.insert(variables_.end(), &masterVolume_);
-
   // Add individual channel volume variables to the container
   this->variables_.insert(variables_.end(), &channelVolume1_);
   this->variables_.insert(variables_.end(), &channelVolume2_);
@@ -104,12 +101,6 @@ int Project::GetTempo() {
   int tempo = v->GetInt() + tempoNudge_;
   return tempo;
 };
-
-int Project::GetMasterVolume() {
-  Variable *v = FindVariable(FourCC::VarMasterVolume);
-  NAssert(v);
-  return v->GetInt();
-}
 
 int Project::GetChannelVolume(int channel) {
   // Return the appropriate channel volume variable

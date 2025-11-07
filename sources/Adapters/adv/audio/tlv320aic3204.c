@@ -10,6 +10,7 @@
 #include "i2c.h"
 #include "stm32h7xx_hal.h"
 #include "tim.h"
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "FreeRTOS.h"
@@ -34,6 +35,28 @@ enum TLVOutput { INIT, HP, SPKR } output = INIT;
 enum TLVInput { NONE, MIC, LINEIN } input = NONE;
 
 static volatile char overrideSpkr = 0;
+static bool codec_ready = false;
+// Remember the last requested output gain so we can reapply it whenever the
+// codec path toggles (HP/SPKR) or after initialization.
+static int8_t current_output_gain_db = 0;
+
+static int8_t clamp_output_gain(int8_t gain_db) {
+  if (gain_db > 29) {
+    return 29;
+  }
+  if (gain_db < -6) {
+    return -6;
+  }
+  return gain_db;
+}
+
+static uint8_t encode_output_gain_register(int8_t gain_db) {
+  int8_t clamped = clamp_output_gain(gain_db);
+  if (clamped >= 0) {
+    return (uint8_t)clamped;
+  }
+  return (uint8_t)((1 << 6) + clamped);
+}
 
 HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value) {
   // Write to the register
@@ -69,6 +92,22 @@ HAL_StatusTypeDef tlv320read(uint8_t page, uint8_t reg, uint8_t *value) {
   return status;
 }
 
+static void tlv320_apply_output_gain_locked(int8_t gain_db) {
+  if (!codec_ready) {
+    return;
+  }
+
+  uint8_t gainValue = encode_output_gain_register(gain_db);
+
+  // Select Page 1 and program all output drivers
+  tlv320write(0x00, 0x01);
+  tlv320write(0x10, gainValue);
+  tlv320write(0x11, gainValue);
+  tlv320write(0x12, gainValue);
+  tlv320write(0x13, gainValue);
+  tlv320write(0x00, 0x00);
+}
+
 void tlv320_reset() {
   // First reset by pulling reset down
   // Ensure reset is set first, then reset and then leave set
@@ -81,6 +120,7 @@ void tlv320_reset() {
 }
 
 void tlv320_init() {
+  codec_ready = false;
   // hardware reset device on start
   tlv320_reset();
   /*
@@ -166,6 +206,9 @@ DOSR 128
 
   // Set MicPGA startup delay to 3.1ms
   tlv320write(0x47, 0x32);
+
+  codec_ready = true;
+  tlv320_apply_output_gain_locked(current_output_gain_db);
 }
 
 void tlv320_enable_hp(void) {
@@ -180,10 +223,6 @@ void tlv320_enable_hp(void) {
   tlv320write(0x03, 0x00);
   tlv320write(0x04, 0x00);
 
-  // Set the HPL gain to 0d
-  tlv320write(0x10, 0x00);
-  // Set the HPR gain to 0dB
-  tlv320write(0x11, 0x00);
   // Power up HPL and HPR drivers
   tlv320write(0x09, 0x30);
   // Wait for 2.5 sec for soft stepping to take effect
@@ -197,6 +236,8 @@ void tlv320_enable_hp(void) {
   // digital data to Left Channel DAC and Right Audio digital data to
   // Right Channel DAC
   tlv320write(0x3f, 0xd6);
+
+  tlv320_apply_output_gain_locked(current_output_gain_db);
 }
 
 void tlv320_enable_spkr(void) {
@@ -212,11 +253,6 @@ void tlv320_enable_spkr(void) {
   tlv320write(0x03, 0x00);
   tlv320write(0x04, 0x00);
 
-  // Set the LOL gain to 0dB
-  tlv320write(0x12, 0x00);
-  // Set the LOR gain to 0dB
-  tlv320write(0x13, 0x00);
-
   // Power up LOL and LOR drivers
   tlv320write(0x09, 0x0c);
   // Wait for 2.5 sec for soft stepping to take effect
@@ -229,6 +265,8 @@ void tlv320_enable_spkr(void) {
   // Power up the Right DAC Channel and mix both data channels to right
   // dac (left disabled)
   tlv320write(0x3f, 0x4e);
+
+  tlv320_apply_output_gain_locked(current_output_gain_db);
 }
 
 void tlv320_select_output(void) {
@@ -246,6 +284,13 @@ void tlv320_select_output(void) {
       tlv320_enable_spkr();
       output = SPKR;
     }
+  }
+}
+
+void tlv320_set_output_gain_db(int8_t gain_db) {
+  current_output_gain_db = clamp_output_gain(gain_db);
+  if (codec_ready) {
+    tlv320_apply_output_gain_locked(current_output_gain_db);
   }
 }
 

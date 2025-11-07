@@ -50,7 +50,7 @@ public:
   void OnPlayerStart(MixerServiceMode mode);
   void OnPlayerStop();
 
-  void SetMasterVolume(int);
+  void UpdateMixVolumes();
   int GetPlayedBufferPercentage();
 
   virtual void Execute(FourCC id, float value);

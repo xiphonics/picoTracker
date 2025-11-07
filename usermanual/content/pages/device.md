@@ -29,6 +29,10 @@ On the first edition picoTracker, the audio output can be set to one of 3 amplif
 
 **PLEASE exercise caution when using earphones or headphones!*
 
+## Output Level (Advance model only)
+
+On the picoTracker Advance, the Device screen exposes an **Output level** setting. This adjusts the devices headphone/speaker gain in hardware, so changes take effect immediately without needing to reboot. Use the lower settings for sensitive earphones or quiet monitoring, and the higher settings when you need additional headroom to drive powered speakers.
+
 ## Remote UI
 
 This setting enables or disables sending commands to a computer attached via USB to the picoTracker running a "remote UI" application that can mirror the display from the picoTracker.

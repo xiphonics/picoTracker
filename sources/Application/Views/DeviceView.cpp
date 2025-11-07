@@ -51,12 +51,24 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
-#ifndef ADV
+#ifdef ADV
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarMasterVolume);
+  if (v) {
+    intVarField_.emplace_back(position, *v, "master level: %d%%", 0, 100, 1, 5);
+    fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+    (*intVarField_.rbegin()).AddObserver(*this);
+  }
+#else
   position._y += 1;
   v = config->FindVariable(FourCC::VarLineOut);
-  intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, 2, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  (*intVarField_.rbegin()).AddObserver(*this);
+  if (v) {
+    int maxIndex = (v->GetListSize() > 0) ? v->GetListSize() - 1 : 0;
+    intVarField_.emplace_back(position, *v, "line Out Mode: %s", 0, maxIndex, 1,
+                              1);
+    fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+    (*intVarField_.rbegin()).AddObserver(*this);
+  }
 #endif
 
   position._y += 1;
@@ -207,12 +219,24 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     NotifyObservers(&ve);
     return;
   }
+#ifdef ADV
+  case FourCC::VarMasterVolume: {
+    Config *config = Config::GetInstance();
+    if (config) {
+      if (Variable *masterVar = config->FindVariable(FourCC::VarMasterVolume)) {
+        platform_set_output_level((uint8_t)masterVar->GetInt());
+      }
+    }
+    break;
+  }
+#else
   case FourCC::VarLineOut: {
     MessageBox *mb =
         new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
     DoModal(mb);
     break;
   }
+#endif
 
   default:
     NInvalid;

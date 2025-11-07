@@ -237,4 +237,9 @@ void platform_brightness(uint8_t value) {
   pwm_set_gpio_level(DISPLAY_PWM, value);
 }
 
+void platform_set_output_level(uint8_t level) {
+  // TODO: on pico set output level using PIO i2S 32bit hack
+  (void)level;
+}
+
 int16_t battery_health() { return -1; };

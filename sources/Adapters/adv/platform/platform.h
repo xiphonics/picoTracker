@@ -29,6 +29,7 @@ uint32_t millis(void);
 uint32_t micros(void);
 
 void platform_brightness(uint8_t value);
+void platform_set_output_level(uint8_t level);
 
 int16_t battery_health();
 

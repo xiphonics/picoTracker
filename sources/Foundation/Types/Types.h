@@ -287,6 +287,7 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandMidiChord, "MCH")
 
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
+  ETL_ENUM_TYPE(VarMasterVolume, "MASTER")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
   ETL_ENUM_TYPE(VarMidiSync, "MIDISYNC")
   ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
@@ -383,7 +384,6 @@ struct FourCC {
   ETL_ENUM_TYPE(VarReserved3Color, "RESERVED3COLOR")
   ETL_ENUM_TYPE(VarReserved4Color, "RESERVED4COLOR")
   ETL_ENUM_TYPE(VarTempo, "tempo")
-  ETL_ENUM_TYPE(VarMasterVolume, "master")
   ETL_ENUM_TYPE(VarPreviewVolume, "preview")
   ETL_ENUM_TYPE(VarWrap, "wrap")
   ETL_ENUM_TYPE(VarTranspose, "transpose")
