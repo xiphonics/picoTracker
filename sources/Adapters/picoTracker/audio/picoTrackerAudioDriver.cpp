@@ -18,6 +18,7 @@
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/pio.h"
+#include "hardware/regs/pio.h"
 #include "pico/multicore.h"
 #include "pico/sync.h"
 #include <math.h>
@@ -30,6 +31,11 @@
 constexpr uint8_t LineOutOffsets[] = {8, 6, 4, 3, 1, 0};
 constexpr uint8_t LineOutLevelCount =
     sizeof(LineOutOffsets) / sizeof(LineOutOffsets[0]);
+
+static inline bool IsStateMachineEnabled(PIO pio, uint sm) {
+  uint32_t mask = 1u << (PIO_CTRL_SM_ENABLE_LSB + sm);
+  return (pio->ctrl & mask) != 0;
+}
 
 // mini blank buffer for underrun, initialized to 0
 const char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 *
@@ -175,7 +181,7 @@ void picoTrackerAudioDriver::ApplyLineOutLevel(uint8_t level) {
   }
   uint8_t backfillBits = PAD_BIT_BUDGET - offsetBits;
 
-  bool smEnabled = pio_sm_is_enabled(AUDIO_PIO, AUDIO_SM);
+  bool smEnabled = IsStateMachineEnabled(AUDIO_PIO, AUDIO_SM);
   if (smEnabled) {
     pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, false);
   }
