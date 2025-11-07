@@ -770,10 +770,6 @@ bool SampleEditorView::reloadEditedSample() {
   return true;
 #else
   auto pool = SamplePool::GetInstance();
-  if (!pool) {
-    Trace::Error("SampleEditorView: SamplePool unavailable");
-    return false;
-  }
 
   if (!goProjectSamplesDir(viewData_)) {
     Trace::Error("SampleEditorView: Failed to chdir for pool reload");
