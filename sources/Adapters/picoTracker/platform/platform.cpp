@@ -242,4 +242,6 @@ void platform_set_output_level(uint8_t level) {
   (void)level;
 }
 
+void platform_set_master_volume(uint8_t level) { (void)level; }
+
 int16_t battery_health() { return -1; };

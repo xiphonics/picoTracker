@@ -39,6 +39,8 @@ static bool codec_ready = false;
 // Remember the last requested output gain so we can reapply it whenever the
 // codec path toggles (HP/SPKR) or after initialization.
 static int8_t current_output_gain_db = 0;
+static uint8_t current_master_volume_percent = 100;
+static const uint8_t dacVolume0dBCode = 0x30;
 
 static int8_t clamp_output_gain(int8_t gain_db) {
   if (gain_db > 29) {
@@ -209,6 +211,7 @@ DOSR 128
 
   codec_ready = true;
   tlv320_apply_output_gain_locked(current_output_gain_db);
+  tlv320_set_master_volume(current_master_volume_percent);
 }
 
 void tlv320_enable_hp(void) {
@@ -292,6 +295,36 @@ void tlv320_set_output_gain_db(int8_t gain_db) {
   if (codec_ready) {
     tlv320_apply_output_gain_locked(current_output_gain_db);
   }
+}
+
+static uint8_t dac_volume_from_percent(uint8_t percent) {
+  if (percent >= 100) {
+    return dacVolume0dBCode;
+  }
+  uint32_t scaled =
+      (uint32_t)percent * (uint32_t)dacVolume0dBCode + 50; // round
+  uint32_t code = scaled / 100;
+  if (code > dacVolume0dBCode) {
+    code = dacVolume0dBCode;
+  }
+  return (uint8_t)code;
+}
+
+void tlv320_set_master_volume(uint8_t volume_percent) {
+  current_master_volume_percent =
+      (volume_percent > 100) ? 100 : volume_percent;
+  uint8_t volumeValue;
+  bool mute = (current_master_volume_percent == 0);
+  if (mute) {
+    volumeValue = 0x80; // set mute bit
+  } else {
+    volumeValue = dac_volume_from_percent(current_master_volume_percent) & 0x7F;
+  }
+
+  tlv320write(0x00, 0x00);
+  uint8_t regValue = mute ? (volumeValue | 0x80) : volumeValue;
+  tlv320write(0x41, regValue);
+  tlv320write(0x42, regValue);
 }
 
 void tlv320_mute(void) {

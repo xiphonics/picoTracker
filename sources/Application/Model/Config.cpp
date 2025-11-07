@@ -26,10 +26,21 @@
 #define CONFIG_VERSION_NUMBER 1
 
 #define MIDI_DEVICE_LEN 4
-#define LINEOUT_OPTION_COUNT 3
 
-static const char *lineOutOptions[LINEOUT_OPTION_COUNT] = {"HP Low", "HP High",
-                                                           "Line Level"};
+#ifdef ADV
+static const char *const lineOutOptions[] = {"-6 dB", "0 dB",  "+6 dB",
+                                             "+18 dB", "+24 dB", "+28 dB"};
+constexpr int LINEOUT_OPTION_COUNT =
+    sizeof(lineOutOptions) / sizeof(lineOutOptions[0]);
+constexpr int DEFAULT_LINEOUT = 1; // 0 dB
+constexpr int DEFAULT_MASTER_LEVEL = 80;
+#else
+static const char *const lineOutOptions[] = {"HP Low", "HP High",
+                                             "Line Level"};
+constexpr int LINEOUT_OPTION_COUNT =
+    sizeof(lineOutOptions) / sizeof(lineOutOptions[0]);
+constexpr int DEFAULT_LINEOUT = 0x2;
+#endif
 static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
                                                       "TRS+USB"};
 static const char *midiSendSync[2] = {"Off", "Send"};
@@ -46,11 +57,6 @@ typedef etl::string<13> ParamString;
 
 // Use default color values from ThemeConstants.h
 // Other default values not related to theme colors:
-#ifdef ADV
-constexpr int DEFAULT_MASTER_LEVEL = 60;
-#else
-constexpr int DEFAULT_LINEOUT = 0x2;
-#endif
 constexpr int DEFAULT_MIDIDEVICE = 0x0;
 constexpr int DEFAULT_MIDISYNC = 0x0;
 constexpr int DEFAULT_REMOTEUI = 0x1;
@@ -156,14 +162,13 @@ static const ConfigParam configParams[] = {
      nullptr,
      0,
      false},
-#else
+#endif
     {"LINEOUT",
      {.intValue = DEFAULT_LINEOUT},
      FourCC::VarLineOut,
      lineOutOptions,
      LINEOUT_OPTION_COUNT,
      false},
-#endif
     {"MIDIDEVICE",
      {.intValue = DEFAULT_MIDIDEVICE},
      FourCC::VarMidiDevice,

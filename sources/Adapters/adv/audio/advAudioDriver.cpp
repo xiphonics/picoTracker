@@ -90,10 +90,12 @@ bool advAudioDriver::InitDriver() {
   Config *config = Config::GetInstance();
   volume_ = 65;
   volume_ = config->GetValue("VOLUME");
-  uint8_t outputLevel = config->GetValue("MASTER");
+  uint8_t masterLevel = config->GetValue("MASTER");
+  uint8_t outputLevel = config->GetValue("LINEOUT");
 
   // Configure codec
   tlv320_init();
+  platform_set_master_volume(masterLevel);
   platform_set_output_level(outputLevel);
   // Takes some time between configuring HP detect and actually detecting
   vTaskDelay(pdMS_TO_TICKS(250));

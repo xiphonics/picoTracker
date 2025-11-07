@@ -27,6 +27,7 @@ void tlv320_init();
 
 void tlv320_select_output(void);
 void tlv320_set_output_gain_db(int8_t gain_db);
+void tlv320_set_master_volume(uint8_t volume_percent);
 void tlv320_unmute(void);
 void tlv320_mute(void);
 void tlv320_enable_linein(void);

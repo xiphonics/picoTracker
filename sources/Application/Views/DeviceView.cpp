@@ -51,25 +51,24 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
-#ifdef ADV
   position._y += 1;
+#ifdef ADV
   v = config->FindVariable(FourCC::VarMasterVolume);
   if (v) {
     intVarField_.emplace_back(position, *v, "master level: %d%%", 0, 100, 1, 5);
     fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
     (*intVarField_.rbegin()).AddObserver(*this);
   }
-#else
   position._y += 1;
+#endif
   v = config->FindVariable(FourCC::VarLineOut);
   if (v) {
     int maxIndex = (v->GetListSize() > 0) ? v->GetListSize() - 1 : 0;
-    intVarField_.emplace_back(position, *v, "line Out Mode: %s", 0, maxIndex, 1,
+    intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, maxIndex, 1,
                               1);
     fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
     (*intVarField_.rbegin()).AddObserver(*this);
   }
-#endif
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarRemoteUI);
@@ -224,7 +223,16 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     Config *config = Config::GetInstance();
     if (config) {
       if (Variable *masterVar = config->FindVariable(FourCC::VarMasterVolume)) {
-        platform_set_output_level((uint8_t)masterVar->GetInt());
+        platform_set_master_volume((uint8_t)masterVar->GetInt());
+      }
+    }
+    break;
+  }
+  case FourCC::VarLineOut: {
+    Config *config = Config::GetInstance();
+    if (config) {
+      if (Variable *lineOutVar = config->FindVariable(FourCC::VarLineOut)) {
+        platform_set_output_level((uint8_t)lineOutVar->GetInt());
       }
     }
     break;

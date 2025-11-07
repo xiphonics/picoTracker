@@ -29,9 +29,22 @@ On the first edition picoTracker, the audio output can be set to one of 3 amplif
 
 **PLEASE exercise caution when using earphones or headphones!*
 
-## Output Level (Advance model only)
+## Master Level (Advance model only)
 
-On the picoTracker Advance, the Device screen exposes an **Output level** setting. This adjusts the devices headphone/speaker gain in hardware, so changes take effect immediately without needing to reboot. Use the lower settings for sensitive earphones or quiet monitoring, and the higher settings when you need additional headroom to drive powered speakers.
+On the picoTracker Advance, the Device screen exposes a **Master level** slider. This adjusts the TLV320 codec's digital DAC volume, giving you smooth control from silence up to 0 dB. Changes take effect immediately without needing to reboot.
+
+## Line Out Mode (Advance model only)
+
+The Advance also includes a **Line Out Mode** selector that controls the TLV320's analog output driver gain. Available settings are:
+
+* `-6 dB`
+* `0 dB`
+* `+6 dB`
+* `+18 dB`
+* `+24 dB`
+* `+28 dB`
+
+Use the lower settings for sensitive headphones or nearfield monitors, and only step up to the higher gain modes when you need additional headroom to drive passive speakers or high-impedance inputs.
 
 ## Remote UI
 

@@ -87,17 +87,21 @@ void platform_brightness(uint8_t value) {
   __HAL_TIM_SET_COMPARE(&htim13, TIM_CHANNEL_1, pulse);
 }
 
-void platform_set_output_level(uint8_t levelPercent) {
+void platform_set_output_level(uint8_t levelIndex) {
+  static const int8_t gainMap[] = {-6, 0, 6, 18, 24, 28};
+  constexpr uint8_t gainCount =
+      (uint8_t)(sizeof(gainMap) / sizeof(gainMap[0]));
+  if (levelIndex >= gainCount) {
+    levelIndex = gainCount - 1;
+  }
+  tlv320_set_output_gain_db(gainMap[levelIndex]);
+}
+
+void platform_set_master_volume(uint8_t levelPercent) {
   if (levelPercent > 100) {
     levelPercent = 100;
   }
-  // TODO: need special handling of 0 to mute output
-
-  constexpr int8_t minDb = -6;
-  constexpr int8_t maxDb = 29;
-  constexpr int range = maxDb - minDb;
-  int scaled = (range * levelPercent + 50) / 100; // round to nearest
-  tlv320_set_output_gain_db((int8_t)(minDb + scaled));
+  tlv320_set_master_volume(levelPercent);
 }
 
 // returns -1 on error, -2 for "calculating" status
