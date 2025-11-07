@@ -170,7 +170,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
     // clear this flag on leaving this screen
-    viewData_->sampleEditorProjectList = false;
+    viewData_->isShowingSampleEditorProjectPool = false;
 
     // Go back to the source view that opened the ImportView
     ViewEvent ve(VET_SWITCH_VIEW, &sourceViewType_);
@@ -358,9 +358,9 @@ void ImportView::OnFocus() {
 
   toInstr_ = viewData_->currentInstrumentID_;
 
-  inProjectSampleDir_ = viewData_->sampleEditorProjectList;
+  inProjectSampleDir_ = viewData_->isShowingSampleEditorProjectPool;
 
-  if (viewData_->sampleEditorProjectList) {
+  if (inProjectSampleDir_) {
     goProjectSamplesDir(viewData_);
     setCurrentFolder(fs, ".");
   } else {

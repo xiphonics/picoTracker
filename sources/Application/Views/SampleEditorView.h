@@ -51,11 +51,13 @@ private:
   void updateSampleParameters();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
+  bool reloadEditedSample();
   bool saveSample(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool loadSampleToPool(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool applySelectedOperation();
   bool applyTrimOperation(uint32_t startFrame, uint32_t endFrame);
+  bool applyNormalizeOperation();
   void navigateToView(ViewType vt);
   int findSampleIndexByName(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
@@ -116,10 +118,7 @@ private:
   Variable startVar_;
   Variable endVar_;
   Variable filenameVar_;
-  enum class SampleEditOperation : int {
-    Trim = 0,
-    Count,
-  };
+  enum SampleEditOperation { Trim = 0, Normalize };
   Variable operationVar_;
 
   GUIWindow &win;

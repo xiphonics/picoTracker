@@ -90,7 +90,7 @@ public:
 
   // Sample Editor
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> sampleEditorFilename;
-  bool sampleEditorProjectList = false;
+  bool isShowingSampleEditorProjectPool = false;
 
   // Import File browser
   const char *importViewStartDir = nullptr;
