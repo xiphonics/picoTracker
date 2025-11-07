@@ -48,8 +48,7 @@ constexpr int kSampleEditOperationCount =
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
       isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
-      waveformUsesSignedDrawing_(false), playbackPosition_(0.0f),
-      playbackStartFrame_(0), lastAnimationTime_(0),
+      playbackPosition_(0.0f), playbackStartFrame_(0), lastAnimationTime_(0),
       sys_(System::GetInstance()), startVar_(FourCC::VarSampleEditStart, 0),
       endVar_(FourCC::VarSampleEditEnd, 0),
       // bit of a hack to use InstrumentName but we never actually persist this
@@ -305,7 +304,6 @@ void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
           return;
         }
       }
-
       if (startY < y_offset + 1)
         startY = y_offset + 1;
       if (endY > y_offset + BITMAPHEIGHT - 2)
@@ -315,7 +313,7 @@ void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
         rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
         view.DrawRect(rrect, CD_NORMAL);
       }
-    } else {
+    } else { // else draw RMS value waveform
       int pixelHeight = waveformCache[waveform_idx];
       if (pixelHeight > 0) {
         int startY = centerY - pixelHeight / 2;
@@ -380,7 +378,7 @@ void SampleEditorView::DrawWaveForm() {
     // Draw full waveform
     if (waveformCacheValid_) {
       for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-        if (waveformUsesSignedDrawing_) {
+        if (waveformUsesSignedDrawing()) {
           uint8_t encodedValue = waveformCache_[x];
           float normalizedValue =
               static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
@@ -457,15 +455,15 @@ void SampleEditorView::DrawWaveForm() {
   // Erase old markers if they have moved or disappeared
   if (last_start_x_ != -1 && last_start_x_ != current_startX) {
     redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET,
-                 waveformUsesSignedDrawing_);
+                 waveformUsesSignedDrawing());
   }
   if (last_end_x_ != -1 && last_end_x_ != current_endX) {
     redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET,
-                 waveformUsesSignedDrawing_);
+                 waveformUsesSignedDrawing());
   }
   if (last_playhead_x_ != -1 && last_playhead_x_ != current_playheadX) {
     redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET,
-                 waveformUsesSignedDrawing_);
+                 waveformUsesSignedDrawing());
   }
 
   // Draw new markers
@@ -1010,16 +1008,10 @@ void SampleEditorView::loadSample(
   // --- 2. Prepare for Single-Pass Processing ---
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
              tempSampleSize_, numChannels);
-  float samplesPerPixel =
-      static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
-  // use signed waveform drawing instead of RMS for short single cycle waves
-  waveformUsesSignedDrawing_ = samplesPerPixel < 1.0f;
 
-  if (waveformUsesSignedDrawing_) {
+  if (waveformUsesSignedDrawing()) {
     memset(waveformCache_, 128, sizeof(waveformCache_));
   }
-
-  Trace::Log("SAMPLEEDITOR", "samples/p/p: %f", samplesPerPixel);
 
   short peakAmplitude = 0;
   uint32_t currentFrame = 0;
@@ -1045,7 +1037,7 @@ void SampleEditorView::loadSample(
         peakAmplitude = abs(sampleValue);
       }
 
-      if (waveformUsesSignedDrawing_) {
+      if (waveformUsesSignedDrawing()) {
         // Upsampling: 1-to-1 mapping of samples to pixels, preserving sign.
         int cacheIndex = currentFrame + i;
         if (cacheIndex < WAVEFORM_CACHE_SIZE) {
@@ -1053,10 +1045,12 @@ void SampleEditorView::loadSample(
           // Encode to [0, 255], with 128 as zero.
           float encoded =
               (normalizedValue + 1.0f) * 127.5f; // map [-1,1] -> [0,255]
-          waveformCache_[cacheIndex] =
-              static_cast<uint8_t>(std::round(std::clamp(encoded, 0.0f, 255.0f)));
+          waveformCache_[cacheIndex] = static_cast<uint8_t>(
+              std::round(std::clamp(encoded, 0.0f, 255.0f)));
         }
       } else {
+        float samplesPerPixel =
+            static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
         int cacheIndex = (currentFrame + i) / samplesPerPixel;
         if (cacheIndex < WAVEFORM_CACHE_SIZE) {
           // Accumulate sum of squares for RMS calculation later.
@@ -1073,10 +1067,12 @@ void SampleEditorView::loadSample(
   file->Close();
 
   // --- 4. Finalize Waveform Cache ---
-  if (!waveformUsesSignedDrawing_) {
+  if (!waveformUsesSignedDrawing()) {
     for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
       // Calculate the Root Mean Mean Square (RMS)
       // 1. Calculate mean of squares from our accumulated integer values.
+      float samplesPerPixel =
+          static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
       float mean_square = (float)sumSquares[x] / samplesPerPixel;
 
       // 2. Take the square root.
@@ -1109,4 +1105,11 @@ void SampleEditorView::clearWaveformRegion() {
   rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
                   Y_OFFSET + BITMAPHEIGHT);
   DrawRect(rrect, CD_BACKGROUND);
+}
+
+bool SampleEditorView::waveformUsesSignedDrawing() {
+  float samplesPerPixel =
+      static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
+  Trace::Log("SAMPLEEDITOR", "samples/p/p: %f", samplesPerPixel);
+  return samplesPerPixel < 1.0f;
 }

@@ -61,6 +61,7 @@ private:
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
+  bool waveformUsesSignedDrawing();
 
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;
@@ -96,7 +97,6 @@ private:
 
   uint8_t waveformCache_[BITMAPWIDTH];
   bool waveformCacheValid_;
-  bool waveformUsesSignedDrawing_;
 
   void updateWaveformCache();
   void DrawWaveForm();
