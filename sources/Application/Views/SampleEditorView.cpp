@@ -364,8 +364,8 @@ void SampleEditorView::DrawWaveForm() {
     const int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
 
     // Draw zero baseline
-    rrect = GUIRect(X_OFFSET + 1, centerY, X_OFFSET + BITMAPWIDTH - 1,
-                    centerY + 1);
+    rrect =
+        GUIRect(X_OFFSET + 1, centerY, X_OFFSET + BITMAPWIDTH - 1, centerY + 1);
     DrawRect(rrect, CD_HILITE2);
 
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
@@ -421,8 +421,7 @@ void SampleEditorView::DrawWaveForm() {
               endY = Y_OFFSET + BITMAPHEIGHT - 2;
 
             if (startY <= endY) {
-              rrect =
-                  GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
+              rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
               DrawRect(rrect, CD_NORMAL);
             }
           }
