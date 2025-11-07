@@ -1,22 +1,57 @@
+@font-face {
+    font-family: 'Projekt Blackbird';
+    src: url('../font/PROJEKTBlackbird.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Oxanium';
+    src: url('../font/Oxanium-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Oxanium';
+    src: url('../font/Oxanium-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Ubuntu Mono';
+    src: url('../font/UbuntuMono-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Ubuntu Mono';
+    src: url('../font/UbuntuMono-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
 :root {
-    --background: #ffffff;
-    --panelheader: #ffffff;
-    --panel: #dddff3;
-    --textLight: #c2c6db;
-    --tableBorder: #cfd0da;
-    --effect: #ff5277;
-    --effectParam: #ffd0d0;
-    --listOdd: #2b3151;
-    --listEven: #202541;
-    --link: #087ce8;
-    --button: #686f99;
+    --background: #AFA48A;
+    --panelheader: #D9D9D9;
+    --panel: #D9D9D9;
+    --textLight: #000000;
+    --tableBorder: #000000;
+    --effect: #000000;
+    --effectParam: #000000;
+    --listOdd: #AFA48A;
+    --listEven: #AFA48A;
+    --link: #000000;
+    --button: #D9D9D9;
     --sidebarWidth: 280px;
 }
 
 body {
     background: var(--background);
-    color: #353f5f;
-    font: 16px/135% "Roboto", sans-serif;
+    color: #000000;
+    font: 16px/135% 'Oxanium', sans-serif;
     font-style: normal;
     font-weight: normal;
     width: 100%;
@@ -38,7 +73,7 @@ aside {
     top: 0;
     /* Stay at the top */
     left: 0;
-    background-color: #14182e;
+    background-color: #000000;
     overflow-x: hidden;
     /* Disable horizontal scroll */
     padding-top: 10px;
@@ -77,8 +112,10 @@ ul {
 }
 
 h1 {
+    font-family: 'Ubuntu Mono', monospace;
+    text-transform: uppercase;
     font-size: 2.75em;
-    color: var(--button);
+    color: #000000;
     margin: 0px;
     line-height: 1;
     padding-top: 20px;
@@ -86,15 +123,19 @@ h1 {
 }
 
 h2 {
+    font-family: 'Projekt Blackbird', sans-serif;
     font-size: 1.5em;
 }
 
 aside>h1 {
+    font-family: 'Projekt Blackbird', sans-serif;
+    text-transform: none;
     font-size: 2em;
     line-height: 1.2;
     margin-left: 0.2em;
     padding-top: 10px;
     padding-bottom: 0px;
+    color: var(--button);
 }
 
 ul.sideNav {
@@ -103,7 +144,7 @@ ul.sideNav {
 }
 
 ul.sideNav h2 {
-    color: #ffffff;
+    color: #D9D9D9;
     font-size: 1.1em;
     margin-bottom: 2px;
 }
@@ -114,7 +155,7 @@ ul.sideNav li {
 }
 
 ul.sideNav a {
-    color: #b0bdc9;
+    color: #D9D9D9;
     text-decoration: none;
 }
 
@@ -125,13 +166,16 @@ ul.sideNav a li:hover {
 }
 
 ul.sideNav a.selected li {
-    color: #1f2235;
-    background-color: var(--tableBorder);
+    color: #000000;
+    background-color: #D3FC51;
     text-decoration: none;
     font-weight: bold;
 }
 
 h4 {
+    font-family: 'Oxanium', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
     font-size: 1.2em;
     margin: 0px;
     padding-top: 20px;
@@ -146,7 +190,7 @@ p {
 
 hr {
     border-top: 1px solid;
-    color: var(--button);
+    color: #000000;
 }
 
 table {
@@ -170,7 +214,7 @@ td {
 th {
     text-align: left;
     padding-left: 7px;
-    background: var(--tableBorder);
+    background: var(--panel);
 }
 
 .fx {
@@ -182,12 +226,13 @@ th {
 }
 
 .shortcut {
-    font-family: monospace;
+    font-family: 'Oxanium', sans-serif;
     font-weight: bold;
+    text-transform: uppercase;
     border-color: var(--tableBorder);
     border-width: 2px;
     border-style: solid;
-    color: #ff5277;
+    color: #000000;
     border-radius: 4px;
     padding: 1px 4px;
     /* background-color: var(--tableBorder); */
@@ -208,11 +253,11 @@ footer {
     font-style: italic;
     margin-top: 30px;
     margin-bottom: 10px;
-    color: #626570;
+    color: #000000;
 }
 
 footer a {
-    color: #626570;
+    color: #000000;
 }
 
 /* page specific rules */
