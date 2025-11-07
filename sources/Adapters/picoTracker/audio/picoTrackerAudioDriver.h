@@ -32,16 +32,23 @@ public:
   void OnChunkDone();
   void SetVolume(int v);
   int GetVolume();
+  void SetLineOutLevel(uint8_t level);
+  static void UpdateHardwareLineOutLevel(uint8_t level);
   virtual double GetStreamTime();
   static void IRQHandler();
   static void BufferNeeded();
 
 private:
+  void ApplyLineOutLevel(uint8_t level);
+  uint8_t ClampLineOutLevel(uint8_t level) const;
+
   static picoTrackerAudioDriver *instance_;
 
   AudioSettings settings_;
   static const char miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
   int volume_;
   uint32_t startTime_;
+  uint8_t lineOutLevel_;
+  bool pioConfigured_;
 };
 #endif

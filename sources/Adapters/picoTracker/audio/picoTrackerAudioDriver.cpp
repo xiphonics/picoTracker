@@ -25,6 +25,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define PAD_BIT_BUDGET 13
+
+constexpr uint8_t LineOutOffsets[] = {8, 6, 4, 3, 1, 0};
+constexpr uint8_t LineOutLevelCount =
+    sizeof(LineOutOffsets) / sizeof(LineOutOffsets[0]);
+
 // mini blank buffer for underrun, initialized to 0
 const char picoTrackerAudioDriver::miniBlank_[MINI_BLANK_SIZE * 2 *
                                               sizeof(short)] = {0};
@@ -74,21 +80,13 @@ picoTrackerAudioDriver::picoTrackerAudioDriver(AudioSettings &settings)
 
   isPlaying_ = false;
   picoTracker_exit = 0;
+  volume_ = 65;
+  startTime_ = 0;
+  lineOutLevel_ = 0;
+  pioConfigured_ = false;
 }
 
 picoTrackerAudioDriver::~picoTrackerAudioDriver() { picoTracker_exit = 1; }
-
-static uint16_t modified_audio_i2s_instructions[24];
-
-static struct pio_program modified_audio_i2s_program = {
-    .instructions = modified_audio_i2s_instructions,
-    .length = 24,
-    .origin = -1,
-    .pio_version = 0,
-#if PICO_PIO_VERSION > 0
-    .used_gpio_ranges = 0x0
-#endif
-};
 
 bool picoTrackerAudioDriver::InitDriver() {
   instance_ = this;
@@ -105,42 +103,14 @@ bool picoTrackerAudioDriver::InitDriver() {
   Config *config = Config::GetInstance();
   auto audioLevel = config->GetValue("LINEOUT");
   Trace::Log("pTAUDIODRIVER", "LINE LEVEL config:%d", audioLevel);
-  volume_ = 65;
   volume_ = config->GetValue("VOLUME");
+  lineOutLevel_ = ClampLineOutLevel((uint8_t)audioLevel);
 
-  // Audio Level support in PIO code:
-  // need to modify the PIO instructions 9 and 21 to use the number of "offset"
-  // aka the OFFSET_COUNT const in the PIO asm code, its value is 3 for default
-  // "headphones level" bits required and then need to modify the PIO
-  // instructions 3 and 15 to use aka the BACKFILL_COUNT in the PIO asm code,
-  // its value is 10 for default "headphones level" the matching number of
-  // "backfill" number of bits required
-  memcpy(modified_audio_i2s_instructions, audio_i2s_program_instructions,
-         24 * 2);
-
-  // ---- HP High volume
-  if (audioLevel == 1) {
-    modified_audio_i2s_instructions[9] = 0xe843;
-    modified_audio_i2s_instructions[21] = 0xf843;
-
-    modified_audio_i2s_instructions[3] = 0xf84a;
-    modified_audio_i2s_instructions[15] = 0xe84a;
-  }
-
-  // ---- Line Level volume
-  if (audioLevel == 2) {
-    modified_audio_i2s_instructions[9] = 0xe841;
-    modified_audio_i2s_instructions[21] = 0xf841;
-
-    modified_audio_i2s_instructions[3] = 0xf84c;
-    modified_audio_i2s_instructions[15] = 0xe84c;
-  }
-
-  modified_audio_i2s_program.instructions = modified_audio_i2s_instructions;
-
-  uint offset = pio_add_program(AUDIO_PIO, &modified_audio_i2s_program);
+  uint offset = pio_add_program(AUDIO_PIO, &audio_i2s_program);
 
   audio_i2s_program_init(AUDIO_PIO, AUDIO_SM, offset, AUDIO_SDATA, AUDIO_BCLK);
+  pioConfigured_ = true;
+  SetLineOutLevel(lineOutLevel_);
 
   // Claim and configure DMA
   dma_channel_claim(AUDIO_DMA);
@@ -190,6 +160,49 @@ void picoTrackerAudioDriver::SetVolume(int v) {
 
 int picoTrackerAudioDriver::GetVolume() { return volume_; };
 
+uint8_t picoTrackerAudioDriver::ClampLineOutLevel(uint8_t level) const {
+  return (level < LineOutLevelCount) ? level : (LineOutLevelCount - 1);
+}
+
+void picoTrackerAudioDriver::ApplyLineOutLevel(uint8_t level) {
+  if (!pioConfigured_) {
+    return;
+  }
+
+  uint8_t offsetBits = LineOutOffsets[level];
+  if (offsetBits > PAD_BIT_BUDGET) {
+    offsetBits = PAD_BIT_BUDGET;
+  }
+  uint8_t backfillBits = PAD_BIT_BUDGET - offsetBits;
+
+  bool smEnabled = pio_sm_is_enabled(AUDIO_PIO, AUDIO_SM);
+  if (smEnabled) {
+    pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, false);
+  }
+
+  // Store backfill count in ISR while keeping Y as the offset count.
+  pio_sm_exec(AUDIO_PIO, AUDIO_SM, pio_encode_set(pio_y, offsetBits));
+  pio_sm_exec(AUDIO_PIO, AUDIO_SM, pio_encode_set(pio_y, backfillBits));
+  pio_sm_exec(AUDIO_PIO, AUDIO_SM, pio_encode_mov(pio_isr, pio_y));
+  pio_sm_exec(AUDIO_PIO, AUDIO_SM, pio_encode_set(pio_y, offsetBits));
+
+  if (smEnabled) {
+    pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, true);
+  }
+}
+
+void picoTrackerAudioDriver::SetLineOutLevel(uint8_t level) {
+  uint8_t clamped = ClampLineOutLevel(level);
+  lineOutLevel_ = clamped;
+  ApplyLineOutLevel(clamped);
+}
+
+void picoTrackerAudioDriver::UpdateHardwareLineOutLevel(uint8_t level) {
+  if (instance_) {
+    instance_->SetLineOutLevel(level);
+  }
+}
+
 void picoTrackerAudioDriver::CloseDriver() {
 
   pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, false);
@@ -199,6 +212,7 @@ void picoTrackerAudioDriver::CloseDriver() {
   dma_channel_unclaim(AUDIO_DMA);
   pio_sm_unclaim(AUDIO_PIO, AUDIO_SM);
   pio_clear_instruction_memory(AUDIO_PIO);
+  pioConfigured_ = false;
 };
 
 bool picoTrackerAudioDriver::StartDriver() {

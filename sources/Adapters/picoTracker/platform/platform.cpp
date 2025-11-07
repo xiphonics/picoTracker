@@ -7,6 +7,7 @@
  */
 
 #include "platform.h"
+#include "Adapters/picoTracker/audio/picoTrackerAudioDriver.h"
 #include "Adapters/picoTracker/mutex/picoTrackerMutex.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
@@ -238,8 +239,7 @@ void platform_brightness(uint8_t value) {
 }
 
 void platform_set_output_level(uint8_t level) {
-  // TODO: on pico set output level using PIO i2S 32bit hack
-  (void)level;
+  picoTrackerAudioDriver::UpdateHardwareLineOutLevel(level);
 }
 
 void platform_set_master_volume(uint8_t level) { (void)level; }

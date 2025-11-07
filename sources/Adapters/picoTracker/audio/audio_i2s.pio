@@ -45,8 +45,11 @@
 .side_set 2
 
 .define DATA_LOOP_COUNT 13 ; 13 because we do 2 `out`'s on the OSR data outside the loop for a total of 16bits
-.define OFFSET_COUNT 6 ; number of bits+1 to offset from MSB to lower the output volume
-.define BACKFILL_COUNT 7 ; number of bits+1 to fill in loop at end of OSR data to get to 32bits in total output per channel
+; Runtime configuration:
+;   - Y register stores the offset (number of MSB repeat bits)
+;   - ISR stores the backfill count (number of zero bits appended after LSB)
+;   The C++ driver programs these registers whenever the user changes the line
+;   output level.
 
                             ;      /--- LRCLK
                             ;      |/-- BCLK
@@ -55,32 +58,32 @@ bitloop1:                   ;      ||
     jmp x-- bitloop1        side 0b11
 
     out pins, 1             side 0b10 ; get the LSB of the real sample data from the OSR
-    set y, BACKFILL_COUNT   side 0b11 ; now how many bits+1 of zeros we will backfill after LSB
+    mov x, isr              side 0b11 ; backfill count
 
  backfill1:   
     set pins, 0             side 0b10
-    jmp y-- backfill1       side 0b11
+    jmp x-- backfill1       side 0b11
 
     set pins, 0             side 0b00 ; Final LSB is a 0
     set x, DATA_LOOP_COUNT  side 0b01
 
     out pins, 1             side 0b00 ; twos complement so need to keep most significant Bit of real sample data
-    set y, OFFSET_COUNT     side 0b01 ; now how many bits+1 of MSB we will pad from MSB
+    mov x, y                side 0b01 ; offset count
 
 padloop1:
     nop                     side 0b00 ; Clocking out MSB for sign extension
-    jmp y-- padloop1        side 0b01
+    jmp x-- padloop1        side 0b01
 
 bitloop0:
     out pins, 1             side 0b00
     jmp x-- bitloop0        side 0b01
 
     out pins, 1             side 0b00
-    set y, BACKFILL_COUNT   side 0b01 ; now how many bits+1 of zeros we will backfill after LSB
+    mov x, isr              side 0b01 ; backfill count
 
   backfill0:   
     set pins, 0             side 0b00
-    jmp y-- backfill0       side 0b01
+    jmp x-- backfill0       side 0b01
 
     set pins, 0             side 0b10 ; Final LSB is a 0
 
@@ -89,11 +92,11 @@ public entry_point:
     set x, DATA_LOOP_COUNT  side 0b11
 
     out pins, 1             side 0b10 ; twos complement so need to keep most significant Bit of real sample data
-    set y, OFFSET_COUNT     side 0b11 ; now how many bits+1 of MSB we will pad from MSB
+    mov x, y                side 0b11 ; offset count
 
 padloop0:
     nop                     side 0b10 ; Clocking out MSB for sign extension
-    jmp y-- padloop0        side 0b11
+    jmp x-- padloop0        side 0b11
      
 
 % c-sdk {

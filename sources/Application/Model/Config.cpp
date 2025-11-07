@@ -27,19 +27,15 @@
 
 #define MIDI_DEVICE_LEN 4
 
+static const char *const lineOutOptions[] = {"min", "low", "std",
+                                             "med", "hi1", "hi2"};
+constexpr uint8_t LINEOUT_OPTION_COUNT =
+    sizeof(lineOutOptions) / sizeof(lineOutOptions[0]);
 #ifdef ADV
-static const char *const lineOutOptions[] = {"-6 dB", "0 dB",  "+6 dB",
-                                             "+18 dB", "+24 dB", "+28 dB"};
-constexpr int LINEOUT_OPTION_COUNT =
-    sizeof(lineOutOptions) / sizeof(lineOutOptions[0]);
-constexpr int DEFAULT_LINEOUT = 1; // 0 dB
-constexpr int DEFAULT_MASTER_LEVEL = 80;
+constexpr uint8_t DEFAULT_LINEOUT = 1;
+constexpr uint8_t DEFAULT_MASTER_LEVEL = 80;
 #else
-static const char *const lineOutOptions[] = {"HP Low", "HP High",
-                                             "Line Level"};
-constexpr int LINEOUT_OPTION_COUNT =
-    sizeof(lineOutOptions) / sizeof(lineOutOptions[0]);
-constexpr int DEFAULT_LINEOUT = 0x2;
+constexpr uint8_t DEFAULT_LINEOUT = 2;
 #endif
 static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
                                                       "TRS+USB"};
