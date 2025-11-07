@@ -9,6 +9,8 @@
 
 #include "ModalView.h"
 
+#include "Foundation/Constants/SpecialCharacters.h"
+
 ModalView::ModalView(View &v)
     : View(v.w_, v.viewData_), finished_(false), returnCode_(0){};
 
@@ -26,7 +28,7 @@ void ModalView::EndModal(int returnCode) {
 void ModalView::ClearTextRect(int x, int y, int w, int h) {
   View::ClearTextRect(x + left_, y + top_, w, h);
 }
-void ModalView::DrawString(int x, int y, const char *txt,
+void ModalView::DrawString(int x, int y, const char *txt, 
                            GUITextProperties &props) {
   View::DrawString(x + left_, y + top_, txt, props);
 };
@@ -60,15 +62,24 @@ void ModalView::SetWindow(int width, int height) {
 
   SetColor(CD_HILITE2);
   GUITextProperties props;
-  props.invert_ = true;
+  
   char line[41];
-  memset(line, ' ', 40);
+  
+  // upper border
+  memset(line, char_border_single_horizontal, width + 3);
+  line[0] = char_border_single_topLeft;
+  line[width + 3] = char_border_single_topRight;
   line[width + 4] = 0;
   DrawString(-2, -2, line, props);
+
+  // lower border
+  line[0] = char_border_single_bottomLeft;
+  line[width + 3] = char_border_single_bottomRight;
   DrawString(-2, height + 1, line, props);
-  line[1] = 0;
+  
+  // left and right borders
   for (int i = 0; i < height + 2; i++) {
-    DrawString(-2, i - 1, line, props);
-    DrawString(width + 1, i - 1, line, props);
+    DrawString(-2, i - 1, char_border_single_vertical_s, props);
+    DrawString(width + 1, i - 1, char_border_single_vertical_s, props);
   }
 };

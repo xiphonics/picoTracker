@@ -12,6 +12,7 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
@@ -407,40 +408,51 @@ void View::drawBattery(GUITextProperties &props) {
   }
 
   GUIPoint battpos = GetAnchor();
+  battpos._x = 28;
   battpos._y = 0;
-  battpos._x = 27;
 
   // use define to choose between drawing battery percentage or battery level as
   // "+" bars
   SetColor(CD_INFO);
   char *battText;
+
 #if BATTERY_LEVEL_AS_PERCENTAGE
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
   char battTextBuffer[8];
   battText = battTextBuffer;
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
-    npf_snprintf(battText, 8, "[CHG]");
+    npf_snprintf(battText, 8, string_battery_charging);
   } else {
     if (batteryState_.percentage == 100) {
-      npf_snprintf(battText, 8, "[FUL]");
+      npf_snprintf(battText, 8, string_battery_100_percent);
     } else {
-      npf_snprintf(battText, 8, "[%2d%%]", batteryState_.percentage);
+      npf_snprintf(battText, 8, char_battery_left_s "%02d" char_battery_right_s,
+                   batteryState_.percentage < 100 ? batteryState_.percentage
+                                                  : 99);
     }
   }
+#undef MIN
 #else
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
-    battText = (char *)"[CHG]";
-  } else if (batteryState_.percentage >= 90) {
-    battText = (char *)"[+++]";
-  } else if (batteryState_.percentage >= 60) {
-    battText = (char *)"[++ ]";
-  } else if (batteryState_.percentage >= 30) {
-    SetColor(CD_WARN);
-    battText = (char *)"[+  ]";
+    battText = string_battery_charging;
   } else {
-    SetColor(CD_ERROR);
-    battText = (char *)"[   ]";
+    if (batteryState_.percentage > 90) {
+      battText = string_battery_100_percent;
+    } else if (batteryState_.percentage > 65) {
+      battText = string_battery_75_percent;
+    } else if (batteryState_.percentage > 40) {
+      battText = string_battery_50_percent;
+    } else if (batteryState_.percentage > 35) {
+      battText = string_battery_25_percent;
+    } else if (batteryState_.percentage > 10) {
+      SetColor(CD_WARN);
+      battText = string_battery_0_percent;
+    } else {
+      SetColor(CD_ERROR);
+      battText = string_battery_0_percent;
+    }
   }
 #endif
 
