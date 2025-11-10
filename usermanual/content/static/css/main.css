@@ -1,4 +1,18 @@
 @font-face {
+    font-family: 'Geist';
+    src: url('../font/Geist-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Geist';
+    src: url('../font/Geist-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
     font-family: 'Projekt Blackbird';
     src: url('../font/PROJEKTBlackbird.ttf') format('truetype');
     font-weight: normal;
@@ -51,7 +65,7 @@
 body {
     background: var(--background);
     color: #000000;
-    font: 16px/135% 'Oxanium', sans-serif;
+    font: 16px/135% 'Geist', sans-serif;
     font-style: normal;
     font-weight: normal;
     width: 100%;
@@ -99,7 +113,7 @@ img {
     margin: 0 0 15px 0;
 }
 
-td > img {
+td>img {
     margin: 0;
 }
 
@@ -112,7 +126,7 @@ ul {
 }
 
 h1 {
-    font-family: 'Ubuntu Mono', monospace;
+    font-family: 'Projekt Blackbird', sans-serif;
     text-transform: uppercase;
     font-size: 2.75em;
     color: #000000;
@@ -125,6 +139,12 @@ h1 {
 h2 {
     font-family: 'Projekt Blackbird', sans-serif;
     font-size: 1.5em;
+}
+
+h3,
+h5,
+h6 {
+    font-family: 'Projekt Blackbird', sans-serif;
 }
 
 aside>h1 {
@@ -173,7 +193,7 @@ ul.sideNav a.selected li {
 }
 
 h4 {
-    font-family: 'Oxanium', sans-serif;
+    font-family: 'Projekt Blackbird', sans-serif;
     font-weight: bold;
     text-transform: uppercase;
     font-size: 1.2em;
@@ -288,4 +308,8 @@ body>div#cover {
     padding: 0;
     filter: none;
     vertical-align: middle;
+}
+
+code, pre {
+    font-family: 'Ubuntu Mono', monospace;
 }
