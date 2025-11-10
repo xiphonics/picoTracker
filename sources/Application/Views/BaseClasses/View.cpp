@@ -417,7 +417,6 @@ void View::drawBattery(GUITextProperties &props) {
   char *battText;
 
 #if BATTERY_LEVEL_AS_PERCENTAGE
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
   char battTextBuffer[8];
   battText = battTextBuffer;
   if (batteryState_.charging) {
@@ -432,7 +431,6 @@ void View::drawBattery(GUITextProperties &props) {
                                                   : 99);
     }
   }
-#undef MIN
 #else
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);

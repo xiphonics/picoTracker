@@ -6,7 +6,7 @@
 #define char_battery_left char_battery_left_s[0]
 #define char_battery_full_s "\201"
 #define char_battery_full char_battery_full_s[0]
-#define char_battery_half_s "\202" git branch - d
+#define char_battery_half_s "\202"
 #define char_battery_half char_battery_half_s[0]
 #define char_battery_empty_s "\203"
 #define char_battery_empty char_battery_empty_s[0]
