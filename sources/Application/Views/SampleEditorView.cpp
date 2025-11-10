@@ -936,6 +936,16 @@ void SampleEditorView::loadSample(
     file->Close();
     return;
   }
+  // need to check as its possible for the user to copy an invalid file into the
+  // projects pool ie. samples subdir
+  if (bitsPerSample != 8 && bitsPerSample != 16) {
+    Trace::Error(
+        "SampleEditorView: Unsupported bit depth (%u) in WAV header for %s",
+        bitsPerSample, filename);
+    file->Close();
+    return;
+  }
+
   uint32_t bytesPerFrame = numChannels * (bitsPerSample / 8);
   tempSampleSize_ = bytesPerFrame > 0 ? dataChunkSize / bytesPerFrame : 0;
   if (tempSampleSize_ == 0) {
@@ -965,14 +975,41 @@ void SampleEditorView::loadSample(
       break;
     }
 
+    const uint8_t *byteBuffer =
+        reinterpret_cast<const uint8_t *>(chunkBuffer_);
     for (uint32_t i = 0; i < framesRead; ++i) {
-      int16_t sampleValue = chunkBuffer_[i * numChannels];
+      int32_t sampleValue = 0;
+      uint32_t frameOffset = i * bytesPerFrame;
 
-      if (abs(sampleValue) > peakAmplitude) {
-        peakAmplitude = abs(sampleValue);
+      if (bitsPerSample == 8) {
+        // 8-bit PCM samples are unsigned; center and scale to 16-bit range so
+        // we treat same way as existing 16bit code path
+        if (frameOffset >= bytesRead) {
+          break;
+        }
+        int32_t centered =
+            static_cast<int32_t>(byteBuffer[frameOffset]) - 128; // [-128,127]
+        sampleValue = centered << 8;                             // [-32768,32512]
+      } else { // 16-bit PCM
+        const int16_t *frameSamples =
+            reinterpret_cast<const int16_t *>(byteBuffer + frameOffset);
+        sampleValue = frameSamples[0];
+      }
+      int16_t clampedSample = static_cast<int16_t>(std::clamp<int32_t>(
+          sampleValue, static_cast<int32_t>(-32768),
+          static_cast<int32_t>(32767)));
+
+      if (abs(clampedSample) > peakAmplitude) {
+        peakAmplitude = abs(clampedSample);
       }
 
-      uint16_t magnitude = static_cast<uint16_t>(abs(sampleValue));
+      uint16_t magnitude = static_cast<uint16_t>(abs(clampedSample));
+      // The extra + 16383u is just an integer math trick to round instead of
+      // truncating (half of the divisor). If we only “scaled by BITMAPHEIGHT”
+      // (e.g., magnitude / BITMAPHEIGHT or magnitude / (32768 / BITMAPHEIGHT)
+      // without rounding) we’d either shrink the values to almost zero or
+      // introduce more distortion. This keeps the 0→32768 range mapped linearly
+      // onto 0→BITMAPHEIGHT with proper rounding
       uint32_t scaled =
           (static_cast<uint32_t>(magnitude) * BITMAPHEIGHT + 16383u) / 32768u;
       if (scaled > BITMAPHEIGHT) {
