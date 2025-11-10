@@ -62,6 +62,8 @@ private:
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
   bool waveformUsesSignedDrawing();
+  void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
+                    int x_offset, int y_offset);
 
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;

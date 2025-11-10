@@ -261,13 +261,15 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 // Helper to redraw the content of a single column (waveform or just
 // background) This function will clear a 1-pixel wide column and redraw the
 // waveform in it.
-void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
-                  int x_offset, int y_offset, bool useSignedWaveform) {
+void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
+                                    int x_coord, int x_offset, int y_offset) {
   if (x_coord < 0)
     return; // Invalid coordinate
 
   GUIRect rrect;
   const int centerY = y_offset + BITMAPHEIGHT / 2;
+
+  bool useSignedWaveform = waveformUsesSignedDrawing();
 
   // 1. Clear the column
   // The Y range for clearing should cover the entire waveform area, including
@@ -375,10 +377,12 @@ void SampleEditorView::DrawWaveForm() {
                     X_OFFSET + BITMAPWIDTH, Y_OFFSET + BITMAPHEIGHT);
     DrawRect(rrect, CD_HILITE1); // Bottom
 
+    bool usesSignedDrawing = waveformUsesSignedDrawing();
+
     // Draw full waveform
     if (waveformCacheValid_) {
       for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-        if (waveformUsesSignedDrawing()) {
+        if (usesSignedDrawing) {
           uint8_t encodedValue = waveformCache_[x];
           float normalizedValue =
               static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
@@ -453,16 +457,13 @@ void SampleEditorView::DrawWaveForm() {
 
   // Erase old markers if they have moved or disappeared
   if (last_start_x_ != -1 && last_start_x_ != current_startX) {
-    redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET,
-                 waveformUsesSignedDrawing());
+    redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET);
   }
   if (last_end_x_ != -1 && last_end_x_ != current_endX) {
-    redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET,
-                 waveformUsesSignedDrawing());
+    redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET);
   }
   if (last_playhead_x_ != -1 && last_playhead_x_ != current_playheadX) {
-    redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET,
-                 waveformUsesSignedDrawing());
+    redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET);
   }
 
   // Draw new markers
@@ -1003,12 +1004,13 @@ void SampleEditorView::loadSample(
   }
   int bytesPerFrame = numChannels * (bitsPerSample / 8);
   tempSampleSize_ = dataChunkSize / bytesPerFrame;
+  bool usesSignedDrawing = waveformUsesSignedDrawing();
 
   // --- 2. Prepare for Single-Pass Processing ---
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
              tempSampleSize_, numChannels);
 
-  if (waveformUsesSignedDrawing()) {
+  if (usesSignedDrawing) {
     memset(waveformCache_, 128, sizeof(waveformCache_));
   }
 
@@ -1036,7 +1038,7 @@ void SampleEditorView::loadSample(
         peakAmplitude = abs(sampleValue);
       }
 
-      if (waveformUsesSignedDrawing()) {
+      if (usesSignedDrawing) {
         // Upsampling: 1-to-1 mapping of samples to pixels, preserving sign.
         int cacheIndex = currentFrame + i;
         if (cacheIndex < WAVEFORM_CACHE_SIZE) {
@@ -1066,7 +1068,7 @@ void SampleEditorView::loadSample(
   file->Close();
 
   // --- 4. Finalize Waveform Cache ---
-  if (!waveformUsesSignedDrawing()) {
+  if (!usesSignedDrawing) {
     for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
       // Calculate the Root Mean Mean Square (RMS)
       // 1. Calculate mean of squares from our accumulated integer values.
