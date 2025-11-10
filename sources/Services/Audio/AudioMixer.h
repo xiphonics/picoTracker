@@ -39,6 +39,7 @@ private:
   // the mix
   stereosample avgMixerLevel_ = 0;
 
-  static fixed renderBuffer_[MAX_SAMPLE_COUNT * 2];
+  __attribute__((section(".DTCMRAM")))
+  __attribute__((aligned(32))) static fixed renderBuffer_[MAX_SAMPLE_COUNT * 2];
 };
 #endif

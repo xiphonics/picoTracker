@@ -106,7 +106,7 @@ bool advAudioDriver::InitDriver() {
   core1_audio = xSemaphoreCreateCountingStatic(SOUND_BUFFER_COUNT - 1, 0,
                                                &xSemaphoreBuffer);
 
-  static StackType_t AudioStack[4000];
+  __attribute__((section(".DTCMRAM"))) static StackType_t AudioStack[4000];
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(AudioThread, "Audio", 4000, NULL, 6, AudioStack,
                     &ProcessEventTCB);
