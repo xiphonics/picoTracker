@@ -12,6 +12,7 @@ tocPagePosition: 1
 
 pages:
   - frontcover.md
+  - advance-fcc.md
   - introduction.md
   - getting-started.md
   - device.md
