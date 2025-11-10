@@ -34,9 +34,9 @@
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
 
-constexpr const char *const kSampleEditOperationNames[] = {"Trim"};
-constexpr int kSampleEditOperationCount =
-    sizeof(kSampleEditOperationNames) / sizeof(kSampleEditOperationNames[0]);
+constexpr const char *const sampleEditOperationNames[] = {"Trim"};
+constexpr uint32_t sampleEditOperationCount =
+    sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
 
 #define X_OFFSET 0
 #ifdef ADV
@@ -54,8 +54,8 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       // bit of a hack to use InstrumentName but we never actually persist this
       // in any config file here
       filenameVar_(FourCC::InstrumentName, ""),
-      operationVar_(FourCC::VarSampleEditOperation, kSampleEditOperationNames,
-                    kSampleEditOperationCount,
+      operationVar_(FourCC::VarSampleEditOperation, sampleEditOperationNames,
+                    sampleEditOperationCount,
                     static_cast<int>(SampleEditOperation::Trim)),
       win(w), redraw_(false) {
   // Initialize waveform cache to zero
@@ -117,7 +117,7 @@ void SampleEditorView::addAllFields() {
                               FourCC::InstrumentName, defaultRecName);
   fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
-  const int baseX = position._x;
+  const uint16_t baseX = position._x;
 
   position._y += 1;
   bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
@@ -135,7 +135,7 @@ void SampleEditorView::addAllFields() {
   // Operation selector
   position._y += 1;
   position._x = baseX;
-  int maxOperationIndex =
+  uint8_t maxOperationIndex =
       operationVar_.GetListSize() > 0 ? operationVar_.GetListSize() - 1 : 0;
   intVarField_.emplace_back(position, operationVar_, "op: %s", 0,
                             maxOperationIndex, 1, 1);
@@ -267,7 +267,7 @@ void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
     return; // Invalid coordinate
 
   GUIRect rrect;
-  const int centerY = y_offset + BITMAPHEIGHT / 2;
+  const uint16_t centerY = y_offset + BITMAPHEIGHT / 2;
 
   bool useSignedWaveform = waveformUsesSignedDrawing();
 
@@ -283,7 +283,7 @@ void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
   view.DrawRect(rrect, CD_HILITE2);
 
   // 2. Redraw the waveform in that column
-  int waveform_idx =
+  uint16_t waveform_idx =
       x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
   if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
     if (useSignedWaveform) {
@@ -291,11 +291,11 @@ void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
       float normalizedValue =
           static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
       float scaled = normalizedValue * (BITMAPHEIGHT / 2.0f);
-      int yPos =
-          static_cast<int>(std::round(static_cast<float>(centerY) + scaled));
+      uint16_t yPos = static_cast<uint16_t>(
+          std::round(static_cast<float>(centerY) + scaled));
 
-      int startY = std::min(centerY, yPos);
-      int endY = std::max(centerY, yPos);
+      uint16_t startY = std::min(centerY, yPos);
+      uint16_t endY = std::max(centerY, yPos);
       if (startY == endY) {
         if (normalizedValue > 0.0f) {
           endY++;
@@ -316,10 +316,10 @@ void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
         view.DrawRect(rrect, CD_NORMAL);
       }
     } else { // else draw RMS value waveform
-      int pixelHeight = waveformCache[waveform_idx];
+      uint16_t pixelHeight = waveformCache[waveform_idx];
       if (pixelHeight > 0) {
-        int startY = centerY - pixelHeight / 2;
-        int endY = startY + pixelHeight;
+        uint16_t startY = centerY - pixelHeight / 2;
+        uint16_t endY = startY + pixelHeight;
 
         // Clamp to inside the border
         if (startY < y_offset + 1)
@@ -363,7 +363,7 @@ void SampleEditorView::DrawWaveForm() {
     fullWaveformRedraw_ = false;
 
     clearWaveformRegion();
-    const int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
+    const uint16_t centerY = Y_OFFSET + BITMAPHEIGHT / 2;
 
     // Draw zero baseline
     rrect =
@@ -387,11 +387,11 @@ void SampleEditorView::DrawWaveForm() {
           float normalizedValue =
               static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
           float scaled = normalizedValue * (BITMAPHEIGHT / 2.0f);
-          int yPos = static_cast<int>(
+          uint16_t yPos = static_cast<int>(
               std::round(static_cast<float>(centerY) + scaled));
 
-          int startY = std::min(centerY, yPos);
-          int endY = std::max(centerY, yPos);
+          uint16_t startY = std::min(centerY, yPos);
+          uint16_t endY = std::max(centerY, yPos);
           if (startY == endY) {
             if (normalizedValue > 0.0f) {
               endY++;
@@ -413,10 +413,10 @@ void SampleEditorView::DrawWaveForm() {
             DrawRect(rrect, CD_NORMAL);
           }
         } else {
-          int pixelHeight = waveformCache_[x];
+          uint16_t pixelHeight = waveformCache_[x];
           if (pixelHeight > 0) {
-            int startY = centerY - pixelHeight / 2;
-            int endY = startY + pixelHeight;
+            uint16_t startY = centerY - pixelHeight / 2;
+            uint16_t endY = startY + pixelHeight;
 
             // Clamp to inside the border
             if (startY < Y_OFFSET + 1)
@@ -442,18 +442,19 @@ void SampleEditorView::DrawWaveForm() {
   // --- Incremental Marker Update Logic ---
 
   // Calculate current marker positions
-  const int current_startX =
+  const uint16_t current_startX =
       X_OFFSET + 1 +
-      static_cast<int>((static_cast<float>(start_) / tempSampleSize_) *
-                       (BITMAPWIDTH - 2));
-  const int current_endX =
+      static_cast<uint16_t>((static_cast<float>(start_) / tempSampleSize_) *
+                            (BITMAPWIDTH - 2));
+  const uint16_t current_endX =
       X_OFFSET + 1 +
-      static_cast<int>((static_cast<float>(end_) / tempSampleSize_) *
-                       (BITMAPWIDTH - 2));
-  const int current_playheadX =
-      isPlaying_ ? (X_OFFSET + 1 +
-                    static_cast<int>(playbackPosition_ * (BITMAPWIDTH - 2)))
-                 : -1;
+      static_cast<uint16_t>((static_cast<float>(end_) / tempSampleSize_) *
+                            (BITMAPWIDTH - 2));
+  const uint16_t current_playheadX =
+      isPlaying_
+          ? (X_OFFSET + 1 +
+             static_cast<uint16_t>(playbackPosition_ * (BITMAPWIDTH - 2)))
+          : -1;
 
   // Erase old markers if they have moved or disappeared
   if (last_start_x_ != -1 && last_start_x_ != current_startX) {
@@ -652,7 +653,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
 bool SampleEditorView::applySelectedOperation() {
   updateSampleParameters();
 
-  int opIndex = operationVar_.GetInt();
+  int8_t opIndex = operationVar_.GetInt();
   if (opIndex < 0 || opIndex >= static_cast<int>(SampleEditOperation::Count)) {
     Trace::Error("SampleEditorView: Invalid operation index %d", opIndex);
     return false;
@@ -742,9 +743,10 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
       if (!goProjectSamplesDir(viewData_)) {
         Trace::Error("SampleEditorView: Failed to chdir for pool reload");
       } else {
-        int old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+        uint16_t old_index =
+            findSampleIndexByName(viewData_->sampleEditorFilename);
         if (old_index >= 0) {
-          int new_index = pool->ReloadSample(
+          uint16_t new_index = pool->ReloadSample(
               old_index, viewData_->sampleEditorFilename.c_str());
           if (new_index >= 0 && old_index != new_index) {
             auto instrumentBank = viewData_->project_->GetInstrumentBank();
@@ -772,8 +774,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     }
   }
 
-  int refreshedSize = static_cast<int>(tempSampleSize_);
-  int newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
+  uint32_t refreshedSize = static_cast<uint32_t>(tempSampleSize_);
+  uint32_t newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
   startVar_.SetInt(0);
   endVar_.SetInt(newEndValue);
   updateSampleParameters();
@@ -848,7 +850,7 @@ bool SampleEditorView::loadSampleToPool(
     return false;
   }
 
-  int sampleId = -1;
+  uint16_t sampleId = -1;
 
   if (!viewData_->sampleEditorProjectList) {
     char projectName[MAX_PROJECT_NAME_LENGTH];
@@ -871,7 +873,7 @@ bool SampleEditorView::loadSampleToPool(
   return true;
 }
 
-int SampleEditorView::findSampleIndexByName(
+uint16_t SampleEditorView::findSampleIndexByName(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const {
   auto pool = SamplePool::GetInstance();
   if (!pool) {
@@ -879,8 +881,8 @@ int SampleEditorView::findSampleIndexByName(
   }
 
   char **names = pool->GetNameList();
-  int count = pool->GetNameListSize();
-  for (int i = 0; i < count; ++i) {
+  uint16_t count = pool->GetNameListSize();
+  for (uint16_t i = 0; i < count; ++i) {
     if (names[i] && strcmp(names[i], name.c_str()) == 0) {
       return i;
     }
@@ -943,7 +945,7 @@ void SampleEditorView::updateSampleParameters() {
     start_ = end_;
 }
 
-short SampleEditorView::chunkBuffer_[512 * 2];
+int16_t SampleEditorView::chunkBuffer_[512 * 2];
 
 // Load sample from the current projects samples subdir
 // ONLY filename for samples subidr (not full path!!) is supported for now
@@ -1002,7 +1004,7 @@ void SampleEditorView::loadSample(
     file->Close();
     return;
   }
-  int bytesPerFrame = numChannels * (bitsPerSample / 8);
+  uint32_t bytesPerFrame = numChannels * (bitsPerSample / 8);
   tempSampleSize_ = dataChunkSize / bytesPerFrame;
   bool usesSignedDrawing = waveformUsesSignedDrawing();
 
@@ -1014,25 +1016,25 @@ void SampleEditorView::loadSample(
     memset(waveformCache_, 128, sizeof(waveformCache_));
   }
 
-  short peakAmplitude = 0;
+  int16_t peakAmplitude = 0;
   uint32_t currentFrame = 0;
 
-  const int CHUNK_FRAMES = 512;
+  const uint32_t CHUNK_FRAMES = 512;
 
   // --- 3. The Single-Pass Read Loop ---
   while (currentFrame < tempSampleSize_) {
-    int framesToRead =
-        std::min(CHUNK_FRAMES, (int)(tempSampleSize_ - currentFrame));
-    int bytesToRead = framesToRead * bytesPerFrame;
-    int bytesRead = file->Read(chunkBuffer_, bytesToRead);
+    uint32_t framesToRead =
+        std::min(CHUNK_FRAMES, (uint32_t)(tempSampleSize_ - currentFrame));
+    uint32_t bytesToRead = framesToRead * bytesPerFrame;
+    uint32_t bytesRead = file->Read(chunkBuffer_, bytesToRead);
 
-    int framesRead = (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
+    uint32_t framesRead = (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
     if (framesRead == 0) {
       break;
     }
 
-    for (int i = 0; i < framesRead; ++i) {
-      short sampleValue = chunkBuffer_[i * numChannels];
+    for (uint32_t i = 0; i < framesRead; ++i) {
+      int16_t sampleValue = chunkBuffer_[i * numChannels];
 
       if (abs(sampleValue) > peakAmplitude) {
         peakAmplitude = abs(sampleValue);
@@ -1040,7 +1042,7 @@ void SampleEditorView::loadSample(
 
       if (usesSignedDrawing) {
         // Upsampling: 1-to-1 mapping of samples to pixels, preserving sign.
-        int cacheIndex = currentFrame + i;
+        uint32_t cacheIndex = currentFrame + i;
         if (cacheIndex < WAVEFORM_CACHE_SIZE) {
           float normalizedValue = (float)sampleValue / 32768.0f; // [-1, 1]
           // Encode to [0, 255], with 128 as zero.
@@ -1052,7 +1054,7 @@ void SampleEditorView::loadSample(
       } else {
         float samplesPerPixel =
             static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
-        int cacheIndex = (currentFrame + i) / samplesPerPixel;
+        uint32_t cacheIndex = (currentFrame + i) / samplesPerPixel;
         if (cacheIndex < WAVEFORM_CACHE_SIZE) {
           // Accumulate sum of squares for RMS calculation later.
           sumSquares[cacheIndex] += (int64_t)sampleValue * sampleValue;

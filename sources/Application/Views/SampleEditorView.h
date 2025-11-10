@@ -57,7 +57,7 @@ private:
   bool applySelectedOperation();
   bool applyTrimOperation(uint32_t startFrame, uint32_t endFrame);
   void navigateToView(ViewType vt);
-  int findSampleIndexByName(
+  uint16_t findSampleIndexByName(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
@@ -109,7 +109,7 @@ private:
   uint32_t lastAnimationTime_;  // Timestamp of the last animation frame
   System *sys_;
   uint32_t tempSampleSize_ = 0;
-  static short chunkBuffer_[512 * 2];
+  static int16_t chunkBuffer_[512 * 2];
   // Use an empty default name - we don't want to populate with sample
   // filename The display name will still be shown on the phrase screen via
   // GetDisplayName()
