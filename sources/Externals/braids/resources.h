@@ -33,7 +33,8 @@
 #define BRAIDS_RESOURCES_H_
 
 // #include "stmlib/stmlib.h"
-#include "pico/stdlib.h"
+// #include "pico/stdlib.h"
+#include <cstdint>
 
 namespace braids {
 
