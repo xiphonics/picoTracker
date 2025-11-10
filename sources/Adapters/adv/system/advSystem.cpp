@@ -161,6 +161,7 @@ void advSystem::GetBatteryState(BatteryState &state) {
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
   ChargingStatus status = getChargingStatus();
+  // PRE_CHARGE stage is used when battery is too low to FAST_CHARGE
   if (status == PRE_CHARGE || status == FAST_CHARGE) {
     state.charging = true;
   } else {
