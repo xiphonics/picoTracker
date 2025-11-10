@@ -269,8 +269,6 @@ void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
   GUIRect rrect;
   const uint16_t centerY = y_offset + BITMAPHEIGHT / 2;
 
-  bool useSignedWaveform = waveformUsesSignedDrawing();
-
   // 1. Clear the column
   // The Y range for clearing should cover the entire waveform area, including
   // borders
@@ -286,26 +284,12 @@ void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
   uint16_t waveform_idx =
       x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
   if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
-    if (useSignedWaveform) {
-      uint8_t encodedValue = waveformCache[waveform_idx];
-      float normalizedValue =
-          static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
-      float scaled = normalizedValue * (BITMAPHEIGHT / 2.0f);
-      uint16_t yPos = static_cast<uint16_t>(
-          std::round(static_cast<float>(centerY) + scaled));
+    uint16_t pixelHeight = waveformCache[waveform_idx];
+    if (pixelHeight > 0) {
+      uint16_t startY = centerY - pixelHeight / 2;
+      uint16_t endY = startY + pixelHeight;
 
-      uint16_t startY = std::min(centerY, yPos);
-      uint16_t endY = std::max(centerY, yPos);
-      if (startY == endY) {
-        if (normalizedValue > 0.0f) {
-          endY++;
-        } else if (normalizedValue < 0.0f) {
-          startY--;
-        } else {
-          // Pure zero amplitude – already represented by the baseline.
-          return;
-        }
-      }
+      // Clamp to inside the border
       if (startY < y_offset + 1)
         startY = y_offset + 1;
       if (endY > y_offset + BITMAPHEIGHT - 2)
@@ -314,23 +298,6 @@ void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
       if (startY <= endY) {
         rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
         view.DrawRect(rrect, CD_NORMAL);
-      }
-    } else { // else draw RMS value waveform
-      uint16_t pixelHeight = waveformCache[waveform_idx];
-      if (pixelHeight > 0) {
-        uint16_t startY = centerY - pixelHeight / 2;
-        uint16_t endY = startY + pixelHeight;
-
-        // Clamp to inside the border
-        if (startY < y_offset + 1)
-          startY = y_offset + 1;
-        if (endY > y_offset + BITMAPHEIGHT - 2)
-          endY = y_offset + BITMAPHEIGHT - 2;
-
-        if (startY <= endY) {
-          rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
-          view.DrawRect(rrect, CD_NORMAL);
-        }
       }
     }
   }
@@ -377,32 +344,15 @@ void SampleEditorView::DrawWaveForm() {
                     X_OFFSET + BITMAPWIDTH, Y_OFFSET + BITMAPHEIGHT);
     DrawRect(rrect, CD_HILITE1); // Bottom
 
-    bool usesSignedDrawing = waveformUsesSignedDrawing();
-
     // Draw full waveform
     if (waveformCacheValid_) {
       for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-        if (usesSignedDrawing) {
-          uint8_t encodedValue = waveformCache_[x];
-          float normalizedValue =
-              static_cast<float>(static_cast<int>(encodedValue) - 128) / 127.0f;
-          float scaled = normalizedValue * (BITMAPHEIGHT / 2.0f);
-          uint16_t yPos = static_cast<int>(
-              std::round(static_cast<float>(centerY) + scaled));
+        uint16_t pixelHeight = waveformCache_[x];
+        if (pixelHeight > 0) {
+          uint16_t startY = centerY - pixelHeight / 2;
+          uint16_t endY = startY + pixelHeight;
 
-          uint16_t startY = std::min(centerY, yPos);
-          uint16_t endY = std::max(centerY, yPos);
-          if (startY == endY) {
-            if (normalizedValue > 0.0f) {
-              endY++;
-            } else if (normalizedValue < 0.0f) {
-              startY--;
-            } else {
-              // Zero amplitude already represented by the baseline.
-              continue;
-            }
-          }
-
+          // Clamp to inside the border
           if (startY < Y_OFFSET + 1)
             startY = Y_OFFSET + 1;
           if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
@@ -411,23 +361,6 @@ void SampleEditorView::DrawWaveForm() {
           if (startY <= endY) {
             rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
             DrawRect(rrect, CD_NORMAL);
-          }
-        } else {
-          uint16_t pixelHeight = waveformCache_[x];
-          if (pixelHeight > 0) {
-            uint16_t startY = centerY - pixelHeight / 2;
-            uint16_t endY = startY + pixelHeight;
-
-            // Clamp to inside the border
-            if (startY < Y_OFFSET + 1)
-              startY = Y_OFFSET + 1;
-            if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
-              endY = Y_OFFSET + BITMAPHEIGHT - 2;
-
-            if (startY <= endY) {
-              rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
-              DrawRect(rrect, CD_NORMAL);
-            }
           }
         }
       }
@@ -956,8 +889,7 @@ void SampleEditorView::loadSample(
   // Reset temporary sample state
   tempSampleSize_ = 0;
   waveformCacheValid_ = false;
-  static int64_t sumSquares[WAVEFORM_CACHE_SIZE];
-  memset(sumSquares, 0, sizeof(sumSquares));
+  memset(waveformCache_, 0, sizeof(waveformCache_));
 
   if (filename.empty()) {
     Trace::Error("missing sample filename");
@@ -1005,16 +937,16 @@ void SampleEditorView::loadSample(
     return;
   }
   uint32_t bytesPerFrame = numChannels * (bitsPerSample / 8);
-  tempSampleSize_ = dataChunkSize / bytesPerFrame;
-  bool usesSignedDrawing = waveformUsesSignedDrawing();
+  tempSampleSize_ = bytesPerFrame > 0 ? dataChunkSize / bytesPerFrame : 0;
+  if (tempSampleSize_ == 0) {
+    Trace::Error("SampleEditorView: Sample has zero frames in %s", filename);
+    file->Close();
+    return;
+  }
 
   // --- 2. Prepare for Single-Pass Processing ---
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
              tempSampleSize_, numChannels);
-
-  if (usesSignedDrawing) {
-    memset(waveformCache_, 128, sizeof(waveformCache_));
-  }
 
   int16_t peakAmplitude = 0;
   uint32_t currentFrame = 0;
@@ -1040,24 +972,36 @@ void SampleEditorView::loadSample(
         peakAmplitude = abs(sampleValue);
       }
 
-      if (usesSignedDrawing) {
-        // Upsampling: 1-to-1 mapping of samples to pixels, preserving sign.
-        uint32_t cacheIndex = currentFrame + i;
-        if (cacheIndex < WAVEFORM_CACHE_SIZE) {
-          float normalizedValue = (float)sampleValue / 32768.0f; // [-1, 1]
-          // Encode to [0, 255], with 128 as zero.
-          float encoded =
-              (normalizedValue + 1.0f) * 127.5f; // map [-1,1] -> [0,255]
-          waveformCache_[cacheIndex] = static_cast<uint8_t>(
-              std::round(std::clamp(encoded, 0.0f, 255.0f)));
-        }
-      } else {
-        float samplesPerPixel =
-            static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
-        uint32_t cacheIndex = (currentFrame + i) / samplesPerPixel;
-        if (cacheIndex < WAVEFORM_CACHE_SIZE) {
-          // Accumulate sum of squares for RMS calculation later.
-          sumSquares[cacheIndex] += (int64_t)sampleValue * sampleValue;
+      uint16_t magnitude = static_cast<uint16_t>(abs(sampleValue));
+      uint32_t scaled =
+          (static_cast<uint32_t>(magnitude) * BITMAPHEIGHT + 16383u) / 32768u;
+      if (scaled > BITMAPHEIGHT) {
+        scaled = BITMAPHEIGHT;
+      }
+      uint8_t sampleHeight = static_cast<uint8_t>(scaled);
+      if (sampleHeight == 0) {
+        continue;
+      }
+      uint32_t sampleIndex = currentFrame + i;
+      uint64_t startColumn =
+          (static_cast<uint64_t>(sampleIndex) * WAVEFORM_CACHE_SIZE) /
+          tempSampleSize_;
+      uint64_t endColumn =
+          (static_cast<uint64_t>(sampleIndex + 1ULL) * WAVEFORM_CACHE_SIZE) /
+          tempSampleSize_;
+      if (endColumn == startColumn) {
+        endColumn = startColumn + 1;
+      }
+      if (startColumn >= WAVEFORM_CACHE_SIZE) {
+        startColumn = WAVEFORM_CACHE_SIZE - 1;
+      }
+      if (endColumn > WAVEFORM_CACHE_SIZE) {
+        endColumn = WAVEFORM_CACHE_SIZE;
+      }
+      for (uint32_t column = static_cast<uint32_t>(startColumn);
+           column < endColumn; ++column) {
+        if (sampleHeight > waveformCache_[column]) {
+          waveformCache_[column] = sampleHeight;
         }
       }
     }
@@ -1069,25 +1013,7 @@ void SampleEditorView::loadSample(
   }
   file->Close();
 
-  // --- 4. Finalize Waveform Cache ---
-  if (!usesSignedDrawing) {
-    for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
-      // Calculate the Root Mean Mean Square (RMS)
-      // 1. Calculate mean of squares from our accumulated integer values.
-      float samplesPerPixel =
-          static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
-      float mean_square = (float)sumSquares[x] / samplesPerPixel;
-
-      // 2. Take the square root.
-      float rms_unscaled = sqrt(mean_square);
-
-      // 3. Normalize from 16-bit sample range to [-1.0, 1.0]
-      float rms = rms_unscaled / 32768.0f;
-
-      // Scale the final value to the display height
-      waveformCache_[x] = (uint8_t)(rms * BITMAPHEIGHT);
-    }
-  }
+  // All columns already contain final peak heights scaled to the display range.
   waveformCacheValid_ = true;
 
   // set start point variable to 0
@@ -1108,11 +1034,4 @@ void SampleEditorView::clearWaveformRegion() {
   rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
                   Y_OFFSET + BITMAPHEIGHT);
   DrawRect(rrect, CD_BACKGROUND);
-}
-
-bool SampleEditorView::waveformUsesSignedDrawing() {
-  float samplesPerPixel =
-      static_cast<float>(tempSampleSize_) / WAVEFORM_CACHE_SIZE;
-  Trace::Log("SAMPLEEDITOR", "samples/p/p: %f", samplesPerPixel);
-  return samplesPerPixel < 1.0f;
 }

@@ -61,7 +61,6 @@ private:
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
-  bool waveformUsesSignedDrawing();
   void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
                     int x_offset, int y_offset);
 
