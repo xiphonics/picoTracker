@@ -316,8 +316,14 @@ void Project::PurgeInstruments() {
   for (int i = 0; i < MAX_INSTRUMENT_COUNT; i++) {
     if (!used[i]) {
       I_Instrument *instrument = bank->GetInstrument(i);
-      instrument->Purge();
-      Trace::Debug("Purged Unused instrument [%d]", i);
+      if (instrument->GetType() == IT_SAMPLE) {
+        SampleInstrument *sampleInstrument =
+            static_cast<SampleInstrument *>(instrument);
+        sampleInstrument->AssignSample(NO_SAMPLE);
+      }
+      // we dont reorder indexes on release so safe to call inside this loop
+      bank->releaseInstrument(i);
+      Trace::Debug("Set unused instrument slot [%d] to NONE", i);
     }
   }
 };
