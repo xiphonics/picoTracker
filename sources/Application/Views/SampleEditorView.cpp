@@ -977,7 +977,7 @@ void SampleEditorView::loadSample(
 
     const uint8_t *byteBuffer = reinterpret_cast<const uint8_t *>(chunkBuffer_);
     for (uint32_t i = 0; i < framesRead; ++i) {
-      int32_t sampleValue = 0;
+      int16_t sampleValue = 0;
       uint32_t frameOffset = i * bytesPerFrame;
 
       if (bitsPerSample == 8) {
@@ -986,17 +986,16 @@ void SampleEditorView::loadSample(
         if (frameOffset >= bytesRead) {
           break;
         }
-        int32_t centered =
-            static_cast<int32_t>(byteBuffer[frameOffset]) - 128; // [-128,127]
+        int16_t centered =
+            static_cast<int16_t>(byteBuffer[frameOffset]) - 128; // [-128,127]
         sampleValue = centered << 8; // [-32768,32512]
       } else {                       // 16-bit PCM
         const int16_t *frameSamples =
             reinterpret_cast<const int16_t *>(byteBuffer + frameOffset);
         sampleValue = frameSamples[0];
       }
-      int16_t clampedSample = static_cast<int16_t>(
-          std::clamp<int32_t>(sampleValue, static_cast<int32_t>(-32768),
-                              static_cast<int32_t>(32767)));
+      int16_t clampedSample =
+          static_cast<int16_t>(std::clamp<int32_t>(sampleValue, -32768, 32767));
 
       if (abs(clampedSample) > peakAmplitude) {
         peakAmplitude = abs(clampedSample);
