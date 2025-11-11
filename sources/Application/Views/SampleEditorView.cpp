@@ -870,13 +870,37 @@ void SampleEditorView::updateSampleParameters() {
   start_ = startVar_.GetInt();
   end_ = endVar_.GetInt();
 
-  // Ensure parameters are within valid range
-  if (start_ >= sampleSize)
+  bool startAdjusted = false;
+  bool endAdjusted = false;
+
+  // Ensure parameters are within valid range to prevent end going before start
+  if (start_ >= sampleSize) {
     start_ = sampleSize - 1;
-  if (end_ >= sampleSize)
+    startAdjusted = true;
+  }
+  if (start_ < 0) {
+    start_ = 0;
+    startAdjusted = true;
+  }
+  if (end_ >= sampleSize) {
     end_ = sampleSize - 1;
-  if (start_ > end_)
-    start_ = end_;
+    endAdjusted = true;
+  }
+  if (end_ < 0) {
+    end_ = 0;
+    endAdjusted = true;
+  }
+  if (start_ > end_) {
+    end_ = start_;
+    endAdjusted = true;
+  }
+
+  if (startAdjusted) {
+    startVar_.SetInt(start_);
+  }
+  if (endAdjusted) {
+    endVar_.SetInt(end_);
+  }
 }
 
 int16_t SampleEditorView::chunkBuffer_[512 * 2];
