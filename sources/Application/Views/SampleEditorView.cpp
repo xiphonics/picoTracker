@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Instruments/WavFileWriter.h"
+#include "Application/Instruments/WavHeader.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Player/Player.h"
@@ -915,17 +916,18 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename);
 
   // --- 1. Read Header & Get Size ---
-  char header[44];
-  if (file->Read(header, 44) != 44) {
-    Trace::Error("SampleEditorView: Failed to read WAV header from %s",
-                 filename);
+  auto headerResult = WavHeaderWriter::ReadHeader(file);
+  if (!headerResult.has_value()) {
+    Trace::Error("SampleEditorView: Failed to parse WAV header for %s (err=%d)",
+                 filename, static_cast<int>(headerResult.error()));
     file->Close();
     return;
   }
 
-  uint16_t numChannels = *reinterpret_cast<uint16_t *>(&header[22]);
-  uint16_t bitsPerSample = *reinterpret_cast<uint16_t *>(&header[34]);
-  uint32_t dataChunkSize = *reinterpret_cast<uint32_t *>(&header[40]);
+  const WavHeaderInfo headerInfo = headerResult.value();
+  uint16_t numChannels = headerInfo.numChannels;
+  uint16_t bitsPerSample = headerInfo.bitsPerSample;
+  uint32_t dataChunkSize = headerInfo.dataChunkSize;
 
   // Added a check to ensure we don't try to use more channels than our buffer
   // supports
@@ -946,13 +948,16 @@ void SampleEditorView::loadSample(
     return;
   }
 
-  uint32_t bytesPerFrame = numChannels * (bitsPerSample / 8);
+  uint32_t bytesPerFrame = numChannels * headerInfo.bytesPerSample;
   tempSampleSize_ = bytesPerFrame > 0 ? dataChunkSize / bytesPerFrame : 0;
   if (tempSampleSize_ == 0) {
     Trace::Error("SampleEditorView: Sample has zero frames in %s", filename);
     file->Close();
     return;
   }
+
+  // ensure we start streaming from the data chunk
+  file->Seek(headerInfo.dataOffset, SEEK_SET);
 
   // --- 2. Prepare for Single-Pass Processing ---
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
