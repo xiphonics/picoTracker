@@ -1023,14 +1023,13 @@ void SampleEditorView::loadSample(
             reinterpret_cast<const int16_t *>(byteBuffer + frameOffset);
         sampleValue = frameSamples[0];
       }
-      int16_t clampedSample =
-          static_cast<int16_t>(std::clamp<int32_t>(sampleValue, -32768, 32767));
+      int16_t clampedSample =std::clamp<int16_t>(sampleValue, -32768, 32767);
 
       if (abs(clampedSample) > peakAmplitude) {
         peakAmplitude = abs(clampedSample);
       }
 
-      uint16_t magnitude = static_cast<uint16_t>(abs(clampedSample));
+      uint16_t magnitude = abs(clampedSample);
       // The extra + 16383u is just an integer math trick to round instead of
       // truncating (half of the divisor). If we only “scaled by BITMAPHEIGHT”
       // (e.g., magnitude / BITMAPHEIGHT or magnitude / (32768 / BITMAPHEIGHT)
@@ -1038,7 +1037,7 @@ void SampleEditorView::loadSample(
       // introduce more distortion. This keeps the 0→32768 range mapped linearly
       // onto 0→BITMAPHEIGHT with proper rounding
       uint32_t scaled =
-          (static_cast<uint32_t>(magnitude) * BITMAPHEIGHT + 16383u) / 32768u;
+          ((magnitude) * BITMAPHEIGHT + 16383u) / 32768u;
       if (scaled > BITMAPHEIGHT) {
         scaled = BITMAPHEIGHT;
       }
