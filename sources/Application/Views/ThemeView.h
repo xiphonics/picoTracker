@@ -28,7 +28,7 @@
 
 #define COLOR_COMPONENT_COUNT 3
 #define COLOR_COUNT 12
-#define COLOUR_SUB_FIELDS_COUNT (COLOR_COMPONENT_COUNT * COLOR_COUNT)
+#define COLOR_SUB_FIELDS_COUNT (COLOR_COMPONENT_COUNT * COLOR_COUNT)
 
 class ThemeView : public FieldView, public I_Observer {
 public:
@@ -65,11 +65,12 @@ private:
 
   ColorComponentField *findColorComponentField(Observable *observable);
 
-  etl::vector<UIIntVarField, (COLOUR_SUB_FIELDS_COUNT + 1)> intVarField_; // for colors + 1 for font selector
-  etl::vector<UISwatchField, COLOUR_SUB_FIELDS_COUNT> swatchField_;
+  etl::vector<UIIntVarField, (COLOR_SUB_FIELDS_COUNT + 1)>
+      intVarField_; // for colors + 1 for font selector
+  etl::vector<UISwatchField, COLOR_COUNT> swatchField_;
   etl::vector<UIStaticField, COLOR_COUNT> staticField_;
-  etl::vector<Variable, COLOUR_SUB_FIELDS_COUNT> colorComponentVars_;
-  etl::vector<ColorComponentField, COLOUR_SUB_FIELDS_COUNT> colorComponentFields_;
+  etl::vector<Variable, COLOR_SUB_FIELDS_COUNT> colorComponentVars_;
+  etl::vector<ColorComponentField, COLOR_SUB_FIELDS_COUNT> colorComponentFields_;
   etl::vector<UIActionField, 2> actionField_; // For Import/Export buttons
   etl::vector<UITextField<MAX_THEME_NAME_LENGTH>, 1>
       textFields_; // For theme name input
