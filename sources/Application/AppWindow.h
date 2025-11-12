@@ -52,6 +52,7 @@ class MixerView;
 class ThemeView;
 class ThemeImportView;
 class SampleEditorView;
+class SampleSlicesView;
 class RecordView;
 class View;
 
@@ -124,6 +125,7 @@ private:
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   SampleEditorView *_sampleEditorView;
+  SampleSlicesView *_sampleSlicesView;
   RecordView *_recordView;
   NullView *_nullView;
 
