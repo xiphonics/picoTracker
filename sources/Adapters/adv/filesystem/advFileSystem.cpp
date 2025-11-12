@@ -7,6 +7,7 @@
  */
 
 #include "advFileSystem.h"
+#include <cstdio>
 #include <cstring>
 
 FATFS SDFatFS;
@@ -436,9 +437,13 @@ void PI_File::Seek(long offset, int whence) {
 }
 
 int PI_File::GetC() {
-  TCHAR c[2];
-  f_gets(c, 2, &file_);
-  return c[0];
+  BYTE c = 0;
+  UINT bytesRead = 0;
+  FRESULT res = f_read(&file_, &c, 1, &bytesRead);
+  if ((res != FR_OK) || (bytesRead == 0)) {
+    return EOF;
+  }
+  return static_cast<int>(c);
 }
 
 int PI_File::Write(const void *ptr, int size, int nmemb) {
