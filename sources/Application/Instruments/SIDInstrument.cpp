@@ -25,11 +25,6 @@ SIDInstrument *SIDInstrument::SID1RenderMaster = 0;
 cRSID SIDInstrument::sid2_(44100);
 SIDInstrument *SIDInstrument::SID2RenderMaster = 0;
 
-Variable SIDInstrument::vwf1_(FourCC::SIDInstrument1Waveform, sidWaveformText,
-                              DWF_LAST, 0x1);
-Variable SIDInstrument::vwf2_(FourCC::SIDInstrument2Waveform, sidWaveformText,
-                              DWF_LAST, 0x1);
-
 Variable SIDInstrument::fltcut1_(FourCC::SIDInstrument1FilterCut, 0x1FF);
 Variable SIDInstrument::fltres1_(FourCC::SIDInstrument1FilterResonance, 0x0);
 Variable SIDInstrument::fltmode1_(FourCC::SIDInstrument1FilterMode,
@@ -45,6 +40,7 @@ Variable SIDInstrument::vol2_(FourCC::SIDInstrument2Volume, 0xF);
 SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
     : I_Instrument(&variables_), chip_(chip),
       vpw_(FourCC::SIDInstrumentPulseWidth, 0x800),
+      vwf_(FourCC::SIDInstrument1Waveform, sidWaveformText, DWF_LAST, 0x1),
       vsync_(FourCC::SIDInstrumentVSync, false),
       vring_(FourCC::SIDInstrumentRingModulator, false),
       vadsr_(FourCC::SIDInstrumentADSR, 0x2282),
@@ -55,7 +51,7 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
 
   // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &vpw_);
-  variables_.insert(variables_.end(), &vwf1_);
+  variables_.insert(variables_.end(), &vwf_);
   variables_.insert(variables_.end(), &vsync_);
   variables_.insert(variables_.end(), &vring_);
   variables_.insert(variables_.end(), &vadsr_);
@@ -83,7 +79,6 @@ bool SIDInstrument::Init() {
   switch (chip_) {
   case 1:
     sid_ = &sid1_;
-    vwf_ = &vwf1_;
     fltcut_ = &fltcut1_;
     fltres_ = &fltres1_;
     fltmode_ = &fltmode1_;
@@ -91,7 +86,6 @@ bool SIDInstrument::Init() {
     break;
   case 2:
     sid_ = &sid2_;
-    vwf_ = &vwf2_;
     fltcut_ = &fltcut2_;
     fltres_ = &fltres2_;
     fltmode_ = &fltmode2_;
@@ -153,7 +147,7 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   sid_->Register[1 + osc * 7] = sid_notes[note - 24] >> 8;   // V1 Freq Hi
   sid_->Register[2 + osc * 7] = vpw_.GetInt() & 0xFF;        // V1 PW Lo
   sid_->Register[3 + osc * 7] = vpw_.GetInt() >> 8;          // V1 PW Hi
-  sid_->Register[4 + osc * 7] = vwf_->GetInt() << 4 | vring_.GetInt() << 2 |
+  sid_->Register[4 + osc * 7] = vwf_.GetInt() << 4 | vring_.GetInt() << 2 |
                                 vsync_.GetInt() << 1 |
                                 (int)gate_;             // V1 Control Reg
   sid_->Register[5 + osc * 7] = vadsr_.GetInt() >> 8;   // V1 Attack/Decay
