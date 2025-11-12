@@ -48,6 +48,18 @@ SECTIONS
     KEEP(*(.firmware_info))
   } > FLASH
 
+  /* Put fast functions into ITCM */
+  _sifastcode = LOADADDR(.fastcode);
+  .fastcode :
+  {
+    . = ALIGN(4);
+    _sfastcode = .;
+    *(.fastcode)
+    *(.fastcode*)
+    . = ALIGN(4);
+    _efastcode = .;
+  } >ITCMRAM AT> FLASH
+
   /* The program code and other data goes into FLASH */
   .text :
   {

@@ -192,6 +192,8 @@ inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
 
   ili9341_start_writing();
 
+  const font_t *font = fonts[ui_font_index];
+
   for (int page = x; page < x + width; page++) {
     // create one column of screen information
     uint16_t *buffer_idx = buffer;
@@ -204,9 +206,7 @@ inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
         uint16_t fg_color = palette[colors[idx] >> 4];
         uint16_t bg_color = palette[colors[idx] & 0xf];
 
-        uint16_t const *pixel_data = (ui_font_index == 0)
-                                         ? FONT_HOURGLASS_BITMAP[character]
-                                         : FONT_YOU_SQUARED_BITMAP[character];
+        const uint16_t *pixel_data = (*font)[character];
 
         // draw the character into the buffer
         for (int j = CHAR_HEIGHT - 1; j >= 0; j--) {

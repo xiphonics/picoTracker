@@ -84,7 +84,16 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern uint32_t _sfastcode, _efastcode, _sifastcode;
+static void init_fastcode_section(void) {
+  uint8_t *fastcode_ram_start = (uint8_t *)&_sfastcode,
+          *fastcode_ram_end = (uint8_t *)&_efastcode,
+          *fastcode_flash_start = (uint8_t *)&_sifastcode;
+  size_t len = fastcode_ram_end - fastcode_ram_start;
+  for (size_t i = 0; i < len; i++) {
+    *(fastcode_ram_start + i) = *(fastcode_flash_start + i);
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -161,6 +170,8 @@ int main(void) {
 
   // can't use Trace here as its not been initialised yet
   printf("INFO: picoTracker Advance init...");
+
+  init_fastcode_section();
 
   tusb_rhport_init_t dev_init = {.role = TUSB_ROLE_DEVICE,
                                  .speed = TUSB_SPEED_AUTO};

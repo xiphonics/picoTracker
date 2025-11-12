@@ -35,7 +35,7 @@
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
 
-constexpr const char *const sampleEditOperationNames[] = {"Trim"};
+constexpr const char *const sampleEditOperationNames[] = {"Trim", "Peak Normalize"};
 constexpr uint32_t sampleEditOperationCount =
     sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
 
@@ -79,7 +79,7 @@ void SampleEditorView::OnFocus() {
   // one containing the sampleEditorFilename file
 
   // Load the sample using this filename and will fill in the wave data cache
-  loadSample(newSampleFile, viewData_->sampleEditorProjectList);
+  loadSample(newSampleFile, viewData_->isShowingSampleEditorProjectPool);
 
   // Update cached sample parameters
   updateSampleParameters();
@@ -150,7 +150,7 @@ void SampleEditorView::addAllFields() {
   (*actionField_.rbegin()).AddObserver(*this);
 
   // Save button row
-  position._y += 1;
+  position._y += 2; // want extra empty row between these buttons & prev Apply
   position._x = baseX;
   actionField_.emplace_back("Save", FourCC::ActionSave, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
@@ -544,7 +544,9 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       ViewType vt = SampleEditorView::sourceViewType_;
       navigateToView(vt);
     } else {
-      // TODO: show user error dialog
+      MessageBox *errorBox = new MessageBox(*this, "Save Failed",
+                                            "Unable to save sample", MBBF_OK);
+      DoModal(errorBox);
       Trace::Error("SampleEditorView: Failed to save file!");
     }
     return;
@@ -554,7 +556,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     if (saveSample(savedFilename) && loadSampleToPool(savedFilename)) {
       // now nav to project pool view
       // need to set this to show project pool dir in ImportView
-      viewData_->sampleEditorProjectList = true;
+      viewData_->isShowingSampleEditorProjectPool = true;
       navigateToView(VT_IMPORT);
     }
     return;
@@ -562,7 +564,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   case FourCC::ActionCancel: {
     const auto &originalFilename = viewData_->sampleEditorFilename;
     if (originalFilename.compare(RECORDING_FILENAME) == 0 &&
-        !viewData_->sampleEditorProjectList) {
+        !viewData_->isShowingSampleEditorProjectPool) {
       auto fs = FileSystem::GetInstance();
       if (fs) {
         if (!fs->DeleteFile(originalFilename.c_str())) {
@@ -587,8 +589,9 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
 bool SampleEditorView::applySelectedOperation() {
   updateSampleParameters();
 
-  int8_t opIndex = operationVar_.GetInt();
-  if (opIndex < 0 || opIndex >= static_cast<int>(SampleEditOperation::Count)) {
+  uint8_t opIndex = operationVar_.GetInt();
+  if (opIndex < 0 ||
+      opIndex > static_cast<int>(SampleEditOperation::Normalize)) {
     Trace::Error("SampleEditorView: Invalid operation index %d", opIndex);
     return false;
   }
@@ -598,6 +601,9 @@ bool SampleEditorView::applySelectedOperation() {
   case SampleEditOperation::Trim: {
     return applyTrimOperation(static_cast<uint32_t>(start_),
                               static_cast<uint32_t>(end_));
+  }
+  case SampleEditOperation::Normalize: {
+    return applyNormalizeOperation();
   }
   default:
     Trace::Error("SampleEditorView: Unsupported operation %d", opIndex);
@@ -661,10 +667,10 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   }
 
   loadSample(viewData_->sampleEditorFilename,
-             viewData_->sampleEditorProjectList);
+             viewData_->isShowingSampleEditorProjectPool);
 
   // need to reload from disk into ram/flash pool samples
-  if (viewData_->sampleEditorProjectList) {
+  if (viewData_->isShowingSampleEditorProjectPool) {
 #ifndef ADV
     // on pico we dont support unloading individual samples from flash
     MessageBox *warning = new MessageBox(*this, "Please reload project",
@@ -725,6 +731,135 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   return true;
 }
 
+bool SampleEditorView::applyNormalizeOperation() {
+  if (!FileSystem::GetInstance()) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return false;
+  }
+
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+  }
+  isPlaying_ = false;
+  playKeyHeld_ = false;
+
+  if (!viewData_) {
+    Trace::Error("SampleEditorView: View data unavailable");
+    return false;
+  }
+
+  const auto &filename = viewData_->sampleEditorFilename;
+  if (filename.empty()) {
+    Trace::Error("SampleEditorView: No filename available for normalize");
+    return false;
+  }
+
+  if (tempSampleSize_ == 0) {
+    Trace::Error("SampleEditorView: Cannot normalize empty sample");
+    return false;
+  }
+
+  WavNormalizeResult normalizeResult{};
+  if (!WavFileWriter::NormalizeFile(filename.c_str(),
+                                    static_cast<void *>(chunkBuffer_),
+                                    sizeof(chunkBuffer_), normalizeResult)) {
+    return false;
+  }
+
+  if (!normalizeResult.normalized) {
+    updateSampleParameters();
+    fullWaveformRedraw_ = true;
+    redraw_ = true;
+    Trace::Log("SAMPLEEDITOR",
+               "Normalize skipped for '%s' (peak=%d, target=%d)",
+               filename.c_str(), normalizeResult.peakBefore,
+               normalizeResult.targetPeak);
+    return true;
+  }
+
+  if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
+    MessageBox *errorBox = new MessageBox(*this, "Reload Failed",
+                                          "Unable to refresh sample", MBBF_OK);
+    DoModal(errorBox);
+    return false;
+  }
+
+  uint32_t maxIndex = tempSampleSize_ - 1;
+  uint32_t startVal = startVar_.GetInt();
+  uint32_t endVal = endVar_.GetInt();
+  if (startVal >= tempSampleSize_) {
+    startVal = maxIndex;
+  }
+  if (endVal >= tempSampleSize_) {
+    endVal = maxIndex;
+  }
+  if (startVal > endVal) {
+    startVal = endVal;
+  }
+  startVar_.SetInt(startVal);
+  endVar_.SetInt(endVal);
+
+  updateSampleParameters();
+  addAllFields();
+  fullWaveformRedraw_ = true;
+  redraw_ = true;
+  playbackPosition_ = 0.0f;
+
+  Trace::Log("SAMPLEEDITOR",
+             "Normalized sample '%s' (gain=%.3f peak=%d target=%d)",
+             filename.c_str(), normalizeResult.gainApplied,
+             normalizeResult.peakBefore, normalizeResult.targetPeak);
+  return true;
+}
+
+bool SampleEditorView::reloadEditedSample() {
+  loadSample(viewData_->sampleEditorFilename,
+             viewData_->isShowingSampleEditorProjectPool);
+
+#ifndef ADV
+  MessageBox *warning = new MessageBox(*this, "Please reload project",
+                                       "To apply changes", MBBF_OK);
+  DoModal(warning);
+  return true;
+#else
+  auto pool = SamplePool::GetInstance();
+
+  if (!goProjectSamplesDir(viewData_)) {
+    Trace::Error("SampleEditorView: Failed to chdir for pool reload");
+    return false;
+  }
+
+  int32_t old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+  if (old_index < 0) {
+    Trace::Error("SampleEditorView: Sample %s not found in pool for reload",
+                 viewData_->sampleEditorFilename.c_str());
+    return false;
+  }
+
+  int32_t new_index =
+      pool->ReloadSample(old_index, viewData_->sampleEditorFilename.c_str());
+  if (new_index < 0) {
+    Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+                 viewData_->sampleEditorFilename.c_str());
+    return false;
+  }
+
+  if (new_index != old_index) {
+    auto instrumentBank = viewData_->project_->GetInstrumentBank();
+    for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+      if (instrument && instrument->GetType() == IT_SAMPLE) {
+        SampleInstrument *sampleInstrument =
+            static_cast<SampleInstrument *>(instrument);
+        if (sampleInstrument->GetSampleIndex() == old_index) {
+          sampleInstrument->AssignSample(new_index);
+        }
+      }
+    }
+  }
+  return true;
+#endif
+}
+
 bool SampleEditorView::saveSample(
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
   auto fs = FileSystem::GetInstance();
@@ -749,7 +884,7 @@ bool SampleEditorView::saveSample(
     return false;
   }
 
-  if (viewData_->sampleEditorProjectList) {
+  if (viewData_->isShowingSampleEditorProjectPool) {
     if (!goProjectSamplesDir(viewData_)) {
       Trace::Error("SampleEditorView: Save failed, couldn't chdir to project "
                    "samples dir!");
@@ -786,7 +921,7 @@ bool SampleEditorView::loadSampleToPool(
 
   uint16_t sampleId = -1;
 
-  if (!viewData_->sampleEditorProjectList) {
+  if (!viewData_->isShowingSampleEditorProjectPool) {
     char projectName[MAX_PROJECT_NAME_LENGTH];
     viewData_->project_->GetProjectName(projectName);
 
