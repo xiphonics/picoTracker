@@ -25,10 +25,8 @@
 
 constexpr uint8_t COLOR_COMPONENT_X_COL_POS[COLOR_COMPONENT_COUNT] = {16, 8, 0};
 constexpr uint8_t COLOR_COMPONENT_X_OFFSETS[COLOR_COMPONENT_COUNT] = {
-    COLOR_LABEL_WIDTH,
-    COLOR_LABEL_WIDTH + COMPONENT_SPACING,
+    COLOR_LABEL_WIDTH, COLOR_LABEL_WIDTH + COMPONENT_SPACING,
     COLOR_LABEL_WIDTH + 2 * COMPONENT_SPACING};
-
 
 ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
@@ -99,63 +97,62 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // Foreground color
   position._y += 3;
   addColorField("Foreground", config->FindVariable(FourCC::VarFGColor),
-                 CD_NORMAL, position);
+                CD_NORMAL, position);
 
   // Background color
   position._y += 1;
   addColorField("Background", config->FindVariable(FourCC::VarBGColor),
-                 CD_BACKGROUND, position);
+                CD_BACKGROUND, position);
 
   // Highlight color
   position._y += 1;
   addColorField("Highlight1", config->FindVariable(FourCC::VarHI1Color),
-                 CD_HILITE1, position);
+                CD_HILITE1, position);
 
   // Highlight2 color
   position._y += 1;
   addColorField("Highlight2", config->FindVariable(FourCC::VarHI2Color),
-                 CD_HILITE2, position);
+                CD_HILITE2, position);
 
   // Console color
   position._y += 1;
   addColorField("Console", config->FindVariable(FourCC::VarConsoleColor),
-                 CD_CONSOLE, position);
+                CD_CONSOLE, position);
 
   // Cursor color
   position._y += 1;
   addColorField("Cursor", config->FindVariable(FourCC::VarCursorColor),
-                 CD_CURSOR, position);
+                CD_CURSOR, position);
 
   // Info color
   position._y += 1;
   addColorField("Info", config->FindVariable(FourCC::VarInfoColor), CD_INFO,
-                 position);
+                position);
 
   // Warning color
   position._y += 1;
   addColorField("Warning", config->FindVariable(FourCC::VarWarnColor), CD_WARN,
-                 position);
+                position);
 
   // Error color
   position._y += 1;
   addColorField("Error", config->FindVariable(FourCC::VarErrorColor), CD_ERROR,
-                 position);
+                position);
 
   // Play color
   position._y += 1;
   addColorField("Accent", config->FindVariable(FourCC::VarAccentColor),
-                 CD_ACCENT, position);
+                CD_ACCENT, position);
 
   // Mute color
   position._y += 1;
   addColorField("AccentAlt", config->FindVariable(FourCC::VarAccentAltColor),
-                 CD_ACCENTALT, position);
+                CD_ACCENTALT, position);
 
   // Emphasis color
   position._y += 1;
   addColorField("Emphasis", config->FindVariable(FourCC::VarEmphasisColor),
-                 CD_EMPHASIS, position);
-
+                CD_EMPHASIS, position);
 }
 
 ThemeView::~ThemeView() {}
@@ -214,7 +211,7 @@ void ThemeView::addSwatchField(ColorDefinition color, GUIPoint position) {
 }
 
 void ThemeView::addColorField(const char *label, Variable *colorVar,
-                               ColorDefinition color, GUIPoint position) {
+                              ColorDefinition color, GUIPoint position) {
 
   staticField_.emplace_back(position, label);
   UIStaticField &labelField = *staticField_.rbegin();
@@ -235,7 +232,7 @@ void ThemeView::addColorField(const char *label, Variable *colorVar,
     intVarField_.emplace_back(componentPosition, componentVar, "%2.2X", 0, 255,
                               1, 16, 0);
     UIIntVarField &componentField = *intVarField_.rbegin();
-    fieldList_.insert(fieldList_.end(), &componentField); 
+    fieldList_.insert(fieldList_.end(), &componentField);
     componentField.AddObserver(*this);
 
     colorComponentFields_.emplace_back();
@@ -292,8 +289,7 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   if (componentField != nullptr) {
     Variable *colorVar = componentField->colorVar;
     uint32_t colorValue = colorVar->GetInt();
-    uint32_t newComponentValue =componentField->componentVar->GetInt() &
-        0xFF;
+    uint32_t newComponentValue = componentField->componentVar->GetInt() & 0xFF;
     colorValue &= ~(static_cast<uint32_t>(0xFF) << componentField->shift);
     colorValue |= newComponentValue << componentField->shift;
     colorVar->SetInt(static_cast<int>(colorValue));

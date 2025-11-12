@@ -28,7 +28,8 @@ public:
   void SetSize(int size);
 
   etl::list<UIField *, 64> fieldList_; // adjust to maximum fields on one screen
-  // ThemeView currently biggest user: uses 64 (12 colors * 5 + font + theme name + buttons)
+  // ThemeView currently biggest user: uses 64 (12 colors * 5 + font + theme
+  // name + buttons)
 
 private:
   UIField *focus_;
