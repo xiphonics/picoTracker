@@ -75,6 +75,9 @@ void advSystem::Boot() {
       section(".DATA_RAM"))) static char fsMemBuf[sizeof(advFileSystem)];
   FileSystem::Install(new (fsMemBuf) advFileSystem());
 
+  // Backlight must be on before any early error screens (e.g. missing SD card)
+  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
+
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir("/")) {
@@ -118,9 +121,6 @@ void advSystem::Boot() {
   } else {
     Trace::Log("POWERON", "Woke up from deep sleep");
   }
-
-  // Enable display PWM
-  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
 
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
