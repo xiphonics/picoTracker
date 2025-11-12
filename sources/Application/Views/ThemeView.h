@@ -67,7 +67,7 @@ private:
 
   etl::vector<UIIntVarField, (COLOUR_SUB_FIELDS_COUNT + 1)> intVarField_; // for colors + 1 for font selector
   etl::vector<UISwatchField, COLOUR_SUB_FIELDS_COUNT> swatchField_;
-  etl::vector<UIStaticField, 24> staticField_;
+  etl::vector<UIStaticField, COLOR_COUNT> staticField_;
   etl::vector<Variable, COLOUR_SUB_FIELDS_COUNT> colorComponentVars_;
   etl::vector<ColorComponentField, COLOUR_SUB_FIELDS_COUNT> colorComponentFields_;
   etl::vector<UIActionField, 2> actionField_; // For Import/Export buttons
