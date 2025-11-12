@@ -17,6 +17,7 @@
     src: url('../font/PROJEKTBlackbird.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
+    font-kerning: normal;
 }
 
 @font-face {
@@ -134,17 +135,22 @@ h1 {
     line-height: 1;
     padding-top: 20px;
     padding-bottom: 10px;
+
 }
 
 h2 {
     font-family: 'Projekt Blackbird', sans-serif;
     font-size: 1.5em;
+    font-kerning: none;
+    letter-spacing: 0.01em;
 }
 
 h3,
 h5,
 h6 {
     font-family: 'Projekt Blackbird', sans-serif;
+    font-kerning: none;
+    letter-spacing: 0.01em;
 }
 
 aside>h1 {
@@ -156,6 +162,8 @@ aside>h1 {
     padding-top: 10px;
     padding-bottom: 0px;
     color: var(--button);
+    font-kerning: none;
+    letter-spacing: 0.01em;
 }
 
 ul.sideNav {
@@ -310,6 +318,7 @@ body>div#cover {
     vertical-align: middle;
 }
 
-code, pre {
+code,
+pre {
     font-family: 'Ubuntu Mono', monospace;
 }
