@@ -35,7 +35,8 @@
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
 
-constexpr const char *const sampleEditOperationNames[] = {"Trim", "Peak Normalize"};
+constexpr const char *const sampleEditOperationNames[] = {"Trim",
+                                                          "Peak Normalize"};
 constexpr uint32_t sampleEditOperationCount =
     sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
 
