@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Instruments/WavFileWriter.h"
+#include "Application/Instruments/WavHeader.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Player/Player.h"
@@ -34,12 +35,10 @@
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
 
-constexpr const char *const kSampleEditOperationNames[] = {
-    "Trim",
-    "Peak Normalize",
-};
-constexpr int kSampleEditOperationCount =
-    sizeof(kSampleEditOperationNames) / sizeof(kSampleEditOperationNames[0]);
+constexpr const char *const sampleEditOperationNames[] = {"Trim",
+                                                          "Peak Normalize"};
+constexpr uint32_t sampleEditOperationCount =
+    sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
 
 #define X_OFFSET 0
 #ifdef ADV
@@ -57,8 +56,8 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       // bit of a hack to use InstrumentName but we never actually persist this
       // in any config file here
       filenameVar_(FourCC::InstrumentName, ""),
-      operationVar_(FourCC::VarSampleEditOperation, kSampleEditOperationNames,
-                    kSampleEditOperationCount,
+      operationVar_(FourCC::VarSampleEditOperation, sampleEditOperationNames,
+                    sampleEditOperationCount,
                     static_cast<int>(SampleEditOperation::Trim)),
       win(w), redraw_(false) {
   // Initialize waveform cache to zero
@@ -120,7 +119,7 @@ void SampleEditorView::addAllFields() {
                               FourCC::InstrumentName, defaultRecName);
   fieldList_.insert(fieldList_.end(), &(*nameTextField_.rbegin()));
 
-  const int baseX = position._x;
+  const uint16_t baseX = position._x;
 
   position._y += 1;
   bigHexVarField_.emplace_back(position, startVar_, 7, "start: %7.7X", 0,
@@ -138,7 +137,7 @@ void SampleEditorView::addAllFields() {
   // Operation selector
   position._y += 1;
   position._x = baseX;
-  int maxOperationIndex =
+  uint8_t maxOperationIndex =
       operationVar_.GetListSize() > 0 ? operationVar_.GetListSize() - 1 : 0;
   intVarField_.emplace_back(position, operationVar_, "op: %s", 0,
                             maxOperationIndex, 1, 1);
@@ -264,12 +263,13 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 // Helper to redraw the content of a single column (waveform or just
 // background) This function will clear a 1-pixel wide column and redraw the
 // waveform in it.
-void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
-                  int x_offset, int y_offset) {
+void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
+                                    int x_coord, int x_offset, int y_offset) {
   if (x_coord < 0)
     return; // Invalid coordinate
 
   GUIRect rrect;
+  const uint16_t centerY = y_offset + BITMAPHEIGHT / 2;
 
   // 1. Clear the column
   // The Y range for clearing should cover the entire waveform area, including
@@ -278,15 +278,18 @@ void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
       GUIRect(x_coord, y_offset + 1, x_coord + 1, y_offset + BITMAPHEIGHT - 1);
   view.DrawRect(rrect, CD_BACKGROUND);
 
+  // Restore zero baseline in this column
+  rrect = GUIRect(x_coord, centerY, x_coord + 1, centerY + 1);
+  view.DrawRect(rrect, CD_HILITE2);
+
   // 2. Redraw the waveform in that column
-  int waveform_idx =
+  uint16_t waveform_idx =
       x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
   if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
-    int pixelHeight = waveformCache[waveform_idx];
+    uint16_t pixelHeight = waveformCache[waveform_idx];
     if (pixelHeight > 0) {
-      int centerY = y_offset + BITMAPHEIGHT / 2;
-      int startY = centerY - pixelHeight / 2;
-      int endY = startY + pixelHeight;
+      uint16_t startY = centerY - pixelHeight / 2;
+      uint16_t endY = startY + pixelHeight;
 
       // Clamp to inside the border
       if (startY < y_offset + 1)
@@ -329,6 +332,12 @@ void SampleEditorView::DrawWaveForm() {
     fullWaveformRedraw_ = false;
 
     clearWaveformRegion();
+    const uint16_t centerY = Y_OFFSET + BITMAPHEIGHT / 2;
+
+    // Draw zero baseline
+    rrect =
+        GUIRect(X_OFFSET + 1, centerY, X_OFFSET + BITMAPWIDTH - 1, centerY + 1);
+    DrawRect(rrect, CD_HILITE2);
 
     rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
     // Draw borders
@@ -339,12 +348,11 @@ void SampleEditorView::DrawWaveForm() {
 
     // Draw full waveform
     if (waveformCacheValid_) {
-      int centerY = Y_OFFSET + BITMAPHEIGHT / 2;
       for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-        int pixelHeight = waveformCache_[x];
+        uint16_t pixelHeight = waveformCache_[x];
         if (pixelHeight > 0) {
-          int startY = centerY - pixelHeight / 2;
-          int endY = startY + pixelHeight;
+          uint16_t startY = centerY - pixelHeight / 2;
+          uint16_t endY = startY + pixelHeight;
 
           // Clamp to inside the border
           if (startY < Y_OFFSET + 1)
@@ -369,18 +377,19 @@ void SampleEditorView::DrawWaveForm() {
   // --- Incremental Marker Update Logic ---
 
   // Calculate current marker positions
-  const int current_startX =
+  const uint16_t current_startX =
       X_OFFSET + 1 +
-      static_cast<int>((static_cast<float>(start_) / tempSampleSize_) *
-                       (BITMAPWIDTH - 2));
-  const int current_endX =
+      static_cast<uint16_t>((static_cast<float>(start_) / tempSampleSize_) *
+                            (BITMAPWIDTH - 2));
+  const uint16_t current_endX =
       X_OFFSET + 1 +
-      static_cast<int>((static_cast<float>(end_) / tempSampleSize_) *
-                       (BITMAPWIDTH - 2));
-  const int current_playheadX =
-      isPlaying_ ? (X_OFFSET + 1 +
-                    static_cast<int>(playbackPosition_ * (BITMAPWIDTH - 2)))
-                 : -1;
+      static_cast<uint16_t>((static_cast<float>(end_) / tempSampleSize_) *
+                            (BITMAPWIDTH - 2));
+  const uint16_t current_playheadX =
+      isPlaying_
+          ? (X_OFFSET + 1 +
+             static_cast<uint16_t>(playbackPosition_ * (BITMAPWIDTH - 2)))
+          : -1;
 
   // Erase old markers if they have moved or disappeared
   if (last_start_x_ != -1 && last_start_x_ != current_startX) {
@@ -581,7 +590,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
 bool SampleEditorView::applySelectedOperation() {
   updateSampleParameters();
 
-  int opIndex = operationVar_.GetInt();
+  uint8_t opIndex = operationVar_.GetInt();
   if (opIndex < 0 ||
       opIndex > static_cast<int>(SampleEditOperation::Normalize)) {
     Trace::Error("SampleEditorView: Invalid operation index %d", opIndex);
@@ -658,15 +667,56 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return true;
   }
 
-  if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
-    MessageBox *errorBox = new MessageBox(*this, "Reload Failed",
-                                          "Unable to refresh sample", MBBF_OK);
-    DoModal(errorBox);
-    return false;
+  loadSample(viewData_->sampleEditorFilename,
+             viewData_->isShowingSampleEditorProjectPool);
+
+  // need to reload from disk into ram/flash pool samples
+  if (viewData_->isShowingSampleEditorProjectPool) {
+#ifndef ADV
+    // on pico we dont support unloading individual samples from flash
+    MessageBox *warning = new MessageBox(*this, "Please reload project",
+                                         "To apply changes", MBBF_OK);
+    DoModal(warning);
+    return true;
+#endif
+    auto pool = SamplePool::GetInstance();
+    if (pool) {
+      if (!goProjectSamplesDir(viewData_)) {
+        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
+      } else {
+        uint16_t old_index =
+            findSampleIndexByName(viewData_->sampleEditorFilename);
+        if (old_index >= 0) {
+          uint16_t new_index = pool->ReloadSample(
+              old_index, viewData_->sampleEditorFilename.c_str());
+          if (new_index >= 0 && old_index != new_index) {
+            auto instrumentBank = viewData_->project_->GetInstrumentBank();
+            for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+              if (instrument && instrument->GetType() == IT_SAMPLE) {
+                SampleInstrument *sampleInstrument =
+                    static_cast<SampleInstrument *>(instrument);
+                if (sampleInstrument->GetSampleIndex() == old_index) {
+                  sampleInstrument->AssignSample(new_index);
+                }
+              }
+            }
+          } else if (new_index < 0) {
+            Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+                         viewData_->sampleEditorFilename.c_str());
+          }
+        } else {
+          Trace::Error(
+              "SampleEditorView: Sample %s not found in pool for reload",
+              viewData_->sampleEditorFilename.c_str());
+        }
+      }
+    } else {
+      Trace::Error("SampleEditorView: SamplePool unavailable for reload");
+    }
   }
 
-  int refreshedSize = static_cast<int>(tempSampleSize_);
-  int newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
+  uint32_t refreshedSize = static_cast<uint32_t>(tempSampleSize_);
+  uint32_t newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
   startVar_.SetInt(0);
   endVar_.SetInt(newEndValue);
   updateSampleParameters();
@@ -870,7 +920,7 @@ bool SampleEditorView::loadSampleToPool(
     return false;
   }
 
-  int sampleId = -1;
+  uint16_t sampleId = -1;
 
   if (!viewData_->isShowingSampleEditorProjectPool) {
     char projectName[MAX_PROJECT_NAME_LENGTH];
@@ -893,7 +943,7 @@ bool SampleEditorView::loadSampleToPool(
   return true;
 }
 
-int SampleEditorView::findSampleIndexByName(
+uint16_t SampleEditorView::findSampleIndexByName(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const {
   auto pool = SamplePool::GetInstance();
   if (!pool) {
@@ -901,8 +951,8 @@ int SampleEditorView::findSampleIndexByName(
   }
 
   char **names = pool->GetNameList();
-  int count = pool->GetNameListSize();
-  for (int i = 0; i < count; ++i) {
+  uint16_t count = pool->GetNameListSize();
+  for (uint16_t i = 0; i < count; ++i) {
     if (names[i] && strcmp(names[i], name.c_str()) == 0) {
       return i;
     }
@@ -956,16 +1006,40 @@ void SampleEditorView::updateSampleParameters() {
   start_ = startVar_.GetInt();
   end_ = endVar_.GetInt();
 
-  // Ensure parameters are within valid range
-  if (start_ >= sampleSize)
+  bool startAdjusted = false;
+  bool endAdjusted = false;
+
+  // Ensure parameters are within valid range to prevent end going before start
+  if (start_ >= sampleSize) {
     start_ = sampleSize - 1;
-  if (end_ >= sampleSize)
+    startAdjusted = true;
+  }
+  if (start_ < 0) {
+    start_ = 0;
+    startAdjusted = true;
+  }
+  if (end_ >= sampleSize) {
     end_ = sampleSize - 1;
-  if (start_ > end_)
-    start_ = end_;
+    endAdjusted = true;
+  }
+  if (end_ < 0) {
+    end_ = 0;
+    endAdjusted = true;
+  }
+  if (start_ > end_) {
+    end_ = start_;
+    endAdjusted = true;
+  }
+
+  if (startAdjusted) {
+    startVar_.SetInt(start_);
+  }
+  if (endAdjusted) {
+    endVar_.SetInt(end_);
+  }
 }
 
-short SampleEditorView::chunkBuffer_[512 * 2];
+int16_t SampleEditorView::chunkBuffer_[512 * 2];
 
 // Load sample from the current projects samples subdir
 // ONLY filename for samples subidr (not full path!!) is supported for now
@@ -976,8 +1050,7 @@ void SampleEditorView::loadSample(
   // Reset temporary sample state
   tempSampleSize_ = 0;
   waveformCacheValid_ = false;
-  static int64_t sumSquares[WAVEFORM_CACHE_SIZE];
-  memset(sumSquares, 0, sizeof(sumSquares));
+  memset(waveformCache_, 0, sizeof(waveformCache_));
 
   if (filename.empty()) {
     Trace::Error("missing sample filename");
@@ -1003,17 +1076,18 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename);
 
   // --- 1. Read Header & Get Size ---
-  char header[44];
-  if (file->Read(header, 44) != 44) {
-    Trace::Error("SampleEditorView: Failed to read WAV header from %s",
-                 filename);
+  auto headerResult = WavHeaderWriter::ReadHeader(file);
+  if (!headerResult.has_value()) {
+    Trace::Error("SampleEditorView: Failed to parse WAV header for %s (err=%d)",
+                 filename, static_cast<int>(headerResult.error()));
     file->Close();
     return;
   }
 
-  uint16_t numChannels = *reinterpret_cast<uint16_t *>(&header[22]);
-  uint16_t bitsPerSample = *reinterpret_cast<uint16_t *>(&header[34]);
-  uint32_t dataChunkSize = *reinterpret_cast<uint32_t *>(&header[40]);
+  const WavHeaderInfo headerInfo = headerResult.value();
+  uint16_t numChannels = headerInfo.numChannels;
+  uint16_t bitsPerSample = headerInfo.bitsPerSample;
+  uint32_t dataChunkSize = headerInfo.dataChunkSize;
 
   // Added a check to ensure we don't try to use more channels than our buffer
   // supports
@@ -1024,46 +1098,109 @@ void SampleEditorView::loadSample(
     file->Close();
     return;
   }
-  int bytesPerFrame = numChannels * (bitsPerSample / 8);
-  tempSampleSize_ = dataChunkSize / bytesPerFrame;
+  // need to check as its possible for the user to copy an invalid file into the
+  // projects pool ie. samples subdir
+  if (bitsPerSample != 8 && bitsPerSample != 16) {
+    Trace::Error(
+        "SampleEditorView: Unsupported bit depth (%u) in WAV header for %s",
+        bitsPerSample, filename);
+    file->Close();
+    return;
+  }
+
+  uint32_t bytesPerFrame = numChannels * headerInfo.bytesPerSample;
+  tempSampleSize_ = bytesPerFrame > 0 ? dataChunkSize / bytesPerFrame : 0;
+  if (tempSampleSize_ == 0) {
+    Trace::Error("SampleEditorView: Sample has zero frames in %s", filename);
+    file->Close();
+    return;
+  }
+
+  // ensure we start streaming from the data chunk
+  file->Seek(headerInfo.dataOffset, SEEK_SET);
 
   // --- 2. Prepare for Single-Pass Processing ---
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
              tempSampleSize_, numChannels);
-  float samplesPerPixel = (float)tempSampleSize_ / WAVEFORM_CACHE_SIZE;
-  Trace::Log("SAMPLEEDITOR", "samples/p/p: %f", samplesPerPixel);
 
-  short peakAmplitude = 0;
+  int16_t peakAmplitude = 0;
   uint32_t currentFrame = 0;
 
-  const int CHUNK_FRAMES = 512;
+  const uint32_t CHUNK_FRAMES = 512;
 
-  uint32_t waveCacheValueAccum = 0;
   // --- 3. The Single-Pass Read Loop ---
   while (currentFrame < tempSampleSize_) {
-    int framesToRead =
-        std::min(CHUNK_FRAMES, (int)(tempSampleSize_ - currentFrame));
-    int bytesToRead = framesToRead * bytesPerFrame;
-    int bytesRead = file->Read(chunkBuffer_, bytesToRead);
+    uint32_t framesToRead =
+        std::min(CHUNK_FRAMES, (uint32_t)(tempSampleSize_ - currentFrame));
+    uint32_t bytesToRead = framesToRead * bytesPerFrame;
+    uint32_t bytesRead = file->Read(chunkBuffer_, bytesToRead);
 
-    int framesRead = (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
+    uint32_t framesRead = (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
     if (framesRead == 0) {
       break;
     }
 
-    for (int i = 0; i < framesRead; ++i) {
-      short sampleValue = chunkBuffer_[i * numChannels];
+    const uint8_t *byteBuffer = reinterpret_cast<const uint8_t *>(chunkBuffer_);
+    for (uint32_t i = 0; i < framesRead; ++i) {
+      int16_t sampleValue = 0;
+      uint32_t frameOffset = i * bytesPerFrame;
 
-      if (abs(sampleValue) > peakAmplitude) {
-        peakAmplitude = abs(sampleValue);
+      if (bitsPerSample == 8) {
+        // 8-bit PCM samples are unsigned; center and scale to 16-bit range so
+        // we treat same way as existing 16bit code path
+        if (frameOffset >= bytesRead) {
+          break;
+        }
+        int16_t centered =
+            static_cast<int16_t>(byteBuffer[frameOffset]) - 128; // [-128,127]
+        sampleValue = centered << 8; // [-32768,32512]
+      } else {                       // 16-bit PCM
+        const int16_t *frameSamples =
+            reinterpret_cast<const int16_t *>(byteBuffer + frameOffset);
+        sampleValue = frameSamples[0];
+      }
+      int16_t clampedSample = std::clamp<int16_t>(sampleValue, -32768, 32767);
+
+      if (abs(clampedSample) > peakAmplitude) {
+        peakAmplitude = abs(clampedSample);
       }
 
-      int cacheIndex = (currentFrame + i) / samplesPerPixel;
-      if (cacheIndex < WAVEFORM_CACHE_SIZE) {
-        // Accumulate sum of squares using integer arithmetic for performance.
-        // Floating point conversion will be done once for each cache entry
-        // later.
-        sumSquares[cacheIndex] += (int64_t)sampleValue * sampleValue;
+      uint16_t magnitude = abs(clampedSample);
+      // The extra + 16383u is just an integer math trick to round instead of
+      // truncating (half of the divisor). If we only “scaled by BITMAPHEIGHT”
+      // (e.g., magnitude / BITMAPHEIGHT or magnitude / (32768 / BITMAPHEIGHT)
+      // without rounding) we’d either shrink the values to almost zero or
+      // introduce more distortion. This keeps the 0→32768 range mapped linearly
+      // onto 0→BITMAPHEIGHT with proper rounding
+      uint32_t scaled = ((magnitude)*BITMAPHEIGHT + 16383u) / 32768u;
+      if (scaled > BITMAPHEIGHT) {
+        scaled = BITMAPHEIGHT;
+      }
+      uint8_t sampleHeight = static_cast<uint8_t>(scaled);
+      if (sampleHeight == 0) {
+        continue;
+      }
+      uint32_t sampleIndex = currentFrame + i;
+      uint64_t startColumn =
+          (static_cast<uint64_t>(sampleIndex) * WAVEFORM_CACHE_SIZE) /
+          tempSampleSize_;
+      uint64_t endColumn =
+          (static_cast<uint64_t>(sampleIndex + 1ULL) * WAVEFORM_CACHE_SIZE) /
+          tempSampleSize_;
+      if (endColumn == startColumn) {
+        endColumn = startColumn + 1;
+      }
+      if (startColumn >= WAVEFORM_CACHE_SIZE) {
+        startColumn = WAVEFORM_CACHE_SIZE - 1;
+      }
+      if (endColumn > WAVEFORM_CACHE_SIZE) {
+        endColumn = WAVEFORM_CACHE_SIZE;
+      }
+      for (uint32_t column = static_cast<uint32_t>(startColumn);
+           column < endColumn; ++column) {
+        if (sampleHeight > waveformCache_[column]) {
+          waveformCache_[column] = sampleHeight;
+        }
       }
     }
     currentFrame += framesRead;
@@ -1074,25 +1211,7 @@ void SampleEditorView::loadSample(
   }
   file->Close();
 
-  // --- 4. Finalize Waveform Cache ---
-  for (int x = 0; x < WAVEFORM_CACHE_SIZE; ++x) {
-    if (samplesPerPixel >= 1) {
-      // Calculate the Root Mean Square (RMS)
-      // 1. Calculate mean of squares from our accumulated integer values.
-      float mean_square = (float)sumSquares[x] / samplesPerPixel;
-
-      // 2. Take the square root.
-      float rms_unscaled = sqrt(mean_square);
-
-      // 3. Normalize from 16-bit sample range to [-1.0, 1.0]
-      float rms = rms_unscaled / 32768.0f;
-
-      // Scale the final value to the display height
-      waveformCache_[x] = (uint8_t)(rms * BITMAPHEIGHT);
-    } else {
-      waveformCache_[x] = 0;
-    }
-  }
+  // All columns already contain final peak heights scaled to the display range.
   waveformCacheValid_ = true;
 
   // set start point variable to 0
