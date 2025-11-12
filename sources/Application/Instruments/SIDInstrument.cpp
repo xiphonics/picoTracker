@@ -164,7 +164,8 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   sid_->Register[22] = fltcut_->GetInt() >> 3;  // Filter Cut Hi
 
   // on start for each instrument it sets it's own filter in this register
-  sid_->Register[23] = (sid_->Register[23] & 0xF & ~(1 << osc)) | fltres_->GetInt() << 4 |
+  sid_->Register[23] = (sid_->Register[23] & 0xF & ~(1 << osc)) |
+                       fltres_->GetInt() << 4 |
                        vfon_.GetInt() << osc; // Filter Res/Filt
 
   int8_t mode = 0;
