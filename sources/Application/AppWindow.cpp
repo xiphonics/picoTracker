@@ -237,21 +237,10 @@ void AppWindow::ClearTextRect(GUIRect &r) {
   }
 };
 
-//
-// Redraw the screen and flush it.
-//
-void AppWindow::Redraw() {
-  // This method is now only used internally by AnimationUpdate
-  // External code should set _needsRedraw flag instead
-  if (_currentView) {
-    _currentView->Redraw();
-  }
-};
 
 //
 // Flush current screen to display
 //
-
 void AppWindow::Flush() {
 
   Lock();
@@ -502,7 +491,10 @@ void AppWindow::LoadProject(const char *projectName) {
     _songView->DoModal(mb);
   }
 
-  Redraw();
+  if (_currentView) {
+    _currentView->SetDirty(true);
+    SetDirty();
+  }
 }
 
 void AppWindow::CloseProject() {
@@ -826,7 +818,6 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     _isDirty = true;
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
-    Redraw();
     break;
   }
 
