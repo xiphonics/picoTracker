@@ -202,6 +202,12 @@ void timerStatsHandler(TimerHandle_t xTimer) {
     }
     prevRuntime = ulTotalRunTime;
   }
+
+  size_t minEver = xPortGetMinimumEverFreeHeapSize();
+  Trace::Debug("Min ever FreeRTOS heap free: %u bytes", (unsigned)minEver);
+
+  size_t freeHeap = xPortGetFreeHeapSize();
+  Trace::Debug("FreeRTOS heap free: %u bytes", (unsigned)freeHeap);
 }
 #endif
 

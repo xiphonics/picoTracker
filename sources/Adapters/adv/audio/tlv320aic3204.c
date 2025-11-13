@@ -69,6 +69,33 @@ HAL_StatusTypeDef tlv320read(uint8_t page, uint8_t reg, uint8_t *value) {
   return status;
 }
 
+#define LINEINBASEHALFDB 12
+#define GAINMASK 0x3F
+#define PRESERVEMASK 0xC0
+#define MIC_GAIN_REGISTER 0x53 // Left ADC digital gain
+
+static uint8_t clamp_half_db(int halfDb) {
+  if (halfDb < 0) {
+    return 0;
+  }
+  if (halfDb > GAINMASK) {
+    return GAINMASK;
+  }
+  return (uint8_t)halfDb;
+}
+
+static void tlv320_update_gain_register(uint8_t reg, uint8_t baseHalfDb,
+                                        int gainDb) {
+  uint8_t current = 0;
+  if (tlv320read(0x01, reg, &current) != HAL_OK) {
+    current = 0;
+  }
+  const uint8_t desiredHalfDb = (uint8_t)baseHalfDb + gainDb * 2;
+  const uint8_t halfDbValue = clamp_half_db(desiredHalfDb);
+  const uint8_t updated = (current & PRESERVEMASK) | (halfDbValue & GAINMASK);
+  tlv320writepage(0x01, reg, updated);
+}
+
 void tlv320_reset() {
   // First reset by pulling reset down
   // Ensure reset is set first, then reset and then leave set
@@ -352,6 +379,23 @@ void tlv320_enable_mic(void) {
 
   // Recheck output in case Speaker needs to be mutted
   tlv320_select_output();
+}
+
+void tlv320_set_linein_gain_db(uint8_t gainDb) {
+  if (input != LINEIN) {
+    return;
+  }
+  tlv320_update_gain_register(0x3b, LINEINBASEHALFDB, gainDb);
+  tlv320_update_gain_register(0x3c, LINEINBASEHALFDB, gainDb);
+}
+
+void tlv320_set_mic_gain_db(uint8_t gainDb) {
+  if (input != MIC) {
+    return;
+  }
+  // Register 0x53 encodes gain in 0.5dB steps with 0x00 = 0dB.
+  const uint8_t regValue = gainDb * 2;
+  tlv320writepage(0x00, MIC_GAIN_REGISTER, regValue);
 }
 
 void tlv320_disable_linein(void) {

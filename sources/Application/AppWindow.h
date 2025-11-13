@@ -83,7 +83,7 @@ protected: // GUIWindow implementation
   virtual void onUpdate(bool redraw);
   virtual void LayoutChildren();
   virtual void Flush();
-  virtual void Redraw();
+  virtual void Redraw(){};
   virtual void AnimationUpdate();
 
   // override draw string to avoid going too far off

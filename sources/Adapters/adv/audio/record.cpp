@@ -6,6 +6,7 @@
 #include "sai.h"
 #include "sd_diskio.h"
 #include "tlv320aic3204.h"
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 
@@ -22,7 +23,10 @@ TaskHandle_t RecordHandle = NULL;
 static volatile bool recordingActive = false;
 static volatile bool writeInProgress = false;
 
-static volatile bool g_monitoringOnly = false;
+static volatile bool monitoringOnly = false;
+
+static int lineInGainDb = 0;
+static int micGainDb = 0;
 
 bool IsRecordingActive() { return recordingActive; }
 
@@ -36,7 +40,7 @@ static uint32_t recordDuration_ = MAX_INT32;
 static RecordSource source_ = LineIn;
 
 StaticSemaphore_t xSemaphoreBuffer;
-SemaphoreHandle_t g_recordingFinishedSemaphore = NULL;
+SemaphoreHandle_t recordingFinishedSemaphore = NULL;
 
 void SetInputSource(RecordSource source) {
   source_ = source;
@@ -44,10 +48,12 @@ void SetInputSource(RecordSource source) {
   case LineIn:
     tlv320_disable_mic();
     tlv320_enable_linein();
+    tlv320_set_linein_gain_db(lineInGainDb);
     break;
   case Mic:
     tlv320_disable_linein();
     tlv320_enable_mic();
+    tlv320_set_mic_gain_db(micGainDb);
     break;
   case USBIn:
     // TODO:
@@ -61,10 +67,24 @@ void SetInputSource(RecordSource source) {
   }
 }
 
+void SetLineInGain(uint8_t gainDb) {
+  lineInGainDb = gainDb;
+  if (source_ == LineIn) {
+    tlv320_set_linein_gain_db(lineInGainDb);
+  }
+}
+
+void SetMicGain(uint8_t gainDb) {
+  micGainDb = gainDb;
+  if (source_ == Mic) {
+    tlv320_set_mic_gain_db(micGainDb);
+  }
+}
+
 void StartMonitoring() {
 
   // Set the flag for monitoring-only mode
-  g_monitoringOnly = true;
+  monitoringOnly = true;
   recordingActive = true; // Use this to keep the task loop active
   first_pass = true;      // Ensure StartRecordStreaming is called
 
@@ -81,7 +101,7 @@ void StartMonitoring() {
 void StopMonitoring() { // Use the main 'recordingActive' flag to trigger the
                         // task's cleanup routine
   recordingActive = false;
-  g_monitoringOnly = false; // Also reset our monitoring flag
+  monitoringOnly = false; // Also reset our monitoring flag
 
   // Notify the Record task to wake it from its wait state so it can clean up
   if (RecordHandle != NULL) {
@@ -121,11 +141,10 @@ bool StartRecording(const char *filename, uint8_t threshold,
   }
 
   // only set if recording file could be opened
-  g_monitoringOnly = false;
+  monitoringOnly = false;
   thresholdOK = false;
   first_pass = true;
-  g_recordingFinishedSemaphore =
-      xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer);
+  recordingFinishedSemaphore = xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer);
 
   // Reset sample counter
   totalSamplesWritten = 0;
@@ -162,8 +181,8 @@ void StopRecording() {
   }
 
   // Now, wait here until the Record task signals it's done
-  if (g_recordingFinishedSemaphore != NULL) {
-    xSemaphoreTake(g_recordingFinishedSemaphore, portMAX_DELAY);
+  if (recordingFinishedSemaphore != NULL) {
+    xSemaphoreTake(recordingFinishedSemaphore, portMAX_DELAY);
   }
   // disable all inputs when we finish recording
   tlv320_disable_linein();
@@ -200,8 +219,8 @@ void Record(void *) {
 
       Player::GetInstance()->StopRecordStreaming();
 
-      if (g_recordingFinishedSemaphore != NULL) {
-        xSemaphoreGive(g_recordingFinishedSemaphore);
+      if (recordingFinishedSemaphore != NULL) {
+        xSemaphoreGive(recordingFinishedSemaphore);
       }
 
       vTaskSuspend(nullptr); // Suspend self until StartRecording resumes it
@@ -225,7 +244,7 @@ void Record(void *) {
       }
       }*/
     // Write raw audio data (uint16_t samples as bytes)
-    if (!g_monitoringOnly) {
+    if (!monitoringOnly) {
       if (RecordFile) {
         writeInProgress = true;
         int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),

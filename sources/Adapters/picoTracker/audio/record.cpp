@@ -11,4 +11,8 @@ void StopRecording() {}
 
 void SetInputSource(RecordSource source) {}
 
+void SetLineInGain(uint8_t) {}
+
+void SetMicGain(uint8_t) {}
+
 bool IsRecordingActive() { return false; }
