@@ -1,7 +1,9 @@
 ---
-title: picoTracker Advance FCC Compliance Statement
+title: picoTracker Advance
 template: page
 ---
+
+#  FCC Compliance Statement
 
 CAUTION: The manufacturer is not responsible for any changes or modifications not expressly approved by the party responsible for compliance. Such modifications could void the user’s authority to operate the equipment.
 
@@ -11,5 +13,12 @@ NOTE: This equipment has been tested and found to comply with the limits for a C
 * Increase the separation between the equipment and receiver.
 * Connect the equipment into an outlet on a circuit different from that to which the receiver is connected.
 * Consult the dealer or an experienced radio/TV technician for help.
+
+# ISED Compliance Statement
+
+This Class B digital apparatus complies with Canadian ICES-003.
+Cet appareil numérique de la classe [B] est conforme à la norme NMB-003 du Canada.
+
+CAN ICES (B) / NMB (B)
 
 ![fcc logo](image/fcc-logo-black-2020-small.png)
