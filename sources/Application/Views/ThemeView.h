@@ -33,7 +33,8 @@ public:
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
-  virtual void OnFocus();
+  void OnFocus() override;
+  void OnFocusLost() override;
 
   // Observer for action callback
   void Update(Observable &, I_ObservableData *);
@@ -68,5 +69,7 @@ private:
   // need separate flag for force because isDirty_ won't work for this because
   // it gets reset before AnimationUpdate is called in ThemeViews case
   bool _forceRedraw = false;
+  // use to flag pending theme data changes to be persisted to file
+  bool configDirty_ = false;
 };
 #endif
