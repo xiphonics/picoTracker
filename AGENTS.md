@@ -76,6 +76,7 @@ PICO_SDK_PATH=../sources/Externals/pico-sdk cmake -DCMAKE_BUILD_TYPE=Debug -DPIC
   [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
   Code formatting is enforced by `clang-format`. Before submitting a pull
   request, run `clang-format` to ensure your code adheres to the style guide.
+  We do not use variable name prefixes like "g_" or "k"
   We always use fixed width integer types like uint32_t or int16_t *never* just int or char.
   We always use designated struct initialisers *never* old style C ones.
 - **`printf` usage:** The `printf` family of functions should not be used.
