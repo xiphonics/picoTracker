@@ -229,8 +229,14 @@ void ThemeView::addColorField(const char *label, Variable *colorVar,
                          static_cast<uint32_t>(0xFF)));
     Variable &componentVar = *colorComponentVars_.rbegin();
 
-    intVarField_.emplace_back(componentPosition, componentVar, "%2.2X", 0, 255,
-                              1, 16, 0);
+    // bigger steps and set limits because we use RGB565 for colors
+    if (i == 0 || i == 2) {
+      intVarField_.emplace_back(componentPosition, componentVar, "%2.2X", 0,
+                                248, 8, 16, 0);
+    } else {
+      intVarField_.emplace_back(componentPosition, componentVar, "%2.2X", 0,
+                                252, 4, 16, 0);
+    }
     UIIntVarField &componentField = *intVarField_.rbegin();
     fieldList_.insert(fieldList_.end(), &componentField);
     componentField.AddObserver(*this);
