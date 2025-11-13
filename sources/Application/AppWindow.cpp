@@ -237,7 +237,6 @@ void AppWindow::ClearTextRect(GUIRect &r) {
   }
 };
 
-
 //
 // Flush current screen to display
 //
