@@ -352,8 +352,7 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
     Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
     if (themeNameVar) {
       themeNameVar->SetString(exportThemeName_.c_str());
-      // Save the config to persist the theme name
-      config->Save();
+      configDirty_ = true;
     }
     return;
   }
@@ -362,6 +361,7 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
     // need to force redraw of entire screen to update for font change
     ForceClear();
     DrawView();
+    configDirty_ = true;
     break;
   }
   // Handle color variable changes
@@ -387,17 +387,13 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
 
       // Force a redraw of the entire screen to update all colors
       _forceRedraw = true;
+      configDirty_ = true;
       break;
     }
   default:
     NInvalid;
     break;
   };
-
-  // Save config when any setting is changed
-  Trace::Log("THEMEVIEW", "persist config changes!");
-  Config *config = Config::GetInstance();
-  config->Save();
 }
 
 void ThemeView::handleThemeExport() {
@@ -445,8 +441,7 @@ void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
     Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
     if (themeNameVar) {
       themeNameVar->SetString(themeName);
-      // Save the config to persist the theme name
-      config->Save();
+      configDirty_ = true;
     }
 
     // Update the theme name field
@@ -482,6 +477,21 @@ void ThemeView::OnFocus() {
   // Update the theme name field from Config when the view gets focus
   // This ensures the field is updated after importing a theme
   updateThemeNameFromConfig();
+}
+
+void ThemeView::OnFocusLost() {
+  if (!configDirty_) {
+    return;
+  }
+
+  Config *config = Config::GetInstance();
+  if (!config->Save()) {
+    Trace::Error("THEMEVIEW", "Failed to save theme config on focus lost");
+    return;
+  }
+
+  Trace::Log("THEMEVIEW", "Saved theme config on focus lost");
+  configDirty_ = false;
 }
 
 // Keep this method for backward compatibility
