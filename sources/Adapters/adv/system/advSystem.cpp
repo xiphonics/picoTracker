@@ -75,6 +75,9 @@ void advSystem::Boot() {
       section(".DATA_RAM"))) static char fsMemBuf[sizeof(advFileSystem)];
   FileSystem::Install(new (fsMemBuf) advFileSystem());
 
+  // Backlight must be on before any early error screens (e.g. missing SD card)
+  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
+
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir("/")) {
@@ -119,9 +122,6 @@ void advSystem::Boot() {
     Trace::Log("POWERON", "Woke up from deep sleep");
   }
 
-  // Enable display PWM
-  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
-
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
 
@@ -160,7 +160,13 @@ void advSystem::GetBatteryState(BatteryState &state) {
   auto soc = getBatterySOC();
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
-  state.charging = getChargingStatus();
+  ChargingStatus status = getChargingStatus();
+  // PRE_CHARGE stage is used when battery is too low to FAST_CHARGE
+  if (status == PRE_CHARGE || status == FAST_CHARGE) {
+    state.charging = true;
+  } else {
+    state.charging = false;
+  }
   if (soc < 0) {
     state.error = true;
   } else {

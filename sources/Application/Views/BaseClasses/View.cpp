@@ -424,7 +424,7 @@ void View::drawBattery(GUITextProperties &props) {
     if (batteryState_.percentage == 100) {
       npf_snprintf(battText, 8, "[FUL]");
     } else {
-      npf_snprintf(battText, 8, "[%d%%]", batteryState_.percentage);
+      npf_snprintf(battText, 8, "[%2d%%]", batteryState_.percentage);
     }
   }
 #else

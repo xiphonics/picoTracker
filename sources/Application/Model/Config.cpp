@@ -34,8 +34,6 @@ static const char *midiSendSync[2] = {"Off", "Send"};
 static const char *midiClockSyncOptions[2] = {"Internal", "External"};
 static const char *remoteUIOnOff[2] = {"Off", "On"};
 
-static const char *fontOptions[2] = {"Standard", "Bold"};
-
 // NOTE: these MUST match up to the RecordSource enum in record.h (of all
 // adapters) also note we *dont* show "All Off" as a UI option for now
 static const char *recordSourceOptions[4] = {"All Off", "Line In", "Mic",
@@ -174,8 +172,8 @@ static const ConfigParam configParams[] = {
     {"UIFONT",
      {.intValue = ThemeConstants::DEFAULT_UIFONT},
      FourCC::VarUIFont,
-     fontOptions,
-     2,
+     ThemeConstants::FONT_NAMES,
+     ThemeConstants::FONT_COUNT,
      false},
 
     // {"RESERVED1", ThemeConstants::DEFAULT_RESERVED1,

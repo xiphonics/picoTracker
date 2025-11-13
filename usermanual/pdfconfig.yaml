@@ -12,6 +12,7 @@ tocPagePosition: 1
 
 pages:
   - frontcover.md
+  - advance-fcc.md
   - introduction.md
   - getting-started.md
   - device.md
@@ -24,6 +25,7 @@ pages:
   - tables.md
   - renders.md
   - mixer.md
+  - tipstricks.md
   # reference
   - keypadcombos.md
   - commands.md

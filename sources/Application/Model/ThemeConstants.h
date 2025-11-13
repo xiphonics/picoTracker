@@ -32,7 +32,9 @@ const uint32_t DEFAULT_EMPHASIS = 0xFFA500;
 
 // Font constants
 const int DEFAULT_UIFONT = 0x0;
-// Default theme name - using inline to avoid multiple definition errors
+const int FONT_COUNT = 3;
+inline const char *FONT_NAMES[FONT_COUNT] = {"Regular", "Bold", "Wide"};
+
 inline const char *DEFAULT_THEME_NAME = "Default";
 } // namespace ThemeConstants
 

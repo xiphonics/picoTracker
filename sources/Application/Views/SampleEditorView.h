@@ -51,16 +51,20 @@ private:
   void updateSampleParameters();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
+  bool reloadEditedSample();
   bool saveSample(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool loadSampleToPool(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool applySelectedOperation();
   bool applyTrimOperation(uint32_t startFrame, uint32_t endFrame);
+  bool applyNormalizeOperation();
   void navigateToView(ViewType vt);
-  int findSampleIndexByName(
+  uint16_t findSampleIndexByName(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
+  void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
+                    int x_offset, int y_offset);
 
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;
@@ -106,7 +110,7 @@ private:
   uint32_t lastAnimationTime_;  // Timestamp of the last animation frame
   System *sys_;
   uint32_t tempSampleSize_ = 0;
-  static short chunkBuffer_[512 * 2];
+  static int16_t chunkBuffer_[512 * 2];
   // Use an empty default name - we don't want to populate with sample
   // filename The display name will still be shown on the phrase screen via
   // GetDisplayName()
@@ -116,10 +120,7 @@ private:
   Variable startVar_;
   Variable endVar_;
   Variable filenameVar_;
-  enum class SampleEditOperation : int {
-    Trim = 0,
-    Count,
-  };
+  enum SampleEditOperation { Trim = 0, Normalize };
   Variable operationVar_;
 
   GUIWindow &win;

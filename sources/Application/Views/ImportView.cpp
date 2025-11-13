@@ -11,6 +11,7 @@
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Views/SampleEditorView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
@@ -112,6 +113,9 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
     if (mask & EPBM_ENTER) {
       if (inProjectSampleDir_) {
+        if (fileIndexList_.empty()) {
+          return; // Do nothing if the list is empty
+        }
         // NOTE: the order of buttons in project pool is: edit, remove
         // while in file browser its: import, edit
         if (selectedButton_ == 0) {
@@ -140,6 +144,9 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // handle changing selected "bottom button", note: ignore if this is a
     // nav+arrow combo
     if ((mask & EPBM_LEFT || mask & EPBM_RIGHT) && !(mask & EPBM_NAV)) {
+      if (inProjectSampleDir_ && fileIndexList_.empty()) {
+        return; // Do nothing if the list is empty
+      }
       // toggle the selected button
       selectedButton_ = (selectedButton_ == 0) ? 1 : 0;
       DrawView();
@@ -152,12 +159,18 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // handle moving up and down the file list
   if (mask & EPBM_UP) {
+    if (inProjectSampleDir_ && fileIndexList_.empty()) {
+      return; // Do nothing if the list is empty
+    }
     warpToNextSample(true);
   } else if (mask & EPBM_DOWN) {
+    if (inProjectSampleDir_ && fileIndexList_.empty()) {
+      return; // Do nothing if the list is empty
+    }
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
     // clear this flag on leaving this screen
-    viewData_->sampleEditorProjectList = false;
+    viewData_->isShowingSampleEditorProjectPool = false;
 
     // Go back to the source view that opened the ImportView
     ViewEvent ve(VET_SWITCH_VIEW, &sourceViewType_);
@@ -274,17 +287,22 @@ void ImportView::DrawView() {
     props.invert_ = (selectedButton_ == 1) ? true : false;
     DrawString(x + 10, y, "[Edit]", props);
   } else {
-    // we make edit the first button to make things easier because remove is
-    // only available for now on the Advance and even on Advance we dont want
-    // remove to be the default button
-    props.invert_ = (selectedButton_ == 0) ? true : false;
-    DrawString(x, y, "[Edit]", props);
-    props.invert_ = (selectedButton_ == 1) ? true : false;
+    if (fileIndexList_.empty()) {
+      // draw this a few lines down from *top* of screen
+      DrawString(2, 3, "[pool empty]", props);
+    } else {
+      // we make edit the first button to make things easier because remove is
+      // only available for now on the Advance and even on Advance we dont want
+      // remove to be the default button
+      props.invert_ = (selectedButton_ == 0) ? true : false;
+      DrawString(x, y, "[Edit]", props);
+      props.invert_ = (selectedButton_ == 1) ? true : false;
 #ifdef ADV
-    DrawString(x + 10, y, "[Remove]", props);
+      DrawString(x + 10, y, "[Remove]", props);
 #else
-    DrawString(x + 10, y, "[N/A]", props);
+      DrawString(x + 10, y, "[N/A]", props);
 #endif
+    }
   }
   props.invert_ = false;
   y += 1;
@@ -340,9 +358,9 @@ void ImportView::OnFocus() {
 
   toInstr_ = viewData_->currentInstrumentID_;
 
-  inProjectSampleDir_ = viewData_->sampleEditorProjectList;
+  inProjectSampleDir_ = viewData_->isShowingSampleEditorProjectPool;
 
-  if (viewData_->sampleEditorProjectList) {
+  if (inProjectSampleDir_) {
     goProjectSamplesDir(viewData_);
     setCurrentFolder(fs, ".");
   } else {
@@ -385,6 +403,36 @@ void ImportView::preview(char *name) {
   // If something is already playing, stop it first
   if (Player::GetInstance()->IsPlaying()) {
     Player::GetInstance()->StopStreaming();
+  }
+
+  auto wav = WavFile::Open(name);
+  MessageBox *mb = nullptr;
+  if (!wav) {
+    auto error = wav.error();
+    switch (error) {
+    case INVALID_FILE:
+      mb = new MessageBox(*this, "Preview Failed", "Could not open file",
+                          MBBF_OK);
+      break;
+    case UNSUPPORTED_FILE_FORMAT:
+    case INVALID_HEADER:
+    case UNSUPPORTED_WAV_FORMAT:
+      mb = new MessageBox(*this, "Preview Failed", "Invalid file", MBBF_OK);
+      break;
+    case UNSUPPORTED_COMPRESSION:
+    case UNSUPPORTED_BITDEPTH:
+    case UNSUPPORTED_SAMPLERATE:
+      mb = new MessageBox(*this, "Preview Failed", "Unsupported format",
+                          MBBF_OK);
+      break;
+    }
+  } else {
+    wav.value()->Close();
+  }
+
+  if (mb != nullptr) {
+    DoModal(mb);
+    return;
   }
 
   // Start playing the selected sample
@@ -479,6 +527,7 @@ void ImportView::import() {
     case INVALID_HEADER:
     case UNSUPPORTED_WAV_FORMAT:
       mb = new MessageBox(*this, "Import Failed", "invalid file", MBBF_OK);
+      break;
     case UNSUPPORTED_COMPRESSION:
     case UNSUPPORTED_BITDEPTH:
     case UNSUPPORTED_SAMPLERATE:
@@ -594,6 +643,9 @@ void ImportView::showSampleEditor(
     bool isProjectSample) {
 
   viewData_->sampleEditorFilename = filename;
+
+  // before going to sample editor set this view as its "source" view
+  SampleEditorView::sourceViewType_ = VT_IMPORT;
 
   // Switch to the SampleEditorView
   ViewType vt = VT_SAMPLE_EDITOR;

@@ -167,14 +167,33 @@ DOSR 128
   tlv320write(0x0a, 0x00);
 
   // INIT INPUT
+  // input frequency comes from MCU and is 11.2896MHz
+  // Digital mic has the following specs:
+  // Low‐Power Mode 400    800 kHz
+  // Standard Mode 1.0    3.3 MHz
+  // High‐Performance Mode 4.1    4.8 MHz
+  // PDM frequency is OSR * ADC_FS
+  // OSR is one of 32, 64, 128, 256
+  // CLKIN = NADC * MADC * (A)OSR * ADC_FS
+  //
+  // restrictions:
+  // ADC_FS = 44100Hz
+  // CLKIN = 11.2896MHz
+  // -> OSR = 64 to be in a valid range for the mic
+  // -> PDM freq -> 64 X 44100Hz = 2.8224MHz (standard mode range)
+  // -> NADC * MADC = 4
+  // -> NADC = 1
+  // -> MADC = 4
+  // this has to be met: MADC * OSR / 32 > RC -> 8 > RC
+  // -> Processing block: PRB_R1 (filter A)
   // Initialize to Page 0
   tlv320write(0, 0);
   // Power up NADC divider with value 1
   tlv320write(0x12, 0x81);
-  // Power up MADC divider with value 2
-  tlv320write(0x13, 0x82);
-  // Program OSR for ADC to 128
-  tlv320write(0x14, 0x80);
+  // Power up MADC divider with value 4
+  tlv320write(0x13, 0x84);
+  // Program OSR for ADC to 64
+  tlv320write(0x14, 0x40);
   // Select ADC PRB_R1
   tlv320write(0x3d, 0x01);
 

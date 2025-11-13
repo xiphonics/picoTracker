@@ -202,6 +202,12 @@ void timerStatsHandler(TimerHandle_t xTimer) {
     }
     prevRuntime = ulTotalRunTime;
   }
+
+  size_t minEver = xPortGetMinimumEverFreeHeapSize();
+  Trace::Debug("Min ever FreeRTOS heap free: %u bytes", (unsigned)minEver);
+
+  size_t freeHeap = xPortGetFreeHeapSize();
+  Trace::Debug("FreeRTOS heap free: %u bytes", (unsigned)freeHeap);
 }
 #endif
 
@@ -431,34 +437,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     }
   } break;
   case CHARGER_INT_Pin: {
-    Trace::Log("CHARGER INT", "interrupt!");
     auto reason = chargerIntReason();
     switch (reason) {
     case VBUS_OK: {
       // start charging (if not 100% already?)
-      Trace::Log("CHARGER INT", "VBUS connected");
       startCharging();
     } break;
     case VBUS_KO: {
       // stop charging?
-      Trace::Log("CHARGER INT", "VBUS disconnected");
       stopCharging();
     } break;
     case CHARGE_END: {
       // stop charging
-      Trace::Log("CHARGER INT", "Charge end");
       stopCharging();
     } break;
     case CHARGE_FAULT: {
       // What do? under this condition BATFET is disconnected
       // maybe bat indicator is [-!-]
-      Trace::Log("CHARGER INT", "Charge fault");
       stopCharging();
     } break;
 
     case UNKNOWN: {
       // do nothing for now, we know we have unhandled cases
-      Trace::Log("CHARGER", "UNKNOWN INTERRUPT");
     } break;
     }
     break;
