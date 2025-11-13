@@ -14,8 +14,8 @@
 #include "Application/Views/BaseClasses/ModalView.h"
 #include "Application/Views/UIController.h"
 #include "BaseClasses/UIActionField.h"
-#include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UIStaticField.h"
 #include "BaseClasses/UISwatchField.h"
 #include "BaseClasses/UITextField.h"
 #include "BaseClasses/View.h"
@@ -24,6 +24,10 @@
 #include "Foundation/T_SimpleList.h"
 #include "Foundation/T_Stack.h"
 #include "ViewData.h"
+
+#define COLOR_COMPONENT_COUNT 3
+#define COLOR_COUNT 12
+#define COLOR_SUB_FIELDS_COUNT (COLOR_COMPONENT_COUNT * COLOR_COUNT)
 
 class ThemeView : public FieldView, public I_Observer {
 public:
@@ -47,10 +51,26 @@ public:
 protected:
 private:
   void addSwatchField(ColorDefinition color, GUIPoint position);
+  void addColorField(const char *label, Variable *colorVar,
+                     ColorDefinition color, GUIPoint position);
+  void syncColorComponentVars(Variable *colorVar);
 
-  etl::vector<UIIntVarField, 2> intVarField_;
-  etl::vector<UIBigHexVarField, 16> bigHexVarField_;
-  etl::vector<UISwatchField, 16> swatchField_;
+  struct ColorComponentField {
+    Observable *observable = nullptr;
+    Variable *componentVar = nullptr;
+    Variable *colorVar = nullptr;
+    uint8_t shift = 0;
+  };
+
+  ColorComponentField *findColorComponentField(Observable *observable);
+
+  etl::vector<UIIntVarField, (COLOR_SUB_FIELDS_COUNT + 1)>
+      intVarField_; // for colors + 1 for font selector
+  etl::vector<UISwatchField, COLOR_COUNT> swatchField_;
+  etl::vector<UIStaticField, COLOR_COUNT> staticField_;
+  etl::vector<Variable, COLOR_SUB_FIELDS_COUNT> colorComponentVars_;
+  etl::vector<ColorComponentField, COLOR_SUB_FIELDS_COUNT>
+      colorComponentFields_;
   etl::vector<UIActionField, 2> actionField_; // For Import/Export buttons
   etl::vector<UITextField<MAX_THEME_NAME_LENGTH>, 1>
       textFields_; // For theme name input
