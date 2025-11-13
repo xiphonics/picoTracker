@@ -16,17 +16,23 @@
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
 #include <Application/Model/ThemeConstants.h>
+#include <stdint.h>
 
-#define MAX_COLOR_VALUE 0xFFFFFF
 #define FONT_FIELD_LINE 3
+
+#define COLOR_LABEL_WIDTH 12
+#define COMPONENT_SPACING 3
+
+constexpr uint8_t COLOR_COMPONENT_X_COL_POS[COLOR_COMPONENT_COUNT] = {16, 8, 0};
+constexpr uint8_t COLOR_COMPONENT_X_OFFSETS[COLOR_COMPONENT_COUNT] = {
+    COLOR_LABEL_WIDTH, COLOR_LABEL_WIDTH + COMPONENT_SPACING,
+    COLOR_LABEL_WIDTH + 2 * COMPONENT_SPACING};
 
 ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   GUIPoint position = GetAnchor();
 
   auto config = Config::GetInstance();
-
-  Variable *v;
 
   // Add import/export buttons at the top
   GUIPoint actionPos = position;
@@ -47,8 +53,8 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   // BUT Not on the Advance where there is currently only a single font
 #ifndef ADV
   position._y = FONT_FIELD_LINE;
-  v = config->FindVariable(FourCC::VarUIFont);
-  intVarField_.emplace_back(position, *v, "Font: %s", 0,
+  Variable *fontVar = config->FindVariable(FourCC::VarUIFont);
+  intVarField_.emplace_back(position, *fontVar, "Font: %s", 0,
                             ThemeConstants::FONT_COUNT - 1, 1,
                             ThemeConstants::FONT_COUNT - 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
@@ -89,166 +95,64 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   exportThemeName_ = currentThemeName;
 
   // Foreground color
-  position._y += 2;
-  v = config->FindVariable(FourCC::VarFGColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Foreground: %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_NORMAL, position);
+  position._y += 3;
+  addColorField("Foreground", config->FindVariable(FourCC::VarFGColor),
+                CD_NORMAL, position);
 
   // Background color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarBGColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Background: %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_BACKGROUND, position);
+  addColorField("Background", config->FindVariable(FourCC::VarBGColor),
+                CD_BACKGROUND, position);
 
   // Highlight color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarHI1Color);
-  bigHexVarField_.emplace_back(position, *v, 6, "Highlight1: %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_HILITE1, position);
+  addColorField("Highlight1", config->FindVariable(FourCC::VarHI1Color),
+                CD_HILITE1, position);
 
   // Highlight2 color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarHI2Color);
-  bigHexVarField_.emplace_back(position, *v, 6, "Highlight2: %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_HILITE2, position);
+  addColorField("Highlight2", config->FindVariable(FourCC::VarHI2Color),
+                CD_HILITE2, position);
 
   // Console color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarConsoleColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Console:    %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_CONSOLE, position);
+  addColorField("Console", config->FindVariable(FourCC::VarConsoleColor),
+                CD_CONSOLE, position);
 
   // Cursor color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarCursorColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Cursor:     %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_CURSOR, position);
+  addColorField("Cursor", config->FindVariable(FourCC::VarCursorColor),
+                CD_CURSOR, position);
 
   // Info color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarInfoColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Info:       %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_INFO, position);
+  addColorField("Info", config->FindVariable(FourCC::VarInfoColor), CD_INFO,
+                position);
 
   // Warning color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarWarnColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Warning:    %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_WARN, position);
+  addColorField("Warning", config->FindVariable(FourCC::VarWarnColor), CD_WARN,
+                position);
 
   // Error color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarErrorColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Error:      %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_ERROR, position);
+  addColorField("Error", config->FindVariable(FourCC::VarErrorColor), CD_ERROR,
+                position);
 
   // Play color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarAccentColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Accent:     %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_ACCENT, position);
+  addColorField("Accent", config->FindVariable(FourCC::VarAccentColor),
+                CD_ACCENT, position);
 
   // Mute color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarAccentAltColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "AccentAlt:  %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_ACCENTALT, position);
+  addColorField("AccentAlt", config->FindVariable(FourCC::VarAccentAltColor),
+                CD_ACCENTALT, position);
 
   // Emphasis color
   position._y += 1;
-  v = config->FindVariable(FourCC::VarEmphasisColor);
-  bigHexVarField_.emplace_back(position, *v, 6, "Emphasis:   %6.6X", 0,
-                               MAX_COLOR_VALUE, 16);
-  fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  addSwatchField(CD_EMPHASIS, position);
-
-  // dont show UI fields for reserved colors
-
-  // // Reserved1 color
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarAccentAltColor);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved1: %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_RESERVED1, position);
-
-  // // Reserved2 color
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarReserved2Color);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved2: %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_RESERVED2, position);
-
-  // // Reserved3 color
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarReserved3Color);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved3: %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_RESERVED3, position);
-
-  // // Reserved4 color
-  // position._y += 1;
-  // v = config->FindVariable(FourCC::VarReserved4Color);
-  // bigHexVarField_.emplace_back(position, *v, 6, "Reserved4: %6.6X", 0,
-  //                              MAX_COLOR_VALUE, 16);
-  // fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
-  // (*bigHexVarField_.rbegin()).AddObserver(*this);
-
-  // addSwatchField(CD_RESERVED4, position);
+  addColorField("Emphasis", config->FindVariable(FourCC::VarEmphasisColor),
+                CD_EMPHASIS, position);
 }
 
 ThemeView::~ThemeView() {}
@@ -293,6 +197,10 @@ void ThemeView::DrawView() {
 
   FieldView::Redraw();
 
+  // just draw the RGB column headings directly:
+  SetColor(CD_INFO);
+  GUITextProperties headerProps;
+  DrawString(17, 6, "R  G  B", headerProps);
   SetColor(CD_NORMAL);
 }
 
@@ -300,6 +208,73 @@ void ThemeView::addSwatchField(ColorDefinition color, GUIPoint position) {
   position._x -= 5;
   swatchField_.emplace_back(position, color);
   fieldList_.insert(fieldList_.end(), &(*swatchField_.rbegin()));
+}
+
+void ThemeView::addColorField(const char *label, Variable *colorVar,
+                              ColorDefinition color, GUIPoint position) {
+
+  staticField_.emplace_back(position, label);
+  UIStaticField &labelField = *staticField_.rbegin();
+  fieldList_.insert(fieldList_.end(), &labelField);
+
+  uint32_t colorValue = static_cast<uint32_t>(colorVar->GetInt());
+
+  for (uint8_t i = 0; i < COLOR_COMPONENT_COUNT; ++i) {
+    GUIPoint componentPosition = position;
+    componentPosition._x += COLOR_COMPONENT_X_OFFSETS[i];
+
+    colorComponentVars_.emplace_back(
+        colorVar->GetID(),
+        static_cast<int>((colorValue >> COLOR_COMPONENT_X_COL_POS[i]) &
+                         static_cast<uint32_t>(0xFF)));
+    Variable &componentVar = *colorComponentVars_.rbegin();
+
+    // bigger steps and set limits because we use RGB565 for colors
+    if (i == 0 || i == 2) {
+      intVarField_.emplace_back(componentPosition, componentVar, "%2.2X", 0,
+                                248, 8, 16, 0);
+    } else {
+      intVarField_.emplace_back(componentPosition, componentVar, "%2.2X", 0,
+                                252, 4, 16, 0);
+    }
+    UIIntVarField &componentField = *intVarField_.rbegin();
+    fieldList_.insert(fieldList_.end(), &componentField);
+    componentField.AddObserver(*this);
+
+    colorComponentFields_.emplace_back();
+    auto &fieldInfo = colorComponentFields_.back();
+    fieldInfo.observable = &componentField;
+    fieldInfo.componentVar = &componentVar;
+    fieldInfo.colorVar = colorVar;
+    fieldInfo.shift = COLOR_COMPONENT_X_COL_POS[i];
+  }
+
+  addSwatchField(color, position);
+}
+
+ThemeView::ColorComponentField *
+ThemeView::findColorComponentField(Observable *observable) {
+  for (auto &entry : colorComponentFields_) {
+    if (entry.observable == observable) {
+      return &entry;
+    }
+  }
+  return nullptr;
+}
+
+void ThemeView::syncColorComponentVars(Variable *colorVar) {
+  if (colorVar == nullptr) {
+    return;
+  }
+  uint32_t colorValue = static_cast<uint32_t>(colorVar->GetInt());
+  for (auto &entry : colorComponentFields_) {
+    if (entry.colorVar != colorVar) {
+      continue;
+    }
+    uint32_t componentValue =
+        (colorValue >> entry.shift) & static_cast<uint32_t>(0xFF);
+    entry.componentVar->SetInt(static_cast<int>(componentValue), false);
+  }
 }
 
 void ThemeView::Update(Observable &o, I_ObservableData *d) {
@@ -315,6 +290,18 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   isDirty_ = true;
 
   uintptr_t fourcc = (uintptr_t)d;
+
+  ColorComponentField *componentField = findColorComponentField(&o);
+  if (componentField != nullptr) {
+    Variable *colorVar = componentField->colorVar;
+    uint32_t colorValue = colorVar->GetInt();
+    uint32_t newComponentValue = componentField->componentVar->GetInt() & 0xFF;
+    colorValue &= ~(static_cast<uint32_t>(0xFF) << componentField->shift);
+    colorValue |= newComponentValue << componentField->shift;
+    colorVar->SetInt(static_cast<int>(colorValue));
+    syncColorComponentVars(colorVar);
+    fourcc = colorVar->GetID();
+  }
 
   switch (fourcc) {
   // Handle theme import action
