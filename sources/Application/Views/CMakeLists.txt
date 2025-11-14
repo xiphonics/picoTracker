@@ -1,8 +1,3 @@
-add_compile_options(
-  # TODO: SHOULD FIX
-  -Wno-int-to-pointer-cast
-)
-
 add_library(application_views
   FieldView.cpp
   ChainView.cpp
