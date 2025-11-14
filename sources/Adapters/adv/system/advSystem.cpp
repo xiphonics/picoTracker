@@ -161,7 +161,7 @@ void advSystem::GetBatteryState(BatteryState &state) {
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
   ChargingStatus status = getChargingStatus();
-  
+
   state.charging = (status == PRE_CHARGE || status == FAST_CHARGE);
   if (soc < 0) {
     state.error = true;
