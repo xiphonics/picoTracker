@@ -1,9 +1,8 @@
 ---
-title: picoTracker Advance
+title: FCC Compliance Statement
 template: page
 ---
 
-#  FCC Compliance Statement
 
 CAUTION: The manufacturer is not responsible for any changes or modifications not expressly approved by the party responsible for compliance. Such modifications could void the user’s authority to operate the equipment.
 

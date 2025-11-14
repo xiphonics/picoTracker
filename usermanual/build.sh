@@ -2,6 +2,7 @@
 
 # builds the html and pdf outputs
 
+# first clear out any out generated content
 rm -rf web
 
 # pico edition first
@@ -19,4 +20,4 @@ mv output/* web/advance/
 
 cp landing/* web/
 
-cp output.pdf output/picoTracker-user-manual.pdf
+# cp output.pdf output/picoTracker-user-manual.pdf
