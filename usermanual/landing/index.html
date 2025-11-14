@@ -1,0 +1,153 @@
+<!doctype html>
+
+<html lang="en">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+        color: #fff;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    header {
+        padding: 40px 20px;
+        margin-bottom: 30px;
+    }
+
+    h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .models-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 20px;
+    }
+
+    .model-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-align: center;
+    }
+
+    .model-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .model-card img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .model-card h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: #ffd700;
+    }
+
+    .model-card a {
+        display: inline-block;
+        background: rgba(255, 215, 0, 0.2);
+        color: white;
+        padding: 12px 25px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 215, 0, 0.4);
+    }
+
+    .model-card a:hover {
+        background: rgba(255, 215, 0, 0.4);
+        transform: scale(1.05);
+    }
+
+    footer {
+        margin-top: 40px;
+        padding: 20px;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 2rem;
+        }
+
+        .models-grid {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .model-card {
+            max-width: 100%;
+        }
+    }
+</style>
+
+<body>
+    <div class="container">
+        <header>
+            <h1 class="topic">picoTracker Manual</h1>
+            <p class="subtitle">Choose your picoTracker model to access the user manual</p>
+        </header>
+
+        <div class="models-grid">
+            <div class="model-card">
+                <a href="pico/introduction.html">
+                    <img src="picoFrontPage-small.jpg" alt="picoTracker">
+                    <h2>picoTracker</h2>
+                </a>
+            </div>
+
+            <div class="model-card">
+                <a href="advance/introduction.html">
+                    <img src="advanceFrontPage-small.jpg" alt="picoTracker Advance">
+                    <h2>picoTracker Advance</h2>
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            <p>User Manual for picoTracker and picoTracker Advance</p>
+            <p>&copy xiphonics 2025</p>
+        </footer>
+    </div>
+</body>
+
+</html>
