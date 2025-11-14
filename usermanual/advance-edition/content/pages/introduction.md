@@ -3,41 +3,40 @@ title: Welcome
 template: page
 ---
 
-Welcome to picoTracker, a small, portable music making device based on the tracker workflow.
+Welcome to the picoTracker Advance, a small, portable music making device based on the tracker workflow.
 
 But what is a "tracker"?
 
 Trackers are music production applications that started life on 16bit home computers such as the legendary Amiga 500. 
-Trackers later evolved to also run on devices such as the Gameboy as popularised by LSDJ and this then inspired the LittleGPTracker (LGPT) which was designed to run on portable Linux-based gaming handheld devices. LGPT then served as the starting point for the firmware for the picoTracker, though it has now substantially diverged from those roots, being customised for the specific hardware of the picoTracker and gaining many new features and improvements.
+
+Trackers later evolved to also run on devices such as the Gameboy as popularised by LSDJ and this then inspired the LittleGPTracker (LGPT) which was designed to run on portable Linux-based gaming handheld devices. LGPT then served as the starting point for the firmware for the picoTracker, though it has now substantially diverged from those roots, being customised for the specific hardware of the picoTracker Advance and gaining many new features and improvements.
 
 ## Overview
 
-The picoTracker features include:
+picoTracker Advance is the evolution of the original picoTracker — a portable music instrument built around the classical tracker interface. It currently supports eight stereo channels, with per-step assignable sample and MIDI instruments. The new hardware is designed to enable new creative possibilities as the firmware continues to evolve.
 
-* 8 song channels
-* 256 chains
-* 128 phrases
-* 32 tables
-* 16 Sample instruments
-* 16 MIDI instruments
-* 3 emulated "SID" synth instruments
-* 3 emulated "retro PC" 2 Operator FM synth instruments 
-* Upto 15 MB of sample memory per open project
-* 8bit or 16bit samples up to 44.1kHz, mono or stereo
-* 16bit 44.1kHz stereo audio output
+Your picoTracker Advance comes included with a:
 
-The picoTracker is powered by an RP2040 microcontroller and supports the following hardware: 
+* 16GB SD Card with sample projects, samples and themes
+* MIDI TRS adapter (type A)
+* quick reference card
 
-*  Headphone/Lineout
-*  TRS MIDI In & Out, USB MIDI Out
-*  320x240 2.8in LCD display
-*  16MB of Flash
-*  MicroSD cards upto 32GB for project & sample library storage
-*  USB-C for MIDI, charging and simple drag&drop firmware upgrades
+(note: Does NOT include power supply or USB-C cable. Uses any standard USB-C charger)
+
+### Hardware specs
+
+* HiDPI 720x720 4" display
+* Powerful ARM processor
+* 48MB of sample memory
+* MicroSD for project and sample storage
+* In/Out TRS and USB MIDI
+* Headphone/Line output and speaker
+* Line input and microphone
+* Battery lasts up to 6 hours
+* Weight: 233g (8.2oz)
+* Dimensions: 143x78x15mm (5.6x3x0.6in)
 
 
 ## Acknowledgements
 
 As with any big open source undertaking, this project would not have been possible without standing on the shoulders of many great open source projects and libraries. We would especially like to thank [Marc Resibois aka Nostromo](https://github.com/Mdashdotdashn), the creator of LittleGPTracker and making it available under a liberal open source license. 
-
-We would also like to thank Damien Guard for permission to use the "Hourglass" and "You Squared" fonts from his amazing [zx-origins font collection](https://damieng.com/typography/zx-origins/).

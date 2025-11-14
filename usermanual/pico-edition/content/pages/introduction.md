@@ -40,4 +40,4 @@ The picoTracker is powered by an RP2040 microcontroller and supports the followi
 
 As with any big open source undertaking, this project would not have been possible without standing on the shoulders of many great open source projects and libraries. We would especially like to thank [Marc Resibois aka Nostromo](https://github.com/Mdashdotdashn), the creator of LittleGPTracker and making it available under a liberal open source license. 
 
-We would also like to thank Damien Guard for permission to use the "Hourglass" and "You Squared" fonts from his amazing [zx-origins font collection](https://damieng.com/typography/zx-origins/).
+We would also like to thank Damien Guard for permission to use the "Hourglass" and "You Squared" fonts from his amazing [zx-origins font collection](https://damieng.com/typography/zx-origins/) and [@n1LS](https://github.com/n1LS) for contributing the "wide" font.
