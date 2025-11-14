@@ -184,6 +184,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
       unsigned char brightness = (unsigned char)v->GetInt();
       System::GetInstance()->SetDisplayBrightness(brightness);
     }
+    configDirty_ = true;
   }
 
   Player *player = Player::GetInstance();
@@ -211,23 +212,37 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     MessageBox *mb =
         new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
     DoModal(mb);
+    configDirty_ = true;
     break;
   }
-
+  case FourCC::VarMidiDevice:
+  case FourCC::VarMidiSync:
+  case FourCC::VarRemoteUI: {
+    configDirty_ = true;
+    break;
+  }
   default:
     NInvalid;
     break;
   };
   focus->Draw(w_);
   isDirty_ = true;
-
-  Trace::Log("DEVICEVIEW", "persist config changes!");
-  Config *config = Config::GetInstance();
-  config->Save();
 };
 
 void DeviceView::addSwatchField(ColorDefinition color, GUIPoint position) {
   position._x -= 5;
   swatchField_.emplace_back(position, color);
   fieldList_.insert(fieldList_.end(), &(*swatchField_.rbegin()));
+}
+
+void DeviceView::OnFocusLost() {
+  if (configDirty_) {
+    Config *config = Config::GetInstance();
+    if (!config->Save()) {
+      Trace::Error("DEVICEVIEW", "Failed to save device config on focus lost");
+      return;
+    }
+    Trace::Log("DEVICEVIEW", "Saved device config on focus lost");
+    configDirty_ = false;
+  }
 }
