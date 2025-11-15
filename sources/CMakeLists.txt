@@ -12,8 +12,6 @@ add_compile_options(
   -fstack-usage
   -fcallgraph-info=su # include above info in callgraph
   -Wstack-usage=2048 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
-  # TODO: SHOULD FIX
-  -Wno-int-to-pointer-cast
   
   # braids
   -Wno-unused-variable
