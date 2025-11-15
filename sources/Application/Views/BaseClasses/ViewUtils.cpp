@@ -12,14 +12,17 @@ void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer) {
 
   char *colon = strchr(buffer, ':');
   if (colon) {
-    *colon = '\0';
-    // color used for the field label text:
+    char *cut = colon + 1;
+    char value = *cut;
+    *cut = '\0';
+
     ((AppWindow &)w).SetColor(LABEL_COLOR);
     w.DrawString(buffer, position, props);
     position._x += strlen(buffer);
-    *colon = ':';
+
+    *cut = value; // restore char
     ((AppWindow &)w).SetColor(VALUE_COLOR);
-    w.DrawString(colon, position, props);
+    w.DrawString(cut, position, props);
   } else {
     ((AppWindow &)w).SetColor(CD_NORMAL);
     w.DrawString(buffer, position, props);
