@@ -26,7 +26,7 @@
 #define BQ25601_PG_STAT 1 << 2
 #define BIT_CHG_CONFIG 4
 #define BIT_VBUS_GD 7
-#define CHRG_STAT_POS 4
+#define CHRG_STAT_POS 3
 #define CHRG_STAT_MASK (0x3 << CHRG_STAT_POS)
 #define CHRG_STAT_NOT 0x0
 #define CHRG_STAT_PRE 0x1
@@ -51,8 +51,8 @@ ChargingStatus getChargingStatus() {
     return NOT_CHARGING;
   }
 
-  // Extract CHG_STAT bits (4 and 5)
-  uint8_t chg_stat = (reg_value >> 4) & 0x03;
+  // Extract CHG_STAT
+  uint8_t chg_stat = (reg_value & CHRG_STAT_MASK) >> CHRG_STAT_POS;
 
   switch (chg_stat) {
   case 0x00:
@@ -63,10 +63,8 @@ ChargingStatus getChargingStatus() {
     return FAST_CHARGE;
   case 0x03:
     return CHARGE_DONE;
-  default:
-    Trace::Error("Unexpected charge status: %i", chg_stat);
-    return NOT_CHARGING; // Should not happen
   }
+  return NOT_CHARGING; // keep compiler warnings happy
 }
 
 void powerOff() {
