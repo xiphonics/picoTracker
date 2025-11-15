@@ -51,8 +51,8 @@ ChargingStatus getChargingStatus() {
     return NOT_CHARGING;
   }
 
-  // Extract CHG_STAT bits (4 and 5)
-  uint8_t chg_stat = (reg_value >> 4) & 0x03;
+  // Extract CHG_STAT
+  uint8_t chg_stat = (reg_value & CHRG_STAT_MASK) >> CHRG_STAT_POS;
 
   switch (chg_stat) {
   case 0x00:
@@ -63,9 +63,8 @@ ChargingStatus getChargingStatus() {
     return FAST_CHARGE;
   case 0x03:
     return CHARGE_DONE;
-  default:
-    return NOT_CHARGING; // Should not happen
   }
+  return NOT_CHARGING; // keep compiler warnings happy
 }
 
 void powerOff() {
