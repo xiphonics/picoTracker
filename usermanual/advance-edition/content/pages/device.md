@@ -49,6 +49,16 @@ See the [Theme Settings](theme.html) chapter for more details.
 
 ## Updating Firmware
 
-The picoTracker firmware can be easily updated by powering the picoTracker via a USB connected to a PC. Select `Update firmware`. This will reboot the device into *BOOTSEL* mode, and you'll see the picoTracker show up as a USB mass storage device on the connected computer. At that point, just copy the UF2 firmware file into the USB device as you would with a USB stick or USB drive. 
+First copy the new firmware file you want to install to the top level directory of your sdcard using your computer and then insert it back into your Advance.
 
-Once copying (flashing) of the new firmware is completed, the picoTracker will automatically reboot and be running the newly installed firmware.
+Then go to the Device Screen and select the `Update firmware` menu item. This will reboot the Advance into its "bootloader" mode.
+
+Once the Advance has booted into the bootloader mode, you will see the bootloader user interface on the screen:
+
+![bootloader image](image/advance-bootloader.jpg)
+
+You can now use the arrow buttons to select the `.bin` firmware file to install from the sdcard and press `ENTER` to install the firmware.
+
+Once installation of the new firmware is completed, you can use the arrow keys to move the selection to the `Reboot` on screen option to reboot into normal mode and be running the newly installed firmware.
+
+**NOTE:** If for some reason you cannot boot into the normal mode on your Advance, you can also boot the Advance into its "bootloader" mode by holding down the boot button, accessible through a small hole below the sdcard slot as you keep pressing the power button for approximately 8 seconds to reboot into the bootloader mode.
