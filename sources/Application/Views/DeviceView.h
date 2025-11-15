@@ -27,6 +27,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus(){};
+  void OnFocusLost() override;
 
   // Observer for action callback
 
@@ -40,5 +41,6 @@ private:
   etl::vector<UIActionField, 2> actionField_;
   etl::vector<UIBigHexVarField, 16> bigHexVarField_;
   etl::vector<UISwatchField, 16> swatchField_;
+  bool configDirty_ = false;
 };
 #endif
