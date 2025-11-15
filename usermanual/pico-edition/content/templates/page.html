@@ -1,0 +1,19 @@
+<!doctype html>
+
+<html lang="en">
+
+{{> header }}
+
+<body onload="setSelectedClass();">
+    {{> sidepanel }}
+
+
+    <article>
+        <h1 class="topic">{{title}}</h1>
+
+        {{ body }}
+        {{> footer }}
+    </article>
+</body>
+
+</html>
