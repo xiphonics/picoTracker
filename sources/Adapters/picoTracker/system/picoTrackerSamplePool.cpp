@@ -135,20 +135,14 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
 bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 
   uint32_t FlashBaseBufferSize = wave->GetDiskSize(-1);
-  Trace::Debug("File size: %i", FlashBaseBufferSize);
 
   // Size actually occupied in flash
   uint32_t FlashPageBufferSize =
       ((FlashBaseBufferSize / FLASH_PAGE_SIZE) +
        ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) *
       FLASH_PAGE_SIZE;
-  Trace::Debug("Size in flash: %i (%i 256 byte pages)", FlashPageBufferSize,
-               FlashPageBufferSize / FLASH_PAGE_SIZE);
 
   if (flashWriteOffset_ + FlashPageBufferSize > flashLimit_) {
-    Trace::Error(
-        "Sample doesn't fit in available Flash (need: %i - avail: %i) ",
-        FlashPageBufferSize, flashLimit_ - flashWriteOffset_);
     return false;
   }
 
@@ -168,14 +162,11 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
                                ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
                               FLASH_SECTOR_SIZE;
-    Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
-                 sectorsToErase, flashEraseOffset_,
-                 flashEraseOffset_ + sectorsToErase);
+
     // Erase required number of sectors
     flash_range_erase(flashEraseOffset_, sectorsToErase);
     // Move erase pointer to new position
     flashEraseOffset_ += sectorsToErase;
-    Trace::Debug("new erase offset: %p", flashEraseOffset_);
   }
 
   uint32_t offset = 0;
@@ -185,9 +176,6 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
   wave->Rewind();
   wave->Read(&readBuffer, BUFFER_SIZE, &br);
   while (br > 0) {
-#if VERBOSE_FLASH_DEBUG
-    Trace::Debug("Read %i bytes", br);
-#endif
     // We need to write double the bytes if we needed to expand to 16 bit
     // Write size will be either 256 (which is the flash page size) or 512
     uint32_t writeSize = br;
@@ -198,12 +186,6 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 
     // There will be trash at the end, but sampleBufferSize_ gives me the
     // bounds
-#if VERBOSE_FLASH_DEBUG
-    Trace::Debug("About to write %i sectors in flash region 0x%X - 0x%X",
-                 writeSize, flashWriteOffset_ + offset,
-                 flashWriteOffset_ + offset + writeSize);
-#endif
-
     flash_range_program(flashWriteOffset_, (uint8_t *)readBuffer, writeSize);
     flashWriteOffset_ += writeSize;
     wave->Read(&readBuffer, BUFFER_SIZE, &br);
