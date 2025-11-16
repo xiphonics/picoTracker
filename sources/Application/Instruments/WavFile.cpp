@@ -13,6 +13,7 @@
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 #include "WavHeader.h"
+#include <stdint.h>
 #include <stdlib.h>
 
 int WavFile::bufferChunkSize_ = -1;
@@ -121,18 +122,28 @@ bool WavFile::GetBuffer(long start, long size) {
     offset += readSize;
   }
 
-  // expand 8 bit data if needed
-
-  unsigned char *src = (unsigned char *)samples_;
-  short *dst = samples_;
-  for (int i = size - 1; i >= 0; i--) {
-    if (bytePerSample_ == 1) {
-      dst[i] = (src[i] - 128) * 256;
-    } else {
-      dst++;
-      if (channelCount_ > 1) {
-        dst++;
-      }
+  int32_t totalSamples = size * channelCount_;
+  if (bytePerSample_ == 1) {
+    // expand 8-bit to 16-bit
+    unsigned char *src = (unsigned char *)samples_;
+    short *dst = samples_;
+    for (int32_t i = totalSamples - 1; i >= 0; --i) {
+      // 8-bit PCM is unsigned while >8-bit is signed
+      dst[i] = (short)((src[i] - 128) << 8);
+    }
+  } else if (bytePerSample_ == 3) {
+    // reduce 24-bit to 16-bit
+    unsigned char *src = (unsigned char *)samples_;
+    short *dst = samples_;
+    for (int32_t i = 0; i < totalSamples; ++i) {
+      const uint32_t byteIndex = i * 3;
+      // 24-bit PCM sample is 24-bit packed
+      int32_t value = src[byteIndex] | (src[byteIndex + 1] << 8) |
+                      (src[byteIndex + 2] << 16);
+      // Sign extend 24-bit int to 32-bit representation
+      value = (value << 8) >> 8;
+      // convert back to 16-bit
+      dst[i] = (short)(value >> 8);
     }
   }
   return true;

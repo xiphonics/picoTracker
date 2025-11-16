@@ -53,7 +53,7 @@ private:
   int size_;           // number of samples
   int sampleRate_;     // sample rate
   int channelCount_;   // mono / stereo
-  int bytePerSample_;  // original file is in 8/16bit
+  int bytePerSample_;  // original file depth (8/16/24bit)
   int dataPosition_;   // offset in file to get to data
   uint32_t readCount_; // remaining bytes to be read from file
 
