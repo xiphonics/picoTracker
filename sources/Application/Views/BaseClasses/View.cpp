@@ -502,6 +502,10 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
 }
 
 void View::switchToRecordView() {
+  // recording view only for the Advance
+#ifndef ADV
+  return;
+#endif
   if (!Player::GetInstance()->IsRunning()) {
     RecordView::SetSourceViewType(viewType_);
     SampleEditorView::SetSourceViewType(viewType_);
