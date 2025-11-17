@@ -226,10 +226,11 @@ void tlv320_enable_hp(void) {
   tlv320write(0x03, 0x00);
   tlv320write(0x04, 0x00);
 
-  // Set the HPL gain to 0d
-  tlv320write(0x10, 0x00);
-  // Set the HPR gain to 0dB
-  tlv320write(0x11, 0x00);
+  // Adjust the output amp for full volume to 1.4Vpp (0.5Vrms) for line level
+  // Set the HPL gain to 9dB
+  tlv320write(0x10, 0x09);
+  // Set the HPR gain to 9dB
+  tlv320write(0x11, 0x09);
   // Power up HPL and HPR drivers
   tlv320write(0x09, 0x30);
   // Wait for 2.5 sec for soft stepping to take effect
