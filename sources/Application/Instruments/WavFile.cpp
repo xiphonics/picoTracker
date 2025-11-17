@@ -160,36 +160,83 @@ bool WavFile::Rewind() {
 
 // incrementally read file, use rewind method to go to beginning
 bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
-  // Calculate read size based on byte per sample
-  uint32_t readSize = (bytePerSample_ == 1) ? btr / 2 : btr;
-
-  // Adjust for bytes remaining
-  readSize = readCount_ > readSize ? readSize : readCount_;
-
-  // Read from file
-  *bytesRead = file_->Read(buff, readSize);
-
-  // For 8-bit samples, we'll expand to 16-bit
-  if (bytePerSample_ == 1) {
-    // Process 8-bit samples, converting them to 16-bit
-    uint8_t *src = (uint8_t *)buff;
-    uint16_t *dst = (uint16_t *)buff;
-
-    // We need to process from end to beginning to avoid overwriting data
-    for (int i = *bytesRead - 1; i >= 0; i--) {
-      dst[i] = (src[i] - 128) * 256;
-    }
-
-    // Adjust bytes read count for 16-bit output
-    *bytesRead = *bytesRead * 2;
-  } else {
-    // Process 16-bit samples
-    uint16_t *data = (uint16_t *)buff;
-    uint32_t sampleCount = *bytesRead / 2; // 16-bit = 2 bytes per sample
+  if (!buff || !bytesRead) {
+    return false;
   }
 
-  // Update remaining bytes counter
-  readCount_ -= readSize;
+  *bytesRead = 0;
+
+  if (btr == 0 || readCount_ == 0) {
+    return true;
+  }
+
+  // dst is always 16-bit
+  uint32_t dstFrameSize = channelCount_ * 2;
+  // src can be 8/16/24-bit
+  uint32_t srcFrameSize = channelCount_ * bytePerSample_;
+  // the max number of frames we can read (floor)
+  uint32_t dstFrames = btr / dstFrameSize;
+  // the number of frames that still have to be read
+  uint32_t srcFrames = readCount_ / srcFrameSize;
+
+  uint32_t framesToRead = (dstFrames < srcFrames) ? dstFrames : srcFrames;
+  uint32_t readSize = framesToRead * srcFrameSize;
+
+  uint32_t actualBytesRead = file_->Read(buff, readSize);
+  // We should have enough capacity to read all of readSize, if we don't, we
+  // need to adjust the file position to where we actually read, adjusting to a
+  // full frame
+  uint32_t missing = actualBytesRead % srcFrameSize;
+  // if we have reminder bytes to read, rewind to last frame read in preparation
+  // for next iteration
+  if (missing != 0) {
+    file_->Seek(-static_cast<int>(missing), SEEK_CUR);
+    actualBytesRead -= missing;
+  }
+
+  // If what we actually read was less than a frame we could end up with 0 bytes
+  // read. Assume the rest of the file does not contain a full frame (unlikely)
+  if (actualBytesRead == 0) {
+    return true;
+  }
+
+  uint32_t framesRead = actualBytesRead / srcFrameSize;
+  uint32_t totalSamples = framesRead * channelCount_;
+
+  // TODO: we repeat this logic in two places
+  // Now adjust the samples
+  if (bytePerSample_ == 1) {
+    // 8 bit samples are unsigned
+    uint8_t *src = static_cast<uint8_t *>(buff);
+    int16_t *dst = static_cast<int16_t *>(buff);
+    for (int32_t i = static_cast<int32_t>(totalSamples) - 1; i >= 0; --i) {
+      dst[i] = static_cast<int16_t>((src[i] - 128) << 8);
+    }
+    *bytesRead = framesRead * dstFrameSize;
+  } else if (bytePerSample_ == 2) {
+    // nothing to do with 16 bit samples
+    *bytesRead = actualBytesRead;
+  } else if (bytePerSample_ == 3) {
+    // 24 bit samples are 3 byte packed and we have to reconstruct the number
+    uint8_t *src = static_cast<uint8_t *>(buff);
+    int16_t *dst = static_cast<int16_t *>(buff);
+    for (uint32_t i = 0; i < totalSamples; ++i) {
+      uint32_t byteIndex = i * 3;
+      int32_t value = src[byteIndex] | (src[byteIndex + 1] << 8) |
+                      (src[byteIndex + 2] << 16);
+      // sign extend
+      value = (value << 8) >> 8;
+      // save 16-bit sample
+      dst[i] = static_cast<int16_t>(value >> 8);
+    }
+    *bytesRead = framesRead * dstFrameSize;
+  } else {
+    // This should never happen, is it necessary? should we exit earlier?
+    Trace::Error("WAVFILE: Unsupported bytes per sample %d", bytePerSample_);
+    return false;
+  }
+
+  readCount_ -= actualBytesRead;
   return true;
 }
 
