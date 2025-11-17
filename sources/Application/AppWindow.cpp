@@ -706,7 +706,7 @@ void AppWindow::AnimationUpdate() {
     // Always update the main view even if modal is active because things like
     // batt gauge still need redrawing and visibility even with a modal onscreen
     _currentView->AnimationUpdate();
-     // Now check if there's an active modal view and 
+    // Now check if there's an active modal view and
     ModalView *modalView = _currentView->GetModalView();
     if (modalView) {
       // Update the modal view
