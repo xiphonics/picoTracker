@@ -12,6 +12,7 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
+#include "Application/Views/RecordView.h"
 #include "Application/Views/SampleEditorView.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
@@ -502,6 +503,7 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
 
 void View::switchToRecordView() {
   if (!Player::GetInstance()->IsRunning()) {
+    RecordView::SetSourceViewType(viewType_);
     SampleEditorView::SetSourceViewType(viewType_);
     ViewType vt = VT_RECORD;
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
