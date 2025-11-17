@@ -12,6 +12,7 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
+#include "Application/Views/SampleEditorView.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
@@ -496,5 +497,15 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
     DrawView();
 
     Trace::Debug("Power button released! View redrawn.");
+  }
+}
+
+void View::switchToRecordView() {
+  if (!Player::GetInstance()->IsRunning()) {
+    SampleEditorView::SetSourceViewType(viewType_);
+    ViewType vt = VT_RECORD;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
   }
 }

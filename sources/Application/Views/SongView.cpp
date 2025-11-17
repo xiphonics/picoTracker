@@ -599,11 +599,7 @@ void SongView::processNormalButtonMask(unsigned int mask) {
       } else {
         // recording screen
         if (!player->IsRunning()) {
-          SampleEditorView::SetSourceViewType(VT_SONG);
-          ViewType vt = VT_RECORD;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
+          switchToRecordView();
         }
       }
     }
