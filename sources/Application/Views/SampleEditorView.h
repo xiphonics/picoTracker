@@ -129,6 +129,6 @@ private:
   int last_end_x_ = -1;
   int last_playhead_x_ = -1;
 
-  bool redraw_;
+  uint8_t modalClearCount_ = 0;
 };
 #endif
