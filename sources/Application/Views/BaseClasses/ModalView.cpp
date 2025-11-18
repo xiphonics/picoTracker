@@ -9,7 +9,7 @@
 
 #include "ModalView.h"
 
-#include "Foundation/Constants/SpecialCharacters.h"
+#include "Application/Utils/DrawUtils.h"
 
 ModalView::ModalView(View &v)
     : View(v.w_, v.viewData_), finished_(false), returnCode_(0){};
@@ -60,26 +60,6 @@ void ModalView::SetWindow(int width, int height) {
   }
   ClearTextRect(-1, -1, width + 2, height + 2);
 
-  SetColor(CD_HILITE2);
-  GUITextProperties props;
-
-  char line[41];
-
-  // upper border
-  memset(line, char_border_single_horizontal, width + 3);
-  line[0] = char_border_single_topLeft;
-  line[width + 3] = char_border_single_topRight;
-  line[width + 4] = 0;
-  DrawString(-2, -2, line, props);
-
-  // lower border
-  line[0] = char_border_single_bottomLeft;
-  line[width + 3] = char_border_single_bottomRight;
-  DrawString(-2, height + 1, line, props);
-
-  // left and right borders
-  for (int i = 0; i < height + 2; i++) {
-    DrawString(-2, i - 1, char_border_single_vertical_s, props);
-    DrawString(width + 1, i - 1, char_border_single_vertical_s, props);
-  }
+  SetColor(CD_NORMAL);
+  DrawUtils_Border(-2, -2, width + 3, height + 3, *this);
 };

@@ -49,28 +49,30 @@
 #define char_indicator_leftNoRight char_indicator_leftNoRight_s[0]
 #define char_indicator_leftRight_s "\226"
 #define char_indicator_leftRight char_indicator_leftRight_s[0]
-#define char_indicator_load_s "\354"
+#define char_indicator_load_s "\355"
 #define char_indicator_load char_indicator_load_s[0]
-#define char_indicator_save_s "\355"
+#define char_indicator_save_s "\356"
 #define char_indicator_save char_indicator_save_s[0]
 #define char_indicator_ellipsis_s "\357"
 #define char_indicator_ellipsis char_indicator_ellipsis_s[0]
 
 #define char_bargraph_bar0_s " "
 #define char_bargraph_bar0 char_bargraph_bar0_s[0]
-#define char_bargraph_bar2_s "\241"
+#define char_bargraph_bar1_s "\241"
+#define char_bargraph_bar1 char_bargraph_bar1_s[0]
+#define char_bargraph_bar2_s "\242"
 #define char_bargraph_bar2 char_bargraph_bar2_s[0]
-#define char_bargraph_bar3_s "\242"
+#define char_bargraph_bar3_s "\243"
 #define char_bargraph_bar3 char_bargraph_bar3_s[0]
-#define char_bargraph_bar4_s "\243"
+#define char_bargraph_bar4_s "\244"
 #define char_bargraph_bar4 char_bargraph_bar4_s[0]
-#define char_bargraph_bar5_s "\244"
+#define char_bargraph_bar5_s "\245"
 #define char_bargraph_bar5 char_bargraph_bar5_s[0]
-#define char_bargraph_bar6_s "\245"
+#define char_bargraph_bar6_s "\246"
 #define char_bargraph_bar6 char_bargraph_bar6_s[0]
-#define char_bargraph_bar7_s "\246"
+#define char_bargraph_bar7_s "\247"
 #define char_bargraph_bar7 char_bargraph_bar7_s[0]
-#define char_bargraph_bar8_s "\247"
+#define char_bargraph_bar8_s "\250"
 #define char_bargraph_bar8 char_bargraph_bar8_s[0]
 #define char_bargraph_bar9_s "\250"
 #define char_bargraph_bar9 char_bargraph_bar9_s[0]
@@ -137,9 +139,9 @@
 #define char_block_bottomRightCorner_s "\346"
 #define char_block_bottomRightCorner char_block_bottomRightCorner_s[0]
 
-#define char_button_left_s "\372"
+#define char_button_left_s "\216"
 #define char_button_left char_button_left_s[0]
-#define char_button_right_s "\373"
+#define char_button_right_s "\217"
 #define char_button_right char_button_right_s[0]
 
 #define char_filledBorder_bottom_s "\337"
@@ -227,6 +229,28 @@
 #define char_border_double_verticalRight char_border_double_verticalRight_s[0]
 #define char_border_double_cross_s "\316"
 
+#define char_logo_x_s "\320"
+#define char_logo_x char_logo_x_s[0]
+#define char_logo_xiponics_0_s "\321"
+#define char_logo_xiponics_0 char_logo_xiponics_0_s[0]
+#define char_logo_xiponics_1_s "\322"
+#define char_logo_xiponics_1 char_logo_xiponics_1_s[0]
+#define char_logo_xiponics_2_s "\323"
+#define char_logo_xiponics_2 char_logo_xiponics_2_s[0]
+#define char_logo_xiponics_3_s "\324"
+#define char_logo_xiponics_3 char_logo_xiponics_3_s[0]
+#define char_logo_xiponics_4_s "\325"
+#define char_logo_xiponics_4 char_logo_xiponics_4_s[0]
+#define char_logo_xiponics_5_s "\326"
+#define char_logo_xiponics_5 char_logo_xiponics_5_s[0]
+#define char_logo_xiponics_6_s "\327"
+#define char_logo_xiponics_6 char_logo_xiponics_6_s[0]
+
+#define char_logo_string_s                                                     \
+  char_logo_x_s char_logo_xiponics_0_s char_logo_xiponics_1_s                  \
+      char_logo_xiponics_2_s char_logo_xiponics_3_s char_logo_xiponics_4_s     \
+          char_logo_xiponics_5_s char_logo_xiponics_6_s
+
 #define string_battery_charging                                                \
   char_battery_left_s char_battery_charging1_s char_battery_charging2_s        \
       char_battery_right_s
@@ -245,3 +269,21 @@
 #define string_battery_0_percent                                               \
   char_battery_left_s char_battery_empty_s char_battery_empty_s                \
       char_battery_right_s
+
+// Array of bargraph characters for fast lookup
+static constexpr const char *const char_bargraph_lookup[] = {
+  char_bargraph_bar0_s,  // 0
+  char_bargraph_bar1_s,  // 1
+  char_bargraph_bar2_s,  // 2
+  char_bargraph_bar3_s,  // 3
+  char_bargraph_bar4_s,  // 4
+  char_bargraph_bar5_s,  // 5
+  char_bargraph_bar6_s,  // 6
+  char_bargraph_bar7_s,  // 7
+  char_bargraph_bar8_s,  // 8
+  char_bargraph_bar9_s,  // 9
+  char_bargraph_bar10_s  // 10
+};
+
+#define char_bargraph_s(x) \
+  (char_bargraph_lookup[(x) < 0 ? 0 : ((x) > 10 ? 10 : (x))]) 

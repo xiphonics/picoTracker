@@ -11,13 +11,26 @@
 #include "Application/Persistency/PersistenceConstants.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "I_Instrument.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include <string.h>
 
-const char *sidWaveformText[DWF_LAST] = {"----", "T---", "-S--", "TS--", "--Q-",
-                                         "T-Q-", "-SQ-", "TSQ-", "---N"};
+const char *sidWaveformText[DWF_LAST] = {
+    "--------",
+    char_waveform_tri1_s char_waveform_tri2_s "------",
+    "--" char_waveform_saw1_s char_waveform_saw2_s "----",
+    char_waveform_tri1_s char_waveform_tri2_s
+        char_waveform_saw1_s char_waveform_saw2_s "----",
+    "----" char_waveform_pulse1_s char_waveform_pulse2_s "--",
+    char_waveform_tri1_s char_waveform_tri2_s
+    "--" char_waveform_pulse1_s char_waveform_pulse2_s "--",
+    "--" char_waveform_saw1_s char_waveform_saw2_s
+        char_waveform_pulse1_s char_waveform_pulse2_s "--",
+    char_waveform_tri1_s char_waveform_tri2_s char_waveform_saw1_s
+        char_waveform_saw2_s char_waveform_pulse1_s char_waveform_pulse2_s "--",
+    "------" char_waveform_noise1_s char_waveform_noise2_s};
 const char *sidFilterModeText[DFM_LAST] = {"LP", "BP", "HP", "Notch"};
 
 cRSID SIDInstrument::sid1_(44100);
