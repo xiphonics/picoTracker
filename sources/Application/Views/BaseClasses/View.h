@@ -132,6 +132,8 @@ public:
 
   void SetDirty(bool dirty);
 
+  void switchToRecordView();
+
   // Methods to access modal view
   bool HasModalView() const { return modalView_ != nullptr; }
   ModalView *GetModalView() const { return modalView_; }
