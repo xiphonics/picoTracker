@@ -10,6 +10,7 @@
 #include "i2c.h"
 #include "stm32h7xx_hal.h"
 #include "tim.h"
+#include <math.h>
 #include <stdio.h>
 
 #include "FreeRTOS.h"
@@ -33,6 +34,7 @@ PUTCHAR_PROTOTYPE {
 enum TLVOutput { INIT, HP, SPKR } output = INIT;
 enum TLVInput { NONE, MIC, LINEIN } input = NONE;
 
+static uint8_t codecVolume = 100;
 static volatile char overrideSpkr = 0;
 
 HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value) {
@@ -295,6 +297,31 @@ void tlv320_select_output(void) {
     }
   }
 }
+
+void tlv320_set_volume(uint8_t vol) {
+  // we use volume if 0..100 to map to register 65 and 66 directly. In order to
+  // have every step be equial (0.5dB), we'll use the range of -0.5dB (255) to
+  // -50.5dB (155)
+  if (vol > 100) {
+    vol = 100;
+  }
+
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  tlv320write(0x41, 155 + vol);
+  tlv320write(0x42, 155 + vol);
+};
+
+uint8_t tlv320_get_volume(void) {
+  uint8_t reg = 0;
+  // Both should be the same, check one channel only
+  if (tlv320read(0x00, 0x41, &reg) == HAL_OK) {
+    if (reg < 155) {
+      reg = 155;
+    }
+  }
+  return reg - 155;
+};
 
 void tlv320_mute(void) {
   // Select Page 0
