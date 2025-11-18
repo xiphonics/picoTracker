@@ -63,8 +63,8 @@ void ModalView::SetWindow(int width, int height) {
   GUITextProperties props;
   props.invert_ = true;
   char line[SCREEN_WIDTH + 1];
-  line[SCREEN_WIDTH + 1] = 0;
   memset(line, ' ', SCREEN_WIDTH);
+  line[SCREEN_WIDTH] = '\0';
   line[width + 4] = 0;
   DrawString(-2, -2, line, props);
   DrawString(-2, height + 1, line, props);
