@@ -32,6 +32,12 @@ public:
 
   void AnimationUpdate() override;
 
+  // Static method to set which view will open the RecordView
+  static void SetSourceViewType(ViewType vt);
+
+  // Track which view opened the RecordView (defaults to song view)
+  static ViewType sourceViewType_;
+
 protected:
 private:
   // UI fields

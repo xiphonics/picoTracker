@@ -12,6 +12,8 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
+#include "Application/Views/RecordView.h"
+#include "Application/Views/SampleEditorView.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
@@ -489,8 +491,17 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
   }
 }
 
-void View::drawPlaybackState(GUITextProperties &props) {
-  SetColor(CD_NORMAL);
-  Player *player = Player::GetInstance();
-  DrawString(27, 0, player->IsRunning() ? char_playback_play_s : " ", props);
+void View::switchToRecordView() {
+  // recording view only for the Advance
+#ifndef ADV
+  return;
+#endif
+  if (!Player::GetInstance()->IsRunning()) {
+    RecordView::SetSourceViewType(viewType_);
+    SampleEditorView::SetSourceViewType(viewType_);
+    ViewType vt = VT_RECORD;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+  }
 }
