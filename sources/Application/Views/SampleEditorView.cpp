@@ -59,7 +59,7 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       operationVar_(FourCC::VarSampleEditOperation, sampleEditOperationNames,
                     sampleEditOperationCount,
                     static_cast<int>(SampleEditOperation::Trim)),
-      win(w), redraw_(false) {
+      win(w) {
   // Initialize waveform cache to zero
   memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
 }
@@ -104,7 +104,7 @@ void SampleEditorView::addAllFields() {
 
   GUIPoint position = GetAnchor();
 
-  position._y = 12; // offset enough for waveform display
+  position._y = 10; // offset enough for waveform display
   position._x = 5;
 
   auto label =
@@ -182,9 +182,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         // Stop playback regardless of whether it's regular or looping
         Player::GetInstance()->StopStreaming();
         isPlaying_ = false;
-
-        // Force redraw to remove the playhead
-        redraw_ = true;
+        isDirty_ = true;
       }
       return;
     }
@@ -235,7 +233,6 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // Store the current animation frame as our start frame
       playbackStartFrame_ = AppWindow::GetAnimationFrameCounter();
       lastAnimationTime_ = sys_->Millis();
-      redraw_ = true;
 
       // If something is already playing, stop it first
       if (Player::GetInstance()->IsPlaying()) {
@@ -249,9 +246,8 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         // Start playback from the specified start position
         Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
                                               startSample);
+        isDirty_ = true;
       }
-      // redraw to show the playhead
-      redraw_ = true;
     }
     return;
   }
@@ -318,10 +314,9 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, titleString, props);
 
-  DrawWaveForm();
-
   // Let the base class draw all the text fields
   FieldView::Redraw();
+  isDirty_ = true;
 }
 
 void SampleEditorView::DrawWaveForm() {
@@ -423,9 +418,6 @@ void SampleEditorView::DrawWaveForm() {
   last_start_x_ = current_startX;
   last_end_x_ = current_endX;
   last_playhead_x_ = current_playheadX;
-
-  // Reset redraw flags
-  redraw_ = false;
 }
 
 void SampleEditorView::AnimationUpdate() {
@@ -465,15 +457,23 @@ void SampleEditorView::AnimationUpdate() {
 
       // Update position (normalized to full sample range)
       playbackPosition_ = samplePos / tempSampleSize_;
-      redraw_ = true;
     }
   }
 
   // Check if we need to update the waveform display
-  if (redraw_) {
-    // Update the waveform display
+  DrawWaveForm();
+
+  // we need this hack because Modal Dialogs text buffer gets repainted after
+  // the dialog is dismissed by "clearing" the text grid where it was, ie.
+  // setting every grid position to a space char with its background set to
+  // background color but this means we need to have the waveform, which draws
+  // directly to pixel buffer repaint itself for *2* frames to ensure it paints
+  // over the space chars that are drawn in the first frame after the dialog is
+  // dismissed
+  if (modalClearCount_ > 0) {
+    fullWaveformRedraw_ = true;
     DrawWaveForm();
-    redraw_ = false;
+    modalClearCount_--;
   }
 
   GUITextProperties props;
@@ -519,12 +519,12 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
         if (!applySelectedOperation()) {
           MessageBox *error =
               new MessageBox(*this, "Operation failed", MBBF_OK);
-          DoModal(error, [this](View &view1, ModalView &dialog1) {
-            fullWaveformRedraw_ = true;
-          });
+          DoModal(error,
+                  [this](View &view1, ModalView &dialog1) { isDirty_ = true; });
         }
       }
-      fullWaveformRedraw_ = true;
+      modalClearCount_ = 2;
+      isDirty_ = true;
     });
     return;
   }
@@ -582,9 +582,6 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     return;
   }
   }
-
-  // Then do a redraw of the waveform markers only
-  redraw_ = true;
 }
 
 bool SampleEditorView::applySelectedOperation() {
@@ -661,7 +658,6 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
                        : 0);
     updateSampleParameters();
     fullWaveformRedraw_ = true;
-    redraw_ = true;
     Trace::Log("SAMPLEEDITOR",
                "Trim skipped because selection spans entire sample");
     return true;
@@ -722,7 +718,6 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   updateSampleParameters();
   addAllFields();
   fullWaveformRedraw_ = true;
-  redraw_ = true;
   playbackPosition_ = 0.0f;
 
   Trace::Log("SAMPLEEDITOR",
@@ -770,7 +765,6 @@ bool SampleEditorView::applyNormalizeOperation() {
   if (!normalizeResult.normalized) {
     updateSampleParameters();
     fullWaveformRedraw_ = true;
-    redraw_ = true;
     Trace::Log("SAMPLEEDITOR",
                "Normalize skipped for '%s' (peak=%d, target=%d)",
                filename.c_str(), normalizeResult.peakBefore,
@@ -803,7 +797,6 @@ bool SampleEditorView::applyNormalizeOperation() {
   updateSampleParameters();
   addAllFields();
   fullWaveformRedraw_ = true;
-  redraw_ = true;
   playbackPosition_ = 0.0f;
 
   Trace::Log("SAMPLEEDITOR",
