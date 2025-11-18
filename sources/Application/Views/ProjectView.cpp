@@ -21,6 +21,7 @@
 #include "BaseClasses/UITempoField.h"
 #include "BaseClasses/View.h"
 #include "BaseClasses/ViewEvent.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
 #include <nanoprintf.h>
@@ -118,7 +119,8 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   Variable *v = project_->FindVariable(FourCC::VarTempo);
   tempoField_.emplace_back(FourCC::ActionTempoChanged, position, *v,
-                           "tempo: %d [%2.2x]  ", MIN_TEMPO, MAX_TEMPO, 1, 10);
+                           "tempo: " char_symbol_bpm_s "%d [%2.2x]  ",
+                           MIN_TEMPO, MAX_TEMPO, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*tempoField_.rbegin()));
   (*tempoField_.rbegin()).AddObserver(*this);
 

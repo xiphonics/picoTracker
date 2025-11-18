@@ -19,18 +19,14 @@
 
 const char *sidWaveformText[DWF_LAST] = {
     "--------",
-    char_waveform_tri1_s char_waveform_tri2_s "------",
-    "--" char_waveform_saw1_s char_waveform_saw2_s "----",
-    char_waveform_tri1_s char_waveform_tri2_s
-        char_waveform_saw1_s char_waveform_saw2_s "----",
-    "----" char_waveform_pulse1_s char_waveform_pulse2_s "--",
-    char_waveform_tri1_s char_waveform_tri2_s
-    "--" char_waveform_pulse1_s char_waveform_pulse2_s "--",
-    "--" char_waveform_saw1_s char_waveform_saw2_s
-        char_waveform_pulse1_s char_waveform_pulse2_s "--",
-    char_waveform_tri1_s char_waveform_tri2_s char_waveform_saw1_s
-        char_waveform_saw2_s char_waveform_pulse1_s char_waveform_pulse2_s "--",
-    "------" char_waveform_noise1_s char_waveform_noise2_s};
+    char_waveform_tri_s "------",
+    "--" char_waveform_saw_s "----",
+    char_waveform_tri_s char_waveform_saw_s "----",
+    "----" char_waveform_pulse_s "--",
+    char_waveform_tri_s "--" char_waveform_pulse_s "--",
+    "--" char_waveform_saw_s char_waveform_pulse_s "--",
+    char_waveform_tri_s char_waveform_saw_s char_waveform_pulse_s "--",
+    "------" char_waveform_noise_s};
 const char *sidFilterModeText[DFM_LAST] = {"LP", "BP", "HP", "Notch"};
 
 cRSID SIDInstrument::sid1_(44100);
