@@ -419,8 +419,8 @@ void ThemeView::handleThemeExport() {
   auto fs = FileSystem::GetInstance();
   if (fs->exists(pathBuffer)) {
     // Theme exists, ask for confirmation
-    MessageBox *mb = new MessageBox(*this, "Theme already exists. Overwrite?",
-                                    MBBF_YES | MBBF_NO);
+    MessageBox *mb = new MessageBox(*this, "Theme already exists.",
+                                    "Overwrite?", MBBF_YES | MBBF_NO);
 
     // Use a lambda for the callback to avoid the static function
     DoModal(mb, [this](View &v, ModalView &dialog) {
