@@ -122,6 +122,13 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*tempoField_.rbegin()));
   (*tempoField_.rbegin()).AddObserver(*this);
 
+#ifndef ADV
+  v = project_->FindVariable(FourCC::VarMasterVolume);
+  position._y += 1;
+  intVarField_.emplace_back(position, *v, "master vol: %d%%", 0, 100, 1, 5);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+#endif
+
   v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
   intVarField_.emplace_back(position, *v, "transpose: %3.2d", -48, 48, 0x1,

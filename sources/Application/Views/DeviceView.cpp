@@ -80,13 +80,6 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   intVarField_.emplace_back(position, *v, "Output volume: %3d", 0, 100, 1, 5);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
-#else
-  Project *project = data->project_;
-  v = project->FindVariable(FourCC::VarMasterVolume);
-  position._y += 1;
-  intVarField_.emplace_back(position, *v, "Output (master) volume: %d%%", 0,
-                            100, 1, 5);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 #endif
 
   position._y += 2;
