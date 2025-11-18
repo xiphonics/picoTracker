@@ -37,5 +37,6 @@ Temporary Items
 # usermanual output
 usermanual/output
 usermanual/bin
+usermanual/web
 
 optbuild/**
