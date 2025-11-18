@@ -21,6 +21,9 @@
 #include "Adapters/picoTracker/audio/record.h"
 #endif
 
+// Initialize static member
+ViewType RecordView::sourceViewType_ = VT_SONG;
+
 RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   GUIPoint position = GetAnchor();
@@ -55,6 +58,9 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
 RecordView::~RecordView() {}
 
+// Static method to set the source view type before opening SampleEditorView
+void RecordView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
+
 void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (!pressed) {
@@ -63,7 +69,7 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
-      ViewType vt = VT_SONG;
+      ViewType vt = sourceViewType_;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
       NotifyObservers(&ve);
