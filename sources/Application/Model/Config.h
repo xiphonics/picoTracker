@@ -35,7 +35,7 @@ public:
   bool ImportTheme(const char *themeName);
 
 private:
-  etl::list<Variable *, 24> variables_;
+  etl::list<Variable *, 25> variables_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
   void useDefaultConfig();

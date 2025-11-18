@@ -40,7 +40,7 @@ private:
 
   AudioSettings settings_;
   static const uint8_t miniBlank_[MINI_BLANK_SIZE];
-  int volume_;
+
   uint32_t startTime_;
 };
 #endif

@@ -87,11 +87,17 @@ bool advAudioDriver::InitDriver() {
   instance_ = this;
 
   Config *config = Config::GetInstance();
-  volume_ = 65;
-  volume_ = config->GetValue("VOLUME");
+  uint8_t initialVolume = 40;
+  if (config) {
+    if (Variable *outputVolume =
+            config->FindVariable(FourCC::VarOutputVolume)) {
+      initialVolume = outputVolume->GetInt();
+    }
+  }
 
   // Configure codec
   tlv320_init();
+  tlv320_set_volume(initialVolume);
   // Takes some time between configuring HP detect and actually detecting
   vTaskDelay(pdMS_TO_TICKS(250));
 
@@ -115,11 +121,11 @@ bool advAudioDriver::InitDriver() {
 };
 
 void advAudioDriver::SetVolume(int v) {
-  volume_ = (v <= 100) ? v : 100;
-  Trace::Debug("Setting volume to %d", volume_);
+  Trace::Debug("Setting volume to %d", v);
+  tlv320_set_volume(v);
 };
 
-int advAudioDriver::GetVolume() { return volume_; };
+int advAudioDriver::GetVolume() { return tlv320_get_volume(); };
 
 void advAudioDriver::CloseDriver(){
     // Not really used, maybe for sleep?
