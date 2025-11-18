@@ -702,17 +702,17 @@ void AppWindow::AnimationUpdate() {
     _isDirty = false;       // Reset the flag
   }
 
-  // Handle view updates - check for modal view first
+  // Handle view updates
   if (_currentView) {
-    // Check if there's an active modal view
+    // Always update the main view even if modal is active because things like
+    // batt gauge still need redrawing and visibility even with a modal onscreen
+    _currentView->AnimationUpdate();
+    // Now check if there's an active modal view and
     ModalView *modalView = _currentView->GetModalView();
     if (modalView) {
-      // Update the modal view first
+      // Update the modal view
       modalView->AnimationUpdate();
     }
-    // Always update the main view even if modal is active because things like
-    // batt gauge still need redrawing and visibility even with modal onscreen
-    _currentView->AnimationUpdate();
   }
 
   // Always flush after AnimationUpdate to ensure consistent state

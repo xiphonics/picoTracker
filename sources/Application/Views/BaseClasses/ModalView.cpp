@@ -8,6 +8,7 @@
  */
 
 #include "ModalView.h"
+#include "Application/AppWindow.h"
 
 #include "Application/Utils/DrawUtils.h"
 
