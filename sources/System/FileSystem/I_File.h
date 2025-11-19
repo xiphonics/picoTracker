@@ -10,6 +10,8 @@
 #ifndef _I_FILE_H_
 #define _I_FILE_H_
 
+#include <cstdint>
+
 class I_File {
 public:
   I_File() {}
@@ -23,6 +25,7 @@ public:
   virtual bool Close() = 0;
   virtual int Error() = 0;
   virtual bool Sync() = 0;
+  virtual bool PreAllocate(uint64_t size) { return false; }
 };
 
 #endif // _I_FILE_H_

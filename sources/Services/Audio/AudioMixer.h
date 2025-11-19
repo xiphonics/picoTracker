@@ -22,6 +22,7 @@ public:
   virtual ~AudioMixer();
   virtual bool Render(fixed *buffer, int samplecount);
   void SetFileRenderer(const char *path);
+  bool PrepareRenderer();
   void EnableRendering(bool enable);
   void SetVolume(fixed volume);
   void SetName(etl::string<12> name) { name_ = name; };

@@ -23,19 +23,40 @@ AudioMixer::~AudioMixer() {}
 
 void AudioMixer::SetFileRenderer(const char *path) { renderPath_ = path; };
 
+bool AudioMixer::PrepareRenderer() {
+  if (writer_) {
+    return true;
+  }
+
+  writer_ = new WavFileWriter(renderPath_.c_str());
+  if (!writer_ || !writer_->IsOpen()) {
+    SAFE_DELETE(writer_);
+    return false;
+  }
+  return true;
+}
+
 void AudioMixer::EnableRendering(bool enable) {
   if (enable == enableRendering_) {
     return;
   }
 
   if (enable) {
-    writer_ = new WavFileWriter(renderPath_.c_str());
-  }
-
-  enableRendering_ = enable;
-  if (!enable) {
-    writer_->Close();
-    SAFE_DELETE(writer_);
+    if (!writer_) {
+      if (!PrepareRenderer()) {
+        Trace::Error("AUDIO_MIXER", "Failed to prepare renderer for %s",
+                     name_.c_str());
+        enableRendering_ = false;
+        return;
+      }
+    }
+    enableRendering_ = true;
+  } else {
+    enableRendering_ = false;
+    if (writer_) {
+      writer_->Close();
+      SAFE_DELETE(writer_);
+    }
   }
 };
 

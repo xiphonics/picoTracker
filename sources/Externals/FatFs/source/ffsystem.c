@@ -51,6 +51,31 @@ static OS_EVENT *Mutex[FF_VOLUMES + 1]; /* Table of mutex pinter */
 #elif OS_TYPE == 3 /* FreeRTOS */
 #include "FreeRTOS.h"
 #include "semphr.h"
+#ifdef ADV
+#include "main.h"
+#include "usart.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+static void ff_debug_uart(const char *fmt, ...) {
+  char buffer[128];
+  va_list args;
+  va_start(args, fmt);
+  int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+  if (len <= 0) {
+    return;
+  }
+  if (len > (int)sizeof(buffer)) {
+    len = sizeof(buffer);
+  }
+  HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)buffer, len, 0xFFFF);
+}
+#else
+static void ff_debug_uart(const char *fmt, ...) {
+  (void)fmt;
+}
+#endif
 static SemaphoreHandle_t Mutex[FF_VOLUMES + 1]; /* Table of mutex handle */
 
 #elif OS_TYPE == 4 /* CMSIS-RTOS */
@@ -157,7 +182,21 @@ int ff_mutex_take(        /* Returns 1:Succeeded or 0:Timeout */
         return (int)(err == OS_NO_ERR);
 
 #elif OS_TYPE == 3 /* FreeRTOS */
-  return (int)(xSemaphoreTake(Mutex[vol], FF_FS_TIMEOUT) == pdTRUE);
+  TickType_t startTick = xTaskGetTickCount();
+  BaseType_t taken = xSemaphoreTake(Mutex[vol], FF_FS_TIMEOUT);
+  TickType_t waited = xTaskGetTickCount() - startTick;
+  if (taken == pdTRUE) {
+    if (waited >= pdMS_TO_TICKS(100)) {
+      ff_debug_uart("FF_MUTEX: vol=%d wait=%lum ticks=%lu\r\n", vol,
+                    (unsigned long)(waited * portTICK_PERIOD_MS),
+                    (unsigned long)waited);
+    }
+    return 1;
+  }
+  ff_debug_uart("FF_MUTEX TIMEOUT: vol=%d waited=%lum ticks=%lu\r\n", vol,
+                (unsigned long)(waited * portTICK_PERIOD_MS),
+                (unsigned long)waited);
+  return 0;
 
 #elif OS_TYPE == 4 /* CMSIS-RTOS */
   return (int)(osMutexWait(Mutex[vol], FF_FS_TIMEOUT) == osOK);

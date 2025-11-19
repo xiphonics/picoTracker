@@ -9,7 +9,26 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "sd_diskio.h"
+#include "main.h"
+#include "usart.h"
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
+
+static void sd_debug_uart(const char *fmt, ...) {
+  char buffer[160];
+  va_list args;
+  va_start(args, fmt);
+  int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+  if (len <= 0) {
+    return;
+  }
+  if (len > (int)sizeof(buffer)) {
+    len = sizeof(buffer);
+  }
+  HAL_UART_Transmit(&DEBUG_UART, (uint8_t *)buffer, len, 0xFFFF);
+}
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -56,6 +75,8 @@ static int SD_check_status_with_timeout(uint32_t timeout) {
     }
   }
 
+  sd_debug_uart("SD_TIMEOUT: card busy > %lums\r\n",
+                (unsigned long)timeout);
   return -1;
 }
 
@@ -122,6 +143,8 @@ static DRESULT SD_DMA_read(BYTE lun, BYTE *buff, LBA_t sector, UINT count) {
       /* in case of a timeout return error */
       if (ReadStatus == 0) {
         res = RES_ERROR;
+        sd_debug_uart("SD_READ: DMA completion timeout (count=%lu)\r\n",
+                      (unsigned long)count);
       } else {
         ReadStatus = 0;
         timeout = HAL_GetTick();
@@ -140,6 +163,10 @@ static DRESULT SD_DMA_read(BYTE lun, BYTE *buff, LBA_t sector, UINT count) {
             break;
           }
         }
+        if (res != RES_OK) {
+          sd_debug_uart("SD_READ: card busy > %lums after DMA\r\n",
+                        (unsigned long)SD_TIMEOUT);
+        }
       }
     }
   } else {
@@ -154,6 +181,7 @@ static DRESULT SD_DMA_read(BYTE lun, BYTE *buff, LBA_t sector, UINT count) {
         }
         if (ReadStatus == 0) {
           res = RES_ERROR;
+          sd_debug_uart("SD_READ: DMA completion timeout (unaligned)\r\n");
           break;
         }
         ReadStatus = 0;
@@ -218,6 +246,8 @@ static DRESULT SD_DMA_write(BYTE lun, const BYTE *buff, LBA_t sector,
       /* in case of a timeout return error */
       if (WriteStatus == 0) {
         res = RES_ERROR;
+        sd_debug_uart("SD_WRITE: DMA completion timeout (count=%lu)\r\n",
+                      (unsigned long)count);
       } else {
         WriteStatus = 0;
         timeout = HAL_GetTick();
@@ -227,6 +257,10 @@ static DRESULT SD_DMA_write(BYTE lun, const BYTE *buff, LBA_t sector,
             res = RES_OK;
             break;
           }
+        }
+        if (res != RES_OK) {
+          sd_debug_uart("SD_WRITE: card busy > %lums after DMA\r\n",
+                        (unsigned long)SD_TIMEOUT);
         }
       }
     }
@@ -254,6 +288,7 @@ static DRESULT SD_DMA_write(BYTE lun, const BYTE *buff, LBA_t sector,
         while ((WriteStatus == 0) && (HAL_GetTick() - timeout < SD_TIMEOUT)) {
         }
         if (WriteStatus == 0) {
+          sd_debug_uart("SD_WRITE: DMA completion timeout (unaligned)\r\n");
           break;
         }
 

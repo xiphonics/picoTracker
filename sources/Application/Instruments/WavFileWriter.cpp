@@ -8,6 +8,7 @@
  */
 
 #include "WavFileWriter.h"
+#include "Services/Audio/AudioDriver.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 #include "System/System/System.h"
@@ -16,15 +17,34 @@
 #include <cstring>
 #include <limits>
 
+namespace {
+
+constexpr uint32_t kRenderSampleRate = 44100;
+constexpr uint32_t kRenderChannels = 2;
+constexpr uint32_t kRenderBytesPerSample = 2;
+constexpr uint32_t kRenderPreallocSeconds = 20; // 2 minutes
+constexpr uint32_t kWavHeaderBytes = 44;
+constexpr uint64_t kRenderPreallocBytes =
+    static_cast<uint64_t>(kRenderSampleRate) * kRenderChannels *
+    kRenderBytesPerSample * kRenderPreallocSeconds;
+
+} // namespace
+
 WavFileWriter::WavFileWriter(const char *path)
-    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
+    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0), timingCount_(0),
+      bufferIndex_(0) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
+    // Preallocate before writing the header (FatFs requires zero-sized file)
+    PreAllocateRenderFile();
+    file_->Seek(0, SEEK_SET);
     // Use WavHeaderWriter to write the header
     if (!WavHeaderWriter::WriteHeader(file_, 44100, 2, 16)) {
       Trace::Log("WAVWRITER", "Failed to write WAV header");
       file_->Close();
       SAFE_DELETE(file_);
+    } else {
+      file_->Seek(kWavHeaderBytes, SEEK_SET);
     }
   }
 };
@@ -35,6 +55,9 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
 
   if (!file_)
     return;
+
+  System *system = System::GetInstance();
+  uint32_t startTime = system->Millis();
 
   // allocate a short buffer for transfer
 
@@ -66,7 +89,32 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
   };
   file_->Write(buffer_, 2, size * 2);
   sampleCount_ += size;
+
+  uint32_t duration = system->Millis() - startTime;
+  if (timingCount_ < kMaxTimingEntries) {
+    timings_[timingCount_++] = {bufferIndex_, duration};
+  }
+  bufferIndex_++;
 };
+
+bool WavFileWriter::PreAllocateRenderFile() {
+  if (!file_) {
+    return false;
+  }
+
+  const uint64_t totalBytes = kWavHeaderBytes + kRenderPreallocBytes;
+  Trace::Log("WAVWRITER", "Attempting to preallocate %llu bytes for render file",
+             static_cast<unsigned long long>(totalBytes));
+  bool preallocated = file_->PreAllocate(totalBytes);
+  if (preallocated) {
+    Trace::Log("WAVWRITER", "Preallocated %llu bytes for render file",
+               static_cast<unsigned long long>(totalBytes));
+  } else {
+    Trace::Error("WAVWRITER", "Preallocate failed for %llu-byte render target",
+                 static_cast<unsigned long long>(totalBytes));
+  }
+  return preallocated;
+}
 
 bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
                              uint32_t endFrame, void *scratchBuffer,
@@ -446,6 +494,17 @@ void WavFileWriter::Close() {
 
   if (!file_)
     return;
+
+  if (timingCount_ > 0) {
+    Trace::Log("RENDER_TRACE", "Render buffer timings:");
+    for (size_t i = 0; i < timingCount_; i++) {
+      Trace::Log("RENDER_TRACE", "  idx=%lu duration=%lu ms",
+                 static_cast<unsigned long>(timings_[i].bufferIndex),
+                 static_cast<unsigned long>(timings_[i].durationMs));
+    }
+    timingCount_ = 0;
+    bufferIndex_ = 0;
+  }
 
   // Use WavHeaderWriter to update file size
   if (!WavHeaderWriter::UpdateFileSize(file_, sampleCount_)) {

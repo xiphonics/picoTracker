@@ -42,6 +42,38 @@ static RecordSource source_ = LineIn;
 StaticSemaphore_t xSemaphoreBuffer;
 SemaphoreHandle_t recordingFinishedSemaphore = NULL;
 
+namespace {
+constexpr uint32_t kRecordSampleRate = 44100;
+constexpr uint32_t kRecordChannels = 2;
+constexpr uint32_t kRecordBytesPerSample = 2;
+constexpr uint32_t kRecordHeaderBytes = 44;
+constexpr uint32_t kDefaultPreallocMs = 120000; // 2 minutes
+
+uint64_t calculatePreallocBytes(uint32_t durationMs) {
+  uint64_t targetMs =
+      (durationMs != MAX_INT32) ? durationMs : kDefaultPreallocMs;
+  uint64_t bytesPerMs =
+      static_cast<uint64_t>(kRecordSampleRate) * kRecordChannels *
+      kRecordBytesPerSample / 1000;
+  return kRecordHeaderBytes + bytesPerMs * targetMs;
+}
+
+void preallocateRecordingFile(I_File *file, uint32_t durationMs) {
+  if (!file) {
+    return;
+  }
+  uint64_t totalBytes = calculatePreallocBytes(durationMs);
+  Trace::Log("RECORD", "Preallocating %llu bytes for recording",
+             static_cast<unsigned long long>(totalBytes));
+  bool ok = file->PreAllocate(totalBytes);
+  if (ok) {
+    Trace::Log("RECORD", "Recording preallocation succeeded");
+  } else {
+    Trace::Error("RECORD", "Recording preallocation failed");
+  }
+}
+} // namespace
+
 void SetInputSource(RecordSource source) {
   source_ = source;
   switch (source) {
@@ -131,6 +163,9 @@ bool StartRecording(const char *filename, uint8_t threshold,
     Trace::Log("RECORD", "Could not create file");
     return false;
   }
+
+  preallocateRecordingFile(RecordFile, recordDuration_);
+  RecordFile->Seek(0, SEEK_SET);
 
   // Write WAV header (44.1kHz, 16-bit, stereo)
   if (!WavHeaderWriter::WriteHeader(RecordFile, 44100, 2, 16)) {

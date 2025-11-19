@@ -108,7 +108,16 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
 
   AudioDriver::Event *event = (AudioDriver::Event *)d;
   if (event->type_ == AudioDriver::Event::ADET_BUFFERNEEDED) {
+    System *system = System::GetInstance();
+    uint32_t beforeLock = system->Millis();
     Lock();
+    uint32_t afterLock = system->Millis();
+    uint32_t wait = afterLock - beforeLock;
+    if (wait > 10) {
+      Trace::Log("RENDER_TRACE",
+                 "MixerService::Update waited %lu ms for mixer lock (t=%lu)", wait,
+                 afterLock);
+    }
     SetChanged();
     NotifyObservers();
 
@@ -194,6 +203,44 @@ void MixerService::setRenderingMode(MixerServiceMode mode) {
     };
     break;
   }
+}
+
+bool MixerService::PrepareRenderingMode(MixerServiceMode mode) {
+  if (mode == MSM_AUDIO) {
+    return true;
+  }
+
+  if (!configureRenderPaths()) {
+    Trace::Error(
+        "[MixerService::PrepareRenderingMode] Failed to configure paths");
+    return false;
+  }
+
+  bool success = true;
+  int sampleRate = Audio::GetInstance()->GetSampleRate();
+  switch (mode) {
+  case MSM_FILE:
+    success = out_ && out_->PrepareRenderer();
+    break;
+  case MSM_FILESPLIT:
+    success = out_ != nullptr;
+    if (success) {
+      success = out_->PrepareRenderer();
+    }
+    for (int i = 0; success && i < SONG_CHANNEL_COUNT; i++) {
+      success = bus_[i].PrepareRenderer();
+    }
+    break;
+  case MSM_AUDIO:
+    // handled earlier
+    break;
+  }
+
+  if (!success) {
+    Trace::Error(
+        "[MixerService::PrepareRenderingMode] Failed to prepare render target");
+  }
+  return success;
 }
 
 void MixerService::OnPlayerStart(MixerServiceMode mode) {

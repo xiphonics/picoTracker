@@ -8,6 +8,7 @@
  */
 
 #include "ProjectView.h"
+#include "Application/Mixer/MixerService.h"
 #include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/randomnames.h"
@@ -22,6 +23,7 @@
 #include "BaseClasses/View.h"
 #include "BaseClasses/ViewEvent.h"
 #include "Services/Midi/MidiService.h"
+#include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include <nanoprintf.h>
 
@@ -403,6 +405,17 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
+      System *sys = System::GetInstance();
+      uint32_t t = sys->Millis();
+      Trace::Log("RENDER_TRACE", "UI Mixdown: prepare requested t=%lu", t);
+      MixerService *mixerService = MixerService::GetInstance();
+      if (!mixerService->PrepareRenderingMode(MSM_FILE)) {
+        MessageBox *mb = new MessageBox(*this, "Render setup failed", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
+      Trace::Log("RENDER_TRACE", "UI Mixdown: player start t=%lu",
+                 sys->Millis());
       // Start playback in rendering mode with MSM_FILE
       player->Start(PM_SONG, true, MSM_FILE, true);
 
@@ -414,6 +427,16 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
+      System *sys = System::GetInstance();
+      uint32_t t = sys->Millis();
+      Trace::Log("RENDER_TRACE", "UI Stems: prepare requested t=%lu", t);
+      MixerService *mixerService = MixerService::GetInstance();
+      if (!mixerService->PrepareRenderingMode(MSM_FILESPLIT)) {
+        MessageBox *mb = new MessageBox(*this, "Render setup failed", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
+      Trace::Log("RENDER_TRACE", "UI Stems: player start t=%lu", sys->Millis());
       // Start playback in rendering mode with MSM_FILESPLIT
       player->Start(PM_SONG, true, MSM_FILESPLIT, true);
 

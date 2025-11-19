@@ -346,3 +346,16 @@ bool picoTrackerFile::Sync() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.sync();
 }
+
+bool picoTrackerFile::PreAllocate(uint64_t size) {
+  std::lock_guard<Mutex> lock(mutex);
+  if (size == 0) {
+    return true;
+  }
+  bool ok = file_.preAllocate(size);
+  if (!ok) {
+    Trace::Error("FILESYSTEM", "preAllocate failed for %llu bytes",
+                 static_cast<unsigned long long>(size));
+  }
+  return ok;
+}

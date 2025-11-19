@@ -17,6 +17,7 @@
 #include "System/FileSystem/I_File.h"
 #include "ff_gen_drv.h"
 #include "sd_diskio.h"
+#include <cstdint>
 
 #define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
@@ -35,6 +36,7 @@ public:
   bool Close() override;
   int Error() override;
   bool Sync() override;
+  bool PreAllocate(uint64_t size) override;
 
 private:
   FIL file_;

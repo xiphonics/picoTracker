@@ -16,6 +16,7 @@
 #include "System/FileSystem/I_File.h"
 #include "pico/sync.h"
 #include <mutex>
+#include <cstdint>
 
 // Forward declaration
 class picoTrackerFile;
@@ -66,6 +67,7 @@ public:
   virtual bool Close() override;
   virtual int Error() override;
   virtual bool Sync() override;
+  virtual bool PreAllocate(uint64_t size) override;
 
 private:
   FsBaseFile file_;

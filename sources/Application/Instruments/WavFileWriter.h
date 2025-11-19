@@ -37,6 +37,7 @@ public:
   ~WavFileWriter();
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
+  bool IsOpen() const { return file_ != nullptr; }
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,
                        void *scratchBuffer, size_t scratchBufferSize,
                        WavTrimResult &result);
@@ -45,9 +46,19 @@ public:
                             WavNormalizeResult &result);
 
 private:
+  bool PreAllocateRenderFile();
   int sampleCount_;
   short *buffer_;
   int bufferSize_;
   I_File *file_;
+
+  struct WriteTiming {
+    uint32_t bufferIndex;
+    uint32_t durationMs;
+  };
+  static constexpr size_t kMaxTimingEntries = 64;
+  WriteTiming timings_[kMaxTimingEntries];
+  size_t timingCount_;
+  uint32_t bufferIndex_;
 };
 #endif

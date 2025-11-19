@@ -60,6 +60,8 @@ public:
   void Lock();
   void Unlock();
 
+  bool PrepareRenderingMode(MixerServiceMode mode);
+
 protected:
   void setRenderingMode(MixerServiceMode mode);
 

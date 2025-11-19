@@ -9,6 +9,7 @@
 #include "advFileSystem.h"
 #include <cstdio>
 #include <cstring>
+#include <limits>
 
 FATFS SDFatFS;
 char SDPath[4];
@@ -464,5 +465,23 @@ bool PI_File::Close() {
 
 bool PI_File::Sync() {
   FRESULT res = f_sync(&file_);
+  return res == FR_OK;
+}
+
+bool PI_File::PreAllocate(uint64_t size) {
+  if (size == 0) {
+    return true;
+  }
+
+  const FSIZE_t maxSize = std::numeric_limits<FSIZE_t>::max();
+  if (size > maxSize) {
+    size = maxSize;
+  }
+
+  FRESULT res = f_expand(&file_, static_cast<FSIZE_t>(size), 1);
+  if (res != FR_OK) {
+    Trace::Log("FILESYSTEM", "f_expand failed (%d) while allocating %llu bytes",
+               static_cast<int>(res), static_cast<unsigned long long>(size));
+  }
   return res == FR_OK;
 }
