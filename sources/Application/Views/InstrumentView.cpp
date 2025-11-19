@@ -432,16 +432,8 @@ void InstrumentView::fillSIDParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
-  switch (instrument->GetChip()) {
-  case SID1:
-    v = instrument->FindVariable(FourCC::SIDInstrument1Waveform);
-    break;
-  case SID2:
-    v = instrument->FindVariable(FourCC::SIDInstrument2Waveform);
-    break;
-  }
+  v = instrument->FindVariable(FourCC::SIDInstrument1Waveform);
 
-  // Only support independent waveforms for the moment
   intVarField_.emplace_back(position, *v, "WF: %s", 0, DWF_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
