@@ -163,9 +163,13 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   sid_->Register[21] = fltcut_->GetInt() & 0x7; // Filter Cut lo
   sid_->Register[22] = fltcut_->GetInt() >> 3;  // Filter Cut Hi
 
-  // on start for each instrument it sets it's own filter in this register
-  sid_->Register[23] = sid_->Register[23] | fltres_->GetInt() << 4 |
-                       vfon_.GetInt() << osc; // Filter Res/Filt
+  // on start for each instrument it sets its own filter on bit in this register
+  //  we need to clear filter resonance and the current oscillator's filter on
+  //  bit while preserving the filter on bits of the other two oscillators for
+  //  this chip
+  sid_->Register[23] = (sid_->Register[23] & 0xF & ~(1 << osc)) |
+                       fltres_->GetInt() << 4 | // filter resonance
+                       vfon_.GetInt() << osc;   // filter on bit for this osc
 
   int8_t mode = 0;
   switch (fltmode_->GetInt()) {
