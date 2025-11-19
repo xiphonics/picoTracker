@@ -22,16 +22,27 @@ namespace {
 constexpr uint32_t kRenderSampleRate = 44100;
 constexpr uint32_t kRenderChannels = 2;
 constexpr uint32_t kRenderBytesPerSample = 2;
-constexpr uint32_t kRenderPreallocSeconds = 20; // 2 minutes
+constexpr uint32_t kRenderPreallocSeconds = 20; // 20 seconds
 constexpr uint32_t kWavHeaderBytes = 44;
 constexpr uint64_t kRenderPreallocBytes =
     static_cast<uint64_t>(kRenderSampleRate) * kRenderChannels *
     kRenderBytesPerSample * kRenderPreallocSeconds;
+#if defined(ADV)
+constexpr size_t kWriterQueueLength = 16;
+constexpr uint16_t kWriterTaskStackWords = 2048;
+constexpr UBaseType_t kWriterTaskPriority = tskIDLE_PRIORITY + 1;
+#endif
 
 } // namespace
 
 WavFileWriter::WavFileWriter(const char *path)
-    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0), timingCount_(0),
+#if defined(ADV)
+    : writeQueue_(nullptr), writerTask_(nullptr), writerFinished_(nullptr),
+      useAsyncWriter_(false),
+#else
+    :
+#endif
+      sampleCount_(0), buffer_(0), bufferSize_(0), file_(0), timingCount_(0),
       bufferIndex_(0) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
@@ -45,6 +56,9 @@ WavFileWriter::WavFileWriter(const char *path)
       SAFE_DELETE(file_);
     } else {
       file_->Seek(kWavHeaderBytes, SEEK_SET);
+#if defined(ADV)
+      useAsyncWriter_ = StartWriter();
+#endif
     }
   }
 };
@@ -87,8 +101,33 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
     }
     *s++ = short(fp2i(v));
   };
-  file_->Write(buffer_, 2, size * 2);
-  sampleCount_ += size;
+#if defined(ADV)
+  bool handled = false;
+  if (useAsyncWriter_ && writeQueue_) {
+    const uint32_t frameCount = static_cast<uint32_t>(size);
+    const size_t copyBytes =
+        static_cast<size_t>(frameCount) * 2U * sizeof(short);
+    short *jobBuffer = static_cast<short *>(pvPortMalloc(copyBytes));
+    if (jobBuffer) {
+      memcpy(jobBuffer, buffer_, copyBytes);
+      RenderWriteJob job{jobBuffer, frameCount};
+      if (EnqueueWriteJob(job)) {
+        handled = true;
+      } else {
+        Trace::Error("WAVWRITER", "Render write queue full, writing inline");
+        ProcessWriteJob(job);
+        handled = true;
+      }
+    } else {
+      Trace::Error("WAVWRITER", "Failed to allocate render queue buffer");
+    }
+  }
+  if (!handled) {
+    WriteSamples(buffer_, static_cast<uint32_t>(size));
+  }
+#else
+  WriteSamples(buffer_, static_cast<uint32_t>(size));
+#endif
 
   uint32_t duration = system->Millis() - startTime;
   if (timingCount_ < kMaxTimingEntries) {
@@ -96,6 +135,22 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
   }
   bufferIndex_++;
 };
+
+bool WavFileWriter::WriteSamples(const short *data, uint32_t frameCount) {
+  if (!file_ || frameCount == 0) {
+    return false;
+  }
+
+  const size_t samplePairs = static_cast<size_t>(frameCount) * 2U;
+  int written = file_->Write(data, sizeof(short),
+                             static_cast<int>(samplePairs));
+  if (written != static_cast<int>(samplePairs)) {
+    Trace::Error("WAVWRITER", "Failed writing render data");
+    return false;
+  }
+  sampleCount_ += frameCount;
+  return true;
+}
 
 bool WavFileWriter::PreAllocateRenderFile() {
   if (!file_) {
@@ -115,6 +170,102 @@ bool WavFileWriter::PreAllocateRenderFile() {
   }
   return preallocated;
 }
+
+#if defined(ADV)
+bool WavFileWriter::StartWriter() {
+  if (writeQueue_) {
+    return true;
+  }
+
+  writeQueue_ = xQueueCreate(kWriterQueueLength, sizeof(RenderWriteJob));
+  if (!writeQueue_) {
+    Trace::Error("WAVWRITER", "Failed to create render queue");
+    return false;
+  }
+
+  writerFinished_ = xSemaphoreCreateBinary();
+  if (!writerFinished_) {
+    Trace::Error("WAVWRITER", "Failed to create writer semaphore");
+    vQueueDelete(writeQueue_);
+    writeQueue_ = nullptr;
+    return false;
+  }
+
+  BaseType_t result =
+      xTaskCreate(WriterTaskEntry, "RenderWriter", kWriterTaskStackWords, this,
+                  kWriterTaskPriority, &writerTask_);
+  if (result != pdPASS) {
+    Trace::Error("WAVWRITER", "Failed to create writer task");
+    vSemaphoreDelete(writerFinished_);
+    writerFinished_ = nullptr;
+    vQueueDelete(writeQueue_);
+    writeQueue_ = nullptr;
+    return false;
+  }
+  return true;
+}
+
+void WavFileWriter::StopWriter() {
+  if (!useAsyncWriter_) {
+    return;
+  }
+
+  if (writeQueue_) {
+    RenderWriteJob job{nullptr, 0};
+    xQueueSend(writeQueue_, &job, portMAX_DELAY);
+  }
+  if (writerFinished_) {
+    xSemaphoreTake(writerFinished_, portMAX_DELAY);
+    vSemaphoreDelete(writerFinished_);
+    writerFinished_ = nullptr;
+  }
+  if (writeQueue_) {
+    vQueueDelete(writeQueue_);
+    writeQueue_ = nullptr;
+  }
+  writerTask_ = nullptr;
+  useAsyncWriter_ = false;
+}
+
+bool WavFileWriter::EnqueueWriteJob(const RenderWriteJob &job) {
+  if (!writeQueue_) {
+    return false;
+  }
+  return xQueueSend(writeQueue_, &job, 0) == pdTRUE;
+}
+
+void WavFileWriter::ProcessWriteJob(const RenderWriteJob &job) {
+  if (!job.data) {
+    return;
+  }
+  WriteSamples(job.data, job.frameCount);
+  vPortFree(job.data);
+}
+
+void WavFileWriter::WriterTaskEntry(void *param) {
+  WavFileWriter *self = static_cast<WavFileWriter *>(param);
+  if (self) {
+    self->WriterTaskLoop();
+  }
+}
+
+void WavFileWriter::WriterTaskLoop() {
+  RenderWriteJob job{};
+  while (writeQueue_) {
+    if (xQueueReceive(writeQueue_, &job, portMAX_DELAY) != pdTRUE) {
+      continue;
+    }
+    if (job.data == nullptr) {
+      break;
+    }
+    ProcessWriteJob(job);
+  }
+  if (writerFinished_) {
+    xSemaphoreGive(writerFinished_);
+  }
+  vTaskDelete(nullptr);
+}
+#endif
 
 bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
                              uint32_t endFrame, void *scratchBuffer,
@@ -494,6 +645,12 @@ void WavFileWriter::Close() {
 
   if (!file_)
     return;
+
+#if defined(ADV)
+  if (useAsyncWriter_) {
+    StopWriter();
+  }
+#endif
 
   if (timingCount_ > 0) {
     Trace::Log("RENDER_TRACE", "Render buffer timings:");

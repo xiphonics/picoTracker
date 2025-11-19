@@ -14,6 +14,12 @@
 #include "System/FileSystem/FileSystem.h"
 #include <cstddef>
 #include <cstdint>
+#if defined(ADV)
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "semphr.h"
+#include "task.h"
+#endif
 
 struct WavTrimResult {
   uint32_t totalFrames;
@@ -47,11 +53,27 @@ public:
 
 private:
   bool PreAllocateRenderFile();
+#if defined(ADV)
+  struct RenderWriteJob {
+    short *data;
+    uint32_t frameCount;
+  };
+  static void WriterTaskEntry(void *param);
+  void WriterTaskLoop();
+  bool StartWriter();
+  void StopWriter();
+  bool EnqueueWriteJob(const RenderWriteJob &job);
+  void ProcessWriteJob(const RenderWriteJob &job);
+  QueueHandle_t writeQueue_;
+  TaskHandle_t writerTask_;
+  SemaphoreHandle_t writerFinished_;
+  bool useAsyncWriter_;
+#endif
+  bool WriteSamples(const short *data, uint32_t frameCount);
   int sampleCount_;
   short *buffer_;
   int bufferSize_;
   I_File *file_;
-
   struct WriteTiming {
     uint32_t bufferIndex;
     uint32_t durationMs;
