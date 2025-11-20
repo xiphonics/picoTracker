@@ -405,6 +405,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
+      if (!hasPlayableSong()) {
+        MessageBox *mb =
+            new MessageBox(*this, "Project has no song data", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
       // Start playback in rendering mode with MSM_FILE
       player->Start(PM_SONG, true, MSM_FILE, true);
 
@@ -416,6 +422,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
+      if (!hasPlayableSong()) {
+        MessageBox *mb =
+            new MessageBox(*this, "Project has no song data", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
       // Start playback in rendering mode with MSM_FILESPLIT
       player->Start(PM_SONG, true, MSM_FILESPLIT, true);
 
@@ -476,4 +488,30 @@ void ProjectView::OnFocus() {
   if (!saveAsFlag_) {
     oldProjName_ = getProjectName();
   }
+}
+
+bool ProjectView::hasPlayableSong() const {
+  const Song *song = (viewData_ != nullptr) ? viewData_->song_ : nullptr;
+  if (song == nullptr) {
+    return false;
+  }
+
+  // go through song grid looking for chains which have at least 1 phrase in them
+  for (int i = 0; i < SONG_CHANNEL_COUNT * SONG_ROW_COUNT; ++i) {
+    unsigned char chainIndex = song->data_[i];
+    if (chainIndex == EMPTY_SONG_VALUE || chainIndex >= CHAIN_COUNT) {
+      continue;
+    }
+
+    const unsigned char *chainData =
+        song->chain_.data_ + (chainIndex * STEPS_PER_PHRASE);
+
+    for (int chainStep = 0; chainStep < STEPS_PER_PHRASE; ++chainStep) {
+      if (chainData[chainStep] != EMPTY_SONG_VALUE) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

@@ -14,6 +14,7 @@
 
 #define CHAIN_COUNT 0xFF
 #define NO_MORE_CHAIN 0x100
+#define PHRASES_PER_CHAIN 0xF
 
 class Chain {
 public:

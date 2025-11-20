@@ -41,6 +41,8 @@
    MAX_MACROINSTRUMENT_COUNT)
 #endif
 
+#define EMPTY_SONG_VALUE 0xFF
+
 class Song : Persistent {
 public:
   Song();
