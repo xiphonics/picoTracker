@@ -26,6 +26,8 @@ extern "C" {
 void tlv320_init();
 
 void tlv320_select_output(void);
+void tlv320_set_volume(uint8_t);
+uint8_t tlv320_get_volume(void);
 void tlv320_unmute(void);
 void tlv320_mute(void);
 void tlv320_enable_linein(void);
