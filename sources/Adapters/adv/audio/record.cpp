@@ -24,6 +24,7 @@ static volatile bool recordingActive = false;
 static volatile bool writeInProgress = false;
 
 static volatile bool monitoringOnly = false;
+static volatile uint8_t buffersToSkip = 0;
 
 static int lineInGainDb = 0;
 static int micGainDb = 0;
@@ -143,6 +144,7 @@ bool StartRecording(const char *filename, uint8_t threshold,
   // only set if recording file could be opened
   monitoringOnly = false;
   thresholdOK = false;
+  buffersToSkip = 2; // drop monitoring buffers from before we start recording
   first_pass = true;
   recordingFinishedSemaphore = xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer);
 
@@ -231,7 +233,7 @@ void Record(void *) {
     // DMA transmit finished, dump to file
     // Tracking which half is ready
     uint32_t offset = 0;
-    if (isHalfBuffer) {
+    if (!isHalfBuffer) {
       offset = RECORD_BUFFER_SIZE / 2;
     }
     /*    if (!thresholdOK) {
@@ -245,6 +247,13 @@ void Record(void *) {
       }*/
     // Write raw audio data (uint16_t samples as bytes)
     if (!monitoringOnly) {
+      // When we monitor we are continously recording, so there is data before
+      // we start recording. We skip a couple of buffers to actually record from
+      // after the moment we press the recording button
+      if (buffersToSkip > 0) {
+        buffersToSkip = buffersToSkip - 1;
+        continue;
+      }
       if (RecordFile) {
         writeInProgress = true;
         int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
