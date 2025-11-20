@@ -52,6 +52,7 @@ constexpr int DEFAULT_BACKLIGHT_LEVEL = 0xFF; // Default to max brightness (255)
 constexpr int DEFAULT_REC_SOURCE = 0x0;
 constexpr int DEFAULT_RECORD_LINE_GAIN_DB = 0;
 constexpr int DEFAULT_RECORD_MIC_GAIN_DB = 0;
+constexpr int DEFAULT_OUTPUT_VOLUME = 40;
 
 // Use a struct to define parameter information
 struct ConfigParam {
@@ -196,6 +197,12 @@ static const ConfigParam configParams[] = {
     {"BACKLIGHTLEVEL",
      {.intValue = DEFAULT_BACKLIGHT_LEVEL},
      FourCC::VarBacklightLevel,
+     nullptr,
+     0,
+     false},
+    {"OUTPUTVOLUME",
+     {.intValue = DEFAULT_OUTPUT_VOLUME},
+     FourCC::VarOutputVolume,
      nullptr,
      0,
      false},
