@@ -18,7 +18,7 @@
 #define PHRASE_COUNT 0x80
 #define NO_MORE_PHRASE 0x81
 #endif
-#define STEPS_PER_PHRASE 0xF
+#define STEPS_PER_PHRASE 16
 
 class Phrase {
 public:
