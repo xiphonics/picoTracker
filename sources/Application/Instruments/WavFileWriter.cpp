@@ -17,7 +17,8 @@
 #include <limits>
 
 WavFileWriter::WavFileWriter(const char *path)
-    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0), path_(path ? path : "") {
+    : sampleCount_(0), file_(0), path_(path ? path : ""), queue_(nullptr),
+      freeQueue_(nullptr), taskHandle_(nullptr), writerActive_(false) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
     // Use WavHeaderWriter to write the header
@@ -25,6 +26,40 @@ WavFileWriter::WavFileWriter(const char *path)
       Trace::Log("WAVWRITER", "Failed to write WAV header");
       file_->Close();
       SAFE_DELETE(file_);
+    }
+  }
+
+  if (file_) {
+    queue_ = xQueueCreate(kRenderQueueDepth, sizeof(RenderChunk *));
+    freeQueue_ = xQueueCreate(kRenderQueueDepth, sizeof(RenderChunk *));
+  }
+
+  if (!queue_ || !freeQueue_) {
+    Trace::Error("WAVWRITER", "Failed to create render queues");
+    if (queue_) {
+      vQueueDelete(queue_);
+      queue_ = nullptr;
+    }
+    if (freeQueue_) {
+      vQueueDelete(freeQueue_);
+      freeQueue_ = nullptr;
+    }
+  } else if (file_) {
+    for (size_t i = 0; i < kRenderQueueDepth; ++i) {
+      RenderChunk *chunk = &chunkPool_[i];
+      chunk->samples = 0;
+      chunk->terminate = false;
+      xQueueSend(freeQueue_, &chunk, 0);
+    }
+    writerActive_ = true;
+    BaseType_t taskResult = xTaskCreate(WavFileWriter::WriterTaskThunk, "wavwr",
+                                        kWriterTaskStackSize, this,
+                                        kWriterTaskPriority, &taskHandle_);
+    if (taskResult != pdPASS) {
+      Trace::Error("WAVWRITER", "Failed to start writer task");
+      writerActive_ = false;
+      vQueueDelete(queue_);
+      queue_ = nullptr;
     }
   }
 };
@@ -36,18 +71,19 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
   if (!file_)
     return;
 
-  // allocate a short buffer for transfer
-
-  if (size > bufferSize_) {
-    SAFE_FREE(buffer_);
-    buffer_ = (short *)malloc(size * 2 * sizeof(short));
-    bufferSize_ = size;
-  };
-
-  if (!buffer_)
+  if (!queue_ || !freeQueue_) {
     return;
+  }
 
-  short *s = buffer_;
+  RenderChunk *chunk = nullptr;
+  if (xQueueReceive(freeQueue_, &chunk, 0) != pdTRUE || chunk == nullptr) {
+    Trace::Error("WAVWRITER", "No free render chunks, dropping audio");
+    return;
+  }
+
+  chunk->samples = static_cast<uint16_t>(size);
+  chunk->terminate = false;
+  short *s = chunk->data;
   fixed *p = bufferIn;
 
   fixed v;
@@ -64,8 +100,11 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
     }
     *s++ = short(fp2i(v));
   };
-  file_->Write(buffer_, 2, size * 2);
-  sampleCount_ += size;
+
+  if (xQueueSend(queue_, &chunk, 0) != pdTRUE) {
+    Trace::Error("WAVWRITER", "Render queue full, dropping audio chunk");
+    xQueueSend(freeQueue_, &chunk, 0);
+  }
 };
 
 bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
@@ -444,6 +483,24 @@ void WavFileWriter::Close() {
   if (!file_)
     return;
 
+  if (queue_) {
+    RenderChunk *sentinel = nullptr;
+    while (xQueueSend(queue_, &sentinel, portMAX_DELAY) != pdTRUE) {
+      vTaskDelay(pdMS_TO_TICKS(1));
+    }
+
+    while (writerActive_) {
+      vTaskDelay(pdMS_TO_TICKS(1));
+    }
+
+    vQueueDelete(queue_);
+    queue_ = nullptr;
+  }
+  if (freeQueue_) {
+    vQueueDelete(freeQueue_);
+    freeQueue_ = nullptr;
+  }
+
   long finalSize = file_->Tell();
   Trace::Log("WAVWRITER", "Closing render file (%p) samples=%d tell=%ld",
              static_cast<void *>(file_), sampleCount_, finalSize);
@@ -467,6 +524,36 @@ void WavFileWriter::Close() {
       delete patchFile;
     }
   }
-
-  SAFE_FREE(buffer_);
 };
+
+void WavFileWriter::WriterTaskThunk(void *param) {
+  auto *self = static_cast<WavFileWriter *>(param);
+  if (self) {
+    self->WriterTask();
+  }
+}
+
+void WavFileWriter::WriterTask() {
+  if (!queue_ || !file_) {
+    writerActive_ = false;
+    vTaskDelete(nullptr);
+    return;
+  }
+
+  RenderChunk *chunk = nullptr;
+  while (xQueueReceive(queue_, &chunk, portMAX_DELAY) == pdTRUE) {
+    if (chunk == nullptr) {
+      break;
+    }
+    file_->Write(chunk->data, sizeof(short), chunk->samples * 2);
+    sampleCount_ += chunk->samples;
+    if (freeQueue_) {
+      while (xQueueSend(freeQueue_, &chunk, portMAX_DELAY) != pdTRUE) {
+        vTaskDelay(pdMS_TO_TICKS(1));
+      }
+    }
+  }
+
+  writerActive_ = false;
+  vTaskDelete(nullptr);
+}

@@ -11,10 +11,14 @@
 #define _WAV_FILE_WRITER_H_
 
 #include "Application/Utils/fixed.h"
+#include "Services/Audio/AudioDriver.h"
 #include "System/FileSystem/FileSystem.h"
+#include <FreeRTOS.h>
 #include <cstddef>
 #include <cstdint>
+#include <queue.h>
 #include <string>
+#include <task.h>
 
 struct WavTrimResult {
   uint32_t totalFrames;
@@ -33,6 +37,10 @@ struct WavNormalizeResult {
 };
 
 class WavFileWriter {
+  static constexpr size_t kRenderQueueDepth = 4;
+  static constexpr uint32_t kWriterTaskStackSize = 1024;
+  static constexpr UBaseType_t kWriterTaskPriority = 2;
+
 public:
   WavFileWriter(const char *path);
   ~WavFileWriter();
@@ -46,10 +54,22 @@ public:
                             WavNormalizeResult &result);
 
 private:
+  struct RenderChunk {
+    uint16_t samples;
+    bool terminate;
+    short data[MAX_SAMPLE_COUNT * 2];
+  };
+
+  static void WriterTaskThunk(void *param);
+  void WriterTask();
+
   int sampleCount_;
-  short *buffer_;
-  int bufferSize_;
   I_File *file_;
   std::string path_;
+  QueueHandle_t queue_;
+  QueueHandle_t freeQueue_;
+  TaskHandle_t taskHandle_;
+  bool writerActive_;
+  RenderChunk chunkPool_[kRenderQueueDepth];
 };
 #endif

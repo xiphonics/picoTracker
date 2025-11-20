@@ -133,14 +133,16 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 
   // Let's get started !
 
-  SyncMaster::GetInstance()->Start();
-
+  // Prepare mixers/render targets before the audio clock starts, so file
+  // writers are opened from the UI thread.
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;
 
   // Notify MixerService about player start - this will set up rendering if
   // needed
   mixer_.OnPlayerStart(msmMode);
+
+  SyncMaster::GetInstance()->Start();
 
   MidiService *ms = MidiService::GetInstance();
   ms->OnPlayerStart();
