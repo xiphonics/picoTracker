@@ -125,7 +125,10 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     uint32_t paddedChunkSize = info.fmtChunkSize + (info.fmtChunkSize & 1);
     uint32_t nextOffset = chunkDataOffset + paddedChunkSize;
     if (nextOffset > riffEnd) {
-      Trace::Error("WavHeaderWriter: fmt chunk exceeds RIFF bounds");
+      Trace::Error(
+          "WavHeaderWriter: fmt chunk exceeds RIFF bounds (chunkSize=%u "
+          "padded=%u dataOffset=%u riffEnd=%u)",
+          info.fmtChunkSize, paddedChunkSize, chunkDataOffset, riffEnd);
       return std::unexpected(INVALID_HEADER);
     }
 
@@ -226,7 +229,9 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     uint32_t paddedChunkSize = chunkSize + (chunkSize & 1);
     uint32_t chunkEnd = dataStart + paddedChunkSize;
     if (chunkEnd > riffEnd) {
-      Trace::Error("WavHeaderWriter: data chunk exceeds RIFF bounds");
+      Trace::Error("WavHeaderWriter: data chunk exceeds RIFF bounds "
+                   "(chunk=%u chunkSize=%u chunkEnd=%u riffEnd=%u)",
+                   chunk, chunkSize, chunkEnd, riffEnd);
       return std::unexpected(INVALID_HEADER);
     }
 
@@ -256,19 +261,25 @@ WavHeaderWriter::ReadHeader(I_File *file) {
   file->Seek(info.dataOffset, SEEK_SET);
   return info;
 }
-bool WavHeaderWriter::UpdateFileSize(I_File *file, uint32_t sampleCount,
-                                     uint16_t channels,
+bool WavHeaderWriter::UpdateFileSize(I_File *file, uint16_t channels,
                                      uint16_t bytesPerSample) {
   if (!file) {
     return false;
   }
 
-  // Get the current position, which is the total file size
+  // Use the actual filesize as the sample count may contain samples there were
+  // dropped and not actually written to the output file
   uint32_t totalFileSize = file->Tell();
+  (void)channels;
+  (void)bytesPerSample;
+  if (totalFileSize < 8) {
+    Trace::Error("WavHeaderWriter: File too small to contain WAV header");
+    return false;
+  }
 
   // Calculate the two size fields required by the WAV header
   uint32_t chunk_size = totalFileSize - 8;
-  uint32_t subchunk2_size = sampleCount * channels * bytesPerSample;
+  uint32_t subchunk2_size = (totalFileSize >= 44) ? (totalFileSize - 44) : 0;
 
   // Update ChunkSize (Total file size - 8)
   file->Seek(4, SEEK_SET);

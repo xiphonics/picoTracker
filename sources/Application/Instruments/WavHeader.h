@@ -35,8 +35,7 @@ public:
                           uint16_t channels = 2, uint16_t bytesPerSample = 2);
 
   // Update file size in WAV header for I_File
-  static bool UpdateFileSize(I_File *file, uint32_t sampleCount,
-                             uint16_t channels = 2,
+  static bool UpdateFileSize(I_File *file, uint16_t channels = 2,
                              uint16_t bytesPerSample = 2);
 
   static std::expected<WavHeaderInfo, WAVEFILE_ERROR> ReadHeader(I_File *file);

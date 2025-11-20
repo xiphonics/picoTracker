@@ -17,7 +17,7 @@
 #include <limits>
 
 WavFileWriter::WavFileWriter(const char *path)
-    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
+    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0), path_(path ? path : "") {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
     // Use WavHeaderWriter to write the header
@@ -192,10 +192,7 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     bytesRemaining -= static_cast<uint32_t>(bytesRead);
   }
 
-  const uint32_t newDataSize = framesToKeep * bytesPerFrame;
-  file->Seek(headerDataOffset + newDataSize, SEEK_SET);
-  if (!WavHeaderWriter::UpdateFileSize(file, framesToKeep, numChannels,
-                                       bytesPerSample)) {
+  if (!WavHeaderWriter::UpdateFileSize(file, numChannels, bytesPerSample)) {
     Trace::Error("WavFileWriter: Failed updating WAV header after trim");
     file->Close();
     return false;
@@ -447,12 +444,29 @@ void WavFileWriter::Close() {
   if (!file_)
     return;
 
-  // Use WavHeaderWriter to update file size
-  if (!WavHeaderWriter::UpdateFileSize(file_, sampleCount_)) {
-    Trace::Log("WAVWRITER", "Failed to update WAV header");
-  }
+  long finalSize = file_->Tell();
+  Trace::Log("WAVWRITER", "Closing render file (%p) samples=%d tell=%ld",
+             static_cast<void *>(file_), sampleCount_, finalSize);
 
+  file_->Sync();
   file_->Close();
   SAFE_DELETE(file_);
+
+  FileSystem *fs = FileSystem::GetInstance();
+  if (fs && !path_.empty()) {
+    I_File *patchFile = fs->Open(path_.c_str(), "r+");
+    if (!patchFile) {
+      Trace::Error("WAVWRITER", "Failed to reopen %s for header patch",
+                   path_.c_str());
+    } else {
+      patchFile->Seek(0, SEEK_END);
+      if (!WavHeaderWriter::UpdateFileSize(patchFile, sampleCount_)) {
+        Trace::Log("WAVWRITER", "Failed to update WAV header");
+      }
+      patchFile->Close();
+      delete patchFile;
+    }
+  }
+
   SAFE_FREE(buffer_);
 };

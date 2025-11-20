@@ -14,6 +14,7 @@
 #include "System/FileSystem/FileSystem.h"
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
 struct WavTrimResult {
   uint32_t totalFrames;
@@ -49,5 +50,6 @@ private:
   short *buffer_;
   int bufferSize_;
   I_File *file_;
+  std::string path_;
 };
 #endif
