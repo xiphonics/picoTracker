@@ -2,6 +2,8 @@ add_executable(picoTracker
   picoTrackerMain.cpp
 )
 
+# set_target_properties(picoTracker PROPERTIES OUTPUT_NAME "picoTracker.elf")
+
 target_link_libraries(picoTracker PUBLIC
 
     # --- Platform-specific Adapter Libraries (Highest Level) ---
