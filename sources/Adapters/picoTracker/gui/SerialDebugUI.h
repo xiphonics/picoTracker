@@ -10,6 +10,7 @@
 #define SERIAL_DEBUG_UI_H_
 
 #include "pico/stdlib.h"
+#include <cstddef>
 
 class SerialDebugUI {
 public:
@@ -22,6 +23,7 @@ public:
   void saveConfig();
   void mkdir(const char *path);
   void rmdir(const char *path);
+  void peekFile(const char *path, size_t bytes);
 
 private:
   int lp_ = 0;

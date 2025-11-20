@@ -19,6 +19,7 @@
 
 extern UART_HandleTypeDef huart1; // Declare the UART handle
 #include <cstdint>
+#include <cstdlib>
 #include <nanoprintf.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,7 +30,7 @@ extern UART_HandleTypeDef huart1; // Declare the UART handle
 #define CR 13
 #define LF 10
 #define ENDSTDIN 255
-#define READ_BUFFER_SIZE 32
+#define READ_BUFFER_SIZE 64
 
 SerialDebugUI::SerialDebugUI(){};
 
@@ -134,6 +135,28 @@ void SerialDebugUI::dispatchCmd(char *input) {
     mkdir(arg);
   } else if (strcmp(cmd, "rmdir") == 0) {
     rmdir(arg);
+  } else if (strcmp(cmd, "peek") == 0) {
+    if (!arg) {
+      Trace::Log("SERIALDEBUG", "Usage: peek <path> [bytes]");
+    } else {
+      char argCopy[256];
+      strncpy(argCopy, arg, sizeof(argCopy) - 1);
+      argCopy[sizeof(argCopy) - 1] = '\0';
+      char *pathTok = strtok(argCopy, " ");
+      char *lenTok = strtok(nullptr, " ");
+      size_t length = 64;
+      if (lenTok) {
+        unsigned long parsed = strtoul(lenTok, nullptr, 10);
+        if (parsed > 0) {
+          length = parsed;
+        }
+      }
+      if (!pathTok) {
+        Trace::Log("SERIALDEBUG", "Usage: peek <path> [bytes]");
+      } else {
+        peekFile(pathTok, length);
+      }
+    }
   } else if (strcmp(cmd, "shutdown") == 0) {
     shutdown();
   } else if (strcmp(cmd, "battery") == 0) {
@@ -150,7 +173,8 @@ void SerialDebugUI::dispatchCmd(char *input) {
   } else if (strcmp(cmd, "stoprec") == 0) {
     StopRecording();
   } else if (strcmp(cmd, "help") == 0) {
-    Trace::Log("SERIALDEBUG", "cat, ls, rm, mkdir, rmdir, save, battery, help");
+    Trace::Log("SERIALDEBUG",
+               "cat, ls, rm, mkdir, rmdir, peek, save, battery, help");
   } else {
     Trace::Log("SERIALDEBUG", "unknown command");
   }
@@ -191,6 +215,59 @@ void SerialDebugUI::catFile(const char *path) {
   // Add a final newline if the file doesn't end with one
   uint8_t newline[] = {'\r', '\n'};
   HAL_UART_Transmit(&huart1, newline, 2, HAL_MAX_DELAY);
+
+  file->Close();
+  delete file;
+}
+
+void SerialDebugUI::peekFile(const char *path, size_t bytes) {
+  if (!path || !*path) {
+    Trace::Log("SERIALDEBUG", "Usage: peek <path> [bytes]");
+    return;
+  }
+
+  auto fs = FileSystem::GetInstance();
+  if (!fs->exists(path)) {
+    Trace::Log("SERIALDEBUG", "File not found: %s", path);
+    return;
+  }
+
+  I_File *file = fs->Open(path, "r");
+  if (!file) {
+    Trace::Log("SERIALDEBUG", "Failed to open file: %s", path);
+    return;
+  }
+
+  if (bytes == 0) {
+    bytes = 64;
+  }
+
+  uint8_t buffer[16];
+  uint32_t offset = 0;
+  size_t remaining = bytes;
+  while (remaining > 0) {
+    size_t toRead = remaining > sizeof(buffer) ? sizeof(buffer) : remaining;
+    int read = file->Read(buffer, static_cast<int>(toRead));
+    if (read <= 0) {
+      break;
+    }
+
+    char line[80];
+    int len = npf_snprintf(line, sizeof(line), "%06X:", offset);
+    for (int i = 0; i < read && len < static_cast<int>(sizeof(line)); ++i) {
+      len += npf_snprintf(line + len, sizeof(line) - len, " %02X", buffer[i]);
+      if (len >= static_cast<int>(sizeof(line))) {
+        break;
+      }
+    }
+    Trace::Log("SERIALDEBUG", "%s", line);
+
+    offset += static_cast<uint32_t>(read);
+    remaining -= static_cast<size_t>(read);
+    if (read < static_cast<int>(toRead)) {
+      break;
+    }
+  }
 
   file->Close();
   delete file;
