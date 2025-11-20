@@ -496,7 +496,8 @@ bool ProjectView::hasPlayableSong() const {
     return false;
   }
 
-  // go through song grid looking for chains which have at least 1 phrase in them
+  // go through song grid looking for chains which have at least 1 phrase in
+  // them
   for (int i = 0; i < SONG_CHANNEL_COUNT * SONG_ROW_COUNT; ++i) {
     unsigned char chainIndex = song->data_[i];
     if (chainIndex == EMPTY_SONG_VALUE || chainIndex >= CHAIN_COUNT) {
