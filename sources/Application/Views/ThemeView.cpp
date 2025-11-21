@@ -163,7 +163,33 @@ void ThemeView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   FieldView::ProcessButtonMask(mask, pressed);
 
-  if (mask & EPBM_NAV) {
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_ENTER) {
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      Variable &var = field->GetVariable();
+      if (field->GetVariableID() != FourCC::Default) {
+        var.Reset();
+        ColorComponentField *componentField = findColorComponentField(field);
+        if (componentField != nullptr) {
+          Variable *colorVar = componentField->colorVar;
+          uint32_t colorValue = colorVar->GetInt();
+          uint32_t newComponentValue =
+              componentField->componentVar->GetInt() & 0xFF;
+          colorValue &= ~(static_cast<uint32_t>(0xFF) << componentField->shift);
+          colorValue |= newComponentValue << componentField->shift;
+          colorVar->SetInt(static_cast<int>(colorValue));
+          syncColorComponentVars(colorVar);
+        }
+        // Update the AppWindow's color values from Config
+        ((AppWindow &)w_).UpdateColorsFromConfig();
+
+        // Force a redraw of the entire screen to update all colors
+        _forceRedraw = true;
+        isDirty_ = true;
+        configDirty_ = true;
+      }
+    }
+  } else if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       // Go back to Device view with NAV+LEFT
       ViewType vt = VT_DEVICE;
