@@ -111,6 +111,28 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
         switchToRecordView();
       }
     }
+    if (mask & EPBM_ENTER) {
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      Variable &var = field->GetVariable();
+      if (field->GetVariableID() != FourCC::Default) {
+        if (field->GetVariableID() == FourCC::VarLineOut) {
+          if (var.IsModified()) {
+            MessageBox *mb =
+                new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
+            DoModal(mb);
+          }
+        }
+        var.Reset();
+        // Handle brightness changes directly
+        if (field->GetVariableID() == FourCC::VarBacklightLevel) {
+          Config *config = Config::GetInstance();
+          unsigned char brightness = (unsigned char)var.GetInt();
+          System::GetInstance()->SetDisplayBrightness(brightness);
+        }
+        isDirty_ = true;
+        configDirty_ = true;
+      }
+    }
   } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_PROJECT;
