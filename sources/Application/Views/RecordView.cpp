@@ -216,9 +216,6 @@ void RecordView::AnimationUpdate() {
     return;
   }
   GUITextProperties props;
-
-  // Always update VU meter even if other parts of UI dont need updating
-  drawMasterVuMeter(player, props);
 }
 
 void RecordView::record() {
