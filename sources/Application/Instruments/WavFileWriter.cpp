@@ -16,8 +16,9 @@
 #include <cstring>
 #include <limits>
 
-WavFileWriter::WavFileWriter(const char *path)
-    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
+short WavFileWriter::buffer_[MAX_SAMPLE_COUNT * 2];
+
+WavFileWriter::WavFileWriter(const char *path) : sampleCount_(0), file_(0) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
     // Use WavHeaderWriter to write the header
@@ -34,17 +35,6 @@ WavFileWriter::~WavFileWriter() { Close(); }
 void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
 
   if (!file_)
-    return;
-
-  // allocate a short buffer for transfer
-
-  if (size > bufferSize_) {
-    SAFE_FREE(buffer_);
-    buffer_ = (short *)malloc(size * 2 * sizeof(short));
-    bufferSize_ = size;
-  };
-
-  if (!buffer_)
     return;
 
   short *s = buffer_;
@@ -454,5 +444,4 @@ void WavFileWriter::Close() {
 
   file_->Close();
   SAFE_DELETE(file_);
-  SAFE_FREE(buffer_);
 };
