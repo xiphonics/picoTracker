@@ -8,6 +8,8 @@
 #ifndef SERIAL_DEBUG_UI_H_
 #define SERIAL_DEBUG_UI_H_
 
+#include <cstddef>
+
 class SerialDebugUI {
 public:
   SerialDebugUI();
@@ -21,6 +23,7 @@ public:
   void rmdir(const char *path);
   void shutdown();
   void readBattery();
+  void peekFile(const char *path, size_t bytes);
 
 private:
   int lp_ = 0;

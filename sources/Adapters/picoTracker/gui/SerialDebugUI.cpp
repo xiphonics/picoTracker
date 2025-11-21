@@ -13,6 +13,7 @@
 #include "hardware/uart.h"
 #include <Adapters/picoTracker/platform/gpio.h>
 #include <Trace.h>
+#include <cstdlib>
 #include <nanoprintf.h>
 #include <stdio.h>
 
@@ -71,6 +72,7 @@ void SerialDebugUI::dispatchCmd(char *input) {
   // split input by space char
   char *cmd = strtok(input, " ");
   char *arg = strtok(NULL, " "); // get the first argument
+  char *arg2 = strtok(NULL, " ");
 
   if (strcmp(cmd, "cat") == 0) {
     catFile(arg);
@@ -84,8 +86,21 @@ void SerialDebugUI::dispatchCmd(char *input) {
     mkdir(arg);
   } else if (strcmp(cmd, "rmdir") == 0) {
     rmdir(arg);
+  } else if (strcmp(cmd, "peek") == 0) {
+    if (!arg) {
+      Trace::Log("SERIALDEBUG", "Usage: peek <path> [bytes]");
+    } else {
+      size_t length = 64;
+      if (arg2) {
+        unsigned long parsed = strtoul(arg2, nullptr, 10);
+        if (parsed > 0) {
+          length = parsed;
+        }
+      }
+      peekFile(arg, length);
+    }
   } else if (strcmp(cmd, "help") == 0) {
-    Trace::Log("SERIALDEBUG", "cat, ls, rm, mkdir, rmdir, save, help");
+    Trace::Log("SERIALDEBUG", "cat, ls, rm, mkdir, rmdir, peek, save, help");
   } else {
     Trace::Log("SERIALDEBUG", "unknown command");
   }
@@ -179,4 +194,54 @@ void SerialDebugUI::rmdir(const char *path) {
   if (!fs->DeleteDir(path)) {
     Trace::Error("failed to remove dir:%s", path);
   }
+}
+
+void SerialDebugUI::peekFile(const char *path, size_t bytes) {
+  if (!path || !*path) {
+    Trace::Log("SERIALDEBUG", "Usage: peek <path> [bytes]");
+    return;
+  }
+
+  auto fs = FileSystem::GetInstance();
+  if (!fs->exists(path)) {
+    Trace::Log("SERIALDEBUG", "File not found: %s", path);
+    return;
+  }
+
+  I_File *file = fs->Open(path, "r");
+  if (!file) {
+    Trace::Log("SERIALDEBUG", "Failed to open file: %s", path);
+    return;
+  }
+
+  if (bytes == 0) {
+    bytes = 64;
+  }
+
+  uint8_t buffer[16];
+  uint32_t offset = 0;
+  size_t remaining = bytes;
+
+  while (remaining > 0) {
+    size_t toRead = remaining > sizeof(buffer) ? sizeof(buffer) : remaining;
+    int read = file->Read(buffer, static_cast<int>(toRead));
+    if (read <= 0) {
+      break;
+    }
+
+    printf("%06X:", offset);
+    for (int i = 0; i < read; ++i) {
+      printf(" %02X", buffer[i]);
+    }
+    printf("\n");
+
+    offset += static_cast<uint32_t>(read);
+    remaining -= static_cast<size_t>(read);
+    if (read < static_cast<int>(toRead)) {
+      break;
+    }
+  }
+
+  file->Close();
+  delete file;
 }
