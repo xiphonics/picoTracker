@@ -25,8 +25,8 @@
 
 extern DMA_HandleTypeDef hdma_sai1_a;
 
-// mini blank buffer for underrun, initialized to 0
-const uint8_t advAudioDriver::miniBlank_[MINI_BLANK_SIZE] = {0};
+// mini blank buffer for underrun, initialized to 0 (16-bit samples)
+const int16_t advAudioDriver::miniBlank_[MINI_BLANK_SIZE] = {0};
 
 advAudioDriver *advAudioDriver::instance_ = NULL;
 SemaphoreHandle_t core1_audio;
