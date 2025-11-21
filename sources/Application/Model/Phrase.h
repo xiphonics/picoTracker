@@ -11,6 +11,7 @@
 #define _PHRASE_H_
 
 #include "Foundation/Types/Types.h"
+
 #ifdef ADV
 #define PHRASE_COUNT 0xFF
 #define NO_MORE_PHRASE 0x100
