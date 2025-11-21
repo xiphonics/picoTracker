@@ -241,6 +241,18 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
         switchToRecordView();
       }
     }
+    if (mask & EPBM_ENTER) {
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      Variable &var = field->GetVariable();
+      if (field->GetVariableID() == FourCC::VarTempo ||
+          field->GetVariableID() == FourCC::VarMasterVolume ||
+          field->GetVariableID() == FourCC::VarTranspose ||
+          field->GetVariableID() == FourCC::VarScale ||
+          field->GetVariableID() == FourCC::VarScaleRoot) {
+        var.Reset();
+        isDirty_ = true;
+      }
+    }
   } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN || mask & EPBM_UP) {
       if (saveAsFlag_) {
