@@ -11,6 +11,7 @@
 #define _WAV_FILE_WRITER_H_
 
 #include "Application/Utils/fixed.h"
+#include "Services/Audio/AudioDriver.h"
 #include "System/FileSystem/FileSystem.h"
 #include <cstddef>
 #include <cstdint>
@@ -46,8 +47,8 @@ public:
 
 private:
   int sampleCount_;
-  short *buffer_;
-  int bufferSize_;
+  // Buffer in AXI RAM since it has to be reachable by DMA perif
+  __attribute__((aligned(32))) static short buffer_[MAX_SAMPLE_COUNT * 2];
   I_File *file_;
 };
 #endif
