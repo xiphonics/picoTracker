@@ -3,6 +3,7 @@ add_library(application_utils
   char.cpp
   fixed.cpp
   stringutils.cpp 
+  DrawUtils.cpp
 )
 
 target_link_libraries(application_utils PUBLIC
