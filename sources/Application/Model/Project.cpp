@@ -25,6 +25,8 @@
 
 #define DEFAULT_VOLUME 60
 
+#define DATA_UNUSED_VALUE 0xFF
+
 Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
@@ -191,7 +193,7 @@ void Project::Purge() {
 
   unsigned char *data = song_.data_;
   for (int i = 0; i < 256 * SONG_CHANNEL_COUNT; i++) {
-    if (*data != 0xFF) {
+    if (*data != DATA_UNUSED_VALUE) {
       song_.chain_.SetUsed(*data);
     }
     data++;
@@ -204,7 +206,7 @@ void Project::Purge() {
 
     if (song_.chain_.IsUsed(i)) {
       for (int j = 0; j < 16; j++) {
-        if (*data != 0xFF) {
+        if (*data != DATA_UNUSED_VALUE) {
           song_.phrase_.SetUsed(*data);
         }
         data++;
@@ -213,7 +215,7 @@ void Project::Purge() {
     } else {
 
       for (int j = 0; j < 16; j++) {
-        *data++ = 0xFF;
+        *data++ = DATA_UNUSED_VALUE;
         *data2++ = 0x00;
       }
     }
@@ -230,8 +232,8 @@ void Project::Purge() {
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
       if (!song_.phrase_.IsUsed(i)) {
-        *data = 0xFF;
-        *data2 = 0xFF;
+        *data = DATA_UNUSED_VALUE;
+        *data2 = DATA_UNUSED_VALUE;
         *cmd1 = FourCC::InstrumentCommandNone;
         *param1 = 0;
         *cmd2 = FourCC::InstrumentCommandNone;
@@ -304,7 +306,7 @@ void Project::PurgeInstruments() {
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
-      if (*data != 0xFF) {
+      if (*data != DATA_UNUSED_VALUE) {
         NAssert(*data < MAX_INSTRUMENT_COUNT);
         used[*data] = true;
       }
