@@ -21,21 +21,29 @@
 Song::Song() : Persistent("SONG"), chain_(), phrase_() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT * SONG_ROW_COUNT; i++)
-    data_[i] = 0xFF;
+    data_[i] = EMPTY_SONG_VALUE;
 };
 
 Song::~Song(){};
 
 void Song::SaveContent(tinyxml2::XMLPrinter *printer) {
   saveHexBuffer(printer, "SONG", data_, SONG_ROW_COUNT * SONG_CHANNEL_COUNT);
-  saveHexBuffer(printer, "CHAINS", chain_.data_, CHAIN_COUNT * 16);
-  saveHexBuffer(printer, "TRANSPOSES", chain_.transpose_, CHAIN_COUNT * 16);
-  saveHexBuffer(printer, "NOTES", phrase_.note_, PHRASE_COUNT * 16);
-  saveHexBuffer(printer, "INSTRUMENTS", phrase_.instr_, PHRASE_COUNT * 16);
-  saveHexBuffer(printer, "COMMAND1", phrase_.cmd1_, PHRASE_COUNT * 16);
-  saveHexBuffer(printer, "PARAM1", phrase_.param1_, PHRASE_COUNT * 16);
-  saveHexBuffer(printer, "COMMAND2", phrase_.cmd2_, PHRASE_COUNT * 16);
-  saveHexBuffer(printer, "PARAM2", phrase_.param2_, PHRASE_COUNT * 16);
+  saveHexBuffer(printer, "CHAINS", chain_.data_,
+                CHAIN_COUNT * PHRASES_PER_CHAIN);
+  saveHexBuffer(printer, "TRANSPOSES", chain_.transpose_,
+                CHAIN_COUNT * PHRASES_PER_CHAIN);
+  saveHexBuffer(printer, "NOTES", phrase_.note_,
+                PHRASE_COUNT * STEPS_PER_PHRASE);
+  saveHexBuffer(printer, "INSTRUMENTS", phrase_.instr_,
+                PHRASE_COUNT * STEPS_PER_PHRASE);
+  saveHexBuffer(printer, "COMMAND1", phrase_.cmd1_,
+                PHRASE_COUNT * STEPS_PER_PHRASE);
+  saveHexBuffer(printer, "PARAM1", phrase_.param1_,
+                PHRASE_COUNT * STEPS_PER_PHRASE);
+  saveHexBuffer(printer, "COMMAND2", phrase_.cmd2_,
+                PHRASE_COUNT * STEPS_PER_PHRASE);
+  saveHexBuffer(printer, "PARAM2", phrase_.param2_,
+                PHRASE_COUNT * STEPS_PER_PHRASE);
 };
 
 void Song::RestoreContent(PersistencyDocument *doc) {

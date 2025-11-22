@@ -13,7 +13,7 @@
 #include <string.h>
 
 Phrase::Phrase() {
-  for (int i = 0; i < PHRASE_COUNT * 16; i++) {
+  for (int i = 0; i < PHRASE_COUNT * STEPS_PER_PHRASE; i++) {
     note_[i] = 0xFF;
     instr_[i] = 0xFF;
     cmd1_[i] = FourCC::InstrumentCommandNone;
