@@ -825,11 +825,10 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
           I_Instrument *instr = bank->GetInstrument(i);
           SampleInstrument *instrument = (SampleInstrument *)instr;
           var.SetInt(instrument->GetSampleSize() - 1);
-          isDirty_ = true;
         } else {
           var.Reset();
-          isDirty_ = true;
         };
+        isDirty_ = true;
       }
     }
     if (mask & EPBM_ALT) {
