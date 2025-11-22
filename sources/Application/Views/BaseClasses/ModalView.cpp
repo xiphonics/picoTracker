@@ -59,7 +59,7 @@ void ModalView::SetWindow(int width, int height) {
   }
   ClearTextRect(-1, -1, width + 2, height + 2);
 
-  SetColor(CD_HILITE2);
+  SetColor(CD_ACCENT);
   GUITextProperties props;
   props.invert_ = true;
   char line[SCREEN_WIDTH + 1];
