@@ -214,10 +214,8 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
     }
     if (mask & EPBM_ENTER) {
       UIIntVarField *field = (UIIntVarField *)GetFocus();
-      Variable &var = field->GetVariable();
       if (field->GetVariableID() != FourCC::Default) {
-        var.Reset();
-        isDirty_ = true;
+        field->ProcessReset();
       }
     }
   } else if (mask & EPBM_ENTER) {
