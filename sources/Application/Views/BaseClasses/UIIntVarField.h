@@ -22,6 +22,7 @@ public:
   virtual ~UIIntVarField(){};
   virtual void Draw(GUIWindow &w, int offset = 0);
   virtual void ProcessArrow(unsigned short mask);
+  virtual void ProcessReset();
   virtual void OnClick(){};
 
   FourCC GetVariableID();
