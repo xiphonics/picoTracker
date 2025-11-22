@@ -192,7 +192,8 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return std::unexpected(INVALID_HEADER);
   }
 
-  if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16)) {
+  if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16) &&
+      (info.bitsPerSample != 24)) {
     Trace::Error("WavHeaderWriter: Unsupported bit depth %u",
                  info.bitsPerSample);
     return std::unexpected(UNSUPPORTED_BITDEPTH);
