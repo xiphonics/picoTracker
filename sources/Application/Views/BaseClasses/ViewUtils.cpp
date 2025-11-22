@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define LABEL_COLOR CD_NORMAL
-#define VALUE_COLOR CD_INFO
+#define VALUE_COLOR CD_EMPHASIS
 
 void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer) {
   GUITextProperties props;

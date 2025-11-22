@@ -143,8 +143,8 @@ void DeviceView::DrawView() {
 #ifdef ADV
   // Draw battery health
   pos._x = SCREEN_MAP_WIDTH + 1;
-  pos._y = 13;
-  SetColor(CD_HILITE1);
+  pos._y = 21;
+  SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, "Battery health:", props);
 
   pos._x += strlen("Battery health") + 1;
@@ -152,7 +152,7 @@ void DeviceView::DrawView() {
   char sohText[5];
   (soh < 0) ? npf_snprintf(sohText, sizeof(sohText), "%s", "NA")
             : npf_snprintf(sohText, sizeof(sohText), "%i%%", soh);
-  SetColor(CD_INFO);
+  SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, sohText, props);
 #endif
 
@@ -164,7 +164,7 @@ void DeviceView::DrawView() {
 
   npf_snprintf(projectString, sizeof(projectString), "Build %s%s_%s",
                PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
-  SetColor(CD_HILITE1);
+  SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
 };
 
