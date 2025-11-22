@@ -52,8 +52,6 @@ public:
   void OnQuit();
 
 private:
-  bool hasPlayableSong() const;
-
   Project *project_;
   // Debug
   unsigned long lastTick_;
