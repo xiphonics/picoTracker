@@ -110,4 +110,4 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: picoTracker_advance
-        path: ${{github.workspace}}/build-advance/Adapters/adv/picoTrackerAdvance.elf
+        path: ${{github.workspace}}/build-advance/Adapters/adv/picoTrackerAdvance.bin
