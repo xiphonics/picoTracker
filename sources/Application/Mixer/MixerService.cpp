@@ -63,7 +63,9 @@ bool MixerService::Init() {
   }
 
   if (result) {
-    Trace::Debug("[MixerService::Init] Out initialized");
+    // CRAZY STUFF! going over 26 chars in this specific logging makes audio
+    // playback stop working!!!!
+    Trace::Debug("[MixerService::Init] Ok");
   } else {
     Trace::Error("[MixerService::Init] Failed to get output");
   }
