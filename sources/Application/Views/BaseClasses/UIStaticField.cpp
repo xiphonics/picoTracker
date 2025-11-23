@@ -19,13 +19,12 @@ UIStaticField::UIStaticField(GUIPoint &position, const char *string)
 
 void UIStaticField::Draw(GUIWindow &w, int offset) {
 
+  GUITextProperties props;
   GUIPoint position = GetPosition();
   position._y += offset;
 
-  char buffer[MAX_FIELD_WIDTH + 1];
-  strncpy(buffer, string_, MAX_FIELD_WIDTH);
-  buffer[MAX_FIELD_WIDTH] = '\0';
-  DrawLabeledField(w, position, buffer);
+  ((AppWindow &)w).SetColor(CD_NORMAL);
+  w.DrawString(string_, position, props);
 };
 
 void UIStaticField::ProcessArrow(unsigned short mask){};
