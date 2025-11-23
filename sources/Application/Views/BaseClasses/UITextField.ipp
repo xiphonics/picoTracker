@@ -23,7 +23,7 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
   w.DrawString(label_.c_str(), position, props);
   position._x += label_.length();
 
-  ((AppWindow &)w).SetColor(CD_INFO);
+  ((AppWindow &)w).SetColor(CD_EMPHASIS);
 
   auto srcString = src_->GetString();
   const char *value;
@@ -34,7 +34,7 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
     value = defaultValue_.c_str();
     len = defaultValue_.length();
     // Use a different color for default values to indicate they're not set
-    ((AppWindow &)w).SetColor(CD_INFO);
+    ((AppWindow &)w).SetColor(CD_EMPHASIS);
   } else {
     value = srcString.c_str();
     len = srcString.length();
