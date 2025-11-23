@@ -14,7 +14,7 @@
 #include "UIField.h"
 #include "stdint.h"
 
-#define MAX_UITEXTFIELD_LABEL_LENGTH 8
+#define MAX_UITEXTFIELD_LABEL_LENGTH 9
 
 template <uint8_t MaxLength>
 class UITextField : public UIField, public Observable {
@@ -37,7 +37,7 @@ private:
   int selected_;
   uint8_t currentChar_ = 0;
   Variable *src_; // Pointer instead of reference
-  const etl::string<8> label_;
+  const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> label_;
   uint8_t fourcc_;
   etl::string<MaxLength> defaultValue_;
 };

@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define LABEL_COLOR CD_NORMAL
-#define VALUE_COLOR CD_INFO
+#define VALUE_COLOR CD_EMPHASIS
 
 void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer) {
   GUITextProperties props;
@@ -24,7 +24,8 @@ void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer) {
     ((AppWindow &)w).SetColor(VALUE_COLOR);
     w.DrawString(cut, position, props);
   } else {
-    ((AppWindow &)w).SetColor(CD_NORMAL);
+    // Fields that don't have a colon are all value
+    ((AppWindow &)w).SetColor(VALUE_COLOR);
     w.DrawString(buffer, position, props);
   }
 }
