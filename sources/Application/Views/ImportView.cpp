@@ -210,10 +210,8 @@ void ImportView::DrawView() {
   char titleBuffer[40];
   npf_snprintf(titleBuffer, sizeof(titleBuffer), "%s", baseTitle);
 
-  SetColor(CD_INFO);
-  DrawString(pos._x + 1, pos._y, titleBuffer, props);
-
   SetColor(CD_NORMAL);
+  DrawString(pos._x + 1, pos._y, titleBuffer, props);
 
   // Draw samples
   int x = 1;
@@ -225,18 +223,13 @@ void ImportView::DrawView() {
   // Loop through visible files in the list
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
-    if (i == currentIndex_) {
-      SetColor(CD_HILITE2);
-      props.invert_ = true;
-    } else {
-      SetColor(CD_NORMAL);
-      props.invert_ = false;
-    }
+    props.invert_ = false;
 
     unsigned fileIndex = fileIndexList_[i];
     etl::string<PFILENAME_SIZE> displayName;
 
     if (fs->getFileType(fileIndex) != PFT_DIR) {
+      SetColor(CD_NORMAL);
       // Handle regular files
       char tempBuffer[PFILENAME_SIZE];
       fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
@@ -250,17 +243,18 @@ void ImportView::DrawView() {
       if (inProjectSampleDir_ &&
           viewData_->project_->SampleInUse(
               etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(tempBuffer))) {
-        SetColor(CD_INFO);
+        SetColor(CD_ACCENT);
         DrawString(x, y, "*", props);
         SetColor(CD_NORMAL);
       } else if (isSingleCycle) {
-        SetColor(CD_INFO);
+        SetColor(CD_ACCENT);
         DrawString(x, y, "~", props);
         SetColor(CD_NORMAL);
       } else {
         DrawString(x, y, " ", props);
       }
     } else {
+      SetColor(CD_ACCENT);
       // Handle directories
       char tempBuffer[PFILENAME_SIZE];
       displayName = "/";
@@ -275,32 +269,62 @@ void ImportView::DrawView() {
       displayName.resize(LIST_WIDTH);
     }
 
+    if (i == currentIndex_) {
+      SetColor(CD_HILITE2);
+      props.invert_ = true;
+    }
     DrawString(x + 1, y, displayName.c_str(), props);
     y += 1;
   };
 
-  SetColor(CD_NORMAL);
+  SetColor(CD_HILITE1);
   y = SCREEN_HEIGHT - 2;
   if (!inProjectSampleDir_) {
-    props.invert_ = (selectedButton_ == 0) ? true : false;
-    DrawString(x, y, "[Import]", props);
-    props.invert_ = (selectedButton_ == 1) ? true : false;
-    DrawString(x + 10, y, "[Edit]", props);
+    if (selectedButton_ == 0) {
+      SetColor(CD_HILITE2);
+      props.invert_ = true;
+    } else {
+      SetColor(CD_HILITE1);
+      props.invert_ = false;
+    }
+    DrawString(x, y, "Import", props);
+    if (selectedButton_ == 1) {
+      SetColor(CD_HILITE2);
+      props.invert_ = true;
+    } else {
+      SetColor(CD_HILITE1);
+      props.invert_ = false;
+    }
+    DrawString(x + 10, y, "Edit", props);
   } else {
     if (fileIndexList_.empty()) {
       // draw this a few lines down from *top* of screen
+      SetColor(CD_NORMAL);
+      props.invert_ = false;
       DrawString(2, 3, "[pool empty]", props);
     } else {
       // we make edit the first button to make things easier because remove is
       // only available for now on the Advance and even on Advance we dont want
       // remove to be the default button
-      props.invert_ = (selectedButton_ == 0) ? true : false;
-      DrawString(x, y, "[Edit]", props);
-      props.invert_ = (selectedButton_ == 1) ? true : false;
+      if (selectedButton_ == 0) {
+        SetColor(CD_HILITE2);
+        props.invert_ = true;
+      } else {
+        SetColor(CD_HILITE1);
+        props.invert_ = false;
+      }
+      DrawString(x, y, "Edit", props);
+      if (selectedButton_ == 1) {
+        SetColor(CD_HILITE2);
+        props.invert_ = true;
+      } else {
+        SetColor(CD_HILITE1);
+        props.invert_ = false;
+      }
 #ifdef ADV
-      DrawString(x + 10, y, "[Remove]", props);
+      DrawString(x + 10, y, "Remove", props);
 #else
-      DrawString(x + 10, y, "[N/A]", props);
+      DrawString(x + 10, y, "N/A", props);
 #endif
     }
   }
@@ -308,7 +332,7 @@ void ImportView::DrawView() {
   y += 1;
 
   // draw current selected file size, preview volume and single cycle indicator
-  SetColor(CD_HILITE2);
+  SetColor(CD_NORMAL);
   props.invert_ = true;
   y = 0;
   uint32_t filesize = 0;
@@ -321,8 +345,6 @@ void ImportView::DrawView() {
     if (filesize > availableSpace) {
       SetColor(CD_WARN);
     }
-  } else {
-    SetColor(CD_INFO);
   }
 
   // Get the current preview volume
