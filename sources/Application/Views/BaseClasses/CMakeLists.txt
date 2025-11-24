@@ -6,6 +6,7 @@ add_library(application_views_baseclasses
   UIField.cpp
   UIIntField.cpp
   UIIntVarField.cpp
+  UIMixerVolumeField.cpp
   UIIntVarOffField.cpp
   UINoteVarField.cpp
   UISortedVarList.cpp

@@ -10,7 +10,7 @@
 #ifndef _MIXER_VIEW_H_
 #define _MIXER_VIEW_H_
 
-#include "BaseClasses/UIIntVarField.h"
+#include "BaseClasses/UIMixerVolumeField.h"
 #include "FieldView.h"
 #include "Foundation/T_SimpleList.h"
 #include "ViewData.h"
@@ -45,8 +45,8 @@ private:
   void initChannelVolumeFields();
 
   // Channel volume UI fields
-  etl::vector<UIIntVarField, SONG_CHANNEL_COUNT> channelVolumeFields_;
-  etl::vector<UIIntVarField, 1> masterVolumeField_; // Master volume field
+  etl::vector<UIMixerVolumeField, SONG_CHANNEL_COUNT> channelVolumeFields_;
+  etl::vector<UIMixerVolumeField, 1> masterVolumeField_; // Master volume field
 
   // Flags to track which UI elements need updating
   // These prevent core1 from directly updating the UI
