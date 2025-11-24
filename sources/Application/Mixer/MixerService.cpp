@@ -123,8 +123,10 @@ fixed MixerService::ToLogVolume(int vol) {
   // Ensure vol is within valid range
   if (vol < 0)
     vol = 0;
-  if (vol > 100)
-    vol = 100;
+  if (vol >= 100) {
+    // Unity gain – treat as a no-op to avoid unnecessary scaling
+    return i2fp(1);
+  }
 
   // Convert to fixed point (0-1 range)
   fixed normalizedVol = fp_mul(i2fp(vol), fl2fp(0.01f));
