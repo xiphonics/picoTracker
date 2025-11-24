@@ -15,7 +15,7 @@
 
 void UIMixerVolumeField::Draw(GUIWindow &w, int offset) {
   if (src_.GetType() == Variable::INT) {
-    int displayValue = src_.GetInt() + displayOffset_;
+    int32_t displayValue = src_.GetInt() + displayOffset_;
     if (displayValue >= max_) {
       GUITextProperties props;
       GUIPoint position = GetPosition();
