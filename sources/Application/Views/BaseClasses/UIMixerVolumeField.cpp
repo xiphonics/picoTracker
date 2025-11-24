@@ -10,8 +10,8 @@
 #include "UIMixerVolumeField.h"
 
 #include "Application/AppWindow.h"
-#include "ViewUtils.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
+#include "ViewUtils.h"
 
 void UIMixerVolumeField::Draw(GUIWindow &w, int offset) {
   if (src_.GetType() == Variable::INT) {
@@ -35,4 +35,3 @@ void UIMixerVolumeField::Draw(GUIWindow &w, int offset) {
 
   UIIntVarField::Draw(w, offset);
 }
-
