@@ -8,6 +8,7 @@
  */
 
 #include "SampleEditorView.h"
+#include "SampleEditProgressDisplay.h"
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Instruments/WavFileWriter.h"
@@ -31,6 +32,20 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+
+namespace {
+
+void wavProgressCallback(SampleEditStage stage, uint8_t percent,
+                         void *context) {
+  if (!context) {
+    return;
+  }
+  auto *display = static_cast<SampleEditProgressDisplay *>(context);
+  display->Update(stage, percent);
+}
+
+} // namespace
+
 
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
@@ -644,10 +659,13 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
+  SampleEditProgressDisplay progressDisplay(filename);
   WavTrimResult trimResult{};
-  if (!WavFileWriter::TrimFile(filename.c_str(), start_, end_,
-                               static_cast<void *>(chunkBuffer_),
-                               sizeof(chunkBuffer_), trimResult)) {
+  bool trimmed = WavFileWriter::TrimFile(
+      filename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
+      sizeof(chunkBuffer_), trimResult, wavProgressCallback, &progressDisplay);
+  progressDisplay.Finish(trimmed);
+  if (!trimmed) {
     return false;
   }
 
@@ -755,10 +773,13 @@ bool SampleEditorView::applyNormalizeOperation() {
     return false;
   }
 
+  SampleEditProgressDisplay progressDisplay(filename);
   WavNormalizeResult normalizeResult{};
-  if (!WavFileWriter::NormalizeFile(filename.c_str(),
-                                    static_cast<void *>(chunkBuffer_),
-                                    sizeof(chunkBuffer_), normalizeResult)) {
+  bool normalized = WavFileWriter::NormalizeFile(
+      filename.c_str(), static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
+      normalizeResult, wavProgressCallback, &progressDisplay);
+  progressDisplay.Finish(normalized);
+  if (!normalized) {
     return false;
   }
 

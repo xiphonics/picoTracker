@@ -18,6 +18,35 @@
 
 short WavFileWriter::buffer_[MAX_SAMPLE_COUNT * 2];
 
+namespace {
+
+inline void reportProgressValue(SampleEditProgressCallback callback,
+                                SampleEditStage stage, uint8_t percent,
+                                void *userData) {
+  if (!callback) {
+    return;
+  }
+  callback(stage, percent, userData);
+}
+
+inline void reportProgressBytes(SampleEditProgressCallback callback,
+                                SampleEditStage stage, uint32_t processed,
+                                uint32_t total, void *userData) {
+  if (!callback || total == 0u) {
+    return;
+  }
+  uint32_t percent =
+      processed >= total
+          ? 100u
+          : static_cast<uint32_t>((processed * 100u) / total);
+  if (percent > 100u) {
+    percent = 100u;
+  }
+  callback(stage, static_cast<uint8_t>(percent), userData);
+}
+
+} // namespace
+
 WavFileWriter::WavFileWriter(const char *path) : sampleCount_(0), file_(0) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
@@ -60,7 +89,9 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
 
 bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
                              uint32_t endFrame, void *scratchBuffer,
-                             size_t scratchBufferSize, WavTrimResult &result) {
+                             size_t scratchBufferSize, WavTrimResult &result,
+                             SampleEditProgressCallback progressCallback,
+                             void *progressContext) {
   result = {0, 0, 0, 0, false};
 
   if (!path) {
@@ -156,6 +187,11 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
   uint32_t readOffset = headerDataOffset + clampedStart * bytesPerFrame;
   uint32_t writeOffset = headerDataOffset;
   uint32_t bytesRemaining = framesToKeep * bytesPerFrame;
+  const uint32_t totalBytesToCopy = bytesRemaining;
+  uint32_t processedBytes = 0;
+
+  reportProgressValue(progressCallback, SampleEditStage::TrimCopy, 0,
+                      progressContext);
 
   while (bytesRemaining > 0) {
     uint32_t chunkSize = std::min<uint32_t>(
@@ -180,7 +216,13 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     readOffset += bytesRead;
     writeOffset += bytesRead;
     bytesRemaining -= static_cast<uint32_t>(bytesRead);
+    processedBytes += static_cast<uint32_t>(bytesRead);
+    reportProgressBytes(progressCallback, SampleEditStage::TrimCopy,
+                        processedBytes, totalBytesToCopy, progressContext);
   }
+
+  reportProgressValue(progressCallback, SampleEditStage::TrimCopy, 100,
+                      progressContext);
 
   const uint32_t newDataSize = framesToKeep * bytesPerFrame;
   file->Seek(headerDataOffset + newDataSize, SEEK_SET);
@@ -196,9 +238,10 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
   return true;
 }
 
-bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
-                                  size_t scratchBufferSize,
-                                  WavNormalizeResult &result) {
+bool WavFileWriter::NormalizeFile(
+    const char *path, void *scratchBuffer, size_t scratchBufferSize,
+    WavNormalizeResult &result, SampleEditProgressCallback progressCallback,
+    void *progressContext) {
   result = {
       .totalFrames = 0,
       .peakBefore = 0,
@@ -288,6 +331,9 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
   uint32_t readOffset = dataOffset;
   int32_t peak = 0;
 
+  reportProgressValue(progressCallback, SampleEditStage::NormalizeScan, 0,
+                      progressContext);
+
   while (bytesRemaining > 0) {
     uint32_t chunkSize = std::min<uint32_t>(bytesRemaining, usableChunk);
 
@@ -324,7 +370,13 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
 
     readOffset += static_cast<uint32_t>(bytesRead);
     bytesRemaining -= static_cast<uint32_t>(bytesRead);
+    uint32_t bytesProcessed = dataChunkSize - bytesRemaining;
+    reportProgressBytes(progressCallback, SampleEditStage::NormalizeScan,
+                        bytesProcessed, dataChunkSize, progressContext);
   }
+
+  reportProgressValue(progressCallback, SampleEditStage::NormalizeScan, 100,
+                      progressContext);
 
   result.peakBefore = peak;
   if (peak <= 0) {
@@ -355,6 +407,9 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
 
   const int32_t minValue = bitsPerSample == 8 ? -128 : -32768;
   const int32_t maxValue = bitsPerSample == 8 ? 127 : 32767;
+
+  reportProgressValue(progressCallback, SampleEditStage::NormalizeApply, 0,
+                      progressContext);
 
   while (bytesRemaining > 0) {
     uint32_t chunkSize = std::min<uint32_t>(bytesRemaining, usableChunk);
@@ -417,7 +472,13 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
 
     readOffset += static_cast<uint32_t>(bytesRead);
     bytesRemaining -= static_cast<uint32_t>(bytesRead);
+    uint32_t bytesProcessed = dataChunkSize - bytesRemaining;
+    reportProgressBytes(progressCallback, SampleEditStage::NormalizeApply,
+                        bytesProcessed, dataChunkSize, progressContext);
   }
+
+  reportProgressValue(progressCallback, SampleEditStage::NormalizeApply, 100,
+                      progressContext);
 
   file->Sync();
   file->Close();
