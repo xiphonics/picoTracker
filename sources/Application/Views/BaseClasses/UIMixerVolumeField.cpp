@@ -20,7 +20,7 @@ void UIMixerVolumeField::Draw(GUIWindow &w, int offset) {
       GUITextProperties props;
       GUIPoint position = GetPosition();
       position._y += offset;
-      char buffer[] = "~~";
+      char buffer[] = "][";
 
       if (focus_) {
         ((AppWindow &)w).SetColor(CD_HILITE2);
