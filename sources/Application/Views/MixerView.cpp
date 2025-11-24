@@ -350,11 +350,6 @@ void MixerView::DrawView() {
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
 
-  // get levels from the player
-  // etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
-  //     player->GetMixerLevels();
-  // drawChannelVUMeters(levels, player, props);
-
   SetColor(CD_NORMAL);
   props.invert_ = false;
 
