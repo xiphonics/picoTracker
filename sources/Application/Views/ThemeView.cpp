@@ -163,16 +163,7 @@ void ThemeView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   FieldView::ProcessButtonMask(mask, pressed);
 
-  if (mask & EPBM_EDIT) {
-    if (mask & EPBM_ENTER) {
-      if (GetFocus() != themeNameField_) {
-        UIIntVarField *field = (UIIntVarField *)GetFocus();
-        if (field->GetVariableID() != FourCC::Default) {
-          field->ProcessReset();
-        }
-      }
-    }
-  } else if (mask & EPBM_NAV) {
+  if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       // Go back to Device view with NAV+LEFT
       ViewType vt = VT_DEVICE;

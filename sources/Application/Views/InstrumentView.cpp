@@ -807,28 +807,23 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_UP)
       warpToNext(+16);
     if (mask & EPBM_ENTER) { // Allow cut instrument
-      if (getInstrument()->GetType() == IT_SAMPLE &&
-          GetFocus() == *fieldList_.begin()) {
+      if (getInstrument()->GetType() == IT_SAMPLE) {
         int i = viewData_->currentInstrumentID_;
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
         I_Instrument *instr = bank->GetInstrument(i);
-        instr->Purge();
-        //                   Variable *v=instr->FindVariable(SIP_SAMPLE) ;
-        //                   v->SetInt(-1) ;
-        isDirty_ = true;
-      } else if (GetFocus() != *fieldList_.begin()) {
+        if (GetFocus() == *fieldList_.begin()) {
+          instr->Purge();
+          //                   Variable *v=instr->FindVariable(SIP_SAMPLE) ;
+          //                   v->SetInt(-1) ;
+          isDirty_ = true;
+        }
         UIIntVarField *field = (UIIntVarField *)GetFocus();
-        Variable &var = field->GetVariable();
         if (field->GetVariableID() == FourCC::SampleInstrumentEnd) {
-          int i = viewData_->currentInstrumentID_;
-          InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-          I_Instrument *instr = bank->GetInstrument(i);
+          Variable &var = field->GetVariable();
           SampleInstrument *instrument = (SampleInstrument *)instr;
           var.SetInt(instrument->GetSampleSize() - 1);
-        } else {
-          var.Reset();
+          isDirty_ = true;
         };
-        isDirty_ = true;
       }
     }
     if (mask & EPBM_ALT) {

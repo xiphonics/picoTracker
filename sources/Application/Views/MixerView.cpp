@@ -212,12 +212,6 @@ void MixerView::processNormalButtonMask(unsigned int mask) {
         switchToRecordView();
       }
     }
-    if (mask & EPBM_ENTER) {
-      UIIntVarField *field = (UIIntVarField *)GetFocus();
-      if (field->GetVariableID() != FourCC::Default) {
-        field->ProcessReset();
-      }
-    }
   } else if (mask & EPBM_ENTER) {
     if (mask & EPBM_NAV) {
       switchSoloMode();

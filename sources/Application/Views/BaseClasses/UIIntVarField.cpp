@@ -102,7 +102,7 @@ void UIIntVarField::ProcessArrow(unsigned short mask) {
       static_cast<uintptr_t>(src_.GetID())));
 };
 
-void UIIntVarField::ProcessReset() {
+void UIIntVarField::ProcessClear() {
   if (!src_.IsModified())
     return;
 

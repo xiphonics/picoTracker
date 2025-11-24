@@ -111,13 +111,6 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
         switchToRecordView();
       }
     }
-    if (mask & EPBM_ENTER) {
-      UIIntVarField *field = (UIIntVarField *)GetFocus();
-      Variable &var = field->GetVariable();
-      if (field->GetVariableID() != FourCC::Default) {
-        field->ProcessReset();
-      }
-    }
   } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN) {
       ViewType vt = VT_PROJECT;
