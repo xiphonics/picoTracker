@@ -58,6 +58,22 @@ static uint32_t palette[16] = {
     0xFF1E9635, // 0x351E
     0xFFFD6DB6, // 0xB6FD
 };
+
+static uint16_t palette565[16] = {0};
+
+// The text path never touches the framebuffer directly. When we draw characters
+// we use DMA2D blending and  that always reads the palette in its native ARGB
+// form and lets DMA2D do the RGB565 conversion internally. The rectangle path
+// bypasses DMA2D and pokes pixels straight into the LTDC framebuffer. The LTDC
+// layer is configured for RGB565 (sources/ Adapters/adv/Core/Src/ltdc.c:67-91),
+// but the panel itself expects the byte lanes in BGR order. Text avoids the
+// mismatch because DMA2D handles it; raw framebuffer writes don’t, so we have
+// to swap the red/blue bits once when we compute the value
+static inline uint16_t rgb565_to_bgr565(uint16_t color) {
+  uint16_t r = (color & 0xF800) >> 11;
+  uint16_t b = (color & 0x001F) << 11;
+  return (uint16_t)((color & 0x07E0) | r | b);
+}
 void display_set_font_index(uint8_t idx) { ui_font_index = idx; }
 
 void display_set_cursor(uint8_t x, uint8_t y) {
@@ -99,6 +115,7 @@ void display_clear(color_t color) {
 
 void display_set_palette_color(int idx, uint16_t rgb565_color) {
   palette[idx] = rgb565_to_abgr8888(rgb565_color);
+  palette565[idx] = rgb565_color;
 }
 
 // Draw changed detects subregions of the display that changed and that are of
@@ -200,18 +217,11 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   }
 }
 
-static inline uint16_t abgr8888_to_rgb565(uint32_t color) {
-  uint8_t r = color & 0xFF;
-  uint8_t g = (color >> 8) & 0xFF;
-  uint8_t b = (color >> 16) & 0xFF;
-  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-}
-// TODO: update this to a use DMA2D call ASAP
+// TODO: update this to use DMA2D ASAP
 void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
                        uint16_t width, uint16_t height) {
-  // Get the ABGR8888 color from the palette
-  uint32_t color = palette[color_index];
-  uint16_t color565 = abgr8888_to_rgb565(color);
+  // Use the cached RGB565 color directly
+  uint16_t color565 = rgb565_to_bgr565(palette565[color_index]);
 
   if (width == 0 || height == 0) {
     return;
