@@ -32,14 +32,7 @@ struct WavNormalizeResult {
   bool normalized;
 };
 
-enum SampleEditStage : uint8_t {
-  TrimCopy = 0,
-  NormalizeScan,
-  NormalizeApply,
-};
-
-using SampleEditProgressCallback =
-    void (*)(SampleEditStage stage, uint8_t percent, void *userData);
+typedef void (*SampleEditProgressCallback)(uint8_t percent, void *userData);
 
 class WavFileWriter {
 public:
@@ -48,12 +41,12 @@ public:
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,
-                       void *scratchBuffer, size_t scratchBufferSize,
+                       void *scratchBuffer, uint32_t scratchBufferSize,
                        WavTrimResult &result,
                        SampleEditProgressCallback progressCallback = nullptr,
                        void *progressContext = nullptr);
   static bool NormalizeFile(const char *path, void *scratchBuffer,
-                            size_t scratchBufferSize,
+                            uint32_t scratchBufferSize,
                             WavNormalizeResult &result,
                             SampleEditProgressCallback progressCallback = nullptr,
                             void *progressContext = nullptr);

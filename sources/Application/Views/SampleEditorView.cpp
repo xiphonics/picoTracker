@@ -35,13 +35,12 @@
 
 namespace {
 
-void wavProgressCallback(SampleEditStage stage, uint8_t percent,
-                         void *context) {
+void wavProgressCallback(uint8_t percent, void *context) {
   if (!context) {
     return;
   }
   auto *display = static_cast<SampleEditProgressDisplay *>(context);
-  display->Update(stage, percent);
+  display->Update(percent);
 }
 
 } // namespace

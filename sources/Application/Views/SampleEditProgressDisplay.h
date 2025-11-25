@@ -9,7 +9,6 @@
 #ifndef SAMPLE_EDIT_PROGRESS_DISPLAY_H_
 #define SAMPLE_EDIT_PROGRESS_DISPLAY_H_
 
-#include "Application/Instruments/WavFileWriter.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/etl/include/etl/string.h"
 
@@ -18,7 +17,7 @@ public:
   explicit SampleEditProgressDisplay(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename);
 
-  void Update(SampleEditStage stage, uint8_t percent);
+  void Update(uint8_t percent);
   void Finish(bool success);
 
 private:

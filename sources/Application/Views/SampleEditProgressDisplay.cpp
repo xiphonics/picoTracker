@@ -14,8 +14,7 @@ SampleEditProgressDisplay::SampleEditProgressDisplay(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename)
     : sampleName_(filename), spinnerIndex_(0) {}
 
-void SampleEditProgressDisplay::Update(SampleEditStage stage, uint8_t percent) {
-  (void)stage;
+void SampleEditProgressDisplay::Update(uint8_t percent) {
   const char spinner = spinnerChars_[spinnerIndex_++ & 0x03];
   Status::SetMultiLine("Sample edit\n%s\n%3u%% %c", sampleName_.c_str(),
                        static_cast<unsigned int>(percent), spinner);
