@@ -44,10 +44,10 @@ public:
                        void *scratchBuffer, uint32_t scratchBufferSize,
                        WavTrimResult &result,
                        SampleEditProgressCallback progressCallback = nullptr);
-  static bool NormalizeFile(const char *path, void *scratchBuffer,
-                            uint32_t scratchBufferSize,
-                            WavNormalizeResult &result,
-                            SampleEditProgressCallback progressCallback = nullptr);
+  static bool
+  NormalizeFile(const char *path, void *scratchBuffer,
+                uint32_t scratchBufferSize, WavNormalizeResult &result,
+                SampleEditProgressCallback progressCallback = nullptr);
 
 private:
   int sampleCount_;

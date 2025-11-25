@@ -23,10 +23,7 @@ inline void reportProgress(SampleEditProgressCallback callback,
   if (!callback || total == 0u) {
     return;
   }
-  uint32_t percent =
-      processed >= total
-          ? 100u
-          : (processed * 100u) / total;
+  uint32_t percent = processed >= total ? 100u : (processed * 100u) / total;
   callback(static_cast<uint8_t>(percent));
 }
 
@@ -217,9 +214,10 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
   return true;
 }
 
-bool WavFileWriter::NormalizeFile(
-    const char *path, void *scratchBuffer, uint32_t scratchBufferSize,
-    WavNormalizeResult &result, SampleEditProgressCallback progressCallback) {
+bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
+                                  uint32_t scratchBufferSize,
+                                  WavNormalizeResult &result,
+                                  SampleEditProgressCallback progressCallback) {
   result = {
       .totalFrames = 0,
       .peakBefore = 0,

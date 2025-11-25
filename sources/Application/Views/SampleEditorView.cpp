@@ -8,7 +8,6 @@
  */
 
 #include "SampleEditorView.h"
-#include "SampleEditProgressDisplay.h"
 #include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Instruments/WavFileWriter.h"
@@ -22,6 +21,7 @@
 #include "BaseClasses/UIStaticField.h"
 #include "Foundation/Types/Types.h"
 #include "ModalDialogs/MessageBox.h"
+#include "SampleEditProgressDisplay.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
