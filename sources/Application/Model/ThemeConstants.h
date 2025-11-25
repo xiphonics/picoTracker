@@ -13,7 +13,7 @@
 // Define default color values to be used across the application
 namespace ThemeConstants {
 // Color constants
-const uint32_t DEFAULT_BACKGROUND = 0x002020;
+const uint32_t DEFAULT_BACKGROUND = 0x000000;
 const uint32_t DEFAULT_FOREGROUND = 0xD8D8D8;
 const uint32_t DEFAULT_HICOLOR1 = 0x005080;
 const uint32_t DEFAULT_HICOLOR2 = 0x307090;
