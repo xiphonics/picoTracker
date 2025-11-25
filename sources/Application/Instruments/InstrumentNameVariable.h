@@ -24,6 +24,7 @@ public:
   // Reimplement Variable methods to interact with the instrument's name
   etl::string<MAX_VARIABLE_STRING_LENGTH> GetString();
   void SetString(const char *string, bool notify = true);
+  void Reset();
 
 private:
   I_Instrument *instrument_;

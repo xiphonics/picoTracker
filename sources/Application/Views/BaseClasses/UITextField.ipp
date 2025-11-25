@@ -159,6 +159,17 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
 };
 
 template <uint8_t MaxLength>
+void UITextField<MaxLength>::ProcessClear() {
+  if (!src_->IsModified())
+    return;
+
+  src_->Reset();
+  SetChanged();
+  NotifyObservers(reinterpret_cast<I_ObservableData *>(
+        static_cast<uintptr_t>(fourcc_)));
+}
+
+template <uint8_t MaxLength>
 etl::string<MaxLength> UITextField<MaxLength>::GetString() {
   return src_->GetString().substr(0, MaxLength);
 };

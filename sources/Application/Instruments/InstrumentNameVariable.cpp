@@ -34,3 +34,5 @@ void InstrumentNameVariable::SetString(const char *string, bool notify) {
     NotifyObservers();
   }
 }
+
+void InstrumentNameVariable::Reset() { SetString(""); }
