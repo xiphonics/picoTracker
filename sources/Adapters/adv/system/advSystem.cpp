@@ -32,7 +32,6 @@
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -143,18 +142,7 @@ void advSystem::Boot() {
 
 void advSystem::Shutdown() { delete Audio::GetInstance(); };
 
-static int secbase;
-
-unsigned long advSystem::GetClock() {
-  struct timeval tp;
-
-  gettimeofday(&tp, NULL);
-  if (!secbase) {
-    secbase = tp.tv_sec;
-    return long(tp.tv_usec / 1000.0);
-  }
-  return long((tp.tv_sec - secbase) * 1000 + tp.tv_usec / 1000.0);
-}
+unsigned long advSystem::GetClock() { return HAL_GetTick(); }
 
 void advSystem::GetBatteryState(BatteryState &state) {
   auto soc = getBatterySOC();
