@@ -33,18 +33,13 @@
 #include <cstdint>
 #include <cstring>
 
-namespace {
+SampleEditProgressDisplay *sampleEditProgressDisplay = nullptr;
 
-void wavProgressCallback(uint8_t percent, void *context) {
-  if (!context) {
-    return;
+void wavProgressCallback(uint8_t percent) {
+  if (sampleEditProgressDisplay) {
+    sampleEditProgressDisplay->Update(percent);
   }
-  auto *display = static_cast<SampleEditProgressDisplay *>(context);
-  display->Update(percent);
 }
-
-} // namespace
-
 
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
@@ -660,9 +655,11 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
 
   SampleEditProgressDisplay progressDisplay(filename);
   WavTrimResult trimResult{};
+  sampleEditProgressDisplay = &progressDisplay;
   bool trimmed = WavFileWriter::TrimFile(
       filename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
-      sizeof(chunkBuffer_), trimResult, wavProgressCallback, &progressDisplay);
+      sizeof(chunkBuffer_), trimResult, wavProgressCallback);
+  sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(trimmed);
   if (!trimmed) {
     return false;
@@ -774,9 +771,11 @@ bool SampleEditorView::applyNormalizeOperation() {
 
   SampleEditProgressDisplay progressDisplay(filename);
   WavNormalizeResult normalizeResult{};
+  sampleEditProgressDisplay = &progressDisplay;
   bool normalized = WavFileWriter::NormalizeFile(
       filename.c_str(), static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
-      normalizeResult, wavProgressCallback, &progressDisplay);
+      normalizeResult, wavProgressCallback);
+  sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(normalized);
   if (!normalized) {
     return false;
