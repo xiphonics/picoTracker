@@ -59,9 +59,8 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
   while (subelem) {
     // Process the PARAM element attributes
     bool hasAttr = doc->NextAttribute();
-    char name[24] = "";
-    char value[24] = "";
-
+    char name[MAX_VARIABLE_STRING_LENGTH + 1] = "";
+    char value[MAX_VARIABLE_STRING_LENGTH + 1] = "";
     while (hasAttr) {
       if (!strcasecmp(doc->attrname_, "NAME")) {
         strcpy(name, doc->attrval_);
