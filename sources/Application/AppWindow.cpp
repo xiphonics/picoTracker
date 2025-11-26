@@ -549,7 +549,6 @@ void AppWindow::UpdateColorsFromConfig() {
   // now assign custom colors if they have been set device config
   defineColor(FourCC::VarBGColor, backgroundColor_, 0);
   defineColor(FourCC::VarFGColor, normalColor_, 1);
-  cursorColor_ = normalColor_;
   defineColor(FourCC::VarHI1Color, highlightColor_, 2);
   defineColor(FourCC::VarHI2Color, highlight2Color_, 3);
   defineColor(FourCC::VarCursorColor, cursorColor_, 4);
