@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - release-2.0
+      - 2.2-release
     paths:
       - usermanual/**
 
@@ -23,7 +23,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           name: 'github-pages'
-          path: usermanual/output
+          path: usermanual/web
   deploy:
     needs: build
     environment:
