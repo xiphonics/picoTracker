@@ -214,7 +214,6 @@ private:
   static bool initPrivate_;
   ModalView *modalView_;
   ModalViewCallback modalViewCallback_;
-  static ColorDefinition currentRectColor_;
 
 public:
   static int margin_;
