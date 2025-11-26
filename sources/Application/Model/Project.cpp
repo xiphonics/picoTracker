@@ -358,8 +358,8 @@ void Project::RestoreContent(PersistencyDocument *doc) {
   bool elem = doc->FirstChild();
   while (elem) {
     bool attr = doc->NextAttribute();
-    char name[24];
-    char value[24];
+    char name[MAX_VARIABLE_STRING_LENGTH + 1];
+    char value[MAX_VARIABLE_STRING_LENGTH + 1];
     while (attr) {
       if (!strcmp(doc->attrname_, "NAME")) {
         strcpy(name, doc->attrval_);
