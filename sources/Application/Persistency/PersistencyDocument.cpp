@@ -190,6 +190,21 @@ bool PersistencyDocument::NextSibling() {
 bool PersistencyDocument::NextAttribute() {
   // This is called as soon as a YXML_ELEMSTART happened or after another
   // YXML_ATTREND
+  // Whitespace between the start tag and the first child can leave the parser
+  // in YXML_CONTENT; if it's not whitespace, treat it as an error.
+  if (r_ == YXML_CONTENT) {
+    char contentChar = state_->data[0];
+    if (contentChar == ' ' || contentChar == '\t' || contentChar == '\n' ||
+        contentChar == '\r' || contentChar == '\0') {
+      Trace::Log("XML", "ignoring whitespace between attributes");
+      return false;
+    }
+    Trace::Error("NextAttribute called with non-whitespace content '%c' in "
+                 "element '%s'",
+                 contentChar, state_->elem ? state_->elem : "<unknown>");
+    return false;
+  }
+
   if ((r_ != YXML_OK) && (r_ != YXML_ELEMSTART) && (r_ != YXML_ATTREND)) {
     Trace::Error("NextAttribute called with invalid state: %d", r_);
     return false;
