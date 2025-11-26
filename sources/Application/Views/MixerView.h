@@ -10,7 +10,7 @@
 #ifndef _MIXER_VIEW_H_
 #define _MIXER_VIEW_H_
 
-#include "BaseClasses/UIMixerVolumeField.h"
+#include "BaseClasses/UIIntVarField.h"
 #include "FieldView.h"
 #include "Foundation/T_SimpleList.h"
 #include "ViewData.h"
