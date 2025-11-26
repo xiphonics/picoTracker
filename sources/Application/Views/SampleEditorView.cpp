@@ -21,6 +21,7 @@
 #include "BaseClasses/UIStaticField.h"
 #include "Foundation/Types/Types.h"
 #include "ModalDialogs/MessageBox.h"
+#include "SampleEditProgressDisplay.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
@@ -31,6 +32,14 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+
+SampleEditProgressDisplay *sampleEditProgressDisplay = nullptr;
+
+void wavProgressCallback(uint8_t percent) {
+  if (sampleEditProgressDisplay) {
+    sampleEditProgressDisplay->Update(percent);
+  }
+}
 
 // Initialize static member
 ViewType SampleEditorView::sourceViewType_ = VT_SONG;
@@ -644,10 +653,15 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
+  SampleEditProgressDisplay progressDisplay(filename);
   WavTrimResult trimResult{};
-  if (!WavFileWriter::TrimFile(filename.c_str(), start_, end_,
-                               static_cast<void *>(chunkBuffer_),
-                               sizeof(chunkBuffer_), trimResult)) {
+  sampleEditProgressDisplay = &progressDisplay;
+  bool trimmed = WavFileWriter::TrimFile(
+      filename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
+      sizeof(chunkBuffer_), trimResult, wavProgressCallback);
+  sampleEditProgressDisplay = nullptr;
+  progressDisplay.Finish(trimmed);
+  if (!trimmed) {
     return false;
   }
 
@@ -755,10 +769,15 @@ bool SampleEditorView::applyNormalizeOperation() {
     return false;
   }
 
+  SampleEditProgressDisplay progressDisplay(filename);
   WavNormalizeResult normalizeResult{};
-  if (!WavFileWriter::NormalizeFile(filename.c_str(),
-                                    static_cast<void *>(chunkBuffer_),
-                                    sizeof(chunkBuffer_), normalizeResult)) {
+  sampleEditProgressDisplay = &progressDisplay;
+  bool normalized = WavFileWriter::NormalizeFile(
+      filename.c_str(), static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
+      normalizeResult, wavProgressCallback);
+  sampleEditProgressDisplay = nullptr;
+  progressDisplay.Finish(normalized);
+  if (!normalized) {
     return false;
   }
 
