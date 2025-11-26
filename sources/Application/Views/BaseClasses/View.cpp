@@ -20,7 +20,6 @@
 #include <nanoprintf.h>
 
 bool View::initPrivate_ = false;
-ColorDefinition View::currentRectColor_ = CD_NORMAL;
 
 int View::margin_ = 0;
 int View::songRowCount_ = 16;
@@ -393,10 +392,7 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 };
 
 void View::DrawRect(GUIRect &r, ColorDefinition color) {
-  if (View::currentRectColor_ != color) {
-    View::currentRectColor_ = color;
-    w_.SetCurrentRectColor(AppWindow::GetColor(color));
-  }
+  w_.SetCurrentRectColor(AppWindow::GetColor(color));
   w_.DrawRect(r);
 }
 
