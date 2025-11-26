@@ -128,24 +128,15 @@ unsigned long picoTrackerSystem::GetClock() {
 void picoTrackerSystem::GetBatteryState(BatteryState &state) {
   u_int16_t adc_reading = adc_read(); // raw voltage from ADC
 
-  int adc_voltage = adc_reading * 0.8; // 0.8mV per unit of ADC
-  // *2 because picoTracker use voltage divider for voltage on ADC pin
-  state.voltage_mv = adc_voltage * 2;
+  // adc_reading needs to be converted to millivolts with a factor of 0.8
+  // the voltage divider at the pin also halves the value
+  // --> each adc_reading increment is 1.6mV on the RP2040 (* 1.6 == * 8 / 5)
+  state.voltage_mv = (adc_reading * 8) / 5;
 
-  // we just do a very basic percentage estimation based on several voltage
-  // thresholds
-  if (state.voltage_mv < 3400) {
-    state.percentage = 0;
-  } else if (state.voltage_mv < 3500) {
-    state.percentage = 30;
-  } else if (state.voltage_mv < 3700) {
-    state.percentage = 60;
-  } else if (state.voltage_mv < 3900) {
-    state.percentage = 90;
-  } else {
-    state.percentage = 100;
-  }
-  state.charging = state.voltage_mv > 4000 ? true : false;
+  // we just do a very basic percentage estimation
+  int value = std::max(0, state.voltage_mv - 3400);
+  state.percentage = std::min(100, value * 2 / 11); // 3400mV=0%, 3950mV=100%
+  state.charging = state.voltage_mv > 4000;
 }
 
 void picoTrackerSystem::SetDisplayBrightness(unsigned char value) {
