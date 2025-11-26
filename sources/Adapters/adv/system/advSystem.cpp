@@ -142,7 +142,7 @@ void advSystem::Boot() {
 
 void advSystem::Shutdown() { delete Audio::GetInstance(); };
 
-unsigned long advSystem::GetClock() { return HAL_GetTick(); }
+unsigned long advSystem::GetClock() { return xTaskGetTickCount(); }
 
 void advSystem::GetBatteryState(BatteryState &state) {
   auto soc = getBatterySOC();
