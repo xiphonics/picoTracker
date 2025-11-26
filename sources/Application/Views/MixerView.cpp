@@ -298,10 +298,11 @@ void MixerView::initChannelVolumeFields() {
     // Find the variable for this channel's volume
     Variable *v = project->FindVariable(channelVolumeFourCCs[i]);
     if (v) {
-      // Create a 2-digit field (00-100) for the channel volume
+      // Create a 2-digit field (00-99) for the channel volume
+      // NOTE: 99 is considered "unity" gain
       // Format: %2.2d = 2-digit decimal number with leading zeros
       // Use xOffset=1 and yOffset=5 for small/large increments
-      channelVolumeFields_.emplace_back(fieldPos, *v, "%2.2d", 0, 100, 1, 5);
+      channelVolumeFields_.emplace_back(fieldPos, *v, "%2.2d", 0, 99, 1, 5);
 
       // Add the field to the fieldList_ for proper field navigation
       fieldList_.insert(fieldList_.end(), &(*channelVolumeFields_.rbegin()));
