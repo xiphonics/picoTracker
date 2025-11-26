@@ -10,7 +10,7 @@
 #include "SelectProjectView.h"
 #include "Application/AppWindow.h"
 
-#define LIST_PAGE_SIZE 14
+#define LIST_PAGE_SIZE SCREEN_HEIGHT - 2
 #define LIST_WIDTH 26
 #define INVALID_PROJECT_NAME "INVALID NAME"
 
