@@ -9,6 +9,7 @@
 
 #include "PersistencyDocument.h"
 #include "System/Console/Trace.h"
+#include "System/Console/nanoprintf.h"
 
 PersistencyDocument::PersistencyDocument() {
   version_ = 0;
@@ -209,11 +210,17 @@ bool PersistencyDocument::NextAttribute() {
       return false;
       break;
     case YXML_ATTRSTART:
-      strcpy(attrname_, state_->attr);
+      npf_snprintf(attrname_, sizeof(attrname_), "%s", state_->attr);
       break;
     case YXML_ATTRVAL:
-      attrval_[cur] = state_->data[0];
-      cur++;
+      if (cur < int(sizeof(attrval_) - 1)) {
+        attrval_[cur] = state_->data[0];
+        cur++;
+      } else {
+        Trace::Error("NextAttribute overflow for attr '%s'", attrname_);
+        attrval_[0] = '\0';
+        return false;
+      }
       break;
     case YXML_ATTREND:
       attrval_[cur] = '\0';
@@ -248,8 +255,15 @@ bool PersistencyDocument::HasContent() {
   // if YXML_CONTENT happened before reaching here, there is already one
   // character in the buffer
   if (r_ == YXML_CONTENT) {
-    content_[cur] = state_->data[0];
-    cur++;
+    if (cur < int(sizeof(content_) - 1)) {
+      content_[cur] = state_->data[0];
+      cur++;
+      found = true;
+    } else {
+      Trace::Error("HasContent truncating initial content for element '%s'",
+                   state_->elem);
+      return false;
+    }
   }
 
   while ((c = fp_->GetC()) != EOF) {
@@ -266,9 +280,15 @@ bool PersistencyDocument::HasContent() {
       return false;
       break;
     case YXML_CONTENT:
-      content_[cur] = state_->data[0];
-      cur++;
-      found = true;
+      if (cur < int(sizeof(content_) - 1)) {
+        content_[cur] = state_->data[0];
+        cur++;
+        found = true;
+      } else {
+        Trace::Error("HasContent truncating content for element '%s'",
+                     state_->elem);
+        return false;
+      }
       break;
     case YXML_ATTRSTART:
     case YXML_ATTRVAL:
