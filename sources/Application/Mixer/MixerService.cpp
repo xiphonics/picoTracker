@@ -117,14 +117,16 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
   }
 }
 
-// Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in
+// Helper function to convert linear volume (0-99) to non-linear (0.0-1.0) in
 // fixed point
 fixed MixerService::ToLogVolume(int vol) {
   // Ensure vol is within valid range
   if (vol < 0)
     vol = 0;
-  if (vol > 100)
-    vol = 100;
+  if (vol >= 99) { // for now treating 99 as unity gain
+    // Unity gain – treat as a no-op to avoid unnecessary scaling
+    return i2fp(1);
+  }
 
   // Convert to fixed point (0-1 range)
   fixed normalizedVol = fp_mul(i2fp(vol), fl2fp(0.01f));
@@ -136,7 +138,7 @@ fixed MixerService::ToLogVolume(int vol) {
 
 void MixerService::SetMasterVolume(int vol) {
   // Apply logarithmic scaling for better volume control
-  // vol is 0-100, where 100 is unity gain (1.0)
+  // vol is 0-99, where 99 is unity gain (1.0)
   fixed masterVolume = ToLogVolume(vol);
 
   // Set the master bus volume
@@ -148,7 +150,7 @@ void MixerService::SetMasterVolume(int vol) {
   // Apply channel volumes to individual channel buses
   if (project) {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      // Get the channel's individual volume (0-100)
+      // Get the channel's individual volume (0-99)
       int channelVol = project->GetChannelVolume(i);
 
       // Convert channel volume to non-linear scale (0.0-1.0)
