@@ -22,7 +22,7 @@ To get to the chain screen, you need to have your cursor on a chain in the song.
 
 The names of the keys are shown below.
 
-![labeled photo of Picotracker keymapping](image/pT-buttonMap.png)
+![labeled photo of Picotracker keymapping](image/advance-keymap-small.png)
 
 ### Playback Modes and Controls
 
