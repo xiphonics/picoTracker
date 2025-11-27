@@ -65,7 +65,9 @@ public:
 
   static GUIColor GetColor(ColorDefinition cd);
 
-  void LoadProject(const char *name);
+  enum LoadProjectResult { LOAD_OK, LOAD_FAILED };
+
+  LoadProjectResult LoadProject(const char *name);
   void CloseProject();
 
   using GUIWindow::Clear;
@@ -168,6 +170,7 @@ private:
   static int charHeight_;
 
   bool loadProject_ = false;
+  bool awaitingProjectLoadAck_ = false;
 
   uint32_t lastAutoSave = 0;
 

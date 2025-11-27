@@ -350,7 +350,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const char *projectName) {
+AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   _closeProject = false;
 
@@ -368,7 +368,10 @@ void AppWindow::LoadProject(const char *projectName) {
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
-    Trace::Error("Failed to load project!!");
+    Trace::Error("Failed to load project '%s'", projectName);
+    pool->Reset();
+    TableHolder::GetInstance()->Reset();
+    return LoadProjectResult::LOAD_FAILED;
   };
 
   // Project
@@ -494,6 +497,7 @@ void AppWindow::LoadProject(const char *projectName) {
     _currentView->SetDirty(true);
     SetDirty();
   }
+  return LoadProjectResult::LOAD_OK;
 }
 
 void AppWindow::CloseProject() {
@@ -648,10 +652,34 @@ void AppWindow::onUpdate(bool redraw) {
 void AppWindow::AnimationUpdate() {
   // Increment the animation frame counter
   animationFrameCounter_++;
+  char failedProjectName_[MAX_PROJECT_NAME_LENGTH] = {0};
+
+  if (awaitingProjectLoadAck_) {
+    if (_mask != 0) {
+      strcpy(projectName_, UNNAMED_PROJECT_NAME);
+      loadProject_ = true;
+      awaitingProjectLoadAck_ = false;
+      Trace::Error("Falling back to untitled after failed load of '%s'",
+                   failedProjectName_);
+    }
+    return;
+  }
 
   if (loadProject_) {
-    LoadProject(projectName_);
+    LoadProjectResult loadResult = LoadProject(projectName_);
     loadProject_ = false;
+    if (loadResult == LoadProjectResult::LOAD_FAILED) {
+      strncpy(failedProjectName_, projectName_, sizeof(failedProjectName_));
+      failedProjectName_[sizeof(failedProjectName_) - 1] = '\0';
+      Status::SetMultiLine(
+          "Invalid Project:\n%s\n  \nPress any key\nto continue...",
+          failedProjectName_);
+      Trace::Error(
+          "Failed to load project '%s'. Waiting for key press to load untitled",
+          failedProjectName_);
+      awaitingProjectLoadAck_ = true;
+      return;
+    }
   }
 
   // run at 1Hz
