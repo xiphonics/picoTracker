@@ -40,6 +40,7 @@
 #include "Player/Player.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 #include "Views/UIController.h"
 #include "platform.h"
@@ -656,6 +657,7 @@ void AppWindow::AnimationUpdate() {
 
   if (awaitingProjectLoadAck_) {
     if (_mask != 0) {
+      FileSystem::GetInstance()->DeleteFile("/.current");
       strcpy(projectName_, UNNAMED_PROJECT_NAME);
       loadProject_ = true;
       awaitingProjectLoadAck_ = false;
