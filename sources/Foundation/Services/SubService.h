@@ -12,11 +12,12 @@
 
 class SubService {
 public:
-  SubService(int fourCC);
+  SubService(int fourCC, bool registerWithService = true);
   virtual ~SubService();
   int GetFourCC() { return fourCC_; };
 
 private:
   int fourCC_;
+  bool registerWithService_;
 };
 #endif

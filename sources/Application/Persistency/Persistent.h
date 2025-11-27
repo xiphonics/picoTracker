@@ -16,7 +16,7 @@
 
 class Persistent : SubService {
 public:
-  Persistent(const char *nodeName);
+  Persistent(const char *nodeName, bool registerWithService = true);
   void Save(tinyxml2::XMLPrinter *printer);
   bool Restore(PersistencyDocument *doc);
 
