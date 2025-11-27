@@ -67,6 +67,8 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
+  auto config = Config::GetInstance();
+
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       ViewType vt = sourceViewType_;
@@ -74,6 +76,7 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       SetChanged();
       NotifyObservers(&ve);
       StopMonitoring();
+      config->Save();
       return;
     }
   }
@@ -87,6 +90,7 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       viewData_->sampleEditorFilename = filename;
 
       // Automatically switch to SampleEditor view after recording stops
+      config->Save();
       ViewType vt = VT_SAMPLE_EDITOR;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
@@ -191,9 +195,7 @@ void RecordView::Update(Observable &o, I_ObservableData *data) {
 #endif
   }
 
-  // Handle field updates
-  isDirty_ = true;
-  config->Save();
+
 }
 
 void RecordView::AnimationUpdate() {
