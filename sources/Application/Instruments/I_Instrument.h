@@ -38,8 +38,10 @@ protected:
 
 public:
   I_Instrument(etl::ilist<Variable *> *list,
-               const char *nodeName = "INSTRUMENT")
-      : VariableContainer(list), Persistent(nodeName){};
+               const char *nodeName = "INSTRUMENT",
+               bool registerWithPersistence = false)
+      : VariableContainer(list),
+        Persistent(nodeName, registerWithPersistence){};
   virtual ~I_Instrument();
 
   // Initialisation routine
