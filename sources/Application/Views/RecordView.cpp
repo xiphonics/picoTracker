@@ -194,8 +194,6 @@ void RecordView::Update(Observable &o, I_ObservableData *data) {
     break;
 #endif
   }
-
-
 }
 
 void RecordView::AnimationUpdate() {
