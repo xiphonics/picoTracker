@@ -10,8 +10,8 @@
 #include "i2c.h"
 #include "stm32h7xx_hal.h"
 #include "tim.h"
-#include <stdbool.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "FreeRTOS.h"
