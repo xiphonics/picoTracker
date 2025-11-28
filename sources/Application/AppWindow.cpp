@@ -658,7 +658,8 @@ void AppWindow::AnimationUpdate() {
   if (awaitingProjectLoadAck_) {
     if (_mask != 0) {
       FileSystem::GetInstance()->DeleteFile("/.current");
-      npf_snprintf(projectName_, sizeof(projectName_), "%s", UNNAMED_PROJECT_NAME);
+      npf_snprintf(projectName_, sizeof(projectName_), "%s",
+                   UNNAMED_PROJECT_NAME);
       loadProject_ = true;
       awaitingProjectLoadAck_ = false;
       Trace::Error("Falling back to untitled after failed load of '%s'",
@@ -671,7 +672,8 @@ void AppWindow::AnimationUpdate() {
     LoadProjectResult loadResult = LoadProject(projectName_);
     loadProject_ = false;
     if (loadResult == LoadProjectResult::LOAD_FAILED) {
-      npf_snprintf(failedProjectName_, sizeof(failedProjectName_), "%s", projectName_);
+      npf_snprintf(failedProjectName_, sizeof(failedProjectName_), "%s",
+                   projectName_);
       Status::SetMultiLine(
           "Invalid Project:\n%s\n  \nPress any key\nto continue...",
           failedProjectName_);
