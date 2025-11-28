@@ -132,7 +132,7 @@ void picoTrackerSystem::GetBatteryState(BatteryState &state) {
   // mV =^= adc_reading * 1.6
   state.voltage_mv = (adc_reading * 8) / 5; // equals adc_reading * 1.6;
 
-  // clamp the ends of the valid vlotage range
+  // clamp the ends of the valid voltage range
   if (state.voltage_mv < 3325) {
     state.percentage = 0;
   } else if (state.voltage_mv > 3900) {
