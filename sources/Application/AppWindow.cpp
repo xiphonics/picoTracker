@@ -92,8 +92,9 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
                             int paletteIndex) {
 
   Config *config = Config::GetInstance();
-  const int rgbValue = config->FindVariable(colorCode)->GetInt();
-  if (rgbValue) {
+  auto rgbVar = config->FindVariable(colorCode);
+  if (rgbVar) {
+    const int32_t rgbValue = rgbVar->GetInt();
     unsigned short r, g, b;
     r = (rgbValue >> 16) & 0xFF;
     g = (rgbValue >> 8) & 0xFF;
