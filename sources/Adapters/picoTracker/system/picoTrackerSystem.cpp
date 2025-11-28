@@ -126,16 +126,29 @@ unsigned long picoTrackerSystem::GetClock() {
 }
 
 void picoTrackerSystem::GetBatteryState(BatteryState &state) {
-  u_int16_t adc_reading = adc_read(); // raw voltage from ADC
+  uint32_t adc_reading = adc_read(); // raw voltage from ADC
+  // 0.8mV per unit of ADC
+  // * 2 because picoTracker use voltage divider for voltage on ADC pin
+  // mV =^= adc_reading * 1.6
+  state.voltage_mv = (adc_reading * 8) / 5; // equals adc_reading * 1.6;
 
-  // adc_reading needs to be converted to millivolts with a factor of 0.8
-  // the voltage divider at the pin also halves the value
-  // --> each adc_reading increment is 1.6mV on the RP2040 (* 1.6 == * 8 / 5)
-  state.voltage_mv = (adc_reading * 8) / 5;
+  // clamp the ends of the valid vlotage range
+  if (state.voltage_mv < 3325) {
+    state.percentage = 0;
+  } else if (state.voltage_mv > 3900) {
+    state.percentage = 100;
+  } else {
+    // the function f(x) = 100 - (x - 3,900)^2 / 3,250 closely maps the original
+    // measurements. It can be optimized for the rp2040 in integer math as
+    //      100 - (100 * x - 390,000) ^ 2 / 33,000,000
+    // with x / 33,000,000 being approximated by x >> 25 (2^25 = 33,554,432)
+    // --> (100 - (100 * x - 390,000) ^ 2) >> 25
+    uint32_t q = 100 * state.voltage_mv - 390000; // 100 * x - 390,000
+    q *= q;                                       // q ^ 2
+    q >>= 25;                                     // q / 33,000,000
+    state.percentage = 100 - q;                   // 100 - q
+  }
 
-  // we just do a very basic percentage estimation
-  int value = std::max(0, state.voltage_mv - 3400);
-  state.percentage = std::min(100, value * 2 / 11); // 3400mV=0%, 3950mV=100%
   state.charging = state.voltage_mv > 4000;
 }
 
