@@ -29,21 +29,25 @@ void sendToUSBCDC(char data[], uint32_t length) {
 
   uint32_t sent = 0;
   while (sent < length) {
-    // tud_task() is called by its own USBDevice FreeRTOS task which will cause
-    // processing of outgoing data, freeing up tinyusb buffer space
     uint32_t available = tud_cdc_write_available();
-    if (available > 0) {
-      uint32_t to_send = length - sent;
-      if (to_send > available) {
-        to_send = available; // Only send what fits
-      }
-      // tud_cdc_write() returns the number of bytes actually written
-      uint32_t written = tud_cdc_write(data + sent, to_send);
-      sent += written;
+    if (available == 0) {
+      // Give TinyUSB time to flush TX FIFO via its own USBDevice task.
+      vTaskDelay(pdMS_TO_TICKS(1));
+      continue;
     }
-    // give back control to RTOS while we wait for tinyusb to free up its tx
-    // buffer space
-    vTaskDelay(pdMS_TO_TICKS(1));
+
+    uint32_t to_send = length - sent;
+    if (to_send > available) {
+      to_send = available; // Only send what fits
+    }
+    // tud_cdc_write() returns the number of bytes actually written
+    uint32_t written = tud_cdc_write(data + sent, to_send);
+    if (written == 0) {
+      // Avoid a tight loop if TinyUSB temporarily reports no space
+      vTaskDelay(pdMS_TO_TICKS(1));
+      continue;
+    }
+    sent += written;
   }
 
   // After the entire message is queued, flush it.
