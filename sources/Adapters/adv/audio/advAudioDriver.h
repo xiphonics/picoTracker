@@ -32,6 +32,7 @@ public:
   void SetVolume(int v);
   int GetVolume();
   virtual double GetStreamTime();
+  void OnAudioActive(bool active) override;
   static void IRQHandler();
   static void BufferNeeded();
 

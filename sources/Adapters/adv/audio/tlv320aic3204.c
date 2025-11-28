@@ -10,6 +10,7 @@
 #include "i2c.h"
 #include "stm32h7xx_hal.h"
 #include "tim.h"
+#include <stdbool.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -36,6 +37,8 @@ enum TLVInput { NONE, MIC, LINEIN } input = NONE;
 
 static uint8_t codecVolume = 100;
 static volatile char overrideSpkr = 0;
+static bool audioOutputActive = false;
+static void tlv320_update_amp_state(void);
 
 HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value) {
   // Write to the register
@@ -69,6 +72,20 @@ HAL_StatusTypeDef tlv320read(uint8_t page, uint8_t reg, uint8_t *value) {
                             1, HAL_MAX_DELAY);
 
   return status;
+}
+
+static void tlv320_update_amp_state(void) {
+  GPIO_PinState ampState =
+      (output == SPKR && audioOutputActive) ? GPIO_PIN_SET : GPIO_PIN_RESET;
+  HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, ampState);
+}
+
+void tlv320_set_audio_output_active(bool active) {
+  if (audioOutputActive == active) {
+    return;
+  }
+  audioOutputActive = active;
+  tlv320_update_amp_state();
 }
 
 #define LINEINBASEHALFDB 12
@@ -285,6 +302,7 @@ void tlv320_select_output(void) {
   uint8_t value;
   tlv320read(0x00, 0x43, &value);
 
+  enum TLVOutput previousOutput = output;
   if (value & 0x20 || input == MIC) {
     if (output != HP) {
       tlv320_enable_hp();
@@ -295,6 +313,10 @@ void tlv320_select_output(void) {
       tlv320_enable_spkr();
       output = SPKR;
     }
+  }
+
+  if (output != previousOutput) {
+    tlv320_update_amp_state();
   }
 }
 
