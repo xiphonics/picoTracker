@@ -65,7 +65,7 @@ public:
 
   static GUIColor GetColor(ColorDefinition cd);
 
-  enum LoadProjectResult { LOAD_OK, LOAD_FAILED };
+  enum LoadProjectResult { LOAD_FAILED = -1, LOAD_OK = 0 };
 
   LoadProjectResult LoadProject(const char *name);
   void CloseProject();

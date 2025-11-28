@@ -101,8 +101,8 @@ bool PersistencyDocument::NextSibling() {
     Trace::Error(
         "XML NextSibling called with invalid state: %d for element '%s'", r_,
         state_->elem ? state_->elem : "<unknown>");
-    // we use r_ = YXML_ESYN to signal that the xml parsing had a fatal error
-    r_ = YXML_ESYN;
+    // we use r_ = YXML_EREF to signal that the xml parsing had a fatal error
+    r_ = YXML_EREF;
 
     // Print additional debug info about the parser state
     const char *stateStr = "unknown";
@@ -204,8 +204,8 @@ bool PersistencyDocument::NextAttribute() {
     Trace::Error("NextAttribute called with non-whitespace content '%c' in "
                  "element '%s'",
                  contentChar, state_->elem ? state_->elem : "<unknown>");
-    // we use r_ = YXML_ESYN to signal that the xml parsing had a fatal error
-    r_ = YXML_ESYN;
+    // we use r_ = YXML_EREF to signal that the xml parsing had a fatal error
+    r_ = YXML_EREF;
     return false;
   }
 
@@ -238,9 +238,9 @@ bool PersistencyDocument::NextAttribute() {
         cur++;
       } else {
         Trace::Error("NextAttribute overflow for attr '%s'", attrname_);
-        // we use r_ = YXML_ESYN to signal that the xml parsing had a fatal
+        // we use r_ = YXML_EREF to signal that the xml parsing had a fatal
         // error
-        r_ = YXML_ESYN;
+        r_ = YXML_EREF;
         attrval_[0] = '\0';
         return false;
       }
@@ -285,8 +285,8 @@ bool PersistencyDocument::HasContent() {
     } else {
       Trace::Error("HasContent truncating initial content for element '%s'",
                    state_->elem);
-      // we use r_ = YXML_ESYN to signal that the xml parsing had a fatal error
-      r_ = YXML_ESYN;
+      // we use r_ = YXML_EREF to signal that the xml parsing had a fatal error
+      r_ = YXML_EREF;
       return false;
     }
   }
@@ -312,7 +312,7 @@ bool PersistencyDocument::HasContent() {
       } else {
         Trace::Error("HasContent truncating content for element '%s'",
                      state_->elem);
-        r_ = YXML_ESYN;
+        r_ = YXML_EREF;
         return false;
       }
       break;
