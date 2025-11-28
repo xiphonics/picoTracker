@@ -14,6 +14,7 @@
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/BaseClasses/ViewEvent.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "PlayerMixer.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/n_assert.h"
@@ -266,14 +267,14 @@ const char *Player::GetLiveIndicator(int channel) {
     case QM_PHRASESTART:
     case QM_TICKSTART:
       if (!IsChannelMuted(channel)) {
-        return (">");
+        return (char_indicator_position_s);
       } else {
-        return ("-");
+        return (char_indicator_positionMuted_s);
       }
       break;
     case QM_CHAINSTOP:
     case QM_PHRASESTOP:
-      return "_";
+      return char_playback_pause_s;
       break;
     case QM_NONE:
       break;
