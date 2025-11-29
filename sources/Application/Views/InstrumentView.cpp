@@ -808,25 +808,23 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       warpToNext(+16);
     if (mask & EPBM_ENTER) { // Allow cut instrument
       if (getInstrument()->GetType() == IT_SAMPLE) {
+        int i = viewData_->currentInstrumentID_;
+        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+        I_Instrument *instr = bank->GetInstrument(i);
         if (GetFocus() == *fieldList_.begin()) {
-          int i = viewData_->currentInstrumentID_;
-          InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-          I_Instrument *instr = bank->GetInstrument(i);
           instr->Purge();
           //                   Variable *v=instr->FindVariable(SIP_SAMPLE) ;
           //                   v->SetInt(-1) ;
           isDirty_ = true;
         }
+        UIIntVarField *field = (UIIntVarField *)GetFocus();
+        if (field->GetVariableID() == FourCC::SampleInstrumentEnd) {
+          Variable &var = field->GetVariable();
+          SampleInstrument *instrument = (SampleInstrument *)instr;
+          var.SetInt(instrument->GetSampleSize() - 1);
+          isDirty_ = true;
+        };
       }
-
-      // Check if on table
-      UIIntVarField *field = (UIIntVarField *)GetFocus();
-      if ((field->GetVariableID() == FourCC::SampleInstrumentTable) ||
-          (field->GetVariableID() == FourCC::MidiInstrumentTable)) {
-        Variable &v = field->GetVariable();
-        v.SetInt(-1);
-        isDirty_ = true;
-      };
     }
     if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;

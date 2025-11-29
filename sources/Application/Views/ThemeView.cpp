@@ -66,7 +66,8 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   // Get the current theme name from Config
   Variable *configThemeVar = config->FindVariable(FourCC::VarThemeName);
-  etl::string<MAX_THEME_NAME_LENGTH> currentThemeName = "default";
+  etl::string<MAX_THEME_NAME_LENGTH> currentThemeName =
+      ThemeConstants::DEFAULT_THEME_NAME;
 
   // If the theme name is set in the config, use it
   if (configThemeVar && !configThemeVar->GetString().empty()) {
@@ -79,7 +80,8 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   // Create the label and default value as variables to avoid temporary objects
   auto label = etl::string<MAX_UITEXTFIELD_LABEL_LENGTH>("Theme: ");
-  auto defaultValue = etl::string<MAX_THEME_NAME_LENGTH>(currentThemeName);
+  auto defaultValue =
+      etl::string<MAX_THEME_NAME_LENGTH>(ThemeConstants::DEFAULT_THEME_NAME);
 
   // Add the text field
   textFields_.emplace_back(*themeNameVar, position, label,
@@ -313,16 +315,6 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   }
   // Handle theme export action
   case FourCC::ActionExport: {
-    // Get the theme name from the text field
-    exportThemeName_ = themeNameField_->GetString();
-
-    // Check if the theme name is empty
-    if (exportThemeName_.empty()) {
-      exportThemeName_ = ThemeConstants::DEFAULT_THEME_NAME;
-      themeNameField_->SetVariable(
-          *new Variable(FourCC::ActionThemeName, exportThemeName_.c_str()));
-    }
-
     // Export the theme
     handleThemeExport();
     return;
@@ -331,6 +323,12 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
   case FourCC::ActionThemeName: {
     // Update the export theme name
     exportThemeName_ = themeNameField_->GetString();
+
+    // Prevent config from being updated with an empty theme name
+    if (exportThemeName_.empty()) {
+      // No need to change the field since it will display this default
+      exportThemeName_ = ThemeConstants::DEFAULT_THEME_NAME;
+    }
 
     // Update the theme name in the Config
     Config *config = Config::GetInstance();
@@ -432,7 +430,6 @@ void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
     // Update the theme name field
     themeNameField_->SetVariable(
         *new Variable(FourCC::ActionThemeName, themeName));
-    exportThemeName_ = themeName;
   }
 
   // Show result message
