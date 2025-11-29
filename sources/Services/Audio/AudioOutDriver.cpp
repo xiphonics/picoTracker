@@ -68,35 +68,28 @@ void AudioOutDriver::clipToMix() {
 
     fixed *p = primarySoundBuffer_;
 
-    fixed v;
-    fixed f_32767 = i2fp(32767);
-    fixed f_m32768 = i2fp(-32768);
-
     short peakL = 0;
     short peakR = 0;
 
     for (int i = 0; i < sampleCount_; i++) {
       // Left
-      v = *p++;
-      int iVal = fp2i(v);
-      *s1 = short(iVal);
+      short l = fp2i(*p++);
+      *s1 = l;
       s1 += offset;
-      if (iVal >= peakL) {
-        peakL = iVal;
-      }
-
+      
       // Right
-      v = *p++;
-      iVal = fp2i(v);
-      *s2 = short(iVal);
+      short r = fp2i(*p++);
+      *s2 = r;
       s2 += offset;
-      if (iVal >= peakR) {
-        peakR = iVal;
+
+      // update the level every 32 sample pairs
+      if (!(i & 0b11111)) {
+        if (l > peakL) peakL = l;
+        if (r > peakR) peakR = r;
       }
-    };
-    lastPeakVolume_ = peakL << 16;
-    lastPeakVolume_ += peakR;
-    peakL = peakR = 0;
+    }
+
+    lastPeakVolume_ = peakL << 16 | peakR;
   }
 };
 
