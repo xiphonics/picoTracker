@@ -43,6 +43,7 @@ void AudioOutDriver::Trigger() {
   prepareMixBuffers();
   hasSound_ = AudioMixer::Render(primarySoundBuffer_, sampleCount_) > 0;
   clipToMix();
+  driver_->OnAudioActive(hasSound_);
   driver_->AddBuffer(mixBuffer_, sampleCount_);
 }
 
