@@ -59,94 +59,94 @@ const char *scaleNames[numScales] = {"None (Chromatic)",
                                      "Whole tone"};
 
 const bool scaleSteps[numScales][12] = {
-    {true, true, true, true, true, true, true, true, true, true, true,
-     true}, // None (Chromatic)
-    {true, false, true, false, true, false, true, true, false, true, true,
-     false}, // Acoustic
-    {true, false, true, true, false, true, false, true, false, true, true,
-     false}, // Adonal malakh
-    {true, false, true, false, true, true, false, true, false, true, false,
-     true}, // Aeolian mode (minor)
-    {true, true, false, false, true, false, true, true, true, false, false,
-     true}, // Algerian
-    {true, true, false, true, true, false, true, false, true, false, true,
-     false}, // Altered
-    {true, false, false, true, true, false, false, true, true, false, false,
-     true}, // Augmented
-    {true, false, true, false, true, true, false, true, false, true, true,
-     true}, // Bebop dominant
-    {true, false, false, true, false, true, true, true, false, false, true,
-     false}, // Blues
-    {true, false, true, true, false, true, false, true, false, true, true,
-     false}, // Dorian
-    {true, true, false, false, true, true, false, true, true, false, false,
-     true}, // Double harmonic
-    {true, true, false, false, true, false, true, false, true, false, true,
-     true}, // Enigmatic
-    {true, true, false, false, true, true, false, true, true, false, false,
-     true}, // Flamenco
-    {true, false, true, true, false, false, true, true, true, false, true,
-     false}, // Gypsy
-    {true, false, true, true, false, true, true, false, true, false, true,
-     false}, // Half diminished
-    {true, false, true, false, true, true, false, true, true, false, false,
-     true}, // Harmonic major
-    {true, false, true, true, false, true, false, true, true, false, false,
-     true}, // Harmonic minor
-    {true, false, true, true, false, false, false, true, true, false, false,
-     false}, // Hirajoshi
-    {true, false, true, true, false, false, true, true, true, false, false,
-     true}, // Hungarian gypsy
-    {true, false, true, true, false, false, true, true, true, false, false,
-     true}, // Hungarian minor
-    {true, true, false, false, false, true, false, true, false, false, true,
-     false}, // Insen
-    {true, false, true, false, true, true, false, true, false, true, false,
-     true}, // Ionian mode (major)
-    {true, true, false, true, true, false, true, true, false, false, false,
-     false}, // Istrian
-    {true, true, false, false, false, true, true, false, false, false, true,
-     false}, // Iwato
-    {true, true, false, true, false, true, true, false, true, false, true,
-     false}, // Locrian
-    {true, false, true, false, true, false, true, false, true, true, false,
-     true}, // Lydian augmented
-    {true, false, true, false, true, false, true, true, false, true, false,
-     true}, // Lydian
-    {true, false, true, false, true, true, false, true, true, true, false,
-     true}, // Major bebop
-    {true, false, true, false, true, true, true, false, true, false, true,
-     false}, // Major locrian
-    {true, false, true, false, true, false, false, true, false, true, false,
-     false}, // Major pentatonic
-    {true, false, true, true, false, true, false, true, true, false, true,
-     false}, // Melodic minor
-    {true, false, true, true, false, true, false, true, false, true, false,
-     true}, // Melodic minor (asc)
-    {true, false, true, false, true, false, true, false, true, false, true,
-     false}, // Minor pentatonic
-    {true, false, true, false, true, true, false, true, false, true, false,
-     true}, // Mixolydian
-    {true, false, true, false, true, false, true, true, false, true, false,
-     true}, // Neapolitan major
-    {true, false, true, false, true, false, false, true, false, true, false,
-     false}, // Neapolitan minor
-    {true, false, true, false, true, true, false, true, false, true, true,
-     false}, // Octatonic
-    {true, false, true, false, true, false, true, false, true, false, true,
-     false}, // Persian
-    {true, false, true, true, false, true, false, true, false, true, false,
-     true}, // Phrygian dominant
-    {true, false, true, false, true, false, true, false, true, false, true,
-     false}, // Phrygian
-    {true, false, true, true, false, true, false, true, false, true, false,
-     true}, // Prometheus
-    {true, false, false, true, false, false, true, false, false, true, false,
-     false}, // Tritone
-    {true, false, true, true, false, false, true, true, false, true, true,
-     false}, // Ukranian
-    {true, false, true, false, true, false, true, false, true, false, true,
-     false}}; // Whole tone
+    // 0     1     2     3     4     5     6     7     8     9    10    11
+    {true, true, true, true, true, true, true, true, true, true, true, true}, // None (Chromatic)
+    // 0            2           4            6      7            9
+    {true, false, true, false, true, false, true, true, false, true, false, false}, // Acoustic
+    // 0            2           4     5             7    8            10
+    {true, false, true, false, true, true, false, true, true, false, true, false}, // Adonal malakh
+    // 0           2      3           5             7    8            10
+    {true, false, true, true, false, true, false, true, true, false, true, false}, // Aeolian mode (minor)
+    // 0           2      3                  6      7    8                   11
+    {true, false, true, true, false, false, true, true, true, false, false, true}, // Algerian
+    // 0     1            3     4           6            8            10
+    {true, true, false, true, true, false, true, false, true, false, true, false}, // Altered
+    // 0                  3     4                   7     8                    11
+    {true, false, false, true, true, false, false, true, true, false, false, true}, // Augmented
+    // 0            2           4      5            7            9     10    11
+    {true, false, true, false, true, true, false, true, false, true, true, true}, // Bebop dominant
+    // 0                   3           5     6      7                  10
+    {true, false, false, true, false, true, true, true, false, false, true, false}, // Blues
+    // 0            2     3            5            7           9     10
+    {true, false, true, true, false, true, false, true, false, true, true, false}, // Dorian
+    // 0    1                    4     5            7    8                   11
+    {true, true, false, false, true, true, false, true, true, false, false, true}, // Double harmonic
+    // 0    1                    4           6            8            10    11
+    {true, true, false, false, true, false, true, false, true, false, true, true}, // Enigmatic
+    // 0    1                    4    5             7     8                  11
+    {true, true, false, false, true, true, false, true, true, false, false, true}, // Flamenco
+    // 0           2      3                   6     7     8           10
+    {true, false, true, true, false, false, true, true, true, false, true, false}, // Gypsy
+    // 0           2      3           5      6           8            10
+    {true, false, true, true, false, true, true, false, true, false, true, false}, // Half diminished
+    // 0           2            4      5            7     8                  11
+    {true, false, true, false, true, true, false, true, true, false, false, true}, // Harmonic major
+    // 0           2     3             5           7      8                  11
+    {true, false, true, true, false, true, false, true, true, false, false, true}, // Harmonic minor
+    // 0           2     3                          7     8
+    {true, false, true, true, false, false, false, true, true, false, false, false}, // Hirajoshi
+    // 0            2    3                   6     7      8                  11
+    {true, false, true, true, false, false, true, true, true, false, false, true}, // Hungarian gypsy
+    // 0            2    3                   6     7      8                  11
+    {true, false, true, true, false, false, true, true, true, false, false, true}, // Hungarian minor
+    // 0    1                           5           7                   10
+    {true, true, false, false, false, true, false, true, false, false, true, false}, // Insen
+    // 0            2            4     5            7           9            11
+    {true, false, true, false, true, true, false, true, false, true, false, true}, // Ionian mode (major)
+    // 0     1            3     4           6      7
+    {true, true, false, true, true, false, true, true, false, false, false, false}, // Istrian
+    // 0    1                          5      6                         10
+    {true, true, false, false, false, true, true, false, false, false, true, false}, // Iwato
+    // 0    1            3             5     6      7                 10
+    {true, true, false, true, false, true, true, false, true, false, true, false}, // Locrian
+    // 0           2            4            6            8      9           11
+    {true, false, true, false, true, false, true, false, true, true, false, true}, // Lydian augmented
+    // 0           2            4            6      7            9           11
+    {true, false, true, false, true, false, true, true, false, true, false, true}, // Lydian
+    // 0           2            4     5             7    8     9            11
+    {true, false, true, false, true, true, false, true, true, true, false, true}, // Major bebop
+    // 0           2            4     5      6           8            10
+    {true, false, true, false, true, true, true, false, true, false, true, false}, // Major locrian
+    // 0           2            4                   7            9
+    {true, false, true, false, true, false, false, true, false, true, false, false}, // Major pentatonic
+    // 0           2      3            5           7     8      9    10    11
+    {true, false, true, true, false, true, false, true, true, true, true, true}, // Melodic minor
+    // 0           2      3            5           7            9            11
+    {true, false, true, true, false, true, false, true, false, true, false, true}, // Melodic minor (asc)
+    // 0                  3            5           7                   10
+    {true, false, false, true, false, true, false, true, false, false, true, false}, // Minor pentatonic
+    // 0            2           4      5           7            9     10
+    {true, false, true, false, true, true, false, true, false, true, true, false}, // Mixolydian
+    // 0    1            3            5            7            9            11
+    {true, true, false, true, false, true, false, true, false, true, false, true}, // Neapolitan major
+    // 0    1            3            5            7      8                  11
+    {true, true, false, true, false, true, false, true, true, false, false, true}, // Neapolitan minor
+    // 0           2     3            5      6            8     9           11
+    {true, false, true, true, false, true, true, false, true, true, false, true}, // Octatonic
+    // 0    1                   4     5     6            8                   11
+    {true, true, false, false, true, true, true, false, true, false, false, true}, // Persian
+    // 0    1                   4     5            7     8            10
+    {true, true, false, false, true, true, false, true, true, false, true, false}, // Phrygian dominant
+    // 0    1            3            5            7     8            10
+    {true, true, false, true, false, true, false, true, true, false, true, false}, // Phrygian
+    // 0           2            4            6                    9    10
+    {true, false, true, false, true, false, true, false, false, true, true, false}, // Prometheus
+    // 0    1                   4            6     7                   10
+    {true, true, false, false, true, false, true, true, false, false, true, false}, // Tritone
+    // 0           2     3                   6     7            9     10
+    {true, false, true, true, false, false, true, true, false, true, true, false}, // Ukranian
+    // 0           2            4            6            8            10
+    {true, false, true, false, true, false, true, false, true, false, true, false}}; // Whole tone
 
 // Return the offset from the root note in semitones for the given scale and
 // "scale number", taking into account the scale root
