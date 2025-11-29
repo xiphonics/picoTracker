@@ -1397,6 +1397,11 @@ void PhraseView::AnimationUpdate() {
   w_.Flush();
 }
 void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
+  if (command == FourCC::InstrumentCommandNone) {
+    // no command -> no help text
+    return;
+  }
+
   char **helpLegend = getHelpLegend(command);
   char line[32]; //-1 for 1char space start of line
   // first clear top line upto battery gauge
