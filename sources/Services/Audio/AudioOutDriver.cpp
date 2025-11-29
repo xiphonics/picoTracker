@@ -76,7 +76,7 @@ void AudioOutDriver::clipToMix() {
       short l = fp2i(*p++);
       *s1 = l;
       s1 += offset;
-      
+
       // Right
       short r = fp2i(*p++);
       *s2 = r;
@@ -84,8 +84,10 @@ void AudioOutDriver::clipToMix() {
 
       // update the level every 32 sample pairs
       if (!(i & 0b11111)) {
-        if (l > peakL) peakL = l;
-        if (r > peakR) peakR = r;
+        if (l > peakL)
+          peakL = l;
+        if (r > peakR)
+          peakR = r;
       }
     }
 
