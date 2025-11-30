@@ -45,7 +45,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   clipboard_.height_ = 0;
 
   for (int i = 0; i < 16; i++) {
-    clipboard_.note_[i] = 0xFF;
+    clipboard_.note_[i] = NO_NOTE;
     clipboard_.instr_[i] = 0;
   };
 }
@@ -129,7 +129,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   switch (col_ + xOffset) {
   case 0:
     c = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_ + yOffset);
-    limit = 119;
+    limit = HIGHEST_NOTE;
     wrap = true;
     break;
   case 1:
@@ -226,11 +226,11 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     lastParam_ = paramValue;
     break;
   }
-  if ((c) && (*c != 0xFF)) {
+  if ((c) && (*c != NO_NOTE)) {
     int offset = offsets_[col_ + xOffset][direction];
 
     // if note column apply the set scale
-    if (col_ + xOffset == 0) {
+    if (col_ + xOffset == 0 && *c <= HIGHEST_NOTE) {
       // Add/remove from offset to match selected scale
       int scale = viewData_->project_->GetScale();
       int scaleRoot = viewData_->project_->GetScaleRoot();
@@ -274,7 +274,7 @@ void PhraseView::pasteLast() {
   switch (col_) {
   case 0:
     c = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_);
-    if ((*c == 0xFF)) {
+    if ((*c == NO_NOTE)) {
       *c = lastNote_;
       c = phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
       *c = lastInstr_;
@@ -735,9 +735,21 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   };
 
+  if (viewMode_ == VM_NORMAL) {
+    // ALT + ENTER == Note Off
+    if (mask & EPBM_ENTER && mask & EPBM_ALT) {
+      if (col_ == 0) {
+        // set note off event
+        uint8_t *note = row_ + phrase_->note_ + 16 * viewData_->currentPhrase_;
+        *note = NOTE_OFF; // 127 == note off
+        isDirty_ = true;
+        return;
+      }
+    }
+  }
+
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_ENTER) {
-
       // If note or I, we request a new instr
       if (col_ < 2) {
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
@@ -1153,8 +1165,10 @@ void PhraseView::DrawView() {
     setTextProps(props, 0, j, false);
     (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_HILITE1)
                                             : SetColor(CD_NORMAL);
-    if (d == 0xFF) {
+    if (d == NO_NOTE) {
       DrawString(pos._x, pos._y, "----", props);
+    } else if (d == NOTE_OFF) {
+      DrawString(pos._x, pos._y, "off ", props);
     } else {
       note2char(d, buffer);
       DrawString(pos._x, pos._y, buffer, props);

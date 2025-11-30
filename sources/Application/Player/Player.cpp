@@ -570,7 +570,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
           if (instrRetrigger[i] >= 0) {
             int note = mixer_.GetChannelNote(i);
             I_Instrument *instr = mixer_.GetInstrument(i);
-            if ((note != 0xFF) && (instr != 0)) {
+            if ((note <= HIGHEST_NOTE) && (instr != 0)) {
               note += (instrRetrigger[i] > 80) ? instrRetrigger[i] - 256
                                                : instrRetrigger[i];
               while (note > 127) {
@@ -811,7 +811,9 @@ void Player::playCursorPosition(int channel) {
     TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
 
-    if (note != 0xFF) {
+    if (note == NOTE_OFF) {
+      mixer_.StopInstrument(channel);
+    } else if (note <= HIGHEST_NOTE) {
 
       // Stop instrument if playing
 
@@ -872,7 +874,7 @@ void Player::playCursorPosition(int channel) {
         }
       }
     }
-    if ((note != 0xFF) || (instr != 0xFF)) {
+    if ((note <= HIGHEST_NOTE) || (instr != 0xFF)) {
       I_Instrument *instrument = mixer_.GetInstrument(channel);
       if (instrument) {
         if (instrument->GetTableAutomation()) {
@@ -884,7 +886,7 @@ void Player::playCursorPosition(int channel) {
           if (tpc.instrRetrigger_ >= 0) {
             int note = mixer_.GetChannelNote(channel);
             I_Instrument *instr = mixer_.GetInstrument(channel);
-            if ((note != 0xFF) && (instr != 0)) {
+            if ((note <= HIGHEST_NOTE) && (instr != 0)) {
               // TODO: should we instead allow for transposing notes *down* with
               // values over 64?
               note += (tpc.instrRetrigger_ > 80) ? 80 : tpc.instrRetrigger_;
