@@ -40,7 +40,7 @@ Variable SIDInstrument::vol2_(FourCC::SIDInstrument2Volume, 0xF);
 SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
     : I_Instrument(&variables_), chip_(chip),
       vpw_(FourCC::SIDInstrumentPulseWidth, 0x800),
-      vwf_(FourCC::SIDInstrument1Waveform, sidWaveformText, DWF_LAST, 0x1),
+      vwf_(FourCC::SIDInstrumentWaveform, sidWaveformText, DWF_LAST, 0x1),
       vsync_(FourCC::SIDInstrumentVSync, false),
       vring_(FourCC::SIDInstrumentRingModulator, false),
       vadsr_(FourCC::SIDInstrumentADSR, 0x2282),

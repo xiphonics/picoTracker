@@ -432,7 +432,7 @@ void InstrumentView::fillSIDParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
-  v = instrument->FindVariable(FourCC::SIDInstrument1Waveform);
+  v = instrument->FindVariable(FourCC::SIDInstrumentWaveform);
 
   intVarField_.emplace_back(position, *v, "WF: %s", 0, DWF_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
