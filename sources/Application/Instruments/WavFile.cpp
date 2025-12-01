@@ -13,17 +13,82 @@
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 #include "WavHeader.h"
+#include <algorithm>
+#include <cmath>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 int WavFile::bufferChunkSize_ = -1;
 unsigned char WavFile::readBuffer_[BUFFER_SIZE];
+
+int16_t ClampToInt16(double sample) {
+  const double clamped = std::clamp(sample, -1.0, 1.0);
+  double scaled = clamped * 32767.0;
+  if (scaled > 32767.0) {
+    scaled = 32767.0;
+  } else if (scaled < -32768.0) {
+    scaled = -32768.0;
+  }
+  return static_cast<int16_t>(scaled);
+}
+
+int16_t ConvertSampleToInt16(const uint8_t *samplePtr, uint16_t audioFormat,
+                             int bytePerSample) {
+  if (audioFormat == 1) { // PCM
+    switch (bytePerSample) {
+    case 1: {
+      // expand 8-bit to 16-bit
+      // 8-bit PCM is unsigned while >8-bit is signed
+      return static_cast<int16_t>((static_cast<int16_t>(samplePtr[0]) - 128)
+                                  << 8);
+    }
+    case 2: {
+      // signed 16-bit
+      int16_t value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return value;
+    }
+    case 3: {
+      // signed 24-bit
+      int32_t value = samplePtr[0] | (samplePtr[1] << 8) |
+                      (static_cast<int32_t>(samplePtr[2]) << 16);
+      value = (value << 8) >> 8; // Sign extend
+      return static_cast<int16_t>(value >> 8);
+    }
+    case 4: {
+      // signed 32-bit
+      int32_t value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return static_cast<int16_t>(value >> 16);
+    }
+    default:
+      break;
+    }
+  } else if (audioFormat == 3) { // IEEE float
+    if (bytePerSample == 4) {
+      float value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return ClampToInt16(static_cast<double>(value));
+    }
+    if (bytePerSample == 8) {
+      double value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return ClampToInt16(value);
+    }
+  }
+
+  Trace::Error("WAVFILE: Unsupported format (%u) or byte depth (%d)",
+               audioFormat, bytePerSample);
+  return 0;
+}
 
 WavFile::WavFile(I_File *file) {
   samples_ = 0;
   size_ = 0;
   readBufferSize_ = 0;
   sampleBufferSize_ = 0;
+  audioFormat_ = 0;
   file_ = file;
 };
 
@@ -56,6 +121,7 @@ std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   wav->sampleRate_ = header->sampleRate;
   wav->channelCount_ = header->numChannels;
   wav->bytePerSample_ = header->bytesPerSample;
+  wav->audioFormat_ = header->audioFormat;
 
   Trace::Debug("File data bytes: %u", header->dataChunkSize);
 
@@ -112,9 +178,13 @@ bool WavFile::GetBuffer(long start, long size) {
   int readSize = (bufferChunkSize_ > 0) ? bufferChunkSize_
                  : count > 4096         ? 4096
                                         : count;
+  // cap the first iteration
+  readSize = std::min(readSize, BUFFER_SIZE);
 
   while (count > 0) {
     readSize = (count > readSize) ? readSize : count;
+    // cap to buffer fize
+    readSize = std::min(readSize, BUFFER_SIZE);
     readBlock(bufferStart, readSize);
     memcpy(ptr + offset, readBuffer_, readSize);
     bufferStart += readSize;
@@ -123,27 +193,19 @@ bool WavFile::GetBuffer(long start, long size) {
   }
 
   int32_t totalSamples = size * channelCount_;
+  auto *src = reinterpret_cast<uint8_t *>(samples_);
+  auto *dst = reinterpret_cast<int16_t *>(samples_);
   if (bytePerSample_ == 1) {
-    // expand 8-bit to 16-bit
-    unsigned char *src = (unsigned char *)samples_;
-    short *dst = samples_;
+    // Expanding 8-bit to 16-bit; convert backward to avoid overwrite
     for (int32_t i = totalSamples - 1; i >= 0; --i) {
-      // 8-bit PCM is unsigned while >8-bit is signed
-      dst[i] = (short)((src[i] - 128) << 8);
+      const uint8_t *samplePtr = src + i * bytePerSample_;
+      dst[i] = ConvertSampleToInt16(samplePtr, audioFormat_, bytePerSample_);
     }
-  } else if (bytePerSample_ == 3) {
-    // reduce 24-bit to 16-bit
-    unsigned char *src = (unsigned char *)samples_;
-    short *dst = samples_;
+  } else {
+    // retain or shring width for samples >= 16-bits
     for (int32_t i = 0; i < totalSamples; ++i) {
-      const uint32_t byteIndex = i * 3;
-      // 24-bit PCM sample is 24-bit packed
-      int32_t value = src[byteIndex] | (src[byteIndex + 1] << 8) |
-                      (src[byteIndex + 2] << 16);
-      // Sign extend 24-bit int to 32-bit representation
-      value = (value << 8) >> 8;
-      // convert back to 16-bit
-      dst[i] = (short)(value >> 8);
+      const uint8_t *samplePtr = src + i * bytePerSample_;
+      dst[i] = ConvertSampleToInt16(samplePtr, audioFormat_, bytePerSample_);
     }
   }
   return true;
@@ -176,10 +238,15 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
   uint32_t srcFrameSize = channelCount_ * bytePerSample_;
   // the max number of frames we can read (floor)
   uint32_t dstFrames = btr / dstFrameSize;
+  // Also cap by how many source bytes fit in caller buffer to avoid overflow
+  uint32_t srcFramesByBuffer = (srcFrameSize > 0) ? (btr / srcFrameSize) : 0;
   // the number of frames that still have to be read
   uint32_t srcFrames = readCount_ / srcFrameSize;
 
-  uint32_t framesToRead = (dstFrames < srcFrames) ? dstFrames : srcFrames;
+  uint32_t framesToRead = std::min({dstFrames, srcFrames, srcFramesByBuffer});
+  if (framesToRead == 0) {
+    return true;
+  }
   uint32_t readSize = framesToRead * srcFrameSize;
 
   uint32_t actualBytesRead = file_->Read(buff, readSize);
@@ -205,36 +272,22 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
 
   // TODO: we repeat this logic in two places
   // Now adjust the samples
+  uint8_t *src = static_cast<uint8_t *>(buff);
+  int16_t *dst = static_cast<int16_t *>(buff);
   if (bytePerSample_ == 1) {
-    // 8 bit samples are unsigned
-    uint8_t *src = static_cast<uint8_t *>(buff);
-    int16_t *dst = static_cast<int16_t *>(buff);
+    // Expanding 8-bit to 16-bit; convert backward to avoid overwrite
     for (int32_t i = static_cast<int32_t>(totalSamples) - 1; i >= 0; --i) {
-      dst[i] = static_cast<int16_t>((src[i] - 128) << 8);
+      const uint8_t *samplePtr = src + i * bytePerSample_;
+      dst[i] = ConvertSampleToInt16(samplePtr, audioFormat_, bytePerSample_);
     }
-    *bytesRead = framesRead * dstFrameSize;
-  } else if (bytePerSample_ == 2) {
-    // nothing to do with 16 bit samples
-    *bytesRead = actualBytesRead;
-  } else if (bytePerSample_ == 3) {
-    // 24 bit samples are 3 byte packed and we have to reconstruct the number
-    uint8_t *src = static_cast<uint8_t *>(buff);
-    int16_t *dst = static_cast<int16_t *>(buff);
-    for (uint32_t i = 0; i < totalSamples; ++i) {
-      uint32_t byteIndex = i * 3;
-      int32_t value = src[byteIndex] | (src[byteIndex + 1] << 8) |
-                      (src[byteIndex + 2] << 16);
-      // sign extend
-      value = (value << 8) >> 8;
-      // save 16-bit sample
-      dst[i] = static_cast<int16_t>(value >> 8);
-    }
-    *bytesRead = framesRead * dstFrameSize;
   } else {
-    // This should never happen, is it necessary? should we exit earlier?
-    Trace::Error("WAVFILE: Unsupported bytes per sample %d", bytePerSample_);
-    return false;
+    // retain or shrink width
+    for (uint32_t i = 0; i < totalSamples; ++i) {
+      const uint8_t *samplePtr = src + i * bytePerSample_;
+      dst[i] = ConvertSampleToInt16(samplePtr, audioFormat_, bytePerSample_);
+    }
   }
+  *bytesRead = framesRead * dstFrameSize;
 
   readCount_ -= actualBytesRead;
   return true;

@@ -155,10 +155,13 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return std::unexpected(INVALID_HEADER);
   }
 
-  if (info.audioFormat != 1) {
-    Trace::Error("WavHeaderWriter: Unsupported compression format %u",
+  const bool isPcm = info.audioFormat == 1;
+  const bool isFloat = info.audioFormat == 3;
+
+  if (!isPcm && !isFloat) {
+    Trace::Error("WavHeaderWriter: Unsupported audio format %u",
                  info.audioFormat);
-    return std::unexpected(UNSUPPORTED_COMPRESSION);
+    return std::unexpected(UNSUPPORTED_AUDIO_FORMAT);
   }
 
   if (file->Read(&info.numChannels, 2) != 2) {
@@ -192,11 +195,19 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return std::unexpected(INVALID_HEADER);
   }
 
-  if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16) &&
-      (info.bitsPerSample != 24)) {
-    Trace::Error("WavHeaderWriter: Unsupported bit depth %u",
-                 info.bitsPerSample);
-    return std::unexpected(UNSUPPORTED_BITDEPTH);
+  if (isPcm) {
+    if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16) &&
+        (info.bitsPerSample != 24) && (info.bitsPerSample != 32)) {
+      Trace::Error("WavHeaderWriter: Unsupported PCM bit depth %u",
+                   info.bitsPerSample);
+      return std::unexpected(UNSUPPORTED_BITDEPTH);
+    }
+  } else if (isFloat) {
+    if ((info.bitsPerSample != 32) && (info.bitsPerSample != 64)) {
+      Trace::Error("WavHeaderWriter: Unsupported IEEE float bit depth %u",
+                   info.bitsPerSample);
+      return std::unexpected(UNSUPPORTED_BITDEPTH);
+    }
   }
 
   info.bytesPerSample = info.bitsPerSample / 8;
