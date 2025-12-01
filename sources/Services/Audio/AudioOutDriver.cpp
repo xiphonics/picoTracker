@@ -83,7 +83,8 @@ void AudioOutDriver::clipToMix() {
       s2 += offset;
 
       // update the level every 32 sample pairs
-      if (!(i & 0b11111)) {
+      // (!(i & 31)) =^= (i % 32 == 0) and is used for performance
+      if (!(i & 31)) {
         if (l > peakL)
           peakL = l;
         if (r > peakR)

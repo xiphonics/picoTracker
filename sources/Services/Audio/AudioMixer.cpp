@@ -115,8 +115,9 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
         fixed l = fp_mul(*c, volume_);
         *c++ = l;
 
-        // update the level every 32 sample pairs
-        if (!(i & 0b11111)) {
+        // update the level every 32 sample pairs 
+        // (!(i & 31)) =^= (i % 32 == 0) and is used for performance
+        if (!(i & 31)) {
           if (r > peakR)
             peakR = r;
           if (l > peakL)
