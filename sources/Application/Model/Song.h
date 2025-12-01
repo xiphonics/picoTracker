@@ -36,7 +36,7 @@
 #define MAX_MACROINSTRUMENT_COUNT 0x01
 
 #define HIGHEST_NOTE 119
-#define NOTE_OFF 120
+#define NOTE_OFF 254
 #define NO_NOTE 255
 #define MAX_INSTRUMENT_COUNT                                                   \
   (MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT +                     \
