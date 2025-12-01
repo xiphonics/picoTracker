@@ -92,12 +92,6 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
   // TODO (democloid): This is wildly inefficient, doing this loop takes 4 - 5
   // times the time it takes a mix loop above. Some tests show that at least
   // double performance is not hard to achieve
-  // nILS: optimizations done:
-  // - process 2 samples at a time, this allows skipping the
-  //   left/right channel check _samplecount_ times
-  // - reduce peak sampling rate to 1/32 (adds a comparison each sample, but
-  // hugely reduces the comparisons and branching that otherwise occurs)
-  //   --> for loop for the unity gain path steps i + 32
   if (gotData) {
     fixed *c = buffer;
 
