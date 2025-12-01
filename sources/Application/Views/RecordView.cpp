@@ -76,7 +76,6 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       SetChanged();
       NotifyObservers(&ve);
       StopMonitoring();
-      config->Save();
       return;
     }
   }
@@ -90,7 +89,6 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       viewData_->sampleEditorFilename = filename;
 
       // Automatically switch to SampleEditor view after recording stops
-      config->Save();
       ViewType vt = VT_SAMPLE_EDITOR;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
@@ -279,4 +277,13 @@ void RecordView::updateRecordingSource() {
   auto config = Config::GetInstance();
   auto source = config->FindVariable(FourCC::VarRecordSource)->GetInt();
   SetInputSource((RecordSource)source);
+}
+
+void RecordView::OnFocusLost() {
+  Config *config = Config::GetInstance();
+  if (!config->Save()) {
+    Trace::Error("RECORDVIEW", "Failed to save record setting on focus lost");
+    return;
+  }
+  Trace::Log("RECORDVIEW", "Saved record setting on focus lost");
 }
