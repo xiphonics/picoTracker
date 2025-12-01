@@ -35,7 +35,7 @@
 #define MAX_OPALINSTRUMENT_COUNT 0x03
 #define MAX_MACROINSTRUMENT_COUNT 0x01
 
-#define HIGHEST_NOTE 119
+#define HIGHEST_NOTE 127
 #define NOTE_OFF 254
 #define NO_NOTE 255
 #define MAX_INSTRUMENT_COUNT                                                   \
