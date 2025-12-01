@@ -130,9 +130,7 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
     char remoteUIBuffer[8];
     auto bufferIndex =
         remoteUISetColorCommand(c._r, c._g, c._b, remoteUIBuffer);
-    sendToUSBCDC(remoteUIBuffer, bufferIndex);
-    sendToUSBCDCBuffered(remoteUIBuffer,
-                         bufferIndex); // Use the buffered function
+    sendToUSBCDCBuffered(remoteUIBuffer, bufferIndex);
   }
 };
 
