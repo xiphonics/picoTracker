@@ -30,8 +30,6 @@
 
 #include "advRemoteUI.h"
 
-#define USB_PROCESSING_INTERVAL_MS 10
-
 bool advEventManager::finished_ = false;
 bool advEventManager::redrawing_ = false;
 uint16_t advEventManager::buttonMask_ = 0;
@@ -241,8 +239,7 @@ void ProcessEvent(void *) {
 
 void USBDevice(void *) {
   for (;;) {
-    tud_task(); // Handle USB device events
-    vTaskDelay(pdMS_TO_TICKS(USB_PROCESSING_INTERVAL_MS));
+    tud_task(); // Blocks on TinyUSB event queue until there is work to do
   }
 }
 
