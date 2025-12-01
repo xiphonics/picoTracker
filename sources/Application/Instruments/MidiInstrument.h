@@ -47,6 +47,9 @@ public:
   virtual bool Render(int channel, fixed *buffer, int size, bool updateTick);
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
 
+  // Handle channel mute status changes
+  void HandleMuteChange(int channel, bool muted);
+
   virtual bool IsInitialized();
 
   virtual bool IsEmpty() { return false; };
