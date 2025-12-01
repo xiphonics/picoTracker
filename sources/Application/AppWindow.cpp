@@ -41,6 +41,7 @@
 #include "Player/Player.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 #include "Views/UIController.h"
 #include "platform.h"
@@ -93,8 +94,9 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
                             int paletteIndex) {
 
   Config *config = Config::GetInstance();
-  const int rgbValue = config->FindVariable(colorCode)->GetInt();
-  if (rgbValue) {
+  auto rgbVar = config->FindVariable(colorCode);
+  if (rgbVar) {
+    const int32_t rgbValue = rgbVar->GetInt();
     unsigned short r, g, b;
     r = (rgbValue >> 16) & 0xFF;
     g = (rgbValue >> 8) & 0xFF;
@@ -351,7 +353,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const char *projectName) {
+AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   _closeProject = false;
 
@@ -369,7 +371,10 @@ void AppWindow::LoadProject(const char *projectName) {
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
-    Trace::Error("Failed to load project!!");
+    Trace::Error("Failed to load project '%s'", projectName);
+    pool->Reset();
+    TableHolder::GetInstance()->Reset();
+    return LoadProjectResult::LOAD_FAILED;
   };
 
   // Project
@@ -495,6 +500,7 @@ void AppWindow::LoadProject(const char *projectName) {
     _currentView->SetDirty(true);
     SetDirty();
   }
+  return LoadProjectResult::LOAD_OK;
 }
 
 void AppWindow::CloseProject() {
@@ -649,10 +655,36 @@ void AppWindow::onUpdate(bool redraw) {
 void AppWindow::AnimationUpdate() {
   // Increment the animation frame counter
   animationFrameCounter_++;
+  char failedProjectName_[MAX_PROJECT_NAME_LENGTH] = {0};
+
+  if (awaitingProjectLoadAck_) {
+    if (_mask != 0) {
+      FileSystem::GetInstance()->DeleteFile("/.current");
+      npf_snprintf(projectName_, sizeof(projectName_), "%s",
+                   UNNAMED_PROJECT_NAME);
+      loadProject_ = true;
+      awaitingProjectLoadAck_ = false;
+      Trace::Error("Falling back to untitled after failed load of '%s'",
+                   failedProjectName_);
+    }
+    return;
+  }
 
   if (loadProject_) {
-    LoadProject(projectName_);
+    LoadProjectResult loadResult = LoadProject(projectName_);
     loadProject_ = false;
+    if (loadResult == LoadProjectResult::LOAD_FAILED) {
+      npf_snprintf(failedProjectName_, sizeof(failedProjectName_), "%s",
+                   projectName_);
+      Status::SetMultiLine(
+          "Invalid Project:\n%s\n  \nPress any key\nto continue...",
+          failedProjectName_);
+      Trace::Error(
+          "Failed to load project '%s'. Waiting for key press to load untitled",
+          failedProjectName_);
+      awaitingProjectLoadAck_ = true;
+      return;
+    }
   }
 
   // run at 1Hz

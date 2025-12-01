@@ -169,10 +169,17 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
                          progress);
   };
 
-  // now load the sample into memory/flash
-  // make sure to use orig name because we are loading the og file, not the
-  // potentially truncated filename now in the projectes sampels subdir
+  // now load the sample into memory/flash from the original source path
   bool status = loadSample(name);
+  if (status) {
+    // Replace stored name with truncated filename so matches the potentially
+    // truncated filename we actually stored into the project pool subdir
+    const int loadedIndex = count_ - 1;
+    if (names_[loadedIndex] != nullptr) {
+      projSampleFilename.copy(names_[loadedIndex], projSampleFilename.size());
+      names_[loadedIndex][projSampleFilename.size()] = '\0';
+    }
+  }
 
   fin->Close();
   fout->Close();
