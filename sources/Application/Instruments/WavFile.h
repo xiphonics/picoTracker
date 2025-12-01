@@ -50,13 +50,13 @@ private:
   int readBufferSize_; // Read buffer size
   short *samples_;     // sample buffer size (16 bits)
   int sampleBufferSize_;
-  int size_;           // number of samples
-  int sampleRate_;     // sample rate
-  int channelCount_;   // mono / stereo
-  int bytePerSample_;  // original file depth (8/16/24/32bit or float)
+  int size_;             // number of samples
+  int sampleRate_;       // sample rate
+  int channelCount_;     // mono / stereo
+  int bytePerSample_;    // original file depth (8/16/24/32bit or float)
   uint16_t audioFormat_; // PCM or IEEE float
-  int dataPosition_;   // offset in file to get to data
-  uint32_t readCount_; // remaining bytes to be read from file
+  int dataPosition_;     // offset in file to get to data
+  uint32_t readCount_;   // remaining bytes to be read from file
 
   static int bufferChunkSize_;
   static bool initChunkSize_;
