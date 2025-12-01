@@ -494,12 +494,7 @@ bool Config::SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName) {
   Variable *fontVar = FindVariable(FourCC::VarUIFont);
   if (fontVar) {
     printer->OpenElement("Font");
-
-    // Format font value in hex format with # prefix
-    char hexValue[16];
-    npf_snprintf(hexValue, sizeof(hexValue), "#%X", fontVar->GetInt());
-
-    printer->PushAttribute("value", hexValue);
+    printer->PushAttribute("value", std::to_string(fontVar->GetInt()).c_str());
     printer->CloseElement(); // Font
   }
 
