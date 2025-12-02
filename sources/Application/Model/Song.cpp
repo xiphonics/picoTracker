@@ -89,7 +89,7 @@ void Song::RestoreContent(PersistencyDocument *doc) {
   data = chain_.data_;
 
   for (int i = 0; i < CHAIN_COUNT; i++) {
-    for (int j = 0; j < 16; j++) {
+    for (int j = 0; j < PHRASES_PER_CHAIN; j++) {
       if (*data != 0xFF) {
         chain_.SetUsed(i);
         phrase_.SetUsed(*data);
@@ -109,7 +109,7 @@ void Song::RestoreContent(PersistencyDocument *doc) {
   TableHolder *th = TableHolder::GetInstance();
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
-    for (int j = 0; j < 16; j++) {
+    for (int j = 0; j < STEPS_PER_PHRASE; j++) {
       if (*data != 0xFF) {
         phrase_.SetUsed(i);
       }
