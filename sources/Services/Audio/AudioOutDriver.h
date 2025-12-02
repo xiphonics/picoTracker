@@ -48,10 +48,11 @@ protected:
   void prepareMixBuffers();
   void mixToPrimary();
   void clipToMix();
+  void updateAudioActive();
 
 private:
   AudioDriver *driver_;
-  bool hasSound_;
+  bool hasSound_ = false;
   stereosample lastPeakVolume_ = 0;
 
   __attribute__((section(".DTCMRAM"))) __attribute__((
