@@ -26,9 +26,10 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
   void getSelectedProjectName(char *name);
-
-protected:
+  void getHighlightedProjectName(char *name);
   void setCurrentFolder();
+  
+protected:
   void warpToNextProject(bool goUp);
 
 private:
@@ -36,5 +37,8 @@ private:
   size_t currentIndex_ = 0;
   char selection_[MAX_PROJECT_NAME_LENGTH];
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
+
+  void DeleteProject();
+
 };
 #endif

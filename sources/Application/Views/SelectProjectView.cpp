@@ -9,10 +9,26 @@
 
 #include "SelectProjectView.h"
 #include "Application/AppWindow.h"
+#include "Application/Persistency/PersistencyService.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
+#include <nanoprintf.h>
 
 #define LIST_PAGE_SIZE SCREEN_HEIGHT - 2
 #define LIST_WIDTH 26
 #define INVALID_PROJECT_NAME "INVALID NAME"
+
+static void DeleteProjectCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    // delete project
+    PersistencyService *ps = PersistencyService::GetInstance();
+    char buffer[MAX_PROJECT_NAME_LENGTH + 1];
+    ((SelectProjectView &)v).getHighlightedProjectName(buffer);
+    ps->DeleteProject(buffer);
+    
+    // reload list
+    ((SelectProjectView &)v).setCurrentFolder();
+  }
+}
 
 SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData) {}
@@ -32,24 +48,24 @@ void SelectProjectView::DrawView() {
   const char *title = "Load Project";
   SetColor(CD_INFO);
   DrawString(pos._x + 1, pos._y, title, props);
-
+  
   SetColor(CD_NORMAL);
-
+  
   // Draw projects
   int x = 1;
   int y = pos._y + 2;
-
-  char buffer[MAX_PROJECT_NAME_LENGTH + 1];
+  
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
-    if (i == currentIndex_) {
-      SetColor(CD_HILITE2);
-      props.invert_ = true;
-    } else {
-      SetColor(CD_NORMAL);
-      props.invert_ = false;
-    }
-
+    i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+      if (i == currentIndex_) {
+        props.invert_ = true;
+        SetColor(CD_HILITE2);
+      } else {
+        SetColor(CD_NORMAL);
+        props.invert_ = false;
+      }
+      
+    char buffer[MAX_PROJECT_NAME_LENGTH + 1];
     memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
 
@@ -73,6 +89,16 @@ void SelectProjectView::OnPlayerUpdate(PlayerEventType,
 
 void SelectProjectView::OnFocus() { setCurrentFolder(); };
 
+void SelectProjectView::DeleteProject() {
+  char buffer[MAX_PROJECT_NAME_LENGTH + 20] = "Delete project?";
+  char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(projectName);
+  npf_snprintf(buffer, sizeof(buffer), "Delete project %s?", projectName);
+  
+  MessageBox *mb = new MessageBox(*this, buffer, MBBF_YES | MBBF_NO);
+  DoModal(mb, DeleteProjectCallback);
+}
+
 void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
@@ -82,6 +108,8 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       warpToNextProject(true);
     if (mask & EPBM_DOWN)
       warpToNextProject(false);
+    if (mask & EPBM_ENTER)
+      DeleteProject();
   } else {
     // A modifier
     if (mask & EPBM_ENTER) {
@@ -184,4 +212,10 @@ void SelectProjectView::setCurrentFolder() {
 
 void SelectProjectView::getSelectedProjectName(char *name) {
   strcpy(name, selection_);
+}
+
+void SelectProjectView::getHighlightedProjectName(char *name) {
+  auto fs = FileSystem::GetInstance();
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  fs->getFileName(fileIndex, name, MAX_PROJECT_NAME_LENGTH + 1);
 }
