@@ -67,6 +67,8 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
+  auto config = Config::GetInstance();
+
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       ViewType vt = sourceViewType_;
@@ -190,10 +192,6 @@ void RecordView::Update(Observable &o, I_ObservableData *data) {
     break;
 #endif
   }
-
-  // Handle field updates
-  isDirty_ = true;
-  config->Save();
 }
 
 void RecordView::AnimationUpdate() {
@@ -279,4 +277,13 @@ void RecordView::updateRecordingSource() {
   auto config = Config::GetInstance();
   auto source = config->FindVariable(FourCC::VarRecordSource)->GetInt();
   SetInputSource((RecordSource)source);
+}
+
+void RecordView::OnFocusLost() {
+  Config *config = Config::GetInstance();
+  if (!config->Save()) {
+    Trace::Error("RECORDVIEW", "Failed to save record setting on focus lost");
+    return;
+  }
+  Trace::Log("RECORDVIEW", "Saved record setting on focus lost");
 }

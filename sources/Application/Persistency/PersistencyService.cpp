@@ -256,6 +256,10 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
     }
     elem = doc.NextSibling();
   }
+  if (doc.HadError()) {
+    Trace::Error("XML errors detected while loading project '%s'", projectName);
+    return PERSIST_LOAD_FAILED;
+  }
   return PERSIST_LOADED;
 };
 

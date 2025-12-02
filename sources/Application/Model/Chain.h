@@ -14,7 +14,7 @@
 
 #define CHAIN_COUNT 0xFF
 #define NO_MORE_CHAIN 0x100
-#define PHRASES_PER_CHAIN 0xF
+#define PHRASES_PER_CHAIN 0x10
 
 class Chain {
 public:
@@ -25,8 +25,8 @@ public:
   void SetUsed(unsigned char c);
   void ClearAllocation();
 
-  unsigned char data_[CHAIN_COUNT * 16];
-  unsigned char transpose_[CHAIN_COUNT * 16];
+  unsigned char data_[CHAIN_COUNT * PHRASES_PER_CHAIN];
+  unsigned char transpose_[CHAIN_COUNT * PHRASES_PER_CHAIN];
 
 private:
   std::bitset<CHAIN_COUNT> isUsed_;
