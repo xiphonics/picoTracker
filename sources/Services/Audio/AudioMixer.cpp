@@ -115,7 +115,7 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
         fixed l = fp_mul(*c, volume_);
         *c++ = l;
 
-        // update the level every 32 sample pairs 
+        // update the level every 32 sample pairs
         // (!(i & 31)) =^= (i % 32 == 0) and is used for performance
         if (!(i & 31)) {
           if (r > peakR)
@@ -127,9 +127,9 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
     }
   }
 
-  // Always update avgMixerLevel_ regardless of whether we got data
+  // Always update peakMixerLevel_ regardless of whether we got data
   // This ensures VU meters update properly in all scenarios
-  avgMixerLevel_ = fp2i(peakL) << 16 | fp2i(peakR);
+  peakMixerLevel_ = fp2i(peakL) << 16 | fp2i(peakR);
 
   if (enableRendering_ && writer_) {
     if (!gotData) {
