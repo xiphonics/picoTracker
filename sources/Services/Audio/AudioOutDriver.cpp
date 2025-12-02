@@ -107,8 +107,7 @@ void AudioOutDriver::clipToMix() {
 
 void AudioOutDriver::updateAudioActive() {
   Player *player = Player::GetInstance();
-  bool shouldBeActive =
-      player && (player->IsRunning() || player->IsPlaying());
+  bool shouldBeActive = player && (player->IsRunning() || player->IsPlaying());
 
   driver_->OnAudioActive(shouldBeActive);
 }
