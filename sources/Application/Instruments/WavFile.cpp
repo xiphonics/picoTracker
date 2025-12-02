@@ -19,22 +19,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-int WavFile::bufferChunkSize_ = -1;
 unsigned char WavFile::readBuffer_[BUFFER_SIZE];
+int16_t WavFile::convertedBuffer_[BUFFER_SIZE / 2];
 
 int16_t ClampToInt16(double sample) {
-  const double clamped = std::clamp(sample, -1.0, 1.0);
-  double scaled = clamped * 32767.0;
-  if (scaled > 32767.0) {
-    scaled = 32767.0;
-  } else if (scaled < -32768.0) {
-    scaled = -32768.0;
-  }
-  return static_cast<int16_t>(scaled);
+  float s = static_cast<float>(sample);
+  if (s <= -1.0f)
+    return -32768;
+  if (s >= +1.0f)
+    return +32767;
+  return static_cast<int16_t>(s * 32768.0f);
 }
 
 int16_t ConvertSampleToInt16(const uint8_t *samplePtr, uint16_t audioFormat,
-                             int bytePerSample) {
+                             int32_t bytePerSample) {
   if (audioFormat == 1) { // PCM
     switch (bytePerSample) {
     case 1: {
@@ -162,51 +160,44 @@ long WavFile::readBlock(long start, long size) {
 };
 
 bool WavFile::GetBuffer(long start, long size) {
-  samples_ = (short *)readBuffer_;
+  samples_ = convertedBuffer_;
 
-  // compute the file buffer size we need to read
-
-  int bufferSize = size * channelCount_ * bytePerSample_;
-  int bufferStart = dataPosition_ + start * channelCount_ * bytePerSample_;
-
-  // Read the buffer but in small chunk to let the system breathe
-  // if the files are big
-
-  int count = bufferSize;
-  int offset = 0;
-  char *ptr = (char *)samples_;
-  int readSize = (bufferChunkSize_ > 0) ? bufferChunkSize_
-                 : count > 4096         ? 4096
-                                        : count;
-  // cap the first iteration
-  readSize = std::min(readSize, BUFFER_SIZE);
-
-  while (count > 0) {
-    readSize = (count > readSize) ? readSize : count;
-    // cap to buffer fize
-    readSize = std::min(readSize, BUFFER_SIZE);
-    readBlock(bufferStart, readSize);
-    memcpy(ptr + offset, readBuffer_, readSize);
-    bufferStart += readSize;
-    count -= readSize;
-    offset += readSize;
+  const int32_t totalSamples = size * channelCount_;
+  const int32_t maxSamples =
+      static_cast<int32_t>(sizeof(convertedBuffer_) / sizeof(int16_t));
+  if (totalSamples > maxSamples) {
+    Trace::Error("WAVFILE: Requested buffer too large (%ld frames)", size);
+    return false;
   }
 
-  int32_t totalSamples = size * channelCount_;
-  auto *src = reinterpret_cast<uint8_t *>(samples_);
-  auto *dst = reinterpret_cast<int16_t *>(samples_);
-  if (bytePerSample_ == 1) {
-    // Expanding 8-bit to 16-bit; convert backward to avoid overwrite
-    for (int32_t i = totalSamples - 1; i >= 0; --i) {
-      const uint8_t *samplePtr = src + i * bytePerSample_;
-      dst[i] = ConvertSampleToInt16(samplePtr, audioFormat_, bytePerSample_);
+  const int32_t bytesPerFrame = channelCount_ * bytePerSample_;
+  const int32_t maxFramesPerRead =
+      (bytesPerFrame > 0) ? (BUFFER_SIZE / bytesPerFrame) : 0;
+  if (maxFramesPerRead == 0) {
+    Trace::Error("WAVFILE: Invalid frame sizing");
+    return false;
+  }
+
+  int32_t bufferStart = dataPosition_ + start * bytesPerFrame;
+  int32_t framesRemaining = size;
+  int32_t dstOffset = 0;
+
+  while (framesRemaining > 0) {
+    const int32_t framesThisRead =
+        std::min<int32_t>(framesRemaining, maxFramesPerRead);
+    const int32_t readSize = framesThisRead * bytesPerFrame;
+
+    readBlock(bufferStart, readSize);
+
+    for (int32_t i = 0; i < framesThisRead * channelCount_; ++i) {
+      const uint8_t *samplePtr = readBuffer_ + i * bytePerSample_;
+      convertedBuffer_[dstOffset + i] =
+          ConvertSampleToInt16(samplePtr, audioFormat_, bytePerSample_);
     }
-  } else {
-    // retain or shring width for samples >= 16-bits
-    for (int32_t i = 0; i < totalSamples; ++i) {
-      const uint8_t *samplePtr = src + i * bytePerSample_;
-      dst[i] = ConvertSampleToInt16(samplePtr, audioFormat_, bytePerSample_);
-    }
+
+    bufferStart += readSize;
+    framesRemaining -= framesThisRead;
+    dstOffset += framesThisRead * channelCount_;
   }
   return true;
 };

@@ -46,20 +46,19 @@ protected:
   long readBlock(long position, long count);
 
 private:
-  I_File *file_;       // File
-  int readBufferSize_; // Read buffer size
-  short *samples_;     // sample buffer size (16 bits)
-  int sampleBufferSize_;
-  int size_;             // number of samples
-  int sampleRate_;       // sample rate
-  int channelCount_;     // mono / stereo
-  int bytePerSample_;    // original file depth (8/16/24/32bit or float)
-  uint16_t audioFormat_; // PCM or IEEE float
-  int dataPosition_;     // offset in file to get to data
-  uint32_t readCount_;   // remaining bytes to be read from file
+  I_File *file_;           // File
+  int32_t readBufferSize_; // Read buffer size
+  int16_t *samples_;       // sample buffer size (16 bits)
+  int32_t sampleBufferSize_;
+  int32_t size_;          // number of samples
+  int32_t sampleRate_;    // sample rate
+  int32_t channelCount_;  // mono / stereo
+  int32_t bytePerSample_; // original file depth (8/16/24/32bit or float)
+  uint16_t audioFormat_;  // PCM or IEEE float
+  int32_t dataPosition_;  // offset in file to get to data
+  uint32_t readCount_;    // remaining bytes to be read from file
 
-  static int bufferChunkSize_;
-  static bool initChunkSize_;
   static unsigned char readBuffer_[BUFFER_SIZE];
+  static int16_t convertedBuffer_[BUFFER_SIZE / 2];
 };
 #endif
