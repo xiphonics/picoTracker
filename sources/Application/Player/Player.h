@@ -143,6 +143,8 @@ protected:
 
   void triggerLiveChains();
 
+  void SetAudioActive(bool active);
+
   bool isPlayable(int row, int col, int chainPos = 0);
   bool findPlayable(uchar *row, int col, uchar chainPos = 0);
 
