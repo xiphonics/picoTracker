@@ -135,6 +135,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   // Let's get started !
 
   SyncMaster::GetInstance()->Start();
+  SetAudioActive(true);
 
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;
@@ -204,8 +205,9 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 }
 
 void Player::Stop() {
-
   mixer_.Lock();
+
+  bool keepAudioActive = mixer_.IsPlaying();
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     mixer_.StopChannel(i);
@@ -218,6 +220,9 @@ void Player::Stop() {
   SetChanged();
   PlayerEvent pe(PET_STOP);
   NotifyObservers(&pe);
+  if (!keepAudioActive) {
+    SetAudioActive(false);
+  }
 
   mixer_.Unlock();
 }
