@@ -10,9 +10,15 @@
 #include "SubService.h"
 #include "ServiceRegistry.h"
 
-SubService::SubService(int fourCC) {
-  fourCC_ = fourCC;
-  ServiceRegistry::GetInstance()->Register(this);
+SubService::SubService(int fourCC, bool registerWithService)
+    : fourCC_(fourCC), registerWithService_(registerWithService) {
+  if (registerWithService_) {
+    ServiceRegistry::GetInstance()->Register(this);
+  }
 };
 
-SubService::~SubService() { ServiceRegistry::GetInstance()->Unregister(this); };
+SubService::~SubService() {
+  if (registerWithService_) {
+    ServiceRegistry::GetInstance()->Unregister(this);
+  }
+};

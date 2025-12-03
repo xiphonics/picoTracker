@@ -98,6 +98,7 @@ bool advAudioDriver::InitDriver() {
   // Configure codec
   tlv320_init();
   tlv320_set_volume(initialVolume);
+  tlv320_set_audio_output_active(false);
   // Takes some time between configuring HP detect and actually detecting
   vTaskDelay(pdMS_TO_TICKS(250));
 
@@ -127,6 +128,10 @@ void advAudioDriver::SetVolume(int v) {
 
 int advAudioDriver::GetVolume() { return tlv320_get_volume(); };
 
+void advAudioDriver::OnAudioActive(bool active) {
+  tlv320_set_audio_output_active(active);
+}
+
 void advAudioDriver::CloseDriver(){
     // Not really used, maybe for sleep?
 };
@@ -153,6 +158,7 @@ bool advAudioDriver::StartDriver() {
 void advAudioDriver::StopDriver() {
   adv_sound_pause(1);
   isPlaying_ = false;
+  tlv320_set_audio_output_active(false);
 };
 
 void advAudioDriver::OnChunkDone() {

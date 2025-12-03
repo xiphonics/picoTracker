@@ -96,8 +96,10 @@ bool PersistencyDocument::FirstChild() {
 }
 
 bool PersistencyDocument::NextSibling() {
-  // Only to be called after YXML_ELEMEND
-  if ((r_ != YXML_OK) && (r_ != YXML_ELEMEND)) {
+  // Only to be called after finishing an element end (YXML_ELEMEND), so need to
+  // accept both plus the idle OK state. Also accept coming straight from an
+  // element start  (YXML_ELEMSTART).
+  if ((r_ != YXML_OK) && (r_ != YXML_ELEMEND) && (r_ != YXML_ELEMSTART)) {
     Trace::Error(
         "XML NextSibling called with invalid state: %d for element '%s'", r_,
         state_->elem ? state_->elem : "<unknown>");
