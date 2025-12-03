@@ -8,8 +8,6 @@
  */
 
 #include "AudioOutDriver.h"
-#include "Application/Player/SyncMaster.h" // Should be installable
-#include "System/Console/Trace.h"
 #include "System/System/System.h"
 
 fixed AudioOutDriver::primarySoundBuffer_[MIX_BUFFER_SIZE];
@@ -35,7 +33,14 @@ bool AudioOutDriver::Start() {
   return driver_->Start();
 }
 
-void AudioOutDriver::Stop() { driver_->Stop(); }
+void AudioOutDriver::Stop() {
+  SetAudioActive(false);
+  driver_->Stop();
+}
+
+void AudioOutDriver::SetAudioActive(bool active) {
+  driver_->OnAudioActive(active);
+}
 
 stereosample AudioOutDriver::GetLastPeakLevels() { return lastPeakVolume_; };
 
@@ -68,31 +73,35 @@ void AudioOutDriver::clipToMix() {
 
     fixed *p = primarySoundBuffer_;
 
+    fixed v;
+    fixed f_32767 = i2fp(32767);
+    fixed f_m32768 = i2fp(-32768);
+
     short peakL = 0;
     short peakR = 0;
 
     for (int i = 0; i < sampleCount_; i++) {
       // Left
-      short l = fp2i(*p++);
-      *s1 = l;
+      v = *p++;
+      int iVal = fp2i(v);
+      *s1 = short(iVal);
       s1 += offset;
+      if (iVal >= peakL) {
+        peakL = iVal;
+      }
 
       // Right
-      short r = fp2i(*p++);
-      *s2 = r;
+      v = *p++;
+      iVal = fp2i(v);
+      *s2 = short(iVal);
       s2 += offset;
-
-      // update the level every 32 sample pairs
-      // (!(i & 31)) =^= (i % 32 == 0) and is used for performance
-      if (!(i & 31)) {
-        if (l > peakL)
-          peakL = l;
-        if (r > peakR)
-          peakR = r;
+      if (iVal >= peakR) {
+        peakR = iVal;
       }
-    }
-
-    lastPeakVolume_ = peakL << 16 | peakR;
+    };
+    lastPeakVolume_ = peakL << 16;
+    lastPeakVolume_ += peakR;
+    peakL = peakR = 0;
   }
 };
 
