@@ -8,9 +8,6 @@
  */
 
 #include "AudioOutDriver.h"
-#include "Application/Player/Player.h"
-#include "Application/Player/SyncMaster.h" // Should be installable
-#include "System/Console/Trace.h"
 #include "System/System/System.h"
 
 fixed AudioOutDriver::primarySoundBuffer_[MIX_BUFFER_SIZE];
@@ -37,8 +34,12 @@ bool AudioOutDriver::Start() {
 }
 
 void AudioOutDriver::Stop() {
-  driver_->OnAudioActive(false);
+  SetAudioActive(false);
   driver_->Stop();
+}
+
+void AudioOutDriver::SetAudioActive(bool active) {
+  driver_->OnAudioActive(active);
 }
 
 stereosample AudioOutDriver::GetLastPeakLevels() { return lastPeakVolume_; };
@@ -47,7 +48,6 @@ void AudioOutDriver::Trigger() {
   prepareMixBuffers();
   hasSound_ = AudioMixer::Render(primarySoundBuffer_, sampleCount_) > 0;
   clipToMix();
-  updateAudioActive();
   driver_->AddBuffer(mixBuffer_, sampleCount_);
 }
 
@@ -104,13 +104,6 @@ void AudioOutDriver::clipToMix() {
     peakL = peakR = 0;
   }
 };
-
-void AudioOutDriver::updateAudioActive() {
-  Player *player = Player::GetInstance();
-  bool shouldBeActive = player && (player->IsRunning() || player->IsPlaying());
-
-  driver_->OnAudioActive(shouldBeActive);
-}
 
 int AudioOutDriver::GetPlayedBufferPercentage() {
   return driver_->GetPlayedBufferPercentage();
