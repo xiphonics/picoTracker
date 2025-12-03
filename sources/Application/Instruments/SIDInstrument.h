@@ -115,6 +115,7 @@ private:
   //  static bool rendered1_;
 
   Variable vpw_;
+  Variable vwf_;
   Variable vsync_;
   Variable vring_;
   Variable vadsr_;
@@ -124,9 +125,6 @@ private:
   Variable osc_; // 0, 1 or 2
 
   // all these settings are shared by all oscillators on a single SID Chip
-  static Variable vwf1_;
-  static Variable vwf2_;
-  Variable *vwf_;
   static Variable fltcut1_;
   static Variable fltcut2_;
   Variable *fltcut_;

@@ -51,6 +51,7 @@ public:
 
   virtual bool Interlaced() = 0;
   virtual int GetPlayedBufferPercentage() = 0;
+  virtual void OnAudioActive(bool active) {}
 
   virtual double GetStreamTime() = 0; // in secs
 
