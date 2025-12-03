@@ -10,6 +10,7 @@
 #include "ChainView.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "ScreenView.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
@@ -793,10 +794,10 @@ void ChainView::AnimationUpdate() {
             pos._y = anchor._y + viewData_->chainPlayPos_[i];
             if (!player->IsChannelMuted(i)) {
               SetColor(CD_ACCENT);
-              DrawString(pos._x, pos._y, ">", props);
+              DrawString(pos._x, pos._y, char_indicator_position_s, props);
             } else {
               SetColor(CD_ACCENTALT);
-              DrawString(pos._x, pos._y, "-", props);
+              DrawString(pos._x, pos._y, char_indicator_positionMuted_s, props);
             }
             lastPlayingPos_ = viewData_->chainPlayPos_[i];
             break;

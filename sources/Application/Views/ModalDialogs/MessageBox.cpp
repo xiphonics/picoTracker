@@ -8,6 +8,7 @@
  */
 
 #include "MessageBox.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include <Application/AppWindow.h>
 
 static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
@@ -53,10 +54,11 @@ void MessageBox::DrawView() {
   // compute space needed for buttons
   // and set window size
 
-  int btnSize = 5;
-  int width = buttonCount_ * (btnSize + 1) + 1;
+  int btnSize = 6;                              // button text max length
+  int width = buttonCount_ * (btnSize + 2) + 2; // 2 for side margins
   width = (size > width) ? size : width;
-  SetWindow(width, line2_.size() > 0 ? 4 : 3);
+  int height = line2_.size() > 0 ? 4 : 3;
+  SetWindow(width, height);
 
   // draw text
   int y = 0;
@@ -74,7 +76,8 @@ void MessageBox::DrawView() {
 
   for (int i = 0; i < buttonCount_; i++) {
     const char *text = buttonText[button_[i]];
-    x = offset * (i + 1) - strlen(text) / 2;
+    const int len = strlen(text);
+    x = offset * (i + 1) - len / 2;
     if (i == selected_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -83,6 +86,13 @@ void MessageBox::DrawView() {
       props.invert_ = false;
     }
     DrawString(x, y, text, props);
+
+    if (i == selected_) {
+      props.invert_ = false;
+      DrawString(x - 1, y, char_button_border_left_s, props);
+      DrawString(x + len, y, char_button_border_right_s, props);
+      props.invert_ = true;
+    }
   }
 };
 

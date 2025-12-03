@@ -69,7 +69,7 @@ uint8_t chargfx_get_cursor_y() { return cursor_y; }
 
 void chargfx_putc(char c, bool invert) {
   int idx = cursor_y * TEXT_WIDTH + cursor_x;
-  if (c >= 32 && c <= 127) {
+  if (c >= 32) {
     screen[idx] = c - 32;
     SetBit(changed, idx);
     if (invert) {
@@ -206,7 +206,9 @@ inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,
         uint16_t fg_color = palette[colors[idx] >> 4];
         uint16_t bg_color = palette[colors[idx] & 0xf];
 
-        const uint16_t *pixel_data = (*font)[character];
+        const uint16_t *pixel_data =
+            (character < 96) ? (*font)[character]
+                             : FONT_SPECIAL_CHARACTERS_BITMAP[character - 96];
 
         // draw the character into the buffer
         for (int j = CHAR_HEIGHT - 1; j >= 0; j--) {

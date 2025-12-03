@@ -15,6 +15,7 @@
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
@@ -1350,10 +1351,10 @@ void PhraseView::AnimationUpdate() {
             pos._y = anchor._y + viewData_->phrasePlayPos_[i];
             if (!player->IsChannelMuted(i)) {
               SetColor(CD_ACCENT);
-              DrawString(pos._x, pos._y, ">", props);
+              DrawString(pos._x, pos._y, char_indicator_position_s, props);
             } else {
               SetColor(CD_ACCENTALT);
-              DrawString(pos._x, pos._y, "-", props);
+              DrawString(pos._x, pos._y, char_indicator_positionMuted_s, props);
             }
             SetColor(CD_CURSOR);
             lastPlayingPos_ = viewData_->phrasePlayPos_[i];

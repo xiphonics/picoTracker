@@ -1,9 +1,10 @@
 add_library(platform_gui
   GUIFactory.cpp
+  InputTester.cpp
+  picoRemoteUI.cpp
   picoTrackerGUIWindowImp.cpp
   picoTrackerEventManager.cpp
   SerialDebugUI.cpp
-  picoRemoteUI.cpp
 )
 
 target_link_libraries(platform_gui PUBLIC
