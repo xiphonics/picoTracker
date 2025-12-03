@@ -26,6 +26,7 @@ public:
   virtual void Close();
   virtual bool Start();
   virtual void Stop();
+  void SetAudioActive(bool active) override;
 
   virtual void Trigger();
 
@@ -48,7 +49,6 @@ protected:
   void prepareMixBuffers();
   void mixToPrimary();
   void clipToMix();
-  void updateAudioActive();
 
 private:
   AudioDriver *driver_;

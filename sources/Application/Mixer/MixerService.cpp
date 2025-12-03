@@ -200,9 +200,15 @@ void MixerService::setRenderingMode(MixerServiceMode mode) {
 
 void MixerService::OnPlayerStart(MixerServiceMode mode) {
   setRenderingMode(mode);
+  if (out_) {
+    out_->SetAudioActive(true);
+  }
 };
 
 void MixerService::OnPlayerStop() {
+  if (out_) {
+    out_->SetAudioActive(false);
+  }
   // always reset back to audio mode when stopping
   setRenderingMode(MSM_AUDIO);
 };
