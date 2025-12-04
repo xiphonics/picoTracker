@@ -230,7 +230,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     int offset = offsets_[col_ + xOffset][direction];
 
     // if note column apply the set scale
-    if (col_ + xOffset == 0 && *c <= HIGHEST_NOTE) {
+    if (col_ + xOffset == 0) {
       // Add/remove from offset to match selected scale
       int scale = viewData_->project_->GetScale();
       int scaleRoot = viewData_->project_->GetScaleRoot();
@@ -238,12 +238,23 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       // Calculate the new note with the offset
       int newNote = *c + offset;
 
-      // Check if the note is in the scale (adjusted for root)
-      // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
-      while (newNote >= 0 &&
-             !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
-        offset > 0 ? offset++ : offset--;
-        newNote = *c + offset;
+      if (*c == NOTE_OFF) {
+        // leave note off
+        *c = (offset > 0) ? 0 : HIGHEST_NOTE;
+        offset = 0;
+      } else if (newNote < 0 || newNote > HIGHEST_NOTE) {
+        // changing to note off
+        limit = NOTE_OFF;
+        *c = NOTE_OFF;
+        offset = 0;
+      } else {
+        // Check if the note is in the scale (adjusted for root)
+        // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
+        while (newNote >= 0 &&
+               !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
+          offset > 0 ? offset++ : offset--;
+          newNote = *c + offset;
+        }
       }
     }
     updateData(c, offset, limit, wrap);
@@ -734,19 +745,6 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     };
     return;
   };
-
-  if (viewMode_ == VM_NORMAL) {
-    // ALT + ENTER == Note Off
-    if (mask & EPBM_ENTER && mask & EPBM_ALT) {
-      if (col_ == 0) {
-        // set note off event
-        uint8_t *note = row_ + phrase_->note_ + 16 * viewData_->currentPhrase_;
-        *note = NOTE_OFF; // 127 == note off
-        isDirty_ = true;
-        return;
-      }
-    }
-  }
 
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_ENTER) {

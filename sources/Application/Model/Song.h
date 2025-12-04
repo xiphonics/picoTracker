@@ -35,15 +35,15 @@
 #define MAX_OPALINSTRUMENT_COUNT 0x03
 #define MAX_MACROINSTRUMENT_COUNT 0x01
 
-#define HIGHEST_NOTE 127
-#define NOTE_OFF 254
-#define NO_NOTE 255
 #define MAX_INSTRUMENT_COUNT                                                   \
   (MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT +                     \
    MAX_SIDINSTRUMENT_COUNT + MAX_OPALINSTRUMENT_COUNT +                        \
    MAX_MACROINSTRUMENT_COUNT)
 #endif
 
+#define HIGHEST_NOTE 0x7F
+#define NOTE_OFF 0xFE
+#define NO_NOTE 0xFF
 #define EMPTY_SONG_VALUE 0xFF
 
 class Song : Persistent {
