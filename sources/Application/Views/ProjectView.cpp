@@ -218,10 +218,12 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
+  #ifndef ADV
   position._x += 8;
   actionField_.emplace_back("Stems", FourCC::ActionRenderStems, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
+  #endif
   position._x = xalign;
 }
 
