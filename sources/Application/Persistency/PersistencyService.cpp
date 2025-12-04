@@ -53,7 +53,7 @@ void PersistencyService::DeleteProject(const char *projectName) {
   fs->DeleteFile(PROJECT_DATA_FILE);                                                                                                                                                                       
   fs->DeleteFile(AUTO_SAVE_FILENAME);                                                                                                                                                                      
                                                                                                                                                                                                           
-  fs->chdir("samples");                                                                                                                                                                                    
+  fs->chdir(PROJECT_SAMPLES_DIR);
   etl::vector<int, MAX_SAMPLES> fileIndexes;                                                                                                                                                               
   fs->list(&fileIndexes, ".wav", false);                                                                                                                                                                   
 
@@ -65,7 +65,7 @@ void PersistencyService::DeleteProject(const char *projectName) {
   };
 
   fs->chdir(".."); // up to project dir
-  status = fs->DeleteDir("samples");
+  status = fs->DeleteDir(PROJECT_SAMPLES_DIR);
 
   if (status) {
     Trace::Log("PERSISTENCYSERVICE", "Successfully deleted the samples directory");
