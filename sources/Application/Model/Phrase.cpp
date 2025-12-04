@@ -8,13 +8,14 @@
  */
 
 #include "Phrase.h"
+#include "Song.h"
 #include "System/System/System.h"
 #include <stdlib.h>
 #include <string.h>
 
 Phrase::Phrase() {
   for (int i = 0; i < PHRASE_COUNT * STEPS_PER_PHRASE; i++) {
-    note_[i] = 0xFF;
+    note_[i] = NO_NOTE;
     instr_[i] = 0xFF;
     cmd1_[i] = FourCC::InstrumentCommandNone;
     param1_[i] = 0x00;
