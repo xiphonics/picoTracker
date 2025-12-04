@@ -169,3 +169,6 @@ void UITextField<MaxLength>::SetVariable(Variable &v) {
   src_ = &v;
   currentChar_ = 0; // Reset cursor position
 };
+
+template <uint8_t MaxLength>
+void UITextField<MaxLength>::SetDefaultValue() { src_->Reset(); }

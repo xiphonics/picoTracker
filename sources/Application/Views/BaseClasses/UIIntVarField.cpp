@@ -105,3 +105,5 @@ void UIIntVarField::ProcessArrow(unsigned short mask) {
 FourCC UIIntVarField::GetVariableID() { return src_.GetID(); };
 
 Variable &UIIntVarField::GetVariable() { return src_; };
+
+void UIIntVarField::SetDefaultValue() { src_.Reset(); }
