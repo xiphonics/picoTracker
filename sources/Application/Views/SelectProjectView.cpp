@@ -24,7 +24,7 @@ static void DeleteProjectCallback(View &v, ModalView &dialog) {
     char buffer[MAX_PROJECT_NAME_LENGTH + 1];
     ((SelectProjectView &)v).getHighlightedProjectName(buffer);
     ps->DeleteProject(buffer);
-    
+
     // reload list
     ((SelectProjectView &)v).setCurrentFolder();
   }
@@ -48,23 +48,22 @@ void SelectProjectView::DrawView() {
   const char *title = "Load Project";
   SetColor(CD_INFO);
   DrawString(pos._x + 1, pos._y, title, props);
-  
   SetColor(CD_NORMAL);
-  
+
   // Draw projects
   int x = 1;
   int y = pos._y + 2;
-  
+
   for (size_t i = topIndex_;
-    i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
-      if (i == currentIndex_) {
-        props.invert_ = true;
-        SetColor(CD_HILITE2);
-      } else {
-        SetColor(CD_NORMAL);
-        props.invert_ = false;
-      }
-      
+       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+    if (i == currentIndex_) {
+      props.invert_ = true;
+      SetColor(CD_HILITE2);
+    } else {
+      SetColor(CD_NORMAL);
+      props.invert_ = false;
+    }
+
     char buffer[MAX_PROJECT_NAME_LENGTH + 1];
     memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
@@ -95,7 +94,7 @@ void SelectProjectView::DeleteProject() {
 
   char buffer[32];
   npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", projectName);
-  
+
   MessageBox *mb = new MessageBox(*this, buffer, MBBF_YES | MBBF_NO);
   DoModal(mb, DeleteProjectCallback);
 }

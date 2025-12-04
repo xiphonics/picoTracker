@@ -14,9 +14,6 @@
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
-#include "System/FileSystem/I_File.h"
-#include "Adapters/picoTracker/gui/picoRemoteUI.h"
-#include "System/Console/nanoprintf.h"
 
 #define PROJECT_STATE_FILE "/.current"
 
@@ -37,62 +34,30 @@ void PersistencyService::PurgeUnnamedProject() {
 
 void PersistencyService::DeleteProject(const char *projectName) {
   auto fs = FileSystem::GetInstance();
-  char buffer[128];
-  bool status;
-  
-  Trace::Log("PERSISTENCYSERVICE", "Deleting project: %s", projectName);
-  
-  status = fs->chdir(PROJECTS_DIR);
-  
-  if (!status) {
-    Trace::Error("PERSISTENCYSERVICE", "Failed to change to projects directory");
-    return;
-  }
 
+  Trace::Debug("PERSISTENCYSERVICE", "Deleting project: %s", projectName);
+
+  fs->chdir(PROJECTS_DIR);
   fs->chdir(projectName);
-  fs->DeleteFile(PROJECT_DATA_FILE);                                                                                                                                                                       
-  fs->DeleteFile(AUTO_SAVE_FILENAME);                                                                                                                                                                      
-                                                                                                                                                                                                          
-  fs->chdir(PROJECT_SAMPLES_DIR);
-  etl::vector<int, MAX_SAMPLES> fileIndexes;                                                                                                                                                               
-  fs->list(&fileIndexes, ".wav", false);                                                                                                                                                                   
+  fs->DeleteFile(PROJECT_DATA_FILE);
+  fs->DeleteFile(AUTO_SAVE_FILENAME);
 
-  // delete all samples                                                                                                                                                                                    
-  char filename[128];                                                                                                                                                                                      
-  for (size_t i = 0; i < fileIndexes.size(); i++) {                                                                                                                                                        
-    fs->getFileName(fileIndexes[i], filename, MAX_PROJECT_SAMPLE_PATH_LENGTH);                                                                                                                             
-    fs->DeleteFile(filename);                                                                                                                                                                              
+  fs->chdir(PROJECT_SAMPLES_DIR);
+  etl::vector<int, MAX_SAMPLES> fileIndexes;
+  fs->list(&fileIndexes, ".wav", false);
+
+  // delete all samples
+  char filename[128];
+  for (size_t i = 0; i < fileIndexes.size(); i++) {
+    fs->getFileName(fileIndexes[i], filename, MAX_PROJECT_SAMPLE_PATH_LENGTH);
+    fs->DeleteFile(filename);
   };
 
   fs->chdir(".."); // up to project dir
-  status = fs->DeleteDir(PROJECT_SAMPLES_DIR);
-
-  if (status) {
-    Trace::Log("PERSISTENCYSERVICE", "Successfully deleted the samples directory");
-
-    npf_snprintf(buffer, sizeof(buffer), "Successfully deleted the samples directory\n\r");
-    sendToUSBCDC(buffer, strlen(buffer));
-  } else {
-    Trace::Log("PERSISTENCYSERVICE", "Failed to delete the samples directory");
-
-    npf_snprintf(buffer, sizeof(buffer), "Failed to delete the samples directory\n\r");
-    sendToUSBCDC(buffer, strlen(buffer));
-  }
+  fs->DeleteDir(PROJECT_SAMPLES_DIR);
 
   fs->chdir(".."); // up to projects dir
-  status = fs->DeleteDir(projectName);
-  
-  if (status) {
-    Trace::Log("PERSISTENCYSERVICE", "Successfully deleted project: %s", projectName);
-
-    npf_snprintf(buffer, sizeof(buffer), "Successfully deleted project: %s\n\r", projectName);
-    sendToUSBCDC(buffer, strlen(buffer));
-  } else {
-    Trace::Error("PERSISTENCYSERVICE", "Failed to delete project: %s", projectName);
-
-    npf_snprintf(buffer, sizeof(buffer), "Failed deleting project: %s\n\r", projectName);
-    sendToUSBCDC(buffer, strlen(buffer));
-  }
+  fs->DeleteDir(projectName);
 }
 
 PersistencyResult

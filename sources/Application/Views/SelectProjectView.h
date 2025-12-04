@@ -28,7 +28,7 @@ public:
   void getSelectedProjectName(char *name);
   void getHighlightedProjectName(char *name);
   void setCurrentFolder();
-  
+
 protected:
   void warpToNextProject(bool goUp);
 
@@ -39,6 +39,5 @@ private:
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 
   void DeleteProject();
-
 };
 #endif
