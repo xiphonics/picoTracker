@@ -90,10 +90,11 @@ void SelectProjectView::OnPlayerUpdate(PlayerEventType,
 void SelectProjectView::OnFocus() { setCurrentFolder(); };
 
 void SelectProjectView::DeleteProject() {
-  char buffer[MAX_PROJECT_NAME_LENGTH + 20] = "Delete project?";
   char projectName[MAX_PROJECT_NAME_LENGTH + 1];
   getHighlightedProjectName(projectName);
-  npf_snprintf(buffer, sizeof(buffer), "Delete project %s?", projectName);
+
+  char buffer[32];
+  npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", projectName);
   
   MessageBox *mb = new MessageBox(*this, buffer, MBBF_YES | MBBF_NO);
   DoModal(mb, DeleteProjectCallback);
