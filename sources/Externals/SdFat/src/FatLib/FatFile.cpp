@@ -1077,9 +1077,7 @@ bool FatFile::rmdir() {
       break;
     }
     // skip empty slot, '.' or '..'
-    if (dir->name[0] == FAT_NAME_DELETED ||
-        !memcmp(dir->name, ".          ", 11) ||
-        !memcmp(dir->name, "..         ", 11)) {
+    if (dir->name[0] == FAT_NAME_DELETED || dir->name[0] == '.') {
       continue;
     }
     // error not empty
