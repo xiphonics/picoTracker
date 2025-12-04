@@ -1077,7 +1077,9 @@ bool FatFile::rmdir() {
       break;
     }
     // skip empty slot, '.' or '..'
-    if (dir->name[0] == FAT_NAME_DELETED) {
+    if (dir->name[0] == FAT_NAME_DELETED ||
+        !memcmp(dir->name, ".          ", 11) ||
+        !memcmp(dir->name, "..         ", 11)) {
       continue;
     }
     // error not empty
@@ -1086,6 +1088,7 @@ bool FatFile::rmdir() {
       goto fail;
     }
   }
+  
   // convert empty directory to normal file for remove
   m_attributes = FILE_ATTR_FILE;
   m_flags |= FILE_FLAG_WRITE;
