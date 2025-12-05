@@ -13,7 +13,7 @@
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include <nanoprintf.h>
 
-#define LIST_PAGE_SIZE SCREEN_HEIGHT - 2
+#define LIST_PAGE_SIZE SCREEN_HEIGHT - 5
 #define LIST_WIDTH 26
 #define INVALID_PROJECT_NAME "INVALID NAME"
 
