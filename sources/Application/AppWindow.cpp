@@ -638,8 +638,8 @@ bool AppWindow::onEvent(GUIEvent &event) {
     SetDirty();
   }
 
-  // View dirty flag will be checked in AnimationUpdate to determine if redraw is
-  // needed
+  // View dirty flag will be checked in AnimationUpdate to determine if redraw
+  // is needed
   return false;
 };
 
