@@ -97,6 +97,10 @@ void SelectProjectView::OnPlayerUpdate(PlayerEventType,
 void SelectProjectView::OnFocus() { setCurrentFolder(); };
 
 void SelectProjectView::DeleteProject() {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+
   char projectName[MAX_PROJECT_NAME_LENGTH + 1];
   getHighlightedProjectName(projectName);
 
@@ -209,6 +213,10 @@ void SelectProjectView::getSelectedProjectName(char *name) {
 }
 
 void SelectProjectView::getHighlightedProjectName(char *name) {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+  
   auto fs = FileSystem::GetInstance();
   unsigned fileIndex = fileIndexList_[currentIndex_];
   fs->getFileName(fileIndex, name, MAX_PROJECT_NAME_LENGTH + 1);
@@ -220,6 +228,10 @@ void SelectProjectView::SelectButton(int direction) {
 }
 
 void SelectProjectView::LoadProject() {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+
   // all subdirs directly inside /project are expected to be projects
   unsigned fileIndex = fileIndexList_[currentIndex_];
   auto fs = FileSystem::GetInstance();
