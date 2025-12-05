@@ -92,7 +92,7 @@ void SelectProjectView::DrawView() {
 };
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
-                                       unsigned int currentTick) {};
+                                       unsigned int currentTick){};
 
 void SelectProjectView::OnFocus() { setCurrentFolder(); };
 
@@ -119,6 +119,10 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // EDIT+ENTER -> hotkey to delete
     if (mask & EPBM_ENTER)
       DeleteProject();
+    if (mask & EPBM_UP)
+      warpToNextProject(true);
+    if (mask & EPBM_DOWN)
+      warpToNextProject(false);
   } else {
     // A modifier
     if (mask & EPBM_ENTER) {
