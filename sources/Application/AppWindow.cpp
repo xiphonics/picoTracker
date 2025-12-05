@@ -581,8 +581,6 @@ bool AppWindow::onEvent(GUIEvent &event) {
 
   _shouldQuit = false;
 
-  _isDirty = false;
-
   unsigned short v = 1 << event.GetValue();
 
   MixerService *sm = MixerService::GetInstance();
