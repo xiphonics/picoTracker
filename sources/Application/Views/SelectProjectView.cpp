@@ -13,7 +13,7 @@
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include <nanoprintf.h>
 
-#define LIST_PAGE_SIZE SCREEN_HEIGHT - 5
+#define LIST_PAGE_SIZE SCREEN_HEIGHT - 4
 #define LIST_WIDTH 26
 #define INVALID_PROJECT_NAME "INVALID NAME"
 
@@ -87,7 +87,7 @@ void SelectProjectView::DrawView() {
     bool selected = selectedButton_ == n;
     props.invert_ = selected;
     SetColor(selected ? CD_HILITE2 : CD_HILITE1);
-    DrawString(x + 10 * n, SCREEN_HEIGHT - 2, buttons[n], props);
+    DrawString(x + 10 * n, SCREEN_HEIGHT - 1, buttons[n], props);
   }
 };
 
