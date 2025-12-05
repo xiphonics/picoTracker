@@ -80,11 +80,19 @@ void SelectProjectView::DrawView() {
     y += 1;
   };
 
-  SetColor(CD_NORMAL);
+  // load/delete selection buttons
+  const char *buttons[numButtons_] = {"Load", "Delete"};
+
+  for (int n = 0; n < numButtons_; n++) {
+    bool selected = selectedButton_ == n;
+    props.invert_ = selected;
+    SetColor(selected ? CD_HILITE2 : CD_HILITE1);
+    DrawString(x + 10 * n, SCREEN_HEIGHT - 2, buttons[n], props);
+  }
 };
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
-                                       unsigned int currentTick){};
+                                       unsigned int currentTick) {};
 
 void SelectProjectView::OnFocus() { setCurrentFolder(); };
 
@@ -104,37 +112,18 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
 
   if (mask & EPBM_EDIT) {
-    if (mask & EPBM_UP)
-      warpToNextProject(true);
-    if (mask & EPBM_DOWN)
-      warpToNextProject(false);
+    // EDIT+ENTER -> hotkey to delete
     if (mask & EPBM_ENTER)
       DeleteProject();
   } else {
     // A modifier
     if (mask & EPBM_ENTER) {
-      // all subdirs directly inside /project are expected to be projects
-      unsigned fileIndex = fileIndexList_[currentIndex_];
-      auto fs = FileSystem::GetInstance();
-      fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
-      if (strlen(selection_) == 0) {
-        Trace::Log("SELECTPROJECTVIEW",
-                   "skipping too long project name on Index:%d", fileIndex);
-        return;
+      if (selectedButton_ == 0) {
+        // load project
+        LoadProject();
+      } else {
+        DeleteProject();
       }
-
-      Trace::Log("SELECTPROJECTVIEW", "Select Project:%s", selection_);
-      // save newly opened projectname, it will be used to load the project file
-      // on device boots following the reboot below
-      auto ps = PersistencyService::GetInstance();
-      ps->SaveProjectState(selection_);
-
-      // now need to delete autosave file so its not loaded when we reboot
-      ps->ClearAutosave(selection_);
-
-      // now reboot!
-      System *sys = System::GetInstance();
-      sys->SystemReboot();
       return;
     } else {
       // R Modifier
@@ -151,6 +140,10 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
           warpToNextProject(true);
         if (mask == EPBM_DOWN)
           warpToNextProject(false);
+        if (mask == EPBM_LEFT)
+          SelectButton(-1);
+        if (mask == EPBM_RIGHT)
+          SelectButton(1);
       }
     }
   }
@@ -206,6 +199,7 @@ void SelectProjectView::setCurrentFolder() {
   }
 
   // reset & redraw screen
+  currentIndex_ = std::min(currentIndex_, fileIndexList_.size() - 1);
   topIndex_ = 0;
   isDirty_ = true;
 }
@@ -218,4 +212,34 @@ void SelectProjectView::getHighlightedProjectName(char *name) {
   auto fs = FileSystem::GetInstance();
   unsigned fileIndex = fileIndexList_[currentIndex_];
   fs->getFileName(fileIndex, name, MAX_PROJECT_NAME_LENGTH + 1);
+}
+
+void SelectProjectView::SelectButton(int direction) {
+  selectedButton_ = (numButtons_ + selectedButton_ + direction) % numButtons_;
+  isDirty_ = true;
+}
+
+void SelectProjectView::LoadProject() {
+  // all subdirs directly inside /project are expected to be projects
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  auto fs = FileSystem::GetInstance();
+  fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
+  if (strlen(selection_) == 0) {
+    Trace::Log("SELECTPROJECTVIEW",
+               "skipping too long project name on Index:%d", fileIndex);
+    return;
+  }
+
+  Trace::Log("SELECTPROJECTVIEW", "Select Project:%s", selection_);
+  // save newly opened projectname, it will be used to load the project file
+  // on device boots following the reboot below
+  auto ps = PersistencyService::GetInstance();
+  ps->SaveProjectState(selection_);
+
+  // now need to delete autosave file so its not loaded when we reboot
+  ps->ClearAutosave(selection_);
+
+  // now reboot!
+  System *sys = System::GetInstance();
+  sys->SystemReboot();
 }

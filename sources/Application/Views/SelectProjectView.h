@@ -33,11 +33,15 @@ protected:
   void warpToNextProject(bool goUp);
 
 private:
+  static const int numButtons_ = 2;
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
   char selection_[MAX_PROJECT_NAME_LENGTH];
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
+  int selectedButton_ = 0;
 
   void DeleteProject();
+  void LoadProject();
+  void SelectButton(int direction);
 };
 #endif
