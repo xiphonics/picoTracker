@@ -24,6 +24,7 @@ public:
   virtual void ProcessArrow(unsigned short mask);
   virtual void OnClick(){};
 
+  void ProcessClear();
   FourCC GetVariableID();
   Variable &GetVariable();
 
