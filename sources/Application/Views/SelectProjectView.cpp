@@ -220,7 +220,7 @@ void SelectProjectView::getHighlightedProjectName(char *name) {
   if (currentIndex_ >= fileIndexList_.size()) {
     return;
   }
-  
+
   auto fs = FileSystem::GetInstance();
   unsigned fileIndex = fileIndexList_[currentIndex_];
   fs->getFileName(fileIndex, name, MAX_PROJECT_NAME_LENGTH + 1);
