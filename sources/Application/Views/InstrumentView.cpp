@@ -697,6 +697,39 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
 
   isDirty_ = false;
+  if ((mask & EPBM_EDIT) && (mask & EPBM_ENTER)) {
+    if (GetFocus() == *fieldList_.begin()) { // disable clearing instrument type
+      mask &= (0xFFFF - (EPBM_EDIT | EPBM_ENTER));
+    }
+    if (getInstrument()->GetType() == IT_SAMPLE) {
+      int i = viewData_->currentInstrumentID_;
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      I_Instrument *instr = bank->GetInstrument(i);
+      if (GetFocus() == *fieldList_.begin()) { // Allow cut instrument
+        bool instrumentModified = checkInstrumentModified();
+        if (instrumentModified) {
+          MessageBox *mb =
+              new MessageBox(*this, "Reset all settings?", MBBF_YES | MBBF_NO);
+
+          DoModal(mb, [this, instr](View &v, ModalView &dialog) {
+            if (dialog.GetReturnCode() == MBL_YES) {
+              // Clear all sample instrument variables
+              instr->Purge();
+              isDirty_ = true;
+            }
+          });
+        }
+      }
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      if (field->GetVariableID() == FourCC::SampleInstrumentEnd) {
+        Variable &var = field->GetVariable();
+        SampleInstrument *instrument = (SampleInstrument *)instr;
+        var.SetInt(instrument->GetSampleSize() - 1);
+        isDirty_ = true;
+        mask &= (0xFFFF - (EPBM_EDIT | EPBM_ENTER));
+      };
+    }
+  }
 
   // Call the parent class's implementation first to ensure action fields like
   // Export, Import work correctly
@@ -806,26 +839,6 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       warpToNext(-16);
     if (mask & EPBM_UP)
       warpToNext(+16);
-    if (mask & EPBM_ENTER) { // Allow cut instrument
-      if (getInstrument()->GetType() == IT_SAMPLE) {
-        int i = viewData_->currentInstrumentID_;
-        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        I_Instrument *instr = bank->GetInstrument(i);
-        if (GetFocus() == *fieldList_.begin()) {
-          instr->Purge();
-          //                   Variable *v=instr->FindVariable(SIP_SAMPLE) ;
-          //                   v->SetInt(-1) ;
-          isDirty_ = true;
-        }
-        UIIntVarField *field = (UIIntVarField *)GetFocus();
-        if (field->GetVariableID() == FourCC::SampleInstrumentEnd) {
-          Variable &var = field->GetVariable();
-          SampleInstrument *instrument = (SampleInstrument *)instr;
-          var.SetInt(instrument->GetSampleSize() - 1);
-          isDirty_ = true;
-        };
-      }
-    }
     if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;
     };
