@@ -104,7 +104,7 @@ void SelectProjectView::DeleteProject() {
   char projectName[MAX_PROJECT_NAME_LENGTH + 1];
   getHighlightedProjectName(projectName);
 
-  char buffer[32];
+  char buffer[MAX_PROJECT_NAME_LENGTH + 11];
   npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", projectName);
 
   MessageBox *mb = new MessageBox(*this, buffer, MBBF_YES | MBBF_NO);
