@@ -729,7 +729,7 @@ void AppWindow::AnimationUpdate() {
   }
 
   // If we need a full redraw due to state changes from key events
-  if (_currentView && _currentView->isDirty_) {
+  if (_currentView && _currentView->isDirty()) {
     _currentView->Redraw(); // Draw main content
   }
 
