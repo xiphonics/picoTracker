@@ -675,9 +675,8 @@ void AppWindow::AnimationUpdate() {
     if (loadResult == LoadProjectResult::LOAD_FAILED) {
       npf_snprintf(failedProjectName_, sizeof(failedProjectName_), "%s",
                    projectName_);
-      Status::SetMultiLine(
-          "Invalid Project:\n%s\n  \nPress any key\nto continue...",
-          failedProjectName_);
+      Status::Set("Invalid Project:\n%s\n  \nPress any key\nto continue...",
+                  failedProjectName_);
       Trace::Error(
           "Failed to load project '%s'. Waiting for key press to load untitled",
           failedProjectName_);
@@ -761,7 +760,7 @@ void AppWindow::AnimationUpdate() {
   }
 }
 
-void AppWindow::LayoutChildren(){};
+void AppWindow::LayoutChildren() {};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
   if (d && (uintptr_t)d == (uintptr_t)FourCC::VarProjectName) {
@@ -894,9 +893,7 @@ void AppWindow::onQuitApp() {
   System::GetInstance()->PostQuitMessage();
 }
 
-void AppWindow::Print(char *line) { PrintMultiLine(line); }
-
-void AppWindow::PrintMultiLine(char *line) {
+void AppWindow::Print(char *line) {
   Clear();
   GUITextProperties props;
   SetColor(CD_NORMAL);

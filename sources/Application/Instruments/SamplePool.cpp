@@ -60,7 +60,7 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      Status::SetMultiLine("Copying:\n%s (%d%%)", name, progress);
+      Status::Set("Copying:\n%s (%d%%)", name, progress);
       loadSample(name);
     }
     if (i == MAX_SAMPLES) {
@@ -128,7 +128,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
   projectSamplePath.append(projSampleFilename);
-  Status::SetMultiLine("Loading %s->\n%s", name, projSampleFilename);
+  Status::Set("Loading %s->\n%s", name, projSampleFilename);
 
   I_File *fout =
       FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
@@ -151,11 +151,14 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
 
     // Update progress indicator
     int progress = (int)(((totalSize - size) * 100) / totalSize);
-    Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
-                         progress);
+    // set minimum display time for status message
+    Status::SetWithTimeout(STATUS_MIN_TIME_INFO,
+                           "%s\nLoading from disk...\n%d%%", name, progress);
   };
 
   // now load the sample into memory/flash from the original source path
+  Status::Set("%s\nLoading into memory...", name);
+
   bool status = loadSample(name);
   if (status) {
     // Replace stored name with truncated filename so matches the potentially
@@ -177,6 +180,11 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   ev.index_ = count_ - 1;
   ev.type_ = SPET_INSERT;
   NotifyObservers(&ev);
+
+  // work is done, wait if still necessary to show status message for some time
+  Status::Set("%s\n \nDone.", name);
+  Status::AwaitDismiss();
+
   return status ? (count_ - 1) : -1;
 };
 
