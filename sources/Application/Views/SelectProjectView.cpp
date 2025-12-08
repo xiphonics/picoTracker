@@ -172,8 +172,7 @@ void SelectProjectView::setCurrentFolder() {
 
     if (isDotEntry || isUntitled) {
       if (isUntitled) {
-        Trace::Log("SELECTPROJECTVIEW",
-                   "skipping untitled project on Index:%d",
+        Trace::Log("SELECTPROJECTVIEW", "skipping untitled project on Index:%d",
                    static_cast<int>(it - fileIndexList_.begin()));
       }
       it = fileIndexList_.erase(it);
