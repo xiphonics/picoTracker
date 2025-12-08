@@ -11,13 +11,19 @@
 #define _STATUS_H_
 
 #include "Foundation/T_Factory.h"
-
+#include <stdarg.h>
+#include <stdint.h>
 class Status : public T_Factory<Status> {
 public:
   virtual void Print(char *) = 0;
-  virtual void PrintMultiLine(char *) = 0;
   static void Set(const char *fmt, ...);
-  static void SetMultiLine(const char *fmt, ...);
+  static void SetTimeout(uint32_t timeout_ms);
+  static void AwaitDismiss();
+
+private:
+  static uint32_t dismiss_time_;
 };
+
+#define STATUS_MIN_TIME_INFO 1500
 
 #endif

@@ -8,37 +8,34 @@
  */
 
 #include "Status.h"
+#include <System/Console/Trace.h>
 #include <System/Console/nanoprintf.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <System/System/System.h>
 
-void Status::Set(const char *fmt, ...) {
+uint32_t Status::dismiss_time_ = 0;
 
-  Status *status = Status::GetInstance();
-  if (!status)
-    return;
-
-  char buffer[128];
-  va_list args;
-  va_start(args, fmt);
-
-  npf_vsnprintf(buffer, sizeof(buffer), fmt, args);
-  status->Print(buffer);
-
-  va_end(args);
+void Status::AwaitDismiss() {
+  while (dismiss_time_ &&
+         (int32_t)(dismiss_time_ - System::GetInstance()->Millis()) > 0) {
+    // busy-wait
+  }
+  // clear timer
+  dismiss_time_ = 0;
 }
 
-void Status::SetMultiLine(const char *fmt, ...) {
-  Status *status = Status::GetInstance();
+void Status::SetTimeout(uint32_t timeout_ms) {
+  dismiss_time_ = System::GetInstance()->Millis() + timeout_ms;
+}
+
+void Status::Set(const char *fmt, ...) {
+  auto status = Status::GetInstance();
   if (!status)
     return;
 
-  char buffer[128];
   va_list args;
   va_start(args, fmt);
-
+  char buffer[128];
   npf_vsnprintf(buffer, sizeof(buffer), fmt, args);
-  status->PrintMultiLine(buffer);
-
+  status->Print(buffer);
   va_end(args);
 }
