@@ -106,12 +106,17 @@ void advSystem::Boot() {
   SamplePool::Install(new (samplePoolMemBuf) advSamplePool());
 
   // Handle wake up
-  if (__HAL_PWR_GET_FLAG(PWR_FLAG_SB)) {
+  const bool standbyFlag = __HAL_PWR_GET_FLAG(PWR_FLAG_SB);
+  const uint32_t wakeFlags = PWR->WKUPFR;
+  const bool rtcWakeFlag = __HAL_RTC_WAKEUPTIMER_GET_FLAG(&hrtc, RTC_FLAG_WUTF);
+
+  if (standbyFlag) {
+    // Always deactivate the timer, if it's not enabled this has no effect
+    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
     // Determine actual source
-    if (PWR->WKUPFR & PWR_WKUPFR_WKUPF2) {
+    if (wakeFlags & PWR_WKUPFR_WKUPF2) {
       Trace::Log("POWERON", "Woke up from power button");
-      HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
-    } else if (__HAL_RTC_WAKEUPTIMER_GET_FLAG(&hrtc, RTC_FLAG_WUTF)) {
+    } else if (rtcWakeFlag) {
       Trace::Log("POWERON", "Woke up from RTC - back to sleep");
       powerOff();
     } else {
@@ -120,6 +125,13 @@ void advSystem::Boot() {
   } else {
     Trace::Log("POWERON", "Woke up from deep sleep");
   }
+
+  // Clear sticky wake flags so a later software reboot is not mistaken for a
+  // standby/RTC wake.
+  __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+  PWR->WKUPCR = 0xFFFFFFFFU;
+  __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
+  __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
