@@ -123,6 +123,8 @@ public:
 
   void Redraw();
 
+  bool isDirty() { return isDirty_; };
+
   // Override in subclasses
 
   virtual void DrawView() = 0;
@@ -215,7 +217,6 @@ private:
   static bool initPrivate_;
   ModalView *modalView_;
   ModalViewCallback modalViewCallback_;
-  static ColorDefinition currentRectColor_;
 
 public:
   static int margin_;

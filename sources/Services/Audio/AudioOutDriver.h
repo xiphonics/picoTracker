@@ -26,6 +26,7 @@ public:
   virtual void Close();
   virtual bool Start();
   virtual void Stop();
+  void SetAudioActive(bool active) override;
 
   virtual void Trigger();
 
@@ -51,7 +52,7 @@ protected:
 
 private:
   AudioDriver *driver_;
-  bool hasSound_;
+  bool hasSound_ = false;
   stereosample lastPeakVolume_ = 0;
 
   __attribute__((section(".DTCMRAM"))) __attribute__((

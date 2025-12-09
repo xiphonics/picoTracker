@@ -872,9 +872,9 @@ void SongView::DrawView() {
       // draw current step
       unsigned char d = *data++;
       if (d == 0xFE) {
-        SetColor(CD_ACCENTALT);
+        SetColor(CD_ACCENT);
       } else if (d == 0x00) {
-        SetColor(CD_EMPHASIS);
+        SetColor(CD_HILITE1);
       } else {
         SetColor(CD_NORMAL);
       }

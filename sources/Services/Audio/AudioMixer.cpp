@@ -88,41 +88,48 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
     }
   }
 
-  //  Apply volume to mix of all of this instances "sub" audiomixers
+  // Apply volume to mix of all of this instance's "sub" audiomixers
   // TODO (democloid): This is wildly inefficient, doing this loop takes 4 - 5
   // times the time it takes a mix loop above. Some tests show that at least
   // double performance is not hard to achieve
   if (gotData) {
     fixed *c = buffer;
-    if (volume_ != i2fp(1)) {
-      for (int i = 0; i < samplecount * 2; i++) {
-        fixed v = fp_mul(*c, volume_);
-        *c++ = v;
 
-        if (i % 2 == 0 && v >= peakR) {
-          peakR = v;
-        }
-        if (v >= peakL) {
-          peakL = v;
-        }
+    if (volume_ == FP_ONE) {
+      // unity gain, no calculations to be done, just grab the levels
+      for (int i = 0; i < samplecount; i += 32, c += 64) {
+        fixed r = *c;
+        fixed l = *(c + 1);
+        if (r > peakR)
+          peakR = r;
+        if (l > peakL)
+          peakL = l;
       }
     } else {
-      for (int i = 0; i < samplecount * 2; i++) {
-        fixed v = buffer[i];
-        if (i % 2 == 0 && v >= peakR) {
-          peakR = v;
-        }
-        if (v >= peakL) {
-          peakL = v;
+      for (int i = 0; i < samplecount; i++) {
+        // Right
+        fixed r = fp_mul(*c, volume_);
+        *c++ = r;
+
+        // Left
+        fixed l = fp_mul(*c, volume_);
+        *c++ = l;
+
+        // update the level every 32 sample pairs
+        // (!(i & 31)) =^= (i % 32 == 0) and is used for performance
+        if (!(i & 31)) {
+          if (r > peakR)
+            peakR = r;
+          if (l > peakL)
+            peakL = l;
         }
       }
     }
   }
 
-  // Always update avgMixerLevel_ regardless of whether we got data
+  // Always update peakMixerLevel_ regardless of whether we got data
   // This ensures VU meters update properly in all scenarios
-  avgMixerLevel_ = fp2i(peakL) << 16;
-  avgMixerLevel_ += fp2i(peakR);
+  peakMixerLevel_ = fp2i(peakL) << 16 | fp2i(peakR);
 
   if (enableRendering_ && writer_) {
     if (!gotData) {

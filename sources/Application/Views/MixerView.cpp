@@ -299,6 +299,7 @@ void MixerView::initChannelVolumeFields() {
     Variable *v = project->FindVariable(channelVolumeFourCCs[i]);
     if (v) {
       // Create a 2-digit field (00-99) for the channel volume
+      // NOTE: 99 is considered "unity" gain
       // Format: %2.2d = 2-digit decimal number with leading zeros
       // Use xOffset=1 and yOffset=5 for small/large increments
       channelVolumeFields_.emplace_back(fieldPos, *v, "%2.2d", 0, 99, 1, 5);
@@ -349,11 +350,6 @@ void MixerView::DrawView() {
   pos = anchor;
   pos._y += VU_METER_HEIGHT - 1; // -1 to align with song grid
   props.invert_ = true;
-
-  // get levels from the player
-  // etl::array<stereosample, SONG_CHANNEL_COUNT> *levels =
-  //     player->GetMixerLevels();
-  // drawChannelVUMeters(levels, player, props);
 
   SetColor(CD_NORMAL);
   props.invert_ = false;

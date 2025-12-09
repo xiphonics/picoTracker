@@ -41,6 +41,7 @@
 #include "Player/Player.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 #include "Views/UIController.h"
 #include "platform.h"
@@ -93,8 +94,9 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
                             int paletteIndex) {
 
   Config *config = Config::GetInstance();
-  const int rgbValue = config->FindVariable(colorCode)->GetInt();
-  if (rgbValue) {
+  auto rgbVar = config->FindVariable(colorCode);
+  if (rgbVar) {
+    const int32_t rgbValue = rgbVar->GetInt();
     unsigned short r, g, b;
     r = (rgbValue >> 16) & 0xFF;
     g = (rgbValue >> 8) & 0xFF;
@@ -351,7 +353,7 @@ void AppWindow::Flush() {
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
 };
 
-void AppWindow::LoadProject(const char *projectName) {
+AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   _closeProject = false;
 
@@ -369,7 +371,10 @@ void AppWindow::LoadProject(const char *projectName) {
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
-    Trace::Error("Failed to load project!!");
+    Trace::Error("Failed to load project '%s'", projectName);
+    pool->Reset();
+    TableHolder::GetInstance()->Reset();
+    return LoadProjectResult::LOAD_FAILED;
   };
 
   // Project
@@ -495,6 +500,7 @@ void AppWindow::LoadProject(const char *projectName) {
     _currentView->SetDirty(true);
     SetDirty();
   }
+  return LoadProjectResult::LOAD_OK;
 }
 
 void AppWindow::CloseProject() {
@@ -544,13 +550,16 @@ AppWindow *AppWindow::Create(GUICreateWindowParams &params,
   return w;
 };
 
-void AppWindow::SetDirty() { _isDirty = true; };
+void AppWindow::SetDirty() {
+  if (_currentView) {
+    _currentView->SetDirty(true);
+  }
+};
 
 void AppWindow::UpdateColorsFromConfig() {
   // now assign custom colors if they have been set device config
   defineColor(FourCC::VarBGColor, backgroundColor_, 0);
   defineColor(FourCC::VarFGColor, normalColor_, 1);
-  cursorColor_ = normalColor_;
   defineColor(FourCC::VarHI1Color, highlightColor_, 2);
   defineColor(FourCC::VarHI2Color, highlight2Color_, 3);
   defineColor(FourCC::VarCursorColor, cursorColor_, 4);
@@ -576,8 +585,6 @@ bool AppWindow::onEvent(GUIEvent &event) {
   // mixer lock, otherwise the windows driver will never return
 
   _shouldQuit = false;
-
-  _isDirty = false;
 
   unsigned short v = 1 << event.GetValue();
 
@@ -612,7 +619,7 @@ bool AppWindow::onEvent(GUIEvent &event) {
        if
        (_currentView!=_listView) {
        CloseProject() ;
-       _isDirty=true ;
+       _currentView->SetDirty(true) ;
        } else {
                             System::GetInstance()->PostQuitMessage() ;
                     };
@@ -629,11 +636,11 @@ bool AppWindow::onEvent(GUIEvent &event) {
   }
   if (_closeProject) {
     CloseProject();
-    _isDirty = true;
+    SetDirty();
   }
 
-  // _isDirty flag will be checked in AnimationUpdate to determine if redraw is
-  // needed
+  // View dirty flag will be checked in AnimationUpdate to determine if redraw
+  // is needed
   return false;
 };
 
@@ -642,7 +649,7 @@ void AppWindow::onUpdate(bool redraw) {
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
     // Mark as dirty to trigger redraw in AnimationUpdate
-    _isDirty = true;
+    SetDirty();
   }
   // No Flush here - AnimationUpdate will handle it
 };
@@ -650,10 +657,36 @@ void AppWindow::onUpdate(bool redraw) {
 void AppWindow::AnimationUpdate() {
   // Increment the animation frame counter
   animationFrameCounter_++;
+  char failedProjectName_[MAX_PROJECT_NAME_LENGTH] = {0};
+
+  if (awaitingProjectLoadAck_) {
+    if (_mask != 0) {
+      FileSystem::GetInstance()->DeleteFile("/.current");
+      npf_snprintf(projectName_, sizeof(projectName_), "%s",
+                   UNNAMED_PROJECT_NAME);
+      loadProject_ = true;
+      awaitingProjectLoadAck_ = false;
+      Trace::Error("Falling back to untitled after failed load of '%s'",
+                   failedProjectName_);
+    }
+    return;
+  }
 
   if (loadProject_) {
-    LoadProject(projectName_);
+    LoadProjectResult loadResult = LoadProject(projectName_);
     loadProject_ = false;
+    if (loadResult == LoadProjectResult::LOAD_FAILED) {
+      npf_snprintf(failedProjectName_, sizeof(failedProjectName_), "%s",
+                   projectName_);
+      Status::SetMultiLine(
+          "Invalid Project:\n%s\n  \nPress any key\nto continue...",
+          failedProjectName_);
+      Trace::Error(
+          "Failed to load project '%s'. Waiting for key press to load untitled",
+          failedProjectName_);
+      awaitingProjectLoadAck_ = true;
+      return;
+    }
   }
 
   // run at 1Hz
@@ -683,7 +716,7 @@ void AppWindow::AnimationUpdate() {
                                             "Connect charger", 0);
       _currentView->DoModal(mb);
       lowBatteryMessageShown_ = true;
-      _isDirty = true;
+      SetDirty();
     }
   } else if (!lowBatteryState_ && lowBatteryMessageShown_) {
     ModalView *modal = _currentView->GetModalView();
@@ -693,13 +726,12 @@ void AppWindow::AnimationUpdate() {
       Trace::Debug("CLose Low Batt dialog");
     }
     lowBatteryMessageShown_ = false;
-    _isDirty = true;
+    SetDirty();
   }
 
   // If we need a full redraw due to state changes from key events
-  if (_isDirty && _currentView) {
+  if (_currentView && _currentView->isDirty()) {
     _currentView->Redraw(); // Draw main content
-    _isDirty = false;       // Reset the flag
   }
 
   // Handle view updates
@@ -815,7 +847,7 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     }
     _currentView->SetFocus(*vt);
-    _isDirty = true;
+    SetDirty();
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
     break;

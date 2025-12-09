@@ -415,6 +415,9 @@ PI_File::PI_File(FIL file) { file_ = file; };
 int PI_File::Read(void *ptr, int size) {
   UINT read;
   FRESULT res = f_read(&file_, ptr, size, &read);
+  if (res != FR_OK) {
+    return -1;
+  }
   return read;
 }
 
@@ -449,6 +452,9 @@ int PI_File::GetC() {
 int PI_File::Write(const void *ptr, int size, int nmemb) {
   UINT written;
   FRESULT res = f_write(&file_, ptr, size * nmemb, &written);
+  if (res != FR_OK) {
+    return -1;
+  }
   return written;
 }
 

@@ -198,10 +198,8 @@ void ThemeView::DrawView() {
   FieldView::Redraw();
 
   // just draw the RGB column headings directly:
-  SetColor(CD_INFO);
   GUITextProperties headerProps;
   DrawString(17, 6, "R  G  B", headerProps);
-  SetColor(CD_NORMAL);
 }
 
 void ThemeView::addSwatchField(ColorDefinition color, GUIPoint position) {

@@ -23,25 +23,34 @@
 
 #include <math.h>
 
-#define DEFAULT_VOLUME 60
+#define DEFAULT_CHANNEL_VOLUME 100
+#define DEFAULT_PREVIEW_VOLUME 60
+
+#ifdef ADV
+#define DEFAULT_MASTER_VOLUME 100
+#else
+#define DEFAULT_MASTER_VOLUME 60
+#endif
+
+#define DATA_UNUSED_VALUE 0xFF
 
 Project::Project(const char *name)
     : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
-      masterVolume_(FourCC::VarMasterVolume, DEFAULT_VOLUME),
-      channelVolume1_(FourCC::VarChannel1Volume, DEFAULT_VOLUME),
-      channelVolume2_(FourCC::VarChannel2Volume, DEFAULT_VOLUME),
-      channelVolume3_(FourCC::VarChannel3Volume, DEFAULT_VOLUME),
-      channelVolume4_(FourCC::VarChannel4Volume, DEFAULT_VOLUME),
-      channelVolume5_(FourCC::VarChannel5Volume, DEFAULT_VOLUME),
-      channelVolume6_(FourCC::VarChannel6Volume, DEFAULT_VOLUME),
-      channelVolume7_(FourCC::VarChannel7Volume, DEFAULT_VOLUME),
-      channelVolume8_(FourCC::VarChannel8Volume, DEFAULT_VOLUME),
+      masterVolume_(FourCC::VarMasterVolume, DEFAULT_MASTER_VOLUME),
+      channelVolume1_(FourCC::VarChannel1Volume, DEFAULT_CHANNEL_VOLUME),
+      channelVolume2_(FourCC::VarChannel2Volume, DEFAULT_CHANNEL_VOLUME),
+      channelVolume3_(FourCC::VarChannel3Volume, DEFAULT_CHANNEL_VOLUME),
+      channelVolume4_(FourCC::VarChannel4Volume, DEFAULT_CHANNEL_VOLUME),
+      channelVolume5_(FourCC::VarChannel5Volume, DEFAULT_CHANNEL_VOLUME),
+      channelVolume6_(FourCC::VarChannel6Volume, DEFAULT_CHANNEL_VOLUME),
+      channelVolume7_(FourCC::VarChannel7Volume, DEFAULT_CHANNEL_VOLUME),
+      channelVolume8_(FourCC::VarChannel8Volume, DEFAULT_CHANNEL_VOLUME),
       wrap_(FourCC::VarWrap, false), transpose_(FourCC::VarTranspose, 0),
       scale_(FourCC::VarScale, scaleNames, numScales, 0),
       scaleRoot_(FourCC::VarScaleRoot, noteNames, 12, 0),
       projectName_(FourCC::VarProjectName, name),
-      previewVolume_(FourCC::VarPreviewVolume, DEFAULT_VOLUME) {
+      previewVolume_(FourCC::VarPreviewVolume, DEFAULT_PREVIEW_VOLUME) {
 
   this->variables_.insert(variables_.end(), &tempo_);
   this->variables_.insert(variables_.end(), &masterVolume_);
@@ -191,7 +200,7 @@ void Project::Purge() {
 
   unsigned char *data = song_.data_;
   for (int i = 0; i < 256 * SONG_CHANNEL_COUNT; i++) {
-    if (*data != 0xFF) {
+    if (*data != DATA_UNUSED_VALUE) {
       song_.chain_.SetUsed(*data);
     }
     data++;
@@ -204,7 +213,7 @@ void Project::Purge() {
 
     if (song_.chain_.IsUsed(i)) {
       for (int j = 0; j < 16; j++) {
-        if (*data != 0xFF) {
+        if (*data != DATA_UNUSED_VALUE) {
           song_.phrase_.SetUsed(*data);
         }
         data++;
@@ -213,7 +222,7 @@ void Project::Purge() {
     } else {
 
       for (int j = 0; j < 16; j++) {
-        *data++ = 0xFF;
+        *data++ = DATA_UNUSED_VALUE;
         *data2++ = 0x00;
       }
     }
@@ -230,8 +239,8 @@ void Project::Purge() {
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
       if (!song_.phrase_.IsUsed(i)) {
-        *data = 0xFF;
-        *data2 = 0xFF;
+        *data = DATA_UNUSED_VALUE;
+        *data2 = DATA_UNUSED_VALUE;
         *cmd1 = FourCC::InstrumentCommandNone;
         *param1 = 0;
         *cmd2 = FourCC::InstrumentCommandNone;
@@ -304,7 +313,7 @@ void Project::PurgeInstruments() {
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
     for (int j = 0; j < 16; j++) {
-      if (*data != 0xFF) {
+      if (*data != DATA_UNUSED_VALUE) {
         NAssert(*data < MAX_INSTRUMENT_COUNT);
         used[*data] = true;
       }
@@ -349,8 +358,8 @@ void Project::RestoreContent(PersistencyDocument *doc) {
   bool elem = doc->FirstChild();
   while (elem) {
     bool attr = doc->NextAttribute();
-    char name[24];
-    char value[24];
+    char name[MAX_VARIABLE_STRING_LENGTH + 1];
+    char value[MAX_VARIABLE_STRING_LENGTH + 1];
     while (attr) {
       if (!strcmp(doc->attrname_, "NAME")) {
         strcpy(name, doc->attrval_);

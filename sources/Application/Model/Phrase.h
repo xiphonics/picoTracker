@@ -11,6 +11,7 @@
 #define _PHRASE_H_
 
 #include "Foundation/Types/Types.h"
+
 #ifdef ADV
 #define PHRASE_COUNT 0xFF
 #define NO_MORE_PHRASE 0x100
@@ -18,6 +19,7 @@
 #define PHRASE_COUNT 0x80
 #define NO_MORE_PHRASE 0x81
 #endif
+#define STEPS_PER_PHRASE 16
 
 class Phrase {
 public:
@@ -28,12 +30,12 @@ public:
   void SetUsed(uchar c);
   void ClearAllocation();
 
-  uchar note_[PHRASE_COUNT * 16];
-  uchar instr_[PHRASE_COUNT * 16];
-  FourCC cmd1_[PHRASE_COUNT * 16];
-  ushort param1_[PHRASE_COUNT * 16];
-  FourCC cmd2_[PHRASE_COUNT * 16];
-  ushort param2_[PHRASE_COUNT * 16];
+  uchar note_[PHRASE_COUNT * STEPS_PER_PHRASE];
+  uchar instr_[PHRASE_COUNT * STEPS_PER_PHRASE];
+  FourCC cmd1_[PHRASE_COUNT * STEPS_PER_PHRASE];
+  ushort param1_[PHRASE_COUNT * STEPS_PER_PHRASE];
+  FourCC cmd2_[PHRASE_COUNT * STEPS_PER_PHRASE];
+  ushort param2_[PHRASE_COUNT * STEPS_PER_PHRASE];
 
 private:
   bool isUsed_[PHRASE_COUNT];

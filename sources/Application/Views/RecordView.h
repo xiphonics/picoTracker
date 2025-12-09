@@ -26,6 +26,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
+  void OnFocusLost() override;
 
   // Observer for field changes
   void Update(Observable &, I_ObservableData *);

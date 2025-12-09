@@ -35,11 +35,13 @@
 #define MAX_OPALINSTRUMENT_COUNT 0x03
 #define MAX_MACROINSTRUMENT_COUNT 0x01
 
-#define MAX_INSTRUMENT_COUNT                                                   \
-  (MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT +                     \
-   MAX_SIDINSTRUMENT_COUNT + MAX_OPALINSTRUMENT_COUNT +                        \
+#define MAX_INSTRUMENT_COUNT                               \
+  (MAX_SAMPLEINSTRUMENT_COUNT + MAX_MIDIINSTRUMENT_COUNT + \
+   MAX_SIDINSTRUMENT_COUNT + MAX_OPALINSTRUMENT_COUNT +    \
    MAX_MACROINSTRUMENT_COUNT)
 #endif
+
+#define EMPTY_SONG_VALUE 0xFF
 
 class Song : Persistent {
 public:

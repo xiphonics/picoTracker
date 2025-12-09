@@ -8,8 +8,6 @@
  */
 
 #include "AudioOutDriver.h"
-#include "Application/Player/SyncMaster.h" // Should be installable
-#include "System/Console/Trace.h"
 #include "System/System/System.h"
 
 fixed AudioOutDriver::primarySoundBuffer_[MIX_BUFFER_SIZE];
@@ -35,7 +33,14 @@ bool AudioOutDriver::Start() {
   return driver_->Start();
 }
 
-void AudioOutDriver::Stop() { driver_->Stop(); }
+void AudioOutDriver::Stop() {
+  SetAudioActive(false);
+  driver_->Stop();
+}
+
+void AudioOutDriver::SetAudioActive(bool active) {
+  driver_->OnAudioActive(active);
+}
 
 stereosample AudioOutDriver::GetLastPeakLevels() { return lastPeakVolume_; };
 

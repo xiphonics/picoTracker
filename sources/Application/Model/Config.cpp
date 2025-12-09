@@ -52,6 +52,7 @@ constexpr int DEFAULT_BACKLIGHT_LEVEL = 0xFF; // Default to max brightness (255)
 constexpr int DEFAULT_REC_SOURCE = 0x0;
 constexpr int DEFAULT_RECORD_LINE_GAIN_DB = 0;
 constexpr int DEFAULT_RECORD_MIC_GAIN_DB = 0;
+constexpr int DEFAULT_OUTPUT_VOLUME = 40;
 
 // Use a struct to define parameter information
 struct ConfigParam {
@@ -196,6 +197,12 @@ static const ConfigParam configParams[] = {
     {"BACKLIGHTLEVEL",
      {.intValue = DEFAULT_BACKLIGHT_LEVEL},
      FourCC::VarBacklightLevel,
+     nullptr,
+     0,
+     false},
+    {"OUTPUTVOLUME",
+     {.intValue = DEFAULT_OUTPUT_VOLUME},
+     FourCC::VarOutputVolume,
      nullptr,
      0,
      false},
@@ -487,12 +494,7 @@ bool Config::SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName) {
   Variable *fontVar = FindVariable(FourCC::VarUIFont);
   if (fontVar) {
     printer->OpenElement("Font");
-
-    // Format font value in hex format with # prefix
-    char hexValue[16];
-    npf_snprintf(hexValue, sizeof(hexValue), "#%X", fontVar->GetInt());
-
-    printer->PushAttribute("value", hexValue);
+    printer->PushAttribute("value", std::to_string(fontVar->GetInt()).c_str());
     printer->CloseElement(); // Font
   }
 

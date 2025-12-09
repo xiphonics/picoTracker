@@ -11,6 +11,7 @@
 #define _WAV_FILE_WRITER_H_
 
 #include "Application/Utils/fixed.h"
+#include "Services/Audio/AudioDriver.h"
 #include "System/FileSystem/FileSystem.h"
 #include <cstddef>
 #include <cstdint>
@@ -31,6 +32,8 @@ struct WavNormalizeResult {
   bool normalized;
 };
 
+typedef void (*SampleEditProgressCallback)(uint8_t percent);
+
 class WavFileWriter {
 public:
   WavFileWriter(const char *path);
@@ -38,16 +41,18 @@ public:
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,
-                       void *scratchBuffer, size_t scratchBufferSize,
-                       WavTrimResult &result);
-  static bool NormalizeFile(const char *path, void *scratchBuffer,
-                            size_t scratchBufferSize,
-                            WavNormalizeResult &result);
+                       void *scratchBuffer, uint32_t scratchBufferSize,
+                       WavTrimResult &result,
+                       SampleEditProgressCallback progressCallback = nullptr);
+  static bool
+  NormalizeFile(const char *path, void *scratchBuffer,
+                uint32_t scratchBufferSize, WavNormalizeResult &result,
+                SampleEditProgressCallback progressCallback = nullptr);
 
 private:
   int sampleCount_;
-  short *buffer_;
-  int bufferSize_;
+  // Buffer in AXI RAM since it has to be reachable by DMA perif
+  __attribute__((aligned(32))) static short buffer_[MAX_SAMPLE_COUNT * 2];
   I_File *file_;
 };
 #endif
