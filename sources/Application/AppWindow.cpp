@@ -549,7 +549,11 @@ AppWindow *AppWindow::Create(GUICreateWindowParams &params,
   return w;
 };
 
-void AppWindow::SetDirty() { _isDirty = true; };
+void AppWindow::SetDirty() {
+  if (_currentView) {
+    _currentView->SetDirty(true);
+  }
+};
 
 void AppWindow::UpdateColorsFromConfig() {
   // now assign custom colors if they have been set device config
@@ -614,7 +618,7 @@ bool AppWindow::onEvent(GUIEvent &event) {
        if
        (_currentView!=_listView) {
        CloseProject() ;
-       _isDirty=true ;
+       _currentView->SetDirty(true) ;
        } else {
                             System::GetInstance()->PostQuitMessage() ;
                     };
@@ -631,11 +635,11 @@ bool AppWindow::onEvent(GUIEvent &event) {
   }
   if (_closeProject) {
     CloseProject();
-    _isDirty = true;
+    SetDirty();
   }
 
-  // _isDirty flag will be checked in AnimationUpdate to determine if redraw is
-  // needed
+  // View dirty flag will be checked in AnimationUpdate to determine if redraw
+  // is needed
   return false;
 };
 
@@ -644,7 +648,7 @@ void AppWindow::onUpdate(bool redraw) {
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
     // Mark as dirty to trigger redraw in AnimationUpdate
-    _isDirty = true;
+    SetDirty();
   }
   // No Flush here - AnimationUpdate will handle it
 };
@@ -711,7 +715,7 @@ void AppWindow::AnimationUpdate() {
                                             "Connect charger", 0);
       _currentView->DoModal(mb);
       lowBatteryMessageShown_ = true;
-      _isDirty = true;
+      SetDirty();
     }
   } else if (!lowBatteryState_ && lowBatteryMessageShown_) {
     ModalView *modal = _currentView->GetModalView();
@@ -721,13 +725,12 @@ void AppWindow::AnimationUpdate() {
       Trace::Debug("CLose Low Batt dialog");
     }
     lowBatteryMessageShown_ = false;
-    _isDirty = true;
+    SetDirty();
   }
 
   // If we need a full redraw due to state changes from key events
-  if (_isDirty && _currentView) {
+  if (_currentView && _currentView->isDirty()) {
     _currentView->Redraw(); // Draw main content
-    _isDirty = false;       // Reset the flag
   }
 
   // Handle view updates
@@ -843,7 +846,7 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     }
     _currentView->SetFocus(*vt);
-    _isDirty = true;
+    SetDirty();
     GUIWindow::Clear(backgroundColor_, true);
     Clear(true);
     break;
