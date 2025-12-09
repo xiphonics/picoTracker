@@ -52,6 +52,7 @@ protected:
   void fillSIDParameters();
   void fillMidiParameters();
   void fillOpalParameters();
+  void fillGameBoyParameters();
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);

@@ -263,6 +263,19 @@ struct FourCC {
     ActionAutoSlice = 186,
     ActionShowRecordView = 187,
 
+    GameBoyInstrumentWaveform = 200,
+    GameBoyInstrumentAttack = 201,
+    GameBoyInstrumentDecay = 202,
+    GameBoyInstrumentLevel = 203,
+    GameBoyInstrumentLength = 204,
+    GameBoyInstrumentBurst = 205,
+    GameBoyInstrumentVibrato = 206,
+    GameBoyInstrumentVibratoDelay = 207,
+    GameBoyInstrumentTranspose = 208,
+    GameBoyInstrumentTable = 209,
+    GameBoyInstrumentSweepTime = 210,
+    GameBoyInstrumentSweepAmount = 211,
+
     Default = 255, // "    "
   };
   ETL_DECLARE_ENUM_TYPE(FourCC, char)

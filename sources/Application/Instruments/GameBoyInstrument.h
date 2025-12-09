@@ -7,16 +7,20 @@
  * This file is part of the picoTracker firmware
  */
 
-#ifndef _OPAL_INSTRUMENT_H_
-#define _OPAL_INSTRUMENT_H_
+#pragma once
 
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
-#include "Externals/opal/opal.h"
 #include "I_Instrument.h"
 #include <cstdint>
 
-#define OPAL_MAX_CHANNELS 4
+#define GB_NUM_WAVEFORMS 5
+
+constexpr int SAMPLING_RATE = 44100;
+
+constexpr int BASE_MIDI = 69; // A4
+constexpr double BASE_FREQ = 440.0;
+constexpr int PHASE_BITS = 32;
 
 class GameBoyInstrument : public I_Instrument {
 
@@ -39,7 +43,7 @@ public:
 
   virtual bool IsEmpty() { return false; };
 
-  virtual InstrumentType GetType() { return IT_OPAL; };
+  virtual InstrumentType GetType() { return IT_GAMEBOY; };
 
   virtual void OnStart();
 
@@ -54,28 +58,22 @@ public:
   void setChannel(uint8_t channel);
 
 private:
-  uint8_t breg;
+  etl::list<Variable *, 12> variables_;
 
-  etl::list<Variable *, 16> variables_;
+  Variable waveform_;
+  Variable attack_;
+  Variable decay_;
 
-  Variable algorithm_;
-  Variable feedback_;
-  Variable deepTremeloVibrato_;
+  Variable level_;
+  Variable length_;
+  Variable burst_;
+  Variable vibrato_;
+  Variable vibratoDelay_;
+  Variable transpose_;
+  Variable table_;
+  Variable sweepTime_;
+  Variable sweepAmount_;
 
-  Variable op1Level_;
-  Variable op1Multiplier_;
-  Variable op1ADSR_;
-  Variable op1WaveShape_;
-  // Termelo(AM),Vibrato(VIB),SustainingVoice(EG),EnveloperScale(KSR)
-  Variable op1TremVibSusKSR_;
-  Variable op1KeyScaleLevel_;
-  Variable op2Level_;
-  Variable op2Multiplier_;
-  Variable op2ADSR_;
-  Variable op2WaveShape_;
-  // Termelo(AM),Vibrato(VIB),SustainingVoice(EG),EnveloperScale(KSR)
-  Variable op2TremVibSusKSR_;
-  Variable op2KeyScaleLevel_;
+  uint32_t phase_ = 0;
+  uint32_t frequency_ = 0;
 };
-
-#endif

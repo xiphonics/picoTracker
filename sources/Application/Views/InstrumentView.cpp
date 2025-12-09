@@ -309,6 +309,9 @@ void InstrumentView::refreshInstrumentFields() {
   case IT_OPAL:
     fillOpalParameters();
     break;
+  case IT_GAMEBOY:
+    fillGameBoyParameters();
+    break;
   case IT_LAST:
     // NA
     break;
@@ -630,6 +633,89 @@ void InstrumentView::fillMidiParameters() {
       UIIntVarOffField(position, *v, "table: %2.2X", 0, 0x7F, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
+
+void InstrumentView::fillGameBoyParameters() {
+  int i = viewData_->currentInstrumentID_;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+  I_Instrument *instr = bank->GetInstrument(i);
+  GameBoyInstrument *instrument = (GameBoyInstrument *)instr;
+  GUIPoint position = GetAnchor();
+
+  // min max x y visOffset
+
+  // extra y spacing to allow for gap between export/import and parameters
+  position._y += 2;
+  Variable *v = instrument->FindVariable(FourCC::GameBoyInstrumentWaveform);
+  intVarField_.emplace_back(position, *v, "Waveform:   %s", 0, GB_NUM_WAVEFORMS - 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  staticField_.emplace_back(position, "Envelope");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentAttack);
+  intVarField_.emplace_back(position, *v, " |- Attack: %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentDecay);
+  intVarField_.emplace_back(position, *v, " '- Decay:  %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentLevel);
+  intVarField_.emplace_back(position, *v, "Level:      %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentLength);
+  intVarField_.emplace_back(position, *v, "Length:     %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentBurst);
+  intVarField_.emplace_back(position, *v, "Burst:      %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  staticField_.emplace_back(position, "Vibrato");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentVibrato);
+  intVarField_.emplace_back(position, *v, " |- Amount: %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentVibratoDelay);
+  intVarField_.emplace_back(position, *v, " '- Delay:  %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentTranspose);
+  intVarField_.emplace_back(position, *v, "Transpose:  %d", 0, 48, 1, 12, -24);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  staticField_.emplace_back(position, "Sweep");
+  fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentSweepTime);
+  intVarField_.emplace_back(position, *v, " |- Time:   %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentSweepAmount);
+  intVarField_.emplace_back(position, *v, " '- Amount: %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentTable);
+  intVarOffField_.emplace_back(position, *v, "Table:   %2.2X", 0x00, TABLE_COUNT - 1, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
+}
 
 void InstrumentView::fillOpalParameters() {
   int i = viewData_->currentInstrumentID_;

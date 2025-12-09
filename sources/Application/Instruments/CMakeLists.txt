@@ -6,6 +6,7 @@ add_library(application_instruments
   InstrumentNameVariable.cpp
   MidiInstrument.cpp
   OpalInstrument.cpp
+  GameBoyInstrument.cpp
   NoneInstrument.cpp
   SRPUpdaters.cpp
   SampleInstrument.cpp
