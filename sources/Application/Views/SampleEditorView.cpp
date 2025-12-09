@@ -330,7 +330,8 @@ void SampleEditorView::DrawView() {
 
 void SampleEditorView::DrawWaveForm() {
   // Avoid drawing markers while a modal is on-screen; the modal redraw logic
-  // only clears the text grid so we must not repaint the pixel buffer behind it.
+  // only clears the text grid so we must not repaint the pixel buffer behind
+  // it.
   if (HasModalView()) {
     return;
   }
