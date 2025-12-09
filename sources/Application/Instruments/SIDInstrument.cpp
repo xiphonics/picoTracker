@@ -98,7 +98,11 @@ bool SIDInstrument::Init() {
   return true;
 };
 
-void SIDInstrument::OnStart() { tableState_.Reset(); };
+void SIDInstrument::OnStart() {
+  tableState_.Reset();
+  int osc = GetOsc();
+  sid_->cRSID_resetADSR(osc);
+};
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)                                                   \
@@ -197,7 +201,12 @@ bool SIDInstrument::Start(int c, unsigned char note, bool retrigger) {
   return true;
 };
 
-void SIDInstrument::Stop(int c) { playing_ = false; };
+void SIDInstrument::Stop(int c) {
+  playing_ = false;
+  int osc = GetOsc();
+  sid_->Register[4 + osc * 7] &= ~1; // Set gate bit off
+  gate_ = false;
+};
 
 bool SIDInstrument::Render(int channel, fixed *buffer, int size,
                            bool updateTick) {
