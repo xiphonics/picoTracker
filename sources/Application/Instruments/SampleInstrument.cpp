@@ -1189,15 +1189,6 @@ etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
   return sampleFileName;
 };
 
-void SampleInstrument::Purge() {
-  auto it = variables_.begin();
-  for (size_t i = 0; i < variables_.size(); i++) {
-    (*it)->Reset();
-    it++;
-  }
-  source_ = NULL;
-};
-
 bool SampleInstrument::IsEmpty() {
   Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return (v->GetInt() == -1);

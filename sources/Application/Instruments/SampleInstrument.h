@@ -48,7 +48,6 @@ public:
 
   virtual InstrumentType GetType() { return IT_SAMPLE; };
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
-  virtual void Purge();
   virtual int GetTable();
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
