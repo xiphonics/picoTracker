@@ -104,7 +104,7 @@ public:
 
   virtual void ProcessCommand(int channel, FourCC cc, ushort value) = 0;
 
-  virtual void Purge() = 0;
+  virtual void Purge();
 
   virtual int GetTable() = 0;
   virtual bool GetTableAutomation() = 0;
