@@ -46,7 +46,7 @@ To create a debug build, you have to replace the ```cmake``` step on the previou
 To build using CMake the debug build for Adv target: 
 ```bash
 cd build
-PICO_SDK_PATH=../sources/Externals/pico-sdk cmakeb -DCMAKE_BUILD_TYPE=Debug -DADV=true ../sources
+cmake -DCMAKE_BUILD_TYPE=Debug -DADV=true ../sources
 make -j8
 ```
 

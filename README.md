@@ -1,6 +1,6 @@
 # picoTracker
 
-picoTracker is a project that aims to provide a low cost open source and DIY hardware music tracker platform. It's firmware is essentially a modified version of [LittleGPTracker](https://littlegptracker.com/) (a.k.a piggy tracker) and keeps 90%+ of it's functionality, but I made some custom modifications, both functional and aesthetic and it might diverge more in the future. It implements a user interface similar to the refined track-by-joypad software [*littlesounddj*](http://www.littlesounddj.com/).
+picoTracker is a project that aims to provide a low cost open source and DIY hardware music tracker platform. It's firmware started as a modified version of [LittleGPTracker](https://littlegptracker.com/) (a.k.a piggy tracker) but has now diverged in many areas and added alot of new and improved functionality. It implements a user interface similar to the refined track-by-joypad software [*littlesounddj*](http://www.littlesounddj.com/).
 
 ## Features
 
@@ -32,7 +32,7 @@ The picoTracker Advance model was launched in November 2025 and has significantl
 
 * The pico will probably struggle with 8 song channels playing at the same time in most cases (the Advance can do 8). There is still room for improvement by either using core0 for partial audio rendering and/or improving the performance of the audio/dsp code (eg. using the hardware interpolator units on the RP2040)
 * Cannot load LGPT projects though there is [a basic script to convert projects](util/lgptconvert.py).
-* Samples are copied to flash upon load and played from there. Since flash has to be shared with program code, only 8MB is available for it when using the Raspberry Pi Pico, or up to 15MB when using other boards or custom hardware (i.e: the [picoTracker](https://xiphonics.com/products/picotracker-pcb-kit) official hardware kit).
+* Samples are copied to flash upon load and played from there. Since flash has to be shared with program code, only 8MB is available for it when using the Raspberry Pi Pico, or up to 8MB when using other boards or custom hardware (i.e: the [picoTracker](https://xiphonics.com/products/picotracker-pcb-kit) official hardware kit).
 * Instrument count is also pretty low due to memory constraints. 16 Sample, 16 MIDI instruments, 3 SID, 3 OPAL instruments.
 * Sample instrument feedback feature has been removed due to memory constraints.
 * Soundfont support has been removed to save some memory.
