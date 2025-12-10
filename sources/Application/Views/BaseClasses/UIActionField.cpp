@@ -37,7 +37,7 @@ void UIActionField::Draw(GUIWindow &w, int offset) {
     strncpy(buffer, name_, MAX_FIELD_WIDTH);
     buffer[MAX_FIELD_WIDTH] = '\0';
 
-    ((AppWindow &)w).SetColor(CD_EMPHASIS);
+    ((AppWindow &)w).SetColor(CD_HILITE1);
     w.DrawString(buffer, position, props);
   }
 };

@@ -66,7 +66,9 @@ public:
 
   static GUIColor GetColor(ColorDefinition cd);
 
-  void LoadProject(const char *name);
+  enum LoadProjectResult { LOAD_FAILED = -1, LOAD_OK = 0 };
+
+  LoadProjectResult LoadProject(const char *name);
   void CloseProject();
 
   using GUIWindow::Clear;
@@ -84,7 +86,7 @@ protected: // GUIWindow implementation
   virtual void onUpdate(bool redraw);
   virtual void LayoutChildren();
   virtual void Flush();
-  virtual void Redraw();
+  virtual void Redraw(){};
   virtual void AnimationUpdate();
 
   // override draw string to avoid going too far off
@@ -170,6 +172,7 @@ private:
   static int charHeight_;
 
   bool loadProject_ = false;
+  bool awaitingProjectLoadAck_ = false;
 
   uint32_t lastAutoSave = 0;
 

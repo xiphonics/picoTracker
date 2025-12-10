@@ -14,7 +14,11 @@
 #include "Foundation/T_Singleton.h"
 #include "Foundation/Types/Types.h"
 
+#ifdef ADV
+#define TABLE_COUNT 0x80
+#else
 #define TABLE_COUNT 0x20
+#endif
 #define TABLE_STEPS 16
 #define TABLE_COLUMNS 3
 

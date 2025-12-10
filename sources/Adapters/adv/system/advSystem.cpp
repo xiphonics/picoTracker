@@ -32,7 +32,6 @@
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -74,6 +73,9 @@ void advSystem::Boot() {
   __attribute__((
       section(".DATA_RAM"))) static char fsMemBuf[sizeof(advFileSystem)];
   FileSystem::Install(new (fsMemBuf) advFileSystem());
+
+  // Backlight must be on before any early error screens (e.g. missing SD card)
+  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
 
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
@@ -119,9 +121,6 @@ void advSystem::Boot() {
     Trace::Log("POWERON", "Woke up from deep sleep");
   }
 
-  // Enable display PWM
-  HAL_TIM_PWM_Start(&htim13, TIM_CHANNEL_1);
-
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
 
@@ -143,24 +142,15 @@ void advSystem::Boot() {
 
 void advSystem::Shutdown() { delete Audio::GetInstance(); };
 
-static int secbase;
-
-unsigned long advSystem::GetClock() {
-  struct timeval tp;
-
-  gettimeofday(&tp, NULL);
-  if (!secbase) {
-    secbase = tp.tv_sec;
-    return long(tp.tv_usec / 1000.0);
-  }
-  return long((tp.tv_sec - secbase) * 1000 + tp.tv_usec / 1000.0);
-}
+unsigned long advSystem::GetClock() { return xTaskGetTickCount(); }
 
 void advSystem::GetBatteryState(BatteryState &state) {
   auto soc = getBatterySOC();
   state.voltage_mv = getBatteryVoltage();
   state.temperature_c = getBatteryTemperature();
-  state.charging = getChargingStatus();
+  ChargingStatus status = getChargingStatus();
+
+  state.charging = (status == PRE_CHARGE || status == FAST_CHARGE);
   if (soc < 0) {
     state.error = true;
   } else {

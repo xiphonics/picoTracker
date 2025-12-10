@@ -122,10 +122,12 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*tempoField_.rbegin()));
   (*tempoField_.rbegin()).AddObserver(*this);
 
+#ifndef ADV
   v = project_->FindVariable(FourCC::VarMasterVolume);
   position._y += 1;
   intVarField_.emplace_back(position, *v, "master vol: %d%%", 0, 100, 1, 5);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+#endif
 
   v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
@@ -216,10 +218,12 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
+#ifndef ADV
   position._x += 8;
   actionField_.emplace_back("Stems", FourCC::ActionRenderStems, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
+#endif
   position._x = xalign;
 }
 
@@ -236,11 +240,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
-        SampleEditorView::SetSourceViewType(VT_PROJECT);
-        ViewType vt = VT_RECORD;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
+        switchToRecordView();
       }
     }
   } else if (mask & EPBM_NAV) {
@@ -440,7 +440,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       } else {
         ImportView::SetSourceViewType(VT_PROJECT);
         // Set to show project pool dir in ImportView
-        viewData_->sampleEditorProjectList = true;
+        viewData_->isShowingSampleEditorProjectPool = true;
 
         // Go to import sample
         ViewType vt = VT_IMPORT;

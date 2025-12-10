@@ -119,13 +119,19 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
     Trace::Error("INSTRUMENTVIEW", "Failed to assign new instrument type: %d",
                  nuType);
 
+    // TODO (democloid): this is a hack in order to ignore all existence of
+    // certain instruments and seamlessly set NONE
+    // Needed as the alternative is to change InstrumentTypeNames array plus all
+    // switch instances which reference the types that wouldn't be available on
+    // this platform
+#ifndef ADV
     // Show a dialog to the user
     char message[40];
     npf_snprintf(message, sizeof(message), "%s instruments exhausted!",
                  InstrumentTypeNames[nuType]);
     MessageBox *mb = new MessageBox(*this, message, "Trying next...", MBBF_OK);
     DoModal(mb);
-
+#endif
     // Try to find the next available instrument type
     bool found = false;
     for (int i = nuType + 1; i < IT_LAST; i++) {
@@ -440,16 +446,8 @@ void InstrumentView::fillSIDParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
-  switch (instrument->GetChip()) {
-  case SID1:
-    v = instrument->FindVariable(FourCC::SIDInstrument1Waveform);
-    break;
-  case SID2:
-    v = instrument->FindVariable(FourCC::SIDInstrument2Waveform);
-    break;
-  }
+  v = instrument->FindVariable(FourCC::SIDInstrumentWaveform);
 
-  // Only support independent waveforms for the moment
   intVarField_.emplace_back(position, *v, "WF: %s", 0, DWF_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -787,11 +785,14 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (current == -1)
         return;
 
-      int next = TableHolder::GetInstance()->Clone(current);
-      if (next != NO_MORE_TABLE) {
-        v.SetInt(next);
-        isDirty_ = true;
-      }
+      if ((field->GetVariableID() == FourCC::SampleInstrumentTable) ||
+          (field->GetVariableID() == FourCC::MidiInstrumentTable)) {
+        int next = TableHolder::GetInstance()->Clone(current);
+        if (next != NO_MORE_TABLE) {
+          v.SetInt(next);
+          isDirty_ = true;
+        }
+      };
     }
     mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
   };
@@ -839,11 +840,7 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
-        SampleEditorView::SetSourceViewType(VT_INSTRUMENT);
-        ViewType vt = VT_RECORD;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
+        switchToRecordView();
       }
     }
   } else if (mask & EPBM_NAV) {

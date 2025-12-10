@@ -599,11 +599,7 @@ void SongView::processNormalButtonMask(unsigned int mask) {
       } else {
         // recording screen
         if (!player->IsRunning()) {
-          SampleEditorView::SetSourceViewType(VT_SONG);
-          ViewType vt = VT_RECORD;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
+          switchToRecordView();
         }
       }
     }
@@ -875,9 +871,9 @@ void SongView::DrawView() {
       // draw current step
       unsigned char d = *data++;
       if (d == 0xFE) {
-        SetColor(CD_ACCENTALT);
+        SetColor(CD_ACCENT);
       } else if (d == 0x00) {
-        SetColor(CD_EMPHASIS);
+        SetColor(CD_HILITE1);
       } else {
         SetColor(CD_NORMAL);
       }

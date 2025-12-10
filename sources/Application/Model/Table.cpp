@@ -29,12 +29,12 @@ void Table::Reset() {
 
 void Table::Copy(const Table &other) {
   for (int i = 0; i < TABLE_STEPS; i++) {
-    cmd1_[i] = *other.cmd1_;
-    param1_[i] = *other.param1_;
-    cmd2_[i] = *other.cmd2_;
-    param2_[i] = *other.param2_;
-    cmd3_[i] = *other.cmd3_;
-    param3_[i] = *other.param3_;
+    cmd1_[i] = *(other.cmd1_ + i);
+    param1_[i] = *(other.param1_ + i);
+    cmd2_[i] = *(other.cmd2_ + i);
+    param2_[i] = *(other.param2_ + i);
+    cmd3_[i] = *(other.cmd3_ + i);
+    param3_[i] = *(other.param3_ + i);
   }
 };
 

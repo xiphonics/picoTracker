@@ -8,6 +8,9 @@
 #ifndef _TLV320AIC3204_
 #define _TLV320AIC3204_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 // #define I2C hi2c4
 #define CODEC_ADDR (0x18 << 1)
 // #define CODEC_RESET_PORT GPIOC
@@ -24,12 +27,17 @@ extern "C" {
 void tlv320_init();
 
 void tlv320_select_output(void);
+void tlv320_set_volume(uint8_t);
+uint8_t tlv320_get_volume(void);
+void tlv320_set_audio_output_active(bool active);
 void tlv320_unmute(void);
 void tlv320_mute(void);
 void tlv320_enable_linein(void);
 void tlv320_enable_mic(void);
 void tlv320_disable_linein(void);
 void tlv320_disable_mic(void);
+void tlv320_set_linein_gain_db(uint8_t gainDb);
+void tlv320_set_mic_gain_db(uint8_t gainDb);
 void tlv320_sleep(void);
 
 #ifdef __cplusplus

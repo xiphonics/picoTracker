@@ -17,6 +17,7 @@
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UITempoField.h"
+#include "Services/Audio/Audio.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
 #include "platform.h"
@@ -73,6 +74,14 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
+#ifdef ADV
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarOutputVolume);
+  intVarField_.emplace_back(position, *v, "Output volume: %3d", 0, 100, 1, 5);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+#endif
+
   position._y += 2;
   actionField_.emplace_back("Theme settings", FourCC::ActionShowTheme,
                             position);
@@ -99,11 +108,7 @@ void DeviceView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
-        SampleEditorView::SetSourceViewType(VT_DEVICE);
-        ViewType vt = VT_RECORD;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
+        switchToRecordView();
       }
     }
   } else if (mask & EPBM_NAV) {
@@ -138,8 +143,8 @@ void DeviceView::DrawView() {
 #ifdef ADV
   // Draw battery health
   pos._x = SCREEN_MAP_WIDTH + 1;
-  pos._y = 12;
-  SetColor(CD_HILITE1);
+  pos._y = 21;
+  SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, "Battery health:", props);
 
   pos._x += strlen("Battery health") + 1;
@@ -147,7 +152,7 @@ void DeviceView::DrawView() {
   char sohText[5];
   (soh < 0) ? npf_snprintf(sohText, sizeof(sohText), "%s", "NA")
             : npf_snprintf(sohText, sizeof(sohText), "%i%%", soh);
-  SetColor(CD_INFO);
+  SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, sohText, props);
 #endif
 
@@ -159,7 +164,7 @@ void DeviceView::DrawView() {
 
   npf_snprintf(projectString, sizeof(projectString), "Build %s%s_%s",
                PROJECT_NUMBER, PROJECT_RELEASE, BUILD_COUNT);
-  SetColor(CD_HILITE1);
+  SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, projectString, props);
 };
 
@@ -184,6 +189,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
       unsigned char brightness = (unsigned char)v->GetInt();
       System::GetInstance()->SetDisplayBrightness(brightness);
     }
+    configDirty_ = true;
   }
 
   Player *player = Player::GetInstance();
@@ -211,23 +217,51 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     MessageBox *mb =
         new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
     DoModal(mb);
+    configDirty_ = true;
     break;
   }
-
+  case FourCC::VarMidiDevice:
+  case FourCC::VarMidiSync:
+  case FourCC::VarRemoteUI: {
+    configDirty_ = true;
+    break;
+  }
+  case FourCC::VarOutputVolume: {
+    Config *config = Config::GetInstance();
+    Variable *v = config->FindVariable(FourCC::VarOutputVolume);
+    if (v) {
+      Audio *audio = Audio::GetInstance();
+      if (audio) {
+        // This unfortunate name may get confused with the actual audio pipeline
+        // mixer. It's not, this sets the driver output volume
+        audio->SetMixerVolume(v->GetInt());
+      }
+    }
+    configDirty_ = true;
+    break;
+  }
   default:
     NInvalid;
     break;
   };
   focus->Draw(w_);
   isDirty_ = true;
-
-  Trace::Log("DEVICEVIEW", "persist config changes!");
-  Config *config = Config::GetInstance();
-  config->Save();
 };
 
 void DeviceView::addSwatchField(ColorDefinition color, GUIPoint position) {
   position._x -= 5;
   swatchField_.emplace_back(position, color);
   fieldList_.insert(fieldList_.end(), &(*swatchField_.rbegin()));
+}
+
+void DeviceView::OnFocusLost() {
+  if (configDirty_) {
+    Config *config = Config::GetInstance();
+    if (!config->Save()) {
+      Trace::Error("DEVICEVIEW", "Failed to save device config on focus lost");
+      return;
+    }
+    Trace::Log("DEVICEVIEW", "Saved device config on focus lost");
+    configDirty_ = false;
+  }
 }

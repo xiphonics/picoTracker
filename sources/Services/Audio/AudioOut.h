@@ -26,6 +26,7 @@ public:
   virtual void Close() = 0;
   virtual bool Start() = 0;
   virtual void Stop() = 0;
+  virtual void SetAudioActive(bool active) {}
 
   //       virtual void SetMasterVolume(int vol)=0 ;
 

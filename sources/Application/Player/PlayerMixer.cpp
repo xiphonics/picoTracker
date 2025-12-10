@@ -134,8 +134,6 @@ void PlayerMixer::Update(Observable &o, I_ObservableData *d) {
   SetChanged();
   NotifyObservers();
 
-  // Transfer the mixer data
-  //     out_->SetMasterVolume(project_->GetMasterVolume()) ;
   MixerService *ms = MixerService::GetInstance();
   ms->SetMasterVolume(project_->GetMasterVolume());
 };

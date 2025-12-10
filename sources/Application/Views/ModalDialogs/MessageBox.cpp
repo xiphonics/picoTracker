@@ -62,14 +62,12 @@ void MessageBox::DrawView() {
   int y = 0;
   int x = (width - size) / 2;
   GUITextProperties props;
-  SetColor(CD_ERROR);
+  SetColor(CD_NORMAL);
   DrawString(x, y, line1_.c_str(), props);
   if (line2_.size() > 0) {
     y++;
     DrawString(x, y, line2_.c_str(), props);
   }
-
-  SetColor(CD_NORMAL);
 
   y += 2;
   int offset = width / (buttonCount_ + 1);
@@ -77,7 +75,13 @@ void MessageBox::DrawView() {
   for (int i = 0; i < buttonCount_; i++) {
     const char *text = buttonText[button_[i]];
     x = offset * (i + 1) - strlen(text) / 2;
-    props.invert_ = (i == selected_) ? true : false;
+    if (i == selected_) {
+      SetColor(CD_HILITE2);
+      props.invert_ = true;
+    } else {
+      SetColor(CD_HILITE1);
+      props.invert_ = false;
+    }
     DrawString(x, y, text, props);
   }
 };

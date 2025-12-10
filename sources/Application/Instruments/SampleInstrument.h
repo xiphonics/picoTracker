@@ -98,7 +98,8 @@ private:
   etl::list<Variable *, 21> variables_;
 
   SoundSource *source_;
-  static struct renderParams renderParams_[SONG_CHANNEL_COUNT];
+  __attribute__((section(".DTCMRAM"))) static struct renderParams
+      renderParams_[SONG_CHANNEL_COUNT];
   bool running_;
   bool dirty_;
   TableSaveState tableState_;

@@ -14,9 +14,20 @@
 #include "WavHeader.h"
 #include <algorithm>
 #include <cstring>
+#include <limits>
 
-WavFileWriter::WavFileWriter(const char *path)
-    : sampleCount_(0), buffer_(0), bufferSize_(0), file_(0) {
+short WavFileWriter::buffer_[MAX_SAMPLE_COUNT * 2];
+
+inline void reportProgress(SampleEditProgressCallback callback,
+                           uint32_t processed, uint32_t total) {
+  if (!callback || total == 0u) {
+    return;
+  }
+  uint32_t percent = processed >= total ? 100u : (processed * 100u) / total;
+  callback(static_cast<uint8_t>(percent));
+}
+
+WavFileWriter::WavFileWriter(const char *path) : sampleCount_(0), file_(0) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
     // Use WavHeaderWriter to write the header
@@ -33,17 +44,6 @@ WavFileWriter::~WavFileWriter() { Close(); }
 void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
 
   if (!file_)
-    return;
-
-  // allocate a short buffer for transfer
-
-  if (size > bufferSize_) {
-    SAFE_FREE(buffer_);
-    buffer_ = (short *)malloc(size * 2 * sizeof(short));
-    bufferSize_ = size;
-  };
-
-  if (!buffer_)
     return;
 
   short *s = buffer_;
@@ -69,7 +69,8 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
 
 bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
                              uint32_t endFrame, void *scratchBuffer,
-                             size_t scratchBufferSize, WavTrimResult &result) {
+                             uint32_t scratchBufferSize, WavTrimResult &result,
+                             SampleEditProgressCallback progressCallback) {
   result = {0, 0, 0, 0, false};
 
   if (!path) {
@@ -165,6 +166,10 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
   uint32_t readOffset = headerDataOffset + clampedStart * bytesPerFrame;
   uint32_t writeOffset = headerDataOffset;
   uint32_t bytesRemaining = framesToKeep * bytesPerFrame;
+  const uint32_t totalBytesToCopy = bytesRemaining;
+  uint32_t processedBytes = 0;
+
+  reportProgress(progressCallback, 0, totalBytesToCopy);
 
   while (bytesRemaining > 0) {
     uint32_t chunkSize = std::min<uint32_t>(
@@ -189,7 +194,11 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     readOffset += bytesRead;
     writeOffset += bytesRead;
     bytesRemaining -= static_cast<uint32_t>(bytesRead);
+    processedBytes += static_cast<uint32_t>(bytesRead);
+    reportProgress(progressCallback, processedBytes, totalBytesToCopy);
   }
+
+  reportProgress(progressCallback, totalBytesToCopy, totalBytesToCopy);
 
   const uint32_t newDataSize = framesToKeep * bytesPerFrame;
   file->Seek(headerDataOffset + newDataSize, SEEK_SET);
@@ -205,6 +214,255 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
   return true;
 }
 
+bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
+                                  uint32_t scratchBufferSize,
+                                  WavNormalizeResult &result,
+                                  SampleEditProgressCallback progressCallback) {
+  result = {
+      .totalFrames = 0,
+      .peakBefore = 0,
+      .targetPeak = 0,
+      .gainApplied = 1.0f,
+      .normalized = false,
+  };
+
+  if (!path) {
+    Trace::Error("WavFileWriter: NormalizeFile received null path");
+    return false;
+  }
+  if (!scratchBuffer || scratchBufferSize == 0) {
+    Trace::Error("WavFileWriter: NormalizeFile received invalid scratch "
+                 "buffer");
+    return false;
+  }
+
+  auto fs = FileSystem::GetInstance();
+  if (!fs) {
+    Trace::Error("WavFileWriter: FileSystem unavailable");
+    return false;
+  }
+
+  I_File *file = fs->Open(path, "r+");
+  if (!file) {
+    Trace::Error("WavFileWriter: Failed to open %s for normalization", path);
+    return false;
+  }
+
+  auto headerInfo = WavHeaderWriter::ReadHeader(file);
+  if (!headerInfo) {
+    Trace::Error("WavFileWriter: Failed to parse WAV header from %s", path);
+    file->Close();
+    return false;
+  }
+
+  const uint16_t numChannels = headerInfo->numChannels;
+  const uint16_t bytesPerSample = headerInfo->bytesPerSample;
+  const uint16_t bitsPerSample = headerInfo->bitsPerSample;
+  const uint32_t dataChunkSize = headerInfo->dataChunkSize;
+  const uint32_t dataOffset = headerInfo->dataOffset;
+
+  if (numChannels == 0 || numChannels > 2 || bytesPerSample == 0 ||
+      dataChunkSize == 0) {
+    Trace::Error("WavFileWriter: Unsupported WAV format for normalization: "
+                 "%s",
+                 path);
+    file->Close();
+    return false;
+  }
+
+  const uint32_t bytesPerFrame = numChannels * bytesPerSample;
+  if (bytesPerFrame == 0) {
+    Trace::Error("WavFileWriter: Invalid bytes per frame for %s", path);
+    file->Close();
+    return false;
+  }
+
+  if (scratchBufferSize < bytesPerFrame) {
+    Trace::Error("WavFileWriter: Scratch buffer too small (%zu) for frame "
+                 "size %u",
+                 scratchBufferSize, bytesPerFrame);
+    file->Close();
+    return false;
+  }
+
+  const uint32_t totalFrames =
+      bytesPerFrame ? (dataChunkSize / bytesPerFrame) : 0;
+  result.totalFrames = totalFrames;
+  const uint32_t fullScalePeak = (bitsPerSample == 8) ? 127U : 32767U;
+  result.targetPeak = static_cast<int32_t>(fullScalePeak);
+
+  if (totalFrames == 0) {
+    Trace::Error("WavFileWriter: Sample has no audio frames in %s", path);
+    file->Close();
+    return false;
+  }
+
+  uint32_t usableChunk = static_cast<uint32_t>(
+      (scratchBufferSize / bytesPerFrame) * bytesPerFrame);
+  if (usableChunk == 0) {
+    usableChunk = bytesPerFrame;
+  }
+
+  uint32_t bytesRemaining = dataChunkSize;
+  uint32_t readOffset = dataOffset;
+  int32_t peak = 0;
+
+  reportProgress(progressCallback, 0, dataChunkSize);
+
+  while (bytesRemaining > 0) {
+    uint32_t chunkSize = std::min<uint32_t>(bytesRemaining, usableChunk);
+
+    file->Seek(readOffset, SEEK_SET);
+    int bytesRead = file->Read(scratchBuffer, chunkSize);
+    if (bytesRead != static_cast<int>(chunkSize)) {
+      Trace::Error(
+          "WavFileWriter: Failed reading sample data during normalization");
+      file->Close();
+      return false;
+    }
+
+    if (bitsPerSample == 8) {
+      uint8_t *samples = static_cast<uint8_t *>(scratchBuffer);
+      for (int i = 0; i < bytesRead; ++i) {
+        int32_t centered = static_cast<int32_t>(samples[i]) - 128;
+        int32_t absValue = centered < 0 ? -centered : centered;
+        if (absValue > peak) {
+          peak = absValue;
+        }
+      }
+    } else {
+      int16_t *samples = static_cast<int16_t *>(scratchBuffer);
+      int32_t sampleCount = bytesRead / sizeof(int16_t);
+      for (int i = 0; i < sampleCount; ++i) {
+        int32_t sample = static_cast<int32_t>(samples[i]);
+        // we need magnitude so need positive value
+        sample = (sample < 0) ? -sample : sample;
+        if (sample > peak) {
+          peak = sample;
+        }
+      }
+    }
+
+    readOffset += static_cast<uint32_t>(bytesRead);
+    bytesRemaining -= static_cast<uint32_t>(bytesRead);
+    uint32_t bytesProcessed = dataChunkSize - bytesRemaining;
+    reportProgress(progressCallback, bytesProcessed, dataChunkSize);
+  }
+
+  reportProgress(progressCallback, dataChunkSize, dataChunkSize);
+
+  result.peakBefore = peak;
+  if (peak <= 0) {
+    Trace::Log("WavFileWriter",
+               "Normalize skipped for %s due to zero detected peak", path);
+    file->Close();
+    return true;
+  }
+
+  if (static_cast<uint32_t>(peak) >= fullScalePeak) {
+    Trace::Log(
+        "WavFileWriter",
+        "Normalize skipped for %s because peak already at or above full scale",
+        path);
+    file->Close();
+    return true;
+  }
+  // `gainQ16` calculates the gain factor required to normalize the audio.
+  // It's represented in Q16 fixed-point format (multiplied by 2^16) to maintain
+  // precision for fractional gain values. The fullscale peak is cast to
+  // `uint64_t` before the left shift to prevent overflow during the
+  // multiplication by 2^16.
+  uint32_t gainQ16 = static_cast<uint32_t>(
+      (static_cast<uint64_t>(fullScalePeak) << 16) / peak);
+
+  bytesRemaining = dataChunkSize;
+  readOffset = dataOffset;
+
+  const int32_t minValue = bitsPerSample == 8 ? -128 : -32768;
+  const int32_t maxValue = bitsPerSample == 8 ? 127 : 32767;
+
+  reportProgress(progressCallback, 0, dataChunkSize);
+
+  while (bytesRemaining > 0) {
+    uint32_t chunkSize = std::min<uint32_t>(bytesRemaining, usableChunk);
+
+    file->Seek(readOffset, SEEK_SET);
+    int bytesRead = file->Read(scratchBuffer, chunkSize);
+    if (bytesRead != static_cast<int>(chunkSize)) {
+      Trace::Error(
+          "WavFileWriter: Failed reading sample data during normalization");
+      file->Close();
+      return false;
+    }
+
+    if (bitsPerSample == 8) {
+      uint8_t *samples = static_cast<uint8_t *>(scratchBuffer);
+      for (int i = 0; i < bytesRead; ++i) {
+        int32_t centered = static_cast<int32_t>(samples[i]) - 128;
+        int64_t scaled = static_cast<int64_t>(centered) * gainQ16;
+        if (scaled >= 0) {
+          scaled += 0x8000;
+        } else {
+          scaled -= 0x8000;
+        }
+        scaled >>= 16;
+        if (scaled > maxValue) {
+          scaled = maxValue;
+        } else if (scaled < minValue) {
+          scaled = minValue;
+        }
+        samples[i] = static_cast<uint8_t>(scaled + 128);
+      }
+    } else {
+      int16_t *samples = static_cast<int16_t *>(scratchBuffer);
+      int sampleCount = bytesRead / sizeof(int16_t);
+      for (int i = 0; i < sampleCount; ++i) {
+        int32_t sample = static_cast<int32_t>(samples[i]);
+        int64_t scaled = static_cast<int64_t>(sample) * gainQ16;
+        if (scaled >= 0) {
+          scaled += 0x8000;
+        } else {
+          scaled -= 0x8000;
+        }
+        scaled >>= 16;
+        if (scaled > maxValue) {
+          scaled = maxValue;
+        } else if (scaled < minValue) {
+          scaled = minValue;
+        }
+        samples[i] = static_cast<int16_t>(scaled);
+      }
+    }
+
+    file->Seek(readOffset, SEEK_SET);
+    int bytesWritten = file->Write(scratchBuffer, 1, bytesRead);
+    if (bytesWritten != bytesRead) {
+      Trace::Error("WavFileWriter: Failed writing normalized data");
+      file->Close();
+      return false;
+    }
+
+    readOffset += static_cast<uint32_t>(bytesRead);
+    bytesRemaining -= static_cast<uint32_t>(bytesRead);
+    uint32_t bytesProcessed = dataChunkSize - bytesRemaining;
+    reportProgress(progressCallback, bytesProcessed, dataChunkSize);
+  }
+
+  reportProgress(progressCallback, dataChunkSize, dataChunkSize);
+
+  file->Sync();
+  file->Close();
+
+  result.normalized = true;
+  result.gainApplied =
+      static_cast<float>(gainQ16) / static_cast<float>(1u << 16);
+
+  Trace::Log("WavFileWriter",
+             "Normalized %s with gain factor %.3f (peak=%d target=%d)", path,
+             result.gainApplied, result.peakBefore, result.targetPeak);
+  return true;
+}
+
 void WavFileWriter::Close() {
 
   if (!file_)
@@ -217,5 +475,4 @@ void WavFileWriter::Close() {
 
   file_->Close();
   SAFE_DELETE(file_);
-  SAFE_FREE(buffer_);
 };

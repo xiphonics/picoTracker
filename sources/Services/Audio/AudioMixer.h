@@ -26,7 +26,7 @@ public:
   void SetVolume(fixed volume);
   void SetName(etl::string<12> name) { name_ = name; };
 
-  stereosample GetMixerLevels() { return avgMixerLevel_; }
+  stereosample GetMixerLevels() { return peakMixerLevel_; }
 
 private:
   bool enableRendering_;
@@ -37,8 +37,9 @@ private:
 
   // hold the avg volume of a buffer worth of samples for each audiomodule in
   // the mix
-  stereosample avgMixerLevel_ = 0;
+  stereosample peakMixerLevel_ = 0;
 
-  static fixed renderBuffer_[MAX_SAMPLE_COUNT * 2];
+  __attribute__((section(".DTCMRAM")))
+  __attribute__((aligned(32))) static fixed renderBuffer_[MAX_SAMPLE_COUNT * 2];
 };
 #endif

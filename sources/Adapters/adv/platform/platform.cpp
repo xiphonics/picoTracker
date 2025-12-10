@@ -21,6 +21,12 @@ void platform_bootloader() {
   uint32_t appResetHandler = *(volatile uint32_t *)(BOOTLOADER_ADDR + 4);
   pFunction appEntry = (pFunction)appResetHandler;
 
+  // Disable external interrupts first since they can fire during this process
+  NVIC_DisableIRQ(EXTI9_5_IRQn);
+  NVIC_DisableIRQ(EXTI15_10_IRQn);
+  NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
+  NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+
   HAL_DeInit();
 
   // Disable SysTick (this may not be needed, not using it)

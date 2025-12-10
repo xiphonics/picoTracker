@@ -11,7 +11,7 @@
 #include "Foundation/T_Singleton.h"
 #include "Services/Audio/AudioDriver.h"
 
-#define MINI_BLANK_SIZE 256 // Samples
+#define MINI_BLANK_SIZE 256 // 16-bit samples
 
 class advAudioDriver : public AudioDriver {
 public:
@@ -32,6 +32,7 @@ public:
   void SetVolume(int v);
   int GetVolume();
   virtual double GetStreamTime();
+  void OnAudioActive(bool active) override;
   static void IRQHandler();
   static void BufferNeeded();
 
@@ -39,8 +40,8 @@ private:
   static advAudioDriver *instance_;
 
   AudioSettings settings_;
-  static const uint8_t miniBlank_[MINI_BLANK_SIZE];
-  int volume_;
+  static const int16_t miniBlank_[MINI_BLANK_SIZE];
+
   uint32_t startTime_;
 };
 #endif

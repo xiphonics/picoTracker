@@ -464,11 +464,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
-        SampleEditorView::SetSourceViewType(VT_CHAIN);
-        ViewType vt = VT_RECORD;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
+        switchToRecordView();
       }
     }
   } else if (mask & EPBM_ENTER) {

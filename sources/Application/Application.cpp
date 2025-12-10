@@ -60,6 +60,7 @@ bool Application::initProject(char *projectName) {
   if (forceLoadUntitledProject) {
     Trace::Log("APPLICATION", "Force loading untitled project");
     FileSystem::GetInstance()->DeleteFile("/.current");
+    PersistencyService::GetInstance()->PurgeUnnamedProject();
     forceLoadUntitledProject = false; // Reset the flag
   }
 

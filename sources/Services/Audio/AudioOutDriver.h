@@ -26,6 +26,7 @@ public:
   virtual void Close();
   virtual bool Start();
   virtual void Stop();
+  void SetAudioActive(bool active) override;
 
   virtual void Trigger();
 
@@ -51,11 +52,13 @@ protected:
 
 private:
   AudioDriver *driver_;
-  bool hasSound_;
+  bool hasSound_ = false;
   stereosample lastPeakVolume_ = 0;
 
-  static fixed primarySoundBuffer_[MIX_BUFFER_SIZE];
-  static short mixBuffer_[MIX_BUFFER_SIZE];
+  __attribute__((section(".DTCMRAM"))) __attribute__((
+      aligned(32))) static fixed primarySoundBuffer_[MIX_BUFFER_SIZE];
+  __attribute__((section(".DTCMRAM")))
+  __attribute__((aligned(32))) static short mixBuffer_[MIX_BUFFER_SIZE];
   int sampleCount_;
 };
 #endif

@@ -884,11 +884,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_PLAY) {
       // recording screen
       if (!Player::GetInstance()->IsRunning()) {
-        SampleEditorView::SetSourceViewType(VT_PHRASE);
-        ViewType vt = VT_RECORD;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
+        switchToRecordView();
       }
     }
   } else if (mask & EPBM_ENTER) {
@@ -1155,7 +1151,7 @@ void PhraseView::DrawView() {
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
     setTextProps(props, 0, j, false);
-    (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_EMPHASIS)
+    (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_HILITE1)
                                             : SetColor(CD_NORMAL);
     if (d == 0xFF) {
       DrawString(pos._x, pos._y, "----", props);
@@ -1401,6 +1397,11 @@ void PhraseView::AnimationUpdate() {
   w_.Flush();
 }
 void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
+  if (command == FourCC::InstrumentCommandNone) {
+    // no command -> no help text
+    return;
+  }
+
   char **helpLegend = getHelpLegend(command);
   char line[32]; //-1 for 1char space start of line
   // first clear top line upto battery gauge

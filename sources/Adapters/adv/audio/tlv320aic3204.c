@@ -10,6 +10,8 @@
 #include "i2c.h"
 #include "stm32h7xx_hal.h"
 #include "tim.h"
+#include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "FreeRTOS.h"
@@ -33,7 +35,10 @@ PUTCHAR_PROTOTYPE {
 enum TLVOutput { INIT, HP, SPKR } output = INIT;
 enum TLVInput { NONE, MIC, LINEIN } input = NONE;
 
+static uint8_t codecVolume = 100;
 static volatile char overrideSpkr = 0;
+static bool audioOutputActive = false;
+static void tlv320_update_amp_state(void);
 
 HAL_StatusTypeDef tlv320write(uint16_t reg, uint8_t value) {
   // Write to the register
@@ -67,6 +72,47 @@ HAL_StatusTypeDef tlv320read(uint8_t page, uint8_t reg, uint8_t *value) {
                             1, HAL_MAX_DELAY);
 
   return status;
+}
+
+static void tlv320_update_amp_state(void) {
+  GPIO_PinState ampState =
+      (output == SPKR && audioOutputActive) ? GPIO_PIN_SET : GPIO_PIN_RESET;
+  HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, ampState);
+}
+
+void tlv320_set_audio_output_active(bool active) {
+  if (audioOutputActive == active) {
+    return;
+  }
+  audioOutputActive = active;
+  tlv320_update_amp_state();
+}
+
+#define LINEINBASEHALFDB 12
+#define GAINMASK 0x3F
+#define PRESERVEMASK 0xC0
+#define MIC_GAIN_REGISTER 0x53 // Left ADC digital gain
+
+static uint8_t clamp_half_db(int halfDb) {
+  if (halfDb < 0) {
+    return 0;
+  }
+  if (halfDb > GAINMASK) {
+    return GAINMASK;
+  }
+  return (uint8_t)halfDb;
+}
+
+static void tlv320_update_gain_register(uint8_t reg, uint8_t baseHalfDb,
+                                        int gainDb) {
+  uint8_t current = 0;
+  if (tlv320read(0x01, reg, &current) != HAL_OK) {
+    current = 0;
+  }
+  const uint8_t desiredHalfDb = (uint8_t)baseHalfDb + gainDb * 2;
+  const uint8_t halfDbValue = clamp_half_db(desiredHalfDb);
+  const uint8_t updated = (current & PRESERVEMASK) | (halfDbValue & GAINMASK);
+  tlv320writepage(0x01, reg, updated);
 }
 
 void tlv320_reset() {
@@ -140,14 +186,33 @@ DOSR 128
   tlv320write(0x0a, 0x00);
 
   // INIT INPUT
+  // input frequency comes from MCU and is 11.2896MHz
+  // Digital mic has the following specs:
+  // Low‐Power Mode 400    800 kHz
+  // Standard Mode 1.0    3.3 MHz
+  // High‐Performance Mode 4.1    4.8 MHz
+  // PDM frequency is OSR * ADC_FS
+  // OSR is one of 32, 64, 128, 256
+  // CLKIN = NADC * MADC * (A)OSR * ADC_FS
+  //
+  // restrictions:
+  // ADC_FS = 44100Hz
+  // CLKIN = 11.2896MHz
+  // -> OSR = 64 to be in a valid range for the mic
+  // -> PDM freq -> 64 X 44100Hz = 2.8224MHz (standard mode range)
+  // -> NADC * MADC = 4
+  // -> NADC = 1
+  // -> MADC = 4
+  // this has to be met: MADC * OSR / 32 > RC -> 8 > RC
+  // -> Processing block: PRB_R1 (filter A)
   // Initialize to Page 0
   tlv320write(0, 0);
   // Power up NADC divider with value 1
   tlv320write(0x12, 0x81);
-  // Power up MADC divider with value 2
-  tlv320write(0x13, 0x82);
-  // Program OSR for ADC to 128
-  tlv320write(0x14, 0x80);
+  // Power up MADC divider with value 4
+  tlv320write(0x13, 0x84);
+  // Program OSR for ADC to 64
+  tlv320write(0x14, 0x40);
   // Select ADC PRB_R1
   tlv320write(0x3d, 0x01);
 
@@ -180,10 +245,11 @@ void tlv320_enable_hp(void) {
   tlv320write(0x03, 0x00);
   tlv320write(0x04, 0x00);
 
-  // Set the HPL gain to 0d
-  tlv320write(0x10, 0x00);
-  // Set the HPR gain to 0dB
-  tlv320write(0x11, 0x00);
+  // Adjust the output amp for full volume to 1.4Vpp (0.5Vrms) for line level
+  // Set the HPL gain to 2dB
+  tlv320write(0x10, 0x02);
+  // Set the HPR gain to 2dB
+  tlv320write(0x11, 0x02);
   // Power up HPL and HPR drivers
   tlv320write(0x09, 0x30);
   // Wait for 2.5 sec for soft stepping to take effect
@@ -236,6 +302,7 @@ void tlv320_select_output(void) {
   uint8_t value;
   tlv320read(0x00, 0x43, &value);
 
+  enum TLVOutput previousOutput = output;
   if (value & 0x20 || input == MIC) {
     if (output != HP) {
       tlv320_enable_hp();
@@ -247,7 +314,36 @@ void tlv320_select_output(void) {
       output = SPKR;
     }
   }
+
+  if (output != previousOutput) {
+    tlv320_update_amp_state();
+  }
 }
+
+void tlv320_set_volume(uint8_t vol) {
+  // we use volume if 0..100 to map to register 65 and 66 directly. In order to
+  // have every step be equial (0.5dB), we'll use the range of -0.5dB (255) to
+  // -50.5dB (155)
+  if (vol > 100) {
+    vol = 100;
+  }
+
+  // Select Page 0
+  tlv320write(0x00, 0x00);
+  tlv320write(0x41, 155 + vol);
+  tlv320write(0x42, 155 + vol);
+};
+
+uint8_t tlv320_get_volume(void) {
+  uint8_t reg = 0;
+  // Both should be the same, check one channel only
+  if (tlv320read(0x00, 0x41, &reg) == HAL_OK) {
+    if (reg < 155) {
+      reg = 155;
+    }
+  }
+  return reg - 155;
+};
 
 void tlv320_mute(void) {
   // Select Page 0
@@ -333,6 +429,23 @@ void tlv320_enable_mic(void) {
 
   // Recheck output in case Speaker needs to be mutted
   tlv320_select_output();
+}
+
+void tlv320_set_linein_gain_db(uint8_t gainDb) {
+  if (input != LINEIN) {
+    return;
+  }
+  tlv320_update_gain_register(0x3b, LINEINBASEHALFDB, gainDb);
+  tlv320_update_gain_register(0x3c, LINEINBASEHALFDB, gainDb);
+}
+
+void tlv320_set_mic_gain_db(uint8_t gainDb) {
+  if (input != MIC) {
+    return;
+  }
+  // Register 0x53 encodes gain in 0.5dB steps with 0x00 = 0dB.
+  const uint8_t regValue = gainDb * 2;
+  tlv320writepage(0x00, MIC_GAIN_REGISTER, regValue);
 }
 
 void tlv320_disable_linein(void) {

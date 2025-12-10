@@ -12,6 +12,7 @@
 #include "Application/Application.h"
 #include "Application/Model/Config.h"
 #include "Application/Model/Project.h"
+#include "Application/Player/Player.h"
 #include "Application/Player/PlayerMixer.h"
 #include "Application/Utils/char.h"
 #include "Services/Audio/Audio.h"
@@ -53,25 +54,18 @@ bool MixerService::Init() {
       out_->Insert(master_);
     }
 
-    char path[30 + MAX_PROJECT_NAME_LENGTH];
-    // Get the project name from the current project
-    char projectname[MAX_PROJECT_NAME_LENGTH];
-    Player::GetInstance()->GetProject()->GetProjectName(projectname);
-
     out_->AddObserver(*MidiService::GetInstance());
-    npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
-    out_->SetFileRenderer(path);
-    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      npf_snprintf(path, sizeof(path), "/renders/%s-channel%d.wav", projectname,
-                   i);
-      bus_[i].SetFileRenderer(path);
+    bool pathConfigured = configureRenderPaths();
+    if (!pathConfigured) {
+      Trace::Error("[MixerService::Init] Failed to set audio render paths");
+      return false;
     }
   }
 
   if (result) {
-    Trace::Debug("Out initialized");
+    Trace::Debug("[MixerService::Init] Out initialized");
   } else {
-    Trace::Debug("Failed to get output");
+    Trace::Error("[MixerService::Init] Failed to get output");
   }
   return (result);
 };
@@ -123,14 +117,16 @@ void MixerService::Update(Observable &o, I_ObservableData *d) {
   }
 }
 
-// Helper function to convert linear volume (0-100) to non-linear (0.0-1.0) in
+// Helper function to convert linear volume (0-99) to non-linear (0.0-1.0) in
 // fixed point
 fixed MixerService::ToLogVolume(int vol) {
   // Ensure vol is within valid range
   if (vol < 0)
     vol = 0;
-  if (vol > 100)
-    vol = 100;
+  if (vol >= 99) { // for now treating 99 as unity gain
+    // Unity gain – treat as a no-op to avoid unnecessary scaling
+    return i2fp(1);
+  }
 
   // Convert to fixed point (0-1 range)
   fixed normalizedVol = fp_mul(i2fp(vol), fl2fp(0.01f));
@@ -142,7 +138,7 @@ fixed MixerService::ToLogVolume(int vol) {
 
 void MixerService::SetMasterVolume(int vol) {
   // Apply logarithmic scaling for better volume control
-  // vol is 0-100, where 100 is unity gain (1.0)
+  // vol is 0-99, where 99 is unity gain (1.0)
   fixed masterVolume = ToLogVolume(vol);
 
   // Set the master bus volume
@@ -154,7 +150,7 @@ void MixerService::SetMasterVolume(int vol) {
   // Apply channel volumes to individual channel buses
   if (project) {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      // Get the channel's individual volume (0-100)
+      // Get the channel's individual volume (0-99)
       int channelVol = project->GetChannelVolume(i);
 
       // Convert channel volume to non-linear scale (0.0-1.0)
@@ -175,6 +171,15 @@ int MixerService::GetPlayedBufferPercentage() {
 }
 
 void MixerService::setRenderingMode(MixerServiceMode mode) {
+  if (mode != MSM_AUDIO) {
+    // in case proj name changed since last time paths were configured
+    bool pathsResult = configureRenderPaths();
+    if (!pathsResult) {
+      Trace::Error(
+          "[MixerService::setRenderingMode] Failed to set render paths");
+    }
+  }
+
   switch (mode) {
   case MSM_AUDIO:
     out_->EnableRendering(false);
@@ -201,6 +206,32 @@ void MixerService::OnPlayerStop() {
   // always reset back to audio mode when stopping
   setRenderingMode(MSM_AUDIO);
 };
+
+bool MixerService::configureRenderPaths() {
+  if (!out_) {
+    return false;
+  }
+
+  Player *player = Player::GetInstance();
+  Project *project = player ? player->GetProject() : nullptr;
+  if (!project) {
+    Trace::Error("MIXERSERVICE", "Cannot configure render paths, project null");
+    return false;
+  }
+
+  char projectname[MAX_PROJECT_NAME_LENGTH];
+  project->GetProjectName(projectname);
+
+  char path[30 + MAX_PROJECT_NAME_LENGTH];
+  npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
+  out_->SetFileRenderer(path);
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    npf_snprintf(path, sizeof(path), "/renders/%s-channel%d.wav", projectname,
+                 i);
+    bus_[i].SetFileRenderer(path);
+  }
+  return true;
+}
 
 void MixerService::Execute(FourCC id, float value) {
   if (value > 0.5) {

@@ -10,6 +10,7 @@
 #include "Player.h"
 #include "Application/Instruments/CommandList.h"
 #include "Application/Instruments/I_Instrument.h"
+#include "Application/Mixer/MixerService.h"
 #include "Application/Model/Groove.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
@@ -134,6 +135,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   // Let's get started !
 
   SyncMaster::GetInstance()->Start();
+  SetAudioActive(true);
 
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;
@@ -203,8 +205,9 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 }
 
 void Player::Stop() {
-
   mixer_.Lock();
+
+  bool keepAudioActive = mixer_.IsPlaying();
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     mixer_.StopChannel(i);
@@ -217,6 +220,9 @@ void Player::Stop() {
   SetChanged();
   PlayerEvent pe(PET_STOP);
   NotifyObservers(&pe);
+  if (!keepAudioActive) {
+    SetAudioActive(false);
+  }
 
   mixer_.Unlock();
 }
@@ -1188,13 +1194,24 @@ unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
 void Player::StartStreaming(const char *name, int startSample) {
   mixer_.StartStreaming(name, startSample);
+  if (!isRunning_) {
+    SetAudioActive(true);
+  }
 }
 
 void Player::StartLoopingStreaming(const char *name) {
   mixer_.StartLoopingStreaming(name);
+  if (!isRunning_) {
+    SetAudioActive(true);
+  }
 }
 
-void Player::StopStreaming() { mixer_.StopStreaming(); }
+void Player::StopStreaming() {
+  mixer_.StopStreaming();
+  if (!isRunning_) {
+    SetAudioActive(false);
+  }
+}
 
 void Player::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
                                   bool stereo) {
@@ -1202,6 +1219,14 @@ void Player::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
 }
 
 void Player::StopRecordStreaming() { mixer_.StopRecordStreaming(); }
+
+void Player::SetAudioActive(bool active) {
+  MixerService *ms = MixerService::GetInstance();
+  AudioOut *out = (ms != nullptr) ? ms->GetAudioOut() : nullptr;
+  if (out) {
+    out->SetAudioActive(active);
+  }
+}
 
 bool Player::IsPlaying() { return mixer_.IsPlaying(); }
 

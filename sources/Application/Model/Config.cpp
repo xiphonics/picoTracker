@@ -34,8 +34,6 @@ static const char *midiSendSync[2] = {"Off", "Send"};
 static const char *midiClockSyncOptions[2] = {"Internal", "External"};
 static const char *remoteUIOnOff[2] = {"Off", "On"};
 
-static const char *fontOptions[2] = {"Standard", "Bold"};
-
 // NOTE: these MUST match up to the RecordSource enum in record.h (of all
 // adapters) also note we *dont* show "All Off" as a UI option for now
 static const char *recordSourceOptions[4] = {"All Off", "Line In", "Mic",
@@ -52,6 +50,9 @@ constexpr int DEFAULT_MIDISYNC = 0x0;
 constexpr int DEFAULT_REMOTEUI = 0x1;
 constexpr int DEFAULT_BACKLIGHT_LEVEL = 0xFF; // Default to max brightness (255)
 constexpr int DEFAULT_REC_SOURCE = 0x0;
+constexpr int DEFAULT_RECORD_LINE_GAIN_DB = 0;
+constexpr int DEFAULT_RECORD_MIC_GAIN_DB = 0;
+constexpr int DEFAULT_OUTPUT_VOLUME = 40;
 
 // Use a struct to define parameter information
 struct ConfigParam {
@@ -172,8 +173,8 @@ static const ConfigParam configParams[] = {
     {"UIFONT",
      {.intValue = ThemeConstants::DEFAULT_UIFONT},
      FourCC::VarUIFont,
-     fontOptions,
-     2,
+     ThemeConstants::FONT_NAMES,
+     ThemeConstants::FONT_COUNT,
      false},
 
     // {"RESERVED1", ThemeConstants::DEFAULT_RESERVED1,
@@ -199,12 +200,30 @@ static const ConfigParam configParams[] = {
      nullptr,
      0,
      false},
+    {"OUTPUTVOLUME",
+     {.intValue = DEFAULT_OUTPUT_VOLUME},
+     FourCC::VarOutputVolume,
+     nullptr,
+     0,
+     false},
 
     {"RECORDSOURCE",
      {.intValue = 1},
      FourCC::VarRecordSource,
      recordSourceOptions,
      4,
+     false},
+    {"RECORDLINEGAIN",
+     {.intValue = DEFAULT_RECORD_LINE_GAIN_DB},
+     FourCC::VarRecordLineGain,
+     nullptr,
+     0,
+     false},
+    {"RECORDMICGAIN",
+     {.intValue = DEFAULT_RECORD_MIC_GAIN_DB},
+     FourCC::VarRecordMicGain,
+     nullptr,
+     0,
      false},
 };
 
@@ -475,12 +494,7 @@ bool Config::SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName) {
   Variable *fontVar = FindVariable(FourCC::VarUIFont);
   if (fontVar) {
     printer->OpenElement("Font");
-
-    // Format font value in hex format with # prefix
-    char hexValue[16];
-    npf_snprintf(hexValue, sizeof(hexValue), "#%X", fontVar->GetInt());
-
-    printer->PushAttribute("value", hexValue);
+    printer->PushAttribute("value", std::to_string(fontVar->GetInt()).c_str());
     printer->CloseElement(); // Font
   }
 

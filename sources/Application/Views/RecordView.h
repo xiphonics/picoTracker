@@ -26,16 +26,23 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
+  void OnFocusLost() override;
 
   // Observer for field changes
   void Update(Observable &, I_ObservableData *);
 
   void AnimationUpdate() override;
 
+  // Static method to set which view will open the RecordView
+  static void SetSourceViewType(ViewType vt);
+
+  // Track which view opened the RecordView (defaults to song view)
+  static ViewType sourceViewType_;
+
 protected:
 private:
   // UI fields
-  etl::vector<UIIntVarField, 1> intVarField_;
+  etl::vector<UIIntVarField, 3> intVarField_;
 
   // Recording state
   bool isRecording_;

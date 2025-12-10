@@ -36,7 +36,8 @@ void UITempoField::OnEditClick() {
 
 void UITempoField::Update(Observable &, I_ObservableData *data) {
   SetChanged();
-  NotifyObservers((I_ObservableData *)(char)action_);
+  NotifyObservers(
+      reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(action_)));
 }
 
 void UITempoField::ProcessArrow(unsigned short mask) {

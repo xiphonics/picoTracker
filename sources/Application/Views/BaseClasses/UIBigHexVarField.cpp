@@ -93,5 +93,6 @@ void UIBigHexVarField::ProcessArrow(unsigned short mask) {
   src_.SetInt(value);
 
   SetChanged();
-  NotifyObservers((I_ObservableData *)(char)src_.GetID());
+  NotifyObservers(reinterpret_cast<I_ObservableData *>(
+      static_cast<uintptr_t>(src_.GetID())));
 };

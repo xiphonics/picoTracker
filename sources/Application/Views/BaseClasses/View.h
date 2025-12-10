@@ -107,7 +107,13 @@ public:
     OnFocus();
   };
 
-  void LooseFocus() { hasFocus_ = false; };
+  virtual void LooseFocus() {
+    if (!hasFocus_) {
+      return;
+    }
+    hasFocus_ = false;
+    OnFocusLost();
+  };
 
   void Clear();
 
@@ -122,9 +128,12 @@ public:
   virtual void DrawView() = 0;
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick) = 0;
   virtual void OnFocus() = 0;
+  virtual void OnFocusLost(){};
   virtual void AnimationUpdate() = 0;
 
   void SetDirty(bool dirty);
+
+  void switchToRecordView();
 
   // Methods to access modal view
   bool HasModalView() const { return modalView_ != nullptr; }
@@ -206,7 +215,6 @@ private:
   static bool initPrivate_;
   ModalView *modalView_;
   ModalViewCallback modalViewCallback_;
-  static ColorDefinition currentRectColor_;
 
 public:
   static int margin_;

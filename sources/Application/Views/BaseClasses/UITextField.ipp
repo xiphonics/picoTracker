@@ -23,7 +23,7 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
   w.DrawString(label_.c_str(), position, props);
   position._x += label_.length();
 
-  ((AppWindow &)w).SetColor(CD_INFO);
+  ((AppWindow &)w).SetColor(CD_EMPHASIS);
 
   auto srcString = src_->GetString();
   const char *value;
@@ -34,7 +34,7 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
     value = defaultValue_.c_str();
     len = defaultValue_.length();
     // Use a different color for default values to indicate they're not set
-    ((AppWindow &)w).SetColor(CD_INFO);
+    ((AppWindow &)w).SetColor(CD_EMPHASIS);
   } else {
     value = srcString.c_str();
     len = srcString.length();
@@ -64,7 +64,8 @@ void UITextField<MaxLength>::Draw(GUIWindow &w, int offset) {
 
 template <uint8_t MaxLength> void UITextField<MaxLength>::OnClick() {
   SetChanged();
-  NotifyObservers((I_ObservableData *)fourcc_);
+  NotifyObservers(
+      reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
 };
 
 template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
@@ -75,7 +76,8 @@ template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
   }
   src_->SetString(buffer.c_str(), true);
   SetChanged();
-  NotifyObservers((I_ObservableData *)fourcc_);
+  NotifyObservers(
+      reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
 };
 
 template <uint8_t MaxLength>
@@ -99,7 +101,8 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
       src_->SetString(buffer.c_str(), true);
     }
     SetChanged();
-    NotifyObservers((I_ObservableData *)fourcc_);
+    NotifyObservers(
+        reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
     break;
   case EPBM_DOWN:
     // If buffer is empty or matches default, initialize with 'A'
@@ -113,7 +116,8 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
       src_->SetString(buffer.c_str(), true);
     }
     SetChanged();
-    NotifyObservers((I_ObservableData *)fourcc_);
+    NotifyObservers(
+        reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
     break;
   case EPBM_LEFT:
     // If we're showing the default value and user presses left, initialize with
@@ -122,7 +126,8 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
       buffer = defaultValue_;
       src_->SetString(buffer.c_str(), true);
       SetChanged();
-      NotifyObservers((I_ObservableData *)fourcc_);
+      NotifyObservers(reinterpret_cast<I_ObservableData *>(
+          static_cast<uintptr_t>(fourcc_)));
     }
     if (currentChar_ > 0) {
       currentChar_--;
@@ -135,7 +140,8 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
       buffer = defaultValue_;
       src_->SetString(buffer.c_str(), true);
       SetChanged();
-      NotifyObservers((I_ObservableData *)fourcc_);
+      NotifyObservers(reinterpret_cast<I_ObservableData *>(
+          static_cast<uintptr_t>(fourcc_)));
     }
     if (currentChar_ < (buffer.length() - 1)) {
       currentChar_++;
@@ -145,7 +151,8 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
       buffer.append("A");
       src_->SetString(buffer.c_str(), true);
       SetChanged();
-      NotifyObservers((I_ObservableData *)fourcc_);
+      NotifyObservers(reinterpret_cast<I_ObservableData *>(
+          static_cast<uintptr_t>(fourcc_)));
     }
     break;
   };

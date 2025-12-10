@@ -58,6 +58,13 @@ static uint32_t palette[16] = {
     0xFF1E9635, // 0x351E
     0xFFFD6DB6, // 0xB6FD
 };
+
+static inline uint16_t abgr8888_to_bgr565(uint32_t color) {
+  uint16_t b = (uint16_t)((color >> 19) & 0x1F);
+  uint16_t g = (uint16_t)((color >> 10) & 0x3F);
+  uint16_t r = (uint16_t)((color >> 3) & 0x1F);
+  return (uint16_t)((b << 11) | (g << 5) | r);
+}
 void display_set_font_index(uint8_t idx) { ui_font_index = idx; }
 
 void display_set_cursor(uint8_t x, uint8_t y) {
@@ -200,18 +207,10 @@ void display_draw_region(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
   }
 }
 
-static inline uint16_t abgr8888_to_rgb565(uint32_t color) {
-  uint8_t r = color & 0xFF;
-  uint8_t g = (color >> 8) & 0xFF;
-  uint8_t b = (color >> 16) & 0xFF;
-  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-}
-// TODO: update this to a use DMA2D call ASAP
+// TODO: update this to use DMA2D ASAP
 void display_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
                        uint16_t width, uint16_t height) {
-  // Get the ABGR8888 color from the palette
-  uint32_t color = palette[color_index];
-  uint16_t color565 = abgr8888_to_rgb565(color);
+  uint16_t color565 = abgr8888_to_bgr565(palette[color_index]);
 
   if (width == 0 || height == 0) {
     return;

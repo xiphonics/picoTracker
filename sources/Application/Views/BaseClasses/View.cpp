@@ -12,13 +12,14 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/mathutils.h"
+#include "Application/Views/RecordView.h"
+#include "Application/Views/SampleEditorView.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
 #include <nanoprintf.h>
 
 bool View::initPrivate_ = false;
-ColorDefinition View::currentRectColor_ = CD_NORMAL;
 
 int View::margin_ = 0;
 int View::songRowCount_ = 16;
@@ -391,10 +392,7 @@ void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
 };
 
 void View::DrawRect(GUIRect &r, ColorDefinition color) {
-  if (View::currentRectColor_ != color) {
-    View::currentRectColor_ = color;
-    w_.SetCurrentRectColor(AppWindow::GetColor(color));
-  }
+  w_.SetCurrentRectColor(AppWindow::GetColor(color));
   w_.DrawRect(r);
 }
 
@@ -412,19 +410,24 @@ void View::drawBattery(GUITextProperties &props) {
 
   // use define to choose between drawing battery percentage or battery level as
   // "+" bars
-  SetColor(CD_INFO);
+  SetColor(CD_NORMAL);
   char *battText;
 #if BATTERY_LEVEL_AS_PERCENTAGE
   char battTextBuffer[8];
   battText = battTextBuffer;
   if (batteryState_.charging) {
-    SetColor(CD_ACCENT);
+    SetColor(CD_INFO);
     npf_snprintf(battText, 8, "[CHG]");
   } else {
     if (batteryState_.percentage == 100) {
       npf_snprintf(battText, 8, "[FUL]");
     } else {
-      npf_snprintf(battText, 8, "[%d%%]", batteryState_.percentage);
+      if (batteryState_.percentage < 20) {
+        SetColor(CD_WARN);
+      } else if (batteryState_.percentage < 5) {
+        SetColor(CD_ERROR);
+      }
+      npf_snprintf(battText, 8, "[%2d%%]", batteryState_.percentage);
     }
   }
 #else
@@ -496,5 +499,20 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
     DrawView();
 
     Trace::Debug("Power button released! View redrawn.");
+  }
+}
+
+void View::switchToRecordView() {
+  // recording view only for the Advance
+#ifndef ADV
+  return;
+#endif
+  if (!Player::GetInstance()->IsRunning()) {
+    RecordView::SetSourceViewType(viewType_);
+    SampleEditorView::SetSourceViewType(viewType_);
+    ViewType vt = VT_RECORD;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
   }
 }

@@ -8,6 +8,7 @@
  */
 
 #include "ModalView.h"
+#include "Application/AppWindow.h"
 
 ModalView::ModalView(View &v)
     : View(v.w_, v.viewData_), finished_(false), returnCode_(0){};
@@ -58,11 +59,12 @@ void ModalView::SetWindow(int width, int height) {
   }
   ClearTextRect(-1, -1, width + 2, height + 2);
 
-  SetColor(CD_HILITE2);
+  SetColor(CD_ACCENT);
   GUITextProperties props;
   props.invert_ = true;
-  char line[41];
-  memset(line, ' ', 40);
+  char line[SCREEN_WIDTH + 1];
+  memset(line, ' ', SCREEN_WIDTH);
+  line[SCREEN_WIDTH] = '\0';
   line[width + 4] = 0;
   DrawString(-2, -2, line, props);
   DrawString(-2, height + 1, line, props);

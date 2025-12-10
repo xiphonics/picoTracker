@@ -25,8 +25,8 @@
 
 extern DMA_HandleTypeDef hdma_sai1_a;
 
-// mini blank buffer for underrun, initialized to 0
-const uint8_t advAudioDriver::miniBlank_[MINI_BLANK_SIZE] = {0};
+// mini blank buffer for underrun, initialized to 0 (16-bit samples)
+const int16_t advAudioDriver::miniBlank_[MINI_BLANK_SIZE] = {0};
 
 advAudioDriver *advAudioDriver::instance_ = NULL;
 SemaphoreHandle_t core1_audio;
@@ -87,11 +87,18 @@ bool advAudioDriver::InitDriver() {
   instance_ = this;
 
   Config *config = Config::GetInstance();
-  volume_ = 65;
-  volume_ = config->GetValue("VOLUME");
+  uint8_t initialVolume = 40;
+  if (config) {
+    if (Variable *outputVolume =
+            config->FindVariable(FourCC::VarOutputVolume)) {
+      initialVolume = outputVolume->GetInt();
+    }
+  }
 
   // Configure codec
   tlv320_init();
+  tlv320_set_volume(initialVolume);
+  tlv320_set_audio_output_active(false);
   // Takes some time between configuring HP detect and actually detecting
   vTaskDelay(pdMS_TO_TICKS(250));
 
@@ -106,7 +113,7 @@ bool advAudioDriver::InitDriver() {
   core1_audio = xSemaphoreCreateCountingStatic(SOUND_BUFFER_COUNT - 1, 0,
                                                &xSemaphoreBuffer);
 
-  static StackType_t AudioStack[4000];
+  __attribute__((section(".DTCMRAM"))) static StackType_t AudioStack[4000];
   static StaticTask_t ProcessEventTCB;
   xTaskCreateStatic(AudioThread, "Audio", 4000, NULL, 6, AudioStack,
                     &ProcessEventTCB);
@@ -115,11 +122,15 @@ bool advAudioDriver::InitDriver() {
 };
 
 void advAudioDriver::SetVolume(int v) {
-  volume_ = (v <= 100) ? v : 100;
-  Trace::Debug("Setting volume to %d", volume_);
+  Trace::Debug("Setting volume to %d", v);
+  tlv320_set_volume(v);
 };
 
-int advAudioDriver::GetVolume() { return volume_; };
+int advAudioDriver::GetVolume() { return tlv320_get_volume(); };
+
+void advAudioDriver::OnAudioActive(bool active) {
+  tlv320_set_audio_output_active(active);
+}
 
 void advAudioDriver::CloseDriver(){
     // Not really used, maybe for sleep?
@@ -147,6 +158,7 @@ bool advAudioDriver::StartDriver() {
 void advAudioDriver::StopDriver() {
   adv_sound_pause(1);
   isPlaying_ = false;
+  tlv320_set_audio_output_active(false);
 };
 
 void advAudioDriver::OnChunkDone() {
