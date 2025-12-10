@@ -711,7 +711,8 @@ void AppWindow::AnimationUpdate() {
     }
   }
 
-  // Check for ToastView animation updates (needs to run frequently for smooth animation)
+  // Check for ToastView animation updates (needs to run frequently for smooth
+  // animation)
   ToastView::getInstance()->UpdateTimer();
 
   if (lowBatteryState_ && !lowBatteryMessageShown_) {
