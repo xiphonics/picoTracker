@@ -16,7 +16,7 @@ MidiInMerger::~MidiInMerger(){};
 
 Channel *MidiInMerger::GetChannel(const char *name) {
   // First let's see if the map contains it
-  std::string key(name);
+  etl::string<STRING_CHANNEL_NAME_MAX> key(name);
   tChannelMap::iterator i = channels_.find(key);
   if (i != channels_.end()) {
     return i->second;

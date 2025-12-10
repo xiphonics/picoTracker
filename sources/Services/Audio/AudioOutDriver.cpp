@@ -111,16 +111,15 @@ int AudioOutDriver::GetPlayedBufferPercentage() {
 
 AudioDriver *AudioOutDriver::GetDriver() { return driver_; };
 
-std::string AudioOutDriver::GetAudioAPI() {
+etl::string<STRING_AUDIO_API_MAX> AudioOutDriver::GetAudioAPI() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.audioAPI_;
 };
 
-std::string AudioOutDriver::GetAudioDevice() {
+etl::string<STRING_AUDIO_DEVICE_MAX> AudioOutDriver::GetAudioDevice() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.audioDevice_;
 };
-
 int AudioOutDriver::GetAudioBufferSize() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.bufferSize_;

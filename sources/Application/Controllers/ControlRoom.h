@@ -22,7 +22,8 @@ public:
   void Close();
 
   bool Attach(const char *nodeUrl, const char *controllerUrl);
-  AssignableControlNode *GetControlNode(const std::string url);
+  AssignableControlNode *
+  GetControlNode(const etl::string<STRING_CONTROL_PATH_MAX> &url);
 
   void Dump();
 };

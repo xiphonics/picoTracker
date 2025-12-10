@@ -14,6 +14,8 @@
 #include "Foundation/T_SimpleList.h"
 #include "Services/Controllers/Channel.h"
 #include "Services/Controllers/ControllerService.h"
+#include "config/StringLimits.h"
+#include "Externals/etl/include/etl/string.h"
 
 enum ControlNodeType { CNT_NODE, CNT_ASSIGNABLE };
 
@@ -22,15 +24,17 @@ public:
   ControlNode(const char *name, ControlNode *parent);
   virtual ~ControlNode();
 
-  virtual ControlNode *FindChild(const std::string &url, bool create = false);
-  virtual std::string GetPath();
+  virtual ControlNode *FindChild(const etl::string<STRING_CONTROL_PATH_MAX> &url,
+                                 bool create = false);
+  virtual ControlNode *FindChild(const char *url, bool create = false);
+  virtual etl::string<STRING_CONTROL_PATH_MAX> GetPath();
   ControlNodeType GetType() { return type_; };
   virtual void Trigger();
 
   void Dump(int level);
 
 protected:
-  std::string name_;
+  etl::string<STRING_CONTROL_NAME_MAX> name_;
   ControlNode *parent_;
   ControlNodeType type_;
 };

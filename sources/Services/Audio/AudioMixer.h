@@ -15,6 +15,7 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Foundation/T_SimpleList.h"
 #include "Services/Audio/AudioDriver.h" // for MAX_SAMPLE_COUNT
+#include "config/StringLimits.h"
 
 class AudioMixer : public AudioModule, public T_SimpleList<AudioModule> {
 public:
@@ -30,7 +31,7 @@ public:
 
 private:
   bool enableRendering_;
-  std::string renderPath_;
+  etl::string<STRING_AUDIO_RENDER_PATH_MAX> renderPath_;
   WavFileWriter *writer_;
   fixed volume_;
   etl::string<12> name_;

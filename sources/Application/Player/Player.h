@@ -16,6 +16,8 @@
 #include "PlayerMixer.h"
 #include "SyncMaster.h"
 #include "System/Timer/Timer.h"
+#include "config/StringLimits.h"
+#include "Externals/etl/include/etl/string.h"
 
 enum PlayerEventType { PET_START, PET_UPDATE, PET_STOP };
 
@@ -118,8 +120,8 @@ public:
   // master out, last avg level while playing
   stereosample GetMasterLevel();
 
-  std::string GetAudioAPI();
-  std::string GetAudioDevice();
+  etl::string<STRING_AUDIO_API_MAX> GetAudioAPI();
+  etl::string<STRING_AUDIO_DEVICE_MAX> GetAudioDevice();
   int GetAudioBufferSize();
   int GetAudioRequestedBufferSize();
   int GetAudioPreBufferCount();

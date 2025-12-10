@@ -12,11 +12,12 @@
 
 #include "MidiChannel.h"
 #include "MidiInDevice.h"
+#include "config/StringLimits.h"
+#include "Externals/etl/include/etl/string.h"
 
 #include <map>
-#include <string>
 
-typedef std::map<std::string, Channel *> tChannelMap;
+typedef std::map<etl::string<STRING_CHANNEL_NAME_MAX>, Channel *> tChannelMap;
 
 class MidiInMerger : public Observable,
                      public ControllerSource,

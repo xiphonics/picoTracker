@@ -14,7 +14,6 @@
 #include "Foundation/Types/Types.h"
 
 #define VAR_OFF -1
-#include <string>
 
 static const int MAX_VARIABLE_STRING_LENGTH = 40;
 

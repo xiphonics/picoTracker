@@ -11,7 +11,8 @@
 #define _CONTROLLER_SOURCE_H_
 
 #include "Channel.h"
-#include <string>
+#include "config/StringLimits.h"
+#include "Externals/etl/include/etl/string.h"
 
 class ControllerSource {
 public:
@@ -24,7 +25,7 @@ public:
   const char *GetName();
 
 private:
-  std::string class_;
-  std::string name_;
+  etl::string<STRING_CONTROLLER_CLASS_MAX> class_;
+  etl::string<STRING_CONTROL_NAME_MAX> name_;
 };
 #endif

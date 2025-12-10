@@ -494,7 +494,9 @@ bool Config::SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName) {
   Variable *fontVar = FindVariable(FourCC::VarUIFont);
   if (fontVar) {
     printer->OpenElement("Font");
-    printer->PushAttribute("value", std::to_string(fontVar->GetInt()).c_str());
+    char buf[16];
+    npf_snprintf(buf, sizeof(buf), "%d", fontVar->GetInt());
+    printer->PushAttribute("value", buf);
     printer->CloseElement(); // Font
   }
 
@@ -540,7 +542,9 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
     // these settings need to be saved as the Int values not as String
     // values hence we *dont* use GetString() !
     if (var->GetType() == Variable::CHAR_LIST) {
-      printer->PushAttribute("VALUE", std::to_string(var->GetInt()).c_str());
+      char buf[16];
+      npf_snprintf(buf, sizeof(buf), "%d", var->GetInt());
+      printer->PushAttribute("VALUE", buf);
     } else {
       // all other settings need to be saved as thier String values
       printer->PushAttribute("VALUE", var->GetString().c_str());

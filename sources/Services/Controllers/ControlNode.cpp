@@ -12,8 +12,6 @@
 #include "System/Console/Trace.h"
 #include <string.h>
 
-using namespace std;
-
 ControlNode::ControlNode(const char *name, ControlNode *parent)
     : T_SimpleList<ControlNode>(true), type_(CNT_NODE) {
   name_ = name;
@@ -24,25 +22,26 @@ ControlNode::ControlNode(const char *name, ControlNode *parent)
 
 ControlNode::~ControlNode() { Empty(); };
 
-ControlNode *ControlNode::FindChild(const std::string &url, bool create) {
+ControlNode *ControlNode::FindChild(
+    const etl::string<STRING_CONTROL_PATH_MAX> &url, bool create) {
   if (url.length() == 0) {
     return NULL;
   }
 
-  std::string suburl = url;
+  etl::string<STRING_CONTROL_PATH_MAX> suburl = url;
   if (parent_ == 0) {
     suburl = url.substr(1); // Get rid of the first slash
   }
-  string::size_type pos = suburl.find("/", 0);
-  std::string node = suburl;
-  if (pos != string::npos) {
+  etl::string<STRING_CONTROL_PATH_MAX>::size_type pos = suburl.find("/", 0);
+  etl::string<STRING_CONTROL_PATH_MAX> node = suburl;
+  if (pos != etl::string<STRING_CONTROL_PATH_MAX>::npos) {
     node = suburl.substr(0, pos);
   }
 
   for (Begin(); !IsDone(); Next()) {
     ControlNode &current = CurrentItem();
     if (!strcmp(node.c_str(), current.name_.c_str())) {
-      if (pos == string::npos) {
+      if (pos == etl::string<STRING_CONTROL_PATH_MAX>::npos) {
         return &current;
       };
       return current.FindChild(suburl.substr(pos + 1), create);
@@ -53,8 +52,9 @@ ControlNode *ControlNode::FindChild(const std::string &url, bool create) {
     ControlNode *parent = this;
     ControlNode *newnode = 0;
     while (suburl.size() != 0) {
-      string::size_type pos = suburl.find("/", 0);
-      if (pos != string::npos) {
+      etl::string<STRING_CONTROL_PATH_MAX>::size_type pos =
+          suburl.find("/", 0);
+      if (pos != etl::string<STRING_CONTROL_PATH_MAX>::npos) {
         node = suburl.substr(0, pos);
         suburl = suburl.substr(pos + 1);
       } else {
@@ -69,8 +69,13 @@ ControlNode *ControlNode::FindChild(const std::string &url, bool create) {
   return 0;
 };
 
-std::string ControlNode::GetPath() {
-  std::string path;
+ControlNode *ControlNode::FindChild(const char *url, bool create) {
+  etl::string<STRING_CONTROL_PATH_MAX> asString(url);
+  return FindChild(asString, create);
+}
+
+etl::string<STRING_CONTROL_PATH_MAX> ControlNode::GetPath() {
+  etl::string<STRING_CONTROL_PATH_MAX> path;
   if (parent_) {
     path = parent_->GetPath();
   };

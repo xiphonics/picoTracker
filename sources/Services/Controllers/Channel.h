@@ -11,7 +11,8 @@
 #define _CHANNEL_H_
 
 #include "Foundation/Observable.h"
-#include <string>
+#include "config/StringLimits.h"
+#include "Externals/etl/include/etl/string.h"
 
 class Channel : public Observable {
 public:
@@ -25,7 +26,7 @@ public:
   virtual void SetValue(float value, bool notify = true);
 
 protected:
-  std::string name_;
+  etl::string<STRING_CHANNEL_NAME_MAX> name_;
   float value_;
 };
 #endif

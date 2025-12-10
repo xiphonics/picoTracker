@@ -15,10 +15,10 @@ Result Result::NoError;
 Result::Result()
     : error_("success"), success_(true), checked_(true), child_(0) {}
 
-Result::Result(const std::string &error)
+Result::Result(const etl::string<STRING_RESULT_MAX> &error)
     : error_(error), success_(false), checked_(false), child_(0) {}
 
-Result::Result(Result &cause, const std::string &error)
+Result::Result(Result &cause, const etl::string<STRING_RESULT_MAX> &error)
     : error_(error), success_(false), checked_(false),
       child_(new Result(cause)) {
   child_->checked_ = true;
@@ -59,8 +59,8 @@ bool Result::Succeeded() {
   return success_;
 }
 
-std::string Result::GetDescription() {
-  std::string description = error_;
+etl::string<STRING_RESULT_MAX> Result::GetDescription() {
+  etl::string<STRING_RESULT_MAX> description = error_;
   if (child_) {
     description += "\n>>>> ";
     description += child_->GetDescription();

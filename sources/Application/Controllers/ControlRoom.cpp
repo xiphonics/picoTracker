@@ -11,7 +11,6 @@
 #include "Services/Controllers/ControllerService.h"
 #include "Services/Controllers/MultiChannelAdapter.h"
 #include "System/Console/Trace.h"
-#include <string>
 
 ControlRoom::ControlRoom() : ControlNode("", 0){};
 
@@ -21,7 +20,8 @@ bool ControlRoom::Init() { return true; };
 
 void ControlRoom::Close() { Empty(); };
 
-AssignableControlNode *ControlRoom::GetControlNode(const std::string url) {
+AssignableControlNode *
+ControlRoom::GetControlNode(const etl::string<STRING_CONTROL_PATH_MAX> &url) {
 
   // Look if the node exists already
 
@@ -33,8 +33,8 @@ AssignableControlNode *ControlRoom::GetControlNode(const std::string url) {
   }
 
   // We need to create it.
-  std::string::size_type pos = url.find_last_of("/");
-  std::string suburl = url.substr(0, pos);
+  auto pos = url.find_last_of("/");
+  etl::string<STRING_CONTROL_PATH_MAX> suburl = url.substr(0, pos);
   ControlNode *parent = this->FindChild(suburl, true);
   AssignableControlNode *newNode =
       new AssignableControlNode(url.substr(pos + 1).c_str(), parent);
@@ -58,7 +58,7 @@ bool ControlRoom::Attach(const char *nodeUrl, const char *controllerUrl) {
 
   MultiChannelAdapter *mca = (MultiChannelAdapter *)acn->GetSourceChannel();
   if (!mca) {
-    std::string name = acn->GetName();
+    etl::string<STRING_CONTROL_NAME_MAX> name = acn->GetName();
     name += "-adapter";
     mca = new MultiChannelAdapter(name.c_str());
     acn->SetSourceChannel(mca);

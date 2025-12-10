@@ -10,19 +10,19 @@
 #pragma once
 
 #include "System/Console/Trace.h"
-#include <string>
+#include "config/StringLimits.h"
+#include "Externals/etl/include/etl/string.h"
 
 class Result {
 public:
-  Result(const std::string &error);
-  Result(const std::ostringstream &error);
-  Result(Result &cause, const std::string &error);
+  Result(const etl::string<STRING_RESULT_MAX> &error);
+  Result(Result &cause, const etl::string<STRING_RESULT_MAX> &error);
   ~Result();
   Result(const Result &other);
 
   bool Failed();
   bool Succeeded();
-  std::string GetDescription();
+  etl::string<STRING_RESULT_MAX> GetDescription();
 
   Result &operator=(const Result &);
 
@@ -32,7 +32,7 @@ protected:
   Result();
 
 private:
-  std::string error_;
+  etl::string<STRING_RESULT_MAX> error_;
   bool success_;
   mutable bool checked_;
   mutable Result *child_;

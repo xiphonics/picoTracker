@@ -14,6 +14,8 @@
 #include "AudioSettings.h"
 #include "Foundation/T_Factory.h"
 #include "Foundation/T_SimpleList.h"
+#include "config/StringLimits.h"
+#include "Externals/etl/include/etl/string.h"
 
 class Audio : public T_Factory<Audio>, public T_SimpleList<AudioOut> {
 public:
@@ -34,8 +36,8 @@ protected:
   AudioSettings settings_;
 
 private:
-  std::string audioAPI_;
-  std::string audioDevice_;
+  etl::string<STRING_AUDIO_API_MAX> audioAPI_;
+  etl::string<STRING_AUDIO_DEVICE_MAX> audioDevice_;
   int audioBufferSize_;
   int preBufferCount_;
 };
