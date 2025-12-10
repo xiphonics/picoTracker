@@ -276,6 +276,7 @@ void Variable::Reset() {
     setStringValue("");
     break;
   }
+  onChange();
 }
 
 void Variable::setStringValue(const char *value) {

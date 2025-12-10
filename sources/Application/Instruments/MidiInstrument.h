@@ -57,8 +57,6 @@ public:
 
   virtual void OnStart();
 
-  virtual void Purge(){};
-
   virtual int GetTable();
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);

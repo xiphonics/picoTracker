@@ -123,6 +123,8 @@ public:
 
   void Redraw();
 
+  bool isDirty() { return isDirty_; };
+
   // Override in subclasses
 
   virtual void DrawView() = 0;

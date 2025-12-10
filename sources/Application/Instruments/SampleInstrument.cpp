@@ -1478,16 +1478,6 @@ void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
   }
 }
 
-void SampleInstrument::Purge() {
-  auto it = variables_.begin();
-  for (size_t i = 0; i < variables_.size(); i++) {
-    (*it)->Reset();
-    it++;
-  }
-  source_ = NULL;
-  slicePoints_.fill(0);
-};
-
 bool SampleInstrument::IsEmpty() {
   Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return (v->GetInt() == -1);

@@ -263,6 +263,18 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // For all other button presses, let the parent class handle navigation
   FieldView::ProcessButtonMask(mask, pressed);
+
+  // EDIT Modifier
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_ENTER) {
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      if (field->GetVariableID() == FourCC::VarSampleEditEnd) {
+        Variable &var = field->GetVariable();
+        var.SetInt(tempSampleSize_ - 1);
+        isDirty_ = true;
+      };
+    }
+  }
 }
 
 // Helper to redraw the content of a single column (waveform or just
@@ -329,6 +341,13 @@ void SampleEditorView::DrawView() {
 }
 
 void SampleEditorView::DrawWaveForm() {
+  // Avoid drawing markers while a modal is on-screen; the modal redraw logic
+  // only clears the text grid so we must not repaint the pixel buffer behind
+  // it.
+  if (HasModalView()) {
+    return;
+  }
+
   GUIRect rrect;
   if (fullWaveformRedraw_) {
     // clear flag immediately to prevent race condition between event triggered

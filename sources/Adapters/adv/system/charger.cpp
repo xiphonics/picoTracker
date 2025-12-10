@@ -87,11 +87,17 @@ void powerOff() {
       HAL_I2C_Mem_Read(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_STATUS_REG,
                        I2C_MEMADD_SIZE_8BIT, &reg_value, 1, HAL_MAX_DELAY);
 
+  bool powerGood = false;
   if (status != HAL_OK) {
     Trace::Error("PowerOff: i2c write error: %i", status);
+    // Assume power is present on read failure so we don't drop to ship mode
+    // just because of a transient I2C issue.
+    powerGood = true;
+  } else {
+    powerGood = (reg_value & BQ25601_PG_STAT);
   }
 
-  if (reg_value & BQ25601_PG_STAT) {
+  if (powerGood) {
     // TODO: we could further optimize and go to deep sleep if battery is full
     Trace::Log("POWEROFF", "Sleep");
 
@@ -116,8 +122,23 @@ void powerOff() {
       ;
 
     uint32_t wakeup_time = 300; // wake up every 5 minutes to check
-    HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, wakeup_time,
-                                RTC_WAKEUPCLOCK_CK_SPRE_16BITS);
+    bool timerArmed =
+        (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, wakeup_time,
+                                     RTC_WAKEUPCLOCK_CK_SPRE_16BITS) == HAL_OK);
+    // It's very unlikely the above call would fail, but in case it does, we
+    // retry applying some remediations
+    if (!timerArmed) {
+      Trace::Error("PowerOff: failed to arm wakeup timer, retrying once");
+      __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+      HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+      timerArmed =
+          (HAL_RTCEx_SetWakeUpTimer_IT(
+               &hrtc, wakeup_time, RTC_WAKEUPCLOCK_CK_SPRE_16BITS) == HAL_OK);
+      if (!timerArmed) {
+        Trace::Error("PowerOff: failed to arm wakeup timer on retry, entering "
+                     "standby without periodic wake");
+      }
+    }
 
     HAL_PWR_EnterSTANDBYMode();
 
