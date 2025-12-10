@@ -21,15 +21,15 @@
 class SampleInstrument;
 
 #ifdef ADV
-static constexpr int kSliceBitmapWidth = 720;
-static constexpr int kSliceBitmapHeight = 160;
+static constexpr int SliceBitmapWidth = 720;
+static constexpr int SliceBitmapHeight = 160;
 #else
-static constexpr int kSliceBitmapWidth = 320;
-static constexpr int kSliceBitmapHeight = 80;
+static constexpr int SliceBitmapWidth = 320;
+static constexpr int SliceBitmapHeight = 80;
 #endif
 
-static constexpr int kSliceWaveformCacheSize = kSliceBitmapWidth;
-static constexpr size_t kSliceCount = 16;
+static constexpr int SliceWaveformCacheSize = SliceBitmapWidth;
+static constexpr size_t SliceCount = 16;
 
 class SampleSlicesView : public FieldView, public I_Observer {
 public:
@@ -65,7 +65,7 @@ private:
   etl::vector<UIBigHexVarField, 1> bigHexVarField_;
   etl::vector<UIStaticField, 2> staticField_;
 
-  uint8_t waveformCache_[kSliceWaveformCacheSize];
+  uint8_t waveformCache_[SliceWaveformCacheSize];
   bool waveformValid_;
   bool needsWaveformRedraw_;
 
@@ -73,7 +73,7 @@ private:
   int instrumentIndex_;
   uint32_t sampleSize_;
 
-  etl::array<int, kSliceCount> slicePixelPositions_;
+  etl::array<int, SliceCount> slicePixelPositions_;
 
   bool playKeyHeld_;
   bool previewActive_;
