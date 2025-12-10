@@ -16,7 +16,7 @@ void Status::Set(const char *fmt, ...) {
   auto status = Status::GetInstance();
   if (!status)
     return;
-    
+
   char buffer[128];
 
   va_list args;

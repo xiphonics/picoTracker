@@ -17,7 +17,7 @@ SampleEditProgressDisplay::SampleEditProgressDisplay(
 void SampleEditProgressDisplay::Update(uint8_t percent) {
   const char spinner = spinnerChars_[spinnerIndex_++ & 0x03];
   Status::Set("Sample edit\n%s\n%3u%% %c", sampleName_.c_str(),
-                       static_cast<unsigned int>(percent), spinner);
+              static_cast<unsigned int>(percent), spinner);
 }
 
 void SampleEditProgressDisplay::Finish(bool success) {
