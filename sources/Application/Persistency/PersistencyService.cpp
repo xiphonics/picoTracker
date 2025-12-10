@@ -14,7 +14,6 @@
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
-#include "System/FileSystem/I_File.h"
 
 #define PROJECT_STATE_FILE "/.current"
 
@@ -30,15 +29,20 @@ PersistencyResult PersistencyService::CreateProject() {
 };
 
 void PersistencyService::PurgeUnnamedProject() {
+  DeleteProject(UNNAMED_PROJECT_NAME);
+};
+
+void PersistencyService::DeleteProject(const char *projectName) {
   auto fs = FileSystem::GetInstance();
 
+  Trace::Debug("PERSISTENCYSERVICE", "Deleting project: %s", projectName);
+
   fs->chdir(PROJECTS_DIR);
-  Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir");
-  fs->chdir(UNNAMED_PROJECT_NAME);
+  fs->chdir(projectName);
   fs->DeleteFile(PROJECT_DATA_FILE);
   fs->DeleteFile(AUTO_SAVE_FILENAME);
 
-  fs->chdir("samples");
+  fs->chdir(PROJECT_SAMPLES_DIR);
   etl::vector<int, MAX_SAMPLES> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
 
@@ -48,7 +52,13 @@ void PersistencyService::PurgeUnnamedProject() {
     fs->getFileName(fileIndexes[i], filename, MAX_PROJECT_SAMPLE_PATH_LENGTH);
     fs->DeleteFile(filename);
   };
-};
+
+  fs->chdir(".."); // up to project dir
+  fs->DeleteDir(PROJECT_SAMPLES_DIR);
+
+  fs->chdir(".."); // up to projects dir
+  fs->DeleteDir(projectName);
+}
 
 PersistencyResult
 PersistencyService::CreateProjectDirs_(const char *projectName) {

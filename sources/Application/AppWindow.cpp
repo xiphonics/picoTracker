@@ -35,6 +35,7 @@
 #include "Application/Views/TableView.h"
 #include "Application/Views/ThemeImportView.h"
 #include "Application/Views/ThemeView.h"
+#include "Application/Views/ToastView.h"
 #include "BaseClasses/View.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Player/Player.h"
@@ -162,6 +163,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   memset(_charScreenProp, 0, SCREEN_CHARS);
   memset(_preScreenProp, 0, SCREEN_CHARS);
 
+  ToastView::Init(*this, _viewData);
+
   Redraw();
 
   // there is some sort of race that if we call LoadProject() from here directly
@@ -243,6 +246,8 @@ void AppWindow::ClearTextRect(GUIRect &r) {
 // Flush current screen to display
 //
 void AppWindow::Flush() {
+  // draw the ToastView, it handles its own visibility
+  ToastView::getInstance()->Draw((*this), _viewData);
 
   Lock();
 
@@ -706,6 +711,10 @@ void AppWindow::AnimationUpdate() {
     }
   }
 
+  // Check for ToastView animation updates (needs to run frequently for smooth
+  // animation)
+  ToastView::getInstance()->UpdateTimer();
+
   if (lowBatteryState_ && !lowBatteryMessageShown_) {
     if (!_currentView->HasModalView()) {
       FullScreenBox *mb = new FullScreenBox(*_currentView, "Low battery!",
@@ -760,7 +769,7 @@ void AppWindow::AnimationUpdate() {
   }
 }
 
-void AppWindow::LayoutChildren(){};
+void AppWindow::LayoutChildren() {};
 
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
   if (d && (uintptr_t)d == (uintptr_t)FourCC::VarProjectName) {

@@ -14,7 +14,7 @@
 
 Chain::Chain() {
 
-  for (int i = 0; i < CHAIN_COUNT * 16; i++) {
+  for (int i = 0; i < CHAIN_COUNT * PHRASES_PER_CHAIN; i++) {
     data_[i] = 0xFF;
     transpose_[i] = 0x00;
   }
