@@ -14,7 +14,7 @@
 
 ToastView *ToastView::instance_ = nullptr;
 
-ToastView::ToastView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {};
+ToastView::ToastView(GUIWindow &w, ViewData *viewData) : View(w, viewData){};
 ToastView::~ToastView() { DeleteStrings(); }
 ToastView *ToastView::getInstance() { return instance_; }
 
