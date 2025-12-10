@@ -47,6 +47,5 @@ private:
   static unsigned int lastBeatCount_;
 
   static EventManager *eventManager_;
-  std::map<void *, unsigned> mmap_;
 };
 #endif

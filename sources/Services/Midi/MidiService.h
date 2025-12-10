@@ -78,7 +78,7 @@ private:
   int currentPlayQueue_;
   int currentOutQueue_;
 
-  MidiInMerger *merger_;
+  MidiInMerger merger_;
   bool sendSync_;
 };
 #endif

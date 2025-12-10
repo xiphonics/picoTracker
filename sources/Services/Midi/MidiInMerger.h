@@ -10,14 +10,18 @@
 #ifndef _MIDI_IN_MERGER_H_
 #define _MIDI_IN_MERGER_H_
 
+#include "Externals/etl/include/etl/map.h"
+#include "Externals/etl/include/etl/string.h"
 #include "MidiChannel.h"
 #include "MidiInDevice.h"
 #include "config/StringLimits.h"
-#include "Externals/etl/include/etl/string.h"
 
-#include <map>
+// Maximum number of merged MIDI channels we expect to track
+static constexpr size_t MIDI_MERGER_MAX_CHANNELS = 16;
 
-typedef std::map<etl::string<STRING_CHANNEL_NAME_MAX>, Channel *> tChannelMap;
+typedef etl::map<etl::string<STRING_MIDI_IN_KEY_MAX>, Channel *,
+                 MIDI_MERGER_MAX_CHANNELS>
+    tChannelMap;
 
 class MidiInMerger : public Observable,
                      public ControllerSource,

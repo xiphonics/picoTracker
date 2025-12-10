@@ -20,7 +20,7 @@
 #undef SendMessage
 #endif
 
-MidiService::MidiService() : sendSync_(true) {
+MidiService::MidiService() : merger_(), sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
@@ -38,9 +38,8 @@ bool MidiService::Init() {
   }
 
   // Add a merger for the input
-  merger_ = new MidiInMerger();
   for (auto dev : inList_) {
-    merger_->Insert(*dev);
+    merger_.Insert(*dev);
     dev->Start();
     // Add this service as an observer to receive transport control messages
     dev->AddObserver(*this);
