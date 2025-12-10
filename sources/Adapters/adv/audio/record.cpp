@@ -17,6 +17,13 @@ uint8_t *writeBuffer;
 
 __attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
 uint16_t recordBuffer[RECORD_BUFFER_SIZE];
+// TODO (democloid): this is less than ideal, but works for now. we need to swap
+// the samples in the input buffer and since we also do the monitoring from it,
+// we cannot invert it in place (and we would have to also invert the monitoring
+// playback). Look for a better solution Half-buffer sized swap workspace for
+// writing to disk
+__attribute__((section(".FRAMEBUFFER"))) __attribute__((
+    aligned(32))) static uint16_t recordSwapBuffer[RECORD_BUFFER_SIZE / 2];
 
 TaskHandle_t RecordHandle = NULL;
 
@@ -39,6 +46,20 @@ static uint32_t start = 0;
 static uint32_t totalSamplesWritten = 0;
 static uint32_t recordDuration_ = MAX_INT32;
 static RecordSource source_ = LineIn;
+
+// Swap L/R channels for interleaved 16-bit stereo using a 32-bit rotate.
+// 'size' is the number of uint16_t entries; assumes even (multiple of 2).
+static inline void SwapChannelsToBuffer(const uint16_t *src, uint16_t *dst,
+                                        uint32_t size) {
+  uint32_t words = size >> 1; // two samples per 32-bit word
+  const uint32_t *src32 = reinterpret_cast<const uint32_t *>(src);
+  uint32_t *dst32 = reinterpret_cast<uint32_t *>(dst);
+  for (uint32_t i = 0; i < words; ++i) {
+    uint32_t lr = src32[i];
+    // Rotate by 16 bits: [RRRR][LLLL] -> [LLLL][RRRR]
+    dst32[i] = (lr >> 16) | (lr << 16);
+  }
+}
 
 StaticSemaphore_t xSemaphoreBuffer;
 SemaphoreHandle_t recordingFinishedSemaphore = NULL;
@@ -236,15 +257,9 @@ void Record(void *) {
     if (!isHalfBuffer) {
       offset = RECORD_BUFFER_SIZE / 2;
     }
-    /*    if (!thresholdOK) {
-      // half the buffer in uint16_t
-      for (uint32_t i = 0; i < RECORD_BUFFER_SIZE / 2; ++i) {
-        if (abs(buffer[i]) > threshold) {
-          thresholdOK = true;
-          break;
-        }
-      }
-      }*/
+
+    const uint32_t halfSamples = RECORD_BUFFER_SIZE / 2; // uint16_t entries
+    SwapChannelsToBuffer(recordBuffer + offset, recordSwapBuffer, halfSamples);
     // Write raw audio data (uint16_t samples as bytes)
     if (!monitoringOnly) {
       // When we monitor we are continously recording, so there is data before
@@ -256,13 +271,15 @@ void Record(void *) {
       }
       if (RecordFile) {
         writeInProgress = true;
-        int bytesWritten = RecordFile->Write((uint8_t *)(recordBuffer + offset),
-                                             RECORD_BUFFER_SIZE, 1);
+        // Write swapped half-buffer to disk (bytes = samples * 2)
+        const uint32_t bytesToWrite = halfSamples * sizeof(uint16_t);
+        int bytesWritten =
+            RecordFile->Write((uint8_t *)recordSwapBuffer, bytesToWrite, 1);
         // sync immediately after writing the buffer for consistent if not
         // fastest perf
         RecordFile->Sync();
         writeInProgress = false;
-        if (bytesWritten != RECORD_BUFFER_SIZE) {
+        if (bytesWritten != (int)bytesToWrite) {
           Trace::Error("write failed\r\n");
           // for now just give up and error out
           return;
