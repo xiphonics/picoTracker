@@ -60,8 +60,8 @@ public:
   // Engine playback  start callback
 
   virtual void OnStart();
-  static constexpr size_t kMaxSlices = 16;
-  static constexpr unsigned char kSliceNoteBase = 60;
+  static constexpr size_t MaxSlices = 16;
+  static constexpr unsigned char SliceNoteBase = 60;
 
   uint32_t GetSlicePoint(size_t index) const;
   void SetSlicePoint(size_t index, uint32_t start);
@@ -125,7 +125,7 @@ private:
   WatchedVariable loopEnd_;
   Variable table_;
   Variable tableAuto_;
-  etl::array<uint32_t, kMaxSlices> slicePoints_;
+  etl::array<uint32_t, MaxSlices> slicePoints_;
 
   static bool useDirtyDownsampling_;
   bool isSliceIndexActive(size_t index) const;

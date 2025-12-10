@@ -29,12 +29,12 @@
 #include <cstring>
 
 namespace {
-constexpr unsigned short kPreviewChannel = SONG_CHANNEL_COUNT - 1;
-constexpr int kSliceXOffset = 0;
+constexpr unsigned short PreviewChannel = SONG_CHANNEL_COUNT - 1;
+constexpr int SliceXOffset = 0;
 #ifdef ADV
-constexpr int kSliceYOffset = 2 * CHAR_HEIGHT * 4;
+constexpr int SliceYOffset = 2 * CHAR_HEIGHT * 4;
 #else
-constexpr int kSliceYOffset = 2 * CHAR_HEIGHT;
+constexpr int SliceYOffset = 2 * CHAR_HEIGHT;
 #endif
 } // namespace
 
@@ -43,7 +43,7 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
       sliceStartVar_(FourCC::SampleInstrumentStart, 0), waveformValid_(false),
       needsWaveformRedraw_(true), instrument_(nullptr), instrumentIndex_(0),
       sampleSize_(0), playKeyHeld_(false), previewActive_(false),
-      previewNote_(SampleInstrument::kSliceNoteBase) {
+      previewNote_(SampleInstrument::SliceNoteBase) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
   slicePixelPositions_.fill(-1);
@@ -178,7 +178,7 @@ void SampleSlicesView::buildFieldLayout() {
   position._y = 12;
 
   intVarField_.emplace_back(position, sliceIndexVar_, "slice: %d", 0,
-                            static_cast<int>(kSliceCount) - 1, 1, 1);
+                            static_cast<int>(SliceCount) - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &intVarField_.back());
   intVarField_.back().AddObserver(*this);
 
@@ -230,25 +230,25 @@ void SampleSlicesView::rebuildWaveform() {
   }
 
   std::fill(std::begin(waveformCache_), std::end(waveformCache_), 0);
-  static int64_t sumSquares[kSliceWaveformCacheSize];
-  static uint32_t counts[kSliceWaveformCacheSize];
-  std::fill_n(sumSquares, kSliceWaveformCacheSize, int64_t{0});
-  std::fill_n(counts, kSliceWaveformCacheSize, uint32_t{0});
+  static int64_t sumSquares[SliceWaveformCacheSize];
+  static uint32_t counts[SliceWaveformCacheSize];
+  std::fill_n(sumSquares, SliceWaveformCacheSize, int64_t{0});
+  std::fill_n(counts, SliceWaveformCacheSize, uint32_t{0});
   float samplesPerPixel =
-      std::max(1.0f, static_cast<float>(sampleSize_) / kSliceWaveformCacheSize);
+      std::max(1.0f, static_cast<float>(sampleSize_) / SliceWaveformCacheSize);
 
   for (uint32_t i = 0; i < sampleSize_; ++i) {
     uint32_t pixel =
         static_cast<uint32_t>(std::floor(i / samplesPerPixel + 0.5f));
-    if (pixel >= kSliceWaveformCacheSize) {
-      pixel = kSliceWaveformCacheSize - 1;
+    if (pixel >= SliceWaveformCacheSize) {
+      pixel = SliceWaveformCacheSize - 1;
     }
     short value = samples[i * channels];
     sumSquares[pixel] += static_cast<int64_t>(value) * value;
     counts[pixel]++;
   }
 
-  for (int i = 0; i < kSliceWaveformCacheSize; ++i) {
+  for (int i = 0; i < SliceWaveformCacheSize; ++i) {
     if (counts[i] == 0) {
       waveformCache_[i] = 0;
       continue;
@@ -256,7 +256,7 @@ void SampleSlicesView::rebuildWaveform() {
     float meanSquare = static_cast<float>(sumSquares[i]) / counts[i];
     float rms = std::sqrt(meanSquare) / 32768.0f;
     uint8_t height = static_cast<uint8_t>(std::min<float>(
-        rms * kSliceBitmapHeight, static_cast<float>(kSliceBitmapHeight)));
+        rms * SliceBitmapHeight, static_cast<float>(SliceBitmapHeight)));
     waveformCache_[i] = height;
   }
 
@@ -265,27 +265,27 @@ void SampleSlicesView::rebuildWaveform() {
 }
 
 void SampleSlicesView::drawWaveform() {
-  GUIRect area(kSliceXOffset, kSliceYOffset, kSliceXOffset + kSliceBitmapWidth,
-               kSliceYOffset + kSliceBitmapHeight);
+  GUIRect area(SliceXOffset, SliceYOffset, SliceXOffset + SliceBitmapWidth,
+               SliceYOffset + SliceBitmapHeight);
   DrawRect(area, CD_BACKGROUND);
 
   if (!waveformValid_) {
     return;
   }
 
-  int centerY = kSliceYOffset + kSliceBitmapHeight / 2;
-  for (int x = 1; x < kSliceBitmapWidth - 1; ++x) {
+  int centerY = SliceYOffset + SliceBitmapHeight / 2;
+  for (int x = 1; x < SliceBitmapWidth - 1; ++x) {
     uint8_t amplitude = waveformCache_[x - 1];
     if (amplitude == 0) {
       continue;
     }
     int startY = centerY - amplitude / 2;
     int endY = startY + amplitude;
-    GUIRect column(kSliceXOffset + x, startY, kSliceXOffset + x + 1, endY);
+    GUIRect column(SliceXOffset + x, startY, SliceXOffset + x + 1, endY);
     DrawRect(column, CD_NORMAL);
   }
 
-  for (size_t i = 0; i < kSliceCount; ++i) {
+  for (size_t i = 0; i < SliceCount; ++i) {
     int x = slicePixelPositions_[i];
     if (x < 0) {
       continue;
@@ -293,8 +293,8 @@ void SampleSlicesView::drawWaveform() {
     ColorDefinition color = (static_cast<int>(i) == sliceIndexVar_.GetInt())
                                 ? CD_CURSOR
                                 : CD_ACCENT;
-    GUIRect marker(x, kSliceYOffset + 2, x + 1,
-                   kSliceYOffset + kSliceBitmapHeight - 2);
+    GUIRect marker(x, SliceYOffset + 2, x + 1,
+                   SliceYOffset + SliceBitmapHeight - 2);
     DrawRect(marker, color);
   }
 }
@@ -306,7 +306,7 @@ void SampleSlicesView::refreshSliceMarkers() {
     return;
   }
 
-  for (size_t i = 0; i < kSliceCount; ++i) {
+  for (size_t i = 0; i < SliceCount; ++i) {
     if (!instrument_->IsSliceDefined(i)) {
       continue;
     }
@@ -345,8 +345,8 @@ void SampleSlicesView::updateSliceSelectionFromInstrument() {
   if (index < 0) {
     index = 0;
   }
-  if (index >= static_cast<int>(kSliceCount)) {
-    index = static_cast<int>(kSliceCount) - 1;
+  if (index >= static_cast<int>(SliceCount)) {
+    index = static_cast<int>(SliceCount) - 1;
   }
 
   uint32_t start = instrument_->GetSlicePoint(static_cast<size_t>(index));
@@ -369,9 +369,9 @@ void SampleSlicesView::startPreview() {
   stopPreview();
 
   unsigned char note = static_cast<unsigned char>(
-      SampleInstrument::kSliceNoteBase + sliceIndexVar_.GetInt());
+      SampleInstrument::SliceNoteBase + sliceIndexVar_.GetInt());
   Player::GetInstance()->PlayNote(static_cast<unsigned short>(instrumentIndex_),
-                                  kPreviewChannel, note, 0x7F);
+                                  PreviewChannel, note, 0x7F);
   previewNote_ = note;
   previewActive_ = true;
 }
@@ -381,7 +381,7 @@ void SampleSlicesView::stopPreview() {
     return;
   }
   Player::GetInstance()->StopNote(static_cast<unsigned short>(instrumentIndex_),
-                                  kPreviewChannel);
+                                  PreviewChannel);
   previewActive_ = false;
 }
 
@@ -400,8 +400,8 @@ int SampleSlicesView::sliceToPixel(uint32_t start) const {
       start, sampleSize_ > 0 ? sampleSize_ - 1 : static_cast<uint32_t>(0));
   float ratio = static_cast<float>(clamped) /
                 static_cast<float>(std::max<uint32_t>(1, sampleSize_));
-  int local = static_cast<int>(ratio * (kSliceBitmapWidth - 2));
-  return kSliceXOffset + 1 + local;
+  int local = static_cast<int>(ratio * (SliceBitmapWidth - 2));
+  return SliceXOffset + 1 + local;
 }
 
 bool SampleSlicesView::hasInstrumentSample() const {

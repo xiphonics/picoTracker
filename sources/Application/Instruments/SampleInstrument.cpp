@@ -108,14 +108,14 @@ SampleInstrument::SampleInstrument()
 SampleInstrument::~SampleInstrument() {}
 
 uint32_t SampleInstrument::GetSlicePoint(size_t index) const {
-  if (index >= kMaxSlices) {
+  if (index >= MaxSlices) {
     return 0;
   }
   return slicePoints_[index];
 }
 
 void SampleInstrument::SetSlicePoint(size_t index, uint32_t start) {
-  if (index >= kMaxSlices) {
+  if (index >= MaxSlices) {
     return;
   }
   uint32_t clamped = start;
@@ -167,14 +167,14 @@ bool SampleInstrument::hasAnySliceValue() const {
 }
 
 bool SampleInstrument::isSliceIndexActive(size_t index) const {
-  if (index >= kMaxSlices) {
+  if (index >= MaxSlices) {
     return false;
   }
   if (index == 0) {
     if (slicePoints_[0] > 0) {
       return true;
     }
-    for (size_t i = 1; i < kMaxSlices; ++i) {
+    for (size_t i = 1; i < MaxSlices; ++i) {
       if (slicePoints_[i] > 0) {
         return true;
       }
@@ -193,11 +193,11 @@ bool SampleInstrument::shouldUseSlice(unsigned char midinote,
   if (source_ == nullptr || source_->IsMulti()) {
     return false;
   }
-  if (midinote < kSliceNoteBase) {
+  if (midinote < SliceNoteBase) {
     return false;
   }
-  size_t index = midinote - kSliceNoteBase;
-  if (index >= kMaxSlices) {
+  size_t index = midinote - SliceNoteBase;
+  if (index >= MaxSlices) {
     return false;
   }
   if (!isSliceIndexActive(index)) {
@@ -215,7 +215,7 @@ bool SampleInstrument::shouldUseSlice(unsigned char midinote,
 
 uint32_t SampleInstrument::computeSliceStart(size_t index,
                                              uint32_t sampleSize) const {
-  if (index >= kMaxSlices || sampleSize == 0) {
+  if (index >= MaxSlices || sampleSize == 0) {
     return 0;
   }
   uint32_t stored = slicePoints_[index];
@@ -235,7 +235,7 @@ uint32_t SampleInstrument::computeSliceEnd(size_t index,
   }
   uint32_t start = computeSliceStart(index, sampleSize);
   uint32_t end = sampleSize;
-  for (size_t i = index + 1; i < kMaxSlices; ++i) {
+  for (size_t i = index + 1; i < MaxSlices; ++i) {
     uint32_t candidate = slicePoints_[i];
     if (candidate > start) {
       if (candidate < end) {
@@ -1403,47 +1403,40 @@ etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
 };
 
 void SampleInstrument::SaveContent(tinyxml2::XMLPrinter *printer) {
-  printer->PushAttribute("VERSION", PROJECT_NUMBER);
-  printer->PushAttribute("TYPE", InstrumentTypeNames[GetType()]);
+  I_Instrument::SaveContent(printer);
 
   for (size_t i = 0; i < slicePoints_.size(); ++i) {
     if (slicePoints_[i] == 0) {
       continue;
     }
-    char attrName[6];
-    npf_snprintf(attrName, sizeof(attrName), "SL%02u",
+    printer->OpenElement("PARAM");
+    char sliceName[6];
+    npf_snprintf(sliceName, sizeof(sliceName), "SL%02u",
                  static_cast<unsigned>(i));
-    printer->PushAttribute(attrName,
+    printer->PushAttribute("NAME", sliceName);
+    printer->PushAttribute("VALUE",
                            static_cast<unsigned int>(slicePoints_[i]));
-  }
-
-  if (!name_.empty()) {
-    printer->OpenElement("PARAM");
-    printer->PushAttribute("NAME", "InstrumentName");
-    printer->PushAttribute("VALUE", name_.c_str());
-    printer->CloseElement();
-  }
-
-  for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
-    printer->OpenElement("PARAM");
-    printer->PushAttribute("NAME", (*it)->GetName());
-    printer->PushAttribute("VALUE", (*it)->GetString().c_str());
     printer->CloseElement();
   }
 }
 
 void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
+  auto setSliceFromString = [this](const char *indexStr,
+                                   const char *valueStr) {
+    int idx = atoi(indexStr);
+    if (idx < 0 || idx >= static_cast<int>(MaxSlices)) {
+      return;
+    }
+    uint32_t value = static_cast<uint32_t>(strtoul(valueStr, nullptr, 10));
+    slicePoints_[static_cast<size_t>(idx)] = value;
+  };
+
   bool hasAttr = doc->NextAttribute();
   while (hasAttr) {
     if (!strcasecmp(doc->attrname_, "TYPE")) {
       Trace::Log("I_INSTRUMENT", "Instrument type from XML: %s", doc->attrval_);
     } else if (!strncasecmp(doc->attrname_, "SL", 2)) {
-      int idx = atoi(doc->attrname_ + 2);
-      if (idx >= 0 && idx < static_cast<int>(kMaxSlices)) {
-        uint32_t value =
-            static_cast<uint32_t>(strtoul(doc->attrval_, nullptr, 10));
-        slicePoints_[static_cast<size_t>(idx)] = value;
-      }
+      setSliceFromString(doc->attrname_ + 2, doc->attrval_);
     }
     hasAttr = doc->NextAttribute();
   }
@@ -1470,6 +1463,8 @@ void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
     if (name[0] != '\0' && value[0] != '\0') {
       if (!strcasecmp(name, "InstrumentName")) {
         SetName(value);
+      } else if (!strncasecmp(name, "SL", 2)) {
+        setSliceFromString(name + 2, value);
       } else {
         bool found = false;
         for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
