@@ -74,7 +74,7 @@ void ToastView::WrapText(const char *message) {
 
     // skip to the next line
     pos += lineLen;
-    
+
     // trim, leadin spaces from wrapping
     while (pos < msgLen && message[pos] == ' ')
       pos++;
