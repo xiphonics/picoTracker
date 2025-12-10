@@ -1414,15 +1414,13 @@ void SampleInstrument::SaveContent(tinyxml2::XMLPrinter *printer) {
     npf_snprintf(sliceName, sizeof(sliceName), "SL%02u",
                  static_cast<unsigned>(i));
     printer->PushAttribute("NAME", sliceName);
-    printer->PushAttribute("VALUE",
-                           static_cast<unsigned int>(slicePoints_[i]));
+    printer->PushAttribute("VALUE", static_cast<unsigned int>(slicePoints_[i]));
     printer->CloseElement();
   }
 }
 
 void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
-  auto setSliceFromString = [this](const char *indexStr,
-                                   const char *valueStr) {
+  auto setSliceFromString = [this](const char *indexStr, const char *valueStr) {
     int idx = atoi(indexStr);
     if (idx < 0 || idx >= static_cast<int>(MaxSlices)) {
       return;
