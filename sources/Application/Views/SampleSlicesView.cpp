@@ -349,7 +349,14 @@ void SampleSlicesView::updateSliceSelectionFromInstrument() {
     index = static_cast<int>(SliceCount) - 1;
   }
 
-  uint32_t start = instrument_->GetSlicePoint(static_cast<size_t>(index));
+  size_t sliceIndex = static_cast<size_t>(index);
+  uint32_t start = instrument_->GetSlicePoint(sliceIndex);
+  if (index > 0 && !instrument_->IsSliceDefined(sliceIndex) &&
+      instrument_->IsSliceDefined(sliceIndex - 1)) {
+    uint32_t previousStart = instrument_->GetSlicePoint(sliceIndex - 1);
+    instrument_->SetSlicePoint(sliceIndex, previousStart);
+    start = instrument_->GetSlicePoint(sliceIndex);
+  }
   sliceStartVar_.SetInt(static_cast<int>(start), false);
 }
 
