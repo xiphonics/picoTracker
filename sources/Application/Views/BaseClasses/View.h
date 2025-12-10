@@ -21,6 +21,7 @@
 #include <functional>
 
 #define VU_METER_HEIGHT 16
+#define VU_METER_MAX 159
 #define VU_METER_CLIP_LEVEL 15
 #define VU_METER_WARN_LEVEL 8
 #define ALT_ROW_NUMBER 4 // for now const vs a user setting
