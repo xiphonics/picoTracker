@@ -251,9 +251,9 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
         fixed s4 = i2fp(nextSample[1]);
         fixed rightSample = s3 + fp_mul(fpFrac, s4 - s3);
 
-        // Apply volume
-        *dst++ = fp_mul(leftSample, volume);
+        // Apply volume and swap to match reversed hardware wiring
         *dst++ = fp_mul(rightSample, volume);
+        *dst++ = fp_mul(leftSample, volume);
       } else {
         // Mono sample with interpolation
         fixed s1 = i2fp(currentSample[0]);
@@ -364,9 +364,9 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     } else {
       rightSample = leftSample;
     }
-    // Apply volume
-    *dst++ = fp_mul(leftSample, volume);
+    // Apply volume and swap to match reversed hardware wiring
     *dst++ = fp_mul(rightSample, volume);
+    *dst++ = fp_mul(leftSample, volume);
 
     // Move to the next source position based on the sample rate ratio
     pos += fp2fl(fpSpeed_);

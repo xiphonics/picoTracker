@@ -41,6 +41,15 @@ Subsequent builds just need the make command. If anything changed on the CMakeLi
 To create a debug build, you have to replace the ```cmake``` step on the previous step with:
 ```picoTracker/build % PICO_SDK_PATH=../sources/Externals/pico-sdk cmake -DCMAKE_BUILD_TYPE=Debug -DPICO_DEOPTIMIZED_DEBUG=1 ../sources/```
 
+## Build for the Advance
+
+To build using CMake the debug build for Adv target: 
+```bash
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug -DADV=true ../sources
+make -j8
+```
+
 ## Testbench for development
 While you can perform changes by building and copying the resulting binary onto the Pico using USB, this will be extremely slow and painful. A better setup would be to use a [picoProbe](https://github.com/raspberrypi/picoprobe) and use [OpenOCD](https://openocd.org/) in order to iterate quickly while you're developing.
 
