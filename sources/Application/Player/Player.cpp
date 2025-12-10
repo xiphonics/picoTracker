@@ -15,7 +15,6 @@
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/BaseClasses/ViewEvent.h"
-#include "Foundation/Constants/SpecialCharacters.h"
 #include "PlayerMixer.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/n_assert.h"

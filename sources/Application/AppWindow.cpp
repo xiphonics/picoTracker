@@ -36,7 +36,6 @@
 #include "Application/Views/ThemeImportView.h"
 #include "Application/Views/ThemeView.h"
 #include "BaseClasses/View.h"
-#include "Foundation/Constants/SpecialCharacters.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Player/Player.h"
 #include "Services/Midi/MidiService.h"
@@ -902,13 +901,6 @@ void AppWindow::PrintMultiLine(char *line) {
   Clear();
   GUITextProperties props;
   SetColor(CD_NORMAL);
-
-  // draw logo
-
-  GUIPoint p(13, 4);
-  DrawString(char_logo_string_s, p, props);
-
-  // draw content
 
   int current_y = 11; // Start near the middle of the screen
 

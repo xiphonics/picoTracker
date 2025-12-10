@@ -13,7 +13,6 @@
 #include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/SampleEditorView.h"
-#include "Foundation/Constants/SpecialCharacters.h"
 #include "ViewData.h"
 #include <nanoprintf.h>
 

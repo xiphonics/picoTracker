@@ -11,7 +11,6 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/SampleEditorView.h"
-#include "Foundation/Constants/SpecialCharacters.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include "UIController.h"

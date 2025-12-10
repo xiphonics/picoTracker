@@ -10,8 +10,6 @@
 #include "ModalView.h"
 #include "Application/AppWindow.h"
 
-#include "Application/Utils/DrawUtils.h"
-
 ModalView::ModalView(View &v)
     : View(v.w_, v.viewData_), finished_(false), returnCode_(0){};
 

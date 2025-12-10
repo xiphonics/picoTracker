@@ -15,7 +15,6 @@
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/SampleEditorView.h"
-#include "Foundation/Constants/SpecialCharacters.h"
 #include "System/Console/Trace.h"
 #include "UIController.h"
 #include "ViewData.h"
