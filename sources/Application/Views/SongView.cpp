@@ -1005,10 +1005,10 @@ void SongView::AnimationUpdate() {
             pos._y = anchor._y + y;
             if (!player->IsChannelMuted(i)) {
               SetColor(CD_ACCENT);
-              DrawString(pos._x, pos._y, char_indicator_position_s, props);
+              DrawString(pos._x, pos._y, ">", props);
             } else {
               SetColor(CD_ACCENTALT);
-              DrawString(pos._x, pos._y, char_indicator_positionMuted_s, props);
+              DrawString(pos._x, pos._y, "-", props);
             }
             SetColor(CD_CURSOR);
             lastPlayedPosition_[i] = viewData_->songPlayPos_[i];

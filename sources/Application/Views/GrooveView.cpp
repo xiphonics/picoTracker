@@ -225,7 +225,7 @@ void GrooveView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {
     pos._x = anchor._x - 1;
     pos._y = anchor._y + lastPosition_;
     SetColor(CD_ACCENT);
-    DrawString(pos._x, pos._y, char_indicator_position_s, props);
+    DrawString(pos._x, pos._y, ">", props);
     SetColor(CD_NORMAL);
   };
 

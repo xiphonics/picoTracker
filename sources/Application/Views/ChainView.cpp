@@ -794,10 +794,10 @@ void ChainView::AnimationUpdate() {
             pos._y = anchor._y + viewData_->chainPlayPos_[i];
             if (!player->IsChannelMuted(i)) {
               SetColor(CD_ACCENT);
-              DrawString(pos._x, pos._y, char_indicator_position_s, props);
+              DrawString(pos._x, pos._y, ">", props);
             } else {
               SetColor(CD_ACCENTALT);
-              DrawString(pos._x, pos._y, char_indicator_positionMuted_s, props);
+              DrawString(pos._x, pos._y, "-", props);
             }
             lastPlayingPos_ = viewData_->chainPlayPos_[i];
             break;
