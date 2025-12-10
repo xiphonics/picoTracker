@@ -10,6 +10,7 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Views/ToastView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
 #include "System/Console/Trace.h"
@@ -152,8 +153,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     // Update progress indicator
     int progress = (int)(((totalSize - size) * 100) / totalSize);
     // set minimum display time for status message
-    Status::SetWithTimeout(STATUS_MIN_TIME_INFO,
-                           "%s\nLoading from disk...\n%d%%", name, progress);
+    Status::Set("%s\nLoading from disk...\n%d%%", name, progress);
   };
 
   // now load the sample into memory/flash from the original source path
@@ -181,9 +181,9 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   ev.type_ = SPET_INSERT;
   NotifyObservers(&ev);
 
-  // work is done, wait if still necessary to show status message for some time
-  Status::Set("%s\n \nDone.", name);
-  Status::AwaitDismiss();
+  ToastView *t = ToastView::getInstance();
+  t->Show(status ? "Loaded successfully." : "Loading failed.",
+          status ? &ttSuccess : &ttError, 1500);
 
   return status ? (count_ - 1) : -1;
 };

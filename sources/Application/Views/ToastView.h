@@ -5,44 +5,48 @@
 #include "System/System/System.h"
 #include <string.h>
 
-enum ToastType {
-  TT_INFO,
-  TT_SUCCESS,
-  TT_WARNING,
-  TT_ERROR
+constexpr int maxLineWidth = (SCREEN_WIDTH - 6);
+constexpr int maxLines = 8;
+
+struct ToastType {
+  const char *symbol;
+  ColorDefinition color;
 };
+
+constexpr ToastType ttInfo = {"i", CD_INFO};
+constexpr ToastType ttError = {"X", CD_ERROR};
+constexpr ToastType ttSuccess = {"I", CD_HILITE1};
+constexpr ToastType ttWarning = {"!", CD_WARN};
 
 class ToastView : public View {
 public:
-  ToastView(GUIWindow &w, ViewData *viewData);
   virtual ~ToastView();
 
-  // Static methods for convenience
-  void UpdateTimer();
-  
-  static ToastView* instance_;
-  
-  static ToastView *getInstance() {
-    return instance_;
-  }
+  static void Init(GUIWindow &w, ViewData *viewData);
+  static ToastView *getInstance();
 
-  #define TOAST_MAX_LINE_WIDTH (SCREEN_WIDTH - 6)
-
-  char *lines_[8]; 
-  int lineCount_;
-  uint32_t dismissTime_;
-  bool visible_;
-  ToastType type_;
-  
-  void Show(const char *message, ToastType type, uint32_t timeout_ms);
+  void Show(const char *text, const ToastType *type, uint32_t msTime);
   void Draw(GUIWindow &w, ViewData *viewData);
+  void UpdateTimer();
+
+private:
+  static ToastView *instance_;
+  ToastType type_ = ttInfo;
+  char *lines_[maxLines] = {nullptr};
+  uint32_t dismissTime_ = 0;
+  uint32_t animationStartTime_ = 0;
+  int32_t lineCount_ = 0;
+  int animationOffset_ = 0;
+  bool visible_ = false;
+
+  ToastView(GUIWindow &w, ViewData *viewData);
   void WrapText(const char *message);
-  char GetTypeIcon();
-  
-  // View virtual methods
-  virtual void ProcessButtonMask(unsigned short mask, bool pressed) override {};
-  virtual void DrawView() override {};
-  virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0) override {};
+  void DeleteStrings();
+
+  // view virtual methods
   virtual void OnFocus() override {};
+  virtual void DrawView() override {};
   virtual void AnimationUpdate() override {};
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick) override {};
+  virtual void ProcessButtonMask(unsigned short mask, bool pressed) override {};
 };

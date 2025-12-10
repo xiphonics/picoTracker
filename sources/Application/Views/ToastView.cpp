@@ -12,171 +12,144 @@
 
 #define TOAST_MAX_LINE_WIDTH (SCREEN_WIDTH - 6)
 
-// Initialize static instance pointer
-ToastView* ToastView::instance_ = nullptr;
+ToastView *ToastView::instance_ = nullptr;
 
-// Constructor
-ToastView::ToastView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
-  lineCount_ = 0;
-  type_ = TT_INFO;
-  dismissTime_ = 0;
-  visible_ = false;
-  
-  for (int i = 0; i < 8; i++) {
+ToastView::ToastView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {};
+ToastView::~ToastView() { DeleteStrings(); }
+ToastView *ToastView::getInstance() { return instance_; }
+
+void ToastView::Init(GUIWindow &w, ViewData *viewData) {
+  if (!instance_)
+    instance_ = new ToastView(w, viewData);
+}
+
+// clean up allocated strings
+void ToastView::DeleteStrings() {
+  for (int i = 0; i < lineCount_; i++) {
+    delete[] lines_[i];
     lines_[i] = nullptr;
   }
-}
-
-ToastView::~ToastView() {
-  // Clean up any allocated line pointers
-  for (int i = 0; i < lineCount_; i++) {
-    if (lines_[i]) {
-      delete[] lines_[i];
-      lines_[i] = nullptr;
-    }
-  }
-}
-
-void ToastView::UpdateTimer() {
-  if (!visible_) {
-    return;
-  }
-  
-  if (System::GetInstance()->Millis() >= dismissTime_) {
-    visible_ = false;
-    Trace::Error("HIDING THE OVCERLATY");
-    ((AppWindow &)w_).SetDirty();
-  }
-}
-
-void ToastView::Show(const char *message, ToastType type, uint32_t timeout_ms) {
-  type_ = type;
-  
-  // Wrap text into lines with padding
-  WrapText(message ? message : "");
-  
-  visible_ = true;
-  
-  // Set dismiss time
-  dismissTime_ = System::GetInstance()->Millis() + timeout_ms;
-}
-
-void ToastView::WrapText(const char *message) {
-  // Clean up old lines
-  for (int i = 0; i < lineCount_; i++) {
-    if (lines_[i]) {
-      delete[] lines_[i];
-      lines_[i] = nullptr;
-    }
-  }
   lineCount_ = 0;
-  
-  // Break message into lines that fit within TOAST_MAX_LINE_WIDTH
+}
+
+// splits the message into multiple lines fitting into the toast width and pads
+// with spaces on both sides
+void ToastView::WrapText(const char *message) {
+  DeleteStrings();
+
+  const int totalLen = 3 + maxLineWidth + 1;
+
+  // helper lambda to add an empty line (top and bottom)
+  auto addEmptyLine = [&]() {
+    lines_[lineCount_] = new char[totalLen + 1];
+    memset(lines_[lineCount_], ' ', totalLen);
+    lines_[lineCount_++][totalLen] = 0;
+  };
+
+  addEmptyLine(); // empty line at start
+
   int msgLen = strlen(message);
-  int start = 0;
-  
-  while (start < msgLen && lineCount_ < 8) {
-    int len = msgLen - start;
-    if (len > TOAST_MAX_LINE_WIDTH) {
-      len = TOAST_MAX_LINE_WIDTH;
-      
-      // Try to break at a space
-      int breakPos = len;
-      for (int i = len - 1; i > len / 2; i--) {
-        if (message[start + i] == ' ') {
-          breakPos = i;
+  int pos = 0;
+
+  while (pos < msgLen && lineCount_ < maxLines - 1) {
+    int remaining = msgLen - pos;
+    int lineLen = remaining > maxLineWidth ? maxLineWidth : remaining;
+
+    // try to break at last space after half the width, break mid-word if needed
+    if (lineLen == maxLineWidth) {
+      for (int i = lineLen - 1; i >= lineLen / 2; i--) {
+        if (message[pos + i] == ' ') {
+          lineLen = i;
           break;
         }
       }
-      len = breakPos;
     }
-    
-    // Trim trailing spaces from the content
-    int contentLen = len;
-    while (contentLen > 0 && message[start + contentLen - 1] == ' ') {
-      contentLen--;
-    }
-    
-    // Allocate line with padding: "   content "
-    // 3 spaces at start + content + 1 space at end
-    int totalLen = 3 + TOAST_MAX_LINE_WIDTH + 1;
+
+    // allocate and populate next line
     lines_[lineCount_] = new char[totalLen + 1];
-    
-    // Fill with spaces
     memset(lines_[lineCount_], ' ', totalLen);
+    if (lineLen > 0)
+      memcpy(lines_[lineCount_] + 3, message + pos, lineLen);
+    lines_[lineCount_++][totalLen] = 0;
+
+    // skip to the next line
+    pos += lineLen;
     
-    // Copy content starting at position 3
-    if (contentLen > 0) {
-      strncpy(lines_[lineCount_] + 3, message + start, contentLen);
-    }
-    
-    // Null terminate
-    lines_[lineCount_][totalLen] = 0;
-    
-    lineCount_++;
-    start += len;
-    
-    // Skip leading spaces on next line
-    while (start < msgLen && message[start] == ' ') {
-      start++;
-    }
+    // trim, leadin spaces from wrapping
+    while (pos < msgLen && message[pos] == ' ')
+      pos++;
   }
 
-  char icon = GetTypeIcon();
-  lines_[0][1] = icon;
+  addEmptyLine(); // empty line at end
 }
 
-char ToastView::GetTypeIcon() {
-  switch (type_) {
-    case TT_INFO: return 'i';
-    case TT_ERROR: return 'x';
-    case TT_SUCCESS: return 'i';
-    case TT_WARNING: return '!';
-    default: return '?';
+void ToastView::UpdateTimer() {
+  if (!visible_)
+    return;
+
+  uint32_t now = System::GetInstance()->Millis();
+
+  // check if we should start animating out
+  if (now >= dismissTime_ && animationStartTime_ == 0) {
+    animationStartTime_ = now;
+    ((AppWindow &)w_).SetDirty();
   }
+
+  // update animation offset
+  if (animationStartTime_ > 0) {
+    int newOffset = (now - animationStartTime_) / 50; // one row per 50ms
+
+    if (newOffset >= 3 + lineCount_) {
+      // animation complete, hide the toast
+      visible_ = false;
+      animationOffset_ = 0;
+      animationStartTime_ = 0;
+      ((AppWindow &)w_).SetDirty();
+    } else if (newOffset != animationOffset_) {
+      // animation in progress, update offset
+      animationOffset_ = newOffset;
+      ((AppWindow &)w_).SetDirty();
+    }
+  }
+}
+
+void ToastView::Show(const char *text, const ToastType *type, uint32_t msTime) {
+  type_ = *type;
+  visible_ = true;
+  animationOffset_ = 0;
+  animationStartTime_ = 0;
+  dismissTime_ = System::GetInstance()->Millis() + msTime;
+  WrapText(text);
 }
 
 void ToastView::Draw(GUIWindow &w, ViewData *viewData) {
-  if (!visible_) {
+  if (!visible_)
     return;
-  }
-  
+
   GUITextProperties props, invprops;
   invprops.invert_ = true;
   SetColor(CD_NORMAL);
-  
-  // Calculate total height: top border + title lines + divider + message lines + bottom border
-  int totalHeight = 3 + lineCount_;
-  
-  // Position at bottom of screen
-  int x = 0;
-  int y = SCREEN_HEIGHT - totalHeight;
-  
-  // Draw top border with corner
+
+  int y = std::max(0, (int)(SCREEN_HEIGHT - lineCount_ - 1 + animationOffset_));
+  int iconY = y + 2;
+
   char buffer[SCREEN_WIDTH + 1];
   memset(buffer, ' ', SCREEN_WIDTH);
   buffer[SCREEN_WIDTH] = 0;
-  DrawString(x, y++, buffer, invprops);
-  
-  // Draw title with icon and wrapping
-  char icon = GetTypeIcon();
-  
-  // Draw divider
-  const char *border = " ";
-  DrawString(0, y, border, invprops);
-  DrawString(1, y, buffer, props);
-  DrawString(SCREEN_WIDTH - 1, y, border, invprops);
-  y++;
-  
-  // Draw message lines
-  for (int i = 0; i < lineCount_; i++) {
-    DrawString(0, y, border, invprops);
-    DrawString(1, y, lines_[i], props);
-    DrawString(SCREEN_WIDTH - 1, y, border, invprops);
-    y++;
-  }  
 
-  DrawString(0, y, border, invprops);
-  DrawString(1, y, buffer, props);
-  DrawString(SCREEN_WIDTH - 1, y, border, invprops);
+  // top border
+  if (y < SCREEN_HEIGHT)
+    DrawString(0, y++, buffer, invprops);
+
+  // message lines
+  for (int i = 0; i < lineCount_ && y < SCREEN_HEIGHT; i++, y++) {
+    DrawString(0, y, " ", invprops);
+    DrawString(1, y, lines_[i], props);
+    DrawString(SCREEN_WIDTH - 1, y, " ", invprops);
+  }
+
+  // add the icon
+  SetColor(type_.color);
+  if (iconY < SCREEN_HEIGHT)
+    DrawString(2, iconY, type_.symbol, props);
 }
