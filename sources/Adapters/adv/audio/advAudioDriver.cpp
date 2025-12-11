@@ -63,9 +63,7 @@ void AudioOutput(void *) {
   }
 }
 
-void advAudioDriver::BufferNeeded() {
-  instance_->OnNewBufferNeeded();
-}
+void advAudioDriver::BufferNeeded() { instance_->OnNewBufferNeeded(); }
 
 advAudioDriver::advAudioDriver(AudioSettings &settings)
     : AudioDriver(settings) {
