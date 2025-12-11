@@ -1045,7 +1045,7 @@ void SongView::NavigateToChainView() {
   if (data != 0xFF) {
     viewData_->currentChain_ = data;
   }
-  
+
   ViewType vt = VT_CHAIN;
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
   SetChanged();
