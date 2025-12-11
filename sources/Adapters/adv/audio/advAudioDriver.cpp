@@ -48,10 +48,11 @@ void AudioThread(void *) {
   while (true) {
     xSemaphoreTake(core1_audio, portMAX_DELAY);
 
-    // Process MIDI
-    MidiService::GetInstance()->Flush();
-
+    // Prepare the next buffer (queues MIDI for this chunk)
     advAudioDriver::BufferNeeded();
+
+    // Flush MIDI after the buffer has been queued to keep it in sync
+    MidiService::GetInstance()->Flush();
   }
 }
 
@@ -63,14 +64,6 @@ void AudioOutput(void *) {
 }
 
 void advAudioDriver::BufferNeeded() {
-  // Audio tick processes MIDI among other things
-  // TODO: understand tick and buffer size relationship. currently not constant
-  // probably not right
-  // TODO: This could (should?) go into the main thread. If done tho, we geat a
-  // deadlock in malloc mutex due to malloc being called from core1 and isr
-  // simultaneously
-  instance_->onAudioBufferTick();
-
   instance_->OnNewBufferNeeded();
 }
 
