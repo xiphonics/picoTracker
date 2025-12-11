@@ -631,14 +631,7 @@ void SongView::processNormalButtonMask(unsigned int mask) {
     }
 
     if (mask & EPBM_RIGHT) {
-      unsigned char *data = viewData_->GetCurrentSongPointer();
-      if (*data != 0xFF) {
-        ViewType vt = VT_CHAIN;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        viewData_->currentChain_ = *data;
-        SetChanged();
-        NotifyObservers(&ve);
-      }
+      NavigateToChainView();
     }
 
     if (mask & EPBM_UP) {
@@ -738,14 +731,7 @@ void SongView::processSelectionButtonMask(unsigned int mask) {
     }
 
     if (mask & EPBM_RIGHT) {
-      unsigned char *data = viewData_->GetCurrentSongPointer();
-      if (*data != 0xFF) {
-        ViewType vt = VT_CHAIN;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        viewData_->currentChain_ = *data;
-        SetChanged();
-        NotifyObservers(&ve);
-      }
+      NavigateToChainView();
     }
 
     if (mask & EPBM_UP) {
@@ -1053,3 +1039,15 @@ void SongView::nudgeTempo(int direction) {
     break;
   }
 };
+
+void SongView::NavigateToChainView() {
+  uint8_t data = *(viewData_->GetCurrentSongPointer());
+  if (data != 0xFF) {
+    viewData_->currentChain_ = data;
+  }
+  
+  ViewType vt = VT_CHAIN;
+  ViewEvent ve(VET_SWITCH_VIEW, &vt);
+  SetChanged();
+  NotifyObservers(&ve);
+}

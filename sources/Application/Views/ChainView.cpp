@@ -496,14 +496,7 @@ void ChainView::processNormalButtonMask(unsigned short mask) {
     }
 
     if (mask & EPBM_RIGHT) {
-      unsigned char *data = viewData_->GetCurrentChainPointer();
-      if (*data != 0xFF) {
-        ViewType vt = VT_PHRASE;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        viewData_->currentPhrase_ = *data;
-        SetChanged();
-        NotifyObservers(&ve);
-      }
+      NavigateToPhraseView();
     }
 
     // We toggle full chain start only if we"re not in live mode
@@ -586,14 +579,7 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
         }
 
         if (mask & EPBM_RIGHT) {
-          unsigned char *data = viewData_->GetCurrentChainPointer();
-          if (*data != 0xFF) {
-            ViewType vt = VT_PHRASE;
-            ViewEvent ve(VET_SWITCH_VIEW, &vt);
-            viewData_->currentPhrase_ = *data;
-            SetChanged();
-            NotifyObservers(&ve);
-          }
+          NavigateToPhraseView();
         }
 
         if (mask & EPBM_PLAY) {
@@ -833,3 +819,16 @@ void ChainView::AnimationUpdate() {
   // Flush the window to ensure changes are displayed
   w_.Flush();
 };
+
+void ChainView::NavigateToPhraseView() {
+  ViewType vt = VT_PHRASE;
+  ViewEvent ve(VET_SWITCH_VIEW, &vt);
+
+  uint8_t data = *viewData_->GetCurrentChainPointer();
+  if (data != 0xFF) {
+    viewData_->currentPhrase_ = data;
+  }
+
+  SetChanged();
+  NotifyObservers(&ve);
+}
