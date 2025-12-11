@@ -22,6 +22,8 @@ bool advMidiOutDevice::Start() { return true; };
 
 void advMidiOutDevice::Stop() {}
 
+void advMidiOutDevice::SendImmediate(MidiMessage &msg) { SendMessage(msg); }
+
 void advMidiOutDevice::SendMessage(MidiMessage &msg) {
   uint8_t status = msg.status_;
   HAL_UART_Transmit(&MIDI_UART, &status, 1, 1);

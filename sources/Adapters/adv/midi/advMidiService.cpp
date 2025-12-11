@@ -28,8 +28,10 @@ advMidiService::advMidiService()
 advMidiService::~advMidiService(){};
 
 void advMidiService::OnPlayerStart() {
-  // Keep base behavior (device restart + queued transport) then send
-  // immediately
+  // TODO (democloid): this is a hack. We need to understand the order of
+  // operations of MIDI messages and why the transport messages get lost,
+  // presumably due to Services/Midi/MidiService.cpp::AdvancePlayQueue clearing
+  // it before it's send out
   MidiService::OnPlayerStart();
 
   Config *config = Config::GetInstance();
@@ -41,10 +43,8 @@ void advMidiService::OnPlayerStart() {
 
   MidiMessage msg;
   msg.status_ = MidiMessage::MIDI_START;
-  etl::vector<MidiMessage, MIDI_MAX_MESG_QUEUE> tmp;
-  tmp.emplace_back(msg.status_, msg.data1_, msg.data2_);
-  midiOutDevice_.SendQueue(tmp);
-  usbMidiOutDevice_.SendQueue(tmp);
+  midiOutDevice_.SendImmediate(msg);
+  usbMidiOutDevice_.SendImmediate(msg);
 }
 
 void advMidiService::OnPlayerStop() {
@@ -59,10 +59,8 @@ void advMidiService::OnPlayerStop() {
 
   MidiMessage msg;
   msg.status_ = MidiMessage::MIDI_STOP;
-  etl::vector<MidiMessage, MIDI_MAX_MESG_QUEUE> tmp;
-  tmp.emplace_back(msg.status_, msg.data1_, msg.data2_);
-  midiOutDevice_.SendQueue(tmp);
-  usbMidiOutDevice_.SendQueue(tmp);
+  midiOutDevice_.SendImmediate(msg);
+  usbMidiOutDevice_.SendImmediate(msg);
 }
 
 void advMidiService::poll() {
