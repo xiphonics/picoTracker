@@ -24,7 +24,7 @@ MidiService::MidiService() : sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
-  sendSync_ = Config::GetInstance()->GetValue("MIDISENDSYNC") > 0;
+  sendSync_ = Config::GetInstance()->GetValue("MIDISYNC") > 0;
 };
 
 MidiService::~MidiService() { Close(); };
