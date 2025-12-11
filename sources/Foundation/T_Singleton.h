@@ -10,7 +10,7 @@
 #ifndef _T_SINGLETON_H_
 #define _T_SINGLETON_H_
 
-#include "T_SimpleList.h"
+#include "Externals/etl/include/etl/singleton.h"
 
 class I_Singleton {
 public:
@@ -21,16 +21,14 @@ template <class Item> class T_Singleton : public I_Singleton {
 protected:
   T_Singleton();
   virtual ~T_Singleton();
+  T_Singleton(const T_Singleton &) = delete;
+  T_Singleton &operator=(const T_Singleton &) = delete;
 
 public:
   // Get the currently installed factory
 
   static Item *GetInstance();
-
-protected:
-  // The static instance of the singleton
-
-  static Item *instance_;
+  template <typename... TArgs> static Item *Create(TArgs &&...args);
 };
 
 #include "T_Singleton.cpp" // Include the implementation file.

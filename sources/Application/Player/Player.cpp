@@ -43,14 +43,6 @@ Player::Player() : mixer_() {
   }
 };
 
-Player *Player::GetInstance() {
-  if (instance_ == 0) {
-    alignas(Player) static char playerMemBuf[sizeof(Player)];
-    instance_ = new (playerMemBuf) Player();
-  }
-  return instance_;
-}
-
 bool Player::Init(Project *project, ViewData *viewData) {
 
   viewData_ = viewData;

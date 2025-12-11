@@ -49,10 +49,10 @@ class Player : public I_Observer,
                public Observable,
                public T_Singleton<Player> {
 private: // Singleton
+  friend class etl::singleton<Player>;
   Player();
 
 public:
-  static Player *GetInstance();
   bool Init(Project *, ViewData *);
   void Reset();
   void Close();

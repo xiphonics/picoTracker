@@ -8,6 +8,7 @@
  */
 
 #include "Result.h"
+#include "System/Console/n_assert.h"
 #include <assert.h>
 
 Result Result::NoError;
