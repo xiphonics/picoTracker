@@ -25,15 +25,6 @@
 #include "System/System/System.h"
 #include <nanoprintf.h>
 
-static void LoadCallback(View &v, ModalView &dialog) {
-  if (dialog.GetReturnCode() == MBL_YES) {
-    ViewType vt = VT_SELECTPROJECT;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
-    ((ProjectView &)v).SetChanged();
-    ((ProjectView &)v).NotifyObservers(&ve);
-  }
-};
-
 static void CreateNewProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     PersistencyService::GetInstance()->SaveProjectState(UNNAMED_PROJECT_NAME);
@@ -55,8 +46,7 @@ static void BootselCallback(View &v, ModalView &dialog) {
 };
 
 static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
-  bool cancelOverwrite = dialog.GetReturnCode() == MBL_CANCEL;
-  if (cancelOverwrite) {
+  if (dialog.GetReturnCode() == MBL_CANCEL) {
     return;
   }
 
@@ -185,11 +175,11 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), nameField_);
 
   position._y += 1;
-  actionField_.emplace_back("Load", FourCC::ActionLoad, position);
+  actionField_.emplace_back("Browse", FourCC::ActionBrowse, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
-  position._x += 5;
+  position._x += 7;
   actionField_.emplace_back("Save", FourCC::ActionSave, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -199,7 +189,7 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
-  position._x += 5;
+  position._x += 4;
   actionField_.emplace_back("Random", FourCC::ActionRandomName, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -372,19 +362,15 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
                nameField_->GetString().c_str());
     saveAsFlag_ = true;
     break;
-  case FourCC::ActionLoad: {
-    if (!player->IsRunning()) {
-      MessageBox *mb = new MessageBox(*this, "Load song and lose changes?",
-                                      MBBF_YES | MBBF_NO);
-      DoModal(mb, LoadCallback);
-    } else {
-      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
-      DoModal(mb);
-    }
+  case FourCC::ActionBrowse: {
+    ViewType vt = VT_SELECTPROJECT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
     break;
   }
   case FourCC::ActionNewProject: {
-    MessageBox *mb = new MessageBox(*this, "New project and lose changes?",
+    MessageBox *mb = new MessageBox(*this, "Create a new project and lose all changes?",
                                     MBBF_YES | MBBF_NO);
     DoModal(mb, CreateNewProjectCallback);
     break;

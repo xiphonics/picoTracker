@@ -228,7 +228,7 @@ struct FourCC {
     ActionPurge = 49,
     ActionPurgeInstrument = 47,
     ActionProjectRename = 102,
-    ActionLoad = 35,
+    ActionBrowse = 35,
     ActionSave = 53,
     ActionLoadAndSave = 179,
     ActionCancel = 180,
