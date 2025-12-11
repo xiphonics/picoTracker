@@ -24,6 +24,8 @@ void ModalView::EndModal(int returnCode) {
   finished_ = true;
 };
 
+void ModalView::Destroy() { delete this; }
+
 void ModalView::ClearTextRect(int x, int y, int w, int h) {
   View::ClearTextRect(x + left_, y + top_, w, h);
 }

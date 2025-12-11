@@ -491,7 +491,7 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   if (!playerOK) {
     MessageBox *mb =
-        new MessageBox(*_songView, "Failed to initialize audio", MBBF_OK);
+        MessageBox::Create(*_songView, "Failed to initialize audio", MBBF_OK);
     _songView->DoModal(mb);
   }
 

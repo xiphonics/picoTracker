@@ -433,19 +433,19 @@ void ImportView::preview(char *name) {
     auto error = wav.error();
     switch (error) {
     case INVALID_FILE:
-      mb = new MessageBox(*this, "Preview Failed", "Could not open file",
-                          MBBF_OK);
+      mb = MessageBox::Create(*this, "Preview Failed", "Could not open file",
+                              MBBF_OK);
       break;
     case UNSUPPORTED_FILE_FORMAT:
     case INVALID_HEADER:
     case UNSUPPORTED_WAV_FORMAT:
-      mb = new MessageBox(*this, "Preview Failed", "Invalid file", MBBF_OK);
+      mb = MessageBox::Create(*this, "Preview Failed", "Invalid file", MBBF_OK);
       break;
     case UNSUPPORTED_COMPRESSION:
     case UNSUPPORTED_BITDEPTH:
     case UNSUPPORTED_SAMPLERATE:
-      mb = new MessageBox(*this, "Preview Failed", "Unsupported format",
-                          MBBF_OK);
+      mb = MessageBox::Create(*this, "Preview Failed", "Unsupported format",
+                              MBBF_OK);
       break;
     }
   } else {
@@ -476,7 +476,7 @@ void ImportView::import() {
   // stop playing before trying to import
   if (Player::GetInstance()->IsPlaying()) {
     MessageBox *mb =
-        new MessageBox(*this, "Can't import while previewing", MBBF_OK);
+        MessageBox::Create(*this, "Can't import while previewing", MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -493,7 +493,7 @@ void ImportView::import() {
   // Check if we're in the project's sample directory
   if (inProjectSampleDir_) {
     MessageBox *mb =
-        new MessageBox(*this, "Can't import from project!", MBBF_OK);
+        MessageBox::Create(*this, "Can't import from project!", MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -508,8 +508,8 @@ void ImportView::import() {
     npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
                  MAX_SAMPLES);
     // pad with trailing spaces as dialog size based on title
-    MessageBox *mb =
-        new MessageBox(*this, "Cannot Import Sample      ", message, MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Cannot Import Sample      ",
+                                        message, MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -530,7 +530,7 @@ void ImportView::import() {
     npf_snprintf(message, sizeof(message), "Only %d bytes free", availBytes);
     // pad with trailing spaces as dialog width based on title length
     MessageBox *mb =
-        new MessageBox(*this, "Sample Too Large       ", message, MBBF_OK);
+        MessageBox::Create(*this, "Sample Too Large       ", message, MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -542,19 +542,19 @@ void ImportView::import() {
     auto error = wav.error();
     switch (error) {
     case INVALID_FILE:
-      mb = new MessageBox(*this, "Import Failed", "Could not open file",
-                          MBBF_OK);
+      mb = MessageBox::Create(*this, "Import Failed", "Could not open file",
+                              MBBF_OK);
       break;
     case UNSUPPORTED_FILE_FORMAT:
     case INVALID_HEADER:
     case UNSUPPORTED_WAV_FORMAT:
-      mb = new MessageBox(*this, "Import Failed", "invalid file", MBBF_OK);
+      mb = MessageBox::Create(*this, "Import Failed", "invalid file", MBBF_OK);
       break;
     case UNSUPPORTED_COMPRESSION:
     case UNSUPPORTED_BITDEPTH:
     case UNSUPPORTED_SAMPLERATE:
-      mb =
-          new MessageBox(*this, "Import Failed", "unsupported format", MBBF_OK);
+      mb = MessageBox::Create(*this, "Import Failed", "unsupported format",
+                              MBBF_OK);
       break;
     }
   } else {
@@ -581,15 +581,15 @@ void ImportView::import() {
     if (nameLength > MAX_INSTRUMENT_FILENAME_LENGTH) {
       Trace::Log("PICOIMPORT", "Filename too long: %s (%zu chars, max is %d)",
                  name, nameLength, MAX_INSTRUMENT_FILENAME_LENGTH);
-      MessageBox *mb = new MessageBox(*this, "Sample name Truncated!",
-                                      "Max filename length:24", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Sample name Truncated!",
+                                          "Max filename length:24", MBBF_OK);
       DoModal(mb);
     }
   } else {
     Trace::Error("failed to import sample");
     // Show a generic error message if import failed for other reasons
-    MessageBox *mb = new MessageBox(*this, "Import Failed",
-                                    "Could not import sample", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(
+        *this, "Import Failed", "Could not import sample", MBBF_OK);
     DoModal(mb);
   };
   isDirty_ = true;
@@ -685,16 +685,16 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filename));
 
   if (inUse) {
-    MessageBox *mb =
-        new MessageBox(*this, "Cannot remove", "Sample in use!", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Cannot remove",
+                                        "Sample in use!", MBBF_OK);
     DoModal(mb);
     return;
   }
 
   // add spacing for basic way to size dialog wider to give Ok/cancel
   // buttons between space
-  MessageBox *mb = new MessageBox(*this, "    Remove sample?    ", filename,
-                                  MBBF_OK | MBBF_CANCEL);
+  MessageBox *mb = MessageBox::Create(*this, "    Remove sample?    ",
+                                      filename, MBBF_OK | MBBF_CANCEL);
   DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
     if (dialog.GetReturnCode() == MBL_OK) {
       // delete file

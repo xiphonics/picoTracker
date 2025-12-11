@@ -533,9 +533,9 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     confirmLine.append(opName.c_str());
     confirmLine.append("?");
 
-    MessageBox *mb =
-        new MessageBox(*this, confirmLine.c_str(), "This overwrites the file",
-                       MBBF_YES | MBBF_NO);
+    MessageBox *mb = MessageBox::Create(*this, confirmLine.c_str(),
+                                        "This overwrites the file",
+                                        MBBF_YES | MBBF_NO);
 
     // Modal cannot properly draw over the waveform gfx area because text
     // drawing doesn't know the area because ClearTextRect() is not yet
@@ -546,7 +546,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       if (dialog.GetReturnCode() == MBL_YES) {
         if (!applySelectedOperation()) {
           MessageBox *error =
-              new MessageBox(*this, "Operation failed", MBBF_OK);
+              MessageBox::Create(*this, "Operation failed", MBBF_OK);
           DoModal(error,
                   [this](View &view1, ModalView &dialog1) { isDirty_ = true; });
         }
@@ -573,8 +573,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       ViewType vt = SampleEditorView::sourceViewType_;
       navigateToView(vt);
     } else {
-      MessageBox *errorBox = new MessageBox(*this, "Save Failed",
-                                            "Unable to save sample", MBBF_OK);
+      MessageBox *errorBox = MessageBox::Create(
+          *this, "Save Failed", "Unable to save sample", MBBF_OK);
       DoModal(errorBox);
       Trace::Error("SampleEditorView: Failed to save file!");
     }
@@ -703,8 +703,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   if (viewData_->isShowingSampleEditorProjectPool) {
 #ifndef ADV
     // on pico we dont support unloading individual samples from flash
-    MessageBox *warning = new MessageBox(*this, "Please reload project",
-                                         "To apply changes", MBBF_OK);
+    MessageBox *warning = MessageBox::Create(*this, "Please reload project",
+                                             "To apply changes", MBBF_OK);
     DoModal(warning);
     return true;
 #endif
@@ -811,8 +811,8 @@ bool SampleEditorView::applyNormalizeOperation() {
   }
 
   if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
-    MessageBox *errorBox = new MessageBox(*this, "Reload Failed",
-                                          "Unable to refresh sample", MBBF_OK);
+    MessageBox *errorBox = MessageBox::Create(
+        *this, "Reload Failed", "Unable to refresh sample", MBBF_OK);
     DoModal(errorBox);
     return false;
   }
@@ -849,8 +849,9 @@ bool SampleEditorView::reloadEditedSample() {
              viewData_->isShowingSampleEditorProjectPool);
 
 #ifndef ADV
-  MessageBox *warning = new MessageBox(*this, "Please reload project",
-                                       "To apply changes", MBBF_OK);
+  MessageBox *warning =
+      MessageBox::Create(*this, "Please reload project", "To apply changes",
+                         MBBF_OK);
   DoModal(warning);
   return true;
 #else

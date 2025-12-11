@@ -334,7 +334,8 @@ void View::DismissModal() {
     if (modalViewCallback_) {
       modalViewCallback_(*this, *modalView_);
     }
-    SAFE_DELETE(modalView_);
+    modalView_->Destroy();
+    modalView_ = nullptr;
     isDirty_ = true;
   }
 };

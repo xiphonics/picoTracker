@@ -188,7 +188,7 @@ void ThemeImportView::onImportTheme(const char *filename) {
 
     // Show success message
     MessageBox *mb =
-        new MessageBox(*this, "Theme imported successfully", MBBF_OK);
+        MessageBox::Create(*this, "Theme imported successfully", MBBF_OK);
     DoModal(mb, [](View &v, ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_OK) {
         // Switch back to the theme view
@@ -200,7 +200,7 @@ void ThemeImportView::onImportTheme(const char *filename) {
     });
   } else {
     // Show error message
-    MessageBox *mb = new MessageBox(*this, "Failed to import theme", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Failed to import theme", MBBF_OK);
     DoModal(mb, [](View &v, ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_OK) {
         // Switch back to the theme view

@@ -754,7 +754,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         } else {
           // show error dialog that no more instruments are available
           MessageBox *mb =
-              new MessageBox(*this, "No more instruments!", MBBF_OK);
+              MessageBox::Create(*this, "No more instruments!", MBBF_OK);
           DoModal(mb);
           return;
         }
