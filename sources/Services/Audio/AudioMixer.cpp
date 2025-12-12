@@ -14,8 +14,7 @@
 fixed AudioMixer::renderBuffer_[MAX_SAMPLE_COUNT * 2];
 
 AudioMixer::AudioMixer(const char *name)
-    : T_SimpleList<AudioModule>(false), enableRendering_(0), writer_(0),
-      name_(name) {
+    : T_SimpleList<AudioModule>(false), enableRendering_(0), name_(name) {
   volume_ = (i2fp(1));
 };
 
@@ -29,13 +28,17 @@ void AudioMixer::EnableRendering(bool enable) {
   }
 
   if (enable) {
-    writer_ = new WavFileWriter(renderPath_.c_str());
+    if (!writer_.Open(renderPath_.c_str())) {
+      Trace::Error("AUDIO_MIXER", "Failed to open render file: %s",
+                   renderPath_.c_str());
+      enableRendering_ = false;
+      return;
+    }
   }
 
   enableRendering_ = enable;
   if (!enable) {
-    writer_->Close();
-    SAFE_DELETE(writer_);
+    writer_.Close();
   }
 };
 
@@ -131,11 +134,11 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
   // This ensures VU meters update properly in all scenarios
   peakMixerLevel_ = fp2i(peakL) << 16 | fp2i(peakR);
 
-  if (enableRendering_ && writer_) {
+  if (enableRendering_ && writer_.IsOpen()) {
     if (!gotData) {
       memset(buffer, 0, samplecount * 2 * sizeof(fixed));
     };
-    writer_->AddBuffer(buffer, samplecount);
+    writer_.AddBuffer(buffer, samplecount);
   }
   return gotData;
 };

@@ -32,7 +32,7 @@ public:
 private:
   bool enableRendering_;
   etl::string<STRING_AUDIO_RENDER_PATH_MAX> renderPath_;
-  WavFileWriter *writer_;
+  WavFileWriter writer_;
   fixed volume_;
   etl::string<12> name_;
 
