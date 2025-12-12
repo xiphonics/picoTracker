@@ -921,19 +921,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       NotifyObservers(&ve);
     }
     if (mask & EPBM_RIGHT) {
-      unsigned char *c =
-          phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
-      if (*c != 0xFF) {
-        viewData_->currentInstrumentID_ = *c;
-      } else {
-        viewData_->currentInstrumentID_ = lastInstr_;
-      }
-      if (viewData_->currentInstrumentID_ != 0xFF) {
-        ViewType vt = VT_INSTRUMENT;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        SetChanged();
-        NotifyObservers(&ve);
-      }
+      NavigateToInstrumentView();
     }
     if (mask & EPBM_DOWN) {
       // Go to table view
@@ -1036,17 +1024,7 @@ void PhraseView::processSelectionButtonMask(unsigned short mask) {
           NotifyObservers(&ve);
         }
         if (mask & EPBM_RIGHT) {
-          unsigned char *c =
-              phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
-          if (*c != 0xFF) {
-            viewData_->currentInstrumentID_ = *c;
-          } else {
-            viewData_->currentInstrumentID_ = lastInstr_;
-          }
-          ViewType vt = VT_INSTRUMENT;
-          ViewEvent ve(VET_SWITCH_VIEW, &vt);
-          SetChanged();
-          NotifyObservers(&ve);
+          NavigateToInstrumentView();
         }
         if (mask & EPBM_PLAY) {
           player->OnStartButton(PM_PHRASE, viewData_->songX_, true,
@@ -1416,4 +1394,16 @@ void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
     strcpy(line, helpLegend[1]);
     DrawString(0, 1, line, props);
   }
+}
+
+void PhraseView::NavigateToInstrumentView() {
+  uint8_t c = *(phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_));
+  if (c != 0xFF) {
+    viewData_->currentInstrumentID_ = c;
+  }
+
+  ViewType vt = VT_INSTRUMENT;
+  ViewEvent ve(VET_SWITCH_VIEW, &vt);
+  SetChanged();
+  NotifyObservers(&ve);
 }

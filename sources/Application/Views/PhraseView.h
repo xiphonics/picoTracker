@@ -93,6 +93,8 @@ private:
 
   bool needsLiveIndicatorUpdate_ = false;
 
+  void NavigateToInstrumentView();
+
 #ifdef PICO_DEOPTIMIZED_DEBUG
   // These variables are specifically for thread synchronization in debug builds
   // They create memory barriers between cores when manipulated in a specific
