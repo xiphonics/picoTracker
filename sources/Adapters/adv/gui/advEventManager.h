@@ -12,7 +12,6 @@
 #ifdef SERIAL_REPL
 #include "SerialDebugUI.h"
 #endif
-#include "Services/Controllers/KeyboardControllerSource.h"
 #include "UIFramework/SimpleBaseClasses/EventManager.h"
 #include "eventQueue.h"
 #include "queue.h"
@@ -69,6 +68,5 @@ private:
   static const int INPUT_BUFFER_SIZE = 80;
   static char inBuffer[INPUT_BUFFER_SIZE];
 #endif
-  KeyboardControllerSource *keyboardCS_;
 };
 #endif

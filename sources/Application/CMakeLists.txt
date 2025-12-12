@@ -9,7 +9,6 @@ target_link_libraries(application PUBLIC
   system_process
   application_commands
   services_midi
-  application_controllers
   application_instruments
   application_model
   application_persistency
@@ -30,7 +29,6 @@ add_subdirectory(Instruments)
 add_subdirectory(Player)
 add_subdirectory(Mixer)
 add_subdirectory(Utils)
-add_subdirectory(Controllers)
 add_subdirectory(Commands)
 add_subdirectory(Persistency)
 add_subdirectory(Views)
