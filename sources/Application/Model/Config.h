@@ -36,6 +36,30 @@ public:
 
 private:
   etl::list<Variable *, 25> variables_;
+  // Config variables (kept as members to avoid heap allocation)
+  WatchedVariable background_;
+  WatchedVariable foreground_;
+  WatchedVariable hiColor1_;
+  WatchedVariable hiColor2_;
+  WatchedVariable consoleColor_;
+  WatchedVariable cursorColor_;
+  WatchedVariable infoColor_;
+  WatchedVariable warnColor_;
+  WatchedVariable errorColor_;
+  WatchedVariable accentColor_;
+  WatchedVariable accentAltColor_;
+  WatchedVariable emphasisColor_;
+  WatchedVariable lineOut_;
+  WatchedVariable midiDevice_;
+  WatchedVariable midiSync_;
+  WatchedVariable remoteUI_;
+  WatchedVariable uiFont_;
+  Variable themeName_;
+  WatchedVariable backlightLevel_;
+  WatchedVariable outputVolume_;
+  WatchedVariable recordSource_;
+  WatchedVariable recordLineGain_;
+  WatchedVariable recordMicGain_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
   void useDefaultConfig();

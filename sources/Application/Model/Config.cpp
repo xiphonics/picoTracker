@@ -227,32 +227,68 @@ static const ConfigParam configParams[] = {
      false},
 };
 
-Config::Config() : VariableContainer(&variables_) {
+Config::Config()
+    : VariableContainer(&variables_),
+      background_(FourCC::VarBGColor,
+                  static_cast<int>(ThemeConstants::DEFAULT_BACKGROUND)),
+      foreground_(FourCC::VarFGColor,
+                  static_cast<int>(ThemeConstants::DEFAULT_FOREGROUND)),
+      hiColor1_(FourCC::VarHI1Color,
+                static_cast<int>(ThemeConstants::DEFAULT_HICOLOR1)),
+      hiColor2_(FourCC::VarHI2Color,
+                static_cast<int>(ThemeConstants::DEFAULT_HICOLOR2)),
+      consoleColor_(FourCC::VarConsoleColor,
+                    static_cast<int>(ThemeConstants::DEFAULT_CONSOLECOLOR)),
+      cursorColor_(FourCC::VarCursorColor,
+                   static_cast<int>(ThemeConstants::DEFAULT_CURSORCOLOR)),
+      infoColor_(FourCC::VarInfoColor,
+                 static_cast<int>(ThemeConstants::DEFAULT_INFOCOLOR)),
+      warnColor_(FourCC::VarWarnColor,
+                 static_cast<int>(ThemeConstants::DEFAULT_WARNCOLOR)),
+      errorColor_(FourCC::VarErrorColor,
+                  static_cast<int>(ThemeConstants::DEFAULT_ERRORCOLOR)),
+      accentColor_(FourCC::VarAccentColor,
+                   static_cast<int>(ThemeConstants::DEFAULT_ACCENT)),
+      accentAltColor_(FourCC::VarAccentAltColor,
+                      static_cast<int>(ThemeConstants::DEFAULT_ACCENT_ALT)),
+      emphasisColor_(FourCC::VarEmphasisColor,
+                     static_cast<int>(ThemeConstants::DEFAULT_EMPHASIS)),
+      lineOut_(FourCC::VarLineOut, lineOutOptions, 3, DEFAULT_LINEOUT),
+      midiDevice_(FourCC::VarMidiDevice, midiDeviceList, 4, DEFAULT_MIDIDEVICE),
+      midiSync_(FourCC::VarMidiSync, midiSendSync, 2, DEFAULT_MIDISYNC),
+      remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, DEFAULT_REMOTEUI),
+      uiFont_(FourCC::VarUIFont, ThemeConstants::FONT_NAMES,
+              ThemeConstants::FONT_COUNT, ThemeConstants::DEFAULT_UIFONT),
+      themeName_(FourCC::VarThemeName, ThemeConstants::DEFAULT_THEME_NAME),
+      backlightLevel_(FourCC::VarBacklightLevel, DEFAULT_BACKLIGHT_LEVEL),
+      outputVolume_(FourCC::VarOutputVolume, DEFAULT_OUTPUT_VOLUME),
+      recordSource_(FourCC::VarRecordSource, recordSourceOptions, 4, 1),
+      recordLineGain_(FourCC::VarRecordLineGain, DEFAULT_RECORD_LINE_GAIN_DB),
+      recordMicGain_(FourCC::VarRecordMicGain, DEFAULT_RECORD_MIC_GAIN_DB) {
 
-  // Create all variables from configParams
-  for (const auto &param : configParams) {
-    if (variables_.size() >= variables_.max_size()) {
-      Trace::Error("CONFIG", "Maximum number of variables reached");
-      break;
-    }
-
-    Variable *var = nullptr;
-
-    if (param.isString) {
-      // For string parameters (like theme name)
-      var = new Variable(FourCC(param.fourcc), param.defaultValue.strValue);
-    } else if (param.options) {
-      // For parameters with options
-      var = new WatchedVariable(FourCC(param.fourcc), param.options,
-                                param.optionCount, 0);
-      var->SetInt(param.defaultValue.intValue);
-    } else {
-      // For simple integer parameters (like colors)
-      var = new WatchedVariable(FourCC(param.fourcc),
-                                param.defaultValue.intValue);
-    }
-    variables_.push_back(var);
-  }
+  variables_.push_back(&background_);
+  variables_.push_back(&foreground_);
+  variables_.push_back(&hiColor1_);
+  variables_.push_back(&hiColor2_);
+  variables_.push_back(&consoleColor_);
+  variables_.push_back(&cursorColor_);
+  variables_.push_back(&infoColor_);
+  variables_.push_back(&warnColor_);
+  variables_.push_back(&errorColor_);
+  variables_.push_back(&accentColor_);
+  variables_.push_back(&accentAltColor_);
+  variables_.push_back(&emphasisColor_);
+  variables_.push_back(&lineOut_);
+  variables_.push_back(&midiDevice_);
+  variables_.push_back(&midiSync_);
+  variables_.push_back(&remoteUI_);
+  variables_.push_back(&uiFont_);
+  variables_.push_back(&themeName_);
+  variables_.push_back(&backlightLevel_);
+  variables_.push_back(&outputVolume_);
+  variables_.push_back(&recordSource_);
+  variables_.push_back(&recordLineGain_);
+  variables_.push_back(&recordMicGain_);
 
   PersistencyDocument doc;
 
