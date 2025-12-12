@@ -433,6 +433,20 @@ struct FourCC {
   ETL_ENUM_TYPE(VarOutputVolume, "outputvolume")
   ETL_ENUM_TYPE(VarImportResampler, "IMPORTRESAMP")
 
+  // GameBoy Instrument Variables
+  ETL_ENUM_TYPE(GameBoyInstrumentWaveform, "waveform")
+  ETL_ENUM_TYPE(GameBoyInstrumentAttack, "attack")
+  ETL_ENUM_TYPE(GameBoyInstrumentDecay, "decay")
+  ETL_ENUM_TYPE(GameBoyInstrumentLevel, "level")
+  ETL_ENUM_TYPE(GameBoyInstrumentLength, "length")
+  ETL_ENUM_TYPE(GameBoyInstrumentBurst, "burst")
+  ETL_ENUM_TYPE(GameBoyInstrumentVibrato, "vibrato")
+  ETL_ENUM_TYPE(GameBoyInstrumentVibratoDelay, "vibrato delay")
+  ETL_ENUM_TYPE(GameBoyInstrumentTranspose, "transpose")
+  ETL_ENUM_TYPE(GameBoyInstrumentTable, "table")
+  ETL_ENUM_TYPE(GameBoyInstrumentSweepTime, "sweep time")
+  ETL_ENUM_TYPE(GameBoyInstrumentSweepAmount, "sweep amount")
+
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE
 };
