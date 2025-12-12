@@ -22,9 +22,7 @@ PersistencyDocument::~PersistencyDocument() {
   Close();
 }
 
-void PersistencyDocument::Close() {
-  fp_.reset();
-}
+void PersistencyDocument::Close() { fp_.reset(); }
 
 bool PersistencyDocument::Load(const char *filename) {
   Trace::Log("PERSISTENCYDOCUMENT", "Loading document from file: %s", filename);

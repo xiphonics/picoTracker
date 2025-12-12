@@ -295,12 +295,12 @@ PersistencyResult PersistencyService::ExportInstrument(
       return PERSIST_EXISTS;
     }
     // Delete the existing file if overwrite is true
-  if (!fs->DeleteFile(pathBufferA.c_str())) {
-    Trace::Error("PERSISTENCYSERVICE: Failed to delete existing file: %s",
-                 pathBufferA.c_str());
-    return PERSIST_ERROR;
+    if (!fs->DeleteFile(pathBufferA.c_str())) {
+      Trace::Error("PERSISTENCYSERVICE: Failed to delete existing file: %s",
+                   pathBufferA.c_str());
+      return PERSIST_ERROR;
+    }
   }
-}
 
   auto fp = fs->Open(pathBufferA.c_str(), "w");
   if (!fp) {
