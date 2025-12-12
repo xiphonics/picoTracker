@@ -70,29 +70,38 @@ void InstrumentBank::RestoreContent(PersistencyDocument *doc) {
     if (!strcasecmp(doc->ElemName(), "INSTRUMENT")) {
       // Get the instrument ID
       unsigned char id = '\0';
-      char *instype = NULL;
+      char instype[16];
+      instype[0] = '\0';
+      bool hasId = false;
+      bool hasType = false;
       bool hasAttr = doc->NextAttribute();
       while (hasAttr) {
         if (!strcasecmp(doc->attrname_, "ID")) {
           unsigned char b1 = (c2h__(doc->attrval_[0])) << 4;
           unsigned char b2 = c2h__(doc->attrval_[1]);
           id = b1 + b2;
+          hasId = true;
 #if XML_DEBUG_LOGGING
           Trace::Log("INSTRUMENTBANK", "instrument ID from xml:%d", id);
 #endif
         }
         if (!strcasecmp(doc->attrname_, "TYPE")) {
-          instype = doc->attrval_;
+          strncpy(instype, doc->attrval_, sizeof(instype) - 1);
+          instype[sizeof(instype) - 1] = '\0';
+          hasType = true;
 #if XML_DEBUG_LOGGING
           Trace::Log("INSTRUMENTBANK", "instrument type from xml:%s", instype);
 #endif
+        }
+        if (hasId && hasType) {
+          break;
         }
         hasAttr = doc->NextAttribute();
       }
 
       InstrumentType instrType = IT_SAMPLE; // default if no type in project XML
-      if (instype) {
-        for (uint i = 0; i < sizeof(InstrumentTypeNames); i++) {
+      if (instype[0] != '\0') {
+        for (uint i = 0; i < IT_LAST; i++) {
           if (!strcasecmp(instype, InstrumentTypeNames[i])) {
             instrType = (InstrumentType)i;
             break;
