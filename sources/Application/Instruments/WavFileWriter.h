@@ -53,6 +53,6 @@ private:
   int sampleCount_;
   // Buffer in AXI RAM since it has to be reachable by DMA perif
   __attribute__((aligned(32))) static short buffer_[MAX_SAMPLE_COUNT * 2];
-  I_File *file_;
+  FileHandle file_;
 };
 #endif

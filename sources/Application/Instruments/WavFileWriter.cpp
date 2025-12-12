@@ -9,7 +9,6 @@
 
 #include "WavFileWriter.h"
 #include "System/Console/Trace.h"
-#include "System/FileSystem/I_File.h"
 #include "System/System/System.h"
 #include "WavHeader.h"
 #include <algorithm>
@@ -27,14 +26,13 @@ inline void reportProgress(SampleEditProgressCallback callback,
   callback(static_cast<uint8_t>(percent));
 }
 
-WavFileWriter::WavFileWriter(const char *path) : sampleCount_(0), file_(0) {
+WavFileWriter::WavFileWriter(const char *path) : sampleCount_(0) {
   file_ = FileSystem::GetInstance()->Open(path, "wb");
   if (file_) {
     // Use WavHeaderWriter to write the header
-    if (!WavHeaderWriter::WriteHeader(file_, 44100, 2, 16)) {
+    if (!WavHeaderWriter::WriteHeader(file_.get(), 44100, 2, 16)) {
       Trace::Log("WAVWRITER", "Failed to write WAV header");
-      file_->Close();
-      SAFE_DELETE(file_);
+      file_.reset();
     }
   }
 };
@@ -93,16 +91,15 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     return false;
   }
 
-  I_File *file = fs->Open(path, "r+");
+  auto file = fs->Open(path, "r+");
   if (!file) {
     Trace::Error("WavFileWriter: Failed to open %s for trimming", path);
     return false;
   }
 
-  auto headerInfo = WavHeaderWriter::ReadHeader(file);
+  auto headerInfo = WavHeaderWriter::ReadHeader(file.get());
   if (!headerInfo) {
     Trace::Error("WavFileWriter: Failed to parse WAV header from %s", path);
-    file->Close();
     return false;
   }
 
@@ -115,21 +112,18 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     Trace::Error("WavFileWriter: Unsupported WAV format (channels=%u, bits=%u) "
                  "in %s",
                  numChannels, bitsPerSample, path);
-    file->Close();
     return false;
   }
 
   uint32_t bytesPerFrame = numChannels * bytesPerSample;
   if (bytesPerFrame == 0) {
     Trace::Error("WavFileWriter: Invalid bytes per frame for %s", path);
-    file->Close();
     return false;
   }
 
   uint32_t totalFrames = bytesPerFrame ? (dataChunkSize / bytesPerFrame) : 0;
   if (totalFrames == 0) {
     Trace::Error("WavFileWriter: Sample has no audio frames in %s", path);
-    file->Close();
     return false;
   }
 
@@ -146,7 +140,6 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
       (clampedEnd >= clampedStart) ? (clampedEnd - clampedStart + 1) : 0;
   if (framesToKeep == 0) {
     Trace::Error("WavFileWriter: Trim would result in empty sample");
-    file->Close();
     return false;
   }
 
@@ -156,7 +149,6 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
   result.framesKept = framesToKeep;
 
   if (clampedStart == 0 && framesToKeep == totalFrames) {
-    file->Close();
     Trace::Log("WavFileWriter",
                "Trim skipped because selection spans entire sample");
     return true;
@@ -179,7 +171,6 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     int bytesRead = file->Read(scratchBuffer, chunkSize);
     if (bytesRead <= 0) {
       Trace::Error("WavFileWriter: Failed reading sample data during trim");
-      file->Close();
       return false;
     }
 
@@ -187,7 +178,6 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
     int bytesWritten = file->Write(scratchBuffer, 1, bytesRead);
     if (bytesWritten != bytesRead) {
       Trace::Error("WavFileWriter: Failed writing trimmed data");
-      file->Close();
       return false;
     }
 
@@ -202,14 +192,12 @@ bool WavFileWriter::TrimFile(const char *path, uint32_t startFrame,
 
   const uint32_t newDataSize = framesToKeep * bytesPerFrame;
   file->Seek(headerDataOffset + newDataSize, SEEK_SET);
-  if (!WavHeaderWriter::UpdateFileSize(file, framesToKeep, numChannels,
+  if (!WavHeaderWriter::UpdateFileSize(file.get(), framesToKeep, numChannels,
                                        bytesPerSample)) {
     Trace::Error("WavFileWriter: Failed updating WAV header after trim");
-    file->Close();
     return false;
   }
 
-  file->Close();
   result.trimmed = true;
   return true;
 }
@@ -242,16 +230,15 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     return false;
   }
 
-  I_File *file = fs->Open(path, "r+");
+  auto file = fs->Open(path, "r+");
   if (!file) {
     Trace::Error("WavFileWriter: Failed to open %s for normalization", path);
     return false;
   }
 
-  auto headerInfo = WavHeaderWriter::ReadHeader(file);
+  auto headerInfo = WavHeaderWriter::ReadHeader(file.get());
   if (!headerInfo) {
     Trace::Error("WavFileWriter: Failed to parse WAV header from %s", path);
-    file->Close();
     return false;
   }
 
@@ -266,14 +253,12 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     Trace::Error("WavFileWriter: Unsupported WAV format for normalization: "
                  "%s",
                  path);
-    file->Close();
     return false;
   }
 
   const uint32_t bytesPerFrame = numChannels * bytesPerSample;
   if (bytesPerFrame == 0) {
     Trace::Error("WavFileWriter: Invalid bytes per frame for %s", path);
-    file->Close();
     return false;
   }
 
@@ -281,7 +266,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     Trace::Error("WavFileWriter: Scratch buffer too small (%zu) for frame "
                  "size %u",
                  scratchBufferSize, bytesPerFrame);
-    file->Close();
     return false;
   }
 
@@ -293,7 +277,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
 
   if (totalFrames == 0) {
     Trace::Error("WavFileWriter: Sample has no audio frames in %s", path);
-    file->Close();
     return false;
   }
 
@@ -317,7 +300,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     if (bytesRead != static_cast<int>(chunkSize)) {
       Trace::Error(
           "WavFileWriter: Failed reading sample data during normalization");
-      file->Close();
       return false;
     }
 
@@ -355,7 +337,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
   if (peak <= 0) {
     Trace::Log("WavFileWriter",
                "Normalize skipped for %s due to zero detected peak", path);
-    file->Close();
     return true;
   }
 
@@ -364,7 +345,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
         "WavFileWriter",
         "Normalize skipped for %s because peak already at or above full scale",
         path);
-    file->Close();
     return true;
   }
   // `gainQ16` calculates the gain factor required to normalize the audio.
@@ -391,7 +371,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     if (bytesRead != static_cast<int>(chunkSize)) {
       Trace::Error(
           "WavFileWriter: Failed reading sample data during normalization");
-      file->Close();
       return false;
     }
 
@@ -438,7 +417,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
     int bytesWritten = file->Write(scratchBuffer, 1, bytesRead);
     if (bytesWritten != bytesRead) {
       Trace::Error("WavFileWriter: Failed writing normalized data");
-      file->Close();
       return false;
     }
 
@@ -451,7 +429,6 @@ bool WavFileWriter::NormalizeFile(const char *path, void *scratchBuffer,
   reportProgress(progressCallback, dataChunkSize, dataChunkSize);
 
   file->Sync();
-  file->Close();
 
   result.normalized = true;
   result.gainApplied =
@@ -469,10 +446,9 @@ void WavFileWriter::Close() {
     return;
 
   // Use WavHeaderWriter to update file size
-  if (!WavHeaderWriter::UpdateFileSize(file_, sampleCount_)) {
+  if (!WavHeaderWriter::UpdateFileSize(file_.get(), sampleCount_)) {
     Trace::Log("WAVWRITER", "Failed to update WAV header");
   }
 
-  file_->Close();
-  SAFE_DELETE(file_);
+  file_.reset();
 };

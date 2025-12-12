@@ -12,6 +12,7 @@
 
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
+#include "System/FileSystem/FileHandle.h"
 #include <stdint.h>
 
 #define MAX_FILE_INDEX_SIZE 256
@@ -30,7 +31,7 @@ public:
   FileSystem() {}
   virtual ~FileSystem() {}
 
-  virtual I_File *Open(const char *name, const char *mode) = 0;
+  virtual FileHandle Open(const char *name, const char *mode) = 0;
   virtual bool chdir(const char *path) = 0;
   virtual bool read(int index, void *data) {
     return false;

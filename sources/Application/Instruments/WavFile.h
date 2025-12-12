@@ -21,10 +21,10 @@
 class WavFile : public SoundSource {
 
 protected: // Factory - see Load method
-  WavFile(I_File *file);
+  WavFile(FileHandle file);
 
 public:
-  virtual ~WavFile();
+  virtual ~WavFile() = default;
   static std::expected<WavFile *, WAVEFILE_ERROR> Open(const char *);
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);
@@ -38,15 +38,15 @@ public:
   uint32_t GetDiskSize(int note);
   bool Rewind();
   bool Read(void *buff, uint32_t btr, uint32_t *bytesRead);
-
   void Close();
+
   virtual bool IsMulti() { return false; };
 
 protected:
   long readBlock(long position, long count);
 
 private:
-  I_File *file_;       // File
+  FileHandle file_;    // File
   int readBufferSize_; // Read buffer size
   short *samples_;     // sample buffer size (16 bits)
   int sampleBufferSize_;
