@@ -9,7 +9,6 @@
 
 #include "Application/Application.h"
 #include "Application/AppWindow.h"
-#include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Persistency/PersistencyService.h"
