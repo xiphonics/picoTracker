@@ -74,6 +74,7 @@ private:
   etl::vector<UIActionField, 2> actionField_; // For Import/Export buttons
   etl::vector<UITextField<MAX_THEME_NAME_LENGTH>, 1>
       textFields_; // For theme name input
+  Variable themeNameVar_;
 
   // Reference to the theme name field for direct access
   UITextField<MAX_THEME_NAME_LENGTH> *themeNameField_;
