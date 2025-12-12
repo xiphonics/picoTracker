@@ -66,6 +66,7 @@ public:
   virtual bool Close() override;
   virtual int Error() override;
   virtual bool Sync() override;
+  void Dispose() override;
 
 private:
   FsBaseFile file_;
