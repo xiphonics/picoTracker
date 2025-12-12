@@ -15,7 +15,6 @@
 #include "Foundation/T_Factory.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "MidiInDevice.h"
-#include "MidiInMerger.h"
 #include "MidiOutDevice.h"
 #include "System/Timer/Timer.h"
 #include <string>
@@ -78,7 +77,6 @@ private:
   int currentPlayQueue_;
   int currentOutQueue_;
 
-  MidiInMerger merger_;
   bool sendSync_;
 };
 #endif

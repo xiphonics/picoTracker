@@ -13,8 +13,6 @@
 #include "Adapters/adv/midi/advMidiService.h"
 #include "Adapters/adv/system/advSamplePool.h"
 #include "Adapters/adv/timer/advTimer.h"
-#include "Application/Commands/NodeList.h"
-#include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"

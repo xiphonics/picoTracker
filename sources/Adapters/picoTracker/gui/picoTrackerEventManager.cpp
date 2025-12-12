@@ -74,8 +74,6 @@ picoTrackerEventManager::~picoTrackerEventManager() {}
 bool picoTrackerEventManager::Init() {
   EventManager::Init();
 
-  keyboardCS_ = new KeyboardControllerSource("keyboard");
-
   // setup a repeating timer for 1ms ticks
   add_repeating_timer_ms(1, timerHandler, NULL, &timer_);
   return true;

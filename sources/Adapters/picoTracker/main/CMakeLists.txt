@@ -19,7 +19,6 @@ target_link_libraries(picoTracker PUBLIC
 
     # --- Application Libraries ---
     # These depend on Services and Foundation
-    application_controllers
     application_views
     application_views_baseclasses
     application_model

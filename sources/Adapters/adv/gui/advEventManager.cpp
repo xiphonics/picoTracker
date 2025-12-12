@@ -249,7 +249,6 @@ advEventManager::~advEventManager() {}
 
 bool advEventManager::Init() {
   EventManager::Init();
-  keyboardCS_ = new KeyboardControllerSource("keyboard");
 
 #ifdef RTOS_STATS
   timerStats =

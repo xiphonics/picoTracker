@@ -14,7 +14,6 @@
 #include "Adapters/picoTracker/system/picoTrackerSamplePool.h"
 #include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #include "Application/Commands/NodeList.h"
-#include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
 #include "hardware/gpio.h"
