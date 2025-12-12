@@ -120,8 +120,8 @@ void MidiInDevice::onDriverMessage(MidiMessage &message) {
   treatChannelEvent(message);
 };
 
-void MidiInDevice::Trigger() {
-  // No-op: events are handled immediately in onDriverMessage.
+void MidiInDevice::Trigger(){
+    // No-op: events are handled immediately in onDriverMessage.
 };
 
 void MidiInDevice::treatChannelEvent(MidiMessage &event) {
@@ -293,7 +293,6 @@ void MidiInDevice::ClearChannelAssignment(int midiChannel) {
     channelToInstrument_[midiChannel] = -1;
   }
 }
-
 
 void MidiInDevice::processMidiData(uint8_t data) {
   // Handle MIDI data byte
