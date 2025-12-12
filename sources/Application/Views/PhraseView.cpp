@@ -26,12 +26,11 @@
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
+      cmdEditPos_(0, 10),
+      cmdEditField_(cmdEditPos_, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
-  GUIPoint pos(0, 10);
-  cmdEditField_ =
-      new UIBigHexVarField(pos, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true);
   row_ = 0;
   viewData->phraseCurPos_ = 0;
   col_ = 0;
@@ -50,7 +49,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   };
 }
 
-PhraseView::~PhraseView() { delete cmdEditField_; };
+PhraseView::~PhraseView() {};
 
 void PhraseView::updateCursor(int dx, int dy) {
 
@@ -101,14 +100,14 @@ void PhraseView::updateCursor(int dx, int dy) {
   case 3:
     p._x += 12;
     p._y += row_;
-    cmdEditField_->SetPosition(p);
+    cmdEditField_.SetPosition(p);
     cmdEdit_.SetInt(
         *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_)));
     break;
   case 5:
     p._x += 21;
     p._y += row_;
-    cmdEditField_->SetPosition(p);
+    cmdEditField_.SetPosition(p);
     cmdEdit_.SetInt(
         *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
     break;
@@ -159,16 +158,16 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   case 3: {
     switch (direction) {
     case VUD_RIGHT:
-      cmdEditField_->ProcessArrow(EPBM_RIGHT);
+      cmdEditField_.ProcessArrow(EPBM_RIGHT);
       break;
     case VUD_UP:
-      cmdEditField_->ProcessArrow(EPBM_UP);
+      cmdEditField_.ProcessArrow(EPBM_UP);
       break;
     case VUD_LEFT:
-      cmdEditField_->ProcessArrow(EPBM_LEFT);
+      cmdEditField_.ProcessArrow(EPBM_LEFT);
       break;
     case VUD_DOWN:
-      cmdEditField_->ProcessArrow(EPBM_DOWN);
+      cmdEditField_.ProcessArrow(EPBM_DOWN);
       break;
     }
     // Sanitize MIDI velocity values if needed
@@ -203,16 +202,16 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   case 5:
     switch (direction) {
     case VUD_RIGHT:
-      cmdEditField_->ProcessArrow(EPBM_RIGHT);
+      cmdEditField_.ProcessArrow(EPBM_RIGHT);
       break;
     case VUD_UP:
-      cmdEditField_->ProcessArrow(EPBM_UP);
+      cmdEditField_.ProcessArrow(EPBM_UP);
       break;
     case VUD_LEFT:
-      cmdEditField_->ProcessArrow(EPBM_LEFT);
+      cmdEditField_.ProcessArrow(EPBM_LEFT);
       break;
     case VUD_DOWN:
-      cmdEditField_->ProcessArrow(EPBM_DOWN);
+      cmdEditField_.ProcessArrow(EPBM_DOWN);
       break;
     }
     // Sanitize MIDI velocity values if needed
@@ -1286,8 +1285,8 @@ void PhraseView::DrawView() {
   };
 
   if ((viewMode_ != VM_SELECTION) && ((col_ == 3) || (col_ == 5))) {
-    cmdEditField_->SetFocus();
-    cmdEditField_->Draw(w_);
+    cmdEditField_.SetFocus();
+    cmdEditField_.Draw(w_);
   };
 };
 

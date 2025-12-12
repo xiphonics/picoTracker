@@ -38,7 +38,7 @@ public:
   // Observer implementation
   virtual void Update(Observable &o, I_ObservableData *d);
 
-  UITextField<MAX_TEXT_INPUT_LENGTH> *GetTextField() { return textField_; }
+  UITextField<MAX_TEXT_INPUT_LENGTH> *GetTextField() { return &textField_; }
 
   // Focus management methods
   void SetFocus(UIField *field);
@@ -49,7 +49,8 @@ private:
   etl::string<MAX_TEXT_TITLE_LENGTH> title_;
   etl::string<MAX_TEXT_PROMPT_LENGTH> prompt_;
   Variable textVariable_;
-  UITextField<MAX_TEXT_INPUT_LENGTH> *textField_;
+  GUIPoint textFieldPos_;
+  UITextField<MAX_TEXT_INPUT_LENGTH> textField_;
   UIField *focus_; // Current focused field
   bool editingText_;
 
