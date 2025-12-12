@@ -416,7 +416,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
-          new RenderProgressModal(*this, "Rendering", "Press OK to stop");
+          RenderProgressModal::Create(*this, "Rendering", "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
     }
     break;
@@ -427,7 +427,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
-          new RenderProgressModal(*this, "Stems Rendering", "Press OK to stop");
+          RenderProgressModal::Create(*this, "Stems Rendering",
+                                      "Press OK to stop");
       DoModal(renderDialog, RenderStopCallback);
     }
     break;

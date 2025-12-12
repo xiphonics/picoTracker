@@ -8,8 +8,37 @@
 
 #include "FullScreenBox.h"
 #include <Application/AppWindow.h>
+#include <new>
 
 static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
+
+static bool inUse = false;
+alignas(FullScreenBox)
+static unsigned char FullScreenBoxStorage[sizeof(FullScreenBox)];
+static void *storage = FullScreenBoxStorage;
+
+FullScreenBox *FullScreenBox::Create(View &view, const char *message,
+                                     int btnFlags) {
+  if (inUse) {
+    auto *existing = reinterpret_cast<FullScreenBox *>(storage);
+    existing->~FullScreenBox();
+    inUse = false;
+  }
+  inUse = true;
+  return new (storage) FullScreenBox(view, message, btnFlags);
+}
+
+FullScreenBox *FullScreenBox::Create(View &view, const char *messageLine1,
+                                     const char *messageLine2, int btnFlags) {
+  if (inUse) {
+    auto *existing = reinterpret_cast<FullScreenBox *>(storage);
+    existing->~FullScreenBox();
+    inUse = false;
+  }
+  inUse = true;
+  return new (storage) FullScreenBox(view, messageLine1, messageLine2,
+                                     btnFlags);
+}
 
 FullScreenBox::FullScreenBox(View &view, const char *message, int btnFlags)
     : MessageBox(view, message, btnFlags) {}
@@ -19,6 +48,11 @@ FullScreenBox::FullScreenBox(View &view, const char *messageLine1,
     : MessageBox(view, messageLine1, messageLine2, btnFlags) {}
 
 FullScreenBox::~FullScreenBox(){};
+
+void FullScreenBox::Destroy() {
+  this->~FullScreenBox();
+  inUse = false;
+};
 
 void FullScreenBox::DrawView() {
   // message size

@@ -711,8 +711,9 @@ void AppWindow::AnimationUpdate() {
 
   if (lowBatteryState_ && !lowBatteryMessageShown_) {
     if (!_currentView->HasModalView()) {
-      FullScreenBox *mb = new FullScreenBox(*_currentView, "Low battery!",
-                                            "Connect charger", 0);
+      FullScreenBox *mb =
+          FullScreenBox::Create(*_currentView, "Low battery!",
+                                "Connect charger", 0);
       _currentView->DoModal(mb);
       lowBatteryMessageShown_ = true;
       SetDirty();
