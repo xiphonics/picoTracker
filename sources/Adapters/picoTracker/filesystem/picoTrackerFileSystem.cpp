@@ -36,14 +36,14 @@ picoTrackerFileSystem::picoTrackerFileSystem() {
   }
 }
 
-I_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
+FileHandle picoTrackerFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   std::lock_guard<Mutex> lock(mutex);
   const bool hasPlus = (mode != nullptr) && (std::strchr(mode, '+') != nullptr);
 
   if (!mode || !*mode) {
     Trace::Error("Invalid mode: %s", mode ? mode : "(null)");
-    return nullptr;
+    return FileHandle();
   }
 
   oflag_t rmode = 0;
@@ -56,11 +56,11 @@ I_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
     break;
   default:
     Trace::Error("Invalid mode: %s", mode);
-    return nullptr;
+    return FileHandle();
   }
   FsBaseFile cwd;
   if (!cwd.openCwd()) {
-    return nullptr;
+    return FileHandle();
   }
   I_File *wFile = 0;
   if (cwd.open(name, rmode)) {
@@ -68,7 +68,7 @@ I_File *picoTrackerFileSystem::Open(const char *name, const char *mode) {
   } else {
     Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
   }
-  return wFile;
+  return MakeFileHandle(wFile);
 }
 
 bool picoTrackerFileSystem::chdir(const char *name) {
@@ -293,7 +293,10 @@ void picoTrackerFileSystem::tolowercase(char *temp) {
 
 // picoTrackerFile implementation
 
-picoTrackerFile::picoTrackerFile(FsBaseFile file) { file_ = file; }
+picoTrackerFile::picoTrackerFile(FsBaseFile file)
+    : file_(file), isOpen_(true) {}
+
+picoTrackerFile::~picoTrackerFile() { Close(); }
 
 int picoTrackerFile::Read(void *ptr, int size) {
   std::lock_guard<Mutex> lock(mutex);
@@ -338,8 +341,16 @@ int picoTrackerFile::Error() {
 }
 
 bool picoTrackerFile::Close() {
+  if (!isOpen_) {
+    return true;
+  }
+
   std::lock_guard<Mutex> lock(mutex);
-  return file_.close();
+  bool closed = file_.close();
+  if (closed) {
+    isOpen_ = false;
+  }
+  return closed;
 }
 
 bool picoTrackerFile::Sync() {

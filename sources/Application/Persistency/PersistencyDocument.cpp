@@ -14,8 +14,7 @@
 PersistencyDocument::PersistencyDocument() {
   version_ = 0;
   yxml_init(state_, stack_, sizeof(stack_));
-  r_ = YXML_OK;  // initialize to ok value
-  fp_ = nullptr; // Initialize file pointer to null
+  r_ = YXML_OK; // initialize to ok value
 }
 
 PersistencyDocument::~PersistencyDocument() {
@@ -24,11 +23,7 @@ PersistencyDocument::~PersistencyDocument() {
 }
 
 void PersistencyDocument::Close() {
-  if (fp_) {
-    fp_->Close();
-    fp_ = nullptr;
-    Trace::Log("PERSISTENCYDOCUMENT", "File closed");
-  }
+  fp_.reset();
 }
 
 bool PersistencyDocument::Load(const char *filename) {
@@ -48,8 +43,7 @@ bool PersistencyDocument::Load(const char *filename) {
   int c = fp_->GetC();
   if (c == EOF) {
     Trace::Error("File is empty or cannot be read: %s", filename);
-    fp_->Close();
-    fp_ = nullptr;
+    fp_.reset();
     return false;
   }
 

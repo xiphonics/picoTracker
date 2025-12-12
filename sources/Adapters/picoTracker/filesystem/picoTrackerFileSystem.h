@@ -28,7 +28,7 @@ public:
   virtual ~picoTrackerFileSystem() {}
 
   // FileSystem interface implementation
-  virtual I_File *Open(const char *name, const char *mode) override;
+  virtual FileHandle Open(const char *name, const char *mode) override;
   virtual bool chdir(const char *path) override;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
                     bool subDirOnly) override;
@@ -55,7 +55,7 @@ private:
 class picoTrackerFile : public I_File {
 public:
   picoTrackerFile(FsBaseFile file);
-  virtual ~picoTrackerFile() {}
+  virtual ~picoTrackerFile();
 
   // PI_File interface implementation
   virtual int Read(void *ptr, int size) override;
@@ -69,6 +69,7 @@ public:
 
 private:
   FsBaseFile file_;
+  bool isOpen_;
 };
 
 // Mutex implementation for thread safety

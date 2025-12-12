@@ -163,7 +163,7 @@ void SerialDebugUI::catFile(const char *path) {
     return;
   }
 
-  I_File *file = fs->Open(path, "r");
+  auto file = fs->Open(path, "r");
   if (!file) {
     Trace::Log("SERIALDEBUG", "Failed to open file: %s", path);
     return;
@@ -191,9 +191,6 @@ void SerialDebugUI::catFile(const char *path) {
   // Add a final newline if the file doesn't end with one
   uint8_t newline[] = {'\r', '\n'};
   HAL_UART_Transmit(&huart1, newline, 2, HAL_MAX_DELAY);
-
-  file->Close();
-  delete file;
 }
 
 void SerialDebugUI::listFiles(const char *path) {

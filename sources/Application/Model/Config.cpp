@@ -327,17 +327,17 @@ Config::~Config() {}
 
 bool Config::Save() {
   auto fs = FileSystem::GetInstance();
-  I_File *fp = fs->Open(CONFIG_FILE_PATH, "w");
+  auto fp = fs->Open(CONFIG_FILE_PATH, "w");
   if (!fp) {
     Trace::Error("Could not open file for writing: %s", CONFIG_FILE_PATH);
     return false;
   }
   Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s", CONFIG_FILE_PATH);
-  tinyxml2::XMLPrinter printer(fp);
+  tinyxml2::XMLPrinter printer(fp.get());
 
   SaveContent(&printer);
 
-  return fp->Close();
+  return fp->Sync();
 }
 
 // Write color variables to an XMLPrinter using the same format as in
@@ -634,19 +634,17 @@ bool Config::ExportTheme(const char *themeName, bool overwrite) {
   }
 
   // Open the file for writing
-  I_File *fp = fs->Open(path.c_str(), "w");
+  auto fp = fs->Open(path.c_str(), "w");
   if (!fp) {
     Trace::Error("Failed to open theme file for writing: %s", path.c_str());
     return false;
   }
 
-  tinyxml2::XMLPrinter printer(fp);
+  tinyxml2::XMLPrinter printer(fp.get());
 
   // Use the SaveTheme method to save the theme data
   SaveTheme(&printer, themeName);
 
-  fp->Close();
-  delete fp; // Clean up the file pointer
   Trace::Log("CONFIG", "Successfully exported theme to: %s", path.c_str());
   return true;
 }
@@ -682,24 +680,12 @@ bool Config::ImportTheme(const char *themeName) {
     return false;
   }
 
-  // Open the file for reading
-  I_File *fp = fs->Open(path.c_str(), "r");
-  if (!fp) {
-    Trace::Error("Failed to open theme file for reading: %s", path.c_str());
-    return false;
-  }
-
   // Create a persistency document from the file
   PersistencyDocument doc;
   if (!doc.Load(path.c_str())) {
     Trace::Error("Failed to load theme document: %s", path.c_str());
-    fp->Close();
-    delete fp;
     return false;
   }
-
-  fp->Close();
-  delete fp;
 
   // Store the theme name in the config
   Variable *themeVar = FindVariable(FourCC::VarThemeName);

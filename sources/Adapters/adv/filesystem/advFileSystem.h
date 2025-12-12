@@ -26,7 +26,7 @@ extern char SDPath[4]; /* SD logical drive path */
 class PI_File : public I_File {
 public:
   PI_File(FIL file); // OK
-  ~PI_File(){};
+  ~PI_File();
   int Read(void *ptr, int size) override; // OK
   int GetC() override;
   int Write(const void *ptr, int size, int nmemb) override;
@@ -38,14 +38,17 @@ public:
 
 private:
   FIL file_;
+  // isOpen_ needed as a safeguard because we still use the legacy explicit
+  // close from TinyXML
+  bool isOpen_;
 };
 
 class advFileSystem : public FileSystem {
 public:
   advFileSystem(); // OK
   virtual ~advFileSystem(){};
-  virtual I_File *Open(const char *name, const char *mode) override; // OK
-  virtual bool chdir(const char *path) override;                     // OK
+  virtual FileHandle Open(const char *name, const char *mode) override; // OK
+  virtual bool chdir(const char *path) override;                        // OK
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
                     bool subDirOnly) override;                          // OK
   virtual void getFileName(int index, char *name, int length) override; // OK
