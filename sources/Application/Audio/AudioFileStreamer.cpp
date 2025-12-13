@@ -181,7 +181,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   int channelCount = wav_.GetChannelCount(-1);
 
   // Clear the output buffer
-  SYS_MEMSET(buffer, 0, samplecount * 2 * sizeof(fixed));
+  memset(buffer, 0, samplecount * 2 * sizeof(fixed));
 
   // Get preview volume from project
   Variable *v = project_->FindVariable(FourCC::VarPreviewVolume);

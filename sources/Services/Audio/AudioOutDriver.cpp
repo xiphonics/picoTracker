@@ -64,7 +64,7 @@ void AudioOutDriver::clipToMix() {
   bool interlaced = driver_->Interlaced();
 
   if (!hasSound_) {
-    SYS_MEMSET(mixBuffer_, 0, sampleCount_ * 2 * sizeof(short));
+    memset(mixBuffer_, 0, sampleCount_ * 2 * sizeof(short));
   } else {
     short *s1 = mixBuffer_;
     short *s2 = (interlaced) ? s1 + 1 : s1 + sampleCount_;

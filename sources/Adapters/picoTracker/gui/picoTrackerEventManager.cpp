@@ -112,15 +112,6 @@ int picoTrackerEventManager::MainLoop() {
       picoTrackerGUIWindowImp::ProcessEvent(event);
       redrawing_ = false;
     }
-#ifdef PICOSTATS
-    if (loops == 100000) {
-      Trace::Debug("Usage %.1f% CPU", ((float)events / loops) * 100);
-      events = 0;
-      loops = 0;
-      //      measure_freqs();
-      measure_free_mem();
-    }
-#endif
   }
   // TODO: HW Shutdown
   return 0;
