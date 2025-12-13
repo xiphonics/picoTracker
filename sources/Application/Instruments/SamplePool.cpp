@@ -18,19 +18,19 @@
 #include "System/io/Status.h"
 #include <stdlib.h>
 #include <string.h>
+#include <utility>
 
 SamplePool::SamplePool() : Observable(&observers_) {
-  for (int i = 0; i < MAX_SAMPLES; i++) {
-    names_[i] = NULL;
-    wav_[i] = NULL;
-  };
   count_ = 0;
+  for (int i = 0; i < MAX_SAMPLES; i++) {
+    names_[i] = nameStore_[i];
+    nameStore_[i][0] = '\0';
+  };
 };
 
 SamplePool::~SamplePool() {
   for (int i = 0; i < MAX_SAMPLES; i++) {
-    SAFE_DELETE(wav_[i]);
-    SAFE_FREE(names_[i]);
+    wav_[i].Close();
   };
 };
 
@@ -78,17 +78,12 @@ void SamplePool::Load(const char *projectName) {
         index = i;
       };
     };
-    SoundSource *tWav = wav_[index];
-    char *tName = names_[index];
-    wav_[index] = wav_[rest - 1];
-    names_[index] = names_[rest - 1];
-    wav_[rest - 1] = tWav;
-    names_[rest - 1] = tName;
+    swapEntries(index, rest - 1);
     rest--;
   };
 };
 
-SoundSource *SamplePool::GetSource(int i) { return wav_[i]; };
+SoundSource *SamplePool::GetSource(int i) { return &wav_[i]; };
 
 char **SamplePool::GetNameList() { return names_; };
 
@@ -158,9 +153,10 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     // Replace stored name with truncated filename so matches the potentially
     // truncated filename we actually stored into the project pool subdir
     const int loadedIndex = count_ - 1;
-    if (names_[loadedIndex] != nullptr) {
-      projSampleFilename.copy(names_[loadedIndex], projSampleFilename.size());
-      names_[loadedIndex][projSampleFilename.size()] = '\0';
+    if (loadedIndex >= 0) {
+      projSampleFilename.copy(nameStore_[loadedIndex],
+                              projSampleFilename.size());
+      nameStore_[loadedIndex][projSampleFilename.size()] = '\0';
     }
   }
 
@@ -183,20 +179,16 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
 
   // delete file
   FileSystem::GetInstance()->DeleteFile(delPath.str().c_str());
-  // delete wav
-  SAFE_DELETE(wav_[i]);
-  // delete name entry
-  SAFE_DELETE(names_[i]);
-
   // shift all entries from deleted to end
   for (int j = i; j < count_ - 1; j++) {
-    wav_[j] = wav_[j + 1];
-    names_[j] = names_[j + 1];
+    wav_[j] = std::move(wav_[j + 1]);
+    memcpy(nameStore_[j], nameStore_[j + 1],
+           MAX_INSTRUMENT_FILENAME_LENGTH + 1);
   };
   // decrease sample count
   count_--;
-  wav_[count_] = 0;
-  names_[count_] = 0;
+  wav_[count_].Close();
+  nameStore_[count_][0] = '\0';
 
   // now notify observers
   SetChanged();
@@ -214,4 +206,15 @@ int8_t SamplePool::ReloadSample(uint8_t index, const char *name) {
     }
   }
   return -1;
+}
+
+void SamplePool::swapEntries(int src, int dst) {
+  if (src == dst) {
+    return;
+  }
+  std::swap(wav_[src], wav_[dst]);
+  char tmp[MAX_INSTRUMENT_FILENAME_LENGTH + 1];
+  memcpy(tmp, nameStore_[src], sizeof(tmp));
+  memcpy(nameStore_[src], nameStore_[dst], sizeof(tmp));
+  memcpy(nameStore_[dst], tmp, sizeof(tmp));
 }

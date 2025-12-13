@@ -31,7 +31,7 @@ public:
 protected:
   AudioFileStreamerMode mode_;
   char name_[256];
-  WavFile *wav_;
+  WavFile wav_;
   float position_;
   Project *project_;
 

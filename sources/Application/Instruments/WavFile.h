@@ -20,12 +20,16 @@
 
 class WavFile : public SoundSource {
 
-protected: // Factory - see Load method
-  WavFile(FileHandle file);
-
 public:
+  WavFile();
+  WavFile(WavFile &&) = default;
+  WavFile &operator=(WavFile &&) = default;
+  WavFile(const WavFile &) = delete;
+  WavFile &operator=(const WavFile &) = delete;
   virtual ~WavFile() = default;
-  static std::expected<WavFile *, WAVEFILE_ERROR> Open(const char *);
+
+  std::expected<void, WAVEFILE_ERROR> Open(const char *);
+  bool IsOpen() const;
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);
   virtual int GetSize(int note);

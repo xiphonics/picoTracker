@@ -18,16 +18,12 @@
 int WavFile::bufferChunkSize_ = -1;
 unsigned char WavFile::readBuffer_[BUFFER_SIZE];
 
-WavFile::WavFile(FileHandle file) : file_(std::move(file)) {
-  samples_ = 0;
-  size_ = 0;
-  readBufferSize_ = 0;
-  sampleBufferSize_ = 0;
-};
+WavFile::WavFile()
+    : file_(), readBufferSize_(0), samples_(nullptr), sampleBufferSize_(0),
+      size_(0), sampleRate_(0), channelCount_(0), bytePerSample_(0),
+      dataPosition_(0), readCount_(0) {}
 
-std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
-  // Trace::Log("WAVFILE", "wave open from %s", name);
-
+std::expected<void, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   // open file
   FileSystem *fs = FileSystem::GetInstance();
   auto file = fs->Open(name, "r");
@@ -40,27 +36,29 @@ std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
     return std::unexpected(header.error());
   }
 
-  WavFile *wav = new WavFile(std::move(file));
+  file_ = std::move(file);
 
-  wav->sampleRate_ = header->sampleRate;
-  wav->channelCount_ = header->numChannels;
-  wav->bytePerSample_ = header->bytesPerSample;
+  sampleRate_ = header->sampleRate;
+  channelCount_ = header->numChannels;
+  bytePerSample_ = header->bytesPerSample;
 
   Trace::Debug("File data bytes: %u", header->dataChunkSize);
 
-  wav->size_ =
-      header->dataChunkSize / (header->numChannels * header->bytesPerSample);
-  Trace::Debug("File sample count: %i", wav->size_);
+  size_ = header->dataChunkSize / (header->numChannels * header->bytesPerSample);
+  Trace::Debug("File sample count: %i", size_);
 
   // All samples are saved as 16bit/sample in memory
-  wav->sampleBufferSize_ = wav->size_ * header->numChannels * 2;
-  Trace::Debug("File sampleBufferSize_: %i", wav->sampleBufferSize_);
+  sampleBufferSize_ = size_ * header->numChannels * 2;
+  Trace::Debug("File sampleBufferSize_: %i", sampleBufferSize_);
 
-  wav->readCount_ = header->dataChunkSize;
-  wav->dataPosition_ = header->dataOffset;
+  readCount_ = header->dataChunkSize;
+  dataPosition_ = header->dataOffset;
 
-  wav->file_->Seek(header->dataOffset, SEEK_SET);
-  return wav;
+  readBufferSize_ = 0;
+  samples_ = nullptr;
+
+  file_->Seek(header->dataOffset, SEEK_SET);
+  return {};
 };
 
 void *WavFile::GetSampleBuffer(int note) { return samples_; };
@@ -171,6 +169,8 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
   readCount_ -= readSize;
   return true;
 }
+
+bool WavFile::IsOpen() const { return static_cast<bool>(file_); }
 
 void WavFile::Close() {
   if (file_) {

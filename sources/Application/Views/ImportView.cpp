@@ -427,10 +427,11 @@ void ImportView::preview(char *name) {
     Player::GetInstance()->StopStreaming();
   }
 
-  auto wav = WavFile::Open(name);
+  WavFile wav;
+  auto wavRes = wav.Open(name);
   MessageBox *mb = nullptr;
-  if (!wav) {
-    auto error = wav.error();
+  if (!wavRes) {
+    auto error = wavRes.error();
     switch (error) {
     case INVALID_FILE:
       mb = MessageBox::Create(*this, "Preview Failed", "Could not open file",
@@ -449,7 +450,7 @@ void ImportView::preview(char *name) {
       break;
     }
   } else {
-    wav.value()->Close();
+    wav.Close();
   }
 
   if (mb != nullptr) {
@@ -536,10 +537,11 @@ void ImportView::import() {
   }
 
   // Check if wave file is in a supported format
-  auto wav = WavFile::Open(name);
+  WavFile wav;
+  auto wavRes = wav.Open(name);
   MessageBox *mb = nullptr;
-  if (!wav) {
-    auto error = wav.error();
+  if (!wavRes) {
+    auto error = wavRes.error();
     switch (error) {
     case INVALID_FILE:
       mb = MessageBox::Create(*this, "Import Failed", "Could not open file",
@@ -558,7 +560,7 @@ void ImportView::import() {
       break;
     }
   } else {
-    wav.value()->Close();
+    wav.Close();
   }
 
   if (mb != nullptr) {
