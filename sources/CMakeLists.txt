@@ -126,7 +126,6 @@ else()
   target_compile_definitions(freertos_config
     INTERFACE
     projCOVERAGE_TEST=0)
-  set(FREERTOS_HEAP 4)
   set(FREERTOS_PORT GCC_ARM_CM7 CACHE STRING "")
 
   # ------- cmake/gcc-arm-none-eabi.cmake START -------
