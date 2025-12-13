@@ -41,12 +41,12 @@ bool PlayerMixer::Init(Project *project) {
   }
 
   AudioMixer *audioMixer = ms->GetMixBus(STREAM_MIX_BUS);
-  audioMixer->Insert(fileStreamer_);
+  audioMixer->AddModule(fileStreamer_);
 
   project_ = project;
 
   // Add the record mixer
-  audioMixer->Insert(recordStreamer_);
+  audioMixer->AddModule(recordStreamer_);
 
   // Init states
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {

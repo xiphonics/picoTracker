@@ -21,8 +21,6 @@
 #include "BaseClasses/View.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
-#include "Foundation/T_SimpleList.h"
-#include "Foundation/T_Stack.h"
 #include "ViewData.h"
 
 #define COLOR_COMPONENT_COUNT 3

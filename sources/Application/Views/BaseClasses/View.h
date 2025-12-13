@@ -13,7 +13,6 @@
 #include "Application/Model/Config.h"
 #include "Application/Model/Project.h"
 #include "Application/Player/Player.h"
-#include "Foundation/T_SimpleList.h"
 #include "I_Action.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"

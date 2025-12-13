@@ -11,7 +11,6 @@
 #define _MIDIOUT_DEVICE_H_
 
 #include "Externals/etl/include/etl/vector.h"
-#include "Foundation/T_SimpleList.h"
 #include "Foundation/Types/Types.h"
 #include "MidiMessage.h"
 #include "config/StringLimits.h"

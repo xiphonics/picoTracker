@@ -16,7 +16,6 @@ short AudioOutDriver::mixBuffer_[MIX_BUFFER_SIZE];
 AudioOutDriver::AudioOutDriver(AudioDriver &driver) {
   driver_ = &driver;
   driver.AddObserver(*this);
-  SetOwnership(false);
 }
 
 AudioOutDriver::~AudioOutDriver() {
