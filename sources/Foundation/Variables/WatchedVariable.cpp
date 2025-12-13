@@ -25,11 +25,6 @@ WatchedVariable::WatchedVariable(FourCC id, const char *const *list, int size,
   updating_ = false;
 }
 
-WatchedVariable::WatchedVariable(FourCC id, const char *value)
-    : Variable(id, value) {
-  updating_ = false;
-};
-
 void WatchedVariable::onChange() {
   if (!updating_ && enabled_) {
     updating_ = true;

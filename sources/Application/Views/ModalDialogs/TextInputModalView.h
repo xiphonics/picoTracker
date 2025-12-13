@@ -16,7 +16,7 @@
 #include "Application/Views/ModalDialogs/MessageBox.h" // For button constants
 #include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
-#include "Foundation/Variables/Variable.h"
+#include "Foundation/Variables/StringVariable.h"
 
 #define MAX_TEXT_TITLE_LENGTH 24
 #define MAX_TEXT_PROMPT_LENGTH 8
@@ -48,7 +48,7 @@ public:
 private:
   etl::string<MAX_TEXT_TITLE_LENGTH> title_;
   etl::string<MAX_TEXT_PROMPT_LENGTH> prompt_;
-  Variable textVariable_;
+  StringVariable<MAX_TEXT_INPUT_LENGTH> textVariable_;
   GUIPoint textFieldPos_;
   UITextField<MAX_TEXT_INPUT_LENGTH> textField_;
   UIField *focus_; // Current focused field

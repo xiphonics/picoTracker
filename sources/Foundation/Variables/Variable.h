@@ -26,7 +26,7 @@ public:
   Variable(FourCC id, int value = 0);
   Variable(FourCC id, float value = 0.0f);
   Variable(FourCC id, bool value = false);
-  Variable(FourCC id, const char *value = 0);
+  Variable(FourCC id, const char *value) = delete; // Use StringVariable
   Variable(FourCC id, const char *const *list, int size, int index = -1);
 
   virtual ~Variable();
@@ -47,13 +47,14 @@ public:
   // Not very clean !
   uint8_t GetListSize();
   const char *const *GetListPointer();
-  void Reset();
+  virtual void Reset();
 
   // Check if the current value differs from the default value
-  bool IsModified();
+  virtual bool IsModified();
 
 protected:
   virtual void onChange(){};
+  void setStringValue(const char *value);
 
   FourCC id_;
   Type type_;
@@ -76,10 +77,8 @@ protected:
     const char *const *char_;
   } list_;
 
-  etl::string<MAX_VARIABLE_STRING_LENGTH> *stringValue_ = nullptr;
+  etl::istring *stringValue_ = nullptr;
 
   uint8_t listSize_;
-
-  void setStringValue(const char *value);
 };
 #endif

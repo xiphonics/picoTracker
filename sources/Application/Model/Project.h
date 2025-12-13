@@ -17,6 +17,8 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/VariableContainer.h"
+#include "Foundation/Variables/StringVariable.h"
+#include "Foundation/Variables/WatchedVariable.h"
 #include "Song.h"
 
 #define PROJECT_NUMBER "2.1-BETA1"
@@ -90,7 +92,7 @@ private:
   Variable transpose_;
   Variable scale_;
   Variable scaleRoot_;
-  WatchedVariable projectName_;
+  StringWatchedVariable<MAX_PROJECT_NAME_LENGTH> projectName_;
   Variable previewVolume_;
 };
 

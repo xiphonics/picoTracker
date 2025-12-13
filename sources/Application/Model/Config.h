@@ -13,6 +13,7 @@
 #include "Application/Persistency/Persistent.h"
 #include "Foundation/T_Singleton.h"
 #include "Foundation/Variables/VariableContainer.h"
+#include "Foundation/Variables/StringVariable.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "System/Console/Trace.h"
 
@@ -54,7 +55,7 @@ private:
   WatchedVariable midiSync_;
   WatchedVariable remoteUI_;
   WatchedVariable uiFont_;
-  Variable themeName_;
+  StringVariable<MAX_VARIABLE_STRING_LENGTH> themeName_;
   WatchedVariable backlightLevel_;
   WatchedVariable outputVolume_;
   WatchedVariable recordSource_;
