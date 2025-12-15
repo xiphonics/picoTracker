@@ -21,6 +21,7 @@ add_library(application_views
   ScreenView.cpp
   MixerView.cpp
   SampleEditorView.cpp
+  SampleSlicesView.cpp
   SampleEditProgressDisplay.cpp
 )
 

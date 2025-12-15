@@ -162,7 +162,6 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
                                ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
                               FLASH_SECTOR_SIZE;
-
     // Erase required number of sectors
     flash_range_erase(flashEraseOffset_, sectorsToErase);
     // Move erase pointer to new position

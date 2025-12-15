@@ -69,16 +69,17 @@ bool PersistencyDocument::FirstChild() {
       return true;
     case YXML_ELEMEND:
       return false;
-    case YXML_CONTENT:
-    case YXML_ATTRSTART:
-    case YXML_ATTRVAL:
-    case YXML_ATTREND:
     case YXML_EEOF:
     case YXML_EREF:
     case YXML_ECLOSE:
     case YXML_ESTACK:
     case YXML_ESYN:
-      // Error
+      Trace::Error("FirstChild parse error: %d", r_);
+      return false;
+    case YXML_CONTENT:
+    case YXML_ATTRSTART:
+    case YXML_ATTRVAL:
+    case YXML_ATTREND:
     default:
       // Any other values we skip, including YXML_OK
       break;

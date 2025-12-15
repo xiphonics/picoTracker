@@ -58,6 +58,8 @@ private:
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
+  int lastSampleIndex_;
+  bool suppressSampleChangeWarning_;
 
   // Variables for export confirmation dialog
   I_Instrument *exportInstrument_ = nullptr;
@@ -70,6 +72,7 @@ private:
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 2> intVarOffField_;
+  etl::vector<UIActionField, 1> sampleActionField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
   etl::vector<InstrumentNameVariable, 1> nameVariables_;
