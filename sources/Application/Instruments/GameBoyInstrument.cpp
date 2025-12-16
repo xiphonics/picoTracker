@@ -194,8 +194,8 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
     if (tock_ == 0) {
       // hot loop
 
-      // envelope processing at ~100Hz
-      tock_ = 22;
+      // envelope processing at ~1000Hz
+      tock_ = 44;
 
       lifetime_--;
       // length
@@ -280,9 +280,7 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 };
 
 int GameBoyInstrument::GetTable() {
-  //  Variable *v = FindVariable(MIP_TABLE);
-  //  return v->GetInt();
-  return 0;
+  return vTable_.GetInt();
 };
 
 bool GameBoyInstrument::GetTableAutomation() {
