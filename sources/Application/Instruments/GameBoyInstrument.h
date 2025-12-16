@@ -16,6 +16,94 @@
 
 #define GB_NUM_WAVEFORMS 5
 
+constexpr uint16_t attackCoeffLUT[65] = {
+    65535, 63000, 60000, 55329, 45156, 35045, 27227, 21474, 17253, 14090, 11690,
+    9844,  8384,  7221,  6279,  5508,  4869,  4334,  3881,  3495,  3163,  2876,
+    2627,  2408,  2215,  2045,  1892,  1757,  1636,  1526,  1428,  1338,  1256,
+    1182,  1114,  1052,  995,   943,   893,   849,   807,   769,   732,   699,
+    668,   638,   612,   586,   562,   539,   517,   498,   479,   461,   444,
+    428,   413,   399,   385,   372,   360,   348,   337,   326,   326,
+};
+
+constexpr uint16_t decayCoeffLUT[65] = {
+    65535, 60000, 54134, 37479, 25165, 17618, 12848, 9728, 7602, 6089, 4980,
+    4148,  3505,  3000,  2594,  2267,  1997,  1773,  1584, 1424, 1286, 1168,
+    1065,  975,   896,   826,   764,   709,   659,   616,  575,  538,  506,
+    476,   448,   423,   400,   378,   359,   340,   323,  308,  293,  280,
+    267,   255,   244,   234,   224,   215,   206,   198,  191,  184,  177,
+    170,   164,   159,   153,   148,   143,   138,   134,  130,  130,
+};
+
+constexpr const int8_t sine64[65] = {
+    0,    12,   25,   37,   49,   60,   71,   81,   90,   98,   106,
+    112,  117,  122,  125,  126,  127,  126,  125,  122,  117,  112,
+    106,  98,   90,   81,   71,   60,   49,   37,   25,   12,   0,
+    -12,  -25,  -37,  -49,  -60,  -71,  -81,  -90,  -98,  -106, -112,
+    -117, -122, -125, -126, -127, -126, -125, -122, -117, -112, -106,
+    -98,  -90,  -81,  -71,  -60,  -49,  -37,  -25,  -12,  0};
+
+static inline uint16_t interpolateU16(const uint16_t *lut, uint8_t v) {
+  uint8_t idx = v >> 2; // 0..63
+  uint8_t frac = v & 3; // 0..3
+
+  uint16_t c0 = lut[idx];
+  uint16_t c1 = lut[idx + 1]; // safe because of sentinel
+
+  return c0 + (((uint32_t)(c1 - c0) * frac) >> 2);
+}
+
+static inline int8_t interpolateS8(const int8_t *lut, uint8_t v) {
+  uint8_t idx = v >> 2; // 0..63
+  uint8_t frac = v & 3; // 0..3
+
+  int8_t c0 = lut[idx];
+  int8_t c1 = lut[idx + 1]; // safe because of sentinel
+
+  return c0 + (((int32_t)(c1 - c0) * frac) >> 2);
+}
+
+typedef enum { ENV_IDLE = 0, ENV_ATTACK, ENV_DECAY } EnvState;
+
+typedef struct {
+  uint16_t value;       // 0..65535
+  uint16_t coefficient; // Q0.16
+  uint16_t attackCoeff;
+  uint16_t decayCoeff;
+  uint16_t target; // 0 or 65535
+  EnvState state;
+
+  void setAttack(uint8_t a) { attackCoeff = interpolateU16(attackCoeffLUT, a); }
+  void setDecay(uint8_t d) { decayCoeff = interpolateU16(decayCoeffLUT, d); }
+
+  void trigger() {
+    value = 0;
+    target = 65535;
+    coefficient = attackCoeff;
+    state = ENV_ATTACK;
+  }
+
+  void tick() {
+    if (state == ENV_IDLE)
+      return;
+
+    uint32_t diff = (uint32_t)target - value;
+    int32_t tmp = value + ((diff * coefficient) >> 16);
+
+    if (state == ENV_ATTACK && tmp >= 65530) {
+      tmp = 65535;
+      target = 0;
+      coefficient = decayCoeff;
+      state = ENV_DECAY;
+    } else if (tmp <= 10) {
+      tmp = 0;
+      state = ENV_IDLE;
+    }
+
+    value = tmp;
+  }
+
+} Envelope;
+
 constexpr int SAMPLING_RATE = 44100;
 
 constexpr int BASE_MIDI = 69; // A4
@@ -60,20 +148,38 @@ public:
 private:
   etl::list<Variable *, 12> variables_;
 
-  Variable waveform_;
-  Variable attack_;
-  Variable decay_;
-
-  Variable level_;
-  Variable length_;
-  Variable burst_;
-  Variable vibrato_;
-  Variable vibratoDelay_;
-  Variable transpose_;
-  Variable table_;
-  Variable sweepTime_;
-  Variable sweepAmount_;
+  Variable vWaveform_;
+  Variable vAttack_;
+  Variable vDecay_;
+  Variable vLevel_;
+  Variable vLength_;
+  Variable vBurst_;
+  Variable vVibratoDepth_;
+  Variable vVibratoDelay_;
+  Variable vTranspose_;
+  Variable vTable_;
+  Variable vSweepTime_;
+  Variable vSweepAmount_;
 
   uint32_t phase_ = 0;
-  uint32_t frequency_ = 0;
+  int32_t frequency_ = 0;
+  int32_t baseFrequency_ = 0;
+  uint32_t egState_;
+  uint32_t egLevel_;
+  uint32_t egAttackRate_;
+  uint32_t egDecayRate_;
+  uint32_t time_;
+  uint32_t tick_;
+  uint32_t tock_;
+  uint32_t lifetime_;
+  uint32_t wave_;
+  uint32_t volume_;
+  uint32_t burstTime_;
+  uint16_t vibPhase_;
+  const uint16_t vibFrequency_ = 0xfff;
+  int32_t vibDepth_;
+  int32_t vibSwing_;
+  uint32_t vibDelay_;
+
+  Envelope envelope_;
 };

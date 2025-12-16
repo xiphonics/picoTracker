@@ -646,7 +646,13 @@ void InstrumentView::fillGameBoyParameters() {
   // extra y spacing to allow for gap between export/import and parameters
   position._y += 2;
   Variable *v = instrument->FindVariable(FourCC::GameBoyInstrumentWaveform);
-  intVarField_.emplace_back(position, *v, "Waveform:   %s", 0, GB_NUM_WAVEFORMS - 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Waveform:   %s", 0,
+                            GB_NUM_WAVEFORMS - 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentLevel);
+  intVarField_.emplace_back(position, *v, "Level:      %02X", 0, 255, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
@@ -663,15 +669,10 @@ void InstrumentView::fillGameBoyParameters() {
   intVarField_.emplace_back(position, *v, " '- Decay:  %02X", 0, 255, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::GameBoyInstrumentLevel);
-  intVarField_.emplace_back(position, *v, "Level:      %02X", 0, 255, 1, 16);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
+  position._y += 2;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentLength);
-  intVarField_.emplace_back(position, *v, "Length:     %02X", 0, 255, 1, 16);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  intVarOffField_.emplace_back(position, *v, "Length:     %02X", 0, 255, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentBurst);
@@ -713,7 +714,8 @@ void InstrumentView::fillGameBoyParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentTable);
-  intVarOffField_.emplace_back(position, *v, "Table:   %2.2X", 0x00, TABLE_COUNT - 1, 1, 0x10);
+  intVarOffField_.emplace_back(position, *v, "Table:      %2.2X", 0x00,
+                               TABLE_COUNT - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 }
 
