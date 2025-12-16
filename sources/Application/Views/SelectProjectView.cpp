@@ -98,13 +98,17 @@ void SelectProjectView::DrawView() {
 
   // load/delete selection buttons
   const char *buttons[numButtons_] = {
-      "Load", SelectionIsCurrentProject() ? "Save" : "Save as", "Delete"};
+      "Load", SelectionIsCurrentProject() ? "Save   " : "Save as", "Delete"};
+
+  int bx = x;
 
   for (int n = 0; n < numButtons_; n++) {
     bool selected = selectedButton_ == n;
     props.invert_ = selected;
     SetColor(selected ? CD_HILITE2 : CD_HILITE1);
-    DrawString(x + 10 * n, SCREEN_HEIGHT - 1, buttons[n], props);
+    DrawString(x, SCREEN_HEIGHT - 1, buttons[n], props);
+
+    x += 2 + strlen(buttons[n]);     
   }
 
   // scroll bar
