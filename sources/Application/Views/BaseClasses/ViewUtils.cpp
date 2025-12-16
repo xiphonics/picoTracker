@@ -40,7 +40,7 @@ bool goProjectSamplesDir(ViewData *viewData_) {
 
     if (fs->chdir(projectName)) {
       // Finally, navigate into the samples subdirectory
-      fs->chdir(PROJECT_SAMPLES_DIR);
+      return fs->chdir(PROJECT_SAMPLES_DIR);
     } else {
       Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
                    projectName);
