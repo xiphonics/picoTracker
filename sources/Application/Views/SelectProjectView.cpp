@@ -59,12 +59,12 @@ void SelectProjectView::DrawView() {
   // Draw projects
   int x = 1;
   int y = pos._y + 2;
-                 
+
   auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
   const char *currentProject = projectName.c_str();
 
-  for (size_t i = topIndex_; 
+  for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
@@ -92,14 +92,14 @@ void SelectProjectView::DrawView() {
       DrawString(x - 1, y, "*", props);
     }
 
-    
     DrawString(x, y, buffer, props);
     y += 1;
   };
-  
+
   // load/delete selection buttons
-  const char *buttons[numButtons_] = {"Load", "Save", "Delete"};
-  
+  const char *buttons[numButtons_] = {
+      "Load", SelectionIsCurrentProject() ? "Save" : "Save as", "Delete"};
+
   for (int n = 0; n < numButtons_; n++) {
     bool selected = selectedButton_ == n;
     props.invert_ = selected;
@@ -116,21 +116,23 @@ void SelectProjectView::DrawScrollBar() {
   if (totalItems <= LIST_PAGE_SIZE) {
     return; // no scrollbar needed
   }
-  
+
   GUITextProperties props;
   GUITextProperties inv;
   inv.invert_ = true;
   SetColor(CD_NORMAL);
-  
+
   // Thumb size represents the ratio of visible items to total items
   int thumbSize = std::max(1, (LIST_PAGE_SIZE * LIST_PAGE_SIZE) / totalItems);
 
-  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar space
+  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
+  // space
   int maxScroll = totalItems - LIST_PAGE_SIZE;
   int availableSpace = LIST_PAGE_SIZE - thumbSize;
   int thumbPos = (topIndex_ * availableSpace) / maxScroll;
-  
-  Trace::Error("%d total, %d thumb size, %d maxScroll, %d thumbPos", totalItems, thumbSize, maxScroll, thumbPos);
+
+  Trace::Error("%d total, %d thumb size, %d maxScroll, %d thumbPos", totalItems,
+               thumbSize, maxScroll, thumbPos);
   for (int y = 0; y < LIST_PAGE_SIZE; y++) {
     bool thumb = y >= thumbPos && y < thumbPos + thumbSize;
     DrawString(SCREEN_WIDTH - 1, 2 + y, thumb ? " " : "|", thumb ? inv : props);
@@ -156,7 +158,8 @@ void SelectProjectView::DeleteProject() {
   const char *current = currentProject.c_str();
 
   if (strcmp(current, selected) == 0) {
-    MessageBox *mb = new MessageBox(*this, "Cannot delete the current project.", MBBF_OK);
+    MessageBox *mb =
+        new MessageBox(*this, "Cannot delete the current project.", MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -184,25 +187,25 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // A modifier
     if (mask & EPBM_ENTER) {
       switch (selectedButton_) {
-        case 0:
-          // load project
-          if (!WarnPlayerRunning()) {
-            LoadProject();
-          }
-          break;
-        case 1: 
-          // save project
-          if (!SelectionIsCurrentProject()) {
-            // ask if the user wants to override the file
-            ConfirmOverwrite();
-          } else {
-            // save
-            SaveSelectedProject();
-          }
-          break;
-        case 2:
-          AttemptDeletingSelectedProject();
-          break;
+      case 0:
+        // load project
+        if (!WarnPlayerRunning()) {
+          LoadProject();
+        }
+        break;
+      case 1:
+        // save project
+        if (!SelectionIsCurrentProject()) {
+          // ask if the user wants to override the file
+          ConfirmOverwrite();
+        } else {
+          // save
+          SaveSelectedProject();
+        }
+        break;
+      case 2:
+        AttemptDeletingSelectedProject();
+        break;
       }
     } else {
       // R Modifier
@@ -287,7 +290,7 @@ void SelectProjectView::getSelectedProjectName(char *name) {
   strcpy(name, selection_);
 }
 
-  void SelectProjectView::getHighlightedProjectName(char *name) {
+void SelectProjectView::getHighlightedProjectName(char *name) {
   if (currentIndex_ >= fileIndexList_.size()) {
     return;
   }
@@ -369,7 +372,13 @@ bool SelectProjectView::SaveSelectedProject() {
   }
 
   // all good so now persist the new project name in project state
-  return ps->SaveProjectState(selected) == PERSIST_SAVED;
+  bool result = ps->SaveProjectState(selected) == PERSIST_SAVED;
+
+  if (result) {
+    viewData_->project_->SetProjectName(selected);
+  }
+
+  return result;
 }
 
 void SelectProjectView::ConfirmOverwrite() {
@@ -379,20 +388,22 @@ void SelectProjectView::ConfirmOverwrite() {
   char buffer[MAX_PROJECT_NAME_LENGTH + 8];
   snprintf(buffer, sizeof(buffer), "\"%s\"?", selected);
 
-  MessageBox *mb = new MessageBox(*this, "Overwrite existing project", buffer, MBBF_YES | MBBF_NO);
+  MessageBox *mb = new MessageBox(*this, "Overwrite existing project", buffer,
+                                  MBBF_YES | MBBF_NO);
   DoModal(mb, ConfirmOverwriteCallback);
 }
 
 void SelectProjectView::AttemptDeletingSelectedProject() {
   if (WarnPlayerRunning()) {
     return;
-  } 
-  
+  }
+
   if (SelectionIsCurrentProject()) {
-    MessageBox *mb = new MessageBox(*this, "Cannot delete the current", "project.", MBBF_OK);
+    MessageBox *mb =
+        new MessageBox(*this, "Cannot delete the current", "project.", MBBF_OK);
     DoModal(mb);
     return;
   }
-  
+
   DeleteProject();
 }

@@ -233,10 +233,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
   } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN || mask & EPBM_UP) {
-      if (saveAsFlag_) {
-        MessageBox *mb =
-            new MessageBox(*this, "Save project rename first", MBBF_OK);
-        DoModal(mb);
+      if (!CanExit()) {
         return;
       }
     }
@@ -363,15 +360,17 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     saveAsFlag_ = true;
     break;
   case FourCC::ActionBrowse: {
-    ViewType vt = VT_SELECTPROJECT;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
-    SetChanged();
-    NotifyObservers(&ve);
+    if (CanExit()) {
+      ViewType vt = VT_SELECTPROJECT;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+    }
     break;
   }
   case FourCC::ActionNewProject: {
-    MessageBox *mb = new MessageBox(*this, "Create a new project and lose all changes?",
-                                    MBBF_YES | MBBF_NO);
+    MessageBox *mb = new MessageBox(*this, "Create a new project and",
+                                    "lose all changes?", MBBF_YES | MBBF_NO);
     DoModal(mb, CreateNewProjectCallback);
     break;
   }
@@ -463,3 +462,13 @@ void ProjectView::OnFocus() {
     oldProjName_ = getProjectName();
   }
 }
+
+bool ProjectView::CanExit() {
+  if (saveAsFlag_) {
+    MessageBox *mb =
+        new MessageBox(*this, "Save project rename first", MBBF_OK);
+    DoModal(mb);
+    return false;
+  }
+  return true;
+};
