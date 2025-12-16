@@ -279,9 +279,7 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }
 };
 
-int GameBoyInstrument::GetTable() {
-  return vTable_.GetInt();
-};
+int GameBoyInstrument::GetTable() { return vTable_.GetInt(); };
 
 bool GameBoyInstrument::GetTableAutomation() {
   //  Variable *v = FindVariable(MIP_TABLEAUTO);
