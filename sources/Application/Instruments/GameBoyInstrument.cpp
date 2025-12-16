@@ -183,10 +183,9 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
 
       if (time_ > vibDelay_) {
         vibPhase_ += vibFrequency_;
-        int32_t sine = interpolateS8(sine64, (vibPhase_ >> 10));
-
-        int32_t delta = (vibSwing_ * sine) / 127;
-        delta = (vibDepth_ * delta) / 255;
+        int32_t sine = interpolateS8(sine64, (vibPhase_ >> 8));
+        int32_t delta = (vibSwing_ * sine) >> 7;
+        delta = (vibDepth_ * delta) >> 8;
         frequency_ = baseFrequency_ + delta;
       }
     }
