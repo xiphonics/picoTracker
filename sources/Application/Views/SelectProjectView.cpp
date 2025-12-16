@@ -23,6 +23,12 @@ static void ConfirmOverwriteCallback(View &v, ModalView &dialog) {
   }
 }
 
+static void LoadProjectCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    ((SelectProjectView &)v).LoadProject();
+  }
+}
+
 static void DeleteProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
     // delete project
@@ -193,9 +199,7 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
       switch (selectedButton_) {
       case 0:
         // load project
-        if (!WarnPlayerRunning()) {
-          LoadProject();
-        }
+        AttemptLoadingProject();
         break;
       case 1:
         // save project
@@ -410,4 +414,14 @@ void SelectProjectView::AttemptDeletingSelectedProject() {
   }
 
   DeleteProject();
+}
+
+void SelectProjectView::AttemptLoadingProject() {
+  if (WarnPlayerRunning()) {
+    return;
+  }
+
+  MessageBox *mb =
+      new MessageBox(*this, "Load song and lose changes?", MBBF_YES | MBBF_NO);
+  DoModal(mb, LoadProjectCallback);
 }

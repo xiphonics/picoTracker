@@ -29,6 +29,7 @@ public:
   void getHighlightedProjectName(char *name);
   void setCurrentFolder();
   bool SaveSelectedProject();
+  void LoadProject();
 
 protected:
   void warpToNextProject(bool goUp);
@@ -43,10 +44,10 @@ private:
 
   void DrawScrollBar();
   void AttemptDeletingSelectedProject();
+  void AttemptLoadingProject();
   bool SelectionIsCurrentProject();
   bool WarnPlayerRunning();
   void DeleteProject();
-  void LoadProject();
   void ConfirmOverwrite();
   void SelectButton(int direction);
 };
