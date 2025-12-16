@@ -108,7 +108,7 @@ void SelectProjectView::DrawView() {
     SetColor(selected ? CD_HILITE2 : CD_HILITE1);
     DrawString(x, SCREEN_HEIGHT - 1, buttons[n], props);
 
-    x += 2 + strlen(buttons[n]);     
+    x += 2 + strlen(buttons[n]);
   }
 
   // scroll bar
