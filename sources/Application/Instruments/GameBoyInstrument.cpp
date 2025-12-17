@@ -21,12 +21,15 @@ enum gbWaveType {
   gbWavePulse25,
   gbWavePulse50,
   gbWaveTriangle,
-  gbWaveNoise,
+  gbWaveNoiseGameBoy,
+  gbWaveNoiseNES,
+  gbWaveNoiseSN76489,
+  gbWaveNoiseWhite,
   gbWaveNone
 };
 
 static const char *waveShapes[GB_NUM_WAVEFORMS] = {
-    "Pulse 12.5%", "Pulse 25%", "Pulse 50%", "Triangle", "Noise"};
+    "Pulse 12.5%", "Pulse 25%", "Pulse 50%", "Triangle", "Noise GB7", "Noise NES", "Noise SN76489", "Noise White"};
 
 #define CHANNEL 0 // just hardcoding to channel 0 for now
 
@@ -62,8 +65,8 @@ static const int32_t frequencyTable[128 + 24] = {
 GameBoyInstrument::GameBoyInstrument()
     : I_Instrument(&variables_), vWaveform_(FourCC::GameBoyInstrumentWaveform,
                                             waveShapes, GB_NUM_WAVEFORMS, 0),
-      vAttack_(FourCC::GameBoyInstrumentAttack, 0x0FF),
-      vDecay_(FourCC::GameBoyInstrumentDecay, 0x0FF),
+      vAttack_(FourCC::GameBoyInstrumentAttack, 0x00),
+      vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
       vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
       vLength_(FourCC::GameBoyInstrumentLength, 0x00),
       vBurst_(FourCC::GameBoyInstrumentBurst, 0x00),
@@ -133,6 +136,12 @@ bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
   volume_ = vLevel_.GetInt();
   burstTime_ = vBurst_.GetInt();
 
+  // sweep
+  int32_t sweepDepth = vSweepAmount_.GetInt();
+#define SWEEP_X 64
+  sweepCoefficient_ = (1 << 16) + (sweepDepth * SWEEP_X);
+  sweepSteps_ = vSweepTime_.GetInt();
+
   return true;
 };
 
@@ -164,6 +173,37 @@ static inline uint32_t pulse(bool level) {
   return (st.lastSample = (last + diff));
 }
 
+
+static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1, int feedback)
+{
+    uint16_t lfsr_val = *lfsr;
+
+    bool bitA = lfsr_val & 1;
+    bool bitB = (lfsr_val >> b1) & 1;
+    bool bitF = bitA ^ bitB;
+
+    lfsr_val = (lfsr_val >> 1) | (bitF << feedback);
+
+    *lfsr = lfsr_val;
+    return bitA ? 0x0FFF'FFFF : 0;
+}
+
+uint32_t voice_noise_nes(uint16_t *lfsr)
+{
+    return voice_noise_lfsr(lfsr, 6, 14);
+}
+
+uint32_t voice_noise_gb7(uint16_t *lfsr)
+{
+    return voice_noise_lfsr(lfsr, 1, 6);
+}
+
+uint32_t voice_noise_sn76489(uint16_t *lfsr)
+{
+    return voice_noise_lfsr(lfsr, 3, 14);
+}
+
+
 bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
                                bool updateTick) {
   // PROFILE_SCOPE("GameBoyInstrument::Render");
@@ -181,13 +221,26 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
 
       envelope_.tick();
 
+      // sweep
+      if (sweepSteps_) {
+        sweepSteps_--;
+
+        uint64_t f = baseFrequency_;
+        f *= sweepCoefficient_;
+        baseFrequency_ = uint32_t(f >> 16);
+      }
+      
+      // vibrato
+      int delta = 0;
+
       if (time_ > vibDelay_) {
         vibPhase_ += vibFrequency_;
         int32_t sine = interpolateS8(sine64, (vibPhase_ >> 8));
-        int32_t delta = (vibSwing_ * sine) >> 7;
+        delta = (vibSwing_ * sine) >> 7;
         delta = (vibDepth_ * delta) >> 8;
-        frequency_ = baseFrequency_ + delta;
       }
+
+      frequency_ = baseFrequency_ + delta;
     }
 
     if (tock_ == 0) {
@@ -197,6 +250,7 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
       tock_ = 44;
 
       lifetime_--;
+      
       // length
       if (lifetime_ == 0) {
         // note off
@@ -208,7 +262,7 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
 
       if (burstTime_) {
         burstTime_--;
-        wave = gbWaveNoise;
+        wave = gbWaveNoiseWhite;
       } else {
         wave = wave_;
       }
@@ -244,7 +298,34 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
       }
       sample &= 0xFF00'0000; // downsample
       break;
-    case gbWaveNoise: // Noise
+    case gbWaveNoiseGameBoy: // Noise: GB7
+      if (phase_ > 0x4000'0000) {
+        phase_ -= 0x4000'0000;
+        noise_ = voice_noise_gb7(&lfsr_);
+        sample = noise_;
+      } else {
+        sample = noise_;
+      }
+      break;
+    case gbWaveNoiseNES: // Noise: NES
+      if (phase_ > 0x4000'0000) {
+        phase_ -= 0x4000'0000;
+        noise_ = voice_noise_nes(&lfsr_);
+        sample = noise_;
+      } else {
+        sample = noise_;
+      }
+      break;
+    case gbWaveNoiseSN76489: // Noise: SN76489
+      if (phase_ > 0x4000'0000) {
+        phase_ -= 0x4000'0000;
+        noise_ = voice_noise_sn76489(&lfsr_);
+        sample = noise_;
+      } else {
+        sample = noise_;
+      }
+      break;
+    case gbWaveNoiseWhite: // Noise: White Noise, frequency independent
       sample = rand() & 0x0FFF'FFFF;
       break;
     }

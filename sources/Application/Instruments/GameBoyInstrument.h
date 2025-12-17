@@ -14,7 +14,7 @@
 #include "I_Instrument.h"
 #include <cstdint>
 
-#define GB_NUM_WAVEFORMS 5
+#define GB_NUM_WAVEFORMS 8
 
 constexpr uint16_t attackCoeffLUT[65] = {
     65535, 63000, 60000, 55329, 45156, 35045, 27227, 21474, 17253, 14090, 11690,
@@ -180,6 +180,11 @@ private:
   int32_t vibDepth_;
   int32_t vibSwing_;
   uint32_t vibDelay_;
+
+  uint32_t sweepCoefficient_;
+  int32_t sweepSteps_;
+  uint16_t lfsr_ = 17;
+  uint32_t noise_;
 
   Envelope envelope_;
 };

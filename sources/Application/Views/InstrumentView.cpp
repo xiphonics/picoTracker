@@ -679,7 +679,7 @@ void InstrumentView::fillGameBoyParameters() {
   intVarField_.emplace_back(position, *v, "Burst:      %02X", 0, 255, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 1;
+  position._y += 2;
   staticField_.emplace_back(position, "Vibrato");
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
@@ -693,23 +693,23 @@ void InstrumentView::fillGameBoyParameters() {
   intVarField_.emplace_back(position, *v, " '- Delay:  %02X", 0, 255, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 1;
-  v = instrument->FindVariable(FourCC::GameBoyInstrumentTranspose);
-  intVarField_.emplace_back(position, *v, "Transpose:  %d", 0, 48, 1, 12, -24);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
+  position._y += 2;
   staticField_.emplace_back(position, "Sweep");
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
-
+  
   position._y += 1;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentSweepTime);
-  intVarField_.emplace_back(position, *v, " |- Time:   %02X", 0, 255, 1, 16);
+  intVarField_.emplace_back(position, *v, " |- Length: %02X", 0, 255, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
+  
   position._y += 1;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentSweepAmount);
-  intVarField_.emplace_back(position, *v, " '- Amount: %02X", 0, 255, 1, 16);
+  intVarField_.emplace_back(position, *v, " '- Amount: %03d", -127, 127, 1, 16);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  
+  position._y += 2;
+  v = instrument->FindVariable(FourCC::GameBoyInstrumentTranspose);
+  intVarField_.emplace_back(position, *v, "Transpose:  %d", 0, 48, 1, 12, -24);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
