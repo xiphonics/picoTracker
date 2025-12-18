@@ -8,10 +8,10 @@
 
 #include "advSamplePool.h"
 
-__attribute__((section(".SDRAM2"))) __attribute__((aligned(32)))
-uint8_t sampleStore1[STORE1_SIZE];
-__attribute__((section(".SDRAM1"))) __attribute__((aligned(32)))
-uint8_t sampleStore2[STORE2_SIZE];
+__attribute__((section(".SDRAM2")))
+__attribute__((aligned(32))) uint8_t sampleStore1[STORE1_SIZE];
+__attribute__((section(".SDRAM1")))
+__attribute__((aligned(32))) uint8_t sampleStore2[STORE2_SIZE];
 
 uint32_t advSamplePool::writeOffset1_ = 0;
 uint32_t advSamplePool::writeOffset2_ = 0;
@@ -138,8 +138,7 @@ bool advSamplePool::unloadSample(uint32_t index) {
     poolBase = sampleStore1;
     poolLimit = STORE1_SIZE;
     poolWriteOffset = &writeOffset1_;
-  } else if (moveDst >= sampleStore2 &&
-             moveDst < sampleStore2 + STORE2_SIZE) {
+  } else if (moveDst >= sampleStore2 && moveDst < sampleStore2 + STORE2_SIZE) {
     poolBase = sampleStore2;
     poolLimit = STORE2_SIZE;
     poolWriteOffset = &writeOffset2_;
@@ -154,7 +153,8 @@ bool advSamplePool::unloadSample(uint32_t index) {
   for (uint32_t j = index + 1; j < count_; ++j) {
     uint8_t *candidate =
         wav_[j] ? static_cast<uint8_t *>(wav_[j]->GetSampleBuffer(0)) : nullptr;
-    if (candidate && candidate >= poolBase && candidate < poolBase + poolLimit) {
+    if (candidate && candidate >= poolBase &&
+        candidate < poolBase + poolLimit) {
       moveSrc = candidate;
       break;
     }
@@ -168,8 +168,7 @@ bool advSamplePool::unloadSample(uint32_t index) {
   uint32_t bytesToMove = 0;
   if (moveSrc != nullptr) {
     shift = static_cast<uint32_t>(moveSrc - static_cast<uint8_t *>(moveDst));
-    bytesToMove =
-        *poolWriteOffset - static_cast<uint32_t>(moveSrc - poolBase);
+    bytesToMove = *poolWriteOffset - static_cast<uint32_t>(moveSrc - poolBase);
   } else {
     // Removing the last sample in this pool: reclaim the tail of the pool
     shift = *poolWriteOffset -
@@ -194,9 +193,9 @@ bool advSamplePool::unloadSample(uint32_t index) {
   // Update each SoundSource in this pool to point at the new buffer location
   if (shift > 0) {
     for (uint32_t j = index; j < count_ - 1; ++j) {
-      uint8_t *buf =
-          wav_[j] ? static_cast<uint8_t *>(wav_[j]->GetSampleBuffer(0))
-                  : nullptr;
+      uint8_t *buf = wav_[j]
+                         ? static_cast<uint8_t *>(wav_[j]->GetSampleBuffer(0))
+                         : nullptr;
       if (buf && buf >= poolBase && buf < poolBase + poolLimit) {
         ((WavFile *)wav_[j])
             ->SetSampleBuffer(reinterpret_cast<short *>(buf - shift));

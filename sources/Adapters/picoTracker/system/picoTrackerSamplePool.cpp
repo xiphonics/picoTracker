@@ -22,8 +22,7 @@
 // Use all flash available after binary for samples
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
-  ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
-   1) *                                                                        \
+  ((((uintptr_t)&__flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) + 1) * \
       FLASH_SECTOR_SIZE
 
 // Total flash size depends on hardware:
@@ -196,7 +195,7 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
   return true;
 };
 
-bool picoTrackerSamplePool::unloadSample(int index) { return false; };
+bool picoTrackerSamplePool::unloadSample(uint32_t index) { return false; };
 
 bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
   // Calculate flash storage needed (round up to flash page size)
