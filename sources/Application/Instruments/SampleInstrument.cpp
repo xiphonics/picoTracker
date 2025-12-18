@@ -846,6 +846,15 @@ void SampleInstrument::updateInstrumentData(bool search) {
   int index = vSample->GetInt();
   int instrSize = 0;
 
+  // Reset source first; we may be clearing an assignment
+  source_ = nullptr;
+
+  // Clamp to valid range to avoid dangling pointers if pool shrank
+  if (index >= pool->GetNameListSize()) {
+    index = NO_SAMPLE;
+    vSample->SetInt(NO_SAMPLE);
+  }
+
   if (index != NO_SAMPLE) {
     source_ = pool->GetSource(index);
     if (source_ && (!source_->IsMulti())) {

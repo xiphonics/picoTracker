@@ -24,7 +24,7 @@ public:
   ~advSamplePool() {}
   virtual bool CheckSampleFits(int sampleSize);
   virtual uint32_t GetAvailableSampleStorageSpace();
-  virtual bool unloadSample(int i);
+  virtual bool unloadSample(uint32_t i);
 
 protected:
   virtual bool loadSample(const char *name);
