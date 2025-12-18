@@ -32,8 +32,7 @@ void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer) {
 
 bool goProjectSamplesDir(ViewData *viewData_) {
   auto fs = FileSystem::GetInstance();
-  fs->chdir("/");
-  fs->chdir("projects");
+  fs->chdir(PROJECTS_DIR);
   // Then, navigate into the current project's directory
   if (viewData_ && viewData_->project_) {
     char projectName[MAX_PROJECT_NAME_LENGTH + 1];
@@ -41,7 +40,7 @@ bool goProjectSamplesDir(ViewData *viewData_) {
 
     if (fs->chdir(projectName)) {
       // Finally, navigate into the samples subdirectory
-      fs->chdir("samples");
+      return fs->chdir(PROJECT_SAMPLES_DIR);
     } else {
       Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
                    projectName);
