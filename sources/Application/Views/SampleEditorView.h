@@ -59,8 +59,6 @@ private:
   bool applyTrimOperation(uint32_t startFrame, uint32_t endFrame);
   bool applyNormalizeOperation();
   void navigateToView(ViewType vt);
-  uint16_t findSampleIndexByName(
-      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
   void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,

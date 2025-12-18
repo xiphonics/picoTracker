@@ -697,13 +697,20 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
                                   MBBF_OK | MBBF_CANCEL);
   DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
     if (dialog.GetReturnCode() == MBL_OK) {
+      // Translate filename to current sample pool index to avoid mismatches
+      int sampleIndex =
+          SamplePool::GetInstance()->FindSampleIndexByName(filename);
+      if (sampleIndex < 0) {
+        Trace::Error("Failed to map sample %s to pool index", filename);
+        return;
+      }
       // delete file
       if (!fs->DeleteFile(filename)) {
         Trace::Error("Failed to delete sample %s", filename);
         return;
       }
       // and unload it from ram
-      SamplePool::GetInstance()->unloadSample(fileIndex);
+      SamplePool::GetInstance()->unloadSample(sampleIndex);
 
       if (currentIndex_ > 0) {
         --currentIndex_;

@@ -702,7 +702,7 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
         Trace::Error("SampleEditorView: Failed to chdir for pool reload");
       } else {
         uint16_t old_index =
-            findSampleIndexByName(viewData_->sampleEditorFilename);
+            pool->FindSampleIndexByName(viewData_->sampleEditorFilename);
         if (old_index >= 0) {
           uint16_t new_index = pool->ReloadSample(
               old_index, viewData_->sampleEditorFilename.c_str());
@@ -849,7 +849,8 @@ bool SampleEditorView::reloadEditedSample() {
     return false;
   }
 
-  int32_t old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+  int32_t old_index =
+      pool->FindSampleIndexByName(viewData_->sampleEditorFilename);
   if (old_index < 0) {
     Trace::Error("SampleEditorView: Sample %s not found in pool for reload",
                  viewData_->sampleEditorFilename.c_str());
@@ -952,7 +953,7 @@ bool SampleEditorView::loadSampleToPool(
       return false;
     }
   } else {
-    sampleId = findSampleIndexByName(savedFilename);
+    sampleId = pool->FindSampleIndexByName(savedFilename);
     if (sampleId < 0) {
       Trace::Error("SampleEditorView: Sample %s not found in pool",
                    savedFilename.c_str());
@@ -960,23 +961,6 @@ bool SampleEditorView::loadSampleToPool(
     }
   }
   return true;
-}
-
-uint16_t SampleEditorView::findSampleIndexByName(
-    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const {
-  auto pool = SamplePool::GetInstance();
-  if (!pool) {
-    return -1;
-  }
-
-  char **names = pool->GetNameList();
-  uint16_t count = pool->GetNameListSize();
-  for (uint16_t i = 0; i < count; ++i) {
-    if (names[i] && strcmp(names[i], name.c_str()) == 0) {
-      return i;
-    }
-  }
-  return -1;
 }
 
 SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
