@@ -146,7 +146,7 @@ public:
   void setChannel(uint8_t channel);
 
 private:
-  etl::list<Variable *, 12> variables_;
+  etl::list<Variable *, 13> variables_;
 
   Variable vWaveform_;
   Variable vAttack_;
@@ -158,12 +158,18 @@ private:
   Variable vVibratoDelay_;
   Variable vTranspose_;
   Variable vTable_;
+  Variable vArpSpeed_;
   Variable vSweepTime_;
   Variable vSweepAmount_;
 
+  uint16_t arpTick_ = 0;
+  uint16_t arpTime_ = 250;
+  uint8_t note_;
   uint32_t phase_ = 0;
   int32_t frequency_ = 0;
-  int32_t baseFrequency_ = 0;
+  uint32_t arpLength_ = 5;
+  int32_t arpFrequencies_[5] = {0, 0, 0, 0, 0};
+  uint8_t arpIndex_ = 0;
   uint32_t egState_;
   uint32_t egLevel_;
   uint32_t egAttackRate_;
@@ -181,10 +187,15 @@ private:
   int32_t vibSwing_;
   uint32_t vibDelay_;
 
+  FourCC command_;
+
   uint32_t sweepCoefficient_;
   int32_t sweepSteps_;
   uint16_t lfsr_ = 17;
   uint32_t noise_;
 
   Envelope envelope_;
+
+  void RunCommand();
+  void CommandInitArp(int channel, ushort value);
 };

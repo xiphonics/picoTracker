@@ -275,6 +275,7 @@ struct FourCC {
     GameBoyInstrumentTable = 209,
     GameBoyInstrumentSweepTime = 210,
     GameBoyInstrumentSweepAmount = 211,
+    GameBoyInstrumentArpSpeed = 212,
 
     Default = 255, // "    "
   };
@@ -446,6 +447,7 @@ struct FourCC {
   ETL_ENUM_TYPE(GameBoyInstrumentTable, "table")
   ETL_ENUM_TYPE(GameBoyInstrumentSweepTime, "sweep time")
   ETL_ENUM_TYPE(GameBoyInstrumentSweepAmount, "sweep amount")
+  ETL_ENUM_TYPE(GameBoyInstrumentArpSpeed, "arp speed")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE
