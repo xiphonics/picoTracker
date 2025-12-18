@@ -99,9 +99,12 @@ char **SamplePool::GetNameList() { return names_; };
 
 int SamplePool::GetNameListSize() { return count_; };
 
-uint32_t SamplePool::FindSampleIndexByName(const char *name) {
-  for (uint32_t i = 0; i < count_; ++i) {
-    if (names_[i] && strcmp(names_[i], name) == 0) {
+uint32_t SamplePool::FindSampleIndexByName(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) {
+  char **names = GetNameList();
+  uint16_t count = GetNameListSize();
+  for (uint16_t i = 0; i < count; ++i) {
+    if (names[i] && strcmp(names[i], name.c_str()) == 0) {
       return i;
     }
   }

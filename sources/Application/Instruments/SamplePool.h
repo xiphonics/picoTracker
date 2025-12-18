@@ -34,7 +34,8 @@ public:
   SoundSource *GetSource(uint32_t i);
   char **GetNameList();
   int GetNameListSize();
-  uint32_t FindSampleIndexByName(const char *name);
+  uint32_t FindSampleIndexByName(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name);
   int ImportSample(const char *name, const char *projectName);
   void PurgeSample(int i, const char *projectName);
   virtual bool CheckSampleFits(int sampleSize) = 0;
