@@ -24,14 +24,24 @@ SampleVariable::~SampleVariable() {
 
 void SampleVariable::Update(Observable &o, I_ObservableData *d) {
   SamplePoolEvent *e = (SamplePoolEvent *)d;
-  // if we recieved notification that an element has been removed
-  // we shift down all the index above the removed element
+  // If a sample was removed, update our index and notify observers so
+  // instruments retarget their sample pointer.
   if (e->type_ == SPET_DELETE) {
-    NAssert(e->index_ != value_.index_);
-    if (value_.index_ > e->index_) {
-      value_.index_--;
-    };
-  };
+    int currentIndex = value_.index_;
+    int newIndex = currentIndex;
+
+    if (currentIndex == e->index_) {
+      newIndex = -1; // sample deleted, clear selection
+    } else if (currentIndex > e->index_) {
+      newIndex = currentIndex - 1;
+    }
+
+    if (newIndex != currentIndex) {
+      SetInt(newIndex); // triggers onChange/NotifyObservers
+    }
+  }
+  // For inserts, just refresh list pointers below
+  // indices remain valid since imports append at the end
   SamplePool *pool = (SamplePool *)&o;
   list_.char_ = pool->GetNameList();
   listSize_ = pool->GetNameListSize();
