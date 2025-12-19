@@ -14,7 +14,7 @@
 #include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "WavFileErrors.h"
-#include <expected>
+#include "Externals/etl/include/etl/expected.h"
 
 #define BUFFER_SIZE 512
 
@@ -28,7 +28,7 @@ public:
   WavFile &operator=(const WavFile &) = delete;
   virtual ~WavFile() = default;
 
-  std::expected<void, WAVEFILE_ERROR> Open(const char *);
+  etl::expected<void, WAVEFILE_ERROR> Open(const char *);
   bool IsOpen() const;
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);

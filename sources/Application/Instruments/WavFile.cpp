@@ -23,17 +23,17 @@ WavFile::WavFile()
       size_(0), sampleRate_(0), channelCount_(0), bytePerSample_(0),
       dataPosition_(0), readCount_(0) {}
 
-std::expected<void, WAVEFILE_ERROR> WavFile::Open(const char *name) {
+etl::expected<void, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   // open file
   FileSystem *fs = FileSystem::GetInstance();
   auto file = fs->Open(name, "r");
 
   if (!file)
-    return std::unexpected(INVALID_FILE);
+    return etl::unexpected(INVALID_FILE);
 
   auto header = WavHeaderWriter::ReadHeader(file.get());
   if (!header) {
-    return std::unexpected(header.error());
+    return etl::unexpected(header.error());
   }
 
   file_ = std::move(file);
