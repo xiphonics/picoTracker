@@ -1,0 +1,23 @@
+#ifndef ADV_NO_HEAP_H
+#define ADV_NO_HEAP_H
+
+#include <cstddef>
+#include <new>
+
+#if defined(__GNUC__) || defined(__clang__)
+#define ADV_NO_HEAP_ERROR \
+  __attribute__((error("dynamic allocation is disabled; use static/stack storage")))
+#else
+#define ADV_NO_HEAP_ERROR
+#endif
+
+void *operator new(std::size_t) ADV_NO_HEAP_ERROR;
+void *operator new[](std::size_t) ADV_NO_HEAP_ERROR;
+void *operator new(std::size_t, const std::nothrow_t &) noexcept
+    ADV_NO_HEAP_ERROR;
+void *operator new[](std::size_t, const std::nothrow_t &) noexcept
+    ADV_NO_HEAP_ERROR;
+
+#undef ADV_NO_HEAP_ERROR
+
+#endif

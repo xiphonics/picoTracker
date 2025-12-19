@@ -164,7 +164,7 @@ else()
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
   set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0")
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
+  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-use-cxa-atexit")
   
   if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
@@ -174,6 +174,8 @@ else()
   # ------- cmake/gcc-arm-none-eabi.cmake STOP -------
 
   project(picoTrackerAdvance C CXX ASM)
+  set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/Adapters/adv/system/no_heap.h")
 
   add_subdirectory(Externals/FreeRTOS-Kernel)
   add_subdirectory(Externals/FatFs)
@@ -204,4 +206,3 @@ add_subdirectory(Application)
 add_subdirectory(Externals)
 add_subdirectory(Services)
 add_subdirectory(Foundation)
-
