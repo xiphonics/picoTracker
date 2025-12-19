@@ -17,7 +17,7 @@
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "ViewEvent.h"
-#include <functional>
+#include "Externals/etl/include/etl/delegate.h"
 
 #define VU_METER_HEIGHT 16
 #define VU_METER_CLIP_LEVEL 15
@@ -92,7 +92,7 @@ enum ViewUpdateDirection { VUD_LEFT = 0, VUD_RIGHT, VUD_UP, VUD_DOWN };
 class View;
 class ModalView;
 
-using ModalViewCallback = std::function<void(View &v, ModalView &d)>;
+using ModalViewCallback = etl::delegate<void(View &v, ModalView &d)>;
 
 class View : public Observable {
 public:
@@ -153,7 +153,7 @@ public:
                           GUITextProperties &props);
   virtual void DrawRect(GUIRect &r, ColorDefinition color);
 
-  void DoModal(ModalView *view, ModalViewCallback cb = 0);
+  void DoModal(ModalView *view, ModalViewCallback cb = ModalViewCallback());
   void DismissModal();
 
 protected:

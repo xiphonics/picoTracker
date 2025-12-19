@@ -40,7 +40,7 @@ View::View(GUIWindow &w, ViewData *viewData)
   mask_ = 0;
   locked_ = false;
   modalView_ = 0;
-  modalViewCallback_ = 0;
+  modalViewCallback_ = ModalViewCallback();
   hasFocus_ = false;
 
   // Initialize VU meter tracking variables

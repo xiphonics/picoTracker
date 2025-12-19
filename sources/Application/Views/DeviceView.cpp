@@ -200,7 +200,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
       MessageBox *mb =
           MessageBox::Create(*this, "Reboot and lose changes?",
                              MBBF_YES | MBBF_NO);
-      DoModal(mb, BootselCallback);
+      DoModal(mb, ModalViewCallback::create<&BootselCallback>());
     } else {
       MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
