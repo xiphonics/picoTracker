@@ -88,11 +88,28 @@ void SamplePool::Load(const char *projectName) {
   };
 };
 
-SoundSource *SamplePool::GetSource(int i) { return wav_[i]; };
+SoundSource *SamplePool::GetSource(uint32_t i) {
+  if (i < 0 || i >= count_) {
+    return nullptr;
+  }
+  return wav_[i];
+};
 
 char **SamplePool::GetNameList() { return names_; };
 
 int SamplePool::GetNameListSize() { return count_; };
+
+uint32_t SamplePool::FindSampleIndexByName(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) {
+  char **names = GetNameList();
+  uint16_t count = GetNameListSize();
+  for (uint16_t i = 0; i < count; ++i) {
+    if (names[i] && strcmp(names[i], name.c_str()) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
 
 #define IMPORT_CHUNK_SIZE 1000
 
@@ -197,7 +214,7 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   SAFE_DELETE(names_[i]);
 
   // shift all entries from deleted to end
-  for (int j = i; j < count_ - 1; j++) {
+  for (uint32_t j = i; j < count_ - 1; j++) {
     wav_[j] = wav_[j + 1];
     names_[j] = names_[j + 1];
   };

@@ -118,49 +118,89 @@ bool advSamplePool::Load(WavFile *wave) {
   return true;
 };
 
-bool advSamplePool::unloadSample(int index) {
+bool advSamplePool::unloadSample(uint32_t index) {
   // Will only optimize samples within the sample pool where the sample resides
   // TODO (democloid): potentially optimize across sample pools
   if (index < 0 || index >= count_)
     return false;
 
-  std::free(names_[index]);
-  names_[index] = nullptr;
-
-  // Get information about how we should do the memmove
-  uint32_t deletedSize = ((WavFile *)wav_[index])->GetDiskSize(0);
-  uint32_t bufferSize = 0;
-  void *moveDst = wav_[index]->GetSampleBuffer(0);
-  void *moveSrc = nullptr;
-  if (index < count_ - 1) {
-    moveSrc = wav_[index + 1]->GetSampleBuffer(0);
+  // Gather memory layout info for the sample being removed
+  void *moveDst = wav_[index] ? wav_[index]->GetSampleBuffer(0) : nullptr;
+  if (!moveDst) {
+    Trace::Error("Invalid sample buffer while deleting");
+    return false;
   }
 
-  // Update each SoundSource
-  for (int j = index; j < count_ - 1; ++j) {
-    void *dstBuffer = wav_[j]->GetSampleBuffer(0);
-    wav_[j] = wav_[j + 1];
-    names_[j] = names_[j + 1];
-    ((WavFile *)wav_[j])->SetSampleBuffer(static_cast<short *>(dstBuffer));
-    // this gives us the total size to be moved
-    bufferSize += ((WavFile *)wav_[j])->GetDiskSize(0);
-  }
-
-  // correct the write pointer (depends on pool)
+  uint8_t *poolBase = nullptr;
+  uint32_t poolLimit = 0;
+  uint32_t *poolWriteOffset = nullptr;
   if (moveDst >= sampleStore1 && moveDst < sampleStore1 + STORE1_SIZE) {
-    writeOffset1_ -= deletedSize;
+    poolBase = sampleStore1;
+    poolLimit = STORE1_SIZE;
+    poolWriteOffset = &writeOffset1_;
   } else if (moveDst >= sampleStore2 && moveDst < sampleStore2 + STORE2_SIZE) {
-    writeOffset2_ -= deletedSize;
+    poolBase = sampleStore2;
+    poolLimit = STORE2_SIZE;
+    poolWriteOffset = &writeOffset2_;
   } else {
-    // should never get here
     Trace::Error("Invalid sample address while deleting");
     return false;
   }
 
-  // If there was anything to move (i.e: it's not the last sample) we do so
-  // now in a sigle chunk
-  if (bufferSize > 0) {
-    std::memmove(moveDst, moveSrc, bufferSize);
+  // Find the first subsequent sample that resides in the same pool so we only
+  // compact that pool.
+  uint8_t *moveSrc = nullptr;
+  for (uint32_t j = index + 1; j < count_; ++j) {
+    uint8_t *candidate =
+        wav_[j] ? static_cast<uint8_t *>(wav_[j]->GetSampleBuffer(0)) : nullptr;
+    if (candidate && candidate >= poolBase &&
+        candidate < poolBase + poolLimit) {
+      moveSrc = candidate;
+      break;
+    }
+  }
+
+  // Free deleted entry resources
+  SAFE_DELETE(wav_[index]);
+  SAFE_FREE(names_[index]);
+
+  uint32_t shift = 0;
+  uint32_t bytesToMove = 0;
+  if (moveSrc != nullptr) {
+    shift = static_cast<uint32_t>(moveSrc - static_cast<uint8_t *>(moveDst));
+    bytesToMove = *poolWriteOffset - static_cast<uint32_t>(moveSrc - poolBase);
+  } else {
+    // Removing the last sample in this pool: reclaim the tail of the pool
+    shift = *poolWriteOffset -
+            static_cast<uint32_t>(static_cast<uint8_t *>(moveDst) - poolBase);
+  }
+
+  // Shift wav/name pointers down in the arrays
+  for (uint32_t j = index; j < count_ - 1; ++j) {
+    wav_[j] = wav_[j + 1];
+    names_[j] = names_[j + 1];
+  }
+
+  // If there was anything to move (i.e: there's a later sample in the same
+  // pool) shift the pool data in one chunk
+  if (bytesToMove > 0) {
+    std::memmove(moveDst, moveSrc, bytesToMove);
+  }
+
+  // Update pool write offset by the bytes we freed
+  *poolWriteOffset -= shift;
+
+  // Update each SoundSource in this pool to point at the new buffer location
+  if (shift > 0) {
+    for (uint32_t j = index; j < count_ - 1; ++j) {
+      uint8_t *buf = wav_[j]
+                         ? static_cast<uint8_t *>(wav_[j]->GetSampleBuffer(0))
+                         : nullptr;
+      if (buf && buf >= poolBase && buf < poolBase + poolLimit) {
+        ((WavFile *)wav_[j])
+            ->SetSampleBuffer(reinterpret_cast<short *>(buf - shift));
+      }
+    }
   }
 
   // clear the last slot (now unused)
@@ -169,6 +209,13 @@ bool advSamplePool::unloadSample(int index) {
 
   // decrement sample count
   --count_;
+
+  // notify observers so sample variables can adjust their indexes
+  SetChanged();
+  SamplePoolEvent ev;
+  ev.index_ = index;
+  ev.type_ = SPET_DELETE;
+  NotifyObservers(&ev);
 
   return true;
 }
