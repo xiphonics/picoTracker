@@ -26,6 +26,7 @@ if (NOT DEFINED ADV)
   set(ADV false)
 endif()
 
+
 # pico
 if (NOT ${ADV})
   set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
@@ -59,6 +60,9 @@ if (NOT ${ADV})
   message(USE_LCD="${USE_LCD}")
   add_compile_definitions(${USE_LCD})
   # add_compile_definitions(LCD_ST7789)
+
+  set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/config/no_heap.h")
 
   # Needed for ETL to pick up our etl_profile.h
   include_directories("config/")
@@ -175,7 +179,7 @@ else()
 
   project(picoTrackerAdvance C CXX ASM)
   set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/Adapters/adv/system/no_heap.h")
+      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/config/no_heap.h")
 
   add_subdirectory(Externals/FreeRTOS-Kernel)
   add_subdirectory(Externals/FatFs)
