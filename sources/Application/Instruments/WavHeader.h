@@ -9,10 +9,10 @@
 #ifndef _WAV_HEADER_WRITER_H_
 #define _WAV_HEADER_WRITER_H_
 
+#include "Externals/etl/include/etl/expected.h"
 #include "System/FileSystem/FileSystem.h"
 #include "WavFileErrors.h"
 #include <cstdint>
-#include "Externals/etl/include/etl/expected.h"
 
 struct WavHeaderInfo {
   uint32_t riffChunkSize = 0;

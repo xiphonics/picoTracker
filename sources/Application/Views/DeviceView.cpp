@@ -197,9 +197,8 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   switch (fourcc) {
   case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
-      MessageBox *mb =
-          MessageBox::Create(*this, "Reboot and lose changes?",
-                             MBBF_YES | MBBF_NO);
+      MessageBox *mb = MessageBox::Create(*this, "Reboot and lose changes?",
+                                          MBBF_YES | MBBF_NO);
       DoModal(mb, ModalViewCallback::create<&BootselCallback>());
     } else {
       MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);

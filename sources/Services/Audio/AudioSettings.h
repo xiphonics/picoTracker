@@ -10,8 +10,8 @@
 #ifndef _AUDIO_SETTINGS_H_
 #define _AUDIO_SETTINGS_H_
 
-#include "config/StringLimits.h"
 #include "Externals/etl/include/etl/string.h"
+#include "config/StringLimits.h"
 // Used to propagate audio hints & settings
 
 struct AudioSettings {

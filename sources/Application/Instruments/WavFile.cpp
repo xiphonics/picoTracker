@@ -44,7 +44,8 @@ etl::expected<void, WAVEFILE_ERROR> WavFile::Open(const char *name) {
 
   Trace::Debug("File data bytes: %u", header->dataChunkSize);
 
-  size_ = header->dataChunkSize / (header->numChannels * header->bytesPerSample);
+  size_ =
+      header->dataChunkSize / (header->numChannels * header->bytesPerSample);
   Trace::Debug("File sample count: %i", size_);
 
   // All samples are saved as 16bit/sample in memory

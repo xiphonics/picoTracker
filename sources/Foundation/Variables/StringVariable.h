@@ -17,8 +17,7 @@
 template <size_t MaxLen = MAX_VARIABLE_STRING_LENGTH>
 class StringVariable : public Variable {
 public:
-  explicit StringVariable(FourCC id, const char *value = "")
-      : Variable(id, 0) {
+  explicit StringVariable(FourCC id, const char *value = "") : Variable(id, 0) {
     type_ = STRING;
     stringValue_ = &storage_;
     setStringValue(value ? value : "");

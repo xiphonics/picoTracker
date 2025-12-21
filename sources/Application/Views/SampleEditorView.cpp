@@ -533,9 +533,9 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     confirmLine.append(opName.c_str());
     confirmLine.append("?");
 
-    MessageBox *mb = MessageBox::Create(*this, confirmLine.c_str(),
-                                        "This overwrites the file",
-                                        MBBF_YES | MBBF_NO);
+    MessageBox *mb =
+        MessageBox::Create(*this, confirmLine.c_str(),
+                           "This overwrites the file", MBBF_YES | MBBF_NO);
 
     // Modal cannot properly draw over the waveform gfx area because text
     // drawing doesn't know the area because ClearTextRect() is not yet
@@ -849,9 +849,8 @@ bool SampleEditorView::reloadEditedSample() {
              viewData_->isShowingSampleEditorProjectPool);
 
 #ifndef ADV
-  MessageBox *warning =
-      MessageBox::Create(*this, "Please reload project", "To apply changes",
-                         MBBF_OK);
+  MessageBox *warning = MessageBox::Create(*this, "Please reload project",
+                                           "To apply changes", MBBF_OK);
   DoModal(warning);
   return true;
 #else

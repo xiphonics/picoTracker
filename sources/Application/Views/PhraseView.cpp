@@ -49,7 +49,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   };
 }
 
-PhraseView::~PhraseView() {};
+PhraseView::~PhraseView(){};
 
 void PhraseView::updateCursor(int dx, int dy) {
 

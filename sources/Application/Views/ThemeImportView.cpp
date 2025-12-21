@@ -200,7 +200,8 @@ void ThemeImportView::onImportTheme(const char *filename) {
     });
   } else {
     // Show error message
-    MessageBox *mb = MessageBox::Create(*this, "Failed to import theme", MBBF_OK);
+    MessageBox *mb =
+        MessageBox::Create(*this, "Failed to import theme", MBBF_OK);
     DoModal(mb, [](View &v, ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_OK) {
         // Switch back to the theme view

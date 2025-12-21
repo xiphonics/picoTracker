@@ -10,11 +10,11 @@
 #ifndef _MIDIOUT_DEVICE_H_
 #define _MIDIOUT_DEVICE_H_
 
+#include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/Types/Types.h"
 #include "MidiMessage.h"
 #include "config/StringLimits.h"
-#include "Externals/etl/include/etl/string.h"
 
 class MidiOutDevice {
 public:

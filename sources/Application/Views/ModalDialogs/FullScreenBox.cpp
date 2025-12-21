@@ -13,8 +13,8 @@
 static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
 
 static bool inUse = false;
-alignas(FullScreenBox)
-static unsigned char FullScreenBoxStorage[sizeof(FullScreenBox)];
+alignas(FullScreenBox) static unsigned char FullScreenBoxStorage[sizeof(
+    FullScreenBox)];
 static void *storage = FullScreenBoxStorage;
 
 FullScreenBox *FullScreenBox::Create(View &view, const char *message,
@@ -36,8 +36,8 @@ FullScreenBox *FullScreenBox::Create(View &view, const char *messageLine1,
     inUse = false;
   }
   inUse = true;
-  return new (storage) FullScreenBox(view, messageLine1, messageLine2,
-                                     btnFlags);
+  return new (storage)
+      FullScreenBox(view, messageLine1, messageLine2, btnFlags);
 }
 
 FullScreenBox::FullScreenBox(View &view, const char *message, int btnFlags)

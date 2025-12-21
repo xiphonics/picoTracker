@@ -148,8 +148,7 @@ bool advSamplePool::unloadSample(uint32_t index) {
     return false;
   }
 
-  const uint32_t moveDstOffset =
-      static_cast<uint32_t>(moveDst - poolBase);
+  const uint32_t moveDstOffset = static_cast<uint32_t>(moveDst - poolBase);
   if (moveDstOffset >= *poolWriteOffset) {
     Trace::Error("Invalid sample address while deleting (outside pool usage)");
     return false;
@@ -178,8 +177,7 @@ bool advSamplePool::unloadSample(uint32_t index) {
   uint32_t bytesToMove = 0;
   if (moveSrc != nullptr) {
     shift = static_cast<uint32_t>(moveSrc - moveDst);
-    bytesToMove =
-        *poolWriteOffset - static_cast<uint32_t>(moveSrc - poolBase);
+    bytesToMove = *poolWriteOffset - static_cast<uint32_t>(moveSrc - poolBase);
   } else {
     // Removing the last sample in this pool: reclaim the tail of the pool
     shift = *poolWriteOffset - moveDstOffset;

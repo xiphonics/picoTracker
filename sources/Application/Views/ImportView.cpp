@@ -590,8 +590,8 @@ void ImportView::import() {
   } else {
     Trace::Error("failed to import sample");
     // Show a generic error message if import failed for other reasons
-    MessageBox *mb = MessageBox::Create(
-        *this, "Import Failed", "Could not import sample", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Import Failed",
+                                        "Could not import sample", MBBF_OK);
     DoModal(mb);
   };
   isDirty_ = true;
@@ -687,16 +687,16 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filename));
 
   if (inUse) {
-    MessageBox *mb = MessageBox::Create(*this, "Cannot remove",
-                                        "Sample in use!", MBBF_OK);
+    MessageBox *mb =
+        MessageBox::Create(*this, "Cannot remove", "Sample in use!", MBBF_OK);
     DoModal(mb);
     return;
   }
 
   // add spacing for basic way to size dialog wider to give Ok/cancel
   // buttons between space
-  MessageBox *mb = MessageBox::Create(*this, "    Remove sample?    ",
-                                      filename, MBBF_OK | MBBF_CANCEL);
+  MessageBox *mb = MessageBox::Create(*this, "    Remove sample?    ", filename,
+                                      MBBF_OK | MBBF_CANCEL);
   DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
     if (dialog.GetReturnCode() == MBL_OK) {
       // Translate filename to current sample pool index to avoid mismatches

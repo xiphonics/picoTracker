@@ -13,9 +13,9 @@
 #include "Application/Instruments/WavFileWriter.h"
 #include "AudioDriver.h"
 #include "AudioOut.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
 #include "config/StringLimits.h"
-#include "Externals/etl/include/etl/string.h"
 
 class AudioDriver;
 

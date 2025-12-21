@@ -10,11 +10,11 @@
 #ifndef _WAV_FILE_H_
 #define _WAV_FILE_H_
 
+#include "Externals/etl/include/etl/expected.h"
 #include "SoundSource.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "WavFileErrors.h"
-#include "Externals/etl/include/etl/expected.h"
 
 #define BUFFER_SIZE 512
 

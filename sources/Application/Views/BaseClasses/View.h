@@ -13,11 +13,11 @@
 #include "Application/Model/Config.h"
 #include "Application/Model/Project.h"
 #include "Application/Player/Player.h"
+#include "Externals/etl/include/etl/delegate.h"
 #include "I_Action.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "ViewEvent.h"
-#include "Externals/etl/include/etl/delegate.h"
 
 #define VU_METER_HEIGHT 16
 #define VU_METER_CLIP_LEVEL 15

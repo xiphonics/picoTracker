@@ -744,9 +744,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
               FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
           if (!samplelibExists) {
-            MessageBox *mb = MessageBox::Create(*this,
-                                                "Can't access the samplelib",
-                                                MBBF_OK);
+            MessageBox *mb = MessageBox::Create(
+                *this, "Can't access the samplelib", MBBF_OK);
             DoModal(mb);
           } else {
             ImportView::SetSourceViewType(VT_INSTRUMENT);
@@ -760,8 +759,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
             NotifyObservers(&ve);
           }
         } else {
-          MessageBox *mb = MessageBox::Create(*this, "Not while playing",
-                                              MBBF_OK);
+          MessageBox *mb =
+              MessageBox::Create(*this, "Not while playing", MBBF_OK);
           DoModal(mb);
         }
       } else {
@@ -982,9 +981,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       // Check if any instrument field has been modified
       bool instrumentModified = checkInstrumentModified();
       if (instrumentModified) {
-        MessageBox *mb = MessageBox::Create(*this, "Change Instrument &",
-                                            "lose settings?",
-                                            MBBF_YES | MBBF_NO);
+        MessageBox *mb = MessageBox::Create(
+            *this, "Change Instrument &", "lose settings?", MBBF_YES | MBBF_NO);
 
         // Use a lambda function that captures 'this' for direct access to class
         // members

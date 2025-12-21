@@ -63,14 +63,14 @@ inline void *alloc_impl(size_t size, bool nothrow) {
     }
   }
   size_t curr = g_outstanding.fetch_add(1, std::memory_order_relaxed) + 1;
-  size_t bytes = g_outstanding_bytes.fetch_add(size, std::memory_order_relaxed) +
-                 size;
+  size_t bytes =
+      g_outstanding_bytes.fetch_add(size, std::memory_order_relaxed) + size;
   size_t peak = g_peak_bytes.load(std::memory_order_relaxed);
-  while (bytes > peak &&
-         !g_peak_bytes.compare_exchange_weak(peak, bytes,
-                                             std::memory_order_relaxed)) {
+  while (bytes > peak && !g_peak_bytes.compare_exchange_weak(
+                             peak, bytes, std::memory_order_relaxed)) {
   }
-  log_alloc("new", size, curr, bytes, g_peak_bytes.load(std::memory_order_relaxed));
+  log_alloc("new", size, curr, bytes,
+            g_peak_bytes.load(std::memory_order_relaxed));
   return p;
 }
 
@@ -93,11 +93,10 @@ inline void dealloc_impl(void *p, size_t size) noexcept {
     }
     size_t prev = g_outstanding.load(std::memory_order_relaxed);
     if (prev > 0) {
-      size_t curr =
-          g_outstanding.fetch_sub(1, std::memory_order_relaxed) - 1;
-      size_t bytes =
-          g_outstanding_bytes.fetch_sub(recordedSize, std::memory_order_relaxed) -
-          recordedSize;
+      size_t curr = g_outstanding.fetch_sub(1, std::memory_order_relaxed) - 1;
+      size_t bytes = g_outstanding_bytes.fetch_sub(recordedSize,
+                                                   std::memory_order_relaxed) -
+                     recordedSize;
       log_alloc("delete", recordedSize, curr, bytes,
                 g_peak_bytes.load(std::memory_order_relaxed));
     } else {
@@ -115,13 +114,11 @@ void *operator new(std::size_t size) { return alloc_impl(size, false); }
 
 void *operator new[](std::size_t size) { return alloc_impl(size, false); }
 
-void *operator new(std::size_t size,
-                   const std::nothrow_t &) noexcept {
+void *operator new(std::size_t size, const std::nothrow_t &) noexcept {
   return alloc_impl(size, true);
 }
 
-void *operator new[](std::size_t size,
-                     const std::nothrow_t &) noexcept {
+void *operator new[](std::size_t size, const std::nothrow_t &) noexcept {
   return alloc_impl(size, true);
 }
 

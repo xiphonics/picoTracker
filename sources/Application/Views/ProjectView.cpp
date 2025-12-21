@@ -67,10 +67,10 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
   if (persist->Save(projName, oldProjName, true) != PERSIST_SAVED) {
     Trace::Error("failed to save renamed project %s [old: %s]", projName,
                  oldProjName);
-    MessageBox *mb = MessageBox::Create(((ProjectView &)v),
-                                        "Failed to save project",
-                                        MBBF_OK | MBBF_CANCEL);
-    ((ProjectView &)v).DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
+    MessageBox *mb = MessageBox::Create(
+        ((ProjectView &)v), "Failed to save project", MBBF_OK | MBBF_CANCEL);
+    ((ProjectView &)v)
+        .DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
     return;
   }
   if (persist->SaveProjectState(projName) != PERSIST_SAVED) {
@@ -101,8 +101,8 @@ static void RenderStopCallback(View &v, ModalView &dialog) {
       player->Stop();
 
       // Show cancellation message
-      MessageBox *cancelDialog = MessageBox::Create(
-          ((ProjectView &)v), "Rendering Stopped", MBBF_OK);
+      MessageBox *cancelDialog =
+          MessageBox::Create(((ProjectView &)v), "Rendering Stopped", MBBF_OK);
       ((ProjectView &)v).DoModal(cancelDialog);
     }
   }
@@ -247,8 +247,8 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN || mask & EPBM_UP) {
       if (saveAsFlag_) {
-        MessageBox *mb = MessageBox::Create(*this, "Save project rename first",
-                                            MBBF_OK);
+        MessageBox *mb =
+            MessageBox::Create(*this, "Save project rename first", MBBF_OK);
         DoModal(mb);
         return;
       }
@@ -314,8 +314,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 
   switch (fourcc) {
   case FourCC::ActionPurge: {
-    MessageBox *mb = MessageBox::Create(*this, "Remove unused samples?",
-                                        MBBF_YES | MBBF_NO);
+    MessageBox *mb =
+        MessageBox::Create(*this, "Remove unused samples?", MBBF_YES | MBBF_NO);
     DoModal(mb, ModalViewCallback::create<&PurgeCallback>());
     break;
   }
@@ -344,8 +344,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       // first need to check if project with this name already exists
       if (persist->Exists(projName)) {
         Trace::Error("project already exists ask user to confirm overwrite");
-        MessageBox *mb = MessageBox::Create(*this, "Overwrite EXISTING project?",
-                                            MBBF_OK | MBBF_CANCEL);
+        MessageBox *mb = MessageBox::Create(
+            *this, "Overwrite EXISTING project?", MBBF_OK | MBBF_CANCEL);
         DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
         return;
       }
@@ -400,8 +400,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
                                           MBBF_YES | MBBF_NO);
       DoModal(mb, ModalViewCallback::create<&BootselCallback>());
     } else {
-      MessageBox *mb =
-          MessageBox::Create(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     break;
@@ -426,9 +425,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       player->Start(PM_SONG, true, MSM_FILESPLIT, true);
 
       // Show a dialog with a Stop button during rendering
-      RenderProgressModal *renderDialog =
-          RenderProgressModal::Create(*this, "Stems Rendering",
-                                      "Press OK to stop");
+      RenderProgressModal *renderDialog = RenderProgressModal::Create(
+          *this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
     }
     break;
@@ -454,8 +452,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
         NotifyObservers(&ve);
       }
     } else {
-      MessageBox *mb =
-          MessageBox::Create(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     break;

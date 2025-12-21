@@ -11,13 +11,13 @@
 #define _PLAYER_H_
 #include "Application/Views/BaseClasses/ViewEvent.h"
 #include "Application/Views/ViewData.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "PlayerMixer.h"
 #include "SyncMaster.h"
 #include "System/Timer/Timer.h"
 #include "config/StringLimits.h"
-#include "Externals/etl/include/etl/string.h"
 
 enum PlayerEventType { PET_START, PET_UPDATE, PET_STOP };
 

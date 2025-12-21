@@ -29,9 +29,8 @@ constexpr uint8_t COLOR_COMPONENT_X_OFFSETS[COLOR_COMPONENT_COUNT] = {
     COLOR_LABEL_WIDTH + 2 * COMPONENT_SPACING};
 
 ThemeView::ThemeView(GUIWindow &w, ViewData *data)
-    : FieldView(w, data),
-      themeNameVar_(FourCC::ActionThemeName,
-                    ThemeConstants::DEFAULT_THEME_NAME) {
+    : FieldView(w, data), themeNameVar_(FourCC::ActionThemeName,
+                                        ThemeConstants::DEFAULT_THEME_NAME) {
 
   GUIPoint position = GetAnchor();
 
@@ -402,9 +401,8 @@ void ThemeView::handleThemeExport() {
   auto fs = FileSystem::GetInstance();
   if (fs->exists(pathBuffer)) {
     // Theme exists, ask for confirmation
-    MessageBox *mb = MessageBox::Create(*this,
-                                        "Theme already exists. Overwrite?",
-                                        MBBF_YES | MBBF_NO);
+    MessageBox *mb = MessageBox::Create(
+        *this, "Theme already exists. Overwrite?", MBBF_YES | MBBF_NO);
 
     // Use a lambda for the callback to avoid the static function
     DoModal(mb, [this](View &v, ModalView &dialog) {
@@ -440,8 +438,7 @@ void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
 
   // Show result message
   MessageBox *resultMb = MessageBox::Create(
-      *this,
-      result ? "Theme exported successfully" : "Failed to export theme",
+      *this, result ? "Theme exported successfully" : "Failed to export theme",
       MBBF_OK);
   DoModal(resultMb);
 }
@@ -449,18 +446,18 @@ void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
 void ThemeView::updateThemeNameFromConfig() {
   // Get the current theme name from Config
   Config *config = Config::GetInstance();
-    Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
+  Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
 
-    if (themeNameVar && !themeNameVar->GetString().empty()) {
-      // Get the theme name from Config
-      etl::string<MAX_THEME_NAME_LENGTH> themeName = themeNameVar->GetString();
+  if (themeNameVar && !themeNameVar->GetString().empty()) {
+    // Get the theme name from Config
+    etl::string<MAX_THEME_NAME_LENGTH> themeName = themeNameVar->GetString();
 
-      // Update the theme name field
-      themeNameVar_.SetString(themeName.c_str());
-      themeNameField_->SetVariable(themeNameVar_);
-      exportThemeName_ = themeName;
-    }
+    // Update the theme name field
+    themeNameVar_.SetString(themeName.c_str());
+    themeNameField_->SetVariable(themeNameVar_);
+    exportThemeName_ = themeName;
   }
+}
 
 void ThemeView::OnFocus() {
   // Update the theme name field from Config when the view gets focus

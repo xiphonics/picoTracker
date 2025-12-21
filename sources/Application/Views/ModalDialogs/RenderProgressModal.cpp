@@ -16,8 +16,8 @@
 #include <stdio.h>
 
 bool RenderProgressModal::inUse_ = false;
-alignas(RenderProgressModal)
-static unsigned char RenderProgressModalStorage[sizeof(RenderProgressModal)];
+alignas(RenderProgressModal) static unsigned char RenderProgressModalStorage
+    [sizeof(RenderProgressModal)];
 void *RenderProgressModal::storage_ = RenderProgressModalStorage;
 
 RenderProgressModal *RenderProgressModal::Create(View &view, const char *title,

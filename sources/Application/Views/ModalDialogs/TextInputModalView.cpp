@@ -16,9 +16,8 @@ TextInputModalView::TextInputModalView(
     etl::string<MAX_TEXT_INPUT_LENGTH> defaultValue)
     : ModalView(view), title_(title), prompt_(prompt),
       textVariable_(FourCC::ActionEdit, defaultValue.c_str()),
-      textFieldPos_(GetAnchor()),
-      textField_(textVariable_, textFieldPos_, "", FourCC::ActionEdit,
-                 defaultValue),
+      textFieldPos_(GetAnchor()), textField_(textVariable_, textFieldPos_, "",
+                                             FourCC::ActionEdit, defaultValue),
       focus_(nullptr), editingText_(true) {
 
   buttonCount_ = 0;

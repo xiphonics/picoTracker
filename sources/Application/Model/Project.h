@@ -16,8 +16,8 @@
 #include "BuildNumber.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
-#include "Foundation/Variables/VariableContainer.h"
 #include "Foundation/Variables/StringVariable.h"
+#include "Foundation/Variables/VariableContainer.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Song.h"
 
