@@ -1,5 +1,4 @@
-build/**
-build-opt/**
+build**
 ref/**
 doxygen/html/**
 projects/buildOSX/**
