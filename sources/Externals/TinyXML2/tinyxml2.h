@@ -235,7 +235,6 @@ public:
     }
     //        EnsureCapacity( _size+1 );
     _mem[_size] = t;
-    printf("push size: %i\r\n", _size);
     ++_size;
   }
 
@@ -248,7 +247,6 @@ public:
     }
     //        EnsureCapacity( _size+count );
     T *ret = &_mem[_size];
-    printf("pushArr size: %i\r\n", _size);
     _size += count;
     return ret;
   }
