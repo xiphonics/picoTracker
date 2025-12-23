@@ -79,6 +79,11 @@ if (NOT ${ADV})
 
   set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
 
+  target_compile_options(picoTracker PRIVATE
+    -fno-unwind-tables
+    -fno-asynchronous-unwind-tables
+  )
+
   target_compile_definitions(picoTracker PUBLIC
     #	PICO_HEAP_SIZE=204800
     PICO_DEBUG_MALLOC_LOW_WATER=1000
@@ -168,7 +173,7 @@ else()
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
   set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0")
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-use-cxa-atexit")
+  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit")
   
   if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
