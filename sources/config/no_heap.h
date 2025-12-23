@@ -1,10 +1,10 @@
 /*
-* SPDX-License-Identifier: BSD-3-Clause
-*
-* Copyright (c) 2024 xiphonics, inc.
-*
-* This file is part of the picoTracker firmware
-*/
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2024 xiphonics, inc.
+ *
+ * This file is part of the picoTracker firmware
+ */
 
 #ifndef NO_HEAP_H
 #define NO_HEAP_H
