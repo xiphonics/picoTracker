@@ -8,23 +8,28 @@
  */
 
 #include "ServiceRegistry.h"
+#include "System/Console/Trace.h"
 
-void ServiceRegistry::Register(Service *s) { services_.Insert(s); };
+void ServiceRegistry::Register(Service *s) {
+  if (services_.full()) {
+    Trace::Error("ServiceRegistry full");
+    return;
+  }
+  services_.push_back(s);
+};
 
 void ServiceRegistry::Register(SubService *s) {
-  for (services_.Begin(); !services_.IsDone(); services_.Next()) {
-    Service &current = services_.CurrentItem();
-    if (current.GetFourCC() == s->GetFourCC()) {
-      current.Register(s);
+  for (auto *svc : services_) {
+    if (svc && svc->GetFourCC() == s->GetFourCC()) {
+      svc->Register(s);
     };
   };
 };
 
 void ServiceRegistry::Unregister(SubService *s) {
-  for (services_.Begin(); !services_.IsDone(); services_.Next()) {
-    Service &current = services_.CurrentItem();
-    if (current.GetFourCC() == s->GetFourCC()) {
-      current.Unregister(s);
+  for (auto *svc : services_) {
+    if (svc && svc->GetFourCC() == s->GetFourCC()) {
+      svc->Unregister(s);
     };
   };
 };

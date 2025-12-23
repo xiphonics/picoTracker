@@ -20,6 +20,7 @@
 #include "BaseClasses/UITextField.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
+#include "Foundation/Variables/StringVariable.h"
 #include "ViewData.h"
 
 class SampleEditorView : public FieldView, public I_Observer {
@@ -117,7 +118,7 @@ private:
   // Variables to back the UI fields
   Variable startVar_;
   Variable endVar_;
-  Variable filenameVar_;
+  StringVariable<MAX_INSTRUMENT_FILENAME_LENGTH> filenameVar_;
   enum SampleEditOperation { Trim = 0, Normalize };
   Variable operationVar_;
 

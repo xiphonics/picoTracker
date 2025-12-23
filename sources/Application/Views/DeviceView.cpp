@@ -197,11 +197,11 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   switch (fourcc) {
   case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
-      MessageBox *mb =
-          new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
-      DoModal(mb, BootselCallback);
+      MessageBox *mb = MessageBox::Create(*this, "Reboot and lose changes?",
+                                          MBBF_YES | MBBF_NO);
+      DoModal(mb, ModalViewCallback::create<&BootselCallback>());
     } else {
-      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     return;
@@ -215,7 +215,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   }
   case FourCC::VarLineOut: {
     MessageBox *mb =
-        new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
+        MessageBox::Create(*this, "Reboot for new Audio Level!", MBBF_OK);
     DoModal(mb);
     configDirty_ = true;
     break;

@@ -10,22 +10,26 @@
 #ifndef _WAV_FILE_H_
 #define _WAV_FILE_H_
 
+#include "Externals/etl/include/etl/expected.h"
 #include "SoundSource.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "WavFileErrors.h"
-#include <expected>
 
 #define BUFFER_SIZE 512
 
 class WavFile : public SoundSource {
 
-protected: // Factory - see Load method
-  WavFile(FileHandle file);
-
 public:
+  WavFile();
+  WavFile(WavFile &&) = default;
+  WavFile &operator=(WavFile &&) = default;
+  WavFile(const WavFile &) = delete;
+  WavFile &operator=(const WavFile &) = delete;
   virtual ~WavFile() = default;
-  static std::expected<WavFile *, WAVEFILE_ERROR> Open(const char *);
+
+  etl::expected<void, WAVEFILE_ERROR> Open(const char *);
+  bool IsOpen() const;
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);
   virtual int GetSize(int note);

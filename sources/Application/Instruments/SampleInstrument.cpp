@@ -348,7 +348,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     // clear the fixed point buffer
 
-    SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
+    memset(buffer, 0, size * 2 * sizeof(fixed));
 
     bool hasUpdaters = !(rp->activeUpdaters_.empty());
 

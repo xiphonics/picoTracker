@@ -17,12 +17,11 @@
 #include <nanoprintf.h>
 
 TableView::TableView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
+      cmdEditPos_(0, 10),
+      cmdEditField_(cmdEditPos_, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true) {
   row_ = 0;
   col_ = 0;
-  GUIPoint pos(0, 10);
-  cmdEditField_ =
-      new UIBigHexVarField(pos, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true);
 
   lastVol_ = 0;
   lastTick_ = 0;
@@ -276,19 +275,19 @@ void TableView::updateCursor(int dx, int dy) {
   case 1:
     p._x += 4;
     p._y += row_;
-    cmdEditField_->SetPosition(p);
+    cmdEditField_.SetPosition(p);
     cmdEdit_.SetInt(*(table.param1_ + row_));
     break;
   case 3:
     p._x += 13;
     p._y += row_;
-    cmdEditField_->SetPosition(p);
+    cmdEditField_.SetPosition(p);
     cmdEdit_.SetInt(*(table.param2_ + row_));
     break;
   case 5:
     p._x += 22;
     p._y += row_;
-    cmdEditField_->SetPosition(p);
+    cmdEditField_.SetPosition(p);
     cmdEdit_.SetInt(*(table.param3_ + row_));
     break;
   };
@@ -355,16 +354,16 @@ void TableView::updateCursorValue(int offset) {
   case 1: {
     switch (offset) {
     case 0x01:
-      cmdEditField_->ProcessArrow(EPBM_RIGHT);
+      cmdEditField_.ProcessArrow(EPBM_RIGHT);
       break;
     case 0x10:
-      cmdEditField_->ProcessArrow(EPBM_UP);
+      cmdEditField_.ProcessArrow(EPBM_UP);
       break;
     case -0x01:
-      cmdEditField_->ProcessArrow(EPBM_LEFT);
+      cmdEditField_.ProcessArrow(EPBM_LEFT);
       break;
     case -0x10:
-      cmdEditField_->ProcessArrow(EPBM_DOWN);
+      cmdEditField_.ProcessArrow(EPBM_DOWN);
       break;
     }
     // Sanitize MIDI velocity values if needed
@@ -410,16 +409,16 @@ void TableView::updateCursorValue(int offset) {
   case 3: {
     switch (offset) {
     case 0x01:
-      cmdEditField_->ProcessArrow(EPBM_RIGHT);
+      cmdEditField_.ProcessArrow(EPBM_RIGHT);
       break;
     case 0x10:
-      cmdEditField_->ProcessArrow(EPBM_UP);
+      cmdEditField_.ProcessArrow(EPBM_UP);
       break;
     case -0x01:
-      cmdEditField_->ProcessArrow(EPBM_LEFT);
+      cmdEditField_.ProcessArrow(EPBM_LEFT);
       break;
     case -0x10:
-      cmdEditField_->ProcessArrow(EPBM_DOWN);
+      cmdEditField_.ProcessArrow(EPBM_DOWN);
       break;
     }
     // Sanitize MIDI velocity values if needed
@@ -465,16 +464,16 @@ void TableView::updateCursorValue(int offset) {
   case 5: {
     switch (offset) {
     case 0x01:
-      cmdEditField_->ProcessArrow(EPBM_RIGHT);
+      cmdEditField_.ProcessArrow(EPBM_RIGHT);
       break;
     case 0x10:
-      cmdEditField_->ProcessArrow(EPBM_UP);
+      cmdEditField_.ProcessArrow(EPBM_UP);
       break;
     case -0x01:
-      cmdEditField_->ProcessArrow(EPBM_LEFT);
+      cmdEditField_.ProcessArrow(EPBM_LEFT);
       break;
     case -0x10:
-      cmdEditField_->ProcessArrow(EPBM_DOWN);
+      cmdEditField_.ProcessArrow(EPBM_DOWN);
       break;
     }
     // Sanitize MIDI velocity values if needed
@@ -881,8 +880,8 @@ void TableView::DrawView() {
 
   if ((viewMode_ != VM_SELECTION) &&
       ((col_ == 1) || (col_ == 3) || (col_ == 5))) {
-    cmdEditField_->SetFocus();
-    cmdEditField_->Draw(w_);
+    cmdEditField_.SetFocus();
+    cmdEditField_.Draw(w_);
   };
 
   drawMap();

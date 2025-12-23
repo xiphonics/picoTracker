@@ -204,7 +204,7 @@ bool SIDInstrument::Render(int channel, fixed *buffer, int size,
   if (playing_ and render_) {
 
     // clear the fixed point buffer
-    SYS_MEMSET(buffer, 0, size * 2 * sizeof(fixed));
+    memset(buffer, 0, size * 2 * sizeof(fixed));
 
     sid_->cRSID_emulateWavesBuffer(buffer, size);
 

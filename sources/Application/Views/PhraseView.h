@@ -64,7 +64,8 @@ private:
   Phrase *phrase_;
   int lastPlayingPos_;
   Variable cmdEdit_;
-  UIBigHexVarField *cmdEditField_;
+  GUIPoint cmdEditPos_;
+  UIBigHexVarField cmdEditField_;
   void printHelpLegend(FourCC command, GUITextProperties props);
 
   struct clipboard {

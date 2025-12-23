@@ -26,6 +26,7 @@ if (NOT DEFINED ADV)
   set(ADV false)
 endif()
 
+
 # pico
 if (NOT ${ADV})
   set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
@@ -40,7 +41,6 @@ if (NOT ${ADV})
 
   # For debugging purposes, print all mallocs
   # add_definitions(-DPICO_DEBUG_MALLOC)
-  # add_definitions(-DPICOSTATS)
   # add_definitions(-DALL_MALLOC)
   # add_definitions(-DSHOW_MEM_USAGE)
   # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
@@ -61,6 +61,9 @@ if (NOT ${ADV})
   add_compile_definitions(${USE_LCD})
   # add_compile_definitions(LCD_ST7789)
 
+  set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/config/no_heap.h")
+
   # Needed for ETL to pick up our etl_profile.h
   include_directories("config/")
 
@@ -75,6 +78,11 @@ if (NOT ${ADV})
   add_subdirectory(Externals/SdFat)
 
   set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
+
+  target_compile_options(picoTracker PRIVATE
+    -fno-unwind-tables
+    -fno-asynchronous-unwind-tables
+  )
 
   target_compile_definitions(picoTracker PUBLIC
     #	PICO_HEAP_SIZE=204800
@@ -127,7 +135,6 @@ else()
   target_compile_definitions(freertos_config
     INTERFACE
     projCOVERAGE_TEST=0)
-  set(FREERTOS_HEAP 4)
   set(FREERTOS_PORT GCC_ARM_CM7 CACHE STRING "")
 
   # ------- cmake/gcc-arm-none-eabi.cmake START -------
@@ -166,7 +173,7 @@ else()
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
   set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0")
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
+  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit")
   
   if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
@@ -176,6 +183,8 @@ else()
   # ------- cmake/gcc-arm-none-eabi.cmake STOP -------
 
   project(picoTrackerAdvance C CXX ASM)
+  set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/config/no_heap.h")
 
   add_subdirectory(Externals/FreeRTOS-Kernel)
   add_subdirectory(Externals/FatFs)
@@ -206,4 +215,3 @@ add_subdirectory(Application)
 add_subdirectory(Externals)
 add_subdirectory(Services)
 add_subdirectory(Foundation)
-

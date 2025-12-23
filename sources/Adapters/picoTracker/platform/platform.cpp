@@ -228,7 +228,10 @@ void platform_reboot() { watchdog_reboot(0, 0, 0); }
 
 void platform_bootloader() { reset_usb_boot(0, 0); }
 
-SysMutex *platform_mutex() { return new picoTrackerMutex(); };
+SysMutex *platform_mutex() {
+  static picoTrackerMutex mutex;
+  return &mutex;
+};
 
 uint32_t millis(void) { return to_ms_since_boot(get_absolute_time()); }
 uint32_t micros(void) { return to_us_since_boot(get_absolute_time()); }

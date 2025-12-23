@@ -47,8 +47,10 @@ protected:
   virtual bool loadSample(const char *name) = 0;
   bool loadSoundFont(const char *path);
   uint32_t count_;
+  char nameStore_[MAX_SAMPLES][MAX_INSTRUMENT_FILENAME_LENGTH + 1];
   char *names_[MAX_SAMPLES];
-  SoundSource *wav_[MAX_SAMPLES];
+  WavFile wav_[MAX_SAMPLES];
+  void swapEntries(int src, int dst);
 
 private:
   etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;

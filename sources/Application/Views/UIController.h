@@ -15,10 +15,10 @@
 
 class UIController : public T_Singleton<UIController> {
 private: // Singleton
+  friend class etl::singleton<UIController>;
   UIController();
 
 public:
-  static UIController *GetInstance();
   void Init(Project *, ViewData *);
   void Reset();
 

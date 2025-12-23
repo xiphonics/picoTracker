@@ -9,6 +9,7 @@
 
 #include "Service.h"
 #include "ServiceRegistry.h"
+#include "System/Console/Trace.h"
 
 Service::Service(int fourCC) {
   fourCC_ = fourCC;
@@ -17,6 +18,17 @@ Service::Service(int fourCC) {
 
 Service::~Service(){};
 
-void Service::Register(SubService *sub) { Insert(sub); };
+void Service::Register(SubService *sub) {
+  if (subs_.full()) {
+    Trace::Error("Service %d: subservice list full", fourCC_);
+    return;
+  }
+  subs_.push_back(sub);
+};
 
-void Service::Unregister(SubService *sub) { Remove(*sub); };
+void Service::Unregister(SubService *sub) {
+  auto it = etl::find(subs_.begin(), subs_.end(), sub);
+  if (it != subs_.end()) {
+    subs_.erase(it);
+  }
+};

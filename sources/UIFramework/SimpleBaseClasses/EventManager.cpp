@@ -25,7 +25,7 @@ bool EventManager::Init() { return true; }
 
 void EventManager::MapAppButton(const char *mapping, AppButton button) {
 
-  std::string mapString;
+  etl::string<STRING_EVENT_MAPPING_MAX> mapString;
   if (!strchr(mapping, ':')) {
     mapString = "key:0:";
   };

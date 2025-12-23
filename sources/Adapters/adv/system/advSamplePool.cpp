@@ -7,6 +7,8 @@
  */
 
 #include "advSamplePool.h"
+#include <cstring>
+#include <utility>
 
 __attribute__((section(".SDRAM2"))) __attribute__((aligned(32)))
 uint8_t sampleStore1[STORE1_SIZE];
@@ -23,8 +25,8 @@ advSamplePool::advSamplePool() : SamplePool() {}
 void advSamplePool::Reset() {
   count_ = 0;
   for (int i = 0; i < MAX_SAMPLES; i++) {
-    SAFE_DELETE(wav_[i]);
-    SAFE_FREE(names_[i]);
+    wav_[i].Close();
+    nameStore_[i][0] = '\0';
   };
 
   volatile void *dummy = &sampleStore2;
@@ -48,25 +50,24 @@ bool advSamplePool::loadSample(const char *name) {
   if (count_ == MAX_SAMPLES)
     return false;
 
-  auto wave = WavFile::Open(name);
-  if (!wave) {
+  auto res = wav_[count_].Open(name);
+  if (!res) {
     Trace::Error("Failed to load sample:%s", name);
     return false;
   }
 
-  wav_[count_] = wave.value();
-  names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
-  strcpy(names_[count_], name);
+  strncpy(nameStore_[count_], name, MAX_INSTRUMENT_FILENAME_LENGTH);
+  nameStore_[count_][MAX_INSTRUMENT_FILENAME_LENGTH] = '\0';
   count_++;
-  Load(wave.value());
-  wave.value()->Close();
+  Load(wav_[count_ - 1]);
+  wav_[count_ - 1].Close();
 
   return true;
 };
 
-bool advSamplePool::Load(WavFile *wave) {
+bool advSamplePool::Load(WavFile &wave) {
 
-  uint32_t fileSize = wave->GetDiskSize(-1);
+  uint32_t fileSize = wave.GetDiskSize(-1);
   Trace::Debug("File size: %i", fileSize);
 
   // Select the sample pool with the least space where it will fit in order to
@@ -103,17 +104,17 @@ bool advSamplePool::Load(WavFile *wave) {
   *writeOffset = (*writeOffset + 3) & ~3;
 
   // Set wave base
-  wave->SetSampleBuffer((short *)(sampleStore + *writeOffset));
+  wave.SetSampleBuffer((short *)(sampleStore + *writeOffset));
 
   uint32_t offset = 0;
   uint32_t br = 0;
 
-  wave->Rewind();
-  wave->Read(sampleStore + *writeOffset, BUFFER_SIZE, &br);
+  wave.Rewind();
+  wave.Read(sampleStore + *writeOffset, BUFFER_SIZE, &br);
   while (br > 0) {
     // Trace::Debug("Wrote %i bytes", br);
     *writeOffset += br;
-    wave->Read(sampleStore + *writeOffset, BUFFER_SIZE, &br);
+    wave.Read(sampleStore + *writeOffset, BUFFER_SIZE, &br);
   }
   return true;
 };
@@ -121,64 +122,65 @@ bool advSamplePool::Load(WavFile *wave) {
 bool advSamplePool::unloadSample(uint32_t index) {
   // Will only optimize samples within the sample pool where the sample resides
   // TODO (democloid): potentially optimize across sample pools
-  if (index < 0 || index >= count_)
+  if (index >= count_)
     return false;
 
   // Gather memory layout info for the sample being removed
-  void *moveDst = wav_[index] ? wav_[index]->GetSampleBuffer(0) : nullptr;
-  if (!moveDst) {
+  auto *moveDst = static_cast<uint8_t *>(wav_[index].GetSampleBuffer(0));
+  if (moveDst == nullptr) {
     Trace::Error("Invalid sample buffer while deleting");
     return false;
   }
 
-  uint8_t *poolBase = nullptr;
+  auto *poolBase = static_cast<uint8_t *>(nullptr);
   uint32_t poolLimit = 0;
   uint32_t *poolWriteOffset = nullptr;
-  if (moveDst >= sampleStore1 && moveDst < sampleStore1 + STORE1_SIZE) {
+  if (moveDst >= sampleStore1 && moveDst < sampleStore1 + storeLimit1_) {
     poolBase = sampleStore1;
-    poolLimit = STORE1_SIZE;
+    poolLimit = storeLimit1_;
     poolWriteOffset = &writeOffset1_;
-  } else if (moveDst >= sampleStore2 && moveDst < sampleStore2 + STORE2_SIZE) {
+  } else if (moveDst >= sampleStore2 && moveDst < sampleStore2 + storeLimit2_) {
     poolBase = sampleStore2;
-    poolLimit = STORE2_SIZE;
+    poolLimit = storeLimit2_;
     poolWriteOffset = &writeOffset2_;
   } else {
     Trace::Error("Invalid sample address while deleting");
     return false;
   }
 
-  // Find the first subsequent sample that resides in the same pool so we only
-  // compact that pool.
-  uint8_t *moveSrc = nullptr;
-  for (uint32_t j = index + 1; j < count_; ++j) {
-    uint8_t *candidate =
-        wav_[j] ? static_cast<uint8_t *>(wav_[j]->GetSampleBuffer(0)) : nullptr;
-    if (candidate && candidate >= poolBase &&
-        candidate < poolBase + poolLimit) {
-      moveSrc = candidate;
-      break;
-    }
+  const uint32_t moveDstOffset = static_cast<uint32_t>(moveDst - poolBase);
+  if (moveDstOffset >= *poolWriteOffset) {
+    Trace::Error("Invalid sample address while deleting (outside pool usage)");
+    return false;
   }
 
-  // Free deleted entry resources
-  SAFE_DELETE(wav_[index]);
-  SAFE_FREE(names_[index]);
+  // Find the next sample in memory (not by index order) that resides in the
+  // same pool so we only compact that pool.
+  uint8_t *moveSrc = nullptr;
+  for (uint32_t j = 0; j < count_; ++j) {
+    if (j == index) {
+      continue;
+    }
+    auto *candidate = static_cast<uint8_t *>(wav_[j].GetSampleBuffer(0));
+    if (candidate == nullptr) {
+      continue;
+    }
+    if (candidate >= poolBase && candidate < poolBase + poolLimit &&
+        candidate > moveDst) {
+      if (moveSrc == nullptr || candidate < moveSrc) {
+        moveSrc = candidate;
+      }
+    }
+  }
 
   uint32_t shift = 0;
   uint32_t bytesToMove = 0;
   if (moveSrc != nullptr) {
-    shift = static_cast<uint32_t>(moveSrc - static_cast<uint8_t *>(moveDst));
+    shift = static_cast<uint32_t>(moveSrc - moveDst);
     bytesToMove = *poolWriteOffset - static_cast<uint32_t>(moveSrc - poolBase);
   } else {
     // Removing the last sample in this pool: reclaim the tail of the pool
-    shift = *poolWriteOffset -
-            static_cast<uint32_t>(static_cast<uint8_t *>(moveDst) - poolBase);
-  }
-
-  // Shift wav/name pointers down in the arrays
-  for (uint32_t j = index; j < count_ - 1; ++j) {
-    wav_[j] = wav_[j + 1];
-    names_[j] = names_[j + 1];
+    shift = *poolWriteOffset - moveDstOffset;
   }
 
   // If there was anything to move (i.e: there's a later sample in the same
@@ -191,21 +193,29 @@ bool advSamplePool::unloadSample(uint32_t index) {
   *poolWriteOffset -= shift;
 
   // Update each SoundSource in this pool to point at the new buffer location
-  if (shift > 0) {
-    for (uint32_t j = index; j < count_ - 1; ++j) {
-      uint8_t *buf = wav_[j]
-                         ? static_cast<uint8_t *>(wav_[j]->GetSampleBuffer(0))
-                         : nullptr;
-      if (buf && buf >= poolBase && buf < poolBase + poolLimit) {
-        ((WavFile *)wav_[j])
-            ->SetSampleBuffer(reinterpret_cast<short *>(buf - shift));
+  if (shift > 0 && moveSrc != nullptr) {
+    for (uint32_t j = 0; j < count_; ++j) {
+      if (j == index) {
+        continue;
+      }
+      auto *buf = static_cast<uint8_t *>(wav_[j].GetSampleBuffer(0));
+      if (buf && buf >= poolBase && buf < poolBase + poolLimit &&
+          buf >= moveSrc) {
+        wav_[j].SetSampleBuffer(reinterpret_cast<short *>(buf - shift));
       }
     }
   }
 
+  // Shift wav/name entries down in the arrays
+  for (uint32_t j = index; j < count_ - 1; ++j) {
+    wav_[j] = std::move(wav_[j + 1]);
+    memcpy(nameStore_[j], nameStore_[j + 1],
+           MAX_INSTRUMENT_FILENAME_LENGTH + 1);
+  }
+
   // clear the last slot (now unused)
-  wav_[count_ - 1] = nullptr;
-  names_[count_ - 1] = nullptr;
+  wav_[count_ - 1].Close();
+  nameStore_[count_ - 1][0] = '\0';
 
   // decrement sample count
   --count_;

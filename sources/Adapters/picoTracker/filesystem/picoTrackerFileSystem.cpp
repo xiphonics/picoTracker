@@ -7,11 +7,16 @@
  */
 
 #include "picoTrackerFileSystem.h"
+#include "Externals/etl/include/etl/pool.h"
 #include "pico/multicore.h"
 #include <cstring>
 
 // Global mutex for thread safety
 Mutex mutex;
+
+constexpr uint32_t MAX_OPEN_FILES = 10;
+
+static etl::pool<picoTrackerFile, MAX_OPEN_FILES> filePool;
 
 picoTrackerFileSystem::picoTrackerFileSystem() {
   // init out access mutex
@@ -63,10 +68,15 @@ FileHandle picoTrackerFileSystem::Open(const char *name, const char *mode) {
     return FileHandle();
   }
   I_File *wFile = 0;
-  if (cwd.open(name, rmode)) {
-    wFile = new picoTrackerFile(cwd);
-  } else {
+  if (!cwd.open(name, rmode)) {
     Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
+    return FileHandle();
+  }
+  wFile = filePool.create(cwd);
+  if (wFile == nullptr) {
+    Trace::Error("FILESYSTEM: No file slots available (max %d)",
+                 static_cast<int>(MAX_OPEN_FILES));
+    return FileHandle();
   }
   return MakeFileHandle(wFile);
 }
@@ -357,3 +367,5 @@ bool picoTrackerFile::Sync() {
   std::lock_guard<Mutex> lock(mutex);
   return file_.sync();
 }
+
+void picoTrackerFile::Dispose() { filePool.destroy(this); }

@@ -43,14 +43,6 @@ Player::Player() : mixer_() {
   }
 };
 
-Player *Player::GetInstance() {
-  if (instance_ == 0) {
-    alignas(Player) static char playerMemBuf[sizeof(Player)];
-    instance_ = new (playerMemBuf) Player();
-  }
-  return instance_;
-}
-
 bool Player::Init(Project *project, ViewData *viewData) {
 
   viewData_ = viewData;
@@ -1230,12 +1222,12 @@ void Player::SetAudioActive(bool active) {
 
 bool Player::IsPlaying() { return mixer_.IsPlaying(); }
 
-std::string Player::GetAudioAPI() {
+etl::string<STRING_AUDIO_API_MAX> Player::GetAudioAPI() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioAPI() : "";
 };
 
-std::string Player::GetAudioDevice() {
+etl::string<STRING_AUDIO_DEVICE_MAX> Player::GetAudioDevice() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioDevice() : "";
 };

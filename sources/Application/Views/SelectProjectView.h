@@ -10,7 +10,6 @@
 #ifndef _SELECTPROJECT_VIEW_H_
 #define _SELECTPROJECT_VIEW_H_
 
-#include "Foundation/T_SimpleList.h"
 #include "ScreenView.h"
 #include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"

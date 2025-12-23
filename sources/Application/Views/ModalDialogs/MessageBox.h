@@ -29,10 +29,12 @@ enum MessageBoxButtonFlag {
 
 class MessageBox : public ModalView {
 public:
-  MessageBox(View &view, const char *message, int btnFlags = MBBF_OK);
-  MessageBox(View &view, const char *message, const char *message2,
-             int btnFlags = MBBF_OK);
+  static MessageBox *Create(View &view, const char *message,
+                            int btnFlags = MBBF_OK);
+  static MessageBox *Create(View &view, const char *message,
+                            const char *message2, int btnFlags = MBBF_OK);
   virtual ~MessageBox();
+  virtual void Destroy() override;
 
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int currentTick);
@@ -41,10 +43,17 @@ public:
   virtual void AnimationUpdate(){};
 
 protected:
+  MessageBox(View &view, const char *message, int btnFlags = MBBF_OK);
+  MessageBox(View &view, const char *message, const char *message2,
+             int btnFlags = MBBF_OK);
   etl::string<SCREEN_WIDTH - 2> line1_ = "";
   etl::string<SCREEN_WIDTH - 2> line2_ = "";
   int button_[4];
   int buttonCount_;
   int selected_;
+
+private:
+  static bool inUse_;
+  static void *storage_;
 };
 #endif

@@ -26,7 +26,6 @@ typedef enum { ERROR = -1, FALSE, TRUE } LOGICAL;
 #define BitTst(arg, posn) BOOL((arg) & (1L << (posn)))
 #define BitFlp(arg, posn) ((arg) ^ (1L << (posn)))
 
-uint32_t measure_free_mem(void);
 void measure_freqs(void);
 #ifdef SDIO_BENCH
 void sd_bench();

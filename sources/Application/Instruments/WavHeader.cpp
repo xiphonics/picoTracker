@@ -74,10 +74,10 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
   return true;
 }
 
-std::expected<WavHeaderInfo, WAVEFILE_ERROR>
+etl::expected<WavHeaderInfo, WAVEFILE_ERROR>
 WavHeaderWriter::ReadHeader(I_File *file) {
   if (!file) {
-    return std::unexpected(INVALID_FILE);
+    return etl::unexpected(INVALID_FILE);
   }
 
   file->Seek(0, SEEK_SET);
@@ -86,25 +86,25 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
   uint32_t chunk = 0;
   if (file->Read(&chunk, 4) != 4) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (chunk != 0x46464952) { // "RIFF"
     Trace::Error("WavHeaderWriter: Missing RIFF identifier");
-    return std::unexpected(UNSUPPORTED_FILE_FORMAT);
+    return etl::unexpected(UNSUPPORTED_FILE_FORMAT);
   }
 
   if (file->Read(&info.riffChunkSize, 4) != 4) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (file->Read(&chunk, 4) != 4) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (chunk != 0x45564157) { // "WAVE"
     Trace::Error("WavHeaderWriter: Missing WAVE identifier");
-    return std::unexpected(UNSUPPORTED_WAV_FORMAT);
+    return etl::unexpected(UNSUPPORTED_WAV_FORMAT);
   }
 
   const uint32_t riffEnd = info.riffChunkSize + 8;
@@ -112,12 +112,12 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
   while (!fmtFound) {
     if (file->Read(&chunk, 4) != 4) {
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
 
     uint32_t chunkSize = 0;
     if (file->Read(&chunkSize, 4) != 4) {
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
     info.fmtChunkSize = chunkSize;
 
@@ -126,7 +126,7 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     uint32_t nextOffset = chunkDataOffset + paddedChunkSize;
     if (nextOffset > riffEnd) {
       Trace::Error("WavHeaderWriter: fmt chunk exceeds RIFF bounds");
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
 
     if (chunk == 0x20746D66) { // "fmt "
@@ -143,59 +143,59 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
   if (!fmtFound) {
     Trace::Error("WavHeaderWriter: fmt chunk missing");
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (info.fmtChunkSize < 16) {
     Trace::Error("WavHeaderWriter: fmt chunk too small");
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (file->Read(&info.audioFormat, 2) != 2) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (info.audioFormat != 1) {
     Trace::Error("WavHeaderWriter: Unsupported compression format %u",
                  info.audioFormat);
-    return std::unexpected(UNSUPPORTED_COMPRESSION);
+    return etl::unexpected(UNSUPPORTED_COMPRESSION);
   }
 
   if (file->Read(&info.numChannels, 2) != 2) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (info.numChannels == 0) {
     Trace::Error("WavHeaderWriter: Invalid channel count 0");
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (file->Read(&info.sampleRate, 4) != 4) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (info.sampleRate > 44100) {
     Trace::Error("WavHeaderWriter: Unsupported sample rate %u",
                  info.sampleRate);
-    return std::unexpected(UNSUPPORTED_SAMPLERATE);
+    return etl::unexpected(UNSUPPORTED_SAMPLERATE);
   }
 
   if (file->Read(&info.byteRate, 4) != 4) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (file->Read(&info.blockAlign, 2) != 2) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if (file->Read(&info.bitsPerSample, 2) != 2) {
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16)) {
     Trace::Error("WavHeaderWriter: Unsupported bit depth %u",
                  info.bitsPerSample);
-    return std::unexpected(UNSUPPORTED_BITDEPTH);
+    return etl::unexpected(UNSUPPORTED_BITDEPTH);
   }
 
   info.bytesPerSample = info.bitsPerSample / 8;
@@ -204,7 +204,7 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     uint32_t toSkip = info.fmtChunkSize - 16;
     if (file->Tell() + toSkip > riffEnd) {
       Trace::Error("WavHeaderWriter: fmt extra data exceeds RIFF bounds");
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
     file->Seek(toSkip, SEEK_CUR);
   }
@@ -214,12 +214,12 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
   while (true) {
     if (file->Read(&chunk, 4) != 4) {
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
 
     uint32_t chunkSize = 0;
     if (file->Read(&chunkSize, 4) != 4) {
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
 
     uint32_t dataStart = file->Tell();
@@ -227,7 +227,7 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     uint32_t chunkEnd = dataStart + paddedChunkSize;
     if (chunkEnd > riffEnd) {
       Trace::Error("WavHeaderWriter: data chunk exceeds RIFF bounds");
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
 
     if (chunk == 0x61746164) { // "data"
@@ -244,13 +244,13 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
     if (static_cast<uint32_t>(file->Tell()) >= riffEnd) {
       Trace::Error("WavHeaderWriter: data chunk not found within RIFF bounds");
-      return std::unexpected(INVALID_HEADER);
+      return etl::unexpected(INVALID_HEADER);
     }
   }
 
   if (info.dataChunkSize == 0) {
     Trace::Error("WavHeaderWriter: Missing or empty data chunk");
-    return std::unexpected(INVALID_HEADER);
+    return etl::unexpected(INVALID_HEADER);
   }
 
   file->Seek(info.dataOffset, SEEK_SET);

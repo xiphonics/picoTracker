@@ -22,7 +22,7 @@ MidiEvent::MidiEvent(unsigned char status, unsigned char data1,
 
 MidiEvent::MidiEvent(char *buffer, int len) {
   type_ = MET_SYSEX;
-  buffer_ = (unsigned char *)malloc(len);
-  bufferSize_ = len;
-  memcpy(buffer_, buffer, len);
+  buffer_ = storage_;
+  bufferSize_ = (len > MAX_SYSEX_LENGTH) ? MAX_SYSEX_LENGTH : len;
+  memcpy(buffer_, buffer, bufferSize_);
 };

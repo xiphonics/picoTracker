@@ -10,12 +10,13 @@
 #ifndef _AUDIO_SETTINGS_H_
 #define _AUDIO_SETTINGS_H_
 
-#include <string>
+#include "Externals/etl/include/etl/string.h"
+#include "config/StringLimits.h"
 // Used to propagate audio hints & settings
 
 struct AudioSettings {
-  std::string audioAPI_;
-  std::string audioDevice_;
+  etl::string<STRING_AUDIO_API_MAX> audioAPI_;
+  etl::string<STRING_AUDIO_DEVICE_MAX> audioDevice_;
   int bufferSize_;
   int preBufferCount_;
 };

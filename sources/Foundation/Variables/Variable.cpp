@@ -34,11 +34,6 @@ Variable::Variable(FourCC id, bool value) : id_(id) {
   type_ = BOOL;
 };
 
-Variable::Variable(FourCC id, const char *value) : id_(id) {
-  setStringValue(value);
-  type_ = STRING;
-};
-
 Variable::Variable(FourCC id, const char *const *list, int size, int index)
     : id_(id) {
   list_.char_ = list;
@@ -224,7 +219,10 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
     npf_snprintf(buf, sizeof(buf), "%s", value_.bool_ ? "true" : "false");
     break;
   case STRING:
-    return *stringValue_;
+    if (stringValue_) {
+      return etl::string<MAX_VARIABLE_STRING_LENGTH>(stringValue_->c_str());
+    }
+    return "";
   case CHAR_LIST:
     if ((value_.index_ < 0) || (value_.index_ >= listSize_)) {
       return "";
@@ -280,10 +278,8 @@ void Variable::Reset() {
 }
 
 void Variable::setStringValue(const char *value) {
-  if (stringValue_ != nullptr) {
-    delete stringValue_;
-  }
-  stringValue_ = new etl::string<MAX_VARIABLE_STRING_LENGTH>(value);
+  NAssert(stringValue_ != nullptr);
+  stringValue_->assign(value);
 }
 
 bool Variable::IsModified() {

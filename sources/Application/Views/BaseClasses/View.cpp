@@ -40,7 +40,7 @@ View::View(GUIWindow &w, ViewData *viewData)
   mask_ = 0;
   locked_ = false;
   modalView_ = 0;
-  modalViewCallback_ = 0;
+  modalViewCallback_ = ModalViewCallback();
   hasFocus_ = false;
 
   // Initialize VU meter tracking variables
@@ -334,7 +334,8 @@ void View::DismissModal() {
     if (modalViewCallback_) {
       modalViewCallback_(*this, *modalView_);
     }
-    SAFE_DELETE(modalView_);
+    modalView_->Destroy();
+    modalView_ = nullptr;
     isDirty_ = true;
   }
 };
