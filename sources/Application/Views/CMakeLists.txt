@@ -16,6 +16,7 @@ add_library(application_views
   SongView.cpp
   TableView.cpp
   ThemeView.cpp
+  ToastView.cpp
   UIController.cpp
   ViewData.cpp
   ScreenView.cpp
