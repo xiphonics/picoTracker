@@ -16,6 +16,7 @@ public:
   // SID model fixed at 8580
   cRSID(unsigned short samplerate);
   void cRSID_emulateADSRs(char cycles);
+  void cRSID_resetADSR(unsigned char channel);
   int cRSID_emulateWaves();
   cRSID_SIDwavOutput cRSID_emulateHQwaves(char cycles);
 
