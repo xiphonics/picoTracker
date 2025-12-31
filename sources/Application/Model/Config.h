@@ -36,7 +36,7 @@ public:
   bool ImportTheme(const char *themeName);
 
 private:
-  etl::list<Variable *, 25> variables_;
+  etl::list<Variable *, 26> variables_;
   // Config variables (kept as members to avoid heap allocation)
   WatchedVariable background_;
   WatchedVariable foreground_;
@@ -54,6 +54,7 @@ private:
   WatchedVariable midiDevice_;
   WatchedVariable midiSync_;
   WatchedVariable remoteUI_;
+  WatchedVariable importResampler_;
   WatchedVariable uiFont_;
   StringVariable<MAX_VARIABLE_STRING_LENGTH> themeName_;
   WatchedVariable backlightLevel_;
