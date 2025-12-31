@@ -7,6 +7,8 @@
  */
 
 #include "WavHeader.h"
+#include "Application/Model/Config.h"
+#include "Externals/SRC/common.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 
@@ -155,10 +157,13 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return etl::unexpected(INVALID_HEADER);
   }
 
-  if (info.audioFormat != 1) {
-    Trace::Error("WavHeaderWriter: Unsupported compression format %u",
+  const bool isPcm = info.audioFormat == 1;
+  const bool isFloat = info.audioFormat == 3;
+
+  if (!isPcm && !isFloat) {
+    Trace::Error("WavHeaderWriter: Unsupported audio format %u",
                  info.audioFormat);
-    return etl::unexpected(UNSUPPORTED_COMPRESSION);
+    return etl::unexpected(UNSUPPORTED_AUDIO_FORMAT);
   }
 
   if (file->Read(&info.numChannels, 2) != 2) {
@@ -174,7 +179,10 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return etl::unexpected(INVALID_HEADER);
   }
 
-  if (info.sampleRate > 44100) {
+  bool enableResampling = Config::GetInstance()->GetValue("IMPORTRESAMP") > 0;
+  if ((!enableResampling && info.sampleRate > 44100) ||
+      (info.sampleRate < 44100 / SRC_MAX_RATIO) ||
+      (info.sampleRate > 44100 * SRC_MAX_RATIO)) {
     Trace::Error("WavHeaderWriter: Unsupported sample rate %u",
                  info.sampleRate);
     return etl::unexpected(UNSUPPORTED_SAMPLERATE);
@@ -192,10 +200,19 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return etl::unexpected(INVALID_HEADER);
   }
 
-  if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16)) {
-    Trace::Error("WavHeaderWriter: Unsupported bit depth %u",
-                 info.bitsPerSample);
-    return etl::unexpected(UNSUPPORTED_BITDEPTH);
+  if (isPcm) {
+    if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16) &&
+        (info.bitsPerSample != 24) && (info.bitsPerSample != 32)) {
+      Trace::Error("WavHeaderWriter: Unsupported PCM bit depth %u",
+                   info.bitsPerSample);
+      return etl::unexpected(UNSUPPORTED_BITDEPTH);
+    }
+  } else if (isFloat) {
+    if ((info.bitsPerSample != 32) && (info.bitsPerSample != 64)) {
+      Trace::Error("WavHeaderWriter: Unsupported IEEE float bit depth %u",
+                   info.bitsPerSample);
+      return etl::unexpected(UNSUPPORTED_BITDEPTH);
+    }
   }
 
   info.bytesPerSample = info.bitsPerSample / 8;

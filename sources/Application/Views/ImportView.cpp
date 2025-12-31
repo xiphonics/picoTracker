@@ -442,7 +442,7 @@ void ImportView::preview(char *name) {
     case UNSUPPORTED_WAV_FORMAT:
       mb = MessageBox::Create(*this, "Preview Failed", "Invalid file", MBBF_OK);
       break;
-    case UNSUPPORTED_COMPRESSION:
+    case UNSUPPORTED_AUDIO_FORMAT:
     case UNSUPPORTED_BITDEPTH:
     case UNSUPPORTED_SAMPLERATE:
       mb = MessageBox::Create(*this, "Preview Failed", "Unsupported format",
@@ -552,7 +552,7 @@ void ImportView::import() {
     case UNSUPPORTED_WAV_FORMAT:
       mb = MessageBox::Create(*this, "Import Failed", "invalid file", MBBF_OK);
       break;
-    case UNSUPPORTED_COMPRESSION:
+    case UNSUPPORTED_AUDIO_FORMAT:
     case UNSUPPORTED_BITDEPTH:
     case UNSUPPORTED_SAMPLERATE:
       mb = MessageBox::Create(*this, "Import Failed", "unsupported format",
