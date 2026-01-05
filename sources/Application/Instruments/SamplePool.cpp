@@ -16,6 +16,8 @@
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
 #include "System/io/Status.h"
+#include "WavHeader.h"
+#include <cstdint>
 #include <stdlib.h>
 #include <string.h>
 #include <utility>
@@ -106,7 +108,7 @@ uint32_t SamplePool::FindSampleIndexByName(
   return -1;
 }
 
-#define IMPORT_CHUNK_SIZE 1000
+#define IMPORT_CHUNK_SIZE 512
 
 int SamplePool::ImportSample(const char *name, const char *projectName) {
 
@@ -114,17 +116,12 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     return -1;
   }
 
-  // Opens file - we assume that have already chdir() into the correct dir
-  // that contains the sample file
-  auto fs = FileSystem::GetInstance();
-  auto fin = fs->Open(name, "r");
-  if (!fin) {
+  WavFile wav;
+  auto wavRes = wav.Open(name);
+  if (!wavRes) {
     Trace::Error("Failed to open sample input file:%s", name);
     return -1;
-  };
-  fin->Seek(0, SEEK_END);
-  long size = fin->Tell();
-  fin->Seek(0, SEEK_SET);
+  }
 
   // will truncate too long filenames to make sure the filename imported into
   // the project is with filename length limit
@@ -148,24 +145,54 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     return -1;
   };
 
-  // copy file to current project
-  char buffer[IMPORT_CHUNK_SIZE];
-  long totalSize = size; // Store original size for progress calculation
+  // Write the initial header as 16bit, we still don't know the size
+  if (!WavHeaderWriter::WriteHeader(fout.get(), wav.GetSampleRate(-1),
+                                    wav.GetChannelCount(-1), 16)) {
+    Trace::Error("Failed to write WAV header for:%s", projectSamplePath);
+    return -1;
+  }
 
-  while (size > 0) {
-    int count = (size > IMPORT_CHUNK_SIZE) ? IMPORT_CHUNK_SIZE : size;
-    fin->Read(buffer, count);
-    fout->Write(buffer, 1, count);
-    size -= count;
+  // copy file to current project as 16-bit PCM
+  uint8_t buffer[IMPORT_CHUNK_SIZE];
+  uint32_t bytesRead = 0;
+  uint32_t totalWritten = 0;
+  uint32_t totalSize = wav.GetDiskSize(-1);
 
-    // Update progress indicator
-    int progress = (int)(((totalSize - size) * 100) / totalSize);
+  wav.Rewind();
+  while (true) {
+    if (!wav.Read(buffer, sizeof(buffer), &bytesRead)) {
+      Trace::Error("Failed reading sample data from:%s", name);
+      return -1;
+    }
+    if (bytesRead == 0) {
+      break;
+    }
+    uint32_t written = fout->Write(buffer, 1, bytesRead);
+    if (written != bytesRead) {
+      Trace::Error("Failed writing sample data to:%s", projectSamplePath);
+      return -1;
+    }
+    totalWritten += bytesRead;
+
+    uint32_t progress = 100;
+    if (totalSize > 0) {
+      progress = (totalWritten * 100) / totalSize;
+    }
     Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
                          progress);
-  };
+  }
 
-  // now load the sample into memory/flash from the original source path
-  bool status = loadSample(name);
+  if (!WavHeaderWriter::UpdateFileSize(fout.get(), wav.GetSize(-1),
+                                       wav.GetChannelCount(-1), 2)) {
+    Trace::Error("Failed to update WAV header for:%s", projectSamplePath);
+    return -1;
+  }
+
+  // Close the output file before re-opening it for import.
+  fout.reset();
+
+  // now load the sample into memory/flash from the project pool path
+  bool status = loadSample(projectSamplePath.c_str());
   if (status) {
     // Replace stored name with truncated filename so matches the potentially
     // truncated filename we actually stored into the project pool subdir
