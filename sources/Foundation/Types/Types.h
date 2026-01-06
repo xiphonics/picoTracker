@@ -254,6 +254,7 @@ struct FourCC {
     VarRecordLineGain = 182,
     VarRecordMicGain = 183,
     VarOutputVolume = 184,
+    VarImportResampler = 185,
 
     Default = 255, // "    "
   };
@@ -410,6 +411,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarRecordLineGain, "recordlinegain")
   ETL_ENUM_TYPE(VarRecordMicGain, "recordmicgain")
   ETL_ENUM_TYPE(VarOutputVolume, "outputvolume")
+  ETL_ENUM_TYPE(VarImportResampler, "IMPORTRESAMP")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

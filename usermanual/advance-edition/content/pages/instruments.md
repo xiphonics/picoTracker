@@ -122,7 +122,24 @@ The preview volume uses a non-linear (quadratic) scale that provides more precis
 
 ### Supported sample file formats
 
-Only uncompressed Wave (*.wav) files are supported using **8 or 16 bit**, mono or stereo and they **MUST** only be 44.1KHz.
+Sample files must be:
+* Uncompressed PCM (Wave/*.wav)
+* Unsigned 8 bit; signed 16, 24 or 32 bit; float 32 or 64 bit
+* Any samplerate from 8kHz to 192kHz
+* Mono or stereo
+
+Bit rate and sample rate are converted on import and saved into the project in the native picoTracker format (16bit/44100Hz/Mono or Stereo)
+
+Sample rate converter selection:
+"Import resampler" option in device screen allows to choose the sample rate converter used:
+**None:** No sample rate converter is used and only files <=44100Hz can be used, sample rate conversion happens in realtime during playback and uses a linear interpolator
+**Linear:** Linear sample rate conversion is used, fast but not band-limited so it may result in aliasing and high frequency loss. Quality is similar to the previous option but higher than 44100Hz files can be imported
+**Sinc:** Fastest band-limited sinc interpolation. Higher quality interpolation but still relatively fast. (97dB SNR, 80% bandwidth)
+**Sinc Best:** Best band-limited sinc interpolation supported. Quality is comparable to what can be done on a PC at the expense of much slower conversion speed (121db SNR, 90% bandwidth)
+
+Conversion happens on import into the project before loading into the sample pool. Any subsequent project load will not need conversion.
+
+*Conversion speed:* Higher bit rate, higher sample rate and better converters all add up to higher conversion times
 
 ## MIDI
 
