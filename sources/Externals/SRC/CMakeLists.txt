@@ -40,6 +40,8 @@ set(SRC_SOURCES
 
 if(ADV)
   list(APPEND SRC_SOURCES src_sinc.c)
+else()
+  list(APPEND SRC_SOURCES src_sinc_stub.c)
 endif()
 
 add_library(samplerate ${SRC_SOURCES})
