@@ -10,6 +10,7 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
 #include "System/Console/Trace.h"
@@ -109,6 +110,13 @@ uint32_t SamplePool::FindSampleIndexByName(
 }
 
 #define IMPORT_CHUNK_SIZE 512
+static constexpr int32_t kImportInputSamples =
+    IMPORT_CHUNK_SIZE / static_cast<int32_t>(sizeof(int16_t));
+static constexpr int32_t kImportMaxOutputSamples =
+    (kImportInputSamples * SRC_MAX_RATIO) + 8;
+static float importResampleIn_[kImportInputSamples];
+static float importResampleOut_[kImportMaxOutputSamples];
+static int16_t importResampleOutInt16_[kImportMaxOutputSamples];
 
 int SamplePool::ImportSample(const char *name, const char *projectName) {
 
@@ -145,9 +153,16 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     return -1;
   };
 
-  // Write the initial header as 16bit, we still don't know the size
-  if (!WavHeaderWriter::WriteHeader(fout.get(), wav.GetSampleRate(-1),
-                                    wav.GetChannelCount(-1), 16)) {
+  const int32_t sourceSampleRate = wav.GetSampleRate(-1);
+  const int32_t channelCount = wav.GetChannelCount(-1);
+  const int32_t importResampler =
+      Config::GetInstance()->GetValue("IMPORTRESAMP");
+  const bool shouldResample =
+      (importResampler > 0) && (sourceSampleRate != 44100);
+  const int32_t outputSampleRate = shouldResample ? 44100 : sourceSampleRate;
+
+  if (!WavHeaderWriter::WriteHeader(fout.get(), outputSampleRate, channelCount,
+                                    16)) {
     Trace::Error("Failed to write WAV header for:%s", projectSamplePath);
     return -1;
   }
@@ -155,35 +170,153 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   // copy file to current project as 16-bit PCM
   uint8_t buffer[IMPORT_CHUNK_SIZE];
   uint32_t bytesRead = 0;
-  uint32_t totalWritten = 0;
+  uint32_t samplesRead = 0;
+  uint32_t totalRead = 0;
+  uint32_t totalWrittenFrames = 0;
   uint32_t totalSize = wav.GetDiskSize(-1);
 
   wav.Rewind();
+  SRC_STATE *resampler = nullptr;
+  if (shouldResample) {
+    int32_t converterType = SRC_LINEAR;
+    if (importResampler == 2) {
+      converterType = SRC_SINC_FASTEST;
+    } else if (importResampler == 3) {
+      converterType = SRC_SINC_MEDIUM_QUALITY;
+    }
+
+    int srcError = 0;
+    resampler = src_new(converterType, channelCount, &srcError);
+    if (!resampler || srcError != SRC_ERR_NO_ERROR) {
+      Trace::Error("Failed to initialize resampler (%d)", srcError);
+      return -1;
+    }
+    src_reset(resampler);
+  }
+
+  const double srcRatio =
+      shouldResample ? (44100.0 / static_cast<double>(sourceSampleRate)) : 1.0;
+
   while (true) {
-    if (!wav.Read(buffer, sizeof(buffer), &bytesRead)) {
-      Trace::Error("Failed reading sample data from:%s", name);
-      return -1;
+    if (!shouldResample) {
+      if (!wav.Read(buffer, sizeof(buffer), &bytesRead)) {
+        Trace::Error("Failed reading sample data from:%s", name);
+        return -1;
+      }
+      if (bytesRead == 0) {
+        break;
+      }
+      totalRead += bytesRead;
+      uint32_t written = fout->Write(buffer, 1, bytesRead);
+      if (written != bytesRead) {
+        Trace::Error("Failed writing sample data to:%s", projectSamplePath);
+        return -1;
+      }
+      totalWrittenFrames +=
+          bytesRead / (static_cast<uint32_t>(channelCount) * 2);
+    } else {
+      if (!wav.ReadFloat(importResampleIn_, kImportInputSamples,
+                         &samplesRead)) {
+        Trace::Error("Failed reading sample data from:%s", name);
+        return -1;
+      }
+      if (samplesRead == 0) {
+        break;
+      }
+      totalRead += samplesRead * 2;
+
+      const uint32_t inputFrames =
+          samplesRead / static_cast<uint32_t>(channelCount);
+      uint32_t framesRemaining = inputFrames;
+      float *inPtr = importResampleIn_;
+      while (framesRemaining > 0) {
+        SRC_DATA data;
+        memset(&data, 0, sizeof(data));
+        data.data_in = inPtr;
+        data.input_frames = static_cast<long>(framesRemaining);
+        data.data_out = importResampleOut_;
+        data.output_frames = static_cast<long>(
+            kImportMaxOutputSamples / static_cast<int32_t>(channelCount));
+        data.src_ratio = srcRatio;
+        data.end_of_input = 0;
+
+        int err = src_process(resampler, &data);
+        if (err != SRC_ERR_NO_ERROR) {
+          Trace::Error("Resample failed: %s", src_strerror(err));
+          return -1;
+        }
+
+        if (data.output_frames_gen > 0) {
+          const int32_t outputSamples =
+              static_cast<int32_t>(data.output_frames_gen) * channelCount;
+          src_float_to_short_array(importResampleOut_, importResampleOutInt16_,
+                                   outputSamples);
+          const int32_t bytesToWrite = outputSamples * sizeof(int16_t);
+          uint32_t written =
+              fout->Write(importResampleOutInt16_, 1, bytesToWrite);
+          if (written != static_cast<uint32_t>(bytesToWrite)) {
+            Trace::Error("Failed writing sample data to:%s", projectSamplePath);
+            return -1;
+          }
+          totalWrittenFrames += data.output_frames_gen;
+        }
+
+        framesRemaining -= data.input_frames_used;
+        inPtr += data.input_frames_used * channelCount;
+      }
     }
-    if (bytesRead == 0) {
-      break;
-    }
-    uint32_t written = fout->Write(buffer, 1, bytesRead);
-    if (written != bytesRead) {
-      Trace::Error("Failed writing sample data to:%s", projectSamplePath);
-      return -1;
-    }
-    totalWritten += bytesRead;
 
     uint32_t progress = 100;
     if (totalSize > 0) {
-      progress = (totalWritten * 100) / totalSize;
+      progress = (totalRead * 100) / totalSize;
     }
     Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
                          progress);
   }
 
-  if (!WavHeaderWriter::UpdateFileSize(fout.get(), wav.GetSize(-1),
-                                       wav.GetChannelCount(-1), 2)) {
+  // Flush the resampler to write any delayed tail samples after input ends.
+  if (shouldResample && resampler) {
+    while (true) {
+      SRC_DATA data;
+      memset(&data, 0, sizeof(data));
+      data.data_in = nullptr;
+      data.input_frames = 0;
+      data.data_out = importResampleOut_;
+      data.output_frames = static_cast<long>(
+          kImportMaxOutputSamples / static_cast<int32_t>(channelCount));
+      data.src_ratio = srcRatio;
+      data.end_of_input = 1;
+
+      int err = src_process(resampler, &data);
+      if (err != SRC_ERR_NO_ERROR) {
+        Trace::Error("Resample flush failed: %s", src_strerror(err));
+        return -1;
+      }
+
+      if (data.output_frames_gen <= 0) {
+        break;
+      }
+
+      const int32_t outputSamples =
+          static_cast<int32_t>(data.output_frames_gen) * channelCount;
+      src_float_to_short_array(importResampleOut_, importResampleOutInt16_,
+                               outputSamples);
+      const int32_t bytesToWrite = outputSamples * sizeof(int16_t);
+      uint32_t written = fout->Write(importResampleOutInt16_, 1, bytesToWrite);
+      if (written != static_cast<uint32_t>(bytesToWrite)) {
+        Trace::Error("Failed writing sample data to:%s", projectSamplePath);
+        return -1;
+      }
+      totalWrittenFrames += data.output_frames_gen;
+    }
+    src_delete(resampler);
+  }
+
+  if (!WavHeaderWriter::UpdateFileSize(
+          fout.get(),
+          shouldResample ? totalWrittenFrames
+                         : static_cast<uint32_t>(wav.GetSize(-1)),
+          channelCount, 2)) {
     Trace::Error("Failed to update WAV header for:%s", projectSamplePath);
     return -1;
   }

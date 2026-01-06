@@ -78,6 +78,51 @@ int16_t ConvertSampleToInt16(const uint8_t *samplePtr, uint16_t audioFormat,
   return 0;
 }
 
+float ConvertSampleToFloat(const uint8_t *samplePtr, uint16_t audioFormat,
+                           int32_t bytePerSample) {
+  if (audioFormat == 1) { // PCM
+    switch (bytePerSample) {
+    case 1: {
+      int16_t v = static_cast<int16_t>(samplePtr[0]) - 128;
+      return static_cast<float>(v) / 128.0f;
+    }
+    case 2: {
+      int16_t value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return static_cast<float>(value) / 32768.0f;
+    }
+    case 3: {
+      int32_t value = samplePtr[0] | (samplePtr[1] << 8) |
+                      (static_cast<int32_t>(samplePtr[2]) << 16);
+      value = (value << 8) >> 8; // Sign extend
+      return static_cast<float>(value) / 8388608.0f;
+    }
+    case 4: {
+      int32_t value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return static_cast<float>(value) / 2147483648.0f;
+    }
+    default:
+      break;
+    }
+  } else if (audioFormat == 3) { // IEEE float
+    if (bytePerSample == 4) {
+      float value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return value;
+    }
+    if (bytePerSample == 8) {
+      double value;
+      memcpy(&value, samplePtr, sizeof(value));
+      return static_cast<float>(value);
+    }
+  }
+
+  Trace::Error("WAVFILE: Unsupported format (%u) or byte depth (%d)",
+               audioFormat, bytePerSample);
+  return 0.0f;
+}
+
 WavFile::WavFile()
     : file_(), readBufferSize_(0), samples_(nullptr), sampleBufferSize_(0),
       size_(0), sampleRate_(0), channelCount_(0), bytePerSample_(0),
@@ -233,7 +278,7 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
   // if we have reminder bytes to read, rewind to last frame read in preparation
   // for next iteration
   if (missing != 0) {
-    file_->Seek(-static_cast<int>(missing), SEEK_CUR);
+    file_->Seek(-static_cast<long>(missing), SEEK_CUR);
     actualBytesRead -= missing;
   }
 
@@ -266,6 +311,76 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
   *bytesRead = framesRead * dstFrameSize;
 
   readCount_ -= actualBytesRead;
+  return true;
+}
+
+// Resampler takes it's input in float, so we read as float if we are resampling
+// so that we don't lose precision from higher bitrate samples
+bool WavFile::ReadFloat(float *buff, uint32_t maxSamples,
+                        uint32_t *samplesRead) {
+  if (!buff || !samplesRead) {
+    return false;
+  }
+
+  *samplesRead = 0;
+
+  if (maxSamples == 0 || readCount_ == 0) {
+    return true;
+  }
+
+  const uint32_t srcFrameSize = channelCount_ * bytePerSample_;
+  if (srcFrameSize == 0) {
+    return false;
+  }
+
+  const uint32_t maxFramesByOutput = maxSamples / channelCount_;
+  const uint32_t maxFramesByReadCount = readCount_ / srcFrameSize;
+  uint32_t framesRemaining = std::min(maxFramesByOutput, maxFramesByReadCount);
+  if (framesRemaining == 0) {
+    return true;
+  }
+
+  const uint32_t maxFramesPerRead = BUFFER_SIZE / srcFrameSize;
+  if (maxFramesPerRead == 0) {
+    return false;
+  }
+
+  uint32_t framesReadTotal = 0;
+
+  while (framesRemaining > 0) {
+    const uint32_t framesThisRead = std::min(framesRemaining, maxFramesPerRead);
+    const uint32_t readSize = framesThisRead * srcFrameSize;
+
+    uint32_t actualBytesRead = file_->Read(readBuffer_, readSize);
+    uint32_t missing = actualBytesRead % srcFrameSize;
+    if (missing != 0) {
+      file_->Seek(-static_cast<int>(missing), SEEK_CUR);
+      actualBytesRead -= missing;
+    }
+    if (actualBytesRead == 0) {
+      break;
+    }
+
+    const uint32_t framesRead = actualBytesRead / srcFrameSize;
+    const uint32_t totalSamples = framesRead * channelCount_;
+    const uint8_t *src = readBuffer_;
+    float *dst = buff + (framesReadTotal * channelCount_);
+
+    for (uint32_t i = 0; i < totalSamples; ++i) {
+      const uint8_t *samplePtr = src + i * bytePerSample_;
+      dst[i] = ConvertSampleToFloat(samplePtr, audioFormat_, bytePerSample_);
+    }
+
+    framesReadTotal += framesRead;
+    framesRemaining -= framesRead;
+    readCount_ -= actualBytesRead;
+
+    if (actualBytesRead < readSize) {
+      break;
+    }
+  }
+
+  *samplesRead = framesReadTotal * channelCount_;
   return true;
 }
 
