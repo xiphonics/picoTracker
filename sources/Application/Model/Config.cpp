@@ -34,10 +34,12 @@ static const char *midiSendSync[2] = {"Off", "Send"};
 static const char *midiClockSyncOptions[2] = {"Internal", "External"};
 static const char *remoteUIOnOff[2] = {"Off", "On"};
 #ifdef ADV
-static const char *importResamplerOptions[4] = {"None", "Linear", "Sinc",
-                                                "Sinc Best"}; // should we allow None?
+static const char *importResamplerOptions[] = {"None", "Linear", "Sinc",
+                                               "Sinc Best"};
+static constexpr int kImportResamplerOptionCount = 4;
 #else
-static const char *importResamplerOptions[4] = {"None", "Linear"}; // sinc not viable for picoTracker
+static const char *importResamplerOptions[] = {"None", "Linear"};
+static constexpr int kImportResamplerOptionCount = 2;
 #endif
 
 // NOTE: these MUST match up to the RecordSource enum in record.h (of all
@@ -221,7 +223,7 @@ static const ConfigParam configParams[] = {
      {.intValue = DEFAULT_IMPORT_RESAMPLER},
      FourCC::VarImportResampler,
      importResamplerOptions,
-     4,
+     kImportResamplerOptionCount,
      false},
 
     {"RECORDSOURCE",
@@ -274,8 +276,8 @@ Config::Config()
       midiDevice_(FourCC::VarMidiDevice, midiDeviceList, 4, DEFAULT_MIDIDEVICE),
       midiSync_(FourCC::VarMidiSync, midiSendSync, 2, DEFAULT_MIDISYNC),
       remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, DEFAULT_REMOTEUI),
-      importResampler_(FourCC::VarImportResampler, importResamplerOptions, 4,
-                       DEFAULT_IMPORT_RESAMPLER),
+      importResampler_(FourCC::VarImportResampler, importResamplerOptions,
+                       kImportResamplerOptionCount, DEFAULT_IMPORT_RESAMPLER),
       uiFont_(FourCC::VarUIFont, ThemeConstants::FONT_NAMES,
               ThemeConstants::FONT_COUNT, ThemeConstants::DEFAULT_UIFONT),
       themeName_(FourCC::VarThemeName, ThemeConstants::DEFAULT_THEME_NAME),
