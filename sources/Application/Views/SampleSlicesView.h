@@ -17,18 +17,19 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "ViewData.h"
+#include <cstdint>
 
 class SampleInstrument;
 
 #ifdef ADV
-static constexpr int SliceBitmapWidth = 720;
-static constexpr int SliceBitmapHeight = 160;
+static constexpr int32_t SliceBitmapWidth = 720;
+static constexpr int32_t SliceBitmapHeight = 160;
 #else
-static constexpr int SliceBitmapWidth = 320;
-static constexpr int SliceBitmapHeight = 80;
+static constexpr int32_t SliceBitmapWidth = 320;
+static constexpr int32_t SliceBitmapHeight = 80;
 #endif
 
-static constexpr int SliceWaveformCacheSize = SliceBitmapWidth;
+static constexpr int32_t SliceWaveformCacheSize = SliceBitmapWidth;
 static constexpr size_t SliceCount = 16;
 
 class SampleSlicesView : public FieldView, public I_Observer {
@@ -53,7 +54,7 @@ private:
   void startPreview();
   void stopPreview();
   void handleSliceSelectionChange();
-  int sliceToPixel(uint32_t start) const;
+  int32_t sliceToPixel(uint32_t start) const;
   uint32_t selectedSliceStart() const;
   bool hasInstrumentSample() const;
 
@@ -69,12 +70,12 @@ private:
   bool needsWaveformRedraw_;
 
   SampleInstrument *instrument_;
-  int instrumentIndex_;
+  int32_t instrumentIndex_;
   uint32_t sampleSize_;
 
   bool playKeyHeld_;
   bool previewActive_;
-  unsigned char previewNote_;
+  uint8_t previewNote_;
 };
 
 #endif

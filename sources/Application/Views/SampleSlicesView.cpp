@@ -8,13 +8,6 @@
 
 #include "SampleSlicesView.h"
 
-#ifdef CHAR_WIDTH
-#undef CHAR_WIDTH
-#endif
-#ifdef CHAR_HEIGHT
-#undef CHAR_HEIGHT
-#endif
-
 #include "Application/AppWindow.h"
 #include "Application/Instruments/InstrumentBank.h"
 #include "Application/Instruments/SamplePool.h"
@@ -24,17 +17,16 @@
 #include "Application/Utils/char.h"
 #include "System/Console/Trace.h"
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstring>
 
 namespace {
-constexpr unsigned short PreviewChannel = SONG_CHANNEL_COUNT - 1;
-constexpr int SliceXOffset = 0;
+constexpr uint16_t PreviewChannel = SONG_CHANNEL_COUNT - 1;
+constexpr int32_t SliceXOffset = 0;
 #ifdef ADV
-constexpr int SliceYOffset = 2 * CHAR_HEIGHT * 4;
+constexpr int32_t SliceYOffset = 2 * CHAR_HEIGHT * 4;
 #else
-constexpr int SliceYOffset = 2 * CHAR_HEIGHT;
+constexpr int32_t SliceYOffset = 2 * CHAR_HEIGHT;
 #endif
 } // namespace
 
@@ -53,7 +45,7 @@ SampleSlicesView::~SampleSlicesView() { stopPreview(); }
 
 void SampleSlicesView::OnFocus() {
   stopPreview();
-  instrumentIndex_ = viewData_->currentInstrumentID_;
+  instrumentIndex_ = static_cast<int32_t>(viewData_->currentInstrumentID_);
   instrument_ = currentInstrument();
   playKeyHeld_ = false;
   previewActive_ = false;
@@ -63,10 +55,10 @@ void SampleSlicesView::OnFocus() {
 
   if (instrument_) {
     SamplePool *pool = SamplePool::GetInstance();
-    int sampleIndex = instrument_->GetSampleIndex();
+    int32_t sampleIndex = instrument_->GetSampleIndex();
     if (sampleIndex >= 0) {
       if (SoundSource *source = pool->GetSource(sampleIndex)) {
-        int size = source->GetSize(0);
+        int32_t size = source->GetSize(0);
         sampleSize_ = (size > 0) ? static_cast<uint32_t>(size) : 0;
       }
     }
@@ -177,17 +169,18 @@ void SampleSlicesView::buildFieldLayout() {
   position._y = 12;
 
   intVarField_.emplace_back(position, sliceIndexVar_, "slice: %d", 0,
-                            static_cast<int>(SliceCount) - 1, 1, 1);
+                            static_cast<int32_t>(SliceCount) - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &intVarField_.back());
   intVarField_.back().AddObserver(*this);
 
   position._y += 1;
-  int maxStart = (sampleSize_ > 0) ? static_cast<int>(sampleSize_ - 1) : 0;
-  int minStart = 0;
+  int32_t maxStart =
+      (sampleSize_ > 0) ? static_cast<int32_t>(sampleSize_ - 1) : 0;
+  int32_t minStart = 0;
   if (instrument_) {
-    int index = sliceIndexVar_.GetInt();
+    int32_t index = sliceIndexVar_.GetInt();
     if (index > 0) {
-      minStart = static_cast<int>(instrument_->GetSlicePoint(index - 1));
+      minStart = static_cast<int32_t>(instrument_->GetSlicePoint(index - 1));
     }
   }
   bigHexVarField_.emplace_back(position, sliceStartVar_, 7, "start: %7.7X",
@@ -214,7 +207,7 @@ void SampleSlicesView::rebuildWaveform() {
   }
 
   SamplePool *pool = SamplePool::GetInstance();
-  int sampleIndex = instrument_->GetSampleIndex();
+  int32_t sampleIndex = instrument_->GetSampleIndex();
   if (sampleIndex < 0) {
     return;
   }
@@ -224,14 +217,14 @@ void SampleSlicesView::rebuildWaveform() {
     return;
   }
 
-  int size = source->GetSize(0);
+  int32_t size = source->GetSize(0);
   sampleSize_ = (size > 0) ? static_cast<uint32_t>(size) : 0;
   if (sampleSize_ == 0) {
     return;
   }
 
-  int channels = source->GetChannelCount(0);
-  short *samples = static_cast<short *>(source->GetSampleBuffer(0));
+  int32_t channels = source->GetChannelCount(0);
+  int16_t *samples = static_cast<int16_t *>(source->GetSampleBuffer(0));
   if (!samples) {
     return;
   }
@@ -239,7 +232,7 @@ void SampleSlicesView::rebuildWaveform() {
   std::fill(std::begin(waveformCache_), std::end(waveformCache_), 0);
   // We quantize to 8-bit in order to accumulate into int32_t to save memory
   static int32_t sumSquares[SliceWaveformCacheSize];
-  // biggest possible sample supported / screen size < int16
+  // Counts fit in uint16_t: max bucket size is <= total samples / columns.
   static uint16_t counts[SliceWaveformCacheSize];
   std::fill_n(sumSquares, SliceWaveformCacheSize, int32_t{0});
   std::fill_n(counts, SliceWaveformCacheSize, uint16_t{0});
@@ -258,7 +251,7 @@ void SampleSlicesView::rebuildWaveform() {
     counts[pixel]++;
   }
 
-  for (int i = 0; i < SliceWaveformCacheSize; ++i) {
+  for (int32_t i = 0; i < SliceWaveformCacheSize; ++i) {
     if (counts[i] == 0) {
       waveformCache_[i] = 0;
       continue;
@@ -280,14 +273,14 @@ void SampleSlicesView::drawWaveform() {
   DrawRect(area, CD_BACKGROUND);
 
   if (waveformValid_) {
-    int centerY = SliceYOffset + SliceBitmapHeight / 2;
-    for (int x = 1; x < SliceBitmapWidth - 1; ++x) {
+    int32_t centerY = SliceYOffset + SliceBitmapHeight / 2;
+    for (int32_t x = 1; x < SliceBitmapWidth - 1; ++x) {
       uint8_t amplitude = waveformCache_[x - 1];
       if (amplitude == 0) {
         continue;
       }
-      int startY = centerY - amplitude / 2;
-      int endY = startY + amplitude;
+      int32_t startY = centerY - amplitude / 2;
+      int32_t endY = startY + amplitude;
       GUIRect column(SliceXOffset + x, startY, SliceXOffset + x + 1, endY);
       DrawRect(column, CD_NORMAL);
     }
@@ -305,11 +298,11 @@ void SampleSlicesView::drawWaveform() {
     if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
       continue;
     }
-    int x = sliceToPixel(start);
+    int32_t x = sliceToPixel(start);
     if (x < 0) {
       continue;
     }
-    ColorDefinition color = (static_cast<int>(i) == sliceIndexVar_.GetInt())
+    ColorDefinition color = (static_cast<int32_t>(i) == sliceIndexVar_.GetInt())
                                 ? CD_HILITE2
                                 : CD_ACCENT;
     GUIRect marker(x, SliceYOffset + 2, x + 1,
@@ -341,17 +334,17 @@ void SampleSlicesView::updateSliceSelectionFromInstrument() {
     return;
   }
 
-  int index = sliceIndexVar_.GetInt();
+  int32_t index = sliceIndexVar_.GetInt();
   if (index < 0) {
     index = 0;
   }
-  if (index >= static_cast<int>(SliceCount)) {
-    index = static_cast<int>(SliceCount) - 1;
+  if (index >= static_cast<int32_t>(SliceCount)) {
+    index = static_cast<int32_t>(SliceCount) - 1;
   }
 
   size_t sliceIndex = static_cast<size_t>(index);
   uint32_t start = instrument_->GetSlicePoint(sliceIndex);
-  sliceStartVar_.SetInt(static_cast<int>(start), false);
+  sliceStartVar_.SetInt(static_cast<int32_t>(start), false);
 }
 
 void SampleSlicesView::applySliceStart(uint32_t start) {
@@ -362,7 +355,7 @@ void SampleSlicesView::applySliceStart(uint32_t start) {
   instrument_->SetSlicePoint(index, start);
   uint32_t stored = instrument_->GetSlicePoint(index);
   if (stored != start) {
-    sliceStartVar_.SetInt(static_cast<int>(stored), false);
+    sliceStartVar_.SetInt(static_cast<int32_t>(stored), false);
   }
 }
 
@@ -373,8 +366,8 @@ void SampleSlicesView::startPreview() {
 
   stopPreview();
 
-  unsigned char note = static_cast<unsigned char>(
-      SampleInstrument::SliceNoteBase + sliceIndexVar_.GetInt());
+  uint8_t note = static_cast<uint8_t>(SampleInstrument::SliceNoteBase +
+                                      sliceIndexVar_.GetInt());
   Player::GetInstance()->PlayNote(static_cast<unsigned short>(instrumentIndex_),
                                   PreviewChannel, note, 0x7F);
   previewNote_ = note;
@@ -397,7 +390,7 @@ void SampleSlicesView::handleSliceSelectionChange() {
   buildFieldLayout();
 }
 
-int SampleSlicesView::sliceToPixel(uint32_t start) const {
+int32_t SampleSlicesView::sliceToPixel(uint32_t start) const {
   if (sampleSize_ == 0) {
     return -1;
   }
@@ -405,7 +398,7 @@ int SampleSlicesView::sliceToPixel(uint32_t start) const {
       start, sampleSize_ > 0 ? sampleSize_ - 1 : static_cast<uint32_t>(0));
   float ratio = static_cast<float>(clamped) /
                 static_cast<float>(std::max<uint32_t>(1, sampleSize_));
-  int local = static_cast<int>(ratio * (SliceBitmapWidth - 2));
+  int32_t local = static_cast<int32_t>(ratio * (SliceBitmapWidth - 2));
   return SliceXOffset + 1 + local;
 }
 
