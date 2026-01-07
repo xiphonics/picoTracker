@@ -237,10 +237,12 @@ void SampleSlicesView::rebuildWaveform() {
   }
 
   std::fill(std::begin(waveformCache_), std::end(waveformCache_), 0);
-  static int64_t sumSquares[SliceWaveformCacheSize];
-  static uint32_t counts[SliceWaveformCacheSize];
-  std::fill_n(sumSquares, SliceWaveformCacheSize, int64_t{0});
-  std::fill_n(counts, SliceWaveformCacheSize, uint32_t{0});
+  // We quantize to 8-bit in order to accumulate into int32_t to save memory
+  static int32_t sumSquares[SliceWaveformCacheSize];
+  // biggest possible sample supported / screen size < int16
+  static uint16_t counts[SliceWaveformCacheSize];
+  std::fill_n(sumSquares, SliceWaveformCacheSize, int32_t{0});
+  std::fill_n(counts, SliceWaveformCacheSize, uint16_t{0});
   float samplesPerPixel =
       std::max(1.0f, static_cast<float>(sampleSize_) / SliceWaveformCacheSize);
 
@@ -250,8 +252,9 @@ void SampleSlicesView::rebuildWaveform() {
     if (pixel >= SliceWaveformCacheSize) {
       pixel = SliceWaveformCacheSize - 1;
     }
-    short value = samples[i * channels];
-    sumSquares[pixel] += static_cast<int64_t>(value) * value;
+    int16_t value = samples[i * channels];
+    int16_t quant = static_cast<int16_t>(value >> 8);
+    sumSquares[pixel] += static_cast<int32_t>(quant) * quant;
     counts[pixel]++;
   }
 
@@ -261,7 +264,7 @@ void SampleSlicesView::rebuildWaveform() {
       continue;
     }
     float meanSquare = static_cast<float>(sumSquares[i]) / counts[i];
-    float rms = std::sqrt(meanSquare) / 32768.0f;
+    float rms = std::sqrt(meanSquare) / 128.0f;
     uint8_t height = static_cast<uint8_t>(std::min<float>(
         rms * SliceBitmapHeight, static_cast<float>(SliceBitmapHeight)));
     waveformCache_[i] = height;

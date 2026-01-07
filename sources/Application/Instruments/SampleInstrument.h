@@ -125,6 +125,7 @@ private:
   WatchedVariable loopEnd_;
   Variable table_;
   Variable tableAuto_;
+  // TODO (democloid): evaluate if this should be in DTCMRAM
   etl::array<uint32_t, MaxSlices> slicePoints_;
 
   static bool useDirtyDownsampling_;
