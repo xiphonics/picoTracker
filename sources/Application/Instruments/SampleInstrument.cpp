@@ -150,7 +150,7 @@ bool SampleInstrument::HasSlicesForPlayback() const {
 }
 
 bool SampleInstrument::HasSlicesForWarning() const {
-  return (slicePoints_[0] > 0) || (slicePoints_[1] > 0);
+  return hasAnySliceValue();
 }
 
 bool SampleInstrument::IsSliceDefined(size_t index) const {
@@ -241,7 +241,6 @@ uint32_t SampleInstrument::computeSliceEnd(size_t index,
       if (candidate < end) {
         end = candidate;
       }
-      break;
     }
   }
   if (end <= start) {

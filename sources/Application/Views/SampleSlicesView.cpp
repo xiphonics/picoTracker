@@ -67,7 +67,8 @@ void SampleSlicesView::OnFocus() {
     int sampleIndex = instrument_->GetSampleIndex();
     if (sampleIndex >= 0) {
       if (SoundSource *source = pool->GetSource(sampleIndex)) {
-        sampleSize_ = static_cast<uint32_t>(source->GetSize(0));
+        int size = source->GetSize(0);
+        sampleSize_ = (size > 0) ? static_cast<uint32_t>(size) : 0;
       }
     }
   }
@@ -94,6 +95,7 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
       // Go back to sample browser NAV+LEFT
+      stopPreview();
       ViewType vt = VT_INSTRUMENT;
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
       SetChanged();
@@ -124,10 +126,9 @@ void SampleSlicesView::DrawView() {
   GUIPoint titlePos = GetTitlePosition();
   DrawString(titlePos._x, titlePos._y, "Sample Slices", props);
 
-  if (needsWaveformRedraw_) {
-    drawWaveform();
-    needsWaveformRedraw_ = false;
-  }
+  refreshSliceMarkers();
+  drawWaveform();
+  needsWaveformRedraw_ = false;
 
   FieldView::Redraw();
 }
@@ -148,12 +149,14 @@ void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
   switch (fourcc) {
   case FourCC::SampleInstrumentSlices:
     handleSliceSelectionChange();
+    ((AppWindow &)w_).SetDirty();
     break;
   case FourCC::SampleInstrumentStart:
     applySliceStart(static_cast<uint32_t>(sliceStartVar_.GetInt()));
     refreshSliceMarkers();
     needsWaveformRedraw_ = true;
     isDirty_ = true;
+    ((AppWindow &)w_).SetDirty();
     break;
   default:
     break;
@@ -218,7 +221,8 @@ void SampleSlicesView::rebuildWaveform() {
     return;
   }
 
-  sampleSize_ = static_cast<uint32_t>(source->GetSize(0));
+  int size = source->GetSize(0);
+  sampleSize_ = (size > 0) ? static_cast<uint32_t>(size) : 0;
   if (sampleSize_ == 0) {
     return;
   }
@@ -269,29 +273,38 @@ void SampleSlicesView::drawWaveform() {
                SliceYOffset + SliceBitmapHeight);
   DrawRect(area, CD_BACKGROUND);
 
-  if (!waveformValid_) {
+  if (waveformValid_) {
+    int centerY = SliceYOffset + SliceBitmapHeight / 2;
+    for (int x = 1; x < SliceBitmapWidth - 1; ++x) {
+      uint8_t amplitude = waveformCache_[x - 1];
+      if (amplitude == 0) {
+        continue;
+      }
+      int startY = centerY - amplitude / 2;
+      int endY = startY + amplitude;
+      GUIRect column(SliceXOffset + x, startY, SliceXOffset + x + 1, endY);
+      DrawRect(column, CD_NORMAL);
+    }
+  }
+
+  if (!instrument_ || sampleSize_ == 0) {
     return;
   }
 
-  int centerY = SliceYOffset + SliceBitmapHeight / 2;
-  for (int x = 1; x < SliceBitmapWidth - 1; ++x) {
-    uint8_t amplitude = waveformCache_[x - 1];
-    if (amplitude == 0) {
+  for (size_t i = 0; i < SliceCount; ++i) {
+    if (!instrument_->IsSliceDefined(i)) {
       continue;
     }
-    int startY = centerY - amplitude / 2;
-    int endY = startY + amplitude;
-    GUIRect column(SliceXOffset + x, startY, SliceXOffset + x + 1, endY);
-    DrawRect(column, CD_NORMAL);
-  }
-
-  for (size_t i = 0; i < SliceCount; ++i) {
-    int x = slicePixelPositions_[i];
+    uint32_t start = instrument_->GetSlicePoint(i);
+    if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
+      continue;
+    }
+    int x = sliceToPixel(start);
     if (x < 0) {
       continue;
     }
     ColorDefinition color = (static_cast<int>(i) == sliceIndexVar_.GetInt())
-                                ? CD_CURSOR
+                                ? CD_HILITE2
                                 : CD_ACCENT;
     GUIRect marker(x, SliceYOffset + 2, x + 1,
                    SliceYOffset + SliceBitmapHeight - 2);
@@ -351,12 +364,6 @@ void SampleSlicesView::updateSliceSelectionFromInstrument() {
 
   size_t sliceIndex = static_cast<size_t>(index);
   uint32_t start = instrument_->GetSlicePoint(sliceIndex);
-  if (index > 0 && !instrument_->IsSliceDefined(sliceIndex) &&
-      instrument_->IsSliceDefined(sliceIndex - 1)) {
-    uint32_t previousStart = instrument_->GetSlicePoint(sliceIndex - 1);
-    instrument_->SetSlicePoint(sliceIndex, previousStart);
-    start = instrument_->GetSlicePoint(sliceIndex);
-  }
   sliceStartVar_.SetInt(static_cast<int>(start), false);
 }
 
