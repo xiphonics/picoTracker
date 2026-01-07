@@ -56,6 +56,7 @@ enum ViewType {
   VT_SELECTTHEME,       // Theme selection
   VT_THEME_IMPORT,      // Theme file import
   VT_SAMPLE_EDITOR,     // Sample Editor
+  VT_SAMPLE_SLICES,     // Sample slice editor
   VT_RECORD             // Recording screen
 };
 

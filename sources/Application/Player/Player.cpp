@@ -1267,6 +1267,9 @@ void Player::PlayNote(unsigned short instrumentIndex, unsigned short channel,
     // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
     int playerChannel = channel % SONG_CHANNEL_COUNT;
     mixer_.StartInstrument(playerChannel, instrument, note, true);
+    if (!isRunning_) {
+      SetAudioActive(true);
+    }
   }
 }
 
@@ -1274,4 +1277,7 @@ void Player::StopNote(unsigned short instrumentIndex, unsigned short channel) {
   // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
   int playerChannel = channel % SONG_CHANNEL_COUNT;
   mixer_.StopInstrument(playerChannel);
+  if (!isRunning_) {
+    SetAudioActive(false);
+  }
 }

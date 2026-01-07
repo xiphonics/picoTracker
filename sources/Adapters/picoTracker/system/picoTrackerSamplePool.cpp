@@ -139,6 +139,8 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
       ((FlashBaseBufferSize / FLASH_PAGE_SIZE) +
        ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) *
       FLASH_PAGE_SIZE;
+  // Trace::Debug("Size in flash: %i (%i 256 byte pages)", FlashPageBufferSize,
+  //              FlashPageBufferSize / FLASH_PAGE_SIZE);
 
   if (flashWriteOffset_ + FlashPageBufferSize > flashLimit_) {
     return false;
@@ -160,11 +162,14 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
                                ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
                               FLASH_SECTOR_SIZE;
-
+    // Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
+    //              sectorsToErase, flashEraseOffset_,
+    //              flashEraseOffset_ + sectorsToErase);
     // Erase required number of sectors
     flash_range_erase(flashEraseOffset_, sectorsToErase);
     // Move erase pointer to new position
     flashEraseOffset_ += sectorsToErase;
+    // Trace::Debug("new erase offset: %p", flashEraseOffset_);
   }
 
   uint32_t offset = 0;

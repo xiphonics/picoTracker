@@ -29,7 +29,8 @@
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
-                                          InstrumentTypeNames, IT_LAST, 0) {
+                                          InstrumentTypeNames, IT_LAST, 0),
+      lastSampleIndex_(-1), suppressSampleChangeWarning_(false) {
 
   project_ = data->project_;
 
@@ -201,6 +202,9 @@ void InstrumentView::refreshInstrumentFields() {
   for (auto &f : bitmaskVarField_) {
     f.RemoveObserver(*this);
   }
+  for (auto &f : sampleActionField_) {
+    f.RemoveObserver(*this);
+  }
 
   fieldList_.clear();
   intVarField_.clear();
@@ -208,9 +212,11 @@ void InstrumentView::refreshInstrumentFields() {
   staticField_.clear();
   bigHexVarField_.clear();
   intVarOffField_.clear();
+  sampleActionField_.clear();
   bitmaskVarField_.clear();
   nameTextField_.clear();
   nameVariables_.clear();
+  lastSampleIndex_ = -1;
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -294,8 +300,10 @@ void InstrumentView::fillSampleParameters() {
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   I_Instrument *instr = bank->GetInstrument(i);
   SampleInstrument *instrument = (SampleInstrument *)instr;
+  lastSampleIndex_ = instrument->GetSampleIndex();
 
   GUIPoint position = GetAnchor();
+  const int baseX = position._x;
 
   // offset y to account for instrument type and export/import fields
   position._y += 1;
@@ -395,6 +403,12 @@ void InstrumentView::fillSampleParameters() {
   bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
                                instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+
+  position._y += 1;
+  sampleActionField_.emplace_back("Slices", FourCC::ActionShowSampleSlices,
+                                  position);
+  fieldList_.insert(fieldList_.end(), &sampleActionField_.back());
+  sampleActionField_.back().AddObserver(*this);
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
   position._y += 2;
@@ -1014,6 +1028,67 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
   case FourCC::ActionImport: {
     // Switch to the InstrumentImportView
     ViewType vt = VT_INSTRUMENT_IMPORT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+  } break;
+  case FourCC::SampleInstrumentSample: {
+    I_Instrument *instr = getInstrument();
+    if (!instr || instr->GetType() != IT_SAMPLE) {
+      break;
+    }
+
+    SampleInstrument *sampleInstr = static_cast<SampleInstrument *>(instr);
+    int newIndex = sampleInstr->GetSampleIndex();
+
+    if (suppressSampleChangeWarning_) {
+      suppressSampleChangeWarning_ = false;
+      lastSampleIndex_ = newIndex;
+      break;
+    }
+
+    if (newIndex == lastSampleIndex_) {
+      break;
+    }
+
+    if (!sampleInstr->HasSlicesForWarning()) {
+      lastSampleIndex_ = newIndex;
+      break;
+    }
+
+    Variable *sampleVar =
+        sampleInstr->FindVariable(FourCC::SampleInstrumentSample);
+    MessageBox *mb = MessageBox::Create(*this, "Change sample &",
+                                        "clear slices?", MBBF_YES | MBBF_NO);
+
+    DoModal(mb, [this, sampleInstr, sampleVar, newIndex](View &view,
+                                                         ModalView &dialog) {
+      if (dialog.GetReturnCode() == MBL_YES) {
+        sampleInstr->ClearSlices();
+        lastSampleIndex_ = newIndex;
+        isDirty_ = true;
+      } else {
+        suppressSampleChangeWarning_ = true;
+        if (sampleVar) {
+          sampleVar->SetInt(lastSampleIndex_);
+        }
+        isDirty_ = true;
+      }
+    });
+  } break;
+  case FourCC::ActionShowSampleSlices: {
+    I_Instrument *instr = getInstrument();
+    if (!instr || instr->GetType() != IT_SAMPLE) {
+      break;
+    }
+    SampleInstrument *sampleInstr = static_cast<SampleInstrument *>(instr);
+    if (sampleInstr->GetSampleIndex() < 0) {
+      MessageBox *mb =
+          MessageBox::Create(*this, "Assign a sample first", MBBF_OK);
+      DoModal(mb);
+      break;
+    }
+    ViewType vt = VT_SAMPLE_SLICES;
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
     SetChanged();
     NotifyObservers(&ve);
