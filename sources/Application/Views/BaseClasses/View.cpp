@@ -166,14 +166,28 @@ void View::drawNotes() {
       SetColor(CD_HILITE1);
     }
     if (player->IsRunning() && viewData_->playMode_ != PM_AUDITION) {
-      DrawString(pos._x, pos._y, player->GetPlayedNote(i),
-                 props); // row for the note values
-      pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedOctive(i),
-                 props); // row for the octive values
-      pos._y++;
-      DrawString(pos._x, pos._y, player->GetPlayedInstrument(i),
-                 props); // draw instrument number
+      uint8_t sliceIndex = 0;
+      if (player->GetPlayedSliceIndex(i, sliceIndex)) {
+        DrawString(pos._x, pos._y, "SL", props);
+        pos._y++;
+        char sliceBuffer[3];
+        sliceBuffer[0] = static_cast<char>('0' + (sliceIndex / 10));
+        sliceBuffer[1] = static_cast<char>('0' + (sliceIndex % 10));
+        sliceBuffer[2] = '\0';
+        DrawString(pos._x, pos._y, sliceBuffer, props);
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i),
+                   props); // draw instrument number
+      } else {
+        DrawString(pos._x, pos._y, player->GetPlayedNote(i),
+                   props); // row for the note values
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedOctive(i),
+                   props); // row for the octive values
+        pos._y++;
+        DrawString(pos._x, pos._y, player->GetPlayedInstrument(i),
+                   props); // draw instrument number
+      }
     } else {
       DrawString(pos._x, pos._y, "  ", props); // row for the note
                                                // values
