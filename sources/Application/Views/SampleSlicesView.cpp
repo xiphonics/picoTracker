@@ -46,7 +46,6 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
       previewNote_(SampleInstrument::SliceNoteBase) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
-  slicePixelPositions_.fill(-1);
   std::memset(waveformCache_, 0, sizeof(waveformCache_));
 }
 
@@ -76,7 +75,6 @@ void SampleSlicesView::OnFocus() {
   sliceIndexVar_.SetInt(0, false);
   updateSliceSelectionFromInstrument();
   rebuildWaveform();
-  refreshSliceMarkers();
   buildFieldLayout();
   isDirty_ = true;
 }
@@ -126,7 +124,6 @@ void SampleSlicesView::DrawView() {
   GUIPoint titlePos = GetTitlePosition();
   DrawString(titlePos._x, titlePos._y, "Sample Slices", props);
 
-  refreshSliceMarkers();
   drawWaveform();
   needsWaveformRedraw_ = false;
 
@@ -153,7 +150,6 @@ void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
     break;
   case FourCC::SampleInstrumentStart:
     applySliceStart(static_cast<uint32_t>(sliceStartVar_.GetInt()));
-    refreshSliceMarkers();
     needsWaveformRedraw_ = true;
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
@@ -319,25 +315,6 @@ void SampleSlicesView::drawWaveform() {
   }
 }
 
-void SampleSlicesView::refreshSliceMarkers() {
-  slicePixelPositions_.fill(-1);
-
-  if (!instrument_ || sampleSize_ == 0) {
-    return;
-  }
-
-  for (size_t i = 0; i < SliceCount; ++i) {
-    if (!instrument_->IsSliceDefined(i)) {
-      continue;
-    }
-    uint32_t start = instrument_->GetSlicePoint(i);
-    if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
-      continue;
-    }
-    slicePixelPositions_[i] = sliceToPixel(start);
-  }
-}
-
 SampleInstrument *SampleSlicesView::currentInstrument() {
   if (!viewData_ || !viewData_->project_) {
     return nullptr;
@@ -412,7 +389,6 @@ void SampleSlicesView::stopPreview() {
 
 void SampleSlicesView::handleSliceSelectionChange() {
   updateSliceSelectionFromInstrument();
-  refreshSliceMarkers();
   needsWaveformRedraw_ = true;
   isDirty_ = true;
   buildFieldLayout();

@@ -47,7 +47,6 @@ private:
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
-  void refreshSliceMarkers();
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
@@ -73,7 +72,6 @@ private:
   int instrumentIndex_;
   uint32_t sampleSize_;
 
-  etl::array<int, SliceCount> slicePixelPositions_;
 
   bool playKeyHeld_;
   bool previewActive_;
