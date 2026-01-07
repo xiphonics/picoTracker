@@ -128,12 +128,30 @@ void SampleInstrument::SetSlicePoint(size_t index, uint32_t start) {
       }
     }
   }
-  if (slicePoints_[index] == clamped) {
-    return;
+  if (index > 0) {
+    uint32_t prev = slicePoints_[index - 1];
+    if (clamped < prev) {
+      clamped = prev;
+    }
   }
-  slicePoints_[index] = clamped;
-  SetChanged();
-  NotifyObservers();
+
+  bool changed = false;
+  if (slicePoints_[index] != clamped) {
+    slicePoints_[index] = clamped;
+    changed = true;
+  }
+
+  for (size_t i = index + 1; i < MaxSlices; ++i) {
+    if (slicePoints_[i] < clamped) {
+      slicePoints_[i] = clamped;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    SetChanged();
+    NotifyObservers();
+  }
 }
 
 void SampleInstrument::ClearSlices() {

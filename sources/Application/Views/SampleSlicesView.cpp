@@ -187,8 +187,15 @@ void SampleSlicesView::buildFieldLayout() {
 
   position._y += 1;
   int maxStart = (sampleSize_ > 0) ? static_cast<int>(sampleSize_ - 1) : 0;
-  bigHexVarField_.emplace_back(position, sliceStartVar_, 7, "start: %7.7X", 0,
-                               maxStart, 16);
+  int minStart = 0;
+  if (instrument_) {
+    int index = sliceIndexVar_.GetInt();
+    if (index > 0) {
+      minStart = static_cast<int>(instrument_->GetSlicePoint(index - 1));
+    }
+  }
+  bigHexVarField_.emplace_back(position, sliceStartVar_, 7, "start: %7.7X",
+                               minStart, maxStart, 16);
   fieldList_.insert(fieldList_.end(), &bigHexVarField_.back());
   bigHexVarField_.back().AddObserver(*this);
 
@@ -373,6 +380,10 @@ void SampleSlicesView::applySliceStart(uint32_t start) {
   }
   size_t index = static_cast<size_t>(sliceIndexVar_.GetInt());
   instrument_->SetSlicePoint(index, start);
+  uint32_t stored = instrument_->GetSlicePoint(index);
+  if (stored != start) {
+    sliceStartVar_.SetInt(static_cast<int>(stored), false);
+  }
 }
 
 void SampleSlicesView::startPreview() {
@@ -404,6 +415,7 @@ void SampleSlicesView::handleSliceSelectionChange() {
   refreshSliceMarkers();
   needsWaveformRedraw_ = true;
   isDirty_ = true;
+  buildFieldLayout();
 }
 
 int SampleSlicesView::sliceToPixel(uint32_t start) const {
