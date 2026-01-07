@@ -72,7 +72,6 @@ private:
   int instrumentIndex_;
   uint32_t sampleSize_;
 
-
   bool playKeyHeld_;
   bool previewActive_;
   unsigned char previewNote_;
