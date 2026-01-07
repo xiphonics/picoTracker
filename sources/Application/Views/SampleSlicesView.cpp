@@ -344,6 +344,19 @@ void SampleSlicesView::updateSliceSelectionFromInstrument() {
 
   size_t sliceIndex = static_cast<size_t>(index);
   uint32_t start = instrument_->GetSlicePoint(sliceIndex);
+  if (start == 0 && index > 0) {
+    for (int32_t i = index - 1; i >= 0; --i) {
+      uint32_t prev = instrument_->GetSlicePoint(static_cast<size_t>(i));
+      if (prev > 0) {
+        start = prev;
+        break;
+      }
+      if (i == 0 && instrument_->HasSlicesForPlayback()) {
+        start = 0;
+        break;
+      }
+    }
+  }
   sliceStartVar_.SetInt(static_cast<int32_t>(start), false);
 }
 

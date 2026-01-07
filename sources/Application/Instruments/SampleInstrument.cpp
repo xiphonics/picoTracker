@@ -142,6 +142,9 @@ void SampleInstrument::SetSlicePoint(size_t index, uint32_t start) {
   }
 
   for (size_t i = index + 1; i < MaxSlices; ++i) {
+    if (slicePoints_[i] == 0) {
+      break;
+    }
     if (slicePoints_[i] < clamped) {
       slicePoints_[i] = clamped;
       changed = true;
