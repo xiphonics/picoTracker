@@ -69,6 +69,7 @@ public:
   bool HasSlicesForPlayback() const;
   bool HasSlicesForWarning() const;
   bool IsSliceDefined(size_t index) const;
+  bool ShouldDisplaySliceForNote(uint8_t midinote) const;
 
   // I_Observer
   virtual void Update(Observable &o, I_ObservableData *d);

@@ -178,6 +178,33 @@ bool SampleInstrument::IsSliceDefined(size_t index) const {
   return isSliceIndexActive(index);
 }
 
+bool SampleInstrument::ShouldDisplaySliceForNote(uint8_t midinote) const {
+  if (!HasSlicesForPlayback()) {
+    return false;
+  }
+  if (source_ == nullptr || source_->IsMulti()) {
+    return false;
+  }
+  if (midinote < SliceNoteBase) {
+    return false;
+  }
+  size_t index = midinote - SliceNoteBase;
+  if (index >= MaxSlices) {
+    return false;
+  }
+  if (!isSliceIndexActive(index)) {
+    return false;
+  }
+  int size = source_->GetSize(0);
+  if (size <= 0) {
+    return false;
+  }
+  uint32_t sampleSize = static_cast<uint32_t>(size);
+  uint32_t start = computeSliceStart(index, sampleSize);
+  uint32_t end = computeSliceEnd(index, sampleSize);
+  return start < end;
+}
+
 bool SampleInstrument::hasAnySliceValue() const {
   for (auto value : slicePoints_) {
     if (value > 0) {

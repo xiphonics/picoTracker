@@ -9,6 +9,7 @@
 
 #include "PhraseView.h"
 #include "Application/Instruments/CommandList.h"
+#include "Application/Instruments/SampleInstrument.h"
 #include "Application/Model/Scale.h"
 #include "Application/Model/Table.h"
 #include "Application/Utils/HelpLegend.h"
@@ -19,6 +20,7 @@
 #include "UIController.h"
 #include "ViewData.h"
 #include <Application/AppWindow.h>
+#include <cstdint>
 #include <etl/string.h>
 #include <nanoprintf.h>
 #include <stdlib.h>
@@ -1145,17 +1147,44 @@ void PhraseView::DrawView() {
 
   // Display notes
   unsigned char *data = phrase_->note_ + (16 * viewData_->currentPhrase_);
+  unsigned char *instrData = phrase_->instr_ + (16 * viewData_->currentPhrase_);
+  unsigned char lastInstr = 0xFF;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
   buffer[4] = 0;
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
+    unsigned char instr = *instrData++;
+    if (instr != 0xFF) {
+      lastInstr = instr;
+    }
+    unsigned char effectiveInstr = (instr != 0xFF) ? instr : lastInstr;
     setTextProps(props, 0, j, false);
     (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_HILITE1)
                                             : SetColor(CD_NORMAL);
     if (d == 0xFF) {
       DrawString(pos._x, pos._y, "----", props);
     } else {
-      note2char(d, buffer);
+      bool showSlice = false;
+      uint8_t sliceIndex = 0;
+      if (effectiveInstr != 0xFF && bank) {
+        I_Instrument *instrObj = bank->GetInstrument(effectiveInstr);
+        if (instrObj && instrObj->GetType() == IT_SAMPLE) {
+          SampleInstrument *sampleInstr =
+              static_cast<SampleInstrument *>(instrObj);
+          if (sampleInstr->ShouldDisplaySliceForNote(d)) {
+            showSlice = true;
+            sliceIndex =
+                static_cast<uint8_t>(d - SampleInstrument::SliceNoteBase);
+          }
+        }
+      }
+      if (showSlice) {
+        npf_snprintf(buffer, sizeof(buffer), "SL%02u",
+                     static_cast<unsigned>(sliceIndex));
+      } else {
+        note2char(d, buffer);
+      }
       DrawString(pos._x, pos._y, buffer, props);
     }
     setTextProps(props, 0, j, true);
