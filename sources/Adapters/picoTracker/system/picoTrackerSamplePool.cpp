@@ -162,27 +162,14 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
                                ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
                               FLASH_SECTOR_SIZE;
-<<<<<<< HEAD
-
-||||||| parent of e781519 (logging in loadsamples causing hardfault now)
-    Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
-                 sectorsToErase, flashEraseOffset_,
-                 flashEraseOffset_ + sectorsToErase);
-=======
     // Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
     //              sectorsToErase, flashEraseOffset_,
     //              flashEraseOffset_ + sectorsToErase);
->>>>>>> e781519 (logging in loadsamples causing hardfault now)
     // Erase required number of sectors
     flash_range_erase(flashEraseOffset_, sectorsToErase);
     // Move erase pointer to new position
     flashEraseOffset_ += sectorsToErase;
-<<<<<<< HEAD
-||||||| parent of e781519 (logging in loadsamples causing hardfault now)
-    Trace::Debug("new erase offset: %p", flashEraseOffset_);
-=======
     // Trace::Debug("new erase offset: %p", flashEraseOffset_);
->>>>>>> e781519 (logging in loadsamples causing hardfault now)
   }
 
   uint32_t offset = 0;
