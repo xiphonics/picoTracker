@@ -88,9 +88,6 @@ GUIColor AppWindow::reserved4Color_(0xFF, 0xFF, 0x00, 15);
 // Initialize the animation frame counter
 uint32_t AppWindow::animationFrameCounter_ = 0;
 
-int AppWindow::charWidth_ = 8;
-int AppWindow::charHeight_ = 8;
-
 void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
                             int paletteIndex) {
 
@@ -344,9 +341,9 @@ void AppWindow::Flush() {
       previous++;
       currentProp++;
       previousProp++;
-      pos._x += AppWindow::charWidth_;
+      pos._x++;
     }
-    pos._y += AppWindow::charHeight_;
+    pos._y++;
     pos._x = 0;
   }
   GUIWindow::Flush();
