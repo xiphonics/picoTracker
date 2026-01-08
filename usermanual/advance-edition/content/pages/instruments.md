@@ -59,10 +59,19 @@ Once you've created an instrument, you can save it for use in other projects:
 
 ### Sample Slices View
 
-The Sample Slices view provides a focused editor for slice start points. Use the `slice` field to choose which of the 16 slots you want to edit (`slice 0` corresponds to `C3`, `slice 15` to `D#4`). The `start` field lets you enter the slice start offset as a hexadecimal sample index, and a waveform preview helps visualize the positions of every defined slice. Press `PLAY` to audition only the currently selected slice at its original pitch.
+The Sample Slices view provides a focused editor for slice start points. Use the `slice` field to choose which of the 16 slots you want to edit (`slice 0` corresponds to `C3`, `slice 15` to `D#4`, but this is hidden from the user). The `start` field lets you enter the slice start offset as a hexadecimal sample index, and a waveform preview helps visualize the positions of every defined slice. Press `PLAY` to audition only the currently selected slice at its original pitch.
+
+Slices are ordered in strict order and they cannot be reordered. Moving a slice backwards will limit it's movement to the position of the previous slice. Moving a slice forward towards another slice will shove the next slice(s) to the new position of the current slice.
 
 Slices are stored per instrument and always reference the currently assigned sample. Changing the instrument's sample when slices are present prompts for confirmation, because accepting the change clears all slice start points.
 
+*Quick edit:*
+Focusing the cursor on the sample graph allows to quickly edit the slices
+
+- `EDIT` + `UP`/`DOWN`: Zoom in/out centered on current selected slice (works on any selected field)
+- `EDIT` + `LEFT`/`RIGHT`: Select previous/next slice
+- `ENTER` + `UP`/`DOWN`: Move current slice back/forward 1/16th of the screen
+- `ENTER` + `LEFT`/`RIGHT`: Move current slice back/forward 1/64th of the screen (finer adjustment can be done on the position field)
 
 ## Sample Import Screen
 

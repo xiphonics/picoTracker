@@ -279,7 +279,7 @@ void SampleSlicesView::buildFieldLayout() {
       minStart = static_cast<int32_t>(instrument_->GetSlicePoint(index - 1));
     }
   }
-  bigHexVarField_.emplace_back(position, sliceStartVar_, 7, "start: %7.7X",
+  bigHexVarField_.emplace_back(position, sliceStartVar_, 7, "position: %7.7X",
                                minStart, maxStart, 16);
   fieldList_.insert(fieldList_.end(), &bigHexVarField_.back());
   bigHexVarField_.back().AddObserver(*this);
