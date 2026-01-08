@@ -61,8 +61,7 @@ bool PhraseView::getEffectiveInstrumentForRow(int row,
   if (row < 0) {
     return false;
   }
-  unsigned char *instrData =
-      phrase_->instr_ + (16 * viewData_->currentPhrase_);
+  unsigned char *instrData = phrase_->instr_ + (16 * viewData_->currentPhrase_);
   for (int i = row; i >= 0; --i) {
     unsigned char instr = instrData[i];
     if (instr != 0xFF) {
@@ -255,8 +254,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       uint8_t instrId = 0;
       InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
       SampleInstrument *sliceInstr = nullptr;
-      if (bank &&
-          getEffectiveInstrumentForRow(row_ + yOffset, instrId)) {
+      if (bank && getEffectiveInstrumentForRow(row_ + yOffset, instrId)) {
         I_Instrument *instr = bank->GetInstrument(instrId);
         if (instr && instr->GetType() == IT_SAMPLE) {
           sliceInstr = static_cast<SampleInstrument *>(instr);

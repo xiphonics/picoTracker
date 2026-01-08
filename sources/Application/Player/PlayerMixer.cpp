@@ -8,8 +8,8 @@
  */
 
 #include "PlayerMixer.h"
-#include "Application/Mixer/MixerService.h"
 #include "Application/Instruments/SampleInstrument.h"
+#include "Application/Mixer/MixerService.h"
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
 #include "Application/Utils/fixed.h"
