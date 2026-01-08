@@ -420,6 +420,11 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
   size_t sliceIndex = 0;
   bool sliceActive = shouldUseSlice(midinote, sliceIndex, sampleSizeU);
+  // Only play valid slices
+  if (!sliceActive && HasSlicesForPlayback() && midinote >= SliceNoteBase &&
+      midinote < static_cast<unsigned char>(SliceNoteBase + MaxSlices)) {
+    return false;
+  }
   uint32_t sliceStart = 0;
   uint32_t sliceEnd = 0;
   if (sliceActive) {
