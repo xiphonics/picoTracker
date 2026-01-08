@@ -30,12 +30,39 @@ constexpr int32_t SliceYOffset = 2 * CHAR_HEIGHT;
 #endif
 } // namespace
 
+SliceGraphField::SliceGraphField(GUIPoint &position, int32_t width,
+                                 int32_t height)
+    : UIField(position), width_(width), height_(height) {}
+
+void SliceGraphField::Draw(GUIWindow &w, int offset) {
+  if (!focus_) {
+    return;
+  }
+  int32_t x = x_;
+  int32_t y = static_cast<int32_t>(y_) + offset;
+  int32_t right = x + width_;
+  int32_t bottom = y + height_;
+
+  w.SetCurrentRectColor(AppWindow::GetColor(CD_HILITE2));
+  GUIRect top(x, y, right, y + 1);
+  GUIRect bottomLine(x, bottom - 1, right, bottom);
+  GUIRect left(x, y, x + 1, bottom);
+  GUIRect rightLine(right - 1, y, right, bottom);
+  w.DrawRect(top);
+  w.DrawRect(bottomLine);
+  w.DrawRect(left);
+  w.DrawRect(rightLine);
+  w.SetCurrentRectColor(AppWindow::GetColor(CD_NORMAL));
+}
+
 SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), sliceIndexVar_(FourCC::SampleInstrumentSlices, 0),
       sliceStartVar_(FourCC::SampleInstrumentStart, 0), waveformValid_(false),
       needsWaveformRedraw_(true), instrument_(nullptr), instrumentIndex_(0),
       sampleSize_(0), zoomLevel_(0), maxZoomLevel_(0), viewStart_(0),
-      viewEnd_(0), playKeyHeld_(false), previewActive_(false),
+      viewEnd_(0), graphFieldPos_(SliceXOffset, SliceYOffset),
+      graphField_(graphFieldPos_, SliceBitmapWidth, SliceBitmapHeight),
+      playKeyHeld_(false), previewActive_(false),
       previewNote_(SampleInstrument::SliceNoteBase) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
@@ -110,6 +137,62 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
+  bool graphFocused = (GetFocus() == &graphField_);
+
+  if (graphFocused && (mask & EPBM_EDIT)) {
+    if (mask & EPBM_LEFT) {
+      int32_t index = sliceIndexVar_.GetInt();
+      if (index > 0) {
+        sliceIndexVar_.SetInt(index - 1);
+      }
+      return;
+    }
+    if (mask & EPBM_RIGHT) {
+      int32_t index = sliceIndexVar_.GetInt();
+      if (index < static_cast<int32_t>(SliceCount) - 1) {
+        sliceIndexVar_.SetInt(index + 1);
+      }
+      return;
+    }
+  }
+
+  if (graphFocused && (mask & EPBM_ENTER)) {
+    uint32_t viewSpan = (viewEnd_ > viewStart_) ? (viewEnd_ - viewStart_) : 0;
+    if (viewSpan == 0) {
+      updateZoomWindow();
+      viewSpan = (viewEnd_ > viewStart_) ? (viewEnd_ - viewStart_) : 0;
+    }
+    if (viewSpan > 0) {
+      int32_t delta = 0;
+      if (mask & (EPBM_LEFT | EPBM_RIGHT)) {
+        delta = static_cast<int32_t>(std::max<uint32_t>(1, viewSpan / 64));
+        if (mask & EPBM_LEFT) {
+          delta = -delta;
+        }
+      } else if (mask & (EPBM_UP | EPBM_DOWN)) {
+        delta = static_cast<int32_t>(std::max<uint32_t>(1, viewSpan / 16));
+        if (mask & EPBM_DOWN) {
+          delta = -delta;
+        }
+      }
+      if (delta != 0) {
+        int32_t start = sliceStartVar_.GetInt();
+        int32_t newStart = start + delta;
+        if (newStart < 0) {
+          newStart = 0;
+        }
+        if (sampleSize_ > 0) {
+          int32_t maxStart = static_cast<int32_t>(sampleSize_ - 1);
+          if (newStart > maxStart) {
+            newStart = maxStart;
+          }
+        }
+        sliceStartVar_.SetInt(newStart);
+        return;
+      }
+    }
+  }
+  // We allow zooming from any place of the screen
   if ((mask & EPBM_EDIT) && (mask & EPBM_UP)) {
     adjustZoom(1);
     return;
@@ -200,6 +283,8 @@ void SampleSlicesView::buildFieldLayout() {
                                minStart, maxStart, 16);
   fieldList_.insert(fieldList_.end(), &bigHexVarField_.back());
   bigHexVarField_.back().AddObserver(*this);
+
+  fieldList_.insert(fieldList_.end(), &graphField_);
 
   position._y += 2;
   position._x = GetAnchor()._x + 5;
@@ -505,6 +590,7 @@ void SampleSlicesView::stopPreview() {
 }
 
 void SampleSlicesView::handleSliceSelectionChange() {
+  bool graphFocused = (GetFocus() == &graphField_);
   updateSliceSelectionFromInstrument();
   if (updateZoomWindow()) {
     waveformValid_ = false;
@@ -512,6 +598,9 @@ void SampleSlicesView::handleSliceSelectionChange() {
   needsWaveformRedraw_ = true;
   isDirty_ = true;
   buildFieldLayout();
+  if (graphFocused) {
+    SetFocus(&graphField_);
+  }
 }
 
 int32_t SampleSlicesView::sliceToPixel(uint32_t start) const {
