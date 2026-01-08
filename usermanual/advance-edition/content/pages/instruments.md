@@ -73,6 +73,8 @@ Focusing the cursor on the sample graph allows to quickly edit the slices
 - `ENTER` + `UP`/`DOWN`: Move current slice back/forward 1/16th of the screen
 - `ENTER` + `LEFT`/`RIGHT`: Move current slice back/forward 1/64th of the screen (finer adjustment can be done on the position field)
 
+*Auto slicing:* Select the number of slices desired and press the slice button to create evenly distributed slices. Set the number to 1 to quickly delete all slices.
+
 ## Sample Import Screen
 
 You can enter the sample import file browser by hitting `ENTER ENTER` (press the `ENTER` key twice in quick succession) when you are in sample field on the *Sample* Instrument Screen. This double-press behavior provides a quick way to access the sample import file browser from the sample field in the *Sample* Instrument Screen.

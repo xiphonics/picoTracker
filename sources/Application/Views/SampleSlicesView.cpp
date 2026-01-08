@@ -15,6 +15,7 @@
 #include "Application/Model/Song.h"
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #include <algorithm>
 #include <cmath>
@@ -57,12 +58,13 @@ void SliceGraphField::Draw(GUIWindow &w, int offset) {
 
 SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), sliceIndexVar_(FourCC::SampleInstrumentSlices, 0),
-      sliceStartVar_(FourCC::SampleInstrumentStart, 0), waveformValid_(false),
+      sliceStartVar_(FourCC::SampleInstrumentStart, 0),
+      autoSliceCountVar_(FourCC::Default, 4), waveformValid_(false),
       needsWaveformRedraw_(true), instrument_(nullptr), instrumentIndex_(0),
       sampleSize_(0), zoomLevel_(0), maxZoomLevel_(0), viewStart_(0),
       viewEnd_(0), graphFieldPos_(SliceXOffset, SliceYOffset),
       graphField_(graphFieldPos_, SliceBitmapWidth, SliceBitmapHeight),
-      playKeyHeld_(false), previewActive_(false),
+      modalWasOpen_(false), playKeyHeld_(false), previewActive_(false),
       previewNote_(SampleInstrument::SliceNoteBase) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
@@ -80,6 +82,7 @@ void SampleSlicesView::OnFocus() {
   waveformValid_ = false;
   needsWaveformRedraw_ = true;
   sampleSize_ = 0;
+  modalWasOpen_ = false;
   zoomLevel_ = 0;
 
   if (instrument_) {
@@ -212,8 +215,10 @@ void SampleSlicesView::DrawView() {
   GUIPoint titlePos = GetTitlePosition();
   DrawString(titlePos._x, titlePos._y, "Sample Slices", props);
 
-  drawWaveform();
-  needsWaveformRedraw_ = false;
+  if (!HasModalView()) {
+    drawWaveform();
+    needsWaveformRedraw_ = false;
+  }
 
   FieldView::Redraw();
 }
@@ -222,6 +227,13 @@ void SampleSlicesView::AnimationUpdate() {
   GUITextProperties props;
   drawBattery(props);
   drawPowerButtonUI(props);
+  bool hasModal = HasModalView();
+  if (modalWasOpen_ && !hasModal) {
+    needsWaveformRedraw_ = true;
+    isDirty_ = true;
+    ((AppWindow &)w_).SetDirty();
+  }
+  modalWasOpen_ = hasModal;
 }
 
 void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
@@ -242,6 +254,18 @@ void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
     break;
+  case FourCC::ActionAutoSlice:
+    // Only warn if slices exist
+    // TODO (democloid): modal does not fully cover graph
+    if (instrument_ && instrument_->HasSlicesForPlayback()) {
+      MessageBox *mb = MessageBox::Create(*this, "Replace current slices?",
+                                          MBBF_YES | MBBF_NO);
+      DoModal(mb, ModalViewCallback::create<
+                      &SampleSlicesView::AutoSliceConfirmCallback>());
+    } else {
+      autoSliceEvenly();
+    }
+    break;
   default:
     break;
   }
@@ -259,6 +283,7 @@ void SampleSlicesView::buildFieldLayout() {
   intVarField_.clear();
   bigHexVarField_.clear();
   staticField_.clear();
+  actionField_.clear();
 
   GUIPoint position = GetAnchor();
   position._x += 5;
@@ -283,6 +308,16 @@ void SampleSlicesView::buildFieldLayout() {
                                minStart, maxStart, 16);
   fieldList_.insert(fieldList_.end(), &bigHexVarField_.back());
   bigHexVarField_.back().AddObserver(*this);
+
+  position._y += 1;
+  intVarField_.emplace_back(position, autoSliceCountVar_, "auto: %d", 1,
+                            static_cast<int32_t>(SliceCount), 1, 4);
+  fieldList_.insert(fieldList_.end(), &intVarField_.back());
+
+  position._x += 11;
+  actionField_.emplace_back("slice", FourCC::ActionAutoSlice, position);
+  fieldList_.insert(fieldList_.end(), &actionField_.back());
+  actionField_.back().AddObserver(*this);
 
   fieldList_.insert(fieldList_.end(), &graphField_);
 
@@ -483,6 +518,42 @@ void SampleSlicesView::applySliceStart(uint32_t start) {
     needsWaveformRedraw_ = true;
     isDirty_ = true;
   }
+}
+
+void SampleSlicesView::autoSliceEvenly() {
+  if (!instrument_ || sampleSize_ == 0) {
+    return;
+  }
+  int32_t count = autoSliceCountVar_.GetInt();
+  if (count < 1) {
+    return;
+  }
+  if (count > static_cast<int32_t>(SliceCount)) {
+    count = static_cast<int32_t>(SliceCount);
+  }
+  instrument_->ClearSlices();
+  if (count > 1) {
+    for (int32_t i = 0; i < count; ++i) {
+      uint32_t start =
+          (static_cast<uint64_t>(sampleSize_) * static_cast<uint64_t>(i)) /
+          static_cast<uint32_t>(count);
+      instrument_->SetSlicePoint(static_cast<size_t>(i), start);
+    }
+  }
+  updateSliceSelectionFromInstrument();
+  if (updateZoomWindow()) {
+    waveformValid_ = false;
+  }
+  needsWaveformRedraw_ = true;
+  isDirty_ = true;
+  ((AppWindow &)w_).SetDirty();
+}
+
+void SampleSlicesView::AutoSliceConfirmCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() != MBL_YES) {
+    return;
+  }
+  static_cast<SampleSlicesView &>(v).autoSliceEvenly();
 }
 
 void SampleSlicesView::updateZoomLimits() {
