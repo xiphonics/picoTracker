@@ -205,6 +205,30 @@ bool SampleInstrument::ShouldDisplaySliceForNote(uint8_t midinote) const {
   return start < end;
 }
 
+bool SampleInstrument::GetSliceNoteRange(uint8_t &first, uint8_t &last) const {
+  if (!HasSlicesForPlayback()) {
+    return false;
+  }
+  bool found = false;
+  size_t firstIndex = 0;
+  size_t lastIndex = 0;
+  for (size_t i = 0; i < MaxSlices; ++i) {
+    if (isSliceIndexActive(i)) {
+      if (!found) {
+        firstIndex = i;
+        found = true;
+      }
+      lastIndex = i;
+    }
+  }
+  if (!found) {
+    return false;
+  }
+  first = static_cast<uint8_t>(SliceNoteBase + firstIndex);
+  last = static_cast<uint8_t>(SliceNoteBase + lastIndex);
+  return true;
+}
+
 bool SampleInstrument::hasAnySliceValue() const {
   for (auto value : slicePoints_) {
     if (value > 0) {

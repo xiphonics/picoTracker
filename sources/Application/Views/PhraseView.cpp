@@ -53,6 +53,26 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
 
 PhraseView::~PhraseView(){};
 
+bool PhraseView::getEffectiveInstrumentForRow(int row,
+                                              uint8_t &instrumentId) const {
+  if (!phrase_) {
+    return false;
+  }
+  if (row < 0) {
+    return false;
+  }
+  unsigned char *instrData =
+      phrase_->instr_ + (16 * viewData_->currentPhrase_);
+  for (int i = row; i >= 0; --i) {
+    unsigned char instr = instrData[i];
+    if (instr != 0xFF) {
+      instrumentId = instr;
+      return true;
+    }
+  }
+  return false;
+}
+
 void PhraseView::updateCursor(int dx, int dy) {
 
   col_ += dx;
@@ -230,24 +250,49 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   if ((c) && (*c != 0xFF)) {
     int offset = offsets_[col_ + xOffset][direction];
 
-    // if note column apply the set scale
+    // if note column apply the set scale or slice range
     if (col_ + xOffset == 0) {
-      // Add/remove from offset to match selected scale
-      int scale = viewData_->project_->GetScale();
-      int scaleRoot = viewData_->project_->GetScaleRoot();
-
-      // Calculate the new note with the offset
-      int newNote = *c + offset;
-
-      // Check if the note is in the scale (adjusted for root)
-      // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
-      while (newNote >= 0 &&
-             !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
-        offset > 0 ? offset++ : offset--;
-        newNote = *c + offset;
+      uint8_t instrId = 0;
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      SampleInstrument *sliceInstr = nullptr;
+      if (bank &&
+          getEffectiveInstrumentForRow(row_ + yOffset, instrId)) {
+        I_Instrument *instr = bank->GetInstrument(instrId);
+        if (instr && instr->GetType() == IT_SAMPLE) {
+          sliceInstr = static_cast<SampleInstrument *>(instr);
+        }
       }
+
+      uint8_t sliceFirst = 0;
+      uint8_t sliceLast = 0;
+      if (sliceInstr && sliceInstr->GetSliceNoteRange(sliceFirst, sliceLast)) {
+        int newNote = *c + offset;
+        if (newNote < sliceFirst) {
+          newNote = sliceFirst;
+        } else if (newNote > sliceLast) {
+          newNote = sliceLast;
+        }
+        *c = static_cast<unsigned char>(newNote);
+      } else {
+        // Add/remove from offset to match selected scale
+        int scale = viewData_->project_->GetScale();
+        int scaleRoot = viewData_->project_->GetScaleRoot();
+
+        // Calculate the new note with the offset
+        int newNote = *c + offset;
+
+        // Check if the note is in the scale (adjusted for root)
+        // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
+        while (newNote >= 0 &&
+               !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
+          offset > 0 ? offset++ : offset--;
+          newNote = *c + offset;
+        }
+        updateData(c, offset, limit, wrap);
+      }
+    } else {
+      updateData(c, offset, limit, wrap);
     }
-    updateData(c, offset, limit, wrap);
 
     switch (col_ + xOffset) {
     case 0: {
@@ -1158,7 +1203,7 @@ void PhraseView::DrawView() {
     if (instr != 0xFF) {
       lastInstr = instr;
     }
-    unsigned char effectiveInstr = (instr != 0xFF) ? instr : lastInstr;
+    unsigned char effectiveInstr = lastInstr;
     setTextProps(props, 0, j, false);
     (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_HILITE1)
                                             : SetColor(CD_NORMAL);
@@ -1166,22 +1211,31 @@ void PhraseView::DrawView() {
       DrawString(pos._x, pos._y, "----", props);
     } else {
       bool showSlice = false;
+      bool invalidSlice = false;
       uint8_t sliceIndex = 0;
       if (effectiveInstr != 0xFF && bank) {
         I_Instrument *instrObj = bank->GetInstrument(effectiveInstr);
         if (instrObj && instrObj->GetType() == IT_SAMPLE) {
           SampleInstrument *sampleInstr =
               static_cast<SampleInstrument *>(instrObj);
-          if (sampleInstr->ShouldDisplaySliceForNote(d)) {
-            showSlice = true;
-            sliceIndex =
-                static_cast<uint8_t>(d - SampleInstrument::SliceNoteBase);
+          if (sampleInstr->HasSlicesForPlayback()) {
+            if (sampleInstr->ShouldDisplaySliceForNote(d)) {
+              showSlice = true;
+              sliceIndex =
+                  static_cast<uint8_t>(d - SampleInstrument::SliceNoteBase);
+            } else if (d >= SampleInstrument::SliceNoteBase &&
+                       d < SampleInstrument::SliceNoteBase +
+                               SampleInstrument::MaxSlices) {
+              invalidSlice = true;
+            }
           }
         }
       }
       if (showSlice) {
         npf_snprintf(buffer, sizeof(buffer), "SL%02u",
                      static_cast<unsigned>(sliceIndex));
+      } else if (invalidSlice) {
+        npf_snprintf(buffer, sizeof(buffer), "SL**");
       } else {
         note2char(d, buffer);
       }

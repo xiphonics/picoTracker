@@ -53,6 +53,7 @@ protected:
   void processSelectionButtonMask(unsigned short mask);
 
   void setTextProps(GUITextProperties &props, int row, int col, bool restore);
+  bool getEffectiveInstrumentForRow(int row, uint8_t &instrumentId) const;
 
 private:
   int row_;
