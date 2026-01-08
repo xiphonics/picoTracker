@@ -111,6 +111,7 @@ public:
   const char *GetPlayedNote(int channel);
   const char *GetPlayedOctive(int channel);
   const char *GetPlayedInstrument(int channel);
+  bool GetPlayedSliceIndex(int channel, uint8_t &sliceIndex);
 
   // info
   int GetPlayedBufferPercentage();

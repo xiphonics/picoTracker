@@ -239,6 +239,10 @@ const char *Player::GetPlayedInstrument(int channel) {
   }
 }
 
+bool Player::GetPlayedSliceIndex(int channel, uint8_t &sliceIndex) {
+  return mixer_.GetPlayedSliceIndex(channel, sliceIndex);
+}
+
 const char *Player::GetLiveIndicator(int channel) {
 
   bool blink = true;
