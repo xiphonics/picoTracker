@@ -1221,9 +1221,7 @@ void PhraseView::DrawView() {
               showSlice = true;
               sliceIndex =
                   static_cast<uint8_t>(d - SampleInstrument::SliceNoteBase);
-            } else if (d >= SampleInstrument::SliceNoteBase &&
-                       d < SampleInstrument::SliceNoteBase +
-                               SampleInstrument::MaxSlices) {
+            } else {
               invalidSlice = true;
             }
           }
