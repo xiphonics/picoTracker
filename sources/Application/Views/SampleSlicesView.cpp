@@ -34,7 +34,8 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), sliceIndexVar_(FourCC::SampleInstrumentSlices, 0),
       sliceStartVar_(FourCC::SampleInstrumentStart, 0), waveformValid_(false),
       needsWaveformRedraw_(true), instrument_(nullptr), instrumentIndex_(0),
-      sampleSize_(0), playKeyHeld_(false), previewActive_(false),
+      sampleSize_(0), zoomLevel_(0), maxZoomLevel_(0), viewStart_(0),
+      viewEnd_(0), playKeyHeld_(false), previewActive_(false),
       previewNote_(SampleInstrument::SliceNoteBase) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
@@ -52,6 +53,7 @@ void SampleSlicesView::OnFocus() {
   waveformValid_ = false;
   needsWaveformRedraw_ = true;
   sampleSize_ = 0;
+  zoomLevel_ = 0;
 
   if (instrument_) {
     SamplePool *pool = SamplePool::GetInstance();
@@ -66,6 +68,8 @@ void SampleSlicesView::OnFocus() {
 
   sliceIndexVar_.SetInt(0, false);
   updateSliceSelectionFromInstrument();
+  updateZoomLimits();
+  updateZoomWindow();
   rebuildWaveform();
   buildFieldLayout();
   isDirty_ = true;
@@ -103,6 +107,15 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
       playKeyHeld_ = true;
       needsWaveformRedraw_ = true;
     }
+    return;
+  }
+
+  if ((mask & EPBM_EDIT) && (mask & EPBM_UP)) {
+    adjustZoom(1);
+    return;
+  }
+  if ((mask & EPBM_EDIT) && (mask & EPBM_DOWN)) {
+    adjustZoom(-1);
     return;
   }
 
@@ -222,6 +235,9 @@ void SampleSlicesView::rebuildWaveform() {
   if (sampleSize_ == 0) {
     return;
   }
+  if (viewEnd_ <= viewStart_) {
+    return;
+  }
 
   int32_t channels = source->GetChannelCount(0);
   int16_t *samples = static_cast<int16_t *>(source->GetSampleBuffer(0));
@@ -236,12 +252,15 @@ void SampleSlicesView::rebuildWaveform() {
   static uint16_t counts[SliceWaveformCacheSize];
   std::fill_n(sumSquares, SliceWaveformCacheSize, int32_t{0});
   std::fill_n(counts, SliceWaveformCacheSize, uint16_t{0});
-  float samplesPerPixel =
-      std::max(1.0f, static_cast<float>(sampleSize_) / SliceWaveformCacheSize);
+  uint32_t viewSpan = viewEnd_ - viewStart_;
+  if (viewSpan == 0) {
+    return;
+  }
 
-  for (uint32_t i = 0; i < sampleSize_; ++i) {
-    uint32_t pixel =
-        static_cast<uint32_t>(std::floor(i / samplesPerPixel + 0.5f));
+  for (uint32_t i = viewStart_; i < viewEnd_; ++i) {
+    uint32_t rel = i - viewStart_;
+    uint32_t pixel = static_cast<uint32_t>(
+        (static_cast<uint64_t>(rel) * SliceWaveformCacheSize) / viewSpan);
     if (pixel >= SliceWaveformCacheSize) {
       pixel = SliceWaveformCacheSize - 1;
     }
@@ -271,6 +290,10 @@ void SampleSlicesView::drawWaveform() {
   GUIRect area(SliceXOffset, SliceYOffset, SliceXOffset + SliceBitmapWidth,
                SliceYOffset + SliceBitmapHeight);
   DrawRect(area, CD_BACKGROUND);
+
+  if (!waveformValid_) {
+    rebuildWaveform();
+  }
 
   if (waveformValid_) {
     int32_t centerY = SliceYOffset + SliceBitmapHeight / 2;
@@ -370,6 +393,91 @@ void SampleSlicesView::applySliceStart(uint32_t start) {
   if (stored != start) {
     sliceStartVar_.SetInt(static_cast<int32_t>(stored), false);
   }
+  if (updateZoomWindow()) {
+    waveformValid_ = false;
+    needsWaveformRedraw_ = true;
+    isDirty_ = true;
+  }
+}
+
+void SampleSlicesView::updateZoomLimits() {
+  maxZoomLevel_ = 0;
+  uint32_t span = sampleSize_;
+  while (span > static_cast<uint32_t>(SliceWaveformCacheSize) &&
+         maxZoomLevel_ < 16) {
+    span = (span + 1) / 2;
+    maxZoomLevel_++;
+  }
+  if (zoomLevel_ > maxZoomLevel_) {
+    zoomLevel_ = maxZoomLevel_;
+  }
+}
+
+bool SampleSlicesView::updateZoomWindow() {
+  if (sampleSize_ == 0) {
+    viewStart_ = 0;
+    viewEnd_ = 0;
+    return false;
+  }
+
+  uint32_t zoomFactor =
+      (zoomLevel_ < 31) ? (static_cast<uint32_t>(1) << zoomLevel_) : 0;
+  if (zoomFactor == 0) {
+    zoomFactor = 1;
+  }
+  uint32_t viewSpan = sampleSize_ / zoomFactor;
+  if (viewSpan == 0) {
+    viewSpan = 1;
+  }
+  if (viewSpan >= sampleSize_) {
+    viewSpan = sampleSize_;
+  }
+
+  uint32_t center = selectedSliceStart();
+  if (center >= sampleSize_) {
+    center = sampleSize_ - 1;
+  }
+
+  uint32_t start = 0;
+  if (viewSpan < sampleSize_) {
+    uint32_t half = viewSpan / 2;
+    if (center > half) {
+      start = center - half;
+    }
+    if (start + viewSpan > sampleSize_) {
+      start = sampleSize_ - viewSpan;
+    }
+  }
+  uint32_t end = start + viewSpan;
+
+  bool changed = (start != viewStart_) || (end != viewEnd_);
+  viewStart_ = start;
+  viewEnd_ = end;
+  return changed;
+}
+
+void SampleSlicesView::adjustZoom(int32_t delta) {
+  if (sampleSize_ == 0) {
+    return;
+  }
+  int32_t newLevel =
+      static_cast<int32_t>(zoomLevel_) + static_cast<int32_t>(delta);
+  if (newLevel < 0) {
+    newLevel = 0;
+  }
+  if (newLevel > static_cast<int32_t>(maxZoomLevel_)) {
+    newLevel = static_cast<int32_t>(maxZoomLevel_);
+  }
+  if (newLevel == static_cast<int32_t>(zoomLevel_)) {
+    return;
+  }
+  zoomLevel_ = static_cast<uint8_t>(newLevel);
+  if (updateZoomWindow()) {
+    waveformValid_ = false;
+    needsWaveformRedraw_ = true;
+    isDirty_ = true;
+    ((AppWindow &)w_).SetDirty();
+  }
 }
 
 void SampleSlicesView::startPreview() {
@@ -398,21 +506,36 @@ void SampleSlicesView::stopPreview() {
 
 void SampleSlicesView::handleSliceSelectionChange() {
   updateSliceSelectionFromInstrument();
+  if (updateZoomWindow()) {
+    waveformValid_ = false;
+  }
   needsWaveformRedraw_ = true;
   isDirty_ = true;
   buildFieldLayout();
 }
 
 int32_t SampleSlicesView::sliceToPixel(uint32_t start) const {
-  if (sampleSize_ == 0) {
+  if (sampleSize_ == 0 || viewEnd_ <= viewStart_) {
+    return -1;
+  }
+  if (start < viewStart_ || start >= viewEnd_) {
     return -1;
   }
   uint32_t clamped = std::min(
       start, sampleSize_ > 0 ? sampleSize_ - 1 : static_cast<uint32_t>(0));
-  float ratio = static_cast<float>(clamped) /
-                static_cast<float>(std::max<uint32_t>(1, sampleSize_));
-  int32_t local = static_cast<int32_t>(ratio * (SliceBitmapWidth - 2));
+  uint32_t viewSpan = viewEnd_ - viewStart_;
+  uint32_t rel = clamped - viewStart_;
+  int32_t local = static_cast<int32_t>(
+      (static_cast<uint64_t>(rel) * (SliceBitmapWidth - 2)) / viewSpan);
   return SliceXOffset + 1 + local;
+}
+
+uint32_t SampleSlicesView::selectedSliceStart() {
+  int32_t start = sliceStartVar_.GetInt();
+  if (start < 0) {
+    return 0;
+  }
+  return static_cast<uint32_t>(start);
 }
 
 bool SampleSlicesView::hasInstrumentSample() const {

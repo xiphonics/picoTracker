@@ -51,11 +51,14 @@ private:
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
+  void updateZoomLimits();
+  bool updateZoomWindow();
+  void adjustZoom(int32_t delta);
   void startPreview();
   void stopPreview();
   void handleSliceSelectionChange();
   int32_t sliceToPixel(uint32_t start) const;
-  uint32_t selectedSliceStart() const;
+  uint32_t selectedSliceStart();
   bool hasInstrumentSample() const;
 
   WatchedVariable sliceIndexVar_;
@@ -72,6 +75,10 @@ private:
   SampleInstrument *instrument_;
   int32_t instrumentIndex_;
   uint32_t sampleSize_;
+  uint8_t zoomLevel_;
+  uint8_t maxZoomLevel_;
+  uint32_t viewStart_;
+  uint32_t viewEnd_;
 
   bool playKeyHeld_;
   bool previewActive_;
