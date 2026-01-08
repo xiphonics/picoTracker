@@ -32,6 +32,19 @@ static constexpr int32_t SliceBitmapHeight = 80;
 static constexpr int32_t SliceWaveformCacheSize = SliceBitmapWidth;
 static constexpr size_t SliceCount = 16;
 
+class SliceGraphField : public UIField {
+public:
+  SliceGraphField(GUIPoint &position, int32_t width, int32_t height);
+  ~SliceGraphField() override = default;
+  void Draw(GUIWindow &w, int offset = 0) override;
+  void OnClick() override{};
+  void ProcessArrow(unsigned short) override{};
+
+private:
+  int32_t width_;
+  int32_t height_;
+};
+
 class SampleSlicesView : public FieldView, public I_Observer {
 public:
   SampleSlicesView(GUIWindow &w, ViewData *data);
@@ -51,11 +64,14 @@ private:
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
+  void updateZoomLimits();
+  bool updateZoomWindow();
+  void adjustZoom(int32_t delta);
   void startPreview();
   void stopPreview();
   void handleSliceSelectionChange();
   int32_t sliceToPixel(uint32_t start) const;
-  uint32_t selectedSliceStart() const;
+  uint32_t selectedSliceStart();
   bool hasInstrumentSample() const;
 
   WatchedVariable sliceIndexVar_;
@@ -72,6 +88,12 @@ private:
   SampleInstrument *instrument_;
   int32_t instrumentIndex_;
   uint32_t sampleSize_;
+  uint8_t zoomLevel_;
+  uint8_t maxZoomLevel_;
+  uint32_t viewStart_;
+  uint32_t viewEnd_;
+  GUIPoint graphFieldPos_;
+  SliceGraphField graphField_;
 
   bool playKeyHeld_;
   bool previewActive_;
