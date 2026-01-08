@@ -9,6 +9,7 @@
 #ifndef _SAMPLE_SLICES_VIEW_H_
 #define _SAMPLE_SLICES_VIEW_H_
 
+#include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
@@ -58,12 +59,14 @@ public:
   void Update(Observable &o, I_ObservableData *d) override;
 
 private:
+  static void AutoSliceConfirmCallback(View &v, ModalView &dialog);
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
+  void autoSliceEvenly();
   void updateZoomLimits();
   bool updateZoomWindow();
   void adjustZoom(int32_t delta);
@@ -76,10 +79,12 @@ private:
 
   WatchedVariable sliceIndexVar_;
   WatchedVariable sliceStartVar_;
+  Variable autoSliceCountVar_;
 
-  etl::vector<UIIntVarField, 1> intVarField_;
+  etl::vector<UIIntVarField, 2> intVarField_;
   etl::vector<UIBigHexVarField, 1> bigHexVarField_;
   etl::vector<UIStaticField, 2> staticField_;
+  etl::vector<UIActionField, 1> actionField_;
 
   uint8_t waveformCache_[SliceWaveformCacheSize];
   bool waveformValid_;
@@ -94,6 +99,7 @@ private:
   uint32_t viewEnd_;
   GUIPoint graphFieldPos_;
   SliceGraphField graphField_;
+  bool modalWasOpen_;
 
   bool playKeyHeld_;
   bool previewActive_;

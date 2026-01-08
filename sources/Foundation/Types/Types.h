@@ -257,6 +257,7 @@ struct FourCC {
     VarRecordMicGain = 183,
     VarOutputVolume = 184,
     VarImportResampler = 185,
+    ActionAutoSlice = 186,
 
     Default = 255, // "    "
   };
