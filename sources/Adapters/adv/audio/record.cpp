@@ -277,8 +277,9 @@ void Record(void *) {
         writeInProgress = false;
         if (bytesWritten != (int)bytesToWrite) {
           Trace::Error("write failed\r\n");
-          // for now just give up and error out
-          return;
+          // Stop recording so the task can clean up and signal completion.
+          recordingActive = false;
+          continue;
         } else {
           // Total samples written totalSamplesWritten/4 for stereo 16bit
           // samples
