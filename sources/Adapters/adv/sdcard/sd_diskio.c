@@ -9,6 +9,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "sd_diskio.h"
+#include "main.h"
 #include <string.h>
 
 /* Private typedef -----------------------------------------------------------*/
@@ -29,6 +30,7 @@ __ALIGN_BEGIN static uint8_t scratch[BLOCKSIZE] __ALIGN_END;
 static volatile DSTATUS Stat = STA_NOINIT;
 static volatile UINT WriteStatus = 0;
 static volatile UINT ReadStatus = 0;
+static uint8_t SD_is_card_present(void);
 /* Private function prototypes -----------------------------------------------*/
 static int SD_check_status_with_timeout(uint32_t);
 static DSTATUS SD_check_status(BYTE);
@@ -48,6 +50,9 @@ const Diskio_drvTypeDef SD_DMA_Driver = {
  * @retval DSTATUS: return 0 if the sd card is ready and -1 otherwise
  */
 static int SD_check_status_with_timeout(uint32_t timeout) {
+  if (!SD_is_card_present()) {
+    return -1;
+  }
   uint32_t timer = HAL_GetTick();
   /* block until SDIO IP is ready again or a timeout occur */
   while (HAL_GetTick() - timer < timeout) {
@@ -67,7 +72,8 @@ static int SD_check_status_with_timeout(uint32_t timeout) {
 static DSTATUS SD_check_status(BYTE lun) {
   Stat = STA_NOINIT;
 
-  if (HAL_SD_GetCardState(&sdmmc_handle) == HAL_SD_CARD_TRANSFER) {
+  if (SD_is_card_present() &&
+      (HAL_SD_GetCardState(&sdmmc_handle) == HAL_SD_CARD_TRANSFER)) {
     Stat &= ~STA_NOINIT;
   }
 
@@ -108,6 +114,9 @@ static DRESULT SD_DMA_read(BYTE lun, BYTE *buff, LBA_t sector, UINT count) {
   uint8_t ret;
   uint32_t i;
 
+  if (!SD_is_card_present()) {
+    return res;
+  }
   if (SD_check_status_with_timeout(SD_TIMEOUT) < 0) {
     return res;
   }
@@ -194,6 +203,9 @@ static DRESULT SD_DMA_write(BYTE lun, const BYTE *buff, LBA_t sector,
   uint8_t ret;
   uint32_t i;
 
+  if (!SD_is_card_present()) {
+    return res;
+  }
   if (SD_check_status_with_timeout(SD_TIMEOUT) < 0) {
     return res;
   }
@@ -313,6 +325,12 @@ static DRESULT SD_DMA_ioctl(BYTE lun, BYTE cmd, void *buff) {
   }
 
   return res;
+}
+
+static uint8_t SD_is_card_present(void) {
+  return (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET)
+             ? 1U
+             : 0U;
 }
 
 /**

@@ -423,14 +423,17 @@ void advEventManager::ProcessInputEvent(void *) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   switch (GPIO_Pin) {
   case SD_DET_Pin: {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
       // SD card inserted
-      Event ev(SD_DET);
-      xQueueSend(eventQueue, &ev, 0);
+      Event ev(SD_DET_INSERT);
+      xQueueSendFromISR(eventQueue, &ev, &xHigherPriorityTaskWoken);
     } else {
-      // We don't yet do anything for SD Card removed, could actually unlink
-      // FS on removal
+      // SD card removed
+      Event ev(SD_DET_REMOVE);
+      xQueueSendFromISR(eventQueue, &ev, &xHigherPriorityTaskWoken);
     }
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
   } break;
   case CHARGER_INT_Pin: {
     auto reason = chargerIntReason();
