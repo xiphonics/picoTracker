@@ -26,6 +26,7 @@ class InstrumentBank : public Persistent {
 public:
   InstrumentBank();
   ~InstrumentBank();
+  void Reset();
   void AssignDefaults();
   I_Instrument *GetInstrument(int i);
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);

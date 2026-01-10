@@ -111,7 +111,8 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
   }
 }
 
-AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
+AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
+    : GUIWindow(imp), project_(projectName), viewData_(&project_) {
 
   instance = this;
 
@@ -120,7 +121,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _statusLine[0] = 0;
 
   _currentView = 0;
-  _viewData = 0;
+  _viewData = &viewData_;
   _songView = 0;
   _chainView = 0;
   _phraseView = 0;
@@ -142,6 +143,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _mask = 0;
   lowBatteryMessageShown_ = false;
   lowBatteryWarningCounter_ = 0;
+
+  npf_snprintf(projectName_, sizeof(projectName_), "%s", projectName);
 
   EventDispatcher *ed = EventDispatcher::GetInstance();
   ed->SetWindow(this);
@@ -368,8 +371,8 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
   // load the projects samples
   pool->Load(projectName);
 
-  alignas(Project) static char projectMemBuf[sizeof(Project)];
-  Project *project = new (projectMemBuf) Project(projectName);
+  project_.Load(projectName);
+  Project *project = &project_;
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
@@ -402,8 +405,8 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
   ApplicationCommandDispatcher::GetInstance()->Init(project);
 
   // Create view data
-  alignas(ViewData) static char viewDataMemBuf[sizeof(ViewData)];
-  _viewData = new (viewDataMemBuf) ViewData(project);
+  _viewData = &viewData_;
+  _viewData->Load(project);
 
   // Create & observe the player
   Player *player = Player::GetInstance();
@@ -576,11 +579,6 @@ void AppWindow::CloseProject() {
   UIController *controller = UIController::GetInstance();
   controller->Reset();
 
-  if (_viewData) {
-    _viewData->~ViewData();
-    _viewData = nullptr;
-  }
-
   _currentView = _nullView;
   _nullView->SetDirty(true);
 };
@@ -590,8 +588,7 @@ AppWindow *AppWindow::Create(GUICreateWindowParams &params,
   I_GUIWindowImp &imp =
       I_GUIWindowFactory::GetInstance()->CreateWindowImp(params);
   alignas(AppWindow) static char appWindowMemBuf[sizeof(AppWindow)];
-  AppWindow *w = new (appWindowMemBuf) AppWindow(imp);
-  strcpy(w->projectName_, projectName);
+  AppWindow *w = new (appWindowMemBuf) AppWindow(imp, projectName);
   return w;
 };
 

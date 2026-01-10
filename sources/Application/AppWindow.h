@@ -58,7 +58,7 @@ class View;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
 protected:
-  AppWindow(I_GUIWindowImp &imp);
+  AppWindow(I_GUIWindowImp &imp, const char *projectName);
   virtual ~AppWindow();
 
 public:
@@ -110,6 +110,8 @@ protected: // GUIWindow implementation
 private:
   bool autoSave();
 
+  Project project_;
+  ViewData viewData_;
   View *_currentView;
   ViewData *_viewData;
   SongView *_songView;

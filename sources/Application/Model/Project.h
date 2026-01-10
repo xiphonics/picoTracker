@@ -35,6 +35,7 @@ class Project : public Persistent, public VariableContainer, I_Observer {
 public:
   Project(const char *name);
   ~Project();
+  void Load(const char *name);
   void Purge();
   void PurgeInstruments();
   void PurgeSamples();

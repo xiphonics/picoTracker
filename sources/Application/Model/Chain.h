@@ -20,6 +20,7 @@ class Chain {
 public:
   Chain();
   ~Chain();
+  void Reset();
   unsigned short GetNext();
   bool IsUsed(unsigned char i) { return isUsed_[i]; };
   void SetUsed(unsigned char c);

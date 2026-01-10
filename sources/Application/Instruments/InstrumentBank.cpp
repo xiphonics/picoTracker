@@ -36,10 +36,19 @@ InstrumentBank::InstrumentBank()
 };
 
 InstrumentBank::~InstrumentBank() {
+  Reset();
+};
+
+void InstrumentBank::Reset() {
   sampleInstrumentPool_.release_all();
   midiInstrumentPool_.release_all();
   sidInstrumentPool_.release_all();
   opalInstrumentPool_.release_all();
+
+  for (size_t i = 0; i < instruments_.max_size(); i++) {
+    instruments_[i] = &none_;
+  }
+  sidOscCount = 0;
 };
 
 I_Instrument *InstrumentBank::GetInstrument(int i) { return instruments_[i]; };
