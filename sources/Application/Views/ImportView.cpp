@@ -36,6 +36,18 @@ ImportView::ImportView(GUIWindow &w, ViewData *viewData)
 
 ImportView::~ImportView() {}
 
+void ImportView::Reset() {
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  previewPlayingIndex_ = 0;
+  selectedButton_ = 0;
+  toInstr_ = 0;
+  playKeyHeld_ = false;
+  editKeyHeld_ = false;
+  inProjectSampleDir_ = false;
+  fileIndexList_.clear();
+}
+
 // Static method to set the source view type before opening ImportView
 void ImportView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 

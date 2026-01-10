@@ -68,6 +68,15 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 
 InstrumentView::~InstrumentView() {}
 
+void InstrumentView::Reset() {
+  lastSampleIndex_ = -1;
+  suppressSampleChangeWarning_ = false;
+  exportInstrument_ = nullptr;
+  exportName_.clear();
+  lastFocusID_ = FourCC::VarInstrumentType;
+  instrumentType_.SetInt(0, false);
+}
+
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
   nameVariables_.emplace_back(instr);
   Variable &nameVar = *nameVariables_.rbegin();

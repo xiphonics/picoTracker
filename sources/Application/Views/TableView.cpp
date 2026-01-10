@@ -36,6 +36,40 @@ TableView::TableView(GUIWindow &w, ViewData *viewData)
 
 TableView::~TableView() {}
 
+void TableView::Reset() {
+  row_ = 0;
+  col_ = 0;
+  lastVol_ = 0;
+  lastTick_ = 0;
+  lastTsp_ = 0;
+  lastCmd_ = FourCC::InstrumentCommandNone;
+  lastParam_ = 0;
+  cmdEdit_.SetInt(0, false);
+
+  clipboard_.active_ = false;
+  clipboard_.width_ = 0;
+  clipboard_.height_ = 0;
+  clipboard_.col_ = 0;
+  clipboard_.row_ = 0;
+  for (int i = 0; i < 16; i++) {
+    clipboard_.cmd1_[i] = 0;
+    clipboard_.param1_[i] = 0;
+    clipboard_.cmd2_[i] = 0;
+    clipboard_.param2_[i] = 0;
+    clipboard_.cmd3_[i] = 0;
+    clipboard_.param3_[i] = 0;
+  }
+
+  saveCol_ = 0;
+  saveRow_ = 0;
+  needsUIUpdate_ = false;
+  needsPlayPositionUpdate_ = false;
+  needsNotesUpdate_ = false;
+  lastPosition_[0] = 0;
+  lastPosition_[1] = 0;
+  lastPosition_[2] = 0;
+}
+
 void TableView::OnFocus() {
   clipboard_.active_ = false;
   viewMode_ = VM_NORMAL;

@@ -75,6 +75,33 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
 
 SampleEditorView::~SampleEditorView() {}
 
+void SampleEditorView::Reset() {
+  fullWaveformRedraw_ = false;
+  isPlaying_ = false;
+  isSingleCycle_ = false;
+  playKeyHeld_ = false;
+  waveformCacheValid_ = false;
+  playbackPosition_ = 0.0f;
+  playbackStartFrame_ = 0;
+  lastAnimationTime_ = 0;
+  start_ = 0;
+  end_ = 0;
+  tempSampleSize_ = 0;
+  modalClearCount_ = 0;
+  last_start_x_ = -1;
+  last_end_x_ = -1;
+  last_playhead_x_ = -1;
+  filename.clear();
+  filenameVar_.SetString("", false);
+  memset(waveformCache_, 0, sizeof(waveformCache_));
+
+  fieldList_.clear();
+  bigHexVarField_.clear();
+  intVarField_.clear();
+  actionField_.clear();
+  nameTextField_.clear();
+}
+
 // Static method to set the source view type before opening SampleEditorView
 void SampleEditorView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 

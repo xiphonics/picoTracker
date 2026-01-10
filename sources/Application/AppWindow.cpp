@@ -444,6 +444,25 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
   // Update view data
   viewData_.Load(project);
 
+  if (views_) {
+    views_->songView.Reset();
+    views_->chainView.Reset();
+    views_->phraseView.Reset();
+    views_->grooveView.Reset();
+    views_->tableView.Reset();
+    views_->projectView.Reset();
+    views_->instrumentView.Reset();
+    views_->mixerView.Reset();
+    views_->importView.Reset();
+    views_->instrumentImportView.Reset();
+    views_->themeView.Reset();
+    views_->themeImportView.Reset();
+    views_->selectProjectView.Reset();
+    views_->sampleEditorView.Reset();
+    views_->sampleSlicesView.Reset();
+    views_->recordView.Reset();
+  }
+
   // Create & observe the player
   Player *player = Player::GetInstance();
   bool playerOK = player->Init(project, &viewData_);

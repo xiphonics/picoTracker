@@ -272,6 +272,13 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   }
 };
 
+void ProjectView::Reset() {
+  lastClock_ = 0;
+  lastTick_ = 0;
+  saveAsFlag_ = false;
+  oldProjName_ = getProjectName();
+}
+
 void ProjectView::DrawView() {
 
   Clear();

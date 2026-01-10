@@ -19,6 +19,13 @@ SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
 
 SelectProjectView::~SelectProjectView() {}
 
+void SelectProjectView::Reset() {
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  selection_[0] = '\0';
+  fileIndexList_.clear();
+}
+
 void SelectProjectView::DrawView() {
   Clear();
 

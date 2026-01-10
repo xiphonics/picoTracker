@@ -27,6 +27,11 @@ MixerView::MixerView(GUIWindow &w, ViewData *viewData)
 
 MixerView::~MixerView() {}
 
+void MixerView::Reset() {
+  needsPlayTimeUpdate_ = false;
+  needsNotesUpdate_ = false;
+}
+
 void MixerView::OnFocus() {
   // update selected field to match current cursor position
   if (viewData_->songX_ <= SONG_CHANNEL_COUNT) {
