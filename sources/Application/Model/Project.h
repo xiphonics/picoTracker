@@ -68,7 +68,7 @@ public:
 private:
   etl::list<Variable *, 16> variables_;
 
-  InstrumentBank *instrumentBank_;
+  InstrumentBank instrumentBank_;
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];
   unsigned int tempoTapCount_;

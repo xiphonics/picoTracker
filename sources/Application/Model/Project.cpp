@@ -76,10 +76,6 @@ Project::Project(const char *name)
 
   // Project name is now managed through the WatchedVariable
 
-  alignas(
-      InstrumentBank) static char instrumentBankMemBuf[sizeof(InstrumentBank)];
-  instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
-
   // look if we can find a sav file
 
   // Makes sure the tables exists for restoring
@@ -93,7 +89,7 @@ Project::Project(const char *name)
   Status::Set("About to load project");
 };
 
-Project::~Project() { delete instrumentBank_; };
+Project::~Project() {}
 
 int Project::GetScale() {
   Variable *v = FindVariable(FourCC::VarScale);
@@ -187,7 +183,7 @@ bool Project::Wrap() {
   return v->GetBool();
 };
 
-InstrumentBank *Project::GetInstrumentBank() { return instrumentBank_; };
+InstrumentBank *Project::GetInstrumentBank() { return &instrumentBank_; };
 
 void Project::Update(Observable &o, I_ObservableData *d) {
   // Nothing to do here for now
