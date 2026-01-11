@@ -12,6 +12,7 @@
 #include "Application/Commands/EventDispatcher.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Mixer/MixerService.h"
+#include "Application/Model/Mixer.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
@@ -401,15 +402,32 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   PersistencyService *persist = PersistencyService::GetInstance();
 
-  TablePlayback::Reset();
+  Player *player = Player::GetInstance();
+  if (player->IsRunning()) {
+    player->Stop();
+  }
 
-  // Load the sample pool
+  TablePlayback::Reset();
+  TableHolder::GetInstance()->Reset();
+  Mixer::GetInstance()->Clear();
+
   SamplePool *pool = SamplePool::GetInstance();
-  // load the projects samples
-  pool->Load(projectName);
+  pool->Reset();
 
   project_.Load(projectName);
   Project *project = &project_;
+
+  if (createProjectOnLoad_) {
+    PersistencyResult created = persist->CreateProject();
+    if (created != PERSIST_SAVED) {
+      Trace::Error("Failed to create new project '%s'", projectName);
+      return LoadProjectResult::LOAD_FAILED;
+    }
+    createProjectOnLoad_ = false;
+  }
+
+  // load the projects samples
+  pool->Load(projectName);
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
@@ -429,6 +447,7 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
   if (projectNameVar) {
     WatchedVariable *watchedVar = (WatchedVariable *)projectNameVar;
     if (watchedVar) {
+      watchedVar->RemoveObserver(*this);
       watchedVar->AddObserver(*this);
       // Store the initial project name
       project->GetProjectName(projectName_);
@@ -463,10 +482,14 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
     views_->recordView.Reset();
   }
 
-  // Create & observe the player
-  Player *player = Player::GetInstance();
-  bool playerOK = player->Init(project, &viewData_);
-  player->AddObserver(*this);
+  bool playerOK = true;
+  if (!playerInitialized_) {
+    playerOK = player->Init(project, &viewData_);
+    player->AddObserver(*this);
+    playerInitialized_ = true;
+  } else {
+    player->BindProject(project, &viewData_);
+  }
 
   // Create the controller
   UIController *controller = UIController::GetInstance();
@@ -485,6 +508,10 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
     _currentView->SetDirty(true);
     SetDirty();
   }
+
+  if (persist->SaveProjectState(projectName) != PERSIST_SAVED) {
+    Trace::Error("Failed to save project state for '%s'", projectName);
+  }
   return LoadProjectResult::LOAD_OK;
 }
 
@@ -494,8 +521,6 @@ void AppWindow::CloseProject() {
   Player *player = Player::GetInstance();
   player->Stop();
   player->RemoveObserver(*this);
-
-  player->Reset();
 
   SamplePool *pool = SamplePool::GetInstance();
   pool->Reset();
@@ -842,12 +867,22 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     break;
   }
 
-    /*	  case VET_LIST_SELECT:
-          {
-          char *name=(char*)ve->GetData() ;
-          LoadProject(name) ;
-          break ;
-          } */
+  case VET_LOAD_PROJECT: {
+    const char *name = static_cast<const char *>(ve->GetData());
+    if (name && name[0] != '\0') {
+      npf_snprintf(projectName_, sizeof(projectName_), "%s", name);
+      createProjectOnLoad_ = false;
+      loadProject_ = true;
+    }
+    break;
+  }
+  case VET_NEW_PROJECT: {
+    npf_snprintf(projectName_, sizeof(projectName_), "%s",
+                 UNNAMED_PROJECT_NAME);
+    createProjectOnLoad_ = true;
+    loadProject_ = true;
+    break;
+  }
   case VET_QUIT_PROJECT: {
     // defer event to after we got out of the view
     _closeProject = true;

@@ -132,6 +132,8 @@ private:
 
   bool loadProject_ = false;
   bool awaitingProjectLoadAck_ = false;
+  bool createProjectOnLoad_ = false;
+  bool playerInitialized_ = false;
 
   uint32_t lastAutoSave = 0;
 

@@ -36,14 +36,12 @@ static void LoadCallback(View &v, ModalView &dialog) {
 
 static void CreateNewProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    PersistencyService::GetInstance()->SaveProjectState(UNNAMED_PROJECT_NAME);
-
     // first clear out any existing "unnamed" project
     PersistencyService::GetInstance()->PurgeUnnamedProject();
 
-    // now reboot!
-    System *sys = System::GetInstance();
-    sys->SystemReboot();
+    ViewEvent ve(VET_NEW_PROJECT);
+    ((ProjectView &)v).SetChanged();
+    ((ProjectView &)v).NotifyObservers(&ve);
   }
 };
 

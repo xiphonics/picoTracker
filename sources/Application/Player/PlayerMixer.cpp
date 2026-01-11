@@ -67,6 +67,17 @@ bool PlayerMixer::Init(Project *project) {
   return true;
 };
 
+void PlayerMixer::BindProject(Project *project) {
+  project_ = project;
+  fileStreamer_.SetProject(project);
+
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    lastInstrument_[i] = 0;
+    isChannelPlaying_[i] = false;
+    notes_[i] = 0xFF;
+  }
+}
+
 void PlayerMixer::Close() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
