@@ -35,9 +35,7 @@ InstrumentBank::InstrumentBank()
   Status::Set("All instruments preloaded");
 };
 
-InstrumentBank::~InstrumentBank() {
-  Reset();
-};
+InstrumentBank::~InstrumentBank() { Reset(); };
 
 void InstrumentBank::Reset() {
   sampleInstrumentPool_.release_all();
