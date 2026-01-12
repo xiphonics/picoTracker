@@ -158,10 +158,11 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
 };
 
 void AudioFileStreamer::Stop() {
-  // Because on the Pico, Stop() is called from Core0 while rendering is on
-  // Core1, can get a race if the wav file is closed in Stop() while rendering
-  // is still reading from the file to stream the audio data so instead just set
-  // flag to request the stop happen in Render()
+  // Because Stop() is called from the "ui thread"" (Core0 on pico) while
+  // rendering is on "audio thread" (Core1 on pico), can get a race if the wav
+  // file is closed in Stop() while rendering is still reading from the file to
+  // stream the audio data so instead just set flag to request the stop happen
+  // in Render()
   stopRequested_ = true;
   mode_ = AFSM_STOPPED;
   Trace::Debug("Streaming stopped");
