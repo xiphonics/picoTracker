@@ -29,7 +29,9 @@ AudioFileStreamer::AudioFileStreamer() {
   fpSpeed_ = FP_ONE;         // Default 1.0 in fixed point
   project_ = NULL;
   singleCycleData_ = NULL;
+#ifndef ADV
   stopRequested_ = false;
+#endif
   referencePitch_ = 261.63f; // C4 = 261.63 Hz (using C4 to compensate for how
                              // its actually what we call C3 in pT)
 };
@@ -40,7 +42,9 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
   Trace::Debug("Starting to stream:%s from sample %d", name, startSample);
   strcpy(name_, name);
   position_ = (startSample > 0) ? float(startSample) : 0.0f;
+#ifndef ADV
   stopRequested_ = false;
+#endif
 
   wav_.Close();
   Trace::Log("", "wave open:%s", name_);
@@ -158,6 +162,7 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
 };
 
 void AudioFileStreamer::Stop() {
+#ifndef ADV
   // Because Stop() is called from the "ui thread"" (Core0 on pico) while
   // rendering is on "audio thread" (Core1 on pico), can get a race if the wav
   // file is closed in Stop() while rendering is still reading from the file to
@@ -166,6 +171,11 @@ void AudioFileStreamer::Stop() {
   stopRequested_ = true;
   mode_ = AFSM_STOPPED;
   Trace::Debug("Streaming stopped");
+#else
+  mode_ = AFSM_STOPPED;
+  wav_.Close();
+  Trace::Debug("Streaming stopped");
+#endif
 };
 
 bool AudioFileStreamer::IsPlaying() {
@@ -173,12 +183,14 @@ bool AudioFileStreamer::IsPlaying() {
 }
 
 bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
+#ifndef ADV
   if (stopRequested_) {
     wav_.Close();
     stopRequested_ = false;
     mode_ = AFSM_STOPPED;
     return false;
   }
+#endif
   // See if we're playing
   if (mode_ == AFSM_STOPPED) {
     return false;
