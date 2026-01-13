@@ -230,8 +230,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
                    "Failed to save device config after line out change");
       configDirty_ = true;
     } else {
-      Trace::Log("DEVICEVIEW",
-                 "Saved device config after line out change");
+      Trace::Log("DEVICEVIEW", "Saved device config after line out change");
       configDirty_ = false;
     }
     break;
