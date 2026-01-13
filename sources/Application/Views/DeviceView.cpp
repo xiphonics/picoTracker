@@ -217,7 +217,15 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     MessageBox *mb =
         new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
     DoModal(mb);
-    configDirty_ = true;
+    Config *config = Config::GetInstance();
+    if (!config->Save()) {
+      Trace::Error("DEVICEVIEW",
+                   "Failed to save device config after line out change");
+      configDirty_ = true;
+    } else {
+      Trace::Log("DEVICEVIEW", "Saved device config after line out change");
+      configDirty_ = false;
+    }
     break;
   }
   case FourCC::VarMidiDevice:
