@@ -217,7 +217,7 @@ bool MixerService::configureRenderPaths() {
     return false;
   }
 
-  char projectname[MAX_PROJECT_NAME_LENGTH];
+  char projectname[MAX_PROJECT_NAME_LENGTH + 1];
   project->GetProjectName(projectname);
 
   char path[30 + MAX_PROJECT_NAME_LENGTH];

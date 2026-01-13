@@ -955,7 +955,7 @@ bool SampleEditorView::loadSampleToPool(
   uint16_t sampleId = -1;
 
   if (!viewData_->isShowingSampleEditorProjectPool) {
-    char projectName[MAX_PROJECT_NAME_LENGTH];
+    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
     viewData_->project_->GetProjectName(projectName);
 
     sampleId = pool->ImportSample(savedFilename.c_str(), projectName);
