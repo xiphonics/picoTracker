@@ -652,7 +652,7 @@ void AppWindow::onUpdate(bool redraw) {
 void AppWindow::AnimationUpdate() {
   // Increment the animation frame counter
   animationFrameCounter_++;
-  char failedProjectName_[MAX_PROJECT_NAME_LENGTH] = {0};
+  char failedProjectName_[MAX_PROJECT_NAME_LENGTH + 1] = {0};
 
   if (awaitingProjectLoadAck_) {
     if (_mask != 0) {

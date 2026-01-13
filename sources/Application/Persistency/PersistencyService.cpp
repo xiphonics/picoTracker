@@ -223,8 +223,11 @@ PersistencyService::LoadCurrentProjectName(char *projectName) {
   auto fs = FileSystem::GetInstance();
   if (fs->exists(PROJECT_STATE_FILE)) {
     auto current = fs->Open(PROJECT_STATE_FILE, "r");
-    int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH - 1);
-    current->Close();
+    if (!current) {
+      Trace::Error("PERSISTENCYSERVICE: Could not open project state file");
+      return PERSIST_LOAD_FAILED;
+    }
+    int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH);
     projectName[len] = '\0';
     Trace::Log("APPLICATION", "read [%d] load proj name: %s", len, projectName);
     if (Exists(projectName)) {
