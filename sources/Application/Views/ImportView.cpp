@@ -488,7 +488,7 @@ void ImportView::import() {
   fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
   // Get current project name
-  char projName[MAX_PROJECT_NAME_LENGTH];
+  char projName[MAX_PROJECT_NAME_LENGTH + 1];
   viewData_->project_->GetProjectName(projName);
 
   // Check if we're in the project's sample directory
@@ -648,7 +648,7 @@ void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Check if we're in the projects directory
   // and if trying to go into the same dir as current project and if so dont
   // allow it
-  char projName[MAX_PROJECT_NAME_LENGTH];
+  char projName[MAX_PROJECT_NAME_LENGTH + 1];
   viewData_->project_->GetProjectName(projName);
 
   if (strcmp(projName, name) == 0) {

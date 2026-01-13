@@ -147,12 +147,16 @@ int Project::GetChannelVolume(int channel) {
 
 void Project::GetProjectName(char *name) {
   Variable *v = FindVariable(FourCC::VarProjectName);
-  strcpy(name, v->GetString().c_str());
+  strncpy(name, v->GetString().c_str(), MAX_PROJECT_NAME_LENGTH);
+  name[MAX_PROJECT_NAME_LENGTH] = '\0';
 }
 
 void Project::SetProjectName(char *name) {
   Variable *v = FindVariable(FourCC::VarProjectName);
-  v->SetString(name, true);
+  char buffer[MAX_PROJECT_NAME_LENGTH + 1];
+  strncpy(buffer, name, MAX_PROJECT_NAME_LENGTH);
+  buffer[MAX_PROJECT_NAME_LENGTH] = '\0';
+  v->SetString(buffer, true);
 }
 
 void Project::NudgeTempo(int value) {

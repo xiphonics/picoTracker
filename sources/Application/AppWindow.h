@@ -79,7 +79,7 @@ public:
   void SetDirty();
   void UpdateColorsFromConfig();
 
-  char projectName_[MAX_PROJECT_NAME_LENGTH];
+  char projectName_[MAX_PROJECT_NAME_LENGTH + 1];
 
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);

@@ -33,7 +33,7 @@ protected:
 private:
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
-  char selection_[MAX_PROJECT_NAME_LENGTH];
+  char selection_[MAX_PROJECT_NAME_LENGTH + 1];
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 #endif
