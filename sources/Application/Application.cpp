@@ -30,7 +30,7 @@ bool Application::Init(GUICreateWindowParams &params) {
 
   ensurePTDirsExist();
 
-  char projectName[MAX_PROJECT_NAME_LENGTH];
+  char projectName[MAX_PROJECT_NAME_LENGTH + 1];
   initProject(projectName);
 
   window_ = AppWindow::Create(params, projectName);

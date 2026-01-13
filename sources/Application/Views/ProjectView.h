@@ -31,8 +31,10 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
+
   etl::string<MAX_PROJECT_NAME_LENGTH> getProjectName() {
-    return nameField_->GetString();
+    return etl::string<MAX_PROJECT_NAME_LENGTH>(
+        nameField_->GetString().c_str());
   };
 
   etl::string<MAX_PROJECT_NAME_LENGTH> getOldProjectName() {

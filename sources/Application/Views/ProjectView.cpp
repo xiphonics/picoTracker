@@ -336,7 +336,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   }
   case FourCC::ActionSave: {
     PersistencyService *persist = PersistencyService::GetInstance();
-    char projName[MAX_PROJECT_NAME_LENGTH];
+    char projName[MAX_PROJECT_NAME_LENGTH + 1];
     project_->GetProjectName(projName);
 
     if (saveAsFlag_) {
