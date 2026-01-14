@@ -189,7 +189,7 @@ bool AudioFileStreamer::IsPlaying() {
 bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 #ifndef ADV
   if (stopRequested_) {
-    wav_.Close();
+    wav_->Close();
     stopRequested_ = false;
     mode_ = AFSM_STOPPED;
     return false;
