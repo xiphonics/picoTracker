@@ -228,6 +228,8 @@ PersistencyService::LoadCurrentProjectName(char *projectName) {
       return PERSIST_LOAD_FAILED;
     }
     int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH);
+    current->Close();
+    delete current;
     projectName[len] = '\0';
     Trace::Log("APPLICATION", "read [%d] load proj name: %s", len, projectName);
     if (Exists(projectName)) {
@@ -251,6 +253,7 @@ PersistencyService::SaveProjectState(const char *projectName) {
   auto current = fs->Open(PROJECT_STATE_FILE, "w");
   current->Write(projectName, 1, strlen(projectName));
   current->Close();
+  delete current;
   return PERSIST_SAVED;
 }
 
