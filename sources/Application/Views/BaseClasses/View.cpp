@@ -193,16 +193,9 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
                              bool forceRedraw, uint8_t xoffset) {
   stereosample playerLevel = player->GetMasterLevel();
 
-  // Convert to dB
-  int leftDb = amplitudeToDb((playerLevel >> 16) & 0xFFFF);
-  int rightDb = amplitudeToDb(playerLevel & 0xFFFF);
-
-  // Map dB to bar levels  -60dB to 0dB range mapped to 0-159 bars (10 steps per
-  // character)
-  // Optimized 159/60 ≈ 2.65 = (2.65 * 256) / 256 = 678 / 256
-  // Using fixed-point: multiply by 678, then right-shift by 8 (divide by 256)
-  int leftBars = std::max(0, std::min(159, ((leftDb + 60) * 678) >> 8));
-  int rightBars = std::max(0, std::min(159, ((rightDb + 60) * 678) >> 8));
+  // Convert amplitude to bar levels
+  int leftBars, rightBars;
+  amplitudeToBars(playerLevel, &leftBars, &rightBars);
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();

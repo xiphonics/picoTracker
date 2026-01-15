@@ -191,6 +191,21 @@ protected:
                    bool forceRedraw = false);
   void drawPowerButtonUI(GUITextProperties &props);
 
+  static inline void amplitudeToBars(stereosample level, int32_t *left,
+                                     int32_t *right) {
+    // Extract both channels
+    uint16_t leftAmp = (level >> 16) & 0xFFFF;
+    uint16_t rightAmp = level & 0xFFFF;
+    // Convert to dB
+    int32_t leftDb = amplitudeToDb(leftAmp);
+    int32_t rightDb = amplitudeToDb(rightAmp);
+    // Map dB to bar levels  -60dB to 0dB range mapped to 0-159 bars
+    // Optimized 159/60 ≈ 2.65 = (2.65 * 256) / 256 = 678 / 256
+    // Using fixed-point: multiply by 678, then right-shift by 8 (divide by 256)
+    *left = std::max(0, std::min(VU_METER_MAX, ((leftDb + 60) * 678) >> 8));
+    *right = std::max(0, std::min(VU_METER_MAX, ((rightDb + 60) * 678) >> 8));
+  }
+
 public: // temp hack for modl windo constructors
   GUIWindow &w_;
   ViewData *viewData_;
