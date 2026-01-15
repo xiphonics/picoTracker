@@ -63,9 +63,48 @@ static const int32_t frequencyTable[128 + 24] = {
     1630727614, 1727695724, 1830429858, 1939272882, 2054588048, 2116760211,
     2116197109, 2113330725};
 
+inline uint32_t GameBoyInstrument::pulse(bool level) {
+  uint32_t target = -(uint32_t)level & 0x0FFF'FFFF;
+
+  int32_t diff = (int32_t)target - (int32_t)lastSample_;
+
+  if (diff > maxStep_) {
+    diff = maxStep_;
+  } else if (diff < minStep_) {
+    diff = minStep_;
+  }
+
+  return (lastSample_ = (lastSample_ + diff));
+}
+
+static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1, int feedback) {
+  uint16_t lfsr_val = *lfsr;
+
+  bool bitA = lfsr_val & 1;
+  bool bitB = (lfsr_val >> b1) & 1;
+  bool bitF = bitA ^ bitB;
+
+  lfsr_val = (lfsr_val >> 1) | (bitF << feedback);
+
+  *lfsr = lfsr_val;
+  return bitA ? 0x0FFF'FFFF : 0;
+}
+
+static inline uint32_t voice_noise_nes(uint16_t *lfsr) {
+  return voice_noise_lfsr(lfsr, 6, 14);
+}
+
+static inline uint32_t voice_noise_gb7(uint16_t *lfsr) {
+  return voice_noise_lfsr(lfsr, 1, 6);
+}
+
+static inline uint32_t voice_noise_sn76489(uint16_t *lfsr) {
+  return voice_noise_lfsr(lfsr, 3, 14);
+}
+
 GameBoyInstrument::GameBoyInstrument()
-    : I_Instrument(&variables_), 
-      vWaveform_(FourCC::GameBoyInstrumentWaveform, waveShapes, GB_NUM_WAVEFORMS, 0),
+    : I_Instrument(&variables_), vWaveform_(FourCC::GameBoyInstrumentWaveform,
+                                            waveShapes, GB_NUM_WAVEFORMS, 0),
       vAttack_(FourCC::GameBoyInstrumentAttack, 0x00),
       vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
       vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
@@ -112,6 +151,8 @@ void GameBoyInstrument::OnStart(){};
 bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
   // note on get frequency etc.
 
+  Trace::Error("GameBoyInstrument: Start note %d on channel %d", note, channel);
+
   int fIndex = std::clamp(note + 12 + vTranspose_.GetInt(), 0, 127 + 24);
   frequency_ = frequencyTable[fIndex];
   arpFrequencies_[0] = frequency_;
@@ -119,7 +160,7 @@ bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
   note_ = note;
 
   command_ = FourCC::InstrumentCommandNone;
-  
+
   arpTime_ = 35 - vArpSpeed_.GetInt();
   arpIndex_ = 0;
   arpTick_ = 0;
@@ -159,60 +200,9 @@ void GameBoyInstrument::Stop(int c) {
   phase_ = 0;
 };
 
-typedef struct {
-  uint32_t lastSample = 0;
-  int32_t maxStep = 0;
-  int32_t minStep = 0;
-} PulseState;
-
-PulseState st = {0, 0x3fff'ffff, -0x3fff'ffff};
-
-static inline uint32_t pulse(bool level) {
-  uint32_t target = -(uint32_t)level & 0x0FFF'FFFF;
-
-  uint32_t last = st.lastSample;
-  int32_t diff = (int32_t)target - (int32_t)last;
-
-  if (diff > st.maxStep) {
-    diff = st.maxStep;
-  } else if (diff < st.minStep) {
-    diff = st.minStep;
-  }
-
-  return (st.lastSample = (last + diff));
-}
-
-static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1, int feedback) {
-  uint16_t lfsr_val = *lfsr;
-
-  bool bitA = lfsr_val & 1;
-  bool bitB = (lfsr_val >> b1) & 1;
-  bool bitF = bitA ^ bitB;
-
-  lfsr_val = (lfsr_val >> 1) | (bitF << feedback);
-
-  *lfsr = lfsr_val;
-  return bitA ? 0x0FFF'FFFF : 0;
-}
-
-static inline uint32_t voice_noise_nes(uint16_t *lfsr) {
-  return voice_noise_lfsr(lfsr, 6, 14);
-}
-
-static inline uint32_t voice_noise_gb7(uint16_t *lfsr) {
-  return voice_noise_lfsr(lfsr, 1, 6);
-}
-
-static inline uint32_t voice_noise_sn76489(uint16_t *lfsr) {
-  return voice_noise_lfsr(lfsr, 3, 14);
-}
-
 bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
                                bool updateTick) {
-  // PROFILE_SCOPE("GameBoyInstrument::Render");
-
-  static uint32_t lastSample = 0;
-
+  PROFILE_SCOPE("GameBoyInstrument::Render");
   uint32_t wave = wave_;
 
   for (int s = 0; s < size; s++) {
@@ -224,7 +214,6 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
 
       envelope_.tick();
 
-      
       // handle commands
       RunCommand();
 
@@ -272,16 +261,12 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
           };
         }
       }
-      
+
       // length
       lifetime_--;
 
       if (lifetime_ == 0) {
         // note off
-        frequency_ = 0;
-        for (int i = 0; i < 5; i++) {
-          arpFrequencies_[i] = 0;
-        }
         wave_ = gbWaveNone;
         envelope_.state = ENV_IDLE;
       }
@@ -380,12 +365,12 @@ bool GameBoyInstrument::IsInitialized() {
 
 void GameBoyInstrument::RunCommand() {
   switch (command_) {
-    case FourCC::InstrumentCommandArpeggiator: {
-      // handled in 1000Hz tick   
-      break;
-    }
-    default:
-      break;
+  case FourCC::InstrumentCommandArpeggiator: {
+    // handled in 1000Hz tick
+    break;
+  }
+  default:
+    break;
   }
 }
 
@@ -412,16 +397,16 @@ void GameBoyInstrument::CommandInitArp(int channel, ushort value) {
 
 void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
-    case FourCC::InstrumentCommandArpeggiator:
-      command_ = cc;
-      CommandInitArp(channel, value);
-      break;
+  case FourCC::InstrumentCommandArpeggiator:
+    command_ = cc;
+    CommandInitArp(channel, value);
+    break;
 
-    case FourCC::InstrumentCommandKill:
-    case FourCC::InstrumentCommandGateOff:
-      command_ = cc;
-      Stop(channel);
-      break;
+  case FourCC::InstrumentCommandKill:
+  case FourCC::InstrumentCommandGateOff:
+    command_ = cc;
+    Stop(channel);
+    break;
   }
 };
 

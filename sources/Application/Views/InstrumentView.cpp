@@ -649,7 +649,7 @@ void InstrumentView::fillGameBoyParameters() {
   int max = GB_NUM_WAVEFORMS;
   intVarField_.emplace_back(position, *v, "Waveform:   %s", 0, max - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  
+
   position._y += 1;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentTranspose);
   intVarField_.emplace_back(position, *v, "Transpose:  %+d", 0, 48, 1, 12, -24);
@@ -723,7 +723,6 @@ void InstrumentView::fillGameBoyParameters() {
   v = instrument->FindVariable(FourCC::GameBoyInstrumentSweepAmount);
   intVarField_.emplace_back(position, *v, " '- Amount: %03d", -127, 127, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
 }
 
 void InstrumentView::fillOpalParameters() {

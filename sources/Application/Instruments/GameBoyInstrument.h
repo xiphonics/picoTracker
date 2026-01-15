@@ -194,8 +194,13 @@ private:
   uint16_t lfsr_ = 17;
   uint32_t noise_;
 
+  uint32_t lastSample_ = 0;
+  int32_t maxStep_ = 0x3fff'ffff;
+  int32_t minStep_ = -0x3fff'ffff;
+
   Envelope envelope_;
 
   void RunCommand();
   void CommandInitArp(int channel, ushort value);
+  inline uint32_t pulse(bool level);
 };

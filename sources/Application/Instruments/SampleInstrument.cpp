@@ -8,6 +8,8 @@
  */
 
 #include "SampleInstrument.h"
+#include "System/Profiler/Profiler.h"
+
 #include "Application/Instruments/Filters.h"
 #include "Application/Model/Table.h"
 #include "Application/Player/PlayerMixer.h" // For MIX_BUFFER_SIZE.. kick out pls
@@ -612,7 +614,7 @@ void SampleInstrument::doKRateUpdate(int channel) {
 
 bool SampleInstrument::Render(int channel, fixed *buffer, int size,
                               bool updateTick) {
-
+  PROFILE_SCOPE("SampleInstrument::Render");
   bool somethingToMix = false;
 
   // Get Current render parameters
