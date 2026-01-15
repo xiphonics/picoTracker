@@ -36,7 +36,7 @@ bool MixerService::Init() {
   out_ = 0;
   // Create the output depending on rendering mode
   Audio *audio = Audio::GetInstance();
-  out_ = audio->GetFirst();
+  out_ = audio->GetFirstOutput();
 
   bool result = false;
 
@@ -44,14 +44,14 @@ bool MixerService::Init() {
   for (int i = 0; i < MAX_BUS_COUNT; i++) {
     hex2char(i, buffer);
     bus_[i].SetName(etl::string<12>(buffer));
-    master_.Insert(bus_[i]);
+    master_.AddModule(bus_[i]);
     master_.SetName("Master");
   }
 
   if (out_) {
     result = out_->Init();
     if (result) {
-      out_->Insert(master_);
+      out_->AddModule(master_);
     }
 
     out_->AddObserver(*MidiService::GetInstance());
@@ -74,13 +74,11 @@ void MixerService::Close() {
   if (out_) {
     out_->RemoveObserver(*MidiService::GetInstance());
     out_->Close();
-    out_->Empty();
-    master_.Empty();
-
-    SAFE_DELETE(out_);
+    out_->ClearModules();
+    master_.ClearModules();
   }
   for (int i = 0; i < MAX_BUS_COUNT; i++) {
-    bus_[i].Empty();
+    bus_[i].ClearModules();
   }
   out_ = 0;
 };
@@ -219,7 +217,7 @@ bool MixerService::configureRenderPaths() {
     return false;
   }
 
-  char projectname[MAX_PROJECT_NAME_LENGTH];
+  char projectname[MAX_PROJECT_NAME_LENGTH + 1];
   project->GetProjectName(projectname);
 
   char path[30 + MAX_PROJECT_NAME_LENGTH];

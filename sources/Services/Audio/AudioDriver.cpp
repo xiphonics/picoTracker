@@ -67,7 +67,7 @@ void AudioDriver::AddBuffer(short *buffer, int samplecount) {
     return;
   }
 
-  SYS_MEMCPY(pool_[poolQueuePosition_].buffer_, (char *)buffer, len);
+  memcpy(pool_[poolQueuePosition_].buffer_, (char *)buffer, len);
   pool_[poolQueuePosition_].size_ = len;
   pool_[poolQueuePosition_].empty_ = false;
   poolQueuePosition_ = (poolQueuePosition_ + 1) % SOUND_BUFFER_COUNT;

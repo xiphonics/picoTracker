@@ -30,6 +30,7 @@
 #include "Application/Views/ProjectView.h"
 #include "Application/Views/RecordView.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Application/Views/SampleSlicesView.h"
 #include "Application/Views/SelectProjectView.h"
 #include "Application/Views/SongView.h"
 #include "Application/Views/TableView.h"
@@ -41,6 +42,7 @@
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
+#include "System/System/System.h"
 #include "UIFramework/Interfaces/I_GUIWindowFactory.h"
 #include "Views/UIController.h"
 #include "platform.h"
@@ -130,6 +132,7 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _tableView = 0;
   _mixerView = 0;
   _sampleEditorView = 0;
+  _sampleSlicesView = 0;
   _recordView = 0;
   _nullView = 0;
   _grooveView = 0;
@@ -482,6 +485,12 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
       new (sampleEditorViewMemBuf) SampleEditorView((*this), _viewData);
   _sampleEditorView->AddObserver((*this));
 
+  alignas(SampleSlicesView) static char
+      sampleSlicesViewMemBuf[sizeof(SampleSlicesView)];
+  _sampleSlicesView =
+      new (sampleSlicesViewMemBuf) SampleSlicesView((*this), _viewData);
+  _sampleSlicesView->AddObserver((*this));
+
   alignas(RecordView) static char recordViewMemBuf[sizeof(RecordView)];
   _recordView = new (recordViewMemBuf) RecordView((*this), _viewData);
   _recordView->AddObserver((*this));
@@ -491,7 +500,7 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   if (!playerOK) {
     MessageBox *mb =
-        new MessageBox(*_songView, "Failed to initialize audio", MBBF_OK);
+        MessageBox::Create(*_songView, "Failed to initialize audio", MBBF_OK);
     _songView->DoModal(mb);
   }
 
@@ -519,21 +528,58 @@ void AppWindow::CloseProject() {
 
   ApplicationCommandDispatcher::GetInstance()->Close();
 
-  SAFE_DELETE(_songView);
-  SAFE_DELETE(_chainView);
-  SAFE_DELETE(_phraseView);
-  SAFE_DELETE(_deviceView);
-  SAFE_DELETE(_themeView);
-  SAFE_DELETE(_themeImportView);
-  SAFE_DELETE(_projectView);
-  SAFE_DELETE(_instrumentView);
-  SAFE_DELETE(_tableView);
-  SAFE_DELETE(_grooveView);
+  if (_songView) {
+    _songView->~SongView();
+    _songView = nullptr;
+  }
+  if (_chainView) {
+    _chainView->~ChainView();
+    _chainView = nullptr;
+  }
+  if (_phraseView) {
+    _phraseView->~PhraseView();
+    _phraseView = nullptr;
+  }
+  if (_deviceView) {
+    _deviceView->~DeviceView();
+    _deviceView = nullptr;
+  }
+  if (_themeView) {
+    _themeView->~ThemeView();
+    _themeView = nullptr;
+  }
+  if (_themeImportView) {
+    _themeImportView->~ThemeImportView();
+    _themeImportView = nullptr;
+  }
+  if (_projectView) {
+    _projectView->~ProjectView();
+    _projectView = nullptr;
+  }
+  if (_instrumentView) {
+    _instrumentView->~InstrumentView();
+    _instrumentView = nullptr;
+  }
+  if (_tableView) {
+    _tableView->~TableView();
+    _tableView = nullptr;
+  }
+  if (_grooveView) {
+    _grooveView->~GrooveView();
+    _grooveView = nullptr;
+  }
+  if (_sampleSlicesView) {
+    _sampleSlicesView->~SampleSlicesView();
+    _sampleSlicesView = nullptr;
+  }
 
   UIController *controller = UIController::GetInstance();
   controller->Reset();
 
-  SAFE_DELETE(_viewData);
+  if (_viewData) {
+    _viewData->~ViewData();
+    _viewData = nullptr;
+  }
 
   _currentView = _nullView;
   _nullView->SetDirty(true);
@@ -656,7 +702,7 @@ void AppWindow::onUpdate(bool redraw) {
 void AppWindow::AnimationUpdate() {
   // Increment the animation frame counter
   animationFrameCounter_++;
-  char failedProjectName_[MAX_PROJECT_NAME_LENGTH] = {0};
+  char failedProjectName_[MAX_PROJECT_NAME_LENGTH + 1] = {0};
 
   if (awaitingProjectLoadAck_) {
     if (_mask != 0) {
@@ -711,8 +757,8 @@ void AppWindow::AnimationUpdate() {
 
   if (lowBatteryState_ && !lowBatteryMessageShown_) {
     if (!_currentView->HasModalView()) {
-      FullScreenBox *mb = new FullScreenBox(*_currentView, "Low battery!",
-                                            "Connect charger", 0);
+      FullScreenBox *mb = FullScreenBox::Create(*_currentView, "Low battery!",
+                                                "Connect charger", 0);
       _currentView->DoModal(mb);
       lowBatteryMessageShown_ = true;
       SetDirty();
@@ -838,6 +884,9 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       break;
     case VT_SAMPLE_EDITOR:
       _currentView = _sampleEditorView;
+      break;
+    case VT_SAMPLE_SLICES:
+      _currentView = _sampleSlicesView;
       break;
     case VT_RECORD:
       _currentView = _recordView;

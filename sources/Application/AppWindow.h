@@ -52,6 +52,7 @@ class MixerView;
 class ThemeView;
 class ThemeImportView;
 class SampleEditorView;
+class SampleSlicesView;
 class RecordView;
 class View;
 
@@ -78,7 +79,7 @@ public:
   void SetDirty();
   void UpdateColorsFromConfig();
 
-  char projectName_[MAX_PROJECT_NAME_LENGTH];
+  char projectName_[MAX_PROJECT_NAME_LENGTH + 1];
 
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);
@@ -126,6 +127,7 @@ private:
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   SampleEditorView *_sampleEditorView;
+  SampleSlicesView *_sampleSlicesView;
   RecordView *_recordView;
   NullView *_nullView;
 

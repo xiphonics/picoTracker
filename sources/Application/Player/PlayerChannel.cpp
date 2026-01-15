@@ -65,17 +65,21 @@ void PlayerChannel::SetMixBus(int i) {
     return;
 
   if (mixBus_) {
-    mixBus_->Remove(*this);
+    mixBus_->RemoveModule(*this);
   }
   mixBus_ = MixerService::GetInstance()->GetMixBus(i);
   if (mixBus_) {
-    mixBus_->Insert(*this);
+    mixBus_->AddModule(*this);
+    busIndex_ = i;
+  } else {
+    busIndex_ = -1;
   }
 };
 
 void PlayerChannel::Reset() {
   if (mixBus_) {
-    mixBus_->Remove(*this);
+    mixBus_->RemoveModule(*this);
+    mixBus_ = nullptr;
   }
   muted_ = false;
   busIndex_ = -1;

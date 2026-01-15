@@ -43,14 +43,6 @@ Player::Player() : mixer_() {
   }
 };
 
-Player *Player::GetInstance() {
-  if (instance_ == 0) {
-    alignas(Player) static char playerMemBuf[sizeof(Player)];
-    instance_ = new (playerMemBuf) Player();
-  }
-  return instance_;
-}
-
 bool Player::Init(Project *project, ViewData *viewData) {
 
   viewData_ = viewData;
@@ -245,6 +237,10 @@ const char *Player::GetPlayedInstrument(int channel) {
       return "--";
     }
   }
+}
+
+bool Player::GetPlayedSliceIndex(int channel, uint8_t &sliceIndex) {
+  return mixer_.GetPlayedSliceIndex(channel, sliceIndex);
 }
 
 const char *Player::GetLiveIndicator(int channel) {
@@ -1230,12 +1226,12 @@ void Player::SetAudioActive(bool active) {
 
 bool Player::IsPlaying() { return mixer_.IsPlaying(); }
 
-std::string Player::GetAudioAPI() {
+etl::string<STRING_AUDIO_API_MAX> Player::GetAudioAPI() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioAPI() : "";
 };
 
-std::string Player::GetAudioDevice() {
+etl::string<STRING_AUDIO_DEVICE_MAX> Player::GetAudioDevice() {
   AudioOut *out = mixer_.GetAudioOut();
   return (out) ? out->GetAudioDevice() : "";
 };
@@ -1275,6 +1271,9 @@ void Player::PlayNote(unsigned short instrumentIndex, unsigned short channel,
     // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
     int playerChannel = channel % SONG_CHANNEL_COUNT;
     mixer_.StartInstrument(playerChannel, instrument, note, true);
+    if (!isRunning_) {
+      SetAudioActive(true);
+    }
   }
 }
 
@@ -1282,4 +1281,7 @@ void Player::StopNote(unsigned short instrumentIndex, unsigned short channel) {
   // Use the channel modulo SONG_CHANNEL_COUNT to ensure it's within range
   int playerChannel = channel % SONG_CHANNEL_COUNT;
   mixer_.StopInstrument(playerChannel);
+  if (!isRunning_) {
+    SetAudioActive(false);
+  }
 }

@@ -22,7 +22,6 @@
 short AudioFileStreamer::singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE] = {0};
 
 AudioFileStreamer::AudioFileStreamer() {
-  wav_ = 0;
   mode_ = AFSM_STOPPED;
   position_ = 0;
   fileSampleRate_ = 44100;   // Default
@@ -30,34 +29,37 @@ AudioFileStreamer::AudioFileStreamer() {
   fpSpeed_ = FP_ONE;         // Default 1.0 in fixed point
   project_ = NULL;
   singleCycleData_ = NULL;
+#ifndef ADV
+  stopRequested_ = false;
+#endif
   referencePitch_ = 261.63f; // C4 = 261.63 Hz (using C4 to compensate for how
                              // its actually what we call C3 in pT)
 };
 
-AudioFileStreamer::~AudioFileStreamer() { SAFE_DELETE(wav_); };
+AudioFileStreamer::~AudioFileStreamer() { wav_.Close(); };
 
 bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
   Trace::Debug("Starting to stream:%s from sample %d", name, startSample);
   strcpy(name_, name);
   position_ = (startSample > 0) ? float(startSample) : 0.0f;
+#ifndef ADV
+  stopRequested_ = false;
+#endif
 
-  if (wav_) {
-    SAFE_DELETE(wav_);
-  }
+  wav_.Close();
   Trace::Log("", "wave open:%s", name_);
-  auto res = WavFile::Open(name_);
+  auto res = wav_.Open(name_);
   if (!res) {
     Trace::Error("Failed to open streaming of file:%s", name_);
     mode_ = AFSM_STOPPED;
     return false;
   }
-  wav_ = res.value();
 
   // Get sample rate information and calculate speed factor
-  fileSampleRate_ = wav_->GetSampleRate(-1);
+  fileSampleRate_ = wav_.GetSampleRate(-1);
   systemSampleRate_ = Audio::GetInstance()->GetSampleRate();
-  int channels = wav_->GetChannelCount(-1);
-  long size = wav_->GetSize(-1);
+  int channels = wav_.GetChannelCount(-1);
+  long size = wav_.GetSize(-1);
 
   // Calculate the speed factor for sample rate conversion
   float ratio;
@@ -95,7 +97,7 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
     Trace::Log("FileStreamer", "mode: looping");
 
     // Get channel count before using it
-    int channels = wav_->GetChannelCount(-1);
+    int channels = wav_.GetChannelCount(-1);
 
     // For safety, load the waveform in smaller chunks to avoid buffer
     // overflow FLASH_PAGE_SIZE  and the assertion in  WavFile::GetBuffer
@@ -110,14 +112,14 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
           (remainingSize > SAFE_CHUNK_SIZE) ? SAFE_CHUNK_SIZE : remainingSize;
 
       // Load this chunk
-      if (!wav_->GetBuffer(currentPos, chunkSize)) {
+      if (!wav_.GetBuffer(currentPos, chunkSize)) {
         Trace::Error("Failed to load chunk at position %d, size %d", currentPos,
                      chunkSize);
         break;
       }
 
       // Copy the data to our static buffer
-      short *srcBuffer = (short *)wav_->GetSampleBuffer(-1);
+      short *srcBuffer = (short *)wav_.GetSampleBuffer(-1);
       if (srcBuffer) {
         // Calculate destination position in our buffer
         short *destPos = singleCycleBuffer_ + (currentPos * channels);
@@ -160,9 +162,20 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
 };
 
 void AudioFileStreamer::Stop() {
+#ifndef ADV
+  // Because Stop() is called from the "ui thread"" (Core0 on pico) while
+  // rendering is on "audio thread" (Core1 on pico), can get a race if the wav
+  // file is closed in Stop() while rendering is still reading from the file to
+  // stream the audio data so instead just set flag to request the stop happen
+  // in Render()
+  stopRequested_ = true;
   mode_ = AFSM_STOPPED;
-  SAFE_DELETE(wav_);
   Trace::Debug("Streaming stopped");
+#else
+  mode_ = AFSM_STOPPED;
+  wav_.Close();
+  Trace::Debug("Streaming stopped");
+#endif
 };
 
 bool AudioFileStreamer::IsPlaying() {
@@ -170,22 +183,30 @@ bool AudioFileStreamer::IsPlaying() {
 }
 
 bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
+#ifndef ADV
+  if (stopRequested_) {
+    wav_.Close();
+    stopRequested_ = false;
+    mode_ = AFSM_STOPPED;
+    return false;
+  }
+#endif
   // See if we're playing
   if (mode_ == AFSM_STOPPED) {
     return false;
   }
   // look if we have the file loaded
-  if (!wav_) {
+  if (!wav_.IsOpen()) {
     Trace::Error("Failed to open streaming of file:%s", name_);
     mode_ = AFSM_STOPPED;
     return false;
   }
   // We are playing a valid file
-  long size = wav_->GetSize(-1);
-  int channelCount = wav_->GetChannelCount(-1);
+  long size = wav_.GetSize(-1);
+  int channelCount = wav_.GetChannelCount(-1);
 
   // Clear the output buffer
-  SYS_MEMSET(buffer, 0, samplecount * 2 * sizeof(fixed));
+  memset(buffer, 0, samplecount * 2 * sizeof(fixed));
 
   // Get preview volume from project
   Variable *v = project_->FindVariable(FourCC::VarPreviewVolume);
@@ -251,9 +272,9 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
         fixed s4 = i2fp(nextSample[1]);
         fixed rightSample = s3 + fp_mul(fpFrac, s4 - s3);
 
-        // Apply volume
-        *dst++ = fp_mul(leftSample, volume);
+        // Apply volume and swap to match reversed hardware wiring
         *dst++ = fp_mul(rightSample, volume);
+        *dst++ = fp_mul(leftSample, volume);
       } else {
         // Mono sample with interpolation
         fixed s1 = i2fp(currentSample[0]);
@@ -292,7 +313,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   }
 
   // Read the samples from the file - just once at the current position
-  if (!wav_->GetBuffer((int)position_, bufferSize)) {
+  if (!wav_.GetBuffer((int)position_, bufferSize)) {
     Trace::Error("AudioFileStreamer: Failed to get buffer at position %d",
                  (int)position_);
     mode_ = AFSM_STOPPED;
@@ -300,7 +321,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   }
 
   // Get the sample buffer
-  short *src = (short *)wav_->GetSampleBuffer(-1);
+  short *src = (short *)wav_.GetSampleBuffer(-1);
   if (!src) {
     Trace::Error("AudioFileStreamer: GetSampleBuffer returned null");
     mode_ = AFSM_STOPPED;
@@ -323,7 +344,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       }
 
       // Read the next buffer
-      if (!wav_->GetBuffer((int)position_, bufferSize)) {
+      if (!wav_.GetBuffer((int)position_, bufferSize)) {
         Trace::Error("AudioFileStreamer: Failed to get buffer at position %d",
                      (int)position_);
         mode_ = AFSM_STOPPED;
@@ -331,7 +352,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
       }
 
       // Update the source pointer
-      src = (short *)wav_->GetSampleBuffer(-1);
+      src = (short *)wav_.GetSampleBuffer(-1);
       if (!src) {
         Trace::Error("AudioFileStreamer: GetSampleBuffer returned null");
         mode_ = AFSM_STOPPED;
@@ -364,9 +385,9 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     } else {
       rightSample = leftSample;
     }
-    // Apply volume
-    *dst++ = fp_mul(leftSample, volume);
+    // Apply volume and swap to match reversed hardware wiring
     *dst++ = fp_mul(rightSample, volume);
+    *dst++ = fp_mul(leftSample, volume);
 
     // Move to the next source position based on the sample rate ratio
     pos += fp2fl(fpSpeed_);

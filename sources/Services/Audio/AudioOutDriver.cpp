@@ -16,7 +16,6 @@ short AudioOutDriver::mixBuffer_[MIX_BUFFER_SIZE];
 AudioOutDriver::AudioOutDriver(AudioDriver &driver) {
   driver_ = &driver;
   driver.AddObserver(*this);
-  SetOwnership(false);
 }
 
 AudioOutDriver::~AudioOutDriver() {
@@ -65,7 +64,7 @@ void AudioOutDriver::clipToMix() {
   bool interlaced = driver_->Interlaced();
 
   if (!hasSound_) {
-    SYS_MEMSET(mixBuffer_, 0, sampleCount_ * 2 * sizeof(short));
+    memset(mixBuffer_, 0, sampleCount_ * 2 * sizeof(short));
   } else {
     short *s1 = mixBuffer_;
     short *s2 = (interlaced) ? s1 + 1 : s1 + sampleCount_;
@@ -111,16 +110,15 @@ int AudioOutDriver::GetPlayedBufferPercentage() {
 
 AudioDriver *AudioOutDriver::GetDriver() { return driver_; };
 
-std::string AudioOutDriver::GetAudioAPI() {
+etl::string<STRING_AUDIO_API_MAX> AudioOutDriver::GetAudioAPI() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.audioAPI_;
 };
 
-std::string AudioOutDriver::GetAudioDevice() {
+etl::string<STRING_AUDIO_DEVICE_MAX> AudioOutDriver::GetAudioDevice() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.audioDevice_;
 };
-
 int AudioOutDriver::GetAudioBufferSize() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.bufferSize_;

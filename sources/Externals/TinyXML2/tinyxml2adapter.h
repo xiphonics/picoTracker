@@ -1,6 +1,7 @@
 #ifndef _TINY2NOSSTUP_H_
 #define _TINY2NOSSTUP_H_
 #include "System/Console/n_assert.h"
+#include "System/FileSystem/FileHandle.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
 #include <stdio.h>
@@ -9,10 +10,9 @@
 #undef FILE
 #endif
 #define FILE I_File
-#define fopen(a, b) FileSystem::GetInstance()->Open(a, b)
-#define fclose(a)                                                              \
-  a->Close();                                                                  \
-  delete (a)
+#define fopen(a, b)                                                            \
+  AcquireLegacyFileHandle_DO_NOT_USE(FileSystem::GetInstance()->Open(a, b))
+#define fclose(a) CloseFile_DO_NOT_USE(a)
 #ifdef __APPLE__
 #define fseeko(a, b, c) a->Seek(b, c)
 #define ftello(a) a->Tell()

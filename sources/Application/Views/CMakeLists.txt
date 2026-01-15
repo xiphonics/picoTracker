@@ -22,6 +22,7 @@ add_library(application_views
   MixerView.cpp
   SampleEditorView.cpp
   SampleEditProgressDisplay.cpp
+  SampleSlicesView.cpp
 )
 
 target_link_libraries(application_views PUBLIC

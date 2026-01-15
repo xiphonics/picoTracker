@@ -18,7 +18,7 @@ picoTracker Advance is the evolution of the original picoTracker — a portable 
 Your picoTracker Advance comes included with a:
 
 * 16GB SD Card with sample projects, samples and themes
-* MIDI TRS adapter (type A)
+* MIDI TRS adapter (type B)
 * quick reference card
 
 (note: Does NOT include power supply or USB-C cable. Uses any standard USB-C charger)

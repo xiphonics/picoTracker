@@ -36,7 +36,8 @@ EventDispatcher::EventDispatcher() {
 
 EventDispatcher::~EventDispatcher() {
   timer_->RemoveObserver(*this);
-  SAFE_DELETE(timer_);
+  timer_->Stop();
+  timer_ = nullptr;
 };
 
 void EventDispatcher::Execute(FourCC id, float value) {

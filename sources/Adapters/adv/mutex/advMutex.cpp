@@ -9,7 +9,9 @@
 #include "advMutex.h"
 #include "System/Console/Trace.h"
 
-advMutex::advMutex() : mutex_(xSemaphoreCreateBinary()) {
+static StaticSemaphore_t storage;
+
+advMutex::advMutex() : mutex_(xSemaphoreCreateBinaryStatic(&storage)) {
   // Semaphore is created in an empty state
   xSemaphoreGive(mutex_);
 }

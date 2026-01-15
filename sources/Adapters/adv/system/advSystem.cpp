@@ -13,8 +13,6 @@
 #include "Adapters/adv/midi/advMidiService.h"
 #include "Adapters/adv/system/advSamplePool.h"
 #include "Adapters/adv/timer/advTimer.h"
-#include "Application/Commands/NodeList.h"
-#include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"
@@ -28,7 +26,6 @@
 #include "tlv320aic3204.h"
 #include <assert.h>
 #include <fcntl.h>
-#include <malloc.h>
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -180,27 +177,9 @@ void advSystem::Sleep(int millisec) {
   //		assert(0) ;
 }
 
-void *advSystem::Malloc(unsigned size) {
-  void *ptr = malloc(size);
-  return ptr;
-}
-
-void advSystem::Free(void *ptr) { free(ptr); }
-
-void advSystem::Memset(void *addr, char val, int size) {
-  memset(addr, val, size);
-};
-
-void *advSystem::Memcpy(void *s1, const void *s2, int n) {
-  return memcpy(s1, s2, n);
-}
-
 void advSystem::PostQuitMessage() { eventManager_->PostQuitMessage(); }
 
-unsigned int advSystem::GetMemoryUsage() {
-  struct mallinfo m = mallinfo();
-  return m.uordblks;
-}
+unsigned int advSystem::GetMemoryUsage() { return 0; }
 
 void advSystem::PowerDown() { powerOff(); }
 

@@ -53,9 +53,27 @@ Once you've created an instrument, you can save it for use in other projects:
 - **start:** start point of the sample regardless of if loop is enabled (note value is in hex)
 - **loop Start:** start point of the sample when loop is enabled (note value is in hex)
 - **loop End:** end point of the sample (note value is in hex). You can play samples backwards by setting the end value lower than the start
+- **slices:** Opens the Sample Slices view where you can define up to 16 slice start points for the currently selected sample. Notes from `C3` through `D#4` trigger slices 1–16 instead of pitching the entire sample.
 - **automation:** If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows will move at the speed of 1 row per tick)
 - **table:** Select a table the instrument will always run. To clone a table here: `NAV`+(`EDIT`, `ENTER`). Make a new table by selecting a higher number not yet in use.
 
+### Sample Slices View
+
+The Sample Slices view provides a focused editor for slice start points. Use the `slice` field to choose which of the 16 slots you want to edit (`slice 0` corresponds to `C3`, `slice 15` to `D#4`, but this is hidden from the user). The `start` field lets you enter the slice start offset as a hexadecimal sample index, and a waveform preview helps visualize the positions of every defined slice. Press `PLAY` to audition only the currently selected slice at its original pitch.
+
+Slices are ordered in strict order and they cannot be reordered. Moving a slice backwards will limit it's movement to the position of the previous slice. Moving a slice forward towards another slice will shove the next slice(s) to the new position of the current slice.
+
+Slices are stored per instrument and always reference the currently assigned sample. Changing the instrument's sample when slices are present prompts for confirmation, because accepting the change clears all slice start points.
+
+*Quick edit:*
+Focusing the cursor on the sample graph allows to quickly edit the slices
+
+- `EDIT` + `UP`/`DOWN`: Zoom in/out centered on current selected slice (works on any selected field)
+- `EDIT` + `LEFT`/`RIGHT`: Select previous/next slice
+- `ENTER` + `UP`/`DOWN`: Move current slice back/forward 1/16th of the screen
+- `ENTER` + `LEFT`/`RIGHT`: Move current slice back/forward 1/64th of the screen (finer adjustment can be done on the position field)
+
+*Auto slicing:* Select the number of slices desired and press the slice button to create evenly distributed slices. Set the number to 1 to quickly delete all slices.
 
 ## Sample Import Screen
 
@@ -122,7 +140,24 @@ The preview volume uses a non-linear (quadratic) scale that provides more precis
 
 ### Supported sample file formats
 
-Only uncompressed Wave (*.wav) files are supported using **8 or 16 bit**, mono or stereo and they **MUST** only be 44.1KHz.
+Sample files must be:
+* Uncompressed PCM (Wave/*.wav)
+* Unsigned 8 bit; signed 16, 24 or 32 bit; float 32 or 64 bit
+* Any samplerate from 8kHz to 192kHz
+* Mono or stereo
+
+Bit rate and sample rate are converted on import and saved into the project in the native picoTracker format (16bit/44100Hz/Mono or Stereo)
+
+Sample rate converter selection:
+"Import resampler" option in device screen allows to choose the sample rate converter used:
+**None:** No sample rate converter is used and only files <=44100Hz can be used, sample rate conversion happens in realtime during playback and uses a linear interpolator
+**Linear:** Linear sample rate conversion is used, fast but not band-limited so it may result in aliasing and high frequency loss. Quality is similar to the previous option but higher than 44100Hz files can be imported
+**Sinc:** Fastest band-limited sinc interpolation. Higher quality interpolation but still relatively fast. (97dB SNR, 80% bandwidth)
+**Sinc Best:** Best band-limited sinc interpolation supported. Quality is comparable to what can be done on a PC at the expense of much slower conversion speed (121db SNR, 90% bandwidth)
+
+Conversion happens on import into the project before loading into the sample pool. Any subsequent project load will not need conversion.
+
+*Conversion speed:* Higher bit rate, higher sample rate and better converters all add up to higher conversion times
 
 ## MIDI
 
