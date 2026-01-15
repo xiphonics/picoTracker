@@ -17,6 +17,9 @@ public:
   MidiEvent(unsigned char status = 0, unsigned char data1 = 0,
             unsigned char data2 = 0);
   MidiEvent(char *buffer, int len);
+  // there is no maximum length specified for SysEx, we choose 256 as an
+  // arbitrary number to support
+  static constexpr int MAX_SYSEX_LENGTH = 256;
 
   MidiEventType type_;
   unsigned char status_;
@@ -24,6 +27,7 @@ public:
   unsigned char data2_;
   unsigned char *buffer_;
   int bufferSize_;
+  unsigned char storage_[MAX_SYSEX_LENGTH];
 };
 
 #endif

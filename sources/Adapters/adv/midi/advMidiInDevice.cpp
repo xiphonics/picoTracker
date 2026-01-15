@@ -11,6 +11,7 @@
 #include "Externals/etl/include/etl/queue_spsc_atomic.h"
 #include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
+#include "System/Console/n_assert.h"
 #include "main.h"
 
 // ETL queue for MIDI input

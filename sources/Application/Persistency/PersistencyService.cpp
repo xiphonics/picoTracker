@@ -9,6 +9,7 @@
 
 #include "PersistencyService.h"
 #include "../Instruments/SamplePool.h"
+#include "Foundation/Services/ServiceRegistry.h"
 
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
@@ -120,28 +121,24 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
   CreatePath(pathBufferA, segments);
 
   auto fs = FileSystem::GetInstance();
-  I_File *fp = fs->Open(pathBufferA.c_str(), "w");
+  auto fp = fs->Open(pathBufferA.c_str(), "w");
   if (!fp) {
     Trace::Error("PERSISTENCYSERVICE: Could not open file for writing: %s",
                  pathBufferA.c_str());
     return PERSIST_ERROR;
   }
   Trace::Log("PERSISTENCYSERVICE", "Opened Proj File: %s", pathBufferA.c_str());
-  tinyxml2::XMLPrinter printer(fp);
+  tinyxml2::XMLPrinter printer(fp.get());
 
   printer.OpenElement("PICOTRACKER");
 
-  // Loop on all registered service
-  // accumulating XML flow
-  for (Begin(); !IsDone(); Next()) {
-    Persistent *currentItem = (Persistent *)&CurrentItem();
+  // Loop on all registered persistable subservices
+  for (auto *sub : SubServices()) {
+    auto *currentItem = static_cast<Persistent *>(static_cast<void *>(sub));
     currentItem->Save(&printer);
-  };
+  }
 
   printer.CloseElement();
-
-  fp->Close();
-  delete (fp);
 
   // if we are doing an explicit save (ie nto a autosave), then we need to
   // delete the existing autosave file so that this explicit save will be loaded
@@ -203,11 +200,11 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
 
   elem = doc.FirstChild();
   while (elem) {
-    for (Begin(); !IsDone(); Next()) {
-      Persistent *currentItem = (Persistent *)&CurrentItem();
+    for (auto *sub : SubServices()) {
+      auto *currentItem = static_cast<Persistent *>(static_cast<void *>(sub));
       if (currentItem->Restore(&doc)) {
         break;
-      };
+      }
     }
     elem = doc.NextSibling();
   }
@@ -223,8 +220,11 @@ PersistencyService::LoadCurrentProjectName(char *projectName) {
   auto fs = FileSystem::GetInstance();
   if (fs->exists(PROJECT_STATE_FILE)) {
     auto current = fs->Open(PROJECT_STATE_FILE, "r");
-    int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH - 1);
-    current->Close();
+    if (!current) {
+      Trace::Error("PERSISTENCYSERVICE: Could not open project state file");
+      return PERSIST_LOAD_FAILED;
+    }
+    int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH);
     projectName[len] = '\0';
     Trace::Log("APPLICATION", "read [%d] load proj name: %s", len, projectName);
     if (Exists(projectName)) {
@@ -246,8 +246,10 @@ PersistencyResult
 PersistencyService::SaveProjectState(const char *projectName) {
   auto fs = FileSystem::GetInstance();
   auto current = fs->Open(PROJECT_STATE_FILE, "w");
+  if (!current) {
+    return PERSIST_ERROR;
+  }
   current->Write(projectName, 1, strlen(projectName));
-  current->Close();
   return PERSIST_SAVED;
 }
 
@@ -307,12 +309,11 @@ PersistencyResult PersistencyService::ExportInstrument(
     return PERSIST_ERROR;
   }
 
-  tinyxml2::XMLPrinter printer(fp);
+  tinyxml2::XMLPrinter printer(fp.get());
 
   // Use the instrument's Persistent interface to save its data
   instrument->Save(&printer);
 
-  fp->Close();
   return PERSIST_SAVED;
 }
 

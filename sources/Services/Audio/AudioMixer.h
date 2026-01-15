@@ -13,10 +13,11 @@
 #include "Application/Instruments/WavFileWriter.h"
 #include "AudioModule.h"
 #include "Externals/etl/include/etl/string.h"
-#include "Foundation/T_SimpleList.h"
+#include "Externals/etl/include/etl/vector.h"
 #include "Services/Audio/AudioDriver.h" // for MAX_SAMPLE_COUNT
+#include "config/StringLimits.h"
 
-class AudioMixer : public AudioModule, public T_SimpleList<AudioModule> {
+class AudioMixer : public AudioModule {
 public:
   AudioMixer(const char *name);
   virtual ~AudioMixer();
@@ -27,13 +28,18 @@ public:
   void SetName(etl::string<12> name) { name_ = name; };
 
   stereosample GetMixerLevels() { return peakMixerLevel_; }
+  void AddModule(AudioModule &module);
+  void RemoveModule(AudioModule &module);
+  void ClearModules();
 
 private:
   bool enableRendering_;
-  std::string renderPath_;
-  WavFileWriter *writer_;
+  etl::string<STRING_AUDIO_RENDER_PATH_MAX> renderPath_;
+  WavFileWriter writer_;
   fixed volume_;
   etl::string<12> name_;
+  static constexpr size_t MaxModules = 10;
+  etl::vector<AudioModule *, MaxModules> modules_;
 
   // hold the avg volume of a buffer worth of samples for each audiomodule in
   // the mix

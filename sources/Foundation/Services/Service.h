@@ -10,18 +10,22 @@
 #ifndef _SERVICE_H_
 #define _SERVICE_H_
 
-#include "Foundation/T_SimpleList.h"
+#include "Externals/etl/include/etl/vector.h"
 #include "SubService.h"
 
-class Service : protected T_SimpleList<SubService> {
+class Service {
 public:
+  static constexpr size_t MaxSubServices = 16;
+
   Service(int fourCC);
   virtual ~Service();
   virtual void Register(SubService *);
   virtual void Unregister(SubService *);
   int GetFourCC() { return fourCC_; };
+  etl::vector<SubService *, MaxSubServices> &SubServices() { return subs_; }
 
 private:
   int fourCC_;
+  etl::vector<SubService *, MaxSubServices> subs_;
 };
 #endif

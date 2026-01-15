@@ -11,7 +11,6 @@
 #define _VARIABLE_CONTAINER_H_
 
 #include "Externals/etl/include/etl/list.h"
-#include "Foundation/T_SimpleList.h"
 #include "Variable.h"
 
 class VariableContainer {

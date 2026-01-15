@@ -7,6 +7,7 @@
  */
 
 #include "advFileSystem.h"
+#include "Externals/etl/include/etl/pool.h"
 #include <cstdio>
 #include <cstring>
 
@@ -15,6 +16,8 @@ char SDPath[4];
 
 // use max int value for parent dir marker
 #define PARENT_DIR_MARKER_INDEX (std::numeric_limits<int>::max())
+
+static etl::pool<PI_File, FF_FS_LOCK> filePool;
 
 advFileSystem::advFileSystem() {
 
@@ -35,14 +38,14 @@ advFileSystem::advFileSystem() {
   //  }
 }
 
-I_File *advFileSystem::Open(const char *name, const char *mode) {
+FileHandle advFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   const bool hasPlus = (mode != nullptr) && (std::strchr(mode, '+') != nullptr);
   BYTE rmode = 0;
 
   if (!mode || !*mode) {
     Trace::Error("Invalid mode: %s", mode ? mode : "(null)");
-    return nullptr;
+    return FileHandle();
   }
 
   switch (*mode) {
@@ -54,17 +57,22 @@ I_File *advFileSystem::Open(const char *name, const char *mode) {
     break;
   default:
     Trace::Error("Invalid mode: %s", mode);
-    return nullptr;
+    return FileHandle();
   }
   FIL cwd;
   PI_File *wFile = 0;
   FRESULT res = f_open(&cwd, name, rmode);
-  if (res == FR_OK) {
-    wFile = new PI_File(cwd);
-  } else {
+  if (res != FR_OK) {
     Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
+    return FileHandle();
   }
-  return wFile;
+  wFile = filePool.create(cwd);
+  if (wFile == nullptr) {
+    Trace::Error("FILESYSTEM: No file slots available (max %d)",
+                 static_cast<int>(FF_FS_LOCK));
+    return FileHandle();
+  }
+  return MakeFileHandle(wFile);
 }
 
 bool advFileSystem::chdir(const char *name) {
@@ -396,7 +404,9 @@ void advFileSystem::tolowercase(char *temp) {
   }
 }
 
-PI_File::PI_File(FIL file) { file_ = file; };
+PI_File::PI_File(FIL file) : file_(file), isOpen_(true) {}
+
+PI_File::~PI_File() { Close(); }
 
 /**
  * Read data from a file starting at the current position.
@@ -463,8 +473,14 @@ long PI_File::Tell() { return f_tell(&file_); }
 int PI_File::Error() { return f_error(&file_); }
 
 bool PI_File::Close() {
-  Trace::Log("FILESYSTEM", "Close file:%s", file_);
+  if (!isOpen_) {
+    return true;
+  }
+
   FRESULT res = f_close(&file_);
+  if (!res) {
+    isOpen_ = false;
+  }
   return res == FR_OK;
 }
 
@@ -472,3 +488,5 @@ bool PI_File::Sync() {
   FRESULT res = f_sync(&file_);
   return res == FR_OK;
 }
+
+void PI_File::Dispose() { filePool.destroy(this); }

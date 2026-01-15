@@ -20,6 +20,7 @@
 #include "BaseClasses/UITextField.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
+#include "Foundation/Variables/StringVariable.h"
 #include "ViewData.h"
 
 class SampleEditorView : public FieldView, public I_Observer {
@@ -59,8 +60,6 @@ private:
   bool applyTrimOperation(uint32_t startFrame, uint32_t endFrame);
   bool applyNormalizeOperation();
   void navigateToView(ViewType vt);
-  uint16_t findSampleIndexByName(
-      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const;
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
   void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
@@ -119,7 +118,7 @@ private:
   // Variables to back the UI fields
   Variable startVar_;
   Variable endVar_;
-  Variable filenameVar_;
+  StringVariable<MAX_INSTRUMENT_FILENAME_LENGTH> filenameVar_;
   enum SampleEditOperation { Trim = 0, Normalize };
   Variable operationVar_;
 

@@ -13,12 +13,11 @@
 #include "Application/Model/Config.h"
 #include "Application/Model/Project.h"
 #include "Application/Player/Player.h"
-#include "Foundation/T_SimpleList.h"
+#include "Externals/etl/include/etl/delegate.h"
 #include "I_Action.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "ViewEvent.h"
-#include <functional>
 
 #define VU_METER_HEIGHT 16
 #define VU_METER_CLIP_LEVEL 15
@@ -57,6 +56,7 @@ enum ViewType {
   VT_SELECTTHEME,       // Theme selection
   VT_THEME_IMPORT,      // Theme file import
   VT_SAMPLE_EDITOR,     // Sample Editor
+  VT_SAMPLE_SLICES,     // Sample slice editor
   VT_RECORD             // Recording screen
 };
 
@@ -93,7 +93,7 @@ enum ViewUpdateDirection { VUD_LEFT = 0, VUD_RIGHT, VUD_UP, VUD_DOWN };
 class View;
 class ModalView;
 
-using ModalViewCallback = std::function<void(View &v, ModalView &d)>;
+using ModalViewCallback = etl::delegate<void(View &v, ModalView &d)>;
 
 class View : public Observable {
 public:
@@ -154,7 +154,7 @@ public:
                           GUITextProperties &props);
   virtual void DrawRect(GUIRect &r, ColorDefinition color);
 
-  void DoModal(ModalView *view, ModalViewCallback cb = 0);
+  void DoModal(ModalView *view, ModalViewCallback cb = ModalViewCallback());
   void DismissModal();
 
 protected:

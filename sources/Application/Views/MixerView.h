@@ -12,7 +12,6 @@
 
 #include "BaseClasses/UIIntVarField.h"
 #include "FieldView.h"
-#include "Foundation/T_SimpleList.h"
 #include "ViewData.h"
 
 class MixerView : public FieldView {

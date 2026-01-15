@@ -22,16 +22,18 @@ bool advMidiOutDevice::Start() { return true; };
 
 void advMidiOutDevice::Stop() {}
 
+void advMidiOutDevice::SendImmediate(MidiMessage &msg) { SendMessage(msg); }
+
 void advMidiOutDevice::SendMessage(MidiMessage &msg) {
   uint8_t status = msg.status_;
-  HAL_UART_Transmit(&MIDI_UART, &status, 1, 10);
+  HAL_UART_Transmit(&MIDI_UART, &status, 1, 1);
 
   if (msg.status_ < 0xF0) {
     uint8_t data1 = msg.data1_;
-    HAL_UART_Transmit(&MIDI_UART, &data1, 1, 10);
+    HAL_UART_Transmit(&MIDI_UART, &data1, 1, 1);
     if (msg.data2_ != MidiMessage::UNUSED_BYTE) {
       uint8_t data2 = msg.data2_;
-      HAL_UART_Transmit(&MIDI_UART, &data2, 1, 10);
+      HAL_UART_Transmit(&MIDI_UART, &data2, 1, 1);
     }
   }
 }

@@ -10,6 +10,7 @@
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 #include "pico/multicore.h"
+#include <cstring>
 
 #define MB 1024 * 1024
 
@@ -77,8 +78,8 @@ picoTrackerSamplePool::picoTrackerSamplePool() : SamplePool() {
 void picoTrackerSamplePool::Reset() {
   count_ = 0;
   for (int i = 0; i < MAX_SAMPLES; i++) {
-    SAFE_DELETE(wav_[i]);
-    SAFE_FREE(names_[i]);
+    wav_[i].Close();
+    nameStore_[i][0] = '\0';
   };
 
   // Reset flash erase and write pointers when we close project
@@ -98,33 +99,30 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
   if (count_ == MAX_SAMPLES)
     return false;
 
-  auto wave = WavFile::Open(name);
-  if (!wave) {
+  auto res = wav_[count_].Open(name);
+  if (!res) {
     Trace::Error("Failed to load sample:%s", name);
     if (multicore_lockout_victim_is_initialized(1)) {
       multicore_lockout_end_blocking();
     }
     return false;
   }
-  wav_[count_] = wave.value();
-  names_[count_] = (char *)SYS_MALLOC(strlen(name) + 1);
-  strcpy(names_[count_], name);
+  strncpy(nameStore_[count_], name, MAX_INSTRUMENT_FILENAME_LENGTH);
+  nameStore_[count_][MAX_INSTRUMENT_FILENAME_LENGTH] = '\0';
   count_++;
 
-  if (!LoadInFlash(wave.value())) {
+  if (!LoadInFlash(&wav_[count_ - 1])) {
     Trace::Error("Failed to load sample into flash: %s", name);
     count_--;
-    SYS_FREE(names_[count_]);
-    names_[count_] = nullptr;
-    delete wav_[count_];
-    wav_[count_] = nullptr;
+    nameStore_[count_][0] = '\0';
+    wav_[count_].Close();
     if (multicore_lockout_victim_is_initialized(1)) {
       multicore_lockout_end_blocking();
     }
     return false;
   }
 
-  wave.value()->Close();
+  wav_[count_ - 1].Close();
 
   if (multicore_lockout_victim_is_initialized(1)) {
     multicore_lockout_end_blocking();
@@ -141,6 +139,8 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
       ((FlashBaseBufferSize / FLASH_PAGE_SIZE) +
        ((FlashBaseBufferSize % FLASH_PAGE_SIZE) != 0)) *
       FLASH_PAGE_SIZE;
+  // Trace::Debug("Size in flash: %i (%i 256 byte pages)", FlashPageBufferSize,
+  //              FlashPageBufferSize / FLASH_PAGE_SIZE);
 
   if (flashWriteOffset_ + FlashPageBufferSize > flashLimit_) {
     return false;
@@ -162,11 +162,14 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
     uint32_t sectorsToErase = ((additionalData / FLASH_SECTOR_SIZE) +
                                ((additionalData % FLASH_SECTOR_SIZE) != 0)) *
                               FLASH_SECTOR_SIZE;
-
+    // Trace::Debug("About to erase %i sectors in flash region 0x%X - 0x%X",
+    //              sectorsToErase, flashEraseOffset_,
+    //              flashEraseOffset_ + sectorsToErase);
     // Erase required number of sectors
     flash_range_erase(flashEraseOffset_, sectorsToErase);
     // Move erase pointer to new position
     flashEraseOffset_ += sectorsToErase;
+    // Trace::Debug("new erase offset: %p", flashEraseOffset_);
   }
 
   uint32_t offset = 0;
@@ -196,7 +199,7 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
   return true;
 };
 
-bool picoTrackerSamplePool::unloadSample(int index) { return false; };
+bool picoTrackerSamplePool::unloadSample(uint32_t index) { return false; };
 
 bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
   // Calculate flash storage needed (round up to flash page size)
