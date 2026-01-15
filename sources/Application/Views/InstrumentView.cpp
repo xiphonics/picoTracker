@@ -29,7 +29,8 @@
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
-                                          InstrumentTypeNames, IT_LAST, 0) {
+                                          InstrumentTypeNames, IT_LAST, 0),
+      lastSampleIndex_(-1), suppressSampleChangeWarning_(false) {
 
   project_ = data->project_;
 
@@ -128,7 +129,8 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
     char message[40];
     npf_snprintf(message, sizeof(message), "%s instruments exhausted!",
                  InstrumentTypeNames[nuType]);
-    MessageBox *mb = new MessageBox(*this, message, "Trying next...", MBBF_OK);
+    MessageBox *mb =
+        MessageBox::Create(*this, message, "Trying next...", MBBF_OK);
     DoModal(mb);
 #endif
     // Try to find the next available instrument type
@@ -200,6 +202,9 @@ void InstrumentView::refreshInstrumentFields() {
   for (auto &f : bitmaskVarField_) {
     f.RemoveObserver(*this);
   }
+  for (auto &f : sampleActionField_) {
+    f.RemoveObserver(*this);
+  }
 
   fieldList_.clear();
   intVarField_.clear();
@@ -207,9 +212,11 @@ void InstrumentView::refreshInstrumentFields() {
   staticField_.clear();
   bigHexVarField_.clear();
   intVarOffField_.clear();
+  sampleActionField_.clear();
   bitmaskVarField_.clear();
   nameTextField_.clear();
   nameVariables_.clear();
+  lastSampleIndex_ = -1;
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
@@ -293,8 +300,10 @@ void InstrumentView::fillSampleParameters() {
   InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
   I_Instrument *instr = bank->GetInstrument(i);
   SampleInstrument *instrument = (SampleInstrument *)instr;
+  lastSampleIndex_ = instrument->GetSampleIndex();
 
   GUIPoint position = GetAnchor();
+  const int baseX = position._x;
 
   // offset y to account for instrument type and export/import fields
   position._y += 1;
@@ -394,6 +403,12 @@ void InstrumentView::fillSampleParameters() {
   bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
                                instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
+
+  position._y += 1;
+  sampleActionField_.emplace_back("Slices", FourCC::ActionShowSampleSlices,
+                                  position);
+  fieldList_.insert(fieldList_.end(), &sampleActionField_.back());
+  sampleActionField_.back().AddObserver(*this);
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
   position._y += 2;
@@ -696,8 +711,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (GetFocus() == *fieldList_.begin()) {
       bool instrumentModified = checkInstrumentModified();
       if (instrumentModified) {
-        MessageBox *mb =
-            new MessageBox(*this, "Reset all settings?", MBBF_YES | MBBF_NO);
+        MessageBox *mb = MessageBox::Create(*this, "Reset all settings?",
+                                            MBBF_YES | MBBF_NO);
 
         DoModal(mb, [this, instr](View &v, ModalView &dialog) {
           if (dialog.GetReturnCode() == MBL_YES) {
@@ -743,8 +758,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
               FileSystem::GetInstance()->exists(SAMPLES_LIB_DIR);
 
           if (!samplelibExists) {
-            MessageBox *mb =
-                new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
+            MessageBox *mb = MessageBox::Create(
+                *this, "Can't access the samplelib", MBBF_OK);
             DoModal(mb);
           } else {
             ImportView::SetSourceViewType(VT_INSTRUMENT);
@@ -758,7 +773,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
             NotifyObservers(&ve);
           }
         } else {
-          MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+          MessageBox *mb =
+              MessageBox::Create(*this, "Not while playing", MBBF_OK);
           DoModal(mb);
         }
       } else {
@@ -979,8 +995,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       // Check if any instrument field has been modified
       bool instrumentModified = checkInstrumentModified();
       if (instrumentModified) {
-        MessageBox *mb = new MessageBox(*this, "Change Instrument &",
-                                        "lose settings?", MBBF_YES | MBBF_NO);
+        MessageBox *mb = MessageBox::Create(
+            *this, "Change Instrument &", "lose settings?", MBBF_YES | MBBF_NO);
 
         // Use a lambda function that captures 'this' for direct access to class
         // members
@@ -1001,7 +1017,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         onInstrumentTypeChange();
       }
     } else {
-      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     break;
@@ -1012,6 +1028,67 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
   case FourCC::ActionImport: {
     // Switch to the InstrumentImportView
     ViewType vt = VT_INSTRUMENT_IMPORT;
+    ViewEvent ve(VET_SWITCH_VIEW, &vt);
+    SetChanged();
+    NotifyObservers(&ve);
+  } break;
+  case FourCC::SampleInstrumentSample: {
+    I_Instrument *instr = getInstrument();
+    if (!instr || instr->GetType() != IT_SAMPLE) {
+      break;
+    }
+
+    SampleInstrument *sampleInstr = static_cast<SampleInstrument *>(instr);
+    int newIndex = sampleInstr->GetSampleIndex();
+
+    if (suppressSampleChangeWarning_) {
+      suppressSampleChangeWarning_ = false;
+      lastSampleIndex_ = newIndex;
+      break;
+    }
+
+    if (newIndex == lastSampleIndex_) {
+      break;
+    }
+
+    if (!sampleInstr->HasSlicesForWarning()) {
+      lastSampleIndex_ = newIndex;
+      break;
+    }
+
+    Variable *sampleVar =
+        sampleInstr->FindVariable(FourCC::SampleInstrumentSample);
+    MessageBox *mb = MessageBox::Create(*this, "Change sample &",
+                                        "clear slices?", MBBF_YES | MBBF_NO);
+
+    DoModal(mb, [this, sampleInstr, sampleVar, newIndex](View &view,
+                                                         ModalView &dialog) {
+      if (dialog.GetReturnCode() == MBL_YES) {
+        sampleInstr->ClearSlices();
+        lastSampleIndex_ = newIndex;
+        isDirty_ = true;
+      } else {
+        suppressSampleChangeWarning_ = true;
+        if (sampleVar) {
+          sampleVar->SetInt(lastSampleIndex_);
+        }
+        isDirty_ = true;
+      }
+    });
+  } break;
+  case FourCC::ActionShowSampleSlices: {
+    I_Instrument *instr = getInstrument();
+    if (!instr || instr->GetType() != IT_SAMPLE) {
+      break;
+    }
+    SampleInstrument *sampleInstr = static_cast<SampleInstrument *>(instr);
+    if (sampleInstr->GetSampleIndex() < 0) {
+      MessageBox *mb =
+          MessageBox::Create(*this, "Assign a sample first", MBBF_OK);
+      DoModal(mb);
+      break;
+    }
+    ViewType vt = VT_SAMPLE_SLICES;
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
     SetChanged();
     NotifyObservers(&ve);
@@ -1104,8 +1181,8 @@ void InstrumentView::handleInstrumentExport() {
 
   if (name.empty() || name == defaultTypeName) {
     // Show error message if no name is set
-    MessageBox *mb =
-        new MessageBox(*this, "Please set a name", "before exporting", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Please set a name",
+                                        "before exporting", MBBF_OK);
     DoModal(mb);
   } else {
     // Export the instrument using the name field
@@ -1116,8 +1193,8 @@ void InstrumentView::handleInstrumentExport() {
       // File already exists, ask user if they want to override it
       etl::string<strlen("Overwrite existing file: ")> confirmMsg =
           "Overwrite existing file?";
-      MessageBox *mb = new MessageBox(*this, confirmMsg.c_str(), name.c_str(),
-                                      MBBF_YES | MBBF_NO);
+      MessageBox *mb = MessageBox::Create(*this, confirmMsg.c_str(),
+                                          name.c_str(), MBBF_YES | MBBF_NO);
 
       // Use a lambda function with captures to avoid using class members
       DoModal(mb, [this, instrument, name](View &v, ModalView &dialog) {
@@ -1147,7 +1224,7 @@ void InstrumentView::handleInstrumentExport() {
                                 ? successMsg.c_str()
                                 : "Failed to export instrument";
       // Show export result message
-      MessageBox *mb = new MessageBox(*this, message, MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, message, MBBF_OK);
       DoModal(mb);
     }
   }

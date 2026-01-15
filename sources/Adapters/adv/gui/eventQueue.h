@@ -3,7 +3,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
-enum EventType { REDRAW, FLUSH, CLOCK, SD_DET, LAST };
+enum EventType { REDRAW, FLUSH, CLOCK, SD_DET_INSERT, SD_DET_REMOVE, LAST };
 
 class Event {
 public:

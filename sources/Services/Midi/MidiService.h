@@ -15,7 +15,6 @@
 #include "Foundation/T_Factory.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "MidiInDevice.h"
-#include "MidiInMerger.h"
 #include "MidiOutDevice.h"
 #include "System/Timer/Timer.h"
 #include <string>
@@ -34,8 +33,8 @@ public:
   void Stop();
 
   //! player notification
-  void OnPlayerStart();
-  void OnPlayerStop();
+  virtual void OnPlayerStart();
+  virtual void OnPlayerStop();
 
   //! Queues a MidiMessage to the current time chunk
   void QueueMessage(MidiMessage &);
@@ -78,7 +77,6 @@ private:
   int currentPlayQueue_;
   int currentOutQueue_;
 
-  MidiInMerger *merger_;
   bool sendSync_;
 };
 #endif

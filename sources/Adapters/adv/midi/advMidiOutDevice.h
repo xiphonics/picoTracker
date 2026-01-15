@@ -17,6 +17,8 @@ public:
   virtual void Close();
   virtual bool Start();
   virtual void Stop();
+  // Adapter-only helper to send immediately
+  void SendImmediate(MidiMessage &msg);
 
 protected:
   virtual void SendMessage(MidiMessage &);

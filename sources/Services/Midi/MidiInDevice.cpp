@@ -8,16 +8,12 @@
  */
 
 #include "MidiInDevice.h"
-#include "Application/Instruments/InstrumentBank.h"
-#include "Application/Model/Config.h"
 #include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 
 #define MIDI_CHANNEL_MASK 0x0F
 #define MIDI_DATA_MASK 0x7F
-
-using namespace std;
 
 // Set this to true to log MIDI events to stdout for debugging
 bool MidiInDevice::dumpEvents_ = false;
@@ -26,13 +22,11 @@ bool MidiInDevice::dumpEvents_ = false;
 int8_t MidiInDevice::channelToInstrument_[16] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-MidiInDevice::MidiInDevice(const char *name)
-    : ControllerSource("midi", name), T_Stack<MidiMessage>(true) {
+MidiInDevice::MidiInDevice(const char *name) : isRunning_(false) {
   for (int channel = 0; channel < 16; channel++) {
     // Initialize the new channel-to-instrument mapping
     channelToInstrument_[channel] = -1; // -1 means no instrument assigned
   }
-  isRunning_ = false;
 
   // Initialize the note tracker
   noteTracker_.clear();
@@ -126,19 +120,8 @@ void MidiInDevice::onDriverMessage(MidiMessage &message) {
   treatChannelEvent(message);
 };
 
-void MidiInDevice::Trigger() {
-
-  MidiMessage *event = Pop(true);
-  while (event) {
-    treatChannelEvent(*event);
-    delete event;
-
-    event = Pop(true);
-  };
-
-  for (int midiChannel = 0; midiChannel < 16; midiChannel++) {
-    // TODO: Trigger all channels with relevant midi messages
-  }
+void MidiInDevice::Trigger(){
+    // No-op: events are handled immediately in onDriverMessage.
 };
 
 void MidiInDevice::treatChannelEvent(MidiMessage &event) {
@@ -310,294 +293,6 @@ void MidiInDevice::ClearChannelAssignment(int midiChannel) {
     channelToInstrument_[midiChannel] = -1;
   }
 }
-
-Channel *MidiInDevice::GetChannel(const char *sourcePath) {
-
-  Channel *channel = 0;
-
-  string path = sourcePath;
-  string::size_type pos = path.find(":", 0);
-  if (pos == string::npos) {
-    return 0;
-  };
-
-  MidiChannel **ccChannel = 0;
-  MidiChannel **noteChannel = 0;
-  MidiChannel **pbChannel = 0;
-  MidiChannel **pcChannel = 0;
-  MidiChannel **catChannel = 0;
-  MidiChannel **atChannel = 0;
-  MidiChannel **activityChannel = 0;
-
-  string firstElem = path.substr(0, pos);
-  string type = "";
-
-  // MIDI channel dependent channels
-
-  string &midiChannelStr = firstElem;
-
-  // First read the channel number
-
-  int midiChannel = atoi(midiChannelStr.c_str());
-  if ((midiChannel < 0) || (midiChannel > 15)) {
-    return 0;
-  };
-  ;
-
-  // read type
-  path = path.substr(pos + 1);
-  pos = path.find(":", 0);
-  type = path.substr(0, pos);
-
-  // Read the event id (note, cc, pb)
-  pos = path.find(":", 0);
-  path = path.substr(pos + 1);
-  int id = atoi(path.c_str());
-  if ((id < 0) || (id > 127)) {
-    return 0;
-  };
-
-  if (type.substr(0, 2) == "cc") {
-
-    MidiControllerType ccType = MCT_NONE;
-    bool isCircular = false;
-    bool isHiRes = false;
-
-    if (type[2] != 0) {
-      switch (type[2]) {
-      case L'+':
-        ccType = MCT_2_COMP;
-        break;
-      case L'|':
-        ccType = MCT_HIRES;
-        isHiRes = true;
-        break;
-      case L'-':
-        ccType = MCT_SIGNED_BIT;
-        break;
-      case L'_':
-        ccType = MCT_SIGNED_BIT_2;
-        break;
-      case L'=':
-        ccType = MCT_BIN_OFFSET;
-        break;
-      case L'*': // backward compatibility
-        ccType = MCT_2_COMP;
-        isCircular = true;
-        // assert(0) ;
-        break;
-      }
-      if (type[3] != 0) {
-        NAssert(type[3] == L'*');
-        isCircular = true;
-      };
-    };
-
-    if (*ccChannel == 0) {
-      *ccChannel = new MidiChannel(sourcePath);
-    }
-    (*ccChannel)->SetControllerType(ccType);
-    (*ccChannel)->SetCircular(isCircular);
-    (*ccChannel)->SetHiRes(isHiRes);
-    channel = *ccChannel;
-  };
-
-  if (type == "note") {
-    if (*noteChannel == 0) {
-      *noteChannel = new MidiChannel(sourcePath);
-    };
-    channel = *noteChannel;
-  };
-  if (type == "note+") {
-    if (*noteChannel == 0) {
-      *noteChannel = new MidiChannel(sourcePath);
-      (*noteChannel)->SetToggle(true);
-    };
-    channel = *noteChannel;
-  };
-  if (type == "at") {
-    if (*atChannel == 0) {
-      (*atChannel) = new MidiChannel(sourcePath);
-    };
-    channel = *atChannel;
-  };
-  if (type == "pb") {
-    if (*pbChannel == 0) {
-      *pbChannel = new MidiChannel(sourcePath);
-    };
-    channel = *pbChannel;
-  };
-  if (type == "cat") {
-    if (*catChannel == 0) {
-      *catChannel = new MidiChannel(sourcePath);
-    };
-    channel = *catChannel;
-  };
-  if (type == "pc") {
-    if (*catChannel == 0) {
-      *catChannel = new MidiChannel(sourcePath);
-    };
-    channel = *pcChannel;
-  };
-  if (type == "activity") {
-    if (*activityChannel == 0) {
-      *activityChannel = new MidiChannel(sourcePath);
-    };
-    channel = *activityChannel;
-  };
-  return channel;
-  ;
-};
-
-void MidiInDevice::treatCC(MidiChannel *channel, int data, bool hiNibble) {
-  switch (channel->GetControllerType()) {
-  // Regular midi channels
-  case MCT_NONE: // to cope with the fact we want to have the possibility to map
-                 // MIDI controllers to 0.5,0.25, etc, we map differently if
-                 // data is zero or otherwise.
-
-    channel->SetValue(
-        (data > 0) ? float(data + 1) / (channel->GetRange() / 2.0f) : 0);
-    break;
-  case MCT_HIRES: {
-    float channelValue = channel->GetValue();
-    int current = (channelValue == 0) ? 0 : int(channelValue * 16384 - 1);
-    int hi = current / 128;
-    int low = current - hi * 128;
-    if (hiNibble) {
-      hi = data;
-    } else {
-      low = data;
-    }
-    current = hi * 128 + low;
-    channel->SetValue((current == 0) ? 0 : (current + 1) / 16384.0f);
-  } break;
-  case MCT_2_COMP: {
-    float current = channel->GetValue();
-    int incr = 0;
-    if (data != 0) {
-      if (data < 0x41) {
-        incr = data;
-      } else {
-        incr = data - 0x80;
-      };
-    };
-    current += float(incr) / (channel->GetRange() / 2.0f - 1.0f);
-    if (channel->IsCircular()) {
-      if (current > 1.0)
-        current -= 1.0F;
-      if (current < 0.0)
-        current += 1.0F;
-    } else {
-      if (current > 1.0)
-        current = 1.0F;
-      if (current < 0.0)
-        current = 0.0F;
-    }
-    channel->SetValue(current);
-    break;
-  }
-  case MCT_SIGNED_BIT: {
-    float current = channel->GetValue();
-    int incr = 0;
-    if (data != 0) {
-      if (data < 0x41) {
-        incr = data;
-      } else {
-        incr = 0x40 - data;
-      };
-    };
-    current += float(incr) / (channel->GetRange() / 2.0f - 1.0f);
-    if (channel->IsCircular()) {
-      if (current > 1.0)
-        current -= 1.0F;
-      if (current < 0.0)
-        current += 1.0F;
-    } else {
-      if (current > 1.0)
-        current = 1.0F;
-      if (current < 0.0)
-        current = 0.0F;
-    }
-    channel->SetValue(current);
-    break;
-  }
-  case MCT_SIGNED_BIT_2: {
-    float current = channel->GetValue();
-    int incr = 0;
-    if (data != 0) {
-      if (data < 0x41) {
-        incr = -data;
-      } else {
-        incr = data - 0x40;
-      };
-    };
-    current += float(incr) / (channel->GetRange() / 2.0f - 1.0f);
-    if (channel->IsCircular()) {
-      if (current > 1.0)
-        current -= 1.0F;
-      if (current < 0.0)
-        current += 1.0F;
-    } else {
-      if (current > 1.0)
-        current = 1.0F;
-      if (current < 0.0)
-        current = 0.0F;
-    }
-    channel->SetValue(current);
-    break;
-  }
-  case MCT_BIN_OFFSET: {
-    float current = channel->GetValue();
-    int incr = 0;
-    if (data != 0) {
-      if (data < 0x41) {
-        incr = data - 0x40;
-      } else {
-        incr = data - 0x40;
-      };
-    };
-    current += float(incr) / (channel->GetRange() / 2.0f - 1.0f);
-    if (channel->IsCircular()) {
-      if (current > 1.0)
-        current -= 1.0F;
-      if (current < 0.0)
-        current += 1.0F;
-    } else {
-      if (current > 1.0)
-        current = 1.0F;
-      if (current < 0.0)
-        current = 0.0F;
-    }
-    channel->SetValue(current);
-    break;
-  }
-  };
-  channel->Trigger();
-};
-
-void MidiInDevice::treatNoteOff(MidiChannel *channel) {
-  if (!channel->IsToggle()) {
-    channel->SetValue(0.0F);
-  }
-  channel->Trigger();
-};
-
-void MidiInDevice::treatNoteOn(MidiChannel *channel, int value) {
-  if (value == 0) { // Actually a note off
-    if (!channel->IsToggle()) {
-      channel->SetValue(0.0F);
-    }
-  } else {
-    if (!channel->IsToggle()) {
-      channel->SetValue(1.0F);
-    } else {
-      float current = channel->GetValue();
-      channel->SetValue((current > 0.5) ? 0.0f : 1.0f);
-    };
-  }
-  channel->Trigger();
-};
 
 void MidiInDevice::processMidiData(uint8_t data) {
   // Handle MIDI data byte

@@ -12,11 +12,15 @@
 
 #include "AudioOut.h"
 #include "AudioSettings.h"
+#include "Externals/etl/include/etl/string.h"
+#include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
-#include "Foundation/T_SimpleList.h"
+#include "config/StringLimits.h"
 
-class Audio : public T_Factory<Audio>, public T_SimpleList<AudioOut> {
+class Audio : public T_Factory<Audio> {
 public:
+  static constexpr size_t MaxAudioOuts = 4;
+
   Audio(AudioSettings &settings);
   virtual ~Audio();
   virtual void Init() = 0;
@@ -29,13 +33,18 @@ public:
   const char *GetAudioDevice();
   int GetAudioBufferSize();
   int GetAudioPreBufferCount();
+  void AddOutput(AudioOut &out);
+  AudioOut *GetFirstOutput();
+  etl::vector<AudioOut *, MaxAudioOuts> &Outputs() { return outputs_; }
 
 protected:
   AudioSettings settings_;
 
+  etl::vector<AudioOut *, MaxAudioOuts> outputs_;
+
 private:
-  std::string audioAPI_;
-  std::string audioDevice_;
+  etl::string<STRING_AUDIO_API_MAX> audioAPI_;
+  etl::string<STRING_AUDIO_DEVICE_MAX> audioDevice_;
   int audioBufferSize_;
   int preBufferCount_;
 };

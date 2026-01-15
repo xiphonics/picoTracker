@@ -52,6 +52,7 @@ class MixerView;
 class ThemeView;
 class ThemeImportView;
 class SampleEditorView;
+class SampleSlicesView;
 class RecordView;
 class View;
 
@@ -77,8 +78,9 @@ public:
 
   void SetDirty();
   void UpdateColorsFromConfig();
+  void SetSdCardPresent(bool present);
 
-  char projectName_[MAX_PROJECT_NAME_LENGTH];
+  char projectName_[MAX_PROJECT_NAME_LENGTH + 1];
 
 protected: // GUIWindow implementation
   virtual bool onEvent(GUIEvent &event);
@@ -126,6 +128,7 @@ private:
   MixerView *_mixerView;
   SelectProjectView *_selectProjectView;
   SampleEditorView *_sampleEditorView;
+  SampleSlicesView *_sampleSlicesView;
   RecordView *_recordView;
   NullView *_nullView;
 
@@ -139,6 +142,8 @@ private:
   bool lowBatteryState_;
   bool lowBatteryMessageShown_;
   uint16_t lowBatteryWarningCounter_;
+  bool sdCardMissing_;
+  bool sdCardMessageShown_;
 
   static unsigned char _charScreen[SCREEN_CHARS];
   static unsigned char _charScreenProp[SCREEN_CHARS];

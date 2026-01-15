@@ -11,12 +11,9 @@
 #define _MIDIIN_DEVICE_H_
 
 #include "Foundation/Observable.h"
-#include "Foundation/T_Stack.h"
-#include "MidiChannel.h"
 #include "MidiEvent.h"
 #include "MidiMessage.h"
 #include "MidiNoteTracker.h"
-#include "Services/Controllers/ControllerSource.h"
 
 enum MidiSyncMessage { MSM_START, MSM_STOP, MSM_TEMPOTICK, MSM_CONTINUE };
 
@@ -25,9 +22,7 @@ struct MidiSyncData : public I_ObservableData {
   MidiSyncData(MidiSyncMessage msg) : message_(msg){};
 };
 
-class MidiInDevice : public Observable,
-                     public ControllerSource,
-                     protected T_Stack<MidiMessage> {
+class MidiInDevice : public Observable {
 public:
   MidiInDevice(const char *name);
   virtual ~MidiInDevice();
@@ -36,7 +31,6 @@ public:
   virtual bool Start() = 0;
   virtual void Stop() = 0;
 
-  virtual Channel *GetChannel(const char *name);
   virtual bool IsRunning();
   virtual void Trigger();
 
@@ -55,9 +49,6 @@ protected:
   virtual void stopDriver() = 0;
 
   void treatChannelEvent(MidiMessage &event);
-  void treatCC(MidiChannel *channel, int, bool hiNibble = false);
-  void treatNoteOff(MidiChannel *channel);
-  void treatNoteOn(MidiChannel *channel, int value);
   bool isRunning_;
 
   // Callbacks from driver

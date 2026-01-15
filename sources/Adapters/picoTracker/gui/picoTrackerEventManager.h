@@ -11,7 +11,6 @@
 
 #include "Foundation/T_Singleton.h"
 #include "SerialDebugUI.h"
-#include "Services/Controllers/KeyboardControllerSource.h"
 #include "UIFramework/SimpleBaseClasses/EventManager.h"
 #include <string>
 
@@ -45,7 +44,5 @@ private:
   static unsigned long time_;
 
   static SerialDebugUI serialDebugUI_;
-
-  KeyboardControllerSource *keyboardCS_;
 };
 #endif

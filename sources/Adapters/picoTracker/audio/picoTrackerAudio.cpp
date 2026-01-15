@@ -30,18 +30,19 @@ void picoTrackerAudio::Init() {
       new (audioDriver) picoTrackerAudioDriver(settings);
   alignas(AudioOutDriver) static char audioOutDriver[sizeof(AudioOutDriver)];
   AudioOutDriver *out = new (audioOutDriver) AudioOutDriver(*drv);
-  Insert(out);
+  AddOutput(*out);
 };
 
 void picoTrackerAudio::Close() {
-  for (Begin(); !IsDone(); Next()) {
-    AudioOut &current = CurrentItem();
-    current.Close();
+  for (auto *out : Outputs()) {
+    if (out) {
+      out->Close();
+    }
   }
 };
 
 void picoTrackerAudio::SetMixerVolume(int v) {
-  AudioOutDriver *out = (AudioOutDriver *)GetFirst();
+  AudioOutDriver *out = (AudioOutDriver *)GetFirstOutput();
   if (out) {
     picoTrackerAudioDriver *drv = (picoTrackerAudioDriver *)out->GetDriver();
     drv->SetVolume(v);
@@ -49,7 +50,7 @@ void picoTrackerAudio::SetMixerVolume(int v) {
 }
 
 int picoTrackerAudio::GetMixerVolume() {
-  AudioOutDriver *out = (AudioOutDriver *)GetFirst();
+  AudioOutDriver *out = (AudioOutDriver *)GetFirstOutput();
   if (out) {
     picoTrackerAudioDriver *drv = (picoTrackerAudioDriver *)out->GetDriver();
     return drv->GetVolume();

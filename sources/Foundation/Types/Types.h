@@ -211,6 +211,7 @@ struct FourCC {
     // 181 is taken for VarSampleEditOperation
     // 182 is taken for VarRecordLineGain
     // 183 is taken for VarRecordMicGain
+    // 184 is taken for ActionShowSampleSlices
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -247,6 +248,7 @@ struct FourCC {
     SampleInstrumentSlices = 171,
     VarBacklightLevel = 174,
     ActionShowSampleEditor = 175,
+    ActionShowSampleSlices = 184,
     VarRecordSource = 176,
     VarSampleEditStart = 177,
     VarSampleEditEnd = 178,
@@ -254,6 +256,8 @@ struct FourCC {
     VarRecordLineGain = 182,
     VarRecordMicGain = 183,
     VarOutputVolume = 184,
+    VarImportResampler = 185,
+    ActionAutoSlice = 186,
 
     Default = 255, // "    "
   };
@@ -410,6 +414,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarRecordLineGain, "recordlinegain")
   ETL_ENUM_TYPE(VarRecordMicGain, "recordmicgain")
   ETL_ENUM_TYPE(VarOutputVolume, "outputvolume")
+  ETL_ENUM_TYPE(VarImportResampler, "IMPORTRESAMP")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

@@ -88,7 +88,12 @@ int64_t advTimer::OnTimerTick() {
   return newcb;
 };
 
-I_Timer *advTimerService::CreateTimer() { return new advTimer(); };
+I_Timer *advTimerService::CreateTimer() {
+  static advTimer timerInstance;
+  timerInstance.Stop();
+  timerInstance.SetPeriod(-1.0f);
+  return &timerInstance;
+};
 
 void advTimerService::TriggerCallback(int msec, timerCallback cb) {
   // TODO(stm): reenable this!

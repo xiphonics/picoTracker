@@ -124,8 +124,6 @@ void SerialDebugUI::catFile(const char *path) {
       line[linePos] = '\0';
       printf("%s\n", line);
     }
-
-    current->Close();
   } else {
     Trace::Log("SERIALDEBUG", "failed to cat file:%s", path);
   }

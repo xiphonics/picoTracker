@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <cstring>
 
-static I_File *RecordFile = nullptr;
+static FileHandle RecordFile;
 
 uint8_t *activeBuffer;
 uint8_t *writeBuffer;
@@ -155,10 +155,9 @@ bool StartRecording(const char *filename, uint8_t threshold,
   }
 
   // Write WAV header (44.1kHz, 16-bit, stereo)
-  if (!WavHeaderWriter::WriteHeader(RecordFile, 44100, 2, 16)) {
+  if (!WavHeaderWriter::WriteHeader(RecordFile.get(), 44100, 2, 16)) {
     Trace::Log("RECORD", "Failed to write WAV header");
-    RecordFile->Close();
-    RecordFile = nullptr;
+    RecordFile.reset();
     return false;
   }
 
@@ -226,18 +225,15 @@ void Record(void *) {
       if (RecordFile) {
         Trace::Log("RECORD", "About to update WAV header");
         // Update WAV header with final file size
-        if (!WavHeaderWriter::UpdateFileSize(RecordFile, totalSamplesWritten)) {
+        if (!WavHeaderWriter::UpdateFileSize(RecordFile.get(),
+                                             totalSamplesWritten)) {
           Trace::Log("RECORD", "Failed to update WAV header");
         }
 
         Trace::Log("RECORD", "STOP Recording: dur:%d samples:%d",
                    (xTaskGetTickCount() - start), totalSamplesWritten);
 
-        // Close file
-        if (!RecordFile->Close()) {
-          Trace::Error("failed to close recording file");
-        }
-        RecordFile = nullptr;
+        RecordFile.reset();
       }
 
       Player::GetInstance()->StopRecordStreaming();
@@ -281,8 +277,9 @@ void Record(void *) {
         writeInProgress = false;
         if (bytesWritten != (int)bytesToWrite) {
           Trace::Error("write failed\r\n");
-          // for now just give up and error out
-          return;
+          // Stop recording so the task can clean up and signal completion.
+          recordingActive = false;
+          continue;
         } else {
           // Total samples written totalSamplesWritten/4 for stereo 16bit
           // samples

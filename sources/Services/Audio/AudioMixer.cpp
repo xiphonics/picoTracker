@@ -14,8 +14,7 @@
 fixed AudioMixer::renderBuffer_[MAX_SAMPLE_COUNT * 2];
 
 AudioMixer::AudioMixer(const char *name)
-    : T_SimpleList<AudioModule>(false), enableRendering_(0), writer_(0),
-      name_(name) {
+    : enableRendering_(0), name_(name), modules_() {
   volume_ = (i2fp(1));
 };
 
@@ -29,13 +28,17 @@ void AudioMixer::EnableRendering(bool enable) {
   }
 
   if (enable) {
-    writer_ = new WavFileWriter(renderPath_.c_str());
+    if (!writer_.Open(renderPath_.c_str())) {
+      Trace::Error("AUDIO_MIXER", "Failed to open render file: %s",
+                   renderPath_.c_str());
+      enableRendering_ = false;
+      return;
+    }
   }
 
   enableRendering_ = enable;
   if (!enable) {
-    writer_->Close();
-    SAFE_DELETE(writer_);
+    writer_.Close();
   }
 };
 
@@ -44,12 +47,14 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
   fixed peakL = 0;
   fixed peakR = 0;
 
-  for (Begin(); !IsDone(); Next()) {
-    AudioModule &current = CurrentItem();
+  for (auto *mod : modules_) {
+    if (!mod) {
+      continue;
+    }
     if (!gotData) {
-      gotData = current.Render(buffer, samplecount);
+      gotData = mod->Render(buffer, samplecount);
     } else {
-      if (current.Render(renderBuffer_, samplecount)) {
+      if (mod->Render(renderBuffer_, samplecount)) {
         fixed *dst = buffer;
         fixed *src = renderBuffer_;
         int count = samplecount * 2;
@@ -131,13 +136,32 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
   // This ensures VU meters update properly in all scenarios
   peakMixerLevel_ = fp2i(peakL) << 16 | fp2i(peakR);
 
-  if (enableRendering_ && writer_) {
+  if (enableRendering_ && writer_.IsOpen()) {
     if (!gotData) {
       memset(buffer, 0, samplecount * 2 * sizeof(fixed));
     };
-    writer_->AddBuffer(buffer, samplecount);
+    writer_.AddBuffer(buffer, samplecount);
   }
   return gotData;
 };
 
 void AudioMixer::SetVolume(fixed volume) { volume_ = volume; }
+
+void AudioMixer::AddModule(AudioModule &module) {
+  if (modules_.full()) {
+    Trace::Error("AUDIOMIXER", "Module list full");
+    return;
+  }
+  modules_.push_back(&module);
+}
+
+void AudioMixer::RemoveModule(AudioModule &module) {
+  for (auto it = modules_.begin(); it != modules_.end(); ++it) {
+    if (*it == &module) {
+      modules_.erase(it);
+      return;
+    }
+  }
+}
+
+void AudioMixer::ClearModules() { modules_.clear(); }
