@@ -31,8 +31,8 @@ public:
 
 private:
   static ToastView *instance_;
+  char lines_[maxLines][SCREEN_WIDTH + 1]; 
   ToastType type_ = ttInfo;
-  char *lines_[maxLines] = {nullptr};
   uint32_t dismissTime_ = 0;
   uint32_t animationStartTime_ = 0;
   int32_t lineCount_ = 0;
@@ -41,7 +41,6 @@ private:
 
   ToastView(GUIWindow &w, ViewData *viewData);
   void WrapText(const char *message);
-  void DeleteStrings();
 
   // view virtual methods
   virtual void OnFocus() override{};

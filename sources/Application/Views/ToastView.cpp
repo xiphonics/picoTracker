@@ -11,37 +11,37 @@
 #include <string.h>
 
 #define TOAST_MAX_LINE_WIDTH (SCREEN_WIDTH - 6)
+#define TOAST_MAX_LINES 8
 
 ToastView *ToastView::instance_ = nullptr;
 
-ToastView::ToastView(GUIWindow &w, ViewData *viewData) : View(w, viewData){};
-ToastView::~ToastView() { DeleteStrings(); }
+ToastView::ToastView(GUIWindow &w, ViewData *viewData) : View(w, viewData) {
+  // Initialize lines array
+  for (int i = 0; i < TOAST_MAX_LINES; i++) {
+    lines_[i][0] = 0;
+  }
+};
+
+ToastView::~ToastView() {}
 ToastView *ToastView::getInstance() { return instance_; }
 
 void ToastView::Init(GUIWindow &w, ViewData *viewData) {
-  if (!instance_)
-    instance_ = new ToastView(w, viewData);
-}
-
-// clean up allocated strings
-void ToastView::DeleteStrings() {
-  for (int i = 0; i < lineCount_; i++) {
-    delete[] lines_[i];
-    lines_[i] = nullptr;
+  if (!instance_) {
+    __attribute__((section(".DATA_RAM"))) static char
+        toastStorage[sizeof(ToastView)];
+    instance_ = new (toastStorage) ToastView(w, viewData);
   }
-  lineCount_ = 0;
 }
 
 // splits the message into multiple lines fitting into the toast width and pads
 // with spaces on both sides
 void ToastView::WrapText(const char *message) {
-  DeleteStrings();
+  lineCount_ = 0;
 
-  const int totalLen = 3 + maxLineWidth + 1;
+  const int totalLen = 3 + TOAST_MAX_LINE_WIDTH + 1;
 
   // helper lambda to add an empty line (top and bottom)
   auto addEmptyLine = [&]() {
-    lines_[lineCount_] = new char[totalLen + 1];
     memset(lines_[lineCount_], ' ', totalLen);
     lines_[lineCount_++][totalLen] = 0;
   };
@@ -65,12 +65,11 @@ void ToastView::WrapText(const char *message) {
       }
     }
 
-    // allocate and populate next line
-    lines_[lineCount_] = new char[totalLen + 1];
-    memset(lines_[lineCount_], ' ', totalLen);
+    // populate next line in static buffer
+    memset(lines_[lineCount_], ' ', totalLen - 1);
     if (lineLen > 0)
       memcpy(lines_[lineCount_] + 3, message + pos, lineLen);
-    lines_[lineCount_++][totalLen] = 0;
+    lines_[lineCount_++][totalLen - 1] = 0;
 
     // skip to the next line
     pos += lineLen;

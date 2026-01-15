@@ -168,18 +168,6 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     return -1;
   }
 
-<<<<<<< HEAD
-    // Update progress indicator
-    int progress = (int)(((totalSize - size) * 100) / totalSize);
-    // set minimum display time for status message
-    Status::Set("%s\nLoading from disk...\n%d%%", name, progress);
-  };
-
-  // now load the sample into memory/flash from the original source path
-  Status::Set("%s\nLoading into memory...", name);
-
-  bool status = loadSample(name);
-=======
   // copy file to current project as 16-bit PCM
   uint8_t buffer[IMPORT_CHUNK_SIZE];
   uint32_t bytesRead = 0;
@@ -283,8 +271,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     if (totalSize > 0) {
       progress = (totalRead * 100) / totalSize;
     }
-    Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
-                         progress);
+    Status::Set("Loading:\n%s\n%d%%", projSampleFilename.c_str(), progress);
   }
 
   // Flush the resampler to write any delayed tail samples after input ends.
@@ -339,7 +326,6 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
 
   // now load the sample into memory/flash from the project pool path
   bool status = loadSample(projectSamplePath.c_str());
->>>>>>> upstream/master
   if (status) {
     // Replace stored name with truncated filename so matches the potentially
     // truncated filename we actually stored into the project pool subdir
