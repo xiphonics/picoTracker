@@ -44,8 +44,8 @@ __attribute__((section(".firmware_info"))) __attribute__((used))
 const firmware_info_t firmware_info = {
     .magic = 0xC0D31355,
     .length = 0,           // placeholder, filled post-link
-    .version = 0x62020200, // type, major, minor, patch
-    // (type: 0x72: beta, debug: 0x64, 0x72: release)
+    .version = 0x72020200, // type, major, minor, patch
+    // (type: 0x62: beta, debug: 0x64, 0x72: release)
     .crc32 = 0,        // placeholder, filled post-link
     .type = 0x00006677 // Only two types: "fw" 0x00006677 or "boot" 0x626f6f74
 };
