@@ -187,7 +187,7 @@ protected:
   void drawMasterVuMeter(Player *player, GUITextProperties props,
                          bool forceRedraw = false, uint8_t xoffset = 24);
   void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);
-  void drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
+  void drawVUMeter(int32_t leftBars, int32_t rightBars, GUIPoint pos,
                    GUITextProperties props, int vuIndex,
                    bool forceRedraw = false);
   void drawPowerButtonUI(GUITextProperties &props);
@@ -220,8 +220,8 @@ public: // temp hack for modl windo constructors
   bool hasFocus_;
 
   // Previous VU meter values for optimization (one pair per channel + master)
-  uint8_t prevLeftVU_[SONG_CHANNEL_COUNT + 1];
-  uint8_t prevRightVU_[SONG_CHANNEL_COUNT + 1];
+  int32_t prevLeftVU_[SONG_CHANNEL_COUNT + 1];
+  int32_t prevRightVU_[SONG_CHANNEL_COUNT + 1];
 
   // Power button state
   bool powerButtonPressed_;

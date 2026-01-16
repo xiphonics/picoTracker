@@ -220,12 +220,12 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
   drawVUMeter(leftBars, rightBars, pos, props, 0, forceRedraw);
 }
 
-void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
+void View::drawVUMeter(int32_t leftBars, int32_t rightBars, GUIPoint pos,
                        GUITextProperties props, int vuIndex, bool forceRedraw) {
 
   // Clamp the values to the maximum height
-  leftBars = std::min(leftBars, (uint8_t)VU_METER_MAX);
-  rightBars = std::min(rightBars, (uint8_t)VU_METER_MAX);
+  leftBars = std::min<int32_t>(leftBars, VU_METER_MAX);
+  rightBars = std::min<int32_t>(rightBars, VU_METER_MAX);
 
   // Add inertia effect by limiting the rate of change
   // Maximum step change allowed per update
