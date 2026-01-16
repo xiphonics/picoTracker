@@ -208,7 +208,7 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
   stereosample playerLevel = player->GetMasterLevel();
 
   // Convert amplitude to bar levels
-  int leftBars, rightBars;
+  int32_t leftBars, rightBars;
   amplitudeToBars(playerLevel, &leftBars, &rightBars);
 
   // we start at the bottom of the VU meter and draw it growing upwards

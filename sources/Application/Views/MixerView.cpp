@@ -468,7 +468,7 @@ void MixerView::drawChannelVUMeters(
     bool anyChanges = false;
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
       // Convert amplitude to bar levels
-      int leftBars, rightBars;
+      int32_t leftBars, rightBars;
       amplitudeToBars(levels->at(i), &leftBars, &rightBars);
 
       // Check if this channel's levels have changed
@@ -490,8 +490,8 @@ void MixerView::drawChannelVUMeters(
 
   // draw vu meter for each bus
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    int leftBars = 0;
-    int rightBars = 0;
+    int32_t leftBars = 0;
+    int32_t rightBars = 0;
     // if channel is muted just use default 0 values for bars
     if (!player->IsChannelMuted(i)) {
       // Convert amplitude to bar levels
