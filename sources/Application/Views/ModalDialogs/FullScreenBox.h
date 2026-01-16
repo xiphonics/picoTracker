@@ -13,10 +13,16 @@
 
 class FullScreenBox : public MessageBox {
 public:
+  static FullScreenBox *Create(View &view, const char *message,
+                               int btnFlags = MBBF_OK);
+  static FullScreenBox *Create(View &view, const char *message,
+                               const char *message2, int btnFlags = MBBF_OK);
+
   FullScreenBox(View &view, const char *message, int btnFlags = MBBF_OK);
   FullScreenBox(View &view, const char *message, const char *message2,
                 int btnFlags = MBBF_OK);
   virtual ~FullScreenBox();
+  virtual void Destroy() override;
 
   virtual void DrawView();
 };

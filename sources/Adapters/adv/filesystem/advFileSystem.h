@@ -25,16 +25,17 @@ extern char SDPath[4]; /* SD logical drive path */
 
 class PI_File : public I_File {
 public:
-  PI_File(FIL file); // OK
+  PI_File(FIL file);
   ~PI_File();
-  int Read(void *ptr, int size) override; // OK
+  int Read(void *ptr, int size) override;
   int GetC() override;
   int Write(const void *ptr, int size, int nmemb) override;
-  void Seek(long offset, int whence) override; // OK
+  void Seek(long offset, int whence) override;
   long Tell() override;
   bool Close() override;
   int Error() override;
   bool Sync() override;
+  void Dispose() override;
 
 private:
   FIL file_;
@@ -47,20 +48,20 @@ class advFileSystem : public FileSystem {
 public:
   advFileSystem(); // OK
   virtual ~advFileSystem(){};
-  virtual FileHandle Open(const char *name, const char *mode) override; // OK
-  virtual bool chdir(const char *path) override;                        // OK
+  virtual FileHandle Open(const char *name, const char *mode) override;
+  virtual bool chdir(const char *path) override;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
-                    bool subDirOnly) override;                          // OK
-  virtual void getFileName(int index, char *name, int length) override; // OK
-  virtual PicoFileType getFileType(int index) override;                 // OK
+                    bool subDirOnly) override;
+  virtual void getFileName(int index, char *name, int length) override;
+  virtual PicoFileType getFileType(int index) override;
   virtual bool isParentRoot() override;
   virtual bool isCurrentRoot() override;
-  virtual bool DeleteFile(const char *name) override;                  // OK
-  virtual bool DeleteDir(const char *name) override;                   // OK
-  virtual bool exists(const char *path) override;                      // OK
-  virtual bool makeDir(const char *path, bool pFlag = false) override; // OK
-  virtual uint64_t getFileSize(int index) override;                    // OK
-  virtual bool CopyFile(const char *src, const char *dest) override;   // OK
+  virtual bool DeleteFile(const char *name) override;
+  virtual bool DeleteDir(const char *name) override;
+  virtual bool exists(const char *path) override;
+  virtual bool makeDir(const char *path, bool pFlag = false) override;
+  virtual uint64_t getFileSize(int index) override;
+  virtual bool CopyFile(const char *src, const char *dest) override;
 
 private:
   FILINFO fileFromIndex(int index);

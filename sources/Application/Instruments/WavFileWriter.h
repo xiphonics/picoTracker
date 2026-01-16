@@ -36,8 +36,11 @@ typedef void (*SampleEditProgressCallback)(uint8_t percent);
 
 class WavFileWriter {
 public:
+  WavFileWriter();
   WavFileWriter(const char *path);
   ~WavFileWriter();
+  bool Open(const char *path);
+  bool IsOpen() const;
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,

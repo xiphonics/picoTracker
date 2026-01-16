@@ -26,16 +26,29 @@ inline void reportProgress(SampleEditProgressCallback callback,
   callback(static_cast<uint8_t>(percent));
 }
 
+WavFileWriter::WavFileWriter() : sampleCount_(0) {}
+
 WavFileWriter::WavFileWriter(const char *path) : sampleCount_(0) {
-  file_ = FileSystem::GetInstance()->Open(path, "wb");
-  if (file_) {
-    // Use WavHeaderWriter to write the header
-    if (!WavHeaderWriter::WriteHeader(file_.get(), 44100, 2, 16)) {
-      Trace::Log("WAVWRITER", "Failed to write WAV header");
-      file_.reset();
-    }
-  }
+  Open(path);
 };
+
+bool WavFileWriter::Open(const char *path) {
+  Close();
+  sampleCount_ = 0;
+  file_ = FileSystem::GetInstance()->Open(path, "wb");
+  if (!file_) {
+    return false;
+  }
+  // Use WavHeaderWriter to write the header
+  if (!WavHeaderWriter::WriteHeader(file_.get(), 44100, 2, 16)) {
+    Trace::Log("WAVWRITER", "Failed to write WAV header");
+    file_.reset();
+    return false;
+  }
+  return true;
+}
+
+bool WavFileWriter::IsOpen() const { return static_cast<bool>(file_); }
 
 WavFileWriter::~WavFileWriter() { Close(); }
 

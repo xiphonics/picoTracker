@@ -1,0 +1,71 @@
+option(LIBSAMPLERATE_COMPATIBLE_NAME "Use old dll name on Windows platform" OFF)
+
+option(LIBSAMPLERATE_ENABLE_SINC_FAST_CONVERTER "Enable Fastest Sinc Interpolator converter" ON)
+option(LIBSAMPLERATE_ENABLE_SINC_MEDIUM_CONVERTER "Enable Medium Sinc Interpolator converter" ON)
+
+option(LIBSAMPLERATE_INSTALL_PKGCONFIG_MODULE "Install samplerate.pc PkgConfig module." ON)
+
+set(ENABLE_SINC_FAST_CONVERTER ${LIBSAMPLERATE_ENABLE_SINC_FAST_CONVERTER} PARENT_SCOPE)
+set(ENABLE_SINC_MEDIUM_CONVERTER ${LIBSAMPLERATE_ENABLE_SINC_MEDIUM_CONVERTER} PARENT_SCOPE)
+
+add_definitions(-DHAVE_STDBOOL_H)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+include(CMakePushCheckState)
+include(CheckCSourceCompiles)
+include(ClipMode)
+include(CMakePackageConfigHelpers)
+
+# This will set CPU_CLIPS_NEGATIVE and CPU_CLIPS_POSITIVE
+clip_mode()
+
+# check for symbol visibility attributes support
+cmake_push_check_state()
+set(CMAKE_REQUIRED_FLAGS "-fvisibility=hidden -Werror")
+check_c_source_compiles("__attribute__((visibility(\"default\"))) int foo(void);
+                         __attribute__((visibility(\"hidden\")))  int bar(void);
+                         int foo (void) {return 0;}
+                         int bar (void) {return 1;}
+                         int main(void) {return 0;}" HAVE_VISIBILITY)
+cmake_pop_check_state()
+
+set(SAMPLERATE_SOURCES
+  common.h
+  fastest_coeffs.h
+  mid_qual_coeffs.h
+  samplerate.c
+  include/samplerate.h
+  src_linear.c
+)
+
+if(ADV)
+  list(APPEND SAMPLERATE_SOURCES src_sinc.c)
+endif()
+
+add_library(samplerate ${SAMPLERATE_SOURCES})
+
+# ALIAS to use if libsamplerate is included from other project with add_subdirectory()
+add_library(SampleRate::samplerate ALIAS samplerate)
+
+target_compile_definitions(samplerate
+  PRIVATE
+  PACKAGE="${PROJECT_NAME}"      # or hard-code "libsamplerate"
+  VERSION="${PROJECT_VERSION}"   # e.g. "0.2.2"
+)
+
+target_include_directories(samplerate
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
+if(LIBM_REQUIRED)
+    target_link_libraries(samplerate PRIVATE m)
+endif()
+
+# Set public header
+set_property(TARGET samplerate PROPERTY PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/samplerate.h)
+
+if(ADV)
+  # Advance has the option to use sinc converters on import
+  target_compile_definitions(samplerate PRIVATE ENABLE_SINC_FAST_CONVERTER ENABLE_SINC_MEDIUM_CONVERTER)
+endif()

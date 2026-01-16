@@ -9,6 +9,7 @@
 
 #include "PersistencyService.h"
 #include "../Instruments/SamplePool.h"
+#include "Foundation/Services/ServiceRegistry.h"
 
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
@@ -172,12 +173,11 @@ PersistencyResult PersistencyService::SaveProjectData(const char *projectName,
 
   printer.OpenElement("PICOTRACKER");
 
-  // Loop on all registered service
-  // accumulating XML flow
-  for (Begin(); !IsDone(); Next()) {
-    Persistent *currentItem = (Persistent *)&CurrentItem();
+  // Loop on all registered persistable subservices
+  for (auto *sub : SubServices()) {
+    auto *currentItem = static_cast<Persistent *>(static_cast<void *>(sub));
     currentItem->Save(&printer);
-  };
+  }
 
   printer.CloseElement();
 
@@ -241,11 +241,11 @@ PersistencyResult PersistencyService::Load(const char *projectName) {
 
   elem = doc.FirstChild();
   while (elem) {
-    for (Begin(); !IsDone(); Next()) {
-      Persistent *currentItem = (Persistent *)&CurrentItem();
+    for (auto *sub : SubServices()) {
+      auto *currentItem = static_cast<Persistent *>(static_cast<void *>(sub));
       if (currentItem->Restore(&doc)) {
         break;
-      };
+      }
     }
     elem = doc.NextSibling();
   }
@@ -265,7 +265,7 @@ PersistencyService::LoadCurrentProjectName(char *projectName) {
       Trace::Error("PERSISTENCYSERVICE: Could not open project state file");
       return PERSIST_LOAD_FAILED;
     }
-    int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH - 1);
+    int len = current->Read(projectName, MAX_PROJECT_NAME_LENGTH);
     projectName[len] = '\0';
     Trace::Log("APPLICATION", "read [%d] load proj name: %s", len, projectName);
     if (Exists(projectName)) {

@@ -7,6 +7,7 @@
  */
 
 #include "advFileSystem.h"
+#include "Externals/etl/include/etl/pool.h"
 #include <cstdio>
 #include <cstring>
 
@@ -15,6 +16,8 @@ char SDPath[4];
 
 // use max int value for parent dir marker
 #define PARENT_DIR_MARKER_INDEX (std::numeric_limits<int>::max())
+
+static etl::pool<PI_File, FF_FS_LOCK> filePool;
 
 advFileSystem::advFileSystem() {
 
@@ -59,10 +62,15 @@ FileHandle advFileSystem::Open(const char *name, const char *mode) {
   FIL cwd;
   PI_File *wFile = 0;
   FRESULT res = f_open(&cwd, name, rmode);
-  if (res == FR_OK) {
-    wFile = new PI_File(cwd);
-  } else {
+  if (res != FR_OK) {
     Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
+    return FileHandle();
+  }
+  wFile = filePool.create(cwd);
+  if (wFile == nullptr) {
+    Trace::Error("FILESYSTEM: No file slots available (max %d)",
+                 static_cast<int>(FF_FS_LOCK));
+    return FileHandle();
   }
   return MakeFileHandle(wFile);
 }
@@ -480,3 +488,5 @@ bool PI_File::Sync() {
   FRESULT res = f_sync(&file_);
   return res == FR_OK;
 }
+
+void PI_File::Dispose() { filePool.destroy(this); }

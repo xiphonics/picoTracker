@@ -14,7 +14,6 @@
 #include "BaseClasses/UIIntVarField.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
-#include "Foundation/T_SimpleList.h"
 #include "ViewData.h"
 
 class RecordView : public FieldView, public I_Observer {

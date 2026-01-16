@@ -21,11 +21,15 @@ class GUITextProperties;
 // Progress message box with render progress display
 class RenderProgressModal : public ModalView {
 public:
+  static RenderProgressModal *Create(View &view, const char *title,
+                                     const char *message);
+
   // Constructor taking a view, title and message
   RenderProgressModal(View &view, const char *title, const char *message);
 
   // Virtual destructor
   virtual ~RenderProgressModal();
+  virtual void Destroy() override;
 
   // ModalView overrides
   virtual void DrawView();
@@ -35,6 +39,9 @@ public:
   virtual void AnimationUpdate();
 
 private:
+  RenderProgressModal(const RenderProgressModal &) = delete;
+  RenderProgressModal &operator=(const RenderProgressModal &) = delete;
+
   // Helper method to draw the render progress
   void drawRenderProgress(GUIPoint &pos, GUITextProperties &props);
 
@@ -55,6 +62,9 @@ private:
   // Constants for sample rate calculations
   static const int SAMPLE_RATE = 44100;
   static const int AUDIO_SLICES_PER_STEP = 6;
+
+  static bool inUse_;
+  static void *storage_;
 };
 
 #endif // _RENDER_PROGRESS_MODAL_H_

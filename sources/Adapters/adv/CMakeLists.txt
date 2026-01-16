@@ -226,7 +226,7 @@ target_link_options(picoTrackerAdvance PRIVATE
     -mfpu=fpv5-d16
     -mfloat-abi=hard
 
-    # --specs=nosys.specs
+    --specs=nosys.specs
     # Use the nano C library spec
     --specs=nano.specs
 

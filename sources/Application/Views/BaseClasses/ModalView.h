@@ -21,6 +21,7 @@ public:
   int GetReturnCode();
 
   void EndModal(int returnCode);
+  virtual void Destroy();
 
 protected:
   void SetWindow(int width, int height);

@@ -33,6 +33,14 @@ static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
 static const char *midiSendSync[2] = {"Off", "Send"};
 static const char *midiClockSyncOptions[2] = {"Internal", "External"};
 static const char *remoteUIOnOff[2] = {"Off", "On"};
+#ifdef ADV
+static const char *importResamplerOptions[] = {"None", "Linear", "Sinc",
+                                               "Sinc Best"};
+static constexpr int kImportResamplerOptionCount = 4;
+#else
+static const char *importResamplerOptions[] = {"None", "Linear"};
+static constexpr int kImportResamplerOptionCount = 2;
+#endif
 
 // NOTE: these MUST match up to the RecordSource enum in record.h (of all
 // adapters) also note we *dont* show "All Off" as a UI option for now
@@ -53,6 +61,11 @@ constexpr int DEFAULT_REC_SOURCE = 0x0;
 constexpr int DEFAULT_RECORD_LINE_GAIN_DB = 0;
 constexpr int DEFAULT_RECORD_MIC_GAIN_DB = 0;
 constexpr int DEFAULT_OUTPUT_VOLUME = 40;
+#ifdef ADV
+constexpr int DEFAULT_IMPORT_RESAMPLER = 2; // Sinc by default
+#else
+constexpr int DEFAULT_IMPORT_RESAMPLER = 0; // default for picoTracker is none (as original)
+#endif
 
 // Use a struct to define parameter information
 struct ConfigParam {
@@ -206,6 +219,12 @@ static const ConfigParam configParams[] = {
      nullptr,
      0,
      false},
+    {"IMPORTRESAMP",
+     {.intValue = DEFAULT_IMPORT_RESAMPLER},
+     FourCC::VarImportResampler,
+     importResamplerOptions,
+     kImportResamplerOptionCount,
+     false},
 
     {"RECORDSOURCE",
      {.intValue = 1},
@@ -227,32 +246,71 @@ static const ConfigParam configParams[] = {
      false},
 };
 
-Config::Config() : VariableContainer(&variables_) {
+Config::Config()
+    : VariableContainer(&variables_),
+      background_(FourCC::VarBGColor,
+                  static_cast<int>(ThemeConstants::DEFAULT_BACKGROUND)),
+      foreground_(FourCC::VarFGColor,
+                  static_cast<int>(ThemeConstants::DEFAULT_FOREGROUND)),
+      hiColor1_(FourCC::VarHI1Color,
+                static_cast<int>(ThemeConstants::DEFAULT_HICOLOR1)),
+      hiColor2_(FourCC::VarHI2Color,
+                static_cast<int>(ThemeConstants::DEFAULT_HICOLOR2)),
+      consoleColor_(FourCC::VarConsoleColor,
+                    static_cast<int>(ThemeConstants::DEFAULT_CONSOLECOLOR)),
+      cursorColor_(FourCC::VarCursorColor,
+                   static_cast<int>(ThemeConstants::DEFAULT_CURSORCOLOR)),
+      infoColor_(FourCC::VarInfoColor,
+                 static_cast<int>(ThemeConstants::DEFAULT_INFOCOLOR)),
+      warnColor_(FourCC::VarWarnColor,
+                 static_cast<int>(ThemeConstants::DEFAULT_WARNCOLOR)),
+      errorColor_(FourCC::VarErrorColor,
+                  static_cast<int>(ThemeConstants::DEFAULT_ERRORCOLOR)),
+      accentColor_(FourCC::VarAccentColor,
+                   static_cast<int>(ThemeConstants::DEFAULT_ACCENT)),
+      accentAltColor_(FourCC::VarAccentAltColor,
+                      static_cast<int>(ThemeConstants::DEFAULT_ACCENT_ALT)),
+      emphasisColor_(FourCC::VarEmphasisColor,
+                     static_cast<int>(ThemeConstants::DEFAULT_EMPHASIS)),
+      lineOut_(FourCC::VarLineOut, lineOutOptions, 3, DEFAULT_LINEOUT),
+      midiDevice_(FourCC::VarMidiDevice, midiDeviceList, 4, DEFAULT_MIDIDEVICE),
+      midiSync_(FourCC::VarMidiSync, midiSendSync, 2, DEFAULT_MIDISYNC),
+      remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, DEFAULT_REMOTEUI),
+      importResampler_(FourCC::VarImportResampler, importResamplerOptions,
+                       kImportResamplerOptionCount, DEFAULT_IMPORT_RESAMPLER),
+      uiFont_(FourCC::VarUIFont, ThemeConstants::FONT_NAMES,
+              ThemeConstants::FONT_COUNT, ThemeConstants::DEFAULT_UIFONT),
+      themeName_(FourCC::VarThemeName, ThemeConstants::DEFAULT_THEME_NAME),
+      backlightLevel_(FourCC::VarBacklightLevel, DEFAULT_BACKLIGHT_LEVEL),
+      outputVolume_(FourCC::VarOutputVolume, DEFAULT_OUTPUT_VOLUME),
+      recordSource_(FourCC::VarRecordSource, recordSourceOptions, 4, 1),
+      recordLineGain_(FourCC::VarRecordLineGain, DEFAULT_RECORD_LINE_GAIN_DB),
+      recordMicGain_(FourCC::VarRecordMicGain, DEFAULT_RECORD_MIC_GAIN_DB) {
 
-  // Create all variables from configParams
-  for (const auto &param : configParams) {
-    if (variables_.size() >= variables_.max_size()) {
-      Trace::Error("CONFIG", "Maximum number of variables reached");
-      break;
-    }
-
-    Variable *var = nullptr;
-
-    if (param.isString) {
-      // For string parameters (like theme name)
-      var = new Variable(FourCC(param.fourcc), param.defaultValue.strValue);
-    } else if (param.options) {
-      // For parameters with options
-      var = new WatchedVariable(FourCC(param.fourcc), param.options,
-                                param.optionCount, 0);
-      var->SetInt(param.defaultValue.intValue);
-    } else {
-      // For simple integer parameters (like colors)
-      var = new WatchedVariable(FourCC(param.fourcc),
-                                param.defaultValue.intValue);
-    }
-    variables_.push_back(var);
-  }
+  variables_.push_back(&background_);
+  variables_.push_back(&foreground_);
+  variables_.push_back(&hiColor1_);
+  variables_.push_back(&hiColor2_);
+  variables_.push_back(&consoleColor_);
+  variables_.push_back(&cursorColor_);
+  variables_.push_back(&infoColor_);
+  variables_.push_back(&warnColor_);
+  variables_.push_back(&errorColor_);
+  variables_.push_back(&accentColor_);
+  variables_.push_back(&accentAltColor_);
+  variables_.push_back(&emphasisColor_);
+  variables_.push_back(&lineOut_);
+  variables_.push_back(&midiDevice_);
+  variables_.push_back(&midiSync_);
+  variables_.push_back(&remoteUI_);
+  variables_.push_back(&importResampler_);
+  variables_.push_back(&uiFont_);
+  variables_.push_back(&themeName_);
+  variables_.push_back(&backlightLevel_);
+  variables_.push_back(&outputVolume_);
+  variables_.push_back(&recordSource_);
+  variables_.push_back(&recordLineGain_);
+  variables_.push_back(&recordMicGain_);
 
   PersistencyDocument doc;
 
@@ -494,7 +552,9 @@ bool Config::SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName) {
   Variable *fontVar = FindVariable(FourCC::VarUIFont);
   if (fontVar) {
     printer->OpenElement("Font");
-    printer->PushAttribute("value", std::to_string(fontVar->GetInt()).c_str());
+    char buf[16];
+    npf_snprintf(buf, sizeof(buf), "%d", fontVar->GetInt());
+    printer->PushAttribute("value", buf);
     printer->CloseElement(); // Font
   }
 
@@ -540,7 +600,9 @@ void Config::SaveContent(tinyxml2::XMLPrinter *printer) {
     // these settings need to be saved as the Int values not as String
     // values hence we *dont* use GetString() !
     if (var->GetType() == Variable::CHAR_LIST) {
-      printer->PushAttribute("VALUE", std::to_string(var->GetInt()).c_str());
+      char buf[16];
+      npf_snprintf(buf, sizeof(buf), "%d", var->GetInt());
+      printer->PushAttribute("VALUE", buf);
     } else {
       // all other settings need to be saved as thier String values
       printer->PushAttribute("VALUE", var->GetString().c_str());

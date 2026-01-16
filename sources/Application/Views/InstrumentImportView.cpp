@@ -177,7 +177,7 @@ void InstrumentImportView::importInstrument(char *name) {
     npf_snprintf(sizeMesg, sizeof(sizeMesg), "Max is %d chars",
                  MAX_INSTRUMENT_FILENAME_LENGTH);
     MessageBox *mb =
-        new MessageBox(*this, "Filename too long", sizeMesg, MBBF_OK);
+        MessageBox::Create(*this, "Filename too long", sizeMesg, MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -196,7 +196,8 @@ void InstrumentImportView::importInstrument(char *name) {
       PersistencyService::GetInstance()->DetectInstrumentType(name);
 
   if (importedType == IT_NONE) {
-    MessageBox *mb = new MessageBox(*this, "Unknown instrument type", MBBF_OK);
+    MessageBox *mb =
+        MessageBox::Create(*this, "Unknown instrument type", MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -209,7 +210,7 @@ void InstrumentImportView::importInstrument(char *name) {
   I_Instrument *currentInstrument = bank->GetInstrument(toInstrID_);
 
   if (!currentInstrument) {
-    MessageBox *mb = new MessageBox(*this, "Invalid instrument", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Invalid instrument", MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -230,7 +231,7 @@ void InstrumentImportView::importInstrument(char *name) {
     if (bank->GetNextAndAssignID(importedType, toInstrID_) ==
         NO_MORE_INSTRUMENT) {
       MessageBox *mb =
-          new MessageBox(*this, "Failed to create instrument", MBBF_OK);
+          MessageBox::Create(*this, "Failed to create instrument", MBBF_OK);
       DoModal(mb);
       return;
     }
@@ -289,7 +290,7 @@ void InstrumentImportView::importInstrument(char *name) {
                "Updated viewData_ currentInstrumentID_ to: %d", toInstrID_);
 
     // Show success message and return to instrument view
-    MessageBox *mb = new MessageBox(*this, "Import successful", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Import successful", MBBF_OK);
     DoModal(mb, [this, instrument](View &v, ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_OK) {
         // Log that we're about to switch back to the instrument view
@@ -308,7 +309,7 @@ void InstrumentImportView::importInstrument(char *name) {
       }
     });
   } else {
-    MessageBox *mb = new MessageBox(*this, "Import failed", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Import failed", MBBF_OK);
     DoModal(mb);
   }
 

@@ -24,13 +24,13 @@ public:
   ~advSamplePool() {}
   virtual bool CheckSampleFits(int sampleSize);
   virtual uint32_t GetAvailableSampleStorageSpace();
-  virtual bool unloadSample(int i);
+  virtual bool unloadSample(uint32_t i);
 
 protected:
   virtual bool loadSample(const char *name);
 
 private:
-  bool Load(WavFile *wave);
+  bool Load(WavFile &wave);
 
   static uint32_t writeOffset1_;
   static uint32_t storeLimit1_;

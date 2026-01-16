@@ -154,33 +154,6 @@ void SelectProjectView::OnPlayerUpdate(PlayerEventType,
 
 void SelectProjectView::OnFocus() { setCurrentFolder(); };
 
-void SelectProjectView::DeleteProject() {
-  if (currentIndex_ >= fileIndexList_.size()) {
-    return;
-  }
-
-  char selected[MAX_PROJECT_NAME_LENGTH + 1];
-  getHighlightedProjectName(selected);
-
-  // make sure we are not attempting to delete the current project
-  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
-  etl::string<MAX_PROJECT_NAME_LENGTH> currentProject = var->GetString();
-  const char *current = currentProject.c_str();
-
-  if (strcmp(current, selected) == 0) {
-    MessageBox *mb =
-        new MessageBox(*this, "Cannot delete the current project.", MBBF_OK);
-    DoModal(mb);
-    return;
-  }
-
-  char buffer[MAX_PROJECT_NAME_LENGTH + 11];
-  npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", selected);
-
-  MessageBox *mb = new MessageBox(*this, buffer, MBBF_YES | MBBF_NO);
-  DoModal(mb, DeleteProjectCallback);
-}
-
 void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
@@ -349,7 +322,7 @@ void SelectProjectView::LoadProject() {
 
 bool SelectProjectView::WarnPlayerRunning() {
   if (Player::GetInstance()->IsRunning()) {
-    MessageBox *mb = new MessageBox(*this, "Not while running!", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Not while running!", MBBF_OK);
     DoModal(mb);
     return true;
   }
@@ -401,24 +374,35 @@ void SelectProjectView::ConfirmOverwrite() {
   char buffer[MAX_PROJECT_NAME_LENGTH + 8];
   snprintf(buffer, sizeof(buffer), "\"%s\"?", selected);
 
-  MessageBox *mb = new MessageBox(*this, "Overwrite existing project", buffer,
-                                  MBBF_YES | MBBF_NO);
-  DoModal(mb, ConfirmOverwriteCallback);
+  MessageBox *mb = MessageBox::Create(*this, "Overwrite existing project",
+                                      buffer, MBBF_YES | MBBF_NO);
+  DoModal(mb, ModalViewCallback::create<&ConfirmOverwriteCallback>());
 }
 
 void SelectProjectView::AttemptDeletingSelectedProject() {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+
   if (WarnPlayerRunning()) {
     return;
   }
 
   if (SelectionIsCurrentProject()) {
-    MessageBox *mb =
-        new MessageBox(*this, "Cannot delete the current", "project.", MBBF_OK);
+    MessageBox *mb = MessageBox::Create(*this, "Cannot delete the active",
+                                        "project.", MBBF_OK);
     DoModal(mb);
     return;
   }
 
-  DeleteProject();
+  char selected[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(selected);
+
+  char buffer[MAX_PROJECT_NAME_LENGTH + 11];
+  npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", selected);
+
+  MessageBox *mb = MessageBox::Create(*this, buffer, MBBF_YES | MBBF_NO);
+  DoModal(mb, ModalViewCallback::create<&DeleteProjectCallback>());
 }
 
 void SelectProjectView::AttemptLoadingProject() {
@@ -426,7 +410,7 @@ void SelectProjectView::AttemptLoadingProject() {
     return;
   }
 
-  MessageBox *mb =
-      new MessageBox(*this, "Load song and lose changes?", MBBF_YES | MBBF_NO);
-  DoModal(mb, LoadProjectCallback);
+  MessageBox *mb = MessageBox::Create(*this, "Load song and lose changes?",
+                                      MBBF_YES | MBBF_NO);
+  DoModal(mb, ModalViewCallback::create<&LoadProjectCallback>());
 }

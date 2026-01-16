@@ -69,7 +69,10 @@ int64_t picoTrackerTimer::OnTimerTick() {
 };
 
 I_Timer *picoTrackerTimerService::CreateTimer() {
-  return new picoTrackerTimer();
+  static picoTrackerTimer timerInstance;
+  timerInstance.Stop();
+  timerInstance.SetPeriod(-1.0f);
+  return &timerInstance;
 };
 
 void picoTrackerTimerService::TriggerCallback(int msec, timerCallback cb) {

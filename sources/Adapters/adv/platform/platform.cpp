@@ -68,7 +68,10 @@ void platform_bootloader() {
   appEntry();
 };
 
-SysMutex *platform_mutex() { return new advMutex(); };
+SysMutex *platform_mutex() {
+  static advMutex mutex;
+  return &mutex;
+};
 
 uint32_t millis(void) { return __HAL_TIM_GET_COUNTER(&htim2) / 1000; }
 uint32_t micros(void) { return __HAL_TIM_GET_COUNTER(&htim2); }

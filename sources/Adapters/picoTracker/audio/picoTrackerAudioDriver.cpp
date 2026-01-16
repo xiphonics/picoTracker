@@ -172,7 +172,6 @@ bool picoTrackerAudioDriver::InitDriver() {
 
   // Enable audio
   irq_set_enabled(DMA_IRQ_0 + AUDIO_DMA_IRQ, true);
-  dma_channel_transfer_from_buffer_now(AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
   pio_sm_set_enabled(AUDIO_PIO, AUDIO_SM, true);
 
   // Set Audio render thread on core1
@@ -209,6 +208,11 @@ bool picoTrackerAudioDriver::StartDriver() {
     sem_release(&core1_audio);
   }
 
+  // start DMA here so that any delay in other initialisation
+  // (eg. MixerService::Init() in Debug builds) doesn't cause race condition
+  // that stops audio dma from starting
+  dma_channel_transfer_from_buffer_now(AUDIO_DMA, miniBlank_, MINI_BLANK_SIZE);
+
   picoTracker_sound_pause(0);
   startTime_ = millis();
 
@@ -222,7 +226,6 @@ void picoTrackerAudioDriver::StopDriver() {
 
 void picoTrackerAudioDriver::OnChunkDone() {
   if (isPlaying_) {
-
     // Process MIDI
     MidiService::GetInstance()->Flush();
 

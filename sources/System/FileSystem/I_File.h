@@ -26,6 +26,7 @@ public:
   virtual long Tell() = 0;
   virtual int Error() = 0;
   virtual bool Sync() = 0;
+  virtual void Dispose() = 0;
 
 protected:
   // Only the filesystem deleter and explicit legacy helpers may close files.

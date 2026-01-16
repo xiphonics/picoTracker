@@ -10,7 +10,6 @@
 #ifndef _SELECTPROJECT_VIEW_H_
 #define _SELECTPROJECT_VIEW_H_
 
-#include "Foundation/T_SimpleList.h"
 #include "ScreenView.h"
 #include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"
@@ -38,7 +37,7 @@ private:
   static const int numButtons_ = 3;
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
-  char selection_[MAX_PROJECT_NAME_LENGTH];
+  char selection_[MAX_PROJECT_NAME_LENGTH + 1];
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
   int selectedButton_ = 0;
 
@@ -47,7 +46,6 @@ private:
   void AttemptLoadingProject();
   bool SelectionIsCurrentProject();
   bool WarnPlayerRunning();
-  void DeleteProject();
   void ConfirmOverwrite();
   void SelectButton(int direction);
 };

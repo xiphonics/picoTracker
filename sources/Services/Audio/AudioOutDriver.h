@@ -13,7 +13,9 @@
 #include "Application/Instruments/WavFileWriter.h"
 #include "AudioDriver.h"
 #include "AudioOut.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
+#include "config/StringLimits.h"
 
 class AudioDriver;
 
@@ -36,8 +38,8 @@ public:
 
   AudioDriver *GetDriver();
 
-  virtual std::string GetAudioAPI();
-  virtual std::string GetAudioDevice();
+  virtual etl::string<STRING_AUDIO_API_MAX> GetAudioAPI();
+  virtual etl::string<STRING_AUDIO_DEVICE_MAX> GetAudioDevice();
   virtual int GetAudioBufferSize();
   virtual int GetAudioRequestedBufferSize();
   virtual int GetAudioPreBufferCount();

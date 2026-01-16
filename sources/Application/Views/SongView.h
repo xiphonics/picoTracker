@@ -77,11 +77,12 @@ private:
   struct {                // .Clipboard structure
     bool active_;         // .If currently making a selection
     unsigned char *data_; // .Null if clipboard empty
-    int x_;               // .Current selection positions
-    int y_;               // .
-    int offset_;          // .
-    int width_;           // .Size of selection
-    int height_;          // .
+    unsigned char storage_[SONG_CHANNEL_COUNT * SONG_ROW_COUNT];
+    int x_;      // .Current selection positions
+    int y_;      // .
+    int offset_; // .
+    int width_;  // .Size of selection
+    int height_; // .
   } clipboard_;
 
   int saveX_;

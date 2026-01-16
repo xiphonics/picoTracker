@@ -10,22 +10,26 @@
 #ifndef _WAV_FILE_H_
 #define _WAV_FILE_H_
 
+#include "Externals/etl/include/etl/expected.h"
 #include "SoundSource.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "WavFileErrors.h"
-#include <expected>
 
 #define BUFFER_SIZE 512
 
 class WavFile : public SoundSource {
 
-protected: // Factory - see Load method
-  WavFile(FileHandle file);
-
 public:
+  WavFile();
+  WavFile(WavFile &&) = default;
+  WavFile &operator=(WavFile &&) = default;
+  WavFile(const WavFile &) = delete;
+  WavFile &operator=(const WavFile &) = delete;
   virtual ~WavFile() = default;
-  static std::expected<WavFile *, WAVEFILE_ERROR> Open(const char *);
+
+  etl::expected<void, WAVEFILE_ERROR> Open(const char *);
+  bool IsOpen() const;
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);
   virtual int GetSize(int note);
@@ -38,6 +42,7 @@ public:
   uint32_t GetDiskSize(int note);
   bool Rewind();
   bool Read(void *buff, uint32_t btr, uint32_t *bytesRead);
+  bool ReadFloat(float *buff, uint32_t maxSamples, uint32_t *samplesRead);
   void Close();
 
   virtual bool IsMulti() { return false; };
@@ -50,15 +55,15 @@ private:
   int readBufferSize_; // Read buffer size
   short *samples_;     // sample buffer size (16 bits)
   int sampleBufferSize_;
-  int size_;           // number of samples
-  int sampleRate_;     // sample rate
-  int channelCount_;   // mono / stereo
-  int bytePerSample_;  // original file is in 8/16bit
-  int dataPosition_;   // offset in file to get to data
-  uint32_t readCount_; // remaining bytes to be read from file
+  int size_;             // number of samples
+  int sampleRate_;       // sample rate
+  int channelCount_;     // mono / stereo
+  int bytePerSample_;    // original file depth (8/16/24/32bit or float)
+  uint16_t audioFormat_; // PCM or IEEE float
+  int dataPosition_;     // offset in file to get to data
+  uint32_t readCount_;   // remaining bytes to be read from file
 
-  static int bufferChunkSize_;
-  static bool initChunkSize_;
   static unsigned char readBuffer_[BUFFER_SIZE];
+  static int16_t convertedBuffer_[BUFFER_SIZE / 2];
 };
 #endif

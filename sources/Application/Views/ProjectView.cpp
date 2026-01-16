@@ -57,9 +57,10 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
   if (persist->Save(projName, oldProjName, true) != PERSIST_SAVED) {
     Trace::Error("failed to save renamed project %s [old: %s]", projName,
                  oldProjName);
-    MessageBox *mb = new MessageBox(
+    MessageBox *mb = MessageBox::Create(
         ((ProjectView &)v), "Failed to save project", MBBF_OK | MBBF_CANCEL);
-    ((ProjectView &)v).DoModal(mb, SaveAsOverwriteCallback);
+    ((ProjectView &)v)
+        .DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
     return;
   }
   if (persist->SaveProjectState(projName) != PERSIST_SAVED) {
@@ -91,7 +92,7 @@ static void RenderStopCallback(View &v, ModalView &dialog) {
 
       // Show cancellation message
       MessageBox *cancelDialog =
-          new MessageBox(((ProjectView &)v), "Rendering Stopped", MBBF_OK);
+          MessageBox::Create(((ProjectView &)v), "Rendering Stopped", MBBF_OK);
       ((ProjectView &)v).DoModal(cancelDialog);
     }
   }
@@ -301,14 +302,14 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   switch (fourcc) {
   case FourCC::ActionPurge: {
     MessageBox *mb =
-        new MessageBox(*this, "Remove unused samples?", MBBF_YES | MBBF_NO);
-    DoModal(mb, PurgeCallback);
+        MessageBox::Create(*this, "Remove unused samples?", MBBF_YES | MBBF_NO);
+    DoModal(mb, ModalViewCallback::create<&PurgeCallback>());
     break;
   }
   case FourCC::ActionPurgeInstrument: {
-    MessageBox *mb =
-        new MessageBox(*this, "Remove unused instruments?", MBBF_YES | MBBF_NO);
-    DoModal(mb, PurgeInstrumentsCallback);
+    MessageBox *mb = MessageBox::Create(*this, "Remove unused instruments?",
+                                        MBBF_YES | MBBF_NO);
+    DoModal(mb, ModalViewCallback::create<&PurgeInstrumentsCallback>());
     break;
   }
   case FourCC::ActionRandomName: {
@@ -323,22 +324,23 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   }
   case FourCC::ActionSave: {
     PersistencyService *persist = PersistencyService::GetInstance();
-    char projName[MAX_PROJECT_NAME_LENGTH];
+    char projName[MAX_PROJECT_NAME_LENGTH + 1];
     project_->GetProjectName(projName);
 
     if (saveAsFlag_) {
       // first need to check if project with this name already exists
       if (persist->Exists(projName)) {
         Trace::Error("project already exists ask user to confirm overwrite");
-        MessageBox *mb = new MessageBox(*this, "Overwrite EXISTING project?",
-                                        MBBF_OK | MBBF_CANCEL);
-        DoModal(mb, SaveAsOverwriteCallback);
+        MessageBox *mb = MessageBox::Create(
+            *this, "Overwrite EXISTING project?", MBBF_OK | MBBF_CANCEL);
+        DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
         return;
       }
       if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
           PERSIST_SAVED) {
         Trace::Error("failed to save project state");
-        MessageBox *mb = new MessageBox(*this, "Error saving Project", MBBF_OK);
+        MessageBox *mb =
+            MessageBox::Create(*this, "Error saving Project", MBBF_OK);
         DoModal(mb);
         return;
       }
@@ -347,7 +349,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
           PERSIST_SAVED) {
         Trace::Error("failed to save project state");
-        MessageBox *mb = new MessageBox(*this, "Error saving Project", MBBF_OK);
+        MessageBox *mb =
+            MessageBox::Create(*this, "Error saving Project", MBBF_OK);
         DoModal(mb);
         return;
       }
@@ -371,18 +374,19 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   }
   case FourCC::ActionNewProject: {
-    MessageBox *mb = new MessageBox(*this, "Create a new project and",
-                                    "lose all changes?", MBBF_YES | MBBF_NO);
-    DoModal(mb, CreateNewProjectCallback);
+    MessageBox *mb =
+        MessageBox::Create(*this, "Create a new project and",
+                           "lose all changes?", MBBF_YES | MBBF_NO);
+    DoModal(mb, ModalViewCallback::create<&CreateNewProjectCallback>());
     break;
   }
   case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
-      MessageBox *mb =
-          new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
-      DoModal(mb, BootselCallback);
+      MessageBox *mb = MessageBox::Create(*this, "Reboot and lose changes?",
+                                          MBBF_YES | MBBF_NO);
+      DoModal(mb, ModalViewCallback::create<&BootselCallback>());
     } else {
-      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     break;
@@ -397,8 +401,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
-          new RenderProgressModal(*this, "Rendering", "Press OK to stop");
-      DoModal(renderDialog, RenderStopCallback);
+          RenderProgressModal::Create(*this, "Rendering", "Press OK to stop");
+      DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
     }
     break;
   case FourCC::ActionRenderStems:
@@ -407,9 +411,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       player->Start(PM_SONG, true, MSM_FILESPLIT, true);
 
       // Show a dialog with a Stop button during rendering
-      RenderProgressModal *renderDialog =
-          new RenderProgressModal(*this, "Stems Rendering", "Press OK to stop");
-      DoModal(renderDialog, RenderStopCallback);
+      RenderProgressModal *renderDialog = RenderProgressModal::Create(
+          *this, "Stems Rendering", "Press OK to stop");
+      DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
     }
     break;
   case FourCC::ActionImport:
@@ -420,7 +424,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 
       if (!samplelibExists) {
         MessageBox *mb =
-            new MessageBox(*this, "Can't access the samplelib", MBBF_OK);
+            MessageBox::Create(*this, "Can't access the samplelib", MBBF_OK);
         DoModal(mb);
       } else {
         ImportView::SetSourceViewType(VT_PROJECT);
@@ -434,7 +438,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
         NotifyObservers(&ve);
       }
     } else {
-      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     break;
@@ -468,7 +472,7 @@ void ProjectView::OnFocus() {
 bool ProjectView::CanExit() {
   if (saveAsFlag_) {
     MessageBox *mb =
-        new MessageBox(*this, "Save project rename first", MBBF_OK);
+        MessageBox::Create(*this, "Save project rename first", MBBF_OK);
     DoModal(mb);
     return false;
   }

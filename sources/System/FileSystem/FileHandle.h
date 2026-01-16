@@ -14,7 +14,11 @@
 
 // Custom deleter that closes the file before releasing the allocation.
 struct FileCloser {
-  void operator()(I_File *file) const { delete file; }
+  void operator()(I_File *file) const {
+    if (file) {
+      file->Dispose();
+    }
+  }
 };
 
 // A unique, non-copyable handle for files that does not expose `release()`.
@@ -56,7 +60,7 @@ inline bool CloseFile_DO_NOT_USE(I_File *file) {
     return true;
   }
   bool ok = file->Close();
-  delete file;
+  file->Dispose();
   return ok;
 }
 

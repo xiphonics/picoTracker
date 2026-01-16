@@ -15,10 +15,10 @@ TextInputModalView::TextInputModalView(
     View &view, const char *title, const char *prompt, int btnFlags,
     etl::string<MAX_TEXT_INPUT_LENGTH> defaultValue)
     : ModalView(view), title_(title), prompt_(prompt),
-      textVariable_(FourCC::ActionEdit, defaultValue.c_str()) {
-
-  editingText_ = true;
-  focus_ = nullptr;
+      textVariable_(FourCC::ActionEdit, defaultValue.c_str()),
+      textFieldPos_(GetAnchor()), textField_(textVariable_, textFieldPos_, "",
+                                             FourCC::ActionEdit, defaultValue),
+      focus_(nullptr), editingText_(true) {
 
   buttonCount_ = 0;
   for (int i = 0; i < MBL_LAST; i++) {
@@ -30,20 +30,19 @@ TextInputModalView::TextInputModalView(
   selected_ = buttonCount_ - 1;
   NAssert(buttonCount_ != 0);
 
-  GUIPoint position = GetAnchor();
-  position._y += 2; // 2 lines below title
-  position._x += 6; // After "Name: " prompt
+  textFieldPos_._y += 2; // 2 lines below title
+  textFieldPos_._x += 6; // After "Name: " prompt
 
-  textField_ = new UITextField<MAX_TEXT_INPUT_LENGTH>(
-      textVariable_, position, "", FourCC::ActionEdit, defaultValue);
-  textField_->AddObserver(*this);
+  textField_.SetPosition(textFieldPos_);
+  textField_.AddObserver(*this);
 
   // Position the button
+  GUIPoint position = textFieldPos_;
   position._y += 2; // 2 lines below text field
   position._x += 1; // Align roughly in middle of the dialog
 
   // Set initial focus to text field
-  SetFocus(textField_);
+  SetFocus(&textField_);
 }
 
 TextInputModalView::~TextInputModalView() {}
@@ -75,12 +74,12 @@ void TextInputModalView::DrawView() {
   DrawString(x, 2, prompt_.c_str(), props);
 
   // Draw text field
-  if (focus_ == textField_) {
+  if (focus_ == &textField_) {
     SetColor(CD_HILITE1);
   } else {
     SetColor(CD_NORMAL);
   }
-  textField_->Draw(w_);
+  textField_.Draw(w_);
 
   // Draw buttons (similar to MessageBox)
   SetColor(CD_NORMAL);
@@ -96,7 +95,7 @@ void TextInputModalView::DrawView() {
     DrawString(x, y, text, props);
   }
   // Update editingText_ flag based on focus for backward compatibility
-  editingText_ = (focus_ == textField_);
+  editingText_ = (focus_ == &textField_);
 }
 
 void TextInputModalView::OnFocus() {}
@@ -106,21 +105,21 @@ void TextInputModalView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
-  if (focus_ == textField_) {
+  if (focus_ == &textField_) {
     // Handle text field input
     if (mask & EPBM_ENTER) {
       // textfields procesarrow expects UP/DOWN/LEFT/RIGHT value not a mask
       // so need to do that processing here
       if (mask & EPBM_UP) {
-        textField_->ProcessArrow(EPBM_UP);
+        textField_.ProcessArrow(EPBM_UP);
       } else if (mask & EPBM_DOWN) {
-        textField_->ProcessArrow(EPBM_DOWN);
+        textField_.ProcessArrow(EPBM_DOWN);
       } else if (mask & EPBM_LEFT) {
-        textField_->ProcessArrow(EPBM_LEFT);
+        textField_.ProcessArrow(EPBM_LEFT);
       } else if (mask & EPBM_RIGHT) {
-        textField_->ProcessArrow(EPBM_RIGHT);
+        textField_.ProcessArrow(EPBM_RIGHT);
       } else {
-        textField_->OnEditClick();
+        textField_.OnEditClick();
       }
     } else if (mask & EPBM_EDIT || mask & EPBM_DOWN) {
       // Switch focus to buttons
@@ -140,7 +139,7 @@ void TextInputModalView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
     } else if (mask & EPBM_UP) {
       // Move focus back to text field
-      SetFocus(textField_);
+      SetFocus(&textField_);
     } else if (mask & EPBM_ENTER) {
       EndModal(button_[selected_]);
     }
@@ -157,7 +156,7 @@ void TextInputModalView::SetFocus(UIField *field) {
   if (focus_) {
     focus_->SetFocus();
     // Update editingText_ flag for backward compatibility
-    editingText_ = (focus_ == textField_);
+    editingText_ = (focus_ == &textField_);
   }
 }
 
