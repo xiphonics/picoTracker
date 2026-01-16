@@ -18,6 +18,9 @@ public:
   advMidiService();
   ~advMidiService();
 
+  void OnPlayerStart() override;
+  void OnPlayerStop() override;
+
   // Poll MIDI input devices for new messages
   void poll();
 

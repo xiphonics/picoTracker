@@ -263,6 +263,18 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // For all other button presses, let the parent class handle navigation
   FieldView::ProcessButtonMask(mask, pressed);
+
+  // EDIT Modifier
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_ENTER) {
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      if (field->GetVariableID() == FourCC::VarSampleEditEnd) {
+        Variable &var = field->GetVariable();
+        var.SetInt(tempSampleSize_ - 1);
+        isDirty_ = true;
+      };
+    }
+  }
 }
 
 // Helper to redraw the content of a single column (waveform or just
@@ -329,6 +341,13 @@ void SampleEditorView::DrawView() {
 }
 
 void SampleEditorView::DrawWaveForm() {
+  // Avoid drawing markers while a modal is on-screen; the modal redraw logic
+  // only clears the text grid so we must not repaint the pixel buffer behind
+  // it.
+  if (HasModalView()) {
+    return;
+  }
+
   GUIRect rrect;
   if (fullWaveformRedraw_) {
     // clear flag immediately to prevent race condition between event triggered
@@ -1080,7 +1099,7 @@ void SampleEditorView::loadSample(
     // sample file we are trying to edit
   }
 
-  I_File *file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
+  auto file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
   if (!file) {
     Trace::Error("SampleEditorView: Failed to open file: %s", filename);
     return;
@@ -1088,11 +1107,10 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename);
 
   // --- 1. Read Header & Get Size ---
-  auto headerResult = WavHeaderWriter::ReadHeader(file);
+  auto headerResult = WavHeaderWriter::ReadHeader(file.get());
   if (!headerResult.has_value()) {
     Trace::Error("SampleEditorView: Failed to parse WAV header for %s (err=%d)",
                  filename, static_cast<int>(headerResult.error()));
-    file->Close();
     return;
   }
 
@@ -1107,7 +1125,6 @@ void SampleEditorView::loadSample(
       dataChunkSize == 0) {
     Trace::Error("SampleEditorView: Invalid or unsupported WAV header in %s",
                  filename);
-    file->Close();
     return;
   }
   // need to check as its possible for the user to copy an invalid file into the
@@ -1116,7 +1133,6 @@ void SampleEditorView::loadSample(
     Trace::Error(
         "SampleEditorView: Unsupported bit depth (%u) in WAV header for %s",
         bitsPerSample, filename);
-    file->Close();
     return;
   }
 
@@ -1124,7 +1140,6 @@ void SampleEditorView::loadSample(
   tempSampleSize_ = bytesPerFrame > 0 ? dataChunkSize / bytesPerFrame : 0;
   if (tempSampleSize_ == 0) {
     Trace::Error("SampleEditorView: Sample has zero frames in %s", filename);
-    file->Close();
     return;
   }
 
@@ -1221,8 +1236,6 @@ void SampleEditorView::loadSample(
       break; // Reached end of file
     }
   }
-  file->Close();
-
   // All columns already contain final peak heights scaled to the display range.
   waveformCacheValid_ = true;
 

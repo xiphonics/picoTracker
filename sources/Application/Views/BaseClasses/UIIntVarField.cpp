@@ -102,6 +102,17 @@ void UIIntVarField::ProcessArrow(unsigned short mask) {
       static_cast<uintptr_t>(src_.GetID())));
 };
 
+void UIIntVarField::ProcessClear() {
+  if (!src_.IsModified())
+    return;
+
+  src_.Reset();
+
+  SetChanged();
+  NotifyObservers(reinterpret_cast<I_ObservableData *>(
+      static_cast<uintptr_t>(src_.GetID())));
+};
+
 FourCC UIIntVarField::GetVariableID() { return src_.GetID(); };
 
 Variable &UIIntVarField::GetVariable() { return src_; };

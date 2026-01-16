@@ -24,6 +24,7 @@ public:
   virtual void ProcessArrow(unsigned short mask) = 0;
   virtual void OnEditClick(){}; // EDIT pressed
   virtual void ProcessEditArrow(unsigned short mask){};
+  virtual void ProcessClear(){}; // EDIT+ENTER pressed
   void SetFocus();
   void ClearFocus();
   bool HasFocus();

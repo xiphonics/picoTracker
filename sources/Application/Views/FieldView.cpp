@@ -82,6 +82,11 @@ void FieldView::ProcessButtonMask(unsigned short mask, bool pressed) {
       isDirty_ = true;
     }
 
+    if (mask & EPBM_EDIT) {
+      focus_->ProcessClear();
+      isDirty_ = true;
+    }
+
     if (mask == EPBM_ENTER) {
       focus_->OnClick();
     };

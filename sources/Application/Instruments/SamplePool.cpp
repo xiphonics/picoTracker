@@ -105,7 +105,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   // Opens file - we assume that have already chdir() into the correct dir
   // that contains the sample file
   auto fs = FileSystem::GetInstance();
-  I_File *fin = fs->Open(name, "r");
+  auto fin = fs->Open(name, "r");
   if (!fin) {
     Trace::Error("Failed to open sample input file:%s", name);
     return -1;
@@ -130,12 +130,9 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   projectSamplePath.append(projSampleFilename);
   Status::SetMultiLine("Loading %s->\n%s", name, projSampleFilename);
 
-  I_File *fout =
-      FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
+  auto fout = FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
     Trace::Error("Failed to open sample project file:%s", projectSamplePath);
-    fin->Close();
-    delete (fin);
     return -1;
   };
 
@@ -166,11 +163,6 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
       names_[loadedIndex][projSampleFilename.size()] = '\0';
     }
   }
-
-  fin->Close();
-  fout->Close();
-  delete (fin);
-  delete (fout);
 
   SetChanged();
   SamplePoolEvent ev;

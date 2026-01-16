@@ -140,8 +140,6 @@ void MacroInstrument::Update(Observable &o, I_ObservableData *d){};
 
 void MacroInstrument::ProcessCommand(int channel, FourCC cc, ushort value){};
 
-void MacroInstrument::Purge(){};
-
 bool MacroInstrument::IsEmpty() { return false; };
 
 int MacroInstrument::GetTable() { return 0; };

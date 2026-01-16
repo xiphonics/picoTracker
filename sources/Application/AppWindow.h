@@ -129,8 +129,6 @@ private:
   RecordView *_recordView;
   NullView *_nullView;
 
-  bool _isDirty; // Flag to indicate a full redraw is needed on next
-                 // AnimationUpdate
   bool _closeProject;
   bool _shouldQuit;
   unsigned short _mask;

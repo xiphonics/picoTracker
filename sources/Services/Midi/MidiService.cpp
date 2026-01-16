@@ -24,7 +24,7 @@ MidiService::MidiService() : sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
-  sendSync_ = Config::GetInstance()->GetValue("MIDISENDSYNC") > 0;
+  sendSync_ = Config::GetInstance()->GetValue("MIDISYNC") > 0;
 };
 
 MidiService::~MidiService() { Close(); };
@@ -37,10 +37,7 @@ bool MidiService::Init() {
     dev->Init();
   }
 
-  // Add a merger for the input
-  merger_ = new MidiInMerger();
   for (auto dev : inList_) {
-    merger_->Insert(*dev);
     dev->Start();
     // Add this service as an observer to receive transport control messages
     dev->AddObserver(*this);

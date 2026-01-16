@@ -18,19 +18,11 @@
 int WavFile::bufferChunkSize_ = -1;
 unsigned char WavFile::readBuffer_[BUFFER_SIZE];
 
-WavFile::WavFile(I_File *file) {
+WavFile::WavFile(FileHandle file) : file_(std::move(file)) {
   samples_ = 0;
   size_ = 0;
   readBufferSize_ = 0;
   sampleBufferSize_ = 0;
-  file_ = file;
-};
-
-WavFile::~WavFile() {
-  if (file_) {
-    file_->Close();
-    delete file_;
-  }
 };
 
 std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
@@ -38,19 +30,17 @@ std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
 
   // open file
   FileSystem *fs = FileSystem::GetInstance();
-  I_File *file = fs->Open(name, "r");
+  auto file = fs->Open(name, "r");
 
   if (!file)
     return std::unexpected(INVALID_FILE);
 
-  auto header = WavHeaderWriter::ReadHeader(file);
+  auto header = WavHeaderWriter::ReadHeader(file.get());
   if (!header) {
-    file->Close();
-    delete file;
     return std::unexpected(header.error());
   }
 
-  WavFile *wav = new WavFile(file);
+  WavFile *wav = new WavFile(std::move(file));
 
   wav->sampleRate_ = header->sampleRate;
   wav->channelCount_ = header->numChannels;
@@ -69,7 +59,7 @@ std::expected<WavFile *, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   wav->readCount_ = header->dataChunkSize;
   wav->dataPosition_ = header->dataOffset;
 
-  file->Seek(header->dataOffset, SEEK_SET);
+  wav->file_->Seek(header->dataOffset, SEEK_SET);
   return wav;
 };
 
@@ -183,9 +173,10 @@ bool WavFile::Read(void *buff, uint32_t btr, uint32_t *bytesRead) {
 }
 
 void WavFile::Close() {
-  file_->Close();
-  SAFE_DELETE(file_);
+  if (file_) {
+    file_.reset();
+  }
   readBufferSize_ = 0;
-};
+}
 
 int WavFile::GetRootNote(int note) { return 60; }
