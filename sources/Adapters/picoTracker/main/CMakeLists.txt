@@ -19,7 +19,6 @@ target_link_libraries(picoTracker PUBLIC
 
     # --- Application Libraries ---
     # These depend on Services and Foundation
-    application_controllers
     application_views
     application_views_baseclasses
     application_model
@@ -31,7 +30,6 @@ target_link_libraries(picoTracker PUBLIC
     # These define interfaces that the adapters implement
     system_timer
     system_console
-    system_errors
     profiler
 
     # --- Foundation Libraries (Lowest-level, most things depend on these) ---

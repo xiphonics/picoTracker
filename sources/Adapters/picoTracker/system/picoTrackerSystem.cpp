@@ -14,7 +14,6 @@
 #include "Adapters/picoTracker/system/picoTrackerSamplePool.h"
 #include "Adapters/picoTracker/timer/picoTrackerTimer.h"
 #include "Application/Commands/NodeList.h"
-#include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
 #include "hardware/gpio.h"
@@ -22,7 +21,6 @@
 #include "pico/rand.h"
 #include <assert.h>
 #include <fcntl.h>
-#include <malloc.h>
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -143,9 +141,9 @@ void picoTrackerSystem::GetBatteryState(BatteryState &state) {
   // 0.8mV per unit of ADC
   // * 2 because picoTracker use voltage divider for voltage on ADC pin
   // mV =^= adc_reading * 1.6
-  state.voltage_mv = (adc_reading * 16) / 10; // equals adc_reading * 1.6;
+  state.voltage_mv = (adc_reading * 8) / 5; // equals adc_reading * 1.6;
 
-  // clamp the ends of the valid vlotage range
+  // clamp the ends of the valid voltage range
   if (state.voltage_mv < 3325) {
     state.percentage = 0;
   } else if (state.voltage_mv > 3900) {
@@ -174,27 +172,9 @@ void picoTrackerSystem::Sleep(int millisec) {
   //		assert(0) ;
 }
 
-void *picoTrackerSystem::Malloc(unsigned size) {
-  void *ptr = malloc(size);
-  return ptr;
-}
-
-void picoTrackerSystem::Free(void *ptr) { free(ptr); }
-
-void picoTrackerSystem::Memset(void *addr, char val, int size) {
-  memset(addr, val, size);
-};
-
-void *picoTrackerSystem::Memcpy(void *s1, const void *s2, int n) {
-  return memcpy(s1, s2, n);
-}
-
 void picoTrackerSystem::PostQuitMessage() { eventManager_->PostQuitMessage(); }
 
-unsigned int picoTrackerSystem::GetMemoryUsage() {
-  struct mallinfo m = mallinfo();
-  return m.uordblks;
-}
+unsigned int picoTrackerSystem::GetMemoryUsage() { return 0; }
 
 void picoTrackerSystem::SystemPutChar(int c) { putchar(c); }
 

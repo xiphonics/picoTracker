@@ -162,23 +162,28 @@ void SelectProjectView::setCurrentFolder() {
   // Let's read all the directory in the project dir
   fs->list(&fileIndexList_, "", true);
 
-  // temp hack,  filter out "." & ".."
-  fileIndexList_.erase(fileIndexList_.begin());
-  fileIndexList_.erase(fileIndexList_.begin());
+  // Filter out "." and ".." along with the hidden default project entry
+  for (auto it = fileIndexList_.begin(); it != fileIndexList_.end();) {
+    fs->getFileName(*it, selection_, MAX_PROJECT_NAME_LENGTH + 1);
 
-  // filter out the "untitled" project entry
-  for (size_t i = 0; i < fileIndexList_.size(); i++) {
-    fs->getFileName(fileIndexList_[i], selection_, MAX_PROJECT_NAME_LENGTH + 1);
-    if (strcmp(selection_, UNNAMED_PROJECT_NAME) == 0) {
-      Trace::Log("SELECTPROJECTVIEW", "skipping untitled project on Index:%d",
-                 i);
-      fileIndexList_.erase(fileIndexList_.begin() + i);
-      break;
+    const bool isDotEntry =
+        (strcmp(selection_, ".") == 0) || (strcmp(selection_, "..") == 0);
+    const bool isUntitled = (strcmp(selection_, UNNAMED_PROJECT_NAME) == 0);
+
+    if (isDotEntry || isUntitled) {
+      if (isUntitled) {
+        Trace::Log("SELECTPROJECTVIEW", "skipping untitled project on Index:%d",
+                   static_cast<int>(it - fileIndexList_.begin()));
+      }
+      it = fileIndexList_.erase(it);
+    } else {
+      ++it;
     }
   }
 
   // reset & redraw screen
   topIndex_ = 0;
+  currentIndex_ = 0;
   isDirty_ = true;
 }
 

@@ -9,6 +9,7 @@
 
 #include "HexBuffers.h"
 #include "Application/Utils/char.h"
+#include "Externals/etl/include/etl/string.h"
 
 #define XML_CUT_LENGTH 64
 
@@ -18,7 +19,6 @@ void prepareHexChunk(tinyxml2::XMLPrinter *printer, unsigned char *datasrc,
   bool singleValue = true;
   int singleValueData = -1;
   unsigned char hexBuffer[XML_CUT_LENGTH * 2 + 1] = "";
-  std::string buffer;
 
   char *hex = (char *)hexBuffer;
   for (int i = 0; i < len; i++) {
@@ -33,12 +33,11 @@ void prepareHexChunk(tinyxml2::XMLPrinter *printer, unsigned char *datasrc,
     datasrc++;
     hex += 2;
   };
-  buffer += (const char *)hexBuffer;
   if (singleValue) {
     printer->PushAttribute("VALUE", singleValueData);
     printer->PushAttribute("LENGTH", len);
   } else {
-    printer->PushText(buffer.c_str());
+    printer->PushText(reinterpret_cast<const char *>(hexBuffer));
   }
 }
 
@@ -78,7 +77,8 @@ void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
 
 void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
                    FourCC *src, unsigned len) {
-  saveHexBuffer(printer, nodeName, (unsigned char *)src, len * sizeof(short));
+  saveHexBuffer(printer, nodeName, (unsigned char *)src,
+                len * sizeof(FourCC::enum_type));
 }
 
 void restoreHexBuffer(PersistencyDocument *doc, unsigned char *destination) {

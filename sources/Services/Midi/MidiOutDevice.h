@@ -10,11 +10,11 @@
 #ifndef _MIDIOUT_DEVICE_H_
 #define _MIDIOUT_DEVICE_H_
 
+#include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/vector.h"
-#include "Foundation/T_SimpleList.h"
 #include "Foundation/Types/Types.h"
 #include "MidiMessage.h"
-#include <string>
+#include "config/StringLimits.h"
 
 class MidiOutDevice {
 public:
@@ -37,6 +37,6 @@ public:
   virtual void SendMessage(MidiMessage &m) = 0;
 
 private:
-  std::string name_;
+  etl::string<STRING_MIDI_OUT_NAME_MAX> name_;
 };
 #endif

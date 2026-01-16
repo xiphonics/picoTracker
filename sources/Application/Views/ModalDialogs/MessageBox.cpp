@@ -9,9 +9,36 @@
 
 #include "MessageBox.h"
 #include "Foundation/Constants/SpecialCharacters.h"
+#include "System/Console/n_assert.h"
 #include <Application/AppWindow.h>
+#include <new>
 
 static const char *buttonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
+
+bool MessageBox::inUse_ = false;
+alignas(MessageBox) static unsigned char MessageBoxStorage[sizeof(MessageBox)];
+void *MessageBox::storage_ = MessageBoxStorage;
+
+MessageBox *MessageBox::Create(View &view, const char *message, int btnFlags) {
+  if (inUse_) {
+    auto *existing = reinterpret_cast<MessageBox *>(storage_);
+    existing->~MessageBox();
+    inUse_ = false;
+  }
+  inUse_ = true;
+  return new (storage_) MessageBox(view, message, btnFlags);
+}
+
+MessageBox *MessageBox::Create(View &view, const char *message,
+                               const char *message2, int btnFlags) {
+  if (inUse_) {
+    auto *existing = reinterpret_cast<MessageBox *>(storage_);
+    existing->~MessageBox();
+    inUse_ = false;
+  }
+  inUse_ = true;
+  return new (storage_) MessageBox(view, message, message2, btnFlags);
+}
 
 MessageBox::MessageBox(View &view, const char *message, int btnFlags)
     : ModalView(view), line1_(message) {
@@ -44,6 +71,11 @@ MessageBox::MessageBox(View &view, const char *messageLine1,
 }
 
 MessageBox::~MessageBox(){};
+
+void MessageBox::Destroy() {
+  this->~MessageBox();
+  inUse_ = false;
+}
 
 void MessageBox::DrawView() {
   // message size

@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include <string>
+#include "Externals/etl/include/etl/string.h"
+#include "config/StringLimits.h"
 
 #define PICO_CLOCK_INTERVAL 33 // ~30Hz
 #define PICO_CLOCK_HZ (1000 / PICO_CLOCK_INTERVAL)
@@ -45,5 +46,5 @@ protected:
   void mapConfigKey(AppButton button, const char *keyName);
 
 private:
-  std::string mapping_[APP_BUTTON_LAST];
+  etl::string<STRING_EVENT_MAPPING_MAX> mapping_[APP_BUTTON_LAST];
 };

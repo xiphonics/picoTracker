@@ -10,17 +10,21 @@
 #ifndef _SERVICE_REGISTRY_H_
 #define _SERVICE_REGISTRY_H_
 
+#include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Singleton.h"
 #include "Service.h"
 #include "SubService.h"
 
 class ServiceRegistry : public T_Singleton<ServiceRegistry> {
 public:
+  static constexpr size_t MaxServices = 16;
+
   void Register(Service *);
   void Register(SubService *);
   void Unregister(SubService *);
+  etl::vector<Service *, MaxServices> &Services() { return services_; }
 
 protected:
-  T_SimpleList<Service> services_;
+  etl::vector<Service *, MaxServices> services_;
 };
 #endif

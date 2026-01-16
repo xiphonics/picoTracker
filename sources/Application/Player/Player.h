@@ -11,11 +11,13 @@
 #define _PLAYER_H_
 #include "Application/Views/BaseClasses/ViewEvent.h"
 #include "Application/Views/ViewData.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "PlayerMixer.h"
 #include "SyncMaster.h"
 #include "System/Timer/Timer.h"
+#include "config/StringLimits.h"
 
 enum PlayerEventType { PET_START, PET_UPDATE, PET_STOP };
 
@@ -47,10 +49,10 @@ class Player : public I_Observer,
                public Observable,
                public T_Singleton<Player> {
 private: // Singleton
+  friend class etl::singleton<Player>;
   Player();
 
 public:
-  static Player *GetInstance();
   bool Init(Project *, ViewData *);
   void Reset();
   void Close();
@@ -109,6 +111,7 @@ public:
   const char *GetPlayedNote(int channel);
   const char *GetPlayedOctive(int channel);
   const char *GetPlayedInstrument(int channel);
+  bool GetPlayedSliceIndex(int channel, uint8_t &sliceIndex);
 
   // info
   int GetPlayedBufferPercentage();
@@ -118,8 +121,8 @@ public:
   // master out, last avg level while playing
   stereosample GetMasterLevel();
 
-  std::string GetAudioAPI();
-  std::string GetAudioDevice();
+  etl::string<STRING_AUDIO_API_MAX> GetAudioAPI();
+  etl::string<STRING_AUDIO_DEVICE_MAX> GetAudioDevice();
   int GetAudioBufferSize();
   int GetAudioRequestedBufferSize();
   int GetAudioPreBufferCount();
@@ -142,6 +145,8 @@ protected:
   void moveToNextChain(int channel, int hop);
 
   void triggerLiveChains();
+
+  void SetAudioActive(bool active);
 
   bool isPlayable(int row, int col, int chainPos = 0);
   bool findPlayable(uchar *row, int col, uchar chainPos = 0);

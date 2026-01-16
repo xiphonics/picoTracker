@@ -1,5 +1,4 @@
-build/**
-build-opt/**
+build**
 ref/**
 doxygen/html/**
 projects/buildOSX/**
@@ -40,3 +39,4 @@ usermanual/bin
 usermanual/web
 
 optbuild/**
+AGENTS.md

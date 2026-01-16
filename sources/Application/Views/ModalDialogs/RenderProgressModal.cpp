@@ -11,19 +11,38 @@
 #include "Application/Player/Player.h"
 #include "Application/Player/SyncMaster.h"
 #include "Application/Views/BaseClasses/View.h"
-#include "MessageBox.h"
 #include "UIFramework/BasicDatas/GUIPoint.h"
+#include <new>
 #include <stdio.h>
+
+bool RenderProgressModal::inUse_ = false;
+alignas(RenderProgressModal) static unsigned char RenderProgressModalStorage
+    [sizeof(RenderProgressModal)];
+void *RenderProgressModal::storage_ = RenderProgressModalStorage;
+
+RenderProgressModal *RenderProgressModal::Create(View &view, const char *title,
+                                                 const char *message) {
+  if (inUse_) {
+    auto *existing = reinterpret_cast<RenderProgressModal *>(storage_);
+    existing->~RenderProgressModal();
+    inUse_ = false;
+  }
+  inUse_ = true;
+  return new (storage_) RenderProgressModal(view, title, message);
+}
 
 RenderProgressModal::RenderProgressModal(View &view, const char *title,
                                          const char *message)
     : ModalView(view), title_(title), message_(message), totalSamples_(0.0f) {
-
-  Player *player = Player::GetInstance();
   tempo_ = SyncMaster::GetInstance()->GetTempo();
 }
 
 RenderProgressModal::~RenderProgressModal() {}
+
+void RenderProgressModal::Destroy() {
+  this->~RenderProgressModal();
+  inUse_ = false;
+}
 
 void RenderProgressModal::DrawView() {
   // Calculate window size
@@ -87,7 +106,7 @@ void RenderProgressModal::ProcessButtonMask(unsigned short mask, bool pressed) {
       player->Stop();
     }
     // Always allow closing the modal, whether rendering is complete or not
-    EndModal(MBL_OK);
+    EndModal(0);
     return; // Return early to prevent setting dirty flag unnecessarily
   }
   // Only set dirty if we didn't handle the button press

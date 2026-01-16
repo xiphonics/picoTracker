@@ -112,3 +112,9 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
     nameVar->SetString(name_.c_str());
   }
 }
+
+void I_Instrument::Purge() {
+  for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+    (*it)->Reset();
+  }
+};

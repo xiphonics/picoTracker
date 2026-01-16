@@ -33,17 +33,14 @@ SongView::SongView(GUIWindow &w, ViewData *viewData) : ScreenView(w, viewData) {
     this->lastQueuedPosition_[i] = 0;
   }
   clipboard_.active_ = false;
-  clipboard_.data_ = 0;
+  clipboard_.data_ = nullptr;
 }
 
 /****************
  Destructor
  ****************/
 
-SongView::~SongView() {
-  if (clipboard_.data_ != 0)
-    SYS_FREE((void *)clipboard_.data_);
-};
+SongView::~SongView() {}
 
 /******************************************************
  updateChain:
@@ -226,8 +223,7 @@ void SongView::fillClipboardData() {
 
   // Clear current selection data
 
-  if (!clipboard_.data_)
-    SYS_FREE((void *)clipboard_.data_);
+  clipboard_.data_ = clipboard_.storage_;
 
   // Prepare selection related information
 
@@ -237,9 +233,6 @@ void SongView::fillClipboardData() {
 
   clipboard_.width_ = selRect.Width() + 1;
   clipboard_.height_ = selRect.Height() + 1;
-
-  clipboard_.data_ =
-      (unsigned char *)SYS_MALLOC(clipboard_.width_ * clipboard_.height_);
 
   unsigned char *src = viewData_->song_->data_ + selRect.Left() +
                        SONG_CHANNEL_COUNT * selRect.Top();

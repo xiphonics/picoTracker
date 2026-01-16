@@ -81,9 +81,7 @@ struct FourCC {
     MidiInstrumentName = 144,
     MidiInstrumentProgram = 160,
 
-    SIDInstrument1Waveform = 72,
-    SIDInstrument2Waveform = 73,
-    SIDInstrument3Waveform = 74,
+    SIDInstrumentWaveform = 72,
     SIDInstrument1FilterCut = 79,
     SIDInstrument2FilterCut = 83,
     SIDInstrument3FilterCut = 87,
@@ -213,6 +211,7 @@ struct FourCC {
     // 181 is taken for VarSampleEditOperation
     // 182 is taken for VarRecordLineGain
     // 183 is taken for VarRecordMicGain
+    // 184 is taken for ActionShowSampleSlices
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -249,6 +248,7 @@ struct FourCC {
     SampleInstrumentSlices = 171,
     VarBacklightLevel = 174,
     ActionShowSampleEditor = 175,
+    ActionShowSampleSlices = 184,
     VarRecordSource = 176,
     VarSampleEditStart = 177,
     VarSampleEditEnd = 178,
@@ -256,6 +256,8 @@ struct FourCC {
     VarRecordLineGain = 182,
     VarRecordMicGain = 183,
     VarOutputVolume = 184,
+    VarImportResampler = 185,
+    ActionAutoSlice = 186,
 
     Default = 255, // "    "
   };
@@ -332,8 +334,7 @@ struct FourCC {
   ETL_ENUM_TYPE(MidiInstrumentTable, "table")
   ETL_ENUM_TYPE(MidiInstrumentTableAutomation, "table automation")
   ETL_ENUM_TYPE(MidiInstrumentProgram, "program")
-  ETL_ENUM_TYPE(SIDInstrument1Waveform, "VWF1")
-  ETL_ENUM_TYPE(SIDInstrument2Waveform, "VWF2")
+  ETL_ENUM_TYPE(SIDInstrumentWaveform, "VWF")
   ETL_ENUM_TYPE(SIDInstrument1FilterCut, "FILTCUT1")
   ETL_ENUM_TYPE(SIDInstrument1FilterResonance, "RES1")
   ETL_ENUM_TYPE(SIDInstrument1FilterMode, "FMODE1")
@@ -413,6 +414,7 @@ struct FourCC {
   ETL_ENUM_TYPE(VarRecordLineGain, "recordlinegain")
   ETL_ENUM_TYPE(VarRecordMicGain, "recordmicgain")
   ETL_ENUM_TYPE(VarOutputVolume, "outputvolume")
+  ETL_ENUM_TYPE(VarImportResampler, "IMPORTRESAMP")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

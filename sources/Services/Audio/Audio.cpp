@@ -10,7 +10,7 @@
 #include "Audio.h"
 #include "Application/Model/Config.h"
 
-Audio::Audio(AudioSettings &hints) : T_SimpleList<AudioOut>(true), settings_() {
+Audio::Audio(AudioSettings &hints) : settings_() {
 
   // Hints contains the basic information about the
   // default settings for the platform. All of the can
@@ -36,3 +36,15 @@ const char *Audio::GetAudioDevice() { return settings_.audioDevice_.c_str(); };
 int Audio::GetAudioBufferSize() { return settings_.bufferSize_; };
 
 int Audio::GetAudioPreBufferCount() { return settings_.preBufferCount_; };
+
+void Audio::AddOutput(AudioOut &out) {
+  if (outputs_.full()) {
+    Trace::Error("AUDIO", "Max audio outputs reached");
+    return;
+  }
+  outputs_.push_back(&out);
+}
+
+AudioOut *Audio::GetFirstOutput() {
+  return outputs_.empty() ? nullptr : outputs_.front();
+}

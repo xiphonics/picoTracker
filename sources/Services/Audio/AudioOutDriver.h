@@ -13,7 +13,9 @@
 #include "Application/Instruments/WavFileWriter.h"
 #include "AudioDriver.h"
 #include "AudioOut.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
+#include "config/StringLimits.h"
 
 class AudioDriver;
 
@@ -26,6 +28,7 @@ public:
   virtual void Close();
   virtual bool Start();
   virtual void Stop();
+  void SetAudioActive(bool active) override;
 
   virtual void Trigger();
 
@@ -35,8 +38,8 @@ public:
 
   AudioDriver *GetDriver();
 
-  virtual std::string GetAudioAPI();
-  virtual std::string GetAudioDevice();
+  virtual etl::string<STRING_AUDIO_API_MAX> GetAudioAPI();
+  virtual etl::string<STRING_AUDIO_DEVICE_MAX> GetAudioDevice();
   virtual int GetAudioBufferSize();
   virtual int GetAudioRequestedBufferSize();
   virtual int GetAudioPreBufferCount();
@@ -51,7 +54,7 @@ protected:
 
 private:
   AudioDriver *driver_;
-  bool hasSound_;
+  bool hasSound_ = false;
   stereosample lastPeakVolume_ = 0;
 
   __attribute__((section(".DTCMRAM"))) __attribute__((

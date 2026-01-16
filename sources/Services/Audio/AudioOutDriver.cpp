@@ -8,8 +8,6 @@
  */
 
 #include "AudioOutDriver.h"
-#include "Application/Player/SyncMaster.h" // Should be installable
-#include "System/Console/Trace.h"
 #include "System/System/System.h"
 
 fixed AudioOutDriver::primarySoundBuffer_[MIX_BUFFER_SIZE];
@@ -18,7 +16,6 @@ short AudioOutDriver::mixBuffer_[MIX_BUFFER_SIZE];
 AudioOutDriver::AudioOutDriver(AudioDriver &driver) {
   driver_ = &driver;
   driver.AddObserver(*this);
-  SetOwnership(false);
 }
 
 AudioOutDriver::~AudioOutDriver() {
@@ -35,7 +32,14 @@ bool AudioOutDriver::Start() {
   return driver_->Start();
 }
 
-void AudioOutDriver::Stop() { driver_->Stop(); }
+void AudioOutDriver::Stop() {
+  SetAudioActive(false);
+  driver_->Stop();
+}
+
+void AudioOutDriver::SetAudioActive(bool active) {
+  driver_->OnAudioActive(active);
+}
 
 stereosample AudioOutDriver::GetLastPeakLevels() { return lastPeakVolume_; };
 
@@ -60,7 +64,7 @@ void AudioOutDriver::clipToMix() {
   bool interlaced = driver_->Interlaced();
 
   if (!hasSound_) {
-    SYS_MEMSET(mixBuffer_, 0, sampleCount_ * 2 * sizeof(short));
+    memset(mixBuffer_, 0, sampleCount_ * 2 * sizeof(short));
   } else {
     short *s1 = mixBuffer_;
     short *s2 = (interlaced) ? s1 + 1 : s1 + sampleCount_;
@@ -106,16 +110,15 @@ int AudioOutDriver::GetPlayedBufferPercentage() {
 
 AudioDriver *AudioOutDriver::GetDriver() { return driver_; };
 
-std::string AudioOutDriver::GetAudioAPI() {
+etl::string<STRING_AUDIO_API_MAX> AudioOutDriver::GetAudioAPI() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.audioAPI_;
 };
 
-std::string AudioOutDriver::GetAudioDevice() {
+etl::string<STRING_AUDIO_DEVICE_MAX> AudioOutDriver::GetAudioDevice() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.audioDevice_;
 };
-
 int AudioOutDriver::GetAudioBufferSize() {
   AudioSettings as = driver_->GetAudioSettings();
   return as.bufferSize_;

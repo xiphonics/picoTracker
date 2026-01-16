@@ -35,6 +35,10 @@ This setting enables or disables sending commands to a computer attached via USB
 
 The [official picoTracker remote UI web application is available ](https://ui.xiphonics.com), it works only with Chromium based browsers.
 
+## Import resampler
+
+This settings allows the selection of the sample rate converter used during sample import. Check the sample instrument section for more details.
+
 ## Display Brightness
 
 The display brightness setting allows you to adjust the backlight level of the picoTracker's LCD display. The brightness can be set from `05` (minimum brightness) to `ff` (maximum brightness). The default value is `80` (medium brightness).

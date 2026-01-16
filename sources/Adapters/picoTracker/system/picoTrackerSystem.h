@@ -28,10 +28,6 @@ public: // System implementation
   virtual void GetBatteryState(BatteryState &state);
   virtual void SetDisplayBrightness(unsigned char value);
   virtual void Sleep(int millisec);
-  virtual void *Malloc(unsigned size);
-  virtual void Free(void *);
-  virtual void Memset(void *addr, char val, int size);
-  virtual void *Memcpy(void *s1, const void *s2, int n);
   virtual void PostQuitMessage();
   virtual unsigned int GetMemoryUsage();
   virtual void PowerDown(){};
@@ -47,6 +43,5 @@ private:
   static unsigned int lastBeatCount_;
 
   static EventManager *eventManager_;
-  std::map<void *, unsigned> mmap_;
 };
 #endif

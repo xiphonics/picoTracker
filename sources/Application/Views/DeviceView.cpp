@@ -67,6 +67,13 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   (*intVarField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
+  v = config->FindVariable(FourCC::VarImportResampler);
+  intVarField_.emplace_back(position, *v, "Import resampler: %s", 0,
+                            v->GetListSize() - 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
   v = config->FindVariable(FourCC::VarBacklightLevel);
   // MIN brightness is 0xF (15)
   intVarField_.emplace_back(position, *v, "Display brightness: %2.2x", 0xF,
@@ -197,11 +204,11 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   switch (fourcc) {
   case FourCC::ActionBootSelect: {
     if (!player->IsRunning()) {
-      MessageBox *mb =
-          new MessageBox(*this, "Reboot and lose changes?", MBBF_YES | MBBF_NO);
-      DoModal(mb, BootselCallback);
+      MessageBox *mb = MessageBox::Create(*this, "Reboot and lose changes?",
+                                          MBBF_YES | MBBF_NO);
+      DoModal(mb, ModalViewCallback::create<&BootselCallback>());
     } else {
-      MessageBox *mb = new MessageBox(*this, "Not while playing", MBBF_OK);
+      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
       DoModal(mb);
     }
     return;
@@ -215,14 +222,23 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
   }
   case FourCC::VarLineOut: {
     MessageBox *mb =
-        new MessageBox(*this, "Reboot for new Audio Level!", MBBF_OK);
+        MessageBox::Create(*this, "Reboot for new Audio Level!", MBBF_OK);
     DoModal(mb);
-    configDirty_ = true;
+    Config *config = Config::GetInstance();
+    if (!config->Save()) {
+      Trace::Error("DEVICEVIEW",
+                   "Failed to save device config after line out change");
+      configDirty_ = true;
+    } else {
+      Trace::Log("DEVICEVIEW", "Saved device config after line out change");
+      configDirty_ = false;
+    }
     break;
   }
   case FourCC::VarMidiDevice:
   case FourCC::VarMidiSync:
-  case FourCC::VarRemoteUI: {
+  case FourCC::VarRemoteUI:
+  case FourCC::VarImportResampler: {
     configDirty_ = true;
     break;
   }

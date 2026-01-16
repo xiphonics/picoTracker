@@ -9,10 +9,10 @@
 #ifndef _WAV_HEADER_WRITER_H_
 #define _WAV_HEADER_WRITER_H_
 
+#include "Externals/etl/include/etl/expected.h"
 #include "System/FileSystem/FileSystem.h"
 #include "WavFileErrors.h"
 #include <cstdint>
-#include <expected>
 
 struct WavHeaderInfo {
   uint32_t riffChunkSize = 0;
@@ -39,7 +39,7 @@ public:
                              uint16_t channels = 2,
                              uint16_t bytesPerSample = 2);
 
-  static std::expected<WavHeaderInfo, WAVEFILE_ERROR> ReadHeader(I_File *file);
+  static etl::expected<WavHeaderInfo, WAVEFILE_ERROR> ReadHeader(I_File *file);
 };
 
 #endif

@@ -4,7 +4,6 @@ add_library(platform_filesystem
 
 target_link_libraries(platform_filesystem PUBLIC
   system_filesystem
-  system_errors
   sdfat
   platform_sdcard
   etl
