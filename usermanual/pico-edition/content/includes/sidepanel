@@ -22,6 +22,9 @@
         <a href="projects.html">
             <li>Projects</li>
         </a>
+        <a href="projectpool.html">
+            <li>Project Pool</li>
+        </a>
         <a href="songs.html">
             <li>Songs</li>
         </a>
@@ -33,6 +36,9 @@
         </a>
         <a href="instruments.html">
             <li>Instruments</li>
+        </a>
+        <a href="sample-editor.html">
+            <li>Sample Editor</li>
         </a>
         <a href="grooves.html">
             <li>Grooves</li>
