@@ -252,6 +252,7 @@
 #define char_border_double_verticalRight_s "\314"
 #define char_border_double_verticalRight char_border_double_verticalRight_s[0]
 #define char_border_double_cross_s "\316"
+#define char_border_double_cross char_border_double_cross_s[0]
 
 #define char_logo_x_s "\320"
 #define char_logo_x char_logo_x_s[0]
@@ -294,10 +295,8 @@
   char_battery_left_s char_battery_empty_s char_battery_empty_s                \
       char_battery_right_s
 
-#ifdef __cplusplus
-
 // Array of bargraph characters for fast lookup
-static constexpr const char *const char_bargraph_lookup[] = {
+static const char *const char_bargraph_lookup[] = {
     char_bargraph_bar0_s, // 0
     char_bargraph_bar1_s, // 1
     char_bargraph_bar2_s, // 2
@@ -312,6 +311,4 @@ static constexpr const char *const char_bargraph_lookup[] = {
 };
 
 #define char_bargraph_s(x)                                                     \
-(char_bargraph_lookup[(x) < 0 ? 0 : ((x) > 10 ? 10 : (x))])
-
-#endif
+    (char_bargraph_lookup[(x) < 0 ? 0 : ((x) > 10 ? 10 : (x))])

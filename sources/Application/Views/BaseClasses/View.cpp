@@ -207,16 +207,9 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
                              bool forceRedraw, uint8_t xoffset) {
   stereosample playerLevel = player->GetMasterLevel();
 
-  // Convert to dB
-  int leftDb = amplitudeToDb((playerLevel >> 16) & 0xFFFF);
-  int rightDb = amplitudeToDb(playerLevel & 0xFFFF);
-
-  // Map dB to bar levels  -60dB to 0dB range mapped to 0-159 bars (10 steps per
-  // character)
-  // Optimized 159/60 ≈ 2.65 = (2.65 * 256) / 256 = 678 / 256
-  // Using fixed-point: multiply by 678, then right-shift by 8 (divide by 256)
-  int leftBars = std::max(0, std::min(159, ((leftDb + 60) * 678) >> 8));
-  int rightBars = std::max(0, std::min(159, ((rightDb + 60) * 678) >> 8));
+  // Convert amplitude to bar levels
+  int32_t leftBars, rightBars;
+  amplitudeToBars(playerLevel, &leftBars, &rightBars);
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();
@@ -227,12 +220,12 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
   drawVUMeter(leftBars, rightBars, pos, props, 0, forceRedraw);
 }
 
-void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
+void View::drawVUMeter(int32_t leftBars, int32_t rightBars, GUIPoint pos,
                        GUITextProperties props, int vuIndex, bool forceRedraw) {
 
   // Clamp the values to the maximum height
-  leftBars = std::min(leftBars, (uint8_t)VU_METER_MAX);
-  rightBars = std::min(rightBars, (uint8_t)VU_METER_MAX);
+  leftBars = std::min<int32_t>(leftBars, VU_METER_MAX);
+  rightBars = std::min<int32_t>(rightBars, VU_METER_MAX);
 
   // Add inertia effect by limiting the rate of change
   // Maximum step change allowed per update
@@ -407,23 +400,23 @@ void View::drawBattery(GUITextProperties &props) {
   // use define to choose between drawing battery percentage or battery level as
   // "+" bars
   SetColor(CD_NORMAL);
-  const char *battText;
+  const char *battText = nullptr;
 
 #if BATTERY_LEVEL_AS_PERCENTAGE
   char battTextBuffer[8];
-  battText = battTextBuffer;
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
-    npf_snprintf(battText, 8, string_battery_charging);
+    npf_snprintf(battTextBuffer, 8, string_battery_charging);
   } else {
     if (batteryState_.percentage == 100) {
-      npf_snprintf(battText, 8, string_battery_100_percent);
+      npf_snprintf(battTextBuffer, 8, string_battery_100_percent);
     } else {
-      npf_snprintf(battText, 8, char_battery_left_s "%02d" char_battery_right_s,
-                   batteryState_.percentage < 100 ? batteryState_.percentage
-                                                  : 99);
+      npf_snprintf(
+          battTextBuffer, 8, char_battery_left_s "%02d" char_battery_right_s,
+          batteryState_.percentage < 100 ? batteryState_.percentage : 99);
     }
   }
+  battText = battTextBuffer;
 #else
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);

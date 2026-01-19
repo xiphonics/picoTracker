@@ -70,8 +70,8 @@ void SamplePool::Load(const char *projectName) {
       for (int j = 1; j < 11; j++) {
         progressBar[j] = j >= prog10 ? char_battery_empty : char_block_full;
       }
-      progressBar[0] = char_button_border_left;
-      progressBar[11] = char_button_border_right;
+      progressBar[0] = char_button_left;
+      progressBar[11] = char_button_right;
       progressBar[12] = 0;
 
       Status::SetMultiLine("Copying %s" char_indicator_ellipsis_s

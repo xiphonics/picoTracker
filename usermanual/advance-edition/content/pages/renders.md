@@ -32,6 +32,8 @@ To create a mixdown:
 6. You can press "OK" at any time to stop the rendering process
 7. When the song has completed playing through, the rendering will automatically finish
 
+***NOTE:*** Mixdown rendering starts on the last played row in the Song screen.
+
 ***NOTE:*** The time displayed during the rendering process is the elapsed time of the audio being rendered, not the actual "clock" time of how long it takes to perform the render.
 
 ***NOTE:*** You may hear noise or audio artifacts while the rendering is in progress or the audio being played at slower speed than expected, but this is normal due to the extra processing required during rendering and it will **not** affect the final rendered audio.

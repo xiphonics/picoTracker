@@ -2,6 +2,14 @@
 
 <html lang="en">
 <style>
+    :root {
+        --background: #AFA48A;
+        --panel: #D9D9D9;
+        --text: #000000;
+        --accent: #D3FC51;
+        --border: #000000;
+    }
+
     * {
         margin: 0;
         padding: 0;
@@ -10,8 +18,10 @@
 
     body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
-        color: #fff;
+        background:
+            radial-gradient(circle at top, #c9c0a9 0%, rgba(201, 192, 169, 0) 55%),
+            linear-gradient(180deg, #9f957d 0%, var(--background) 60%);
+        color: var(--text);
         min-height: 100vh;
         padding: 20px;
     }
@@ -30,7 +40,8 @@
     h1 {
         font-size: 3rem;
         margin-bottom: 10px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
     }
 
     .subtitle {
@@ -49,21 +60,20 @@
     }
 
     .model-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
+        background: var(--panel);
         border-radius: 15px;
         padding: 25px;
         width: 100%;
         max-width: 500px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        border: 2px solid var(--border);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         text-align: center;
     }
 
     .model-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
     }
 
     .model-card img {
@@ -71,29 +81,29 @@
         height: auto;
         border-radius: 10px;
         margin-bottom: 20px;
-        border: 3px solid rgba(255, 255, 255, 0.2);
+        border: 2px solid var(--border);
     }
 
     .model-card h2 {
         font-size: 2rem;
         margin-bottom: 15px;
-        color: #ffd700;
+        color: var(--text);
     }
 
     .model-card a {
         display: inline-block;
-        background: rgba(255, 215, 0, 0.2);
-        color: white;
+        background: var(--panel);
+        color: var(--text);
         padding: 12px 25px;
         border-radius: 30px;
         text-decoration: none;
         font-weight: bold;
         transition: all 0.3s ease;
-        border: 2px solid rgba(255, 215, 0, 0.4);
+        border: 2px solid var(--border);
     }
 
     .model-card a:hover {
-        background: rgba(255, 215, 0, 0.4);
+        background: var(--accent);
         transform: scale(1.05);
     }
 
