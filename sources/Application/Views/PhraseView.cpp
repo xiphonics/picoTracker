@@ -806,7 +806,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       } else {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
+                FourCC::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -820,7 +820,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
+                FourCC::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -853,7 +853,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       } else {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
+                FourCC::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           int current =
               *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_));
@@ -872,7 +872,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
+                FourCC::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->Clone(
               *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
