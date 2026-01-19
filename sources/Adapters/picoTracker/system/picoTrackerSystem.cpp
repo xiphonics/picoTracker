@@ -50,7 +50,7 @@ static bool checkForSDCard() {
   alignas(picoTrackerFileSystem) static char
       fsMemBuf[sizeof(picoTrackerFileSystem)];
   FileSystem::Install(new (fsMemBuf) picoTrackerFileSystem());
-  
+
   auto fs = FileSystem::GetInstance();
   return fs->chdir("/");
 }
@@ -79,7 +79,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
 
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
-  
+
   if (!fs->chdir("/") || scanKeys()) {
     Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!");
     critical_error_message("SDCARD MISSING", 0x01, checkForSDCard);
