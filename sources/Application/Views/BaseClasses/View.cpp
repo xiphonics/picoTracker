@@ -14,6 +14,7 @@
 #include "Application/Utils/mathutils.h"
 #include "Application/Views/RecordView.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "ModalView.h"
 #include "System/Console/Trace.h"
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
@@ -206,13 +207,9 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
                              bool forceRedraw, uint8_t xoffset) {
   stereosample playerLevel = player->GetMasterLevel();
 
-  // Convert to dB
-  int leftDb = amplitudeToDb((playerLevel >> 16) & 0xFFFF);
-  int rightDb = amplitudeToDb(playerLevel & 0xFFFF);
-
-  // Map dB to bar levels  -60dB to 0dB range mapped to 0-15 bars
-  int leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
-  int rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
+  // Convert amplitude to bar levels
+  int32_t leftBars, rightBars;
+  amplitudeToBars(playerLevel, &leftBars, &rightBars);
 
   // we start at the bottom of the VU meter and draw it growing upwards
   GUIPoint pos = GetAnchor();
@@ -223,16 +220,17 @@ void View::drawMasterVuMeter(Player *player, GUITextProperties props,
   drawVUMeter(leftBars, rightBars, pos, props, 0, forceRedraw);
 }
 
-void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
+void View::drawVUMeter(int32_t leftBars, int32_t rightBars, GUIPoint pos,
                        GUITextProperties props, int vuIndex, bool forceRedraw) {
 
   // Clamp the values to the maximum height
-  leftBars = std::min(leftBars, (uint8_t)VU_METER_HEIGHT);
-  rightBars = std::min(rightBars, (uint8_t)VU_METER_HEIGHT);
+  leftBars = std::min<int32_t>(leftBars, VU_METER_MAX);
+  rightBars = std::min<int32_t>(rightBars, VU_METER_MAX);
 
   // Add inertia effect by limiting the rate of change
   // Maximum step change allowed per update
-  const int maxStepChange = 2;
+  const int maxStepChange = 20;
+  const int fallStepChange = 10;
 
   // For rising levels (current > previous), allow faster response
   if (leftBars > prevLeftVU_[vuIndex]) {
@@ -244,7 +242,6 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
   // For falling levels (current < previous), add more inertia for a slower fall
   else if (leftBars < prevLeftVU_[vuIndex]) {
     // Use a smaller step for falling levels to create more inertia
-    const int fallStepChange = 1;
     if (prevLeftVU_[vuIndex] - leftBars > fallStepChange) {
       leftBars = prevLeftVU_[vuIndex] - fallStepChange;
     }
@@ -256,26 +253,22 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
       rightBars = prevRightVU_[vuIndex] + maxStepChange;
     }
   } else if (rightBars < prevRightVU_[vuIndex]) {
-    const int fallStepChange = 1;
     if (prevRightVU_[vuIndex] - rightBars > fallStepChange) {
       rightBars = prevRightVU_[vuIndex] - fallStepChange;
     }
   }
 
   // Left channel: Handle level changes
-  if (forceRedraw || leftBars != prevLeftVU_[vuIndex]) {
+  bool leftChanged = (leftBars != prevLeftVU_[vuIndex]);
+  bool rightChanged = (rightBars != prevRightVU_[vuIndex]);
+
+  if (forceRedraw || leftChanged || rightChanged) {
     // If forcing redraw or level changed, redraw the entire meter
 
-    // First clear the entire meter area with inversion disabled
-    props.invert_ = false;
-    SetColor(CD_BACKGROUND);
-    for (int i = 0; i < VU_METER_HEIGHT; i++) {
-      DrawString(pos._x, pos._y - i, " ", props);
-    }
-
     // Then draw the active cells with inversion enabled
-    props.invert_ = true;
-    for (int i = 0; i < leftBars; i++) {
+    props.invert_ = false;
+
+    for (int i = 0; i < VU_METER_HEIGHT; i++) {
       // Set appropriate color based on level
       if (i == VU_METER_CLIP_LEVEL) {
         SetColor(CD_ERROR);
@@ -284,39 +277,20 @@ void View::drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
       } else {
         SetColor(CD_INFO);
       }
-      DrawString(pos._x, pos._y - i, " ", props);
-    }
-  }
-  // If not forcing redraw and leftBars == prevLeftVU_[vuIndex], do nothing for
-  // left channel
 
-  // Right channel: Handle level changes
-  if (forceRedraw || rightBars != prevRightVU_[vuIndex]) {
-    // If forcing redraw or level changed, redraw the entire meter
-
-    // First clear the entire meter area with inversion disabled
-    props.invert_ = false;
-    SetColor(CD_BACKGROUND);
-    for (int i = 0; i < VU_METER_HEIGHT; i++) {
-      DrawString(pos._x + 1, pos._y - i, " ", props);
-    }
-
-    // Then draw the active cells with inversion enabled
-    props.invert_ = true;
-    for (int i = 0; i < rightBars; i++) {
-      // Set appropriate color based on level
-      if (i == VU_METER_CLIP_LEVEL) {
-        SetColor(CD_ERROR);
-      } else if (i > VU_METER_WARN_LEVEL) {
-        SetColor(CD_WARN);
-      } else {
-        SetColor(CD_INFO);
+      // draw left channel if changed
+      if (leftChanged) {
+        DrawString(pos._x, pos._y - i, char_bargraph_s(leftBars - 10 * i),
+                   props);
       }
-      DrawString(pos._x + 1, pos._y - i, " ", props);
+
+      // draw right channel if changed
+      if (rightChanged) {
+        DrawString(pos._x + 1, pos._y - i, char_bargraph_s(rightBars - 10 * i),
+                   props);
+      }
     }
   }
-  // If not forcing redraw and rightBars == prevRightVU_[vuIndex], do nothing
-  // for right channel
 
   // Store the current values for next time
   prevLeftVU_[vuIndex] = leftBars;
@@ -420,45 +394,49 @@ void View::drawBattery(GUITextProperties &props) {
   }
 
   GUIPoint battpos = GetAnchor();
+  battpos._x = 28;
   battpos._y = 0;
-  battpos._x = 27;
 
   // use define to choose between drawing battery percentage or battery level as
   // "+" bars
   SetColor(CD_NORMAL);
-  char *battText;
+  const char *battText = nullptr;
+
 #if BATTERY_LEVEL_AS_PERCENTAGE
   char battTextBuffer[8];
-  battText = battTextBuffer;
   if (batteryState_.charging) {
-    SetColor(CD_INFO);
-    npf_snprintf(battText, 8, "[CHG]");
+    SetColor(CD_ACCENT);
+    npf_snprintf(battTextBuffer, 8, string_battery_charging);
   } else {
     if (batteryState_.percentage == 100) {
-      npf_snprintf(battText, 8, "[FUL]");
+      npf_snprintf(battTextBuffer, 8, string_battery_100_percent);
     } else {
-      if (batteryState_.percentage < 20) {
-        SetColor(CD_WARN);
-      } else if (batteryState_.percentage < 5) {
-        SetColor(CD_ERROR);
-      }
-      npf_snprintf(battText, 8, "[%2d%%]", batteryState_.percentage);
+      npf_snprintf(
+          battTextBuffer, 8, char_battery_left_s "%02d" char_battery_right_s,
+          batteryState_.percentage < 100 ? batteryState_.percentage : 99);
     }
   }
+  battText = battTextBuffer;
 #else
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
-    battText = (char *)"[CHG]";
-  } else if (batteryState_.percentage >= 90) {
-    battText = (char *)"[+++]";
-  } else if (batteryState_.percentage >= 60) {
-    battText = (char *)"[++ ]";
-  } else if (batteryState_.percentage >= 30) {
-    SetColor(CD_WARN);
-    battText = (char *)"[+  ]";
+    battText = string_battery_charging;
   } else {
-    SetColor(CD_ERROR);
-    battText = (char *)"[   ]";
+    if (batteryState_.percentage > 90) {
+      battText = string_battery_100_percent;
+    } else if (batteryState_.percentage > 65) {
+      battText = string_battery_75_percent;
+    } else if (batteryState_.percentage > 40) {
+      battText = string_battery_50_percent;
+    } else if (batteryState_.percentage > 35) {
+      battText = string_battery_25_percent;
+    } else if (batteryState_.percentage > 10) {
+      SetColor(CD_WARN);
+      battText = string_battery_0_percent;
+    } else {
+      SetColor(CD_ERROR);
+      battText = string_battery_0_percent;
+    }
   }
 #endif
 
