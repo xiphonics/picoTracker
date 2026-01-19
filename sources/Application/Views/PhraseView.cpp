@@ -1001,11 +1001,11 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       ushort *param =
           phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
 
-      if (*cmd != FourCC::SampleInstrumentTable) {
+      if (*cmd != FourCC::InstrumentCommandTable) {
         cmd = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_);
         param = phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
       }
-      if (*cmd == FourCC::SampleInstrumentTable) {
+      if (*cmd == FourCC::InstrumentCommandTable) {
         viewData_->currentTable_ = (*param) & (TABLE_COUNT - 1);
       }
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
