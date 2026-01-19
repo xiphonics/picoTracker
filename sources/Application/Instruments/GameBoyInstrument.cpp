@@ -34,6 +34,8 @@ static const char *waveShapes[GB_NUM_WAVEFORMS] = {
 
 #define CHANNEL 0 // just hardcoding to channel 0 for now
 
+static uint32_t lcg = 42;
+
 // precalculated frequency table midi notes -12 to 127+12
 static const int32_t frequencyTable[128 + 24] = {
     398127,     421801,     446882,     473455,     501608,     531436,
@@ -63,18 +65,18 @@ static const int32_t frequencyTable[128 + 24] = {
     1630727614, 1727695724, 1830429858, 1939272882, 2054588048, 2116760211,
     2116197109, 2113330725};
 
-inline uint32_t GameBoyInstrument::pulse(bool level) {
+inline uint32_t GameBoyInstrument::pulse(int channel, bool level) {
   uint32_t target = -(uint32_t)level & 0x0FFF'FFFF;
 
-  int32_t diff = (int32_t)target - (int32_t)lastSample_;
+  int32_t diff = (int32_t)target - (int32_t)voices_[channel].lastSample;
 
-  if (diff > maxStep_) {
-    diff = maxStep_;
-  } else if (diff < minStep_) {
-    diff = minStep_;
+  if (diff > voices_[channel].maxStep) {
+    diff = voices_[channel].maxStep;
+  } else if (diff < voices_[channel].minStep) {
+    diff = voices_[channel].minStep;
   }
 
-  return (lastSample_ = (lastSample_ + diff));
+  return (voices_[channel].lastSample = (voices_[channel].lastSample + diff));
 }
 
 static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1, int feedback) {
@@ -103,8 +105,8 @@ static inline uint32_t voice_noise_sn76489(uint16_t *lfsr) {
 }
 
 GameBoyInstrument::GameBoyInstrument()
-    : I_Instrument(&variables_), vWaveform_(FourCC::GameBoyInstrumentWaveform,
-                                            waveShapes, GB_NUM_WAVEFORMS, 0),
+    : I_Instrument(&variables_),
+      vWaveform_(FourCC::GameBoyInstrumentWaveform, waveShapes, GB_NUM_WAVEFORMS, 0),
       vAttack_(FourCC::GameBoyInstrumentAttack, 0x00),
       vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
       vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
@@ -133,9 +135,6 @@ GameBoyInstrument::GameBoyInstrument()
   variables_.insert(variables_.end(), &vArpSpeed_);
   variables_.insert(variables_.end(), &vSweepTime_);
   variables_.insert(variables_.end(), &vSweepAmount_);
-
-  envelope_.setAttack(vAttack_.GetInt());
-  envelope_.setDecay(vDecay_.GetInt());
 }
 
 GameBoyInstrument::~GameBoyInstrument(){};
@@ -153,207 +152,203 @@ bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
 
   Trace::Error("GameBoyInstrument: Start note %d on channel %d", note, channel);
 
+  voice_t &v = voices_[channel];
   int fIndex = std::clamp(note + 12 + vTranspose_.GetInt(), 0, 127 + 24);
-  frequency_ = frequencyTable[fIndex];
-  arpFrequencies_[0] = frequency_;
+  v.frequency = frequencyTable[fIndex];
+  v.arpFrequencies[0] = v.frequency;
 
-  note_ = note;
+  v.note = note;
 
-  command_ = FourCC::InstrumentCommandNone;
+  v.command = FourCC::InstrumentCommandNone;
 
-  arpTime_ = 35 - vArpSpeed_.GetInt();
-  arpIndex_ = 0;
-  arpTick_ = 0;
-  phase_ = 0;
-  time_ = 0;
-  tick_ = 0;
-  tock_ = 0;
+  v.arpTime = 35 - vArpSpeed_.GetInt();
+  v.arpIndex = 0;
+  v.arpTick = 0;
+  v.phase = 0;
+  v.time = 0;
+  v.tick = 0;
+  v.tock = 0;
 
   // reset vibrato
-  vibSwing_ = frequencyTable[fIndex + 1] - frequency_;
-  vibDelay_ = vVibratoDelay_.GetInt() << 8;
-  vibDepth_ = vVibratoDepth_.GetInt();
-  vibPhase_ = 0;
+  v.vibSwing = frequencyTable[fIndex + 1] - v.frequency;
+  v.vibDelay = vVibratoDelay_.GetInt() << 8;
+  v.vibDepth = vVibratoDepth_.GetInt();
+  v.vibPhase = 0;
 
   // reset envelope
-  envelope_.setAttack(vAttack_.GetInt());
-  envelope_.setDecay(vDecay_.GetInt());
-  envelope_.trigger();
+  v.envelope.setAttack(vAttack_.GetInt());
+  v.envelope.setDecay(vDecay_.GetInt());
+  v.envelope.trigger();
 
-  int v = vLength_.GetInt();
-  lifetime_ = v ? v : 0xFFFF'FFFF;
+  int len = vLength_.GetInt();
+  v.lifetime = len ? len : 0xFFFF'FFFF;
 
-  wave_ = vWaveform_.GetInt();
-  volume_ = vLevel_.GetInt();
-  burstTime_ = vBurst_.GetInt();
+  v.wave = vWaveform_.GetInt();
+  v.volume = vLevel_.GetInt();
+  v.burstTime = vBurst_.GetInt();
 
   // sweep
   int32_t sweepDepth = vSweepAmount_.GetInt();
-  sweepCoefficient_ = (1 << 16) + (sweepDepth * 64);
-  sweepSteps_ = vSweepTime_.GetInt();
+  v.sweepCoefficient = (1 << 16) + (sweepDepth * 64);
+  v.sweepSteps = vSweepTime_.GetInt();
 
   return true;
 };
 
-void GameBoyInstrument::Stop(int c) {
-  frequency_ = 0;
-  phase_ = 0;
+void GameBoyInstrument::Stop(int channel) {
+  voices_[channel].frequency = 0;
+  voices_[channel].phase = 0;
 };
 
 bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
                                bool updateTick) {
   PROFILE_SCOPE("GameBoyInstrument::Render");
-  uint32_t wave = wave_;
+  voice_t &v = voices_[channel];
+  uint32_t wave = v.wave;
+  uint32_t combinedGain = (v.volume * v.envelope.value) >> 16; // Precompute
 
   for (int s = 0; s < size; s++) {
     // cold loop @ 100 Hz ------------------------------------------------------
-    if (tick_ == 0) {
+    if (v.tick == 0) {
 
       // envelope processing at ~100Hz
-      tick_ = 441;
-
-      envelope_.tick();
+      v.tick = 441;
+      v.envelope.tick();
 
       // handle commands
-      RunCommand();
+      RunCommand(channel);
 
       // sweep
-      if (sweepSteps_) {
-        sweepSteps_--;
+      if (v.sweepSteps) {
+        v.sweepSteps--;
 
         // sweep al base frequencies
-        for (uint32_t i = 0; i < arpLength_; i++) {
-          uint64_t f = arpFrequencies_[i];
-          f *= sweepCoefficient_;
-          arpFrequencies_[i] = uint32_t(f >> 16);
+        for (uint32_t i = 0; i < v.arpLength; i++) {
+          uint64_t f = v.arpFrequencies[i];
+          f *= v.sweepCoefficient;
+          v.arpFrequencies[i] = uint32_t(f >> 16);
         }
       }
 
       // vibrato
       int delta = 0;
 
-      if (time_ > vibDelay_) {
-        vibPhase_ += vibFrequency_;
-        int32_t sine = interpolateS8(sine64, (vibPhase_ >> 8));
-        delta = (vibSwing_ * sine) >> 7;
-        delta = (vibDepth_ * delta) >> 8;
+      if (v.time > v.vibDelay) {
+        v.vibPhase += v.vibFrequency;
+        int32_t sine = interpolateS8(sine64, (v.vibPhase >> 8));
+        delta = (v.vibSwing * sine) >> 7;
+        delta = (v.vibDepth * delta) >> 8;
       }
 
-      frequency_ = arpFrequencies_[arpIndex_] + delta;
+      v.frequency = v.arpFrequencies[v.arpIndex] + delta;
     }
 
     // warm loop @ ~1000 Hz ----------------------------------------------------
-    if (tock_ == 0) {
+    if (v.tock == 0) {
       // hot loop
 
       // envelope processing at ~1000Hz
-      tock_ = 44;
+      v.tock = 44;
 
       // arpeggio
-      if (command_ == FourCC::InstrumentCommandArpeggiator) {
-        arpTick_++;
+      if (v.command == FourCC::InstrumentCommandArpeggiator) {
+        v.arpTick++;
 
-        if (arpTick_ >= arpTime_) {
-          arpTick_ = 0;
-          arpIndex_++;
-          if (arpIndex_ >= arpLength_) {
-            arpIndex_ = 0;
+        if (v.arpTick >= v.arpTime) {
+          v.arpTick = 0;
+          v.arpIndex++;
+          if (v.arpIndex >= v.arpLength) {
+            v.arpIndex = 0;
           };
         }
       }
 
       // length
-      lifetime_--;
+      v.lifetime--;
 
-      if (lifetime_ == 0) {
+      if (v.lifetime == 0) {
         // note off
-        wave_ = gbWaveNone;
-        envelope_.state = ENV_IDLE;
+        v.wave = gbWaveNone;
+        v.envelope.state = ENV_IDLE;
       }
 
-      if (burstTime_) {
-        burstTime_--;
+      if (v.burstTime) {
+        v.burstTime--;
         wave = gbWaveNoiseWhite;
       } else {
-        wave = wave_;
+        wave = v.wave;
       }
+      
+      // Recompute combined gain when envelope or wave changes
+      combinedGain = (v.volume * v.envelope.value) >> 16;
     }
 
     // hot loop @ ~44100 Hz ----------------------------------------------------
-    tick_--;
-    tock_--;
+    v.tick--;
+    v.tock--;
 
     // advance phase
-    phase_ += frequency_;
+    v.phase += v.frequency;
 
     fixed sample = 0;
 
     // generate sample based on waveform
     switch (wave) {
     case gbWavePulse12_5: // Pulse 12.5%
-      sample = pulse(phase_ > 0x2000'0000);
+      sample = pulse(channel, v.phase > 0x2000'0000);
       break;
     case gbWavePulse25: // Pulse 25%
-      sample = pulse(phase_ > 0x4000'0000);
+      sample = pulse(channel, v.phase > 0x4000'0000);
       break;
     case gbWavePulse50: // Pulse 50%
-      sample = pulse(phase_ > 0x8000'0000);
+      sample = pulse(channel, v.phase > 0x8000'0000);
       break;
     case gbWaveTriangle: // Triangle
-      if (phase_ < 0x8000'0000) {
+      if (v.phase < 0x8000'0000) {
         // first half, rising slope
-        sample = phase_ >> 3;
+        sample = v.phase >> 3;
       } else {
         // second half, falling slope
-        sample = (0xFFFF'FFFF - phase_) >> 3;
+        sample = (0xFFFF'FFFF - v.phase) >> 3;
       }
       sample &= 0xFF00'0000; // downsample
       break;
     case gbWaveNoiseGameBoy: // Noise: GB7
-      if (phase_ > 0x4000'0000) {
-        phase_ -= 0x4000'0000;
-        noise_ = voice_noise_gb7(&lfsr_);
-        sample = noise_;
-      } else {
-        sample = noise_;
+      if (v.phase > 0x4000'0000) {
+        v.phase -= 0x4000'0000;
+        v.noise = voice_noise_gb7(&v.lfsr);
       }
+      sample = v.noise;
       break;
     case gbWaveNoiseNES: // Noise: NES
-      if (phase_ > 0x4000'0000) {
-        phase_ -= 0x4000'0000;
-        noise_ = voice_noise_nes(&lfsr_);
-        sample = noise_;
-      } else {
-        sample = noise_;
+      if (v.phase > 0x4000'0000) {
+        v.phase -= 0x4000'0000;
+        v.noise = voice_noise_nes(&v.lfsr);
       }
+      sample = v.noise;
       break;
     case gbWaveNoiseSN76489: // Noise: SN76489
-      if (phase_ > 0x4000'0000) {
-        phase_ -= 0x4000'0000;
-        noise_ = voice_noise_sn76489(&lfsr_);
-        sample = noise_;
-      } else {
-        sample = noise_;
+      if (v.phase > 0x4000'0000) {
+        v.phase -= 0x4000'0000;
+        v.noise = voice_noise_sn76489(&v.lfsr);
       }
+      sample = v.noise;
       break;
     case gbWaveNoiseWhite: // Noise: White Noise, frequency independent
-      sample = rand() & 0x0FFF'FFFF;
+        lcg *= 1664525;
+        lcg += 1013904223;
+        sample = lcg & 0x0FFF'FFFF;
       break;
     }
 
-    // apply master level
-    sample >>= 8;
-    sample *= volume_;
+    // Apply combined gain (volume * envelope) in single operation
+    sample = (sample >> 8) * combinedGain;
 
-    // apply envelope level 32 * 8 * 16 = 56 bits >> 24 to get back to 32
-    sample >>= 16;
-    sample *= envelope_.value; // 32
-
-    // output to both left and right channels
-    buffer[s * 2] = sample;
-    buffer[s * 2 + 1] = sample;
-
-    time_++;
+    // Output to both channels
+    buffer[0] = buffer[1] = sample;
+    buffer += 2;
+    
+    v.time++;
   }
 
   return true;
@@ -363,8 +358,8 @@ bool GameBoyInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
-void GameBoyInstrument::RunCommand() {
-  switch (command_) {
+void GameBoyInstrument::RunCommand(int channel) {
+  switch (voices_[channel].command) {
   case FourCC::InstrumentCommandArpeggiator: {
     // handled in 1000Hz tick
     break;
@@ -375,36 +370,37 @@ void GameBoyInstrument::RunCommand() {
 }
 
 void GameBoyInstrument::CommandInitArp(int channel, ushort value) {
-  arpIndex_ = 0;
-  arpLength_ = 5;
+  voice_t &v = voices_[channel];
+  v.arpIndex = 0;
+  v.arpLength = 5;
 
   // trim off trailing zeroes
-  ushort v = value;
-  while (arpLength_ > 1 && (v & 0xF) == 0) {
-    arpLength_--;
-    v >>= 4;
+  ushort val = value;
+  while (v.arpLength > 1 && (val & 0xF) == 0) {
+    v.arpLength--;
+    val >>= 4;
   }
 
-  for (uint32_t i = 0; i < arpLength_ - 1; i++) {
+  for (uint32_t i = 0; i < v.arpLength - 1; i++) {
     uint8_t semitone = (value >> (i * 4)) & 0x0F;
-    int32_t value = note_ + vTranspose_.GetInt() + semitone + 12;
-    value = (value < 0) ? 0 : value;
-    value = (value > 127 + 24) ? 127 + 24 : value;
-    arpFrequencies_[i + 1] = frequencyTable[value];
+    int32_t noteVal = v.note + vTranspose_.GetInt() + semitone + 12;
+    noteVal = (noteVal < 0) ? 0 : noteVal;
+    noteVal = (noteVal > 127 + 24) ? 127 + 24 : noteVal;
+    v.arpFrequencies[i + 1] = frequencyTable[noteVal];
   }
-  Trace::Error("Initialized an arp command: %d steps", arpLength_);
+  Trace::Error("Initialized an arp command: %d steps", v.arpLength);
 }
 
 void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
   case FourCC::InstrumentCommandArpeggiator:
-    command_ = cc;
+    voices_[channel].command = cc;
     CommandInitArp(channel, value);
     break;
 
   case FourCC::InstrumentCommandKill:
   case FourCC::InstrumentCommandGateOff:
-    command_ = cc;
+    voices_[channel].command = cc;
     Stop(channel);
     break;
   }

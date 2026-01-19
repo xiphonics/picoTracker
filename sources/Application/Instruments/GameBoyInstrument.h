@@ -104,6 +104,48 @@ typedef struct {
 
 } Envelope;
 
+typedef struct voice_t
+{
+  uint16_t arpTick = 0;
+  uint16_t arpTime = 250;
+  uint8_t note;
+  uint32_t phase = 0;
+  int32_t frequency = 0;
+  uint32_t arpLength = 5;
+  int32_t arpFrequencies[5] = {0, 0, 0, 0, 0};
+  uint8_t arpIndex = 0;
+  uint32_t egState;
+  uint32_t egLevel;
+  uint32_t egAttackRate;
+  uint32_t egDecayRate;
+  uint32_t time;
+  uint32_t tick;
+  uint32_t tock;
+  uint32_t lifetime;
+  uint32_t wave;
+  uint32_t volume;
+  uint32_t burstTime;
+  uint16_t vibPhase;
+  const uint16_t vibFrequency = 0xfff;
+  int32_t vibDepth;
+  int32_t vibSwing;
+  uint32_t vibDelay;
+
+  FourCC command;
+
+  uint32_t sweepCoefficient;
+  int32_t sweepSteps;
+  uint16_t lfsr = 17;
+  uint32_t noise;
+
+  uint32_t lastSample = 0;
+  int32_t maxStep = 0x3fff'ffff;
+  int32_t minStep = -0x3fff'ffff;
+
+  Envelope envelope;
+} voice_t;
+
+
 constexpr int SAMPLING_RATE = 44100;
 
 constexpr int BASE_MIDI = 69; // A4
@@ -162,45 +204,9 @@ private:
   Variable vSweepTime_;
   Variable vSweepAmount_;
 
-  uint16_t arpTick_ = 0;
-  uint16_t arpTime_ = 250;
-  uint8_t note_;
-  uint32_t phase_ = 0;
-  int32_t frequency_ = 0;
-  uint32_t arpLength_ = 5;
-  int32_t arpFrequencies_[5] = {0, 0, 0, 0, 0};
-  uint8_t arpIndex_ = 0;
-  uint32_t egState_;
-  uint32_t egLevel_;
-  uint32_t egAttackRate_;
-  uint32_t egDecayRate_;
-  uint32_t time_;
-  uint32_t tick_;
-  uint32_t tock_;
-  uint32_t lifetime_;
-  uint32_t wave_;
-  uint32_t volume_;
-  uint32_t burstTime_;
-  uint16_t vibPhase_;
-  const uint16_t vibFrequency_ = 0xfff;
-  int32_t vibDepth_;
-  int32_t vibSwing_;
-  uint32_t vibDelay_;
+  voice_t voices_[SONG_CHANNEL_COUNT];
 
-  FourCC command_;
-
-  uint32_t sweepCoefficient_;
-  int32_t sweepSteps_;
-  uint16_t lfsr_ = 17;
-  uint32_t noise_;
-
-  uint32_t lastSample_ = 0;
-  int32_t maxStep_ = 0x3fff'ffff;
-  int32_t minStep_ = -0x3fff'ffff;
-
-  Envelope envelope_;
-
-  void RunCommand();
+  void RunCommand(int channel);
   void CommandInitArp(int channel, ushort value);
-  inline uint32_t pulse(bool level);
+  inline uint32_t pulse(int channel, bool level);
 };
