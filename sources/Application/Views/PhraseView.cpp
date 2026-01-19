@@ -865,6 +865,8 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
               *c = next;
               isDirty_ = true;
               cmdEdit_.SetInt(next);
+              Trace::Log("PHRASEVIEW", "Cloned table1 %04x -> %04x", current,
+                         next);
             }
           }
         }
@@ -880,12 +882,18 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
             *c = next;
             isDirty_ = true;
             cmdEdit_.SetInt(next);
+            Trace::Log("PHRASEVIEW", "Cloned table2 -> %04x", next);
           }
         }
       };
       mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
-    } else {
+    } else if (mask != EPBM_ALT) {
+      Trace::Log("PHRASEVIEW", "Clone miss -> selection mode");
       viewMode_ = VM_SELECTION;
+    }
+    if (viewMode_ == VM_CLONE && mask == EPBM_ALT) {
+      Trace::Log("PHRASEVIEW", "Clone hold: ALT-only");
+      return;
     }
   };
 
@@ -901,6 +909,10 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else {
     viewMode_ = VM_NORMAL;
     processNormalButtonMask(mask);
+    if (viewMode_ == VM_CLONE) {
+      Trace::Debug("Normal->Clone latch");
+      return;
+    }
   };
 }
 
@@ -922,6 +934,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     }
     if (mask & EPBM_ALT) {
       viewMode_ = VM_CLONE;
+      Trace::Log("PHRASEVIEW", "processNormalButtonMask set CLONE");
     };
     if (mask & EPBM_NAV)
       toggleMute();
