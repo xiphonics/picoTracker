@@ -467,14 +467,9 @@ void MixerView::drawChannelVUMeters(
   if (!forceRedraw) {
     bool anyChanges = false;
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      // Convert to dB
-      int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
-      int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
-
-      // Map dB to bar levels
-      int leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
-      int rightBars =
-          std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
+      // Convert amplitude to bar levels
+      int32_t leftBars, rightBars;
+      amplitudeToBars(levels->at(i), &leftBars, &rightBars);
 
       // Check if this channel's levels have changed
       if (leftBars != prevLeftVU_[i + 1] || rightBars != prevRightVU_[i + 1]) {
@@ -495,17 +490,12 @@ void MixerView::drawChannelVUMeters(
 
   // draw vu meter for each bus
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    int leftBars = 0;
-    int rightBars = 0;
+    int32_t leftBars = 0;
+    int32_t rightBars = 0;
     // if channel is muted just use default 0 values for bars
     if (!player->IsChannelMuted(i)) {
-      // Convert to dB
-      int leftDb = amplitudeToDb((levels->at(i) >> 16) & 0xFFFF);
-      int rightDb = amplitudeToDb(levels->at(i) & 0xFFFF);
-
-      // Map dB to bar levels  -60dB to 0dB range mapped to 0-15 bars
-      leftBars = std::max(0, std::min(VU_METER_HEIGHT, (leftDb + 60) / 4));
-      rightBars = std::max(0, std::min(VU_METER_HEIGHT, (rightDb + 60) / 4));
+      // Convert amplitude to bar levels
+      amplitudeToBars(levels->at(i), &leftBars, &rightBars);
     }
 
     // Use index i+1 for channel VU meters (index 0 is reserved for master)

@@ -74,7 +74,7 @@ void display_set_cursor(uint8_t x, uint8_t y) {
 
 void display_putc(char c, bool invert) {
   int idx = cursor_y * TEXT_WIDTH + cursor_x;
-  if (c >= 32 && c <= 127) {
+  if (c >= 32) {
     screen[idx] = c - 32;
     SetBit(changed, idx);
     if (invert) {
