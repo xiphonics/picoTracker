@@ -311,4 +311,4 @@ static const char *const char_bargraph_lookup[] = {
 };
 
 #define char_bargraph_s(x)                                                     \
-    (char_bargraph_lookup[(x) < 0 ? 0 : ((x) > 10 ? 10 : (x))])
+  (char_bargraph_lookup[(x) < 0 ? 0 : ((x) > 10 ? 10 : (x))])
