@@ -64,6 +64,8 @@ private:
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
+  void redrawWaveformColumn(int32_t x);
+  void drawSliceMarkersAt(int32_t x);
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
@@ -77,6 +79,7 @@ private:
   int32_t sliceToPixel(uint32_t start) const;
   uint32_t selectedSliceStart();
   bool hasInstrumentSample() const;
+  void resetSlicePixelCache();
 
   WatchedVariable sliceIndexVar_;
   WatchedVariable sliceStartVar_;
@@ -90,6 +93,7 @@ private:
   uint8_t waveformCache_[SliceWaveformCacheSize];
   bool waveformValid_;
   bool needsWaveformRedraw_;
+  bool needsFullRedraw_;
 
   SampleInstrument *instrument_;
   int32_t instrumentIndex_;
@@ -101,6 +105,8 @@ private:
   GUIPoint graphFieldPos_;
   SliceGraphField graphField_;
   bool modalWasOpen_;
+  int16_t slicePixelCache_[SliceCount];
+  int8_t lastSelectedSlice_;
 
   bool playKeyHeld_;
   bool previewActive_;

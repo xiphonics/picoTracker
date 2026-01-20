@@ -36,15 +36,13 @@ SliceGraphField::SliceGraphField(GUIPoint &position, int32_t width,
     : UIField(position), width_(width), height_(height) {}
 
 void SliceGraphField::Draw(GUIWindow &w, int offset) {
-  if (!focus_) {
-    return;
-  }
   int32_t x = x_;
   int32_t y = static_cast<int32_t>(y_) + offset;
   int32_t right = x + width_;
   int32_t bottom = y + height_;
 
-  w.SetCurrentRectColor(AppWindow::GetColor(CD_HILITE2));
+  ColorDefinition borderColor = focus_ ? CD_HILITE2 : CD_BACKGROUND;
+  w.SetCurrentRectColor(AppWindow::GetColor(borderColor));
   GUIRect top(x, y, right, y + 1);
   GUIRect bottomLine(x, bottom - 1, right, bottom);
   GUIRect left(x, y, x + 1, bottom);
@@ -60,15 +58,16 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), sliceIndexVar_(FourCC::SampleInstrumentSlices, 0),
       sliceStartVar_(FourCC::SampleInstrumentStart, 0),
       autoSliceCountVar_(FourCC::Default, 4), waveformValid_(false),
-      needsWaveformRedraw_(true), instrument_(nullptr), instrumentIndex_(0),
-      sampleSize_(0), zoomLevel_(0), maxZoomLevel_(0), viewStart_(0),
-      viewEnd_(0), graphFieldPos_(SliceXOffset, SliceYOffset),
+      needsWaveformRedraw_(true), needsFullRedraw_(true), instrument_(nullptr),
+      instrumentIndex_(0), sampleSize_(0), zoomLevel_(0), maxZoomLevel_(0),
+      viewStart_(0), viewEnd_(0), graphFieldPos_(SliceXOffset, SliceYOffset),
       graphField_(graphFieldPos_, SliceBitmapWidth, SliceBitmapHeight),
-      modalWasOpen_(false), playKeyHeld_(false), previewActive_(false),
-      previewNote_(SampleInstrument::SliceNoteBase) {
+      modalWasOpen_(false), lastSelectedSlice_(-1), playKeyHeld_(false),
+      previewActive_(false), previewNote_(SampleInstrument::SliceNoteBase) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
   std::memset(waveformCache_, 0, sizeof(waveformCache_));
+  resetSlicePixelCache();
 }
 
 SampleSlicesView::~SampleSlicesView() { stopPreview(); }
@@ -88,9 +87,11 @@ void SampleSlicesView::Reset() {
   previewNote_ = SampleInstrument::SliceNoteBase;
   waveformValid_ = false;
   needsWaveformRedraw_ = true;
+  needsFullRedraw_ = true;
   sliceIndexVar_.SetInt(0, false);
   sliceStartVar_.SetInt(0, false);
   std::memset(waveformCache_, 0, sizeof(waveformCache_));
+  resetSlicePixelCache();
 }
 
 void SampleSlicesView::OnFocus() {
@@ -101,9 +102,11 @@ void SampleSlicesView::OnFocus() {
   previewActive_ = false;
   waveformValid_ = false;
   needsWaveformRedraw_ = true;
+  needsFullRedraw_ = true;
   sampleSize_ = 0;
   modalWasOpen_ = false;
   zoomLevel_ = 0;
+  resetSlicePixelCache();
 
   if (instrument_) {
     SamplePool *pool = SamplePool::GetInstance();
@@ -229,7 +232,9 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
 }
 
 void SampleSlicesView::DrawView() {
-  Clear();
+  if (needsFullRedraw_) {
+    Clear();
+  }
 
   GUITextProperties props;
   GUIPoint titlePos = GetTitlePosition();
@@ -237,10 +242,10 @@ void SampleSlicesView::DrawView() {
 
   if (!HasModalView()) {
     drawWaveform();
-    needsWaveformRedraw_ = false;
   }
 
   FieldView::Redraw();
+  needsFullRedraw_ = false;
 }
 
 void SampleSlicesView::AnimationUpdate() {
@@ -270,7 +275,6 @@ void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
     break;
   case FourCC::SampleInstrumentStart:
     applySliceStart(static_cast<uint32_t>(sliceStartVar_.GetInt()));
-    needsWaveformRedraw_ = true;
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
     break;
@@ -309,7 +313,7 @@ void SampleSlicesView::buildFieldLayout() {
   position._x += 5;
   position._y = 12;
 
-  intVarField_.emplace_back(position, sliceIndexVar_, "slice: %d", 0,
+  intVarField_.emplace_back(position, sliceIndexVar_, "slice: %2d", 0,
                             static_cast<int32_t>(SliceCount) - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &intVarField_.back());
   intVarField_.back().AddObserver(*this);
@@ -330,7 +334,7 @@ void SampleSlicesView::buildFieldLayout() {
   bigHexVarField_.back().AddObserver(*this);
 
   position._y += 1;
-  intVarField_.emplace_back(position, autoSliceCountVar_, "auto: %d", 1,
+  intVarField_.emplace_back(position, autoSliceCountVar_, "auto: %2d", 1,
                             static_cast<int32_t>(SliceCount), 1, 4);
   fieldList_.insert(fieldList_.end(), &intVarField_.back());
 
@@ -427,28 +431,149 @@ void SampleSlicesView::rebuildWaveform() {
 }
 
 void SampleSlicesView::drawWaveform() {
-  GUIRect area(SliceXOffset, SliceYOffset, SliceXOffset + SliceBitmapWidth,
-               SliceYOffset + SliceBitmapHeight);
-  DrawRect(area, CD_BACKGROUND);
-
   if (!waveformValid_) {
     rebuildWaveform();
   }
 
-  if (waveformValid_) {
-    int32_t centerY = SliceYOffset + SliceBitmapHeight / 2;
-    for (int32_t x = 1; x < SliceBitmapWidth - 1; ++x) {
-      uint8_t amplitude = waveformCache_[x - 1];
-      if (amplitude == 0) {
-        continue;
+  if (needsWaveformRedraw_) {
+    GUIRect area(SliceXOffset, SliceYOffset,
+                 SliceXOffset + SliceBitmapWidth,
+                 SliceYOffset + SliceBitmapHeight);
+    DrawRect(area, CD_BACKGROUND);
+
+    if (waveformValid_) {
+      int32_t centerY = SliceYOffset + SliceBitmapHeight / 2;
+      for (int32_t x = 1; x < SliceBitmapWidth - 1; ++x) {
+        uint8_t amplitude = waveformCache_[x - 1];
+        if (amplitude == 0) {
+          continue;
+        }
+        int32_t startY = centerY - amplitude / 2;
+        int32_t endY = startY + amplitude;
+        GUIRect column(SliceXOffset + x, startY, SliceXOffset + x + 1, endY);
+        DrawRect(column, CD_NORMAL);
       }
-      int32_t startY = centerY - amplitude / 2;
-      int32_t endY = startY + amplitude;
-      GUIRect column(SliceXOffset + x, startY, SliceXOffset + x + 1, endY);
-      DrawRect(column, CD_NORMAL);
+    }
+
+    if (instrument_ && sampleSize_ > 0) {
+      for (size_t i = 0; i < SliceCount; ++i) {
+        if (!instrument_->IsSliceDefined(i)) {
+          slicePixelCache_[i] = -1;
+          continue;
+        }
+        uint32_t start = instrument_->GetSlicePoint(i);
+        if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
+          slicePixelCache_[i] = -1;
+          continue;
+        }
+        int32_t x = sliceToPixel(start);
+        if (x < 0) {
+          slicePixelCache_[i] = -1;
+          continue;
+        }
+        ColorDefinition color =
+            (static_cast<int32_t>(i) == sliceIndexVar_.GetInt()) ? CD_HILITE2
+                                                                : CD_ACCENT;
+        GUIRect marker(x, SliceYOffset + 2, x + 1,
+                       SliceYOffset + SliceBitmapHeight - 2);
+        DrawRect(marker, color);
+        slicePixelCache_[i] = static_cast<int16_t>(x);
+      }
+    } else {
+      resetSlicePixelCache();
+    }
+
+    lastSelectedSlice_ = static_cast<int8_t>(sliceIndexVar_.GetInt());
+    needsWaveformRedraw_ = false;
+    return;
+  }
+
+  if (!instrument_ || sampleSize_ == 0) {
+    return;
+  }
+
+  int32_t currentSelected = sliceIndexVar_.GetInt();
+  bool selectionChanged = (currentSelected != lastSelectedSlice_);
+  int16_t redrawXs[SliceCount * 2 + 2];
+  size_t redrawCount = 0;
+  auto addRedrawX = [&redrawXs, &redrawCount](int16_t x) {
+    if (x < 0) {
+      return;
+    }
+    for (size_t i = 0; i < redrawCount; ++i) {
+      if (redrawXs[i] == x) {
+        return;
+      }
+    }
+    if (redrawCount < (SliceCount * 2 + 2)) {
+      redrawXs[redrawCount++] = x;
+    }
+  };
+
+  for (size_t i = 0; i < SliceCount; ++i) {
+    int16_t currentX = -1;
+    if (instrument_->IsSliceDefined(i)) {
+      uint32_t start = instrument_->GetSlicePoint(i);
+      if (!(i == 0 && start == 0 && !instrument_->HasSlicesForPlayback())) {
+        int32_t x = sliceToPixel(start);
+        if (x >= 0) {
+          currentX = static_cast<int16_t>(x);
+        }
+      }
+    }
+    int16_t previousX = slicePixelCache_[i];
+    if (currentX != previousX) {
+      addRedrawX(previousX);
+      addRedrawX(currentX);
+      slicePixelCache_[i] = currentX;
     }
   }
 
+  if (selectionChanged) {
+    if (lastSelectedSlice_ >= 0 &&
+        lastSelectedSlice_ < static_cast<int32_t>(SliceCount)) {
+      addRedrawX(slicePixelCache_[lastSelectedSlice_]);
+    }
+    if (currentSelected >= 0 &&
+        currentSelected < static_cast<int32_t>(SliceCount)) {
+      addRedrawX(slicePixelCache_[currentSelected]);
+    }
+    lastSelectedSlice_ = static_cast<int8_t>(currentSelected);
+  }
+
+  for (size_t i = 0; i < redrawCount; ++i) {
+    redrawWaveformColumn(redrawXs[i]);
+    drawSliceMarkersAt(redrawXs[i]);
+  }
+}
+
+void SampleSlicesView::redrawWaveformColumn(int32_t x) {
+  if (x < SliceXOffset + 1 || x >= SliceXOffset + SliceBitmapWidth - 1) {
+    return;
+  }
+  GUIRect clearRect(x, SliceYOffset, x + 1,
+                    SliceYOffset + SliceBitmapHeight);
+  DrawRect(clearRect, CD_BACKGROUND);
+
+  if (!waveformValid_) {
+    return;
+  }
+  int32_t cacheIndex = x - SliceXOffset - 1;
+  if (cacheIndex < 0 || cacheIndex >= SliceWaveformCacheSize) {
+    return;
+  }
+  uint8_t amplitude = waveformCache_[cacheIndex];
+  if (amplitude == 0) {
+    return;
+  }
+  int32_t centerY = SliceYOffset + SliceBitmapHeight / 2;
+  int32_t startY = centerY - amplitude / 2;
+  int32_t endY = startY + amplitude;
+  GUIRect column(x, startY, x + 1, endY);
+  DrawRect(column, CD_NORMAL);
+}
+
+void SampleSlicesView::drawSliceMarkersAt(int32_t x) {
   if (!instrument_ || sampleSize_ == 0) {
     return;
   }
@@ -461,13 +586,13 @@ void SampleSlicesView::drawWaveform() {
     if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
       continue;
     }
-    int32_t x = sliceToPixel(start);
-    if (x < 0) {
+    int32_t sliceX = sliceToPixel(start);
+    if (sliceX != x) {
       continue;
     }
-    ColorDefinition color = (static_cast<int32_t>(i) == sliceIndexVar_.GetInt())
-                                ? CD_HILITE2
-                                : CD_ACCENT;
+    ColorDefinition color =
+        (static_cast<int32_t>(i) == sliceIndexVar_.GetInt()) ? CD_HILITE2
+                                                            : CD_ACCENT;
     GUIRect marker(x, SliceYOffset + 2, x + 1,
                    SliceYOffset + SliceBitmapHeight - 2);
     DrawRect(marker, color);
@@ -685,8 +810,8 @@ void SampleSlicesView::handleSliceSelectionChange() {
   updateSliceSelectionFromInstrument();
   if (updateZoomWindow()) {
     waveformValid_ = false;
+    needsWaveformRedraw_ = true;
   }
-  needsWaveformRedraw_ = true;
   isDirty_ = true;
   buildFieldLayout();
   if (graphFocused) {
@@ -720,4 +845,11 @@ uint32_t SampleSlicesView::selectedSliceStart() {
 
 bool SampleSlicesView::hasInstrumentSample() const {
   return instrument_ && instrument_->GetSampleIndex() >= 0 && sampleSize_ > 0;
+}
+
+void SampleSlicesView::resetSlicePixelCache() {
+  for (size_t i = 0; i < SliceCount; ++i) {
+    slicePixelCache_[i] = -1;
+  }
+  lastSelectedSlice_ = -1;
 }
