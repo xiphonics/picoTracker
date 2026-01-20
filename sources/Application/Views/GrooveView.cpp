@@ -23,6 +23,11 @@ GrooveView::GrooveView(GUIWindow &w, ViewData *viewData)
 
 GrooveView::~GrooveView() {}
 
+void GrooveView::Reset() {
+  position_ = 0;
+  lastPosition_ = 0;
+}
+
 void GrooveView::updateCursor(int dir) {
   position_ += dir;
   if (position_ < 0)

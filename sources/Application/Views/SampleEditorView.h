@@ -27,6 +27,7 @@ class SampleEditorView : public FieldView, public I_Observer {
 public:
   SampleEditorView(GUIWindow &w, ViewData *data);
   virtual ~SampleEditorView();
+  void Reset();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();

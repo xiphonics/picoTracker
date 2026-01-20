@@ -47,6 +47,7 @@ class Song : Persistent {
 public:
   Song();
   ~Song();
+  void Reset();
 
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);

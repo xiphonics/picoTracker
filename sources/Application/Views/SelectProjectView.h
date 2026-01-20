@@ -19,6 +19,7 @@ class SelectProjectView : public ScreenView {
 public:
   SelectProjectView(GUIWindow &w, ViewData *viewData);
   ~SelectProjectView();
+  void Reset();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();

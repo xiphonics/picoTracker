@@ -73,6 +73,26 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
 
 SampleSlicesView::~SampleSlicesView() { stopPreview(); }
 
+void SampleSlicesView::Reset() {
+  stopPreview();
+  instrument_ = nullptr;
+  instrumentIndex_ = 0;
+  sampleSize_ = 0;
+  zoomLevel_ = 0;
+  maxZoomLevel_ = 0;
+  viewStart_ = 0;
+  viewEnd_ = 0;
+  modalWasOpen_ = false;
+  playKeyHeld_ = false;
+  previewActive_ = false;
+  previewNote_ = SampleInstrument::SliceNoteBase;
+  waveformValid_ = false;
+  needsWaveformRedraw_ = true;
+  sliceIndexVar_.SetInt(0, false);
+  sliceStartVar_.SetInt(0, false);
+  std::memset(waveformCache_, 0, sizeof(waveformCache_));
+}
+
 void SampleSlicesView::OnFocus() {
   stopPreview();
   instrumentIndex_ = static_cast<int32_t>(viewData_->currentInstrumentID_);

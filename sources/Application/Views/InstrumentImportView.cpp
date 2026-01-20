@@ -27,6 +27,14 @@ InstrumentImportView::InstrumentImportView(GUIWindow &w, ViewData *viewData)
 
 InstrumentImportView::~InstrumentImportView() {}
 
+void InstrumentImportView::Reset() {
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  selected_ = 0;
+  toInstrID_ = 0;
+  fileIndexList_.clear();
+}
+
 void InstrumentImportView::ProcessButtonMask(unsigned short mask,
                                              bool pressed) {
   if (!pressed)

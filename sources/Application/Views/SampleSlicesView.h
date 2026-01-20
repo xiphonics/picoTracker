@@ -50,6 +50,7 @@ class SampleSlicesView : public FieldView, public I_Observer {
 public:
   SampleSlicesView(GUIWindow &w, ViewData *data);
   ~SampleSlicesView() override;
+  void Reset();
 
   void ProcessButtonMask(unsigned short mask, bool pressed) override;
   void DrawView() override;

@@ -19,6 +19,7 @@ class TableView : public ScreenView {
 public:
   TableView(GUIWindow &w, ViewData *viewData);
   ~TableView();
+  void Reset();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);

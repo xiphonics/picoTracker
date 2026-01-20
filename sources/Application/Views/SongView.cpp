@@ -41,6 +41,37 @@ SongView::SongView(GUIWindow &w, ViewData *viewData) : ScreenView(w, viewData) {
 
 SongView::~SongView() {}
 
+/****************
+ Reset
+ ****************/
+
+void SongView::Reset() {
+  updatingChain_ = false;
+  lastChain_ = 0;
+
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    lastPlayedPosition_[i] = 0;
+    lastQueuedPosition_[i] = 0;
+  }
+
+  clipboard_.active_ = false;
+  clipboard_.data_ = nullptr;
+  clipboard_.x_ = 0;
+  clipboard_.y_ = 0;
+  clipboard_.offset_ = 0;
+  clipboard_.width_ = 0;
+  clipboard_.height_ = 0;
+  memset(clipboard_.storage_, 0xFF, sizeof(clipboard_.storage_));
+
+  saveX_ = 0;
+  saveY_ = 0;
+  saveOffset_ = 0;
+  invertBatt_ = false;
+  needClear_ = false;
+  needsUIUpdate_ = false;
+  needsPlayTimeUpdate_ = false;
+}
+
 /******************************************************
  updateChain:
         update current chain value by adding offset
