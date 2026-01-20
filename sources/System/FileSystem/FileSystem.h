@@ -44,6 +44,9 @@ public:
   virtual bool isCurrentRoot() = 0;
   virtual bool DeleteFile(const char *name) = 0;
   virtual bool DeleteDir(const char *name) = 0;
+  // Optional batching hook for filesystem implementations that cache listings.
+  virtual void BeginBatch() {}
+  virtual void EndBatch() {}
   virtual bool exists(const char *path) = 0;
   virtual bool makeDir(const char *path, bool pFlag = false) = 0;
   virtual uint64_t getFileSize(int index) = 0;

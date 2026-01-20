@@ -58,6 +58,8 @@ public:
   virtual bool isCurrentRoot() override;
   virtual bool DeleteFile(const char *name) override;
   virtual bool DeleteDir(const char *name) override;
+  virtual void BeginBatch() override;
+  virtual void EndBatch() override;
   virtual bool exists(const char *path) override;
   virtual bool makeDir(const char *path, bool pFlag = false) override;
   virtual uint64_t getFileSize(int index) override;
@@ -73,6 +75,7 @@ private:
   // TODO: this is quite big! need move it out to external RAM
   // cache for fileFromIndex
   etl::vector<FILINFO, MAX_FILE_INDEX_SIZE> file_cache_;
+  bool batching_;
 };
 
 #endif

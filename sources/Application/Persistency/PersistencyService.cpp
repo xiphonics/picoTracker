@@ -15,6 +15,7 @@
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
+#include <cstring>
 
 #define PROJECT_STATE_FILE "/.current"
 
@@ -63,11 +64,19 @@ bool PersistencyService::DeleteProject(const char *projectName) {
   fs->list(&fileIndexes, ".wav", false);
 
   // delete all samples
+  fs->BeginBatch();
   char filename[128];
   for (size_t i = 0; i < fileIndexes.size(); i++) {
     fs->getFileName(fileIndexes[i], filename, MAX_PROJECT_SAMPLE_PATH_LENGTH);
+    if (strcmp(filename, "..") == 0 || strcmp(filename, ".") == 0) {
+      continue;
+    }
+    if (fs->getFileType(fileIndexes[i]) == PFT_DIR) {
+      continue;
+    }
     fs->DeleteFile(filename);
   };
+  fs->EndBatch();
 
   if (!fs->chdir("..")) { // up to project dir
     Trace::Error("PERSISTENCYSERVICE: Could not change back to project dir");
