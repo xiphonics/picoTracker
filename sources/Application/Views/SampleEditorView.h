@@ -75,7 +75,7 @@ private:
 
 #ifdef ADV
 #define BITMAPWIDTH 720
-#define BITMAPHEIGHT 160
+#define BITMAPHEIGHT 180
 #else
 #define BITMAPWIDTH 320
 #define BITMAPHEIGHT 80

@@ -24,14 +24,13 @@ class SampleInstrument;
 
 #ifdef ADV
 static constexpr int32_t SliceBitmapWidth = 720;
-static constexpr int32_t SliceBitmapHeight = 160;
+static constexpr int32_t SliceBitmapHeight = 180;
 #else
 static constexpr int32_t SliceBitmapWidth = 320;
 static constexpr int32_t SliceBitmapHeight = 80;
 #endif
 
 static constexpr int32_t SliceWaveformCacheSize = SliceBitmapWidth;
-static constexpr size_t SliceCount = 16;
 
 class SliceGraphField : public UIField {
 public:
@@ -105,7 +104,7 @@ private:
   GUIPoint graphFieldPos_;
   SliceGraphField graphField_;
   bool modalWasOpen_;
-  int16_t slicePixelCache_[SliceCount];
+  int16_t slicePixelCache_[SampleInstrument::MaxSlices];
   int8_t lastSelectedSlice_;
 
   bool playKeyHeld_;

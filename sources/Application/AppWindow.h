@@ -19,8 +19,13 @@
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #define PROP_INVERT 0x80
+#ifdef ADV
+#define CHAR_WIDTH 22
+#define CHAR_HEIGHT 30
+#else
 #define CHAR_WIDTH 10
 #define CHAR_HEIGHT 10
+#endif
 #define SCREEN_WIDTH 32
 #define SCREEN_HEIGHT 24
 #define SCREEN_MAP_HEIGHT 4

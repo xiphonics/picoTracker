@@ -10,6 +10,7 @@
 
 #include "Application/AppWindow.h"
 #include "Application/Instruments/InstrumentBank.h"
+#include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Project.h"
 #include "Application/Model/Song.h"
@@ -24,11 +25,7 @@
 namespace {
 constexpr uint16_t PreviewChannel = SONG_CHANNEL_COUNT - 1;
 constexpr int32_t SliceXOffset = 0;
-#ifdef ADV
-constexpr int32_t SliceYOffset = 2 * CHAR_HEIGHT * 4;
-#else
 constexpr int32_t SliceYOffset = 2 * CHAR_HEIGHT;
-#endif
 } // namespace
 
 SliceGraphField::SliceGraphField(GUIPoint &position, int32_t width,
@@ -175,7 +172,7 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
     if (mask & EPBM_RIGHT) {
       int32_t index = sliceIndexVar_.GetInt();
-      if (index < static_cast<int32_t>(SliceCount) - 1) {
+      if (index < static_cast<int32_t>(SampleInstrument::MaxSlices) - 1) {
         sliceIndexVar_.SetInt(index + 1);
       }
       return;
@@ -313,8 +310,9 @@ void SampleSlicesView::buildFieldLayout() {
   position._x += 5;
   position._y = 12;
 
-  intVarField_.emplace_back(position, sliceIndexVar_, "slice: %2d", 0,
-                            static_cast<int32_t>(SliceCount) - 1, 1, 1);
+  intVarField_.emplace_back(
+      position, sliceIndexVar_, "slice: %2d", 0,
+      static_cast<int32_t>(SampleInstrument::MaxSlices) - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &intVarField_.back());
   intVarField_.back().AddObserver(*this);
 
@@ -335,7 +333,8 @@ void SampleSlicesView::buildFieldLayout() {
 
   position._y += 1;
   intVarField_.emplace_back(position, autoSliceCountVar_, "auto: %2d", 1,
-                            static_cast<int32_t>(SliceCount), 1, 4);
+                            static_cast<int32_t>(SampleInstrument::MaxSlices),
+                            1, 4);
   fieldList_.insert(fieldList_.end(), &intVarField_.back());
 
   position._x += 11;
@@ -436,8 +435,7 @@ void SampleSlicesView::drawWaveform() {
   }
 
   if (needsWaveformRedraw_) {
-    GUIRect area(SliceXOffset, SliceYOffset,
-                 SliceXOffset + SliceBitmapWidth,
+    GUIRect area(SliceXOffset, SliceYOffset, SliceXOffset + SliceBitmapWidth,
                  SliceYOffset + SliceBitmapHeight);
     DrawRect(area, CD_BACKGROUND);
 
@@ -456,7 +454,7 @@ void SampleSlicesView::drawWaveform() {
     }
 
     if (instrument_ && sampleSize_ > 0) {
-      for (size_t i = 0; i < SliceCount; ++i) {
+      for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
         if (!instrument_->IsSliceDefined(i)) {
           slicePixelCache_[i] = -1;
           continue;
@@ -473,7 +471,7 @@ void SampleSlicesView::drawWaveform() {
         }
         ColorDefinition color =
             (static_cast<int32_t>(i) == sliceIndexVar_.GetInt()) ? CD_HILITE2
-                                                                : CD_ACCENT;
+                                                                 : CD_ACCENT;
         GUIRect marker(x, SliceYOffset + 2, x + 1,
                        SliceYOffset + SliceBitmapHeight - 2);
         DrawRect(marker, color);
@@ -494,7 +492,7 @@ void SampleSlicesView::drawWaveform() {
 
   int32_t currentSelected = sliceIndexVar_.GetInt();
   bool selectionChanged = (currentSelected != lastSelectedSlice_);
-  int16_t redrawXs[SliceCount * 2 + 2];
+  int16_t redrawXs[SampleInstrument::MaxSlices * 2 + 2];
   size_t redrawCount = 0;
   auto addRedrawX = [&redrawXs, &redrawCount](int16_t x) {
     if (x < 0) {
@@ -505,12 +503,12 @@ void SampleSlicesView::drawWaveform() {
         return;
       }
     }
-    if (redrawCount < (SliceCount * 2 + 2)) {
+    if (redrawCount < (SampleInstrument::MaxSlices * 2 + 2)) {
       redrawXs[redrawCount++] = x;
     }
   };
 
-  for (size_t i = 0; i < SliceCount; ++i) {
+  for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
     int16_t currentX = -1;
     if (instrument_->IsSliceDefined(i)) {
       uint32_t start = instrument_->GetSlicePoint(i);
@@ -531,11 +529,12 @@ void SampleSlicesView::drawWaveform() {
 
   if (selectionChanged) {
     if (lastSelectedSlice_ >= 0 &&
-        lastSelectedSlice_ < static_cast<int32_t>(SliceCount)) {
+        lastSelectedSlice_ <
+            static_cast<int32_t>(SampleInstrument::MaxSlices)) {
       addRedrawX(slicePixelCache_[lastSelectedSlice_]);
     }
     if (currentSelected >= 0 &&
-        currentSelected < static_cast<int32_t>(SliceCount)) {
+        currentSelected < static_cast<int32_t>(SampleInstrument::MaxSlices)) {
       addRedrawX(slicePixelCache_[currentSelected]);
     }
     lastSelectedSlice_ = static_cast<int8_t>(currentSelected);
@@ -551,8 +550,7 @@ void SampleSlicesView::redrawWaveformColumn(int32_t x) {
   if (x < SliceXOffset + 1 || x >= SliceXOffset + SliceBitmapWidth - 1) {
     return;
   }
-  GUIRect clearRect(x, SliceYOffset, x + 1,
-                    SliceYOffset + SliceBitmapHeight);
+  GUIRect clearRect(x, SliceYOffset, x + 1, SliceYOffset + SliceBitmapHeight);
   DrawRect(clearRect, CD_BACKGROUND);
 
   if (!waveformValid_) {
@@ -578,7 +576,7 @@ void SampleSlicesView::drawSliceMarkersAt(int32_t x) {
     return;
   }
 
-  for (size_t i = 0; i < SliceCount; ++i) {
+  for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
     if (!instrument_->IsSliceDefined(i)) {
       continue;
     }
@@ -590,9 +588,9 @@ void SampleSlicesView::drawSliceMarkersAt(int32_t x) {
     if (sliceX != x) {
       continue;
     }
-    ColorDefinition color =
-        (static_cast<int32_t>(i) == sliceIndexVar_.GetInt()) ? CD_HILITE2
-                                                            : CD_ACCENT;
+    ColorDefinition color = (static_cast<int32_t>(i) == sliceIndexVar_.GetInt())
+                                ? CD_HILITE2
+                                : CD_ACCENT;
     GUIRect marker(x, SliceYOffset + 2, x + 1,
                    SliceYOffset + SliceBitmapHeight - 2);
     DrawRect(marker, color);
@@ -626,8 +624,8 @@ void SampleSlicesView::updateSliceSelectionFromInstrument() {
   if (index < 0) {
     index = 0;
   }
-  if (index >= static_cast<int32_t>(SliceCount)) {
-    index = static_cast<int32_t>(SliceCount) - 1;
+  if (index >= static_cast<int32_t>(SampleInstrument::MaxSlices)) {
+    index = static_cast<int32_t>(SampleInstrument::MaxSlices) - 1;
   }
 
   size_t sliceIndex = static_cast<size_t>(index);
@@ -673,8 +671,8 @@ void SampleSlicesView::autoSliceEvenly() {
   if (count < 1) {
     return;
   }
-  if (count > static_cast<int32_t>(SliceCount)) {
-    count = static_cast<int32_t>(SliceCount);
+  if (count > static_cast<int32_t>(SampleInstrument::MaxSlices)) {
+    count = static_cast<int32_t>(SampleInstrument::MaxSlices);
   }
   instrument_->ClearSlices();
   if (count > 1) {
@@ -848,7 +846,7 @@ bool SampleSlicesView::hasInstrumentSample() const {
 }
 
 void SampleSlicesView::resetSlicePixelCache() {
-  for (size_t i = 0; i < SliceCount; ++i) {
+  for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
     slicePixelCache_[i] = -1;
   }
   lastSelectedSlice_ = -1;

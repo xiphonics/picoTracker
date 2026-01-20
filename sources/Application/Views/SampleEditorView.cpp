@@ -50,11 +50,7 @@ constexpr uint32_t sampleEditOperationCount =
     sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
 
 #define X_OFFSET 0
-#ifdef ADV
-#define Y_OFFSET (2 * CHAR_HEIGHT * 4)
-#else
 #define Y_OFFSET 2 * CHAR_HEIGHT
-#endif
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
