@@ -62,7 +62,7 @@ To reset all muted and soloed tracks, press `NAV + ALT`.
 | query current row for playback                                                                        |        `ALT + PLAY`        |       ![nav + alt + play](image/pt-buttons-alt_play.jpg)        |
 | reset all muted & soloed tracks                                                                       |        `ALT + NAV`         |       ![nav + alt + enter](image/pt-buttons-nav_alt.jpg)        |
 | cut the current cursor position if filled, paste otherwise                                            |       `ALT + ENTER`        |          ![arrow keys](image/pt-buttons-alt_enter.jpg)          |
-| Clone: Overwrite current highlighted Item with a copy of itself using the next unused Item available. |    `ALT + EDIT + ENTER`    | ![alt + edit + enter keys](image/pt-buttons-alt_edit_enter.jpg) |
+| Clone: Overwrite current highlighted Item with a copy of itself using the next unused Item available. |    `ALT + (EDIT, ENTER)`    | ![alt + edit + enter keys](image/pt-buttons-alt_edit_enter.jpg) |
 | start selection                                                                                       |       `ALT + EDIT `        |        ![edit + alt keys](image/pt-buttons-alt_edit.jpg)        |
 | start selection with row selected                                                                     |    `ALT + EDIT + EDIT`     |       ![edit + alt keys](image/pt-buttons-alt_edit2.jpg)        |
 | start selection with current screen selected                                                          | `ALT + EDIT + EDIT + EDIT` |       ![edit + alt keys](image/pt-buttons-alt_edit3.jpg)        |
@@ -126,7 +126,7 @@ Once a selection is started you can do a few more things:
 | Function               |    Key Combination    |                             Image                              |
 |:-----------------------|:---------------------:|:--------------------------------------------------------------:|
 | unmute all             |      `ALT + NAV`      |         ![alt + nav key](image/pt-buttons-nav_alt.jpg)         |
-| clone current position | ` ALT + EDIT + ENTER` | ![alt + edit + enter key](image/pt-buttons-alt_edit_enter.jpg) |
+| clone current position | `ALT + (EDIT, ENTER)` | ![alt + edit + enter key](image/pt-buttons-alt_edit_enter.jpg) |
 | paste clipboard        |     `ALT + ENTER`     |       ![alt + enter key](image/pt-buttons-alt_enter.jpg)       |
 | start selection        |     `ALT + EDIT`      |        ![alt + edit key](image/pt-buttons-alt_edit.jpg)        |
 
@@ -205,8 +205,8 @@ Once a selection is started you can do a few more things:
 | unmute all                                                                      |     `ALT + NAV`      |         ![alt + nav key](image/pt-buttons-nav_alt.jpg)         |
 | paste clipboard                                                                 |    `ALT + ENTER`     |       ![alt + enter key](image/pt-buttons-alt_enter.jpg)       |
 | start selection                                                                 |     `ALT + EDIT`     |        ![alt + edit key](image/pt-buttons-alt_edit.jpg)        |
-| clone current instrument (cursor in note / instrument column)                   | `ALT + EDIT + ENTER` | ![alt + edit + enter key](image/pt-buttons-alt_edit_enter.jpg) |
-| clone current table (cursor in note / instrument column) (TODO: see issue #753) | `ALT + EDIT + ENTER` | ![alt + edit + enter key](image/pt-buttons-alt_edit_enter.jpg) |
+| clone current instrument (cursor in note / instrument column)                   | `ALT + (EDIT, ENTER)` | ![alt + edit + enter key](image/pt-buttons-alt_edit_enter.jpg) |
+| clone current table (cursor in note / instrument column) (TODO: see issue #753) | `ALT + (EDIT, ENTER)` | ![alt + edit + enter key](image/pt-buttons-alt_edit_enter.jpg) |
 
 ### EDIT Modifier
 
@@ -274,7 +274,7 @@ Once a selection is started you can do a few more things:
 | Previous/Next instrument (-1/+1)                                             | `EDIT + (LEFT / RIGHT)` | ![edit + (left / right) key](image/pt-buttons-edit_leftright.jpg) |
 | Previous/Next instrument (-16/+16)                                           |  `EDIT + (DOWN / UP)`   |       ![edit + down key](image/pt-buttons-edit_updown.jpg)        |
 | Cut/purge instrument (sample) or clear table                                 |     `EDIT + ENTER`      |       ![edit + enter key](image/pt-buttons-edit_enter.jpg)        |
-| clone current table                                                          |  `EDIT + ALT + ENTER`   |      ![edit + alt key](image/pt-buttons-alt_edit_enter.jpg)       |
+| clone current table                                                          |  `ALT + (EDIT, ENTER)`   |      ![edit + alt key](image/pt-buttons-alt_edit_enter.jpg)       |
 | \[advance only\] Sample recording, only accessible when sequencer is stopped |      `EDIT + PLAY`      |        ![edit + play keys](image/pt-buttons-edit_play.jpg)        |
 
 ## Import View
