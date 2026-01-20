@@ -887,12 +887,13 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
       };
       mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
-    } else if (mask != EPBM_ALT) {
+    } else if (mask != EPBM_ALT && mask != (EPBM_ALT | EPBM_EDIT)) {
       Trace::Log("PHRASEVIEW", "Clone miss -> selection mode");
       viewMode_ = VM_SELECTION;
     }
-    if (viewMode_ == VM_CLONE && mask == EPBM_ALT) {
-      Trace::Log("PHRASEVIEW", "Clone hold: ALT-only");
+    if (viewMode_ == VM_CLONE &&
+        (mask == EPBM_ALT || mask == (EPBM_ALT | EPBM_EDIT))) {
+      Trace::Log("PHRASEVIEW", "Clone hold: ALT-only or ALT+EDIT");
       return;
     }
   };
