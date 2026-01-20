@@ -420,7 +420,7 @@ void InstrumentView::fillSampleParameters() {
   sampleActionField_.back().AddObserver(*this);
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
-  position._y += 2;
+  position._y += 1;
   intVarField_.emplace_back(position, *v, "automation: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
