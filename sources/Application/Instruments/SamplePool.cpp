@@ -14,6 +14,7 @@
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
@@ -64,7 +65,19 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      Status::Set("Copying:\n%s (%d%%)", name, progress);
+      int prog10 = progress / 10;
+
+      char progressBar[13];
+      for (int j = 1; j < 11; j++) {
+        progressBar[j] = j >= prog10 ? char_battery_empty : char_block_full;
+      }
+      progressBar[0] = char_button_left;
+      progressBar[11] = char_button_right;
+      progressBar[12] = 0;
+
+      Status::Set("Copying %s" char_indicator_ellipsis_s "\n \n%s %d%%", name,
+                  (const char *)progressBar, progress);
+
       loadSample(name);
     }
     if (i == MAX_SAMPLES) {

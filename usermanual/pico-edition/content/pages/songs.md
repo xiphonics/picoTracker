@@ -47,8 +47,8 @@ As mentioned above, the Song screen can be either in *song* or *live* mode. The 
 
 You can temporarily speed up or slow down the song playback using the Tempo Nudge feature. This is useful for syncing with external gear or making fine timing adjustments during live/DJ performances.
 
-- `SHIFT` + `LEFT`: Nudge tempo down (slower)
-- `SHIFT` + `RIGHT`: Nudge tempo up (faster)
+- `ALT` + `LEFT`: Nudge tempo down (slower)
+- `ALT` + `RIGHT`: Nudge tempo up (faster)
 
 The tempo will return to its original value when you release the keys.
 

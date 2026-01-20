@@ -8,6 +8,7 @@
 
 #include "ToastView.h"
 #include "Application/AppWindow.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include <string.h>
 
 #define TOAST_MAX_LINE_WIDTH (SCREEN_WIDTH - 6)
@@ -125,26 +126,27 @@ void ToastView::Draw(GUIWindow &w, ViewData *viewData) {
   if (!visible_)
     return;
 
-  GUITextProperties props, invprops;
-  invprops.invert_ = true;
+  GUITextProperties props;
   SetColor(CD_NORMAL);
 
   int y = std::max(0, (int)(SCREEN_HEIGHT - lineCount_ - 1 + animationOffset_));
   int iconY = y + 2;
 
   char buffer[SCREEN_WIDTH + 1];
-  memset(buffer, ' ', SCREEN_WIDTH);
+  buffer[0] = char_border_single_topLeft;
+  memset(buffer + 1, char_border_single_horizontal, SCREEN_WIDTH - 2);
+  buffer[SCREEN_WIDTH - 1] = char_border_single_topRight;
   buffer[SCREEN_WIDTH] = 0;
 
   // top border
   if (y < SCREEN_HEIGHT)
-    DrawString(0, y++, buffer, invprops);
+    DrawString(0, y++, buffer, props);
 
   // message lines
   for (int i = 0; i < lineCount_ && y < SCREEN_HEIGHT; i++, y++) {
-    DrawString(0, y, " ", invprops);
+    DrawString(0, y, char_border_single_vertical_s, props);
     DrawString(1, y, lines_[i], props);
-    DrawString(SCREEN_WIDTH - 1, y, " ", invprops);
+    DrawString(SCREEN_WIDTH - 1, y, char_border_single_vertical_s, props);
   }
 
   // add the icon

@@ -143,6 +143,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   _mask = 0;
   lowBatteryMessageShown_ = false;
   lowBatteryWarningCounter_ = 0;
+  sdCardMissing_ = false;
+  sdCardMessageShown_ = false;
 
   EventDispatcher *ed = EventDispatcher::GetInstance();
   ed->SetWindow(this);
@@ -178,6 +180,20 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
 };
 
 AppWindow::~AppWindow() { MidiService::GetInstance()->Close(); }
+
+void AppWindow::SetSdCardPresent(bool present) {
+  sdCardMissing_ = !present;
+  if (!present) {
+    sdCardMessageShown_ = false;
+  }
+  SetDirty();
+}
+
+void appwindow_set_sdcard_present(bool present) {
+  if (instance) {
+    instance->SetSdCardPresent(present);
+  }
+}
 
 void AppWindow::DrawString(const char *string, GUIPoint &pos,
                            GUITextProperties &props, bool force) {
@@ -779,6 +795,24 @@ void AppWindow::AnimationUpdate() {
       Trace::Debug("CLose Low Batt dialog");
     }
     lowBatteryMessageShown_ = false;
+    SetDirty();
+  }
+
+  if (sdCardMissing_ && !sdCardMessageShown_) {
+    if (_currentView) {
+      FullScreenBox *mb = FullScreenBox::Create(
+          *_currentView, "SD Card Missing", "Insert SD Card", 0);
+      _currentView->DoModal(mb);
+      sdCardMessageShown_ = true;
+      SetDirty();
+    }
+  } else if (!sdCardMissing_ && sdCardMessageShown_) {
+    ModalView *modal = _currentView ? _currentView->GetModalView() : nullptr;
+    if (modal) {
+      modal->EndModal(0);
+      _currentView->DismissModal();
+    }
+    sdCardMessageShown_ = false;
     SetDirty();
   }
 
