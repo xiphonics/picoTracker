@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "BaseClasses/ViewEvent.h"
 #include <nanoprintf.h>
 
 #define LIST_PAGE_SIZE (SCREEN_HEIGHT - 4)
@@ -46,6 +47,13 @@ SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData) {}
 
 SelectProjectView::~SelectProjectView() {}
+
+void SelectProjectView::Reset() {
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  selection_[0] = '\0';
+  fileIndexList_.clear();
+}
 
 void SelectProjectView::DrawView() {
   Clear();
@@ -307,17 +315,10 @@ void SelectProjectView::LoadProject() {
   }
 
   Trace::Log("SELECTPROJECTVIEW", "Select Project:%s", selection_);
-  // save newly opened projectname, it will be used to load the project file
-  // on device boots following the reboot below
-  auto ps = PersistencyService::GetInstance();
-  ps->SaveProjectState(selection_);
 
-  // now need to delete autosave file so its not loaded when we reboot
-  ps->ClearAutosave(selection_);
-
-  // now reboot!
-  System *sys = System::GetInstance();
-  sys->SystemReboot();
+  ViewEvent ve(VET_LOAD_PROJECT, selection_);
+  SetChanged();
+  NotifyObservers(&ve);
 }
 
 bool SelectProjectView::WarnPlayerRunning() {

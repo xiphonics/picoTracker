@@ -48,8 +48,8 @@ To understand how grooves affect playback:
 The following controls are available in the groove screen:
 
 - `EDIT`: Add a new step to the groove pattern if one doesn't exist
-- `EDIT`+`Left/Right`: Modify the current step value
-- `ENTER`+`Arrows`: Navigate between different groove patterns
+- `ENTER`+`Left/Right`: Modify the current step value
+- `EDIT`+`Arrows`: Navigate between different groove patterns
 - `EDIT`+`ENTER`: Clear the current step
 
 ## Tips for Using Grooves

@@ -16,6 +16,7 @@
 class ChainView : public ScreenView {
 public:
   ChainView(GUIWindow &w, ViewData *data);
+  void Reset();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnFocus();

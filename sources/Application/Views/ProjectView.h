@@ -26,6 +26,7 @@ class ProjectView : public FieldView, public I_Observer {
 public:
   ProjectView(GUIWindow &w, ViewData *data);
   virtual ~ProjectView();
+  void Reset();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();

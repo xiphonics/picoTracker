@@ -20,6 +20,7 @@ class ImportView : public ScreenView {
 public:
   ImportView(GUIWindow &w, ViewData *viewData);
   ~ImportView();
+  void Reset();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);

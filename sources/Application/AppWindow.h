@@ -30,35 +30,12 @@
 #define MAX_FIELD_WIDTH 26
 #define SCREEN_REDRAW_RATE PICO_CLOCK_HZ
 
-// need this forward declaration to break out of circular dependency as
-// ProjectView uses a UITextfield which in turn had dependency on AppWindow
-// and UITextField is templated which means its class/method definitions need to
-// be in its header file  :-(
-class ProjectView;
-class ChainView;
-class ConsoleView;
-class DeviceView;
-class GrooveView;
-class ImportView;
-class InstrumentImportView;
-class InstrumentView;
-class NullView;
-class PhraseView;
-class SelectProjectView;
-class SongView;
-class TableView;
-class ScreenView;
-class MixerView;
-class ThemeView;
-class ThemeImportView;
-class SampleEditorView;
-class SampleSlicesView;
-class RecordView;
 class View;
+struct AppWindowViews;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
 protected:
-  AppWindow(I_GUIWindowImp &imp);
+  AppWindow(I_GUIWindowImp &imp, const char *projectName);
   virtual ~AppWindow();
 
 public:
@@ -78,6 +55,7 @@ public:
 
   void SetDirty();
   void UpdateColorsFromConfig();
+  void SetSdCardPresent(bool present);
 
   char projectName_[MAX_PROJECT_NAME_LENGTH + 1];
 
@@ -110,26 +88,10 @@ protected: // GUIWindow implementation
 private:
   bool autoSave();
 
+  Project project_;
+  ViewData viewData_;
+  AppWindowViews *views_;
   View *_currentView;
-  ViewData *_viewData;
-  SongView *_songView;
-  ChainView *_chainView;
-  PhraseView *_phraseView;
-  DeviceView *_deviceView;
-  ProjectView *_projectView;
-  InstrumentView *_instrumentView;
-  TableView *_tableView;
-  GrooveView *_grooveView;
-  ImportView *_importView;
-  InstrumentImportView *_instrumentImportView;
-  ThemeView *_themeView;
-  ThemeImportView *_themeImportView;
-  MixerView *_mixerView;
-  SelectProjectView *_selectProjectView;
-  SampleEditorView *_sampleEditorView;
-  SampleSlicesView *_sampleSlicesView;
-  RecordView *_recordView;
-  NullView *_nullView;
 
   bool _closeProject;
   bool _shouldQuit;
@@ -141,6 +103,8 @@ private:
   bool lowBatteryState_;
   bool lowBatteryMessageShown_;
   uint16_t lowBatteryWarningCounter_;
+  bool sdCardMissing_;
+  bool sdCardMessageShown_;
 
   static unsigned char _charScreen[SCREEN_CHARS];
   static unsigned char _charScreenProp[SCREEN_CHARS];
@@ -171,6 +135,8 @@ private:
 
   bool loadProject_ = false;
   bool awaitingProjectLoadAck_ = false;
+  bool createProjectOnLoad_ = false;
+  bool playerInitialized_ = false;
 
   uint32_t lastAutoSave = 0;
 

@@ -27,14 +27,12 @@
 
 static void CreateNewProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    PersistencyService::GetInstance()->SaveProjectState(UNNAMED_PROJECT_NAME);
-
     // first clear out any existing "unnamed" project
     PersistencyService::GetInstance()->PurgeUnnamedProject();
 
-    // now reboot!
-    System *sys = System::GetInstance();
-    sys->SystemReboot();
+    ViewEvent ve(VET_NEW_PROJECT);
+    ((ProjectView &)v).SetChanged();
+    ((ProjectView &)v).NotifyObservers(&ve);
   }
 };
 
@@ -258,6 +256,13 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
   }
 };
+
+void ProjectView::Reset() {
+  lastClock_ = 0;
+  lastTick_ = 0;
+  saveAsFlag_ = false;
+  oldProjName_ = getProjectName();
+}
 
 void ProjectView::DrawView() {
 

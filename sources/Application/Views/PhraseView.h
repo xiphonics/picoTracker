@@ -19,6 +19,7 @@ class PhraseView : public ScreenView {
 public:
   PhraseView(GUIWindow &w, ViewData *viewData);
   ~PhraseView();
+  void Reset();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);

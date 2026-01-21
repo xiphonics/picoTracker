@@ -17,6 +17,7 @@ class GrooveView : public ScreenView {
 public:
   GrooveView(GUIWindow &w, ViewData *viewData);
   ~GrooveView();
+  void Reset();
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);

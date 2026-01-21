@@ -12,7 +12,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-Phrase::Phrase() {
+Phrase::Phrase() { Reset(); };
+
+Phrase::~Phrase(){};
+
+void Phrase::Reset() {
   for (int i = 0; i < PHRASE_COUNT * STEPS_PER_PHRASE; i++) {
     note_[i] = 0xFF;
     instr_[i] = 0xFF;
@@ -24,9 +28,7 @@ Phrase::Phrase() {
   for (int i = 0; i < PHRASE_COUNT; i++) {
     isUsed_[i] = false;
   }
-};
-
-Phrase::~Phrase(){};
+}
 
 unsigned short Phrase::GetNext() {
   for (int i = 0; i < PHRASE_COUNT; i++) {

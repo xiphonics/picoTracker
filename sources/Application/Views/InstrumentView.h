@@ -28,6 +28,7 @@ class InstrumentView : public FieldView, public I_Observer {
 public:
   InstrumentView(GUIWindow &w, ViewData *data);
   virtual ~InstrumentView();
+  void Reset();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();

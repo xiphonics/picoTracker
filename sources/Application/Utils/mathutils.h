@@ -7,6 +7,8 @@
  * This file is part of the picoTracker firmware
  */
 
+#pragma once
+
 // Helper function to convert linear amplitude to dB
 inline int amplitudeToDb(int amplitude) {
   if (amplitude <= 0) {

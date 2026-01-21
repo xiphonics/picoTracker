@@ -53,6 +53,37 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
 
 PhraseView::~PhraseView(){};
 
+void PhraseView::Reset() {
+  phrase_ = &(viewData_->song_->phrase_);
+  lastPlayingPos_ = 0;
+  row_ = 0;
+  col_ = 0;
+  lastNote_ = 60;
+  lastInstr_ = 0;
+  lastCmd_ = FourCC::InstrumentCommandNone;
+  lastParam_ = 0;
+  viewData_->phraseCurPos_ = 0;
+
+  clipboard_.active_ = false;
+  clipboard_.width_ = 0;
+  clipboard_.height_ = 0;
+  clipboard_.col_ = 0;
+  clipboard_.row_ = 0;
+  for (int i = 0; i < 16; i++) {
+    clipboard_.note_[i] = 0xFF;
+    clipboard_.instr_[i] = 0;
+    clipboard_.cmd1_[i] = 0;
+    clipboard_.param1_[i] = 0;
+    clipboard_.cmd2_[i] = 0;
+    clipboard_.param2_[i] = 0;
+  }
+
+  saveCol_ = 0;
+  saveRow_ = 0;
+  needsUIUpdate_ = false;
+  needsLiveIndicatorUpdate_ = false;
+}
+
 bool PhraseView::getEffectiveInstrumentForRow(int row,
                                               uint8_t &instrumentId) const {
   if (!phrase_) {

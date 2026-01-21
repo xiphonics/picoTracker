@@ -25,6 +25,7 @@ class Phrase {
 public:
   Phrase();
   ~Phrase();
+  void Reset();
   unsigned short GetNext();
   bool IsUsed(uchar i) { return isUsed_[i]; };
   void SetUsed(uchar c);

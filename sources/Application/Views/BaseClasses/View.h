@@ -13,6 +13,7 @@
 #include "Application/Model/Config.h"
 #include "Application/Model/Project.h"
 #include "Application/Player/Player.h"
+#include "Application/Utils/mathutils.h"
 #include "Externals/etl/include/etl/delegate.h"
 #include "I_Action.h"
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
@@ -20,6 +21,7 @@
 #include "ViewEvent.h"
 
 #define VU_METER_HEIGHT 16
+#define VU_METER_MAX 159
 #define VU_METER_CLIP_LEVEL 15
 #define VU_METER_WARN_LEVEL 8
 #define ALT_ROW_NUMBER 4 // for now const vs a user setting
@@ -185,10 +187,25 @@ protected:
   void drawMasterVuMeter(Player *player, GUITextProperties props,
                          bool forceRedraw = false, uint8_t xoffset = 24);
   void drawPlayTime(Player *player, GUIPoint pos, GUITextProperties &props);
-  void drawVUMeter(uint8_t leftBars, uint8_t rightBars, GUIPoint pos,
+  void drawVUMeter(int32_t leftBars, int32_t rightBars, GUIPoint pos,
                    GUITextProperties props, int vuIndex,
                    bool forceRedraw = false);
   void drawPowerButtonUI(GUITextProperties &props);
+
+  static inline void amplitudeToBars(stereosample level, int32_t *left,
+                                     int32_t *right) {
+    // Extract both channels
+    uint16_t leftAmp = (level >> 16) & 0xFFFF;
+    uint16_t rightAmp = level & 0xFFFF;
+    // Convert to dB
+    int leftDb = amplitudeToDb(leftAmp);
+    int rightDb = amplitudeToDb(rightAmp);
+    // Map dB to bar levels  -60dB to 0dB range mapped to 0-159 bars
+    // Optimized 159/60 ≈ 2.65 = (2.65 * 256) / 256 = 678 / 256
+    // Using fixed-point: multiply by 678, then right-shift by 8 (divide by 256)
+    *left = std::clamp<int32_t>(((leftDb + 60) * 678) >> 8, 0, VU_METER_MAX);
+    *right = std::clamp<int32_t>(((rightDb + 60) * 678) >> 8, 0, VU_METER_MAX);
+  }
 
 public: // temp hack for modl windo constructors
   GUIWindow &w_;
@@ -203,8 +220,8 @@ public: // temp hack for modl windo constructors
   bool hasFocus_;
 
   // Previous VU meter values for optimization (one pair per channel + master)
-  uint8_t prevLeftVU_[SONG_CHANNEL_COUNT + 1];
-  uint8_t prevRightVU_[SONG_CHANNEL_COUNT + 1];
+  int32_t prevLeftVU_[SONG_CHANNEL_COUNT + 1];
+  int32_t prevRightVU_[SONG_CHANNEL_COUNT + 1];
 
   // Power button state
   bool powerButtonPressed_;

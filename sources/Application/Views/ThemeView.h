@@ -32,6 +32,7 @@ class ThemeView : public FieldView, public I_Observer {
 public:
   ThemeView(GUIWindow &w, ViewData *data);
   virtual ~ThemeView();
+  void Reset();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
