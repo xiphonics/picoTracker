@@ -12,6 +12,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "BaseClasses/ViewEvent.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include <nanoprintf.h>
 
 #define LIST_PAGE_SIZE (SCREEN_HEIGHT - 4)
@@ -153,7 +154,9 @@ void SelectProjectView::DrawScrollBar() {
                thumbSize, maxScroll, thumbPos);
   for (int y = 0; y < LIST_PAGE_SIZE; y++) {
     bool thumb = y >= thumbPos && y < thumbPos + thumbSize;
-    DrawString(SCREEN_WIDTH - 1, 2 + y, thumb ? " " : "|", thumb ? inv : props);
+    DrawString(SCREEN_WIDTH - 1, 2 + y,
+               thumb ? char_block_full_s : char_border_single_vertical_s,
+               props);
   }
 }
 
