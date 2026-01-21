@@ -12,9 +12,24 @@
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "I_Instrument.h"
+#include "System/Console/Trace.h"
 #include <cstdint>
 
 #define GB_NUM_WAVEFORMS 8
+
+static uint32_t lcg = 42;
+
+enum gbWaveType {
+  gbWavePulse12_5,
+  gbWavePulse25,
+  gbWavePulse50,
+  gbWaveTriangle,
+  gbWaveNoiseGameBoy,
+  gbWaveNoiseNES,
+  gbWaveNoiseSN76489,
+  gbWaveNoiseWhite,
+  gbWaveNone
+};
 
 // precalculated frequency table midi notes -12 to 127+12
 constexpr int32_t frequencyTable[128 + 24] = {
@@ -170,7 +185,7 @@ typedef struct voice_t {
   uint32_t lifetime;
   uint32_t wave;
   uint32_t volume;
-  uint32_t burstTime;
+  int32_t burstTime;
   uint16_t vibPhase;
   const uint16_t vibFrequency = 0xfff;
   int32_t vibDepth;
@@ -190,7 +205,170 @@ typedef struct voice_t {
 
   Envelope envelope;
 
-  void note_on(unsigned char note, bool retrigger) {
+  inline void stop() {
+    frequency = 0;
+    phase = 0;
+  }
+
+  void runCommand() {
+    switch (command) {
+      case FourCC::InstrumentCommandArpeggiator: {
+        // handled in 1000Hz tick
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  inline fixed sample() {
+    uint32_t combinedGain = (volume * envelope.value) >> 16; // Precompute
+    uint32_t waveform = wave;
+
+    // cold loop @ 100 Hz ------------------------------------------------------
+    if (tick == 0) {
+
+      // envelope processing at ~100Hz
+      tick = 441;
+      envelope.tick();
+
+      // recompute combined gain when envelope changes
+      combinedGain = (volume * envelope.value) >> 16;
+
+      // handle commands
+      runCommand();
+
+      // sweep
+      if (sweepSteps) {
+        sweepSteps--;
+
+        // sweep al base frequencies
+        for (uint32_t i = 0; i < arpLength; i++) {
+          uint64_t f = arpFrequencies[i];
+          f *= sweepCoefficient;
+          arpFrequencies[i] = uint32_t(f >> 16);
+        }
+      }
+
+      // vibrato
+      int delta = 0;
+
+      if (time > vibDelay) {
+        vibPhase += vibFrequency;
+        int32_t sine = interpolateS8(sine64, (vibPhase >> 8));
+        delta = (vibSwing * sine) >> 7;
+        delta = (vibDepth * delta) >> 8;
+      }
+
+      frequency = arpFrequencies[arpIndex] + delta;
+    }
+
+    // warm loop @ ~1000 Hz ----------------------------------------------------
+    if (tock == 0) {
+      // hot loop
+
+      // envelope processing at ~1000Hz
+      tock = 44;
+
+      // arpeggio
+      if (command == FourCC::InstrumentCommandArpeggiator) {
+        arpTick++;
+
+        if (arpTick >= arpTime) {
+          arpTick = 0;
+          arpIndex++;
+          if (arpIndex >= arpLength) {
+            arpIndex = 0;
+          };
+        }
+      }
+
+      if (lifetime == 0) {
+        // note off
+        wave = gbWaveNone;
+        envelope.state = ENV_IDLE;
+      } else {
+        if (burstTime > 0) {
+          burstTime--;
+          wave = gbWaveNoiseWhite;
+        } else {
+          wave = parameters.wave;
+        }
+
+        // length
+        lifetime--;
+      }
+    }
+
+    // hot loop @ ~44100 Hz ----------------------------------------------------
+    tick--;
+    tock--;
+
+    // advance phase
+    phase += frequency;
+
+    fixed sample = 0;
+
+    // generate sample based on waveform
+    switch (wave) {
+    case gbWavePulse12_5: // Pulse 12.5%
+      sample = pulse(phase > 0x2000'0000);
+      break;
+    case gbWavePulse25: // Pulse 25%
+      sample = pulse(phase > 0x4000'0000);
+      break;
+    case gbWavePulse50: // Pulse 50%
+      sample = pulse(phase > 0x8000'0000);
+      break;
+    case gbWaveTriangle: // Triangle
+      if (phase < 0x8000'0000) {
+        // first half, rising slope
+        sample = phase >> 3;
+      } else {
+        // second half, falling slope
+        sample = (0xFFFF'FFFF - phase) >> 3;
+      }
+      sample &= 0xFF00'0000; // downsample
+      break;
+    case gbWaveNoiseGameBoy: // Noise: GB7
+      if (phase > 0x4000'0000) {
+        phase -= 0x4000'0000;
+        noise = voice_noise_gb7(&lfsr);
+      }
+      sample = noise;
+      break;
+    case gbWaveNoiseNES: // Noise: NES
+      if (phase > 0x4000'0000) {
+        phase -= 0x4000'0000;
+        noise = voice_noise_nes(&lfsr);
+      }
+      sample = noise;
+      break;
+    case gbWaveNoiseSN76489: // Noise: SN76489
+      if (phase > 0x4000'0000) {
+        phase -= 0x4000'0000;
+        noise = voice_noise_sn76489(&lfsr);
+      }
+      sample = noise;
+      break;
+    case gbWaveNoiseWhite: // Noise: White Noise, frequency independent
+        lcg *= 1664525;
+        lcg += 1013904223;
+        sample = lcg & 0x0FFF'FFFF;
+      break;
+    }
+
+    time++;
+    
+    // Apply combined gain (volume * envelope) in single operation
+    sample = (sample >> 8) * combinedGain;
+
+    return sample;
+  }
+
+  inline void note_on(unsigned char note, bool retrigger, InstrumentParameters parameters) {
+    this->parameters = parameters;
+
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
     frequency = frequencyTable[fIndex];
     arpFrequencies[0] = frequency;
@@ -218,8 +396,7 @@ typedef struct voice_t {
     envelope.setDecay(parameters.decay);
     envelope.trigger();
 
-    int len = parameters.length;
-    lifetime = len ? len : 0xFFFF'FFFF;
+    lifetime = (parameters.length < 0) ? 0x7FFF'FFFF : (1 + parameters.length);
 
     wave = parameters.wave;
     volume = parameters.level;
@@ -229,6 +406,80 @@ typedef struct voice_t {
     int32_t sweepDepth = parameters.sweepAmount;
     sweepCoefficient = (1 << 16) + (sweepDepth * 64);
     sweepSteps = parameters.sweepTime;
+  }
+
+  inline uint32_t pulse(bool level) {
+    uint32_t target = -(uint32_t)level & 0x0FFF'FFFF;
+
+    int32_t diff = (int32_t)target - (int32_t)lastSample;
+
+    if (diff > maxStep) {
+      diff = maxStep;
+    } else if (diff < minStep) {
+      diff = minStep;
+    }
+
+    return (lastSample = (lastSample + diff));
+  }
+
+  static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1, int feedback) {
+    uint16_t lfsr_val = *lfsr;
+
+    bool bitA = lfsr_val & 1;
+    bool bitB = (lfsr_val >> b1) & 1;
+    bool bitF = bitA ^ bitB;
+
+    lfsr_val = (lfsr_val >> 1) | (bitF << feedback);
+
+    *lfsr = lfsr_val;
+    return bitA ? 0x0FFF'FFFF : 0;
+  }
+
+  static inline uint32_t voice_noise_nes(uint16_t *lfsr) {
+    return voice_noise_lfsr(lfsr, 6, 14);
+  }
+
+  static inline uint32_t voice_noise_gb7(uint16_t *lfsr) {
+    return voice_noise_lfsr(lfsr, 1, 6);
+  }
+
+  static inline uint32_t voice_noise_sn76489(uint16_t *lfsr) {
+    return voice_noise_lfsr(lfsr, 3, 14);
+  }
+
+  void command_init_legato(uint8_t speed, int8_t semitones) {
+    // not implemented yet
+    /*
+    performs an exponential pitch slide from previous note value to pitch bb at speed aa.
+
+    00 is the fastest speed for aa (instant, useless)
+    bb values are relative: 00-7F are up, 80-FF are down, expressed in semi-tones
+    if LEG is put on a row where a note is present and the pitch offset is 0 (e.g. C4 I3 LEG 1000) the slide will occur automatically from previous note to the current one at the given speed.
+    If an instrument is not triggered on the same row as LEG, the command will re-trigger the previous instrument (unless the previous instrument is still playing).
+    LEG does exponential pitch change (i;e. it goes at same speed through all octaves) while PITCH is linear
+    */
+  }
+
+  void command_init_arp(ushort value) {
+    arpIndex = 0;
+    arpLength = 5;
+
+    // trim off trailing zeroes
+    ushort val = value;
+    while (arpLength > 1 && (val & 0xF) == 0) {
+      arpLength--;
+      val >>= 4;
+    }
+
+    for (uint32_t i = 0; i < arpLength - 1; i++) {
+      uint8_t semitone = (value >> (i * 4)) & 0x0F;
+      int32_t noteVal = note + parameters.transpose + semitone + 12;
+      noteVal = (noteVal < 0) ? 0 : noteVal;
+      noteVal = (noteVal > 127 + 24) ? 127 + 24 : noteVal;
+      arpFrequencies[i + 1] = frequencyTable[noteVal];
+    }
+
+    Trace::Error("Initialized an arp command: %d steps", arpLength);
   }
 } voice_t;
 
@@ -243,33 +494,30 @@ class GameBoyInstrument : public I_Instrument {
 
 public:
   GameBoyInstrument();
-  virtual ~GameBoyInstrument();
+  virtual ~GameBoyInstrument(){};
 
-  virtual bool Init();
+  virtual bool Init() { return true; }
+  virtual bool IsInitialized() { return true; };
+  virtual bool IsEmpty() { return false; };
+  
+  virtual InstrumentType GetType() { return IT_GAMEBOY; };
 
   // Start & stop the instument
   virtual bool Start(int channel, unsigned char note, bool retrigger = true);
   virtual void Stop(int channel);
-
+  
+  virtual void OnStart(){};
+  virtual void Purge(){};
+  
   // size refers to the number of samples
   // should always fill interleaved stereo / 16bit
   virtual bool Render(int channel, fixed *buffer, int size, bool updateTick);
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
 
-  virtual bool IsInitialized();
-
-  virtual bool IsEmpty() { return false; };
-
-  virtual InstrumentType GetType() { return IT_GAMEBOY; };
-
-  virtual void OnStart();
-
-  virtual void Purge() {};
-
-  virtual int GetTable();
-  virtual bool GetTableAutomation();
-  virtual void GetTableState(TableSaveState &state);
-  virtual void SetTableState(TableSaveState &state);
+  virtual int GetTable() { return vTable_.GetInt(); };
+  virtual bool GetTableAutomation() { return 0; };
+  virtual void GetTableState(TableSaveState &state){};
+  virtual void SetTableState(TableSaveState &state){};
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
   void setChannel(uint8_t channel);
@@ -296,6 +544,5 @@ private:
 
   void RunCommand(int channel);
   void CommandInitArp(int channel, ushort value);
-  inline uint32_t pulse(int channel, bool level);
   InstrumentParameters getInstrumentParameters();
 };
