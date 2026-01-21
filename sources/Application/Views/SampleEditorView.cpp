@@ -514,7 +514,7 @@ void SampleEditorView::updateGraphMarkers() {
     }
     playheadVisible = true;
   }
-  graphField_.SetMarker(2, playheadSample, CD_CURSOR, playheadVisible);
+  graphField_.SetMarker(2, playheadSample, CD_NORMAL, playheadVisible);
 }
 
 void SampleEditorView::rebuildWaveform() {

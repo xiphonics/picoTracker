@@ -17,6 +17,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "GraphField.h"
+#include "System/System/System.h"
 #include "ViewData.h"
 #include <cstdint>
 
@@ -49,6 +50,7 @@ private:
   void adjustZoom(int32_t delta);
   void startPreview();
   void stopPreview();
+  uint32_t sliceEndForIndex(size_t index, uint32_t start) const;
   void handleSliceSelectionChange();
   uint32_t selectedSliceStart();
   bool hasInstrumentSample() const;
@@ -74,6 +76,13 @@ private:
   bool playKeyHeld_;
   bool previewActive_;
   uint8_t previewNote_;
+  System *sys_;
+  uint32_t previewStartMs_;
+  uint32_t previewStartSample_;
+  uint32_t previewEndSample_;
+  float previewDurationMs_;
+  uint32_t previewPlayheadSample_;
+  bool previewCursorVisible_;
 };
 
 #endif

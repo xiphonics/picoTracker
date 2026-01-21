@@ -35,7 +35,10 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
       graphField_(graphFieldPos_, GraphField::BitmapWidth,
                   GraphField::BitmapHeight),
       modalWasOpen_(false), playKeyHeld_(false),
-      previewActive_(false), previewNote_(SampleInstrument::SliceNoteBase) {
+      previewActive_(false), previewNote_(SampleInstrument::SliceNoteBase),
+      sys_(System::GetInstance()), previewStartMs_(0), previewStartSample_(0),
+      previewEndSample_(0), previewDurationMs_(0.0f),
+      previewPlayheadSample_(0), previewCursorVisible_(false) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
   graphField_.SetShowBaseline(false);
@@ -52,6 +55,12 @@ void SampleSlicesView::Reset() {
   playKeyHeld_ = false;
   previewActive_ = false;
   previewNote_ = SampleInstrument::SliceNoteBase;
+  previewStartMs_ = 0;
+  previewStartSample_ = 0;
+  previewEndSample_ = 0;
+  previewDurationMs_ = 0.0f;
+  previewPlayheadSample_ = 0;
+  previewCursorVisible_ = false;
   needsFullRedraw_ = true;
   sliceIndexVar_.SetInt(0, false);
   sliceStartVar_.SetInt(0, false);
@@ -68,6 +77,12 @@ void SampleSlicesView::OnFocus() {
   needsFullRedraw_ = true;
   sampleSize_ = 0;
   modalWasOpen_ = false;
+  previewStartMs_ = 0;
+  previewStartSample_ = 0;
+  previewEndSample_ = 0;
+  previewDurationMs_ = 0.0f;
+  previewPlayheadSample_ = 0;
+  previewCursorVisible_ = false;
   graphField_.Reset();
   graphField_.SetShowBaseline(false);
 
@@ -217,6 +232,27 @@ void SampleSlicesView::DrawView() {
 }
 
 void SampleSlicesView::AnimationUpdate() {
+  if (previewActive_ && previewCursorVisible_ && previewDurationMs_ > 0.0f) {
+    uint32_t nowMs = sys_ ? sys_->Millis() : 0;
+    uint32_t elapsedMs = nowMs - previewStartMs_;
+    if (static_cast<float>(elapsedMs) >= previewDurationMs_) {
+      previewCursorVisible_ = false;
+      isDirty_ = true;
+      ((AppWindow &)w_).SetDirty();
+    } else {
+      float fraction =
+          static_cast<float>(elapsedMs) / previewDurationMs_;
+      uint32_t span = (previewEndSample_ > previewStartSample_)
+                          ? (previewEndSample_ - previewStartSample_)
+                          : 0;
+      previewPlayheadSample_ =
+          previewStartSample_ +
+          static_cast<uint32_t>(fraction * static_cast<float>(span));
+      isDirty_ = true;
+      ((AppWindow &)w_).SetDirty();
+    }
+  }
+
   GUITextProperties props;
   drawBattery(props);
   drawPowerButtonUI(props);
@@ -227,6 +263,9 @@ void SampleSlicesView::AnimationUpdate() {
     ((AppWindow &)w_).SetDirty();
   }
   modalWasOpen_ = hasModal;
+  if (!hasModal && (previewActive_ || previewCursorVisible_)) {
+    drawWaveform();
+  }
 }
 
 void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
@@ -375,7 +414,7 @@ void SampleSlicesView::drawWaveform() {
     rebuildWaveform();
   }
 
-  graphField_.SetMarkerCount(SampleInstrument::MaxSlices);
+  graphField_.SetMarkerCount(SampleInstrument::MaxSlices + 1);
   if (instrument_ && sampleSize_ > 0) {
     for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
       if (!instrument_->IsSliceDefined(i)) {
@@ -396,6 +435,14 @@ void SampleSlicesView::drawWaveform() {
     for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
       graphField_.SetMarker(i, 0, CD_ACCENT, false);
     }
+  }
+
+  size_t playheadIndex = SampleInstrument::MaxSlices;
+  if (previewCursorVisible_) {
+    graphField_.SetMarker(playheadIndex, previewPlayheadSample_, CD_NORMAL,
+                          true);
+  } else {
+    graphField_.SetMarker(playheadIndex, 0, CD_NORMAL, false);
   }
 
   graphField_.DrawGraph(*this);
@@ -529,12 +576,41 @@ void SampleSlicesView::startPreview() {
 
   stopPreview();
 
+  uint32_t startSample = selectedSliceStart();
+  uint32_t endSample = sliceEndForIndex(
+      static_cast<size_t>(sliceIndexVar_.GetInt()), startSample);
+  if (endSample <= startSample && sampleSize_ > 0) {
+    endSample = sampleSize_ - 1;
+  }
+
   uint8_t note = static_cast<uint8_t>(SampleInstrument::SliceNoteBase +
                                       sliceIndexVar_.GetInt());
   Player::GetInstance()->PlayNote(static_cast<unsigned short>(instrumentIndex_),
                                   PreviewChannel, note, 0x7F);
   previewNote_ = note;
   previewActive_ = true;
+  previewStartSample_ = startSample;
+  previewEndSample_ = endSample;
+  previewPlayheadSample_ = startSample;
+
+  float durationMs = 0.0f;
+  if (instrument_) {
+    SamplePool *pool = SamplePool::GetInstance();
+    int32_t sampleIndex = instrument_->GetSampleIndex();
+    if (sampleIndex >= 0) {
+      if (SoundSource *source = pool->GetSource(sampleIndex)) {
+        int32_t sampleRate = source->GetSampleRate(note);
+        if (sampleRate > 0 && endSample > startSample) {
+          uint32_t frames = endSample - startSample;
+          durationMs = (static_cast<float>(frames) * 1000.0f) /
+                       static_cast<float>(sampleRate);
+        }
+      }
+    }
+  }
+  previewDurationMs_ = durationMs;
+  previewStartMs_ = sys_ ? sys_->Millis() : 0;
+  previewCursorVisible_ = (previewDurationMs_ > 0.0f);
 }
 
 void SampleSlicesView::stopPreview() {
@@ -544,6 +620,8 @@ void SampleSlicesView::stopPreview() {
   Player::GetInstance()->StopNote(static_cast<unsigned short>(instrumentIndex_),
                                   PreviewChannel);
   previewActive_ = false;
+  previewCursorVisible_ = false;
+  graphField_.RequestFullRedraw();
 }
 
 void SampleSlicesView::handleSliceSelectionChange() {
@@ -566,6 +644,25 @@ uint32_t SampleSlicesView::selectedSliceStart() {
     return 0;
   }
   return static_cast<uint32_t>(start);
+}
+
+uint32_t SampleSlicesView::sliceEndForIndex(size_t index,
+                                            uint32_t start) const {
+  if (!instrument_ || sampleSize_ == 0) {
+    return 0;
+  }
+  uint32_t end = sampleSize_ > 0 ? sampleSize_ - 1 : 0;
+  for (size_t i = index + 1; i < SampleInstrument::MaxSlices; ++i) {
+    if (!instrument_->IsSliceDefined(i)) {
+      continue;
+    }
+    uint32_t nextStart = instrument_->GetSlicePoint(i);
+    if (nextStart > start) {
+      end = nextStart;
+      break;
+    }
+  }
+  return end;
 }
 
 bool SampleSlicesView::hasInstrumentSample() const {
