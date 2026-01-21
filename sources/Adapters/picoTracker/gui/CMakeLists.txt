@@ -1,5 +1,6 @@
 add_library(platform_gui
   GUIFactory.cpp
+  InputTester.cpp
   picoTrackerGUIWindowImp.cpp
   picoTrackerEventManager.cpp
   SerialDebugUI.cpp

@@ -28,6 +28,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "Adapters/picoTracker/gui/InputTester.h"
 #include "Adapters/picoTracker/platform/platform.h"
 #include "critical_error_message.h"
 #include "hardware/adc.h"
@@ -42,6 +43,17 @@ int picoTrackerSystem::MainLoop() {
   eventManager_->InstallMappings();
   return eventManager_->MainLoop();
 };
+
+static bool checkForSDCard() {
+  drawInputTester();
+
+  alignas(picoTrackerFileSystem) static char
+      fsMemBuf[sizeof(picoTrackerFileSystem)];
+  FileSystem::Install(new (fsMemBuf) picoTrackerFileSystem());
+
+  auto fs = FileSystem::GetInstance();
+  return fs->chdir("/");
+}
 
 void picoTrackerSystem::Boot(int argc, char **argv) {
 
@@ -67,9 +79,9 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
 
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
-  if (!fs->chdir("/")) {
+  if (!fs->chdir("/") || scanKeys()) {
     Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!");
-    critical_error_message("SDCARD MISSING", 0x01);
+    critical_error_message("SDCARD MISSING", 0x01, checkForSDCard);
   }
 
   // Install MIDI
