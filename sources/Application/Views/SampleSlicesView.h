@@ -13,37 +13,14 @@
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
-#include "Externals/etl/include/etl/array.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/WatchedVariable.h"
+#include "GraphField.h"
 #include "ViewData.h"
 #include <cstdint>
 
 class SampleInstrument;
-
-#ifdef ADV
-static constexpr int32_t SliceBitmapWidth = 720;
-static constexpr int32_t SliceBitmapHeight = 180;
-#else
-static constexpr int32_t SliceBitmapWidth = 320;
-static constexpr int32_t SliceBitmapHeight = 80;
-#endif
-
-static constexpr int32_t SliceWaveformCacheSize = SliceBitmapWidth;
-
-class SliceGraphField : public UIField {
-public:
-  SliceGraphField(GUIPoint &position, int32_t width, int32_t height);
-  ~SliceGraphField() override = default;
-  void Draw(GUIWindow &w, int offset = 0) override;
-  void OnClick() override{};
-  void ProcessArrow(unsigned short) override{};
-
-private:
-  int32_t width_;
-  int32_t height_;
-};
 
 class SampleSlicesView : public FieldView, public I_Observer {
 public:
@@ -63,8 +40,6 @@ private:
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
-  void redrawWaveformColumn(int32_t x);
-  void drawSliceMarkersAt(int32_t x);
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
@@ -75,10 +50,8 @@ private:
   void startPreview();
   void stopPreview();
   void handleSliceSelectionChange();
-  int32_t sliceToPixel(uint32_t start) const;
   uint32_t selectedSliceStart();
   bool hasInstrumentSample() const;
-  void resetSlicePixelCache();
 
   WatchedVariable sliceIndexVar_;
   WatchedVariable sliceStartVar_;
@@ -89,23 +62,14 @@ private:
   etl::vector<UIStaticField, 2> staticField_;
   etl::vector<UIActionField, 1> actionField_;
 
-  uint8_t waveformCache_[SliceWaveformCacheSize];
-  bool waveformValid_;
-  bool needsWaveformRedraw_;
   bool needsFullRedraw_;
 
   SampleInstrument *instrument_;
   int32_t instrumentIndex_;
   uint32_t sampleSize_;
-  uint8_t zoomLevel_;
-  uint8_t maxZoomLevel_;
-  uint32_t viewStart_;
-  uint32_t viewEnd_;
   GUIPoint graphFieldPos_;
-  SliceGraphField graphField_;
+  GraphField graphField_;
   bool modalWasOpen_;
-  int16_t slicePixelCache_[SampleInstrument::MaxSlices];
-  int8_t lastSelectedSlice_;
 
   bool playKeyHeld_;
   bool previewActive_;

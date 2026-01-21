@@ -19,8 +19,6 @@
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #include <algorithm>
-#include <cmath>
-#include <cstring>
 
 namespace {
 constexpr uint16_t PreviewChannel = SONG_CHANNEL_COUNT - 1;
@@ -28,43 +26,19 @@ constexpr int32_t SliceXOffset = 0;
 constexpr int32_t SliceYOffset = 2 * CHAR_HEIGHT;
 } // namespace
 
-SliceGraphField::SliceGraphField(GUIPoint &position, int32_t width,
-                                 int32_t height)
-    : UIField(position), width_(width), height_(height) {}
-
-void SliceGraphField::Draw(GUIWindow &w, int offset) {
-  int32_t x = x_;
-  int32_t y = static_cast<int32_t>(y_) + offset;
-  int32_t right = x + width_;
-  int32_t bottom = y + height_;
-
-  ColorDefinition borderColor = focus_ ? CD_HILITE2 : CD_BACKGROUND;
-  w.SetCurrentRectColor(AppWindow::GetColor(borderColor));
-  GUIRect top(x, y, right, y + 1);
-  GUIRect bottomLine(x, bottom - 1, right, bottom);
-  GUIRect left(x, y, x + 1, bottom);
-  GUIRect rightLine(right - 1, y, right, bottom);
-  w.DrawRect(top);
-  w.DrawRect(bottomLine);
-  w.DrawRect(left);
-  w.DrawRect(rightLine);
-  w.SetCurrentRectColor(AppWindow::GetColor(CD_NORMAL));
-}
-
 SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), sliceIndexVar_(FourCC::SampleInstrumentSlices, 0),
       sliceStartVar_(FourCC::SampleInstrumentStart, 0),
-      autoSliceCountVar_(FourCC::Default, 4), waveformValid_(false),
-      needsWaveformRedraw_(true), needsFullRedraw_(true), instrument_(nullptr),
-      instrumentIndex_(0), sampleSize_(0), zoomLevel_(0), maxZoomLevel_(0),
-      viewStart_(0), viewEnd_(0), graphFieldPos_(SliceXOffset, SliceYOffset),
-      graphField_(graphFieldPos_, SliceBitmapWidth, SliceBitmapHeight),
-      modalWasOpen_(false), lastSelectedSlice_(-1), playKeyHeld_(false),
+      autoSliceCountVar_(FourCC::Default, 4), needsFullRedraw_(true),
+      instrument_(nullptr), instrumentIndex_(0), sampleSize_(0),
+      graphFieldPos_(SliceXOffset, SliceYOffset),
+      graphField_(graphFieldPos_, GraphField::BitmapWidth,
+                  GraphField::BitmapHeight),
+      modalWasOpen_(false), playKeyHeld_(false),
       previewActive_(false), previewNote_(SampleInstrument::SliceNoteBase) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
-  std::memset(waveformCache_, 0, sizeof(waveformCache_));
-  resetSlicePixelCache();
+  graphField_.SetShowBaseline(false);
 }
 
 SampleSlicesView::~SampleSlicesView() { stopPreview(); }
@@ -74,21 +48,15 @@ void SampleSlicesView::Reset() {
   instrument_ = nullptr;
   instrumentIndex_ = 0;
   sampleSize_ = 0;
-  zoomLevel_ = 0;
-  maxZoomLevel_ = 0;
-  viewStart_ = 0;
-  viewEnd_ = 0;
   modalWasOpen_ = false;
   playKeyHeld_ = false;
   previewActive_ = false;
   previewNote_ = SampleInstrument::SliceNoteBase;
-  waveformValid_ = false;
-  needsWaveformRedraw_ = true;
   needsFullRedraw_ = true;
   sliceIndexVar_.SetInt(0, false);
   sliceStartVar_.SetInt(0, false);
-  std::memset(waveformCache_, 0, sizeof(waveformCache_));
-  resetSlicePixelCache();
+  graphField_.Reset();
+  graphField_.SetShowBaseline(false);
 }
 
 void SampleSlicesView::OnFocus() {
@@ -97,13 +65,11 @@ void SampleSlicesView::OnFocus() {
   instrument_ = currentInstrument();
   playKeyHeld_ = false;
   previewActive_ = false;
-  waveformValid_ = false;
-  needsWaveformRedraw_ = true;
   needsFullRedraw_ = true;
   sampleSize_ = 0;
   modalWasOpen_ = false;
-  zoomLevel_ = 0;
-  resetSlicePixelCache();
+  graphField_.Reset();
+  graphField_.SetShowBaseline(false);
 
   if (instrument_) {
     SamplePool *pool = SamplePool::GetInstance();
@@ -121,6 +87,7 @@ void SampleSlicesView::OnFocus() {
   updateZoomLimits();
   updateZoomWindow();
   rebuildWaveform();
+  graphField_.RequestFullRedraw();
   buildFieldLayout();
   isDirty_ = true;
 }
@@ -130,7 +97,7 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (playKeyHeld_ && !(mask & EPBM_PLAY)) {
       playKeyHeld_ = false;
       stopPreview();
-      needsWaveformRedraw_ = true;
+      graphField_.RequestFullRedraw();
     }
     FieldView::ProcessButtonMask(mask, pressed);
     return;
@@ -155,7 +122,7 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (!playKeyHeld_) {
       startPreview();
       playKeyHeld_ = true;
-      needsWaveformRedraw_ = true;
+      graphField_.RequestFullRedraw();
     }
     return;
   }
@@ -180,10 +147,14 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
   }
 
   if (graphFocused && (mask & EPBM_ENTER)) {
-    uint32_t viewSpan = (viewEnd_ > viewStart_) ? (viewEnd_ - viewStart_) : 0;
+    uint32_t viewStart = graphField_.ViewStart();
+    uint32_t viewEnd = graphField_.ViewEnd();
+    uint32_t viewSpan = (viewEnd > viewStart) ? (viewEnd - viewStart) : 0;
     if (viewSpan == 0) {
       updateZoomWindow();
-      viewSpan = (viewEnd_ > viewStart_) ? (viewEnd_ - viewStart_) : 0;
+      viewStart = graphField_.ViewStart();
+      viewEnd = graphField_.ViewEnd();
+      viewSpan = (viewEnd > viewStart) ? (viewEnd - viewStart) : 0;
     }
     if (viewSpan > 0) {
       int32_t delta = 0;
@@ -251,7 +222,7 @@ void SampleSlicesView::AnimationUpdate() {
   drawPowerButtonUI(props);
   bool hasModal = HasModalView();
   if (modalWasOpen_ && !hasModal) {
-    needsWaveformRedraw_ = true;
+    graphField_.RequestFullRedraw();
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
   }
@@ -355,8 +326,8 @@ void SampleSlicesView::buildFieldLayout() {
 }
 
 void SampleSlicesView::rebuildWaveform() {
-  waveformValid_ = false;
-  std::memset(waveformCache_, 0, sizeof(waveformCache_));
+  graphField_.InvalidateWaveform();
+  graphField_.BeginRmsBuild();
 
   if (!instrument_) {
     return;
@@ -375,10 +346,11 @@ void SampleSlicesView::rebuildWaveform() {
 
   int32_t size = source->GetSize(0);
   sampleSize_ = (size > 0) ? static_cast<uint32_t>(size) : 0;
+  graphField_.SetSampleSize(sampleSize_);
   if (sampleSize_ == 0) {
     return;
   }
-  if (viewEnd_ <= viewStart_) {
+  if (graphField_.ViewEnd() <= graphField_.ViewStart()) {
     return;
   }
 
@@ -388,213 +360,45 @@ void SampleSlicesView::rebuildWaveform() {
     return;
   }
 
-  std::fill(std::begin(waveformCache_), std::end(waveformCache_), 0);
-  // We quantize to 8-bit in order to accumulate into int32_t to save memory
-  static int32_t sumSquares[SliceWaveformCacheSize];
-  // Counts fit in uint16_t: max bucket size is <= total samples / columns.
-  static uint16_t counts[SliceWaveformCacheSize];
-  std::fill_n(sumSquares, SliceWaveformCacheSize, int32_t{0});
-  std::fill_n(counts, SliceWaveformCacheSize, uint16_t{0});
-  uint32_t viewSpan = viewEnd_ - viewStart_;
-  if (viewSpan == 0) {
-    return;
-  }
-
-  for (uint32_t i = viewStart_; i < viewEnd_; ++i) {
-    uint32_t rel = i - viewStart_;
-    uint32_t pixel = static_cast<uint32_t>(
-        (static_cast<uint64_t>(rel) * SliceWaveformCacheSize) / viewSpan);
-    if (pixel >= SliceWaveformCacheSize) {
-      pixel = SliceWaveformCacheSize - 1;
-    }
+  uint32_t viewStart = graphField_.ViewStart();
+  uint32_t viewEnd = graphField_.ViewEnd();
+  for (uint32_t i = viewStart; i < viewEnd; ++i) {
     int16_t value = samples[i * channels];
-    int16_t quant = static_cast<int16_t>(value >> 8);
-    sumSquares[pixel] += static_cast<int32_t>(quant) * quant;
-    counts[pixel]++;
+    graphField_.AccumulateRmsSample(i, value);
   }
 
-  for (int32_t i = 0; i < SliceWaveformCacheSize; ++i) {
-    if (counts[i] == 0) {
-      waveformCache_[i] = 0;
-      continue;
-    }
-    float meanSquare = static_cast<float>(sumSquares[i]) / counts[i];
-    float rms = std::sqrt(meanSquare) / 128.0f;
-    uint8_t height = static_cast<uint8_t>(std::min<float>(
-        rms * SliceBitmapHeight, static_cast<float>(SliceBitmapHeight)));
-    waveformCache_[i] = height;
-  }
-
-  waveformValid_ = true;
-  needsWaveformRedraw_ = true;
+  graphField_.FinalizeRmsBuild();
 }
 
 void SampleSlicesView::drawWaveform() {
-  if (!waveformValid_) {
+  if (!graphField_.WaveformValid()) {
     rebuildWaveform();
   }
 
-  if (needsWaveformRedraw_) {
-    GUIRect area(SliceXOffset, SliceYOffset, SliceXOffset + SliceBitmapWidth,
-                 SliceYOffset + SliceBitmapHeight);
-    DrawRect(area, CD_BACKGROUND);
-
-    if (waveformValid_) {
-      int32_t centerY = SliceYOffset + SliceBitmapHeight / 2;
-      for (int32_t x = 1; x < SliceBitmapWidth - 1; ++x) {
-        uint8_t amplitude = waveformCache_[x - 1];
-        if (amplitude == 0) {
-          continue;
-        }
-        int32_t startY = centerY - amplitude / 2;
-        int32_t endY = startY + amplitude;
-        GUIRect column(SliceXOffset + x, startY, SliceXOffset + x + 1, endY);
-        DrawRect(column, CD_NORMAL);
+  graphField_.SetMarkerCount(SampleInstrument::MaxSlices);
+  if (instrument_ && sampleSize_ > 0) {
+    for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
+      if (!instrument_->IsSliceDefined(i)) {
+        graphField_.SetMarker(i, 0, CD_ACCENT, false);
+        continue;
       }
-    }
-
-    if (instrument_ && sampleSize_ > 0) {
-      for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
-        if (!instrument_->IsSliceDefined(i)) {
-          slicePixelCache_[i] = -1;
-          continue;
-        }
-        uint32_t start = instrument_->GetSlicePoint(i);
-        if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
-          slicePixelCache_[i] = -1;
-          continue;
-        }
-        int32_t x = sliceToPixel(start);
-        if (x < 0) {
-          slicePixelCache_[i] = -1;
-          continue;
-        }
-        ColorDefinition color =
-            (static_cast<int32_t>(i) == sliceIndexVar_.GetInt()) ? CD_HILITE2
-                                                                 : CD_ACCENT;
-        GUIRect marker(x, SliceYOffset + 2, x + 1,
-                       SliceYOffset + SliceBitmapHeight - 2);
-        DrawRect(marker, color);
-        slicePixelCache_[i] = static_cast<int16_t>(x);
-      }
-    } else {
-      resetSlicePixelCache();
-    }
-
-    lastSelectedSlice_ = static_cast<int8_t>(sliceIndexVar_.GetInt());
-    needsWaveformRedraw_ = false;
-    return;
-  }
-
-  if (!instrument_ || sampleSize_ == 0) {
-    return;
-  }
-
-  int32_t currentSelected = sliceIndexVar_.GetInt();
-  bool selectionChanged = (currentSelected != lastSelectedSlice_);
-  int16_t redrawXs[SampleInstrument::MaxSlices * 2 + 2];
-  size_t redrawCount = 0;
-  auto addRedrawX = [&redrawXs, &redrawCount](int16_t x) {
-    if (x < 0) {
-      return;
-    }
-    for (size_t i = 0; i < redrawCount; ++i) {
-      if (redrawXs[i] == x) {
-        return;
-      }
-    }
-    if (redrawCount < (SampleInstrument::MaxSlices * 2 + 2)) {
-      redrawXs[redrawCount++] = x;
-    }
-  };
-
-  for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
-    int16_t currentX = -1;
-    if (instrument_->IsSliceDefined(i)) {
       uint32_t start = instrument_->GetSlicePoint(i);
-      if (!(i == 0 && start == 0 && !instrument_->HasSlicesForPlayback())) {
-        int32_t x = sliceToPixel(start);
-        if (x >= 0) {
-          currentX = static_cast<int16_t>(x);
-        }
+      if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
+        graphField_.SetMarker(i, 0, CD_ACCENT, false);
+        continue;
       }
+      ColorDefinition color =
+          (static_cast<int32_t>(i) == sliceIndexVar_.GetInt()) ? CD_HILITE2
+                                                               : CD_ACCENT;
+      graphField_.SetMarker(i, start, color, true);
     }
-    int16_t previousX = slicePixelCache_[i];
-    if (currentX != previousX) {
-      addRedrawX(previousX);
-      addRedrawX(currentX);
-      slicePixelCache_[i] = currentX;
+  } else {
+    for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
+      graphField_.SetMarker(i, 0, CD_ACCENT, false);
     }
   }
 
-  if (selectionChanged) {
-    if (lastSelectedSlice_ >= 0 &&
-        lastSelectedSlice_ <
-            static_cast<int32_t>(SampleInstrument::MaxSlices)) {
-      addRedrawX(slicePixelCache_[lastSelectedSlice_]);
-    }
-    if (currentSelected >= 0 &&
-        currentSelected < static_cast<int32_t>(SampleInstrument::MaxSlices)) {
-      addRedrawX(slicePixelCache_[currentSelected]);
-    }
-    lastSelectedSlice_ = static_cast<int8_t>(currentSelected);
-  }
-
-  for (size_t i = 0; i < redrawCount; ++i) {
-    redrawWaveformColumn(redrawXs[i]);
-    drawSliceMarkersAt(redrawXs[i]);
-  }
-}
-
-void SampleSlicesView::redrawWaveformColumn(int32_t x) {
-  if (x < SliceXOffset + 1 || x >= SliceXOffset + SliceBitmapWidth - 1) {
-    return;
-  }
-  GUIRect clearRect(x, SliceYOffset, x + 1, SliceYOffset + SliceBitmapHeight);
-  DrawRect(clearRect, CD_BACKGROUND);
-
-  if (!waveformValid_) {
-    return;
-  }
-  int32_t cacheIndex = x - SliceXOffset - 1;
-  if (cacheIndex < 0 || cacheIndex >= SliceWaveformCacheSize) {
-    return;
-  }
-  uint8_t amplitude = waveformCache_[cacheIndex];
-  if (amplitude == 0) {
-    return;
-  }
-  int32_t centerY = SliceYOffset + SliceBitmapHeight / 2;
-  int32_t startY = centerY - amplitude / 2;
-  int32_t endY = startY + amplitude;
-  GUIRect column(x, startY, x + 1, endY);
-  DrawRect(column, CD_NORMAL);
-}
-
-void SampleSlicesView::drawSliceMarkersAt(int32_t x) {
-  if (!instrument_ || sampleSize_ == 0) {
-    return;
-  }
-
-  for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
-    if (!instrument_->IsSliceDefined(i)) {
-      continue;
-    }
-    uint32_t start = instrument_->GetSlicePoint(i);
-    if (i == 0 && start == 0 && !instrument_->HasSlicesForPlayback()) {
-      continue;
-    }
-    int32_t sliceX = sliceToPixel(start);
-    if (sliceX != x) {
-      continue;
-    }
-    ColorDefinition color = (static_cast<int32_t>(i) == sliceIndexVar_.GetInt())
-                                ? CD_HILITE2
-                                : CD_ACCENT;
-    GUIRect marker(x, SliceYOffset + 2, x + 1,
-                   SliceYOffset + SliceBitmapHeight - 2);
-    DrawRect(marker, color);
-  }
+  graphField_.DrawGraph(*this);
 }
 
 SampleInstrument *SampleSlicesView::currentInstrument() {
@@ -657,8 +461,7 @@ void SampleSlicesView::applySliceStart(uint32_t start) {
     sliceStartVar_.SetInt(static_cast<int32_t>(stored), false);
   }
   if (updateZoomWindow()) {
-    waveformValid_ = false;
-    needsWaveformRedraw_ = true;
+    graphField_.InvalidateWaveform();
     isDirty_ = true;
   }
 }
@@ -685,9 +488,9 @@ void SampleSlicesView::autoSliceEvenly() {
   }
   updateSliceSelectionFromInstrument();
   if (updateZoomWindow()) {
-    waveformValid_ = false;
+    graphField_.InvalidateWaveform();
   }
-  needsWaveformRedraw_ = true;
+  graphField_.RequestFullRedraw();
   isDirty_ = true;
   ((AppWindow &)w_).SetDirty();
 }
@@ -700,80 +503,20 @@ void SampleSlicesView::AutoSliceConfirmCallback(View &v, ModalView &dialog) {
 }
 
 void SampleSlicesView::updateZoomLimits() {
-  maxZoomLevel_ = 0;
-  uint32_t span = sampleSize_;
-  while (span > static_cast<uint32_t>(SliceWaveformCacheSize) &&
-         maxZoomLevel_ < 16) {
-    span = (span + 1) / 2;
-    maxZoomLevel_++;
-  }
-  if (zoomLevel_ > maxZoomLevel_) {
-    zoomLevel_ = maxZoomLevel_;
-  }
+  graphField_.SetSampleSize(sampleSize_);
 }
 
 bool SampleSlicesView::updateZoomWindow() {
-  if (sampleSize_ == 0) {
-    viewStart_ = 0;
-    viewEnd_ = 0;
-    return false;
-  }
-
-  uint32_t zoomFactor =
-      (zoomLevel_ < 31) ? (static_cast<uint32_t>(1) << zoomLevel_) : 0;
-  if (zoomFactor == 0) {
-    zoomFactor = 1;
-  }
-  uint32_t viewSpan = sampleSize_ / zoomFactor;
-  if (viewSpan == 0) {
-    viewSpan = 1;
-  }
-  if (viewSpan >= sampleSize_) {
-    viewSpan = sampleSize_;
-  }
-
-  uint32_t center = selectedSliceStart();
-  if (center >= sampleSize_) {
-    center = sampleSize_ - 1;
-  }
-
-  uint32_t start = 0;
-  if (viewSpan < sampleSize_) {
-    uint32_t half = viewSpan / 2;
-    if (center > half) {
-      start = center - half;
-    }
-    if (start + viewSpan > sampleSize_) {
-      start = sampleSize_ - viewSpan;
-    }
-  }
-  uint32_t end = start + viewSpan;
-
-  bool changed = (start != viewStart_) || (end != viewEnd_);
-  viewStart_ = start;
-  viewEnd_ = end;
-  return changed;
+  return graphField_.UpdateZoomWindow(selectedSliceStart());
 }
 
 void SampleSlicesView::adjustZoom(int32_t delta) {
   if (sampleSize_ == 0) {
     return;
   }
-  int32_t newLevel =
-      static_cast<int32_t>(zoomLevel_) + static_cast<int32_t>(delta);
-  if (newLevel < 0) {
-    newLevel = 0;
-  }
-  if (newLevel > static_cast<int32_t>(maxZoomLevel_)) {
-    newLevel = static_cast<int32_t>(maxZoomLevel_);
-  }
-  if (newLevel == static_cast<int32_t>(zoomLevel_)) {
-    return;
-  }
-  zoomLevel_ = static_cast<uint8_t>(newLevel);
-  if (updateZoomWindow()) {
-    waveformValid_ = false;
-    needsWaveformRedraw_ = true;
+  if (graphField_.AdjustZoom(delta, selectedSliceStart())) {
+    graphField_.InvalidateWaveform();
+    graphField_.RequestFullRedraw();
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
   }
@@ -807,30 +550,14 @@ void SampleSlicesView::handleSliceSelectionChange() {
   bool graphFocused = (GetFocus() == &graphField_);
   updateSliceSelectionFromInstrument();
   if (updateZoomWindow()) {
-    waveformValid_ = false;
-    needsWaveformRedraw_ = true;
+    graphField_.InvalidateWaveform();
+    graphField_.RequestFullRedraw();
   }
   isDirty_ = true;
   buildFieldLayout();
   if (graphFocused) {
     SetFocus(&graphField_);
   }
-}
-
-int32_t SampleSlicesView::sliceToPixel(uint32_t start) const {
-  if (sampleSize_ == 0 || viewEnd_ <= viewStart_) {
-    return -1;
-  }
-  if (start < viewStart_ || start >= viewEnd_) {
-    return -1;
-  }
-  uint32_t clamped = std::min(
-      start, sampleSize_ > 0 ? sampleSize_ - 1 : static_cast<uint32_t>(0));
-  uint32_t viewSpan = viewEnd_ - viewStart_;
-  uint32_t rel = clamped - viewStart_;
-  int32_t local = static_cast<int32_t>(
-      (static_cast<uint64_t>(rel) * (SliceBitmapWidth - 2)) / viewSpan);
-  return SliceXOffset + 1 + local;
 }
 
 uint32_t SampleSlicesView::selectedSliceStart() {
@@ -843,11 +570,4 @@ uint32_t SampleSlicesView::selectedSliceStart() {
 
 bool SampleSlicesView::hasInstrumentSample() const {
   return instrument_ && instrument_->GetSampleIndex() >= 0 && sampleSize_ > 0;
-}
-
-void SampleSlicesView::resetSlicePixelCache() {
-  for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
-    slicePixelCache_[i] = -1;
-  }
-  lastSelectedSlice_ = -1;
 }

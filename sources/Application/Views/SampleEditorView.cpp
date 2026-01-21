@@ -29,7 +29,6 @@
 #include "UIController.h"
 #include "ViewUtils.h"
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <cstring>
 
@@ -49,13 +48,13 @@ constexpr const char *const sampleEditOperationNames[] = {"Trim",
 constexpr uint32_t sampleEditOperationCount =
     sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
 
-#define X_OFFSET 0
-#define Y_OFFSET 2 * CHAR_HEIGHT
+constexpr int32_t GraphXOffset = 0;
+constexpr int32_t GraphYOffset = 2 * CHAR_HEIGHT;
 
 SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), fullWaveformRedraw_(false), isPlaying_(false),
-      isSingleCycle_(false), playKeyHeld_(false), waveformCacheValid_(false),
-      playbackPosition_(0.0f), playbackStartFrame_(0), lastAnimationTime_(0),
+      isSingleCycle_(false), playKeyHeld_(false), playbackPosition_(0.0f),
+      playbackStartFrame_(0), lastAnimationTime_(0),
       sys_(System::GetInstance()), startVar_(FourCC::VarSampleEditStart, 0),
       endVar_(FourCC::VarSampleEditEnd, 0),
       // bit of a hack to use InstrumentName but we never actually persist this
@@ -64,9 +63,11 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       operationVar_(FourCC::VarSampleEditOperation, sampleEditOperationNames,
                     sampleEditOperationCount,
                     static_cast<int>(SampleEditOperation::Trim)),
-      win(w) {
-  // Initialize waveform cache to zero
-  memset(waveformCache_, 0, BITMAPWIDTH * sizeof(uint8_t));
+      win(w), graphFieldPos_(GraphXOffset, GraphYOffset),
+      graphField_(graphFieldPos_, GraphField::BitmapWidth,
+                  GraphField::BitmapHeight) {
+  graphField_.SetShowBaseline(true);
+  graphField_.SetBorderColors(CD_HILITE1, CD_HILITE2);
 }
 
 SampleEditorView::~SampleEditorView() {}
@@ -76,20 +77,20 @@ void SampleEditorView::Reset() {
   isPlaying_ = false;
   isSingleCycle_ = false;
   playKeyHeld_ = false;
-  waveformCacheValid_ = false;
   playbackPosition_ = 0.0f;
   playbackStartFrame_ = 0;
   lastAnimationTime_ = 0;
   start_ = 0;
   end_ = 0;
   tempSampleSize_ = 0;
+  headerInfo_ = WavHeaderInfo{};
+  headerValid_ = false;
   modalClearCount_ = 0;
-  last_start_x_ = -1;
-  last_end_x_ = -1;
-  last_playhead_x_ = -1;
   filename.clear();
   filenameVar_.SetString("", false);
-  memset(waveformCache_, 0, sizeof(waveformCache_));
+  graphField_.Reset();
+  graphField_.SetShowBaseline(true);
+  graphField_.SetBorderColors(CD_HILITE1, CD_HILITE2);
 
   fieldList_.clear();
   bigHexVarField_.clear();
@@ -116,6 +117,7 @@ void SampleEditorView::OnFocus() {
 
   // Update cached sample parameters
   updateSampleParameters();
+  updateZoomWindow();
 
   // Force redraw of waveform
   fullWaveformRedraw_ = true;
@@ -284,63 +286,32 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
+  // We allow zooming from any place of the screen
+  if ((mask & EPBM_EDIT) && (mask & EPBM_UP)) {
+    adjustZoom(1);
+    return;
+  }
+  if ((mask & EPBM_EDIT) && (mask & EPBM_DOWN)) {
+    adjustZoom(-1);
+    return;
+  }
+
   // For all other button presses, let the parent class handle navigation
   FieldView::ProcessButtonMask(mask, pressed);
 
   // EDIT Modifier
   if (mask & EPBM_EDIT) {
     if (mask & EPBM_ENTER) {
-      UIIntVarField *field = (UIIntVarField *)GetFocus();
-      if (field->GetVariableID() == FourCC::VarSampleEditEnd) {
-        Variable &var = field->GetVariable();
-        var.SetInt(tempSampleSize_ - 1);
-        isDirty_ = true;
+      UIField *focus = GetFocus();
+      for (auto &field : bigHexVarField_) {
+        if (&field == focus &&
+            field.GetVariableID() == FourCC::VarSampleEditEnd) {
+          Variable &var = field.GetVariable();
+          var.SetInt(tempSampleSize_ - 1);
+          isDirty_ = true;
+          break;
+        }
       };
-    }
-  }
-}
-
-// Helper to redraw the content of a single column (waveform or just
-// background) This function will clear a 1-pixel wide column and redraw the
-// waveform in it.
-void SampleEditorView::redrawColumn(View &view, const uint8_t *waveformCache,
-                                    int x_coord, int x_offset, int y_offset) {
-  if (x_coord < 0)
-    return; // Invalid coordinate
-
-  GUIRect rrect;
-  const uint16_t centerY = y_offset + BITMAPHEIGHT / 2;
-
-  // 1. Clear the column
-  // The Y range for clearing should cover the entire waveform area, including
-  // borders
-  rrect =
-      GUIRect(x_coord, y_offset + 1, x_coord + 1, y_offset + BITMAPHEIGHT - 1);
-  view.DrawRect(rrect, CD_BACKGROUND);
-
-  // Restore zero baseline in this column
-  rrect = GUIRect(x_coord, centerY, x_coord + 1, centerY + 1);
-  view.DrawRect(rrect, CD_HILITE2);
-
-  // 2. Redraw the waveform in that column
-  uint16_t waveform_idx =
-      x_coord - x_offset - 1; // Adjust for X_OFFSET and 1-pixel border
-  if (waveform_idx >= 0 && waveform_idx < WAVEFORM_CACHE_SIZE) {
-    uint16_t pixelHeight = waveformCache[waveform_idx];
-    if (pixelHeight > 0) {
-      uint16_t startY = centerY - pixelHeight / 2;
-      uint16_t endY = startY + pixelHeight;
-
-      // Clamp to inside the border
-      if (startY < y_offset + 1)
-        startY = y_offset + 1;
-      if (endY > y_offset + BITMAPHEIGHT - 2)
-        endY = y_offset + BITMAPHEIGHT - 2;
-
-      if (startY <= endY) {
-        rrect = GUIRect(x_coord, startY, x_coord + 1, endY);
-        view.DrawRect(rrect, CD_NORMAL);
-      }
     }
   }
 }
@@ -358,6 +329,8 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, titleString, props);
 
+  graphField_.Draw(w_);
+
   // Let the base class draw all the text fields
   FieldView::Redraw();
   isDirty_ = true;
@@ -370,105 +343,163 @@ void SampleEditorView::DrawWaveForm() {
   if (HasModalView()) {
     return;
   }
-
-  GUIRect rrect;
   if (fullWaveformRedraw_) {
-    // clear flag immediately to prevent race condition between event triggered
-    // from input event and the animation update callback
     fullWaveformRedraw_ = false;
+    graphField_.RequestFullRedraw();
+  }
+  if (!graphField_.WaveformValid()) {
+    rebuildWaveform();
+  }
+  updateGraphMarkers();
+  graphField_.DrawGraph(*this);
+}
 
-    clearWaveformRegion();
-    const uint16_t centerY = Y_OFFSET + BITMAPHEIGHT / 2;
+uint32_t SampleEditorView::selectionCenterSample() const {
+  if (tempSampleSize_ == 0) {
+    return 0;
+  }
+  uint32_t startVal = start_;
+  uint32_t endVal = end_;
+  if (startVal > endVal) {
+    startVal = endVal;
+  }
+  uint32_t center = startVal + ((endVal - startVal) / 2);
+  if (center >= tempSampleSize_) {
+    center = tempSampleSize_ - 1;
+  }
+  return center;
+}
 
-    // Draw zero baseline
-    rrect =
-        GUIRect(X_OFFSET + 1, centerY, X_OFFSET + BITMAPWIDTH - 1, centerY + 1);
-    DrawRect(rrect, CD_HILITE2);
+void SampleEditorView::updateZoomWindow() {
+  if (tempSampleSize_ == 0) {
+    graphField_.SetSampleSize(0);
+    return;
+  }
+  graphField_.SetSampleSize(tempSampleSize_);
+  if (graphField_.UpdateZoomWindow(selectionCenterSample())) {
+    graphField_.InvalidateWaveform();
+    graphField_.RequestFullRedraw();
+  }
+}
 
-    rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH, Y_OFFSET + 1);
-    // Draw borders
-    DrawRect(rrect, CD_HILITE1); // Top
-    rrect = GUIRect(X_OFFSET, Y_OFFSET + BITMAPHEIGHT - 1,
-                    X_OFFSET + BITMAPWIDTH, Y_OFFSET + BITMAPHEIGHT);
-    DrawRect(rrect, CD_HILITE1); // Bottom
+void SampleEditorView::adjustZoom(int32_t delta) {
+  if (graphField_.AdjustZoom(delta, selectionCenterSample())) {
+    graphField_.InvalidateWaveform();
+    graphField_.RequestFullRedraw();
+    isDirty_ = true;
+    ((AppWindow &)w_).SetDirty();
+  }
+}
 
-    // Draw full waveform
-    if (waveformCacheValid_) {
-      for (int x = 0; x < WAVEFORM_CACHE_SIZE; x++) {
-        uint16_t pixelHeight = waveformCache_[x];
-        if (pixelHeight > 0) {
-          uint16_t startY = centerY - pixelHeight / 2;
-          uint16_t endY = startY + pixelHeight;
+void SampleEditorView::updateGraphMarkers() {
+  graphField_.SetMarkerCount(3);
+  bool hasSample = tempSampleSize_ > 0;
 
-          // Clamp to inside the border
-          if (startY < Y_OFFSET + 1)
-            startY = Y_OFFSET + 1;
-          if (endY > Y_OFFSET + BITMAPHEIGHT - 2)
-            endY = Y_OFFSET + BITMAPHEIGHT - 2;
+  if (hasSample) {
+    graphField_.SetMarker(0, start_, CD_CURSOR, true);
+    graphField_.SetMarker(1, end_, CD_CURSOR, true);
+  } else {
+    graphField_.SetMarker(0, 0, CD_CURSOR, false);
+    graphField_.SetMarker(1, 0, CD_CURSOR, false);
+  }
 
-          if (startY <= endY) {
-            rrect = GUIRect(X_OFFSET + x + 1, startY, X_OFFSET + x + 2, endY);
-            DrawRect(rrect, CD_NORMAL);
-          }
-        }
-      }
+  uint32_t playheadSample = 0;
+  bool playheadVisible = false;
+  if (isPlaying_ && tempSampleSize_ > 0) {
+    playheadSample = static_cast<uint32_t>(playbackPosition_ * tempSampleSize_);
+    if (playheadSample >= tempSampleSize_) {
+      playheadSample = tempSampleSize_ - 1;
     }
-    // After a full redraw, invalidate last positions to ensure markers are
-    // drawn fresh
-    last_start_x_ = -1;
-    last_end_x_ = -1;
-    last_playhead_x_ = -1;
+    playheadVisible = true;
+  }
+  graphField_.SetMarker(2, playheadSample, CD_CURSOR, playheadVisible);
+}
+
+void SampleEditorView::rebuildWaveform() {
+  graphField_.InvalidateWaveform();
+  graphField_.BeginRmsBuild();
+
+  if (!headerValid_ || tempSampleSize_ == 0) {
+    return;
+  }
+  if (graphField_.ViewEnd() <= graphField_.ViewStart()) {
+    return;
   }
 
-  // --- Incremental Marker Update Logic ---
-
-  // Calculate current marker positions
-  const uint16_t current_startX =
-      X_OFFSET + 1 +
-      static_cast<uint16_t>((static_cast<float>(start_) / tempSampleSize_) *
-                            (BITMAPWIDTH - 2));
-  const uint16_t current_endX =
-      X_OFFSET + 1 +
-      static_cast<uint16_t>((static_cast<float>(end_) / tempSampleSize_) *
-                            (BITMAPWIDTH - 2));
-  const uint16_t current_playheadX =
-      isPlaying_
-          ? (X_OFFSET + 1 +
-             static_cast<uint16_t>(playbackPosition_ * (BITMAPWIDTH - 2)))
-          : -1;
-
-  // Erase old markers if they have moved or disappeared
-  if (last_start_x_ != -1 && last_start_x_ != current_startX) {
-    redrawColumn(*this, waveformCache_, last_start_x_, X_OFFSET, Y_OFFSET);
-  }
-  if (last_end_x_ != -1 && last_end_x_ != current_endX) {
-    redrawColumn(*this, waveformCache_, last_end_x_, X_OFFSET, Y_OFFSET);
-  }
-  if (last_playhead_x_ != -1 && last_playhead_x_ != current_playheadX) {
-    redrawColumn(*this, waveformCache_, last_playhead_x_, X_OFFSET, Y_OFFSET);
+  if (viewData_->isShowingSampleEditorProjectPool) {
+    if (!goProjectSamplesDir(viewData_)) {
+      Trace::Error("SampleEditorView: Failed to chdir for waveform rebuild");
+      return;
+    }
   }
 
-  // Draw new markers
-  if (current_startX != -1) { // Only draw if valid
-    rrect = GUIRect(current_startX, Y_OFFSET + 2, current_startX + 1,
-                    Y_OFFSET + BITMAPHEIGHT - 3);
-    DrawRect(rrect, CD_CURSOR);
-  }
-  if (current_endX != -1) { // Only draw if valid
-    rrect = GUIRect(current_endX, Y_OFFSET + 2, current_endX + 1,
-                    Y_OFFSET + BITMAPHEIGHT - 3);
-    DrawRect(rrect, CD_CURSOR);
-  }
-  if (current_playheadX != -1) { // Only draw if valid and playing
-    rrect = GUIRect(current_playheadX, Y_OFFSET + 2, current_playheadX + 1,
-                    Y_OFFSET + BITMAPHEIGHT - 3);
-    DrawRect(rrect, CD_CURSOR);
+  auto file = FileSystem::GetInstance()->Open(
+      viewData_->sampleEditorFilename.c_str(), "r");
+  if (!file) {
+    Trace::Error("SampleEditorView: Failed to open file for waveform rebuild");
+    return;
   }
 
-  // Update last known positions
-  last_start_x_ = current_startX;
-  last_end_x_ = current_endX;
-  last_playhead_x_ = current_playheadX;
+  uint32_t bytesPerFrame =
+      static_cast<uint32_t>(headerInfo_.numChannels) *
+      static_cast<uint32_t>(headerInfo_.bytesPerSample);
+  if (bytesPerFrame == 0) {
+    Trace::Error("SampleEditorView: Invalid WAV header for waveform rebuild");
+    return;
+  }
+
+  uint32_t viewStart = graphField_.ViewStart();
+  uint32_t viewEnd = graphField_.ViewEnd();
+  uint32_t totalFrames = viewEnd - viewStart;
+  uint64_t startOffset = headerInfo_.dataOffset +
+                         static_cast<uint64_t>(viewStart) * bytesPerFrame;
+  file->Seek(static_cast<uint32_t>(startOffset), SEEK_SET);
+
+  static constexpr uint32_t ChunkFrames = 512;
+  uint32_t framesRemaining = totalFrames;
+  uint32_t currentFrame = 0;
+  while (framesRemaining > 0) {
+    uint32_t framesToRead = std::min(ChunkFrames, framesRemaining);
+    uint32_t bytesToRead = framesToRead * bytesPerFrame;
+    uint32_t bytesRead = file->Read(chunkBuffer_, bytesToRead);
+    uint32_t framesRead =
+        (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
+    if (framesRead == 0) {
+      break;
+    }
+
+    const uint8_t *byteBuffer =
+        reinterpret_cast<const uint8_t *>(chunkBuffer_);
+    for (uint32_t i = 0; i < framesRead; ++i) {
+      uint32_t frameOffset = i * bytesPerFrame;
+      int16_t sampleValue = 0;
+      if (headerInfo_.bitsPerSample == 8) {
+        if (frameOffset >= bytesRead) {
+          break;
+        }
+        int16_t centered =
+            static_cast<int16_t>(byteBuffer[frameOffset]) - 128;
+        sampleValue = centered << 8;
+      } else {
+        const int16_t *frameSamples =
+            reinterpret_cast<const int16_t *>(byteBuffer + frameOffset);
+        sampleValue = frameSamples[0];
+      }
+      int16_t clampedSample =
+          std::clamp<int16_t>(sampleValue, -32768, 32767);
+      uint32_t sampleIndex = viewStart + currentFrame + i;
+      graphField_.AccumulateRmsSample(sampleIndex, clampedSample);
+    }
+
+    currentFrame += framesRead;
+    framesRemaining -= framesRead;
+
+    if (bytesRead < bytesToRead) {
+      break;
+    }
+  }
+
+  graphField_.FinalizeRmsBuild();
 }
 
 void SampleEditorView::AnimationUpdate() {
@@ -1075,6 +1106,8 @@ void SampleEditorView::updateSampleParameters() {
   if (endAdjusted) {
     endVar_.SetInt(end_);
   }
+
+  updateZoomWindow();
 }
 
 int16_t SampleEditorView::chunkBuffer_[512 * 2];
@@ -1087,8 +1120,10 @@ void SampleEditorView::loadSample(
 
   // Reset temporary sample state
   tempSampleSize_ = 0;
-  waveformCacheValid_ = false;
-  memset(waveformCache_, 0, sizeof(waveformCache_));
+  headerInfo_ = WavHeaderInfo{};
+  headerValid_ = false;
+  graphField_.SetSampleSize(0);
+  graphField_.InvalidateWaveform();
 
   if (filename.empty()) {
     Trace::Error("missing sample filename");
@@ -1122,6 +1157,8 @@ void SampleEditorView::loadSample(
   }
 
   const WavHeaderInfo headerInfo = headerResult.value();
+  headerInfo_ = headerInfo;
+  headerValid_ = true;
   uint16_t numChannels = headerInfo.numChannels;
   uint16_t bitsPerSample = headerInfo.bitsPerSample;
   uint32_t dataChunkSize = headerInfo.dataChunkSize;
@@ -1149,6 +1186,8 @@ void SampleEditorView::loadSample(
     Trace::Error("SampleEditorView: Sample has zero frames in %s", filename);
     return;
   }
+  graphField_.SetSampleSize(tempSampleSize_);
+  updateZoomWindow();
 
   // ensure we start streaming from the data chunk
   file->Seek(headerInfo.dataOffset, SEEK_SET);
@@ -1157,111 +1196,22 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Parsing sample: %d frames, %d channels",
              tempSampleSize_, numChannels);
 
-  int16_t peakAmplitude = 0;
-  uint32_t currentFrame = 0;
-
-  const uint32_t CHUNK_FRAMES = 512;
-
-  // --- 3. The Single-Pass Read Loop ---
-  while (currentFrame < tempSampleSize_) {
-    uint32_t framesToRead =
-        std::min(CHUNK_FRAMES, (uint32_t)(tempSampleSize_ - currentFrame));
-    uint32_t bytesToRead = framesToRead * bytesPerFrame;
-    uint32_t bytesRead = file->Read(chunkBuffer_, bytesToRead);
-
-    uint32_t framesRead = (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
-    if (framesRead == 0) {
-      break;
-    }
-
-    const uint8_t *byteBuffer = reinterpret_cast<const uint8_t *>(chunkBuffer_);
-    for (uint32_t i = 0; i < framesRead; ++i) {
-      int16_t sampleValue = 0;
-      uint32_t frameOffset = i * bytesPerFrame;
-
-      if (bitsPerSample == 8) {
-        // 8-bit PCM samples are unsigned; center and scale to 16-bit range so
-        // we treat same way as existing 16bit code path
-        if (frameOffset >= bytesRead) {
-          break;
-        }
-        int16_t centered =
-            static_cast<int16_t>(byteBuffer[frameOffset]) - 128; // [-128,127]
-        sampleValue = centered << 8; // [-32768,32512]
-      } else {                       // 16-bit PCM
-        const int16_t *frameSamples =
-            reinterpret_cast<const int16_t *>(byteBuffer + frameOffset);
-        sampleValue = frameSamples[0];
-      }
-      int16_t clampedSample = std::clamp<int16_t>(sampleValue, -32768, 32767);
-
-      if (abs(clampedSample) > peakAmplitude) {
-        peakAmplitude = abs(clampedSample);
-      }
-
-      uint16_t magnitude = abs(clampedSample);
-      // The extra + 16383u is just an integer math trick to round instead of
-      // truncating (half of the divisor). If we only “scaled by BITMAPHEIGHT”
-      // (e.g., magnitude / BITMAPHEIGHT or magnitude / (32768 / BITMAPHEIGHT)
-      // without rounding) we’d either shrink the values to almost zero or
-      // introduce more distortion. This keeps the 0→32768 range mapped linearly
-      // onto 0→BITMAPHEIGHT with proper rounding
-      uint32_t scaled = ((magnitude)*BITMAPHEIGHT + 16383u) / 32768u;
-      if (scaled > BITMAPHEIGHT) {
-        scaled = BITMAPHEIGHT;
-      }
-      uint8_t sampleHeight = static_cast<uint8_t>(scaled);
-      if (sampleHeight == 0) {
-        continue;
-      }
-      uint32_t sampleIndex = currentFrame + i;
-      uint64_t startColumn =
-          (static_cast<uint64_t>(sampleIndex) * WAVEFORM_CACHE_SIZE) /
-          tempSampleSize_;
-      uint64_t endColumn =
-          (static_cast<uint64_t>(sampleIndex + 1ULL) * WAVEFORM_CACHE_SIZE) /
-          tempSampleSize_;
-      if (endColumn == startColumn) {
-        endColumn = startColumn + 1;
-      }
-      if (startColumn >= WAVEFORM_CACHE_SIZE) {
-        startColumn = WAVEFORM_CACHE_SIZE - 1;
-      }
-      if (endColumn > WAVEFORM_CACHE_SIZE) {
-        endColumn = WAVEFORM_CACHE_SIZE;
-      }
-      for (uint32_t column = static_cast<uint32_t>(startColumn);
-           column < endColumn; ++column) {
-        if (sampleHeight > waveformCache_[column]) {
-          waveformCache_[column] = sampleHeight;
-        }
-      }
-    }
-    currentFrame += framesRead;
-
-    if (bytesRead < bytesToRead) {
-      break; // Reached end of file
-    }
-  }
-  // All columns already contain final peak heights scaled to the display range.
-  waveformCacheValid_ = true;
-
   // set start point variable to 0
   startVar_.SetInt(0);
 
   // set end point variable
   endVar_.SetInt(tempSampleSize_);
 
-  // log duration, sample count, peak vol for file
-  Trace::Log("SAMPLEEDITOR", "Loaded %d frames, peak:%d from %s",
-             tempSampleSize_, peakAmplitude, filename.c_str());
+  Trace::Log("SAMPLEEDITOR", "Loaded %d frames from %s", tempSampleSize_,
+             filename.c_str());
   fullWaveformRedraw_ = true;
 }
 
 void SampleEditorView::clearWaveformRegion() {
   // Clear the entire waveform area
   GUIRect rrect;
-  rrect = GUIRect(X_OFFSET, Y_OFFSET, X_OFFSET + BITMAPWIDTH,
-                  Y_OFFSET + BITMAPHEIGHT);
+  rrect = GUIRect(GraphXOffset, GraphYOffset,
+                  GraphXOffset + GraphField::BitmapWidth,
+                  GraphYOffset + GraphField::BitmapHeight);
   DrawRect(rrect, CD_BACKGROUND);
 }
