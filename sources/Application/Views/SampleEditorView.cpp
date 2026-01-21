@@ -91,6 +91,7 @@ void SampleEditorView::Reset() {
   graphField_.Reset();
   graphField_.SetShowBaseline(true);
   graphField_.SetBorderColors(CD_HILITE1, CD_HILITE2);
+  selectedMarker_ = MarkerStart;
 
   fieldList_.clear();
   bigHexVarField_.clear();
@@ -118,6 +119,7 @@ void SampleEditorView::OnFocus() {
   // Update cached sample parameters
   updateSampleParameters();
   updateZoomWindow();
+  selectedMarker_ = MarkerStart;
 
   // Force redraw of waveform
   fullWaveformRedraw_ = true;
@@ -202,9 +204,13 @@ void SampleEditorView::addAllFields() {
   actionField_.emplace_back("Discard", FourCC::ActionCancel, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
+
+  fieldList_.insert(fieldList_.end(), &graphField_);
 }
 
 void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
+  updateSelectedMarkerFromFocus();
+
   // Check for key release events
   if (!pressed) {
     // Check if play key was released (exactly like ImportView approach)
@@ -286,6 +292,89 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
+  bool graphFocused = (GetFocus() == &graphField_);
+  if (graphFocused && (mask & EPBM_EDIT)) {
+    if (mask & EPBM_LEFT) {
+      selectedMarker_ = MarkerStart;
+      isDirty_ = true;
+      ((AppWindow &)w_).SetDirty();
+      return;
+    }
+    if (mask & EPBM_RIGHT) {
+      selectedMarker_ = MarkerEnd;
+      isDirty_ = true;
+      ((AppWindow &)w_).SetDirty();
+      return;
+    }
+  }
+
+  if (graphFocused && (mask & EPBM_ENTER)) {
+    uint32_t viewStart = graphField_.ViewStart();
+    uint32_t viewEnd = graphField_.ViewEnd();
+    uint32_t viewSpan = (viewEnd > viewStart) ? (viewEnd - viewStart) : 0;
+    if (viewSpan == 0) {
+      updateZoomWindow();
+      viewStart = graphField_.ViewStart();
+      viewEnd = graphField_.ViewEnd();
+      viewSpan = (viewEnd > viewStart) ? (viewEnd - viewStart) : 0;
+    }
+    if (viewSpan > 0) {
+      int32_t delta = 0;
+      if (mask & (EPBM_LEFT | EPBM_RIGHT)) {
+        delta = static_cast<int32_t>(std::max<uint32_t>(1, viewSpan / 64));
+        if (mask & EPBM_LEFT) {
+          delta = -delta;
+        }
+      } else if (mask & (EPBM_UP | EPBM_DOWN)) {
+        delta = static_cast<int32_t>(std::max<uint32_t>(1, viewSpan / 16));
+        if (mask & EPBM_DOWN) {
+          delta = -delta;
+        }
+      }
+      if (delta != 0) {
+        if (selectedMarker_ == MarkerStart) {
+          int32_t start = startVar_.GetInt();
+          int32_t newStart = start + delta;
+          if (newStart < 0) {
+            newStart = 0;
+          }
+          int32_t maxStart =
+              (tempSampleSize_ > 0) ? static_cast<int32_t>(tempSampleSize_ - 1)
+                                    : 0;
+          if (newStart > maxStart) {
+            newStart = maxStart;
+          }
+          int32_t end = endVar_.GetInt();
+          if (newStart > end) {
+            newStart = end;
+          }
+          startVar_.SetInt(newStart);
+        } else {
+          int32_t end = endVar_.GetInt();
+          int32_t newEnd = end + delta;
+          if (newEnd < 0) {
+            newEnd = 0;
+          }
+          int32_t maxEnd =
+              (tempSampleSize_ > 0) ? static_cast<int32_t>(tempSampleSize_ - 1)
+                                    : 0;
+          if (newEnd > maxEnd) {
+            newEnd = maxEnd;
+          }
+          int32_t start = startVar_.GetInt();
+          if (newEnd < start) {
+            newEnd = start;
+          }
+          endVar_.SetInt(newEnd);
+        }
+        updateSampleParameters();
+        isDirty_ = true;
+        ((AppWindow &)w_).SetDirty();
+        return;
+      }
+    }
+  }
+
   // We allow zooming from any place of the screen
   if ((mask & EPBM_EDIT) && (mask & EPBM_UP)) {
     adjustZoom(1);
@@ -298,6 +387,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // For all other button presses, let the parent class handle navigation
   FieldView::ProcessButtonMask(mask, pressed);
+  updateSelectedMarkerFromFocus();
 
   // EDIT Modifier
   if (mask & EPBM_EDIT) {
@@ -329,8 +419,6 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, titleString, props);
 
-  graphField_.Draw(w_);
-
   // Let the base class draw all the text fields
   FieldView::Redraw();
   isDirty_ = true;
@@ -354,16 +442,26 @@ void SampleEditorView::DrawWaveForm() {
   graphField_.DrawGraph(*this);
 }
 
+void SampleEditorView::updateSelectedMarkerFromFocus() {
+  UIField *focus = GetFocus();
+  for (auto &field : bigHexVarField_) {
+    if (&field != focus) {
+      continue;
+    }
+    if (field.GetVariableID() == FourCC::VarSampleEditStart) {
+      selectedMarker_ = MarkerStart;
+    } else if (field.GetVariableID() == FourCC::VarSampleEditEnd) {
+      selectedMarker_ = MarkerEnd;
+    }
+    break;
+  }
+}
+
 uint32_t SampleEditorView::selectionCenterSample() const {
   if (tempSampleSize_ == 0) {
     return 0;
   }
-  uint32_t startVal = start_;
-  uint32_t endVal = end_;
-  if (startVal > endVal) {
-    startVal = endVal;
-  }
-  uint32_t center = startVal + ((endVal - startVal) / 2);
+  uint32_t center = (selectedMarker_ == MarkerEnd) ? end_ : start_;
   if (center >= tempSampleSize_) {
     center = tempSampleSize_ - 1;
   }
@@ -396,11 +494,15 @@ void SampleEditorView::updateGraphMarkers() {
   bool hasSample = tempSampleSize_ > 0;
 
   if (hasSample) {
-    graphField_.SetMarker(0, start_, CD_CURSOR, true);
-    graphField_.SetMarker(1, end_, CD_CURSOR, true);
+    ColorDefinition startColor =
+        (selectedMarker_ == MarkerStart) ? CD_HILITE2 : CD_ACCENT;
+    ColorDefinition endColor =
+        (selectedMarker_ == MarkerEnd) ? CD_HILITE2 : CD_ACCENT;
+    graphField_.SetMarker(0, start_, startColor, true);
+    graphField_.SetMarker(1, end_, endColor, true);
   } else {
-    graphField_.SetMarker(0, 0, CD_CURSOR, false);
-    graphField_.SetMarker(1, 0, CD_CURSOR, false);
+    graphField_.SetMarker(0, 0, CD_ACCENT, false);
+    graphField_.SetMarker(1, 0, CD_ACCENT, false);
   }
 
   uint32_t playheadSample = 0;

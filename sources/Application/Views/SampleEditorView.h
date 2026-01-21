@@ -54,6 +54,7 @@ private:
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
   uint32_t selectionCenterSample() const;
+  void updateSelectedMarkerFromFocus();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
@@ -119,6 +120,9 @@ private:
 
   GUIPoint graphFieldPos_;
   GraphField graphField_;
+
+  enum SelectedMarker { MarkerStart = 0, MarkerEnd };
+  SelectedMarker selectedMarker_ = MarkerStart;
 
   uint8_t modalClearCount_ = 0;
 };
