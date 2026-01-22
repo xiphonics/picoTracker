@@ -71,5 +71,7 @@ private:
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
   bool saveAsFlag_ = false;
   etl::string<MAX_PROJECT_NAME_LENGTH> oldProjName_;
+
+  bool CanExit();
 };
 #endif

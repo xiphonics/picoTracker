@@ -26,15 +26,28 @@ public:
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
   void getSelectedProjectName(char *name);
+  void getHighlightedProjectName(char *name);
+  void setCurrentFolder();
+  bool SaveSelectedProject();
+  void LoadProject();
 
 protected:
-  void setCurrentFolder();
   void warpToNextProject(bool goUp);
 
 private:
+  static const int numButtons_ = 3;
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
   char selection_[MAX_PROJECT_NAME_LENGTH + 1];
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
+  int selectedButton_ = 0;
+
+  void DrawScrollBar();
+  void AttemptDeletingSelectedProject();
+  void AttemptLoadingProject();
+  bool SelectionIsCurrentProject();
+  bool WarnPlayerRunning();
+  void ConfirmOverwrite();
+  void SelectButton(int direction);
 };
 #endif

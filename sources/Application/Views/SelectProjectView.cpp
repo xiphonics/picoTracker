@@ -9,11 +9,40 @@
 
 #include "SelectProjectView.h"
 #include "Application/AppWindow.h"
+#include "Application/Persistency/PersistencyService.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
 #include "BaseClasses/ViewEvent.h"
+#include "Foundation/Constants/SpecialCharacters.h"
+#include <nanoprintf.h>
 
-#define LIST_PAGE_SIZE SCREEN_HEIGHT - 2
+#define LIST_PAGE_SIZE (SCREEN_HEIGHT - 4)
 #define LIST_WIDTH 26
 #define INVALID_PROJECT_NAME "INVALID NAME"
+
+static void ConfirmOverwriteCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    ((SelectProjectView &)v).SaveSelectedProject();
+  }
+}
+
+static void LoadProjectCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    ((SelectProjectView &)v).LoadProject();
+  }
+}
+
+static void DeleteProjectCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    // delete project
+    PersistencyService *ps = PersistencyService::GetInstance();
+    char buffer[MAX_PROJECT_NAME_LENGTH + 1];
+    ((SelectProjectView &)v).getHighlightedProjectName(buffer);
+    ps->DeleteProject(buffer);
+
+    // reload list
+    ((SelectProjectView &)v).setCurrentFolder();
+  }
+}
 
 SelectProjectView::SelectProjectView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData) {}
@@ -37,17 +66,19 @@ void SelectProjectView::DrawView() {
   auto fs = FileSystem::GetInstance();
 
   // Draw title
-  const char *title = "Load Project";
+  const char *title = "Browse Projects";
   SetColor(CD_INFO);
   DrawString(pos._x + 1, pos._y, title, props);
-
   SetColor(CD_NORMAL);
 
   // Draw projects
   int x = 1;
   int y = pos._y + 2;
 
-  char buffer[MAX_PROJECT_NAME_LENGTH + 1];
+  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
+  const char *currentProject = projectName.c_str();
+
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
     if (i == currentIndex_) {
@@ -58,23 +89,76 @@ void SelectProjectView::DrawView() {
       props.invert_ = false;
     }
 
+    char buffer[MAX_PROJECT_NAME_LENGTH + 1];
     memset(buffer, '\0', sizeof(buffer));
     unsigned fileIndex = fileIndexList_[i];
 
     if (fs->getFileType(fileIndex) == PFT_DIR) {
       fs->getFileName(fileIndex, buffer, MAX_PROJECT_NAME_LENGTH + 1);
     }
-    // SDFat lib doesnt truncate if filename longer than buffer as per docs but
+    // SDFat lib doesn't truncate if filename longer than buffer as per docs but
     // instead returns empty string in buffer
     if (strlen(buffer) == 0) {
       strcpy(buffer, INVALID_PROJECT_NAME);
     }
+
+    if (strcmp(buffer, currentProject) == 0) {
+      // mark currently loaded project
+      DrawString(x - 1, y, "*", props);
+    }
+
     DrawString(x, y, buffer, props);
     y += 1;
   };
 
-  SetColor(CD_NORMAL);
+  // load/delete selection buttons
+  const char *buttons[numButtons_] = {
+      "Load", SelectionIsCurrentProject() ? "Save   " : "Save as", "Delete"};
+
+  int bx = x;
+
+  for (int n = 0; n < numButtons_; n++) {
+    bool selected = selectedButton_ == n;
+    props.invert_ = selected;
+    SetColor(selected ? CD_HILITE2 : CD_HILITE1);
+    DrawString(x, SCREEN_HEIGHT - 1, buttons[n], props);
+
+    x += 2 + strlen(buttons[n]);
+  }
+
+  // scroll bar
+  DrawScrollBar();
 };
+
+void SelectProjectView::DrawScrollBar() {
+  int totalItems = fileIndexList_.size();
+  if (totalItems <= LIST_PAGE_SIZE) {
+    return; // no scrollbar needed
+  }
+
+  GUITextProperties props;
+  GUITextProperties inv;
+  inv.invert_ = true;
+  SetColor(CD_NORMAL);
+
+  // Thumb size represents the ratio of visible items to total items
+  int thumbSize = std::max(1, (LIST_PAGE_SIZE * LIST_PAGE_SIZE) / totalItems);
+
+  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
+  // space
+  int maxScroll = totalItems - LIST_PAGE_SIZE;
+  int availableSpace = LIST_PAGE_SIZE - thumbSize;
+  int thumbPos = (topIndex_ * availableSpace) / maxScroll;
+
+  Trace::Error("%d total, %d thumb size, %d maxScroll, %d thumbPos", totalItems,
+               thumbSize, maxScroll, thumbPos);
+  for (int y = 0; y < LIST_PAGE_SIZE; y++) {
+    bool thumb = y >= thumbPos && y < thumbPos + thumbSize;
+    DrawString(SCREEN_WIDTH - 1, 2 + y,
+               thumb ? char_block_full_s : char_border_single_vertical_s,
+               props);
+  }
+}
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
                                        unsigned int currentTick){};
@@ -86,6 +170,9 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
 
   if (mask & EPBM_EDIT) {
+    // EDIT+ENTER -> hotkey to delete
+    if (mask & EPBM_ENTER)
+      AttemptDeletingSelectedProject();
     if (mask & EPBM_UP)
       warpToNextProject(true);
     if (mask & EPBM_DOWN)
@@ -93,22 +180,25 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   } else {
     // A modifier
     if (mask & EPBM_ENTER) {
-      // all subdirs directly inside /project are expected to be projects
-      unsigned fileIndex = fileIndexList_[currentIndex_];
-      auto fs = FileSystem::GetInstance();
-      fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
-      if (strlen(selection_) == 0) {
-        Trace::Log("SELECTPROJECTVIEW",
-                   "skipping too long project name on Index:%d", fileIndex);
-        return;
+      switch (selectedButton_) {
+      case 0:
+        // load project
+        AttemptLoadingProject();
+        break;
+      case 1:
+        // save project
+        if (!SelectionIsCurrentProject()) {
+          // ask if the user wants to override the file
+          ConfirmOverwrite();
+        } else {
+          // save
+          SaveSelectedProject();
+        }
+        break;
+      case 2:
+        AttemptDeletingSelectedProject();
+        break;
       }
-
-      Trace::Log("SELECTPROJECTVIEW", "Select Project:%s", selection_);
-
-      ViewEvent ve(VET_LOAD_PROJECT, selection_);
-      SetChanged();
-      NotifyObservers(&ve);
-      return;
     } else {
       // R Modifier
       if ((mask & EPBM_NAV) && (mask & EPBM_LEFT)) {
@@ -124,6 +214,10 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
           warpToNextProject(true);
         if (mask == EPBM_DOWN)
           warpToNextProject(false);
+        if (mask == EPBM_LEFT)
+          SelectButton(-1);
+        if (mask == EPBM_RIGHT)
+          SelectButton(1);
       }
     }
   }
@@ -183,6 +277,7 @@ void SelectProjectView::setCurrentFolder() {
   }
 
   // reset & redraw screen
+  currentIndex_ = std::min(currentIndex_, fileIndexList_.size() - 1);
   topIndex_ = 0;
   currentIndex_ = 0;
   isDirty_ = true;
@@ -190,4 +285,136 @@ void SelectProjectView::setCurrentFolder() {
 
 void SelectProjectView::getSelectedProjectName(char *name) {
   strcpy(name, selection_);
+}
+
+void SelectProjectView::getHighlightedProjectName(char *name) {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+
+  auto fs = FileSystem::GetInstance();
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  fs->getFileName(fileIndex, name, MAX_PROJECT_NAME_LENGTH + 1);
+}
+
+void SelectProjectView::SelectButton(int direction) {
+  selectedButton_ = (numButtons_ + selectedButton_ + direction) % numButtons_;
+  isDirty_ = true;
+}
+
+void SelectProjectView::LoadProject() {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+
+  // all subdirs directly inside /project are expected to be projects
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  auto fs = FileSystem::GetInstance();
+  fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
+  if (strlen(selection_) == 0) {
+    Trace::Log("SELECTPROJECTVIEW",
+               "skipping too long project name on Index:%d", fileIndex);
+    return;
+  }
+
+  Trace::Log("SELECTPROJECTVIEW", "Select Project:%s", selection_);
+
+  ViewEvent ve(VET_LOAD_PROJECT, selection_);
+  SetChanged();
+  NotifyObservers(&ve);
+}
+
+bool SelectProjectView::WarnPlayerRunning() {
+  if (Player::GetInstance()->IsRunning()) {
+    MessageBox *mb = MessageBox::Create(*this, "Not while running!", MBBF_OK);
+    DoModal(mb);
+    return true;
+  }
+  return false;
+}
+
+bool SelectProjectView::SelectionIsCurrentProject() {
+  char selected[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(selected);
+
+  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
+  const char *current = projectName.c_str();
+
+  return strcmp(current, selected) == 0;
+}
+
+bool SelectProjectView::SaveSelectedProject() {
+  auto appWindow = static_cast<AppWindow *>(&w_);
+  PersistencyService *ps = PersistencyService::GetInstance();
+
+  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
+  const char *current = projectName.c_str();
+
+  char selected[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(selected);
+
+  Trace::Error("%s -> %s", current, selected);
+
+  if (ps->Save(selected, current, true) != PERSIST_SAVED) {
+    return false;
+  }
+
+  // all good so now persist the new project name in project state
+  bool result = ps->SaveProjectState(selected) == PERSIST_SAVED;
+
+  if (result) {
+    viewData_->project_->SetProjectName(selected);
+  }
+
+  return result;
+}
+
+void SelectProjectView::ConfirmOverwrite() {
+  char selected[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(selected);
+
+  char buffer[MAX_PROJECT_NAME_LENGTH + 8];
+  snprintf(buffer, sizeof(buffer), "\"%s\"?", selected);
+
+  MessageBox *mb = MessageBox::Create(*this, "Overwrite existing project",
+                                      buffer, MBBF_YES | MBBF_NO);
+  DoModal(mb, ModalViewCallback::create<&ConfirmOverwriteCallback>());
+}
+
+void SelectProjectView::AttemptDeletingSelectedProject() {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+
+  if (WarnPlayerRunning()) {
+    return;
+  }
+
+  if (SelectionIsCurrentProject()) {
+    MessageBox *mb = MessageBox::Create(*this, "Cannot delete the active",
+                                        "project.", MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
+  char selected[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(selected);
+
+  char buffer[MAX_PROJECT_NAME_LENGTH + 11];
+  npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", selected);
+
+  MessageBox *mb = MessageBox::Create(*this, buffer, MBBF_YES | MBBF_NO);
+  DoModal(mb, ModalViewCallback::create<&DeleteProjectCallback>());
+}
+
+void SelectProjectView::AttemptLoadingProject() {
+  if (WarnPlayerRunning()) {
+    return;
+  }
+
+  MessageBox *mb = MessageBox::Create(*this, "Load song and lose changes?",
+                                      MBBF_YES | MBBF_NO);
+  DoModal(mb, ModalViewCallback::create<&LoadProjectCallback>());
 }
