@@ -9,7 +9,6 @@
 #ifndef _SAMPLE_SLICES_VIEW_H_
 #define _SAMPLE_SLICES_VIEW_H_
 
-#include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "FieldView.h"
@@ -36,14 +35,12 @@ public:
   void Update(Observable &o, I_ObservableData *d) override;
 
 private:
-  static void AutoSliceConfirmCallback(View &v, ModalView &dialog);
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
-  void autoSliceEvenly();
   void updateZoomLimits();
   bool updateZoomWindow();
   void adjustZoom(int32_t delta);
@@ -56,11 +53,9 @@ private:
 
   WatchedVariable sliceIndexVar_;
   WatchedVariable sliceStartVar_;
-  Variable autoSliceCountVar_;
 
-  etl::vector<UIIntVarField, 2> intVarField_;
+  etl::vector<UIIntVarField, 1> intVarField_;
   etl::vector<UIStaticField, 5> staticField_;
-  etl::vector<UIActionField, 1> actionField_;
 
   bool needsFullRedraw_;
 

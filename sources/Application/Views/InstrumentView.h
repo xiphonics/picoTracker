@@ -22,6 +22,7 @@
 #include "Externals/etl/include/etl/vector.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
+#include "Foundation/Variables/Variable.h"
 #include "ViewData.h"
 
 class InstrumentView : public FieldView, public I_Observer {
@@ -59,6 +60,7 @@ private:
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
+  Variable autoSliceCountVar_;
   int lastSampleIndex_;
   bool suppressSampleChangeWarning_;
 
@@ -73,7 +75,7 @@ private:
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 2> intVarOffField_;
-  etl::vector<UIActionField, 1> sampleActionField_;
+  etl::vector<UIActionField, 2> sampleActionField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
   etl::vector<InstrumentNameVariable, 1> nameVariables_;
