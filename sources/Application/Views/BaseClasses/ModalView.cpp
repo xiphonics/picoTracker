@@ -30,7 +30,7 @@ void ModalView::ClearTextRect(int x, int y, int w, int h) {
   View::ClearTextRect(x + left_, y + top_, w, h);
 }
 void ModalView::DrawString(int x, int y, const char *txt,
-                           GUITextProperties &props) {
+                           const GUITextProperties &props) {
   View::DrawString(x + left_, y + top_, txt, props);
 };
 

@@ -93,7 +93,7 @@ protected: // GUIWindow implementation
   // override draw string to avoid going too far off
   // the screen.
   virtual void DrawString(const char *string, GUIPoint &pos,
-                          GUITextProperties &props, bool overlay = false);
+                          const GUITextProperties &props, bool overlay = false);
 
   // I_Observer implementation
 
