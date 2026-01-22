@@ -231,8 +231,8 @@
 #define char_border_single_cross_s "\305"
 #define char_border_single_cross char_border_single_cross_s[0]
 
-#define char_line_2_s char_border_single_horizontal_s                          \
-  char_border_single_horizontal_s
+#define char_line_2_s                                                          \
+  char_border_single_horizontal_s char_border_single_horizontal_s
 #define char_line_3_s char_line_2_s char_border_single_horizontal_s
 #define char_line_4_s char_line_3_s char_border_single_horizontal_s
 #define char_line_5_s char_line_4_s char_border_single_horizontal_s
