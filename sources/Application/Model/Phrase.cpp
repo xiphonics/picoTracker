@@ -8,6 +8,7 @@
  */
 
 #include "Phrase.h"
+#include "Application/Utils/AllocUtils.h"
 #include "System/System/System.h"
 #include <stdlib.h>
 #include <string.h>
@@ -41,20 +42,10 @@ unsigned short Phrase::GetNext() {
 };
 
 unsigned short Phrase::GetNextAfter(uchar current) {
-  int start = (current < PHRASE_COUNT) ? (current + 1) : 0;
-  for (int i = start; i < PHRASE_COUNT; i++) {
-    if (!isUsed_[i]) {
-      isUsed_[i] = true;
-      return i;
-    }
-  }
-  for (int i = 0; i < start; i++) {
-    if (!isUsed_[i]) {
-      isUsed_[i] = true;
-      return i;
-    }
-  }
-  return NO_MORE_PHRASE;
+  int next = FindNextAfter(
+      current, PHRASE_COUNT, [this](int i) { return !isUsed_[i]; },
+      [this](int i) { isUsed_[i] = true; });
+  return (next >= 0) ? static_cast<unsigned short>(next) : NO_MORE_PHRASE;
 };
 
 void Phrase::SetUsed(unsigned char c) { isUsed_[c] = true; }

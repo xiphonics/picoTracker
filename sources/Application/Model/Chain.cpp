@@ -8,6 +8,7 @@
  */
 
 #include "Chain.h"
+#include "Application/Utils/AllocUtils.h"
 #include "System/System/System.h"
 #include <stdlib.h>
 #include <string.h>
@@ -37,20 +38,10 @@ unsigned short Chain::GetNext() {
 };
 
 unsigned short Chain::GetNextAfter(unsigned char current) {
-  int start = (current < CHAIN_COUNT) ? (current + 1) : 0;
-  for (int i = start; i < CHAIN_COUNT; i++) {
-    if (!isUsed_[i]) {
-      isUsed_[i] = true;
-      return i;
-    }
-  }
-  for (int i = 0; i < start; i++) {
-    if (!isUsed_[i]) {
-      isUsed_[i] = true;
-      return i;
-    }
-  }
-  return NO_MORE_CHAIN;
+  int next = FindNextAfter(
+      current, CHAIN_COUNT, [this](int i) { return !isUsed_[i]; },
+      [this](int i) { isUsed_[i] = true; });
+  return (next >= 0) ? static_cast<unsigned short>(next) : NO_MORE_CHAIN;
 };
 
 void Chain::SetUsed(unsigned char c) { isUsed_[c] = true; }
