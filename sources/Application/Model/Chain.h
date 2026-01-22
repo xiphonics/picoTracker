@@ -22,6 +22,7 @@ public:
   ~Chain();
   void Reset();
   unsigned short GetNext();
+  unsigned short GetNextAfter(unsigned char current);
   bool IsUsed(unsigned char i) { return isUsed_[i]; };
   void SetUsed(unsigned char c);
   void ClearAllocation();

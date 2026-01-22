@@ -36,6 +36,23 @@ unsigned short Chain::GetNext() {
   return NO_MORE_CHAIN;
 };
 
+unsigned short Chain::GetNextAfter(unsigned char current) {
+  int start = (current < CHAIN_COUNT) ? (current + 1) : 0;
+  for (int i = start; i < CHAIN_COUNT; i++) {
+    if (!isUsed_[i]) {
+      isUsed_[i] = true;
+      return i;
+    }
+  }
+  for (int i = 0; i < start; i++) {
+    if (!isUsed_[i]) {
+      isUsed_[i] = true;
+      return i;
+    }
+  }
+  return NO_MORE_CHAIN;
+};
+
 void Chain::SetUsed(unsigned char c) { isUsed_[c] = true; }
 
 void Chain::ClearAllocation() {

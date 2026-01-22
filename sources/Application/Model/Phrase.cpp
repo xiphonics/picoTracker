@@ -40,6 +40,23 @@ unsigned short Phrase::GetNext() {
   return NO_MORE_PHRASE;
 };
 
+unsigned short Phrase::GetNextAfter(uchar current) {
+  int start = (current < PHRASE_COUNT) ? (current + 1) : 0;
+  for (int i = start; i < PHRASE_COUNT; i++) {
+    if (!isUsed_[i]) {
+      isUsed_[i] = true;
+      return i;
+    }
+  }
+  for (int i = 0; i < start; i++) {
+    if (!isUsed_[i]) {
+      isUsed_[i] = true;
+      return i;
+    }
+  }
+  return NO_MORE_PHRASE;
+};
+
 void Phrase::SetUsed(unsigned char c) { isUsed_[c] = true; }
 
 void Phrase::ClearAllocation() {

@@ -27,6 +27,7 @@ public:
   ~Phrase();
   void Reset();
   unsigned short GetNext();
+  unsigned short GetNextAfter(uchar current);
   bool IsUsed(uchar i) { return isUsed_[i]; };
   void SetUsed(uchar c);
   void ClearAllocation();
