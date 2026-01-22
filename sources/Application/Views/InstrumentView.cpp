@@ -475,24 +475,19 @@ void InstrumentView::fillSIDParameters() {
   v = instrument->FindVariable(FourCC::SIDInstrumentRingModulator);
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_verticalRight_s char_border_single_horizontal_s
+      " " char_border_single_bottomLeft_s char_border_single_horizontal_s
       "Ring Mod:   %s",
       0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
-  position._y += 1;
+  position._y += 2;
   v = instrument->FindVariable(FourCC::SIDInstrumentADSR);
   bigHexVarField_.emplace_back(UIBigHexVarField(
-      position, *v, 4,
-      " " char_border_single_bottomLeft_s char_border_single_horizontal_s
-      "A/D/S/R:    %4.4X",
-      0, 0xFFFF, 16, true));
+      position, *v, 4, "Env. A/D/S/R:  %4.4X", 0, 0xFFFF, 16, true));
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 2;
-  staticField_.emplace_back(
-      position,
-      "Chip Settings" char_line_11_s);
+  staticField_.emplace_back(position, "Chip Settings" char_line_11_s);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._y += 2;
@@ -618,9 +613,7 @@ void InstrumentView::fillOpalParameters() {
 
   // extra y spacing to allow for gap between export/import and parameters
   position._y += 2;
-  staticField_.emplace_back(
-      position,
-      "General Settings" char_line_8_s);
+  staticField_.emplace_back(position, "General Settings" char_line_8_s);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._y += 2;
@@ -641,18 +634,19 @@ void InstrumentView::fillOpalParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
-  staticField_.emplace_back(
-      position,
-      "Operator Settings" char_line_7_s);
+  staticField_.emplace_back(position, "Operator Settings" char_line_7_s);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   // operator settings
   position._y += 2;
-  staticField_.emplace_back(position, "               Op 1" char_border_single_vertical_s "Op 2");
+  staticField_.emplace_back(
+      position, "               Op 1" char_border_single_vertical_s "Op 2");
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._y += 1;
-  staticField_.emplace_back(position, "               " char_line_4_s char_border_single_cross_s char_line_4_s);
+  staticField_.emplace_back(
+      position,
+      "               " char_line_4_s char_border_single_cross_s char_line_4_s);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   // vertical table separator
@@ -670,7 +664,8 @@ void InstrumentView::fillOpalParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::OPALInstrumentOp2Level);
-  intVarField_.emplace_back(UIIntVarField(position + GUIPoint(20, 0), *v, "%2.2X", 0, 63, 1, 1, 0));
+  intVarField_.emplace_back(
+      UIIntVarField(position + GUIPoint(20, 0), *v, "%2.2X", 0, 63, 1, 1, 0));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
@@ -691,8 +686,8 @@ void InstrumentView::fillOpalParameters() {
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::OPALInstrumentOp2ADSR);
-  bigHexVarField_.emplace_back(
-      UIBigHexVarField(position + GUIPoint(20, 0), *v, 4, "%4.4X", 0, 0xFFFF, 16, true));
+  bigHexVarField_.emplace_back(UIBigHexVarField(
+      position + GUIPoint(20, 0), *v, 4, "%4.4X", 0, 0xFFFF, 16, true));
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
@@ -702,7 +697,8 @@ void InstrumentView::fillOpalParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::OPALInstrumentOp2WaveShape);
-  intVarField_.emplace_back(UIIntVarField(position + GUIPoint(20, 0), *v, "%s", 0, 7, 1, 1));
+  intVarField_.emplace_back(
+      UIIntVarField(position + GUIPoint(20, 0), *v, "%s", 0, 7, 1, 1));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
@@ -712,7 +708,8 @@ void InstrumentView::fillOpalParameters() {
   fieldList_.insert(fieldList_.end(), &(*bitmaskVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::OPALInstrumentOp2TremVibSusKSR);
-  bitmaskVarField_.emplace_back(UIBitmaskVarField(position + GUIPoint(20, 0), *v, "%04b", 4));
+  bitmaskVarField_.emplace_back(
+      UIBitmaskVarField(position + GUIPoint(20, 0), *v, "%04b", 4));
   fieldList_.insert(fieldList_.end(), &(*bitmaskVarField_.rbegin()));
 
   position._y += 1;
@@ -722,7 +719,8 @@ void InstrumentView::fillOpalParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::OPALInstrumentOp2KeyScaleLevel);
-  intVarField_.emplace_back(UIIntVarField(position + GUIPoint(20, 0), *v, "%s", 0, 3, 1, 1));
+  intVarField_.emplace_back(
+      UIIntVarField(position + GUIPoint(20, 0), *v, "%s", 0, 3, 1, 1));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   Trace::Error("OPAL fill done, total fields: %d", fieldList_.size());
