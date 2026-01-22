@@ -69,7 +69,7 @@ private:
   etl::vector<UIActionField, 2> persistentActionField_;
   etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
-  etl::vector<UIStaticField, 4> staticField_;
+  etl::vector<UIStaticField, 10> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 2> intVarOffField_;
   etl::vector<UIActionField, 1> sampleActionField_;
