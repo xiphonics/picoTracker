@@ -10,7 +10,6 @@
 #define _SAMPLE_SLICES_VIEW_H_
 
 #include "BaseClasses/UIActionField.h"
-#include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "FieldView.h"
@@ -60,8 +59,7 @@ private:
   Variable autoSliceCountVar_;
 
   etl::vector<UIIntVarField, 2> intVarField_;
-  etl::vector<UIBigHexVarField, 1> bigHexVarField_;
-  etl::vector<UIStaticField, 2> staticField_;
+  etl::vector<UIStaticField, 5> staticField_;
   etl::vector<UIActionField, 1> actionField_;
 
   bool needsFullRedraw_;

@@ -34,11 +34,11 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
       graphFieldPos_(SliceXOffset, SliceYOffset),
       graphField_(graphFieldPos_, GraphField::BitmapWidth,
                   GraphField::BitmapHeight),
-      modalWasOpen_(false), playKeyHeld_(false),
-      previewActive_(false), previewNote_(SampleInstrument::SliceNoteBase),
+      modalWasOpen_(false), playKeyHeld_(false), previewActive_(false),
+      previewNote_(SampleInstrument::SliceNoteBase),
       sys_(System::GetInstance()), previewStartMs_(0), previewStartSample_(0),
-      previewEndSample_(0), previewDurationMs_(0.0f),
-      previewPlayheadSample_(0), previewCursorVisible_(false) {
+      previewEndSample_(0), previewDurationMs_(0.0f), previewPlayheadSample_(0),
+      previewCursorVisible_(false) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
   graphField_.SetShowBaseline(false);
@@ -240,8 +240,7 @@ void SampleSlicesView::AnimationUpdate() {
       isDirty_ = true;
       ((AppWindow &)w_).SetDirty();
     } else {
-      float fraction =
-          static_cast<float>(elapsedMs) / previewDurationMs_;
+      float fraction = static_cast<float>(elapsedMs) / previewDurationMs_;
       uint32_t span = (previewEndSample_ > previewStartSample_)
                           ? (previewEndSample_ - previewStartSample_)
                           : 0;
@@ -306,13 +305,9 @@ void SampleSlicesView::buildFieldLayout() {
   for (auto &f : intVarField_) {
     f.RemoveObserver(*this);
   }
-  for (auto &f : bigHexVarField_) {
-    f.RemoveObserver(*this);
-  }
 
   fieldList_.clear();
   intVarField_.clear();
-  bigHexVarField_.clear();
   staticField_.clear();
   actionField_.clear();
 
@@ -320,28 +315,6 @@ void SampleSlicesView::buildFieldLayout() {
   position._x += 5;
   position._y = 12;
 
-  intVarField_.emplace_back(
-      position, sliceIndexVar_, "slice: %2d", 0,
-      static_cast<int32_t>(SampleInstrument::MaxSlices) - 1, 1, 1);
-  fieldList_.insert(fieldList_.end(), &intVarField_.back());
-  intVarField_.back().AddObserver(*this);
-
-  position._y += 1;
-  int32_t maxStart =
-      (sampleSize_ > 0) ? static_cast<int32_t>(sampleSize_ - 1) : 0;
-  int32_t minStart = 0;
-  if (instrument_) {
-    int32_t index = sliceIndexVar_.GetInt();
-    if (index > 0) {
-      minStart = static_cast<int32_t>(instrument_->GetSlicePoint(index - 1));
-    }
-  }
-  bigHexVarField_.emplace_back(position, sliceStartVar_, 7, "position: %7.7X",
-                               minStart, maxStart, 16);
-  fieldList_.insert(fieldList_.end(), &bigHexVarField_.back());
-  bigHexVarField_.back().AddObserver(*this);
-
-  position._y += 1;
   intVarField_.emplace_back(position, autoSliceCountVar_, "auto: %2d", 1,
                             static_cast<int32_t>(SampleInstrument::MaxSlices),
                             1, 4);
@@ -355,13 +328,23 @@ void SampleSlicesView::buildFieldLayout() {
   fieldList_.insert(fieldList_.end(), &graphField_);
 
   position._y += 2;
-  position._x = GetAnchor()._x + 5;
+  position._x = 1;
+  staticField_.emplace_back(position, "EDIT+RIGHT/LEFT: select slice");
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._y += 1;
+  staticField_.emplace_back(position, "EDIT+UP/DOWN: zoom in/out");
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._y += 1;
+  staticField_.emplace_back(position, "ENTER+UP/DOWN: coarse move");
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._y += 1;
+  staticField_.emplace_back(position, "ENTER+RIGHT/LEFT: fine move");
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._y += 1;
   staticField_.emplace_back(position, "PLAY: preview slice");
   fieldList_.insert(fieldList_.end(), &staticField_.back());
 
-  if (!fieldList_.empty()) {
-    SetFocus(*fieldList_.begin());
-  }
+  SetFocus(&graphField_);
 }
 
 void SampleSlicesView::rebuildWaveform() {
