@@ -27,6 +27,10 @@ static void ConfirmOverwriteCallback(View &v, ModalView &dialog) {
 
 static void LoadProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
+
+    // User accepted losing changes; clear autosave for the current project.
+    ((SelectProjectView &)v).ClearAutoSave();
+
     ((SelectProjectView &)v).LoadProject();
   }
 }
@@ -307,19 +311,6 @@ void SelectProjectView::LoadProject() {
     return;
   }
 
-  // User accepted losing changes; clear autosave for the current project.
-  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
-  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
-  const char *currentProject = projectName.c_str();
-  PersistencyService *ps = PersistencyService::GetInstance();
-  if (currentProject && currentProject[0] != '\0') {
-    if (!ps->ClearAutosave(currentProject)) {
-      Trace::Log("SELECTPROJECTVIEW",
-                 "Autosave clear failed or missing for project: %s",
-                 currentProject);
-    }
-  }
-
   // all subdirs directly inside /project are expected to be projects
   unsigned fileIndex = fileIndexList_[currentIndex_];
   auto fs = FileSystem::GetInstance();
@@ -430,4 +421,17 @@ void SelectProjectView::AttemptLoadingProject() {
   MessageBox *mb = MessageBox::Create(*this, "Load song and lose changes?",
                                       MBBF_YES | MBBF_NO);
   DoModal(mb, ModalViewCallback::create<&LoadProjectCallback>());
+}
+
+void SelectProjectView::ClearAutoSave() {
+  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
+  PersistencyService *ps = PersistencyService::GetInstance();
+  if (!projectName.empty()) {
+    if (!ps->ClearAutosave(projectName.c_str())) {
+      Trace::Log("SELECTPROJECTVIEW",
+                 "Autosave clear failed or missing for project: %s",
+                 projectName.c_str());
+    }
+  }
 }
