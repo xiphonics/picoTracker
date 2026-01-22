@@ -396,7 +396,8 @@ void View::drawBattery(GUITextProperties &props) {
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
 
-  // use define to choose between drawing battery percentage or battery level as bars
+  // use define to choose between drawing battery percentage or battery level as
+  // bars
   SetColor(CD_NORMAL);
   const char *battText = nullptr;
 
@@ -438,7 +439,8 @@ void View::drawBattery(GUITextProperties &props) {
   constexpr int kBattWidth = 6; // "[100%]" is the widest we render
   int startX = SCREEN_WIDTH - kBattWidth;
   ClearTextRect(startX, battpos._y, kBattWidth, 1);
-  battpos._x = startX + (kBattWidth - battLen); // we want to right align the batt widget
+  battpos._x =
+      startX + (kBattWidth - battLen); // we want to right align the batt widget
   DrawString(battpos._x, battpos._y, battText, props);
 }
 
