@@ -235,9 +235,8 @@ unsigned short InstrumentBank::GetNextFreeInstrumentSlotId() {
 unsigned short InstrumentBank::Clone(unsigned short i) {
   I_Instrument *src = instruments_[i];
 
-  // TODO: NEED TO actually find the next available instrument slot, if there
-  // even is one
-  auto nextFreeInstrumentSlotId = i++;
+  // Find next available instrument slot
+  auto nextFreeInstrumentSlotId = GetNextFreeInstrumentSlotId();
 
   unsigned short next =
       GetNextAndAssignID(src->GetType(), nextFreeInstrumentSlotId);
