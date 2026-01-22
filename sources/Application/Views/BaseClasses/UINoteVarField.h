@@ -15,8 +15,8 @@
 class UINoteVarField : public UIIntVarField {
 
 public:
-  UINoteVarField(GUIPoint &position, Variable &v, const char *format, int min,
-                 int max, int xOffset, int yOffset);
+  UINoteVarField(const GUIPoint &position, Variable &v, const char *format,
+                 int min, int max, int xOffset, int yOffset);
   virtual void Draw(GUIWindow &w, int offset = 0);
 };
 
