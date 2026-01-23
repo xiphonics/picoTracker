@@ -447,8 +447,7 @@ void InstrumentView::fillSIDParameters() {
   v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_verticalRight_s char_border_single_horizontal_s
-      "Pulsewidth: %2.2X",
+      "  Pulsewidth:   %2.2X",
       0, 0xFFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -457,8 +456,7 @@ void InstrumentView::fillSIDParameters() {
 
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_verticalRight_s char_border_single_horizontal_s
-      "Waveform:   %s",
+      "  Waveform:    %s",
       0, DWF_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -466,8 +464,7 @@ void InstrumentView::fillSIDParameters() {
   v = instrument->FindVariable(FourCC::SIDInstrumentVSync);
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_verticalRight_s char_border_single_horizontal_s
-      "Osc Sync:   %s",
+      "  Osc Sync:    %s",
       0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -475,8 +472,7 @@ void InstrumentView::fillSIDParameters() {
   v = instrument->FindVariable(FourCC::SIDInstrumentRingModulator);
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_bottomLeft_s char_border_single_horizontal_s
-      "Ring Mod:   %s",
+      "  Ring Mod:    %s",
       0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -506,8 +502,7 @@ void InstrumentView::fillSIDParameters() {
   }
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_verticalRight_s char_border_single_horizontal_s
-      "Cutoff:     %1.1X",
+      "  Cutoff:      %1.1X",
       0, 0x7FF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -522,8 +517,7 @@ void InstrumentView::fillSIDParameters() {
   }
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_verticalRight_s char_border_single_horizontal_s
-      "Resonance:  %1.1X",
+      "  Resonance:   %1.1X",
       0, 0xF, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -538,8 +532,7 @@ void InstrumentView::fillSIDParameters() {
   }
   intVarField_.emplace_back(
       position, *v,
-      " " char_border_single_bottomLeft_s char_border_single_horizontal_s
-      "Mode:       %s",
+      "  Mode:        %s",
       0, DFM_LAST - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
