@@ -445,13 +445,11 @@ void View::drawBattery(GUITextProperties &props) {
       }
 
       int previous_level = last_bar_level;
-      bool changed = false;
       if (!has_last_bar_level) {
         last_bar_level = candidate_level;
         pending_bar_level = -1;
         pending_bar_seconds = 0;
         has_last_bar_level = true;
-        changed = true;
       } else if (candidate_level == last_bar_level) {
         pending_bar_level = -1;
         pending_bar_seconds = 0;
@@ -462,18 +460,13 @@ void View::drawBattery(GUITextProperties &props) {
           pending_bar_level = candidate_level;
           pending_bar_seconds = 1;
         }
-
         if (pending_bar_seconds >= confirm_seconds_required) {
           last_bar_level = candidate_level;
           pending_bar_level = -1;
           pending_bar_seconds = 0;
-          changed = true;
         }
       }
-
       bar_level = last_bar_level;
-
-      (void)previous_level;
     }
 
     if (bar_level >= 4) {
