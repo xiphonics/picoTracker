@@ -1,7 +1,7 @@
 #pragma once
 
-#include "System/Console/Trace.h"
 #include "Application/Utils/fixed.h"
+#include "System/Console/Trace.h"
 #include <cstdint>
 
 static uint32_t lcg = 42;
@@ -22,8 +22,55 @@ enum gbWaveType {
 };
 
 /******************************************************************************
- * constants                                                                  * 
+ * constants                                                                  *
  ******************************************************************************/
+
+// precalculated note step values for DDS (32-bit phase accumulator)
+static const uint32_t semitoneRatioQ16[256] = {
+    0x00000028, 0x0000002A, 0x0000002D, 0x0000002F, 0x00000032, 0x00000035,
+    0x00000039, 0x0000003C, 0x00000040, 0x00000043, 0x00000047, 0x0000004C,
+    0x00000050, 0x00000055, 0x0000005A, 0x0000005F, 0x00000065, 0x0000006B,
+    0x00000072, 0x00000078, 0x00000080, 0x00000087, 0x0000008F, 0x00000098,
+    0x000000A1, 0x000000AA, 0x000000B5, 0x000000BF, 0x000000CB, 0x000000D7,
+    0x000000E4, 0x000000F1, 0x00000100, 0x0000010F, 0x0000011F, 0x00000130,
+    0x00000142, 0x00000155, 0x0000016A, 0x0000017F, 0x00000196, 0x000001AE,
+    0x000001C8, 0x000001E3, 0x00000200, 0x0000021E, 0x0000023E, 0x00000260,
+    0x00000285, 0x000002AB, 0x000002D4, 0x000002FF, 0x0000032C, 0x0000035D,
+    0x00000390, 0x000003C6, 0x00000400, 0x0000043C, 0x0000047D, 0x000004C1,
+    0x0000050A, 0x00000556, 0x000005A8, 0x000005FE, 0x00000659, 0x000006BA,
+    0x00000720, 0x0000078D, 0x00000800, 0x00000879, 0x000008FA, 0x00000983,
+    0x00000A14, 0x00000AAD, 0x00000B50, 0x00000BFC, 0x00000CB2, 0x00000D74,
+    0x00000E41, 0x00000F1A, 0x00001000, 0x000010F3, 0x000011F5, 0x00001306,
+    0x00001428, 0x0000155B, 0x000016A0, 0x000017F9, 0x00001965, 0x00001AE8,
+    0x00001C82, 0x00001E34, 0x00002000, 0x000021E7, 0x000023EB, 0x0000260D,
+    0x00002851, 0x00002AB7, 0x00002D41, 0x00002FF2, 0x000032CB, 0x000035D1,
+    0x00003904, 0x00003C68, 0x00004000, 0x000043CE, 0x000047D6, 0x00004C1B,
+    0x000050A2, 0x0000556E, 0x00005A82, 0x00005FE4, 0x00006597, 0x00006BA2,
+    0x00007208, 0x000078D0, 0x00008000, 0x0000879C, 0x00008FAC, 0x00009837,
+    0x0000A145, 0x0000AADC, 0x0000B504, 0x0000BFC8, 0x0000CB2F, 0x0000D744,
+    0x0000E411, 0x0000F1A1, 0x00010000, 0x00010F38, 0x00011F59, 0x0001306F,
+    0x0001428A, 0x000155B8, 0x00016A09, 0x00017F91, 0x0001965F, 0x0001AE89,
+    0x0001C823, 0x0001E343, 0x00020000, 0x00021E71, 0x00023EB3, 0x000260DF,
+    0x00028514, 0x0002AB70, 0x0002D413, 0x0002FF22, 0x00032CBF, 0x00035D13,
+    0x00039047, 0x0003C686, 0x00040000, 0x00043CE3, 0x00047D66, 0x0004C1BF,
+    0x00050A28, 0x000556E0, 0x0005A827, 0x0005FE44, 0x0006597F, 0x0006BA27,
+    0x0007208F, 0x00078D0D, 0x00080000, 0x000879C7, 0x0008FACD, 0x0009837F,
+    0x000A1451, 0x000AADC0, 0x000B504F, 0x000BFC88, 0x000CB2FF, 0x000D744F,
+    0x000E411F, 0x000F1A1B, 0x00100000, 0x0010F38F, 0x0011F59A, 0x001306FE,
+    0x001428A2, 0x00155B81, 0x0016A09E, 0x0017F910, 0x001965FE, 0x001AE89F,
+    0x001C823E, 0x001E3437, 0x00200000, 0x0021E71F, 0x0023EB35, 0x00260DFC,
+    0x00285145, 0x002AB702, 0x002D413C, 0x002FF221, 0x0032CBFD, 0x0035D13F,
+    0x0039047C, 0x003C686F, 0x00400000, 0x0043CE3E, 0x0047D66B, 0x004C1BF8,
+    0x0050A28B, 0x00556E04, 0x005A8279, 0x005FE443, 0x006597FA, 0x006BA27E,
+    0x007208F8, 0x0078D0DF, 0x00800000, 0x00879C7C, 0x008FACD6, 0x009837F0,
+    0x00A14517, 0x00AADC08, 0x00B504F3, 0x00BFC886, 0x00CB2FF5, 0x00D744FC,
+    0x00E411F0, 0x00F1A1BF, 0x01000000, 0x010F38F9, 0x011F59AC, 0x01306FE0,
+    0x01428A2F, 0x0155B810, 0x016A09E6, 0x017F910D, 0x01965FEA, 0x01AE89F9,
+    0x01C823E0, 0x01E3437E, 0x02000000, 0x021E71F2, 0x023EB358, 0x0260DFC1,
+    0x0285145F, 0x02AB7021, 0x02D413CC, 0x02FF221A, 0x032CBFD4, 0x035D13F3,
+    0x039047C0, 0x03C686FC, 0x04000000, 0x043CE3E4, 0x047D66B0, 0x04C1BF82,
+    0x050A28BE, 0x0556E042, 0x05A82799, 0x05FE4435,
+};
 
 // precalculated frequency table midi notes -12 to 127+12
 constexpr int32_t frequencyTable[128 + 24] = {
@@ -80,6 +127,11 @@ constexpr const int8_t sine64[65] = {
     -117, -122, -125, -126, -127, -126, -125, -122, -117, -112, -106,
     -98,  -90,  -81,  -71,  -60,  -49,  -37,  -25,  -12,  0};
 
+static inline uint32_t multiplyQ32(uint32_t a, uint32_t b) {
+  uint64_t tmp = (uint64_t)a * b;
+  return (uint32_t)(tmp >> 32);
+}
+
 static inline uint16_t interpolateU16(const uint16_t *lut, uint8_t v) {
   uint8_t idx = v >> 2; // 0..63
   uint8_t frac = v & 3; // 0..3
@@ -119,7 +171,7 @@ typedef struct InstrumentParameters {
 typedef enum { ENV_IDLE = 0, ENV_ATTACK, ENV_DECAY } EnvState;
 
 /******************************************************************************
- * envelope                                                                   * 
+ * envelope                                                                   *
  ******************************************************************************/
 
 typedef struct {
@@ -163,7 +215,7 @@ typedef struct {
 } Envelope;
 
 /******************************************************************************
- * voice                                                                      * 
+ * voice                                                                      *
  ******************************************************************************/
 
 typedef struct voice_t {
@@ -198,12 +250,13 @@ typedef struct voice_t {
 
   uint32_t sweepCoefficient;
   int32_t sweepSteps;
-  
+
   // Legato (exponential pitch slide)
-  uint32_t legatoCoefficient = 65536; // Q16.16 multiplier per 100Hz tick
-  int32_t legatoSteps = 0;             // Remaining ticks
-  int32_t legatoTargetFreq = 0;        // Target frequency
-  
+  int32_t legatoCoefficient = 0; // Q16.16 multiplier per 100Hz tick
+  int32_t legatoFactor = 0;      // Q16.16 multiplier per 100Hz tick
+  int32_t legatoSteps = 0;       // Remaining ticks
+  int32_t legatoTargetFreq = 0;  // Target frequency
+
   uint16_t lfsr = 17;
   uint32_t noise;
 
@@ -220,13 +273,23 @@ typedef struct voice_t {
 
   void runCommand() {
     switch (command) {
-      case FourCC::InstrumentCommandArpeggiator: {
-        // handled in 1000Hz tick
-        break;
-      }
-      default:
-        break;
+    case FourCC::InstrumentCommandArpeggiator: {
+      // handled in 1000Hz tick
+      break;
     }
+    default:
+      break;
+    }
+  }
+
+  // convert a floating-point factor to Q0.32 fixed-point
+  static inline uint32_t floatToQ32(double f) {
+    return (uint32_t)(f * 4294967296.0); // 2^32
+  }
+
+  // apply slide factor to DDS step
+  static inline uint32_t applySlide(uint32_t step, uint32_t factorQ32) {
+    return multiplyQ32(step, factorQ32);
   }
 
   inline fixed sample() {
@@ -271,18 +334,10 @@ typedef struct voice_t {
       frequency = arpFrequencies[arpIndex] + delta;
 
       // Legato: exponential frequency interpolation
-      if (legatoSteps > 0) {
+      if (legatoSteps > 0 && command == FourCC::InstrumentCommandLegato) {
+        legatoFactor = applySlide(legatoFactor, legatoCoefficient);
         legatoSteps--;
-        
-        // Apply exponential multiplier
-        uint64_t newFreq = ((uint64_t)frequency * legatoCoefficient) >> 16;
-        
-        // Clamp to prevent overshoot on final step
-        if (legatoSteps == 0) {
-          frequency = legatoTargetFreq;
-        } else {
-          frequency = (int32_t)newFreq;
-        }
+        frequency = multiplyQ32(frequency, legatoFactor);
       }
     }
 
@@ -375,21 +430,22 @@ typedef struct voice_t {
       sample = noise;
       break;
     case gbWaveNoiseWhite: // Noise: White Noise, frequency independent
-        lcg *= 1664525;
-        lcg += 1013904223;
-        sample = lcg & 0x0FFF'FFFF;
+      lcg *= 1664525;
+      lcg += 1013904223;
+      sample = lcg & 0x0FFF'FFFF;
       break;
     }
 
     time++;
-    
+
     // Apply combined gain (volume * envelope) in single operation
     sample = (sample >> 8) * combinedGain;
 
     return sample;
   }
 
-  inline void note_on(unsigned char note, bool retrigger, InstrumentParameters parameters) {
+  inline void note_on(unsigned char note, bool retrigger,
+                      InstrumentParameters parameters) {
     this->parameters = parameters;
 
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
@@ -407,6 +463,7 @@ typedef struct voice_t {
     time = 0;
     tick = 0;
     tock = 0;
+    legatoCoefficient = 0xFFFF'FFFF; // 1.0 in Q0.32
 
     // reset vibrato
     vibSwing = frequencyTable[fIndex + 1] - frequency;
@@ -447,7 +504,8 @@ typedef struct voice_t {
     return (lastSample = (lastSample + diff));
   }
 
-  static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1, int feedback) {
+  static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1,
+                                          int feedback) {
     uint16_t lfsr_val = *lfsr;
 
     bool bitA = lfsr_val & 1;
@@ -474,39 +532,74 @@ typedef struct voice_t {
 
   /* command implementation ***************************************************/
 
+  // integer log2 approximation for Q16.16 input
+  static inline int32_t log2_fixed(uint32_t xQ16) {
+    if (xQ16 == 0)
+      return 0;
+
+    int leading = 31 - __builtin_clz(xQ16); // integer part of log2
+    uint32_t frac = xQ16 << (31 - leading); // normalized fractional part
+    // take top 16 bits as fraction
+    int32_t frac16 = frac >> 15;
+    return (leading - 16) << 16 | (frac16 & 0xFFFF); // Q16.16
+  }
+
+  // integer exp2 approximation, input in Q16.16, output Q16.16
+  static inline uint32_t exp2_fixed(int32_t log2Q16) {
+    int32_t intPart = log2Q16 >> 16;
+    int32_t fracPart = log2Q16 & 0xFFFF;
+    // 2^fracPart ~ 1 + fracPart / 65536 (linear approx)
+    uint32_t result = (1U << 16) + fracPart;
+    // multiply by 2^intPart
+    if (intPart >= 0)
+      result <<= intPart;
+    else
+      result >>= -intPart;
+    return result;
+  }
+
+  // fully fixed-point per-tick legato initialization
   void command_init_legato(uint8_t speed, int8_t semitones) {
-    // not implemented yet
     /*
-    performs an exponential pitch slide from previous note value to pitch bb at speed aa.
+    performs an exponential pitch slide from previous note value to pitch bb at
+    speed aa.
 
     00 is the fastest speed for aa (instant, useless)
-    bb values are relative: 00-7F are up, 80-FF are down, expressed in semi-tones
-    if LEG is put on a row where a note is present and the pitch offset is 0 (e.g. C4 I3 LEG 1000) the slide will occur automatically from previous note to the current one at the given speed.
-    If an instrument is not triggered on the same row as LEG, the command will re-trigger the previous instrument (unless the previous instrument is still playing).
-    LEG does exponential pitch change (i;e. it goes at same speed through all octaves) while PITCH is linear
+    bb values are relative: 00-7F are up, 80-FF are down, expressed in
+    semi-tones if LEG is put on a row where a note is present and the pitch
+    offset is 0 (e.g. C4 I3 LEG 1000) the slide will occur automatically from
+    previous note to the current one at the given speed. If an instrument is not
+    triggered on the same row as LEG, the command will re-trigger the previous
+    instrument (unless the previous instrument is still playing). LEG does
+    exponential pitch change (i;e. it goes at same speed through all octaves)
+    while PITCH is linear
     */
-    uint32_t targetNote = note + semitones + parameters.transpose;
-    int32_t targetFreq = frequencyTable[std::clamp<int32_t>(targetNote + 12, 0, 127 + 24)];
-    int32_t currentFreq = frequency;
-    int32_t ticks = speed; // Speed is in 100Hz ticks (speed=0 is instant)
 
-    if (ticks == 0 || currentFreq == 0) {
-      // Instant change
-      frequency = targetFreq;
-      legatoSteps = 0;
-    } else {
-      // Calculate exponential coefficient: multiplier^ticks = targetFreq/currentFreq
-      // Using linear approximation: coefficient ≈ 1 + (targetFreq - currentFreq) / (currentFreq * ticks)
-      // In Q16.16: coefficient = 65536 + ((targetFreq - currentFreq) << 16) / (currentFreq * ticks)
-      int64_t freqDiff = (int64_t)targetFreq - currentFreq;
-      int64_t denominator = (int64_t)currentFreq * ticks;
-      int64_t coeffOffset = (freqDiff << 16) / denominator;
-      
-      legatoCoefficient = 65536 + (int32_t)coeffOffset;
-      legatoSteps = ticks;
-      legatoTargetFreq = targetFreq;
-    }
+    int ticks = 1 + speed; // minimum 1 tick
 
+    // clamp semitones to table
+    if (semitones < -128)
+      semitones = -128;
+    if (semitones > 127)
+      semitones = 127;
+
+    // get total ratio from table (Q16.16)
+    uint32_t ratioQ16 = semitoneRatioQ16[semitones + 128];
+
+    // compute log2 of ratio in Q16.16
+    int32_t log2Total = log2_fixed(ratioQ16);
+
+    // divide by ticks to get per-tick log2
+    int32_t log2PerTick = log2Total / ticks;
+
+    // compute per-tick factor in Q16.16
+    legatoCoefficient = exp2_fixed(log2PerTick); // Q16.16
+
+    // initialize factor to 1.0 in Q16.16
+    legatoFactor = 0x00010000;
+
+    // remaining ticks
+    legatoSteps = ticks;
   }
 
   void command_init_arp(ushort value) {
@@ -514,7 +607,8 @@ typedef struct voice_t {
     arpLength = 5;
 
     // trim off trailing zeroes
-    ushort val = value;
+    uint16_t val = value;
+
     while (arpLength > 1 && (val & 0xF) == 0) {
       arpLength--;
       val >>= 4;
