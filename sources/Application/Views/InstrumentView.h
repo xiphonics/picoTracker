@@ -25,6 +25,8 @@
 #include "Foundation/Variables/Variable.h"
 #include "ViewData.h"
 
+class SampleInstrument;
+
 class InstrumentView : public FieldView, public I_Observer {
 public:
   InstrumentView(GUIWindow &w, ViewData *data);
@@ -57,6 +59,7 @@ protected:
   void handleInstrumentExport();
 
 private:
+  void syncAutoSliceCount(SampleInstrument *instrument);
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;

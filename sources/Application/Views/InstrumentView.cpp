@@ -305,6 +305,21 @@ void InstrumentView::refreshInstrumentFields() {
 
 void InstrumentView::fillNoneParameters() {}
 
+void InstrumentView::syncAutoSliceCount(SampleInstrument *instrument) {
+  int32_t count = 0;
+  if (instrument) {
+    for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
+      if (instrument->IsSliceDefined(i)) {
+        count++;
+      }
+    }
+  }
+  if (count < 1) {
+    count = 1;
+  }
+  autoSliceCountVar_.SetInt(count, false);
+}
+
 void InstrumentView::fillSampleParameters() {
 
   int i = viewData_->currentInstrumentID_;
@@ -312,6 +327,7 @@ void InstrumentView::fillSampleParameters() {
   I_Instrument *instr = bank->GetInstrument(i);
   SampleInstrument *instrument = (SampleInstrument *)instr;
   lastSampleIndex_ = instrument->GetSampleIndex();
+  syncAutoSliceCount(instrument);
 
   GUIPoint position = GetAnchor();
   const int baseX = position._x;
@@ -1076,6 +1092,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     }
 
     if (!sampleInstr->HasSlicesForWarning()) {
+      sampleInstr->ClearSlices();
+      autoSliceCountVar_.SetInt(1, false);
       lastSampleIndex_ = newIndex;
       break;
     }
@@ -1089,6 +1107,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                                                          ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_YES) {
         sampleInstr->ClearSlices();
+        autoSliceCountVar_.SetInt(1, false);
         lastSampleIndex_ = newIndex;
         isDirty_ = true;
       } else {
