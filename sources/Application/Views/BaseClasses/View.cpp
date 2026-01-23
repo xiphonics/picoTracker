@@ -473,14 +473,7 @@ void View::drawBattery(GUITextProperties &props) {
 
       bar_level = last_bar_level;
 
-      if (changed) {
-        Trace::Debug("Battery bars changed: %d -> %d (pct=%u, mv=%u)",
-                     previous_level, bar_level, pct, batteryState_.voltage_mv);
-      } else {
-        Trace::Debug("Battery bars stable: %d (pct=%u, mv=%u, pending=%d/%u)",
-                     bar_level, pct, batteryState_.voltage_mv,
-                     pending_bar_level, pending_bar_seconds);
-      }
+      (void)previous_level;
     }
 
     if (bar_level >= 4) {
