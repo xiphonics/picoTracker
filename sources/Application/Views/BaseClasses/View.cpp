@@ -421,8 +421,8 @@ void View::drawBattery(GUITextProperties &props) {
   battText = battTextBuffer;
 #else
   static bool has_last_bar_level = false;
-  static int last_bar_level = 0;
-  static int pending_bar_level = -1;
+  static uint8_t last_bar_level = 0;
+  static uint8_t pending_bar_level = 0;
   static uint8_t pending_bar_seconds = 0;
   const uint8_t confirm_seconds_required = 10;
 
@@ -431,7 +431,7 @@ void View::drawBattery(GUITextProperties &props) {
     battText = string_battery_charging;
   } else {
     uint8_t pct = batteryState_.percentage;
-    int bar_level = last_bar_level;
+    uint8_t bar_level = last_bar_level;
     if (battery_state_updated || !has_last_bar_level) {
       int candidate_level = 0;
       if (pct > 90) {
@@ -444,7 +444,7 @@ void View::drawBattery(GUITextProperties &props) {
         candidate_level = 1;
       }
 
-      int previous_level = last_bar_level;
+      uint8_t previous_level = last_bar_level;
       if (!has_last_bar_level) {
         last_bar_level = candidate_level;
         pending_bar_level = -1;
