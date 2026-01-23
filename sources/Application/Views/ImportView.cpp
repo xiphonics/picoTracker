@@ -588,6 +588,7 @@ void ImportView::import() {
     if (instr->GetType() == IT_SAMPLE) {
       SampleInstrument *sinstr = (SampleInstrument *)instr;
       sinstr->AssignSample(sampleID);
+      sinstr->ClearSlices();
     };
 
     // check if we had to truncate filename
