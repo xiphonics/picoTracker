@@ -444,7 +444,6 @@ void View::drawBattery(GUITextProperties &props) {
         candidate_level = 1;
       }
 
-      uint8_t previous_level = last_bar_level;
       if (!has_last_bar_level) {
         last_bar_level = candidate_level;
         pending_bar_level = -1;
