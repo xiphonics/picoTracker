@@ -424,60 +424,60 @@ void View::drawBattery(GUITextProperties &props) {
   }
   battText = battTextBuffer;
 #else
-  static int8_t last_bar_level = -1;
-  static int8_t pending_bar_level = -1;
-  static uint8_t pending_bar_seconds = 0;
-  const uint8_t confirm_seconds_required = 10;
+  static int8_t lastBarLevel = -1;
+  static int8_t pendingBarLevel = -1;
+  static uint8_t pendingBarSeconds = 0;
+  const uint8_t confirmSecondsRequired = 10;
 
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     battText = string_battery_charging;
   } else {
     uint8_t pct = batteryState_.percentage;
-    uint8_t bar_level =
-        last_bar_level < 0 ? 0 : static_cast<uint8_t>(last_bar_level);
-    if (batteryStateUpdated || last_bar_level < 0) {
-      int candidate_level = 0;
+    uint8_t barLevel =
+        lastBarLevel < 0 ? 0 : static_cast<uint8_t>(lastBarLevel);
+    if (batteryStateUpdated || lastBarLevel < 0) {
+      int candidateLevel = 0;
       if (pct > 90) {
-        candidate_level = 4;
+        candidateLevel = 4;
       } else if (pct > 65) {
-        candidate_level = 3;
+        candidateLevel = 3;
       } else if (pct > 40) {
-        candidate_level = 2;
+        candidateLevel = 2;
       } else if (pct > 35) {
-        candidate_level = 1;
+        candidateLevel = 1;
       }
 
-      if (last_bar_level < 0) {
-        last_bar_level = candidate_level;
-        pending_bar_level = -1;
-        pending_bar_seconds = 0;
-      } else if (candidate_level == last_bar_level) {
-        pending_bar_level = -1;
-        pending_bar_seconds = 0;
+      if (lastBarLevel < 0) {
+        lastBarLevel = candidateLevel;
+        pendingBarLevel = -1;
+        pendingBarSeconds = 0;
+      } else if (candidateLevel == lastBarLevel) {
+        pendingBarLevel = -1;
+        pendingBarSeconds = 0;
       } else {
-        if (pending_bar_level == candidate_level) {
-          pending_bar_seconds++;
+        if (pendingBarLevel == candidateLevel) {
+          pendingBarSeconds++;
         } else {
-          pending_bar_level = candidate_level;
-          pending_bar_seconds = 1;
+          pendingBarLevel = candidateLevel;
+          pendingBarSeconds = 1;
         }
-        if (pending_bar_seconds >= confirm_seconds_required) {
-          last_bar_level = candidate_level;
-          pending_bar_level = -1;
-          pending_bar_seconds = 0;
+        if (pendingBarSeconds >= confirmSecondsRequired) {
+          lastBarLevel = candidateLevel;
+          pendingBarLevel = -1;
+          pendingBarSeconds = 0;
         }
       }
-      bar_level = last_bar_level;
+      barLevel = lastBarLevel;
     }
 
-    if (bar_level >= 4) {
+    if (barLevel >= 4) {
       battText = string_battery_100_percent;
-    } else if (bar_level == 3) {
+    } else if (barLevel == 3) {
       battText = string_battery_75_percent;
-    } else if (bar_level == 2) {
+    } else if (barLevel == 2) {
       battText = string_battery_50_percent;
-    } else if (bar_level == 1) {
+    } else if (barLevel == 1) {
       battText = string_battery_25_percent;
     } else {
       if (pct > 10) {
