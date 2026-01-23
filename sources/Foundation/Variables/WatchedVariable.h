@@ -18,7 +18,8 @@ public:
   WatchedVariable(FourCC id, int value = 0);
   WatchedVariable(FourCC id, bool value);
   WatchedVariable(FourCC id, const char *const *list, int size, int index = 0);
-  WatchedVariable(FourCC id, const char *value);
+  WatchedVariable(FourCC id,
+                  const char *value) = delete; // Use StringWatchedVariable
   virtual ~WatchedVariable(){};
   static void Enable();
   static void Disable();

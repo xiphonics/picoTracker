@@ -36,8 +36,11 @@ typedef void (*SampleEditProgressCallback)(uint8_t percent);
 
 class WavFileWriter {
 public:
+  WavFileWriter();
   WavFileWriter(const char *path);
   ~WavFileWriter();
+  bool Open(const char *path);
+  bool IsOpen() const;
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,
@@ -53,6 +56,6 @@ private:
   int sampleCount_;
   // Buffer in AXI RAM since it has to be reachable by DMA perif
   __attribute__((aligned(32))) static short buffer_[MAX_SAMPLE_COUNT * 2];
-  I_File *file_;
+  FileHandle file_;
 };
 #endif

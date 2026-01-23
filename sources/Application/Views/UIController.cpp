@@ -13,13 +13,6 @@
 
 UIController::UIController(){};
 
-UIController *UIController::GetInstance() {
-  if (instance_ == 0) {
-    instance_ = new UIController();
-  }
-  return instance_;
-}
-
 void UIController::Init(Project *project, ViewData *viewData) {
   viewData_ = viewData;
   project_ = project;

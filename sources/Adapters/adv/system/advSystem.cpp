@@ -13,8 +13,6 @@
 #include "Adapters/adv/midi/advMidiService.h"
 #include "Adapters/adv/system/advSamplePool.h"
 #include "Adapters/adv/timer/advTimer.h"
-#include "Application/Commands/NodeList.h"
-#include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Player/SyncMaster.h"
 #include "BatteryGauge.h"
@@ -28,7 +26,6 @@
 #include "tlv320aic3204.h"
 #include <assert.h>
 #include <fcntl.h>
-#include <malloc.h>
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,6 +66,27 @@ void advSystem::Boot() {
       section(".DATA_RAM"))) static char timerMemBuf[sizeof(advTimerService)];
   TimerService::GetInstance()->Install(new (timerMemBuf) advTimerService());
 
+  // Handle wake up - needs to happen before we turn display on!
+  const bool standbyFlag = __HAL_PWR_GET_FLAG(PWR_FLAG_SB);
+  const uint32_t wakeFlags = PWR->WKUPFR;
+  const bool rtcWakeFlag = __HAL_RTC_WAKEUPTIMER_GET_FLAG(&hrtc, RTC_FLAG_WUTF);
+
+  if (standbyFlag) {
+    // Always deactivate the timer, if it's not enabled this has no effect
+    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    // Determine actual source
+    if (wakeFlags & PWR_WKUPFR_WKUPF2) {
+      Trace::Log("POWERON", "Woke up from power button");
+    } else if (rtcWakeFlag) {
+      Trace::Log("POWERON", "Woke up from RTC - back to sleep");
+      powerOff();
+    } else {
+      Trace::Log("POWERON", "Woke up from unknown source");
+    }
+  } else {
+    Trace::Log("POWERON", "Woke up from deep sleep");
+  }
+
   // Install FileSystem
   __attribute__((
       section(".DATA_RAM"))) static char fsMemBuf[sizeof(advFileSystem)];
@@ -105,21 +123,12 @@ void advSystem::Boot() {
   static char samplePoolMemBuf[sizeof(advSamplePool)];
   SamplePool::Install(new (samplePoolMemBuf) advSamplePool());
 
-  // Handle wake up
-  if (__HAL_PWR_GET_FLAG(PWR_FLAG_SB)) {
-    // Determine actual source
-    if (PWR->WKUPFR & PWR_WKUPFR_WKUPF2) {
-      Trace::Log("POWERON", "Woke up from power button");
-      HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
-    } else if (__HAL_RTC_WAKEUPTIMER_GET_FLAG(&hrtc, RTC_FLAG_WUTF)) {
-      Trace::Log("POWERON", "Woke up from RTC - back to sleep");
-      powerOff();
-    } else {
-      Trace::Log("POWERON", "Woke up from unknown source");
-    }
-  } else {
-    Trace::Log("POWERON", "Woke up from deep sleep");
-  }
+  // Clear sticky wake flags so a later software reboot is not mistaken for a
+  // standby/RTC wake.
+  __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(&hrtc, RTC_FLAG_WUTF);
+  PWR->WKUPCR = 0xFFFFFFFFU;
+  __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
+  __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
@@ -168,27 +177,9 @@ void advSystem::Sleep(int millisec) {
   //		assert(0) ;
 }
 
-void *advSystem::Malloc(unsigned size) {
-  void *ptr = malloc(size);
-  return ptr;
-}
-
-void advSystem::Free(void *ptr) { free(ptr); }
-
-void advSystem::Memset(void *addr, char val, int size) {
-  memset(addr, val, size);
-};
-
-void *advSystem::Memcpy(void *s1, const void *s2, int n) {
-  return memcpy(s1, s2, n);
-}
-
 void advSystem::PostQuitMessage() { eventManager_->PostQuitMessage(); }
 
-unsigned int advSystem::GetMemoryUsage() {
-  struct mallinfo m = mallinfo();
-  return m.uordblks;
-}
+unsigned int advSystem::GetMemoryUsage() { return 0; }
 
 void advSystem::PowerDown() { powerOff(); }
 

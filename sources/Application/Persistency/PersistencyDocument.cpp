@@ -9,12 +9,12 @@
 
 #include "PersistencyDocument.h"
 #include "System/Console/Trace.h"
+#include "System/Console/nanoprintf.h"
 
 PersistencyDocument::PersistencyDocument() {
   version_ = 0;
   yxml_init(state_, stack_, sizeof(stack_));
-  r_ = YXML_OK;  // initialize to ok value
-  fp_ = nullptr; // Initialize file pointer to null
+  r_ = YXML_OK; // initialize to ok value
 }
 
 PersistencyDocument::~PersistencyDocument() {
@@ -22,13 +22,7 @@ PersistencyDocument::~PersistencyDocument() {
   Close();
 }
 
-void PersistencyDocument::Close() {
-  if (fp_) {
-    fp_->Close();
-    fp_ = nullptr;
-    Trace::Log("PERSISTENCYDOCUMENT", "File closed");
-  }
-}
+void PersistencyDocument::Close() { fp_.reset(); }
 
 bool PersistencyDocument::Load(const char *filename) {
   Trace::Log("PERSISTENCYDOCUMENT", "Loading document from file: %s", filename);
@@ -47,8 +41,7 @@ bool PersistencyDocument::Load(const char *filename) {
   int c = fp_->GetC();
   if (c == EOF) {
     Trace::Error("File is empty or cannot be read: %s", filename);
-    fp_->Close();
-    fp_ = nullptr;
+    fp_.reset();
     return false;
   }
 
@@ -76,16 +69,17 @@ bool PersistencyDocument::FirstChild() {
       return true;
     case YXML_ELEMEND:
       return false;
-    case YXML_CONTENT:
-    case YXML_ATTRSTART:
-    case YXML_ATTRVAL:
-    case YXML_ATTREND:
     case YXML_EEOF:
     case YXML_EREF:
     case YXML_ECLOSE:
     case YXML_ESTACK:
     case YXML_ESYN:
-      // Error
+      Trace::Error("FirstChild parse error: %d", r_);
+      return false;
+    case YXML_CONTENT:
+    case YXML_ATTRSTART:
+    case YXML_ATTRVAL:
+    case YXML_ATTREND:
     default:
       // Any other values we skip, including YXML_OK
       break;
@@ -95,11 +89,15 @@ bool PersistencyDocument::FirstChild() {
 }
 
 bool PersistencyDocument::NextSibling() {
-  // Only to be called after YXML_ELEMEND
-  if ((r_ != YXML_OK) && (r_ != YXML_ELEMEND)) {
+  // Only to be called after finishing an element end (YXML_ELEMEND), so need to
+  // accept both plus the idle OK state. Also accept coming straight from an
+  // element start  (YXML_ELEMSTART).
+  if ((r_ != YXML_OK) && (r_ != YXML_ELEMEND) && (r_ != YXML_ELEMSTART)) {
     Trace::Error(
         "XML NextSibling called with invalid state: %d for element '%s'", r_,
         state_->elem ? state_->elem : "<unknown>");
+    // we use r_ = YXML_EREF to signal that the xml parsing had a fatal error
+    r_ = YXML_EREF;
 
     // Print additional debug info about the parser state
     const char *stateStr = "unknown";
@@ -189,8 +187,26 @@ bool PersistencyDocument::NextSibling() {
 bool PersistencyDocument::NextAttribute() {
   // This is called as soon as a YXML_ELEMSTART happened or after another
   // YXML_ATTREND
+  // Whitespace between the start tag and the first child can leave the parser
+  // in YXML_CONTENT; if it's not whitespace, treat it as an error.
+  if (r_ == YXML_CONTENT) {
+    char contentChar = state_->data[0];
+    if (contentChar == ' ' || contentChar == '\t' || contentChar == '\n' ||
+        contentChar == '\r' || contentChar == '\0') {
+      Trace::Log("XML", "ignoring whitespace between attributes");
+      return false;
+    }
+    Trace::Error("NextAttribute called with non-whitespace content '%c' in "
+                 "element '%s'",
+                 contentChar, state_->elem ? state_->elem : "<unknown>");
+    // we use r_ = YXML_EREF to signal that the xml parsing had a fatal error
+    r_ = YXML_EREF;
+    return false;
+  }
+
   if ((r_ != YXML_OK) && (r_ != YXML_ELEMSTART) && (r_ != YXML_ATTREND)) {
     Trace::Error("NextAttribute called with invalid state: %d", r_);
+    r_ = YXML_ESYN;
     return false;
   }
 
@@ -209,11 +225,20 @@ bool PersistencyDocument::NextAttribute() {
       return false;
       break;
     case YXML_ATTRSTART:
-      strcpy(attrname_, state_->attr);
+      npf_snprintf(attrname_, sizeof(attrname_), "%s", state_->attr);
       break;
     case YXML_ATTRVAL:
-      attrval_[cur] = state_->data[0];
-      cur++;
+      if (cur < int(sizeof(attrval_) - 1)) {
+        attrval_[cur] = state_->data[0];
+        cur++;
+      } else {
+        Trace::Error("NextAttribute overflow for attr '%s'", attrname_);
+        // we use r_ = YXML_EREF to signal that the xml parsing had a fatal
+        // error
+        r_ = YXML_EREF;
+        attrval_[0] = '\0';
+        return false;
+      }
       break;
     case YXML_ATTREND:
       attrval_[cur] = '\0';
@@ -248,8 +273,17 @@ bool PersistencyDocument::HasContent() {
   // if YXML_CONTENT happened before reaching here, there is already one
   // character in the buffer
   if (r_ == YXML_CONTENT) {
-    content_[cur] = state_->data[0];
-    cur++;
+    if (cur < int(sizeof(content_) - 1)) {
+      content_[cur] = state_->data[0];
+      cur++;
+      found = true;
+    } else {
+      Trace::Error("HasContent truncating initial content for element '%s'",
+                   state_->elem);
+      // we use r_ = YXML_EREF to signal that the xml parsing had a fatal error
+      r_ = YXML_EREF;
+      return false;
+    }
   }
 
   while ((c = fp_->GetC()) != EOF) {
@@ -266,9 +300,16 @@ bool PersistencyDocument::HasContent() {
       return false;
       break;
     case YXML_CONTENT:
-      content_[cur] = state_->data[0];
-      cur++;
-      found = true;
+      if (cur < int(sizeof(content_) - 1)) {
+        content_[cur] = state_->data[0];
+        cur++;
+        found = true;
+      } else {
+        Trace::Error("HasContent truncating content for element '%s'",
+                     state_->elem);
+        r_ = YXML_EREF;
+        return false;
+      }
       break;
     case YXML_ATTRSTART:
     case YXML_ATTRVAL:

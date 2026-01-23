@@ -2,7 +2,6 @@ add_library(system_filesystem INTERFACE)
 
 target_link_libraries(system_filesystem INTERFACE
   application_utils
-  system_errors
   etl
 )
 

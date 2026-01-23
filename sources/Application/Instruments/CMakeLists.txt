@@ -23,6 +23,7 @@ target_link_libraries(application_instruments PUBLIC
   system_io
   crsid
   opal
+  SampleRate::samplerate
   etl
   application_utils
   profiler

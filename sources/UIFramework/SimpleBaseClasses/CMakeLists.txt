@@ -5,7 +5,6 @@ add_library(uiframework_simplebaseclasses
 
 target_link_libraries(uiframework_simplebaseclasses PUBLIC
   application_model
-  application_controllers
 )
 
 target_include_directories(uiframework_simplebaseclasses PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

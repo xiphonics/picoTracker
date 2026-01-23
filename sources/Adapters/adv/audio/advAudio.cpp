@@ -28,18 +28,19 @@ void advAudio::Init() {
   __attribute__((
       section(".DATA_RAM"))) static char audioOutDriver[sizeof(AudioOutDriver)];
   AudioOutDriver *out = new (audioOutDriver) AudioOutDriver(*drv);
-  Insert(out);
+  AddOutput(*out);
 };
 
 void advAudio::Close() {
-  for (Begin(); !IsDone(); Next()) {
-    AudioOut &current = CurrentItem();
-    current.Close();
+  for (auto *out : Outputs()) {
+    if (out) {
+      out->Close();
+    }
   }
 };
 
 void advAudio::SetMixerVolume(int v) {
-  AudioOutDriver *out = (AudioOutDriver *)GetFirst();
+  AudioOutDriver *out = (AudioOutDriver *)GetFirstOutput();
   if (out) {
     advAudioDriver *drv = (advAudioDriver *)out->GetDriver();
     drv->SetVolume(v);
@@ -47,7 +48,7 @@ void advAudio::SetMixerVolume(int v) {
 }
 
 int advAudio::GetMixerVolume() {
-  AudioOutDriver *out = (AudioOutDriver *)GetFirst();
+  AudioOutDriver *out = (AudioOutDriver *)GetFirstOutput();
   if (out) {
     advAudioDriver *drv = (advAudioDriver *)out->GetDriver();
     return drv->GetVolume();

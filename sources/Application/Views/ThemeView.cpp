@@ -28,7 +28,9 @@ constexpr uint8_t COLOR_COMPONENT_X_OFFSETS[COLOR_COMPONENT_COUNT] = {
     COLOR_LABEL_WIDTH, COLOR_LABEL_WIDTH + COMPONENT_SPACING,
     COLOR_LABEL_WIDTH + 2 * COMPONENT_SPACING};
 
-ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
+ThemeView::ThemeView(GUIWindow &w, ViewData *data)
+    : FieldView(w, data), themeNameVar_(FourCC::ActionThemeName,
+                                        ThemeConstants::DEFAULT_THEME_NAME) {
 
   GUIPoint position = GetAnchor();
 
@@ -73,16 +75,14 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
     currentThemeName = configThemeVar->GetString();
   }
 
-  // Create a variable for the theme name field
-  Variable *themeNameVar =
-      new Variable(FourCC::ActionThemeName, currentThemeName.c_str());
-
   // Create the label and default value as variables to avoid temporary objects
   auto label = etl::string<MAX_UITEXTFIELD_LABEL_LENGTH>("Theme: ");
   auto defaultValue = etl::string<MAX_THEME_NAME_LENGTH>(currentThemeName);
 
+  themeNameVar_.SetString(currentThemeName.c_str(), false);
+
   // Add the text field
-  textFields_.emplace_back(*themeNameVar, position, label,
+  textFields_.emplace_back(themeNameVar_, position, label,
                            FourCC::ActionThemeName, defaultValue);
   themeNameField_ = &(*textFields_.rbegin());
   themeNameField_->AddObserver(*this);
@@ -319,8 +319,8 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
     // Check if the theme name is empty
     if (exportThemeName_.empty()) {
       exportThemeName_ = ThemeConstants::DEFAULT_THEME_NAME;
-      themeNameField_->SetVariable(
-          *new Variable(FourCC::ActionThemeName, exportThemeName_.c_str()));
+      themeNameVar_.SetString(exportThemeName_.c_str());
+      themeNameField_->SetVariable(themeNameVar_);
     }
 
     // Export the theme
@@ -339,6 +339,7 @@ void ThemeView::Update(Observable &o, I_ObservableData *d) {
       themeNameVar->SetString(exportThemeName_.c_str());
       configDirty_ = true;
     }
+    themeNameVar_.SetString(exportThemeName_.c_str());
     return;
   }
   // if font changes call redraw all fields
@@ -400,8 +401,8 @@ void ThemeView::handleThemeExport() {
   auto fs = FileSystem::GetInstance();
   if (fs->exists(pathBuffer)) {
     // Theme exists, ask for confirmation
-    MessageBox *mb = new MessageBox(*this, "Theme already exists. Overwrite?",
-                                    MBBF_YES | MBBF_NO);
+    MessageBox *mb = MessageBox::Create(
+        *this, "Theme already exists. Overwrite?", MBBF_YES | MBBF_NO);
 
     // Use a lambda for the callback to avoid the static function
     DoModal(mb, [this](View &v, ModalView &dialog) {
@@ -430,13 +431,13 @@ void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
     }
 
     // Update the theme name field
-    themeNameField_->SetVariable(
-        *new Variable(FourCC::ActionThemeName, themeName));
+    themeNameVar_.SetString(themeName);
+    themeNameField_->SetVariable(themeNameVar_);
     exportThemeName_ = themeName;
   }
 
   // Show result message
-  MessageBox *resultMb = new MessageBox(
+  MessageBox *resultMb = MessageBox::Create(
       *this, result ? "Theme exported successfully" : "Failed to export theme",
       MBBF_OK);
   DoModal(resultMb);
@@ -452,8 +453,8 @@ void ThemeView::updateThemeNameFromConfig() {
     etl::string<MAX_THEME_NAME_LENGTH> themeName = themeNameVar->GetString();
 
     // Update the theme name field
-    themeNameField_->SetVariable(
-        *new Variable(FourCC::ActionThemeName, themeName.c_str()));
+    themeNameVar_.SetString(themeName.c_str());
+    themeNameField_->SetVariable(themeNameVar_);
     exportThemeName_ = themeName;
   }
 }

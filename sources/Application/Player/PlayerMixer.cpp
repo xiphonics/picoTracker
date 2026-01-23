@@ -8,6 +8,7 @@
  */
 
 #include "PlayerMixer.h"
+#include "Application/Instruments/SampleInstrument.h"
 #include "Application/Mixer/MixerService.h"
 #include "Application/Model/Mixer.h"
 #include "Application/Utils/char.h"
@@ -16,6 +17,7 @@
 #include "SyncMaster.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
+#include <cstdint>
 #include <math.h>
 #include <stdlib.h>
 
@@ -41,12 +43,12 @@ bool PlayerMixer::Init(Project *project) {
   }
 
   AudioMixer *audioMixer = ms->GetMixBus(STREAM_MIX_BUS);
-  audioMixer->Insert(fileStreamer_);
+  audioMixer->AddModule(fileStreamer_);
 
   project_ = project;
 
   // Add the record mixer
-  audioMixer->Insert(recordStreamer_);
+  audioMixer->AddModule(recordStreamer_);
 
   // Init states
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -198,6 +200,24 @@ void PlayerMixer::OnPlayerStop() {
 
 static char noteBuffer[5];
 
+static bool shouldShowSlice(int channel, uint8_t &sliceIndex,
+                            I_Instrument *instrument,
+                            const unsigned char *notes) {
+  if (!instrument || instrument->GetType() != IT_SAMPLE) {
+    return false;
+  }
+  if (notes[channel] == 0xFF) {
+    return false;
+  }
+  SampleInstrument *sampleInstr = static_cast<SampleInstrument *>(instrument);
+  if (!sampleInstr->ShouldDisplaySliceForNote(notes[channel])) {
+    return false;
+  }
+  sliceIndex =
+      static_cast<uint8_t>(notes[channel] - SampleInstrument::SliceNoteBase);
+  return true;
+}
+
 int PlayerMixer::GetChannelNote(int channel) { return notes_[channel]; }
 
 const char *PlayerMixer::GetPlayedNote(int channel) {
@@ -220,6 +240,10 @@ const char *PlayerMixer::GetPlayedOctive(int channel) {
   }
   return "  ";
 };
+
+bool PlayerMixer::GetPlayedSliceIndex(int channel, uint8_t &sliceIndex) {
+  return shouldShowSlice(channel, sliceIndex, lastInstrument_[channel], notes_);
+}
 
 AudioOut *PlayerMixer::GetAudioOut() {
   MixerService *ms = MixerService::GetInstance();

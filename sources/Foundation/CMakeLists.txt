@@ -1,6 +1,5 @@
 add_library(foundation
   Observable.cpp
-  SingletonRegistry.cpp
 )
 
 target_link_libraries(foundation PUBLIC system_console

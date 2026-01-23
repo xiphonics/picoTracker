@@ -30,8 +30,6 @@
 
 #include "advRemoteUI.h"
 
-#define USB_PROCESSING_INTERVAL_MS 10
-
 bool advEventManager::finished_ = false;
 bool advEventManager::redrawing_ = false;
 uint16_t advEventManager::buttonMask_ = 0;
@@ -241,8 +239,7 @@ void ProcessEvent(void *) {
 
 void USBDevice(void *) {
   for (;;) {
-    tud_task(); // Handle USB device events
-    vTaskDelay(pdMS_TO_TICKS(USB_PROCESSING_INTERVAL_MS));
+    tud_task(); // Blocks on TinyUSB event queue until there is work to do
   }
 }
 
@@ -252,7 +249,6 @@ advEventManager::~advEventManager() {}
 
 bool advEventManager::Init() {
   EventManager::Init();
-  keyboardCS_ = new KeyboardControllerSource("keyboard");
 
 #ifdef RTOS_STATS
   timerStats =
@@ -427,14 +423,17 @@ void advEventManager::ProcessInputEvent(void *) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   switch (GPIO_Pin) {
   case SD_DET_Pin: {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     if (HAL_GPIO_ReadPin(SD_DET_GPIO_Port, SD_DET_Pin) == GPIO_PIN_RESET) {
       // SD card inserted
-      Event ev(SD_DET);
-      xQueueSend(eventQueue, &ev, 0);
+      Event ev(SD_DET_INSERT);
+      xQueueSendFromISR(eventQueue, &ev, &xHigherPriorityTaskWoken);
     } else {
-      // We don't yet do anything for SD Card removed, could actually unlink
-      // FS on removal
+      // SD card removed
+      Event ev(SD_DET_REMOVE);
+      xQueueSendFromISR(eventQueue, &ev, &xHigherPriorityTaskWoken);
     }
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
   } break;
   case CHARGER_INT_Pin: {
     auto reason = chargerIntReason();

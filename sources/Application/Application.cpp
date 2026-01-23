@@ -9,7 +9,6 @@
 
 #include "Application/Application.h"
 #include "Application/AppWindow.h"
-#include "Application/Controllers/ControlRoom.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Persistency/PersistencyService.h"
@@ -30,7 +29,7 @@ bool Application::Init(GUICreateWindowParams &params) {
 
   ensurePTDirsExist();
 
-  char projectName[MAX_PROJECT_NAME_LENGTH];
+  char projectName[MAX_PROJECT_NAME_LENGTH + 1];
   initProject(projectName);
 
   window_ = AppWindow::Create(params, projectName);
@@ -60,6 +59,7 @@ bool Application::initProject(char *projectName) {
   if (forceLoadUntitledProject) {
     Trace::Log("APPLICATION", "Force loading untitled project");
     FileSystem::GetInstance()->DeleteFile("/.current");
+    PersistencyService::GetInstance()->PurgeUnnamedProject();
     forceLoadUntitledProject = false; // Reset the flag
   }
 

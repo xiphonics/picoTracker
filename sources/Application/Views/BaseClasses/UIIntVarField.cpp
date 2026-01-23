@@ -49,12 +49,14 @@ void UIIntVarField::Draw(GUIWindow &w, int offset) {
     if (src_.GetInt() < 0) {
       npf_snprintf(buffer, sizeof(buffer), format_, "NONE");
     } else {
-      const char *cvalue = src_.GetString().c_str();
+      auto value = src_.GetString();
+      const char *cvalue = value.c_str();
       npf_snprintf(buffer, sizeof(buffer), format_, cvalue);
     }
     break;
   case Variable::BOOL: {
-    const char *cvalue = src_.GetString().c_str();
+    auto value = src_.GetString();
+    const char *cvalue = value.c_str();
     npf_snprintf(buffer, sizeof(buffer), format_, cvalue);
   } break;
 
@@ -96,6 +98,17 @@ void UIIntVarField::ProcessArrow(unsigned short mask) {
   }
 
   src_.SetInt(value);
+
+  SetChanged();
+  NotifyObservers(reinterpret_cast<I_ObservableData *>(
+      static_cast<uintptr_t>(src_.GetID())));
+};
+
+void UIIntVarField::ProcessClear() {
+  if (!src_.IsModified())
+    return;
+
+  src_.Reset();
 
   SetChanged();
   NotifyObservers(reinterpret_cast<I_ObservableData *>(

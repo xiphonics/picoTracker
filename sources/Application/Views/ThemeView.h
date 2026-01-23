@@ -21,8 +21,7 @@
 #include "BaseClasses/View.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
-#include "Foundation/T_SimpleList.h"
-#include "Foundation/T_Stack.h"
+#include "Foundation/Variables/StringVariable.h"
 #include "ViewData.h"
 
 #define COLOR_COMPONENT_COUNT 3
@@ -74,6 +73,7 @@ private:
   etl::vector<UIActionField, 2> actionField_; // For Import/Export buttons
   etl::vector<UITextField<MAX_THEME_NAME_LENGTH>, 1>
       textFields_; // For theme name input
+  StringVariable<MAX_THEME_NAME_LENGTH> themeNameVar_;
 
   // Reference to the theme name field for direct access
   UITextField<MAX_THEME_NAME_LENGTH> *themeNameField_;

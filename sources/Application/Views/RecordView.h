@@ -14,7 +14,6 @@
 #include "BaseClasses/UIIntVarField.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
-#include "Foundation/T_SimpleList.h"
 #include "ViewData.h"
 
 class RecordView : public FieldView, public I_Observer {
@@ -26,6 +25,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
+  void OnFocusLost() override;
 
   // Observer for field changes
   void Update(Observable &, I_ObservableData *);

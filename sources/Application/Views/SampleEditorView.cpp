@@ -263,6 +263,18 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // For all other button presses, let the parent class handle navigation
   FieldView::ProcessButtonMask(mask, pressed);
+
+  // EDIT Modifier
+  if (mask & EPBM_EDIT) {
+    if (mask & EPBM_ENTER) {
+      UIIntVarField *field = (UIIntVarField *)GetFocus();
+      if (field->GetVariableID() == FourCC::VarSampleEditEnd) {
+        Variable &var = field->GetVariable();
+        var.SetInt(tempSampleSize_ - 1);
+        isDirty_ = true;
+      };
+    }
+  }
 }
 
 // Helper to redraw the content of a single column (waveform or just
@@ -329,6 +341,13 @@ void SampleEditorView::DrawView() {
 }
 
 void SampleEditorView::DrawWaveForm() {
+  // Avoid drawing markers while a modal is on-screen; the modal redraw logic
+  // only clears the text grid so we must not repaint the pixel buffer behind
+  // it.
+  if (HasModalView()) {
+    return;
+  }
+
   GUIRect rrect;
   if (fullWaveformRedraw_) {
     // clear flag immediately to prevent race condition between event triggered
@@ -515,8 +534,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     confirmLine.append("?");
 
     MessageBox *mb =
-        new MessageBox(*this, confirmLine.c_str(), "This overwrites the file",
-                       MBBF_YES | MBBF_NO);
+        MessageBox::Create(*this, confirmLine.c_str(),
+                           "This overwrites the file", MBBF_YES | MBBF_NO);
 
     // Modal cannot properly draw over the waveform gfx area because text
     // drawing doesn't know the area because ClearTextRect() is not yet
@@ -527,7 +546,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       if (dialog.GetReturnCode() == MBL_YES) {
         if (!applySelectedOperation()) {
           MessageBox *error =
-              new MessageBox(*this, "Operation failed", MBBF_OK);
+              MessageBox::Create(*this, "Operation failed", MBBF_OK);
           DoModal(error,
                   [this](View &view1, ModalView &dialog1) { isDirty_ = true; });
         }
@@ -554,8 +573,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       ViewType vt = SampleEditorView::sourceViewType_;
       navigateToView(vt);
     } else {
-      MessageBox *errorBox = new MessageBox(*this, "Save Failed",
-                                            "Unable to save sample", MBBF_OK);
+      MessageBox *errorBox = MessageBox::Create(
+          *this, "Save Failed", "Unable to save sample", MBBF_OK);
       DoModal(errorBox);
       Trace::Error("SampleEditorView: Failed to save file!");
     }
@@ -684,8 +703,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   if (viewData_->isShowingSampleEditorProjectPool) {
 #ifndef ADV
     // on pico we dont support unloading individual samples from flash
-    MessageBox *warning = new MessageBox(*this, "Please reload project",
-                                         "To apply changes", MBBF_OK);
+    MessageBox *warning = MessageBox::Create(*this, "Please reload project",
+                                             "To apply changes", MBBF_OK);
     DoModal(warning);
     return true;
 #endif
@@ -695,7 +714,7 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
         Trace::Error("SampleEditorView: Failed to chdir for pool reload");
       } else {
         uint16_t old_index =
-            findSampleIndexByName(viewData_->sampleEditorFilename);
+            pool->FindSampleIndexByName(viewData_->sampleEditorFilename);
         if (old_index >= 0) {
           uint16_t new_index = pool->ReloadSample(
               old_index, viewData_->sampleEditorFilename.c_str());
@@ -792,8 +811,8 @@ bool SampleEditorView::applyNormalizeOperation() {
   }
 
   if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
-    MessageBox *errorBox = new MessageBox(*this, "Reload Failed",
-                                          "Unable to refresh sample", MBBF_OK);
+    MessageBox *errorBox = MessageBox::Create(
+        *this, "Reload Failed", "Unable to refresh sample", MBBF_OK);
     DoModal(errorBox);
     return false;
   }
@@ -830,8 +849,8 @@ bool SampleEditorView::reloadEditedSample() {
              viewData_->isShowingSampleEditorProjectPool);
 
 #ifndef ADV
-  MessageBox *warning = new MessageBox(*this, "Please reload project",
-                                       "To apply changes", MBBF_OK);
+  MessageBox *warning = MessageBox::Create(*this, "Please reload project",
+                                           "To apply changes", MBBF_OK);
   DoModal(warning);
   return true;
 #else
@@ -842,7 +861,8 @@ bool SampleEditorView::reloadEditedSample() {
     return false;
   }
 
-  int32_t old_index = findSampleIndexByName(viewData_->sampleEditorFilename);
+  int32_t old_index =
+      pool->FindSampleIndexByName(viewData_->sampleEditorFilename);
   if (old_index < 0) {
     Trace::Error("SampleEditorView: Sample %s not found in pool for reload",
                  viewData_->sampleEditorFilename.c_str());
@@ -935,7 +955,7 @@ bool SampleEditorView::loadSampleToPool(
   uint16_t sampleId = -1;
 
   if (!viewData_->isShowingSampleEditorProjectPool) {
-    char projectName[MAX_PROJECT_NAME_LENGTH];
+    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
     viewData_->project_->GetProjectName(projectName);
 
     sampleId = pool->ImportSample(savedFilename.c_str(), projectName);
@@ -945,7 +965,7 @@ bool SampleEditorView::loadSampleToPool(
       return false;
     }
   } else {
-    sampleId = findSampleIndexByName(savedFilename);
+    sampleId = pool->FindSampleIndexByName(savedFilename);
     if (sampleId < 0) {
       Trace::Error("SampleEditorView: Sample %s not found in pool",
                    savedFilename.c_str());
@@ -953,23 +973,6 @@ bool SampleEditorView::loadSampleToPool(
     }
   }
   return true;
-}
-
-uint16_t SampleEditorView::findSampleIndexByName(
-    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name) const {
-  auto pool = SamplePool::GetInstance();
-  if (!pool) {
-    return -1;
-  }
-
-  char **names = pool->GetNameList();
-  uint16_t count = pool->GetNameListSize();
-  for (uint16_t i = 0; i < count; ++i) {
-    if (names[i] && strcmp(names[i], name.c_str()) == 0) {
-      return i;
-    }
-  }
-  return -1;
 }
 
 SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
@@ -1080,7 +1083,7 @@ void SampleEditorView::loadSample(
     // sample file we are trying to edit
   }
 
-  I_File *file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
+  auto file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
   if (!file) {
     Trace::Error("SampleEditorView: Failed to open file: %s", filename);
     return;
@@ -1088,11 +1091,10 @@ void SampleEditorView::loadSample(
   Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename);
 
   // --- 1. Read Header & Get Size ---
-  auto headerResult = WavHeaderWriter::ReadHeader(file);
+  auto headerResult = WavHeaderWriter::ReadHeader(file.get());
   if (!headerResult.has_value()) {
     Trace::Error("SampleEditorView: Failed to parse WAV header for %s (err=%d)",
                  filename, static_cast<int>(headerResult.error()));
-    file->Close();
     return;
   }
 
@@ -1107,7 +1109,6 @@ void SampleEditorView::loadSample(
       dataChunkSize == 0) {
     Trace::Error("SampleEditorView: Invalid or unsupported WAV header in %s",
                  filename);
-    file->Close();
     return;
   }
   // need to check as its possible for the user to copy an invalid file into the
@@ -1116,7 +1117,6 @@ void SampleEditorView::loadSample(
     Trace::Error(
         "SampleEditorView: Unsupported bit depth (%u) in WAV header for %s",
         bitsPerSample, filename);
-    file->Close();
     return;
   }
 
@@ -1124,7 +1124,6 @@ void SampleEditorView::loadSample(
   tempSampleSize_ = bytesPerFrame > 0 ? dataChunkSize / bytesPerFrame : 0;
   if (tempSampleSize_ == 0) {
     Trace::Error("SampleEditorView: Sample has zero frames in %s", filename);
-    file->Close();
     return;
   }
 
@@ -1221,8 +1220,6 @@ void SampleEditorView::loadSample(
       break; // Reached end of file
     }
   }
-  file->Close();
-
   // All columns already contain final peak heights scaled to the display range.
   waveformCacheValid_ = true;
 

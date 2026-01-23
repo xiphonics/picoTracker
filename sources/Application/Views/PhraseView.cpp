@@ -9,6 +9,7 @@
 
 #include "PhraseView.h"
 #include "Application/Instruments/CommandList.h"
+#include "Application/Instruments/SampleInstrument.h"
 #include "Application/Model/Scale.h"
 #include "Application/Model/Table.h"
 #include "Application/Utils/HelpLegend.h"
@@ -19,6 +20,7 @@
 #include "UIController.h"
 #include "ViewData.h"
 #include <Application/AppWindow.h>
+#include <cstdint>
 #include <etl/string.h>
 #include <nanoprintf.h>
 #include <stdlib.h>
@@ -26,12 +28,11 @@
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
-    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0) {
+    : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
+      cmdEditPos_(0, 10),
+      cmdEditField_(cmdEditPos_, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true) {
   phrase_ = &(viewData_->song_->phrase_);
   lastPlayingPos_ = 0;
-  GUIPoint pos(0, 10);
-  cmdEditField_ =
-      new UIBigHexVarField(pos, cmdEdit_, 4, "%4.4X", 0, 0xFFFF, 16, true);
   row_ = 0;
   viewData->phraseCurPos_ = 0;
   col_ = 0;
@@ -50,7 +51,26 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   };
 }
 
-PhraseView::~PhraseView() { delete cmdEditField_; };
+PhraseView::~PhraseView(){};
+
+bool PhraseView::getEffectiveInstrumentForRow(int row,
+                                              uint8_t &instrumentId) const {
+  if (!phrase_) {
+    return false;
+  }
+  if (row < 0) {
+    return false;
+  }
+  unsigned char *instrData = phrase_->instr_ + (16 * viewData_->currentPhrase_);
+  for (int i = row; i >= 0; --i) {
+    unsigned char instr = instrData[i];
+    if (instr != 0xFF) {
+      instrumentId = instr;
+      return true;
+    }
+  }
+  return false;
+}
 
 void PhraseView::updateCursor(int dx, int dy) {
 
@@ -101,14 +121,14 @@ void PhraseView::updateCursor(int dx, int dy) {
   case 3:
     p._x += 12;
     p._y += row_;
-    cmdEditField_->SetPosition(p);
+    cmdEditField_.SetPosition(p);
     cmdEdit_.SetInt(
         *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_)));
     break;
   case 5:
     p._x += 21;
     p._y += row_;
-    cmdEditField_->SetPosition(p);
+    cmdEditField_.SetPosition(p);
     cmdEdit_.SetInt(
         *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
     break;
@@ -159,16 +179,16 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   case 3: {
     switch (direction) {
     case VUD_RIGHT:
-      cmdEditField_->ProcessArrow(EPBM_RIGHT);
+      cmdEditField_.ProcessArrow(EPBM_RIGHT);
       break;
     case VUD_UP:
-      cmdEditField_->ProcessArrow(EPBM_UP);
+      cmdEditField_.ProcessArrow(EPBM_UP);
       break;
     case VUD_LEFT:
-      cmdEditField_->ProcessArrow(EPBM_LEFT);
+      cmdEditField_.ProcessArrow(EPBM_LEFT);
       break;
     case VUD_DOWN:
-      cmdEditField_->ProcessArrow(EPBM_DOWN);
+      cmdEditField_.ProcessArrow(EPBM_DOWN);
       break;
     }
     // Sanitize MIDI velocity values if needed
@@ -203,16 +223,16 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   case 5:
     switch (direction) {
     case VUD_RIGHT:
-      cmdEditField_->ProcessArrow(EPBM_RIGHT);
+      cmdEditField_.ProcessArrow(EPBM_RIGHT);
       break;
     case VUD_UP:
-      cmdEditField_->ProcessArrow(EPBM_UP);
+      cmdEditField_.ProcessArrow(EPBM_UP);
       break;
     case VUD_LEFT:
-      cmdEditField_->ProcessArrow(EPBM_LEFT);
+      cmdEditField_.ProcessArrow(EPBM_LEFT);
       break;
     case VUD_DOWN:
-      cmdEditField_->ProcessArrow(EPBM_DOWN);
+      cmdEditField_.ProcessArrow(EPBM_DOWN);
       break;
     }
     // Sanitize MIDI velocity values if needed
@@ -229,35 +249,56 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   if ((c) && (*c != NO_NOTE)) {
     int offset = offsets_[col_ + xOffset][direction];
 
-    // if note column apply the set scale
+    // if note column apply the set scale or slice range
     if (col_ + xOffset == 0) {
-      // Add/remove from offset to match selected scale
-      int scale = viewData_->project_->GetScale();
-      int scaleRoot = viewData_->project_->GetScaleRoot();
-
-      // Calculate the new note with the offset
-      int newNote = *c + offset;
-
-      if (*c == NOTE_OFF) {
-        // leave note off
-        *c = (offset > 0) ? 0 : HIGHEST_NOTE;
-        offset = 0;
-      } else if (newNote < 0 || newNote > HIGHEST_NOTE) {
-        // changing to note off
-        limit = NOTE_OFF;
-        *c = NOTE_OFF;
-        offset = 0;
-      } else {
-        // Check if the note is in the scale (adjusted for root)
-        // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
-        while (newNote >= 0 &&
-               !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
-          offset > 0 ? offset++ : offset--;
-          newNote = *c + offset;
+      uint8_t instrId = 0;
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      SampleInstrument *sliceInstr = nullptr;
+      if (bank && getEffectiveInstrumentForRow(row_ + yOffset, instrId)) {
+        I_Instrument *instr = bank->GetInstrument(instrId);
+        if (instr && instr->GetType() == IT_SAMPLE) {
+          sliceInstr = static_cast<SampleInstrument *>(instr);
         }
       }
+
+      uint8_t sliceFirst = 0;
+      uint8_t sliceLast = 0;
+      if (sliceInstr && sliceInstr->GetSliceNoteRange(sliceFirst, sliceLast)) {
+        int newNote = *c + offset;
+        if (newNote < sliceFirst) {
+          newNote = sliceFirst;
+        } else if (newNote > sliceLast) {
+          newNote = sliceLast;
+        }
+        *c = static_cast<unsigned char>(newNote);
+      } else {
+        // Calculate the new note with the offset
+        int newNote = *c + offset;
+
+        if (*c == NOTE_OFF) {
+          // leave note off
+          *c = (offset > 0) ? 0 : HIGHEST_NOTE;
+        } else if (newNote < 0 || newNote > HIGHEST_NOTE) {
+          // changing to note off
+          *c = NOTE_OFF;
+        } else {
+          // Add/remove from offset to match selected scale
+          int scale = viewData_->project_->GetScale();
+          int scaleRoot = viewData_->project_->GetScaleRoot();
+
+          /// Check if the note is in the scale (adjusted for root)
+          // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
+          while (newNote >= 0 &&
+                 !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
+            offset > 0 ? offset++ : offset--;
+            newNote = *c + offset;
+          }
+          updateData(c, offset, limit, wrap);
+        }
+      }
+    } else {
+      updateData(c, offset, limit, wrap);
     }
-    updateData(c, offset, limit, wrap);
 
     switch (col_ + xOffset) {
     case 0: {
@@ -764,7 +805,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         } else {
           // show error dialog that no more instruments are available
           MessageBox *mb =
-              new MessageBox(*this, "No more instruments!", MBBF_OK);
+              MessageBox::Create(*this, "No more instruments!", MBBF_OK);
           DoModal(mb);
           return;
         }
@@ -1156,10 +1197,18 @@ void PhraseView::DrawView() {
 
   // Display notes
   unsigned char *data = phrase_->note_ + (16 * viewData_->currentPhrase_);
+  unsigned char *instrData = phrase_->instr_ + (16 * viewData_->currentPhrase_);
+  unsigned char lastInstr = 0xFF;
+  InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
   buffer[4] = 0;
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
+    unsigned char instr = *instrData++;
+    if (instr != 0xFF) {
+      lastInstr = instr;
+    }
+    unsigned char effectiveInstr = lastInstr;
     setTextProps(props, 0, j, false);
     (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_HILITE1)
                                             : SetColor(CD_NORMAL);
@@ -1168,7 +1217,33 @@ void PhraseView::DrawView() {
     } else if (d == NOTE_OFF) {
       DrawString(pos._x, pos._y, "off ", props);
     } else {
-      note2char(d, buffer);
+      bool showSlice = false;
+      bool invalidSlice = false;
+      uint8_t sliceIndex = 0;
+      if (effectiveInstr != 0xFF && bank) {
+        I_Instrument *instrObj = bank->GetInstrument(effectiveInstr);
+        if (instrObj && instrObj->GetType() == IT_SAMPLE) {
+          SampleInstrument *sampleInstr =
+              static_cast<SampleInstrument *>(instrObj);
+          if (sampleInstr->HasSlicesForPlayback()) {
+            if (sampleInstr->ShouldDisplaySliceForNote(d)) {
+              showSlice = true;
+              sliceIndex =
+                  static_cast<uint8_t>(d - SampleInstrument::SliceNoteBase);
+            } else {
+              invalidSlice = true;
+            }
+          }
+        }
+      }
+      if (showSlice) {
+        npf_snprintf(buffer, sizeof(buffer), "SL%02u",
+                     static_cast<unsigned>(sliceIndex));
+      } else if (invalidSlice) {
+        npf_snprintf(buffer, sizeof(buffer), "SL**");
+      } else {
+        note2char(d, buffer);
+      }
       DrawString(pos._x, pos._y, buffer, props);
     }
     setTextProps(props, 0, j, true);
@@ -1298,8 +1373,8 @@ void PhraseView::DrawView() {
   };
 
   if ((viewMode_ != VM_SELECTION) && ((col_ == 3) || (col_ == 5))) {
-    cmdEditField_->SetFocus();
-    cmdEditField_->Draw(w_);
+    cmdEditField_.SetFocus();
+    cmdEditField_.Draw(w_);
   };
 };
 
@@ -1409,6 +1484,11 @@ void PhraseView::AnimationUpdate() {
   w_.Flush();
 }
 void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
+  if (command == FourCC::InstrumentCommandNone) {
+    // no command -> no help text
+    return;
+  }
+
   char **helpLegend = getHelpLegend(command);
   char line[32]; //-1 for 1char space start of line
   // first clear top line upto battery gauge

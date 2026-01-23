@@ -48,10 +48,11 @@ void AudioThread(void *) {
   while (true) {
     xSemaphoreTake(core1_audio, portMAX_DELAY);
 
-    // Process MIDI
-    MidiService::GetInstance()->Flush();
-
+    // Prepare the next buffer (queues MIDI for this chunk)
     advAudioDriver::BufferNeeded();
+
+    // Flush MIDI after the buffer has been queued to keep it in sync
+    MidiService::GetInstance()->Flush();
   }
 }
 
@@ -62,17 +63,7 @@ void AudioOutput(void *) {
   }
 }
 
-void advAudioDriver::BufferNeeded() {
-  // Audio tick processes MIDI among other things
-  // TODO: understand tick and buffer size relationship. currently not constant
-  // probably not right
-  // TODO: This could (should?) go into the main thread. If done tho, we geat a
-  // deadlock in malloc mutex due to malloc being called from core1 and isr
-  // simultaneously
-  instance_->onAudioBufferTick();
-
-  instance_->OnNewBufferNeeded();
-}
+void advAudioDriver::BufferNeeded() { instance_->OnNewBufferNeeded(); }
 
 advAudioDriver::advAudioDriver(AudioSettings &settings)
     : AudioDriver(settings) {
@@ -98,6 +89,7 @@ bool advAudioDriver::InitDriver() {
   // Configure codec
   tlv320_init();
   tlv320_set_volume(initialVolume);
+  tlv320_set_audio_output_active(false);
   // Takes some time between configuring HP detect and actually detecting
   vTaskDelay(pdMS_TO_TICKS(250));
 
@@ -127,6 +119,10 @@ void advAudioDriver::SetVolume(int v) {
 
 int advAudioDriver::GetVolume() { return tlv320_get_volume(); };
 
+void advAudioDriver::OnAudioActive(bool active) {
+  tlv320_set_audio_output_active(active);
+}
+
 void advAudioDriver::CloseDriver(){
     // Not really used, maybe for sleep?
 };
@@ -153,6 +149,7 @@ bool advAudioDriver::StartDriver() {
 void advAudioDriver::StopDriver() {
   adv_sound_pause(1);
   isPlaying_ = false;
+  tlv320_set_audio_output_active(false);
 };
 
 void advAudioDriver::OnChunkDone() {

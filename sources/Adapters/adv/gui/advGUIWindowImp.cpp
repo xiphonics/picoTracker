@@ -7,12 +7,14 @@
  */
 
 #include "advGUIWindowImp.h"
+#include "Adapters/adv/audio/record.h"
 #include "Adapters/adv/filesystem/advFileSystem.h"
 #include "Adapters/adv/utils/utils.h"
 #include "Application/Model/Config.h"
 #include "Application/Utils/char.h"
 #include "Player/Player.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "advRemoteUI.h"
@@ -23,6 +25,8 @@
 // index, used by DrawRect() to know which color to use when drawing to the
 // devices LCD
 static uint8_t lastRemoteColorIdx = 255;
+
+void appwindow_set_sdcard_present(bool present);
 
 advGUIWindowImp *instance_;
 
@@ -130,9 +134,7 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
     char remoteUIBuffer[8];
     auto bufferIndex =
         remoteUISetColorCommand(c._r, c._g, c._b, remoteUIBuffer);
-    sendToUSBCDC(remoteUIBuffer, bufferIndex);
-    sendToUSBCDCBuffered(remoteUIBuffer,
-                         bufferIndex); // Use the buffered function
+    sendToUSBCDCBuffered(remoteUIBuffer, bufferIndex);
   }
 };
 
@@ -180,14 +182,37 @@ void advGUIWindowImp::ProcessEvent(Event &event) {
   case CLOCK:
     instance_->_window->ClockTick();
     break;
-  case SD_DET:
-    // SD reinit
+  case SD_DET_INSERT: {
+    Trace::Log("SDCARD", "Card inserted, reinitializing");
     FATFS_UnLinkDriver(SDPath);
     HAL_SD_DeInit(&hsd1);
     __HAL_RCC_SDMMC1_FORCE_RESET();
     __HAL_RCC_SDMMC1_RELEASE_RESET();
     MX_SDMMC1_SD_Init();
     FATFS_LinkDriver(&SD_DMA_Driver, SDPath);
+    bool mounted =
+        (f_mount(&SDFatFS, (TCHAR const *)SDPath, 0) == FR_OK) ? true : false;
+    if (mounted) {
+      auto fs = FileSystem::GetInstance();
+      if (!fs || !fs->chdir("/")) {
+        mounted = false;
+      }
+    }
+    if (!mounted) {
+      Trace::Error("Failed to mount after insert");
+    }
+    appwindow_set_sdcard_present(mounted);
+  } break;
+  case SD_DET_REMOVE: {
+    Trace::Log("SDCARD", "Card removed, pausing");
+    if (IsRecordingActive()) {
+      StopRecording();
+    }
+    f_mount(NULL, (TCHAR const *)SDPath, 0);
+    FATFS_UnLinkDriver(SDPath);
+    HAL_SD_DeInit(&hsd1);
+    appwindow_set_sdcard_present(false);
+  } break;
   case LAST:
     break;
   }

@@ -31,7 +31,7 @@ public:
 protected:
   AudioFileStreamerMode mode_;
   char name_[256];
-  WavFile *wav_;
+  WavFile wav_;
   float position_;
   Project *project_;
 
@@ -47,6 +47,9 @@ protected:
 
   // For matching oscillator mode in SampleInstrument
   float referencePitch_; // Reference pitch in Hz (C3 = 130.81 Hz)
+#ifndef ADV
+  volatile bool stopRequested_;
+#endif
 
 public:
   void SetProject(Project *project) { project_ = project; }

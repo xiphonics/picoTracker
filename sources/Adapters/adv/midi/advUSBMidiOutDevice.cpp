@@ -22,6 +22,8 @@ bool advUSBMidiOutDevice::Start() { return true; };
 
 void advUSBMidiOutDevice::Stop() {}
 
+void advUSBMidiOutDevice::SendImmediate(MidiMessage &msg) { SendMessage(msg); }
+
 void advUSBMidiOutDevice::SendMessage(MidiMessage &msg) {
   uint8_t midicmd[3] = {0, 0, 0};
 
