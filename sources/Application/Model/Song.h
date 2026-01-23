@@ -41,6 +41,9 @@
    MAX_MACROINSTRUMENT_COUNT)
 #endif
 
+#define HIGHEST_NOTE 0x7F
+#define NOTE_OFF 0xFE
+#define NO_NOTE 0xFF
 #define EMPTY_SONG_VALUE 0xFF
 
 class Song : Persistent {
