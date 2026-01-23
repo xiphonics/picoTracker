@@ -445,35 +445,25 @@ void InstrumentView::fillSIDParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
-  intVarField_.emplace_back(
-      position, *v,
-      "  Pulsewidth:   %2.2X",
-      0, 0xFFF, 1, 0x10);
+  intVarField_.emplace_back(position, *v, "  Pulsewidth:   %2.2X", 0, 0xFFF, 1,
+                            0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentWaveform);
 
-  intVarField_.emplace_back(
-      position, *v,
-      "  Waveform:    %s",
-      0, DWF_LAST - 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "  Waveform:    %s", 0, DWF_LAST - 1,
+                            1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentVSync);
-  intVarField_.emplace_back(
-      position, *v,
-      "  Osc Sync:    %s",
-      0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "  Osc Sync:    %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentRingModulator);
-  intVarField_.emplace_back(
-      position, *v,
-      "  Ring Mod:    %s",
-      0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "  Ring Mod:    %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
@@ -500,10 +490,8 @@ void InstrumentView::fillSIDParameters() {
     v = instrument->FindVariable(FourCC::SIDInstrument2FilterCut);
     break;
   }
-  intVarField_.emplace_back(
-      position, *v,
-      "  Cutoff:      %1.1X",
-      0, 0x7FF, 1, 0x10);
+  intVarField_.emplace_back(position, *v, "  Cutoff:      %1.1X", 0, 0x7FF, 1,
+                            0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
@@ -515,10 +503,7 @@ void InstrumentView::fillSIDParameters() {
     v = instrument->FindVariable(FourCC::SIDInstrument2FilterResonance);
     break;
   }
-  intVarField_.emplace_back(
-      position, *v,
-      "  Resonance:   %1.1X",
-      0, 0xF, 1, 1);
+  intVarField_.emplace_back(position, *v, "  Resonance:   %1.1X", 0, 0xF, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
@@ -530,10 +515,8 @@ void InstrumentView::fillSIDParameters() {
     v = instrument->FindVariable(FourCC::SIDInstrument2FilterMode);
     break;
   }
-  intVarField_.emplace_back(
-      position, *v,
-      "  Mode:        %s",
-      0, DFM_LAST - 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "  Mode:        %s", 0, DFM_LAST - 1,
+                            1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
