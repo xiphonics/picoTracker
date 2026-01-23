@@ -142,11 +142,9 @@ void picoTrackerSystem::GetBatteryState(BatteryState &state) {
   // mV =^= adc_reading * 1.6
   uint32_t voltage_mv_raw = (adc_reading * 8) / 5; // equals adc_reading * 1.6;
 
-  static bool has_filtered_voltage = false;
   static uint16_t filtered_voltage_mv = 0;
-  if (!has_filtered_voltage) {
+  if (filtered_voltage_mv == 0) {
     filtered_voltage_mv = voltage_mv_raw;
-    has_filtered_voltage = true;
   } else {
     // Simple low-pass filter to reduce bounce between adjacent battery levels.
     uint32_t filtered_scaled =

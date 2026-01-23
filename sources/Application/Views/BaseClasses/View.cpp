@@ -418,25 +418,57 @@ void View::drawBattery(GUITextProperties &props) {
   }
   battText = battTextBuffer;
 #else
+  static bool has_last_bar_level = false;
+  static int last_bar_level = 0;
+  static uint8_t drop_confirm_count = 0;
+  const uint8_t drop_confirm_required = 3;
+
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     battText = string_battery_charging;
   } else {
-    if (batteryState_.percentage > 90) {
-      battText = string_battery_100_percent;
-    } else if (batteryState_.percentage > 65) {
-      battText = string_battery_75_percent;
-    } else if (batteryState_.percentage > 40) {
-      battText = string_battery_50_percent;
-    } else if (batteryState_.percentage > 35) {
-      battText = string_battery_25_percent;
-    } else if (batteryState_.percentage > 10) {
-      SetColor(CD_WARN);
-      battText = string_battery_0_percent;
+    uint8_t pct = batteryState_.percentage;
+    int bar_level = 0;
+    if (pct > 90) {
+      bar_level = 4;
+    } else if (pct > 65) {
+      bar_level = 3;
+    } else if (pct > 40) {
+      bar_level = 2;
+    } else if (pct > 35) {
+      bar_level = 1;
+    }
+
+    if (has_last_bar_level && bar_level < last_bar_level) {
+      drop_confirm_count++;
+      if (drop_confirm_count < drop_confirm_required) {
+        bar_level = last_bar_level;
+      }
     } else {
-      SetColor(CD_ERROR);
+      drop_confirm_count = 0;
+    }
+
+    if (bar_level >= 4) {
+      battText = string_battery_100_percent;
+    } else if (bar_level == 3) {
+      battText = string_battery_75_percent;
+    } else if (bar_level == 2) {
+      battText = string_battery_50_percent;
+    } else if (bar_level == 1) {
+      battText = string_battery_25_percent;
+    } else {
+      if (pct > 10) {
+        SetColor(CD_WARN);
+      } else {
+        SetColor(CD_ERROR);
+      }
       battText = string_battery_0_percent;
     }
+
+    if (!has_last_bar_level) {
+      has_last_bar_level = true;
+    }
+    last_bar_level = bar_level;
   }
 #endif
 
