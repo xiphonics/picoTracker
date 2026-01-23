@@ -387,9 +387,11 @@ void View::DrawRect(GUIRect &r, ColorDefinition color) {
 
 void View::drawBattery(GUITextProperties &props) {
   // only update the voltage once per second
+  bool battery_state_updated = false;
   if (AppWindow::GetAnimationFrameCounter() % PICO_CLOCK_HZ == 0) {
     System *sys = System::GetInstance();
     sys->GetBatteryState(batteryState_);
+    battery_state_updated = true;
     // Trace::Debug("Battery: %d%%", batteryState_.percentage);
   }
 
@@ -420,32 +422,65 @@ void View::drawBattery(GUITextProperties &props) {
 #else
   static bool has_last_bar_level = false;
   static int last_bar_level = 0;
-  static uint8_t drop_confirm_count = 0;
-  const uint8_t drop_confirm_required = 3;
+  static int pending_bar_level = -1;
+  static uint8_t pending_bar_seconds = 0;
+  const uint8_t confirm_seconds_required = 10;
 
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     battText = string_battery_charging;
   } else {
     uint8_t pct = batteryState_.percentage;
-    int bar_level = 0;
-    if (pct > 90) {
-      bar_level = 4;
-    } else if (pct > 65) {
-      bar_level = 3;
-    } else if (pct > 40) {
-      bar_level = 2;
-    } else if (pct > 35) {
-      bar_level = 1;
-    }
-
-    if (has_last_bar_level && bar_level < last_bar_level) {
-      drop_confirm_count++;
-      if (drop_confirm_count < drop_confirm_required) {
-        bar_level = last_bar_level;
+    int bar_level = last_bar_level;
+    if (battery_state_updated || !has_last_bar_level) {
+      int candidate_level = 0;
+      if (pct > 90) {
+        candidate_level = 4;
+      } else if (pct > 65) {
+        candidate_level = 3;
+      } else if (pct > 40) {
+        candidate_level = 2;
+      } else if (pct > 35) {
+        candidate_level = 1;
       }
-    } else {
-      drop_confirm_count = 0;
+
+      int previous_level = last_bar_level;
+      bool changed = false;
+      if (!has_last_bar_level) {
+        last_bar_level = candidate_level;
+        pending_bar_level = -1;
+        pending_bar_seconds = 0;
+        has_last_bar_level = true;
+        changed = true;
+      } else if (candidate_level == last_bar_level) {
+        pending_bar_level = -1;
+        pending_bar_seconds = 0;
+      } else {
+        if (pending_bar_level == candidate_level) {
+          pending_bar_seconds++;
+        } else {
+          pending_bar_level = candidate_level;
+          pending_bar_seconds = 1;
+        }
+
+        if (pending_bar_seconds >= confirm_seconds_required) {
+          last_bar_level = candidate_level;
+          pending_bar_level = -1;
+          pending_bar_seconds = 0;
+          changed = true;
+        }
+      }
+
+      bar_level = last_bar_level;
+
+      if (changed) {
+        Trace::Debug("Battery bars changed: %d -> %d (pct=%u, mv=%u)",
+                     previous_level, bar_level, pct, batteryState_.voltage_mv);
+      } else {
+        Trace::Debug("Battery bars stable: %d (pct=%u, mv=%u, pending=%d/%u)",
+                     bar_level, pct, batteryState_.voltage_mv,
+                     pending_bar_level, pending_bar_seconds);
+      }
     }
 
     if (bar_level >= 4) {
@@ -464,11 +499,6 @@ void View::drawBattery(GUITextProperties &props) {
       }
       battText = string_battery_0_percent;
     }
-
-    if (!has_last_bar_level) {
-      has_last_bar_level = true;
-    }
-    last_bar_level = bar_level;
   }
 #endif
 
