@@ -273,8 +273,7 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
   int index = pos._x + SCREEN_WIDTH * pos._y;
   memcpy(_charScreen + index, buffer, len);
   // Only the low nibble is used for the palette index.
-  unsigned char prop =
-      (colorIndex_ & 0x0F) | (props.invert_ ? PROP_INVERT : 0);
+  unsigned char prop = (colorIndex_ & 0x0F) | (props.invert_ ? PROP_INVERT : 0);
   memset(_charScreenProp + index, prop, len);
   memset(_charScreenBg + index, (backgroundIndex_ & 0x0F), len);
 };
@@ -347,10 +346,8 @@ void AppWindow::Flush() {
 
         // Extract color index from properties and check if it's different from
         // current color
-        ColorDefinition charColor =
-            (ColorDefinition)((*currentProp) & 0x0F);
-        ColorDefinition charBackground =
-            (ColorDefinition)((*currentBg) & 0x0F);
+        ColorDefinition charColor = (ColorDefinition)((*currentProp) & 0x0F);
+        ColorDefinition charBackground = (ColorDefinition)((*currentBg) & 0x0F);
         if (charColor != color) {
           color = charColor;
 
