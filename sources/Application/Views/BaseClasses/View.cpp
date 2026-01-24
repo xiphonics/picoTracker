@@ -386,9 +386,23 @@ void View::DrawRect(GUIRect &r, ColorDefinition color) {
 }
 
 void View::drawBattery(GUITextProperties &props) {
-  // only update the voltage once per second
+  // Only update the voltage once per second, but force an initial read
+  // so the first displayed level is accurate.
+  static bool batteryStateInitialized = false;
 #if !BATTERY_LEVEL_AS_PERCENTAGE
   bool batteryStateUpdated = false;
+#endif
+  if (!batteryStateInitialized) {
+    System *sys = System::GetInstance();
+    sys->GetBatteryState(batteryState_);
+#if !BATTERY_LEVEL_AS_PERCENTAGE
+    batteryStateUpdated = true;
+#endif
+    batteryStateInitialized = true;
+  }
+
+  // only update the voltage once per second
+#if !BATTERY_LEVEL_AS_PERCENTAGE
 #endif
   if (AppWindow::GetAnimationFrameCounter() % PICO_CLOCK_HZ == 0) {
     System *sys = System::GetInstance();
