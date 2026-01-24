@@ -935,9 +935,9 @@ void InstrumentView::DrawView() {
   if (instr) {
     InstrumentType type = instr->GetType();
     if (type == IT_SID || type == IT_OPAL) {
-      SetColor(CD_WARN);
-      DrawString(16, 1, "!EXPERIMENTAL!", props);
-      SetColor(CD_NORMAL);
+      SetTextColors(CD_ERROR, CD_WARN);
+      DrawString(16, 1, "Experimental", props);
+      SetTextColors(CD_NORMAL, CD_BACKGROUND);
     }
   }
 }
