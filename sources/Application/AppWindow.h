@@ -52,6 +52,8 @@ public:
   virtual void Clear(bool all = false);
   virtual void ClearTextRect(GUIRect &rect);
   virtual void SetColor(ColorDefinition cd);
+  virtual void SetBackground(ColorDefinition cd);
+  virtual void SetTextColors(ColorDefinition fg, ColorDefinition bg);
 
   void SetDirty();
   void UpdateColorsFromConfig();
@@ -108,8 +110,10 @@ private:
 
   static unsigned char _charScreen[SCREEN_CHARS];
   static unsigned char _charScreenProp[SCREEN_CHARS];
+  static unsigned char _charScreenBg[SCREEN_CHARS];
   static unsigned char _preScreen[SCREEN_CHARS];
   static unsigned char _preScreenProp[SCREEN_CHARS];
+  static unsigned char _preScreenBg[SCREEN_CHARS];
 
   static GUIColor backgroundColor_;
   static GUIColor normalColor_;
@@ -129,6 +133,7 @@ private:
   static GUIColor reserved4Color_;
 
   ColorDefinition colorIndex_;
+  ColorDefinition backgroundIndex_;
 
   static int charWidth_;
   static int charHeight_;

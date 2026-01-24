@@ -23,6 +23,7 @@ public:
 
 public: // I_GUIWindowImp implementation
   virtual void SetColor(GUIColor &);
+  virtual void SetBackgroundColor(GUIColor &);
   virtual void DrawRect(GUIRect &);
   virtual void DrawChar(const char c, GUIPoint &pos, GUITextProperties &);
   virtual void DrawString(const char *string, GUIPoint &pos,

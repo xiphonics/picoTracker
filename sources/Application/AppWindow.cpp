@@ -66,8 +66,10 @@ AppWindow *instance = 0;
 
 unsigned char AppWindow::_charScreen[SCREEN_CHARS];
 unsigned char AppWindow::_charScreenProp[SCREEN_CHARS];
+unsigned char AppWindow::_charScreenBg[SCREEN_CHARS];
 unsigned char AppWindow::_preScreen[SCREEN_CHARS];
 unsigned char AppWindow::_preScreenProp[SCREEN_CHARS];
+unsigned char AppWindow::_preScreenBg[SCREEN_CHARS];
 
 GUIColor AppWindow::backgroundColor_(0x0F, 0x0F, 0x0F, 0);
 GUIColor AppWindow::normalColor_(0xAD, 0xAD, 0xAD, 1);
@@ -176,6 +178,9 @@ AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
 
   UpdateColorsFromConfig();
 
+  colorIndex_ = CD_NORMAL;
+  backgroundIndex_ = CD_BACKGROUND;
+
   GUIWindow::Clear(backgroundColor_);
 
   static AppWindowViews views(*this, viewData_);
@@ -206,6 +211,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
   memset(_preScreen, ' ', SCREEN_CHARS);
   memset(_charScreenProp, 0, SCREEN_CHARS);
   memset(_preScreenProp, 0, SCREEN_CHARS);
+  memset(_charScreenBg, backgroundIndex_, SCREEN_CHARS);
+  memset(_preScreenBg, backgroundIndex_, SCREEN_CHARS);
 
   Redraw();
 
@@ -265,17 +272,21 @@ void AppWindow::DrawString(const char *string, GUIPoint &pos,
   NAssert((pos._x < SCREEN_WIDTH) && (pos._y < SCREEN_HEIGHT));
   int index = pos._x + SCREEN_WIDTH * pos._y;
   memcpy(_charScreen + index, buffer, len);
-  // Ensure color index is masked to prevent overlap with inversion bit
-  unsigned char prop = (colorIndex_ & 0x7F) + (props.invert_ ? PROP_INVERT : 0);
+  // Only the low nibble is used for the palette index.
+  unsigned char prop =
+      (colorIndex_ & 0x0F) | (props.invert_ ? PROP_INVERT : 0);
   memset(_charScreenProp + index, prop, len);
+  memset(_charScreenBg + index, (backgroundIndex_ & 0x0F), len);
 };
 
 void AppWindow::Clear(bool all) {
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_charScreenProp, 0, SCREEN_CHARS);
+  memset(_charScreenBg, backgroundIndex_, SCREEN_CHARS);
   if (all) {
     memset(_preScreen, ' ', SCREEN_CHARS);
     memset(_preScreenProp, 0, SCREEN_CHARS);
+    memset(_preScreenBg, backgroundIndex_, SCREEN_CHARS);
   };
 };
 
@@ -288,13 +299,16 @@ void AppWindow::ClearTextRect(GUIRect &r) {
 
   unsigned char *st = _charScreen + x + (SCREEN_WIDTH * y);
   unsigned char *pr = _charScreenProp + x + (SCREEN_WIDTH * y);
+  unsigned char *bg = _charScreenBg + x + (SCREEN_WIDTH * y);
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
       *st++ = ' ';
       *pr++ = 0;
+      *bg++ = backgroundIndex_;
     }
     st += (SCREEN_WIDTH - w);
     pr += (SCREEN_WIDTH - w);
+    bg += (SCREEN_WIDTH - w);
   }
 };
 
@@ -308,8 +322,9 @@ void AppWindow::Flush() {
   GUITextProperties props;
   GUIPoint pos;
 
-  // Start with an invalid color to force color setting on first character
+  // Start with invalid colors to force palette setting on first character
   ColorDefinition color = (ColorDefinition)-1;
+  ColorDefinition background = (ColorDefinition)-1;
   pos._x = 0;
   pos._y = 0;
 
@@ -319,77 +334,36 @@ void AppWindow::Flush() {
   unsigned char *previous = _preScreen;
   unsigned char *currentProp = _charScreenProp;
   unsigned char *previousProp = _preScreenProp;
+  unsigned char *currentBg = _charScreenBg;
+  unsigned char *previousBg = _preScreenBg;
   for (int y = 0; y < SCREEN_HEIGHT; y++) {
     for (int x = 0; x < SCREEN_WIDTH; x++) {
 #ifndef _LGPT_NO_SCREEN_CACHE_
-      if ((*current != *previous) || (*currentProp != *previousProp)) {
+      if ((*current != *previous) || (*currentProp != *previousProp) ||
+          (*currentBg != *previousBg)) {
 #endif
         // Extract invert flag from properties
         props.invert_ = (*currentProp & PROP_INVERT) != 0;
 
         // Extract color index from properties and check if it's different from
         // current color
-        ColorDefinition charColor = (ColorDefinition)((*currentProp) & 0x7F);
+        ColorDefinition charColor =
+            (ColorDefinition)((*currentProp) & 0x0F);
+        ColorDefinition charBackground =
+            (ColorDefinition)((*currentBg) & 0x0F);
         if (charColor != color) {
           color = charColor;
 
           // Initialize gcolor with a safe default to avoid uninitialized value
           // if switch falls through
           GUIColor gcolor = normalColor_;
-          switch (color) {
-          case CD_BACKGROUND:
-            gcolor = backgroundColor_;
-            break;
-          case CD_NORMAL:
-            break;
-          case CD_HILITE1:
-            gcolor = highlightColor_;
-            break;
-          case CD_HILITE2:
-            gcolor = highlight2Color_;
-            break;
-          case CD_CONSOLE:
-            gcolor = consoleColor_;
-            break;
-          case CD_CURSOR:
-            gcolor = cursorColor_;
-            break;
-          case CD_INFO:
-            gcolor = infoColor_;
-            break;
-          case CD_WARN:
-            gcolor = warnColor_;
-            break;
-          case CD_ERROR:
-            gcolor = errorColor_;
-            break;
-          case CD_ACCENT:
-            gcolor = accentColor_;
-            break;
-          case CD_ACCENTALT:
-            gcolor = accentAltColor_;
-            break;
-          case CD_EMPHASIS:
-            gcolor = emphasisColor_;
-            break;
-          case CD_RESERVED1:
-            gcolor = reserved1Color_;
-            break;
-          case CD_RESERVED2:
-            gcolor = reserved2Color_;
-            break;
-          case CD_RESERVED3:
-            gcolor = reserved3Color_;
-            break;
-          case CD_RESERVED4:
-            gcolor = reserved4Color_;
-            break;
-
-          default:
-            NAssert(0);
-            break;
-          }
+          gcolor = GetColor(color);
           GUIWindow::SetColor(gcolor);
+        }
+        if (charBackground != background) {
+          background = charBackground;
+          GUIColor bgColor = GetColor(background);
+          GUIWindow::SetBackgroundColor(bgColor);
         }
         GUIWindow::DrawChar(*current, pos, props);
         count++;
@@ -400,6 +374,8 @@ void AppWindow::Flush() {
       previous++;
       currentProp++;
       previousProp++;
+      currentBg++;
+      previousBg++;
       pos._x += AppWindow::charWidth_;
     }
     pos._y += AppWindow::charHeight_;
@@ -409,6 +385,7 @@ void AppWindow::Flush() {
   Unlock();
   memcpy(_preScreen, _charScreen, SCREEN_CHARS);
   memcpy(_preScreenProp, _charScreenProp, SCREEN_CHARS);
+  memcpy(_preScreenBg, _charScreenBg, SCREEN_CHARS);
 };
 
 AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
@@ -991,12 +968,26 @@ void AppWindow::PrintMultiLine(char *line) {
 
 void AppWindow::SetColor(ColorDefinition cd) {
   // Ensure color index is within valid range (0-15)
-  if (cd <= CD_EMPHASIS) {
+  if (cd <= CD_RESERVED4) {
     colorIndex_ = cd;
   } else {
     Trace::Error("APPWINDOW", "Invalid color index: %d", cd);
     colorIndex_ = CD_NORMAL; // Default to normal color
   }
+};
+
+void AppWindow::SetBackground(ColorDefinition cd) {
+  if (cd <= CD_RESERVED4) {
+    backgroundIndex_ = cd;
+  } else {
+    Trace::Error("APPWINDOW", "Invalid background index: %d", cd);
+    backgroundIndex_ = CD_BACKGROUND;
+  }
+};
+
+void AppWindow::SetTextColors(ColorDefinition fg, ColorDefinition bg) {
+  SetColor(fg);
+  SetBackground(bg);
 };
 
 bool AppWindow::autoSave() {

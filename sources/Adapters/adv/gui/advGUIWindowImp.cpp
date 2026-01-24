@@ -138,6 +138,11 @@ void advGUIWindowImp::SetColor(GUIColor &c) {
   }
 };
 
+void advGUIWindowImp::SetBackgroundColor(GUIColor &c) {
+  color_t color = GetColor(c);
+  display_set_background(color);
+};
+
 void advGUIWindowImp::Lock(){};
 
 void advGUIWindowImp::Unlock(){};

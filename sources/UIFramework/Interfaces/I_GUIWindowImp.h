@@ -32,6 +32,7 @@ public:
 
   virtual void PushEvent(GUIEvent &) = 0;
   virtual void DrawRect(GUIRect &r) = 0;
+  virtual void SetBackgroundColor(GUIColor &) = 0;
 
   //	virtual void Save()=0 ;
   //	virtual void Restore()=0 ;

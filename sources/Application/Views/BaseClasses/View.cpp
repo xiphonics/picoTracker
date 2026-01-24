@@ -370,6 +370,14 @@ void View::ForceClear() { ((AppWindow &)w_).Clear(true); }
 
 void View::SetColor(ColorDefinition cd) { ((AppWindow &)w_).SetColor(cd); };
 
+void View::SetBackground(ColorDefinition cd) {
+  ((AppWindow &)w_).SetBackground(cd);
+};
+
+void View::SetTextColors(ColorDefinition fg, ColorDefinition bg) {
+  ((AppWindow &)w_).SetTextColors(fg, bg);
+};
+
 void View::ClearTextRect(int x, int y, int w, int h) {
   GUIRect rect(x, y, (x + w), (y + h));
   w_.ClearTextRect(rect);

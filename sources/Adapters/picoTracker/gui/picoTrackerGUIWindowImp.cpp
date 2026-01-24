@@ -150,6 +150,11 @@ void picoTrackerGUIWindowImp::SetColor(GUIColor &c) {
   }
 };
 
+void picoTrackerGUIWindowImp::SetBackgroundColor(GUIColor &c) {
+  chargfx_color_t color = GetColor(c);
+  chargfx_set_background(color);
+}
+
 void picoTrackerGUIWindowImp::Lock(){};
 
 void picoTrackerGUIWindowImp::Unlock(){};
