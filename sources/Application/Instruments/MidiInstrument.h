@@ -102,10 +102,6 @@ private:
   Variable table_;
   Variable tableAuto_;
   Variable program_;
-  // need to store defaultname as it depends on the MIDI channel of the
-  // instrument
-  etl::string<MAX_INSTRUMENT_NAME_LENGTH> defaultName_;
-
   static MidiService *svc_;
   static TimerService *timerSvc_;
 };
