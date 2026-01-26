@@ -27,11 +27,33 @@
 #include <cstdint>
 #include <nanoprintf.h>
 
+namespace {
+constexpr size_t SliceCountListSize = SampleInstrument::MaxSlices;
+static const char *sliceCountNames[SliceCountListSize];
+static char sliceCountNameStorage[SliceCountListSize][4];
+static void InitSliceCountNames() {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+  sliceCountNames[0] = "off";
+  for (size_t i = 1; i < SliceCountListSize; ++i) {
+    npf_snprintf(sliceCountNameStorage[i], sizeof(sliceCountNameStorage[i]),
+                 "%u", static_cast<unsigned int>(i + 1));
+    sliceCountNames[i] = sliceCountNameStorage[i];
+  }
+}
+} // namespace
+
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
                                           InstrumentTypeNames, IT_LAST, 0),
-      autoSliceCountVar_(FourCC::Default, 4), lastSampleIndex_(-1),
+      autoSliceCountVar_(FourCC::Default, sliceCountNames, SliceCountListSize,
+                         0),
+      lastSampleIndex_(-1),
       suppressSampleChangeWarning_(false) {
+  InitSliceCountNames();
 
   project_ = data->project_;
 
@@ -76,7 +98,7 @@ void InstrumentView::Reset() {
   exportName_.clear();
   lastFocusID_ = FourCC::VarInstrumentType;
   instrumentType_.SetInt(0, false);
-  autoSliceCountVar_.SetInt(4, false);
+  autoSliceCountVar_.SetInt(3, false);
 }
 
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
@@ -317,7 +339,7 @@ void InstrumentView::syncAutoSliceCount(SampleInstrument *instrument) {
   if (count < 1) {
     count = 1;
   }
-  autoSliceCountVar_.SetInt(count, false);
+  autoSliceCountVar_.SetInt(count - 1, false);
 }
 
 void InstrumentView::fillSampleParameters() {
@@ -342,8 +364,9 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
-  intVarField_.emplace_back(position, autoSliceCountVar_, "slices: %2d", 1,
-                            static_cast<int32_t>(SampleInstrument::MaxSlices),
+  intVarField_.emplace_back(position, autoSliceCountVar_, "slices: %s", 0,
+                            static_cast<int32_t>(SampleInstrument::MaxSlices) -
+                                1,
                             1, 4);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -1093,7 +1116,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
 
     if (!sampleInstr->HasSlicesForWarning()) {
       sampleInstr->ClearSlices();
-      autoSliceCountVar_.SetInt(1, false);
+      autoSliceCountVar_.SetInt(0, false);
       lastSampleIndex_ = newIndex;
       break;
     }
@@ -1107,7 +1130,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                                                          ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_YES) {
         sampleInstr->ClearSlices();
-        autoSliceCountVar_.SetInt(1, false);
+        autoSliceCountVar_.SetInt(0, false);
         lastSampleIndex_ = newIndex;
         isDirty_ = true;
       } else {
@@ -1153,7 +1176,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (sampleSize <= 0) {
         return;
       }
-      int32_t count = autoSliceCountVar_.GetInt();
+      int32_t count = autoSliceCountVar_.GetInt() + 1;
       if (count < 1) {
         return;
       }

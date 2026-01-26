@@ -23,6 +23,7 @@
 #include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/Variable.h"
+#include "Foundation/Variables/WatchedVariable.h"
 #include "ViewData.h"
 
 class SampleInstrument;
@@ -63,7 +64,7 @@ private:
   Project *project_;
   FourCC lastFocusID_;
   WatchedVariable instrumentType_;
-  Variable autoSliceCountVar_;
+  WatchedVariable autoSliceCountVar_;
   int lastSampleIndex_;
   bool suppressSampleChangeWarning_;
 
