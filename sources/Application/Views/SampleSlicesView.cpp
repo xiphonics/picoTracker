@@ -355,6 +355,16 @@ void SampleSlicesView::rebuildWaveform() {
     return;
   }
 
+  if (!refreshSampleSize()) {
+    return;
+  }
+  if (sampleSize_ == 0) {
+    return;
+  }
+  if (graphField_.ViewEnd() <= graphField_.ViewStart()) {
+    return;
+  }
+
   SamplePool *pool = SamplePool::GetInstance();
   int32_t sampleIndex = instrument_->GetSampleIndex();
   if (sampleIndex < 0) {
@@ -363,16 +373,6 @@ void SampleSlicesView::rebuildWaveform() {
 
   SoundSource *source = pool->GetSource(sampleIndex);
   if (!source) {
-    return;
-  }
-
-  int32_t size = source->GetSize(0);
-  sampleSize_ = (size > 0) ? static_cast<uint32_t>(size) : 0;
-  graphField_.SetSampleSize(sampleSize_);
-  if (sampleSize_ == 0) {
-    return;
-  }
-  if (graphField_.ViewEnd() <= graphField_.ViewStart()) {
     return;
   }
 
@@ -497,7 +497,10 @@ void SampleSlicesView::applySliceStart(uint32_t start) {
 }
 
 void SampleSlicesView::autoSliceEvenly() {
-  if (!instrument_ || sampleSize_ == 0) {
+  if (!instrument_) {
+    return;
+  }
+  if (!refreshSampleSize()) {
     return;
   }
   int32_t count = autoSliceCountVar_.GetInt();
@@ -523,6 +526,29 @@ void SampleSlicesView::autoSliceEvenly() {
   graphField_.RequestFullRedraw();
   isDirty_ = true;
   ((AppWindow &)w_).SetDirty();
+}
+
+bool SampleSlicesView::refreshSampleSize() {
+  sampleSize_ = 0;
+  if (!instrument_) {
+    graphField_.SetSampleSize(0);
+    return false;
+  }
+  SamplePool *pool = SamplePool::GetInstance();
+  int32_t sampleIndex = instrument_->GetSampleIndex();
+  if (sampleIndex < 0) {
+    graphField_.SetSampleSize(0);
+    return false;
+  }
+  SoundSource *source = pool->GetSource(sampleIndex);
+  if (!source) {
+    graphField_.SetSampleSize(0);
+    return false;
+  }
+  int32_t size = source->GetSize(0);
+  sampleSize_ = (size > 0) ? static_cast<uint32_t>(size) : 0;
+  graphField_.SetSampleSize(sampleSize_);
+  return sampleSize_ > 0;
 }
 
 void SampleSlicesView::AutoSliceConfirmCallback(View &v, ModalView &dialog) {

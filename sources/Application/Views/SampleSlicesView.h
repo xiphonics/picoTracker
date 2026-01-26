@@ -41,6 +41,7 @@ private:
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
+  bool refreshSampleSize();
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
