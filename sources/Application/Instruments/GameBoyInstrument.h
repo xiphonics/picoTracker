@@ -33,10 +33,10 @@ public:
   // Start & stop the instument
   virtual bool Start(int channel, unsigned char note, bool retrigger = true);
   virtual void Stop(int channel);
-  
+
   virtual void OnStart(){};
   virtual void Purge(){};
-  
+
   // size refers to the number of samples
   // should always fill interleaved stereo / 16bit
   virtual bool Render(int channel, fixed *buffer, int size, bool updateTick);
@@ -52,7 +52,7 @@ public:
 
 private:
   static voice_t voices_[SONG_CHANNEL_COUNT];
-  
+
   etl::list<Variable *, 13> variables_;
 
   Variable vWaveform_;
@@ -68,7 +68,6 @@ private:
   Variable vArpSpeed_;
   Variable vSweepTime_;
   Variable vSweepAmount_;
-
 
   void RunCommand(int channel);
   void CommandInitArp(int channel, ushort value);

@@ -22,8 +22,8 @@ static const char *waveShapes[GB_NUM_WAVEFORMS] = {
 voice_t GameBoyInstrument::voices_[SONG_CHANNEL_COUNT];
 
 GameBoyInstrument::GameBoyInstrument()
-    : I_Instrument(&variables_),
-      vWaveform_(FourCC::GameBoyInstrumentWaveform, waveShapes, GB_NUM_WAVEFORMS, 0),
+    : I_Instrument(&variables_), vWaveform_(FourCC::GameBoyInstrumentWaveform,
+                                            waveShapes, GB_NUM_WAVEFORMS, 0),
       vAttack_(FourCC::GameBoyInstrumentAttack, 0x00),
       vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
       vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
@@ -73,7 +73,7 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
 
   for (int s = 0; s < size; s++) {
     v.sample(buffer, buffer + 1);
-    
+
     // Output to both channels
     buffer += 2;
   }
@@ -89,7 +89,7 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandKill:
   case FourCC::InstrumentCommandGateOff:
-    voices_[channel].stop();  
+    voices_[channel].stop();
     break;
 
   case FourCC::InstrumentCommandVolume:
@@ -114,9 +114,7 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }
 };
 
-bool GameBoyInstrument::SupportsCommand(FourCC cc) {
-  return false;
-}
+bool GameBoyInstrument::SupportsCommand(FourCC cc) { return false; }
 
 InstrumentParameters GameBoyInstrument::getInstrumentParameters() {
   InstrumentParameters params;
