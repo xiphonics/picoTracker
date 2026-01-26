@@ -19,6 +19,7 @@
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #include <algorithm>
+#include <nanoprintf.h>
 
 namespace {
 constexpr uint16_t PreviewChannel = SONG_CHANNEL_COUNT - 1;
@@ -41,6 +42,8 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
       previewCursorVisible_(false) {
   sliceIndexVar_.AddObserver(*this);
   sliceStartVar_.AddObserver(*this);
+  sliceIndexLabel_[0] = '\0';
+  zoomLabel_[0] = '\0';
   graphField_.SetShowBaseline(false);
 }
 
@@ -67,6 +70,8 @@ void SampleSlicesView::Reset() {
   autoSliceCountVar_.SetInt(4, false);
   graphField_.Reset();
   graphField_.SetShowBaseline(false);
+  sliceIndexLabel_[0] = '\0';
+  zoomLabel_[0] = '\0';
 }
 
 void SampleSlicesView::OnFocus() {
@@ -329,6 +334,14 @@ void SampleSlicesView::buildFieldLayout() {
 
   position._y += 2;
   position._x = 1;
+  updateStatusLabels();
+  staticField_.emplace_back(position, sliceIndexLabel_);
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._x += 12;
+  staticField_.emplace_back(position, zoomLabel_);
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._y += 1;
+  position._x = 1;
   staticField_.emplace_back(position, "EDIT+RIGHT/LEFT: select slice");
   fieldList_.insert(fieldList_.end(), &staticField_.back());
   position._y += 1;
@@ -492,6 +505,7 @@ void SampleSlicesView::applySliceStart(uint32_t start) {
   }
   if (updateZoomWindow()) {
     graphField_.InvalidateWaveform();
+    updateStatusLabels();
     isDirty_ = true;
   }
 }
@@ -524,6 +538,7 @@ void SampleSlicesView::autoSliceEvenly() {
     graphField_.InvalidateWaveform();
   }
   graphField_.RequestFullRedraw();
+  updateStatusLabels();
   isDirty_ = true;
   ((AppWindow &)w_).SetDirty();
 }
@@ -551,6 +566,22 @@ bool SampleSlicesView::refreshSampleSize() {
   return sampleSize_ > 0;
 }
 
+void SampleSlicesView::updateStatusLabels() {
+  int32_t sliceIndex = sliceIndexVar_.GetInt();
+  if (sliceIndex < 0) {
+    sliceIndex = 0;
+  }
+  npf_snprintf(sliceIndexLabel_, sizeof(sliceIndexLabel_), "slice: %2d",
+               sliceIndex + 1);
+
+  uint32_t zoom = 1u;
+  uint8_t level = graphField_.ZoomLevel();
+  if (level < 31) {
+    zoom = 1u << level;
+  }
+  npf_snprintf(zoomLabel_, sizeof(zoomLabel_), "zoom: %2ux", zoom);
+}
+
 void SampleSlicesView::AutoSliceConfirmCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() != MBL_YES) {
     return;
@@ -563,7 +594,11 @@ void SampleSlicesView::updateZoomLimits() {
 }
 
 bool SampleSlicesView::updateZoomWindow() {
-  return graphField_.UpdateZoomWindow(selectedSliceStart());
+  bool changed = graphField_.UpdateZoomWindow(selectedSliceStart());
+  if (changed) {
+    updateStatusLabels();
+  }
+  return changed;
 }
 
 void SampleSlicesView::adjustZoom(int32_t delta) {
@@ -573,6 +608,7 @@ void SampleSlicesView::adjustZoom(int32_t delta) {
   if (graphField_.AdjustZoom(delta, selectedSliceStart())) {
     graphField_.InvalidateWaveform();
     graphField_.RequestFullRedraw();
+    updateStatusLabels();
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
   }
