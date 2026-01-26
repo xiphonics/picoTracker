@@ -509,6 +509,10 @@ void ThemeView::AnimationUpdate() {
     _forceRedraw = false;
   }
   GUITextProperties props;
-  drawBattery(props);
+  static uint8_t batteryTick = 0;
+  batteryTick++;
+  if ((batteryTick % PICO_CLOCK_HZ) == 0) {
+    drawBattery(props);
+  }
   drawPowerButtonUI(props);
 }
