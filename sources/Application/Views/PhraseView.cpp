@@ -1282,6 +1282,19 @@ void PhraseView::DrawView() {
 
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
+
+    SetColor(CD_NORMAL);
+
+    uint8_t ins;
+    if (getEffectiveInstrumentForRow(j, ins)) {
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      I_Instrument *instr = bank->GetInstrument(ins);
+
+      if (command.IsInstrumentCommand() && !instr->SupportsCommand(command)) {
+        SetColor(CD_CONSOLE);
+      }
+    }
+
     setTextProps(props, 2, j, false);
     DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 2, j, true);
@@ -1290,6 +1303,8 @@ void PhraseView::DrawView() {
       printHelpLegend(command, props);
     }
   }
+
+  SetColor(CD_NORMAL);
 
   // Draw commands params 1
 

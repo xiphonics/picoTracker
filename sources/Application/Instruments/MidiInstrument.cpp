@@ -225,6 +225,17 @@ bool MidiInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
+bool MidiInstrument::SupportsCommand(FourCC cc) {
+  auto supportedCommands = {
+      FourCC::InstrumentCommandRetrigger,  FourCC::InstrumentCommandLegato,
+      FourCC::InstrumentCommandPitchSlide, FourCC::InstrumentCommandVelocity,
+      FourCC::InstrumentCommandVolume,     FourCC::InstrumentCommandMidiCC,
+      FourCC::InstrumentCommandMidiPC,     FourCC::InstrumentCommandMidiChord,
+      FourCC::InstrumentCommandKill};
+  return std::find(supportedCommands.begin(), supportedCommands.end(), cc) !=
+         supportedCommands.end();
+};
+
 void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);

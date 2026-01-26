@@ -1173,6 +1173,26 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
   };
 };
 
+bool SampleInstrument::SupportsCommand(FourCC cc) {
+  auto supportedCommands = {
+      FourCC::InstrumentCommandArpeggiator,
+      FourCC::InstrumentCommandCrush,
+      FourCC::InstrumentCommandFilterCut,
+      FourCC::InstrumentCommandFilterResonance,
+      FourCC::InstrumentCommandLegato,
+      FourCC::InstrumentCommandLoopOffset,
+      FourCC::InstrumentCommandLowPassFilter,
+      FourCC::InstrumentCommandPan,
+      FourCC::InstrumentCommandPitchFineTune,
+      FourCC::InstrumentCommandPitchSlide,
+      FourCC::InstrumentCommandPlayOffset,
+      FourCC::InstrumentCommandRetrigger,
+      FourCC::InstrumentCommandVolume,
+  };
+  return std::find(supportedCommands.begin(), supportedCommands.end(), cc) !=
+         supportedCommands.end();
+}
+
 void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   renderParams *rp = renderParams_ + channel;
@@ -1180,7 +1200,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     return;
 
   switch (cc) {
-  case FourCC::InstrumentCommandLoopOfset:
+  case FourCC::InstrumentCommandLoopOffset:
 
     if (value > 0x8000) {
       value = 0x10000 - value;
@@ -1196,7 +1216,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
     break;
 
-  case FourCC::InstrumentCommandPlayOfset: {
+  case FourCC::InstrumentCommandPlayOffset: {
     if (!source_)
       return;
     int wavSize = source_->GetSize(rp->midiNote_);
