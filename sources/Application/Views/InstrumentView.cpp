@@ -27,34 +27,10 @@
 #include <cstdint>
 #include <nanoprintf.h>
 
-namespace {
-constexpr size_t SliceCountListSize = SampleInstrument::MaxSlices;
-static const char *sliceCountNames[SliceCountListSize];
-static char sliceCountNameStorage[SliceCountListSize][4];
-static void InitSliceCountNames() {
-  static bool initialized = false;
-  if (initialized) {
-    return;
-  }
-  initialized = true;
-  sliceCountNames[0] = "off";
-  for (size_t i = 1; i < SliceCountListSize; ++i) {
-    npf_snprintf(sliceCountNameStorage[i], sizeof(sliceCountNameStorage[i]),
-                 "%u", static_cast<unsigned int>(i + 1));
-    sliceCountNames[i] = sliceCountNameStorage[i];
-  }
-}
-} // namespace
-
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
                                           InstrumentTypeNames, IT_LAST, 0),
-      autoSliceCountVar_(FourCC::Default, sliceCountNames, SliceCountListSize,
-                         0),
-      lastSampleIndex_(-1),
-      suppressSampleChangeWarning_(false) {
-  InitSliceCountNames();
-
+      lastSampleIndex_(-1), suppressSampleChangeWarning_(false) {
   project_ = data->project_;
 
   GUIPoint position = GUIPoint(5, 1);
@@ -87,6 +63,8 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   fieldList_.insert(fieldList_.end(), &(*persistentActionField_.rbegin()));
   (*persistentActionField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::ActionExport;
+
+  sliceCountLabel_[0] = '\0';
 }
 
 InstrumentView::~InstrumentView() {}
@@ -98,7 +76,24 @@ void InstrumentView::Reset() {
   exportName_.clear();
   lastFocusID_ = FourCC::VarInstrumentType;
   instrumentType_.SetInt(0, false);
-  autoSliceCountVar_.SetInt(3, false);
+  sliceCountLabel_[0] = '\0';
+}
+
+static void updateSliceCountLabel(char *buffer, size_t bufferSize,
+                                  SampleInstrument *instrument) {
+  int32_t count = 0;
+  if (instrument) {
+    for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
+      if (instrument->IsSliceDefined(i)) {
+        count++;
+      }
+    }
+  }
+  if (count <= 1) {
+    npf_snprintf(buffer, bufferSize, "slices: off");
+  } else {
+    npf_snprintf(buffer, bufferSize, "slices: %2d", count);
+  }
 }
 
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
@@ -327,21 +322,6 @@ void InstrumentView::refreshInstrumentFields() {
 
 void InstrumentView::fillNoneParameters() {}
 
-void InstrumentView::syncAutoSliceCount(SampleInstrument *instrument) {
-  int32_t count = 0;
-  if (instrument) {
-    for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
-      if (instrument->IsSliceDefined(i)) {
-        count++;
-      }
-    }
-  }
-  if (count < 1) {
-    count = 1;
-  }
-  autoSliceCountVar_.SetInt(count - 1, false);
-}
-
 void InstrumentView::fillSampleParameters() {
 
   int i = viewData_->currentInstrumentID_;
@@ -349,7 +329,6 @@ void InstrumentView::fillSampleParameters() {
   I_Instrument *instr = bank->GetInstrument(i);
   SampleInstrument *instrument = (SampleInstrument *)instr;
   lastSampleIndex_ = instrument->GetSampleIndex();
-  syncAutoSliceCount(instrument);
 
   GUIPoint position = GetAnchor();
   const int baseX = position._x;
@@ -364,19 +343,11 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
-  intVarField_.emplace_back(position, autoSliceCountVar_, "slices: %s", 0,
-                            static_cast<int32_t>(SampleInstrument::MaxSlices) -
-                                1,
-                            1, 4);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  updateSliceCountLabel(sliceCountLabel_, sizeof(sliceCountLabel_), instrument);
+  staticField_.emplace_back(position, sliceCountLabel_);
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
 
   GUIPoint actionPos = position;
-  actionPos = position;
-  actionPos._x = baseX + 11;
-  sampleActionField_.emplace_back("auto", FourCC::ActionAutoSlice, actionPos);
-  fieldList_.insert(fieldList_.end(), &sampleActionField_.back());
-  sampleActionField_.back().AddObserver(*this);
-
   actionPos._x = baseX + 17;
   sampleActionField_.emplace_back("adjust", FourCC::ActionShowSampleSlices,
                                   actionPos);
@@ -1116,8 +1087,10 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
 
     if (!sampleInstr->HasSlicesForWarning()) {
       sampleInstr->ClearSlices();
-      autoSliceCountVar_.SetInt(0, false);
       lastSampleIndex_ = newIndex;
+      updateSliceCountLabel(sliceCountLabel_, sizeof(sliceCountLabel_),
+                            sampleInstr);
+      isDirty_ = true;
       break;
     }
 
@@ -1130,8 +1103,9 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                                                          ModalView &dialog) {
       if (dialog.GetReturnCode() == MBL_YES) {
         sampleInstr->ClearSlices();
-        autoSliceCountVar_.SetInt(0, false);
         lastSampleIndex_ = newIndex;
+        updateSliceCountLabel(sliceCountLabel_, sizeof(sliceCountLabel_),
+                              sampleInstr);
         isDirty_ = true;
       } else {
         suppressSampleChangeWarning_ = true;
@@ -1158,55 +1132,6 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
     SetChanged();
     NotifyObservers(&ve);
-  } break;
-  case FourCC::ActionAutoSlice: {
-    I_Instrument *instr = getInstrument();
-    if (!instr || instr->GetType() != IT_SAMPLE) {
-      break;
-    }
-    SampleInstrument *sampleInstr = static_cast<SampleInstrument *>(instr);
-    if (sampleInstr->GetSampleIndex() < 0) {
-      MessageBox *mb =
-          MessageBox::Create(*this, "Assign a sample first", MBBF_OK);
-      DoModal(mb);
-      break;
-    }
-    auto applySlices = [this, sampleInstr]() {
-      int32_t sampleSize = sampleInstr->GetSampleSize(0);
-      if (sampleSize <= 0) {
-        return;
-      }
-      int32_t count = autoSliceCountVar_.GetInt() + 1;
-      if (count < 1) {
-        return;
-      }
-      if (count > static_cast<int32_t>(SampleInstrument::MaxSlices)) {
-        count = static_cast<int32_t>(SampleInstrument::MaxSlices);
-      }
-      sampleInstr->ClearSlices();
-      if (count > 1) {
-        for (int32_t i = 0; i < count; ++i) {
-          uint32_t start =
-              (static_cast<uint64_t>(sampleSize) * static_cast<uint64_t>(i)) /
-              static_cast<uint32_t>(count);
-          sampleInstr->SetSlicePoint(static_cast<size_t>(i), start);
-        }
-      }
-      isDirty_ = true;
-      ((AppWindow &)w_).SetDirty();
-    };
-
-    if (sampleInstr->HasSlicesForPlayback()) {
-      MessageBox *mb = MessageBox::Create(*this, "Replace current slices?",
-                                          MBBF_YES | MBBF_NO);
-      DoModal(mb, [applySlices](View &view, ModalView &dialog) {
-        if (dialog.GetReturnCode() == MBL_YES) {
-          applySlices();
-        }
-      });
-    } else {
-      applySlices();
-    }
   } break;
   case FourCC::MidiInstrumentProgram: {
     // When program value changes, send a MIDI Program Change message
