@@ -5,8 +5,8 @@
 #include <cstdint>
 
 static uint32_t lcg = 42;
-#define GB_NUM_WAVEFORMS 8
 
+constexpr int GB_NUM_WAVEFORMS = 8;
 constexpr int SAMPLING_RATE = 44100;
 
 enum gbWaveType {
@@ -25,52 +25,12 @@ enum gbWaveType {
  * constants                                                                  *
  ******************************************************************************/
 
-// precalculated note step values for DDS (32-bit phase accumulator)
-static const uint32_t semitoneRatioQ16[256] = {
-    0x00000028, 0x0000002A, 0x0000002D, 0x0000002F, 0x00000032, 0x00000035,
-    0x00000039, 0x0000003C, 0x00000040, 0x00000043, 0x00000047, 0x0000004C,
-    0x00000050, 0x00000055, 0x0000005A, 0x0000005F, 0x00000065, 0x0000006B,
-    0x00000072, 0x00000078, 0x00000080, 0x00000087, 0x0000008F, 0x00000098,
-    0x000000A1, 0x000000AA, 0x000000B5, 0x000000BF, 0x000000CB, 0x000000D7,
-    0x000000E4, 0x000000F1, 0x00000100, 0x0000010F, 0x0000011F, 0x00000130,
-    0x00000142, 0x00000155, 0x0000016A, 0x0000017F, 0x00000196, 0x000001AE,
-    0x000001C8, 0x000001E3, 0x00000200, 0x0000021E, 0x0000023E, 0x00000260,
-    0x00000285, 0x000002AB, 0x000002D4, 0x000002FF, 0x0000032C, 0x0000035D,
-    0x00000390, 0x000003C6, 0x00000400, 0x0000043C, 0x0000047D, 0x000004C1,
-    0x0000050A, 0x00000556, 0x000005A8, 0x000005FE, 0x00000659, 0x000006BA,
-    0x00000720, 0x0000078D, 0x00000800, 0x00000879, 0x000008FA, 0x00000983,
-    0x00000A14, 0x00000AAD, 0x00000B50, 0x00000BFC, 0x00000CB2, 0x00000D74,
-    0x00000E41, 0x00000F1A, 0x00001000, 0x000010F3, 0x000011F5, 0x00001306,
-    0x00001428, 0x0000155B, 0x000016A0, 0x000017F9, 0x00001965, 0x00001AE8,
-    0x00001C82, 0x00001E34, 0x00002000, 0x000021E7, 0x000023EB, 0x0000260D,
-    0x00002851, 0x00002AB7, 0x00002D41, 0x00002FF2, 0x000032CB, 0x000035D1,
-    0x00003904, 0x00003C68, 0x00004000, 0x000043CE, 0x000047D6, 0x00004C1B,
-    0x000050A2, 0x0000556E, 0x00005A82, 0x00005FE4, 0x00006597, 0x00006BA2,
-    0x00007208, 0x000078D0, 0x00008000, 0x0000879C, 0x00008FAC, 0x00009837,
-    0x0000A145, 0x0000AADC, 0x0000B504, 0x0000BFC8, 0x0000CB2F, 0x0000D744,
-    0x0000E411, 0x0000F1A1, 0x00010000, 0x00010F38, 0x00011F59, 0x0001306F,
-    0x0001428A, 0x000155B8, 0x00016A09, 0x00017F91, 0x0001965F, 0x0001AE89,
-    0x0001C823, 0x0001E343, 0x00020000, 0x00021E71, 0x00023EB3, 0x000260DF,
-    0x00028514, 0x0002AB70, 0x0002D413, 0x0002FF22, 0x00032CBF, 0x00035D13,
-    0x00039047, 0x0003C686, 0x00040000, 0x00043CE3, 0x00047D66, 0x0004C1BF,
-    0x00050A28, 0x000556E0, 0x0005A827, 0x0005FE44, 0x0006597F, 0x0006BA27,
-    0x0007208F, 0x00078D0D, 0x00080000, 0x000879C7, 0x0008FACD, 0x0009837F,
-    0x000A1451, 0x000AADC0, 0x000B504F, 0x000BFC88, 0x000CB2FF, 0x000D744F,
-    0x000E411F, 0x000F1A1B, 0x00100000, 0x0010F38F, 0x0011F59A, 0x001306FE,
-    0x001428A2, 0x00155B81, 0x0016A09E, 0x0017F910, 0x001965FE, 0x001AE89F,
-    0x001C823E, 0x001E3437, 0x00200000, 0x0021E71F, 0x0023EB35, 0x00260DFC,
-    0x00285145, 0x002AB702, 0x002D413C, 0x002FF221, 0x0032CBFD, 0x0035D13F,
-    0x0039047C, 0x003C686F, 0x00400000, 0x0043CE3E, 0x0047D66B, 0x004C1BF8,
-    0x0050A28B, 0x00556E04, 0x005A8279, 0x005FE443, 0x006597FA, 0x006BA27E,
-    0x007208F8, 0x0078D0DF, 0x00800000, 0x00879C7C, 0x008FACD6, 0x009837F0,
-    0x00A14517, 0x00AADC08, 0x00B504F3, 0x00BFC886, 0x00CB2FF5, 0x00D744FC,
-    0x00E411F0, 0x00F1A1BF, 0x01000000, 0x010F38F9, 0x011F59AC, 0x01306FE0,
-    0x01428A2F, 0x0155B810, 0x016A09E6, 0x017F910D, 0x01965FEA, 0x01AE89F9,
-    0x01C823E0, 0x01E3437E, 0x02000000, 0x021E71F2, 0x023EB358, 0x0260DFC1,
-    0x0285145F, 0x02AB7021, 0x02D413CC, 0x02FF221A, 0x032CBFD4, 0x035D13F3,
-    0x039047C0, 0x03C686FC, 0x04000000, 0x043CE3E4, 0x047D66B0, 0x04C1BF82,
-    0x050A28BE, 0x0556E042, 0x05A82799, 0x05FE4435,
-};
+#include "CompileTimeFunctions.h"
+
+// Precalculated semitone ratios for pitch slides (Q16.16 format)
+// Index 128 = 1.0 (0 semitones), index 0 = 2^(-128/12), index 255 = 2^(127/12)
+constexpr auto semitoneRatioQ16 =
+    makeSemitoneRatioTable(std::make_index_sequence<256>{});
 
 // precalculated frequency table midi notes -12 to 127+12
 constexpr int32_t frequencyTable[128 + 24] = {
@@ -221,11 +181,13 @@ typedef struct {
 typedef struct voice_t {
   InstrumentParameters parameters;
 
+  bool arpeggio = false;
   uint16_t arpTick = 0;
   uint16_t arpTime = 250;
   uint8_t note;
   uint32_t phase = 0;
   int32_t frequency = 0;
+  int32_t lastFrequency = 0;
   uint32_t arpLength = 5;
   int32_t arpFrequencies[5] = {0, 0, 0, 0, 0};
   uint8_t arpIndex = 0;
@@ -246,7 +208,14 @@ typedef struct voice_t {
   int32_t vibSwing;
   uint32_t vibDelay;
 
-  FourCC command;
+  uint8_t drive;
+  uint8_t bitcrush;
+
+  int16_t pan;
+  uint8_t panTarget;
+  uint8_t panStep;
+
+  FourCC command; // TODO remove
 
   uint32_t sweepCoefficient;
   int32_t sweepSteps;
@@ -256,6 +225,8 @@ typedef struct voice_t {
   int32_t legatoFactor = 0;      // Q16.16 multiplier per 100Hz tick
   int32_t legatoSteps = 0;       // Remaining ticks
   int32_t legatoTargetFreq = 0;  // Target frequency
+
+  bool legato = false;
 
   uint16_t lfsr = 17;
   uint32_t noise;
@@ -282,19 +253,12 @@ typedef struct voice_t {
     }
   }
 
-  // convert a floating-point factor to Q0.32 fixed-point
-  static inline uint32_t floatToQ32(double f) {
-    return (uint32_t)(f * 4294967296.0); // 2^32
-  }
-
-  // apply slide factor to DDS step
-  static inline uint32_t applySlide(uint32_t step, uint32_t factorQ32) {
-    return multiplyQ32(step, factorQ32);
-  }
-
-  inline fixed sample() {
+  inline void sample(fixed *left, fixed *right) {
     uint32_t combinedGain = (volume * envelope.value) >> 16; // Precompute
     uint32_t waveform = wave;
+
+    uint8_t leftGain = std::min((0xff - pan) * 2, 0xff);
+    uint8_t rightGain = std::min(0xff, 2 * pan);
 
     // cold loop @ 100 Hz ------------------------------------------------------
     if (tick == 0) {
@@ -321,6 +285,27 @@ typedef struct voice_t {
         }
       }
 
+      // pan
+
+      if (panStep) {
+        if (pan < panTarget) {
+          pan += panStep;
+          if (pan > panTarget) {
+            pan = panTarget;
+            panStep = 0;
+          }
+        } else if (pan > panTarget) {
+          pan -= panStep;
+          if (pan < panTarget) {
+            pan = panTarget;
+            panStep = 0;
+          }
+        }
+
+        uint8_t leftGain = std::min((0xff - pan) * 2, 0xff);
+        uint8_t rightGain = std::min(0xff, 2 * pan);
+      }
+
       // vibrato
       int delta = 0;
 
@@ -333,12 +318,19 @@ typedef struct voice_t {
 
       frequency = arpFrequencies[arpIndex] + delta;
 
-      // Legato: exponential frequency interpolation
-      if (legatoSteps > 0 && command == FourCC::InstrumentCommandLegato) {
-        legatoFactor = applySlide(legatoFactor, legatoCoefficient);
+      // Legato: exponential frequency interpolation (Q16.16 fixed-point)
+      if (legatoSteps > 0 && legato) {
+        // Accumulate factor: legatoFactor *= legatoCoefficient (both Q16.16)
+        legatoFactor += legatoCoefficient;
         legatoSteps--;
-        frequency = multiplyQ32(frequency, legatoFactor);
+
+        if (legatoSteps == 0) {
+          legatoFactor = legatoTargetFreq;
+        }
       }
+
+      // Apply to frequency: frequency *= legatoFactor (Q16.16)
+      frequency = ((int64_t)frequency * legatoFactor) >> 16;
     }
 
     // warm loop @ ~1000 Hz ----------------------------------------------------
@@ -349,7 +341,7 @@ typedef struct voice_t {
       tock = 44;
 
       // arpeggio
-      if (command == FourCC::InstrumentCommandArpeggiator) {
+      if (arpeggio) {
         arpTick++;
 
         if (arpTick >= arpTime) {
@@ -441,12 +433,38 @@ typedef struct voice_t {
     // Apply combined gain (volume * envelope) in single operation
     sample = (sample >> 8) * combinedGain;
 
-    return sample;
+    // Apply bitcrush
+    if (bitcrush) {
+      sample &= (0xffff'ffff << bitcrush);
+      // drive is ignored at the moment
+      // sample *= drive;
+    }
+
+    // Apply panning
+
+    *left = (sample >> 8) * leftGain;
+    *right = (sample >> 8) * rightGain;
   }
 
   inline void note_on(unsigned char note, bool retrigger,
                       InstrumentParameters parameters) {
     this->parameters = parameters;
+
+    // is this the best time to store that?
+    lastFrequency = frequency;
+
+    // command settings
+    legatoSteps = 0;
+    legatoFactor = 0x0001'0000; // 1.0 in Q16.16
+    legato = false;
+    arpeggio = false;
+
+    bitcrush = 0;
+    drive = 0;
+
+    pan = 128;
+    panTarget = 128;
+    panStep = 0;
 
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
     frequency = frequencyTable[fIndex];
@@ -463,7 +481,7 @@ typedef struct voice_t {
     time = 0;
     tick = 0;
     tock = 0;
-    legatoCoefficient = 0xFFFF'FFFF; // 1.0 in Q0.32
+    legatoCoefficient = 0x0001'0000; // 1.0 in Q16.16
 
     // reset vibrato
     vibSwing = frequencyTable[fIndex + 1] - frequency;
@@ -558,11 +576,16 @@ typedef struct voice_t {
     return result;
   }
 
+  void command_init_pan(uint8_t speed, int8_t pan) {
+    panTarget = pan;
+    panStep = speed;
+  }
+
   // fully fixed-point per-tick legato initialization
   void command_init_legato(uint8_t speed, int8_t semitones) {
     /*
-    performs an exponential pitch slide from previous note value to pitch bb at
-    speed aa.
+    performs an exponential*) pitch slide from previous note value to pitch bb
+    at speed aa.
 
     00 is the fastest speed for aa (instant, useless)
     bb values are relative: 00-7F are up, 80-FF are down, expressed in
@@ -573,38 +596,49 @@ typedef struct voice_t {
     instrument (unless the previous instrument is still playing). LEG does
     exponential pitch change (i;e. it goes at same speed through all octaves)
     while PITCH is linear
+
+    *) it's not exponential in the GameBoy instrument, for performance reasons
     */
 
     int ticks = 1 + speed; // minimum 1 tick
 
-    // clamp semitones to table
-    if (semitones < -128)
-      semitones = -128;
-    if (semitones > 127)
-      semitones = 127;
+    if (semitones == 0) {
+      // Slide from lastFrequency to current frequency
+      if (lastFrequency == frequency) {
+        // Same frequency - no slide needed
+        legato = false;
+        return;
+      }
 
-    // get total ratio from table (Q16.16)
-    uint32_t ratioQ16 = semitoneRatioQ16[semitones + 128];
+      // Initial factor = lastFrequency / frequency (e.g., 0.5 for up an octave)
+      // Target factor = 1.0 (when we reach the new frequency)
+      int64_t initialFactor = ((int64_t)lastFrequency << 16) / frequency;
+      legatoTargetFreq = 0x0001'0000; // 1.0 in Q16.16
+      legatoCoefficient = (legatoTargetFreq - initialFactor) / ticks;
+      legatoFactor = initialFactor; // Start at the ratio
+    } else {
+      // clamp semitones to table
+      if (semitones < -128)
+        semitones = -128;
+      if (semitones > 127)
+        semitones = 127;
 
-    // compute log2 of ratio in Q16.16
-    int32_t log2Total = log2_fixed(ratioQ16);
+      // get total ratio from table (Q16.16)
+      legatoTargetFreq = semitoneRatioQ16[semitones + 128];
+      legatoCoefficient = (legatoTargetFreq - 0x0001'0000) / ticks;
+    }
 
-    // divide by ticks to get per-tick log2
-    int32_t log2PerTick = log2Total / ticks;
-
-    // compute per-tick factor in Q16.16
-    legatoCoefficient = exp2_fixed(log2PerTick); // Q16.16
-
-    // initialize factor to 1.0 in Q16.16
-    legatoFactor = 0x00010000;
-
-    // remaining ticks
     legatoSteps = ticks;
+    legatoFactor = 0x0001'0000; // start at 1.0
+
+    legato = true;
   }
 
   void command_init_arp(ushort value) {
     arpIndex = 0;
     arpLength = 5;
+
+    arpeggio = true;
 
     // trim off trailing zeroes
     uint16_t val = value;

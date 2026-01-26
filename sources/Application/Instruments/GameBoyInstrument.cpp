@@ -59,8 +59,6 @@ void GameBoyInstrument::Stop(int channel) { voices_[channel].stop(); };
 bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
   // note on get frequency etc.
 
-  Trace::Error("GameBoyInstrument: Start note %d on channel %d", note, channel);
-
   // dump instrument parameters
   InstrumentParameters params = getInstrumentParameters();
   voices_[channel].note_on(note, retrigger, params);
@@ -74,10 +72,9 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
   voice_t &v = voices_[channel];
 
   for (int s = 0; s < size; s++) {
-    fixed sample = v.sample();
+    v.sample(buffer, buffer + 1);
     
     // Output to both channels
-    buffer[0] = buffer[1] = sample;
     buffer += 2;
   }
 
@@ -96,11 +93,16 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     break;
 
   case FourCC::InstrumentCommandVolume:
-    // volume is 0-127, map to 0-255
     voices_[channel].parameters.level = value;
     break;
 
-  case FourCC::InstrumentCommandInstrumentRetrigger:
+  case FourCC::InstrumentCommandCrush:
+    voices_[channel].bitcrush = value && 0x0f;
+    voices_[channel].drive = value >> 8;
+    break;
+
+  case FourCC::InstrumentCommandPan:
+    voices_[channel].command_init_pan(value >> 8, value & 0xFF);
     break;
 
   case FourCC::InstrumentCommandPitchSlide:
@@ -111,6 +113,10 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     break;
   }
 };
+
+bool GameBoyInstrument::SupportsCommand(FourCC cc) {
+  return false;
+}
 
 InstrumentParameters GameBoyInstrument::getInstrumentParameters() {
   InstrumentParameters params;

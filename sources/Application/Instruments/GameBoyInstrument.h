@@ -25,7 +25,9 @@ public:
   virtual bool Init() { return true; }
   virtual bool IsInitialized() { return true; };
   virtual bool IsEmpty() { return false; };
-  
+
+  virtual bool SupportsCommand(FourCC cc);
+
   virtual InstrumentType GetType() { return IT_GAMEBOY; };
 
   // Start & stop the instument
