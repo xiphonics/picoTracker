@@ -27,7 +27,7 @@ enum gbFlags { fArpeggio = 1 << 0, fLegato = 1 << 1 };
  * constants                                                                  *
  ******************************************************************************/
 
-#include "CompileTimeFunctions.h"
+#include "GameBoyCompileTimeFunctions.h"
 
 // precalculated semitone ratios for pitch slides (Q16.16 format)
 constexpr auto semitoneRatioQ16 = makeRatioLUT(std::make_index_sequence<256>{});
