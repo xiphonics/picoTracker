@@ -27,65 +27,16 @@ enum gbWaveType {
 
 #include "CompileTimeFunctions.h"
 
-// Precalculated semitone ratios for pitch slides (Q16.16 format)
-// Index 128 = 1.0 (0 semitones), index 0 = 2^(-128/12), index 255 = 2^(127/12)
-constexpr auto semitoneRatioQ16 =
-    makeSemitoneRatioTable(std::make_index_sequence<256>{});
-
+// precalculated semitone ratios for pitch slides (Q16.16 format)
+constexpr auto semitoneRatioQ16 = makeRatioLUT(std::make_index_sequence<256>{});
 // precalculated frequency table midi notes -12 to 127+12
-constexpr int32_t frequencyTable[128 + 24] = {
-    398127,     421801,     446882,     473455,     501608,     531436,
-    563036,     596516,     631987,     669567,     709381,     751563,
-    796254,     843601,     893765,     946911,     1003217,    1062871,
-    1126073,    1193033,    1263974,    1339134,    1418763,    1503127,
-    1592507,    1687203,    1787529,    1893821,    2006434,    2125742,
-    2252146,    2386065,    2527948,    2678268,    2837526,    3006254,
-    3185015,    3374406,    3575058,    3787642,    4012867,    4251485,
-    4504291,    4772130,    5055896,    5356535,    5675051,    6012507,
-    6370030,    6748811,    7150117,    7575285,    8025735,    8502970,
-    9008582,    9544261,    10111792,   10713070,   11350103,   12025015,
-    12740059,   13497623,   14300233,   15150569,   16051469,   17005939,
-    18017165,   19088521,   20223584,   21426141,   22700205,   24050030,
-    25480119,   26995246,   28600467,   30301139,   32102938,   34011878,
-    36034330,   38177043,   40447168,   42852281,   45400411,   48100060,
-    50960238,   53990491,   57200933,   60602278,   64205876,   68023757,
-    72068660,   76354085,   80894335,   85704563,   90800821,   96200119,
-    101920476,  107980983,  114401866,  121204555,  128411753,  136047513,
-    144137319,  152708170,  161788671,  171409126,  181601643,  192400238,
-    203840952,  215961966,  228803732,  242409110,  256823506,  272095026,
-    288274639,  305416341,  323577341,  342818251,  363203285,  384800477,
-    407681904,  431923931,  457607465,  484818220,  513647012,  544190053,
-    576549277,  610832681,  647154683,  685636503,  726406571,  769600953,
-    815363807,  863847862,  915214929,  969636441,  1027294024, 1088380105,
-    1153098554, 1221665363, 1294309365, 1371273005, 1452813141, 1539201906,
-    1630727614, 1727695724, 1830429858, 1939272882, 2054588048, 2116760211,
-    2116197109, 2113330725};
-
-constexpr uint16_t attackCoeffLUT[65] = {
-    65535, 63000, 60000, 55329, 45156, 35045, 27227, 21474, 17253, 14090, 11690,
-    9844,  8384,  7221,  6279,  5508,  4869,  4334,  3881,  3495,  3163,  2876,
-    2627,  2408,  2215,  2045,  1892,  1757,  1636,  1526,  1428,  1338,  1256,
-    1182,  1114,  1052,  995,   943,   893,   849,   807,   769,   732,   699,
-    668,   638,   612,   586,   562,   539,   517,   498,   479,   461,   444,
-    428,   413,   399,   385,   372,   360,   348,   337,   326,   326,
-};
-
-constexpr uint16_t decayCoeffLUT[65] = {
-    65535, 60000, 54134, 37479, 25165, 17618, 12848, 9728, 7602, 6089, 4980,
-    4148,  3505,  3000,  2594,  2267,  1997,  1773,  1584, 1424, 1286, 1168,
-    1065,  975,   896,   826,   764,   709,   659,   616,  575,  538,  506,
-    476,   448,   423,   400,   378,   359,   340,   323,  308,  293,  280,
-    267,   255,   244,   234,   224,   215,   206,   198,  191,  184,  177,
-    170,   164,   159,   153,   148,   143,   138,   134,  130,  130,
-};
-
-constexpr const int8_t sine64[65] = {
-    0,    12,   25,   37,   49,   60,   71,   81,   90,   98,   106,
-    112,  117,  122,  125,  126,  127,  126,  125,  122,  117,  112,
-    106,  98,   90,   81,   71,   60,   49,   37,   25,   12,   0,
-    -12,  -25,  -37,  -49,  -60,  -71,  -81,  -90,  -98,  -106, -112,
-    -117, -122, -125, -126, -127, -126, -125, -122, -117, -112, -106,
-    -98,  -90,  -81,  -71,  -60,  -49,  -37,  -25,  -12,  0};
+constexpr auto frequencyLUT = makeFreqLUT(std::make_index_sequence<128 + 24>{});
+// precalculated attack coefficients for envelope (0-64)
+constexpr auto attackCoeffLUT = makeAttackLUT(std::make_index_sequence<65>{});
+// precalculated decay coefficients for envelope (0-64)
+constexpr auto decayCoeffLUT = makeDecayLUT(std::make_index_sequence<65>{});
+// precalculated sine wave values for vibrato (0-63 + sentinel)
+constexpr auto sine64LUT = makeSine64LUT(std::make_index_sequence<65>{});
 
 static inline uint32_t multiplyQ32(uint32_t a, uint32_t b) {
   uint64_t tmp = (uint64_t)a * b;
@@ -113,19 +64,19 @@ static inline int8_t interpolateS8(const int8_t *lut, uint8_t v) {
 }
 
 typedef struct InstrumentParameters {
-  int wave;
-  int attack;
-  int decay;
-  int level;
-  int length;
-  int burst;
-  int vibratoDepth;
-  int vibratoDelay;
-  int transpose;
-  int table;
-  int arpSpeed;
-  int sweepTime;
-  int sweepAmount;
+  uint8_t wave;
+  uint8_t attack;
+  uint8_t decay;
+  uint8_t level;
+  int16_t length;
+  uint8_t burst;
+  uint8_t vibratoDepth;
+  uint8_t vibratoDelay;
+  int8_t transpose;
+  int16_t table;
+  uint8_t arpSpeed;
+  uint8_t sweepTime;
+  int8_t sweepAmount;
 } InstrumentParameters;
 
 typedef enum { ENV_IDLE = 0, ENV_ATTACK, ENV_DECAY } EnvState;
@@ -135,20 +86,23 @@ typedef enum { ENV_IDLE = 0, ENV_ATTACK, ENV_DECAY } EnvState;
  ******************************************************************************/
 
 typedef struct {
-  uint16_t value;       // 0..65535
-  uint16_t coefficient; // Q0.16
-  uint16_t attackCoeff;
-  uint16_t decayCoeff;
+  uint16_t value;
+  uint16_t coefficient; // q0.16
+  uint16_t attack;
+  uint16_t decay;
   uint16_t target; // 0 or 65535
   EnvState state;
 
-  void setAttack(uint8_t a) { attackCoeff = interpolateU16(attackCoeffLUT, a); }
-  void setDecay(uint8_t d) { decayCoeff = interpolateU16(decayCoeffLUT, d); }
+  void setAttack(uint8_t a) {
+    attack = interpolateU16(attackCoeffLUT.data(), a);
+  }
+
+  void setDecay(uint8_t d) { decay = interpolateU16(decayCoeffLUT.data(), d); }
 
   void trigger() {
     value = 0;
     target = 65535;
-    coefficient = attackCoeff;
+    coefficient = attack;
     state = ENV_ATTACK;
   }
 
@@ -162,7 +116,7 @@ typedef struct {
     if (state == ENV_ATTACK && tmp >= 65530) {
       tmp = 65535;
       target = 0;
-      coefficient = decayCoeff;
+      coefficient = decay;
       state = ENV_DECAY;
     } else if (tmp <= 10) {
       tmp = 0;
@@ -191,15 +145,11 @@ typedef struct voice_t {
   uint32_t arpLength = 5;
   int32_t arpFrequencies[5] = {0, 0, 0, 0, 0};
   uint8_t arpIndex = 0;
-  uint32_t egState;
-  uint32_t egLevel;
-  uint32_t egAttackRate;
-  uint32_t egDecayRate;
   uint32_t time;
   uint32_t tick;
   uint32_t tock;
   uint32_t lifetime;
-  uint32_t wave;
+  uint8_t wave;
   uint32_t volume;
   int32_t burstTime;
   uint16_t vibPhase;
@@ -215,16 +165,16 @@ typedef struct voice_t {
   uint8_t panTarget;
   uint8_t panStep;
 
-  FourCC command; // TODO remove
+  FourCC command; // tODO remove
 
   uint32_t sweepCoefficient;
   int32_t sweepSteps;
 
-  // Legato (exponential pitch slide)
-  int32_t legatoCoefficient = 0; // Q16.16 multiplier per 100Hz tick
-  int32_t legatoFactor = 0;      // Q16.16 multiplier per 100Hz tick
-  int32_t legatoSteps = 0;       // Remaining ticks
-  int32_t legatoTargetFreq = 0;  // Target frequency
+  // legato (exponential pitch slide)
+  int32_t legatoCoefficient = 0; // q16.16 multiplier per 100Hz tick
+  int32_t legatoFactor = 0;      // q16.16 multiplier per 100Hz tick
+  int32_t legatoSteps = 0;       // remaining ticks
+  int32_t legatoTargetFreq = 0;  // target frequency
 
   bool legato = false;
 
@@ -232,8 +182,8 @@ typedef struct voice_t {
   uint32_t noise;
 
   uint32_t lastSample = 0;
-  int32_t maxStep = 0x3fff'ffff;
-  int32_t minStep = -0x3fff'ffff;
+  const int32_t maxStep = 0x3fff'ffff;
+  const int32_t minStep = -0x3fff'ffff;
 
   Envelope envelope;
 
@@ -254,8 +204,7 @@ typedef struct voice_t {
   }
 
   inline void sample(fixed *left, fixed *right) {
-    uint32_t combinedGain = (volume * envelope.value) >> 16; // Precompute
-    uint32_t waveform = wave;
+    uint32_t combinedGain = (volume * envelope.value) >> 16; // precompute
 
     uint8_t leftGain = std::min((0xff - pan) * 2, 0xff);
     uint8_t rightGain = std::min(0xff, 2 * pan);
@@ -311,16 +260,16 @@ typedef struct voice_t {
 
       if (time > vibDelay) {
         vibPhase += vibFrequency;
-        int32_t sine = interpolateS8(sine64, (vibPhase >> 8));
+        int32_t sine = interpolateS8(sine64LUT.data(), vibPhase >> 8);
         delta = (vibSwing * sine) >> 7;
         delta = (vibDepth * delta) >> 8;
       }
 
       frequency = arpFrequencies[arpIndex] + delta;
 
-      // Legato: exponential frequency interpolation (Q16.16 fixed-point)
+      // legato: exponential frequency interpolation (Q16.16 fixed-point)
       if (legatoSteps > 0 && legato) {
-        // Accumulate factor: legatoFactor *= legatoCoefficient (both Q16.16)
+        // accumulate factor: legatoFactor *= legatoCoefficient (both Q16.16)
         legatoFactor += legatoCoefficient;
         legatoSteps--;
 
@@ -329,7 +278,7 @@ typedef struct voice_t {
         }
       }
 
-      // Apply to frequency: frequency *= legatoFactor (Q16.16)
+      // apply to frequency: frequency *= legatoFactor (Q16.16)
       frequency = ((int64_t)frequency * legatoFactor) >> 16;
     }
 
@@ -381,16 +330,16 @@ typedef struct voice_t {
 
     // generate sample based on waveform
     switch (wave) {
-    case gbWavePulse12_5: // Pulse 12.5%
+    case gbWavePulse12_5: // pulse 12.5%
       sample = pulse(phase > 0x2000'0000);
       break;
-    case gbWavePulse25: // Pulse 25%
+    case gbWavePulse25: // pulse 25%
       sample = pulse(phase > 0x4000'0000);
       break;
-    case gbWavePulse50: // Pulse 50%
+    case gbWavePulse50: // pulse 50%
       sample = pulse(phase > 0x8000'0000);
       break;
-    case gbWaveTriangle: // Triangle
+    case gbWaveTriangle: // triangle
       if (phase < 0x8000'0000) {
         // first half, rising slope
         sample = phase >> 3;
@@ -400,28 +349,18 @@ typedef struct voice_t {
       }
       sample &= 0xFF00'0000; // downsample
       break;
-    case gbWaveNoiseGameBoy: // Noise: GB7
+    case gbWaveNoiseGameBoy: // noise: GB7
+    case gbWaveNoiseNES:     // noise: NES
+    case gbWaveNoiseSN76489: // noise: SN76489
       if (phase > 0x4000'0000) {
         phase -= 0x4000'0000;
-        noise = voice_noise_gb7(&lfsr);
+        noise = (wave == gbWaveNoiseGameBoy) ? voice_noise_gb7(&lfsr)
+                : (wave == gbWaveNoiseNES)   ? voice_noise_nes(&lfsr)
+                                             : voice_noise_sn76489(&lfsr);
       }
       sample = noise;
       break;
-    case gbWaveNoiseNES: // Noise: NES
-      if (phase > 0x4000'0000) {
-        phase -= 0x4000'0000;
-        noise = voice_noise_nes(&lfsr);
-      }
-      sample = noise;
-      break;
-    case gbWaveNoiseSN76489: // Noise: SN76489
-      if (phase > 0x4000'0000) {
-        phase -= 0x4000'0000;
-        noise = voice_noise_sn76489(&lfsr);
-      }
-      sample = noise;
-      break;
-    case gbWaveNoiseWhite: // Noise: White Noise, frequency independent
+    case gbWaveNoiseWhite: // noise: white noise, frequency independent
       lcg *= 1664525;
       lcg += 1013904223;
       sample = lcg & 0x0FFF'FFFF;
@@ -430,17 +369,17 @@ typedef struct voice_t {
 
     time++;
 
-    // Apply combined gain (volume * envelope) in single operation
+    // apply combined gain (volume * envelope) in single operation
     sample = (sample >> 8) * combinedGain;
 
-    // Apply bitcrush
+    // apply bitcrush
     if (bitcrush) {
       sample &= (0xffff'ffff << bitcrush);
       // drive is ignored at the moment
       // sample *= drive;
     }
 
-    // Apply panning
+    // apply panning
 
     *left = (sample >> 8) * leftGain;
     *right = (sample >> 8) * rightGain;
@@ -467,7 +406,7 @@ typedef struct voice_t {
     panStep = 0;
 
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
-    frequency = frequencyTable[fIndex];
+    frequency = frequencyLUT[fIndex];
     arpFrequencies[0] = frequency;
 
     this->note = note;
@@ -484,7 +423,7 @@ typedef struct voice_t {
     legatoCoefficient = 0x0001'0000; // 1.0 in Q16.16
 
     // reset vibrato
-    vibSwing = frequencyTable[fIndex + 1] - frequency;
+    vibSwing = frequencyLUT[fIndex + 1] - frequency;
     vibDelay = parameters.vibratoDelay << 8;
     vibDepth = parameters.vibratoDepth;
     vibPhase = 0;
@@ -522,12 +461,11 @@ typedef struct voice_t {
     return (lastSample = (lastSample + diff));
   }
 
-  static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b1,
-                                          int feedback) {
+  static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b, int feedback) {
     uint16_t lfsr_val = *lfsr;
 
     bool bitA = lfsr_val & 1;
-    bool bitB = (lfsr_val >> b1) & 1;
+    bool bitB = (lfsr_val >> b) & 1;
     bool bitF = bitA ^ bitB;
 
     lfsr_val = (lfsr_val >> 1) | (bitF << feedback);
@@ -555,11 +493,13 @@ typedef struct voice_t {
     if (xQ16 == 0)
       return 0;
 
-    int leading = 31 - __builtin_clz(xQ16); // integer part of log2
-    uint32_t frac = xQ16 << (31 - leading); // normalized fractional part
+    // integer part of log2
+    int leading = 31 - __builtin_clz(xQ16);
+    // normalized fractional part
+    uint32_t frac = xQ16 << (31 - leading);
     // take top 16 bits as fraction
     int32_t frac16 = frac >> 15;
-    return (leading - 16) << 16 | (frac16 & 0xFFFF); // Q16.16
+    return (leading - 16) << 16 | (frac16 & 0xFFFF);
   }
 
   // integer exp2 approximation, input in Q16.16, output Q16.16
@@ -583,39 +523,23 @@ typedef struct voice_t {
 
   // fully fixed-point per-tick legato initialization
   void command_init_legato(uint8_t speed, int8_t semitones) {
-    /*
-    performs an exponential*) pitch slide from previous note value to pitch bb
-    at speed aa.
-
-    00 is the fastest speed for aa (instant, useless)
-    bb values are relative: 00-7F are up, 80-FF are down, expressed in
-    semi-tones if LEG is put on a row where a note is present and the pitch
-    offset is 0 (e.g. C4 I3 LEG 1000) the slide will occur automatically from
-    previous note to the current one at the given speed. If an instrument is not
-    triggered on the same row as LEG, the command will re-trigger the previous
-    instrument (unless the previous instrument is still playing). LEG does
-    exponential pitch change (i;e. it goes at same speed through all octaves)
-    while PITCH is linear
-
-    *) it's not exponential in the GameBoy instrument, for performance reasons
-    */
-
+    // not exponential in the GameBoy instrument, for performance reasons (atm)
     int ticks = 1 + speed; // minimum 1 tick
 
     if (semitones == 0) {
-      // Slide from lastFrequency to current frequency
+      // slide from lastFrequency to current frequency
       if (lastFrequency == frequency) {
-        // Same frequency - no slide needed
+        // same frequency - no slide needed
         legato = false;
         return;
       }
 
-      // Initial factor = lastFrequency / frequency (e.g., 0.5 for up an octave)
-      // Target factor = 1.0 (when we reach the new frequency)
+      // initial factor = lastFrequency / frequency (e.g., 0.5 for up an octave)
+      // target factor = 1.0 (when we reach the new frequency)
       int64_t initialFactor = ((int64_t)lastFrequency << 16) / frequency;
       legatoTargetFreq = 0x0001'0000; // 1.0 in Q16.16
       legatoCoefficient = (legatoTargetFreq - initialFactor) / ticks;
-      legatoFactor = initialFactor; // Start at the ratio
+      legatoFactor = initialFactor; // start at the ratio
     } else {
       // clamp semitones to table
       if (semitones < -128)
@@ -648,12 +572,12 @@ typedef struct voice_t {
       val >>= 4;
     }
 
-    for (uint32_t i = 0; i < arpLength - 1; i++) {
+    for (uint8_t i = 0; i < arpLength - 1; i++) {
       uint8_t semitone = (value >> (i * 4)) & 0x0F;
       int32_t noteVal = note + parameters.transpose + semitone + 12;
       noteVal = (noteVal < 0) ? 0 : noteVal;
       noteVal = (noteVal > 127 + 24) ? 127 + 24 : noteVal;
-      arpFrequencies[i + 1] = frequencyTable[noteVal];
+      arpFrequencies[i + 1] = frequencyLUT[noteVal];
     }
   }
 } voice_t;
