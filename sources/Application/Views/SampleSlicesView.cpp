@@ -235,6 +235,7 @@ void SampleSlicesView::DrawView() {
 
   if (!HasModalView()) {
     drawWaveform();
+    ClearTextRect(0, 9, SCREEN_WIDTH, 3);
   }
 
   FieldView::Redraw();
