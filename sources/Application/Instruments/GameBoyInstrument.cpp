@@ -27,7 +27,7 @@ GameBoyInstrument::GameBoyInstrument()
       vAttack_(FourCC::GameBoyInstrumentAttack, 0x00),
       vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
       vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
-      vLength_(FourCC::GameBoyInstrumentLength, -1),
+      vLength_(FourCC::GameBoyInstrumentLength, 0),
       vBurst_(FourCC::GameBoyInstrumentBurst, 0x00),
       vVibratoDepth_(FourCC::GameBoyInstrumentVibrato, 0x07),
       vVibratoDelay_(FourCC::GameBoyInstrumentVibratoDelay, 0x40),
@@ -122,8 +122,8 @@ InstrumentParameters GameBoyInstrument::getInstrumentParameters() {
   params.attack = vAttack_.GetInt();
   params.decay = vDecay_.GetInt();
   params.level = vLevel_.GetInt();
-  params.length = vLength_.GetInt();
-  params.burst = vBurst_.GetInt();
+  params.length = vLength_.GetInt() < 0 ? 0 : vLength_.GetInt();
+  params.burst = vBurst_.GetInt() < 0 ? 0 : vBurst_.GetInt();
   params.vibratoDepth = vVibratoDepth_.GetInt();
   params.vibratoDelay = vVibratoDelay_.GetInt();
   params.transpose = vTranspose_.GetInt();

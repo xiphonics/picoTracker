@@ -84,7 +84,7 @@ typedef struct InstrumentParameters {
   int8_t sweepAmount;
 } InstrumentParameters;
 
-typedef enum { ENV_IDLE = 0, ENV_ATTACK, ENV_DECAY } EnvState;
+typedef enum { ENV_IDLE, ENV_ATTACK, ENV_DECAY } EnvState;
 
 /******************************************************************************
  * envelope                                                                   *
@@ -283,7 +283,6 @@ typedef struct voice_t {
     if (tock == 0) {
       // hot loop
 
-      // envelope processing at ~1000Hz
       tock = 44;
 
       // arpeggio
@@ -427,7 +426,7 @@ typedef struct voice_t {
     envelope.setDecay(parameters.decay);
     envelope.trigger();
 
-    lifetime = (parameters.length < 0) ? 0x7FFF'FFFF : (1 + parameters.length);
+    lifetime = (parameters.length == 0) ? 0x7FFF'FFFF : (parameters.length);
 
     wave = parameters.wave;
     volume = parameters.level;
