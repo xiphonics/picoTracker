@@ -179,7 +179,12 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (viewSpan > 0) {
       int32_t delta = 0;
       if (mask & (EPBM_LEFT | EPBM_RIGHT)) {
-        delta = static_cast<int32_t>(std::max<uint32_t>(1, viewSpan / 64));
+        // We allow single sample movement at max zoom level
+        if (graphField_.ZoomLevel() >= graphField_.MaxZoomLevel()) {
+          delta = 1;
+        } else {
+          delta = static_cast<int32_t>(std::max<uint32_t>(1, viewSpan / 64));
+        }
         if (mask & EPBM_LEFT) {
           delta = -delta;
         }
