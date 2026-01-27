@@ -574,7 +574,7 @@ void SampleSlicesView::updateStatusLabels() {
     sliceIndex = 0;
   }
   npf_snprintf(sliceIndexLabel_, sizeof(sliceIndexLabel_), "slice: %2d",
-               sliceIndex + 1);
+               sliceIndex);
 
   uint32_t zoom = 1u;
   uint8_t level = graphField_.ZoomLevel();
