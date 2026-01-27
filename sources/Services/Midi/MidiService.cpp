@@ -14,6 +14,7 @@
 #include "Services/Audio/AudioDriver.h"
 #include "System/Console/Trace.h"
 #include "System/Timer/Timer.h"
+#include <cstdint>
 #include <cstring>
 
 #ifdef SendMessage
@@ -206,6 +207,13 @@ void MidiService::OnPlayerStart() {
 };
 
 void MidiService::OnPlayerStop() {
+  for (uint8_t channel = 0; channel < 16; channel++) {
+    MidiMessage ccMsg;
+    ccMsg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
+    ccMsg.data1_ = MidiCC::CC_ALL_NOTES_OFF;
+    ccMsg.data2_ = 0x00;
+    QueueMessage(ccMsg);
+  }
   // Send MIDI Stop message (0xFC) to all active output devices
   if (sendSync_) {
     MidiMessage msg;
