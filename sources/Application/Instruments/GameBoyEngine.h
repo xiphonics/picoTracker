@@ -21,6 +21,8 @@ enum gbWaveType {
   gbWaveNone
 };
 
+enum gbFlags { fArpeggio = 1 << 0, fLegato = 1 << 1 };
+
 /******************************************************************************
  * constants                                                                  *
  ******************************************************************************/
@@ -64,16 +66,19 @@ static inline int8_t interpolateS8(const int8_t *lut, uint8_t v) {
 }
 
 typedef struct InstrumentParameters {
+  uint8_t table;
+  uint8_t length;
+
   uint8_t wave;
   uint8_t attack;
   uint8_t decay;
   uint8_t level;
-  int16_t length;
+
   uint8_t burst;
   uint8_t vibratoDepth;
   uint8_t vibratoDelay;
   int8_t transpose;
-  int16_t table;
+
   uint8_t arpSpeed;
   uint8_t sweepTime;
   int8_t sweepAmount;
@@ -85,12 +90,12 @@ typedef enum { ENV_IDLE = 0, ENV_ATTACK, ENV_DECAY } EnvState;
  * envelope                                                                   *
  ******************************************************************************/
 
+#pragma pack(push, 1)
 typedef struct {
   uint16_t value;
   uint16_t coefficient; // q0.16
   uint16_t attack;
   uint16_t decay;
-  uint16_t target; // 0 or 65535
   EnvState state;
 
   void setAttack(uint8_t a) {
@@ -101,7 +106,6 @@ typedef struct {
 
   void trigger() {
     value = 0;
-    target = 65535;
     coefficient = attack;
     state = ENV_ATTACK;
   }
@@ -110,12 +114,11 @@ typedef struct {
     if (state == ENV_IDLE)
       return;
 
-    uint32_t diff = (uint32_t)target - value;
+    uint32_t diff = (uint32_t)(state == ENV_ATTACK ? 65535 : 0) - value;
     int32_t tmp = value + ((diff * coefficient) >> 16);
 
     if (state == ENV_ATTACK && tmp >= 65530) {
       tmp = 65535;
-      target = 0;
       coefficient = decay;
       state = ENV_DECAY;
     } else if (tmp <= 10) {
@@ -127,36 +130,50 @@ typedef struct {
   }
 
 } Envelope;
+#pragma pack(pop)
 
 /******************************************************************************
  * voice                                                                      *
  ******************************************************************************/
 
+// max rates for slew limiting the waveform against aliasing noise. could be
+// improved to be frequency-dependent later.
+constexpr int32_t maxStep = 0x3fff'ffff;
+constexpr int32_t minStep = -0x3fff'ffff;
+
+#pragma pack(push, 1)
 typedef struct voice_t {
   InstrumentParameters parameters;
 
-  bool arpeggio = false;
-  uint16_t arpTick = 0;
-  uint16_t arpTime = 250;
   uint8_t note;
+  uint8_t wave;
+  uint8_t vibDepth;
+  uint8_t flags = 0; // bit 0: arpeggio, bit 1: legato
+
+  uint8_t arpTick = 0;
+  uint8_t arpTime = 250;
+
   uint32_t phase = 0;
   int32_t frequency = 0;
   int32_t lastFrequency = 0;
-  uint32_t arpLength = 5;
-  int32_t arpFrequencies[5] = {0, 0, 0, 0, 0};
+
+  uint8_t volume;
+  uint8_t burstTime;
+  uint8_t arpLength = 5;
   uint8_t arpIndex = 0;
-  uint32_t time;
-  uint32_t tick;
-  uint32_t tock;
+
+  int32_t arpFrequencies[5] = {0, 0, 0, 0, 0};
+  uint32_t time; // sample counter
+  uint32_t tick; // sample counter for 100Hz updates
+  uint32_t tock; // sample counter for 1000Hz updates
   uint32_t lifetime;
-  uint8_t wave;
-  uint32_t volume;
-  int32_t burstTime;
+
   uint16_t vibPhase;
   const uint16_t vibFrequency = 0xfff;
-  int32_t vibDepth;
+
   int32_t vibSwing;
-  uint32_t vibDelay;
+
+  uint16_t vibDelay;
 
   uint8_t drive;
   uint8_t bitcrush;
@@ -165,10 +182,8 @@ typedef struct voice_t {
   uint8_t panTarget;
   uint8_t panStep;
 
-  FourCC command; // tODO remove
-
   uint32_t sweepCoefficient;
-  int32_t sweepSteps;
+  int16_t sweepSteps;
 
   // legato (exponential pitch slide)
   int32_t legatoCoefficient = 0; // q16.16 multiplier per 100Hz tick
@@ -176,31 +191,16 @@ typedef struct voice_t {
   int32_t legatoSteps = 0;       // remaining ticks
   int32_t legatoTargetFreq = 0;  // target frequency
 
-  bool legato = false;
-
   uint16_t lfsr = 17;
   uint32_t noise;
 
   uint32_t lastSample = 0;
-  const int32_t maxStep = 0x3fff'ffff;
-  const int32_t minStep = -0x3fff'ffff;
 
   Envelope envelope;
 
   inline void stop() {
     frequency = 0;
     phase = 0;
-  }
-
-  void runCommand() {
-    switch (command) {
-    case FourCC::InstrumentCommandArpeggiator: {
-      // handled in 1000Hz tick
-      break;
-    }
-    default:
-      break;
-    }
   }
 
   inline void sample(fixed *left, fixed *right) {
@@ -219,14 +219,11 @@ typedef struct voice_t {
       // recompute combined gain when envelope changes
       combinedGain = (volume * envelope.value) >> 16;
 
-      // handle commands
-      runCommand();
-
       // sweep
       if (sweepSteps) {
         sweepSteps--;
 
-        // sweep al base frequencies
+        // sweep all base frequencies
         for (uint32_t i = 0; i < arpLength; i++) {
           uint64_t f = arpFrequencies[i];
           f *= sweepCoefficient;
@@ -268,7 +265,7 @@ typedef struct voice_t {
       frequency = arpFrequencies[arpIndex] + delta;
 
       // legato: exponential frequency interpolation (Q16.16 fixed-point)
-      if (legatoSteps > 0 && legato) {
+      if (legatoSteps > 0 && (flags & fLegato)) {
         // accumulate factor: legatoFactor *= legatoCoefficient (both Q16.16)
         legatoFactor += legatoCoefficient;
         legatoSteps--;
@@ -290,7 +287,7 @@ typedef struct voice_t {
       tock = 44;
 
       // arpeggio
-      if (arpeggio) {
+      if (flags & fArpeggio) {
         arpTick++;
 
         if (arpTick >= arpTime) {
@@ -395,8 +392,7 @@ typedef struct voice_t {
     // command settings
     legatoSteps = 0;
     legatoFactor = 0x0001'0000; // 1.0 in Q16.16
-    legato = false;
-    arpeggio = false;
+    flags = 0;                  // clear arpeggio and legato
 
     bitcrush = 0;
     drive = 0;
@@ -410,8 +406,6 @@ typedef struct voice_t {
     arpFrequencies[0] = frequency;
 
     this->note = note;
-
-    command = FourCC::InstrumentCommandNone;
 
     arpTime = 35 - parameters.arpSpeed;
     arpIndex = 0;
@@ -530,7 +524,7 @@ typedef struct voice_t {
       // slide from lastFrequency to current frequency
       if (lastFrequency == frequency) {
         // same frequency - no slide needed
-        legato = false;
+        flags &= ~fLegato; // clear legato flag
         return;
       }
 
@@ -555,14 +549,14 @@ typedef struct voice_t {
     legatoSteps = ticks;
     legatoFactor = 0x0001'0000; // start at 1.0
 
-    legato = true;
+    flags |= fLegato; // set legato flag
   }
 
   void command_init_arp(ushort value) {
     arpIndex = 0;
     arpLength = 5;
 
-    arpeggio = true;
+    flags |= fArpeggio; // set arpeggio flag
 
     // trim off trailing zeroes
     uint16_t val = value;
@@ -581,3 +575,7 @@ typedef struct voice_t {
     }
   }
 } voice_t;
+#pragma pack(pop)
+
+// 128 bytes per voice max to keep the entire thing under 1kB for 8 voices
+static_assert(sizeof(voice_t) <= 128, "Check sizeof(voice_t) in error message");
