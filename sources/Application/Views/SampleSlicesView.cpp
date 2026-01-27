@@ -151,21 +151,19 @@ void SampleSlicesView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   bool graphFocused = (GetFocus() == &graphField_);
 
-  if (graphFocused && (mask & EPBM_EDIT)) {
-    if (mask & EPBM_LEFT) {
-      int32_t index = sliceIndexVar_.GetInt();
-      if (index > 0) {
-        sliceIndexVar_.SetInt(index - 1);
-      }
-      return;
+  if (graphFocused && (mask == EPBM_LEFT)) {
+    int32_t index = sliceIndexVar_.GetInt();
+    if (index > 0) {
+      sliceIndexVar_.SetInt(index - 1);
     }
-    if (mask & EPBM_RIGHT) {
-      int32_t index = sliceIndexVar_.GetInt();
-      if (index < static_cast<int32_t>(SampleInstrument::MaxSlices) - 1) {
-        sliceIndexVar_.SetInt(index + 1);
-      }
-      return;
+    return;
+  }
+  if (graphFocused && (mask == EPBM_RIGHT)) {
+    int32_t index = sliceIndexVar_.GetInt();
+    if (index < static_cast<int32_t>(SampleInstrument::MaxSlices) - 1) {
+      sliceIndexVar_.SetInt(index + 1);
     }
+    return;
   }
 
   if (graphFocused && (mask & EPBM_ENTER)) {
@@ -316,42 +314,41 @@ void SampleSlicesView::buildFieldLayout() {
   staticField_.clear();
   actionField_.clear();
 
+  fieldList_.insert(fieldList_.end(), &graphField_);
+
   GUIPoint position = GetAnchor();
   position._x = 1;
-  position._y = 12;
+  position._y = 8;
+  updateStatusLabels();
+  staticField_.emplace_back(position, sliceIndexLabel_);
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._x += 21;
+  staticField_.emplace_back(position, zoomLabel_);
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
 
-  intVarField_.emplace_back(position, autoSliceCountVar_, "auto: %2d", 1,
+  position._x = 12;
+  intVarField_.emplace_back(position, autoSliceCountVar_, "%2d", 1,
                             static_cast<int32_t>(SampleInstrument::MaxSlices),
                             1, 4);
   fieldList_.insert(fieldList_.end(), &intVarField_.back());
 
-  position._x += 11;
+  position._x += 3;
   actionField_.emplace_back("slice", FourCC::ActionAutoSlice, position);
   fieldList_.insert(fieldList_.end(), &actionField_.back());
   actionField_.back().AddObserver(*this);
 
-  fieldList_.insert(fieldList_.end(), &graphField_);
-
-  position._y += 2;
+  position._y += 4;
   position._x = 1;
-  updateStatusLabels();
-  staticField_.emplace_back(position, sliceIndexLabel_);
-  fieldList_.insert(fieldList_.end(), &staticField_.back());
-  position._x += 12;
-  staticField_.emplace_back(position, zoomLabel_);
-  fieldList_.insert(fieldList_.end(), &staticField_.back());
-  position._y += 1;
-  position._x = 1;
-  staticField_.emplace_back(position, "EDIT+RIGHT/LEFT: select slice");
-  fieldList_.insert(fieldList_.end(), &staticField_.back());
-  position._y += 1;
-  staticField_.emplace_back(position, "EDIT+UP/DOWN: zoom in/out");
+  staticField_.emplace_back(position, "RIGHT/LEFT: select slice");
   fieldList_.insert(fieldList_.end(), &staticField_.back());
   position._y += 1;
   staticField_.emplace_back(position, "ENTER+UP/DOWN: coarse move");
   fieldList_.insert(fieldList_.end(), &staticField_.back());
   position._y += 1;
   staticField_.emplace_back(position, "ENTER+RIGHT/LEFT: fine move");
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+  position._y += 1;
+  staticField_.emplace_back(position, "EDIT+UP/DOWN: zoom in/out");
   fieldList_.insert(fieldList_.end(), &staticField_.back());
   position._y += 1;
   staticField_.emplace_back(position, "PLAY: preview slice");
@@ -579,7 +576,7 @@ void SampleSlicesView::updateStatusLabels() {
   if (level < 31) {
     zoom = 1u << level;
   }
-  npf_snprintf(zoomLabel_, sizeof(zoomLabel_), "zoom: %2ux", zoom);
+  npf_snprintf(zoomLabel_, sizeof(zoomLabel_), "zoom:%3ux", zoom);
 }
 
 void SampleSlicesView::AutoSliceConfirmCallback(View &v, ModalView &dialog) {
