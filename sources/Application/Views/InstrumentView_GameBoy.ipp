@@ -16,7 +16,7 @@ void InstrumentView::fillGameBoyParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentTranspose);
-  intVarField_.emplace_back(position, *v, "Transpose:  %+d", 0, 48, 1, 12, -24);
+  intVarField_.emplace_back(position, *v, "Transpose: %+02d", 0, 48, 1, 12, -24);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
@@ -85,6 +85,6 @@ void InstrumentView::fillGameBoyParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::GameBoyInstrumentSweepAmount);
-  intVarField_.emplace_back(position, *v, " " char_border_single_bottomLeft_s char_border_single_horizontal_s " Amount: %03d", -127, 127, 1, 16);
+  intVarField_.emplace_back(position, *v, " " char_border_single_bottomLeft_s char_border_single_horizontal_s " Amount:%+03d", -127, 127, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 }

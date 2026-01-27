@@ -147,7 +147,6 @@ typedef struct voice_t {
 
   uint8_t note;
   uint8_t wave;
-  uint8_t vibDepth;
   uint8_t flags = 0; // bit 0: arpeggio, bit 1: legato
 
   uint8_t arpTick = 0;
@@ -157,7 +156,6 @@ typedef struct voice_t {
   int32_t frequency = 0;
   int32_t lastFrequency = 0;
 
-  uint8_t volume;
   uint8_t burstTime;
   uint8_t arpLength = 5;
   uint8_t arpIndex = 0;
@@ -204,7 +202,8 @@ typedef struct voice_t {
   }
 
   inline void sample(fixed *left, fixed *right) {
-    uint32_t combinedGain = (volume * envelope.value) >> 16; // precompute
+    uint32_t combinedGain =
+        (parameters.level * envelope.value) >> 16; // precompute
 
     uint8_t leftGain = std::min((0xff - pan) * 2, 0xff);
     uint8_t rightGain = std::min(0xff, 2 * pan);
@@ -217,7 +216,7 @@ typedef struct voice_t {
       envelope.tick();
 
       // recompute combined gain when envelope changes
-      combinedGain = (volume * envelope.value) >> 16;
+      combinedGain = (parameters.level * envelope.value) >> 16;
 
       // sweep
       if (sweepSteps) {
@@ -259,7 +258,7 @@ typedef struct voice_t {
         vibPhase += vibFrequency;
         int32_t sine = interpolateS8(sine64LUT.data(), vibPhase >> 8);
         delta = (vibSwing * sine) >> 7;
-        delta = (vibDepth * delta) >> 8;
+        delta = (parameters.vibratoDepth * delta) >> 8;
       }
 
       frequency = arpFrequencies[arpIndex] + delta;
@@ -376,7 +375,6 @@ typedef struct voice_t {
     }
 
     // apply panning
-
     *left = (sample >> 8) * leftGain;
     *right = (sample >> 8) * rightGain;
   }
@@ -418,7 +416,6 @@ typedef struct voice_t {
     // reset vibrato
     vibSwing = frequencyLUT[fIndex + 1] - frequency;
     vibDelay = parameters.vibratoDelay << 8;
-    vibDepth = parameters.vibratoDepth;
     vibPhase = 0;
 
     // reset envelope
@@ -429,7 +426,6 @@ typedef struct voice_t {
     lifetime = (parameters.length == 0) ? 0x7FFF'FFFF : (parameters.length);
 
     wave = parameters.wave;
-    volume = parameters.level;
     burstTime = parameters.burst;
 
     // sweep

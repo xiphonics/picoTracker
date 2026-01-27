@@ -122,6 +122,7 @@ InstrumentParameters GameBoyInstrument::getInstrumentParameters() {
   params.attack = vAttack_.GetInt();
   params.decay = vDecay_.GetInt();
   params.level = vLevel_.GetInt();
+  // off == -1, map to uint8_t range
   params.length = vLength_.GetInt() < 0 ? 0 : vLength_.GetInt();
   params.burst = vBurst_.GetInt() < 0 ? 0 : vBurst_.GetInt();
   params.vibratoDepth = vVibratoDepth_.GetInt();
