@@ -837,12 +837,23 @@ bool SampleEditorView::applyNormalizeOperation() {
     return true;
   }
 
-  if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
-    MessageBox *errorBox = MessageBox::Create(
-        *this, "Reload Failed", "Unable to refresh sample", MBBF_OK);
-    DoModal(errorBox);
-    return false;
+  const int32_t previousStart = startVar_.GetInt();
+  const int32_t previousEnd = endVar_.GetInt();
+
+  if (viewData_->isShowingSampleEditorProjectPool) {
+    if (!reloadEditedSample()) {
+      MessageBox *errorBox = MessageBox::Create(
+          *this, "Reload Failed", "Unable to refresh sample", MBBF_OK);
+      DoModal(errorBox);
+      return false;
+    }
+  } else {
+    loadSample(viewData_->sampleEditorFilename,
+               viewData_->isShowingSampleEditorProjectPool);
   }
+
+  startVar_.SetInt(previousStart);
+  endVar_.SetInt(previousEnd);
 
   uint32_t maxIndex = tempSampleSize_ - 1;
   uint32_t startVal = startVar_.GetInt();
