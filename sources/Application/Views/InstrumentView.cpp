@@ -348,7 +348,7 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &staticField_.back());
 
   GUIPoint actionPos = position;
-  actionPos._x = baseX + 17;
+  actionPos._x = baseX + 12;
   sampleActionField_.emplace_back("adjust", FourCC::ActionShowSampleSlices,
                                   actionPos);
   fieldList_.insert(fieldList_.end(), &sampleActionField_.back());
@@ -444,16 +444,16 @@ void InstrumentView::fillSampleParameters() {
                                instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
-  v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
-  position._y += 1;
-  intVarField_.emplace_back(position, *v, "automation: %s", 0, 1, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentTable);
   intVarOffField_.emplace_back(position, *v, "table: %2.2X", 0x00,
                                TABLE_COUNT - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
+
+  v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
+  position._x += 12;
+  intVarField_.emplace_back(position, *v, "auto: %s", 0, 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 };
 
 void InstrumentView::fillSIDParameters() {
