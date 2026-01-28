@@ -64,6 +64,7 @@ public:
   virtual bool makeDir(const char *path, bool pFlag = false) override;
   virtual uint64_t getFileSize(int index) override;
   virtual bool CopyFile(const char *src, const char *dest) override;
+  virtual bool isExFat() { return false; }; // not used on the Advance
 
 private:
   FILINFO fileFromIndex(int index);
