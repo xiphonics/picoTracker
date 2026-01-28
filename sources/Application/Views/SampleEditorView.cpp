@@ -338,9 +338,9 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
           if (newStart < 0) {
             newStart = 0;
           }
-          int32_t maxStart =
-              (tempSampleSize_ > 0) ? static_cast<int32_t>(tempSampleSize_ - 1)
-                                    : 0;
+          int32_t maxStart = (tempSampleSize_ > 0)
+                                 ? static_cast<int32_t>(tempSampleSize_ - 1)
+                                 : 0;
           if (newStart > maxStart) {
             newStart = maxStart;
           }
@@ -355,9 +355,9 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
           if (newEnd < 0) {
             newEnd = 0;
           }
-          int32_t maxEnd =
-              (tempSampleSize_ > 0) ? static_cast<int32_t>(tempSampleSize_ - 1)
-                                    : 0;
+          int32_t maxEnd = (tempSampleSize_ > 0)
+                               ? static_cast<int32_t>(tempSampleSize_ - 1)
+                               : 0;
           if (newEnd > maxEnd) {
             newEnd = maxEnd;
           }
@@ -542,9 +542,8 @@ void SampleEditorView::rebuildWaveform() {
     return;
   }
 
-  uint32_t bytesPerFrame =
-      static_cast<uint32_t>(headerInfo_.numChannels) *
-      static_cast<uint32_t>(headerInfo_.bytesPerSample);
+  uint32_t bytesPerFrame = static_cast<uint32_t>(headerInfo_.numChannels) *
+                           static_cast<uint32_t>(headerInfo_.bytesPerSample);
   if (bytesPerFrame == 0) {
     Trace::Error("SampleEditorView: Invalid WAV header for waveform rebuild");
     return;
@@ -553,8 +552,8 @@ void SampleEditorView::rebuildWaveform() {
   uint32_t viewStart = graphField_.ViewStart();
   uint32_t viewEnd = graphField_.ViewEnd();
   uint32_t totalFrames = viewEnd - viewStart;
-  uint64_t startOffset = headerInfo_.dataOffset +
-                         static_cast<uint64_t>(viewStart) * bytesPerFrame;
+  uint64_t startOffset =
+      headerInfo_.dataOffset + static_cast<uint64_t>(viewStart) * bytesPerFrame;
   file->Seek(static_cast<uint32_t>(startOffset), SEEK_SET);
 
   static constexpr uint32_t ChunkFrames = 512;
@@ -564,14 +563,12 @@ void SampleEditorView::rebuildWaveform() {
     uint32_t framesToRead = std::min(ChunkFrames, framesRemaining);
     uint32_t bytesToRead = framesToRead * bytesPerFrame;
     uint32_t bytesRead = file->Read(chunkBuffer_, bytesToRead);
-    uint32_t framesRead =
-        (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
+    uint32_t framesRead = (bytesPerFrame > 0) ? bytesRead / bytesPerFrame : 0;
     if (framesRead == 0) {
       break;
     }
 
-    const uint8_t *byteBuffer =
-        reinterpret_cast<const uint8_t *>(chunkBuffer_);
+    const uint8_t *byteBuffer = reinterpret_cast<const uint8_t *>(chunkBuffer_);
     for (uint32_t i = 0; i < framesRead; ++i) {
       uint32_t frameOffset = i * bytesPerFrame;
       int16_t sampleValue = 0;
@@ -579,16 +576,14 @@ void SampleEditorView::rebuildWaveform() {
         if (frameOffset >= bytesRead) {
           break;
         }
-        int16_t centered =
-            static_cast<int16_t>(byteBuffer[frameOffset]) - 128;
+        int16_t centered = static_cast<int16_t>(byteBuffer[frameOffset]) - 128;
         sampleValue = centered << 8;
       } else {
         const int16_t *frameSamples =
             reinterpret_cast<const int16_t *>(byteBuffer + frameOffset);
         sampleValue = frameSamples[0];
       }
-      int16_t clampedSample =
-          std::clamp<int16_t>(sampleValue, -32768, 32767);
+      int16_t clampedSample = std::clamp<int16_t>(sampleValue, -32768, 32767);
       uint32_t sampleIndex = viewStart + currentFrame + i;
       graphField_.AccumulateRmsSample(sampleIndex, clampedSample);
     }
