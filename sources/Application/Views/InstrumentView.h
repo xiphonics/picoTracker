@@ -22,7 +22,11 @@
 #include "Externals/etl/include/etl/vector.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
+#include "Foundation/Variables/Variable.h"
+#include "Foundation/Variables/WatchedVariable.h"
 #include "ViewData.h"
+
+class SampleInstrument;
 
 class InstrumentView : public FieldView, public I_Observer {
 public:
@@ -61,6 +65,7 @@ private:
   WatchedVariable instrumentType_;
   int lastSampleIndex_;
   bool suppressSampleChangeWarning_;
+  char sliceCountLabel_[20];
 
   // Variables for export confirmation dialog
   I_Instrument *exportInstrument_ = nullptr;
@@ -70,7 +75,7 @@ private:
   etl::vector<UIActionField, 2> persistentActionField_;
   etl::vector<UIIntVarField, 40> intVarField_;
   etl::vector<UINoteVarField, 1> noteVarField_;
-  etl::vector<UIStaticField, 4> staticField_;
+  etl::vector<UIStaticField, 5> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
   etl::vector<UIIntVarOffField, 2> intVarOffField_;
   etl::vector<UIActionField, 1> sampleActionField_;

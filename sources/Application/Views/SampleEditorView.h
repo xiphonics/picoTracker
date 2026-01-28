@@ -13,6 +13,7 @@
 
 #include "Application/Instruments/InstrumentNameVariable.h"
 #include "Application/Instruments/SampleInstrument.h"
+#include "Application/Instruments/WavHeader.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
@@ -21,6 +22,7 @@
 #include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/StringVariable.h"
+#include "GraphField.h"
 #include "ViewData.h"
 
 class SampleEditorView : public FieldView, public I_Observer {
@@ -51,6 +53,8 @@ private:
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
   void updateSampleParameters();
+  uint32_t selectionCenterSample() const;
+  void updateSelectedMarkerFromFocus();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
@@ -63,8 +67,10 @@ private:
   void navigateToView(ViewType vt);
   SampleInstrument *getCurrentSampleInstrument();
   void clearWaveformRegion();
-  void redrawColumn(View &view, const uint8_t *waveformCache, int x_coord,
-                    int x_offset, int y_offset);
+  void rebuildWaveform();
+  void updateGraphMarkers();
+  void updateZoomWindow();
+  void adjustZoom(int32_t delta);
 
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;
@@ -72,17 +78,6 @@ private:
   etl::vector<UIActionField, 4> actionField_;
   etl::vector<UIStaticField, 4> staticField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
-
-#ifdef ADV
-#define BITMAPWIDTH 720
-#define BITMAPHEIGHT 160
-#else
-#define BITMAPWIDTH 320
-#define BITMAPHEIGHT 80
-#endif
-
-// Waveform data cache
-#define WAVEFORM_CACHE_SIZE BITMAPWIDTH
 
   // Flag to force redraw of waveform
   // This is required because we try to not redraw the full waveform as doing so
@@ -98,10 +93,6 @@ private:
   uint32_t start_ = 0;
   uint32_t end_ = 0;
 
-  uint8_t waveformCache_[BITMAPWIDTH];
-  bool waveformCacheValid_;
-
-  void updateWaveformCache();
   void DrawWaveForm();
 
   float playbackPosition_; // Current playback position as normalized value (0.0
@@ -110,6 +101,8 @@ private:
   uint32_t lastAnimationTime_;  // Timestamp of the last animation frame
   System *sys_;
   uint32_t tempSampleSize_ = 0;
+  WavHeaderInfo headerInfo_{};
+  bool headerValid_ = false;
   static int16_t chunkBuffer_[512 * 2];
   // Use an empty default name - we don't want to populate with sample
   // filename The display name will still be shown on the phrase screen via
@@ -125,9 +118,11 @@ private:
 
   GUIWindow &win;
 
-  int last_start_x_ = -1;
-  int last_end_x_ = -1;
-  int last_playhead_x_ = -1;
+  GUIPoint graphFieldPos_;
+  GraphField graphField_;
+
+  enum SelectedMarker { MarkerStart = 0, MarkerEnd };
+  SelectedMarker selectedMarker_ = MarkerStart;
 
   uint8_t modalClearCount_ = 0;
 };

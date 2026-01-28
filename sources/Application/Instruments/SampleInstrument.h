@@ -60,8 +60,12 @@ public:
   // Engine playback  start callback
 
   virtual void OnStart();
+#ifdef ADV
+  static constexpr size_t MaxSlices = 64;
+#else
   static constexpr size_t MaxSlices = 16;
-  static constexpr unsigned char SliceNoteBase = 60;
+#endif
+  static constexpr unsigned char SliceNoteBase = 48;
 
   uint32_t GetSlicePoint(size_t index) const;
   void SetSlicePoint(size_t index, uint32_t start);
