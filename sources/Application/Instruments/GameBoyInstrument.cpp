@@ -101,6 +101,10 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     voices_[channel].drive = value >> 8;
     break;
 
+  case FourCC::InstrumentCommandVibrato:
+    voices_[channel].command_init_vibrato(value >> 8, value & 0xFF);
+    break;
+
   case FourCC::InstrumentCommandPan:
     voices_[channel].command_init_pan(value >> 8, value & 0xFF);
     break;
