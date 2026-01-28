@@ -11,6 +11,7 @@
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Views/SampleEditorView.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "UIController.h"
 #include "ViewData.h"
@@ -20,6 +21,8 @@
 #else
 #include "Adapters/picoTracker/audio/record.h"
 #endif
+
+static constexpr uint32_t kMaxRecordDurationMs = 30000;
 
 // Initialize static member
 ViewType RecordView::sourceViewType_ = VT_SONG;
@@ -31,7 +34,9 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   auto config = Config::GetInstance();
 
   // Initialize recording state
-  isRecording_ = false;
+  uiRecordingActive_ = false;
+  uiSavingActive_ = false;
+  autoSwitchPending_ = false;
   recordingStartTime_ = 0;
   recordingDuration_ = 0;
 
@@ -59,7 +64,9 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 RecordView::~RecordView() {}
 
 void RecordView::Reset() {
-  isRecording_ = false;
+  uiRecordingActive_ = false;
+  uiSavingActive_ = false;
+  autoSwitchPending_ = false;
   recordingStartTime_ = 0;
   recordingDuration_ = 0;
 }
@@ -73,7 +80,37 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   }
 
-  auto config = Config::GetInstance();
+  if (uiSavingActive_) {
+    // Ignore input while saving to keep stop/save flow deterministic.
+    return;
+  }
+
+  // While actively recording, lock out all parameter edits/navigation except:
+  // - PLAY: stop recording (existing save/switch flow)
+  // - NAV-LEFT: leave immediately and stop recording in background
+  if (uiRecordingActive_) {
+    if ((mask & EPBM_NAV) && (mask & EPBM_LEFT)) {
+#ifdef ADV
+      RequestStopRecording();
+#endif
+      uiRecordingActive_ = false;
+      uiSavingActive_ = false;
+      autoSwitchPending_ = false;
+
+      ViewType vt = sourceViewType_;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+      return;
+    }
+
+    if (mask & EPBM_PLAY) {
+      stopAndSwitchToEditor();
+      return;
+    }
+
+    return;
+  }
 
   if (mask & EPBM_NAV) {
     if (mask & EPBM_LEFT) {
@@ -88,21 +125,7 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // Handle PLAY button for start/stop recording
   if (mask & EPBM_PLAY) {
-    if (isRecording_) {
-      stop();
-      // set the current file for sample editor before switching view
-      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
-      viewData_->sampleEditorFilename = filename;
-
-      // Automatically switch to SampleEditor view after recording stops
-      ViewType vt = VT_SAMPLE_EDITOR;
-      ViewEvent ve(VET_SWITCH_VIEW, &vt);
-      SetChanged();
-      NotifyObservers(&ve);
-      return;
-    } else {
-      record();
-    }
+    record();
     isDirty_ = true;
     return;
   }
@@ -129,7 +152,11 @@ void RecordView::DrawView() {
 
   SetColor(CD_NORMAL);
 
-  if (isRecording_) {
+  if (uiSavingActive_) {
+    SetColor(CD_ERROR);
+    DrawString(pos._x, pos._y, "SAVING", props);
+    SetColor(CD_NORMAL);
+  } else if (uiRecordingActive_) {
     SetColor(CD_ERROR);
     DrawString(pos._x, pos._y, "[REC]", props);
     SetColor(CD_NORMAL);
@@ -138,20 +165,28 @@ void RecordView::DrawView() {
   }
 
   // Draw time display
-  if (isRecording_) {
+  if (uiRecordingActive_ || uiSavingActive_) {
     SetColor(CD_ERROR);
   }
-  pos._x += 6;
-  char timeBuffer[16];
-  formatTime(recordingDuration_, timeBuffer, sizeof(timeBuffer));
-  DrawString(pos._x, pos._y, timeBuffer, props);
+  pos._x += 7;
+  if (uiSavingActive_) {
+    char percentBuffer[8];
+    uint8_t percent = GetSavingProgressPercent();
+    snprintf(percentBuffer, sizeof(percentBuffer), "%3u%%", percent);
+    DrawString(pos._x, pos._y, percentBuffer, props);
+  } else {
+    char timeBuffer[16];
+    formatTime(recordingDuration_, timeBuffer, sizeof(timeBuffer));
+    DrawString(pos._x, pos._y, timeBuffer, props);
+  }
 
   // Draw instructions
   pos._y += 2;
   pos._x = GetAnchor()._x;
   SetColor(CD_NORMAL);
-  const char *instruction =
-      isRecording_ ? "PRESS PLAY TO STOP" : "PRESS PLAY TO RECORD";
+  const char *instruction = uiSavingActive_      ? ""
+                            : uiRecordingActive_ ? "PRESS PLAY TO STOP"
+                                                 : "PRESS PLAY TO RECORD";
   DrawString(pos._x, pos._y, instruction, props);
 
   // Draw fields
@@ -205,10 +240,75 @@ void RecordView::AnimationUpdate() {
   // off etc
   ScreenView::AnimationUpdate();
 
-  if (isRecording_) {
+#ifdef ADV
+  const bool backendRecordingActive = IsRecordingActive();
+  const bool backendSavingActive = IsSavingRecording();
+
+  if (uiRecordingActive_ && !backendRecordingActive) {
+    // Backend can stop on its own (duration/RAM limit). Keep the same
+    // save-progress and switch flow as a user initiated stop.
+    uiRecordingActive_ = false;
+    uiSavingActive_ = true;
+    autoSwitchPending_ = true;
+  }
+
+  if (autoSwitchPending_) {
+    // Non-blocking completion check to avoid switching before the record task
+    // has finalized and closed the WAV file.
+    if (WaitForRecordingStop(0)) {
+      FinishStopRecording();
+      uiSavingActive_ = false;
+      autoSwitchPending_ = false;
+      Trace::Log("RECORD", "Recording stopped");
+
+      if (!DidLastRecordingCaptureAudio()) {
+        // Treat empty captures as cancelled: stay on record view and resume
+        // monitoring instead of switching to sample editor.
+        recordingDuration_ = 0;
+        updateRecordingSource();
+        StartMonitoring();
+        isDirty_ = true;
+        DrawView();
+        return;
+      }
+
+      // SampleEditor expects a relative filename for recordings; make sure the
+      // working directory points at the recordings folder before switching.
+      auto fs = FileSystem::GetInstance();
+      if (!fs || !fs->chdir(RECORDINGS_DIR)) {
+        Trace::Error("RECORDVIEW: failed to chdir to %s before editor switch",
+                     RECORDINGS_DIR);
+      }
+
+      // set the current file for sample editor before switching view
+      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
+      viewData_->sampleEditorFilename = filename;
+
+      // Automatically switch to SampleEditor view after recording stops
+      ViewType vt = VT_SAMPLE_EDITOR;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
+      return;
+    }
+    uiSavingActive_ = true;
+  } else {
+    uiSavingActive_ = backendSavingActive;
+  }
+#endif
+
+  if (uiRecordingActive_) {
     // Update recording duration
     uint32_t currentTime = System::GetInstance()->Millis();
     recordingDuration_ = (currentTime - recordingStartTime_);
+    if (recordingDuration_ >= kMaxRecordDurationMs) {
+      stopAndSwitchToEditor();
+      return;
+    }
+    isDirty_ = true;
+    DrawView();
+  }
+  if (uiSavingActive_) {
     isDirty_ = true;
     DrawView();
   }
@@ -224,7 +324,7 @@ void RecordView::AnimationUpdate() {
 
 void RecordView::record() {
 #ifdef ADV
-  if (isRecording_) {
+  if (uiRecordingActive_) {
     return;
   }
 
@@ -240,7 +340,9 @@ void RecordView::record() {
   bool success = StartRecording(RECORDING_FILENAME, 10, 0);
 
   if (success) {
-    isRecording_ = true;
+    uiRecordingActive_ = true;
+    uiSavingActive_ = false;
+    autoSwitchPending_ = false;
     recordingStartTime_ = System::GetInstance()->Millis();
     recordingDuration_ = 0;
     Trace::Log("RECORDVIEW", "Recording started successfully");
@@ -254,19 +356,23 @@ void RecordView::record() {
 
 void RecordView::stop() {
 #ifdef ADV
-  if (!isRecording_) {
+  const bool backendRecordingActive = IsRecordingActive();
+  if (!uiRecordingActive_ && !backendRecordingActive) {
     return;
   }
 
-  GUITextProperties props;
-  SetColor(CD_NORMAL);
-  DrawString(10, 18, "Saving...", props);
+  RequestStopRecording();
+  uiRecordingActive_ = false;
+  uiSavingActive_ = true;
+  autoSwitchPending_ = true;
+  isDirty_ = true;
+  DrawView();
+#endif
+}
 
-  // will BLOCK until rec file is safely saved
-  StopRecording();
-
-  isRecording_ = false;
-  Trace::Log("RECORD", "Recording stopped");
+void RecordView::stopAndSwitchToEditor() {
+#ifdef ADV
+  stop();
 #endif
 }
 

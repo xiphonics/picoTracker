@@ -1,5 +1,6 @@
 #include "record.h"
 #include "Application/Instruments/WavHeader.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
@@ -12,23 +13,30 @@
 
 static FileHandle RecordFile;
 
-uint8_t *activeBuffer;
-uint8_t *writeBuffer;
+static constexpr uint32_t kRecordSampleRate = 44100;
+static constexpr uint32_t kRecordRamSeconds = 30;
+static constexpr uint32_t kRecordRamSamples =
+    kRecordSampleRate * kRecordRamSeconds * 2; // max uint16_t entries
+static constexpr uint32_t kRecordDumpChunkBytes = 4096;
+static constexpr uint32_t kStopRecordingTimeoutMs = 30000;
+// On ADV hardware, mic signal is present on the even interleaved lane.
+static constexpr uint8_t kMicInputLaneIndex = 0;
 
-__attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
+__attribute__((section(".SDRAM1"))) __attribute__((aligned(32)))
 uint16_t recordBuffer[RECORD_BUFFER_SIZE];
-// TODO (democloid): this is less than ideal, but works for now. we need to swap
-// the samples in the input buffer and since we also do the monitoring from it,
-// we cannot invert it in place (and we would have to also invert the monitoring
-// playback). Look for a better solution Half-buffer sized swap workspace for
-// writing to disk
-__attribute__((section(".FRAMEBUFFER"))) __attribute__((
-    aligned(32))) static uint16_t recordSwapBuffer[RECORD_BUFFER_SIZE / 2];
+__attribute__((section(".SDRAM1")))
+__attribute__((aligned(32))) static uint16_t recordRamBuffer[kRecordRamSamples];
 
 TaskHandle_t RecordHandle = NULL;
 
 static volatile bool recordingActive = false;
 static volatile bool writeInProgress = false;
+static volatile bool savingInProgress = false;
+static volatile uint8_t savingProgressPercent = 0;
+// True only when the latest recording was successfully persisted to disk.
+static volatile bool lastRecordingSavedAudio = false;
+// True only for explicit recording sessions (not monitor-only streaming).
+static volatile bool recordingSessionActive = false;
 
 static volatile bool monitoringOnly = false;
 static volatile uint8_t buffersToSkip = 0;
@@ -36,16 +44,125 @@ static volatile uint8_t buffersToSkip = 0;
 static int lineInGainDb = 0;
 static int micGainDb = 0;
 
+static inline void SetRecordMonitorAudioActive(bool active) {
+  // Keep this local to record/monitor flow and avoid changing core player
+  // behavior. If the sequencer is running, player owns audio-active state.
+  Player *player = Player::GetInstance();
+  if (player && !player->IsRunning()) {
+    tlv320_set_audio_output_active(active);
+  }
+}
+
 bool IsRecordingActive() { return recordingActive; }
+bool IsSavingRecording() { return savingInProgress; }
+uint8_t GetSavingProgressPercent() { return savingProgressPercent; }
+bool DidLastRecordingCaptureAudio() { return lastRecordingSavedAudio; }
 
 // Tracking which half is ready
 static volatile bool isHalfBuffer = false;
-static volatile bool thresholdOK = false;
 static bool first_pass = true;
 static uint32_t start = 0;
 static uint32_t totalSamplesWritten = 0;
 static uint32_t recordDuration_ = MAX_INT32;
 static RecordSource source_ = LineIn;
+static uint32_t recordRamSamples = 0;
+static char recordingFilename_[PFILENAME_SIZE] = {0};
+static uint16_t recordChannelCount = 2;
+
+static bool DeleteRecordingFile(const char *filename) {
+  if (!filename || filename[0] == '\0') {
+    return false;
+  }
+  auto fs = FileSystem::GetInstance();
+  if (!fs || !fs->chdir(RECORDINGS_DIR)) {
+    Trace::Error("RECORD: could not access recording directory %s",
+                 RECORDINGS_DIR);
+    return false;
+  }
+  if (!fs->DeleteFile(filename)) {
+    Trace::Error("RECORD: failed to delete file %s", filename);
+    return false;
+  }
+  return true;
+}
+
+static bool PersistRecordingToWav(const char *filename, const uint8_t *data,
+                                  uint32_t bytesToWrite, uint16_t channelCount,
+                                  uint32_t *outFramesWritten) {
+  if (outFramesWritten) {
+    *outFramesWritten = 0;
+  }
+  if (!filename || filename[0] == '\0') {
+    Trace::Error("RECORD: invalid recording filename");
+    return false;
+  }
+
+  auto fs = FileSystem::GetInstance();
+  if (!fs || !fs->chdir(RECORDINGS_DIR)) {
+    Trace::Error("RECORD: could not access recording directory %s",
+                 RECORDINGS_DIR);
+    return false;
+  }
+
+  RecordFile = fs->Open(filename, "w");
+  if (!RecordFile) {
+    Trace::Error("RECORD: could not create file %s", filename);
+    return false;
+  }
+
+  if (!WavHeaderWriter::WriteHeader(RecordFile.get(), kRecordSampleRate,
+                                    channelCount, 16)) {
+    Trace::Error("RECORD: failed to write WAV header");
+    RecordFile.reset();
+    DeleteRecordingFile(filename);
+    return false;
+  }
+
+  uint32_t bytesWrittenTotal = 0;
+  writeInProgress = true;
+  while (bytesWrittenTotal < bytesToWrite) {
+    uint32_t chunk = bytesToWrite - bytesWrittenTotal;
+    if (chunk > kRecordDumpChunkBytes) {
+      chunk = kRecordDumpChunkBytes;
+    }
+    int bytesWritten = RecordFile->Write(data + bytesWrittenTotal, chunk, 1);
+    if (bytesWritten != (int)chunk) {
+      Trace::Error("RECORD: write failed at %lu/%lu bytes (file err=%d)",
+                   bytesWrittenTotal, bytesToWrite, RecordFile->Error());
+      writeInProgress = false;
+      RecordFile.reset();
+      DeleteRecordingFile(filename);
+      return false;
+    }
+    bytesWrittenTotal += chunk;
+    savingProgressPercent = (bytesWrittenTotal * 100U) / bytesToWrite;
+  }
+
+  if (!RecordFile->Sync()) {
+    Trace::Error("RECORD: sync failed while finalizing recording");
+    writeInProgress = false;
+    RecordFile.reset();
+    DeleteRecordingFile(filename);
+    return false;
+  }
+  writeInProgress = false;
+
+  uint32_t frameBytes = static_cast<uint32_t>(channelCount) * sizeof(uint16_t);
+  uint32_t framesWritten = (frameBytes > 0) ? (bytesWrittenTotal / frameBytes) : 0;
+  if (!WavHeaderWriter::UpdateFileSize(RecordFile.get(), framesWritten, channelCount,
+                                       2)) {
+    Trace::Error("RECORD: failed to update WAV header");
+    RecordFile.reset();
+    DeleteRecordingFile(filename);
+    return false;
+  }
+
+  RecordFile.reset();
+  if (outFramesWritten) {
+    *outFramesWritten = framesWritten;
+  }
+  return true;
+}
 
 // Swap L/R channels for interleaved 16-bit stereo using a 32-bit rotate.
 // 'size' is the number of uint16_t entries; assumes even (multiple of 2).
@@ -107,8 +224,13 @@ void StartMonitoring() {
 
   // Set the flag for monitoring-only mode
   monitoringOnly = true;
+  recordingSessionActive = false;
+  // Monitoring should not inherit a prior recording timeout.
+  recordDuration_ = MAX_INT32;
+  start = xTaskGetTickCount();
   recordingActive = true; // Use this to keep the task loop active
   first_pass = true;      // Ensure StartRecordStreaming is called
+  SetRecordMonitorAudioActive(true);
 
   // Clear the buffer and start the SAI DMA
   memset(recordBuffer, 0, RECORD_BUFFER_SIZE * sizeof(uint16_t));
@@ -137,39 +259,42 @@ void StopMonitoring() { // Use the main 'recordingActive' flag to trigger the
 
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds) {
+  if (RecordFile) {
+    Trace::Error("RECORD: stale file handle detected before start, closing");
+    RecordFile.reset();
+  }
+  recordingSessionActive = false;
+
   // TODO 0 milliseconds indicates unlimited duration recording
   if (milliseconds != 0) {
-    recordDuration_ = milliseconds;
+    recordDuration_ = pdMS_TO_TICKS(milliseconds);
   } else {
-    recordDuration_ = MAX_INT32;
+    recordDuration_ = pdMS_TO_TICKS(kRecordRamSeconds * 1000);
   }
 
-  auto fs = FileSystem::GetInstance();
-  fs->chdir(RECORDINGS_DIR);
-
-  // Create or truncate the file using FileSystem
-  RecordFile = fs->Open(filename, "w");
-  if (!RecordFile) {
-    Trace::Log("RECORD", "Could not create file");
+  if (filename && filename[0] != '\0') {
+    snprintf(recordingFilename_, sizeof(recordingFilename_), "%s", filename);
+  } else {
+    Trace::Error("RECORD: invalid recording filename");
+    recordingFilename_[0] = '\0';
     return false;
   }
 
-  // Write WAV header (44.1kHz, 16-bit, stereo)
-  if (!WavHeaderWriter::WriteHeader(RecordFile.get(), 44100, 2, 16)) {
-    Trace::Log("RECORD", "Failed to write WAV header");
-    RecordFile.reset();
-    return false;
-  }
+  recordChannelCount = (source_ == Mic) ? 1 : 2;
 
-  // only set if recording file could be opened
+  // Activate record mode.
   monitoringOnly = false;
-  thresholdOK = false;
+  recordingSessionActive = true;
   buffersToSkip = 2; // drop monitoring buffers from before we start recording
   first_pass = true;
   recordingFinishedSemaphore = xSemaphoreCreateBinaryStatic(&xSemaphoreBuffer);
 
   // Reset sample counter
   totalSamplesWritten = 0;
+  recordRamSamples = 0;
+  lastRecordingSavedAudio = false;
+  savingInProgress = false;
+  savingProgressPercent = 0;
 
   // Signal task to start recording
   recordingActive = true;
@@ -191,8 +316,28 @@ bool StartRecording(const char *filename, uint8_t threshold,
 }
 
 void StopRecording() {
+  // Idempotent: if neither active recording nor save finalization is running,
+  // there is nothing to wait for.
+  if (!recordingActive && !savingInProgress) {
+    FinishStopRecording();
+    return;
+  }
+
+  if (recordingActive) {
+    RequestStopRecording();
+  }
+
+  // Block for a bounded amount of time while recording data is flushed to SD.
+  if (!WaitForRecordingStop(kStopRecordingTimeoutMs)) {
+    Trace::Error("RECORD: stop timed out after %lu ms",
+                 kStopRecordingTimeoutMs);
+  }
+  FinishStopRecording();
+}
+
+void RequestStopRecording() {
   if (!recordingActive) {
-    return; // Already stopping/stopped
+    return;
   }
 
   recordingActive = false;
@@ -201,42 +346,71 @@ void StopRecording() {
   if (RecordHandle != NULL) {
     xTaskNotifyGive(RecordHandle);
   }
+}
 
-  // Now, wait here until the Record task signals it's done
-  if (recordingFinishedSemaphore != NULL) {
-    xSemaphoreTake(recordingFinishedSemaphore, portMAX_DELAY);
+bool WaitForRecordingStop(uint32_t timeoutMs) {
+  if (recordingFinishedSemaphore == NULL) {
+    return true;
   }
+
+  if (timeoutMs == MAX_INT32) {
+    return xSemaphoreTake(recordingFinishedSemaphore, portMAX_DELAY) == pdTRUE;
+  }
+
+  return xSemaphoreTake(recordingFinishedSemaphore, pdMS_TO_TICKS(timeoutMs)) ==
+         pdTRUE;
+}
+
+void FinishStopRecording() {
   // disable all inputs when we finish recording
   tlv320_disable_linein();
   tlv320_disable_mic();
 }
 
 void Record(void *) {
-  UINT bw;
   uint32_t lastLoggedTime = xTaskGetTickCount();
   for (;;) {
-    if (xTaskGetTickCount() - start > recordDuration_) {
-      StopRecording();
+    if (!monitoringOnly && (xTaskGetTickCount() - start > recordDuration_)) {
+      RequestStopRecording();
     }
 
     if (!recordingActive) {
       HAL_SAI_DMAStop(&hsai_BlockB1);
 
-      if (RecordFile) {
-        Trace::Log("RECORD", "About to update WAV header");
-        // Update WAV header with final file size
-        if (!WavHeaderWriter::UpdateFileSize(RecordFile.get(),
-                                             totalSamplesWritten)) {
-          Trace::Log("RECORD", "Failed to update WAV header");
+      Player::GetInstance()->StopRecordStreaming();
+      SetRecordMonitorAudioActive(false);
+
+      bool writeFailed = false;
+      if (recordingSessionActive) {
+        if (recordRamSamples > 0) {
+          savingInProgress = true;
+          savingProgressPercent = 0;
+          const uint32_t bytesToWrite = recordRamSamples * sizeof(uint16_t);
+          uint32_t framesWritten = 0;
+          const uint8_t *data =
+              reinterpret_cast<const uint8_t *>(recordRamBuffer);
+          bool saved =
+              PersistRecordingToWav(recordingFilename_, data, bytesToWrite,
+                                    recordChannelCount, &framesWritten);
+          totalSamplesWritten = framesWritten;
+          lastRecordingSavedAudio = saved;
+          writeFailed = !saved;
+          if (saved) {
+            savingProgressPercent = 100;
+          }
+          savingInProgress = false;
+        } else {
+          // No captured audio: treat this as cancelled (no file created).
+          lastRecordingSavedAudio = false;
+          totalSamplesWritten = 0;
         }
 
-        Trace::Log("RECORD", "STOP Recording: dur:%d samples:%d",
-                   (xTaskGetTickCount() - start), totalSamplesWritten);
+        recordingSessionActive = false;
 
-        RecordFile.reset();
+        Trace::Log("RECORD", "STOP Recording: dur:%d samples:%d status:%s",
+                   (xTaskGetTickCount() - start), totalSamplesWritten,
+                   writeFailed ? "FAILED" : "OK");
       }
-
-      Player::GetInstance()->StopRecordStreaming();
 
       if (recordingFinishedSemaphore != NULL) {
         xSemaphoreGive(recordingFinishedSemaphore);
@@ -247,6 +421,11 @@ void Record(void *) {
 
     // Interrupt return
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    // A stop request also wakes this task. In that case, skip buffer processing
+    // and let the next loop iteration run the stop/finalize path immediately.
+    if (!recordingActive) {
+      continue;
+    }
     // DMA transmit finished, dump to file
     // Tracking which half is ready
     uint32_t offset = 0;
@@ -255,8 +434,6 @@ void Record(void *) {
     }
 
     const uint32_t halfSamples = RECORD_BUFFER_SIZE / 2; // uint16_t entries
-    SwapChannelsToBuffer(recordBuffer + offset, recordSwapBuffer, halfSamples);
-    // Write raw audio data (uint16_t samples as bytes)
     if (!monitoringOnly) {
       // When we monitor we are continously recording, so there is data before
       // we start recording. We skip a couple of buffers to actually record from
@@ -265,42 +442,61 @@ void Record(void *) {
         buffersToSkip = buffersToSkip - 1;
         continue;
       }
-      if (RecordFile) {
-        writeInProgress = true;
-        // Write swapped half-buffer to disk (bytes = samples * 2)
-        const uint32_t bytesToWrite = halfSamples * sizeof(uint16_t);
-        int bytesWritten =
-            RecordFile->Write((uint8_t *)recordSwapBuffer, bytesToWrite, 1);
-        // sync immediately after writing the buffer for consistent if not
-        // fastest perf
-        RecordFile->Sync();
-        writeInProgress = false;
-        if (bytesWritten != (int)bytesToWrite) {
-          Trace::Error("write failed\r\n");
-          // Stop recording so the task can clean up and signal completion.
-          recordingActive = false;
-          continue;
-        } else {
-          // Total samples written totalSamplesWritten/4 for stereo 16bit
-          // samples
-          totalSamplesWritten += bytesWritten / 4;
+      uint32_t remainingSamples = kRecordRamSamples - recordRamSamples;
+      if (remainingSamples == 0) {
+        Trace::Log("RECORD", "RAM buffer full");
+        recordingActive = false;
+      } else {
+        if (recordChannelCount == 1) {
+          // Mic source is recorded as mono WAV and always uses the even lane
+          // on ADV interleaved input.
+          const uint32_t halfFrames = halfSamples / 2;
+          uint32_t copyFrames = halfFrames;
+          if (copyFrames > remainingSamples) {
+            copyFrames = remainingSamples;
+          }
 
-          auto now = xTaskGetTickCount();
-          if ((now - lastLoggedTime) > 1000) { // log every sec
-            Trace::Debug("RECORDING [%i]s [%d]",
-                         (xTaskGetTickCount() - start) / 1000,
-                         totalSamplesWritten);
-            lastLoggedTime = now;
+          for (uint32_t i = 0; i < copyFrames; ++i) {
+            recordRamBuffer[recordRamSamples + i] =
+                recordBuffer[offset + i * 2 + kMicInputLaneIndex];
+          }
+          recordRamSamples += copyFrames;
+          totalSamplesWritten = recordRamSamples;
+
+          if (copyFrames < halfFrames) {
+            Trace::Log("RECORD", "RAM buffer full");
+            recordingActive = false;
+          }
+        } else {
+          uint32_t copySamples = halfSamples;
+          if (copySamples > remainingSamples) {
+            copySamples = remainingSamples;
+          }
+
+          SwapChannelsToBuffer(recordBuffer + offset,
+                               recordRamBuffer + recordRamSamples, copySamples);
+          recordRamSamples += copySamples;
+          totalSamplesWritten = recordRamSamples / 2;
+
+          if (copySamples < halfSamples) {
+            Trace::Log("RECORD", "RAM buffer full");
+            recordingActive = false;
           }
         }
-      } else {
-        writeInProgress = false;
-        Trace::Error("RecordFile is null");
+
+        auto now = xTaskGetTickCount();
+        if ((now - lastLoggedTime) > 1000) { // log every sec
+          Trace::Debug("RECORDING [%i]s [%d]",
+                       (xTaskGetTickCount() - start) / 1000,
+                       totalSamplesWritten);
+          lastLoggedTime = now;
+        }
       }
     }
     // start playing
     if (first_pass) {
       first_pass = false;
+      SetRecordMonitorAudioActive(true);
       Player::GetInstance()->StartRecordStreaming(recordBuffer,
                                                   RECORD_BUFFER_SIZE, true);
     }
@@ -311,7 +507,7 @@ void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai) {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   isHalfBuffer = true;
   if (writeInProgress) {
-    Trace::Error("RECORD - SD Card write underrun!");
+    Trace::Error("RECORD - write underrun!");
   }
   vTaskNotifyGiveFromISR(RecordHandle, &xHigherPriorityTaskWoken);
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -321,7 +517,7 @@ void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai) {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   isHalfBuffer = false;
   if (writeInProgress) {
-    Trace::Error("RECORD - SD Card write underrun!");
+    Trace::Error("RECORD - write underrun!");
   }
   vTaskNotifyGiveFromISR(RecordHandle, &xHigherPriorityTaskWoken);
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
