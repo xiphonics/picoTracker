@@ -21,7 +21,7 @@ static const char *algorithms[2] = {"1*2", "1+2"};
 static const char *waveShapes[8] = {"sine", "half", "abs", "puls",
                                     "even", "ab-e", "sqr", "dsqr"};
 
-static const char *kslValues[4] = {"0", "1.5", "3", "6"};
+static const char *kslValues[4] = {"0.0", "1.5", "3.0", "6.0"};
 
 #define FREQ_BASE_REG 0xA0
 #define OCTAVE_BASE_REG 0xB0

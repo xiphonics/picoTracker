@@ -16,7 +16,7 @@
 class UIBigHexVarField : public UIIntVarField {
 
 public:
-  UIBigHexVarField(GUIPoint &position, Variable &v, int precision,
+  UIBigHexVarField(const GUIPoint &position, Variable &v, int precision,
                    const char *format, int min, int max, int power,
                    bool wrap = false);
   virtual ~UIBigHexVarField(){};

@@ -24,8 +24,9 @@ public:
   virtual void SetColor(GUIColor &) = 0;
   virtual void ClearTextRect(GUIRect &) = 0;
   virtual void DrawString(const char *string, GUIPoint &pos,
-                          GUITextProperties &p, bool overlay) = 0;
-  virtual void DrawChar(const char c, GUIPoint &pos, GUITextProperties &) = 0;
+                          const GUITextProperties &p, bool overlay) = 0;
+  virtual void DrawChar(const char c, GUIPoint &pos,
+                        const GUITextProperties &) = 0;
 
   virtual GUIRect GetRect() = 0;
   virtual void Invalidate() = 0;

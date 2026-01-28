@@ -233,7 +233,7 @@ void appwindow_set_sdcard_present(bool present) {
 }
 
 void AppWindow::DrawString(const char *string, GUIPoint &pos,
-                           GUITextProperties &props, bool force) {
+                           const GUITextProperties &props, bool force) {
 
   // Safety check for null string
   if (!string) {

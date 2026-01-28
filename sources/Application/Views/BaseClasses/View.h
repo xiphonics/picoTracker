@@ -153,7 +153,7 @@ public:
   virtual void SetColor(ColorDefinition cd);
   virtual void ClearTextRect(int x, int y, int w, int h);
   virtual void DrawString(int x, int y, const char *txt,
-                          GUITextProperties &props);
+                          const GUITextProperties &props);
   virtual void DrawRect(GUIRect &r, ColorDefinition color);
 
   void DoModal(ModalView *view, ModalViewCallback cb = ModalViewCallback());

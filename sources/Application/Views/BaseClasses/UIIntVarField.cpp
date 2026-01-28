@@ -19,7 +19,7 @@
 
 #define abs(x) (x < 0 ? -x : x)
 
-UIIntVarField::UIIntVarField(GUIPoint &position, Variable &v,
+UIIntVarField::UIIntVarField(const GUIPoint &position, Variable &v,
                              const char *format, int min, int max, int xOffset,
                              int yOffset, int displayOffset)
     : UIField(position), src_(v) {

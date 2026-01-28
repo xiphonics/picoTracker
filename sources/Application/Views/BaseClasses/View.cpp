@@ -375,7 +375,8 @@ void View::ClearTextRect(int x, int y, int w, int h) {
   w_.ClearTextRect(rect);
 };
 
-void View::DrawString(int x, int y, const char *txt, GUITextProperties &props) {
+void View::DrawString(int x, int y, const char *txt,
+                      const GUITextProperties &props) {
   GUIPoint pos(x, y);
   w_.DrawString(txt, pos, props);
 };

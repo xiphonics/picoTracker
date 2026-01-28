@@ -13,7 +13,7 @@
 #include <System/Console/nanoprintf.h>
 #include <string.h>
 
-UIBitmaskVarField::UIBitmaskVarField(GUIPoint &position, Variable &v,
+UIBitmaskVarField::UIBitmaskVarField(const GUIPoint &position, Variable &v,
                                      const char *format, int len)
     : UIIntVarField(position, v, format, 0, 0xffff, 0, 0, 0) {
   len_ = len;
