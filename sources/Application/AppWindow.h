@@ -86,7 +86,7 @@ protected: // GUIWindow implementation
   void onQuitApp();
 
 private:
-  bool autoSave();
+  bool AutoSave();
 
   Project project_;
   ViewData viewData_;

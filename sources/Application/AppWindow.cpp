@@ -786,7 +786,7 @@ void AppWindow::AnimationUpdate() {
   // this callback is called PICO_CLOCK_HZ times a second and we have easy
   // access in this class to the player, projectname and persistence service
   if ((++lastAutoSave / PICO_CLOCK_HZ) > AUTOSAVE_INTERVAL_IN_SECONDS) {
-    if (autoSave()) {
+    if (AutoSave()) {
       lastAutoSave = 0;
     }
   }
@@ -999,7 +999,7 @@ void AppWindow::SetColor(ColorDefinition cd) {
   }
 };
 
-bool AppWindow::autoSave() {
+bool AppWindow::AutoSave() {
   Player *player = Player::GetInstance();
   // only auto save when sequencer is not running and not recording
   bool recording = IsRecordingActive();

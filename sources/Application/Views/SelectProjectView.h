@@ -30,6 +30,7 @@ public:
   void setCurrentFolder();
   bool SaveSelectedProject();
   void LoadProject();
+  void ClearAutoSave();
 
 protected:
   void warpToNextProject(bool goUp);

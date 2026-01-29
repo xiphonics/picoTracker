@@ -27,6 +27,10 @@ static void ConfirmOverwriteCallback(View &v, ModalView &dialog) {
 
 static void LoadProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
+
+    // User accepted losing changes; clear autosave for the current project.
+    ((SelectProjectView &)v).ClearAutoSave();
+
     ((SelectProjectView &)v).LoadProject();
   }
 }
@@ -417,4 +421,17 @@ void SelectProjectView::AttemptLoadingProject() {
   MessageBox *mb = MessageBox::Create(*this, "Load song and lose changes?",
                                       MBBF_YES | MBBF_NO);
   DoModal(mb, ModalViewCallback::create<&LoadProjectCallback>());
+}
+
+void SelectProjectView::ClearAutoSave() {
+  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
+  PersistencyService *ps = PersistencyService::GetInstance();
+  if (!projectName.empty()) {
+    if (!ps->ClearAutosave(projectName.c_str())) {
+      Trace::Log("SELECTPROJECTVIEW",
+                 "Autosave clear failed or missing for project: %s",
+                 projectName.c_str());
+    }
+  }
 }
