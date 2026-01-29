@@ -426,9 +426,15 @@ void ImportView::warpToNextSample(bool goUp) {
 }
 
 void ImportView::preview(char *name) {
-  // Get file size to check if it's a single cycle waveform
   auto fs = FileSystem::GetInstance();
   unsigned fileIndex = fileIndexList_[currentIndex_];
+
+  // do not preview directories
+  if (fs->getFileType(fileIndex) == PFT_DIR) {
+    return;
+  }
+
+  // Get file size to check if it's a single cycle waveform
   int fileSize = fs->getFileSize(fileIndex);
 
   // check for LGPT or AKWF standard file sizes
