@@ -21,7 +21,7 @@ static char **getHelpLegend(FourCC command) {
     result[0] = (char *)("KILl:--bb, stop playing");
     result[1] = (char *)("after bb ticks");
     break;
-  case FourCC::InstrumentCommandLoopOfset:
+  case FourCC::InstrumentCommandLoopOffset:
     result[0] = (char *)("Loop OFset: Shift loop");
     result[1] = (char *)("start & end values aaaa");
     break;
@@ -63,7 +63,7 @@ static char **getHelpLegend(FourCC command) {
     result[0] = (char *)("MIDI Program Change:aabb,");
     result[1] = (char *)("send program change bb");
     break;
-  case FourCC::InstrumentCommandPlayOfset:
+  case FourCC::InstrumentCommandPlayOffset:
     result[0] = (char *)("Play OFfset:aabb, jump abs");
     result[1] = (char *)("to aa or move rel bb chunks");
     break;

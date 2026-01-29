@@ -176,6 +176,14 @@ bool OpalInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
+bool OpalInstrument::SupportsCommand(FourCC cc) {
+  auto supportedCommands = {
+      FourCC::InstrumentCommandGateOff,
+  };
+  return std::find(supportedCommands.begin(), supportedCommands.end(), cc) !=
+         supportedCommands.end();
+};
+
 void OpalInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
   case FourCC::InstrumentCommandGateOff:
