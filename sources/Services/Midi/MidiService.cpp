@@ -85,7 +85,8 @@ void MidiService::QueueMessage(MidiMessage &m) {
 void MidiService::Trigger() {
   AdvancePlayQueue();
 
-  if (!activeOutDevices_.empty() && sendSync_) {
+  if (!activeOutDevices_.empty() && sendSync_ &&
+      Player::GetInstance()->IsRunning()) {
     SyncMaster *sm = SyncMaster::GetInstance();
     if (sm->MidiSlice()) {
       MidiMessage msg;
