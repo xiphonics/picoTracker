@@ -25,8 +25,6 @@ MidiService::MidiService() : sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
-  lastStartQueuedMs_ = 0;
-  lastStopQueuedMs_ = 0;
   sendSync_ = Config::GetInstance()->GetValue("MIDISYNC") > 0;
 };
 
@@ -153,22 +151,6 @@ void MidiService::OnMidiClock() {
 void MidiService::flushOutQueue() {
   auto flushQueue = &queues_[currentOutQueue_];
 
-  if (!flushQueue->empty()) {
-    const uint32_t nowMs = System::GetInstance()->GetClock();
-    for (auto &msg : *flushQueue) {
-      if (msg.status_ == MidiMessage::MIDI_START && lastStartQueuedMs_ != 0) {
-        const uint32_t deltaMs = nowMs - lastStartQueuedMs_;
-        Trace::Log("MIDI", "Send MIDI START at %lu ms (+%lu ms)", nowMs,
-                   deltaMs);
-      } else if (msg.status_ == MidiMessage::MIDI_STOP &&
-                 lastStopQueuedMs_ != 0) {
-        const uint32_t deltaMs = nowMs - lastStopQueuedMs_;
-        Trace::Log("MIDI", "Send MIDI STOP at %lu ms (+%lu ms)", nowMs,
-                   deltaMs);
-      }
-    }
-  }
-
   for (auto dev : activeOutDevices_) {
     dev->SendQueue(*flushQueue);
   }
@@ -218,8 +200,6 @@ void MidiService::OnPlayerStart() {
   if (sendSync_) {
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_START;
-    lastStartQueuedMs_ = System::GetInstance()->GetClock();
-    Trace::Log("MIDI", "Queue MIDI_START at %lu ms", lastStartQueuedMs_);
     QueueMessage(msg);
   }
 };
@@ -229,8 +209,6 @@ void MidiService::OnPlayerStop() {
   if (sendSync_) {
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_STOP;
-    lastStopQueuedMs_ = System::GetInstance()->GetClock();
-    Trace::Log("MIDI", "Queue MIDI_STOP at %lu ms", lastStopQueuedMs_);
     QueueMessage(msg);
   }
 };
