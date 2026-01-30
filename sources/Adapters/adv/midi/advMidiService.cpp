@@ -24,7 +24,7 @@ advMidiService::advMidiService()
   // inList_.insert(inList_.end(), &usbMidiInDevice_);
 };
 
-advMidiService::~advMidiService() {};
+advMidiService::~advMidiService(){};
 
 void advMidiService::OnPlayerStart() { MidiService::OnPlayerStart(); }
 
