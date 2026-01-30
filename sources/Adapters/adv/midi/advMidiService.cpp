@@ -24,15 +24,11 @@ advMidiService::advMidiService()
   // inList_.insert(inList_.end(), &usbMidiInDevice_);
 };
 
-advMidiService::~advMidiService(){};
+advMidiService::~advMidiService() {};
 
-void advMidiService::OnPlayerStart() {
-  MidiService::OnPlayerStart();
-}
+void advMidiService::OnPlayerStart() { MidiService::OnPlayerStart(); }
 
-void advMidiService::OnPlayerStop() {
-  MidiService::OnPlayerStop();
-}
+void advMidiService::OnPlayerStop() { MidiService::OnPlayerStop(); }
 
 void advMidiService::poll() {
   // Poll all MIDI input devices
