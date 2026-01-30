@@ -78,5 +78,7 @@ private:
   int currentOutQueue_;
 
   bool sendSync_;
+  uint32_t lastStartQueuedMs_;
+  uint32_t lastStopQueuedMs_;
 };
 #endif
