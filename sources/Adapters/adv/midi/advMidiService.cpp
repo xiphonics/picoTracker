@@ -25,7 +25,7 @@ advMidiService::advMidiService()
   // inList_.insert(inList_.end(), &usbMidiInDevice_);
 };
 
-advMidiService::~advMidiService() {};
+advMidiService::~advMidiService(){};
 
 void advMidiService::OnPlayerStart() {
   // TODO (democloid): this is a hack. We need to understand the order of
