@@ -33,8 +33,8 @@ public:
   void Stop();
 
   //! player notification
-  virtual void OnPlayerStart();
-  virtual void OnPlayerStop();
+  void OnPlayerStart();
+  void OnPlayerStop();
 
   //! Queues a MidiMessage to the current time chunk
   void QueueMessage(MidiMessage &);
