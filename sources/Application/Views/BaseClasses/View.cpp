@@ -386,10 +386,30 @@ void View::DrawRect(GUIRect &r, ColorDefinition color) {
 }
 
 void View::drawBattery(GUITextProperties &props) {
+  // Only update the voltage once per second, but force an initial read
+  // so the first displayed level is accurate.
+  static bool batteryStateInitialized = false;
+#if !BATTERY_LEVEL_AS_PERCENTAGE
+  bool batteryStateUpdated = false;
+#endif
+  if (!batteryStateInitialized) {
+    System *sys = System::GetInstance();
+    sys->GetBatteryState(batteryState_);
+#if !BATTERY_LEVEL_AS_PERCENTAGE
+    batteryStateUpdated = true;
+#endif
+    batteryStateInitialized = true;
+  }
+
   // only update the voltage once per second
+#if !BATTERY_LEVEL_AS_PERCENTAGE
+#endif
   if (AppWindow::GetAnimationFrameCounter() % PICO_CLOCK_HZ == 0) {
     System *sys = System::GetInstance();
     sys->GetBatteryState(batteryState_);
+#if !BATTERY_LEVEL_AS_PERCENTAGE
+    batteryStateUpdated = true;
+#endif
     // Trace::Debug("Battery: %d%%", batteryState_.percentage);
   }
 
@@ -413,23 +433,67 @@ void View::drawBattery(GUITextProperties &props) {
   }
   battText = battTextBuffer;
 #else
+  static int8_t lastBarLevel = -1;
+  static int8_t pendingBarLevel = -1;
+  static uint8_t pendingBarSeconds = 0;
+  const uint8_t confirmSecondsRequired = 10;
+
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     battText = string_battery_charging;
   } else {
-    if (batteryState_.percentage > 90) {
+    uint8_t pct = batteryState_.percentage;
+    uint8_t barLevel =
+        lastBarLevel < 0 ? 0 : static_cast<uint8_t>(lastBarLevel);
+    if (batteryStateUpdated || lastBarLevel < 0) {
+      int candidateLevel = 0;
+      if (pct > 90) {
+        candidateLevel = 4;
+      } else if (pct > 65) {
+        candidateLevel = 3;
+      } else if (pct > 40) {
+        candidateLevel = 2;
+      } else if (pct > 35) {
+        candidateLevel = 1;
+      }
+
+      if (lastBarLevel < 0) {
+        lastBarLevel = candidateLevel;
+        pendingBarLevel = -1;
+        pendingBarSeconds = 0;
+      } else if (candidateLevel == lastBarLevel) {
+        pendingBarLevel = -1;
+        pendingBarSeconds = 0;
+      } else {
+        if (pendingBarLevel == candidateLevel) {
+          pendingBarSeconds++;
+        } else {
+          pendingBarLevel = candidateLevel;
+          pendingBarSeconds = 1;
+        }
+        if (pendingBarSeconds >= confirmSecondsRequired) {
+          lastBarLevel = candidateLevel;
+          pendingBarLevel = -1;
+          pendingBarSeconds = 0;
+        }
+      }
+      barLevel = lastBarLevel;
+    }
+
+    if (barLevel >= 4) {
       battText = string_battery_100_percent;
-    } else if (batteryState_.percentage > 65) {
+    } else if (barLevel == 3) {
       battText = string_battery_75_percent;
-    } else if (batteryState_.percentage > 40) {
+    } else if (barLevel == 2) {
       battText = string_battery_50_percent;
-    } else if (batteryState_.percentage > 35) {
+    } else if (barLevel == 1) {
       battText = string_battery_25_percent;
-    } else if (batteryState_.percentage > 10) {
-      SetColor(CD_WARN);
-      battText = string_battery_0_percent;
     } else {
-      SetColor(CD_ERROR);
+      if (pct > 10) {
+        SetColor(CD_WARN);
+      } else {
+        SetColor(CD_ERROR);
+      }
       battText = string_battery_0_percent;
     }
   }

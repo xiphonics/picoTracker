@@ -152,11 +152,23 @@ unsigned long picoTrackerSystem::GetClock() {
 }
 
 void picoTrackerSystem::GetBatteryState(BatteryState &state) {
-  uint32_t adc_reading = adc_read(); // raw voltage from ADC
+  uint32_t adcReading = adc_read(); // raw voltage from ADC
   // 0.8mV per unit of ADC
   // * 2 because picoTracker use voltage divider for voltage on ADC pin
   // mV =^= adc_reading * 1.6
-  state.voltage_mv = (adc_reading * 8) / 5; // equals adc_reading * 1.6;
+  uint32_t voltageMvRaw = (adcReading * 8) / 5; // equals adc_reading * 1.6;
+
+  static uint16_t filteredVoltageMv = 0;
+  if (filteredVoltageMv == 0) {
+    filteredVoltageMv = voltageMvRaw;
+  } else {
+    // Simple low-pass filter to reduce bounce between adjacent battery levels.
+    uint32_t filteredScaled =
+        (static_cast<uint32_t>(filteredVoltageMv) * 15) + voltageMvRaw + 8;
+    filteredVoltageMv = static_cast<uint16_t>(filteredScaled / 16);
+  }
+
+  state.voltage_mv = filteredVoltageMv;
 
   // clamp the ends of the valid voltage range
   if (state.voltage_mv < 3325) {
