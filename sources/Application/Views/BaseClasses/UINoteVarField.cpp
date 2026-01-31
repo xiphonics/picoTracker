@@ -13,7 +13,7 @@
 #include "ViewUtils.h"
 #include <System/Console/nanoprintf.h>
 
-UINoteVarField::UINoteVarField(GUIPoint &position, Variable &v,
+UINoteVarField::UINoteVarField(const GUIPoint &position, Variable &v,
                                const char *format, int min, int max,
                                int xOffset, int yOffset)
     : UIIntVarField(position, v, format, min, max, xOffset, yOffset){};

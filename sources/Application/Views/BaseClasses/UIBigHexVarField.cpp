@@ -13,7 +13,7 @@
 #include <System/Console/nanoprintf.h>
 #include <string.h>
 
-UIBigHexVarField::UIBigHexVarField(GUIPoint &position, Variable &v,
+UIBigHexVarField::UIBigHexVarField(const GUIPoint &position, Variable &v,
                                    int precision, const char *format, int min,
                                    int max, int power, bool wrap)
     : UIIntVarField(position, v, format, min, max, 0, 0) {

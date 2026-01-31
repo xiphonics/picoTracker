@@ -18,7 +18,7 @@
 class UIBitmaskVarField : public UIIntVarField {
 
 public:
-  UIBitmaskVarField(GUIPoint &position, Variable &v, const char *format,
+  UIBitmaskVarField(const GUIPoint &position, Variable &v, const char *format,
                     int len);
   virtual ~UIBitmaskVarField(){};
   virtual void Draw(GUIWindow &w, int offset = 0);

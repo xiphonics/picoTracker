@@ -12,6 +12,7 @@
 
 struct GUITextProperties {
   GUITextProperties() : invert_(false){};
+  GUITextProperties(bool inverted) : invert_(inverted){};
   bool invert_;
 };
 

@@ -65,7 +65,7 @@ void picoTrackerGUIWindowImp::SendFont(uint8_t uifontIndex) {
 }
 
 void picoTrackerGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
-                                       GUITextProperties &p) {
+                                       const GUITextProperties &p) {
   //  Trace::Debug("Draw char \"%c\" at pos x:%ld (%ld), y:%ld (%ld) - invert:
   //  %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
 
