@@ -26,10 +26,6 @@ advMidiService::advMidiService()
 
 advMidiService::~advMidiService(){};
 
-void advMidiService::OnPlayerStart() { MidiService::OnPlayerStart(); }
-
-void advMidiService::OnPlayerStop() { MidiService::OnPlayerStop(); }
-
 void advMidiService::poll() {
   // Poll all MIDI input devices
   for (auto dev : inList_) {
