@@ -46,7 +46,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   clipboard_.height_ = 0;
 
   for (int i = 0; i < 16; i++) {
-    clipboard_.note_[i] = 0xFF;
+    clipboard_.note_[i] = NO_NOTE;
     clipboard_.instr_[i] = 0;
   };
 }
@@ -180,7 +180,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   switch (col_ + xOffset) {
   case 0:
     c = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_ + yOffset);
-    limit = 119;
+    limit = HIGHEST_NOTE;
     wrap = true;
     break;
   case 1:
@@ -277,7 +277,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     lastParam_ = paramValue;
     break;
   }
-  if ((c) && (*c != 0xFF)) {
+  if ((c) && (*c != NO_NOTE)) {
     int offset = offsets_[col_ + xOffset][direction];
 
     // if note column apply the set scale or slice range
@@ -303,21 +303,29 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
         }
         *c = static_cast<unsigned char>(newNote);
       } else {
-        // Add/remove from offset to match selected scale
-        int scale = viewData_->project_->GetScale();
-        int scaleRoot = viewData_->project_->GetScaleRoot();
-
         // Calculate the new note with the offset
         int newNote = *c + offset;
 
-        // Check if the note is in the scale (adjusted for root)
-        // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
-        while (newNote >= 0 &&
-               !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
-          offset > 0 ? offset++ : offset--;
-          newNote = *c + offset;
+        if (*c == NOTE_OFF) {
+          // leave note off
+          *c = (offset > 0) ? 0 : HIGHEST_NOTE;
+        } else if (newNote < 0 || newNote > HIGHEST_NOTE) {
+          // changing to note off
+          *c = NOTE_OFF;
+        } else {
+          // Add/remove from offset to match selected scale
+          int scale = viewData_->project_->GetScale();
+          int scaleRoot = viewData_->project_->GetScaleRoot();
+
+          /// Check if the note is in the scale (adjusted for root)
+          // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
+          while (newNote >= 0 &&
+                 !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
+            offset > 0 ? offset++ : offset--;
+            newNote = *c + offset;
+          }
+          updateData(c, offset, limit, wrap);
         }
-        updateData(c, offset, limit, wrap);
       }
     } else {
       updateData(c, offset, limit, wrap);
@@ -349,7 +357,7 @@ void PhraseView::pasteLast() {
   switch (col_) {
   case 0:
     c = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_);
-    if ((*c == 0xFF)) {
+    if ((*c == NO_NOTE)) {
       *c = lastNote_;
       c = phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
       *c = lastInstr_;
@@ -812,7 +820,6 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_ENTER) {
-
       // If note or I, we request a new instr
       if (col_ < 2) {
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
@@ -1232,8 +1239,10 @@ void PhraseView::DrawView() {
     setTextProps(props, 0, j, false);
     (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_HILITE1)
                                             : SetColor(CD_NORMAL);
-    if (d == 0xFF) {
+    if (d == NO_NOTE) {
       DrawString(pos._x, pos._y, "----", props);
+    } else if (d == NOTE_OFF) {
+      DrawString(pos._x, pos._y, "off ", props);
     } else {
       bool showSlice = false;
       bool invalidSlice = false;
