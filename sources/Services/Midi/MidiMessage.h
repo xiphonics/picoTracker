@@ -55,4 +55,9 @@ struct MidiMessage : public I_ObservableData {
   unsigned char data2_;
 };
 
-enum MidiCC { CC_VOLUME = 0x07 };
+// MIDI Control Change numbers used throughout the firmware
+enum MidiCC {
+  CC_VOLUME = 0x07,
+  // All Notes Off (CC 123) – clears any lingering notes on a channel
+  CC_ALL_NOTES_OFF = 0x7B
+};
