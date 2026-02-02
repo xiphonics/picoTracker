@@ -400,6 +400,9 @@ void View::drawBattery(GUITextProperties &props) {
   const uint32_t frameCounter = AppWindow::GetAnimationFrameCounter();
   const bool sampleNow = (frameCounter % PICO_CLOCK_HZ) == 0;
 
+  // TODO: this logic is not needed on the Advance as it has accurate battery
+  // metering and so can be removed for the Advance in future
+
   // Sample the battery once per second.
   if (sampleNow) {
     System *sys = System::GetInstance();
