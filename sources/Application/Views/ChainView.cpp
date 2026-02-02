@@ -33,6 +33,27 @@ ChainView::ChainView(GUIWindow &w, ViewData *viewData)
   };
 }
 
+void ChainView::Reset() {
+  updatingPhrase_ = false;
+  lastPhrase_ = 0;
+  lastPlayingPos_ = 0;
+  lastQueuedPos_ = 0;
+
+  clipboard_.active_ = false;
+  clipboard_.width_ = 0;
+  clipboard_.height_ = 0;
+  clipboard_.col_ = 0;
+  clipboard_.row_ = 0;
+  for (int i = 0; i < 16; i++) {
+    clipboard_.phrase_[i] = 0xFF;
+    clipboard_.transpose_[i] = 0;
+  }
+
+  saveRow_ = 0;
+  saveCol_ = 0;
+  needsUIUpdate_ = false;
+}
+
 void ChainView::setPhrase(unsigned char value) {
   viewData_->SetChainPhrase(value);
   lastPhrase_ = value;

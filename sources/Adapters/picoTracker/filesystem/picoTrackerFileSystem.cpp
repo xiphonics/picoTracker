@@ -41,6 +41,11 @@ picoTrackerFileSystem::picoTrackerFileSystem() {
   }
 }
 
+bool picoTrackerFileSystem::isExFat() {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.fatType() == FAT_TYPE_EXFAT;
+}
+
 FileHandle picoTrackerFileSystem::Open(const char *name, const char *mode) {
   Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   std::lock_guard<Mutex> lock(mutex);

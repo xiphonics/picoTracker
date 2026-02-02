@@ -12,8 +12,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-Chain::Chain() {
+Chain::Chain() { Reset(); };
 
+Chain::~Chain(){};
+
+void Chain::Reset() {
   for (int i = 0; i < CHAIN_COUNT * PHRASES_PER_CHAIN; i++) {
     data_[i] = 0xFF;
     transpose_[i] = 0x00;
@@ -21,9 +24,7 @@ Chain::Chain() {
   for (int i = 0; i < CHAIN_COUNT; i++) {
     isUsed_[i] = false;
   }
-};
-
-Chain::~Chain(){};
+}
 
 unsigned short Chain::GetNext() {
   for (int i = 0; i < CHAIN_COUNT; i++) {

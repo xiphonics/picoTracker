@@ -139,10 +139,29 @@
 #define char_block_bottomRightCorner_s "\346"
 #define char_block_bottomRightCorner char_block_bottomRightCorner_s[0]
 
-#define char_button_left_s "\216"
-#define char_button_left char_button_left_s[0]
-#define char_button_right_s "\217"
+#define char_button_border_left_s "\216"
+#define char_button_border_left char_button_border_left_s[0]
+#define char_button_border_right_s "\217"
+#define char_button_border_right char_button_border_right_s[0]
+
+#define char_button_right_s "\227"
 #define char_button_right char_button_right_s[0]
+#define char_button_up_s "\230"
+#define char_button_up char_button_up_s[0]
+#define char_button_down_s "\231"
+#define char_button_down char_button_down_s[0]
+#define char_button_left_s "\232"
+#define char_button_left char_button_left_s[0]
+#define char_button_play_s "\233"
+#define char_button_play char_button_play_s[0]
+#define char_button_enter_s "\234"
+#define char_button_enter char_button_enter_s[0]
+#define char_button_alt_s "\235"
+#define char_button_alt char_button_alt_s[0]
+#define char_button_nav_s "\236"
+#define char_button_nav char_button_nav_s[0]
+#define char_button_edit_s "\237"
+#define char_button_edit char_button_edit_s[0]
 
 #define char_filledBorder_bottom_s "\337"
 #define char_filledBorder_bottom char_filledBorder_bottom_s[0]
@@ -233,6 +252,7 @@
 #define char_border_double_verticalRight_s "\314"
 #define char_border_double_verticalRight char_border_double_verticalRight_s[0]
 #define char_border_double_cross_s "\316"
+#define char_border_double_cross char_border_double_cross_s[0]
 
 #define char_logo_x_s "\320"
 #define char_logo_x char_logo_x_s[0]
@@ -276,7 +296,7 @@
       char_battery_right_s
 
 // Array of bargraph characters for fast lookup
-static constexpr const char *const char_bargraph_lookup[] = {
+static const char *const char_bargraph_lookup[] = {
     char_bargraph_bar0_s, // 0
     char_bargraph_bar1_s, // 1
     char_bargraph_bar2_s, // 2

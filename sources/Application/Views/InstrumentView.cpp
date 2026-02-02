@@ -68,6 +68,15 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
 
 InstrumentView::~InstrumentView() {}
 
+void InstrumentView::Reset() {
+  lastSampleIndex_ = -1;
+  suppressSampleChangeWarning_ = false;
+  exportInstrument_ = nullptr;
+  exportName_.clear();
+  lastFocusID_ = FourCC::VarInstrumentType;
+  instrumentType_.SetInt(0, false);
+}
+
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
   nameVariables_.emplace_back(instr);
   Variable &nameVar = *nameVariables_.rbegin();
@@ -411,7 +420,7 @@ void InstrumentView::fillSampleParameters() {
   sampleActionField_.back().AddObserver(*this);
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
-  position._y += 2;
+  position._y += 1;
   intVarField_.emplace_back(position, *v, "automation: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -560,7 +569,6 @@ void InstrumentView::fillMidiParameters() {
   intVarOffField_.emplace_back(
       UIIntVarOffField(position, *v, "program: %2.2X", 0, 0x7F, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
-  (*intVarOffField_.rbegin()).AddObserver(*this);
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentTableAutomation);
@@ -1094,7 +1102,12 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     NotifyObservers(&ve);
   } break;
   case FourCC::MidiInstrumentProgram: {
-    // When program value changes, send a MIDI Program Change message
+    // When program value changes, send a MIDI Program Change message during
+    // playback
+    if (!Player::GetInstance()->IsRunning()) {
+      break;
+    }
+
     I_Instrument *instr = getInstrument();
     if (instr && instr->GetType() == IT_MIDI) {
       MidiInstrument *midiInstr = (MidiInstrument *)instr;
@@ -1109,8 +1122,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         int channel = channelVar->GetInt();
         int program = programVar->GetInt();
 
-        // Send Program Change message and play C3 note using the helper method
-        midiInstr->SendProgramChangeWithNote(channel, program);
+        // Send Program Change message
+        midiInstr->SendProgramChange(channel, program);
       }
     }
   } break;

@@ -58,6 +58,15 @@ bool Player::Init(Project *project, ViewData *viewData) {
   return mixer_.Start();
 }
 
+void Player::BindProject(Project *project, ViewData *viewData) {
+  viewData_ = viewData;
+  project_ = project;
+  mixer_.BindProject(project);
+
+  SyncMaster *sync = SyncMaster::GetInstance();
+  sync->SetTempo(project_->GetTempo());
+}
+
 void Player::Reset() {
   viewData_ = 0;
   project_ = 0;

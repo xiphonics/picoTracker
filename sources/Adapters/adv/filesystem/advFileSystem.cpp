@@ -19,7 +19,7 @@ char SDPath[4];
 
 static etl::pool<PI_File, FF_FS_LOCK> filePool;
 
-advFileSystem::advFileSystem() {
+advFileSystem::advFileSystem() : batching_(false) {
 
   // Link FatFs driver
   FATFS_LinkDriver(&SD_DMA_Driver, SDPath);
@@ -272,7 +272,7 @@ bool advFileSystem::DeleteFile(const char *path) {
     return false;
   }
   res = f_unlink(path);
-  if (res == FR_OK) {
+  if (res == FR_OK && !batching_) {
     updateCache();
   }
   return res == FR_OK;
@@ -292,10 +292,22 @@ bool advFileSystem::DeleteDir(const char *path) {
     return false;
   }
   res = f_unlink(path);
-  if (res == FR_OK) {
+  if (res == FR_OK && !batching_) {
     updateCache();
   }
   return res == FR_OK;
+}
+
+void advFileSystem::BeginBatch() { batching_ = true; }
+
+void advFileSystem::EndBatch() {
+  if (!batching_) {
+    return;
+  }
+  batching_ = false;
+  if (!batching_) {
+    updateCache();
+  }
 }
 
 bool advFileSystem::exists(const char *path) {
