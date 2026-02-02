@@ -24,12 +24,23 @@ bool View::initPrivate_ = false;
 
 int View::margin_ = 0;
 int View::songRowCount_ = 16;
+
 BatteryState View::batteryState_ = {
     .percentage = 0,
     .voltage_mv = 0,
     .temperature_c = 0,
     .charging = false,
 };
+
+BatteryState View::latestBatteryState_ = {
+    .percentage = 0,
+    .voltage_mv = 0,
+    .temperature_c = 0,
+    .charging = false,
+};
+
+uint32_t View::lastBatteryDisplayFrame_ = 0;
+bool View::batteryDisplayInitialized_ = false;
 
 View::View(GUIWindow &w, ViewData *viewData)
     : w_(w), viewData_(viewData), viewMode_(VM_NORMAL) {
@@ -386,11 +397,32 @@ void View::DrawRect(GUIRect &r, ColorDefinition color) {
 }
 
 void View::drawBattery(GUITextProperties &props) {
-  // only update the voltage once per second
-  if (AppWindow::GetAnimationFrameCounter() % PICO_CLOCK_HZ == 0) {
+  const uint32_t frameCounter = AppWindow::GetAnimationFrameCounter();
+  const bool sampleNow = (frameCounter % PICO_CLOCK_HZ) == 0;
+
+  // Sample the battery once per second.
+  if (sampleNow) {
     System *sys = System::GetInstance();
-    sys->GetBatteryState(batteryState_);
-    // Trace::Debug("Battery: %d%%", batteryState_.percentage);
+    sys->GetBatteryState(latestBatteryState_);
+    if (!batteryDisplayInitialized_) {
+      batteryState_ = latestBatteryState_;
+      lastBatteryDisplayFrame_ = frameCounter;
+      batteryDisplayInitialized_ = true;
+    } else {
+      if (latestBatteryState_.charging != batteryState_.charging) {
+        // Immediately display change in charging state
+        batteryState_ = latestBatteryState_;
+        lastBatteryDisplayFrame_ = frameCounter;
+      } else {
+        constexpr uint32_t kBatteryDisplayUpdateFrames = PICO_CLOCK_HZ * 120;
+        if ((frameCounter - lastBatteryDisplayFrame_) >=
+            kBatteryDisplayUpdateFrames) {
+          // While discharging, update the display at most every 120 seconds.
+          batteryState_ = latestBatteryState_;
+          lastBatteryDisplayFrame_ = frameCounter;
+        }
+      }
+    }
   }
 
   GUIPoint battpos = GetAnchor();
