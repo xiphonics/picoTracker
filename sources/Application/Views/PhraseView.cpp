@@ -272,29 +272,21 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
         }
         *c = static_cast<unsigned char>(newNote);
       } else {
+        // Add/remove from offset to match selected scale
+        int scale = viewData_->project_->GetScale();
+        int scaleRoot = viewData_->project_->GetScaleRoot();
+
         // Calculate the new note with the offset
         int newNote = *c + offset;
 
-        if (*c == NOTE_OFF) {
-          // leave note off
-          *c = (offset > 0) ? 0 : HIGHEST_NOTE;
-        } else if (newNote < 0 || newNote > HIGHEST_NOTE) {
-          // changing to note off
-          *c = NOTE_OFF;
-        } else {
-          // Add/remove from offset to match selected scale
-          int scale = viewData_->project_->GetScale();
-          int scaleRoot = viewData_->project_->GetScaleRoot();
-
-          /// Check if the note is in the scale (adjusted for root)
-          // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
-          while (newNote >= 0 &&
-                 !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
-            offset > 0 ? offset++ : offset--;
-            newNote = *c + offset;
-          }
-          updateData(c, offset, limit, wrap);
+        // Check if the note is in the scale (adjusted for root)
+        // For root = 0, (newNote + 12 - 0) % 12 simplifies to newNote % 12
+        while (newNote >= 0 &&
+               !scaleSteps[scale][(newNote + 12 - scaleRoot) % 12]) {
+          offset > 0 ? offset++ : offset--;
+          newNote = *c + offset;
         }
+        updateData(c, offset, limit, wrap);
       }
     } else {
       updateData(c, offset, limit, wrap);
@@ -391,6 +383,13 @@ void PhraseView::pasteLast() {
 }
 
 void PhraseView::cutPosition() {
+  // cutting an empty note slot adds a note off
+  uint8_t *note = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_);
+  if (col_ == 0 && *note == NO_NOTE) {
+    *note = NOTE_OFF;
+    isDirty_ = true;
+    return;
+  }
 
   clipboard_.active_ = true;
   clipboard_.row_ = row_;
