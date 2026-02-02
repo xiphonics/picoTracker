@@ -12,6 +12,7 @@
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "CommandList.h"
+#include "Externals/etl/include/etl/string_stream.h"
 #include "Externals/etl/include/etl/to_string.h"
 #include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
@@ -334,12 +335,11 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> MidiInstrument::GetDefaultName() {
   // use the channel number as a fallback
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
-  defaultName_ = "MIDI CH ";
   int displayChannelNum = v->GetInt() + 1;
-  char channelStr[3];
-  hex2char(displayChannelNum, channelStr);
-  defaultName_ += channelStr;
-  return defaultName_;
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> name;
+  etl::string_stream ss(name);
+  ss << "MIDI CH " << etl::setfill('0') << etl::setw(2) << displayChannelNum;
+  return name;
 }
 
 int MidiInstrument::GetTable() {

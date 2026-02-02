@@ -55,7 +55,7 @@ Once you've created an instrument, you can save it for use in other projects:
 - **loop End:** end point of the sample (note value is in hex). You can play samples backwards by setting the end value lower than the start
 - **slices:** Opens the Sample Slices view where you can define up to 16 slice start points for the currently selected sample. Notes from `C3` through `D#4` trigger slices 1–16 instead of pitching the entire sample.
 - **automation:** If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows will move at the speed of 1 row per tick)
-- **table:** Select a table the instrument will always run. To clone a table here: `NAV`+(`EDIT`, `ENTER`). Make a new table by selecting a higher number not yet in use.
+- **table:** Select a table the instrument will always run. To clone a table here: `ALT`+(`EDIT`, `ENTER`). Make a new table by selecting a higher number not yet in use.
 
 ### Sample Slices View
 
@@ -172,7 +172,7 @@ A MIDI instrument has the following settings:
 - **Program** - MIDI program change value to send (0x00-0x7F). Program changes for *each* MIDI instrument are sent only once at sequencer start. Setting this to `--` will disable sending program change messages entirely.
 - **Length** - Sets note gate length in number of ticks
 - **Automation** - When on, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is `Off`, table behavior is normal (play arrows will move at the speed of 1 row per tick)
-- **Table**- As above, select a table the instrument will always run. Clone a table here: `NAV`+`EDIT`,`ENTER`. Make a new table by selecting a higher number not yet in use.
+- **Table**- As above, select a table the instrument will always run. Clone a table here: `ALT`+`EDIT`,`ENTER`. Make a new table by selecting a higher number not yet in use.
 
 
 ## Synths

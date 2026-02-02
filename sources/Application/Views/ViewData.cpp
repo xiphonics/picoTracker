@@ -10,8 +10,11 @@
 #include "ViewData.h"
 #include "BaseClasses/View.h"
 
-ViewData::ViewData(Project *project) {
+ViewData::ViewData(Project *project) { Load(project); };
 
+ViewData::~ViewData() {}
+
+void ViewData::Load(Project *project) {
   project_ = project;
   song_ = &(project->song_);
   currentChain_ = 0;
@@ -24,9 +27,21 @@ ViewData::ViewData(Project *project) {
   currentTable_ = 0;
   currentInstrumentID_ = 0;
   currentGroove_ = 0;
-};
+  playMode_ = PM_SONG;
+  phraseCurPos_ = 0;
 
-ViewData::~ViewData() { delete project_; };
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    songPlayPos_[i] = 0;
+    chainPlayPos_[i] = 0;
+    phrasePlayPos_[i] = 0;
+    currentPlayChain_[i] = 0xFF;
+    currentPlayPhrase_[i] = 0xFF;
+  }
+
+  sampleEditorFilename.clear();
+  isShowingSampleEditorProjectPool = false;
+  importViewStartDir = nullptr;
+}
 
 unsigned char ViewData::UpdateSongChain(int offset) {
   unsigned char *c =

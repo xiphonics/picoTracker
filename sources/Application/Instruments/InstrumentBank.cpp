@@ -35,11 +35,18 @@ InstrumentBank::InstrumentBank()
   Status::Set("All instruments preloaded");
 };
 
-InstrumentBank::~InstrumentBank() {
+InstrumentBank::~InstrumentBank() { Reset(); };
+
+void InstrumentBank::Reset() {
   sampleInstrumentPool_.release_all();
   midiInstrumentPool_.release_all();
   sidInstrumentPool_.release_all();
   opalInstrumentPool_.release_all();
+
+  for (size_t i = 0; i < instruments_.max_size(); i++) {
+    instruments_[i] = &none_;
+  }
+  sidOscCount = 0;
 };
 
 I_Instrument *InstrumentBank::GetInstrument(int i) { return instruments_[i]; };
@@ -228,9 +235,8 @@ unsigned short InstrumentBank::GetNextFreeInstrumentSlotId() {
 unsigned short InstrumentBank::Clone(unsigned short i) {
   I_Instrument *src = instruments_[i];
 
-  // TODO: NEED TO actually find the next available instrument slot, if there
-  // even is one
-  auto nextFreeInstrumentSlotId = i++;
+  // Find next available instrument slot
+  auto nextFreeInstrumentSlotId = GetNextFreeInstrumentSlotId();
 
   unsigned short next =
       GetNextAndAssignID(src->GetType(), nextFreeInstrumentSlotId);

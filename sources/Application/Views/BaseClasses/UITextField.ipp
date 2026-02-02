@@ -1,6 +1,6 @@
 #include "Application/AppWindow.h"
 #include "View.h"
-#include "stringutils.h"
+#include "Application/Utils/stringutils.h"
 
 template <uint8_t MaxLength>
 UITextField<MaxLength>::UITextField(

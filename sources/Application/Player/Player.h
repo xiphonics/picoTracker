@@ -54,6 +54,7 @@ private: // Singleton
 
 public:
   bool Init(Project *, ViewData *);
+  void BindProject(Project *, ViewData *);
   void Reset();
   void Close();
 

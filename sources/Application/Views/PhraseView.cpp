@@ -53,6 +53,37 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
 
 PhraseView::~PhraseView(){};
 
+void PhraseView::Reset() {
+  phrase_ = &(viewData_->song_->phrase_);
+  lastPlayingPos_ = 0;
+  row_ = 0;
+  col_ = 0;
+  lastNote_ = 60;
+  lastInstr_ = 0;
+  lastCmd_ = FourCC::InstrumentCommandNone;
+  lastParam_ = 0;
+  viewData_->phraseCurPos_ = 0;
+
+  clipboard_.active_ = false;
+  clipboard_.width_ = 0;
+  clipboard_.height_ = 0;
+  clipboard_.col_ = 0;
+  clipboard_.row_ = 0;
+  for (int i = 0; i < 16; i++) {
+    clipboard_.note_[i] = 0xFF;
+    clipboard_.instr_[i] = 0;
+    clipboard_.cmd1_[i] = 0;
+    clipboard_.param1_[i] = 0;
+    clipboard_.cmd2_[i] = 0;
+    clipboard_.param2_[i] = 0;
+  }
+
+  saveCol_ = 0;
+  saveRow_ = 0;
+  needsUIUpdate_ = false;
+  needsLiveIndicatorUpdate_ = false;
+}
+
 bool PhraseView::getEffectiveInstrumentForRow(int row,
                                               uint8_t &instrumentId) const {
   if (!phrase_) {
@@ -812,7 +843,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       } else {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
+                FourCC::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -826,7 +857,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
+                FourCC::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -842,58 +873,57 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
   }
 
-  if (viewMode_ == VM_CLONE) {
-    if ((mask & EPBM_ENTER) && (mask & EPBM_ALT)) {
-      if (col_ < 2) {
-        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        unsigned char *c =
-            phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
-        if (*c != 0xFF) {
-          unsigned short next = bank->Clone(*c);
-          if (next != NO_MORE_INSTRUMENT) {
-            *c = (unsigned char)next;
-            lastInstr_ = next;
-            isDirty_ = true;
-          }
+  if (mask == (EPBM_ALT | EPBM_EDIT | EPBM_ENTER)) {
+    if (col_ < 2) {
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      unsigned char *c =
+          phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
+      if (*c != 0xFF) {
+        unsigned short next = bank->Clone(*c);
+        if (next != NO_MORE_INSTRUMENT) {
+          *c = (unsigned char)next;
+          lastInstr_ = next;
+          isDirty_ = true;
         }
-      } else {
-        if ((col_ == 3) &&
-            (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
-          TableHolder *th = TableHolder::GetInstance();
-          int current =
-              *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_));
-          if (current != -1) {
-            unsigned short next = th->Clone(current);
-            if (next != NO_MORE_TABLE) {
-              ushort *c =
-                  phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
-              *c = next;
-              isDirty_ = true;
-              cmdEdit_.SetInt(next);
-            }
-          }
-        }
-        if ((col_ == 5) &&
-            (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::SampleInstrumentTable) {
-          TableHolder *th = TableHolder::GetInstance();
-          unsigned short next = th->Clone(
-              *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
+      }
+    } else {
+      if ((col_ == 3) &&
+          (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
+              FourCC::InstrumentCommandTable) {
+        TableHolder *th = TableHolder::GetInstance();
+        int current =
+            *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_));
+        if (current != -1) {
+          unsigned short next = th->Clone(current);
           if (next != NO_MORE_TABLE) {
             ushort *c =
-                phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
+                phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
             *c = next;
             isDirty_ = true;
             cmdEdit_.SetInt(next);
+            Trace::Log("PHRASEVIEW", "Cloned table1 %04x -> %04x", current,
+                       next);
           }
         }
-      };
-      mask &= (0xFFFF - (EPBM_ENTER | EPBM_ALT));
-    } else {
-      viewMode_ = VM_SELECTION;
-    }
-  };
+      }
+      if ((col_ == 5) &&
+          (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
+              FourCC::InstrumentCommandTable) {
+        TableHolder *th = TableHolder::GetInstance();
+        unsigned short next = th->Clone(
+            *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
+        if (next != NO_MORE_TABLE) {
+          ushort *c =
+              phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
+          *c = next;
+          isDirty_ = true;
+          cmdEdit_.SetInt(next);
+          Trace::Log("PHRASEVIEW", "Cloned table2 -> %04x", next);
+        }
+      }
+    };
+    return;
+  }
 
   if (viewMode_ == VM_SELECTION) {
     if (!clipboard_.active_) {
@@ -926,9 +956,6 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_ENTER) {
       cutPosition();
     }
-    if (mask & EPBM_ALT) {
-      viewMode_ = VM_CLONE;
-    };
     if (mask & EPBM_NAV)
       toggleMute();
     if (mask & EPBM_PLAY) {
@@ -994,11 +1021,11 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       ushort *param =
           phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
 
-      if (*cmd != FourCC::SampleInstrumentTable) {
+      if (*cmd != FourCC::InstrumentCommandTable) {
         cmd = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_);
         param = phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
       }
-      if (*cmd == FourCC::SampleInstrumentTable) {
+      if (*cmd == FourCC::InstrumentCommandTable) {
         viewData_->currentTable_ = (*param) & (TABLE_COUNT - 1);
       }
       ViewEvent ve(VET_SWITCH_VIEW, &vt);

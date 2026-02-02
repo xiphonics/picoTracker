@@ -27,6 +27,12 @@ ThemeImportView::ThemeImportView(GUIWindow &w, ViewData *viewData)
 
 ThemeImportView::~ThemeImportView() {}
 
+void ThemeImportView::Reset() {
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  fileIndexList_.clear();
+}
+
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;

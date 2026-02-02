@@ -46,7 +46,8 @@ public:
   PersistencyResult SaveProjectState(const char *projectName);
   PersistencyResult CreateProject();
   bool Exists(const char *projectName);
-  void PurgeUnnamedProject();
+  bool PurgeUnnamedProject();
+  bool DeleteProject(const char *projectName);
   PersistencyResult AutoSaveProjectData(const char *projectName);
   bool ClearAutosave(const char *projectName);
 

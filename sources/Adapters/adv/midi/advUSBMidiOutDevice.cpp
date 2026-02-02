@@ -9,7 +9,6 @@
 #include "advUSBMidiOutDevice.h"
 #include "Adapters/adv/platform/platform.h"
 #include "Adapters/adv/usb/usb_utils.h"
-#include "System/Console/Trace.h"
 
 advUSBMidiOutDevice::advUSBMidiOutDevice(const char *name)
     : MidiOutDevice(name) {}

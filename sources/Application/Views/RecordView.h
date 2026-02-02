@@ -20,6 +20,7 @@ class RecordView : public FieldView, public I_Observer {
 public:
   RecordView(GUIWindow &w, ViewData *data);
   virtual ~RecordView();
+  void Reset();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();

@@ -15,7 +15,7 @@
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
-#include "System/FileSystem/I_File.h"
+#include <cstring>
 
 #define PROJECT_STATE_FILE "/.current"
 
@@ -30,26 +30,76 @@ PersistencyResult PersistencyService::CreateProject() {
                                                  false);
 };
 
-void PersistencyService::PurgeUnnamedProject() {
+bool PersistencyService::PurgeUnnamedProject() {
+  return DeleteProject(UNNAMED_PROJECT_NAME);
+};
+
+bool PersistencyService::DeleteProject(const char *projectName) {
   auto fs = FileSystem::GetInstance();
 
-  fs->chdir(PROJECTS_DIR);
-  Trace::Debug("PERSISTENCYSERVICE", "purging unnamed project dir");
-  fs->chdir(UNNAMED_PROJECT_NAME);
+  Trace::Debug("PERSISTENCYSERVICE", "Deleting project: %s", projectName);
+
+  // TODO: navigate using absolute paths to simplify things
+  if (!fs->chdir(PROJECTS_DIR)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not change to projects dir");
+    return false;
+  }
+
+  if (!fs->chdir(projectName)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not change to project dir");
+    return false;
+  }
+
+  // no checks on the file deletion, since they may not exist and the directory
+  // deletion will fail later on if they do and cannot be deleted
   fs->DeleteFile(PROJECT_DATA_FILE);
   fs->DeleteFile(AUTO_SAVE_FILENAME);
 
-  fs->chdir("samples");
+  if (!fs->chdir(PROJECT_SAMPLES_DIR)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not change to project dir");
+    return false;
+  }
+
   etl::vector<int, MAX_SAMPLES> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
 
   // delete all samples
+  fs->BeginBatch();
   char filename[128];
   for (size_t i = 0; i < fileIndexes.size(); i++) {
     fs->getFileName(fileIndexes[i], filename, MAX_PROJECT_SAMPLE_PATH_LENGTH);
+    if (strcmp(filename, "..") == 0 || strcmp(filename, ".") == 0) {
+      continue;
+    }
+    if (fs->getFileType(fileIndexes[i]) == PFT_DIR) {
+      continue;
+    }
     fs->DeleteFile(filename);
   };
-};
+  fs->EndBatch();
+
+  if (!fs->chdir("..")) { // up to project dir
+    Trace::Error("PERSISTENCYSERVICE: Could not change back to project dir");
+    return false;
+  }
+
+  if (!fs->DeleteDir(PROJECT_SAMPLES_DIR)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not delete the project sample dir");
+    return false;
+  }
+
+  if (!fs->chdir("..")) { // up to projects dir
+    Trace::Error("PERSISTENCYSERVICE: Could not change back to projects dir");
+    return false;
+  }
+
+  if (!fs->DeleteDir(projectName)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not delete the project dir");
+    return false;
+  }
+
+  return true;
+}
 
 PersistencyResult
 PersistencyService::CreateProjectDirs_(const char *projectName) {

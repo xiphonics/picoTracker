@@ -18,13 +18,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-Song::Song() : Persistent("SONG"), chain_(), phrase_() {
-
-  for (int i = 0; i < SONG_CHANNEL_COUNT * SONG_ROW_COUNT; i++)
-    data_[i] = EMPTY_SONG_VALUE;
-};
+Song::Song() : Persistent("SONG"), chain_(), phrase_() { Reset(); };
 
 Song::~Song(){};
+
+void Song::Reset() {
+  for (int i = 0; i < SONG_CHANNEL_COUNT * SONG_ROW_COUNT; i++) {
+    data_[i] = EMPTY_SONG_VALUE;
+  }
+  chain_.Reset();
+  phrase_.Reset();
+}
 
 void Song::SaveContent(tinyxml2::XMLPrinter *printer) {
   saveHexBuffer(printer, "SONG", data_, SONG_ROW_COUNT * SONG_CHANNEL_COUNT);

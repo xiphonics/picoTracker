@@ -34,6 +34,7 @@ public:
   void Stop();
   bool IsPlaying();
   bool Init(Project *project);
+  void BindProject(Project *project);
   void Close();
 
   void OnPlayerStart(MixerServiceMode msmMode);
