@@ -36,6 +36,7 @@ public:
   //! player notification
   void OnPlayerStart();
   void OnPlayerStop();
+  void RegisterActiveChannel(uint8_t channel);
 
   //! Queues a MidiMessage to the current time chunk
   void QueueMessage(MidiMessage &);
@@ -70,6 +71,7 @@ private:
   void updateActiveDevicesList(unsigned short config);
 
 private:
+  uint16_t activeMidiChannelMask_;
   etl::vector<MidiOutDevice *, 2> activeOutDevices_;
 
   etl::array<etl::vector<MidiMessage, MIDI_MAX_MESG_QUEUE>, MIDI_MAX_BUFFERS>

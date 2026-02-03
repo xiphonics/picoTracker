@@ -21,7 +21,7 @@
 #undef SendMessage
 #endif
 
-MidiService::MidiService() : sendSync_(true) {
+MidiService::MidiService() : activeMidiChannelMask_(0), sendSync_(true) {
   for (int i = 0; i < MIDI_MAX_BUFFERS; i++) {
     queues_[i].clear();
   }
@@ -206,14 +206,23 @@ void MidiService::OnPlayerStart() {
   }
 };
 
+void MidiService::RegisterActiveChannel(uint8_t channel) {
+  activeMidiChannelMask_ |= static_cast<uint16_t>(1u << (channel & 0x0F));
+}
+
 void MidiService::OnPlayerStop() {
   for (uint8_t channel = 0; channel < 16; channel++) {
+    if ((activeMidiChannelMask_ & (static_cast<uint16_t>(1u << channel))) ==
+        0) {
+      continue;
+    }
     MidiMessage ccMsg;
     ccMsg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
     ccMsg.data1_ = MidiCC::CC_ALL_NOTES_OFF;
     ccMsg.data2_ = 0x00;
     QueueMessage(ccMsg);
   }
+  activeMidiChannelMask_ = 0;
   // Send MIDI Stop message (0xFC) to all active output devices
   if (sendSync_) {
     MidiMessage msg;

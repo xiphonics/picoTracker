@@ -73,6 +73,8 @@ void MidiInstrument::OnStart() {
     msg.data2_ = volume / 2;
     svc_->QueueMessage(msg);
   }
+
+  svc_->RegisterActiveChannel(channel_.GetInt());
 };
 
 bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
@@ -101,6 +103,8 @@ bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
 
 void MidiInstrument::Stop(int c) {
 
+  Trace::Debug("MIDI INSTR STOP!====");
+
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int channel = v->GetInt();
 
@@ -113,7 +117,7 @@ void MidiInstrument::Stop(int c) {
     msg.data1_ = lastNotes_[c][i];
     msg.data2_ = 0x00;
     svc_->QueueMessage(msg);
-    // Trace::Debug("MIDI chord note OFF[%d]:%d", i, msg.data1_);
+    Trace::Debug("MIDI chord note OFF[%d]:%d", i, msg.data1_);
   }
   // clear last notes array
   lastNotes_[c].fill(0);
