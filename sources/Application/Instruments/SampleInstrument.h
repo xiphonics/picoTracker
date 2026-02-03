@@ -61,7 +61,7 @@ public:
 
   virtual void OnStart();
   static constexpr size_t MaxSlices = 16;
-  static constexpr unsigned char SliceNoteBase = 60;
+  static constexpr unsigned char SliceNoteBase = NOTE_C3;
 
   uint32_t GetSlicePoint(size_t index) const;
   void SetSlicePoint(size_t index, uint32_t start);

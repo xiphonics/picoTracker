@@ -36,7 +36,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   row_ = 0;
   viewData->phraseCurPos_ = 0;
   col_ = 0;
-  lastNote_ = 60;
+  lastNote_ = NOTE_C3;
   lastInstr_ = 0;
   lastCmd_ = FourCC::InstrumentCommandNone;
   lastParam_ = 0;
@@ -58,7 +58,7 @@ void PhraseView::Reset() {
   lastPlayingPos_ = 0;
   row_ = 0;
   col_ = 0;
-  lastNote_ = 60;
+  lastNote_ = NOTE_C3;
   lastInstr_ = 0;
   lastCmd_ = FourCC::InstrumentCommandNone;
   lastParam_ = 0;
@@ -279,6 +279,12 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   }
   if ((c) && (*c != NO_NOTE)) {
     int offset = offsets_[col_ + xOffset][direction];
+
+    // when changing notes from note off, always start from C3
+    if (*c == NOTE_OFF) {
+      *c = NOTE_C3;
+      offset = 0;
+    }
 
     // if note column apply the set scale or slice range
     if (col_ + xOffset == 0) {
