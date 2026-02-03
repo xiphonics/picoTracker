@@ -25,6 +25,7 @@
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
 #include <cstdint>
+#include "Externals/etl/include/etl/to_string.h"
 #include <nanoprintf.h>
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
@@ -64,7 +65,7 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   (*persistentActionField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::ActionExport;
 
-  sliceCountLabel_[0] = '\0';
+  sliceCountLabel_.clear();
 }
 
 InstrumentView::~InstrumentView() {}
@@ -76,10 +77,10 @@ void InstrumentView::Reset() {
   exportName_.clear();
   lastFocusID_ = FourCC::VarInstrumentType;
   instrumentType_.SetInt(0, false);
-  sliceCountLabel_[0] = '\0';
+  sliceCountLabel_.clear();
 }
 
-static void updateSliceCountLabel(char *buffer, size_t bufferSize,
+static void updateSliceCountLabel(etl::string<20> &label,
                                   SampleInstrument *instrument) {
   int32_t count = 0;
   if (instrument) {
@@ -90,9 +91,12 @@ static void updateSliceCountLabel(char *buffer, size_t bufferSize,
     }
   }
   if (count <= 1) {
-    npf_snprintf(buffer, bufferSize, "slices: off");
+    label = "slices: off";
   } else {
-    npf_snprintf(buffer, bufferSize, "slices: %2d", count);
+    label = "slices: ";
+    etl::format_spec format;
+    format.width(2).fill(' ');
+    etl::to_string(count, label, format, true);
   }
 }
 
@@ -343,8 +347,8 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
-  updateSliceCountLabel(sliceCountLabel_, sizeof(sliceCountLabel_), instrument);
-  staticField_.emplace_back(position, sliceCountLabel_);
+  updateSliceCountLabel(sliceCountLabel_, instrument);
+  staticField_.emplace_back(position, sliceCountLabel_.c_str());
   fieldList_.insert(fieldList_.end(), &staticField_.back());
 
   GUIPoint actionPos = position;
@@ -1088,8 +1092,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     if (!sampleInstr->HasSlicesForWarning()) {
       sampleInstr->ClearSlices();
       lastSampleIndex_ = newIndex;
-      updateSliceCountLabel(sliceCountLabel_, sizeof(sliceCountLabel_),
-                            sampleInstr);
+      updateSliceCountLabel(sliceCountLabel_, sampleInstr);
       isDirty_ = true;
       break;
     }
@@ -1104,8 +1107,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (dialog.GetReturnCode() == MBL_YES) {
         sampleInstr->ClearSlices();
         lastSampleIndex_ = newIndex;
-        updateSliceCountLabel(sliceCountLabel_, sizeof(sliceCountLabel_),
-                              sampleInstr);
+        updateSliceCountLabel(sliceCountLabel_, sampleInstr);
         isDirty_ = true;
       } else {
         suppressSampleChangeWarning_ = true;

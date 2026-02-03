@@ -37,21 +37,23 @@ public:
   void SetShowBaseline(bool show);
   void SetBorderColors(ColorDefinition normal, ColorDefinition focused);
   void SetSampleSize(uint32_t sampleSize);
+
   uint32_t SampleSize() const;
   uint8_t ZoomLevel() const;
   uint8_t MaxZoomLevel() const;
-  bool UpdateZoomWindow(uint32_t centerSample);
-  bool AdjustZoom(int32_t delta, uint32_t centerSample);
   uint32_t ViewStart() const;
   uint32_t ViewEnd() const;
+  void ClearWaveformCache();
+  bool WaveformValid() const;
+
+  bool UpdateZoomWindow(uint32_t centerSample);
+  bool AdjustZoom(int32_t delta, uint32_t centerSample);
 
   void BeginRmsBuild();
   void AccumulateRmsSample(uint32_t sampleIndex, int16_t sampleValue);
   void FinalizeRmsBuild();
 
   uint8_t *WaveformCache();
-  void ClearWaveformCache();
-  bool WaveformValid() const;
   void InvalidateWaveform();
   void SetWaveformValid(bool valid);
   void RequestFullRedraw();

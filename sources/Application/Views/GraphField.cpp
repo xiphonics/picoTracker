@@ -89,6 +89,14 @@ uint8_t GraphField::ZoomLevel() const { return zoomLevel_; }
 
 uint8_t GraphField::MaxZoomLevel() const { return maxZoomLevel_; }
 
+uint32_t GraphField::ViewStart() const { return viewStart_; }
+
+uint32_t GraphField::ViewEnd() const { return viewEnd_; }
+
+uint8_t *GraphField::WaveformCache() { return waveformCache_; }
+
+bool GraphField::WaveformValid() const { return waveformValid_; }
+
 bool GraphField::UpdateZoomWindow(uint32_t centerSample) {
   if (sampleSize_ == 0) {
     bool changed = (viewStart_ != 0 || viewEnd_ != 0);
@@ -153,10 +161,6 @@ bool GraphField::AdjustZoom(int32_t delta, uint32_t centerSample) {
   return UpdateZoomWindow(centerSample);
 }
 
-uint32_t GraphField::ViewStart() const { return viewStart_; }
-
-uint32_t GraphField::ViewEnd() const { return viewEnd_; }
-
 void GraphField::BeginRmsBuild() {
   waveformValid_ = false;
   std::memset(waveformCache_, 0, sizeof(waveformCache_));
@@ -204,13 +208,9 @@ void GraphField::FinalizeRmsBuild() {
   needsFullRedraw_ = true;
 }
 
-uint8_t *GraphField::WaveformCache() { return waveformCache_; }
-
 void GraphField::ClearWaveformCache() {
   std::memset(waveformCache_, 0, sizeof(waveformCache_));
 }
-
-bool GraphField::WaveformValid() const { return waveformValid_; }
 
 void GraphField::InvalidateWaveform() {
   waveformValid_ = false;
