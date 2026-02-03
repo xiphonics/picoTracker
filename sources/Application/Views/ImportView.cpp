@@ -385,7 +385,7 @@ void ImportView::DrawView() {
   SetColor(CD_NORMAL);
 };
 
-void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {};
+void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){};
 
 void ImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();

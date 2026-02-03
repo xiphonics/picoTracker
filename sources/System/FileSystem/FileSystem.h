@@ -15,8 +15,8 @@
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
 #include "System/FileSystem/FileHandle.h"
-#include <initializer_list>
 #include <cstring>
+#include <initializer_list>
 #include <stdint.h>
 
 #define MAX_FILE_INDEX_SIZE 256
