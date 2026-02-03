@@ -530,8 +530,7 @@ void SampleEditorView::rebuildWaveform() {
 
   const char *pathToOpen = viewData_->sampleEditorFilename.c_str();
   if (viewData_->isShowingSampleEditorProjectPool) {
-    const auto *path =
-        getProjectSamplePath(viewData_->sampleEditorFilename, 0);
+    const auto *path = getProjectSamplePath(viewData_->sampleEditorFilename, 0);
     if (!path) {
       Trace::Error("SampleEditorView: invalid project sample path");
       return;
