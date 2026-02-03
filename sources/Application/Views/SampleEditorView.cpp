@@ -1174,8 +1174,8 @@ const FileSystem::PathBuffer *SampleEditorView::getProjectSamplePath(
   viewData_->project_->GetProjectName(projectName);
 
   auto &path = fs->GetPathBuffer(bufferSlot);
-  if (!fs->BuildPath(path, PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR,
-                     filename.c_str())) {
+  if (!fs->BuildPath(path,
+                     {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR, filename})) {
     Trace::Error("SampleEditorView: path too long for %s", filename.c_str());
     return nullptr;
   }

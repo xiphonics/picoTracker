@@ -11,9 +11,11 @@
 #define _FILESYSTEM_H_
 
 #include "Externals/etl/include/etl/string.h"
+#include "Externals/etl/include/etl/string_view.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
 #include "System/FileSystem/FileHandle.h"
+#include <initializer_list>
 #include <cstring>
 #include <stdint.h>
 
@@ -76,35 +78,38 @@ public:
     return pathBuffers_[slot];
   }
 
-  // Build a path from up to 5 segments. Returns false if it would overflow.
-  bool BuildPath(PathBuffer &out, const char *seg0, const char *seg1 = nullptr,
-                 const char *seg2 = nullptr, const char *seg3 = nullptr,
-                 const char *seg4 = nullptr, bool absolute = true) {
+  // Build a path from segments. Returns false if it would overflow.
+  bool BuildPath(PathBuffer &out,
+                 std::initializer_list<etl::string_view> segments,
+                 bool absolute = true) {
     out.clear();
     if (absolute) {
       out = "/";
     }
 
-    const char *segments[] = {seg0, seg1, seg2, seg3, seg4};
-    for (const char *segment : segments) {
-      if (!segment || !*segment) {
+    for (etl::string_view segment : segments) {
+      if (segment.empty()) {
         continue;
       }
-      const char *s = segment;
-      while (*s == '/') {
-        ++s;
+      size_t start = 0;
+      size_t end = segment.size();
+      while (start < end && segment[start] == '/') {
+        ++start;
       }
-      if (!*s) {
+      while (end > start && segment[end - 1] == '/') {
+        --end;
+      }
+      if (start == end) {
         continue;
       }
       if (!out.empty() && out.back() != '/') {
         out += '/';
       }
-      const size_t segLen = strlen(s);
+      const size_t segLen = end - start;
       if ((out.size() + segLen) > out.capacity()) {
         return false;
       }
-      out.append(s, segLen);
+      out.append(segment.data() + start, segLen);
     }
     return true;
   }
