@@ -528,15 +528,18 @@ void SampleEditorView::rebuildWaveform() {
     return;
   }
 
+  const char *pathToOpen = viewData_->sampleEditorFilename.c_str();
   if (viewData_->isShowingSampleEditorProjectPool) {
-    if (!goProjectSamplesDir(viewData_)) {
-      Trace::Error("SampleEditorView: Failed to chdir for waveform rebuild");
+    const auto *path =
+        getProjectSamplePath(viewData_->sampleEditorFilename, 0);
+    if (!path) {
+      Trace::Error("SampleEditorView: invalid project sample path");
       return;
     }
+    pathToOpen = path->c_str();
   }
 
-  auto file = FileSystem::GetInstance()->Open(
-      viewData_->sampleEditorFilename.c_str(), "r");
+  auto file = FileSystem::GetInstance()->Open(pathToOpen, "r");
   if (!file) {
     Trace::Error("SampleEditorView: Failed to open file for waveform rebuild");
     return;
@@ -966,8 +969,8 @@ bool SampleEditorView::applyNormalizeOperation() {
   }
 
   bool normalized = WavFileWriter::NormalizeFile(
-      pathToNormalize, static_cast<void *>(chunkBuffer_),
-      sizeof(chunkBuffer_), normalizeResult, wavProgressCallback);
+      pathToNormalize, static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
+      normalizeResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(normalized);
   if (!normalized) {
@@ -1029,8 +1032,7 @@ bool SampleEditorView::reloadEditedSample() {
   return true;
 #else
   auto pool = SamplePool::GetInstance();
-  const auto *path =
-      getProjectSamplePath(viewData_->sampleEditorFilename, 0);
+  const auto *path = getProjectSamplePath(viewData_->sampleEditorFilename, 0);
   if (!path) {
     Trace::Error("SampleEditorView: null path from sample editor filename");
     return false;
@@ -1174,8 +1176,8 @@ const FileSystem::PathBuffer *SampleEditorView::getProjectSamplePath(
   viewData_->project_->GetProjectName(projectName);
 
   auto &path = fs->GetPathBuffer(bufferSlot);
-  if (!fs->BuildPath(path,
-                     {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR, filename})) {
+  if (!fs->BuildPath(
+          path, {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR, filename})) {
     Trace::Error("SampleEditorView: path too long for %s", filename.c_str());
     return nullptr;
   }

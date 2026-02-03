@@ -7,5 +7,4 @@ class ViewData;
 
 void DrawLabeledField(GUIWindow &w, GUIPoint position, char *buffer);
 
-
 #endif

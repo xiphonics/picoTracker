@@ -19,11 +19,11 @@
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "BaseClasses/UITextField.h"
-#include "System/FileSystem/FileSystem.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/StringVariable.h"
 #include "GraphField.h"
+#include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"
 
 class SampleEditorView : public FieldView, public I_Observer {
@@ -34,7 +34,7 @@ public:
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
-  virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int) {};
   virtual void OnFocus();
 
   // Observer for action callback
