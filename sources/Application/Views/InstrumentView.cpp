@@ -20,12 +20,12 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
+#include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
 #include <cstdint>
-#include "Externals/etl/include/etl/to_string.h"
 #include <nanoprintf.h>
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
