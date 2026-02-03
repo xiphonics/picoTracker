@@ -19,6 +19,7 @@
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
 #include "BaseClasses/UITextField.h"
+#include "System/FileSystem/FileSystem.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/StringVariable.h"
@@ -66,6 +67,9 @@ private:
   bool applyNormalizeOperation();
   void navigateToView(ViewType vt);
   SampleInstrument *getCurrentSampleInstrument();
+  const FileSystem::PathBuffer *getProjectSamplePath(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename,
+      uint8_t bufferSlot);
   void clearWaveformRegion();
   void rebuildWaveform();
   void updateGraphMarkers();

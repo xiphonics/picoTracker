@@ -826,8 +826,19 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   SampleEditProgressDisplay progressDisplay(filename);
   WavTrimResult trimResult{};
   sampleEditProgressDisplay = &progressDisplay;
+  const char *pathToFileToTrim = filename.c_str();
+  if (viewData_->isShowingSampleEditorProjectPool) {
+    const auto *path = getProjectSamplePath(filename, 0);
+    if (!path) {
+      sampleEditProgressDisplay = nullptr;
+      progressDisplay.Finish(false);
+      return false;
+    }
+    pathToFileToTrim = path->c_str();
+  }
+
   bool trimmed = WavFileWriter::TrimFile(
-      filename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
+      pathToFileToTrim, start_, end_, static_cast<void *>(chunkBuffer_),
       sizeof(chunkBuffer_), trimResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(trimmed);
@@ -861,14 +872,15 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
 #endif
     auto pool = SamplePool::GetInstance();
     if (pool) {
-      if (!goProjectSamplesDir(viewData_)) {
-        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
-      } else {
+      const auto *path =
+          getProjectSamplePath(viewData_->sampleEditorFilename, 0);
+      if (path) {
         uint16_t old_index =
             pool->FindSampleIndexByName(viewData_->sampleEditorFilename);
         if (old_index >= 0) {
-          uint16_t new_index = pool->ReloadSample(
-              old_index, viewData_->sampleEditorFilename.c_str());
+          uint16_t new_index = pool->ReloadSampleFromPath(
+              old_index, viewData_->sampleEditorFilename.c_str(),
+              path->c_str());
           if (new_index >= 0 && old_index != new_index) {
             auto instrumentBank = viewData_->project_->GetInstrumentBank();
             for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
@@ -942,9 +954,20 @@ bool SampleEditorView::applyNormalizeOperation() {
   SampleEditProgressDisplay progressDisplay(filename);
   WavNormalizeResult normalizeResult{};
   sampleEditProgressDisplay = &progressDisplay;
+  const char *pathToNormalize = filename.c_str();
+  if (viewData_->isShowingSampleEditorProjectPool) {
+    const auto *path = getProjectSamplePath(filename, 0);
+    if (!path) {
+      sampleEditProgressDisplay = nullptr;
+      progressDisplay.Finish(false);
+      return false;
+    }
+    pathToNormalize = path->c_str();
+  }
+
   bool normalized = WavFileWriter::NormalizeFile(
-      filename.c_str(), static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
-      normalizeResult, wavProgressCallback);
+      pathToNormalize, static_cast<void *>(chunkBuffer_),
+      sizeof(chunkBuffer_), normalizeResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(normalized);
   if (!normalized) {
@@ -1006,9 +1029,10 @@ bool SampleEditorView::reloadEditedSample() {
   return true;
 #else
   auto pool = SamplePool::GetInstance();
-
-  if (!goProjectSamplesDir(viewData_)) {
-    Trace::Error("SampleEditorView: Failed to chdir for pool reload");
+  const auto *path =
+      getProjectSamplePath(viewData_->sampleEditorFilename, 0);
+  if (!path) {
+    Trace::Error("SampleEditorView: null path from sample editor filename");
     return false;
   }
 
@@ -1020,8 +1044,8 @@ bool SampleEditorView::reloadEditedSample() {
     return false;
   }
 
-  int32_t new_index =
-      pool->ReloadSample(old_index, viewData_->sampleEditorFilename.c_str());
+  int32_t new_index = pool->ReloadSampleFromPath(
+      old_index, viewData_->sampleEditorFilename.c_str(), path->c_str());
   if (new_index < 0) {
     Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
                  viewData_->sampleEditorFilename.c_str());
@@ -1068,19 +1092,25 @@ bool SampleEditorView::saveSample(
     return false;
   }
 
-  if (viewData_->isShowingSampleEditorProjectPool) {
-    if (!goProjectSamplesDir(viewData_)) {
-      Trace::Error("SampleEditorView: Save failed, couldn't chdir to project "
-                   "samples dir!");
-      return false;
-    }
-  }
-
   if (originalFilename != savedFilename) {
-    if (!fs->CopyFile(originalFilename.c_str(), savedFilename.c_str())) {
-      Trace::Error("SampleEditorView: Save failed copying %s -> %s",
-                   originalFilename.c_str(), savedFilename.c_str());
-      return false;
+    if (viewData_->isShowingSampleEditorProjectPool) {
+      const auto *srcPath = getProjectSamplePath(originalFilename, 0);
+      const auto *destPath = getProjectSamplePath(savedFilename, 1);
+      if (!srcPath || !destPath) {
+        Trace::Error("SampleEditorView: Save failed, path too long");
+        return false;
+      }
+      if (!fs->CopyFile(srcPath->c_str(), destPath->c_str())) {
+        Trace::Error("SampleEditorView: Save failed copying %s -> %s",
+                     srcPath->c_str(), destPath->c_str());
+        return false;
+      }
+    } else {
+      if (!fs->CopyFile(originalFilename.c_str(), savedFilename.c_str())) {
+        Trace::Error("SampleEditorView: Save failed copying %s -> %s",
+                     originalFilename.c_str(), savedFilename.c_str());
+        return false;
+      }
     }
   }
 
@@ -1124,6 +1154,32 @@ bool SampleEditorView::loadSampleToPool(
     }
   }
   return true;
+}
+
+const FileSystem::PathBuffer *SampleEditorView::getProjectSamplePath(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename,
+    uint8_t bufferSlot) {
+  if (!viewData_ || !viewData_->project_) {
+    Trace::Error("SampleEditorView: Project context unavailable");
+    return nullptr;
+  }
+
+  auto fs = FileSystem::GetInstance();
+  if (!fs) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return nullptr;
+  }
+
+  char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+  viewData_->project_->GetProjectName(projectName);
+
+  auto &path = fs->GetPathBuffer(bufferSlot);
+  if (!fs->BuildPath(path, PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR,
+                     filename.c_str())) {
+    Trace::Error("SampleEditorView: path too long for %s", filename.c_str());
+    return nullptr;
+  }
+  return &path;
 }
 
 SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
@@ -1209,8 +1265,7 @@ void SampleEditorView::updateSampleParameters() {
 
 int16_t SampleEditorView::chunkBuffer_[512 * 2];
 
-// Load sample from the current projects samples subdir
-// ONLY filename for samples subidr (not full path!!) is supported for now
+// Load sample by name, using project sample path when needed.
 void SampleEditorView::loadSample(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
     bool isProjectSampleFile) {
@@ -1227,29 +1282,28 @@ void SampleEditorView::loadSample(
     return;
   }
 
+  const char *pathToOpen = filename.c_str();
   if (isProjectSampleFile) {
-    // First, navigate to the root projects samples subdir directory
-    if (!goProjectSamplesDir(viewData_)) {
-      Trace::Error("couldn't change to project pool samples dir!");
+    const auto *path = getProjectSamplePath(filename, 0);
+    if (!path) {
+      Trace::Error("SampleEditorView: invalid project sample path");
       return;
     }
-  } else {
-    // do nothing, we rely on the current directory being correctly set for the
-    // sample file we are trying to edit
+    pathToOpen = path->c_str();
   }
 
-  auto file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
+  auto file = FileSystem::GetInstance()->Open(pathToOpen, "r");
   if (!file) {
-    Trace::Error("SampleEditorView: Failed to open file: %s", filename);
+    Trace::Error("SampleEditorView: Failed to open file: %s", pathToOpen);
     return;
   }
-  Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename);
+  Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", pathToOpen);
 
   // --- 1. Read Header & Get Size ---
   auto headerResult = WavHeaderWriter::ReadHeader(file.get());
   if (!headerResult.has_value()) {
     Trace::Error("SampleEditorView: Failed to parse WAV header for %s (err=%d)",
-                 filename, static_cast<int>(headerResult.error()));
+                 pathToOpen, static_cast<int>(headerResult.error()));
     return;
   }
 
@@ -1265,7 +1319,7 @@ void SampleEditorView::loadSample(
   if (numChannels > 2 || numChannels == 0 || bitsPerSample == 0 ||
       dataChunkSize == 0) {
     Trace::Error("SampleEditorView: Invalid or unsupported WAV header in %s",
-                 filename);
+                 pathToOpen);
     return;
   }
   // need to check as its possible for the user to copy an invalid file into the
@@ -1273,7 +1327,7 @@ void SampleEditorView::loadSample(
   if (bitsPerSample != 8 && bitsPerSample != 16) {
     Trace::Error(
         "SampleEditorView: Unsupported bit depth (%u) in WAV header for %s",
-        bitsPerSample, filename);
+        bitsPerSample, pathToOpen);
     return;
   }
 

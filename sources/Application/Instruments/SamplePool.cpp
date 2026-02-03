@@ -399,6 +399,29 @@ int8_t SamplePool::ReloadSample(uint8_t index, const char *name) {
   return -1;
 }
 
+int8_t SamplePool::ReloadSampleFromPath(uint8_t index, const char *displayName,
+                                        const char *fullPath) {
+  if (!displayName || !fullPath) {
+    return -1;
+  }
+
+  if (unloadSample(index)) {
+    if (loadSample(fullPath)) {
+      int8_t loadedIndex = static_cast<int8_t>(count_ - 1);
+      if (loadedIndex >= 0) {
+        size_t nameLength = strlen(displayName);
+        if (nameLength > MAX_INSTRUMENT_FILENAME_LENGTH) {
+          nameLength = MAX_INSTRUMENT_FILENAME_LENGTH;
+        }
+        memcpy(nameStore_[loadedIndex], displayName, nameLength);
+        nameStore_[loadedIndex][nameLength] = '\0';
+      }
+      return loadedIndex;
+    }
+  }
+  return -1;
+}
+
 void SamplePool::swapEntries(int src, int dst) {
   if (src == dst) {
     return;

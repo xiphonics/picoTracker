@@ -10,13 +10,16 @@
 #ifndef _FILESYSTEM_H_
 #define _FILESYSTEM_H_
 
+#include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
 #include "System/FileSystem/FileHandle.h"
+#include <cstring>
 #include <stdint.h>
 
 #define MAX_FILE_INDEX_SIZE 256
 #define PFILENAME_SIZE 256                 // per FAT32 spec for LFNs
+#define FAT_MAX_PATH_SIZE 256              // per FAT32 spec for Paths
 #define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
 enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
@@ -28,6 +31,8 @@ class I_File;
 // platform-specific classes
 class FileSystem : public T_Factory<FileSystem> {
 public:
+  using PathBuffer = etl::string<FAT_MAX_PATH_SIZE>;
+
   FileSystem() {}
   virtual ~FileSystem() {}
 
@@ -36,6 +41,18 @@ public:
   virtual bool read(int index, void *data) {
     return false;
   } // Default implementation
+  // List files in a full path. Default implementation changes cwd to path.
+  virtual bool listPath(etl::ivector<int> *fileIndexes, const char *path,
+                        const char *filter, bool subDirOnly) {
+    if (!path || !*path) {
+      return false;
+    }
+    if (!chdir(path)) {
+      return false;
+    }
+    list(fileIndexes, filter, subDirOnly);
+    return true;
+  }
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
                     bool subDirOnly) = 0;
   virtual void getFileName(int index, char *name, int length) = 0;
@@ -52,6 +69,49 @@ public:
   virtual uint64_t getFileSize(int index) = 0;
   virtual bool CopyFile(const char *src, const char *dest) = 0;
   virtual bool isExFat() = 0;
+
+  // Reusable scratch buffers for building full paths without stack overhead.
+  PathBuffer &GetPathBuffer(uint8_t slot = 0) {
+    slot = slot < kPathBufferCount ? slot : 0;
+    return pathBuffers_[slot];
+  }
+
+  // Build a path from up to 5 segments. Returns false if it would overflow.
+  bool BuildPath(PathBuffer &out, const char *seg0, const char *seg1 = nullptr,
+                 const char *seg2 = nullptr, const char *seg3 = nullptr,
+                 const char *seg4 = nullptr, bool absolute = true) {
+    out.clear();
+    if (absolute) {
+      out = "/";
+    }
+
+    const char *segments[] = {seg0, seg1, seg2, seg3, seg4};
+    for (const char *segment : segments) {
+      if (!segment || !*segment) {
+        continue;
+      }
+      const char *s = segment;
+      while (*s == '/') {
+        ++s;
+      }
+      if (!*s) {
+        continue;
+      }
+      if (!out.empty() && out.back() != '/') {
+        out += '/';
+      }
+      const size_t segLen = strlen(s);
+      if ((out.size() + segLen) > out.capacity()) {
+        return false;
+      }
+      out.append(s, segLen);
+    }
+    return true;
+  }
+
+private:
+  static constexpr uint8_t kPathBufferCount = 2;
+  PathBuffer pathBuffers_[kPathBufferCount];
 };
 
 #endif // _FILESYSTEM_H_
