@@ -1,5 +1,6 @@
 add_library(application_views
   FieldView.cpp
+  GraphField.cpp
   ChainView.cpp
   ConsoleView.cpp
   GrooveView.cpp
