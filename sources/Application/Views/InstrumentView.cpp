@@ -20,6 +20,7 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
+#include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
@@ -31,7 +32,6 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
                                           InstrumentTypeNames, IT_LAST, 0),
       lastSampleIndex_(-1), suppressSampleChangeWarning_(false) {
-
   project_ = data->project_;
 
   GUIPoint position = GUIPoint(5, 1);
@@ -64,6 +64,8 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   fieldList_.insert(fieldList_.end(), &(*persistentActionField_.rbegin()));
   (*persistentActionField_.rbegin()).AddObserver(*this);
   lastFocusID_ = FourCC::ActionExport;
+
+  sliceCountLabel_.clear();
 }
 
 InstrumentView::~InstrumentView() {}
@@ -75,6 +77,27 @@ void InstrumentView::Reset() {
   exportName_.clear();
   lastFocusID_ = FourCC::VarInstrumentType;
   instrumentType_.SetInt(0, false);
+  sliceCountLabel_.clear();
+}
+
+static void updateSliceCountLabel(etl::string<20> &label,
+                                  SampleInstrument *instrument) {
+  int32_t count = 0;
+  if (instrument) {
+    for (size_t i = 0; i < SampleInstrument::MaxSlices; ++i) {
+      if (instrument->IsSliceDefined(i)) {
+        count++;
+      }
+    }
+  }
+  if (count <= 1) {
+    label = "slices: off";
+  } else {
+    label = "slices: ";
+    etl::format_spec format;
+    format.width(2).fill(' ');
+    etl::to_string(count, label, format, true);
+  }
 }
 
 void InstrumentView::addNameTextField(I_Instrument *instr, GUIPoint &position) {
@@ -319,9 +342,21 @@ void InstrumentView::fillSampleParameters() {
 
   Variable *v = instrument->FindVariable(FourCC::SampleInstrumentSample);
   SamplePool *sp = SamplePool::GetInstance();
-  intVarField_.emplace_back(position, *v, "sample: %.19s", 0,
+  intVarField_.emplace_back(position, *v, "sample: %.17s", 0,
                             sp->GetNameListSize() - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
+  updateSliceCountLabel(sliceCountLabel_, instrument);
+  staticField_.emplace_back(position, sliceCountLabel_.c_str());
+  fieldList_.insert(fieldList_.end(), &staticField_.back());
+
+  GUIPoint actionPos = position;
+  actionPos._x = baseX + 12;
+  sampleActionField_.emplace_back("adjust", FourCC::ActionShowSampleSlices,
+                                  actionPos);
+  fieldList_.insert(fieldList_.end(), &sampleActionField_.back());
+  sampleActionField_.back().AddObserver(*this);
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentVolume);
@@ -414,21 +449,15 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
-  sampleActionField_.emplace_back("Slices", FourCC::ActionShowSampleSlices,
-                                  position);
-  fieldList_.insert(fieldList_.end(), &sampleActionField_.back());
-  sampleActionField_.back().AddObserver(*this);
-
-  v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
-  position._y += 1;
-  intVarField_.emplace_back(position, *v, "automation: %s", 0, 1, 1, 1);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-
-  position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentTable);
   intVarOffField_.emplace_back(position, *v, "table: %2.2X", 0x00,
                                TABLE_COUNT - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
+
+  v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
+  position._x += 12;
+  intVarField_.emplace_back(position, *v, "auto: %s", 0, 1, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 };
 
 void InstrumentView::fillSIDParameters() {
@@ -1060,7 +1089,10 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     }
 
     if (!sampleInstr->HasSlicesForWarning()) {
+      sampleInstr->ClearSlices();
       lastSampleIndex_ = newIndex;
+      updateSliceCountLabel(sliceCountLabel_, sampleInstr);
+      isDirty_ = true;
       break;
     }
 
@@ -1074,6 +1106,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (dialog.GetReturnCode() == MBL_YES) {
         sampleInstr->ClearSlices();
         lastSampleIndex_ = newIndex;
+        updateSliceCountLabel(sliceCountLabel_, sampleInstr);
         isDirty_ = true;
       } else {
         suppressSampleChangeWarning_ = true;
