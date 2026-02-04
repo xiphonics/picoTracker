@@ -81,8 +81,7 @@ FileHandle advFileSystem::Open(const char *name, const char *mode) {
 
 FileHandle advFileSystem::openPath(const PathBuffer *path, OpenMode mode) {
   Trace::Log("FILESYSTEM", "openPath:%s, mode:%d",
-             path ? path->c_str() : "(null)",
-             static_cast<int>(mode));
+             path ? path->c_str() : "(null)", static_cast<int>(mode));
   BYTE rmode = 0;
 
   if (!IsAbsolutePath(path)) {
@@ -149,8 +148,8 @@ bool advFileSystem::chdir(const char *name) {
 }
 
 bool advFileSystem::listPath(etl::ivector<int> *fileIndexes,
-                             const PathBuffer *path,
-                             const char *filter, bool subDirOnly) {
+                             const PathBuffer *path, const char *filter,
+                             bool subDirOnly) {
   if (fileIndexes == nullptr || !IsAbsolutePath(path)) {
     Trace::Error("listPath: invalid args");
     return false;
@@ -496,7 +495,6 @@ bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
 
   return res == FR_OK;
 }
-
 
 void advFileSystem::tolowercase(char *temp) {
   // Convert to upper case

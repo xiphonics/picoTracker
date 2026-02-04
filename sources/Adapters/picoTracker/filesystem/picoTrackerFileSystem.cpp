@@ -93,8 +93,7 @@ FileHandle picoTrackerFileSystem::Open(const char *name, const char *mode) {
 FileHandle picoTrackerFileSystem::openPath(const PathBuffer *path,
                                            OpenMode mode) {
   Trace::Log("FILESYSTEM", "openPath:%s, mode:%d",
-             path ? path->c_str() : "(null)",
-             static_cast<int>(mode));
+             path ? path->c_str() : "(null)", static_cast<int>(mode));
   std::lock_guard<Mutex> lock(mutex);
 
   if (!IsAbsolutePath(path)) {
@@ -155,8 +154,7 @@ bool picoTrackerFileSystem::chdir(const char *name) {
 }
 
 bool picoTrackerFileSystem::listPath(etl::ivector<int> *fileIndexes,
-                                     const PathBuffer *path,
-                                     const char *filter,
+                                     const PathBuffer *path, const char *filter,
                                      bool subDirOnly) {
   std::lock_guard<Mutex> lock(mutex);
 

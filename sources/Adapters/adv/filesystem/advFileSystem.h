@@ -47,10 +47,9 @@ private:
 class advFileSystem : public FileSystem {
 public:
   advFileSystem(); // OK
-  virtual ~advFileSystem(){};
+  virtual ~advFileSystem() {};
   virtual FileHandle Open(const char *name, const char *mode) override;
-  virtual FileHandle openPath(const PathBuffer *path,
-                              OpenMode mode) override;
+  virtual FileHandle openPath(const PathBuffer *path, OpenMode mode) override;
   virtual bool chdir(const char *path) override;
   virtual bool listPath(etl::ivector<int> *fileIndexes, const PathBuffer *path,
                         const char *filter, bool subDirOnly) override;
