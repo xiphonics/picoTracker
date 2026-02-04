@@ -42,6 +42,8 @@ public:
   virtual uint32_t GetAvailableSampleStorageSpace() = 0;
   virtual bool unloadSample(uint32_t i) = 0;
   int8_t ReloadSample(uint8_t index, const char *name);
+  int8_t ReloadSampleFromPath(uint8_t index, const char *displayName,
+                              const char *fullPath);
 
 protected:
   virtual bool loadSample(const char *name) = 0;

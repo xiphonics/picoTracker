@@ -16,7 +16,6 @@
 #include "Externals/etl/include/etl/to_string.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/FileSystem/FileSystem.h"
-#include "ViewUtils.h"
 #include <memory>
 #include <nanoprintf.h>
 
@@ -395,10 +394,14 @@ void ImportView::OnFocus() {
   inProjectSampleDir_ = viewData_->isShowingSampleEditorProjectPool;
 
   if (inProjectSampleDir_) {
-    goProjectSamplesDir(viewData_);
-    setCurrentFolder(fs, ".");
+    currentIndex_ = 0;
+    topIndex_ = 0;
+    refreshFileIndexList(fs);
   } else {
-    setCurrentFolder(fs, viewData_->importViewStartDir);
+    const char *startDir = viewData_->importViewStartDir
+                               ? viewData_->importViewStartDir
+                               : SAMPLES_LIB_DIR;
+    setCurrentFolder(fs, startDir);
   }
 };
 
@@ -746,7 +749,27 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {
-  fs->list(&fileIndexList_, ".wav", false);
+  if (inProjectSampleDir_) {
+    char projectName[MAX_PROJECT_NAME_LENGTH + 1];
+    viewData_->project_->GetProjectName(projectName);
+
+    auto &path = fs->GetPathBuffer(0);
+    if (!fs->BuildPath(path, {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR})) {
+      Trace::Error("ImportView: project samples path too long for %s",
+                   projectName);
+      fileIndexList_.clear();
+      return;
+    }
+
+    if (!fs->listPath(&fileIndexList_, &path, ".wav", false)) {
+      Trace::Error("ImportView: failed to list project samples in %s",
+                   path.c_str());
+      fileIndexList_.clear();
+      return;
+    }
+  } else {
+    fs->list(&fileIndexList_, ".wav", false);
+  }
 
   if (fs->isCurrentRoot() || inProjectSampleDir_) {
     for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {

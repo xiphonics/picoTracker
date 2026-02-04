@@ -23,6 +23,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/Variables/StringVariable.h"
 #include "GraphField.h"
+#include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"
 
 class SampleEditorView : public FieldView, public I_Observer {
@@ -66,6 +67,9 @@ private:
   bool applyNormalizeOperation();
   void navigateToView(ViewType vt);
   SampleInstrument *getCurrentSampleInstrument();
+  const FileSystem::PathBuffer *getProjectSamplePath(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename,
+      uint8_t bufferSlot);
   void clearWaveformRegion();
   void rebuildWaveform();
   void updateGraphMarkers();
