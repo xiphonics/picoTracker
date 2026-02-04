@@ -113,14 +113,19 @@ private:
   fixed speed_;
 };
 
-/*class Vibrato: public I_SRPUpdater {
+class Vibrato : public I_SRPUpdater {
 public:
-        Vibrato() {} ;
-        virtual ~Vibrato() {} ;
-        void SetData() ;
-        virtual void Trigger(bool tableTick) ;
-        virtual void UpdateSRP(struct RUParams &rup) ;
+  Vibrato(){};
+  virtual ~Vibrato(){};
+  void SetData(uint8_t rate, uint8_t depth);
+  virtual void Trigger(bool tableTick);
+  virtual void UpdateSRP(struct RUParams &rup);
+
 private:
-} ;
-*/
+  fixed current_;
+  uint8_t depth_;
+  uint16_t phase_;
+  uint16_t rate_;
+};
+
 #endif

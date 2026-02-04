@@ -42,10 +42,10 @@ struct FourCC {
     InstrumentCommandTable = 58,               // TABL
     InstrumentCommandTempo = 62,               // TMPO
     InstrumentCommandVelocity = 66,            // VELM
-    InstrumentCommandVolume = 73,              // VOLM
+    InstrumentCommandVolume = 69,              // VOLM
     InstrumentCommandNone = 45,                // ----
     InstrumentCommandMidiChord = 143,
-    InstrumentCommandVibrato = 69,             
+    InstrumentCommandVibrato = 73,
 
     SampleInstrumentCrushVolume = 3,
     SampleInstrumentVolume = 19,

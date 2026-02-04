@@ -111,6 +111,10 @@ static char **getHelpLegend(FourCC command) {
     result[0] = (char *)("MIDI Chord:abcd");
     result[1] = (char *)("send rel notes:+a,+b,+c,+d");
     break;
+  case FourCC::InstrumentCommandVibrato:
+    result[0] = (char *)("VIBrato:aabb");
+    result[1] = (char *)("rate aa, depth bb");
+    break;
   default:
     result[0] = result[1] = (char *)("");
     break;

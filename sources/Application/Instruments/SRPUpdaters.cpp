@@ -8,8 +8,10 @@
  */
 
 #include "SRPUpdaters.h"
+#include "Foundation/Constants/SineTable.h"
 #include "System/Console/Trace.h"
 #include <math.h>
+
 //
 // Volume Ramp
 //
@@ -298,3 +300,34 @@ void Arp::UpdateSRP(struct RUParams &rup) {
     return;
   rup.speedOffset_ = fp_mul(rup.speedOffset_, current_);
 };
+
+//
+// Vibrato
+//
+
+void Vibrato::SetData(uint8_t rate, uint8_t depth) {
+  // lower 8 bits: depth, upper 8 bits: speed
+  depth_ = depth;
+  rate_ = 1 + (rate << 4);
+
+  // reset output and phase
+  phase_ = 0;
+  current_ = FP_ONE;
+};
+
+void Vibrato::Trigger(bool tableTick) {
+  if (!enabled_)
+    return;
+
+  // step the lfo phase
+  phase_ += rate_;
+  // sine is i16, depth u8 -> 23 bit value, shifted down by 10 bits gives a
+  // range of 13 bits (~±0.26 -> four semitones)
+  current_ = FP_ONE + ((sine_i16_interpolated_64(phase_) * depth_) >> 10);
+};
+
+void Vibrato::UpdateSRP(struct RUParams &rup) {
+  if (!enabled_)
+    return;
+  rup.speedOffset_ = fp_mul(rup.speedOffset_, current_);
+}
