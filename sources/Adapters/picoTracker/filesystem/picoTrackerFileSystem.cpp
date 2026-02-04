@@ -101,6 +101,59 @@ bool picoTrackerFileSystem::chdir(const char *name) {
   return res;
 }
 
+bool picoTrackerFileSystem::listPath(etl::ivector<int> *fileIndexes,
+                                     const char *path, const char *filter,
+                                     bool subDirOnly) {
+  std::lock_guard<Mutex> lock(mutex);
+
+  if (fileIndexes == nullptr || path == nullptr) {
+    Trace::Error("listPath: invalid args");
+    return false;
+  }
+
+  fileIndexes->clear();
+  const char *safeFilter = filter ? filter : "";
+
+  FsBaseFile dir;
+  if (!dir.open(path, O_RDONLY)) {
+    Trace::Error("listPath: failed to open dir: %s", path);
+    return false;
+  }
+  if (!dir.isDir()) {
+    Trace::Error("listPath: path is not a directory: %s", path);
+    dir.close();
+    return false;
+  }
+
+  char buffer[PFILENAME_SIZE];
+  FsBaseFile entry;
+  uint16_t count = 0;
+  while (entry.openNext(&dir, O_READ) && (count < fileIndexes->capacity())) {
+    uint32_t index = entry.dirIndex();
+    entry.getName(buffer, PFILENAME_SIZE);
+
+    bool matchesFilter = true;
+    if (strlen(safeFilter) > 0) {
+      tolowercase(buffer);
+      matchesFilter = (strstr(buffer, safeFilter) != nullptr);
+    }
+    if ((entry.isDirectory() && entry.dirIndex() != 0) ||
+        (!entry.isHidden() && matchesFilter)) {
+      if (subDirOnly) {
+        if (entry.isDirectory()) {
+          fileIndexes->push_back(index);
+        }
+      } else {
+        fileIndexes->push_back(index);
+      }
+      count++;
+    }
+    entry.close();
+  }
+  dir.close();
+  return true;
+}
+
 PicoFileType picoTrackerFileSystem::getFileType(int index) {
   std::lock_guard<Mutex> lock(mutex);
 
@@ -124,6 +177,7 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
+  const char *safeFilter = filter ? filter : "";
 
   File cwd;
   if (!cwd.openCwd()) {
@@ -150,9 +204,9 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     entry.getName(buffer, PFILENAME_SIZE);
 
     bool matchesFilter = true;
-    if (strlen(filter) > 0) {
+    if (strlen(safeFilter) > 0) {
       tolowercase(buffer);
-      matchesFilter = (strstr(buffer, filter) != nullptr);
+      matchesFilter = (strstr(buffer, safeFilter) != nullptr);
       // Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]", buffer, filter,
       //            matchesFilter);
     }

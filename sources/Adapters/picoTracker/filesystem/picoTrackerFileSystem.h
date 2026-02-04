@@ -30,6 +30,8 @@ public:
   // FileSystem interface implementation
   virtual FileHandle Open(const char *name, const char *mode) override;
   virtual bool chdir(const char *path) override;
+  virtual bool listPath(etl::ivector<int> *fileIndexes, const char *path,
+                        const char *filter, bool subDirOnly) override;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
                     bool subDirOnly) override;
   virtual void getFileName(int index, char *name, int length) override;

@@ -97,6 +97,43 @@ bool advFileSystem::chdir(const char *name) {
   return (res == FR_OK);
 }
 
+bool advFileSystem::listPath(etl::ivector<int> *fileIndexes, const char *path,
+                             const char *filter, bool subDirOnly) {
+  if (fileIndexes == nullptr || path == nullptr) {
+    Trace::Error("listPath: invalid args");
+    return false;
+  }
+
+  Trace::Log("FILESYSTEM", "Rebuilding cache for %s", path);
+  file_cache_.clear();
+
+  DIR dir;
+  FRESULT res = f_opendir(&dir, path);
+  if (res == FR_OK) {
+    for (;;) {
+      FILINFO fno;
+      res = f_readdir(&dir, &fno);
+      if (res != FR_OK || fno.fname[0] == 0) {
+        break;
+      }
+      if (!file_cache_.full()) {
+        file_cache_.push_back(fno);
+      } else {
+        Trace::Error("file cache is full");
+        break;
+      }
+    }
+    f_closedir(&dir);
+  } else {
+    Trace::Error("listPath: failed to open dir %s", path);
+    return false;
+  }
+  Trace::Log("FILESYSTEM", "Cache rebuilt, %d entries", file_cache_.size());
+
+  list(fileIndexes, filter, subDirOnly);
+  return true;
+}
+
 PicoFileType advFileSystem::getFileType(int index) {
   // special case for parent dir marker
   if (index == PARENT_DIR_MARKER_INDEX) {
@@ -114,6 +151,7 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
                          bool subDirOnly) {
 
   fileIndexes->clear();
+  const char *safeFilter = filter ? filter : "";
 
   // HACK: there is an assumption that ".." will be present, so add index
   // for it
@@ -141,9 +179,9 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     const FILINFO &fno = file_cache_[i];
 
     bool matchesFilter = true;
-    if (strlen(filter) > 0) {
+    if (strlen(safeFilter) > 0) {
       tolowercase((char *)fno.fname);
-      matchesFilter = (strstr(fno.fname, filter) != nullptr);
+      matchesFilter = (strstr(fno.fname, safeFilter) != nullptr);
       Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", fno.fname, filter,
                  matchesFilter);
     }
