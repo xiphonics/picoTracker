@@ -536,8 +536,7 @@ void SampleEditorView::rebuildWaveform() {
   const char *pathToOpen = viewData_->sampleEditorFilename.c_str();
   FileHandle file;
   if (viewData_->isShowingSampleEditorProjectPool) {
-    const auto *path =
-        getProjectSamplePath(viewData_->sampleEditorFilename, 0);
+    const auto *path = getProjectSamplePath(viewData_->sampleEditorFilename, 0);
     if (!path) {
       Trace::Error("SampleEditorView: invalid project sample path");
       return;
@@ -976,8 +975,8 @@ bool SampleEditorView::applyNormalizeOperation() {
   }
 
   bool normalized = WavFileWriter::NormalizeFile(
-      pathToNormalize, static_cast<void *>(chunkBuffer_),
-      sizeof(chunkBuffer_), normalizeResult, wavProgressCallback);
+      pathToNormalize, static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
+      normalizeResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(normalized);
   if (!normalized) {
@@ -1039,8 +1038,7 @@ bool SampleEditorView::reloadEditedSample() {
   return true;
 #else
   auto pool = SamplePool::GetInstance();
-  const auto *path =
-      getProjectSamplePath(viewData_->sampleEditorFilename, 0);
+  const auto *path = getProjectSamplePath(viewData_->sampleEditorFilename, 0);
   if (!path) {
     Trace::Error("SampleEditorView: null path from sample editor filename");
     return false;

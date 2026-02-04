@@ -384,7 +384,7 @@ void ImportView::DrawView() {
   SetColor(CD_NORMAL);
 };
 
-void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){};
+void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {};
 
 void ImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
@@ -754,7 +754,8 @@ void ImportView::refreshFileIndexList(FileSystem *fs) {
     viewData_->project_->GetProjectName(projectName);
 
     auto &path = fs->GetPathBuffer(0);
-    if (!fs->BuildPath(path, {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR})) {
+    if (!fs->BuildPath(path,
+                       {PROJECTS_DIR, projectName, PROJECT_SAMPLES_DIR})) {
       Trace::Error("ImportView: project samples path too long for %s",
                    projectName);
       fileIndexList_.clear();
