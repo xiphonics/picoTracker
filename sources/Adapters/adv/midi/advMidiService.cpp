@@ -7,7 +7,6 @@
  */
 
 #include "advMidiService.h"
-#include "Application/Model/Config.h"
 #include "advMidiInDevice.h"
 #include "advMidiOutDevice.h"
 #include "advUSBMidiOutDevice.h"
@@ -26,42 +25,6 @@ advMidiService::advMidiService()
 };
 
 advMidiService::~advMidiService(){};
-
-void advMidiService::OnPlayerStart() {
-  // TODO (democloid): this is a hack. We need to understand the order of
-  // operations of MIDI messages and why the transport messages get lost,
-  // presumably due to Services/Midi/MidiService.cpp::AdvancePlayQueue clearing
-  // it before it's send out
-  MidiService::OnPlayerStart();
-
-  Config *config = Config::GetInstance();
-  const bool midiSyncEnabled =
-      config ? (config->GetValue("MIDISYNC") > 0) : false;
-  if (!midiSyncEnabled) {
-    return;
-  }
-
-  MidiMessage msg;
-  msg.status_ = MidiMessage::MIDI_START;
-  midiOutDevice_.SendImmediate(msg);
-  usbMidiOutDevice_.SendImmediate(msg);
-}
-
-void advMidiService::OnPlayerStop() {
-  MidiService::OnPlayerStop();
-
-  Config *config = Config::GetInstance();
-  const bool midiSyncEnabled =
-      config ? (config->GetValue("MIDISYNC") > 0) : false;
-  if (!midiSyncEnabled) {
-    return;
-  }
-
-  MidiMessage msg;
-  msg.status_ = MidiMessage::MIDI_STOP;
-  midiOutDevice_.SendImmediate(msg);
-  usbMidiOutDevice_.SendImmediate(msg);
-}
 
 void advMidiService::poll() {
   // Poll all MIDI input devices
