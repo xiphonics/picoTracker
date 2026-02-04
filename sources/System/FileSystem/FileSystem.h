@@ -36,16 +36,24 @@ class I_File;
 class FileSystem : public T_Factory<FileSystem> {
 public:
   using PathBuffer = etl::string<FS_MAX_PATH_SIZE>;
+  enum class OpenMode {
+    Read,
+    Write,
+    ReadWrite,
+    ReadWriteCreate,
+    WriteCreateTruncate
+  };
 
   FileSystem() {}
   virtual ~FileSystem() {}
 
   virtual FileHandle Open(const char *name, const char *mode) = 0;
+  virtual FileHandle openPath(const PathBuffer *path, OpenMode mode) = 0;
   virtual bool chdir(const char *path) = 0;
   virtual bool read(int index, void *data) { return false; }
 
   // List files in a full path
-  virtual bool listPath(etl::ivector<int> *fileIndexes, const char *path,
+  virtual bool listPath(etl::ivector<int> *fileIndexes, const PathBuffer *path,
                         const char *filter, bool subDirOnly) = 0;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
                     bool subDirOnly) = 0;

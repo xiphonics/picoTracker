@@ -19,6 +19,10 @@ char SDPath[4];
 
 static etl::pool<PI_File, FF_FS_LOCK> filePool;
 
+static bool IsAbsolutePath(const FileSystem::PathBuffer *path) {
+  return path != nullptr && !path->empty() && (*path)[0] == '/';
+}
+
 advFileSystem::advFileSystem() : batching_(false) {
 
   // Link FatFs driver
@@ -72,7 +76,54 @@ FileHandle advFileSystem::Open(const char *name, const char *mode) {
                  static_cast<int>(FF_FS_LOCK));
     return FileHandle();
   }
-  return MakeFileHandle(wFile);
+  return FileHandle(wFile);
+}
+
+FileHandle advFileSystem::openPath(const PathBuffer *path, OpenMode mode) {
+  Trace::Log("FILESYSTEM", "openPath:%s, mode:%d",
+             path ? path->c_str() : "(null)",
+             static_cast<int>(mode));
+  BYTE rmode = 0;
+
+  if (!IsAbsolutePath(path)) {
+    Trace::Error("OpenPath: invalid args");
+    return FileHandle();
+  }
+
+  switch (mode) {
+  case OpenMode::Read:
+    rmode = FA_READ;
+    break;
+  case OpenMode::Write:
+    rmode = FA_WRITE;
+    break;
+  case OpenMode::ReadWrite:
+    rmode = FA_READ | FA_WRITE;
+    break;
+  case OpenMode::ReadWriteCreate:
+    rmode = FA_READ | FA_WRITE | FA_OPEN_ALWAYS;
+    break;
+  case OpenMode::WriteCreateTruncate:
+    rmode = FA_CREATE_ALWAYS | FA_WRITE;
+    break;
+  default:
+    Trace::Error("Invalid OpenMode: %d", static_cast<int>(mode));
+    return FileHandle();
+  }
+
+  FIL file;
+  FRESULT res = f_open(&file, path->c_str(), rmode);
+  if (res != FR_OK) {
+    Trace::Error("FILESYSTEM: Cannot open file:%s", path->c_str());
+    return FileHandle();
+  }
+  PI_File *wFile = filePool.create(file);
+  if (wFile == nullptr) {
+    Trace::Error("FILESYSTEM: No file slots available (max %d)",
+                 static_cast<int>(FF_FS_LOCK));
+    return FileHandle();
+  }
+  return FileHandle(wFile);
 }
 
 bool advFileSystem::chdir(const char *name) {
@@ -97,18 +148,19 @@ bool advFileSystem::chdir(const char *name) {
   return (res == FR_OK);
 }
 
-bool advFileSystem::listPath(etl::ivector<int> *fileIndexes, const char *path,
+bool advFileSystem::listPath(etl::ivector<int> *fileIndexes,
+                             const PathBuffer *path,
                              const char *filter, bool subDirOnly) {
-  if (fileIndexes == nullptr || path == nullptr) {
+  if (fileIndexes == nullptr || !IsAbsolutePath(path)) {
     Trace::Error("listPath: invalid args");
     return false;
   }
 
-  Trace::Log("FILESYSTEM", "Rebuilding cache for %s", path);
+  Trace::Log("FILESYSTEM", "Rebuilding cache for %s", path->c_str());
   file_cache_.clear();
 
   DIR dir;
-  FRESULT res = f_opendir(&dir, path);
+  FRESULT res = f_opendir(&dir, path->c_str());
   if (res == FR_OK) {
     for (;;) {
       FILINFO fno;
@@ -125,7 +177,7 @@ bool advFileSystem::listPath(etl::ivector<int> *fileIndexes, const char *path,
     }
     f_closedir(&dir);
   } else {
-    Trace::Error("listPath: failed to open dir %s", path);
+    Trace::Error("listPath: failed to open dir %s", path->c_str());
     return false;
   }
   Trace::Log("FILESYSTEM", "Cache rebuilt, %d entries", file_cache_.size());
@@ -444,6 +496,7 @@ bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
 
   return res == FR_OK;
 }
+
 
 void advFileSystem::tolowercase(char *temp) {
   // Convert to upper case

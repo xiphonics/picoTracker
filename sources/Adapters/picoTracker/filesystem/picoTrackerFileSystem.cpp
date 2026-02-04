@@ -18,6 +18,10 @@ constexpr uint32_t MAX_OPEN_FILES = 10;
 
 static etl::pool<picoTrackerFile, MAX_OPEN_FILES> filePool;
 
+static bool IsAbsolutePath(const FileSystem::PathBuffer *path) {
+  return path != nullptr && !path->empty() && (*path)[0] == '/';
+}
+
 picoTrackerFileSystem::picoTrackerFileSystem() {
   // init out access mutex
   std::lock_guard<Mutex> lock(mutex);
@@ -83,7 +87,56 @@ FileHandle picoTrackerFileSystem::Open(const char *name, const char *mode) {
                  static_cast<int>(MAX_OPEN_FILES));
     return FileHandle();
   }
-  return MakeFileHandle(wFile);
+  return FileHandle(wFile);
+}
+
+FileHandle picoTrackerFileSystem::openPath(const PathBuffer *path,
+                                           OpenMode mode) {
+  Trace::Log("FILESYSTEM", "openPath:%s, mode:%d",
+             path ? path->c_str() : "(null)",
+             static_cast<int>(mode));
+  std::lock_guard<Mutex> lock(mutex);
+
+  if (!IsAbsolutePath(path)) {
+    Trace::Error("OpenPath: invalid args");
+    return FileHandle();
+  }
+
+  oflag_t rmode = 0;
+  switch (mode) {
+  case OpenMode::Read:
+    rmode = O_RDONLY;
+    break;
+  case OpenMode::Write:
+    rmode = O_WRONLY;
+    break;
+  case OpenMode::ReadWrite:
+    rmode = O_RDWR;
+    break;
+  case OpenMode::ReadWriteCreate:
+    rmode = O_RDWR | O_CREAT;
+    break;
+  case OpenMode::WriteCreateTruncate:
+    rmode = O_WRONLY | O_CREAT | O_TRUNC;
+    break;
+  default:
+    Trace::Error("Invalid OpenMode: %d", static_cast<int>(mode));
+    return FileHandle();
+  }
+
+  FsBaseFile file;
+  if (!file.open(path->c_str(), rmode)) {
+    Trace::Error("FILESYSTEM: Cannot open file:%s", path->c_str());
+    return FileHandle();
+  }
+
+  I_File *wFile = filePool.create(file);
+  if (wFile == nullptr) {
+    Trace::Error("FILESYSTEM: No file slots available (max %d)",
+                 static_cast<int>(MAX_OPEN_FILES));
+    return FileHandle();
+  }
+  return FileHandle(wFile);
 }
 
 bool picoTrackerFileSystem::chdir(const char *name) {
@@ -102,11 +155,12 @@ bool picoTrackerFileSystem::chdir(const char *name) {
 }
 
 bool picoTrackerFileSystem::listPath(etl::ivector<int> *fileIndexes,
-                                     const char *path, const char *filter,
+                                     const PathBuffer *path,
+                                     const char *filter,
                                      bool subDirOnly) {
   std::lock_guard<Mutex> lock(mutex);
 
-  if (fileIndexes == nullptr || path == nullptr) {
+  if (fileIndexes == nullptr || !IsAbsolutePath(path)) {
     Trace::Error("listPath: invalid args");
     return false;
   }
@@ -115,12 +169,12 @@ bool picoTrackerFileSystem::listPath(etl::ivector<int> *fileIndexes,
   const char *safeFilter = filter ? filter : "";
 
   FsBaseFile dir;
-  if (!dir.open(path, O_RDONLY)) {
-    Trace::Error("listPath: failed to open dir: %s", path);
+  if (!dir.open(path->c_str(), O_RDONLY)) {
+    Trace::Error("listPath: failed to open dir: %s", path->c_str());
     return false;
   }
   if (!dir.isDir()) {
-    Trace::Error("listPath: path is not a directory: %s", path);
+    Trace::Error("listPath: path is not a directory: %s", path->c_str());
     dir.close();
     return false;
   }

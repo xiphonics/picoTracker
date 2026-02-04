@@ -21,7 +21,9 @@ struct FileCloser {
   }
 };
 
-// A unique, non-copyable handle for files that does not expose `release()`.
+// A unique, non-copyable handle that owns an `I_File*` allocated from a pool
+// and returns it via `Dispose()` when the handle dies. This keeps ownership
+// explicit and avoids manual Close/Dispose at call sites.
 class FileHandle {
 public:
   FileHandle() = default;
