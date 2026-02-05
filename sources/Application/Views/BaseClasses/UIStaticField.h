@@ -15,7 +15,7 @@
 class UIStaticField : public UIField {
 
 public:
-  UIStaticField(GUIPoint &position, const char *string);
+  UIStaticField(const GUIPoint &position, const char *string);
   virtual ~UIStaticField(){};
   virtual void Draw(GUIWindow &w, int offset = 0);
   virtual void ProcessArrow(unsigned short mask);

@@ -13,7 +13,7 @@
 #include <System/Console/nanoprintf.h>
 #include <string.h>
 
-UIIntVarOffField::UIIntVarOffField(GUIPoint &position, Variable &v,
+UIIntVarOffField::UIIntVarOffField(const GUIPoint &position, Variable &v,
                                    const char *format, int min, int max,
                                    int xOffset, int yOffset)
     : UIIntVarField(position, v, format, min, max, xOffset, yOffset) {}
