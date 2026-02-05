@@ -89,9 +89,10 @@ public:
   void SetRender(bool render) { render_ = render; };
 
   // returns just the chip name, eg "SID #1"
-  etl::string<6> GetChipName() { return "SID #1"; };
+  const char *GetChipName() { return chipName_; };
 
 private:
+  char chipName_[7] = "SID #1";
   etl::list<Variable *, 19> variables_;
 
   SIDInstrumentInstance chip_; // SID1 or SID2

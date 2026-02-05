@@ -469,10 +469,10 @@ void InstrumentView::fillSIDParameters() {
   // offset y to account for instrument type, name and export/import fields
   position._y += 1;
 
-  staticField_.emplace_back(position, instrument->GetChipName().c_str());
+  staticField_.emplace_back(position, instrument->GetChipName());
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
-  position._y += 1;
+  position._y += 2;
   staticField_.emplace_back(position, "Oscillator Settings" char_line_5_s);
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
@@ -483,7 +483,7 @@ void InstrumentView::fillSIDParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SIDInstrumentPulseWidth);
-  intVarField_.emplace_back(position, *v, "  Pulsewidth:   %2.2X", 0, 0xFFF, 1,
+  intVarField_.emplace_back(position, *v, "  Pulsewidth:  %2.2X", 0, 0xFFF, 1,
                             0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -981,9 +981,9 @@ void InstrumentView::DrawView() {
     InstrumentType type = instr->GetType();
     if (type == IT_SID || type == IT_OPAL) {
       SetColor(CD_WARN);
-      DrawString(18, 1, char_button_left_s, props);
+      DrawString(18, 1, char_button_border_left_s, props);
       DrawString(19, 1, "EXPERIMENTAL", GUITextProperties(true));
-      DrawString(31, 1, char_button_right_s, props);
+      DrawString(31, 1, char_button_border_right_s, props);
       SetColor(CD_NORMAL);
     }
   }
