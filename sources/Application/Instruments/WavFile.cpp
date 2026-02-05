@@ -9,6 +9,7 @@
 
 #include "WavFile.h"
 #include "Application/Model/Config.h"
+#include "Application/Model/Song.h"
 #include "Foundation/Types/Types.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
@@ -393,4 +394,4 @@ void WavFile::Close() {
   readBufferSize_ = 0;
 }
 
-int WavFile::GetRootNote(int note) { return 60; }
+int WavFile::GetRootNote(int note) { return NOTE_C3; }

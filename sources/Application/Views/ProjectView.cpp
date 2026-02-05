@@ -25,25 +25,14 @@
 #include "System/System/System.h"
 #include <nanoprintf.h>
 
-static void LoadCallback(View &v, ModalView &dialog) {
-  if (dialog.GetReturnCode() == MBL_YES) {
-    ViewType vt = VT_SELECTPROJECT;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
-    ((ProjectView &)v).SetChanged();
-    ((ProjectView &)v).NotifyObservers(&ve);
-  }
-};
-
 static void CreateNewProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    PersistencyService::GetInstance()->SaveProjectState(UNNAMED_PROJECT_NAME);
-
     // first clear out any existing "unnamed" project
     PersistencyService::GetInstance()->PurgeUnnamedProject();
 
-    // now reboot!
-    System *sys = System::GetInstance();
-    sys->SystemReboot();
+    ViewEvent ve(VET_NEW_PROJECT);
+    ((ProjectView &)v).SetChanged();
+    ((ProjectView &)v).NotifyObservers(&ve);
   }
 };
 
@@ -55,8 +44,7 @@ static void BootselCallback(View &v, ModalView &dialog) {
 };
 
 static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
-  bool cancelOverwrite = dialog.GetReturnCode() == MBL_CANCEL;
-  if (cancelOverwrite) {
+  if (dialog.GetReturnCode() == MBL_CANCEL) {
     return;
   }
 
@@ -186,11 +174,11 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), nameField_);
 
   position._y += 1;
-  actionField_.emplace_back("Load", FourCC::ActionLoad, position);
+  actionField_.emplace_back("Browse", FourCC::ActionBrowse, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
-  position._x += 5;
+  position._x += 7;
   actionField_.emplace_back("Save", FourCC::ActionSave, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -200,7 +188,7 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
-  position._x += 5;
+  position._x += 4;
   actionField_.emplace_back("Random", FourCC::ActionRandomName, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -246,10 +234,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
   } else if (mask & EPBM_NAV) {
     if (mask & EPBM_DOWN || mask & EPBM_UP) {
-      if (saveAsFlag_) {
-        MessageBox *mb =
-            MessageBox::Create(*this, "Save project rename first", MBBF_OK);
-        DoModal(mb);
+      if (!CanExit()) {
         return;
       }
     }
@@ -271,6 +256,13 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
     player->OnStartButton(PM_SONG, viewData_->songX_, false, viewData_->songX_);
   }
 };
+
+void ProjectView::Reset() {
+  lastClock_ = 0;
+  lastTick_ = 0;
+  saveAsFlag_ = false;
+  oldProjName_ = getProjectName();
+}
 
 void ProjectView::DrawView() {
 
@@ -377,20 +369,19 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
                nameField_->GetString().c_str());
     saveAsFlag_ = true;
     break;
-  case FourCC::ActionLoad: {
-    if (!player->IsRunning()) {
-      MessageBox *mb = MessageBox::Create(*this, "Load song and lose changes?",
-                                          MBBF_YES | MBBF_NO);
-      DoModal(mb, ModalViewCallback::create<&LoadCallback>());
-    } else {
-      MessageBox *mb = MessageBox::Create(*this, "Not while playing", MBBF_OK);
-      DoModal(mb);
+  case FourCC::ActionBrowse: {
+    if (CanExit()) {
+      ViewType vt = VT_SELECTPROJECT;
+      ViewEvent ve(VET_SWITCH_VIEW, &vt);
+      SetChanged();
+      NotifyObservers(&ve);
     }
     break;
   }
   case FourCC::ActionNewProject: {
-    MessageBox *mb = MessageBox::Create(*this, "New project and lose changes?",
-                                        MBBF_YES | MBBF_NO);
+    MessageBox *mb =
+        MessageBox::Create(*this, "Create a new project and",
+                           "lose all changes?", MBBF_YES | MBBF_NO);
     DoModal(mb, ModalViewCallback::create<&CreateNewProjectCallback>());
     break;
   }
@@ -482,3 +473,13 @@ void ProjectView::OnFocus() {
     oldProjName_ = getProjectName();
   }
 }
+
+bool ProjectView::CanExit() {
+  if (saveAsFlag_) {
+    MessageBox *mb =
+        MessageBox::Create(*this, "Save project rename first", MBBF_OK);
+    DoModal(mb);
+    return false;
+  }
+  return true;
+};

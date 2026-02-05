@@ -19,8 +19,13 @@
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #define PROP_INVERT 0x80
+#ifdef ADV
+#define CHAR_WIDTH 22
+#define CHAR_HEIGHT 30
+#else
 #define CHAR_WIDTH 10
 #define CHAR_HEIGHT 10
+#endif
 #define SCREEN_WIDTH 32
 #define SCREEN_HEIGHT 24
 #define SCREEN_MAP_HEIGHT 4
@@ -30,35 +35,12 @@
 #define MAX_FIELD_WIDTH 26
 #define SCREEN_REDRAW_RATE PICO_CLOCK_HZ
 
-// need this forward declaration to break out of circular dependency as
-// ProjectView uses a UITextfield which in turn had dependency on AppWindow
-// and UITextField is templated which means its class/method definitions need to
-// be in its header file  :-(
-class ProjectView;
-class ChainView;
-class ConsoleView;
-class DeviceView;
-class GrooveView;
-class ImportView;
-class InstrumentImportView;
-class InstrumentView;
-class NullView;
-class PhraseView;
-class SelectProjectView;
-class SongView;
-class TableView;
-class ScreenView;
-class MixerView;
-class ThemeView;
-class ThemeImportView;
-class SampleEditorView;
-class SampleSlicesView;
-class RecordView;
 class View;
+struct AppWindowViews;
 
 class AppWindow : public GUIWindow, I_Observer, Status {
 protected:
-  AppWindow(I_GUIWindowImp &imp);
+  AppWindow(I_GUIWindowImp &imp, const char *projectName);
   virtual ~AppWindow();
 
 public:
@@ -109,28 +91,12 @@ protected: // GUIWindow implementation
   void onQuitApp();
 
 private:
-  bool autoSave();
+  bool AutoSave();
 
+  Project project_;
+  ViewData viewData_;
+  AppWindowViews *views_;
   View *_currentView;
-  ViewData *_viewData;
-  SongView *_songView;
-  ChainView *_chainView;
-  PhraseView *_phraseView;
-  DeviceView *_deviceView;
-  ProjectView *_projectView;
-  InstrumentView *_instrumentView;
-  TableView *_tableView;
-  GrooveView *_grooveView;
-  ImportView *_importView;
-  InstrumentImportView *_instrumentImportView;
-  ThemeView *_themeView;
-  ThemeImportView *_themeImportView;
-  MixerView *_mixerView;
-  SelectProjectView *_selectProjectView;
-  SampleEditorView *_sampleEditorView;
-  SampleSlicesView *_sampleSlicesView;
-  RecordView *_recordView;
-  NullView *_nullView;
 
   bool _closeProject;
   bool _shouldQuit;
@@ -174,6 +140,8 @@ private:
 
   bool loadProject_ = false;
   bool awaitingProjectLoadAck_ = false;
+  bool createProjectOnLoad_ = false;
+  bool playerInitialized_ = false;
 
   uint32_t lastAutoSave = 0;
 

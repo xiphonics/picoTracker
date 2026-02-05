@@ -238,6 +238,11 @@ public:
   static int margin_;
   static int songRowCount_;
   static BatteryState batteryState_;
+
+private:
+  static BatteryState latestBatteryState_;
+  static uint32_t lastBatteryDisplayFrame_;
+  static bool batteryDisplayInitialized_;
 };
 
 #endif

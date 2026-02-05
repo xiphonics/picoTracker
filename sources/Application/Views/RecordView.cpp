@@ -58,6 +58,12 @@ RecordView::RecordView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
 RecordView::~RecordView() {}
 
+void RecordView::Reset() {
+  isRecording_ = false;
+  recordingStartTime_ = 0;
+  recordingDuration_ = 0;
+}
+
 // Static method to set the source view type before opening SampleEditorView
 void RecordView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 

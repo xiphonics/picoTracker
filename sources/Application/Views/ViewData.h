@@ -20,6 +20,7 @@ class ViewData {
 public:
   ViewData(Project *project);
   ~ViewData();
+  void Load(Project *project);
 
   unsigned char UpdateSongChain(int offset);
   void UpdateSongOffset(int offset);

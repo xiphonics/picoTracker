@@ -76,10 +76,6 @@ Project::Project(const char *name)
 
   // Project name is now managed through the WatchedVariable
 
-  alignas(
-      InstrumentBank) static char instrumentBankMemBuf[sizeof(InstrumentBank)];
-  instrumentBank_ = new (instrumentBankMemBuf) InstrumentBank();
-
   // look if we can find a sav file
 
   // Makes sure the tables exists for restoring
@@ -93,7 +89,43 @@ Project::Project(const char *name)
   Status::Set("About to load project");
 };
 
-Project::~Project() { delete instrumentBank_; };
+Project::~Project() {}
+
+void Project::Load(const char *name) {
+  tempoNudge_ = 0;
+  tempoTapCount_ = 0;
+  for (int i = 0; i < MAX_TAP; i++) {
+    lastTap_[i] = 0;
+  }
+
+  song_.Reset();
+  instrumentBank_.Reset();
+  Groove::GetInstance()->Clear();
+
+  tempo_.Reset();
+  masterVolume_.Reset();
+  channelVolume1_.Reset();
+  channelVolume2_.Reset();
+  channelVolume3_.Reset();
+  channelVolume4_.Reset();
+  channelVolume5_.Reset();
+  channelVolume6_.Reset();
+  channelVolume7_.Reset();
+  channelVolume8_.Reset();
+  wrap_.Reset();
+  transpose_.Reset();
+  scale_.Reset();
+  scaleRoot_.Reset();
+  previewVolume_.Reset();
+
+  if (name) {
+    projectName_.SetString(name, true);
+  } else {
+    projectName_.SetString("", true);
+  }
+
+  Status::Set("About to load project");
+}
 
 int Project::GetScale() {
   Variable *v = FindVariable(FourCC::VarScale);
@@ -191,7 +223,7 @@ bool Project::Wrap() {
   return v->GetBool();
 };
 
-InstrumentBank *Project::GetInstrumentBank() { return instrumentBank_; };
+InstrumentBank *Project::GetInstrumentBank() { return &instrumentBank_; };
 
 void Project::Update(Observable &o, I_ObservableData *d) {
   // Nothing to do here for now

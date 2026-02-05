@@ -13,7 +13,10 @@
 extern "C" {
 #endif
 
-void critical_error_message(const char *message, int guruId);
+#include <stdbool.h>
+
+void critical_error_message(const char *message, int guruId,
+                            bool (*externalCallback)(void));
 
 #ifdef __cplusplus
 }

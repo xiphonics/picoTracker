@@ -27,6 +27,16 @@ MixerView::MixerView(GUIWindow &w, ViewData *viewData)
 
 MixerView::~MixerView() {}
 
+void MixerView::Reset() {
+  needsPlayTimeUpdate_ = false;
+  needsNotesUpdate_ = false;
+  ClearFocus();
+  fieldList_.clear();
+  channelVolumeFields_.clear();
+  masterVolumeField_.clear();
+  initChannelVolumeFields();
+}
+
 void MixerView::OnFocus() {
   // update selected field to match current cursor position
   if (viewData_->songX_ <= SONG_CHANNEL_COUNT) {
@@ -269,9 +279,7 @@ void MixerView::processSelectionButtonMask(unsigned int mask) {
 }
 
 void MixerView::initChannelVolumeFields() {
-  // Get the project from the Player
-  Player *player = Player::GetInstance();
-  Project *project = player ? player->GetProject() : nullptr;
+  Project *project = viewData_ ? viewData_->project_ : nullptr;
 
   if (!project)
     return;

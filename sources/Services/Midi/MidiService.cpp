@@ -13,6 +13,7 @@
 #include "Application/Player/SyncMaster.h"
 #include "Services/Audio/AudioDriver.h"
 #include "System/Console/Trace.h"
+#include "System/System/System.h"
 #include "System/Timer/Timer.h"
 #include <cstring>
 
@@ -148,14 +149,15 @@ void MidiService::OnMidiClock() {
 }
 
 void MidiService::flushOutQueue() {
-  // Move queue positions
-  currentOutQueue_ = (currentOutQueue_ + 1) % MIDI_MAX_BUFFERS;
   auto flushQueue = &queues_[currentOutQueue_];
 
   for (auto dev : activeOutDevices_) {
     dev->SendQueue(*flushQueue);
   }
   flushQueue->clear();
+
+  // Move queue positions after flush
+  currentOutQueue_ = (currentOutQueue_ + 1) % MIDI_MAX_BUFFERS;
 }
 
 void MidiService::updateActiveDevicesList(unsigned short config) {

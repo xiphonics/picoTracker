@@ -10,46 +10,24 @@
 #define _SAMPLE_SLICES_VIEW_H_
 
 #include "BaseClasses/UIActionField.h"
-#include "BaseClasses/UIBigHexVarField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
-#include "Externals/etl/include/etl/array.h"
 #include "FieldView.h"
 #include "Foundation/Observable.h"
+#include "Foundation/Variables/Variable.h"
 #include "Foundation/Variables/WatchedVariable.h"
+#include "GraphField.h"
+#include "System/System/System.h"
 #include "ViewData.h"
 #include <cstdint>
 
 class SampleInstrument;
 
-#ifdef ADV
-static constexpr int32_t SliceBitmapWidth = 720;
-static constexpr int32_t SliceBitmapHeight = 160;
-#else
-static constexpr int32_t SliceBitmapWidth = 320;
-static constexpr int32_t SliceBitmapHeight = 80;
-#endif
-
-static constexpr int32_t SliceWaveformCacheSize = SliceBitmapWidth;
-static constexpr size_t SliceCount = 16;
-
-class SliceGraphField : public UIField {
-public:
-  SliceGraphField(GUIPoint &position, int32_t width, int32_t height);
-  ~SliceGraphField() override = default;
-  void Draw(GUIWindow &w, int offset = 0) override;
-  void OnClick() override{};
-  void ProcessArrow(unsigned short) override{};
-
-private:
-  int32_t width_;
-  int32_t height_;
-};
-
 class SampleSlicesView : public FieldView, public I_Observer {
 public:
   SampleSlicesView(GUIWindow &w, ViewData *data);
   ~SampleSlicesView() override;
+  void Reset();
 
   void ProcessButtonMask(unsigned short mask, bool pressed) override;
   void DrawView() override;
@@ -63,6 +41,8 @@ private:
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
+  bool refreshSampleSize();
+  void updateStatusLabels();
   SampleInstrument *currentInstrument();
   void updateSliceSelectionFromInstrument();
   void applySliceStart(uint32_t start);
@@ -72,8 +52,8 @@ private:
   void adjustZoom(int32_t delta);
   void startPreview();
   void stopPreview();
+  uint32_t sliceEndForIndex(size_t index, uint32_t start) const;
   void handleSliceSelectionChange();
-  int32_t sliceToPixel(uint32_t start) const;
   uint32_t selectedSliceStart();
   bool hasInstrumentSample() const;
 
@@ -82,28 +62,30 @@ private:
   Variable autoSliceCountVar_;
 
   etl::vector<UIIntVarField, 2> intVarField_;
-  etl::vector<UIBigHexVarField, 1> bigHexVarField_;
-  etl::vector<UIStaticField, 2> staticField_;
+  etl::vector<UIStaticField, 7> staticField_;
   etl::vector<UIActionField, 1> actionField_;
+  char sliceIndexLabel_[16];
+  char zoomLabel_[16];
 
-  uint8_t waveformCache_[SliceWaveformCacheSize];
-  bool waveformValid_;
-  bool needsWaveformRedraw_;
+  bool needsFullRedraw_;
 
   SampleInstrument *instrument_;
   int32_t instrumentIndex_;
   uint32_t sampleSize_;
-  uint8_t zoomLevel_;
-  uint8_t maxZoomLevel_;
-  uint32_t viewStart_;
-  uint32_t viewEnd_;
   GUIPoint graphFieldPos_;
-  SliceGraphField graphField_;
+  GraphField graphField_;
   bool modalWasOpen_;
 
   bool playKeyHeld_;
   bool previewActive_;
   uint8_t previewNote_;
+  System *sys_;
+  uint32_t previewStartMs_;
+  uint32_t previewStartSample_;
+  uint32_t previewEndSample_;
+  float previewDurationMs_;
+  uint32_t previewPlayheadSample_;
+  bool previewCursorVisible_;
 };
 
 #endif

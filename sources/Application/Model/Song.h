@@ -41,12 +41,17 @@
    MAX_MACROINSTRUMENT_COUNT)
 #endif
 
+#define HIGHEST_NOTE 119
+#define NOTE_OFF 0xFE
+#define NO_NOTE 0xFF
+#define NOTE_C3 60
 #define EMPTY_SONG_VALUE 0xFF
 
 class Song : Persistent {
 public:
   Song();
   ~Song();
+  void Reset();
 
   virtual void SaveContent(tinyxml2::XMLPrinter *printer);
   virtual void RestoreContent(PersistencyDocument *doc);

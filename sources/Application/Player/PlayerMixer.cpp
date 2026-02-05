@@ -67,6 +67,17 @@ bool PlayerMixer::Init(Project *project) {
   return true;
 };
 
+void PlayerMixer::BindProject(Project *project) {
+  project_ = project;
+  fileStreamer_.SetProject(project);
+
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    lastInstrument_[i] = 0;
+    isChannelPlaying_[i] = false;
+    notes_[i] = 0xFF;
+  }
+}
+
 void PlayerMixer::Close() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -82,7 +93,7 @@ bool PlayerMixer::Start() {
   ms->AddObserver(*this);
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-    notes_[i] = 0xFF;
+    notes_[i] = NO_NOTE;
   };
 
   return ms->Start();
@@ -149,7 +160,7 @@ void PlayerMixer::StartInstrument(int channel, I_Instrument *instrument,
 
 void PlayerMixer::StopInstrument(int channel) {
   channel_[channel]->StopInstrument();
-  notes_[channel] = 0xFF;
+  notes_[channel] = NO_NOTE;
 }
 
 I_Instrument *PlayerMixer::GetInstrument(int channel) {
@@ -222,7 +233,7 @@ int PlayerMixer::GetChannelNote(int channel) { return notes_[channel]; }
 
 const char *PlayerMixer::GetPlayedNote(int channel) {
 
-  if (notes_[channel] != 0xFF) {
+  if (notes_[channel] <= HIGHEST_NOTE) {
     note2visualizer(notes_[channel], noteBuffer);
     return noteBuffer;
   }
@@ -230,7 +241,7 @@ const char *PlayerMixer::GetPlayedNote(int channel) {
 };
 
 const char *PlayerMixer::GetPlayedOctive(int channel) {
-  if (notes_[channel] != 0xFF) {
+  if (notes_[channel] <= HIGHEST_NOTE) {
     if (!IsChannelMuted(channel)) {
       oct2visualizer(notes_[channel], noteBuffer);
       return noteBuffer;

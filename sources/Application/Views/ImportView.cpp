@@ -36,6 +36,18 @@ ImportView::ImportView(GUIWindow &w, ViewData *viewData)
 
 ImportView::~ImportView() {}
 
+void ImportView::Reset() {
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  previewPlayingIndex_ = 0;
+  selectedButton_ = 0;
+  toInstr_ = 0;
+  playKeyHeld_ = false;
+  editKeyHeld_ = false;
+  inProjectSampleDir_ = false;
+  fileIndexList_.clear();
+}
+
 // Static method to set the source view type before opening ImportView
 void ImportView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 
@@ -414,9 +426,15 @@ void ImportView::warpToNextSample(bool goUp) {
 }
 
 void ImportView::preview(char *name) {
-  // Get file size to check if it's a single cycle waveform
   auto fs = FileSystem::GetInstance();
   unsigned fileIndex = fileIndexList_[currentIndex_];
+
+  // do not preview directories
+  if (fs->getFileType(fileIndex) == PFT_DIR) {
+    return;
+  }
+
+  // Get file size to check if it's a single cycle waveform
   int fileSize = fs->getFileSize(fileIndex);
 
   // check for LGPT or AKWF standard file sizes
@@ -576,6 +594,7 @@ void ImportView::import() {
     if (instr->GetType() == IT_SAMPLE) {
       SampleInstrument *sinstr = (SampleInstrument *)instr;
       sinstr->AssignSample(sampleID);
+      sinstr->ClearSlices();
     };
 
     // check if we had to truncate filename

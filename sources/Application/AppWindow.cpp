@@ -12,6 +12,7 @@
 #include "Application/Commands/EventDispatcher.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Mixer/MixerService.h"
+#include "Application/Model/Mixer.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Player/TablePlayback.h"
 #include "Application/Utils/char.h"
@@ -91,6 +92,38 @@ uint32_t AppWindow::animationFrameCounter_ = 0;
 int AppWindow::charWidth_ = 8;
 int AppWindow::charHeight_ = 8;
 
+struct AppWindowViews {
+  SongView songView;
+  ChainView chainView;
+  PhraseView phraseView;
+  DeviceView deviceView;
+  ThemeView themeView;
+  ThemeImportView themeImportView;
+  ProjectView projectView;
+  ImportView importView;
+  InstrumentImportView instrumentImportView;
+  InstrumentView instrumentView;
+  TableView tableView;
+  GrooveView grooveView;
+  SelectProjectView selectProjectView;
+  MixerView mixerView;
+  SampleEditorView sampleEditorView;
+  SampleSlicesView sampleSlicesView;
+  RecordView recordView;
+  NullView nullView;
+
+  AppWindowViews(GUIWindow &w, ViewData &viewData)
+      : songView(w, &viewData), chainView(w, &viewData),
+        phraseView(w, &viewData), deviceView(w, &viewData),
+        themeView(w, &viewData), themeImportView(w, &viewData),
+        projectView(w, &viewData), importView(w, &viewData),
+        instrumentImportView(w, &viewData), instrumentView(w, &viewData),
+        tableView(w, &viewData), grooveView(w, &viewData),
+        selectProjectView(w, &viewData), mixerView(w, &viewData),
+        sampleEditorView(w, &viewData), sampleSlicesView(w, &viewData),
+        recordView(w, &viewData), nullView(w, &viewData) {}
+};
+
 void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
                             int paletteIndex) {
 
@@ -111,7 +144,9 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
   }
 }
 
-AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
+AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
+    : GUIWindow(imp), project_(projectName), viewData_(&project_),
+      views_(nullptr), _currentView(nullptr) {
 
   instance = this;
 
@@ -119,24 +154,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
 
   _statusLine[0] = 0;
 
-  _currentView = 0;
-  _viewData = 0;
-  _songView = 0;
-  _chainView = 0;
-  _phraseView = 0;
-  _deviceView = 0;
-  _themeView = 0;
-  _themeImportView = 0;
-  _projectView = 0;
-  _instrumentView = 0;
-  _tableView = 0;
-  _mixerView = 0;
-  _sampleEditorView = 0;
-  _sampleSlicesView = 0;
-  _recordView = 0;
-  _nullView = 0;
-  _grooveView = 0;
-  _closeProject = 0;
+  _currentView = nullptr;
+  _closeProject = false;
   _lastA = 0;
   _lastB = 0;
   _mask = 0;
@@ -144,6 +163,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
   lowBatteryWarningCounter_ = 0;
   sdCardMissing_ = false;
   sdCardMessageShown_ = false;
+
+  npf_snprintf(projectName_, sizeof(projectName_), "%s", projectName);
 
   EventDispatcher *ed = EventDispatcher::GetInstance();
   ed->SetWindow(this);
@@ -157,10 +178,29 @@ AppWindow::AppWindow(I_GUIWindowImp &imp) : GUIWindow(imp) {
 
   GUIWindow::Clear(backgroundColor_);
 
-  alignas(NullView) static char nullViewMemBuf[sizeof(NullView)];
-  _nullView = new (nullViewMemBuf) NullView((*this), 0);
-  _currentView = _nullView;
-  _nullView->SetDirty(true);
+  static AppWindowViews views(*this, viewData_);
+  views_ = &views;
+
+  _currentView = &views_->nullView;
+  views_->nullView.SetDirty(true);
+
+  views_->songView.AddObserver(*this);
+  views_->chainView.AddObserver(*this);
+  views_->phraseView.AddObserver(*this);
+  views_->deviceView.AddObserver(*this);
+  views_->themeView.AddObserver(*this);
+  views_->themeImportView.AddObserver(*this);
+  views_->projectView.AddObserver(*this);
+  views_->importView.AddObserver(*this);
+  views_->instrumentImportView.AddObserver(*this);
+  views_->instrumentView.AddObserver(*this);
+  views_->tableView.AddObserver(*this);
+  views_->grooveView.AddObserver(*this);
+  views_->selectProjectView.AddObserver(*this);
+  views_->mixerView.AddObserver(*this);
+  views_->sampleEditorView.AddObserver(*this);
+  views_->sampleSlicesView.AddObserver(*this);
+  views_->recordView.AddObserver(*this);
 
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_preScreen, ' ', SCREEN_CHARS);
@@ -377,15 +417,32 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   PersistencyService *persist = PersistencyService::GetInstance();
 
-  TablePlayback::Reset();
+  Player *player = Player::GetInstance();
+  if (player->IsRunning()) {
+    player->Stop();
+  }
 
-  // Load the sample pool
+  TablePlayback::Reset();
+  TableHolder::GetInstance()->Reset();
+  Mixer::GetInstance()->Clear();
+
   SamplePool *pool = SamplePool::GetInstance();
+  pool->Reset();
+
+  project_.Load(projectName);
+  Project *project = &project_;
+
+  if (createProjectOnLoad_) {
+    PersistencyResult created = persist->CreateProject();
+    if (created != PERSIST_SAVED) {
+      Trace::Error("Failed to create new project '%s'", projectName);
+      return LoadProjectResult::LOAD_FAILED;
+    }
+    createProjectOnLoad_ = false;
+  }
+
   // load the projects samples
   pool->Load(projectName);
-
-  alignas(Project) static char projectMemBuf[sizeof(Project)];
-  Project *project = new (projectMemBuf) Project(projectName);
 
   bool succeeded = (persist->Load(projectName) == PERSIST_LOADED);
   if (!succeeded) {
@@ -405,6 +462,7 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
   if (projectNameVar) {
     WatchedVariable *watchedVar = (WatchedVariable *)projectNameVar;
     if (watchedVar) {
+      watchedVar->RemoveObserver(*this);
       watchedVar->AddObserver(*this);
       // Store the initial project name
       project->GetProjectName(projectName_);
@@ -417,112 +475,57 @@ AppWindow::LoadProjectResult AppWindow::LoadProject(const char *projectName) {
 
   ApplicationCommandDispatcher::GetInstance()->Init(project);
 
-  // Create view data
-  alignas(ViewData) static char viewDataMemBuf[sizeof(ViewData)];
-  _viewData = new (viewDataMemBuf) ViewData(project);
+  // Update view data
+  viewData_.Load(project);
 
-  // Create & observe the player
-  Player *player = Player::GetInstance();
-  bool playerOK = player->Init(project, _viewData);
-  player->AddObserver(*this);
+  if (views_) {
+    views_->songView.Reset();
+    views_->chainView.Reset();
+    views_->phraseView.Reset();
+    views_->grooveView.Reset();
+    views_->tableView.Reset();
+    views_->projectView.Reset();
+    views_->instrumentView.Reset();
+    views_->mixerView.Reset();
+    views_->importView.Reset();
+    views_->instrumentImportView.Reset();
+    views_->themeView.Reset();
+    views_->themeImportView.Reset();
+    views_->selectProjectView.Reset();
+    views_->sampleEditorView.Reset();
+    views_->sampleSlicesView.Reset();
+    views_->recordView.Reset();
+  }
+
+  bool playerOK = true;
+  if (!playerInitialized_) {
+    playerOK = player->Init(project, &viewData_);
+    player->AddObserver(*this);
+    playerInitialized_ = true;
+  } else {
+    player->BindProject(project, &viewData_);
+  }
 
   // Create the controller
   UIController *controller = UIController::GetInstance();
-  controller->Init(project, _viewData);
+  controller->Init(project, &viewData_);
 
-  // Create & observe all views
-  alignas(SongView) static char songViewMemBuf[sizeof(SongView)];
-  _songView = new (songViewMemBuf) SongView((*this), _viewData);
-  _songView->AddObserver((*this));
-
-  alignas(ChainView) static char chainViewMemBuf[sizeof(ChainView)];
-  _chainView = new (chainViewMemBuf) ChainView((*this), _viewData);
-  _chainView->AddObserver((*this));
-
-  alignas(PhraseView) static char phraseViewMemBuf[sizeof(PhraseView)];
-  _phraseView = new (phraseViewMemBuf) PhraseView((*this), _viewData);
-  _phraseView->AddObserver((*this));
-
-  alignas(DeviceView) static char deviceViewMemBuf[sizeof(DeviceView)];
-  _deviceView = new (deviceViewMemBuf) DeviceView((*this), _viewData);
-  _deviceView->AddObserver((*this));
-
-  alignas(ThemeView) static char themeViewMemBuf[sizeof(ThemeView)];
-  _themeView = new (themeViewMemBuf) ThemeView((*this), _viewData);
-  _themeView->AddObserver((*this));
-
-  alignas(ThemeImportView) static char
-      themeImportViewMemBuf[sizeof(ThemeImportView)];
-  _themeImportView =
-      new (themeImportViewMemBuf) ThemeImportView((*this), _viewData);
-  _themeImportView->AddObserver((*this));
-
-  alignas(ProjectView) static char projectViewMemBuf[sizeof(ProjectView)];
-  _projectView = new (projectViewMemBuf) ProjectView((*this), _viewData);
-  _projectView->AddObserver((*this));
-
-  alignas(ImportView) static char importViewMemBuf[sizeof(ImportView)];
-  _importView = new (importViewMemBuf) ImportView((*this), _viewData);
-  _importView->AddObserver((*this));
-
-  alignas(InstrumentImportView) static char
-      instrumentImportViewMemBuf[sizeof(InstrumentImportView)];
-  _instrumentImportView =
-      new (instrumentImportViewMemBuf) InstrumentImportView((*this), _viewData);
-  _instrumentImportView->AddObserver((*this));
-
-  alignas(
-      InstrumentView) static char instrumentViewMemBuf[sizeof(InstrumentView)];
-  _instrumentView =
-      new (instrumentViewMemBuf) InstrumentView((*this), _viewData);
-  _instrumentView->AddObserver((*this));
-
-  alignas(TableView) static char tableViewMemBuf[sizeof(TableView)];
-  _tableView = new (tableViewMemBuf) TableView((*this), _viewData);
-  _tableView->AddObserver((*this));
-
-  alignas(GrooveView) static char grooveViewMemBuf[sizeof(GrooveView)];
-  _grooveView = new (grooveViewMemBuf) GrooveView((*this), _viewData);
-  _grooveView->AddObserver(*this);
-
-  alignas(SelectProjectView) static char
-      selectProjectViewMemBuf[sizeof(SelectProjectView)];
-  _selectProjectView =
-      new (selectProjectViewMemBuf) SelectProjectView((*this), _viewData);
-  _selectProjectView->AddObserver((*this));
-
-  alignas(MixerView) static char mixerViewMemBuf[sizeof(MixerView)];
-  _mixerView = new (mixerViewMemBuf) MixerView((*this), _viewData);
-  _mixerView->AddObserver((*this));
-
-  alignas(SampleEditorView) static char
-      sampleEditorViewMemBuf[sizeof(SampleEditorView)];
-  _sampleEditorView =
-      new (sampleEditorViewMemBuf) SampleEditorView((*this), _viewData);
-  _sampleEditorView->AddObserver((*this));
-
-  alignas(SampleSlicesView) static char
-      sampleSlicesViewMemBuf[sizeof(SampleSlicesView)];
-  _sampleSlicesView =
-      new (sampleSlicesViewMemBuf) SampleSlicesView((*this), _viewData);
-  _sampleSlicesView->AddObserver((*this));
-
-  alignas(RecordView) static char recordViewMemBuf[sizeof(RecordView)];
-  _recordView = new (recordViewMemBuf) RecordView((*this), _viewData);
-  _recordView->AddObserver((*this));
-
-  _currentView = _songView;
+  _currentView = &views_->songView;
   _currentView->OnFocus();
 
   if (!playerOK) {
-    MessageBox *mb =
-        MessageBox::Create(*_songView, "Failed to initialize audio", MBBF_OK);
-    _songView->DoModal(mb);
+    MessageBox *mb = MessageBox::Create(views_->songView,
+                                        "Failed to initialize audio", MBBF_OK);
+    views_->songView.DoModal(mb);
   }
 
   if (_currentView) {
     _currentView->SetDirty(true);
     SetDirty();
+  }
+
+  if (persist->SaveProjectState(projectName) != PERSIST_SAVED) {
+    Trace::Error("Failed to save project state for '%s'", projectName);
   }
   return LoadProjectResult::LOAD_OK;
 }
@@ -534,8 +537,6 @@ void AppWindow::CloseProject() {
   player->Stop();
   player->RemoveObserver(*this);
 
-  player->Reset();
-
   SamplePool *pool = SamplePool::GetInstance();
   pool->Reset();
 
@@ -544,61 +545,11 @@ void AppWindow::CloseProject() {
 
   ApplicationCommandDispatcher::GetInstance()->Close();
 
-  if (_songView) {
-    _songView->~SongView();
-    _songView = nullptr;
-  }
-  if (_chainView) {
-    _chainView->~ChainView();
-    _chainView = nullptr;
-  }
-  if (_phraseView) {
-    _phraseView->~PhraseView();
-    _phraseView = nullptr;
-  }
-  if (_deviceView) {
-    _deviceView->~DeviceView();
-    _deviceView = nullptr;
-  }
-  if (_themeView) {
-    _themeView->~ThemeView();
-    _themeView = nullptr;
-  }
-  if (_themeImportView) {
-    _themeImportView->~ThemeImportView();
-    _themeImportView = nullptr;
-  }
-  if (_projectView) {
-    _projectView->~ProjectView();
-    _projectView = nullptr;
-  }
-  if (_instrumentView) {
-    _instrumentView->~InstrumentView();
-    _instrumentView = nullptr;
-  }
-  if (_tableView) {
-    _tableView->~TableView();
-    _tableView = nullptr;
-  }
-  if (_grooveView) {
-    _grooveView->~GrooveView();
-    _grooveView = nullptr;
-  }
-  if (_sampleSlicesView) {
-    _sampleSlicesView->~SampleSlicesView();
-    _sampleSlicesView = nullptr;
-  }
-
   UIController *controller = UIController::GetInstance();
   controller->Reset();
 
-  if (_viewData) {
-    _viewData->~ViewData();
-    _viewData = nullptr;
-  }
-
-  _currentView = _nullView;
-  _nullView->SetDirty(true);
+  _currentView = &views_->nullView;
+  views_->nullView.SetDirty(true);
 };
 
 AppWindow *AppWindow::Create(GUICreateWindowParams &params,
@@ -606,8 +557,7 @@ AppWindow *AppWindow::Create(GUICreateWindowParams &params,
   I_GUIWindowImp &imp =
       I_GUIWindowFactory::GetInstance()->CreateWindowImp(params);
   alignas(AppWindow) static char appWindowMemBuf[sizeof(AppWindow)];
-  AppWindow *w = new (appWindowMemBuf) AppWindow(imp);
-  strcpy(w->projectName_, projectName);
+  AppWindow *w = new (appWindowMemBuf) AppWindow(imp, projectName);
   return w;
 };
 
@@ -836,7 +786,7 @@ void AppWindow::AnimationUpdate() {
   // this callback is called PICO_CLOCK_HZ times a second and we have easy
   // access in this class to the player, projectname and persistence service
   if ((++lastAutoSave / PICO_CLOCK_HZ) > AUTOSAVE_INTERVAL_IN_SECONDS) {
-    if (autoSave()) {
+    if (AutoSave()) {
       lastAutoSave = 0;
     }
   }
@@ -847,7 +797,7 @@ void AppWindow::LayoutChildren(){};
 void AppWindow::Update(Observable &o, I_ObservableData *d) {
   if (d && (uintptr_t)d == (uintptr_t)FourCC::VarProjectName) {
     // Update the stored project name from the project
-    Project *project = _viewData->project_;
+    Project *project = viewData_.project_;
     if (project) {
       project->GetProjectName(projectName_);
       Trace::Log("APPWINDOW", "Project name retrieved: %s", projectName_);
@@ -869,61 +819,61 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
 
     switch (*vt) {
     case VT_SONG:
-      _currentView = _songView;
+      _currentView = &views_->songView;
       break;
     case VT_CHAIN:
-      _currentView = _chainView;
+      _currentView = &views_->chainView;
       break;
     case VT_PHRASE:
-      _currentView = _phraseView;
+      _currentView = &views_->phraseView;
       break;
     case VT_DEVICE:
-      _currentView = _deviceView;
+      _currentView = &views_->deviceView;
       break;
     case VT_PROJECT:
-      _currentView = _projectView;
+      _currentView = &views_->projectView;
       break;
     case VT_INSTRUMENT:
-      _currentView = _instrumentView;
+      _currentView = &views_->instrumentView;
       break;
     case VT_TABLE:
-      _currentView = _tableView;
+      _currentView = &views_->tableView;
       break;
     case VT_TABLE2:
-      _currentView = _tableView;
+      _currentView = &views_->tableView;
       break;
     case VT_GROOVE:
-      _currentView = _grooveView;
+      _currentView = &views_->grooveView;
       break;
     case VT_IMPORT:
-      _currentView = _importView;
+      _currentView = &views_->importView;
       break;
     case VT_INSTRUMENT_IMPORT:
-      _currentView = _instrumentImportView;
+      _currentView = &views_->instrumentImportView;
       break;
     case VT_SELECTPROJECT:
-      _currentView = _selectProjectView;
+      _currentView = &views_->selectProjectView;
       break;
     case VT_MIXER:
-      _currentView = _mixerView;
+      _currentView = &views_->mixerView;
       break;
     case VT_THEME:
-      _currentView = _themeView;
+      _currentView = &views_->themeView;
       break;
     case VT_THEME_IMPORT:
-      _currentView = _themeImportView;
+      _currentView = &views_->themeImportView;
       break;
     case VT_SELECTTHEME:
-      _currentView = _themeView;
+      _currentView = &views_->themeView;
       break;
     case VT_SAMPLE_EDITOR:
-      _currentView = _sampleEditorView;
+      _currentView = &views_->sampleEditorView;
       break;
     case VT_SAMPLE_SLICES:
-      _currentView = _sampleSlicesView;
+      _currentView = &views_->sampleSlicesView;
       break;
     case VT_RECORD:
-      _currentView = _recordView;
+      _currentView = &views_->recordView;
       break;
     default:
       break;
@@ -950,12 +900,22 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     break;
   }
 
-    /*	  case VET_LIST_SELECT:
-          {
-          char *name=(char*)ve->GetData() ;
-          LoadProject(name) ;
-          break ;
-          } */
+  case VET_LOAD_PROJECT: {
+    const char *name = static_cast<const char *>(ve->GetData());
+    if (name && name[0] != '\0') {
+      npf_snprintf(projectName_, sizeof(projectName_), "%s", name);
+      createProjectOnLoad_ = false;
+      loadProject_ = true;
+    }
+    break;
+  }
+  case VET_NEW_PROJECT: {
+    npf_snprintf(projectName_, sizeof(projectName_), "%s",
+                 UNNAMED_PROJECT_NAME);
+    createProjectOnLoad_ = true;
+    loadProject_ = true;
+    break;
+  }
   case VET_QUIT_PROJECT: {
     // defer event to after we got out of the view
     _closeProject = true;
@@ -1039,7 +999,7 @@ void AppWindow::SetColor(ColorDefinition cd) {
   }
 };
 
-bool AppWindow::autoSave() {
+bool AppWindow::AutoSave() {
   Player *player = Player::GetInstance();
   // only auto save when sequencer is not running and not recording
   bool recording = IsRecordingActive();

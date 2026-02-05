@@ -26,6 +26,7 @@ class ProjectView : public FieldView, public I_Observer {
 public:
   ProjectView(GUIWindow &w, ViewData *data);
   virtual ~ProjectView();
+  void Reset();
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
@@ -70,5 +71,7 @@ private:
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
   bool saveAsFlag_ = false;
   etl::string<MAX_PROJECT_NAME_LENGTH> oldProjName_;
+
+  bool CanExit();
 };
 #endif

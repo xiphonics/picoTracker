@@ -18,6 +18,7 @@ class SongView : public ScreenView {
 public:
   SongView(GUIWindow &w, ViewData *viewData);
   ~SongView();
+  void Reset();
 
   // View implementation
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);

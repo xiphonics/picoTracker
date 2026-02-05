@@ -157,6 +157,13 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data)
 
 ThemeView::~ThemeView() {}
 
+void ThemeView::Reset() {
+  exportThemeName_.clear();
+  themeNameEditMode_ = false;
+  _forceRedraw = false;
+  configDirty_ = false;
+}
+
 void ThemeView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
