@@ -31,11 +31,7 @@ void GUIWindow::SetColor(GUIColor &color) { _imp->SetColor(color); }
 
 void GUIWindow::ClearTextRect(GUIRect &r) { _imp->ClearTextRect(r); }
 
-<<<<<<< HEAD
 void GUIWindow::DrawString(const char *string, const GUIPoint &pos,
-=======
-void GUIWindow::DrawString(const char *string, const const GUIPoint &pos,
->>>>>>> 54356038 (passing GUITextProperties as const)
                            const GUITextProperties &props, bool overlay) {
   _imp->DrawString(string, pos, props, overlay);
 }
@@ -44,11 +40,7 @@ void GUIWindow::SetCurrentRectColor(GUIColor color) { _imp->SetColor(color); }
 
 void GUIWindow::DrawRect(GUIRect &r) { _imp->DrawRect(r); }
 
-<<<<<<< HEAD
 void GUIWindow::DrawChar(const char c, const GUIPoint &pos,
-=======
-void GUIWindow::DrawChar(const char c, GUIPoint &pos,
->>>>>>> 54356038 (passing GUITextProperties as const)
                          const GUITextProperties &props) {
   _imp->DrawChar(c, pos, props);
 }

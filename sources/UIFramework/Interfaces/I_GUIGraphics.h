@@ -23,18 +23,10 @@ public:
   virtual void Clear(GUIColor &, bool overlay = false) = 0;
   virtual void SetColor(GUIColor &) = 0;
   virtual void ClearTextRect(GUIRect &) = 0;
-<<<<<<< HEAD
   virtual void DrawString(const char *string, const GUIPoint &pos,
                           const GUITextProperties &p, bool overlay) = 0;
   virtual void DrawChar(const char c, const GUIPoint &pos,
                         const GUITextProperties &props) = 0;
-=======
-  virtual void DrawString(const char *string, const const GUIPoint &pos,
-                          const GUITextProperties &p, bool overlay) = 0;
-  virtual void DrawChar(const char c, GUIPoint &pos,
-                        const GUITextProperties &) = 0;
->>>>>>> 54356038 (passing GUITextProperties as const)
-
   virtual GUIRect GetRect() = 0;
   virtual void Invalidate() = 0;
   virtual void Lock() = 0;
