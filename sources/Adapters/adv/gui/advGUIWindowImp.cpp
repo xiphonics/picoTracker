@@ -63,8 +63,8 @@ void advGUIWindowImp::SendFont(uint8_t uifontIndex) {
   sendToUSBCDCBuffered(remoteUIBuffer, 3);
 }
 
-void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
-                               GUITextProperties &p) {
+void advGUIWindowImp::DrawChar(const char c, const GUIPoint &pos,
+                               const GUITextProperties &p) {
   //  Trace::Debug("Draw char \"%c\" at pos x:%ld (%ld), y:%ld (%ld) - invert:
   //  %d", c, pos._x, pos._x / 8, pos._y, pos._y / 8, p.invert_);
 
@@ -79,7 +79,7 @@ void advGUIWindowImp::DrawChar(const char c, GUIPoint &pos,
   }
 }
 
-void advGUIWindowImp::DrawString(const char *string, GUIPoint &pos,
+void advGUIWindowImp::DrawString(const char *string, const GUIPoint &pos,
                                  GUITextProperties &p, bool overlay) {
   Trace::Debug("draw string");
   display_set_cursor(pos._x, pos._y);
