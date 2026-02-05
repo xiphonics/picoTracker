@@ -153,8 +153,8 @@ int GUIParentGraphics::GetStringWidth(char *string) {
   }
 }
 
-void GUIParentGraphics::DrawString(char *string, GUIPoint &pos,
-                                   GUITextProperties &props) {
+void GUIParentGraphics::DrawString(const char *string, const GUIPoint &pos,
+                                   const GUITextProperties &props) {
   if (_useBs) {
     _bs->DrawString(string, pos, props);
   } else {
