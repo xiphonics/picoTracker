@@ -376,19 +376,16 @@ void MidiInstrument::SendProgramChangeWithNote(int channel, int program) {
   // First send the program change
   SendProgramChange(channel, program);
 
-  // Define C3 as MIDI note 60
-  const uint8_t C3_NOTE = 60;
-
   // Send Note On for C3 with velocity 100 (0x64)
   MidiMessage noteOn;
   noteOn.status_ = MidiMessage::MIDI_NOTE_ON + channel;
-  noteOn.data1_ = C3_NOTE;
+  noteOn.data1_ = NOTE_C3;
   noteOn.data2_ = 0x64; // Velocity 100
   svc_->QueueMessage(noteOn);
 
   // Set up the note-off information for the callback
   NoteOffInfo::current.channel = channel;
-  NoteOffInfo::current.note = C3_NOTE;
+  NoteOffInfo::current.note = NOTE_C3;
 
   // Schedule the note-off message after 300ms using TimerService
   // This is non-blocking and will happen asynchronously

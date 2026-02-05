@@ -36,7 +36,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   row_ = 0;
   viewData->phraseCurPos_ = 0;
   col_ = 0;
-  lastNote_ = 60;
+  lastNote_ = NOTE_C3;
   lastInstr_ = 0;
   lastCmd_ = FourCC::InstrumentCommandNone;
   lastParam_ = 0;
@@ -46,7 +46,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   clipboard_.height_ = 0;
 
   for (int i = 0; i < 16; i++) {
-    clipboard_.note_[i] = 0xFF;
+    clipboard_.note_[i] = NO_NOTE;
     clipboard_.instr_[i] = 0;
   };
 }
@@ -58,7 +58,7 @@ void PhraseView::Reset() {
   lastPlayingPos_ = 0;
   row_ = 0;
   col_ = 0;
-  lastNote_ = 60;
+  lastNote_ = NOTE_C3;
   lastInstr_ = 0;
   lastCmd_ = FourCC::InstrumentCommandNone;
   lastParam_ = 0;
@@ -180,7 +180,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   switch (col_ + xOffset) {
   case 0:
     c = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_ + yOffset);
-    limit = 119;
+    limit = HIGHEST_NOTE;
     wrap = true;
     break;
   case 1:
@@ -277,8 +277,14 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     lastParam_ = paramValue;
     break;
   }
-  if ((c) && (*c != 0xFF)) {
+  if ((c) && (*c != NO_NOTE)) {
     int offset = offsets_[col_ + xOffset][direction];
+
+    // when changing notes from note off, always start from C3
+    if (*c == NOTE_OFF) {
+      *c = NOTE_C3;
+      offset = 0;
+    }
 
     // if note column apply the set scale or slice range
     if (col_ + xOffset == 0) {
@@ -349,7 +355,7 @@ void PhraseView::pasteLast() {
   switch (col_) {
   case 0:
     c = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_);
-    if ((*c == 0xFF)) {
+    if ((*c == NO_NOTE)) {
       *c = lastNote_;
       c = phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
       *c = lastInstr_;
@@ -414,6 +420,13 @@ void PhraseView::pasteLast() {
 }
 
 void PhraseView::cutPosition() {
+  // cutting an empty note slot adds a note off
+  uint8_t *note = phrase_->note_ + (16 * viewData_->currentPhrase_ + row_);
+  if (col_ == 0 && *note == NO_NOTE) {
+    *note = NOTE_OFF;
+    isDirty_ = true;
+    return;
+  }
 
   clipboard_.active_ = true;
   clipboard_.row_ = row_;
@@ -812,7 +825,6 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_ENTER) {
-
       // If note or I, we request a new instr
       if (col_ < 2) {
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
@@ -1232,8 +1244,10 @@ void PhraseView::DrawView() {
     setTextProps(props, 0, j, false);
     (0 == j || 4 == j || 8 == j || 12 == j) ? SetColor(CD_HILITE1)
                                             : SetColor(CD_NORMAL);
-    if (d == 0xFF) {
+    if (d == NO_NOTE) {
       DrawString(pos._x, pos._y, "----", props);
+    } else if (d == NOTE_OFF) {
+      DrawString(pos._x, pos._y, "off ", props);
     } else {
       bool showSlice = false;
       bool invalidSlice = false;
