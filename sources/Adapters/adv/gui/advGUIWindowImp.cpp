@@ -80,7 +80,7 @@ void advGUIWindowImp::DrawChar(const char c, const GUIPoint &pos,
 }
 
 void advGUIWindowImp::DrawString(const char *string, const GUIPoint &pos,
-                                 GUITextProperties &p, bool overlay) {
+                                 const GUITextProperties &p, bool overlay) {
   Trace::Debug("draw string");
   display_set_cursor(pos._x, pos._y);
   display_print(string, p.invert_);
