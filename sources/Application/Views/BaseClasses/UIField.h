@@ -17,7 +17,7 @@
 
 class UIField {
 public:
-  UIField(GUIPoint &position);
+  UIField(const GUIPoint &position);
   virtual ~UIField();
   virtual void Draw(GUIWindow &w, int offset = 0) = 0;
   virtual void OnClick() = 0; // ENTER pressed

@@ -19,7 +19,7 @@
 template <uint8_t MaxLength>
 class UITextField : public UIField, public Observable {
 public:
-  UITextField(Variable &v, GUIPoint &position,
+  UITextField(Variable &v, const GUIPoint &position,
               const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> &label,
               uint8_t fourcc, etl::string<MaxLength> &defaultValue_);
 

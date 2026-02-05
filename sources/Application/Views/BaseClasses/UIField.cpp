@@ -9,7 +9,7 @@
 
 #include "UIField.h"
 
-UIField::UIField(GUIPoint &position) {
+UIField::UIField(const GUIPoint &position) {
   x_ = position._x;
   y_ = position._y;
   focus_ = false;
