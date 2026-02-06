@@ -23,7 +23,7 @@
 
 #include <math.h>
 
-#define DEFAULT_CHANNEL_VOLUME 100
+#define DEFAULT_CHANNEL_VOLUME 99
 #define DEFAULT_PREVIEW_VOLUME 60
 
 #ifdef ADV
