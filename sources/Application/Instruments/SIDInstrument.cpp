@@ -79,7 +79,7 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
   variables_.insert(variables_.end(), &vol2_);
 }
 
-SIDInstrument::~SIDInstrument() {};
+SIDInstrument::~SIDInstrument(){};
 
 bool SIDInstrument::Init() {
   tableState_.Reset();
@@ -264,6 +264,6 @@ bool SIDInstrument::GetTableAutomation() {
   return v->GetBool();
 };
 
-void SIDInstrument::GetTableState(TableSaveState &state) {};
+void SIDInstrument::GetTableState(TableSaveState &state){};
 
-void SIDInstrument::SetTableState(TableSaveState &state) {};
+void SIDInstrument::SetTableState(TableSaveState &state){};
