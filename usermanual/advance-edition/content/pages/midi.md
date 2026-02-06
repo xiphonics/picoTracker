@@ -29,10 +29,6 @@ When a MIDI device is connected and configured, incoming MIDI notes will trigger
 
 - **Sample Instruments**: Fully support polyphonic playback. Multiple notes can be played simultaneously, and each note can be stopped independently.
 
-- **OPAL Instruments**: Should be *considered* monophonic from a MIDI input perspective. However they DONT behave completely like a monophonic instrument, so care needs to be taken to ensure that only one note is played on a midi channel at a time. 
-
-- **SID Instruments**: Should be *considered* monophonic from a MIDI input perspective. However they DONT behave completely like a monophonic instrument, so care needs to be taken to ensure that only one note is played on a midi channel at a time. 
-
 ### Supported MIDI Messages
 
 picoTracker currently supports the following MIDI message types:
