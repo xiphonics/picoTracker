@@ -11,13 +11,22 @@
 #include "Application/Persistency/PersistenceConstants.h"
 #include "CommandList.h"
 #include "Externals/etl/include/etl/to_string.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "I_Instrument.h"
 #include "System/Console/Trace.h"
 #include "System/System/System.h"
 #include <string.h>
 
-const char *sidWaveformText[DWF_LAST] = {"----", "T---", "-S--", "TS--", "--Q-",
-                                         "T-Q-", "-SQ-", "TSQ-", "---N"};
+const char *sidWaveformText[DWF_LAST] = {
+    "--------",
+    char_waveform_tri_s "------",
+    "--" char_waveform_saw_s "----",
+    char_waveform_tri_s char_waveform_saw_s "----",
+    "----" char_waveform_pulse_s "--",
+    char_waveform_tri_s "--" char_waveform_pulse_s "--",
+    "--" char_waveform_saw_s char_waveform_pulse_s "--",
+    char_waveform_tri_s char_waveform_saw_s char_waveform_pulse_s "--",
+    "------" char_waveform_noise_s};
 const char *sidFilterModeText[DFM_LAST] = {"LP", "BP", "HP", "Notch"};
 
 cRSID SIDInstrument::sid1_(44100);
@@ -70,7 +79,7 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
   variables_.insert(variables_.end(), &vol2_);
 }
 
-SIDInstrument::~SIDInstrument(){};
+SIDInstrument::~SIDInstrument() {};
 
 bool SIDInstrument::Init() {
   tableState_.Reset();
@@ -255,6 +264,6 @@ bool SIDInstrument::GetTableAutomation() {
   return v->GetBool();
 };
 
-void SIDInstrument::GetTableState(TableSaveState &state){};
+void SIDInstrument::GetTableState(TableSaveState &state) {};
 
-void SIDInstrument::SetTableState(TableSaveState &state){};
+void SIDInstrument::SetTableState(TableSaveState &state) {};
