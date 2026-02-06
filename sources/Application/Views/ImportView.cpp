@@ -509,6 +509,9 @@ void ImportView::DrawView() {
   y = 23; // bottom line
   DrawString(x, y, tempBuffer, props);
 
+  drawScrollBar(SCREEN_WIDTH - 1, pos._y + 2, LIST_PAGE_SIZE, topIndex_,
+                fileIndexList_.size());
+
   SetColor(CD_NORMAL);
 };
 
