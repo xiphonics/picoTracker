@@ -30,7 +30,7 @@
 #define char_symbol_indicatorFull_s "\214"
 #define char_symbol_indicatorFull char_symbol_indicatorFull_s[0]
 
-#define char_playback_pause_s "\214"
+#define char_playback_pause_s "\215"
 #define char_playback_pause char_playback_pause_s[0]
 #define char_playback_play_s "\220"
 #define char_playback_play char_playback_play_s[0]

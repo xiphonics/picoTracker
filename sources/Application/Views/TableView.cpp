@@ -13,6 +13,7 @@
 #include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "ViewData.h"
 #include <nanoprintf.h>
 
@@ -992,7 +993,7 @@ void TableView::AnimationUpdate() {
           if (yPos >= 0 && yPos < 16) { // Only draw if position is valid
             pos._x = anchor._x - 1 + (i * 9);
             pos._y = anchor._y + yPos;
-            DrawString(pos._x, pos._y, ">", props);
+            DrawString(pos._x, pos._y, char_indicator_position_s, props);
           }
         }
       }
