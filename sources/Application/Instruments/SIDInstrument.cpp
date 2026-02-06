@@ -101,7 +101,7 @@ bool SIDInstrument::Init() {
 void SIDInstrument::OnStart() {
   tableState_.Reset();
   int osc = GetOsc();
-  sid_->cRSID_resetADSR(osc);
+  sid_->cRSID_resetChannel(osc);
 };
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"

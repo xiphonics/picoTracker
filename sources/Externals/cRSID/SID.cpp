@@ -176,7 +176,7 @@ cRSID::cRSID_emulateADSRs(char cycles) {
   }
 }
 
-void cRSID::cRSID_resetADSR(unsigned char channel) {
+void cRSID::cRSID_resetChannel(unsigned char channel) {
   ADSRstate[channel] = 0;
   RateCounter[channel] = 0;
   EnvelopeCounter[channel] = 0;
