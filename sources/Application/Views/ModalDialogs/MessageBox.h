@@ -46,10 +46,12 @@ protected:
   MessageBox(View &view, const char *message, int btnFlags = MBBF_OK);
   MessageBox(View &view, const char *message, const char *message2,
              int btnFlags = MBBF_OK);
+  void InitButtons(int btnFlags);
   etl::string<SCREEN_WIDTH - 2> line1_ = "";
   etl::string<SCREEN_WIDTH - 2> line2_ = "";
   int button_[4];
   int buttonCount_;
+  int buttonWidth_;
   int selected_;
 
 private:
