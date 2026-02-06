@@ -90,7 +90,7 @@ See for example the [PeteyDroney](http://www.hexawe.net/lgptwiki/lgpt-%20PeteyDr
 
 ## Breakz !
 
-### Loop choppin' (old method)
+### Loop choppin' with commands
 
 Loop chopping is really easy in picoTracker through the `POF` command. POF sees the whole sample as 256 chunks of the same length. It allows to put the current playback head to the beginning of any of those chunks. To get it, we'll take a really simple drum loop sample going like this:
 
@@ -104,12 +104,6 @@ You can see by combining a lot of `LOF` commands one after the other, you can re
 Here's a nice example, courtesy of jonbro, chopping drums he had recorded previously:
 
 [Jonbro - the thing is the thing](https://battleofthebits.com/arena/Entry/the+thing+is+the+thing/1479/)
-
-### Slice (new chopping method)
-
-Using this, you can assign up to 256 individual slices from C-2 (C minus two) up to the amount of slices you set. How handy!
-
-Of course, you are not limited to drum loops. Just chop anything away !
 
 ## Grooves, BPM, Math and You
 
