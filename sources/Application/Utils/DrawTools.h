@@ -14,3 +14,4 @@ void DrawDoubleBorder(View &view, int x, int y, int width, int height,
                       const GUITextProperties &props);
 void DrawSingleBorder(View &view, int x, int y, int width, int height,
                       const GUITextProperties &props);
+void DrawScrollBar(View &view, int topIndex, int totalItems, int pageSize);

@@ -11,6 +11,7 @@
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Utils/DrawTools.h"
 #include "Application/Views/SampleEditorView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
@@ -381,6 +382,8 @@ void ImportView::DrawView() {
   x = 1;  // align with rest screen title & file list
   y = 23; // bottom line
   DrawString(x, y, tempBuffer, props);
+
+  DrawScrollBar(*this, topIndex_, fileIndexList_.size(), LIST_PAGE_SIZE);
 
   SetColor(CD_NORMAL);
 };

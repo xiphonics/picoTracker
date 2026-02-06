@@ -40,3 +40,32 @@ void DrawSingleBorder(View &view, int x, int y, int width, int height,
                       const GUITextProperties &props) {
   DrawBorder(view, x, y, width, height, props, char_border_single_charset);
 }
+
+void DrawScrollBar(View &view, int topIndex, int totalItems, int pageSize) {
+  if (totalItems <= pageSize) {
+    return; // no scrollbar needed
+  }
+
+  GUITextProperties props;
+  GUITextProperties inv;
+  inv.invert_ = true;
+  view.SetColor(CD_NORMAL);
+
+  // Thumb size represents the ratio of visible items to total items
+  int thumbSize = std::max(1, (pageSize * pageSize) / totalItems);
+
+  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
+  // space
+  int maxScroll = totalItems - pageSize;
+  int availableSpace = pageSize - thumbSize;
+  int thumbPos = (topIndex * availableSpace) / maxScroll;
+
+  Trace::Error("%d total, %d thumb size, %d maxScroll, %d thumbPos", totalItems,
+               thumbSize, maxScroll, thumbPos);
+  for (int y = 0; y < pageSize; y++) {
+    bool thumb = y >= thumbPos && y < thumbPos + thumbSize;
+    view.DrawString(SCREEN_WIDTH - 1, 2 + y,
+                    thumb ? char_block_full_s : char_border_single_vertical_s,
+                    props);
+  }
+}
