@@ -254,6 +254,16 @@
 #define char_border_double_cross_s "\316"
 #define char_border_double_cross char_border_double_cross_s[0]
 
+#define char_border_double_charset                                             \
+  char_border_double_topLeft_s char_border_double_topRight_s                   \
+      char_border_double_bottomLeft_s char_border_double_bottomRight_s         \
+          char_border_double_horizontal_s char_border_double_vertical_s
+
+#define char_border_single_charset                                             \
+  char_border_single_topLeft_s char_border_single_topRight_s                   \
+      char_border_single_bottomLeft_s char_border_single_bottomRight_s         \
+          char_border_single_horizontal_s char_border_single_vertical_s
+
 #define char_logo_x_s "\320"
 #define char_logo_x char_logo_x_s[0]
 #define char_logo_xiponics_0_s "\321"

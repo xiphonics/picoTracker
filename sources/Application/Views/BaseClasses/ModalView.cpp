@@ -9,6 +9,8 @@
 
 #include "ModalView.h"
 #include "Application/AppWindow.h"
+#include "Application/Utils/DrawTools.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 
 ModalView::ModalView(View &v)
     : View(v.w_, v.viewData_), finished_(false), returnCode_(0){};
@@ -63,16 +65,5 @@ void ModalView::SetWindow(int width, int height) {
 
   SetColor(CD_ACCENT);
   GUITextProperties props;
-  props.invert_ = true;
-  char line[SCREEN_WIDTH + 1];
-  memset(line, ' ', SCREEN_WIDTH);
-  line[SCREEN_WIDTH] = '\0';
-  line[width + 4] = 0;
-  DrawString(-2, -2, line, props);
-  DrawString(-2, height + 1, line, props);
-  line[1] = 0;
-  for (int i = 0; i < height + 2; i++) {
-    DrawString(-2, i - 1, line, props);
-    DrawString(width + 1, i - 1, line, props);
-  }
-};
+  DrawDoubleBorder(*this, -2, -2, width + 4, height + 4, props);
+}
