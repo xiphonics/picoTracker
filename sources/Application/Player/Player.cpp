@@ -1136,6 +1136,7 @@ void Player::moveToNextChain(int channel, int hop) {
         for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
           mixer_.StopChannel(i);
         }
+        MidiService::GetInstance()->OnPlayerStop();
         mixer_.OnPlayerStop();
 
         isRunning_ = false;

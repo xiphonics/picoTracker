@@ -38,7 +38,8 @@ public:
   virtual void DrawBitmap(GUIBitmap &, GUIPoint &p);
   virtual void StretchBitmap(GUIBitmap &, GUIRect &srcR, GUIRect &dstR);
   virtual void SelectFont(int type, int size);
-  virtual void DrawString(char *string, GUIPoint &pos, GUITextProperties &);
+  virtual void DrawString(const char *string, const GUIPoint &pos,
+                          const GUITextProperties &props);
   virtual int GetStringWidth(char *string);
 
   virtual GUIRect GetRect();

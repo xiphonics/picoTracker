@@ -16,7 +16,7 @@
 
 #define abs(x) (x < 0 ? -x : x)
 
-UIIntField::UIIntField(GUIPoint &position, int *src, const char *format,
+UIIntField::UIIntField(const GUIPoint &position, int *src, const char *format,
                        int min, int max, int xOffset, int yOffset)
     : UIField(position) {
   src_ = src;

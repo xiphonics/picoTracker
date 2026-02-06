@@ -9,7 +9,7 @@
 
 #include "UISortedVarList.h"
 
-UISortedVarList::UISortedVarList(GUIPoint &position, Variable &v,
+UISortedVarList::UISortedVarList(const GUIPoint &position, Variable &v,
                                  const char *format)
     : UIIntVarField(position, v, format, 0, v.GetListSize(), 0,
                     0 /*dummy 4 last*/) {
