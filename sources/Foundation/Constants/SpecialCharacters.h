@@ -21,7 +21,7 @@
 #define char_symbol_indicatorEmpty_s "\x8B"
 #define char_symbol_indicatorFull_s "\x8C"
 
-#define char_playback_pause_s "\x8C"
+#define char_playback_pause_s "\x8D"
 #define char_playback_play_s "\x90"
 
 #define char_indicator_position_s "\x90"
