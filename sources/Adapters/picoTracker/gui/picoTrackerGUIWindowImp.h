@@ -25,9 +25,11 @@ public:
 public: // I_GUIWindowImp implementation
   virtual void SetColor(GUIColor &) override;
   virtual void DrawRect(GUIRect &) override;
-  virtual void DrawChar(const char c, GUIPoint &pos, GUITextProperties &);
-  virtual void DrawString(const char *string, GUIPoint &pos,
-                          GUITextProperties &, bool overlay = false){};
+  virtual void DrawChar(const char c, const GUIPoint &pos,
+                        const GUITextProperties &props);
+  virtual void DrawString(const char *string, const GUIPoint &pos,
+                          const GUITextProperties &props,
+                          bool overlay = false){};
   virtual GUIRect GetRect();
   virtual void Invalidate();
   virtual void Flush();

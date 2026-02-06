@@ -10,7 +10,8 @@
 #include "UISwatchField.h"
 #include "Application/AppWindow.h"
 
-UISwatchField::UISwatchField(GUIPoint &position, const ColorDefinition color)
+UISwatchField::UISwatchField(const GUIPoint &position,
+                             const ColorDefinition color)
     : UIField(position) {
   color_ = color;
 };

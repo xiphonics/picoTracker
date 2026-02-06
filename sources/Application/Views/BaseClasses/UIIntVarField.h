@@ -16,8 +16,9 @@
 class UIIntVarField : public UIField, public Observable {
 
 public:
-  UIIntVarField(GUIPoint &position, Variable &v, const char *format, int min,
-                int max, int xOffset, int yOffset, int displayOffset = 0);
+  UIIntVarField(const GUIPoint &position, Variable &v, const char *format,
+                int min, int max, int xOffset, int yOffset,
+                int displayOffset = 0);
 
   virtual ~UIIntVarField(){};
   virtual void Draw(GUIWindow &w, int offset = 0);
