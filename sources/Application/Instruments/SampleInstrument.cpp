@@ -10,10 +10,10 @@
 #include "SampleInstrument.h"
 #include "Application/Instruments/Filters.h"
 #include "Application/Model/Table.h"
-#include "Application/Player/PlayerMixer.h" // For MIX_BUFFER_SIZE.. kick out pls
 #include "Application/Player/SyncMaster.h"
 #include "Application/Utils/fixed.h"
 #include "CommandList.h"
+#include "Foundation/Constants/SineTable.h"
 #include "SamplePool.h"
 #include "SampleVariable.h"
 #include "Services/Audio/Audio.h"
@@ -1433,6 +1433,19 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     if (crush > 0)
       rp->crush_ = crush;
   }
+
+  case FourCC::InstrumentCommandVibrato: {
+    uint8_t rate = value >> 8;
+    uint8_t depth = value & 0xFF;
+    // setup the vibrato
+    rp->vibrato_.SetData(rate, depth);
+    if (!rp->vibrato_.Enabled()) {
+      // enable and add to active updaters
+      rp->vibrato_.Enable();
+      rp->activeUpdaters_.push_back(&rp->vibrato_);
+    }
+  } break;
+
   default:
     break;
   };
