@@ -232,6 +232,32 @@ void appwindow_set_sdcard_present(bool present) {
   }
 }
 
+void AppWindow::AcquireAutoSaveBlock() {
+  if (instance) {
+    instance->autoSaveBlockCount_++;
+  }
+}
+
+void AppWindow::ReleaseAutoSaveBlock() {
+  if (instance && instance->autoSaveBlockCount_ > 0) {
+    instance->autoSaveBlockCount_--;
+  }
+}
+
+bool AppWindow::IsAutoSaveBlocked() {
+  return instance && instance->autoSaveBlockCount_ > 0;
+}
+
+AppWindow::AutoSaveBlockGuard::AutoSaveBlockGuard() : active_(true) {
+  AppWindow::AcquireAutoSaveBlock();
+}
+
+AppWindow::AutoSaveBlockGuard::~AutoSaveBlockGuard() {
+  if (active_) {
+    AppWindow::ReleaseAutoSaveBlock();
+  }
+}
+
 void AppWindow::DrawString(const char *string, const GUIPoint &pos,
                            const GUITextProperties &props, bool force) {
 
@@ -1003,7 +1029,7 @@ bool AppWindow::AutoSave() {
   Player *player = Player::GetInstance();
   // only auto save when sequencer is not running and not recording
   bool recording = IsRecordingActive();
-  if (!player->IsRunning() && !recording) {
+  if (!player->IsRunning() && !recording && !IsAutoSaveBlocked()) {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
     // get persistence service and call autosave
     PersistencyService *ps = PersistencyService::GetInstance();

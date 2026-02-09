@@ -350,6 +350,7 @@ bool SelectProjectView::SelectionIsCurrentProject() {
 
 bool SelectProjectView::SaveSelectedProject() {
   auto appWindow = static_cast<AppWindow *>(&w_);
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
   PersistencyService *ps = PersistencyService::GetInstance();
 
   auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);

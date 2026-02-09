@@ -35,6 +35,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
   virtual void OnFocus();
+  virtual void OnFocusLost();
 
   // Observer for action callback
   void Update(Observable &, I_ObservableData *);
@@ -71,6 +72,7 @@ private:
   void updateGraphMarkers();
   void updateZoomWindow();
   void adjustZoom(int32_t delta);
+  void releasePreviewAutoSaveBlock();
 
   // UI fields
   etl::vector<UIIntVarField, 1> intVarField_;
@@ -88,6 +90,7 @@ private:
   bool isPlaying_;
   bool isSingleCycle_; // Whether the sample is a single cycle waveform
   bool playKeyHeld_;   // Flag to track when the play key is being held down
+  bool autoSaveBlockedForPreview_ = false;
 
   // Cached sample parameters
   uint32_t start_ = 0;

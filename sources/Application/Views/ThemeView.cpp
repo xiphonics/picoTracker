@@ -425,6 +425,8 @@ void ThemeView::handleThemeExport() {
 }
 
 void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   // Export the theme using Config
   Config *config = Config::GetInstance();
   bool result = config->ExportTheme(themeName, overwrite);
@@ -476,6 +478,7 @@ void ThemeView::OnFocusLost() {
   if (!configDirty_) {
     return;
   }
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
 
   Config *config = Config::GetInstance();
   if (!config->Save()) {

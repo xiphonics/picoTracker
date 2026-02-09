@@ -73,6 +73,7 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
 SampleEditorView::~SampleEditorView() {}
 
 void SampleEditorView::Reset() {
+  releasePreviewAutoSaveBlock();
   fullWaveformRedraw_ = false;
   isPlaying_ = false;
   isSingleCycle_ = false;
@@ -125,6 +126,15 @@ void SampleEditorView::OnFocus() {
   fullWaveformRedraw_ = true;
 
   addAllFields();
+}
+
+void SampleEditorView::OnFocusLost() {
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+  }
+  isPlaying_ = false;
+  playKeyHeld_ = false;
+  releasePreviewAutoSaveBlock();
 }
 
 void SampleEditorView::addAllFields() {
@@ -224,6 +234,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         isPlaying_ = false;
         isDirty_ = true;
       }
+      releasePreviewAutoSaveBlock();
       return;
     }
   }
@@ -280,6 +291,10 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
 
       // Start playing the sample with just the filename
+      if (!autoSaveBlockedForPreview_) {
+        AppWindow::AcquireAutoSaveBlock();
+        autoSaveBlockedForPreview_ = true;
+      }
       if (isSingleCycle_) {
         Player::GetInstance()->StartLoopingStreaming(sampleFileName.c_str());
       } else {
@@ -608,6 +623,7 @@ void SampleEditorView::AnimationUpdate() {
       Player::GetInstance()->StopStreaming();
       isPlaying_ = false;
       playbackPosition_ = 0;
+      releasePreviewAutoSaveBlock();
       // forceRedraw_ = true;
       Trace::Debug("DEBUG: Playback stopped, resetting playhead\n");
     } else {
@@ -678,6 +694,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     }
     isPlaying_ = false;
     playKeyHeld_ = false;
+    releasePreviewAutoSaveBlock();
 
     auto opName = operationVar_.GetString();
     etl::string<SCREEN_WIDTH - 2> confirmLine("Apply ");
@@ -790,6 +807,8 @@ bool SampleEditorView::applySelectedOperation() {
 }
 
 bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   if (!FileSystem::GetInstance()) {
     Trace::Error("SampleEditorView: FileSystem unavailable");
     return false;
@@ -800,6 +819,7 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   }
   isPlaying_ = false;
   playKeyHeld_ = false;
+  releasePreviewAutoSaveBlock();
 
   if (!viewData_) {
     Trace::Error("SampleEditorView: View data unavailable");
@@ -912,6 +932,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
 }
 
 bool SampleEditorView::applyNormalizeOperation() {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   if (!FileSystem::GetInstance()) {
     Trace::Error("SampleEditorView: FileSystem unavailable");
     return false;
@@ -922,6 +944,7 @@ bool SampleEditorView::applyNormalizeOperation() {
   }
   isPlaying_ = false;
   playKeyHeld_ = false;
+  releasePreviewAutoSaveBlock();
 
   if (!viewData_) {
     Trace::Error("SampleEditorView: View data unavailable");
@@ -1046,6 +1069,8 @@ bool SampleEditorView::reloadEditedSample() {
 
 bool SampleEditorView::saveSample(
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   auto fs = FileSystem::GetInstance();
   if (!fs) {
     Trace::Error("SampleEditorView: FileSystem unavailable");
@@ -1092,6 +1117,8 @@ bool SampleEditorView::saveSample(
 
 bool SampleEditorView::loadSampleToPool(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   if (!viewData_ || !viewData_->project_) {
     Trace::Error("SampleEditorView: Project context unavailable");
     return false;
@@ -1155,10 +1182,18 @@ void SampleEditorView::navigateToView(ViewType vt) {
 
   isPlaying_ = false;
   playKeyHeld_ = false;
+  releasePreviewAutoSaveBlock();
 
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
   SetChanged();
   NotifyObservers(&ve);
+}
+
+void SampleEditorView::releasePreviewAutoSaveBlock() {
+  if (autoSaveBlockedForPreview_) {
+    AppWindow::ReleaseAutoSaveBlock();
+    autoSaveBlockedForPreview_ = false;
+  }
 }
 
 void SampleEditorView::updateSampleParameters() {

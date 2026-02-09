@@ -179,6 +179,8 @@ void ThemeImportView::warpToNextTheme(bool goUp) {
 }
 
 void ThemeImportView::onImportTheme(const char *filename) {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   // Use Config's ImportTheme method directly
   Config *config = Config::GetInstance();
   bool result = config->ImportTheme(filename);

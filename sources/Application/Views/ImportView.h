@@ -25,6 +25,7 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
+  virtual void OnFocusLost();
 
   // Static method to set which view will open the ImportView
   static void SetSourceViewType(ViewType vt);
@@ -55,6 +56,7 @@ private:
       false; // Flag to track when the edit key is being held down
   bool inProjectSampleDir_ =
       false; // Flag to track if we're in the project's sample directory
+  bool autoSaveBlockedForPreview_ = false;
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 #endif

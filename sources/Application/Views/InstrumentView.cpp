@@ -8,6 +8,7 @@
  */
 
 #include "InstrumentView.h"
+#include "Application/AppWindow.h"
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
@@ -1232,6 +1233,8 @@ void InstrumentView::resetInstrumentToDefaults() {
 }
 
 void InstrumentView::handleInstrumentExport() {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   // Get current instrument using its id
   I_Instrument *instrument =
       viewData_->project_->GetInstrumentBank()->GetInstrument(
@@ -1264,6 +1267,8 @@ void InstrumentView::handleInstrumentExport() {
       // Use a lambda function with captures to avoid using class members
       DoModal(mb, [this, instrument, name](View &v, ModalView &dialog) {
         if (dialog.GetReturnCode() == MBL_YES) {
+          AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
           // User confirmed override, call ExportInstrument with overwrite=true
 
           // Re-export the instrument with overwrite flag set to true

@@ -47,6 +47,21 @@ public:
   static AppWindow *Create(GUICreateWindowParams &, const char *projectName);
 
   static GUIColor GetColor(ColorDefinition cd);
+  static void AcquireAutoSaveBlock();
+  static void ReleaseAutoSaveBlock();
+  static bool IsAutoSaveBlocked();
+
+  class AutoSaveBlockGuard {
+  public:
+    AutoSaveBlockGuard();
+    ~AutoSaveBlockGuard();
+
+    AutoSaveBlockGuard(const AutoSaveBlockGuard &) = delete;
+    AutoSaveBlockGuard &operator=(const AutoSaveBlockGuard &) = delete;
+
+  private:
+    bool active_ = false;
+  };
 
   enum LoadProjectResult { LOAD_FAILED = -1, LOAD_OK = 0 };
 
@@ -144,6 +159,7 @@ private:
   bool playerInitialized_ = false;
 
   uint32_t lastAutoSave = 0;
+  uint32_t autoSaveBlockCount_ = 0;
 
   // Counter for animation frames, updated once per frame at PICO_CLOCK_HZ
   static uint32_t animationFrameCounter_;

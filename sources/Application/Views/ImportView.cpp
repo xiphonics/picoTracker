@@ -8,6 +8,7 @@
  */
 
 #include "ImportView.h"
+#include "Application/AppWindow.h"
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
@@ -37,6 +38,9 @@ ImportView::ImportView(GUIWindow &w, ViewData *viewData)
 ImportView::~ImportView() {}
 
 void ImportView::Reset() {
+  if (autoSaveBlockedForPreview_) {
+    AppWindow::ReleaseAutoSaveBlock();
+  }
   topIndex_ = 0;
   currentIndex_ = 0;
   previewPlayingIndex_ = 0;
@@ -45,6 +49,7 @@ void ImportView::Reset() {
   playKeyHeld_ = false;
   editKeyHeld_ = false;
   inProjectSampleDir_ = false;
+  autoSaveBlockedForPreview_ = false;
   fileIndexList_.clear();
 }
 
@@ -61,6 +66,10 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (Player::GetInstance()->IsPlaying()) {
         Player::GetInstance()->StopStreaming();
         previewPlayingIndex_ = (size_t)-1;
+      }
+      if (autoSaveBlockedForPreview_) {
+        AppWindow::ReleaseAutoSaveBlock();
+        autoSaveBlockedForPreview_ = false;
       }
       return;
     }
@@ -402,6 +411,17 @@ void ImportView::OnFocus() {
   }
 };
 
+void ImportView::OnFocusLost() {
+  if (Player::GetInstance()->IsPlaying()) {
+    Player::GetInstance()->StopStreaming();
+  }
+  playKeyHeld_ = false;
+  if (autoSaveBlockedForPreview_) {
+    AppWindow::ReleaseAutoSaveBlock();
+    autoSaveBlockedForPreview_ = false;
+  }
+}
+
 void ImportView::warpToNextSample(bool goUp) {
   if (goUp) {
     if (currentIndex_ > 0) {
@@ -480,6 +500,10 @@ void ImportView::preview(char *name) {
   Trace::Debug("Starting preview of %s (single cycle: %d)", name,
                isSingleCycle);
   previewPlayingIndex_ = currentIndex_;
+  if (!autoSaveBlockedForPreview_) {
+    AppWindow::AcquireAutoSaveBlock();
+    autoSaveBlockedForPreview_ = true;
+  }
 
   // Use looping for single cycle waveforms
   if (isSingleCycle) {
@@ -492,6 +516,8 @@ void ImportView::preview(char *name) {
 }
 
 void ImportView::import() {
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
   // stop playing before trying to import
   if (Player::GetInstance()->IsPlaying()) {
     MessageBox *mb =

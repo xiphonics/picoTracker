@@ -8,6 +8,7 @@
  */
 
 #include "ProjectView.h"
+#include "Application/AppWindow.h"
 #include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/randomnames.h"
@@ -47,6 +48,7 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_CANCEL) {
     return;
   }
+  AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
 
   PersistencyService *persist = PersistencyService::GetInstance();
   const char *projName = ((ProjectView &)v).getProjectName().c_str();
@@ -328,6 +330,8 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   }
   case FourCC::ActionSave: {
+    AppWindow::AutoSaveBlockGuard autoSaveBlockGuard;
+
     PersistencyService *persist = PersistencyService::GetInstance();
     char projName[MAX_PROJECT_NAME_LENGTH + 1];
     project_->GetProjectName(projName);
