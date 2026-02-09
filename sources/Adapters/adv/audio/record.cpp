@@ -15,8 +15,8 @@ static FileHandle RecordFile;
 uint8_t *activeBuffer;
 uint8_t *writeBuffer;
 
-__attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
-uint16_t recordBuffer[RECORD_BUFFER_SIZE];
+__attribute__((section(".FRAMEBUFFER")))
+__attribute__((aligned(32))) uint16_t recordBuffer[RECORD_BUFFER_SIZE];
 // TODO (democloid): this is less than ideal, but works for now. we need to swap
 // the samples in the input buffer and since we also do the monitoring from it,
 // we cannot invert it in place (and we would have to also invert the monitoring
@@ -230,9 +230,8 @@ void Record(void *) {
         Trace::Log("RECORD", "About to update WAV header");
         // Update WAV header with final file size
         const uint16_t wavChannels = recordingMono_ ? 1 : 2;
-        if (!WavHeaderWriter::UpdateFileSize(RecordFile.get(),
-                                             totalSamplesWritten, wavChannels,
-                                             2)) {
+        if (!WavHeaderWriter::UpdateFileSize(
+                RecordFile.get(), totalSamplesWritten, wavChannels, 2)) {
           Trace::Log("RECORD", "Failed to update WAV header");
         }
 
@@ -301,8 +300,8 @@ void Record(void *) {
         } else {
           // Track written frame count (1 frame = all channels at one sample
           // time).
-          totalSamplesWritten += recordingMono_ ? (bytesWritten / 2)
-                                                : (bytesWritten / 4);
+          totalSamplesWritten +=
+              recordingMono_ ? (bytesWritten / 2) : (bytesWritten / 4);
 
           auto now = xTaskGetTickCount();
           if ((now - lastLoggedTime) > 1000) { // log every sec
