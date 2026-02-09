@@ -46,6 +46,7 @@ static uint32_t start = 0;
 static uint32_t totalSamplesWritten = 0;
 static uint32_t recordDuration_ = MAX_INT32;
 static RecordSource source_ = LineIn;
+static bool recordingMono_ = false;
 
 // Swap L/R channels for interleaved 16-bit stereo using a 32-bit rotate.
 // 'size' is the number of uint16_t entries; assumes even (multiple of 2).
@@ -144,6 +145,8 @@ bool StartRecording(const char *filename, uint8_t threshold,
     recordDuration_ = MAX_INT32;
   }
 
+  recordingMono_ = (source_ == Mic);
+
   auto fs = FileSystem::GetInstance();
   fs->chdir(RECORDINGS_DIR);
 
@@ -154,8 +157,9 @@ bool StartRecording(const char *filename, uint8_t threshold,
     return false;
   }
 
-  // Write WAV header (44.1kHz, 16-bit, stereo)
-  if (!WavHeaderWriter::WriteHeader(RecordFile.get(), 44100, 2, 16)) {
+  // Write WAV header (44.1kHz, 16-bit, stereo/mono based on input source)
+  const uint16_t wavChannels = recordingMono_ ? 1 : 2;
+  if (!WavHeaderWriter::WriteHeader(RecordFile.get(), 44100, wavChannels, 16)) {
     Trace::Log("RECORD", "Failed to write WAV header");
     RecordFile.reset();
     return false;
@@ -225,8 +229,10 @@ void Record(void *) {
       if (RecordFile) {
         Trace::Log("RECORD", "About to update WAV header");
         // Update WAV header with final file size
+        const uint16_t wavChannels = recordingMono_ ? 1 : 2;
         if (!WavHeaderWriter::UpdateFileSize(RecordFile.get(),
-                                             totalSamplesWritten)) {
+                                             totalSamplesWritten, wavChannels,
+                                             2)) {
           Trace::Log("RECORD", "Failed to update WAV header");
         }
 
@@ -267,10 +273,22 @@ void Record(void *) {
       }
       if (RecordFile) {
         writeInProgress = true;
-        // Write swapped half-buffer to disk (bytes = samples * 2)
-        const uint32_t bytesToWrite = halfSamples * sizeof(uint16_t);
-        int bytesWritten =
-            RecordFile->Write((uint8_t *)recordSwapBuffer, bytesToWrite, 1);
+        uint32_t bytesToWrite = 0;
+        const void *writePtr = recordSwapBuffer;
+        if (recordingMono_) {
+          // Mic path is mono in hardware; write a single channel from the
+          // captured interleaved frame layout.
+          const uint32_t frameCount = halfSamples / 2;
+          uint16_t *monoBuffer = recordSwapBuffer;
+          for (uint32_t i = 0; i < frameCount; ++i) {
+            monoBuffer[i] = recordSwapBuffer[i * 2 + 1];
+          }
+          writePtr = monoBuffer;
+          bytesToWrite = frameCount * sizeof(uint16_t);
+        } else {
+          bytesToWrite = halfSamples * sizeof(uint16_t);
+        }
+        int bytesWritten = RecordFile->Write(writePtr, bytesToWrite, 1);
         // sync immediately after writing the buffer for consistent if not
         // fastest perf
         RecordFile->Sync();
@@ -281,9 +299,10 @@ void Record(void *) {
           recordingActive = false;
           continue;
         } else {
-          // Total samples written totalSamplesWritten/4 for stereo 16bit
-          // samples
-          totalSamplesWritten += bytesWritten / 4;
+          // Track written frame count (1 frame = all channels at one sample
+          // time).
+          totalSamplesWritten += recordingMono_ ? (bytesWritten / 2)
+                                                : (bytesWritten / 4);
 
           auto now = xTaskGetTickCount();
           if ((now - lastLoggedTime) > 1000) { // log every sec
