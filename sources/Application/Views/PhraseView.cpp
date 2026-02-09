@@ -962,6 +962,17 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
     if (mask & EPBM_ENTER) {
       cutPosition();
     }
+    if (mask & EPBM_ALT) {
+      viewMode_ = VM_SELECTION;
+      if (!clipboard_.active_) {
+        clipboard_.active_ = true;
+        clipboard_.col_ = col_;
+        clipboard_.row_ = row_;
+        saveCol_ = col_;
+        saveRow_ = row_;
+      }
+      isDirty_ = true;
+    }
     if (mask & EPBM_NAV)
       toggleMute();
     if (mask & EPBM_PLAY) {
@@ -1058,7 +1069,6 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
 
   } else if (mask & EPBM_ALT) {
     // ALT Modifier
-
   } else {
     // No modifier
     if (mask & EPBM_DOWN)
