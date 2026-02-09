@@ -92,72 +92,47 @@ void View::drawMap() {
 
   // draw entire map
   SetColor(CD_NORMAL);
-  char buffer[5];
+  
   props.invert_ = false;
-  // row1
-  strcpy(buffer, "D   ");
-  DrawString(pos._x, pos._y, buffer, props);
-  pos._y++;
-  // row2
-  strcpy(buffer, "P G ");
-  DrawString(pos._x, pos._y, buffer, props);
-  pos._y++;
-  // row3
-  strcpy(buffer, "SCPI");
-  DrawString(pos._x, pos._y, buffer, props);
-  pos._y++;
-  // row4
-  strcpy(buffer, "M TT");
-  DrawString(pos._x, pos._y, buffer, props);
+  const char *map[] = {"D   ", "P G ", "SCPI", "M TT"};
+  for (int i = 0; i < 4; i++) {
+    DrawString(pos._x, pos._y + i, map[i], props);
+  }
 
   // draw current screen on map
   SetColor(CD_HILITE2);
+  props.invert_ = true;
   pos._y = anchor._y + View::songRowCount_ + 1;
   switch (viewType_) {
   case VT_CHAIN:
-    pos._x += 1;
-    pos._y += 2;
-    DrawString(pos._x, pos._y, "C", props);
+    DrawString(pos._x + 1, pos._y + 2, "C", props);
     break;
   case VT_PHRASE:
-    pos._x += 2;
-    pos._y += 2;
-    DrawString(pos._x, pos._y, "P", props);
+    DrawString(pos._x + 2, pos._y + 2, "P", props);
     break;
   case VT_DEVICE:
     DrawString(pos._x, pos._y, "D", props);
     break;
   case VT_PROJECT:
-    pos._y += 1;
-    DrawString(pos._x, pos._y, "P", props);
+    DrawString(pos._x, pos._y + 1, "P", props);
     break;
   case VT_INSTRUMENT:
-    pos._x += 3;
-    pos._y += 2;
-    DrawString(pos._x, pos._y, "I", props);
+    DrawString(pos._x + 3, pos._y + 2, "I", props);
     break;
   case VT_TABLE: // under phrase
-    pos._x += 2;
-    pos._y += 3;
-    DrawString(pos._x, pos._y, "T", props);
+    DrawString(pos._x + 2, pos._y + 3, "T", props);
     break;
   case VT_TABLE2: // under instrument
-    pos._x += 3;
-    pos._y += 3;
-    DrawString(pos._x, pos._y, "T", props);
+    DrawString(pos._x + 3, pos._y + 3, "T", props);
     break;
   case VT_GROOVE:
-    pos._x += 2;
-    pos._y += 1;
-    DrawString(pos._x, pos._y, "G", props);
+    DrawString(pos._x + 2, pos._y + 1, "G", props);
     break;
   case VT_MIXER:
-    pos._y += 3;
-    DrawString(pos._x, pos._y, "M", props);
+    DrawString(pos._x, pos._y + 3, "M", props);
     break;
   default: // VT_SONG
-    pos._y += 2;
-    DrawString(pos._x, pos._y, "S", props);
+    DrawString(pos._x, pos._y + 2, "S", props);
   }
 }
 
