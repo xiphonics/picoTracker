@@ -15,8 +15,8 @@ static FileHandle RecordFile;
 uint8_t *activeBuffer;
 uint8_t *writeBuffer;
 
-__attribute__((section(".FRAMEBUFFER")))
-__attribute__((aligned(32))) uint16_t recordBuffer[RECORD_BUFFER_SIZE];
+__attribute__((section(".FRAMEBUFFER"))) __attribute__((aligned(32)))
+uint16_t recordBuffer[RECORD_BUFFER_SIZE];
 // TODO (democloid): this is less than ideal, but works for now. we need to swap
 // the samples in the input buffer and since we also do the monitoring from it,
 // we cannot invert it in place (and we would have to also invert the monitoring
