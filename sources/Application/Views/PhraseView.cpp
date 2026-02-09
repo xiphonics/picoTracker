@@ -1228,8 +1228,7 @@ void PhraseView::DrawView() {
   for (int j = 0; j < 16; j++) {
     ((j / ALT_ROW_NUMBER) % 2) ? SetColor(CD_ACCENT) : SetColor(CD_ACCENTALT);
     hex2char(j, buffer);
-    DrawString(pos._x, pos._y, buffer, props);
-    pos._y++;
+    DrawString(pos._x, pos._y + j, buffer, props);
   }
 
   SetColor(CD_NORMAL);
@@ -1237,6 +1236,7 @@ void PhraseView::DrawView() {
   pos = anchor;
 
   // Display notes
+
   unsigned char *data = phrase_->note_ + (16 * viewData_->currentPhrase_);
   unsigned char *instrData = phrase_->instr_ + (16 * viewData_->currentPhrase_);
   unsigned char lastInstr = 0xFF;
@@ -1292,6 +1292,7 @@ void PhraseView::DrawView() {
   }
 
   // Draw instruments
+
   pos = anchor;
   pos._x += 4;
 
@@ -1303,24 +1304,12 @@ void PhraseView::DrawView() {
     unsigned char d = *data++;
     setTextProps(props, 1, j, false);
     if (d == 0xFF) {
-      DrawString(pos._x, pos._y, "I--", props);
+      DrawString(pos._x, pos._y + j, "I--", props);
     } else {
       hex2char(d, buffer + 1);
-      DrawString(pos._x, pos._y, buffer, props);
-      if (j == row_) {
-        npf_snprintf(buffer, sizeof(buffer), "I%2.2X:", d);
-        etl::string<32 - BATTERY_GAUGE_WIDTH> instrLine = buffer;
-        setTextProps(props, 1, j, true);
-        GUIPoint location = GetTitlePosition();
-        location._x += 10; // make space for "Phrase %2.2x"
-        InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
-        I_Instrument *instr = bank->GetInstrument(d);
-        instrLine += instr->GetDisplayName();
-        DrawString(location._x, location._y, instrLine.c_str(), props);
-      }
+      DrawString(pos._x, pos._y + j, buffer, props);
     }
     setTextProps(props, 1, j, true);
-    pos._y++;
   }
 
   // Draw command 1
@@ -1333,12 +1322,8 @@ void PhraseView::DrawView() {
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
     setTextProps(props, 2, j, false);
-    DrawString(pos._x, pos._y, command.c_str(), props);
+    DrawString(pos._x, pos._y + j, command.c_str(), props);
     setTextProps(props, 2, j, true);
-    pos._y++;
-    if (j == row_ && (col_ == 2 || col_ == 3)) {
-      printHelpLegend(command, props);
-    }
   }
 
   // Draw commands params 1
@@ -1352,16 +1337,9 @@ void PhraseView::DrawView() {
   for (int j = 0; j < 16; j++) {
     ushort p = *param++;
     setTextProps(props, 3, j, false);
-    /*		if (p==0xFFFF) {
-                            DrawString(pos._x,pos._y,"----",props) ;
-                    } else {
-    */
     hexshort2char(p, buffer);
-    DrawString(pos._x, pos._y, buffer, props);
-    /*		}
-     */
+    DrawString(pos._x, pos._y + j, buffer, props);
     setTextProps(props, 3, j, true);
-    pos._y++;
   }
 
   // Draw commands 2
@@ -1374,12 +1352,8 @@ void PhraseView::DrawView() {
   for (int j = 0; j < 16; j++) {
     FourCC command = *f++;
     setTextProps(props, 4, j, false);
-    DrawString(pos._x, pos._y, command.c_str(), props);
+    DrawString(pos._x, pos._y + j, command.c_str(), props);
     setTextProps(props, 4, j, true);
-    pos._y++;
-    if (j == row_ && (col_ == 4 || col_ == 5)) {
-      printHelpLegend(command, props);
-    }
   }
 
   // Draw commands params
@@ -1393,23 +1367,34 @@ void PhraseView::DrawView() {
   for (int j = 0; j < 16; j++) {
     ushort p = *param++;
     setTextProps(props, 5, j, false);
-    /*		if (p==0xFFFF) {
-                            DrawString(pos._x,pos._y,"----",props) ;
-                    } else {
-    */
     hexshort2char(p, buffer);
-    DrawString(pos._x, pos._y, buffer, props);
-    /*		}
-     */
+    DrawString(pos._x, pos._y + j, buffer, props);
     setTextProps(props, 5, j, true);
-    pos._y++;
+  }
+
+  // Draw instrument Name
+
+  if (col_ == 1) {
+    unsigned char *data =
+        phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
+    if (*data != 0xFF) {
+      GUIPoint location = GetTitlePosition();
+      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+      I_Instrument *instr = bank->GetInstrument(*data);
+      npf_snprintf(buffer, sizeof(buffer), "I%2.2X:", *data);
+      etl::string<32 - BATTERY_GAUGE_WIDTH> instrLine = buffer;
+      instrLine += instr->GetDisplayName();
+      setTextProps(props, 1, row_, true);
+      DrawString(location._x + 10, location._y, instrLine.c_str(), props);
+    }
+  } else {
+    drawHelpLegend();
   }
 
   drawMap();
   drawNotes();
 
-  Player *player = Player::GetInstance();
-  if (player->IsRunning()) {
+  if (Player::GetInstance()->IsRunning()) {
     OnPlayerUpdate(PET_UPDATE);
   };
 
@@ -1524,13 +1509,30 @@ void PhraseView::AnimationUpdate() {
   // Flush the window to ensure changes are displayed
   w_.Flush();
 }
-void PhraseView::printHelpLegend(FourCC command, GUITextProperties props) {
-  if (command == FourCC::InstrumentCommandNone) {
+
+void PhraseView::drawHelpLegend() {
+  GUITextProperties props;
+  FourCC *command = nullptr;
+
+  if (col_ == 2 || col_ == 3) {
+    command = phrase_->cmd1_;
+  } else if (col_ == 4 || col_ == 5) {
+    command = phrase_->cmd2_;
+  }
+
+  if (!command) {
+    // cursor is not in a command column -> no help text
+    return;
+  }
+
+  command += (16 * viewData_->currentPhrase_ + row_);
+
+  if (*command == FourCC::InstrumentCommandNone) {
     // no command -> no help text
     return;
   }
 
-  char **helpLegend = getHelpLegend(command);
+  char **helpLegend = getHelpLegend(*command);
   char line[32]; //-1 for 1char space start of line
   // first clear top line upto battery gauge
   DrawString(0, 0, "                           ", props);
