@@ -1021,4 +1021,20 @@ void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
     strcpy(line, helpLegend[1]);
     DrawString(0, 1, line, props);
   }
+
+  // highlight the upper case letters before the ':'
+  const char *line0 = helpLegend[0];
+  const char *colonPos = strchr(line0, ':');
+
+  if (colonPos) {
+    SetColor(CD_ACCENT);
+    char str[2] = {0, 0};
+    for (const char *p = line0; p < colonPos; ++p) {
+      if ((*p >= 'A') && (*p <= 'Z')) {
+        str[0] = *p;
+        DrawString(static_cast<int>(p - line0), 0, str, props);
+      }
+    }
+    SetColor(CD_NORMAL);
+  }
 }
