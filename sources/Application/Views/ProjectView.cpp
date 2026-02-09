@@ -84,6 +84,8 @@ static void PurgeInstrumentsCallback(View &v, ModalView &dialog) {
 };
 
 static void RenderStopCallback(View &v, ModalView &dialog) {
+  ((ProjectView &)v).EndRenderAutoSaveBlock();
+
   // If the user clicked OK, stop the rendering
   if (dialog.GetReturnCode() == MBL_OK) {
     Player *player = Player::GetInstance();
@@ -220,6 +222,20 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
 ProjectView::~ProjectView() {}
 
+void ProjectView::BeginRenderAutoSaveBlock() {
+  if (!renderAutoSaveBlocked_) {
+    AppWindow::AcquireAutoSaveBlock();
+    renderAutoSaveBlocked_ = true;
+  }
+}
+
+void ProjectView::EndRenderAutoSaveBlock() {
+  if (renderAutoSaveBlocked_) {
+    AppWindow::ReleaseAutoSaveBlock();
+    renderAutoSaveBlocked_ = false;
+  }
+}
+
 void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (!pressed)
@@ -260,6 +276,7 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
 };
 
 void ProjectView::Reset() {
+  EndRenderAutoSaveBlock();
   lastClock_ = 0;
   lastTick_ = 0;
   saveAsFlag_ = false;
@@ -405,6 +422,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
+      BeginRenderAutoSaveBlock();
       // Start playback in rendering mode with MSM_FILE
       player->Start(PM_SONG, true, MSM_FILE, true);
 
@@ -416,6 +434,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
+      BeginRenderAutoSaveBlock();
       // Start playback in rendering mode with MSM_FILESPLIT
       player->Start(PM_SONG, true, MSM_FILESPLIT, true);
 

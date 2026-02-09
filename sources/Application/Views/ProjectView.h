@@ -53,6 +53,8 @@ public:
   void OnPurgeInstruments();
   void OnPurge();
   void OnQuit();
+  void BeginRenderAutoSaveBlock();
+  void EndRenderAutoSaveBlock();
 
 private:
   Project *project_;
@@ -71,6 +73,7 @@ private:
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
   bool saveAsFlag_ = false;
   etl::string<MAX_PROJECT_NAME_LENGTH> oldProjName_;
+  bool renderAutoSaveBlocked_ = false;
 
   bool CanExit();
 };
