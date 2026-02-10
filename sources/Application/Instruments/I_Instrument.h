@@ -104,6 +104,7 @@ public:
     return GetDefaultName();
   }
 
+  virtual bool SupportsCommand(FourCC cc) = 0;
   virtual void ProcessCommand(int channel, FourCC cc, ushort value) = 0;
 
   virtual void Purge();

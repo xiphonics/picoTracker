@@ -235,6 +235,14 @@ bool SIDInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
+bool SIDInstrument::SupportsCommand(FourCC cc) {
+  auto supportedCommands = {
+      FourCC::InstrumentCommandGateOff,
+  };
+  return std::find(supportedCommands.begin(), supportedCommands.end(), cc) !=
+         supportedCommands.end();
+}
+
 void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
   case FourCC::InstrumentCommandGateOff:

@@ -48,6 +48,7 @@ public:
   virtual bool IsEmpty();
 
   virtual InstrumentType GetType() { return IT_SAMPLE; };
+  virtual bool SupportsCommand(FourCC cc) override;
   virtual void ProcessCommand(int channel, FourCC cc, ushort value);
   virtual int GetTable();
   virtual bool GetTableAutomation();

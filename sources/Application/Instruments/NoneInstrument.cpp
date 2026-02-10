@@ -34,6 +34,8 @@ bool NoneInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
+bool NoneInstrument::SupportsCommand(FourCC cc) { return false; };
+
 void NoneInstrument::ProcessCommand(int channel, FourCC cc, ushort value){};
 
 int NoneInstrument::GetTable() { return 0; };
