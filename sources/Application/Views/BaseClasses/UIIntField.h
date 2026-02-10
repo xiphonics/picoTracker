@@ -15,8 +15,8 @@
 class UIIntField : public UIField {
 
 public:
-  UIIntField(GUIPoint &position, int *src, const char *format, int min, int max,
-             int xOffset, int yOffset);
+  UIIntField(const GUIPoint &position, int *src, const char *format, int min,
+             int max, int xOffset, int yOffset);
   virtual ~UIIntField(){};
   virtual void Draw(GUIWindow &w);
   virtual void ProcessArrow(unsigned short mask);

@@ -12,7 +12,7 @@
 #include "ViewUtils.h"
 #include <string.h>
 
-UIStaticField::UIStaticField(GUIPoint &position, const char *string)
+UIStaticField::UIStaticField(const GUIPoint &position, const char *string)
     : UIField(position) {
   string_ = string;
 };

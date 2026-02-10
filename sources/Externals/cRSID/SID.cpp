@@ -164,13 +164,28 @@ cRSID::cRSID_emulateADSRs(char cycles) {
                      *EnvelopeCounterPtr != (SR & 0xF0) + (SR >> 4)) {
             --(*EnvelopeCounterPtr); // resid adds 1 cycle delay, we omit that
                                      // mechanism here
-            if (*EnvelopeCounterPtr == 0)
+            if ((*ADSRstatePtr & DECAYSUSTAIN_BITVAL)) {
+              if (*EnvelopeCounterPtr < (SR & 0xF0) + (SR >> 4))
+                *EnvelopeCounterPtr = ((SR & 0xF0) + (SR >> 4));
+            } else if (*EnvelopeCounterPtr == 0)
               *ADSRstatePtr &= ~HOLDZEROn_BITVAL;
           }
         }
       }
     }
   }
+}
+
+void cRSID::cRSID_resetChannel(unsigned char channel) {
+  ADSRstate[channel] = 0;
+  RateCounter[channel] = 0;
+  EnvelopeCounter[channel] = 0;
+  ExponentCounter[channel] = 0;
+  PhaseAccu[channel] = 0;
+  PrevPhaseAccu[channel] = 0;
+  NoiseLFSR[channel] = 0x7FFFFF;
+  PrevWavGenOut[channel] = 0;
+  PrevWavData[channel] = 0;
 }
 
 __attribute__((always_inline)) inline unsigned short

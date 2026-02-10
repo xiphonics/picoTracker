@@ -37,9 +37,10 @@ public:
 public: // I_GUIGraphics implementation
   virtual void SetColor(GUIColor &);
   virtual void ClearTextRect(GUIRect &);
-  virtual void DrawChar(const char c, GUIPoint &pos, GUITextProperties &);
-  virtual void DrawString(const char *string, GUIPoint &pos,
-                          GUITextProperties &props, bool overlay = false);
+  virtual void DrawChar(const char c, const GUIPoint &pos,
+                        const GUITextProperties &props);
+  virtual void DrawString(const char *string, const GUIPoint &pos,
+                          const GUITextProperties &props, bool overlay = false);
   virtual void DrawRect(GUIRect &r);
   virtual void SetCurrentRectColor(GUIColor color);
   virtual GUIRect GetRect();

@@ -14,8 +14,6 @@ picoTracker supports several different types of instruments, each with its own u
 3. Press `EDIT`+`LEFT` or `EDIT`+`RIGHT` to cycle through the available instrument types:
    - **SAMPLE**: For playing back WAV samples with various effects
    - **MIDI**: For controlling external MIDI devices
-   - **SID**: Emulation of the Commodore 64 SID chip
-   - **OPAL**: FM synthesis emulating classic PC soundcards
 4. If you've made changes to the current instrument, you'll be asked to confirm before switching types
 5. Note that you cannot change instrument types while playback is active
 
@@ -175,62 +173,6 @@ A MIDI instrument has the following settings:
 - **Table**- As above, select a table the instrument will always run. Clone a table here: `ALT`+`EDIT`,`ENTER`. Make a new table by selecting a higher number not yet in use.
 
 
-## Synths
-
-### SID
-
-![screen capture of SID instrument screen](image/sid-screen-small.png)
-
-* **SID Chip:** Currently only "SID #1" is supported
-* **OSC:** The oscillator to use: 0-2
-* **VPW:** Pulse Width Modulation (PWM) of the oscillator, 000-FFF [1]
-* **WF:** Waveform to use: TSQN (Triangle, Sawtooth, Square PWM, Noise (white-ish))
-* **Sync:** Sync the oscillator (false/true)
-* **Ring:** Enable or disable Ring modulation (false/true)
-* **A/D/S/R:** Attack/Decay/Sustain/Release, each is single digit 0-15 value
-### Global SID chip settings:
-* **Filter:** Set if the filter is on or off (false/true)
-* **Flt cut:** The filter cutoff frequency 0-F
-* **Flt res:** The filter resonance 0-F
-* **Flt mode:** The filter mode: LP (lowpass), BP (bandpass), HP (highpass)
-* **Volume:** Output volume: 0-F
-
-The picoTracker currently only supports up to 3 SID instruments. Each of these represents a single monophonic oscillator with a single emulated "SID chip". Thus some of the settings above are shared between the 3 SID instruments because they are a global setting for the entire SID chip and *not* per oscillator.
-
-SID Notes:
-[1] In the SID, the pulse waveform can have its width dynamically adjusted. This parameter controls the duty cycle of the square wave, which determines the harmonic content and timbre of the sound.
-
-A pulse width of `0` creates a very thin pulse (almost a spike), while a value of `FFF` (4095) creates a full square wave. Values in between create asymmetrical square waves with varying harmonic characteristics.
-
-
-
-### OPAL
-
-![screen capture of OPAL instrument screen](image/opal-screen-small.png)
-
-The OPAL instrument is an emulation of the FM synth "retro soundcards" of the PC DOS era. Each "OPAL" instrument is made up of 2 FM operators that can be in configured for either standard 2 OP FM or in parallel as 2 additive oscillators. Each operator can have one of 8 different waveforms as shown below.
-
-The OPAL instrument has settings for both the instrument as a whole and per each of the 2 operators.
-
-The picoTracker currently only supports up to 3 OPAL instruments. Because each of the instruments is a single monophonic voice, using the same instrument simultaneously in the picoTracker 8 track sequencer will work as if you were controlling an external monophonic synth via MIDI output and cause the following notes to cut off the previously playing note on that OPAL instrument.
-
-### Instrument wide settings
-
-* **Algorithm:** Select either 2 Operator FM `(1*2)` or Additive `(1+2)`
-* **Deep tremelo/vibrato:** Enable/disable Deep tremelo or vibrato effect
-* **Feedback:** Turn on/off feedback for Operator 1
-
-### Per Operator settings
-
-* **Level:** Operator output level **attenuation**, hence 0 is *highest* output level
-* **Multiplier:** Frequency multiplier, `0=1/2, 1=1, 2=2, 3=3` etc
-* **A/D/S/R:** Attack/Decay/Sustain/Release, each is single digit 0-15 value
-* **Shape:** Waveform share, 8 to choose from, see waveform drawings below
-* **TR/VB/SU/KSR:**  Tremelo, Vibrato, Sustain and Envelope Scaling (KSR)
-* **Keyscale:** Attenuates output level towards higher pitch: `1=3.0 dB/oct, 2=1.5 dB/oct, 3=6.0 dB/oct`
-
-![screen capture of OPAL instrument screen](image/opal-waveforms-small.png)
-
 ### Exporting an Instrument
 
 1. Make sure your instrument has a name set in the "name:" field
@@ -267,14 +209,12 @@ Exported instruments are stored in `/instruments/` on your SD card.
 
 The picoTrackers CPU limits the number of simultaneous instruments that can be played at once. The specific limit depends on the instrument type and the settings of each instrument. In general the limit is:
 * 4-5 Sample instruments or
-* 3 OPAL instruments or
-* 3 SID instruments
 * 8 MIDI instruments
 
 Because they are very light weight when it comes to CPU usage, 8 MIDI instruments can be sequenced at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
 
-Even given the above limits, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 samplers, 1 OPAL, 1 SID and 4 MIDI should in theory be possible. Note this only applies to simultaneously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
+Even given the above limits, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 samplers and 4 MIDI should in theory be possible. Note this only applies to simultaneously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
 
 ## Exporting and Importing Instruments
 
-picoTracker allows you to save and reuse your instrument settings across different projects through the instrument export and import functionality. This feature is particularly useful for building a library of your favorite synth instruments or using instruments created by other picoTracker users.
+picoTracker allows you to save and reuse your instrument settings across different projects through the instrument export and import functionality. This feature is particularly useful for building a library of your favorite instruments or using instruments created by other picoTracker users.
