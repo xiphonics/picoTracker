@@ -1,10 +1,11 @@
 #pragma once
 
+// table LEG breaks vibrato
+// noise is affected by previous noise
+
 #include "Application/Utils/fixed.h"
 #include "System/Console/Trace.h"
 #include <cstdint>
-
-static uint32_t lcg = 42;
 
 constexpr int GB_NUM_WAVEFORMS = 8;
 constexpr int SAMPLING_RATE = 44100;
@@ -189,7 +190,7 @@ typedef struct voice_t {
   int32_t legatoTargetFreq = 0;  // target frequency
 
   uint16_t lfsr = 17;
-  uint32_t noise;
+  uint32_t noise = 42;
 
   uint32_t lastSample = 0;
 
@@ -363,8 +364,8 @@ typedef struct voice_t {
       noise(voice_noise_sn76489);
       break;
     case gbWaveNoiseWhite: // noise: white noise, frequency independent
-      lcg = (lcg * 1664525) + 1013904223;
-      sample = lcg & 0x0FFF'FFFF;
+      noise = (noise * 1664525) + 1013904223;
+      sample = noise & 0x0FFF'FFFF;
       break;
     }
 
@@ -389,6 +390,8 @@ typedef struct voice_t {
 
     // is this the best time to store that?
     lastFrequency = frequency;
+
+    noise = 42;
 
     // command settings
     legatoSteps = 0;
