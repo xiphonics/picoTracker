@@ -262,8 +262,7 @@ private:
     StoreModalCallback(
         &cb, sizeof(CallbackType), alignof(CallbackType),
         [](void *dst, const void *src) {
-          new (dst)
-              CallbackType(*reinterpret_cast<const CallbackType *>(src));
+          new (dst) CallbackType(*reinterpret_cast<const CallbackType *>(src));
         },
         [](void *storage) {
           reinterpret_cast<CallbackType *>(storage)->~CallbackType();

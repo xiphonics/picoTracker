@@ -221,10 +221,10 @@ AppWindow::~AppWindow() {
   MidiService::GetInstance()->Close();
 }
 
-void AppWindow::StoreModalCallback(const void *source, size_t size, size_t align,
-                                   void (*copyFn)(void *, const void *),
-                                   void (*destroyFn)(void *),
-                                   void (*invokeFn)(void *, View &, ModalView &)) {
+void AppWindow::StoreModalCallback(
+    const void *source, size_t size, size_t align,
+    void (*copyFn)(void *, const void *), void (*destroyFn)(void *),
+    void (*invokeFn)(void *, View &, ModalView &)) {
   modalCallbackSlot_.Store(source, size, align, copyFn, destroyFn, invokeFn);
 }
 

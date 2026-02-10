@@ -331,9 +331,7 @@ void View::DoModal(ModalView *view, ModalViewCallback cb) {
   isDirty_ = true;
 };
 
-void View::ClearModalCallback() {
-  ((AppWindow &)w_).ClearModalCallback();
-}
+void View::ClearModalCallback() { ((AppWindow &)w_).ClearModalCallback(); }
 
 void View::StoreModalCallback(const void *source, size_t size, size_t align,
                               OwnedModalCallbackCopyFn copyFn,

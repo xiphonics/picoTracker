@@ -16,10 +16,10 @@
 #include "System/Process/SysMutex.h"
 #include "System/io/Status.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
+#include <UIFramework/SimpleBaseClasses/EventManager.h>
 #include <cstddef>
 #include <new>
 #include <type_traits>
-#include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #define PROP_INVERT 0x80
 #ifdef ADV
