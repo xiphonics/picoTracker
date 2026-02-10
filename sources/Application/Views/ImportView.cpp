@@ -716,8 +716,11 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   // buttons between space
   MessageBox *mb = MessageBox::Create(*this, "    Remove sample?    ", filename,
                                       MBBF_OK | MBBF_CANCEL);
-  DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
+  DoModal(mb, [this, fs, fileIndex](View &v, ModalView &dialog) {
     if (dialog.GetReturnCode() == MBL_OK) {
+      char filename[PFILENAME_SIZE];
+      fs->getFileName(fileIndex, filename, PFILENAME_SIZE);
+
       // Translate filename to current sample pool index to avoid mismatches
       int sampleIndex =
           SamplePool::GetInstance()->FindSampleIndexByName(filename);

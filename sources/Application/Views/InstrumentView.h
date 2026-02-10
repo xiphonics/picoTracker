@@ -44,9 +44,6 @@ public:
   bool checkInstrumentModified();
   void resetInstrumentToDefaults();
 
-  // only public to allow to be called from modal dialog static callback
-  void applyProposedTypeChangeUI();
-
 protected:
   void warpToNext(int offset);
   void onInstrumentChange();

@@ -16,6 +16,7 @@
 #include "System/Process/SysMutex.h"
 #include "System/io/Status.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
+#include <cstddef>
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #define PROP_INVERT 0x80
@@ -151,6 +152,26 @@ private:
 public:
   // Static accessor for the animation frame counter
   static uint32_t GetAnimationFrameCounter() { return animationFrameCounter_; }
+
+  // Internal modal callback storage used by View to keep lambda callbacks alive
+  // until modal dismissal.
+  using OwnedModalCallbackCopyFn = void (*)(void *, const void *);
+  using OwnedModalCallbackInvokeFn = void (*)(void *, View &, ModalView &);
+  using OwnedModalCallbackDestroyFn = void (*)(void *);
+  void SetOwnedModalCallbackRaw(const void *source, size_t size, size_t align,
+                                OwnedModalCallbackCopyFn copyFn,
+                                OwnedModalCallbackDestroyFn destroyFn,
+                                OwnedModalCallbackInvokeFn invokeFn);
+  void InvokeOwnedModalCallback(View &v, ModalView &d);
+  void ClearOwnedModalCallback();
+
+private:
+  static constexpr size_t ModalCallbackStorageSize = 64;
+  alignas(std::max_align_t) unsigned char
+      modalCallbackStorage_[ModalCallbackStorageSize];
+  OwnedModalCallbackInvokeFn ownedModalCallbackInvoke_ = nullptr;
+  OwnedModalCallbackDestroyFn ownedModalCallbackDestroy_ = nullptr;
+  bool hasOwnedModalCallback_ = false;
 };
 
 #endif

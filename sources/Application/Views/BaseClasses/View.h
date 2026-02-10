@@ -19,6 +19,10 @@
 #include "UIFramework/Interfaces/I_GUIGraphics.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include "ViewEvent.h"
+#include <cstddef>
+#include <new>
+#include <type_traits>
+#include <utility>
 
 #define VU_METER_HEIGHT 16
 #define VU_METER_MAX 159
@@ -101,6 +105,7 @@ class View : public Observable {
 public:
   View(GUIWindow &w, ViewData *viewData);
   View(View &v);
+  virtual ~View();
 
   void SetFocus(ViewType vt) {
     viewType_ = vt;
@@ -157,6 +162,17 @@ public:
   virtual void DrawRect(GUIRect &r, ColorDefinition color);
 
   void DoModal(ModalView *view, ModalViewCallback cb = ModalViewCallback());
+
+  template <typename TCallback,
+            typename std::enable_if<
+                !std::is_same<typename std::decay<TCallback>::type,
+                              ModalViewCallback>::value,
+                int>::type = 0>
+  void DoModal(ModalView *view, TCallback &&cb) {
+    DoModal(view, ModalViewCallback());
+    SetOwnedModalCallback(std::forward<TCallback>(cb));
+  }
+
   void DismissModal();
 
 protected:
@@ -228,11 +244,48 @@ public: // temp hack for modl windo constructors
   int powerButtonHoldCount_;
 
 private:
+  static constexpr size_t ModalCallbackStorageSize = 64;
+  using OwnedModalCallbackInvokeFn = void (*)(void *, View &, ModalView &);
+  using OwnedModalCallbackDestroyFn = void (*)(void *);
+
+  void ClearOwnedModalCallback();
+  void InvokeOwnedModalCallback(View &v, ModalView &d);
+
+  template <typename TCallback> void SetOwnedModalCallback(TCallback &&cb) {
+    using CallbackType = typename std::decay<TCallback>::type;
+
+    static_assert(sizeof(CallbackType) <= ModalCallbackStorageSize,
+                  "Modal callback too large for inline storage");
+    static_assert(alignof(CallbackType) <= alignof(std::max_align_t),
+                  "Modal callback alignment exceeds inline storage alignment");
+
+    SetOwnedModalCallbackRaw(
+        &cb, sizeof(CallbackType), alignof(CallbackType),
+        [](void *dst, const void *src) {
+          new (dst)
+              CallbackType(*reinterpret_cast<const CallbackType *>(src));
+        },
+        [](void *storage) {
+          reinterpret_cast<CallbackType *>(storage)->~CallbackType();
+        },
+        [](void *storage, View &v, ModalView &d) {
+          CallbackType &callback = *reinterpret_cast<CallbackType *>(storage);
+          callback(v, d);
+        });
+    modalViewCallback_ =
+        ModalViewCallback::create<View, &View::InvokeOwnedModalCallback>(*this);
+  }
+
+  using OwnedModalCallbackCopyFn = void (*)(void *, const void *);
   unsigned short mask_;
   bool locked_;
   static bool initPrivate_;
   ModalView *modalView_;
   ModalViewCallback modalViewCallback_;
+  void SetOwnedModalCallbackRaw(const void *source, size_t size, size_t align,
+                                OwnedModalCallbackCopyFn copyFn,
+                                OwnedModalCallbackDestroyFn destroyFn,
+                                OwnedModalCallbackInvokeFn invokeFn);
 
 public:
   static int margin_;

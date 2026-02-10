@@ -1053,20 +1053,12 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (instrumentModified) {
         MessageBox *mb = MessageBox::Create(
             *this, "Change Instrument &", "lose settings?", MBBF_YES | MBBF_NO);
-
-        // Use a lambda function that captures 'this' for direct access to class
-        // members
-        DoModal(mb,
-                [this, currentType, proposedType](View &v, ModalView &dialog) {
-                  if (dialog.GetReturnCode() == MBL_YES) {
-                    // Apply the proposed type change when user confirms
-                    instrumentType_.SetInt(proposedType, false);
-                    onInstrumentTypeChange();
-                  }
-                  // If user selects No, we don't need to do anything as the UI
-                  // already shows the current type not the proposed type change
-                  // that the user decided to reject
-                });
+        DoModal(mb, [this, proposedType](View &v, ModalView &dialog) {
+          if (dialog.GetReturnCode() == MBL_YES) {
+            instrumentType_.SetInt(proposedType, false);
+            onInstrumentTypeChange();
+          }
+        });
       } else {
         // Apply the proposed type change immediately if not modified
         instrumentType_.SetInt(proposedType, false);

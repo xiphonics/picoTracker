@@ -61,6 +61,8 @@ View::View(GUIWindow &w, ViewData *viewData)
     prevRightVU_[i] = 0;
   }
 }
+
+View::~View() {}
 GUIPoint View::GetAnchor() {
   // Original code had a dynamic anchor point dending on song count, but
   // changing the song count didn't work anyway given that there are many places
@@ -322,17 +324,36 @@ void View::drawPlayTime(Player *player, GUIPoint pos,
 }
 
 void View::DoModal(ModalView *view, ModalViewCallback cb) {
+  ClearOwnedModalCallback();
   modalView_ = view;
   modalView_->OnFocus();
   modalViewCallback_ = cb;
   isDirty_ = true;
 };
 
+void View::ClearOwnedModalCallback() {
+  ((AppWindow &)w_).ClearOwnedModalCallback();
+}
+
+void View::SetOwnedModalCallbackRaw(const void *source, size_t size,
+                                    size_t align,
+                                    OwnedModalCallbackCopyFn copyFn,
+                                    OwnedModalCallbackDestroyFn destroyFn,
+                                    OwnedModalCallbackInvokeFn invokeFn) {
+  ((AppWindow &)w_)
+      .SetOwnedModalCallbackRaw(source, size, align, copyFn, destroyFn, invokeFn);
+}
+
+void View::InvokeOwnedModalCallback(View &v, ModalView &d) {
+  ((AppWindow &)w_).InvokeOwnedModalCallback(v, d);
+}
+
 void View::DismissModal() {
   if (modalView_ && modalView_->IsFinished()) {
     if (modalViewCallback_) {
       modalViewCallback_(*this, *modalView_);
     }
+    ClearOwnedModalCallback();
     modalView_->Destroy();
     modalView_ = nullptr;
     isDirty_ = true;
