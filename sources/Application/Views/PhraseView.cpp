@@ -878,8 +878,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
   }
 
-  if ((viewMode_ == VM_CLONE) &&
-      !((mask & EPBM_ENTER) && (mask & EPBM_ALT))) {
+  if ((viewMode_ == VM_CLONE) && !((mask & EPBM_ENTER) && (mask & EPBM_ALT))) {
     viewMode_ = VM_SELECTION;
   }
 
