@@ -324,28 +324,27 @@ void View::drawPlayTime(Player *player, GUIPoint pos,
 }
 
 void View::DoModal(ModalView *view, ModalViewCallback cb) {
-  ClearOwnedModalCallback();
+  ClearModalCallback();
   modalView_ = view;
   modalView_->OnFocus();
   modalViewCallback_ = cb;
   isDirty_ = true;
 };
 
-void View::ClearOwnedModalCallback() {
-  ((AppWindow &)w_).ClearOwnedModalCallback();
+void View::ClearModalCallback() {
+  ((AppWindow &)w_).ClearModalCallback();
 }
 
-void View::SetOwnedModalCallbackRaw(const void *source, size_t size,
-                                    size_t align,
-                                    OwnedModalCallbackCopyFn copyFn,
-                                    OwnedModalCallbackDestroyFn destroyFn,
-                                    OwnedModalCallbackInvokeFn invokeFn) {
+void View::StoreModalCallback(const void *source, size_t size, size_t align,
+                              OwnedModalCallbackCopyFn copyFn,
+                              OwnedModalCallbackDestroyFn destroyFn,
+                              OwnedModalCallbackInvokeFn invokeFn) {
   ((AppWindow &)w_)
-      .SetOwnedModalCallbackRaw(source, size, align, copyFn, destroyFn, invokeFn);
+      .StoreModalCallback(source, size, align, copyFn, destroyFn, invokeFn);
 }
 
-void View::InvokeOwnedModalCallback(View &v, ModalView &d) {
-  ((AppWindow &)w_).InvokeOwnedModalCallback(v, d);
+void View::InvokeModalCallback(View &v, ModalView &d) {
+  ((AppWindow &)w_).InvokeModalCallback(v, d);
 }
 
 void View::DismissModal() {
@@ -353,7 +352,7 @@ void View::DismissModal() {
     if (modalViewCallback_) {
       modalViewCallback_(*this, *modalView_);
     }
-    ClearOwnedModalCallback();
+    ClearModalCallback();
     modalView_->Destroy();
     modalView_ = nullptr;
     isDirty_ = true;

@@ -248,8 +248,8 @@ private:
   using OwnedModalCallbackInvokeFn = void (*)(void *, View &, ModalView &);
   using OwnedModalCallbackDestroyFn = void (*)(void *);
 
-  void ClearOwnedModalCallback();
-  void InvokeOwnedModalCallback(View &v, ModalView &d);
+  void ClearModalCallback();
+  void InvokeModalCallback(View &v, ModalView &d);
 
   template <typename TCallback> void SetOwnedModalCallback(TCallback &&cb) {
     using CallbackType = typename std::decay<TCallback>::type;
@@ -259,7 +259,7 @@ private:
     static_assert(alignof(CallbackType) <= alignof(std::max_align_t),
                   "Modal callback alignment exceeds inline storage alignment");
 
-    SetOwnedModalCallbackRaw(
+    StoreModalCallback(
         &cb, sizeof(CallbackType), alignof(CallbackType),
         [](void *dst, const void *src) {
           new (dst)
@@ -273,7 +273,7 @@ private:
           callback(v, d);
         });
     modalViewCallback_ =
-        ModalViewCallback::create<View, &View::InvokeOwnedModalCallback>(*this);
+        ModalViewCallback::create<View, &View::InvokeModalCallback>(*this);
   }
 
   using OwnedModalCallbackCopyFn = void (*)(void *, const void *);
@@ -282,10 +282,10 @@ private:
   static bool initPrivate_;
   ModalView *modalView_;
   ModalViewCallback modalViewCallback_;
-  void SetOwnedModalCallbackRaw(const void *source, size_t size, size_t align,
-                                OwnedModalCallbackCopyFn copyFn,
-                                OwnedModalCallbackDestroyFn destroyFn,
-                                OwnedModalCallbackInvokeFn invokeFn);
+  void StoreModalCallback(const void *source, size_t size, size_t align,
+                          OwnedModalCallbackCopyFn copyFn,
+                          OwnedModalCallbackDestroyFn destroyFn,
+                          OwnedModalCallbackInvokeFn invokeFn);
 
 public:
   static int margin_;

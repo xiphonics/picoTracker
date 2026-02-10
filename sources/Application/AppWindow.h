@@ -17,6 +17,8 @@
 #include "System/io/Status.h"
 #include "UIFramework/SimpleBaseClasses/GUIWindow.h"
 #include <cstddef>
+#include <new>
+#include <type_traits>
 #include <UIFramework/SimpleBaseClasses/EventManager.h>
 
 #define PROP_INVERT 0x80
@@ -153,25 +155,57 @@ public:
   // Static accessor for the animation frame counter
   static uint32_t GetAnimationFrameCounter() { return animationFrameCounter_; }
 
-  // Internal modal callback storage used by View to keep lambda callbacks alive
+  // Internal modal callback API used by View to keep lambda callbacks alive
   // until modal dismissal.
-  using OwnedModalCallbackCopyFn = void (*)(void *, const void *);
-  using OwnedModalCallbackInvokeFn = void (*)(void *, View &, ModalView &);
-  using OwnedModalCallbackDestroyFn = void (*)(void *);
-  void SetOwnedModalCallbackRaw(const void *source, size_t size, size_t align,
-                                OwnedModalCallbackCopyFn copyFn,
-                                OwnedModalCallbackDestroyFn destroyFn,
-                                OwnedModalCallbackInvokeFn invokeFn);
-  void InvokeOwnedModalCallback(View &v, ModalView &d);
-  void ClearOwnedModalCallback();
+  void StoreModalCallback(const void *source, size_t size, size_t align,
+                          void (*copyFn)(void *, const void *),
+                          void (*destroyFn)(void *),
+                          void (*invokeFn)(void *, View &, ModalView &));
+  void InvokeModalCallback(View &v, ModalView &d);
+  void ClearModalCallback();
 
 private:
-  static constexpr size_t ModalCallbackStorageSize = 64;
-  alignas(std::max_align_t) unsigned char
-      modalCallbackStorage_[ModalCallbackStorageSize];
-  OwnedModalCallbackInvokeFn ownedModalCallbackInvoke_ = nullptr;
-  OwnedModalCallbackDestroyFn ownedModalCallbackDestroy_ = nullptr;
-  bool hasOwnedModalCallback_ = false;
+  struct ModalCallbackSlot {
+    static constexpr size_t StorageSize = 64;
+    using CopyFn = void (*)(void *, const void *);
+    using DestroyFn = void (*)(void *);
+    using InvokeFn = void (*)(void *, View &, ModalView &);
+
+    void Store(const void *source, size_t size, size_t align, CopyFn copyFn,
+               DestroyFn destroyFn, InvokeFn invokeFn) {
+      Clear();
+      if (size > StorageSize || align > alignof(std::max_align_t) || !source ||
+          !copyFn || !destroyFn || !invokeFn) {
+        return;
+      }
+      copyFn(storage_, source);
+      invoke_ = invokeFn;
+      destroy_ = destroyFn;
+      active_ = true;
+    }
+
+    void Invoke(View &v, ModalView &d) {
+      if (active_ && invoke_) {
+        invoke_(storage_, v, d);
+      }
+    }
+
+    void Clear() {
+      if (active_ && destroy_) {
+        destroy_(storage_);
+      }
+      active_ = false;
+      invoke_ = nullptr;
+      destroy_ = nullptr;
+    }
+
+    alignas(std::max_align_t) unsigned char storage_[StorageSize];
+    InvokeFn invoke_ = nullptr;
+    DestroyFn destroy_ = nullptr;
+    bool active_ = false;
+  };
+
+  ModalCallbackSlot modalCallbackSlot_;
 };
 
 #endif

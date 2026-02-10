@@ -217,41 +217,22 @@ AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
 };
 
 AppWindow::~AppWindow() {
-  ClearOwnedModalCallback();
+  ClearModalCallback();
   MidiService::GetInstance()->Close();
 }
 
-void AppWindow::SetOwnedModalCallbackRaw(
-    const void *source, size_t size, size_t align,
-    OwnedModalCallbackCopyFn copyFn, OwnedModalCallbackDestroyFn destroyFn,
-    OwnedModalCallbackInvokeFn invokeFn) {
-  ClearOwnedModalCallback();
-
-  if (size > ModalCallbackStorageSize || align > alignof(std::max_align_t) ||
-      !source || !copyFn || !destroyFn || !invokeFn) {
-    return;
-  }
-
-  copyFn(modalCallbackStorage_, source);
-  ownedModalCallbackInvoke_ = invokeFn;
-  ownedModalCallbackDestroy_ = destroyFn;
-  hasOwnedModalCallback_ = true;
+void AppWindow::StoreModalCallback(const void *source, size_t size, size_t align,
+                                   void (*copyFn)(void *, const void *),
+                                   void (*destroyFn)(void *),
+                                   void (*invokeFn)(void *, View &, ModalView &)) {
+  modalCallbackSlot_.Store(source, size, align, copyFn, destroyFn, invokeFn);
 }
 
-void AppWindow::InvokeOwnedModalCallback(View &v, ModalView &d) {
-  if (hasOwnedModalCallback_ && ownedModalCallbackInvoke_) {
-    ownedModalCallbackInvoke_(modalCallbackStorage_, v, d);
-  }
+void AppWindow::InvokeModalCallback(View &v, ModalView &d) {
+  modalCallbackSlot_.Invoke(v, d);
 }
 
-void AppWindow::ClearOwnedModalCallback() {
-  if (hasOwnedModalCallback_ && ownedModalCallbackDestroy_) {
-    ownedModalCallbackDestroy_(modalCallbackStorage_);
-  }
-  hasOwnedModalCallback_ = false;
-  ownedModalCallbackInvoke_ = nullptr;
-  ownedModalCallbackDestroy_ = nullptr;
-}
+void AppWindow::ClearModalCallback() { modalCallbackSlot_.Clear(); }
 
 void AppWindow::SetSdCardPresent(bool present) {
   sdCardMissing_ = !present;
