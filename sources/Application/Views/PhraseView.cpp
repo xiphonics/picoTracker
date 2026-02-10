@@ -801,7 +801,6 @@ void PhraseView::OnFocus() {
 };
 
 void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
-
   if (!pressed) {
     // ENTER might now no longer be pressed so first check if we were in
     // audition mode and if its not then stop auditioning, stopAudition does
@@ -879,7 +878,13 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
   }
 
-  if (mask == (EPBM_ALT | EPBM_EDIT | EPBM_ENTER)) {
+  if ((viewMode_ == VM_CLONE) &&
+      !((mask & EPBM_ENTER) && (mask & EPBM_ALT))) {
+    viewMode_ = VM_SELECTION;
+  }
+
+  if ((mask == (EPBM_ALT | EPBM_EDIT | EPBM_ENTER)) ||
+      ((viewMode_ == VM_CLONE) && (mask & EPBM_ENTER) && (mask & EPBM_ALT))) {
     if (col_ < 2) {
       InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
       unsigned char *c =
@@ -928,6 +933,8 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
       }
     };
+    viewMode_ = VM_NORMAL;
+    clipboard_.active_ = false;
     return;
   }
 
@@ -963,15 +970,7 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
       cutPosition();
     }
     if (mask & EPBM_ALT) {
-      viewMode_ = VM_SELECTION;
-      if (!clipboard_.active_) {
-        clipboard_.active_ = true;
-        clipboard_.col_ = col_;
-        clipboard_.row_ = row_;
-        saveCol_ = col_;
-        saveRow_ = row_;
-      }
-      isDirty_ = true;
+      viewMode_ = VM_CLONE;
     }
     if (mask & EPBM_NAV)
       toggleMute();
