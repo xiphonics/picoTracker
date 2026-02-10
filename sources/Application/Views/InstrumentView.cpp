@@ -1053,6 +1053,10 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (instrumentModified) {
         MessageBox *mb = MessageBox::Create(
             *this, "Change Instrument &", "lose settings?", MBBF_YES | MBBF_NO);
+
+        // If user selects No, we don't need to do anything as the UI
+        // already shows the current type not the proposed type change
+        // that the user decided to reject
         DoModal(mb, [this, proposedType](View &v, ModalView &dialog) {
           if (dialog.GetReturnCode() == MBL_YES) {
             instrumentType_.SetInt(proposedType, false);
