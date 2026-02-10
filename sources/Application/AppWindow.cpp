@@ -1009,10 +1009,11 @@ bool AppWindow::AutoSave() {
   bool autosaveSafeView =
       _currentView == &views_->songView || _currentView == &views_->chainView ||
       _currentView == &views_->phraseView ||
-      _currentView == &views_->tableView || _currentView == &views_->grooveView ||
+      _currentView == &views_->tableView ||
+      _currentView == &views_->grooveView ||
       _currentView == &views_->instrumentView ||
-      _currentView == &views_->deviceView || _currentView == &views_->themeView || 
-      _currentView == &views_->mixerView;
+      _currentView == &views_->deviceView ||
+      _currentView == &views_->themeView || _currentView == &views_->mixerView;
   bool recording = IsRecordingActive();
   if (!player->IsRunning() && !recording && autosaveSafeView) {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
