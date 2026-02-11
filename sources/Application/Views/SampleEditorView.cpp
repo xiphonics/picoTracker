@@ -47,6 +47,8 @@ constexpr const char *const sampleEditOperationNames[] = {"Trim",
                                                           "Peak Normalize"};
 constexpr uint32_t sampleEditOperationCount =
     sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
+constexpr const char *const kSampleEditTempLeafName = ".sampledit_tmp.wav";
+constexpr const char *const kSampleEditBackupLeafName = ".sampledit_bak.wav";
 
 constexpr int32_t GraphXOffset = 0;
 constexpr int32_t GraphYOffset = 2 * CHAR_HEIGHT;
@@ -66,6 +68,7 @@ SampleEditorView::SampleEditorView(GUIWindow &w, ViewData *data)
       win(w), graphFieldPos_(GraphXOffset, GraphYOffset),
       graphField_(graphFieldPos_, GraphField::BitmapWidth,
                   GraphField::BitmapHeight) {
+  assignWorkingFilename();
   graphField_.SetShowBaseline(true);
   graphField_.SetBorderColors(CD_HILITE1, CD_HILITE2);
 }
@@ -88,6 +91,8 @@ void SampleEditorView::Reset() {
   modalClearCount_ = 0;
   filename.clear();
   filenameVar_.SetString("", false);
+  workingFilename_.clear();
+  hasWorkingCopy_ = false;
   graphField_.Reset();
   graphField_.SetShowBaseline(true);
   graphField_.SetBorderColors(CD_HILITE1, CD_HILITE2);
@@ -103,7 +108,202 @@ void SampleEditorView::Reset() {
 // Static method to set the source view type before opening SampleEditorView
 void SampleEditorView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 
+void SampleEditorView::assignWorkingFilename() {
+  if (!buildSiblingPath(viewData_->sampleEditorFilename, kSampleEditTempLeafName,
+                        workingFilename_)) {
+    Trace::Error("SampleEditorView: Failed creating temp filename from %s",
+                 viewData_->sampleEditorFilename.c_str());
+  }
+}
+
+bool SampleEditorView::buildSiblingPath(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &srcFilename,
+    const char *siblingName,
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &outFilename) const {
+  outFilename.clear();
+  if (srcFilename.empty() || !siblingName || siblingName[0] == '\0') {
+    return false;
+  }
+
+  size_t slashPos = srcFilename.size();
+  for (size_t i = srcFilename.size(); i > 0; --i) {
+    if (srcFilename[i - 1] == '/') {
+      slashPos = i - 1;
+      break;
+    }
+  }
+
+  if (slashPos == srcFilename.size()) {
+    outFilename.append(siblingName);
+  } else if (slashPos == 0) {
+    outFilename.append("/");
+    outFilename.append(siblingName);
+  } else {
+    outFilename = srcFilename.substr(0, slashPos);
+    outFilename.append("/");
+    outFilename.append(siblingName);
+  }
+
+  if (outFilename.is_truncated()) {
+    outFilename.clear();
+    return false;
+  }
+  return true;
+}
+
+const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &
+SampleEditorView::activeFilename() const {
+  return hasWorkingCopy_ ? workingFilename_ : viewData_->sampleEditorFilename;
+}
+
+bool SampleEditorView::ensureWorkingCopy() {
+  auto fs = FileSystem::GetInstance();
+  if (!fs) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return false;
+  }
+
+  if (hasWorkingCopy_) {
+    return true;
+  }
+
+  if (viewData_->sampleEditorFilename.empty()) {
+    Trace::Error("SampleEditorView: No source file available");
+    return false;
+  }
+
+  if (workingFilename_.empty()) {
+    assignWorkingFilename();
+  }
+  if (workingFilename_.empty()) {
+    Trace::Error("SampleEditorView: Could not prepare temp filename");
+    return false;
+  }
+  if (workingFilename_ == viewData_->sampleEditorFilename) {
+    Trace::Error("SampleEditorView: Temp filename conflicts with source file %s",
+                 workingFilename_.c_str());
+    return false;
+  }
+
+  if (fs->exists(workingFilename_.c_str()) &&
+      !fs->DeleteFile(workingFilename_.c_str())) {
+    Trace::Error("SampleEditorView: Failed deleting stale temp file %s",
+                 workingFilename_.c_str());
+    return false;
+  }
+
+  if (!fs->CopyFile(viewData_->sampleEditorFilename.c_str(),
+                    workingFilename_.c_str())) {
+    Trace::Error("SampleEditorView: Failed creating temp copy %s -> %s",
+                 viewData_->sampleEditorFilename.c_str(),
+                 workingFilename_.c_str());
+    return false;
+  }
+
+  hasWorkingCopy_ = true;
+  return true;
+}
+
+void SampleEditorView::discardWorkingCopy() {
+  auto fs = FileSystem::GetInstance();
+  if (!fs || workingFilename_.empty()) {
+    hasWorkingCopy_ = false;
+    return;
+  }
+
+  if (fs->exists(workingFilename_.c_str()) &&
+      !fs->DeleteFile(workingFilename_.c_str())) {
+    Trace::Error("SampleEditorView: Failed deleting temp file %s",
+                 workingFilename_.c_str());
+  }
+
+  hasWorkingCopy_ = false;
+}
+
+bool SampleEditorView::commitWorkingCopy(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &targetFilename) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs) {
+    Trace::Error("SampleEditorView: FileSystem unavailable");
+    return false;
+  }
+  if (!hasWorkingCopy_) {
+    return true;
+  }
+
+  const bool commitToOriginal = (targetFilename == viewData_->sampleEditorFilename);
+  if (commitToOriginal) {
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> backupFilename;
+    if (!buildSiblingPath(targetFilename, kSampleEditBackupLeafName,
+                          backupFilename)) {
+      Trace::Error("SampleEditorView: Failed creating backup filename for %s",
+                   targetFilename.c_str());
+      return false;
+    }
+    if (backupFilename == targetFilename || backupFilename == workingFilename_) {
+      Trace::Error("SampleEditorView: Backup filename conflicts for %s",
+                   targetFilename.c_str());
+      return false;
+    }
+    if (fs->exists(backupFilename.c_str()) &&
+        !fs->DeleteFile(backupFilename.c_str())) {
+      Trace::Error("SampleEditorView: Failed deleting stale backup file %s",
+                   backupFilename.c_str());
+      return false;
+    }
+
+    bool movedOriginalToBackup = false;
+    if (fs->exists(targetFilename.c_str())) {
+      if (!fs->MoveFile(targetFilename.c_str(), backupFilename.c_str())) {
+        Trace::Error("SampleEditorView: Failed moving original file to backup %s"
+                     " -> %s",
+                     targetFilename.c_str(), backupFilename.c_str());
+        return false;
+      }
+      movedOriginalToBackup = true;
+    }
+
+    if (!fs->MoveFile(workingFilename_.c_str(), targetFilename.c_str())) {
+      Trace::Error("SampleEditorView: Failed moving temp file %s -> %s",
+                   workingFilename_.c_str(), targetFilename.c_str());
+      if (movedOriginalToBackup &&
+          !fs->MoveFile(backupFilename.c_str(), targetFilename.c_str())) {
+        Trace::Error("SampleEditorView: Failed restoring original file from %s",
+                     backupFilename.c_str());
+      }
+      return false;
+    }
+
+    if (movedOriginalToBackup && fs->exists(backupFilename.c_str()) &&
+        !fs->DeleteFile(backupFilename.c_str())) {
+      Trace::Error("SampleEditorView: Failed deleting backup file %s",
+                   backupFilename.c_str());
+    }
+    hasWorkingCopy_ = false;
+    return true;
+  } else {
+    if (fs->exists(targetFilename.c_str()) &&
+        !fs->DeleteFile(targetFilename.c_str())) {
+      Trace::Error("SampleEditorView: Failed deleting destination file %s",
+                   targetFilename.c_str());
+      return false;
+    }
+
+    if (!fs->CopyFile(workingFilename_.c_str(), targetFilename.c_str())) {
+      Trace::Error("SampleEditorView: Failed committing temp file %s -> %s",
+                   workingFilename_.c_str(), targetFilename.c_str());
+      return false;
+    }
+  }
+
+  discardWorkingCopy();
+  return true;
+}
+
 void SampleEditorView::OnFocus() {
+  assignWorkingFilename();
+  discardWorkingCopy();
+
   const auto newSampleFile = viewData_->sampleEditorFilename;
   // Use the passed in filename to fill in our filename variable with the last 4
   // chars (".wav") removed
@@ -250,7 +450,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // Start sample playback if no already playing
     if (!isPlaying_) {
       // Get the sample file name
-      const auto sampleFileName = viewData_->sampleEditorFilename;
+      const auto &sampleFileName = activeFilename();
       isSingleCycle_ = (tempSampleSize_ <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
 
       Trace::Debug("DEBUG: Starting playback of sample '%s' (size=%d, "
@@ -536,7 +736,7 @@ void SampleEditorView::rebuildWaveform() {
   }
 
   auto file = FileSystem::GetInstance()->Open(
-      viewData_->sampleEditorFilename.c_str(), "r");
+      activeFilename().c_str(), "r");
   if (!file) {
     Trace::Error("SampleEditorView: Failed to open file for waveform rebuild");
     return;
@@ -686,7 +886,7 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
 
     MessageBox *mb =
         MessageBox::Create(*this, confirmLine.c_str(),
-                           "This overwrites the file", MBBF_YES | MBBF_NO);
+                           "Saved only after Save", MBBF_YES | MBBF_NO);
 
     // Modal cannot properly draw over the waveform gfx area because text
     // drawing doesn't know the area because ClearTextRect() is not yet
@@ -735,6 +935,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     return;
   }
   case FourCC::ActionCancel: {
+    discardWorkingCopy();
+
     const auto &originalFilename = viewData_->sampleEditorFilename;
     if (originalFilename.compare(RECORDING_FILENAME) == 0 &&
         !viewData_->isShowingSampleEditorProjectPool) {
@@ -779,6 +981,10 @@ void SampleEditorView::onOperationFailedAck(View &, ModalView &) {
 bool SampleEditorView::applySelectedOperation() {
   updateSampleParameters();
 
+  if (!ensureWorkingCopy()) {
+    return false;
+  }
+
   uint8_t opIndex = operationVar_.GetInt();
   if (opIndex < 0 ||
       opIndex > static_cast<int>(SampleEditOperation::Normalize)) {
@@ -819,7 +1025,7 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
-  const auto &filename = viewData_->sampleEditorFilename;
+  const auto &filename = activeFilename();
   if (filename.empty()) {
     Trace::Error("SampleEditorView: No filename available for trim");
     return false;
@@ -860,53 +1066,7 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return true;
   }
 
-  loadSample(viewData_->sampleEditorFilename,
-             viewData_->isShowingSampleEditorProjectPool);
-
-  // need to reload from disk into ram/flash pool samples
-  if (viewData_->isShowingSampleEditorProjectPool) {
-#ifndef ADV
-    // on pico we dont support unloading individual samples from flash
-    MessageBox *warning = MessageBox::Create(*this, "Please reload project",
-                                             "To apply changes", MBBF_OK);
-    DoModal(warning);
-    return true;
-#endif
-    auto pool = SamplePool::GetInstance();
-    if (pool) {
-      if (!goProjectSamplesDir(viewData_)) {
-        Trace::Error("SampleEditorView: Failed to chdir for pool reload");
-      } else {
-        uint16_t old_index =
-            pool->FindSampleIndexByName(viewData_->sampleEditorFilename);
-        if (old_index >= 0) {
-          uint16_t new_index = pool->ReloadSample(
-              old_index, viewData_->sampleEditorFilename.c_str());
-          if (new_index >= 0 && old_index != new_index) {
-            auto instrumentBank = viewData_->project_->GetInstrumentBank();
-            for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
-              if (instrument && instrument->GetType() == IT_SAMPLE) {
-                SampleInstrument *sampleInstrument =
-                    static_cast<SampleInstrument *>(instrument);
-                if (sampleInstrument->GetSampleIndex() == old_index) {
-                  sampleInstrument->AssignSample(new_index);
-                }
-              }
-            }
-          } else if (new_index < 0) {
-            Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
-                         viewData_->sampleEditorFilename.c_str());
-          }
-        } else {
-          Trace::Error(
-              "SampleEditorView: Sample %s not found in pool for reload",
-              viewData_->sampleEditorFilename.c_str());
-        }
-      }
-    } else {
-      Trace::Error("SampleEditorView: SamplePool unavailable for reload");
-    }
-  }
+  loadSample(activeFilename(), viewData_->isShowingSampleEditorProjectPool);
 
   uint32_t refreshedSize = static_cast<uint32_t>(tempSampleSize_);
   uint32_t newEndValue = refreshedSize > 0 ? refreshedSize - 1 : 0;
@@ -941,7 +1101,7 @@ bool SampleEditorView::applyNormalizeOperation() {
     return false;
   }
 
-  const auto &filename = viewData_->sampleEditorFilename;
+  const auto &filename = activeFilename();
   if (filename.empty()) {
     Trace::Error("SampleEditorView: No filename available for normalize");
     return false;
@@ -974,10 +1134,9 @@ bool SampleEditorView::applyNormalizeOperation() {
     return true;
   }
 
-  if (viewData_->isShowingSampleEditorProjectPool && !reloadEditedSample()) {
-    MessageBox *errorBox = MessageBox::Create(
-        *this, "Reload Failed", "Unable to refresh sample", MBBF_OK);
-    DoModal(errorBox);
+  loadSample(activeFilename(), viewData_->isShowingSampleEditorProjectPool);
+  if (tempSampleSize_ == 0) {
+    Trace::Error("SampleEditorView: Failed to reload normalized sample");
     return false;
   }
 
@@ -1089,12 +1248,32 @@ bool SampleEditorView::saveSample(
     }
   }
 
-  if (originalFilename != savedFilename) {
+  const bool commitToOriginal = (savedFilename == originalFilename);
+  const bool committingWorkingCopy = hasWorkingCopy_;
+
+  if (committingWorkingCopy) {
+    if (!commitWorkingCopy(savedFilename)) {
+      Trace::Error("SampleEditorView: Save failed committing temp to %s",
+                   savedFilename.c_str());
+      return false;
+    }
+  } else if (originalFilename != savedFilename) {
+    if (fs->exists(savedFilename.c_str()) &&
+        !fs->DeleteFile(savedFilename.c_str())) {
+      Trace::Error("SampleEditorView: Save failed deleting existing %s",
+                   savedFilename.c_str());
+      return false;
+    }
     if (!fs->CopyFile(originalFilename.c_str(), savedFilename.c_str())) {
       Trace::Error("SampleEditorView: Save failed copying %s -> %s",
                    originalFilename.c_str(), savedFilename.c_str());
       return false;
     }
+  }
+
+  if (viewData_->isShowingSampleEditorProjectPool && committingWorkingCopy &&
+      commitToOriginal && !reloadEditedSample()) {
+    Trace::Error("SampleEditorView: Save committed but failed pool refresh");
   }
 
   Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
@@ -1168,6 +1347,7 @@ void SampleEditorView::navigateToView(ViewType vt) {
 
   isPlaying_ = false;
   playKeyHeld_ = false;
+  discardWorkingCopy();
 
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
   SetChanged();
