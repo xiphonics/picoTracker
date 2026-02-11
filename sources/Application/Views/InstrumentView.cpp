@@ -29,6 +29,12 @@
 #include <cstdint>
 #include <nanoprintf.h>
 
+static void ConfirmInstrumentTypeChangeCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    ((InstrumentView &)v).applyProposedTypeChangeUI();
+  }
+}
+
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
                                           InstrumentTypeNames, IT_LAST, 0),
@@ -203,6 +209,11 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
 
   // Mark the view as dirty to ensure it gets redrawn
   isDirty_ = true;
+}
+
+void InstrumentView::applyProposedTypeChangeUI() {
+  instrumentType_.SetInt(pendingInstrumentType_, false);
+  onInstrumentTypeChange();
 }
 
 void InstrumentView::onInstrumentChange() {
@@ -1053,20 +1064,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (instrumentModified) {
         MessageBox *mb = MessageBox::Create(
             *this, "Change Instrument &", "lose settings?", MBBF_YES | MBBF_NO);
-
-        // Use a lambda function that captures 'this' for direct access to class
-        // members
-        DoModal(mb,
-                [this, currentType, proposedType](View &v, ModalView &dialog) {
-                  if (dialog.GetReturnCode() == MBL_YES) {
-                    // Apply the proposed type change when user confirms
-                    instrumentType_.SetInt(proposedType, false);
-                    onInstrumentTypeChange();
-                  }
-                  // If user selects No, we don't need to do anything as the UI
-                  // already shows the current type not the proposed type change
-                  // that the user decided to reject
-                });
+        pendingInstrumentType_ = proposedType;
+        DoModal(mb, ModalViewCallback::create<&ConfirmInstrumentTypeChangeCallback>());
       } else {
         // Apply the proposed type change immediately if not modified
         instrumentType_.SetInt(proposedType, false);

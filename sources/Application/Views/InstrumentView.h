@@ -73,6 +73,7 @@ private:
   // Variables for export confirmation dialog
   I_Instrument *exportInstrument_ = nullptr;
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> exportName_;
+  InstrumentType pendingInstrumentType_ = IT_NONE;
 
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIActionField, 2> persistentActionField_;
