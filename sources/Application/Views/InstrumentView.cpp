@@ -779,9 +779,8 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         MessageBox *mb = MessageBox::Create(*this, "Reset all settings?",
                                             MBBF_YES | MBBF_NO);
         pendingPurgeInstrument_ = instr;
-        DoModal(
-            mb,
-            ModalViewCallback::create<&InstrumentView::ConfirmResetInstrumentCallback>());
+        DoModal(mb, ModalViewCallback::create<
+                        &InstrumentView::ConfirmResetInstrumentCallback>());
       }
       return;
     }
@@ -1061,7 +1060,9 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         MessageBox *mb = MessageBox::Create(
             *this, "Change Instrument &", "lose settings?", MBBF_YES | MBBF_NO);
         pendingInstrumentType_ = proposedType;
-        DoModal(mb, ModalViewCallback::create<&ConfirmInstrumentTypeChangeCallback>());
+        DoModal(
+            mb,
+            ModalViewCallback::create<&ConfirmInstrumentTypeChangeCallback>());
       } else {
         // Apply the proposed type change immediately if not modified
         instrumentType_.SetInt(proposedType, false);
@@ -1114,9 +1115,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                                         "clear slices?", MBBF_YES | MBBF_NO);
     pendingSampleChangeInstrument_ = sampleInstr;
     pendingSampleChangeNewIndex_ = newIndex;
-    DoModal(
-        mb,
-        ModalViewCallback::create<&InstrumentView::ConfirmSampleChangeCallback>());
+    DoModal(mb, ModalViewCallback::create<
+                    &InstrumentView::ConfirmSampleChangeCallback>());
   } break;
   case FourCC::ActionShowSampleSlices: {
     I_Instrument *instr = getInstrument();
@@ -1245,9 +1245,8 @@ void InstrumentView::handleInstrumentExport() {
 
       exportInstrument_ = instrument;
       exportName_ = name;
-      DoModal(
-          mb,
-          ModalViewCallback::create<&InstrumentView::ConfirmExportOverwriteCallback>());
+      DoModal(mb, ModalViewCallback::create<
+                      &InstrumentView::ConfirmExportOverwriteCallback>());
     } else {
       // Create a message with the instrument name
       etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
@@ -1278,7 +1277,8 @@ void InstrumentView::ConfirmResetInstrumentCallback(View &view,
   self.isDirty_ = true;
 }
 
-void InstrumentView::ConfirmSampleChangeCallback(View &view, ModalView &dialog) {
+void InstrumentView::ConfirmSampleChangeCallback(View &view,
+                                                 ModalView &dialog) {
   auto &self = (InstrumentView &)view;
   SampleInstrument *sampleInstr = self.pendingSampleChangeInstrument_;
   int newIndex = self.pendingSampleChangeNewIndex_;

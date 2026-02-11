@@ -693,9 +693,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     // implemented so we need to manually clear the waveform drawing
     clearWaveformRegion();
 
-    DoModal(
-        mb,
-        ModalViewCallback::create<&SampleEditorView::ConfirmApplyOperationCallback>());
+    DoModal(mb, ModalViewCallback::create<
+                    &SampleEditorView::ConfirmApplyOperationCallback>());
     return;
   }
   case FourCC::ActionSave: {
@@ -760,8 +759,8 @@ void SampleEditorView::ConfirmApplyOperationCallback(View &view,
   if (dialog.GetReturnCode() == MBL_YES) {
     if (!self.applySelectedOperation()) {
       MessageBox *error = MessageBox::Create(self, "Operation failed", MBBF_OK);
-      self.DoModal(
-          error, ModalViewCallback::create<&SampleEditorView::OperationFailedAckCallback>());
+      self.DoModal(error, ModalViewCallback::create<
+                              &SampleEditorView::OperationFailedAckCallback>());
     }
   }
   self.modalClearCount_ = 2;
