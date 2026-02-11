@@ -62,6 +62,10 @@ protected:
   void handleInstrumentExport();
 
 private:
+  static void ConfirmResetInstrumentCallback(View &view, ModalView &dialog);
+  static void ConfirmSampleChangeCallback(View &view, ModalView &dialog);
+  static void ConfirmExportOverwriteCallback(View &view, ModalView &dialog);
+
   static constexpr size_t SliceCountLabelSize = 20;
   Project *project_;
   FourCC lastFocusID_;
@@ -71,6 +75,9 @@ private:
   etl::string<SliceCountLabelSize> sliceCountLabel_;
 
   // Variables for export confirmation dialog
+  I_Instrument *pendingPurgeInstrument_ = nullptr;
+  SampleInstrument *pendingSampleChangeInstrument_ = nullptr;
+  int pendingSampleChangeNewIndex_ = -1;
   I_Instrument *exportInstrument_ = nullptr;
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> exportName_;
   InstrumentType pendingInstrumentType_ = IT_NONE;

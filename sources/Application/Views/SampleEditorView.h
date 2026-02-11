@@ -49,6 +49,9 @@ public:
 
 protected:
 private:
+  static void ConfirmApplyOperationCallback(View &view, ModalView &dialog);
+  static void OperationFailedAckCallback(View &view, ModalView &dialog);
+
   // Helper methods
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);

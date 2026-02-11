@@ -778,14 +778,10 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (instrumentModified) {
         MessageBox *mb = MessageBox::Create(*this, "Reset all settings?",
                                             MBBF_YES | MBBF_NO);
-
-        DoModal(mb, [this, instr](View &v, ModalView &dialog) {
-          if (dialog.GetReturnCode() == MBL_YES) {
-            // Clear all sample instrument variables
-            instr->Purge();
-            isDirty_ = true;
-          }
-        });
+        pendingPurgeInstrument_ = instr;
+        DoModal(
+            mb,
+            ModalViewCallback::create<&InstrumentView::ConfirmResetInstrumentCallback>());
       }
       return;
     }
@@ -1114,26 +1110,13 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       break;
     }
 
-    Variable *sampleVar =
-        sampleInstr->FindVariable(FourCC::SampleInstrumentSample);
     MessageBox *mb = MessageBox::Create(*this, "Change sample &",
                                         "clear slices?", MBBF_YES | MBBF_NO);
-
-    DoModal(mb, [this, sampleInstr, sampleVar, newIndex](View &view,
-                                                         ModalView &dialog) {
-      if (dialog.GetReturnCode() == MBL_YES) {
-        sampleInstr->ClearSlices();
-        lastSampleIndex_ = newIndex;
-        updateSliceCountLabel(sliceCountLabel_, sampleInstr);
-        isDirty_ = true;
-      } else {
-        suppressSampleChangeWarning_ = true;
-        if (sampleVar) {
-          sampleVar->SetInt(lastSampleIndex_);
-        }
-        isDirty_ = true;
-      }
-    });
+    pendingSampleChangeInstrument_ = sampleInstr;
+    pendingSampleChangeNewIndex_ = newIndex;
+    DoModal(
+        mb,
+        ModalViewCallback::create<&InstrumentView::ConfirmSampleChangeCallback>());
   } break;
   case FourCC::ActionShowSampleSlices: {
     I_Instrument *instr = getInstrument();
@@ -1260,24 +1243,11 @@ void InstrumentView::handleInstrumentExport() {
       MessageBox *mb = MessageBox::Create(*this, confirmMsg.c_str(),
                                           name.c_str(), MBBF_YES | MBBF_NO);
 
-      // Use a lambda function with captures to avoid using class members
-      DoModal(mb, [this, instrument, name](View &v, ModalView &dialog) {
-        if (dialog.GetReturnCode() == MBL_YES) {
-          // User confirmed override, call ExportInstrument with overwrite=true
-
-          // Re-export the instrument with overwrite flag set to true
-          PersistencyResult result =
-              PersistencyService::GetInstance()->ExportInstrument(instrument,
-                                                                  name, true);
-
-          Trace::Log("INSTRUMENTVIEW",
-                     "Instrument '%s' exported with overwrite", name.c_str());
-
-          // TODO: unfortunately we can't show the result message here
-          // because we're in a modal already and showing a model from result
-          // of a modal is not supported
-        }
-      });
+      exportInstrument_ = instrument;
+      exportName_ = name;
+      DoModal(
+          mb,
+          ModalViewCallback::create<&InstrumentView::ConfirmExportOverwriteCallback>());
     } else {
       // Create a message with the instrument name
       etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
@@ -1292,4 +1262,62 @@ void InstrumentView::handleInstrumentExport() {
       DoModal(mb);
     }
   }
+}
+
+void InstrumentView::ConfirmResetInstrumentCallback(View &view,
+                                                    ModalView &dialog) {
+  auto &self = (InstrumentView &)view;
+  I_Instrument *instr = self.pendingPurgeInstrument_;
+  self.pendingPurgeInstrument_ = nullptr;
+
+  if (dialog.GetReturnCode() != MBL_YES || !instr) {
+    return;
+  }
+
+  instr->Purge();
+  self.isDirty_ = true;
+}
+
+void InstrumentView::ConfirmSampleChangeCallback(View &view, ModalView &dialog) {
+  auto &self = (InstrumentView &)view;
+  SampleInstrument *sampleInstr = self.pendingSampleChangeInstrument_;
+  int newIndex = self.pendingSampleChangeNewIndex_;
+  self.pendingSampleChangeInstrument_ = nullptr;
+  self.pendingSampleChangeNewIndex_ = -1;
+
+  if (!sampleInstr) {
+    return;
+  }
+
+  if (dialog.GetReturnCode() == MBL_YES) {
+    sampleInstr->ClearSlices();
+    self.lastSampleIndex_ = newIndex;
+    updateSliceCountLabel(self.sliceCountLabel_, sampleInstr);
+    self.isDirty_ = true;
+    return;
+  }
+
+  self.suppressSampleChangeWarning_ = true;
+  if (Variable *sampleVar =
+          sampleInstr->FindVariable(FourCC::SampleInstrumentSample)) {
+    sampleVar->SetInt(self.lastSampleIndex_);
+  }
+  self.isDirty_ = true;
+}
+
+void InstrumentView::ConfirmExportOverwriteCallback(View &view,
+                                                    ModalView &dialog) {
+  auto &self = (InstrumentView &)view;
+  I_Instrument *instrument = self.exportInstrument_;
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> name = self.exportName_;
+  self.exportInstrument_ = nullptr;
+  self.exportName_.clear();
+
+  if (dialog.GetReturnCode() != MBL_YES || !instrument) {
+    return;
+  }
+
+  PersistencyService::GetInstance()->ExportInstrument(instrument, name, true);
+  Trace::Log("INSTRUMENTVIEW", "Instrument '%s' exported with overwrite",
+             name.c_str());
 }

@@ -50,6 +50,8 @@ public:
 
 protected:
 private:
+  static void ConfirmThemeOverwriteCallback(View &view, ModalView &dialog);
+
   void addSwatchField(ColorDefinition color, GUIPoint position);
   void addColorField(const char *label, Variable *colorVar,
                      ColorDefinition color, GUIPoint position);

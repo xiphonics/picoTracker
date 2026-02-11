@@ -195,30 +195,28 @@ void ThemeImportView::onImportTheme(const char *filename) {
     // Show success message
     MessageBox *mb =
         MessageBox::Create(*this, "Theme imported successfully", MBBF_OK);
-    DoModal(mb, [](View &v, ModalView &dialog) {
-      if (dialog.GetReturnCode() == MBL_OK) {
-        // Switch back to the theme view
-        ViewType vt = VT_THEME;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        v.SetChanged();
-        v.NotifyObservers(&ve);
-      }
-    });
+    DoModal(mb, ModalViewCallback::create<
+                    &ThemeImportView::ImportThemeModalDismissCallback>());
   } else {
     // Show error message
     MessageBox *mb =
         MessageBox::Create(*this, "Failed to import theme", MBBF_OK);
-    DoModal(mb, [](View &v, ModalView &dialog) {
-      if (dialog.GetReturnCode() == MBL_OK) {
-        // Switch back to the theme view
-        ViewType vt = VT_THEME;
-        ViewEvent ve(VET_SWITCH_VIEW, &vt);
-        v.SetChanged();
-        v.NotifyObservers(&ve);
-      }
-    });
+    DoModal(mb, ModalViewCallback::create<
+                    &ThemeImportView::ImportThemeModalDismissCallback>());
   }
   isDirty_ = true;
+}
+
+void ThemeImportView::ImportThemeModalDismissCallback(View &view,
+                                                      ModalView &dialog) {
+  if (dialog.GetReturnCode() != MBL_OK) {
+    return;
+  }
+
+  ViewType vt = VT_THEME;
+  ViewEvent ve(VET_SWITCH_VIEW, &vt);
+  view.SetChanged();
+  view.NotifyObservers(&ve);
 }
 
 void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {

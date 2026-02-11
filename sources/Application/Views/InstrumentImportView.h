@@ -31,6 +31,8 @@ protected:
   void importInstrument(char *name);
 
 private:
+  static void ImportSuccessCallback(View &view, ModalView &dialog);
+
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
   short selected_ = 0;
