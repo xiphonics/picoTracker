@@ -192,7 +192,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
     break;
   }
 
-  ProcessCommands();
+  Trace::Error("USELESS?");
 
   startTime_ = mixer_.GetAudioOut()->GetStreamTime();
 
@@ -538,17 +538,21 @@ void Player::Update(Observable &o, I_ObservableData *d) {
       };
     }
 
+    // Track which channels just had their delay expire
+    bool delayExpired[SONG_CHANNEL_COUNT];
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      delayExpired[i] = false;
       if (timeToStart_[i] > 0) {
         if (--timeToStart_[i] == 0) {
           playCursorPosition(i);
+          delayExpired[i] = true;
         }
       }
     }
 
     // Process commands in current phrase
     if (viewData_->playMode_ != PM_AUDITION)
-      ProcessCommands();
+      ProcessCommands(delayExpired);
 
     // Initialise retrigger table
     int instrRetrigger[SONG_CHANNEL_COUNT];
@@ -613,7 +617,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
         position for all channels
  ************************************************************/
 
-void Player::ProcessCommands() {
+void Player::ProcessCommands(bool delayExpired[SONG_CHANNEL_COUNT]) {
 
   // loop on all channels
 
@@ -627,7 +631,14 @@ void Player::ProcessCommands() {
 
       uchar phrase = viewData_->currentPlayPhrase_[i];
       if (phrase != 0xFF) {
-        if (gs->TriggerChannel(i)) { // If groove says it is time to play
+
+        // Skip if waiting for delayed trigger
+        if (timeToStart_[i]) {
+          continue;
+        }
+
+        // If groove says it is time to play OR or the delay just expired
+        if (gs->TriggerChannel(i) || (delayExpired && delayExpired[i])) {
           int pos = viewData_->phrasePlayPos_[i];
           FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
           ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
