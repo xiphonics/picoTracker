@@ -493,7 +493,7 @@ typedef struct voice_t {
     // will clip
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
     uint64_t mod = frequencyLUT[fIndex + 8] - frequency;
-    mod = (mod * rate) >> 8;
+    mod = (mod * depth) >> 8;
     vibSwing = (int32_t)mod;
 
     // start immediately
@@ -520,12 +520,6 @@ typedef struct voice_t {
       legatoCoefficient = (legatoTargetFreq - initialFactor) / ticks;
       legatoFactor = initialFactor; // start at the ratio
     } else {
-      // clamp semitones to table
-      if (semitones < -128)
-        semitones = -128;
-      if (semitones > 127)
-        semitones = 127;
-
       // get total ratio from table (Q16.16)
       legatoTargetFreq = semitoneRatioQ16[semitones + 128];
       legatoCoefficient = (legatoTargetFreq - 0x0001'0000) / ticks;
@@ -541,12 +535,6 @@ typedef struct voice_t {
   void command_init_pitch_shift(uint8_t speed, int8_t semitones) {
     // not exponential in the GameBoy instrument, for performance reasons (atm)
     int ticks = 1 + speed; // minimum 1 tick
-
-    // clamp semitones to table
-    if (semitones < -128)
-      semitones = -128;
-    if (semitones > 127)
-      semitones = 127;
 
     // get total ratio from table (Q16.16)
     legatoTargetFreq = semitoneRatioQ16[semitones + 128];
