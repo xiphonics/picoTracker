@@ -8,6 +8,7 @@
  */
 
 #include "MessageBox.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "System/Console/n_assert.h"
 #include <Application/AppWindow.h>
 #include <new>
@@ -41,35 +42,34 @@ MessageBox *MessageBox::Create(View &view, const char *message,
 
 MessageBox::MessageBox(View &view, const char *message, int btnFlags)
     : ModalView(view), line1_(message) {
-
-  buttonCount_ = 0;
-  for (int i = 0; i < MBL_LAST; i++) {
-    if (btnFlags & (1 << (i))) {
-      button_[buttonCount_] = i;
-      buttonCount_++;
-    }
-  }
-  selected_ = buttonCount_ - 1;
-  NAssert(buttonCount_ != 0);
+  InitButtons(btnFlags);
 };
 
 // Constructor for 2 line message
 MessageBox::MessageBox(View &view, const char *messageLine1,
                        const char *messageLine2, int btnFlags)
     : ModalView(view), line1_(messageLine1), line2_(messageLine2) {
+  InitButtons(btnFlags);
+}
 
+MessageBox::~MessageBox(){};
+
+void MessageBox::InitButtons(int btnFlags) {
   buttonCount_ = 0;
+  buttonWidth_ = 0;
+
   for (int i = 0; i < MBL_LAST; i++) {
     if (btnFlags & (1 << (i))) {
       button_[buttonCount_] = i;
       buttonCount_++;
+
+      int len = strlen(buttonText[button_[i]]);
+      buttonWidth_ = std::max(buttonWidth_, len);
     }
   }
   selected_ = buttonCount_ - 1;
   NAssert(buttonCount_ != 0);
 }
-
-MessageBox::~MessageBox(){};
 
 void MessageBox::Destroy() {
   this->~MessageBox();
@@ -78,15 +78,11 @@ void MessageBox::Destroy() {
 
 void MessageBox::DrawView() {
   // message size
-  int size1 = line1_.size();
-  int size2 = line2_.size();
-  int size = (size1 > size2) ? size1 : size2;
+  int size = std::max(line1_.size(), line2_.size());
 
   // compute space needed for buttons
   // and set window size
-
-  int btnSize = 5;
-  int width = buttonCount_ * (btnSize + 1) + 1;
+  int width = buttonCount_ * (buttonWidth_ + 1) + 1;
   width = (size > width) ? size : width;
   SetWindow(width, line2_.size() > 0 ? 4 : 3);
 
@@ -105,16 +101,21 @@ void MessageBox::DrawView() {
   int offset = width / (buttonCount_ + 1);
 
   for (int i = 0; i < buttonCount_; i++) {
+    bool selected = (i == selected_);
+
     const char *text = buttonText[button_[i]];
     x = offset * (i + 1) - strlen(text) / 2;
-    if (i == selected_) {
-      SetColor(CD_HILITE2);
-      props.invert_ = true;
-    } else {
-      SetColor(CD_HILITE1);
-      props.invert_ = false;
-    }
+    SetColor(selected ? CD_HILITE2 : CD_HILITE1);
+    props.invert_ = selected;
+
     DrawString(x, y, text, props);
+
+    // button ends
+    if (selected) {
+      props.invert_ = false;
+      DrawString(x - 1, y, char_button_border_left_s, props);
+      DrawString(x + strlen(text), y, char_button_border_right_s, props);
+    }
   }
 };
 

@@ -28,7 +28,7 @@
 #define MIDI_DEVICE_LEN 4
 
 static const char *lineOutOptions[3] = {"HP Low", "HP High", "Line Level"};
-static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
+static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"Off", "TRS", "USB",
                                                       "TRS+USB"};
 static const char *midiSendSync[2] = {"Off", "Send"};
 static const char *midiClockSyncOptions[2] = {"Internal", "External"};

@@ -13,6 +13,7 @@
 #include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "ViewData.h"
 #include <nanoprintf.h>
 
@@ -992,7 +993,7 @@ void TableView::AnimationUpdate() {
           if (yPos >= 0 && yPos < 16) { // Only draw if position is valid
             pos._x = anchor._x - 1 + (i * 9);
             pos._y = anchor._y + yPos;
-            DrawString(pos._x, pos._y, ">", props);
+            DrawString(pos._x, pos._y, char_indicator_position_s, props);
           }
         }
       }
@@ -1019,5 +1020,21 @@ void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
   if (helpLegend[1] != NULL) {
     strcpy(line, helpLegend[1]);
     DrawString(0, 1, line, props);
+  }
+
+  // highlight the upper case letters before the ':'
+  const char *line0 = helpLegend[0];
+  const char *colonPos = strchr(line0, ':');
+
+  if (colonPos) {
+    SetColor(CD_ACCENT);
+    char str[2] = {0, 0};
+    for (const char *p = line0; p < colonPos; ++p) {
+      if ((*p >= 'A') && (*p <= 'Z')) {
+        str[0] = *p;
+        DrawString(static_cast<int>(p - line0), 0, str, props);
+      }
+    }
+    SetColor(CD_NORMAL);
   }
 }
