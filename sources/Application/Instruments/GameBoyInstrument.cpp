@@ -28,11 +28,11 @@ GameBoyInstrument::GameBoyInstrument()
       vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
       vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
       vLength_(FourCC::GameBoyInstrumentLength, 0),
-      vBurst_(FourCC::GameBoyInstrumentBurst, 0x00),
+      vBurst_(FourCC::GameBoyInstrumentBurst, -1),
       vVibratoDepth_(FourCC::GameBoyInstrumentVibrato, 0x07),
       vVibratoDelay_(FourCC::GameBoyInstrumentVibratoDelay, 0x40),
       vTranspose_(FourCC::GameBoyInstrumentTranspose, 0x00),
-      vTable_(FourCC::GameBoyInstrumentTable, 0x00),
+      vTable_(FourCC::GameBoyInstrumentTable, -1),
       vArpSpeed_(FourCC::GameBoyInstrumentArpSpeed, 0x12),
       vSweepTime_(FourCC::GameBoyInstrumentSweepTime, 0x00),
       vSweepAmount_(FourCC::GameBoyInstrumentSweepAmount, 0x00) {
@@ -64,7 +64,7 @@ bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
   voices_[channel].note_on(note, retrigger, params);
 
   return true;
-};
+}
 
 bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
                                bool updateTick) {
@@ -79,7 +79,7 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
   }
 
   return true;
-};
+}
 
 void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
@@ -110,18 +110,20 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     break;
 
   case FourCC::InstrumentCommandPitchSlide:
+    voices_[channel].command_init_legato(value >> 8, (int8_t)(value & 0xFF));
     break;
 
   case FourCC::InstrumentCommandLegato:
     voices_[channel].command_init_legato(value >> 8, (int8_t)(value & 0xFF));
     break;
   }
-};
+}
 
 bool GameBoyInstrument::SupportsCommand(FourCC cc) { return false; }
 
 InstrumentParameters GameBoyInstrument::getInstrumentParameters() {
   InstrumentParameters params;
+
   params.wave = vWaveform_.GetInt();
   params.attack = vAttack_.GetInt();
   params.decay = vDecay_.GetInt();
@@ -132,9 +134,9 @@ InstrumentParameters GameBoyInstrument::getInstrumentParameters() {
   params.vibratoDepth = vVibratoDepth_.GetInt();
   params.vibratoDelay = vVibratoDelay_.GetInt();
   params.transpose = vTranspose_.GetInt();
-  params.table = vTable_.GetInt();
   params.arpSpeed = vArpSpeed_.GetInt();
   params.sweepTime = vSweepTime_.GetInt();
   params.sweepAmount = vSweepAmount_.GetInt();
+
   return params;
 }

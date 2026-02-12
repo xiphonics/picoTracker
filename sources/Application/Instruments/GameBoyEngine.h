@@ -1,7 +1,7 @@
 #pragma once
 
 // table LEG breaks vibrato
-// noise is affected by previous noise
+// retrigger/instrument retrigger
 
 #include "Application/Utils/fixed.h"
 #include "System/Console/Trace.h"
@@ -67,7 +67,6 @@ static inline int8_t interpolateS8(const int8_t *lut, uint8_t v) {
 }
 
 typedef struct InstrumentParameters {
-  uint8_t table;
   uint8_t length;
 
   uint8_t wave;
@@ -129,7 +128,6 @@ typedef struct {
 
     value = tmp;
   }
-
 } Envelope;
 #pragma pack(pop)
 
@@ -344,12 +342,10 @@ typedef struct voice_t {
     case gbWavePulse50: // pulse 50%
       sample = pulse(phase > 0x8000'0000);
       break;
-    case gbWaveTriangle: // triangle
-      if (phase < 0x8000'0000) {
-        // first half, rising slope
+    case gbWaveTriangle:         // triangle
+      if (phase < 0x8000'0000) { // first half, rising slope
         sample = phase >> 3;
-      } else {
-        // second half, falling slope
+      } else { // second half, falling slope
         sample = (0xFFFF'FFFF - phase) >> 3;
       }
       sample &= 0xFF00'0000; // downsample
@@ -363,8 +359,8 @@ typedef struct voice_t {
     case gbWaveNoiseSN76489: // noise: SN76489
       noise(voice_noise_sn76489);
       break;
-    case gbWaveNoiseWhite: // noise: white noise, frequency independent
-      noise = (noise * 1664525) + 1013904223;
+    case gbWaveNoiseWhite:                    // noise: white noise
+      noise = (noise * 1664525) + 1013904223; // frequency independent
       sample = noise & 0x0FFF'FFFF;
       break;
     }
@@ -485,34 +481,6 @@ typedef struct voice_t {
 
   /* command implementation ***************************************************/
 
-  // integer log2 approximation for Q16.16 input
-  static inline int32_t log2_fixed(uint32_t xQ16) {
-    if (xQ16 == 0)
-      return 0;
-
-    // integer part of log2
-    int leading = 31 - __builtin_clz(xQ16);
-    // normalized fractional part
-    uint32_t frac = xQ16 << (31 - leading);
-    // take top 16 bits as fraction
-    int32_t frac16 = frac >> 15;
-    return (leading - 16) << 16 | (frac16 & 0xFFFF);
-  }
-
-  // integer exp2 approximation, input in Q16.16, output Q16.16
-  static inline uint32_t exp2_fixed(int32_t log2Q16) {
-    int32_t intPart = log2Q16 >> 16;
-    int32_t fracPart = log2Q16 & 0xFFFF;
-    // 2^fracPart ~ 1 + fracPart / 65536 (linear approx)
-    uint32_t result = (1U << 16) + fracPart;
-    // multiply by 2^intPart
-    if (intPart >= 0)
-      result <<= intPart;
-    else
-      result >>= -intPart;
-    return result;
-  }
-
   void command_init_pan(uint8_t speed, int8_t pan) {
     panTarget = pan;
     panStep = speed;
@@ -521,10 +489,11 @@ typedef struct voice_t {
   void command_init_vibrato(uint8_t rate, uint8_t depth) {
     vibFrequency = rate << 6;
 
-    // max swing == one octave
+    // max swing == 8 semitones = small sixth, otherwise adding the vibrato
+    // will clip
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
-    uint64_t mod = frequencyLUT[fIndex + 12] - frequency;
-    mod = (mod * depth) >> 8;
+    uint64_t mod = frequencyLUT[fIndex + 8] - frequency;
+    mod = (mod * rate) >> 8;
     vibSwing = (int32_t)mod;
 
     // start immediately

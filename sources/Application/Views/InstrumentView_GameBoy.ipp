@@ -44,8 +44,8 @@ void InstrumentView::fillGameBoyParameters() {
   max = TABLE_COUNT - 1;
   const char *text = "Table:      %02X";
   v = instrument->FindVariable(FourCC::GameBoyInstrumentTable);
-  intVarField_.emplace_back(position, *v, text, 0x00, max, 1, 0x10);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  intVarOffField_.emplace_back(position, *v, text, 0, max, 1, 0x10);
+  fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 
   position._y += 2;
   staticField_.emplace_back(position, "Envelope");
