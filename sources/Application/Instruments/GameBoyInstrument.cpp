@@ -110,7 +110,7 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     break;
 
   case FourCC::InstrumentCommandPitchSlide:
-    voices_[channel].command_init_legato(value >> 8, (int8_t)(value & 0xFF));
+    voices_[channel].command_init_pitch_shift(value >> 8, value & 0xFF);
     break;
 
   case FourCC::InstrumentCommandLegato:

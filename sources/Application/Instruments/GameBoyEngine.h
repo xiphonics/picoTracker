@@ -537,6 +537,27 @@ typedef struct voice_t {
     flags |= fLegato; // set legato flag
   }
 
+  // fully fixed-point per-tick pitch shift initialization
+  void command_init_pitch_shift(uint8_t speed, int8_t semitones) {
+    // not exponential in the GameBoy instrument, for performance reasons (atm)
+    int ticks = 1 + speed; // minimum 1 tick
+
+    // clamp semitones to table
+    if (semitones < -128)
+      semitones = -128;
+    if (semitones > 127)
+      semitones = 127;
+
+    // get total ratio from table (Q16.16)
+    legatoTargetFreq = semitoneRatioQ16[semitones + 128];
+    legatoCoefficient = (legatoTargetFreq - 0x0001'0000) / ticks;
+
+    legatoSteps = ticks;
+    legatoFactor = 0x0001'0000; // start at 1.0
+
+    flags |= fLegato; // set legato flag
+  }
+
   void command_init_arp(ushort value) {
     arpIndex = 0;
     arpLength = 5;
@@ -546,13 +567,13 @@ typedef struct voice_t {
     // trim off trailing zeroes
     uint16_t val = value;
 
-    while (arpLength > 1 && (val & 0xF) == 0) {
+    while ((arpLength > 1) && !(val & 0x000F)) {
       arpLength--;
       val >>= 4;
     }
 
     for (uint8_t i = 0; i < arpLength - 1; i++) {
-      uint8_t semitone = (value >> (i * 4)) & 0x0F;
+      uint8_t semitone = (value >> (12 - i * 4)) & 0x000F;
       int32_t noteVal = note + parameters.transpose + semitone + 12;
       noteVal = (noteVal < 0) ? 0 : noteVal;
       noteVal = (noteVal > 127 + 24) ? 127 + 24 : noteVal;
