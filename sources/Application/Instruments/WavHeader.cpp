@@ -111,13 +111,12 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
   const long afterWavePos = file->Tell();
   file->Seek(0, SEEK_END);
-  const long fileEndLong = file->Tell();
+  const uint32_t fileEnd = static_cast<uint32_t>(file->Tell());
   file->Seek(afterWavePos, SEEK_SET);
-  if (fileEndLong <= 0) {
+  if (fileEnd <= 0) {
     return etl::unexpected(INVALID_HEADER);
   }
 
-  const uint32_t fileEnd = static_cast<uint32_t>(fileEndLong);
   const uint32_t riffEnd = info.riffChunkSize + 8;
   bool fmtFound = false;
 
