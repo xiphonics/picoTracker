@@ -64,19 +64,13 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      int prog10 = progress / 10;
 
-      char progressBar[13];
-      for (int j = 1; j < 11; j++) {
-        progressBar[j] = j >= prog10 ? char_battery_empty : char_block_full;
-      }
-      progressBar[0] = char_button_border_left;
-      progressBar[11] = char_button_border_right;
-      progressBar[12] = 0;
+      progressBar_t progressBar;
+      fillProgressBar(i, totalSamples, &progressBar);
 
       Status::SetMultiLine("Copying %s" char_indicator_ellipsis_s
-                           "\n \n%s %d%%",
-                           name, (const char *)progressBar, progress);
+                           "\n \n%s %3d%%",
+                           name, progressBar, progress);
 
       loadSample(name);
     }
@@ -284,8 +278,11 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     if (totalSize > 0) {
       progress = (totalRead * 100) / totalSize;
     }
-    Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
-                         progress);
+
+    progressBar_t progressBar;
+    fillProgressBar(totalRead, totalSize, &progressBar);
+    Status::SetMultiLine("Copying %s" char_indicator_ellipsis_s "\n \n%s %3d%%",
+                         projSampleFilename.c_str(), progressBar, progress);
   }
 
   // Flush the resampler to write any delayed tail samples after input ends.
