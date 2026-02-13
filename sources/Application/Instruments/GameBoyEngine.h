@@ -168,6 +168,7 @@ typedef struct voice_t {
   uint16_t vibPhase;
   uint16_t vibFrequency = 0xfff;
   int32_t vibSwing;
+  uint8_t vibDepth;
 
   uint16_t vibDelay;
 
@@ -256,7 +257,7 @@ typedef struct voice_t {
         vibPhase += vibFrequency;
         int32_t sine = interpolateS8(sine64LUT.data(), vibPhase >> 8);
         delta = (vibSwing * sine) >> 7;
-        delta = (parameters.vibratoDepth * delta) >> 8;
+        delta = (vibDepth * delta) >> 8;
       }
 
       frequency = arpFrequencies[arpIndex] + delta;
@@ -417,6 +418,7 @@ typedef struct voice_t {
     legatoCoefficient = 0x0001'0000; // 1.0 in Q16.16
 
     // reset vibrato
+    vibDepth = parameters.vibratoDepth;
     vibSwing = frequencyLUT[fIndex + 1] - frequency;
     vibDelay = parameters.vibratoDelay << 8;
     vibPhase = 0;
@@ -489,13 +491,9 @@ typedef struct voice_t {
   void command_init_vibrato(uint8_t rate, uint8_t depth) {
     vibFrequency = rate << 6;
 
-    // max swing == 8 semitones = small sixth, otherwise adding the vibrato
-    // will clip
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
-    uint64_t mod = frequencyLUT[fIndex + 8] - frequency;
-    mod = (mod * depth) >> 8;
-    vibSwing = (int32_t)mod;
-
+    vibSwing = frequencyLUT[fIndex + 1] - frequency;
+    vibDepth = depth;
     // start immediately
     vibDelay = 0;
   }
