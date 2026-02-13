@@ -44,7 +44,7 @@ protected:
   void refreshFileIndexList(FileSystem *fs);
 
 private:
-  static void ConfirmRemoveProjectSampleCallback(View &view, ModalView &dialog);
+  void onConfirmRemoveProjectSample(View &view, ModalView &dialog);
 
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;

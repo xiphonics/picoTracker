@@ -43,8 +43,6 @@ public:
   void onInstrumentTypeChange(bool updateUI = false);
   bool checkInstrumentModified();
   void resetInstrumentToDefaults();
-
-  // only public to allow to be called from modal dialog static callback
   void applyProposedTypeChangeUI();
 
 protected:
@@ -62,9 +60,10 @@ protected:
   void handleInstrumentExport();
 
 private:
-  static void ConfirmResetInstrumentCallback(View &view, ModalView &dialog);
-  static void ConfirmSampleChangeCallback(View &view, ModalView &dialog);
-  static void ConfirmExportOverwriteCallback(View &view, ModalView &dialog);
+  void onConfirmInstrumentTypeChange(View &view, ModalView &dialog);
+  void onConfirmResetInstrument(View &view, ModalView &dialog);
+  void onConfirmSampleChange(View &view, ModalView &dialog);
+  void onConfirmExportOverwrite(View &view, ModalView &dialog);
 
   static constexpr size_t SliceCountLabelSize = 20;
   Project *project_;

@@ -413,18 +413,17 @@ void ThemeView::handleThemeExport() {
 
     DoModal(
         mb,
-        ModalViewCallback::create<&ThemeView::ConfirmThemeOverwriteCallback>());
+        ModalViewCallback::create<ThemeView, &ThemeView::onConfirmThemeOverwrite>(
+            *this));
   } else {
     // Theme doesn't exist, export directly
     exportThemeWithName(exportThemeName_.c_str(), false);
   }
 }
 
-void ThemeView::ConfirmThemeOverwriteCallback(View &view, ModalView &dialog) {
+void ThemeView::onConfirmThemeOverwrite(View &, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    ((ThemeView &)view)
-        .exportThemeWithName(((ThemeView &)view).exportThemeName_.c_str(),
-                             true);
+    exportThemeWithName(exportThemeName_.c_str(), true);
   }
 }
 

@@ -299,8 +299,9 @@ void InstrumentImportView::importInstrument(char *name) {
 
     // Show success message and return to instrument view
     MessageBox *mb = MessageBox::Create(*this, "Import successful", MBBF_OK);
-    DoModal(mb, ModalViewCallback::create<
-                    &InstrumentImportView::ImportSuccessCallback>());
+    DoModal(mb, ModalViewCallback::create<InstrumentImportView,
+                                          &InstrumentImportView::onImportSuccess>(
+                    *this));
   } else {
     MessageBox *mb = MessageBox::Create(*this, "Import failed", MBBF_OK);
     DoModal(mb);
@@ -309,19 +310,16 @@ void InstrumentImportView::importInstrument(char *name) {
   isDirty_ = true;
 }
 
-void InstrumentImportView::ImportSuccessCallback(View &view,
-                                                 ModalView &dialog) {
+void InstrumentImportView::onImportSuccess(View &, ModalView &dialog) {
   if (dialog.GetReturnCode() != MBL_OK) {
     return;
   }
 
-  auto &self = (InstrumentImportView &)view;
   Trace::Log("INSTRUMENTIMPORT",
-             "Switching back to instrument view with ID: %d", self.toInstrID_);
+             "Switching back to instrument view with ID: %d", toInstrID_);
 
   I_Instrument *instrument =
-      self.viewData_->project_->GetInstrumentBank()->GetInstrument(
-          self.toInstrID_);
+      viewData_->project_->GetInstrumentBank()->GetInstrument(toInstrID_);
   if (instrument) {
     instrument->SetChanged();
     instrument->NotifyObservers();
@@ -329,8 +327,8 @@ void InstrumentImportView::ImportSuccessCallback(View &view,
 
   ViewType vt = VT_INSTRUMENT;
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
-  view.SetChanged();
-  view.NotifyObservers(&ve);
+  SetChanged();
+  NotifyObservers(&ve);
 }
 
 void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {

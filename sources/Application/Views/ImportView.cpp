@@ -719,20 +719,19 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   pendingDeleteFs_ = fs;
   strncpy(pendingDeleteFilename_, filename, PFILENAME_SIZE - 1);
   pendingDeleteFilename_[PFILENAME_SIZE - 1] = '\0';
-  DoModal(mb, ModalViewCallback::create<
-                  &ImportView::ConfirmRemoveProjectSampleCallback>());
+  DoModal(mb, ModalViewCallback::create<ImportView,
+                                        &ImportView::onConfirmRemoveProjectSample>(
+                  *this));
 }
 
-void ImportView::ConfirmRemoveProjectSampleCallback(View &view,
-                                                    ModalView &dialog) {
-  ImportView &self = (ImportView &)view;
-  FileSystem *fs = self.pendingDeleteFs_;
-  self.pendingDeleteFs_ = nullptr;
+void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
+  FileSystem *fs = pendingDeleteFs_;
+  pendingDeleteFs_ = nullptr;
 
   char filename[PFILENAME_SIZE];
-  strncpy(filename, self.pendingDeleteFilename_, PFILENAME_SIZE - 1);
+  strncpy(filename, pendingDeleteFilename_, PFILENAME_SIZE - 1);
   filename[PFILENAME_SIZE - 1] = '\0';
-  self.pendingDeleteFilename_[0] = '\0';
+  pendingDeleteFilename_[0] = '\0';
 
   if (dialog.GetReturnCode() != MBL_OK || !fs) {
     return;
@@ -751,12 +750,12 @@ void ImportView::ConfirmRemoveProjectSampleCallback(View &view,
 
   SamplePool::GetInstance()->unloadSample(sampleIndex);
 
-  if (self.currentIndex_ > 0) {
-    --self.currentIndex_;
+  if (currentIndex_ > 0) {
+    --currentIndex_;
   }
 
-  self.refreshFileIndexList(fs);
-  self.isDirty_ = true;
+  refreshFileIndexList(fs);
+  isDirty_ = true;
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {

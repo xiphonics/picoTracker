@@ -693,8 +693,9 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     // implemented so we need to manually clear the waveform drawing
     clearWaveformRegion();
 
-    DoModal(mb, ModalViewCallback::create<
-                    &SampleEditorView::ConfirmApplyOperationCallback>());
+    DoModal(mb, ModalViewCallback::create<SampleEditorView,
+                                          &SampleEditorView::onConfirmApplyOperation>(
+                    *this));
     return;
   }
   case FourCC::ActionSave: {
@@ -753,22 +754,21 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
   }
 }
 
-void SampleEditorView::ConfirmApplyOperationCallback(View &view,
-                                                     ModalView &dialog) {
-  auto &self = (SampleEditorView &)view;
+void SampleEditorView::onConfirmApplyOperation(View &, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    if (!self.applySelectedOperation()) {
-      MessageBox *error = MessageBox::Create(self, "Operation failed", MBBF_OK);
-      self.DoModal(error, ModalViewCallback::create<
-                              &SampleEditorView::OperationFailedAckCallback>());
+    if (!applySelectedOperation()) {
+      MessageBox *error = MessageBox::Create(*this, "Operation failed", MBBF_OK);
+      DoModal(error, ModalViewCallback::create<SampleEditorView,
+                                               &SampleEditorView::onOperationFailedAck>(
+                         *this));
     }
   }
-  self.modalClearCount_ = 2;
-  self.isDirty_ = true;
+  modalClearCount_ = 2;
+  isDirty_ = true;
 }
 
-void SampleEditorView::OperationFailedAckCallback(View &view, ModalView &) {
-  ((SampleEditorView &)view).isDirty_ = true;
+void SampleEditorView::onOperationFailedAck(View &, ModalView &) {
+  isDirty_ = true;
 }
 
 bool SampleEditorView::applySelectedOperation() {

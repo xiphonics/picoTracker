@@ -195,28 +195,29 @@ void ThemeImportView::onImportTheme(const char *filename) {
     // Show success message
     MessageBox *mb =
         MessageBox::Create(*this, "Theme imported successfully", MBBF_OK);
-    DoModal(mb, ModalViewCallback::create<
-                    &ThemeImportView::ImportThemeModalDismissCallback>());
+    DoModal(mb, ModalViewCallback::create<ThemeImportView,
+                                          &ThemeImportView::onImportThemeModalDismiss>(
+                    *this));
   } else {
     // Show error message
     MessageBox *mb =
         MessageBox::Create(*this, "Failed to import theme", MBBF_OK);
-    DoModal(mb, ModalViewCallback::create<
-                    &ThemeImportView::ImportThemeModalDismissCallback>());
+    DoModal(mb, ModalViewCallback::create<ThemeImportView,
+                                          &ThemeImportView::onImportThemeModalDismiss>(
+                    *this));
   }
   isDirty_ = true;
 }
 
-void ThemeImportView::ImportThemeModalDismissCallback(View &view,
-                                                      ModalView &dialog) {
+void ThemeImportView::onImportThemeModalDismiss(View &, ModalView &dialog) {
   if (dialog.GetReturnCode() != MBL_OK) {
     return;
   }
 
   ViewType vt = VT_THEME;
   ViewEvent ve(VET_SWITCH_VIEW, &vt);
-  view.SetChanged();
-  view.NotifyObservers(&ve);
+  SetChanged();
+  NotifyObservers(&ve);
 }
 
 void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
