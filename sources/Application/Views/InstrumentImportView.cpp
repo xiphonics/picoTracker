@@ -299,9 +299,10 @@ void InstrumentImportView::importInstrument(char *name) {
 
     // Show success message and return to instrument view
     MessageBox *mb = MessageBox::Create(*this, "Import successful", MBBF_OK);
-    DoModal(mb, ModalViewCallback::create<InstrumentImportView,
-                                          &InstrumentImportView::onImportSuccess>(
-                    *this));
+    DoModal(mb,
+            ModalViewCallback::create<InstrumentImportView,
+                                      &InstrumentImportView::onImportSuccess>(
+                *this));
   } else {
     MessageBox *mb = MessageBox::Create(*this, "Import failed", MBBF_OK);
     DoModal(mb);

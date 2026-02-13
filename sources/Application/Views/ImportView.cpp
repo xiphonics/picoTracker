@@ -719,9 +719,10 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   pendingDeleteFs_ = fs;
   strncpy(pendingDeleteFilename_, filename, PFILENAME_SIZE - 1);
   pendingDeleteFilename_[PFILENAME_SIZE - 1] = '\0';
-  DoModal(mb, ModalViewCallback::create<ImportView,
-                                        &ImportView::onConfirmRemoveProjectSample>(
-                  *this));
+  DoModal(mb,
+          ModalViewCallback::create<ImportView,
+                                    &ImportView::onConfirmRemoveProjectSample>(
+              *this));
 }
 
 void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {

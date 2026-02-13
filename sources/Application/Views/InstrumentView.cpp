@@ -773,9 +773,10 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
         MessageBox *mb = MessageBox::Create(*this, "Reset all settings?",
                                             MBBF_YES | MBBF_NO);
         pendingPurgeInstrument_ = instr;
-        DoModal(mb, ModalViewCallback::create<InstrumentView,
-                                              &InstrumentView::onConfirmResetInstrument>(
-                        *this));
+        DoModal(mb,
+                ModalViewCallback::create<
+                    InstrumentView, &InstrumentView::onConfirmResetInstrument>(
+                    *this));
       }
       return;
     }
@@ -1057,8 +1058,8 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         pendingInstrumentType_ = proposedType;
         DoModal(
             mb,
-            ModalViewCallback::create<InstrumentView,
-                                      &InstrumentView::onConfirmInstrumentTypeChange>(
+            ModalViewCallback::create<
+                InstrumentView, &InstrumentView::onConfirmInstrumentTypeChange>(
                 *this));
       } else {
         // Apply the proposed type change immediately if not modified
@@ -1112,9 +1113,10 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
                                         "clear slices?", MBBF_YES | MBBF_NO);
     pendingSampleChangeInstrument_ = sampleInstr;
     pendingSampleChangeNewIndex_ = newIndex;
-    DoModal(mb, ModalViewCallback::create<InstrumentView,
-                                          &InstrumentView::onConfirmSampleChange>(
-                    *this));
+    DoModal(mb,
+            ModalViewCallback::create<InstrumentView,
+                                      &InstrumentView::onConfirmSampleChange>(
+                *this));
   } break;
   case FourCC::ActionShowSampleSlices: {
     I_Instrument *instr = getInstrument();
@@ -1243,9 +1245,11 @@ void InstrumentView::handleInstrumentExport() {
 
       exportInstrument_ = instrument;
       exportName_ = name;
-      DoModal(mb, ModalViewCallback::create<InstrumentView,
-                                            &InstrumentView::onConfirmExportOverwrite>(
-                      *this));
+      DoModal(
+          mb,
+          ModalViewCallback::create<InstrumentView,
+                                    &InstrumentView::onConfirmExportOverwrite>(
+              *this));
     } else {
       // Create a message with the instrument name
       etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
