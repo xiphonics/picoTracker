@@ -44,6 +44,7 @@ public:
   int8_t ReloadSample(uint8_t index, const char *name);
 
 protected:
+  virtual void updateStatus(int current, int total, const char *message);
   virtual bool loadSample(const char *name) = 0;
   bool loadSoundFont(const char *path);
   uint32_t count_;
@@ -51,6 +52,10 @@ protected:
   char *names_[MAX_SAMPLES];
   WavFile wav_[MAX_SAMPLES];
   void swapEntries(int src, int dst);
+
+  int importCount;
+  int importIndex;
+  const char *importName;
 
 private:
   etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;

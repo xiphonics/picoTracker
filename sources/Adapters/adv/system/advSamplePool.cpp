@@ -109,9 +109,23 @@ bool advSamplePool::Load(WavFile &wave) {
   uint32_t offset = 0;
   uint32_t br = 0;
 
+  // 10 updates per sample
+  uint32_t writeStep = (9 + fileSize) / 10; // ceil to avoid 11 steps
+  uint32_t totalWritten = 0;
+  uint32_t subStep = 0;
+
   wave.Rewind();
   wave.Read(sampleStore + *writeOffset, BUFFER_SIZE, &br);
+
   while (br > 0) {
+    totalWritten += br;
+
+    while (totalWritten >= writeStep) {
+      totalWritten -= writeStep;
+      subStep++;
+      updateStatus(importIndex * 10 + subStep, importCount * 10, "Importing");
+    }
+
     // Trace::Debug("Wrote %i bytes", br);
     *writeOffset += br;
     wave.Read(sampleStore + *writeOffset, BUFFER_SIZE, &br);
