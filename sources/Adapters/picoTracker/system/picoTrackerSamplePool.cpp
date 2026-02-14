@@ -111,6 +111,8 @@ bool picoTrackerSamplePool::loadSample(const char *name) {
   nameStore_[count_][MAX_INSTRUMENT_FILENAME_LENGTH] = '\0';
   count_++;
 
+  updateStatus(importIndex, importCount, "Importing");
+
   if (!LoadInFlash(&wav_[count_ - 1])) {
     Trace::Error("Failed to load sample into flash: %s", name);
     count_--;
