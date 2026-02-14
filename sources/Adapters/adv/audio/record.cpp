@@ -148,9 +148,10 @@ static bool PersistRecordingToWav(const char *filename, const uint8_t *data,
   writeInProgress = false;
 
   uint32_t frameBytes = static_cast<uint32_t>(channelCount) * sizeof(uint16_t);
-  uint32_t framesWritten = (frameBytes > 0) ? (bytesWrittenTotal / frameBytes) : 0;
-  if (!WavHeaderWriter::UpdateFileSize(RecordFile.get(), framesWritten, channelCount,
-                                       2)) {
+  uint32_t framesWritten =
+      (frameBytes > 0) ? (bytesWrittenTotal / frameBytes) : 0;
+  if (!WavHeaderWriter::UpdateFileSize(RecordFile.get(), framesWritten,
+                                       channelCount, 2)) {
     Trace::Error("RECORD: failed to update WAV header");
     RecordFile.reset();
     DeleteRecordingFile(filename);
