@@ -43,8 +43,6 @@ public:
   void onInstrumentTypeChange(bool updateUI = false);
   bool checkInstrumentModified();
   void resetInstrumentToDefaults();
-
-  // only public to allow to be called from modal dialog static callback
   void applyProposedTypeChangeUI();
 
 protected:
@@ -62,6 +60,11 @@ protected:
   void handleInstrumentExport();
 
 private:
+  void onConfirmInstrumentTypeChange(View &view, ModalView &dialog);
+  void onConfirmResetInstrument(View &view, ModalView &dialog);
+  void onConfirmSampleChange(View &view, ModalView &dialog);
+  void onConfirmExportOverwrite(View &view, ModalView &dialog);
+
   static constexpr size_t SliceCountLabelSize = 20;
   Project *project_;
   FourCC lastFocusID_;
@@ -71,8 +74,12 @@ private:
   etl::string<SliceCountLabelSize> sliceCountLabel_;
 
   // Variables for export confirmation dialog
+  I_Instrument *pendingPurgeInstrument_ = nullptr;
+  SampleInstrument *pendingSampleChangeInstrument_ = nullptr;
+  int pendingSampleChangeNewIndex_ = -1;
   I_Instrument *exportInstrument_ = nullptr;
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> exportName_;
+  InstrumentType pendingInstrumentType_ = IT_NONE;
 
   etl::vector<UIIntVarField, 1> typeIntVarField_;
   etl::vector<UIActionField, 2> persistentActionField_;

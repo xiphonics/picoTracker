@@ -716,33 +716,47 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
   // buttons between space
   MessageBox *mb = MessageBox::Create(*this, "    Remove sample?    ", filename,
                                       MBBF_OK | MBBF_CANCEL);
-  DoModal(mb, [this, fs, filename, fileIndex](View &v, ModalView &dialog) {
-    if (dialog.GetReturnCode() == MBL_OK) {
-      // Translate filename to current sample pool index to avoid mismatches
-      int sampleIndex =
-          SamplePool::GetInstance()->FindSampleIndexByName(filename);
-      if (sampleIndex < 0) {
-        Trace::Error("Failed to map sample %s to pool index", filename);
-        return;
-      }
-      // delete file
-      if (!fs->DeleteFile(filename)) {
-        Trace::Error("Failed to delete sample %s", filename);
-        return;
-      }
-      // and unload it from ram
-      SamplePool::GetInstance()->unloadSample(sampleIndex);
+  pendingDeleteFs_ = fs;
+  strncpy(pendingDeleteFilename_, filename, PFILENAME_SIZE - 1);
+  pendingDeleteFilename_[PFILENAME_SIZE - 1] = '\0';
+  DoModal(mb,
+          ModalViewCallback::create<ImportView,
+                                    &ImportView::onConfirmRemoveProjectSample>(
+              *this));
+}
 
-      if (currentIndex_ > 0) {
-        --currentIndex_;
-      }
+void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
+  FileSystem *fs = pendingDeleteFs_;
+  pendingDeleteFs_ = nullptr;
 
-      // refresh directory listing to avoid stale indexes
-      refreshFileIndexList(fs);
+  char filename[PFILENAME_SIZE];
+  strncpy(filename, pendingDeleteFilename_, PFILENAME_SIZE - 1);
+  filename[PFILENAME_SIZE - 1] = '\0';
+  pendingDeleteFilename_[0] = '\0';
 
-      isDirty_ = true;
-    }
-  });
+  if (dialog.GetReturnCode() != MBL_OK || !fs) {
+    return;
+  }
+
+  int sampleIndex = SamplePool::GetInstance()->FindSampleIndexByName(filename);
+  if (sampleIndex < 0) {
+    Trace::Error("Failed to map sample %s to pool index", filename);
+    return;
+  }
+
+  if (!fs->DeleteFile(filename)) {
+    Trace::Error("Failed to delete sample %s", filename);
+    return;
+  }
+
+  SamplePool::GetInstance()->unloadSample(sampleIndex);
+
+  if (currentIndex_ > 0) {
+    --currentIndex_;
+  }
+
+  refreshFileIndexList(fs);
+  isDirty_ = true;
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {

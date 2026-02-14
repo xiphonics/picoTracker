@@ -44,6 +44,8 @@ protected:
   void refreshFileIndexList(FileSystem *fs);
 
 private:
+  void onConfirmRemoveProjectSample(View &view, ModalView &dialog);
+
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
   size_t previewPlayingIndex_ = 0;
@@ -55,6 +57,8 @@ private:
       false; // Flag to track when the edit key is being held down
   bool inProjectSampleDir_ =
       false; // Flag to track if we're in the project's sample directory
+  FileSystem *pendingDeleteFs_ = nullptr;
+  char pendingDeleteFilename_[PFILENAME_SIZE] = {};
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 #endif
