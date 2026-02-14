@@ -45,13 +45,16 @@ private:
   etl::vector<UIIntVarField, 3> intVarField_;
 
   // Recording state
-  bool isRecording_;
+  bool uiRecordingActive_;
+  bool uiSavingActive_;
+  bool autoSwitchPending_;
   uint32_t recordingStartTime_;
   uint32_t recordingDuration_;
 
   // Helper methods
   void record();
   void stop();
+  void stopAndSwitchToEditor();
   void updateTimeDisplay();
   void generateFullPath(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
                         etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> *fullpath);

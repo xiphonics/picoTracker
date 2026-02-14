@@ -396,6 +396,10 @@ void tlv320_enable_linein(void) {
   tlv320write(0x51, 0xc0);
   // Unmute Left and Right ADC Digital Volume Control.
   tlv320write(0x52, 0x00);
+
+  // Recheck output so line-in defaults to speaker when no headphones are
+  // detected.
+  tlv320_select_output();
 }
 void tlv320_enable_mic(void) {
   if (input == NONE) {
