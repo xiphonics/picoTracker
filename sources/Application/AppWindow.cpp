@@ -144,7 +144,7 @@ void AppWindow::defineColor(FourCC colorCode, GUIColor &color,
   }
 }
 
-AppWindow::AppWindow (I_GUIWindowImp &imp, const char *projectName)
+AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
     : GUIWindow(imp), project_(projectName), viewData_(&project_),
       views_(nullptr), _currentView(nullptr) {
 
