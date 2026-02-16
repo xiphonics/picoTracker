@@ -28,6 +28,12 @@ public:
   };
   bool operator==(const GUIPoint &p) const { return _x == p._x && _y == p._y; };
   bool operator!=(const GUIPoint &p) const { return _x != p._x || _y != p._y; };
+  GUIPoint operator+(const GUIPoint &p) const {
+    return GUIPoint(_x + p._x, _y + p._y);
+  };
+  GUIPoint operator-(const GUIPoint &p) const {
+    return GUIPoint(_x - p._x, _y - p._y);
+  };
 
   GUIPoint operator+(const GUIPoint &p) const {
     return GUIPoint(_x + p._x, _y + p._y);

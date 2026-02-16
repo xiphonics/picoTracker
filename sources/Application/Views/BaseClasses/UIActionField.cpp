@@ -9,6 +9,7 @@
 
 #include "UIActionField.h"
 #include "Application/AppWindow.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "ViewUtils.h"
 #include <string.h>
 
@@ -31,6 +32,11 @@ void UIActionField::Draw(GUIWindow &w, int offset) {
     ((AppWindow &)w).SetColor(CD_HILITE2);
     props.invert_ = true;
     w.DrawString(name_, position, props);
+    props.invert_ = false;
+    w.DrawString(char_button_border_left_s, position - GUIPoint(1, 0), props);
+    w.DrawString(char_button_border_right_s,
+                 position + GUIPoint(strlen(name_), 0), props);
+
   } else {
     // enforce max field length
     char buffer[MAX_FIELD_WIDTH + 1];

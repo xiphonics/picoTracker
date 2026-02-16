@@ -11,6 +11,7 @@
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Utils/DrawTools.h"
 #include "Application/Views/SampleEditorView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
@@ -382,6 +383,8 @@ void ImportView::DrawView() {
   y = 23; // bottom line
   DrawString(x, y, tempBuffer, props);
 
+  DrawScrollBar(*this, topIndex_, fileIndexList_.size(), LIST_PAGE_SIZE);
+
   SetColor(CD_NORMAL);
 };
 
@@ -495,7 +498,7 @@ void ImportView::import() {
   // stop playing before trying to import
   if (Player::GetInstance()->IsPlaying()) {
     MessageBox *mb =
-        MessageBox::Create(*this, "Can't import while previewing", MBBF_OK);
+        MessageBox::Create(*this, "Can't import while", "previewing", MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -524,11 +527,10 @@ void ImportView::import() {
   if (currentCount >= MAX_SAMPLES) {
     // Show error dialog to inform the user
     char message[SCREEN_WIDTH];
-    npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
+    npf_snprintf(message, sizeof(message), "Limit of %d sample reached",
                  MAX_SAMPLES);
-    // pad with trailing spaces as dialog size based on title
-    MessageBox *mb = MessageBox::Create(*this, "Cannot Import Sample      ",
-                                        message, MBBF_OK);
+    MessageBox *mb =
+        MessageBox::Create(*this, "Cannot Import Sample", message, MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -547,9 +549,8 @@ void ImportView::import() {
 
     uint32_t availBytes = availableFlash;
     npf_snprintf(message, sizeof(message), "Only %d bytes free", availBytes);
-    // pad with trailing spaces as dialog width based on title length
     MessageBox *mb =
-        MessageBox::Create(*this, "Sample Too Large       ", message, MBBF_OK);
+        MessageBox::Create(*this, "Sample Too Large", message, MBBF_OK);
     DoModal(mb);
     return;
   }
@@ -714,7 +715,7 @@ void ImportView::removeProjectSample(uint8_t fileIndex, FileSystem *fs) {
 
   // add spacing for basic way to size dialog wider to give Ok/cancel
   // buttons between space
-  MessageBox *mb = MessageBox::Create(*this, "    Remove sample?    ", filename,
+  MessageBox *mb = MessageBox::Create(*this, "Remove sample?", filename,
                                       MBBF_OK | MBBF_CANCEL);
   pendingDeleteFs_ = fs;
   strncpy(pendingDeleteFilename_, filename, PFILENAME_SIZE - 1);
