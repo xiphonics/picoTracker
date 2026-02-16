@@ -411,10 +411,9 @@ void ThemeView::handleThemeExport() {
     MessageBox *mb = MessageBox::Create(
         *this, "Theme already exists. Overwrite?", MBBF_YES | MBBF_NO);
 
-    DoModal(
-        mb,
-        ModalViewCallback::create<ThemeView, &ThemeView::onConfirmThemeOverwrite>(
-            *this));
+    DoModal(mb, ModalViewCallback::create<ThemeView,
+                                          &ThemeView::onConfirmThemeOverwrite>(
+                    *this));
   } else {
     // Theme doesn't exist, export directly
     exportThemeWithName(exportThemeName_.c_str(), false);
