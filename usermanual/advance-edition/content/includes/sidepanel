@@ -1,4 +1,11 @@
-<aside>
+<button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-controls="manual-sidebar" aria-expanded="false" onclick="toggleMobileMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+<div class="mobile-menu-backdrop" onclick="closeMobileMenu()"></div>
+<aside id="manual-sidebar">
+    <button class="mobile-menu-close" type="button" aria-label="Close menu" onclick="closeMobileMenu()">Close</button>
     <h1> picoTracker Manual</h1>
     <ul class="sideNav">
         <li>
