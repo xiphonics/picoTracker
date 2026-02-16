@@ -58,6 +58,16 @@ private:
   void updateSampleParameters();
   uint32_t selectionCenterSample() const;
   void updateSelectedMarkerFromFocus();
+  const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &activeFilename() const;
+  bool ensureWorkingCopy();
+  void discardWorkingCopy();
+  bool commitWorkingCopy(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &targetFilename);
+  void assignWorkingFilename();
+  bool buildSiblingPath(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &srcFilename,
+      etl::string_view siblingName,
+      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &outFilename) const;
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
@@ -128,5 +138,8 @@ private:
   SelectedMarker selectedMarker_ = MarkerStart;
 
   uint8_t modalClearCount_ = 0;
+
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> workingFilename_;
+  bool hasWorkingCopy_ = false;
 };
 #endif

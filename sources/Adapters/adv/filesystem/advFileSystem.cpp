@@ -392,17 +392,18 @@ uint64_t advFileSystem::getFileSize(const int index) {
   return fno.fsize;
 }
 
-bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
+bool advFileSystem::CopyFile(const char *srcFilename,
+                             const char *destFilename) {
   FIL fsrc, fdst; // File objects
   UINT br, bw;    // File read/write count
   FRESULT res;
   // Open source file on the drive 1
-  res = f_open(&fsrc, srcPath, FA_READ);
+  res = f_open(&fsrc, srcFilename, FA_READ);
   if (res != FR_OK)
     return false;
 
   // Create destination file on the drive 0
-  res = f_open(&fdst, destPath, FA_WRITE | FA_CREATE_ALWAYS);
+  res = f_open(&fdst, destFilename, FA_WRITE | FA_CREATE_ALWAYS);
   if (res != FR_OK) {
     f_close(&fsrc);
     return false;
@@ -429,6 +430,16 @@ bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   }
 
   return res == FR_OK;
+}
+
+bool advFileSystem::MoveFile(const char *srcFilename,
+                             const char *destFilename) {
+  FRESULT res = f_rename(srcFilename, destFilename);
+  if (res == FR_OK) {
+    updateCache();
+    return true;
+  }
+  return false;
 }
 
 void advFileSystem::tolowercase(char *temp) {

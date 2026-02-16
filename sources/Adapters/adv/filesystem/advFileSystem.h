@@ -63,7 +63,10 @@ public:
   virtual bool exists(const char *path) override;
   virtual bool makeDir(const char *path, bool pFlag = false) override;
   virtual uint64_t getFileSize(int index) override;
-  virtual bool CopyFile(const char *src, const char *dest) override;
+  virtual bool CopyFile(const char *srcFilename,
+                        const char *destFilename) override;
+  virtual bool MoveFile(const char *srcFilename,
+                        const char *destFilename) override;
   virtual bool isExFat() { return false; }; // not used on the Advance
 
 private:
