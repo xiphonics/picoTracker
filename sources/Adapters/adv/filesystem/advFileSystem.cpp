@@ -8,6 +8,7 @@
 
 #include "advFileSystem.h"
 #include "Externals/etl/include/etl/pool.h"
+#include "FileHandle.h"
 #include <cstdio>
 #include <cstring>
 
@@ -39,13 +40,26 @@ advFileSystem::advFileSystem() : batching_(false) {
 }
 
 FileHandle advFileSystem::Open(const char *name, const char *mode) {
-  Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   const bool hasPlus = (mode != nullptr) && (std::strchr(mode, '+') != nullptr);
   BYTE rmode = 0;
 
   if (!mode || !*mode) {
     Trace::Error("Invalid mode: %s", mode ? mode : "(null)");
     return FileHandle();
+  }
+
+  if (name && name[0] != '/') {
+    char cwd[PFILENAME_SIZE];
+    FRESULT cwdRes = f_getcwd(cwd, sizeof(cwd));
+    if (cwdRes == FR_OK) {
+      Trace::Log("FILESYSTEM", "Open file:%s, mode:%s, cwd:%s", name, mode,
+                 cwd);
+    } else {
+      Trace::Log("FILESYSTEM", "Open file:%s, mode:%s, cwd:<err:%d>", name,
+                 mode, static_cast<int>(cwdRes));
+    }
+  } else {
+    Trace::Log("FILESYSTEM", "Open file:%s, mode:%s", name, mode);
   }
 
   switch (*mode) {
@@ -62,12 +76,20 @@ FileHandle advFileSystem::Open(const char *name, const char *mode) {
   FIL cwd;
   PI_File *wFile = 0;
   FRESULT res = f_open(&cwd, name, rmode);
+  if (res == FR_LOCKED) {
+    Trace::Error("FILESYSTEM: Cannot open file (locked): %s (mode:%s)", name,
+                 mode);
+    return FileHandle();
+  }
   if (res != FR_OK) {
-    Trace::Error("FILESYSTEM: Cannot open file:%s", name, mode);
+    Trace::Error("FILESYSTEM: Cannot open file:%s (mode:%s, err:%d)", name,
+                 mode, static_cast<int>(res));
     return FileHandle();
   }
   wFile = filePool.create(cwd);
   if (wFile == nullptr) {
+    // Avoid leaking an open FATFS object when the pool is exhausted.
+    f_close(&cwd);
     Trace::Error("FILESYSTEM: No file slots available (max %d)",
                  static_cast<int>(FF_FS_LOCK));
     return FileHandle();
@@ -370,19 +392,22 @@ uint64_t advFileSystem::getFileSize(const int index) {
   return fno.fsize;
 }
 
-bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
+bool advFileSystem::CopyFile(const char *srcFilename,
+                             const char *destFilename) {
   FIL fsrc, fdst; // File objects
   UINT br, bw;    // File read/write count
   FRESULT res;
   // Open source file on the drive 1
-  res = f_open(&fsrc, srcPath, FA_READ);
+  res = f_open(&fsrc, srcFilename, FA_READ);
   if (res != FR_OK)
     return false;
 
   // Create destination file on the drive 0
-  res = f_open(&fdst, destPath, FA_WRITE | FA_CREATE_ALWAYS);
-  if (res != FR_OK)
+  res = f_open(&fdst, destFilename, FA_WRITE | FA_CREATE_ALWAYS);
+  if (res != FR_OK) {
+    f_close(&fsrc);
     return false;
+  }
 
   // Copy source to destination
   for (;;) {
@@ -405,6 +430,16 @@ bool advFileSystem::CopyFile(const char *srcPath, const char *destPath) {
   }
 
   return res == FR_OK;
+}
+
+bool advFileSystem::MoveFile(const char *srcFilename,
+                             const char *destFilename) {
+  FRESULT res = f_rename(srcFilename, destFilename);
+  if (res == FR_OK) {
+    updateCache();
+    return true;
+  }
+  return false;
 }
 
 void advFileSystem::tolowercase(char *temp) {
@@ -475,6 +510,7 @@ int PI_File::Write(const void *ptr, int size, int nmemb) {
   UINT written;
   FRESULT res = f_write(&file_, ptr, size * nmemb, &written);
   if (res != FR_OK) {
+    Trace::Error("FILESYSTEM: f_write failed err:%d", static_cast<int>(res));
     return -1;
   }
   return written;
@@ -492,12 +528,17 @@ bool PI_File::Close() {
   FRESULT res = f_close(&file_);
   if (!res) {
     isOpen_ = false;
+  } else {
+    Trace::Error("FILESYSTEM: f_close failed err:%d", static_cast<int>(res));
   }
   return res == FR_OK;
 }
 
 bool PI_File::Sync() {
   FRESULT res = f_sync(&file_);
+  if (res != FR_OK) {
+    Trace::Error("FILESYSTEM: f_sync failed err:%d", static_cast<int>(res));
+  }
   return res == FR_OK;
 }
 

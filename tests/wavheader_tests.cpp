@@ -38,9 +38,7 @@ struct ByteWriter {
     return AppendBytes(bytes, sizeof(bytes));
   }
 
-  bool AppendFourCC(const char *fourcc) {
-    return AppendBytes(fourcc, 4);
-  }
+  bool AppendFourCC(const char *fourcc) { return AppendBytes(fourcc, 4); }
 };
 
 class TestFile final : public I_File {
@@ -121,7 +119,7 @@ private:
 };
 
 ByteWriter BuildPcmWav(uint16_t channels, uint32_t sampleRate,
-                      uint16_t bitsPerSample, uint32_t dataSize) {
+                       uint16_t bitsPerSample, uint32_t dataSize) {
   ByteWriter writer;
   uint32_t byteRate = sampleRate * channels * (bitsPerSample / 8);
   uint16_t blockAlign = channels * (bitsPerSample / 8);
