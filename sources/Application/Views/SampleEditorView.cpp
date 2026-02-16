@@ -109,8 +109,8 @@ void SampleEditorView::Reset() {
 void SampleEditorView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 
 void SampleEditorView::assignWorkingFilename() {
-  if (!buildSiblingPath(viewData_->sampleEditorFilename, kSampleEditTempLeafName,
-                        workingFilename_)) {
+  if (!buildSiblingPath(viewData_->sampleEditorFilename,
+                        kSampleEditTempLeafName, workingFilename_)) {
     Trace::Error("SampleEditorView: Failed creating temp filename from %s",
                  viewData_->sampleEditorFilename.c_str());
   }
@@ -180,8 +180,9 @@ bool SampleEditorView::ensureWorkingCopy() {
     return false;
   }
   if (workingFilename_ == viewData_->sampleEditorFilename) {
-    Trace::Error("SampleEditorView: Temp filename conflicts with source file %s",
-                 workingFilename_.c_str());
+    Trace::Error(
+        "SampleEditorView: Temp filename conflicts with source file %s",
+        workingFilename_.c_str());
     return false;
   }
 
@@ -231,7 +232,8 @@ bool SampleEditorView::commitWorkingCopy(
     return true;
   }
 
-  const bool commitToOriginal = (targetFilename == viewData_->sampleEditorFilename);
+  const bool commitToOriginal =
+      (targetFilename == viewData_->sampleEditorFilename);
   if (commitToOriginal) {
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> backupFilename;
     if (!buildSiblingPath(targetFilename, kSampleEditBackupLeafName,
@@ -240,7 +242,8 @@ bool SampleEditorView::commitWorkingCopy(
                    targetFilename.c_str());
       return false;
     }
-    if (backupFilename == targetFilename || backupFilename == workingFilename_) {
+    if (backupFilename == targetFilename ||
+        backupFilename == workingFilename_) {
       Trace::Error("SampleEditorView: Backup filename conflicts for %s",
                    targetFilename.c_str());
       return false;
@@ -255,9 +258,10 @@ bool SampleEditorView::commitWorkingCopy(
     bool movedOriginalToBackup = false;
     if (fs->exists(targetFilename.c_str())) {
       if (!fs->MoveFile(targetFilename.c_str(), backupFilename.c_str())) {
-        Trace::Error("SampleEditorView: Failed moving original file to backup %s"
-                     " -> %s",
-                     targetFilename.c_str(), backupFilename.c_str());
+        Trace::Error(
+            "SampleEditorView: Failed moving original file to backup %s"
+            " -> %s",
+            targetFilename.c_str(), backupFilename.c_str());
         return false;
       }
       movedOriginalToBackup = true;
@@ -735,8 +739,7 @@ void SampleEditorView::rebuildWaveform() {
     }
   }
 
-  auto file = FileSystem::GetInstance()->Open(
-      activeFilename().c_str(), "r");
+  auto file = FileSystem::GetInstance()->Open(activeFilename().c_str(), "r");
   if (!file) {
     Trace::Error("SampleEditorView: Failed to open file for waveform rebuild");
     return;
@@ -885,8 +888,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     confirmLine.append("?");
 
     MessageBox *mb =
-        MessageBox::Create(*this, confirmLine.c_str(),
-                           "Saved only after Save", MBBF_YES | MBBF_NO);
+        MessageBox::Create(*this, confirmLine.c_str(), "Saved only after Save",
+                           MBBF_YES | MBBF_NO);
 
     // Modal cannot properly draw over the waveform gfx area because text
     // drawing doesn't know the area because ClearTextRect() is not yet

@@ -392,7 +392,8 @@ uint64_t advFileSystem::getFileSize(const int index) {
   return fno.fsize;
 }
 
-bool advFileSystem::CopyFile(const char *srcFilename, const char *destFilename) {
+bool advFileSystem::CopyFile(const char *srcFilename,
+                             const char *destFilename) {
   FIL fsrc, fdst; // File objects
   UINT br, bw;    // File read/write count
   FRESULT res;
@@ -431,7 +432,8 @@ bool advFileSystem::CopyFile(const char *srcFilename, const char *destFilename) 
   return res == FR_OK;
 }
 
-bool advFileSystem::MoveFile(const char *srcFilename, const char *destFilename) {
+bool advFileSystem::MoveFile(const char *srcFilename,
+                             const char *destFilename) {
   FRESULT res = f_rename(srcFilename, destFilename);
   if (res == FR_OK) {
     updateCache();
