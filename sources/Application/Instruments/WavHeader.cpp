@@ -72,8 +72,7 @@ bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
   if (file->Write(&size, 1, 4) != 4)
     return false;
 
-  file->Sync();
-  return true;
+  return file->Sync();
 }
 
 etl::expected<WavHeaderInfo, WAVEFILE_ERROR>
@@ -107,6 +106,14 @@ WavHeaderWriter::ReadHeader(I_File *file) {
   if (chunk != 0x45564157) { // "WAVE"
     Trace::Error("WavHeaderWriter: Missing WAVE identifier");
     return etl::unexpected(UNSUPPORTED_WAV_FORMAT);
+  }
+
+  const long afterWavePos = file->Tell();
+  file->Seek(0, SEEK_END);
+  const uint32_t fileEnd = static_cast<uint32_t>(file->Tell());
+  file->Seek(afterWavePos, SEEK_SET);
+  if (fileEnd <= 0) {
+    return etl::unexpected(INVALID_HEADER);
   }
 
   const uint32_t riffEnd = info.riffChunkSize + 8;
@@ -243,8 +250,17 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     uint32_t paddedChunkSize = chunkSize + (chunkSize & 1);
     uint32_t chunkEnd = dataStart + paddedChunkSize;
     if (chunkEnd > riffEnd) {
-      Trace::Error("WavHeaderWriter: data chunk exceeds RIFF bounds");
-      return etl::unexpected(INVALID_HEADER);
+      // Some exporters write a too-small RIFF size while keeping a valid data
+      // chunk that ends at/before EOF. Accept only this narrow mismatch.
+      if (chunk == 0x61746164 && chunkEnd <= fileEnd) { // "data"
+        Trace::Log("WAVHEADER",
+                   "Accepting data chunk beyond RIFF bounds (riffEnd=%u, "
+                   "chunkEnd=%u, fileEnd=%u)",
+                   riffEnd, chunkEnd, fileEnd);
+      } else {
+        Trace::Error("WavHeaderWriter: data chunk exceeds RIFF bounds");
+        return etl::unexpected(INVALID_HEADER);
+      }
     }
 
     if (chunk == 0x61746164) { // "data"
@@ -282,6 +298,11 @@ bool WavHeaderWriter::UpdateFileSize(I_File *file, uint32_t sampleCount,
 
   // Get the current position, which is the total file size
   uint32_t totalFileSize = file->Tell();
+  if (totalFileSize < 44) {
+    Trace::Error("WAVHEADER: file too small to patch header (%u bytes)",
+                 totalFileSize);
+    return false;
+  }
 
   // Calculate the two size fields required by the WAV header
   uint32_t chunk_size = totalFileSize - 8;
@@ -289,19 +310,28 @@ bool WavHeaderWriter::UpdateFileSize(I_File *file, uint32_t sampleCount,
 
   // Update ChunkSize (Total file size - 8)
   file->Seek(4, SEEK_SET);
-  file->Write(&chunk_size, 4, 1);
+  int written = file->Write(&chunk_size, 1, 4);
+  if (written != 4) {
+    Trace::Error("WAVHEADER: failed to write RIFF chunk size (wrote=%d err=%d)",
+                 written, file->Error());
+    return false;
+  }
 
   Trace::Log("WAVHEADER", "Updating header: FileSize=%u, DataSize=%u",
              chunk_size, subchunk2_size);
 
   // Update Subchunk2Size (the size of the raw data)
   file->Seek(40, SEEK_SET);
-  file->Write(&subchunk2_size, 4, 1);
+  written = file->Write(&subchunk2_size, 1, 4);
+  if (written != 4) {
+    Trace::Error("WAVHEADER: failed to write data chunk size (wrote=%d err=%d)",
+                 written, file->Error());
+    return false;
+  }
 
   // Return the file pointer to its original position at the end of the file
   file->Seek(totalFileSize, SEEK_SET);
 
   // Force a sync to write all cached data to the disk before closing.
-  file->Sync();
-  return true;
+  return file->Sync();
 }

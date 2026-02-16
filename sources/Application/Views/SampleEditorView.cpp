@@ -1433,16 +1433,16 @@ void SampleEditorView::loadSample(
 
   auto file = FileSystem::GetInstance()->Open(filename.c_str(), "r");
   if (!file) {
-    Trace::Error("SampleEditorView: Failed to open file: %s", filename);
+    Trace::Error("SampleEditorView: Failed to open file: %s", filename.c_str());
     return;
   }
-  Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename);
+  Trace::Log("SAMPLEEDITOR", "Loaded for parsing: %s", filename.c_str());
 
   // --- 1. Read Header & Get Size ---
   auto headerResult = WavHeaderWriter::ReadHeader(file.get());
   if (!headerResult.has_value()) {
     Trace::Error("SampleEditorView: Failed to parse WAV header for %s (err=%d)",
-                 filename, static_cast<int>(headerResult.error()));
+                 filename.c_str(), static_cast<int>(headerResult.error()));
     return;
   }
 
@@ -1458,7 +1458,7 @@ void SampleEditorView::loadSample(
   if (numChannels > 2 || numChannels == 0 || bitsPerSample == 0 ||
       dataChunkSize == 0) {
     Trace::Error("SampleEditorView: Invalid or unsupported WAV header in %s",
-                 filename);
+                 filename.c_str());
     return;
   }
   // need to check as its possible for the user to copy an invalid file into the
@@ -1466,14 +1466,15 @@ void SampleEditorView::loadSample(
   if (bitsPerSample != 8 && bitsPerSample != 16) {
     Trace::Error(
         "SampleEditorView: Unsupported bit depth (%u) in WAV header for %s",
-        bitsPerSample, filename);
+        bitsPerSample, filename.c_str());
     return;
   }
 
   uint32_t bytesPerFrame = numChannels * headerInfo.bytesPerSample;
   tempSampleSize_ = bytesPerFrame > 0 ? dataChunkSize / bytesPerFrame : 0;
   if (tempSampleSize_ == 0) {
-    Trace::Error("SampleEditorView: Sample has zero frames in %s", filename);
+    Trace::Error("SampleEditorView: Sample has zero frames in %s",
+                 filename.c_str());
     return;
   }
   graphField_.SetSampleSize(tempSampleSize_);
