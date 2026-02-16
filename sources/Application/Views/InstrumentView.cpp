@@ -205,6 +205,11 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
   isDirty_ = true;
 }
 
+void InstrumentView::applyProposedTypeChangeUI() {
+  instrumentType_.SetInt(pendingInstrumentType_, false);
+  onInstrumentTypeChange();
+}
+
 void InstrumentView::onInstrumentChange() {
 
   ClearFocus();
@@ -767,14 +772,11 @@ void InstrumentView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (instrumentModified) {
         MessageBox *mb = MessageBox::Create(*this, "Reset all settings?",
                                             MBBF_YES | MBBF_NO);
-
-        DoModal(mb, [this, instr](View &v, ModalView &dialog) {
-          if (dialog.GetReturnCode() == MBL_YES) {
-            // Clear all sample instrument variables
-            instr->Purge();
-            isDirty_ = true;
-          }
-        });
+        pendingPurgeInstrument_ = instr;
+        DoModal(mb,
+                ModalViewCallback::create<
+                    InstrumentView, &InstrumentView::onConfirmResetInstrument>(
+                    *this));
       }
       return;
     }
@@ -1053,20 +1055,12 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       if (instrumentModified) {
         MessageBox *mb = MessageBox::Create(
             *this, "Change Instrument &", "lose settings?", MBBF_YES | MBBF_NO);
-
-        // Use a lambda function that captures 'this' for direct access to class
-        // members
-        DoModal(mb,
-                [this, currentType, proposedType](View &v, ModalView &dialog) {
-                  if (dialog.GetReturnCode() == MBL_YES) {
-                    // Apply the proposed type change when user confirms
-                    instrumentType_.SetInt(proposedType, false);
-                    onInstrumentTypeChange();
-                  }
-                  // If user selects No, we don't need to do anything as the UI
-                  // already shows the current type not the proposed type change
-                  // that the user decided to reject
-                });
+        pendingInstrumentType_ = proposedType;
+        DoModal(
+            mb,
+            ModalViewCallback::create<
+                InstrumentView, &InstrumentView::onConfirmInstrumentTypeChange>(
+                *this));
       } else {
         // Apply the proposed type change immediately if not modified
         instrumentType_.SetInt(proposedType, false);
@@ -1115,26 +1109,14 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
       break;
     }
 
-    Variable *sampleVar =
-        sampleInstr->FindVariable(FourCC::SampleInstrumentSample);
     MessageBox *mb = MessageBox::Create(*this, "Change sample &",
                                         "clear slices?", MBBF_YES | MBBF_NO);
-
-    DoModal(mb, [this, sampleInstr, sampleVar, newIndex](View &view,
-                                                         ModalView &dialog) {
-      if (dialog.GetReturnCode() == MBL_YES) {
-        sampleInstr->ClearSlices();
-        lastSampleIndex_ = newIndex;
-        updateSliceCountLabel(sliceCountLabel_, sampleInstr);
-        isDirty_ = true;
-      } else {
-        suppressSampleChangeWarning_ = true;
-        if (sampleVar) {
-          sampleVar->SetInt(lastSampleIndex_);
-        }
-        isDirty_ = true;
-      }
-    });
+    pendingSampleChangeInstrument_ = sampleInstr;
+    pendingSampleChangeNewIndex_ = newIndex;
+    DoModal(mb,
+            ModalViewCallback::create<InstrumentView,
+                                      &InstrumentView::onConfirmSampleChange>(
+                *this));
   } break;
   case FourCC::ActionShowSampleSlices: {
     I_Instrument *instr = getInstrument();
@@ -1261,24 +1243,13 @@ void InstrumentView::handleInstrumentExport() {
       MessageBox *mb = MessageBox::Create(*this, confirmMsg.c_str(),
                                           name.c_str(), MBBF_YES | MBBF_NO);
 
-      // Use a lambda function with captures to avoid using class members
-      DoModal(mb, [this, instrument, name](View &v, ModalView &dialog) {
-        if (dialog.GetReturnCode() == MBL_YES) {
-          // User confirmed override, call ExportInstrument with overwrite=true
-
-          // Re-export the instrument with overwrite flag set to true
-          PersistencyResult result =
-              PersistencyService::GetInstance()->ExportInstrument(instrument,
-                                                                  name, true);
-
-          Trace::Log("INSTRUMENTVIEW",
-                     "Instrument '%s' exported with overwrite", name.c_str());
-
-          // TODO: unfortunately we can't show the result message here
-          // because we're in a modal already and showing a model from result
-          // of a modal is not supported
-        }
-      });
+      exportInstrument_ = instrument;
+      exportName_ = name;
+      DoModal(
+          mb,
+          ModalViewCallback::create<InstrumentView,
+                                    &InstrumentView::onConfirmExportOverwrite>(
+              *this));
     } else {
       // Create a message with the instrument name
       etl::string<MAX_INSTRUMENT_NAME_LENGTH + strlen("Exported: ")>
@@ -1293,4 +1264,63 @@ void InstrumentView::handleInstrumentExport() {
       DoModal(mb);
     }
   }
+}
+
+void InstrumentView::onConfirmInstrumentTypeChange(View &, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    applyProposedTypeChangeUI();
+  }
+}
+
+void InstrumentView::onConfirmResetInstrument(View &, ModalView &dialog) {
+  I_Instrument *instr = pendingPurgeInstrument_;
+  pendingPurgeInstrument_ = nullptr;
+
+  if (dialog.GetReturnCode() != MBL_YES || !instr) {
+    return;
+  }
+
+  instr->Purge();
+  isDirty_ = true;
+}
+
+void InstrumentView::onConfirmSampleChange(View &, ModalView &dialog) {
+  SampleInstrument *sampleInstr = pendingSampleChangeInstrument_;
+  int newIndex = pendingSampleChangeNewIndex_;
+  pendingSampleChangeInstrument_ = nullptr;
+  pendingSampleChangeNewIndex_ = -1;
+
+  if (!sampleInstr) {
+    return;
+  }
+
+  if (dialog.GetReturnCode() == MBL_YES) {
+    sampleInstr->ClearSlices();
+    lastSampleIndex_ = newIndex;
+    updateSliceCountLabel(sliceCountLabel_, sampleInstr);
+    isDirty_ = true;
+    return;
+  }
+
+  suppressSampleChangeWarning_ = true;
+  if (Variable *sampleVar =
+          sampleInstr->FindVariable(FourCC::SampleInstrumentSample)) {
+    sampleVar->SetInt(lastSampleIndex_);
+  }
+  isDirty_ = true;
+}
+
+void InstrumentView::onConfirmExportOverwrite(View &, ModalView &dialog) {
+  I_Instrument *instrument = exportInstrument_;
+  etl::string<MAX_INSTRUMENT_NAME_LENGTH> name = exportName_;
+  exportInstrument_ = nullptr;
+  exportName_.clear();
+
+  if (dialog.GetReturnCode() != MBL_YES || !instrument) {
+    return;
+  }
+
+  PersistencyService::GetInstance()->ExportInstrument(instrument, name, true);
+  Trace::Log("INSTRUMENTVIEW", "Instrument '%s' exported with overwrite",
+             name.c_str());
 }
