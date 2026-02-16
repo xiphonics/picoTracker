@@ -7,6 +7,7 @@
  */
 
 #include "picoTrackerFileSystem.h"
+#include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/etl/include/etl/pool.h"
 #include "pico/multicore.h"
 #include <cstring>
@@ -17,6 +18,38 @@ Mutex mutex;
 constexpr uint32_t MAX_OPEN_FILES = 10;
 
 static etl::pool<picoTrackerFile, MAX_OPEN_FILES> filePool;
+
+// compile-time generated map to change uppercase letters to lowercase for
+// sorting, leave all other characters unchanged. could be used to also change
+// the sort order for other/special characters if needed
+static constexpr uint8_t getCharacterSortRank(uint8_t value) {
+  return (value >= 'A' && value <= 'Z') ? 'a' + (value - 'A') : value;
+}
+
+template <size_t... Indexes>
+constexpr std::array<uint8_t, sizeof...(Indexes)>
+MakeSortMap(std::index_sequence<Indexes...>) {
+  return {getCharacterSortRank(static_cast<uint8_t>(Indexes))...};
+}
+
+static constexpr auto kSortMap = MakeSortMap(std::make_index_sequence<256>{});
+
+// extracts a uint32 from the first four letters of a string for faster sorting
+// by comparing these uint32 values instead of doing string compares
+static uint32_t getFileSortKey(char *filename) {
+  uint32_t sortKey = 0;
+  uint8_t *value = (uint8_t *)filename;
+
+  for (size_t i = 0; i < 4; i++) {
+    sortKey <<= 8;
+    if (*value != '\0') {
+      sortKey |= kSortMap[*value];
+      value++;
+    }
+  }
+
+  return sortKey;
+}
 
 picoTrackerFileSystem::picoTrackerFileSystem() {
   // init out access mutex
@@ -120,8 +153,10 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
 }
 
 void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
-                                 const char *filter, bool subDirOnly) {
-  std::lock_guard<Mutex> lock(mutex);
+                                 const char *filter, bool subDirOnly,
+                                 bool sorted = false) {
+  std::unique_lock<Mutex> lock(mutex);
+  etl::vector<uint32_t, MAX_FILE_INDEX_SIZE> sortKeys;
 
   fileIndexes->clear();
 
@@ -159,12 +194,18 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     // filter out "." and files that dont match filter if a filter is given
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
         (!entry.isHidden() && matchesFilter)) {
-      if (subDirOnly) {
-        if (entry.isDirectory()) {
-          fileIndexes->push_back(index);
-        }
+      bool add = false;
+
+      if (subDirOnly && entry.isDirectory()) {
+        add = entry.isDirectory();
       } else {
+        add = true;
+      }
+
+      if (add) {
         fileIndexes->push_back(index);
+        entry.getName(buffer, PFILENAME_SIZE);
+        sortKeys.push_back(getFileSortKey(buffer));
       }
       // Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
       count++;
@@ -173,7 +214,43 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     }
     entry.close();
   }
+
   cwd.close();
+  lock.unlock();
+
+  // sort using insertion sort (with an extra step if our keys are identical)
+  constexpr int total = MAX_PROJECT_NAME_LENGTH + 1;
+  char currentName[total];
+  char prevName[total];
+
+  for (size_t i = 1; i < sortKeys.size(); ++i) {
+    uint32_t key = sortKeys[i];
+    int index = fileIndexes->at(i);
+    size_t j = i;
+
+    while (j > 0) {
+      bool shouldMove = sortKeys[j - 1] > key;
+
+      if (!shouldMove && sortKeys[j - 1] == key) {
+        // keys are identical, do a tiebreaker by doing a string compare to
+        // ensure stable sorting of files with same first 4 letters
+        getFileName(index, currentName, total);
+        getFileName(fileIndexes->at(j - 1), prevName, total);
+        shouldMove = strcasecmp(prevName, currentName) > 0;
+      }
+
+      if (shouldMove) {
+        sortKeys[j] = sortKeys[j - 1];
+        fileIndexes->at(j) = fileIndexes->at(j - 1);
+        --j;
+      } else {
+        break;
+      }
+    }
+
+    sortKeys[j] = key;
+    fileIndexes->at(j) = index;
+  }
   Trace::Log("FILESYSTEM", "scanned: %d, added file indexes:%d", count,
              fileIndexes->size());
 }
