@@ -411,16 +411,18 @@ void ThemeView::handleThemeExport() {
     MessageBox *mb = MessageBox::Create(
         *this, "Theme already exists. Overwrite?", MBBF_YES | MBBF_NO);
 
-    // Use a lambda for the callback to avoid the static function
-    DoModal(mb, [this](View &v, ModalView &dialog) {
-      if (dialog.GetReturnCode() == MBL_YES) {
-        // User confirmed overwrite
-        exportThemeWithName(exportThemeName_.c_str(), true);
-      }
-    });
+    DoModal(mb, ModalViewCallback::create<ThemeView,
+                                          &ThemeView::onConfirmThemeOverwrite>(
+                    *this));
   } else {
     // Theme doesn't exist, export directly
     exportThemeWithName(exportThemeName_.c_str(), false);
+  }
+}
+
+void ThemeView::onConfirmThemeOverwrite(View &, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    exportThemeWithName(exportThemeName_.c_str(), true);
   }
 }
 

@@ -348,11 +348,11 @@ uint64_t picoTrackerFileSystem::getFileSize(const int index) {
   return size;
 }
 
-bool picoTrackerFileSystem::CopyFile(const char *srcPath,
-                                     const char *destPath) {
+bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
+                                     const char *destFilename) {
   std::lock_guard<Mutex> lock(mutex);
-  auto fSrc = sd.open(srcPath, O_READ);
-  auto fDest = sd.open(destPath, O_WRITE | O_CREAT);
+  auto fSrc = sd.open(srcFilename, O_READ);
+  auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
 
   int n = 0;
   int bufferSize = sizeof(fileBuffer_);
@@ -362,7 +362,7 @@ bool picoTrackerFileSystem::CopyFile(const char *srcPath,
     if (n >= 0) {
       fDest.write(fileBuffer_, n);
     } else {
-      Trace::Error("Failed to read file: %s", srcPath);
+      Trace::Error("Failed to read file: %s", srcFilename);
       return false;
     }
     if (n < bufferSize) {
@@ -372,6 +372,12 @@ bool picoTrackerFileSystem::CopyFile(const char *srcPath,
   fSrc.close();
   fDest.close();
   return true;
+}
+
+bool picoTrackerFileSystem::MoveFile(const char *srcFilename,
+                                     const char *destFilename) {
+  std::lock_guard<Mutex> lock(mutex);
+  return sd.rename(srcFilename, destFilename);
 }
 
 void picoTrackerFileSystem::tolowercase(char *temp) {

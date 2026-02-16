@@ -38,9 +38,7 @@ struct ByteWriter {
     return AppendBytes(bytes, sizeof(bytes));
   }
 
-  bool AppendFourCC(const char *fourcc) {
-    return AppendBytes(fourcc, 4);
-  }
+  bool AppendFourCC(const char *fourcc) { return AppendBytes(fourcc, 4); }
 };
 
 class TestFile final : public I_File {
@@ -121,7 +119,7 @@ private:
 };
 
 ByteWriter BuildPcmWav(uint16_t channels, uint32_t sampleRate,
-                      uint16_t bitsPerSample, uint32_t dataSize) {
+                       uint16_t bitsPerSample, uint32_t dataSize) {
   ByteWriter writer;
   uint32_t byteRate = sampleRate * channels * (bitsPerSample / 8);
   uint16_t blockAlign = channels * (bitsPerSample / 8);
@@ -216,4 +214,34 @@ TEST_CASE("ReadHeader rejects unsupported audio format") {
   auto result = WavHeaderWriter::ReadHeader(&file);
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == UNSUPPORTED_AUDIO_FORMAT);
+}
+
+TEST_CASE("ReadHeader accepts data chunk beyond RIFF when still within EOF") {
+  Config::SetImportResampler(0);
+  ByteWriter wav = BuildPcmWav(2, 44100, 16, 8);
+
+  // Make RIFF chunk size too small by 4 bytes so data end exceeds RIFF bounds.
+  uint32_t riffSize = 0;
+  std::memcpy(&riffSize, wav.data + 4, sizeof(riffSize));
+  riffSize -= 4;
+  std::memcpy(wav.data + 4, &riffSize, sizeof(riffSize));
+
+  TestFile file(wav.data, wav.size);
+  auto result = WavHeaderWriter::ReadHeader(&file);
+  REQUIRE(result.has_value());
+  CHECK(result->dataChunkSize == 8);
+}
+
+TEST_CASE("ReadHeader rejects data chunk beyond EOF") {
+  Config::SetImportResampler(0);
+  ByteWriter wav = BuildPcmWav(2, 44100, 16, 8);
+
+  // Increase data size field beyond available bytes in file.
+  uint32_t oversizedData = 12;
+  std::memcpy(wav.data + 40, &oversizedData, sizeof(oversizedData));
+
+  TestFile file(wav.data, wav.size);
+  auto result = WavHeaderWriter::ReadHeader(&file);
+  REQUIRE_FALSE(result.has_value());
+  CHECK(result.error() == INVALID_HEADER);
 }

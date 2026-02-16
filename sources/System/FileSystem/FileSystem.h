@@ -49,7 +49,8 @@ public:
   virtual bool exists(const char *path) = 0;
   virtual bool makeDir(const char *path, bool pFlag = false) = 0;
   virtual uint64_t getFileSize(int index) = 0;
-  virtual bool CopyFile(const char *src, const char *dest) = 0;
+  virtual bool CopyFile(const char *srcFilename, const char *destFilename) = 0;
+  virtual bool MoveFile(const char *srcFilename, const char *destFilename) = 0;
   virtual bool isExFat() = 0;
 };
 

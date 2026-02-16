@@ -1001,9 +1001,21 @@ void AppWindow::SetColor(ColorDefinition cd) {
 
 bool AppWindow::AutoSave() {
   Player *player = Player::GetInstance();
-  // only auto save when sequencer is not running and not recording
+  if (views_ == nullptr || _currentView == nullptr) {
+    return false;
+  }
+  // only auto save when sequencer is not running, not recording,
+  // and the user is in an autosave-safe view.
+  bool autosaveSafeView =
+      _currentView == &views_->songView || _currentView == &views_->chainView ||
+      _currentView == &views_->phraseView ||
+      _currentView == &views_->tableView ||
+      _currentView == &views_->grooveView ||
+      _currentView == &views_->instrumentView ||
+      _currentView == &views_->deviceView ||
+      _currentView == &views_->themeView || _currentView == &views_->mixerView;
   bool recording = IsRecordingActive();
-  if (!player->IsRunning() && !recording) {
+  if (!player->IsRunning() && !recording && autosaveSafeView) {
     Trace::Log("APPWINDOW", "AutoSaving Project Data");
     // get persistence service and call autosave
     PersistencyService *ps = PersistencyService::GetInstance();

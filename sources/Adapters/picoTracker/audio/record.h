@@ -22,11 +22,18 @@ void Record(void *);
 bool StartRecording(const char *filename, uint8_t threshold,
                     uint32_t milliseconds);
 void StopRecording();
+void RequestStopRecording();
+bool WaitForRecordingStop(uint32_t timeoutMs);
+void FinishStopRecording();
 void StartMonitoring();
 void StopMonitoring();
 void SetInputSource(RecordSource source);
 void SetLineInGain(uint8_t gainDb);
 void SetMicGain(uint8_t gainDb);
 bool IsRecordingActive();
+bool IsSavingRecording();
+uint8_t GetSavingProgressPercent();
+// True only if the last recording captured samples and was persisted to disk.
+bool DidLastRecordingCaptureAudio();
 
 #endif
