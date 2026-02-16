@@ -47,8 +47,8 @@ constexpr const char *const sampleEditOperationNames[] = {"Trim",
                                                           "Peak Normalize"};
 constexpr uint32_t sampleEditOperationCount =
     sizeof(sampleEditOperationNames) / sizeof(sampleEditOperationNames[0]);
-constexpr const char *const kSampleEditTempLeafName = ".sampledit_tmp.wav";
-constexpr const char *const kSampleEditBackupLeafName = ".sampledit_bak.wav";
+constexpr etl::string_view kSampleEditTempLeafName = ".sampledit_tmp.wav";
+constexpr etl::string_view kSampleEditBackupLeafName = ".sampledit_bak.wav";
 
 constexpr int32_t GraphXOffset = 0;
 constexpr int32_t GraphYOffset = 2 * CHAR_HEIGHT;
@@ -118,10 +118,10 @@ void SampleEditorView::assignWorkingFilename() {
 
 bool SampleEditorView::buildSiblingPath(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &srcFilename,
-    const char *siblingName,
+    etl::string_view siblingName,
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &outFilename) const {
   outFilename.clear();
-  if (srcFilename.empty() || !siblingName || siblingName[0] == '\0') {
+  if (srcFilename.empty() || siblingName.empty()) {
     return false;
   }
 
@@ -134,14 +134,14 @@ bool SampleEditorView::buildSiblingPath(
   }
 
   if (slashPos == srcFilename.size()) {
-    outFilename.append(siblingName);
+    outFilename.append(siblingName.data(), siblingName.size());
   } else if (slashPos == 0) {
     outFilename.append("/");
-    outFilename.append(siblingName);
+    outFilename.append(siblingName.data(), siblingName.size());
   } else {
     outFilename = srcFilename.substr(0, slashPos);
     outFilename.append("/");
-    outFilename.append(siblingName);
+    outFilename.append(siblingName.data(), siblingName.size());
   }
 
   if (outFilename.is_truncated()) {

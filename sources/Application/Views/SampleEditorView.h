@@ -66,7 +66,7 @@ private:
   void assignWorkingFilename();
   bool buildSiblingPath(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &srcFilename,
-      const char *siblingName,
+      etl::string_view siblingName,
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &outFilename) const;
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
