@@ -49,6 +49,9 @@ public:
 
 protected:
 private:
+  void onConfirmApplyOperation(View &view, ModalView &dialog);
+  void onOperationFailedAck(View &view, ModalView &dialog);
+
   // Helper methods
   void addAllFields();
   void addNameTextField(I_Instrument *instr, GUIPoint &position);
