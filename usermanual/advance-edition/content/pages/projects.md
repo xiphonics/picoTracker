@@ -13,9 +13,11 @@ You can ***explicitly*** save the current project by pressing [SAVE] on the proj
 
 ## Current Project settings
 
-- **Tempo:**: Can be set between 60bpm [0x3c] and 400bpm [0x190]. Resolution aligned to LSDJ.
+- **Tempo:**: Can be set between 60bpm [0x3c] and 400bpm [0x190]. You can also tap tempo: move the cursor to the `tempo` field and press `EDIT` repeatedly in time.
 - **Transpose:** Live transposition of every triggered instruments.
 - **Scale:** Set the scale that will applied to all notes entered in the project. When entering a note in the Phrase screen, you will only be able to enter notes that belong to the selected scale. See [the reference](scales.html) for a list of all available scales.
+
+For best tap tempo results, tap at least 2-3 times at a steady pace. If taps are too far apart, tap detection restarts from the latest tap.
 
 ## Current Project optimisation
 
