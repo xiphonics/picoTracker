@@ -158,10 +158,6 @@ SampleEditorView::activeFilename() const {
 
 bool SampleEditorView::ensureWorkingCopy() {
   auto fs = FileSystem::GetInstance();
-  if (!fs) {
-    Trace::Error("SampleEditorView: FileSystem unavailable");
-    return false;
-  }
 
   if (hasWorkingCopy_) {
     return true;
@@ -224,10 +220,7 @@ void SampleEditorView::discardWorkingCopy() {
 bool SampleEditorView::commitWorkingCopy(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &targetFilename) {
   auto fs = FileSystem::GetInstance();
-  if (!fs) {
-    Trace::Error("SampleEditorView: FileSystem unavailable");
-    return false;
-  }
+
   if (!hasWorkingCopy_) {
     return true;
   }
@@ -910,10 +903,6 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
       const auto &originalFilename = viewData_->sampleEditorFilename;
       if (originalFilename.compare(RECORDING_FILENAME) == 0) {
         auto fs = FileSystem::GetInstance();
-        if (!fs) {
-          Trace::Error("SampleEditorView: FileSystem unavailable");
-          return;
-        }
         fs->chdir(RECORDINGS_DIR);
         viewData_->importViewStartDir = RECORDINGS_DIR;
       }
@@ -1012,11 +1001,6 @@ bool SampleEditorView::applySelectedOperation() {
 }
 
 bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
-  if (!FileSystem::GetInstance()) {
-    Trace::Error("SampleEditorView: FileSystem unavailable");
-    return false;
-  }
-
   if (Player::GetInstance()->IsPlaying()) {
     Player::GetInstance()->StopStreaming();
   }
@@ -1088,11 +1072,6 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
 }
 
 bool SampleEditorView::applyNormalizeOperation() {
-  if (!FileSystem::GetInstance()) {
-    Trace::Error("SampleEditorView: FileSystem unavailable");
-    return false;
-  }
-
   if (Player::GetInstance()->IsPlaying()) {
     Player::GetInstance()->StopStreaming();
   }
@@ -1222,11 +1201,6 @@ bool SampleEditorView::reloadEditedSample() {
 bool SampleEditorView::saveSample(
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
   auto fs = FileSystem::GetInstance();
-  if (!fs) {
-    Trace::Error("SampleEditorView: FileSystem unavailable");
-    return false;
-  }
-
   const auto &originalFilename = viewData_->sampleEditorFilename;
 
   savedFilename =
