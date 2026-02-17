@@ -17,7 +17,7 @@
 #define MAX_THEME_EXPORT_PATH_LENGTH                                           \
   (MAX_THEME_NAME_LENGTH + strlen(THEMES_DIR) + 1 +                            \
    strlen(THEME_FILE_EXTENSION))
-// Instrument/sample display names exclude ".wav", so they are 4 chars shorter.
+// accounts for .pti extension so they are 4 chars shorter.
 #define MAX_INSTRUMENT_NAME_LENGTH (MAX_INSTRUMENT_FILENAME_LENGTH - 4)
 
 #define PROJECTS_DIR "/projects"
