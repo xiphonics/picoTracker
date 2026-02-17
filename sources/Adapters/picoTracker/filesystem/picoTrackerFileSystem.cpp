@@ -9,6 +9,7 @@
 #include "picoTrackerFileSystem.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/etl/include/etl/pool.h"
+#include "Foundation/Services/MemoryService.h"
 #include "pico/multicore.h"
 #include <cstring>
 
@@ -156,7 +157,8 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
                                  const char *filter, bool subDirOnly,
                                  bool sorted = false) {
   std::unique_lock<Mutex> lock(mutex);
-  etl::vector<uint32_t, MAX_FILE_INDEX_SIZE> sortKeys;
+
+  uint32_t *sortKeys = (uint32_t *)MemoryPool::acquire();
 
   fileIndexes->clear();
 
@@ -205,10 +207,10 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
       if (add) {
         fileIndexes->push_back(index);
         entry.getName(buffer, PFILENAME_SIZE);
-        sortKeys.push_back(getFileSortKey(buffer));
+        sortKeys[fileIndexes->size() - 1] = getFileSortKey(buffer);
+        count++;
       }
       // Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
-      count++;
     } else {
       // Trace::Log("FILESYSTEM", "skipped hidden: %s", buffer);
     }
@@ -223,7 +225,7 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
   char currentName[total];
   char prevName[total];
 
-  for (size_t i = 1; i < sortKeys.size(); ++i) {
+  for (size_t i = 1; i < count; i++) {
     uint32_t key = sortKeys[i];
     int index = fileIndexes->at(i);
     size_t j = i;
@@ -251,6 +253,9 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     sortKeys[j] = key;
     fileIndexes->at(j) = index;
   }
+
+  MemoryPool::release();
+
   Trace::Log("FILESYSTEM", "scanned: %d, added file indexes:%d", count,
              fileIndexes->size());
 }
@@ -354,21 +359,25 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
   auto fSrc = sd.open(srcFilename, O_READ);
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
 
-  int n = 0;
-  int bufferSize = sizeof(fileBuffer_);
+  unsigned int n = 0;
+  char *buffer = (char *)MemoryPool::acquire();
+
   while (true) {
-    n = fSrc.read(fileBuffer_, bufferSize);
+    n = fSrc.read(buffer, sizeof(buffer));
     // check for read error and only write if no error
     if (n >= 0) {
-      fDest.write(fileBuffer_, n);
+      fDest.write(buffer, n);
     } else {
       Trace::Error("Failed to read file: %s", srcFilename);
       return false;
     }
-    if (n < bufferSize) {
+    if (n < sizeof(buffer)) {
       break;
     }
   }
+
+  MemoryPool::release();
+
   fSrc.close();
   fDest.close();
   return true;
