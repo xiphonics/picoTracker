@@ -31,7 +31,7 @@ public:
   virtual FileHandle Open(const char *name, const char *mode) override;
   virtual bool chdir(const char *path) override;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
-                    bool subDirOnly) override;
+                    bool subDirOnly, bool sorted) override;
   virtual void getFileName(int index, char *name, int length) override;
   virtual PicoFileType getFileType(int index) override;
   virtual bool isParentRoot() override;
@@ -50,9 +50,6 @@ public:
 private:
   SdFs sd;
   void tolowercase(char *temp);
-  // buffer needs to be allocated here as too big for allocation as local
-  // variable on the stack
-  uint8_t fileBuffer_[512];
 };
 
 // Concrete implementation of PI_File for picoTracker

@@ -8,6 +8,7 @@
  */
 
 #include "Status.h"
+#include "Foundation/Services/MemoryService.h"
 #include <System/Console/nanoprintf.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@ void Status::Set(const char *fmt, ...) {
   if (!status)
     return;
 
-  char buffer[128];
+  char *buffer = (char *)MemoryPool::acquire();
   va_list args;
   va_start(args, fmt);
 
@@ -26,6 +27,8 @@ void Status::Set(const char *fmt, ...) {
   status->Print(buffer);
 
   va_end(args);
+
+  MemoryPool::release();
 }
 
 void Status::SetMultiLine(const char *fmt, ...) {
@@ -33,7 +36,7 @@ void Status::SetMultiLine(const char *fmt, ...) {
   if (!status)
     return;
 
-  char buffer[128];
+  char *buffer = (char *)MemoryPool::acquire();
   va_list args;
   va_start(args, fmt);
 
@@ -41,4 +44,6 @@ void Status::SetMultiLine(const char *fmt, ...) {
   status->PrintMultiLine(buffer);
 
   va_end(args);
+
+  MemoryPool::release();
 }
