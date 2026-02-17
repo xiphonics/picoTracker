@@ -36,7 +36,8 @@ public:
   virtual bool read(int index, void *data) {
     return false;
   } // Default implementation
-  virtual void list(etl::ivector<int> *fileIndexes, const char *filter, bool subDirOnly, bool sorted=false) = 0;
+  virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
+                    bool subDirOnly, bool sorted = false) = 0;
   virtual void getFileName(int index, char *name, int length) = 0;
   virtual PicoFileType getFileType(int index) = 0;
   virtual bool isParentRoot() = 0;
