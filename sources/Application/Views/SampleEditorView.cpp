@@ -1187,11 +1187,10 @@ bool SampleEditorView::reloadEditedSample() {
   MessageBox *warning = MessageBox::Create(*this, "Please reload project",
                                            "To apply changes", MBBF_OK);
   clearWaveformRegion();
-  DoModal(
-      warning,
-      ModalViewCallback::create<SampleEditorView,
-                                &SampleEditorView::onSimpleModalDismiss>(
-          *this));
+  DoModal(warning,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
   return true;
 #else
   auto pool = SamplePool::GetInstance();
