@@ -1,70 +1,21 @@
 #pragma once
 
-// table LEG breaks vibrato
+// TODO:
 // retrigger/instrument retrigger
 
 #include "Application/Utils/fixed.h"
 #include "System/Console/Trace.h"
 #include <cstdint>
 
-constexpr int GB_NUM_WAVEFORMS = 8;
-constexpr int SAMPLING_RATE = 44100;
-
-enum gbWaveType {
-  gbWavePulse12_5,
-  gbWavePulse25,
-  gbWavePulse50,
-  gbWaveTriangle,
-  gbWaveNoiseGameBoy,
-  gbWaveNoiseNES,
-  gbWaveNoiseSN76489,
-  gbWaveNoiseWhite,
-  gbWaveNone
-};
-
-enum gbFlags { fArpeggio = 1 << 0, fLegato = 1 << 1 };
+#include "GameBoyEnums.h"
+#include "GameBoyEnvelope.h"
+#include "GameBoyMath.h"
+#include "GameBoyTables.h"
 
 /******************************************************************************
- * constants                                                                  *
+ * InstrumentParameters holds all relevant information from the instrument    *
+ * view that is needed by the engine.                                         *
  ******************************************************************************/
-
-#include "GameBoyCompileTimeFunctions.h"
-
-// precalculated semitone ratios for pitch slides (Q16.16 format)
-constexpr auto semitoneRatioQ16 = makeRatioLUT(std::make_index_sequence<256>{});
-// precalculated frequency table midi notes -12 to 127+12
-constexpr auto frequencyLUT = makeFreqLUT(std::make_index_sequence<128 + 24>{});
-// precalculated attack coefficients for envelope (0-64)
-constexpr auto attackCoeffLUT = makeAttackLUT(std::make_index_sequence<65>{});
-// precalculated decay coefficients for envelope (0-64)
-constexpr auto decayCoeffLUT = makeDecayLUT(std::make_index_sequence<65>{});
-// precalculated sine wave values for vibrato (0-63 + sentinel)
-constexpr auto sine64LUT = makeSine64LUT(std::make_index_sequence<65>{});
-
-static inline uint32_t multiplyQ32(uint32_t a, uint32_t b) {
-  uint64_t tmp = (uint64_t)a * b;
-  return (uint32_t)(tmp >> 32);
-}
-
-static inline uint16_t interpolateU16(const uint16_t *lut, uint8_t v) {
-  uint8_t idx = v >> 2; // 0..63
-  uint8_t frac = v & 3; // 0..3
-
-  uint16_t c0 = lut[idx];
-  uint16_t c1 = lut[idx + 1]; // safe because of sentinel
-
-  return c0 + (((uint32_t)(c1 - c0) * frac) >> 2);
-}
-
-static inline int8_t interpolateS8(const int8_t *lut, uint8_t v) {
-  uint8_t idx = v >> 2; // 0..63
-  uint8_t frac = v & 3; // 0..3
-
-  int8_t c0 = lut[idx];
-  int8_t c1 = lut[idx + 1]; // safe because of sentinel
-
-  return c0 + (((int32_t)(c1 - c0) * frac) >> 2);
-}
 
 typedef struct InstrumentParameters {
   uint8_t length;
@@ -84,52 +35,9 @@ typedef struct InstrumentParameters {
   int8_t sweepAmount;
 } InstrumentParameters;
 
-typedef enum { ENV_IDLE, ENV_ATTACK, ENV_DECAY } EnvState;
-
-/******************************************************************************
- * envelope                                                                   *
- ******************************************************************************/
-
-#pragma pack(push, 1)
-typedef struct {
-  uint16_t value;
-  uint16_t coefficient; // q0.16
-  uint16_t attack;
-  uint16_t decay;
-  EnvState state;
-
-  void setAttack(uint8_t a) {
-    attack = interpolateU16(attackCoeffLUT.data(), a);
-  }
-
-  void setDecay(uint8_t d) { decay = interpolateU16(decayCoeffLUT.data(), d); }
-
-  void trigger() {
-    value = 0;
-    coefficient = attack;
-    state = ENV_ATTACK;
-  }
-
-  void tick() {
-    if (state == ENV_IDLE)
-      return;
-
-    uint32_t diff = (uint32_t)(state == ENV_ATTACK ? 65535 : 0) - value;
-    int32_t tmp = value + ((diff * coefficient) >> 16);
-
-    if (state == ENV_ATTACK && tmp >= 65530) {
-      tmp = 65535;
-      coefficient = decay;
-      state = ENV_DECAY;
-    } else if (tmp <= 10) {
-      tmp = 0;
-      state = ENV_IDLE;
-    }
-
-    value = tmp;
-  }
-} Envelope;
-#pragma pack(pop)
+// 128 bytes per voice max to keep the entire thing under 1kB for the 8 voices
+static_assert(sizeof(InstrumentParameters) <= 12,
+              "Check sizeof(InstrumentParameters) in error message");
 
 /******************************************************************************
  * voice                                                                      *
@@ -144,56 +52,116 @@ constexpr int32_t minStep = -0x3fff'ffff;
 typedef struct voice_t {
   InstrumentParameters parameters;
 
-  uint8_t note;
-  uint8_t wave;
-  uint8_t flags = 0; // bit 0: arpeggio, bit 1: legato
+  uint32_t phase = 0;    // oscillator phase
+  int32_t frequency = 0; // precomp'd oscillator frequency (incl. vibrato, etc)
+  int32_t lastFrequency = 0; // for legato slides, to compute the initial factor
 
-  uint8_t arpTick = 0;
-  uint8_t arpTime = 250;
+  uint8_t burstTime; // initial white noise burst duration in ticks
 
-  uint32_t phase = 0;
-  int32_t frequency = 0;
-  int32_t lastFrequency = 0;
-
-  uint8_t burstTime;
-  uint8_t arpLength = 5;
-  uint8_t arpIndex = 0;
-
-  int32_t arpFrequencies[5] = {0, 0, 0, 0, 0};
   uint32_t time; // sample counter
   uint32_t tick; // sample counter for 100Hz updates
   uint32_t tock; // sample counter for 1000Hz updates
-  uint32_t lifetime;
+  uint32_t timeToLive;
 
-  uint16_t vibPhase;
-  uint16_t vibFrequency = 0xfff;
-  int32_t vibSwing;
-  uint8_t vibDepth;
+  struct arp {
+    uint8_t clock = 0;  // internal clock for arpeggio timing
+    uint8_t time = 250; // arpeggio step duration in clock ticks
+    uint8_t length = 5; // number of steps in the arpeggio (1-5)
+    uint8_t index = 0;  // current index in the arpeggio sequence
+    int32_t frequencies[5] = {0, 0, 0, 0, 0};
 
-  uint16_t vibDelay;
+    inline void tick() {
+      clock++;
+
+      if (clock >= time) {
+        clock = 0;
+        index++;
+        if (index >= length) {
+          index = 0;
+        };
+      }
+    }
+  } arp;
+
+  struct vibrato {
+    uint16_t phase;             // sine lfo phase
+    uint16_t frequency = 0xfff; // vibrato frequency
+    int32_t swing;  // frequency diff between current note and next semitone
+    uint8_t depth;  // vibrato depth to apply
+    uint16_t delay; // ticks before auto-vibrato starts
+
+    int tick(uint32_t time) {
+      if (time > delay) {
+        phase += frequency;
+        int32_t sine = interpolateS8(sine64LUT.data(), phase >> 8);
+        int delta = (swing * sine) >> 7;
+        delta = (depth * delta) >> 8;
+        return delta;
+      }
+      return 0;
+    }
+  } vibrato;
+
+  struct pan {
+    int16_t position; // current pan position (0-255, 128=center)
+    uint8_t target;   // target pan position for slew
+    int8_t step;      // slew step size
+
+    inline void tick() {
+      if (step == 0)
+        return;
+
+      position += step;
+
+      // check if we've reached or overshot the target
+      if ((step > 0 && position >= target) ||
+          (step < 0 && position <= target)) {
+        position = target;
+        step = 0;
+      }
+    }
+  } pan;
+
+  struct sweep {
+    uint32_t coefficient;
+    int16_t steps;
+  } sweep;
+
+  struct legato {
+    // legato (exponential pitch slide)
+    int32_t coefficient = 0; // q16.16 multiplier per 100Hz tick
+    int32_t factor = 0;      // q16.16 multiplier per 100Hz tick
+    int32_t steps = 0;       // remaining ticks
+    int32_t targetFreq = 0;  // target frequency
+
+    inline void tick() {
+      if (steps) {
+        // accumulate factor: legato.factor *= legato.coefficient (both Q16.16)
+        factor += coefficient;
+        steps--;
+
+        if (steps == 0) {
+          factor = targetFreq;
+        }
+      }
+    }
+  } legato;
 
   uint8_t drive;
   uint8_t bitcrush;
-
-  int16_t pan;
-  uint8_t panTarget;
-  uint8_t panStep;
-
-  uint32_t sweepCoefficient;
-  int16_t sweepSteps;
-
-  // legato (exponential pitch slide)
-  int32_t legatoCoefficient = 0; // q16.16 multiplier per 100Hz tick
-  int32_t legatoFactor = 0;      // q16.16 multiplier per 100Hz tick
-  int32_t legatoSteps = 0;       // remaining ticks
-  int32_t legatoTargetFreq = 0;  // target frequency
 
   uint16_t lfsr = 17;
   uint32_t noise = 42;
 
   uint32_t lastSample = 0;
 
-  Envelope envelope;
+  uint8_t note;
+  uint8_t wave;
+  gbFlags flags;
+
+  envelope_t envelope;
+
+  // implementation ------------------------------------------------------------
 
   inline void stop() {
     frequency = 0;
@@ -201,11 +169,11 @@ typedef struct voice_t {
   }
 
   inline void sample(fixed *left, fixed *right) {
-    uint32_t combinedGain =
-        (parameters.level * envelope.value) >> 16; // precompute
+    // precompute the gain, it doesn't need to be updated every sample
+    uint32_t combinedGain = (parameters.level * envelope.value) >> 16;
 
-    uint8_t leftGain = std::min((0xff - pan) * 2, 0xff);
-    uint8_t rightGain = std::min(0xff, 2 * pan);
+    uint8_t leftGain = std::min((0xff - pan.position) * 2, 0xff);
+    uint8_t rightGain = std::min(0xff, 2 * pan.position);
 
     // cold loop @ 100 Hz ------------------------------------------------------
     if (tick == 0) {
@@ -218,89 +186,57 @@ typedef struct voice_t {
       combinedGain = (parameters.level * envelope.value) >> 16;
 
       // sweep
-      if (sweepSteps) {
-        sweepSteps--;
+      if (sweep.steps) {
+        sweep.steps--;
 
         // sweep all base frequencies
-        for (uint32_t i = 0; i < arpLength; i++) {
-          uint64_t f = arpFrequencies[i];
-          f *= sweepCoefficient;
-          arpFrequencies[i] = uint32_t(f >> 16);
+        for (uint32_t i = 0; i < arp.length; i++) {
+          uint64_t f = arp.frequencies[i];
+          f *= sweep.coefficient;
+          arp.frequencies[i] = uint32_t(f >> 16);
         }
       }
 
       // pan
+      if (pan.step) {
+        pan.tick();
 
-      if (panStep) {
-        if (pan < panTarget) {
-          pan += panStep;
-          if (pan > panTarget) {
-            pan = panTarget;
-            panStep = 0;
-          }
-        } else if (pan > panTarget) {
-          pan -= panStep;
-          if (pan < panTarget) {
-            pan = panTarget;
-            panStep = 0;
-          }
-        }
-
-        leftGain = std::min((0xff - pan) * 2, 0xff);
-        rightGain = std::min(0xff, 2 * pan);
+        leftGain = std::min((0xff - pan.position) * 2, 0xff);
+        rightGain = std::min(0xff, 2 * pan.position);
       }
 
       // vibrato
-      int delta = 0;
-
-      if (time > vibDelay) {
-        vibPhase += vibFrequency;
-        int32_t sine = interpolateS8(sine64LUT.data(), vibPhase >> 8);
-        delta = (vibSwing * sine) >> 7;
-        delta = (vibDepth * delta) >> 8;
-      }
-
-      frequency = arpFrequencies[arpIndex] + delta;
+      frequency = arp.frequencies[arp.index] + vibrato.tick(time);
 
       // legato: exponential frequency interpolation (Q16.16 fixed-point)
-      if (legatoSteps > 0 && (flags & fLegato)) {
-        // accumulate factor: legatoFactor *= legatoCoefficient (both Q16.16)
-        legatoFactor += legatoCoefficient;
-        legatoSteps--;
-
-        if (legatoSteps == 0) {
-          legatoFactor = legatoTargetFreq;
-        }
+      if (flags.legato) {
+        legato.tick();
       }
 
-      // apply to frequency: frequency *= legatoFactor (Q16.16)
-      frequency = ((int64_t)frequency * legatoFactor) >> 16;
+      // apply to frequency: frequency *= legato.factor (Q16.16)
+      frequency = ((int64_t)frequency * legato.factor) >> 16;
     }
 
     // warm loop @ ~1000 Hz ----------------------------------------------------
     if (tock == 0) {
-      // hot loop
-
       tock = 44;
 
       // arpeggio
-      if (flags & fArpeggio) {
-        arpTick++;
-
-        if (arpTick >= arpTime) {
-          arpTick = 0;
-          arpIndex++;
-          if (arpIndex >= arpLength) {
-            arpIndex = 0;
-          };
-        }
+      if (flags.arpeggio) {
+        arp.tick();
       }
 
-      if (lifetime == 0) {
-        // note off
-        wave = gbWaveNone;
-        envelope.state = ENV_IDLE;
+      if (timeToLive == 0) {
+        if (flags.retrigger) {
+          flags.retrigger = 0; // clear retrigger flag
+          note_on(note, true, parameters);
+        } else {
+          // note off, kill everything
+          wave = gbWaveNone;
+          envelope.state = gbEnvIdle;
+        }
       } else {
+        // still in burst or already playing?
         if (burstTime > 0) {
           burstTime--;
           wave = gbWaveNoiseWhite;
@@ -309,7 +245,7 @@ typedef struct voice_t {
         }
 
         // length
-        lifetime--;
+        timeToLive--;
       }
     }
 
@@ -383,119 +319,139 @@ typedef struct voice_t {
 
   inline void note_on(unsigned char note, bool retrigger,
                       InstrumentParameters parameters) {
+    Trace::Error("note_on: note=%d, retrigger=%d, attack=%d, decay=%d, "
+                 "level=%d, wave=%d",
+                 note, retrigger, parameters.attack, parameters.decay,
+                 parameters.level, parameters.wave);
     this->parameters = parameters;
 
     // is this the best time to store that?
     lastFrequency = frequency;
 
-    noise = 42;
+    noise = 42; // reset the lcg to get deterministic noise bursts on each note
 
     // command settings
-    legatoSteps = 0;
-    legatoFactor = 0x0001'0000; // 1.0 in Q16.16
-    flags = 0;                  // clear arpeggio and legato
+    legato.steps = 0;
+    legato.factor = 0x0001'0000;      // 1.0 in Q16.16
+    legato.coefficient = 0x0001'0000; // 1.0 in Q16.16
+    flags.byte = 0;                   // clear all flags
 
-    bitcrush = 0;
+    bitcrush = 0; // only accessible via command
     drive = 0;
 
-    pan = 128;
-    panTarget = 128;
-    panStep = 0;
+    // reset panning
+    pan.position = 128;
+    pan.target = 128;
+    pan.step = 0;
 
+    // oscillator frequency setup
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
     frequency = frequencyLUT[fIndex];
-    arpFrequencies[0] = frequency;
-
-    this->note = note;
-
-    arpTime = 35 - parameters.arpSpeed;
-    arpIndex = 0;
-    arpTick = 0;
-    phase = 0;
-    time = 0;
-    tick = 0;
-    tock = 0;
-    legatoCoefficient = 0x0001'0000; // 1.0 in Q16.16
-
-    // reset vibrato
-    vibDepth = parameters.vibratoDepth;
-    vibSwing = frequencyLUT[fIndex + 1] - frequency;
-    vibDelay = parameters.vibratoDelay << 8;
-    vibPhase = 0;
-    vibFrequency = 0xfff;
-
-    // reset envelope
-    envelope.setAttack(parameters.attack);
-    envelope.setDecay(parameters.decay);
-    envelope.trigger();
-
-    lifetime = (parameters.length == 0) ? 0x7FFF'FFFF : (parameters.length);
-
+    arp.frequencies[0] = frequency;
     wave = parameters.wave;
     burstTime = parameters.burst;
 
-    // sweep
-    int32_t sweepDepth = parameters.sweepAmount;
-    sweepCoefficient = (1 << 16) + (sweepDepth * 64);
-    sweepSteps = parameters.sweepTime;
-  }
+    this->note = note;
 
-  /* waveform generation ******************************************************/
+    // reset apreggio to default state (off, base frequency only)
+    arp.time = 35 - parameters.arpSpeed;
+    arp.index = 0;
+    arp.clock = 0;
 
-  inline uint32_t pulse(bool level) {
-    uint32_t target = -(uint32_t)level & 0x0FFF'FFFF;
+    // reset oscillator state and timers
+    timeToLive = (parameters.length == 0) ? 0x7FFF'FFFF : (parameters.length);
+    Trace::Error("timeToLive: %d", timeToLive);
+    phase = 0;
 
-    int32_t diff = (int32_t)target - (int32_t)lastSample;
-
-    if (diff > maxStep) {
-      diff = maxStep;
-    } else if (diff < minStep) {
-      diff = minStep;
+    // don't reset timers on retrig - they might mid-execution and will
+    // underflow
+    if (!retrigger) {
+      time = 0;
+      tick = 0;
+      tock = 0;
     }
 
+    // reset vibrato
+    vibrato.depth = parameters.vibratoDepth;
+    vibrato.swing = frequencyLUT[fIndex + 1] - frequency;
+    vibrato.delay = parameters.vibratoDelay << 8;
+    vibrato.phase = 0;
+    vibrato.frequency = 0xfff;
+
+    // reset envelope
+    envelope.set_attack(parameters.attack);
+    envelope.set_decay(parameters.decay);
+    envelope.trigger();
+
+    // sweep
+    int32_t sweepDepth = parameters.sweepAmount;
+    sweep.coefficient = (1 << 16) + (sweepDepth * 64);
+    sweep.steps = parameters.sweepTime;
+  }
+
+  /****************************************************************************
+   *  waveform generation                                                     *
+   ****************************************************************************/
+
+  // simple slew limited pulse generator to avoid some of the aliasing noise
+  // while keeping the implementation fast enough for 8 voices on rp2040
+  inline uint32_t pulse(bool high) {
+    uint32_t target = high ? 0x0FFF'FFFF : 0;
+    int32_t diff = (int32_t)target - (int32_t)lastSample;
+    diff = std::clamp(diff, minStep, maxStep);
     return (lastSample = (lastSample + diff));
   }
 
-  static inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b, int feedback) {
+  // generic LFSR function for noise generation, parameterized by tap and
+  // feedback bits
+  inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b, int feedback) {
     uint16_t lfsr_val = *lfsr;
 
-    bool bitA = lfsr_val & 1;
-    bool bitB = (lfsr_val >> b) & 1;
-    bool bitF = bitA ^ bitB;
+    uint32_t bitA = lfsr_val & 1;
+    uint32_t bitB = (lfsr_val >> b) & 1;
+    uint32_t bitF = bitA ^ bitB;
 
-    lfsr_val = (lfsr_val >> 1) | (bitF << feedback);
-
-    *lfsr = lfsr_val;
+    *lfsr = (lfsr_val >> 1) | (bitF << feedback);
     return bitA ? 0x0FFF'FFFF : 0;
   }
 
-  static inline uint32_t voice_noise_nes(uint16_t *lfsr) {
+  // NES noise shift register taps at bits 0 and 6, feedback to bit 14
+  inline uint32_t voice_noise_nes(uint16_t *lfsr) {
     return voice_noise_lfsr(lfsr, 6, 14);
   }
 
-  static inline uint32_t voice_noise_gb7(uint16_t *lfsr) {
+  // GameBoy noise shift register taps at bits 0 and 1, feedback to bit 6
+  inline uint32_t voice_noise_gb7(uint16_t *lfsr) {
     return voice_noise_lfsr(lfsr, 1, 6);
   }
 
-  static inline uint32_t voice_noise_sn76489(uint16_t *lfsr) {
+  // SN76489 noise shift register taps at bits 0 and 1, feedback to bit 15
+  inline uint32_t voice_noise_sn76489(uint16_t *lfsr) {
     return voice_noise_lfsr(lfsr, 3, 14);
   }
 
-  /* command implementation ***************************************************/
+  /****************************************************************************
+   *  command processing                                                     *
+   ****************************************************************************/
 
-  void command_init_pan(uint8_t speed, int8_t pan) {
-    panTarget = pan;
-    panStep = speed;
+  void command_init_instrument_retrigger(int8_t transpose) {
+    flags.retrigger = 1; // set retrigger flag
+    timeToLive = 0;      // make sure the note is killed in the next tick
+    note += transpose;
+  }
+
+  void command_init_pan(uint8_t speed, int8_t target) {
+    pan.target = target;
+    pan.step = (target > pan.position) ? speed : -speed;
   }
 
   void command_init_vibrato(uint8_t rate, uint8_t depth) {
-    vibFrequency = rate << 6;
+    vibrato.frequency = rate << 6;
 
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
-    vibSwing = frequencyLUT[fIndex + 1] - frequency;
-    vibDepth = depth;
-    // start immediately
-    vibDelay = 0;
+    vibrato.swing = frequencyLUT[fIndex + 1] - frequency;
+    vibrato.depth = depth;
+    vibrato.delay = 0; // vibrato starts immediately on command
   }
 
   // fully fixed-point per-tick legato initialization
@@ -507,26 +463,26 @@ typedef struct voice_t {
       // slide from lastFrequency to current frequency
       if (lastFrequency == frequency) {
         // same frequency - no slide needed
-        flags &= ~fLegato; // clear legato flag
+        flags.legato = 0; // clear legato flag
         return;
       }
 
       // initial factor = lastFrequency / frequency (e.g., 0.5 for up an octave)
       // target factor = 1.0 (when we reach the new frequency)
       int64_t initialFactor = ((int64_t)lastFrequency << 16) / frequency;
-      legatoTargetFreq = 0x0001'0000; // 1.0 in Q16.16
-      legatoCoefficient = (legatoTargetFreq - initialFactor) / ticks;
-      legatoFactor = initialFactor; // start at the ratio
+      legato.targetFreq = 0x0001'0000; // 1.0 in Q16.16
+      legato.coefficient = (legato.targetFreq - initialFactor) / ticks;
+      legato.factor = initialFactor; // start at the ratio
     } else {
       // get total ratio from table (Q16.16)
-      legatoTargetFreq = semitoneRatioQ16[semitones + 128];
-      legatoCoefficient = (legatoTargetFreq - 0x0001'0000) / ticks;
+      legato.targetFreq = semitoneRatioQ16[semitones + 128];
+      legato.coefficient = (legato.targetFreq - 0x0001'0000) / ticks;
     }
 
-    legatoSteps = ticks;
-    legatoFactor = 0x0001'0000; // start at 1.0
+    legato.steps = ticks;
+    legato.factor = 0x0001'0000; // start at 1.0
 
-    flags |= fLegato; // set legato flag
+    flags.legato = 1; // set legato flag
   }
 
   // fully fixed-point per-tick pitch shift initialization
@@ -535,39 +491,41 @@ typedef struct voice_t {
     int ticks = 1 + speed; // minimum 1 tick
 
     // get total ratio from table (Q16.16)
-    legatoTargetFreq = semitoneRatioQ16[semitones + 128];
-    legatoCoefficient = (legatoTargetFreq - 0x0001'0000) / ticks;
+    legato.targetFreq = semitoneRatioQ16[semitones + 128];
+    legato.coefficient = (legato.targetFreq - 0x0001'0000) / ticks;
 
-    legatoSteps = ticks;
-    legatoFactor = 0x0001'0000; // start at 1.0
+    legato.steps = ticks;
+    legato.factor = 0x0001'0000; // start at 1.0 in q16.16
 
-    flags |= fLegato; // set legato flag
+    flags.legato = 1; // set legato flag
   }
 
   void command_init_arp(ushort value) {
-    arpIndex = 0;
-    arpLength = 5;
-
-    flags |= fArpeggio; // set arpeggio flag
+    // preset to full length arpeggio
+    arp.index = 0;
+    arp.length = 5;
 
     // trim off trailing zeroes
     uint16_t val = value;
 
-    while ((arpLength > 1) && !(val & 0x000F)) {
-      arpLength--;
+    while ((arp.length > 1) && !(val & 0x000F)) {
+      arp.length--;
       val >>= 4;
     }
 
-    for (uint8_t i = 0; i < arpLength - 1; i++) {
+    // calculate frequencies for each step in the arpeggio
+    for (uint8_t i = 0; i < arp.length - 1; i++) {
       uint8_t semitone = (value >> (12 - i * 4)) & 0x000F;
       int32_t noteVal = note + parameters.transpose + semitone + 12;
       noteVal = (noteVal < 0) ? 0 : noteVal;
       noteVal = (noteVal > 127 + 24) ? 127 + 24 : noteVal;
-      arpFrequencies[i + 1] = frequencyLUT[noteVal];
+      arp.frequencies[i + 1] = frequencyLUT[noteVal];
     }
+
+    flags.arpeggio = 1; // set arpeggio flag
   }
 } voice_t;
 #pragma pack(pop)
 
-// 128 bytes per voice max to keep the entire thing under 1kB for 8 voices
+// 128 bytes per voice max to keep the entire thing under 1kB for the 8 voices
 static_assert(sizeof(voice_t) <= 128, "Check sizeof(voice_t) in error message");

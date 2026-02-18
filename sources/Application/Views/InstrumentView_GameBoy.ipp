@@ -10,7 +10,7 @@ void InstrumentView::fillGameBoyParameters() {
   // extra y spacing to allow for gap between export/import and parameters
   position._y += 2;
   Variable *v = instrument->FindVariable(FourCC::GameBoyInstrumentWaveform);
-  int max = GB_NUM_WAVEFORMS;
+  int max = gbNumWaveforms;
   intVarField_.emplace_back(position, *v, "Waveform:   %s", 0, max - 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 

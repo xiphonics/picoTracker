@@ -994,7 +994,7 @@ void InstrumentView::DrawView() {
   I_Instrument *instr = getInstrument();
   if (instr) {
     InstrumentType type = instr->GetType();
-    if (type == IT_SID || type == IT_OPAL) {
+    if (type == IT_SID || type == IT_OPAL || type == IT_GAMEBOY) {
       SetColor(CD_WARN);
       DrawString(18, 1, char_button_border_left_s, props);
       DrawString(19, 1, "EXPERIMENTAL", GUITextProperties(true));

@@ -1,0 +1,50 @@
+#pragma once
+
+#include "GameBoyEnums.h"
+#include "GameBoyMath.h"
+#include "GameBoyTables.h"
+
+#pragma pack(push, 1)
+typedef struct envelope_t {
+  uint16_t value;
+  uint16_t coefficient; // q0.16
+  uint16_t attack;
+  uint16_t decay;
+  gbEnvState state;
+
+  void set_attack(uint8_t a) {
+    // map 8 bit attack value to 16 bit coefficient using LUT and interpolation
+    attack = interpolateU16(attackCoeffLUT.data(), a);
+  }
+
+  void set_decay(uint8_t d) {
+    // map 8 bit decay value to 16 bit coefficient using LUT and interpolation
+    decay = interpolateU16(decayCoeffLUT.data(), d);
+  }
+
+  void trigger() {
+    coefficient = attack;
+    state = gbEnvAttack;
+    value = 0;
+  }
+
+  void tick() {
+    if (state == gbEnvIdle)
+      return;
+
+    uint32_t diff = (uint32_t)(state == gbEnvAttack ? 65535 : 0) - value;
+    int32_t tmp = value + ((diff * coefficient) >> 16);
+
+    if (state == gbEnvAttack && tmp >= 65530) {
+      tmp = 65535;
+      coefficient = decay;
+      state = gbEnvDecay;
+    } else if (tmp <= 10) {
+      tmp = 0;
+      state = gbEnvIdle;
+    }
+
+    value = tmp;
+  }
+} envelope_t;
+#pragma pack(pop)

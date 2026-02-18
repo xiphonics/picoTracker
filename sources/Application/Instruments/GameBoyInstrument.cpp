@@ -8,14 +8,10 @@
  */
 
 #include "GameBoyInstrument.h"
-#include "CommandList.h"
-#include "Externals/etl/include/etl/to_string.h"
 #include "I_Instrument.h"
-#include "System/Profiler/Profiler.h"
-#include "bit.h"
 #include <string.h>
 
-static const char *waveShapes[GB_NUM_WAVEFORMS] = {
+static const char *waveShapes[gbNumWaveforms] = {
     "Pulse 12.5%", "Pulse 25%", "Pulse 50%",     "Triangle",
     "Noise GB7",   "Noise NES", "Noise SN76489", "Noise White"};
 
@@ -23,7 +19,7 @@ voice_t GameBoyInstrument::voices_[SONG_CHANNEL_COUNT];
 
 GameBoyInstrument::GameBoyInstrument()
     : I_Instrument(&variables_), vWaveform_(FourCC::GameBoyInstrumentWaveform,
-                                            waveShapes, GB_NUM_WAVEFORMS, 0),
+                                            waveShapes, gbNumWaveforms, 0),
       vAttack_(FourCC::GameBoyInstrumentAttack, 0x00),
       vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
       vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
@@ -115,6 +111,10 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandLegato:
     voices_[channel].command_init_legato(value >> 8, (int8_t)(value & 0xFF));
+    break;
+
+  case FourCC::InstrumentCommandInstrumentRetrigger:
+    voices_[channel].command_init_instrument_retrigger((int8_t)(value & 0xff));
     break;
   }
 }
