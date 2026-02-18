@@ -51,6 +51,7 @@ protected:
 private:
   void onConfirmApplyOperation(View &view, ModalView &dialog);
   void onOperationFailedAck(View &view, ModalView &dialog);
+  void onSimpleModalDismiss(View &view, ModalView &dialog);
 
   // Helper methods
   void addAllFields();

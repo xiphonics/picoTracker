@@ -616,8 +616,22 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, titleString, props);
 
-  // Let the base class draw all the text fields
-  FieldView::Redraw();
+  if (HasModalView()) {
+    // Modal rendering only clears text cells. Avoid redrawing the graph field
+    // border behind the modal while it is active.
+    if (GetFocus() == 0 && !fieldList_.empty()) {
+      SetFocus(*fieldList_.begin());
+    }
+    for (auto it = fieldList_.begin(); it != fieldList_.end(); ++it) {
+      if (*it == &graphField_) {
+        continue;
+      }
+      (*it)->Draw(w_);
+    }
+  } else {
+    // Let the base class draw all fields, including graph frame.
+    FieldView::Redraw();
+  }
   isDirty_ = true;
 }
 
@@ -847,6 +861,10 @@ void SampleEditorView::AnimationUpdate() {
   // dismissed
   if (modalClearCount_ > 0) {
     fullWaveformRedraw_ = true;
+    // Redraw full fields for two frames as well so GraphField border pixels
+    // that got cleared by modal text cleanup are restored.
+    isDirty_ = true;
+    ((AppWindow &)w_).SetDirty();
     DrawWaveForm();
     modalClearCount_--;
   }
@@ -911,7 +929,12 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     } else {
       MessageBox *errorBox = MessageBox::Create(
           *this, "Save Failed", "Unable to save sample", MBBF_OK);
-      DoModal(errorBox);
+      clearWaveformRegion();
+      DoModal(
+          errorBox,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
       Trace::Error("SampleEditorView: Failed to save file!");
     }
     return;
@@ -955,6 +978,7 @@ void SampleEditorView::onConfirmApplyOperation(View &, ModalView &dialog) {
     if (!applySelectedOperation()) {
       MessageBox *error =
           MessageBox::Create(*this, "Operation failed", MBBF_OK);
+      clearWaveformRegion();
       DoModal(
           error,
           ModalViewCallback::create<SampleEditorView,
@@ -967,6 +991,12 @@ void SampleEditorView::onConfirmApplyOperation(View &, ModalView &dialog) {
 }
 
 void SampleEditorView::onOperationFailedAck(View &, ModalView &) {
+  modalClearCount_ = 2;
+  isDirty_ = true;
+}
+
+void SampleEditorView::onSimpleModalDismiss(View &, ModalView &) {
+  modalClearCount_ = 2;
   isDirty_ = true;
 }
 
@@ -1156,7 +1186,12 @@ bool SampleEditorView::reloadEditedSample() {
 #ifndef ADV
   MessageBox *warning = MessageBox::Create(*this, "Please reload project",
                                            "To apply changes", MBBF_OK);
-  DoModal(warning);
+  clearWaveformRegion();
+  DoModal(
+      warning,
+      ModalViewCallback::create<SampleEditorView,
+                                &SampleEditorView::onSimpleModalDismiss>(
+          *this));
   return true;
 #else
   auto pool = SamplePool::GetInstance();
