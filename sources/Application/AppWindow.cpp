@@ -152,8 +152,6 @@ AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
 
   // Init all members
 
-  _statusLine[0] = 0;
-
   _currentView = nullptr;
   _closeProject = false;
   _lastA = 0;
