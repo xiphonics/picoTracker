@@ -108,6 +108,12 @@
 
 #define MAX_VSYNC_SCANLINES 254
 
+#ifdef LCD_ST7789
+#define LCD_MADCTL_DEFAULT 0xC0
+#else
+#define LCD_MADCTL_DEFAULT 0x88
+#endif
+
 extern const uint8_t font6x8[];
 
 void ili9341_init();
