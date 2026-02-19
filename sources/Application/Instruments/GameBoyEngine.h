@@ -4,7 +4,6 @@
 // retrigger/instrument retrigger
 
 #include "Application/Utils/fixed.h"
-#include "System/Console/Trace.h"
 #include <cstdint>
 
 #include "GameBoyEnums.h"
@@ -48,6 +47,8 @@ static_assert(sizeof(InstrumentParameters) <= 12,
 constexpr int32_t maxStep = 0x3fff'ffff;
 constexpr int32_t minStep = -0x3fff'ffff;
 
+// (!) alignment has to be manually kept in this to allow using pack() to  (!)
+//     size below 128 bytes
 #pragma pack(push, 1)
 typedef struct voice_t {
   InstrumentParameters parameters;
@@ -56,19 +57,20 @@ typedef struct voice_t {
   int32_t frequency = 0; // precomp'd oscillator frequency (incl. vibrato, etc)
   int32_t lastFrequency = 0; // for legato slides, to compute the initial factor
 
-  uint8_t burstTime; // initial white noise burst duration in ticks
-
   uint32_t time; // sample counter
   uint32_t tick; // sample counter for 100Hz updates
   uint32_t tock; // sample counter for 1000Hz updates
   uint32_t timeToLive;
 
+  uint32_t noise = 42;
+  uint32_t lastSample = 0;
+
   struct arp {
+    int32_t frequencies[5] = {0, 0, 0, 0, 0};
     uint8_t clock = 0;  // internal clock for arpeggio timing
     uint8_t time = 250; // arpeggio step duration in clock ticks
     uint8_t length = 5; // number of steps in the arpeggio (1-5)
     uint8_t index = 0;  // current index in the arpeggio sequence
-    int32_t frequencies[5] = {0, 0, 0, 0, 0};
 
     inline void tick() {
       clock++;
@@ -84,11 +86,11 @@ typedef struct voice_t {
   } arp;
 
   struct vibrato {
-    uint16_t phase;             // sine lfo phase
-    uint16_t frequency = 0xfff; // vibrato frequency
     int32_t swing;  // frequency diff between current note and next semitone
-    uint8_t depth;  // vibrato depth to apply
-    uint16_t delay; // ticks before auto-vibrato starts
+    uint16_t phase; // sine lfo phase
+    uint16_t frequency = 0xfff; // vibrato frequency
+    uint16_t delay;             // ticks before auto-vibrato starts
+    uint8_t depth;              // vibrato depth to apply
 
     int tick(uint32_t time) {
       if (time > delay) {
@@ -122,9 +124,11 @@ typedef struct voice_t {
     }
   } pan;
 
+  uint8_t burstTime; // initial white noise burst duration in ticks
+  gbFlags flags;
   struct sweep {
-    uint32_t coefficient;
     int16_t steps;
+    uint32_t coefficient;
   } sweep;
 
   struct legato {
@@ -150,14 +154,10 @@ typedef struct voice_t {
   uint8_t drive;
   uint8_t bitcrush;
 
-  uint16_t lfsr = 17;
-  uint32_t noise = 42;
-
-  uint32_t lastSample = 0;
-
   uint8_t note;
   uint8_t wave;
-  gbFlags flags;
+
+  uint16_t lfsr = 17;
 
   envelope_t envelope;
 
@@ -319,10 +319,6 @@ typedef struct voice_t {
 
   inline void note_on(unsigned char note, bool retrigger,
                       InstrumentParameters parameters) {
-    Trace::Error("note_on: note=%d, retrigger=%d, attack=%d, decay=%d, "
-                 "level=%d, wave=%d",
-                 note, retrigger, parameters.attack, parameters.decay,
-                 parameters.level, parameters.wave);
     this->parameters = parameters;
 
     // is this the best time to store that?
@@ -360,7 +356,6 @@ typedef struct voice_t {
 
     // reset oscillator state and timers
     timeToLive = (parameters.length == 0) ? 0x7FFF'FFFF : (parameters.length);
-    Trace::Error("timeToLive: %d", timeToLive);
     phase = 0;
 
     // don't reset timers on retrig - they might mid-execution and will
@@ -526,6 +521,5 @@ typedef struct voice_t {
   }
 } voice_t;
 #pragma pack(pop)
-
 // 128 bytes per voice max to keep the entire thing under 1kB for the 8 voices
 static_assert(sizeof(voice_t) <= 128, "Check sizeof(voice_t) in error message");
