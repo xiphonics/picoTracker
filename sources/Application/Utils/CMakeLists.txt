@@ -1,4 +1,5 @@
 add_library(application_utils
+  MemoryPool.cpp
   HexBuffers.cpp
   char.cpp
   fixed.cpp
