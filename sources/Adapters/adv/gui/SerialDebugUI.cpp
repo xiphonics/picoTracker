@@ -10,6 +10,7 @@
 #include "../system/advSystem.h"
 #include "Adapters/adv/audio/record.h"
 #include "Application/Model/Config.h"
+#include "Application/Utils/MemoryPool.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
 #include "System/System/System.h"
@@ -198,8 +199,8 @@ void SerialDebugUI::listFiles(const char *path) {
   if (!fs->chdir(path)) {
     Trace::Error("failed to ls files path:%s", path);
   }
-  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
-  fs->list(&fileIndexes, "", false);
+
+  fs->list(&MemoryPool::fileIndexList, "", false);
 
   // No need to actually do the printing below for now as the current debug code
   // in PicoFileSystem class is already printing all the files fetched when the

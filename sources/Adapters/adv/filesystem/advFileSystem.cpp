@@ -7,6 +7,7 @@
  */
 
 #include "advFileSystem.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Externals/etl/include/etl/pool.h"
 #include "FileHandle.h"
 #include <cstdio>
@@ -133,7 +134,7 @@ PicoFileType advFileSystem::getFileType(int index) {
 }
 
 void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
-                         bool subDirOnly) {
+                         bool subDirOnly, bool sorted = false) {
 
   fileIndexes->clear();
 
@@ -154,6 +155,8 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     Trace::Error("Failed to open cwd");
     return;
   }
+
+  uint32_t *sortKeys = (uint32_t *)MemoryPool::Acquire();
 
   for (size_t i = 0; i < file_cache_.size(); ++i) {
     if (fileIndexes->full()) {
@@ -177,19 +180,52 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
 
     // filter out "." style hidden entries and files that dont match filter
     if ((isDir || (isFile && matchesFilter)) && !isHiddenName) {
-      if (subDirOnly) {
-        if (fno.fattrib & AM_DIR) {
-          fileIndexes->push_back(i);
-        }
-      } else {
+      if (!subDirOnly || isDir) {
         fileIndexes->push_back(i);
+
+        if (sorted) {
+          sortKeys[fileIndexes->size() - 1] =
+              FileSystem::getFileSortKey(fno.fname);
+        }
       }
       Trace::Log("FILESYSTEM", "[%d] got file: %s", index, fno.fname);
     } else {
       Trace::Log("FILESYSTEM", "skipped hidden: %s", fno.fname);
     }
   }
+
+  for (size_t i = 1; i < fileIndexes->size(); i++) {
+    uint32_t key = sortKeys[i];
+    int index = fileIndexes->at(i);
+    size_t j = i;
+
+    while (j > 0) {
+      bool shouldMove = sortKeys[j - 1] > key;
+
+      if (!shouldMove && sortKeys[j - 1] == key) {
+        // keys are identical, do a tiebreaker by doing a string compare to
+        // ensure stable sorting of files with same first 4 letters
+        const FILINFO &fA = file_cache_[index];
+        const FILINFO &fB = file_cache_[fileIndexes->at(j - 1)];
+
+        shouldMove = strcasecmp(fA.fname, fB.fname) > 0;
+      }
+
+      if (shouldMove) {
+        sortKeys[j] = sortKeys[j - 1];
+        fileIndexes->at(j) = fileIndexes->at(j - 1);
+        --j;
+      } else {
+        break;
+      }
+    }
+
+    sortKeys[j] = key;
+    fileIndexes->at(j) = index;
+  }
+
   f_closedir(&dir);
+  MemoryPool::Release();
   Trace::Log("FILESYSTEM", "added file indexes:%d", fileIndexes->size());
 }
 

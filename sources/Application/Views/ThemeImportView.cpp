@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
@@ -30,7 +31,7 @@ ThemeImportView::~ThemeImportView() {}
 void ThemeImportView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
-  fileIndexList_.clear();
+  MemoryPool::fileIndexList.clear();
 }
 
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
@@ -41,8 +42,8 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     auto fs = FileSystem::GetInstance();
     char name[PFILENAME_SIZE];
 
-    if (currentIndex_ < fileIndexList_.size()) {
-      unsigned fileIndex = fileIndexList_[currentIndex_];
+    if (currentIndex_ < MemoryPool::fileIndexList.size()) {
+      unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
       fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
       if (mask & EPBM_ALT) {
@@ -68,8 +69,8 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
 
-      if (currentIndex_ < fileIndexList_.size()) {
-        unsigned fileIndex = fileIndexList_[currentIndex_];
+      if (currentIndex_ < MemoryPool::fileIndexList.size()) {
+        unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
         char name[PFILENAME_SIZE];
         fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
@@ -112,7 +113,8 @@ void ThemeImportView::DrawView() {
   // than buffer but instead returns empty string in buffer :-(
   char buffer[PFILENAME_SIZE];
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < MemoryPool::fileIndexList.size());
+       i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -122,7 +124,7 @@ void ThemeImportView::DrawView() {
     }
 
     memset(buffer, '\0', sizeof(buffer));
-    unsigned fileIndex = fileIndexList_[i];
+    unsigned fileIndex = MemoryPool::fileIndexList[i];
     fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
     if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -153,7 +155,7 @@ void ThemeImportView::OnFocus() {
 }
 
 void ThemeImportView::warpToNextTheme(bool goUp) {
-  if (fileIndexList_.empty())
+  if (MemoryPool::fileIndexList.empty())
     return;
 
   if (goUp) {
@@ -166,7 +168,7 @@ void ThemeImportView::warpToNextTheme(bool goUp) {
       }
     }
   } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
+    if (currentIndex_ < MemoryPool::fileIndexList.size() - 1) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
@@ -234,8 +236,9 @@ void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   isDirty_ = true;
 
   // Update list of file indexes in this new dir
-  fileIndexList_.clear();
+  MemoryPool::fileIndexList.clear();
   // Use false for subDirOnly to include both files and directories
-  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
-  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
+  fs->list(&MemoryPool::fileIndexList, THEME_FILE_EXTENSION, false, true);
+  Trace::Debug("loaded %d files from %s", MemoryPool::fileIndexList.size(),
+               name);
 }

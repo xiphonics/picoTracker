@@ -8,9 +8,11 @@
  */
 
 #include "ImportView.h"
+
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Application/Views/SampleEditorView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
@@ -45,7 +47,7 @@ void ImportView::Reset() {
   playKeyHeld_ = false;
   editKeyHeld_ = false;
   inProjectSampleDir_ = false;
-  fileIndexList_.clear();
+  MemoryPool::fileIndexList.clear();
 }
 
 // Static method to set the source view type before opening ImportView
@@ -77,7 +79,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // Handle key press events
   if (pressed) {
     auto fs = FileSystem::GetInstance();
-    unsigned fileIndex = fileIndexList_[currentIndex_];
+    unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
 
     if (mask & EPBM_PLAY) {
       char name[PFILENAME_SIZE];
@@ -125,7 +127,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
     if (mask & EPBM_ENTER) {
       if (inProjectSampleDir_) {
-        if (fileIndexList_.empty()) {
+        if (MemoryPool::fileIndexList.empty()) {
           return; // Do nothing if the list is empty
         }
         // NOTE: the order of buttons in project pool is: edit, remove
@@ -156,7 +158,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // handle changing selected "bottom button", note: ignore if this is a
     // nav+arrow combo
     if ((mask & EPBM_LEFT || mask & EPBM_RIGHT) && !(mask & EPBM_NAV)) {
-      if (inProjectSampleDir_ && fileIndexList_.empty()) {
+      if (inProjectSampleDir_ && MemoryPool::fileIndexList.empty()) {
         return; // Do nothing if the list is empty
       }
       // toggle the selected button
@@ -171,12 +173,12 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // handle moving up and down the file list
   if (mask & EPBM_UP) {
-    if (inProjectSampleDir_ && fileIndexList_.empty()) {
+    if (inProjectSampleDir_ && MemoryPool::fileIndexList.empty()) {
       return; // Do nothing if the list is empty
     }
     warpToNextSample(true);
   } else if (mask & EPBM_DOWN) {
-    if (inProjectSampleDir_ && fileIndexList_.empty()) {
+    if (inProjectSampleDir_ && MemoryPool::fileIndexList.empty()) {
       return; // Do nothing if the list is empty
     }
     warpToNextSample(false);
@@ -193,7 +195,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // A modifier
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
-      unsigned fileIndex = fileIndexList_[currentIndex_];
+      unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
       char name[PFILENAME_SIZE];
       fs->getFileName(fileIndex, name, PFILENAME_SIZE);
       if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -234,10 +236,11 @@ void ImportView::DrawView() {
 
   // Loop through visible files in the list
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < MemoryPool::fileIndexList.size());
+       i++) {
     props.invert_ = false;
 
-    unsigned fileIndex = fileIndexList_[i];
+    unsigned fileIndex = MemoryPool::fileIndexList[i];
     etl::string<PFILENAME_SIZE> displayName;
 
     if (fs->getFileType(fileIndex) != PFT_DIR) {
@@ -309,7 +312,7 @@ void ImportView::DrawView() {
     }
     DrawString(x + 10, y, "Edit", props);
   } else {
-    if (fileIndexList_.empty()) {
+    if (MemoryPool::fileIndexList.empty()) {
       // draw this a few lines down from *top* of screen
       SetColor(CD_NORMAL);
       props.invert_ = false;
@@ -348,7 +351,7 @@ void ImportView::DrawView() {
   props.invert_ = true;
   y = 0;
   uint32_t filesize = 0;
-  auto currentFileIndex = fileIndexList_[currentIndex_];
+  auto currentFileIndex = MemoryPool::fileIndexList[currentIndex_];
 
   // only get file size if it's a file not a dir
   if (fs->getFileType(currentFileIndex) == PFT_FILE) {
@@ -413,7 +416,7 @@ void ImportView::warpToNextSample(bool goUp) {
       }
     }
   } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
+    if (currentIndex_ < MemoryPool::fileIndexList.size() - 1) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
@@ -427,7 +430,7 @@ void ImportView::warpToNextSample(bool goUp) {
 
 void ImportView::preview(char *name) {
   auto fs = FileSystem::GetInstance();
-  unsigned fileIndex = fileIndexList_[currentIndex_];
+  unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
 
   // do not preview directories
   if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -502,7 +505,7 @@ void ImportView::import() {
 
   auto fs = FileSystem::GetInstance();
   char name[PFILENAME_SIZE];
-  unsigned fileIndex = fileIndexList_[currentIndex_];
+  unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
   fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
   // Get current project name
@@ -760,20 +763,23 @@ void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {
-  fs->list(&fileIndexList_, ".wav", false);
+  fs->list(&MemoryPool::fileIndexList, ".wav", false, true);
 
   if (fs->isCurrentRoot() || inProjectSampleDir_) {
-    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
+    for (auto it = MemoryPool::fileIndexList.begin();
+         it != MemoryPool::fileIndexList.end(); ++it) {
       char entryName[PFILENAME_SIZE];
       fs->getFileName(*it, entryName, PFILENAME_SIZE);
       if (strcmp(entryName, "..") == 0) {
-        fileIndexList_.erase(it);
+        MemoryPool::fileIndexList.erase(it);
         break;
       }
     }
   }
 
-  if (currentIndex_ >= fileIndexList_.size()) {
-    currentIndex_ = fileIndexList_.empty() ? 0 : fileIndexList_.size() - 1;
+  if (currentIndex_ >= MemoryPool::fileIndexList.size()) {
+    currentIndex_ = MemoryPool::fileIndexList.empty()
+                        ? 0
+                        : MemoryPool::fileIndexList.size() - 1;
   }
 }
