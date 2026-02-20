@@ -261,7 +261,7 @@ void SelectProjectView::setCurrentFolder() {
   MemoryPool::fileIndexList.clear();
 
   // Let's read all the directory in the project dir
-  fs->list(&MemoryPool::fileIndexList, "", true);
+  fs->list(&MemoryPool::fileIndexList, "", true, true);
 
   // Filter out "." and ".." along with the hidden default project entry
   for (auto it = MemoryPool::fileIndexList.begin();

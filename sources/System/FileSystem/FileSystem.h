@@ -37,7 +37,7 @@ public:
     return false;
   } // Default implementation
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
-                    bool subDirOnly) = 0;
+                    bool subDirOnly, bool sorted = false) = 0;
   virtual void getFileName(int index, char *name, int length) = 0;
   virtual PicoFileType getFileType(int index) = 0;
   virtual bool isParentRoot() = 0;
@@ -53,6 +53,22 @@ public:
   virtual bool CopyFile(const char *srcFilename, const char *destFilename) = 0;
   virtual bool MoveFile(const char *srcFilename, const char *destFilename) = 0;
   virtual bool isExFat() = 0;
+
+  // extracts a uint32 from the first four letters of a string for faster
+  // sorting by comparing these uint32 values instead of doing string compares
+  static uint32_t getFileSortKey(const char *filename) {
+    uint32_t sortKey = 0;
+    const uint8_t *value = reinterpret_cast<const uint8_t *>(filename);
+
+    for (size_t i = 0; i < 4; i++) {
+      char c = value[i];
+      sortKey <<= 8;
+      if (c != '\0') {
+        sortKey |= (c >= 'A' && c <= 'Z') ? 'a' + (c - 'A') : c;
+      }
+    }
+    return sortKey;
+  }
 };
 
 #endif // _FILESYSTEM_H_

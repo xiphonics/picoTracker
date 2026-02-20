@@ -346,7 +346,7 @@ void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Update list of file indexes in this new dir
   MemoryPool::fileIndexList.clear();
   // Use false for subDirOnly to include both files and directories
-  fs->list(&MemoryPool::fileIndexList, INSTRUMENT_FILE_EXTENSION, false);
+  fs->list(&MemoryPool::fileIndexList, INSTRUMENT_FILE_EXTENSION, false, true);
   Trace::Debug("loaded %d files from %s", MemoryPool::fileIndexList.size(),
                name);
 }

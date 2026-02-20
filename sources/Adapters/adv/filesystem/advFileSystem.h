@@ -51,7 +51,7 @@ public:
   virtual FileHandle Open(const char *name, const char *mode) override;
   virtual bool chdir(const char *path) override;
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
-                    bool subDirOnly) override;
+                    bool subDirOnly, bool sorted) override;
   virtual void getFileName(int index, char *name, int length) override;
   virtual PicoFileType getFileType(int index) override;
   virtual bool isParentRoot() override;

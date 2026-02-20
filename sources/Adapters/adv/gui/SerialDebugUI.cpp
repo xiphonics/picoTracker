@@ -10,6 +10,7 @@
 #include "../system/advSystem.h"
 #include "Adapters/adv/audio/record.h"
 #include "Application/Model/Config.h"
+#include "Application/Utils/MemoryPool.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
 #include "System/System/System.h"

@@ -9,8 +9,8 @@
 
 #include "PersistencyService.h"
 #include "../Instruments/SamplePool.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Foundation/Services/ServiceRegistry.h"
-
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
@@ -60,18 +60,18 @@ bool PersistencyService::DeleteProject(const char *projectName) {
     return false;
   }
 
-  etl::vector<int, MAX_SAMPLES> fileIndexes;
-  fs->list(&fileIndexes, ".wav", false);
+  fs->list(&MemoryPool::fileIndexList, ".wav", false);
 
   // delete all samples
   fs->BeginBatch();
   char filename[128];
-  for (size_t i = 0; i < fileIndexes.size(); i++) {
-    fs->getFileName(fileIndexes[i], filename, MAX_PROJECT_SAMPLE_PATH_LENGTH);
+  for (size_t i = 0; i < MemoryPool::fileIndexList.size(); i++) {
+    fs->getFileName(MemoryPool::fileIndexList[i], filename,
+                    MAX_PROJECT_SAMPLE_PATH_LENGTH);
     if (strcmp(filename, "..") == 0 || strcmp(filename, ".") == 0) {
       continue;
     }
-    if (fs->getFileType(fileIndexes[i]) == PFT_DIR) {
+    if (fs->getFileType(MemoryPool::fileIndexList[i]) == PFT_DIR) {
       continue;
     }
     fs->DeleteFile(filename);
@@ -134,10 +134,11 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     Trace::Debug("get list of samples to copy from old project: %s",
                  oldProjectName);
 
-    fs->list(&fileIndexes_, ".wav", false);
+    fs->list(&MemoryPool::fileIndexList, ".wav", false);
     char filenameBuffer[PFILENAME_SIZE];
-    for (size_t i = 0; i < fileIndexes_.size(); i++) {
-      fs->getFileName(fileIndexes_[i], filenameBuffer, sizeof(filenameBuffer));
+    for (size_t i = 0; i < MemoryPool::fileIndexList.size(); i++) {
+      fs->getFileName(MemoryPool::fileIndexList[i], filenameBuffer,
+                      sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)

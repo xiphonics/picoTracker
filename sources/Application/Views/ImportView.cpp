@@ -763,7 +763,7 @@ void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {
-  fs->list(&MemoryPool::fileIndexList, ".wav", false);
+  fs->list(&MemoryPool::fileIndexList, ".wav", false, true);
 
   if (fs->isCurrentRoot() || inProjectSampleDir_) {
     for (auto it = MemoryPool::fileIndexList.begin();
