@@ -5,6 +5,24 @@ picoTracker is based on the Raspberry Pi Pico and it's built around the [C SDK](
 
 The only requirement is to install the toolchain as explained in [Getting started](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) document, this will depend on each platform. It's essentially: Basic build tools (build-essentials in Debian based distros), cmake and arm cross compiler.
 
+## picoTracker Firmware development principles
+
+With the Advance model now being available, we want to set out some core principles for the continued development and maintenance of the "v2 pico" RP2040
+PCB kit based picoTracker devices firmware. These principles are layed out below in intentionally brief format as while some a very specific and don't required
+discussion, others are intended to be the start of conversations (in GitHub issues) on a per case basis.
+
+- V1 and V2 PCB based devices (ILI9314 & ST7789) **must** continue be supported
+- The Screenmap layout cannot be modified
+- Physical button keybindings & naming of buttons cannot be modified
+- Existing keycombos cannot be modified
+- Any new keycombos need to be compatible with the Advance
+- Remote UI protocol needs to remain compatible with existing RemoteUI client
+- Project file format needs to remain compatible with the Advance via the
+  conversion tool
+- Export file formats (theme, instruments) needs to be remain backwards
+  compatible with previous firmware versions
+
+
 ## Coding style
 
 The coding style is based on the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and is enforced with clang-format run on CI so please try to run it locally before submitting a pull request.
@@ -105,16 +123,3 @@ A helpful tool for debugging MIDI output is [ShowMIDI](https://github.com/gbevin
 ### USB MIDI output
 
 TODO
-
-## Notes on code structure
-
-### Key classes
-
-Some classes are worth documenting specifically here as they contain key pieces of functionality.
-
-`sources/Adapters/picoTracker/gui/picoTrackerEventManager.cpp`
-
-`picoTrackerEventManager` is important because it's where `MainLoop()` is and hence it's where "events" are dispatched. 
-It is also here that the 1ms tick timer callback is set up and the callback function for it is found: `timerHandler()`. The `timerHandler()` function is then the source of the `PICO_CLOCK` events, which are then dispatched to the `picoTrackerEventQueue` at the rate of 1Hz.
-
-`AppWindow::AnimationUpdate()` is the handy spot where we handle calling autosave just because of the convienence of the `AppWindow` class having easy access to the player, the current project name and the persistance service.
