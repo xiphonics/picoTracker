@@ -12,7 +12,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/DrawUtils.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
-#include "BaseClasses/ViewEvent.h"
+#include "Application/Views/ToastView.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "System/System/System.h"
 #include <new>
@@ -475,6 +475,53 @@ bool SelectProjectView::SelectionIsCurrentProject() {
   return strcmp(current, selected) == 0;
 }
 
+<<<<<<< HEAD
+=======
+bool SelectProjectView::SaveSelectedProject() {
+  auto appWindow = static_cast<AppWindow *>(&w_);
+  PersistencyService *ps = PersistencyService::GetInstance();
+
+  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
+  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
+  const char *current = projectName.c_str();
+
+  char selected[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(selected);
+
+  Trace::Error("%s -> %s", current, selected);
+
+  bool result = ps->Save(selected, current, true) == PERSIST_SAVED;
+
+  if (result) {
+    // all good so now persist the new project name in project state
+    result = ps->SaveProjectState(selected) == PERSIST_SAVED;
+  }
+
+  if (result) {
+    viewData_->project_->SetProjectName(selected);
+    ToastView::getInstance()->Show("Project saved successfully.", &ttSuccess,
+                                   ToastDuration::regular);
+  } else {
+    ToastView::getInstance()->Show("Failed to save project.", &ttError,
+                                   ToastDuration::regular);
+  }
+
+  return result;
+}
+
+void SelectProjectView::ConfirmOverwrite() {
+  char selected[MAX_PROJECT_NAME_LENGTH + 1];
+  getHighlightedProjectName(selected);
+
+  char buffer[MAX_PROJECT_NAME_LENGTH + 8];
+  snprintf(buffer, sizeof(buffer), "\"%s\"?", selected);
+
+  MessageBox *mb = MessageBox::Create(*this, "Overwrite existing project",
+                                      buffer, MBBF_YES | MBBF_NO);
+  DoModal(mb, ModalViewCallback::create<&ConfirmOverwriteCallback>());
+}
+
+>>>>>>> a4028561 (adds general Toast support and adds toast messages to save & delete project)
 void SelectProjectView::AttemptDeletingSelectedProject() {
   if (currentIndex_ >= fileIndexList_.size()) {
     return;

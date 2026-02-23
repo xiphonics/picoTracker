@@ -10,7 +10,11 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+<<<<<<< HEAD
 #include "Application/Utils/DrawUtils.h"
+=======
+#include "Application/Views/ToastView.h"
+>>>>>>> a4028561 (adds general Toast support and adds toast messages to save & delete project)
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
@@ -82,6 +86,18 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
+      int prog10 = progress / 10;
+
+      char progressBar[13];
+      for (int j = 1; j < 11; j++) {
+        progressBar[j] = j >= prog10 ? char_battery_empty : char_block_full;
+      }
+      progressBar[0] = char_button_border_left;
+      progressBar[11] = char_button_border_right;
+      progressBar[12] = 0;
+
+      Status::Set("Copying %s" char_indicator_ellipsis_s "\n \n%s %d%%", name,
+                  (const char *)progressBar, progress);
 
       updateStatus(importIndex, importCount, "Loading");
       loadSample(name);
@@ -164,7 +180,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
   projectSamplePath.append(projSampleFilename);
-  Status::SetMultiLine("Loading %s->\n%s", name, projSampleFilename);
+  Status::Set("Loading %s->\n%s", name, projSampleFilename);
 
   auto fout = FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
@@ -287,6 +303,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
       }
     }
 
+<<<<<<< HEAD
 #ifdef ADV
     uint32_t total = totalSize;
 #else
@@ -296,6 +313,13 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     importCount = total;
     importIndex = totalRead;
     updateStatus(totalRead, total, "Copying");
+=======
+    uint32_t progress = 100;
+    if (totalSize > 0) {
+      progress = (totalRead * 100) / totalSize;
+    }
+    Status::Set("Loading:\n%s\n%d%%", projSampleFilename.c_str(), progress);
+>>>>>>> a4028561 (adds general Toast support and adds toast messages to save & delete project)
   }
 
   // Flush the resampler to write any delayed tail samples after input ends.
@@ -366,6 +390,11 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   ev.index_ = count_ - 1;
   ev.type_ = SPET_INSERT;
   NotifyObservers(&ev);
+
+  ToastView *t = ToastView::getInstance();
+  t->Show(status ? "Loaded successfully." : "Loading failed.",
+          status ? &ttSuccess : &ttError, 1500);
+
   return status ? (count_ - 1) : -1;
 };
 
