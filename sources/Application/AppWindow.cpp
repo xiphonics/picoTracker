@@ -298,6 +298,13 @@ void AppWindow::ClearTextRect(GUIRect &r) {
   }
 };
 
+void AppWindow::InvalidateTextCache() {
+  // Force the next text flush to resend all cells without changing the current
+  // text buffer contents.
+  memset(_preScreen, 0xFF, SCREEN_CHARS);
+  memset(_preScreenProp, 0xFF, SCREEN_CHARS);
+}
+
 //
 // Flush current screen to display
 //

@@ -287,7 +287,6 @@ void SampleSlicesView::AnimationUpdate() {
   bool hasModal = HasModalView();
   if (modalWasOpen_ && !hasModal) {
     graphField_.RequestFullRedraw();
-    modalClearCount_ = std::max<uint8_t>(modalClearCount_, 2);
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
   }
@@ -325,7 +324,11 @@ void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
     if (instrument_ && instrument_->HasSlicesForPlayback()) {
       MessageBox *mb = MessageBox::Create(*this, "Replace current slices?",
                                           MBBF_YES | MBBF_NO);
+      modalClearCount_ = 0;
       clearWaveformRegion();
+      // Reopening the same modal can reuse identical text, so invalidate only
+      // the previous text cache and let the next redraw resend the full dialog.
+      ((AppWindow &)w_).InvalidateTextCache();
       DoModal(mb, ModalViewCallback::create<
                       &SampleSlicesView::AutoSliceConfirmCallback>());
     } else {
@@ -620,10 +623,14 @@ void SampleSlicesView::updateStatusLabels() {
 }
 
 void SampleSlicesView::AutoSliceConfirmCallback(View &v, ModalView &dialog) {
+  auto &self = static_cast<SampleSlicesView &>(v);
+  self.modalClearCount_ = 2;
+  self.isDirty_ = true;
+  ((AppWindow &)self.w_).SetDirty();
   if (dialog.GetReturnCode() != MBL_YES) {
     return;
   }
-  static_cast<SampleSlicesView &>(v).autoSliceEvenly();
+  self.autoSliceEvenly();
 }
 
 void SampleSlicesView::updateZoomLimits() {
