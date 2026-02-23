@@ -36,8 +36,7 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
       graphField_(graphFieldPos_, GraphField::BitmapWidth,
                   GraphField::BitmapHeight),
       modalWasOpen_(false), modalClearCount_(0), playKeyHeld_(false),
-      previewActive_(false),
-      previewNote_(SampleInstrument::SliceNoteBase),
+      previewActive_(false), previewNote_(SampleInstrument::SliceNoteBase),
       sys_(System::GetInstance()), previewStartMs_(0), previewStartSample_(0),
       previewEndSample_(0), previewDurationMs_(0.0f), previewPlayheadSample_(0),
       previewCursorVisible_(false) {
