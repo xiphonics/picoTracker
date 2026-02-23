@@ -114,7 +114,8 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     break;
 
   case FourCC::InstrumentCommandInstrumentRetrigger:
-    voices_[channel].command_init_instrument_retrigger((int8_t)(value & 0xff));
+    voices_[channel].command_init_instrument_retrigger(value >> 8,
+                                                       (int8_t)(value & 0xff));
     break;
   }
 }

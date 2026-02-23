@@ -429,9 +429,9 @@ typedef struct voice_t {
    *  command processing                                                     *
    ****************************************************************************/
 
-  void command_init_instrument_retrigger(int8_t transpose) {
+  void command_init_instrument_retrigger(uint8_t delay, int8_t transpose) {
     flags.retrigger = 1; // set retrigger flag
-    timeToLive = 0;      // make sure the note is killed in the next tick
+    timeToLive = delay;  // make sure the note is killed in the next tick
     note += transpose;
   }
 
