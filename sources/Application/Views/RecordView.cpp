@@ -109,6 +109,14 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
       return;
     }
 
+    // Only disable editing of the audio source selector while recording.
+    // Allow navigation and edits for the gain fields.
+    if (!intVarField_.empty() && GetFocus() == &intVarField_[0] &&
+        (mask & (EPBM_ENTER | EPBM_EDIT))) {
+      return;
+    }
+
+    FieldView::ProcessButtonMask(mask, pressed);
     return;
   }
 
@@ -189,8 +197,14 @@ void RecordView::DrawView() {
                                                  : "PRESS PLAY TO RECORD";
   DrawString(pos._x, pos._y, instruction, props);
 
-  // Draw fields
+  // Draw fields. While recording, render the audio source selector without
+  // focus highlight so it appears disabled.
   FieldView::Redraw();
+  if (uiRecordingActive_ && !intVarField_.empty() && GetFocus() == &intVarField_[0]) {
+    intVarField_[0].ClearFocus();
+    intVarField_[0].Draw(w_);
+    intVarField_[0].SetFocus();
+  }
 
   SetColor(CD_NORMAL);
 }
