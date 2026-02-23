@@ -35,7 +35,8 @@ SampleSlicesView::SampleSlicesView(GUIWindow &w, ViewData *data)
       graphFieldPos_(SliceXOffset, SliceYOffset),
       graphField_(graphFieldPos_, GraphField::BitmapWidth,
                   GraphField::BitmapHeight),
-      modalWasOpen_(false), playKeyHeld_(false), previewActive_(false),
+      modalWasOpen_(false), modalClearCount_(0), playKeyHeld_(false),
+      previewActive_(false),
       previewNote_(SampleInstrument::SliceNoteBase),
       sys_(System::GetInstance()), previewStartMs_(0), previewStartSample_(0),
       previewEndSample_(0), previewDurationMs_(0.0f), previewPlayheadSample_(0),
@@ -55,6 +56,7 @@ void SampleSlicesView::Reset() {
   instrumentIndex_ = 0;
   sampleSize_ = 0;
   modalWasOpen_ = false;
+  modalClearCount_ = 0;
   playKeyHeld_ = false;
   previewActive_ = false;
   previewNote_ = SampleInstrument::SliceNoteBase;
@@ -83,6 +85,7 @@ void SampleSlicesView::OnFocus() {
   needsFullRedraw_ = true;
   sampleSize_ = 0;
   modalWasOpen_ = false;
+  modalClearCount_ = 0;
   previewStartMs_ = 0;
   previewStartSample_ = 0;
   previewEndSample_ = 0;
@@ -233,12 +236,27 @@ void SampleSlicesView::DrawView() {
   GUIPoint titlePos = GetTitlePosition();
   DrawString(titlePos._x, titlePos._y, "Sample Slices", props);
 
-  if (!HasModalView()) {
+  bool hasModal = HasModalView();
+  if (!hasModal) {
     drawWaveform();
     ClearTextRect(0, 9, SCREEN_WIDTH, 3);
   }
 
-  FieldView::Redraw();
+  if (hasModal) {
+    // Modal text cleanup does not cover the graph bitmap area, so avoid
+    // redrawing the graph field frame behind the modal.
+    if (GetFocus() == 0 && !fieldList_.empty()) {
+      SetFocus(*fieldList_.begin());
+    }
+    for (auto it = fieldList_.begin(); it != fieldList_.end(); ++it) {
+      if (*it == &graphField_) {
+        continue;
+      }
+      (*it)->Draw(w_);
+    }
+  } else {
+    FieldView::Redraw();
+  }
   needsFullRedraw_ = false;
 }
 
@@ -269,10 +287,18 @@ void SampleSlicesView::AnimationUpdate() {
   bool hasModal = HasModalView();
   if (modalWasOpen_ && !hasModal) {
     graphField_.RequestFullRedraw();
+    modalClearCount_ = std::max<uint8_t>(modalClearCount_, 2);
     isDirty_ = true;
     ((AppWindow &)w_).SetDirty();
   }
   modalWasOpen_ = hasModal;
+  if (!hasModal && modalClearCount_ > 0) {
+    graphField_.RequestFullRedraw();
+    isDirty_ = true;
+    ((AppWindow &)w_).SetDirty();
+    drawWaveform();
+    modalClearCount_--;
+  }
   if (!hasModal && (previewActive_ || previewCursorVisible_)) {
     drawWaveform();
   }
@@ -299,6 +325,7 @@ void SampleSlicesView::Update(Observable &o, I_ObservableData *d) {
     if (instrument_ && instrument_->HasSlicesForPlayback()) {
       MessageBox *mb = MessageBox::Create(*this, "Replace current slices?",
                                           MBBF_YES | MBBF_NO);
+      clearWaveformRegion();
       DoModal(mb, ModalViewCallback::create<
                       &SampleSlicesView::AutoSliceConfirmCallback>());
     } else {
@@ -445,6 +472,13 @@ void SampleSlicesView::drawWaveform() {
   }
 
   graphField_.DrawGraph(*this);
+}
+
+void SampleSlicesView::clearWaveformRegion() {
+  GUIRect rect(graphFieldPos_._x, graphFieldPos_._y,
+               graphFieldPos_._x + GraphField::BitmapWidth,
+               graphFieldPos_._y + GraphField::BitmapHeight);
+  DrawRect(rect, CD_BACKGROUND);
 }
 
 SampleInstrument *SampleSlicesView::currentInstrument() {
