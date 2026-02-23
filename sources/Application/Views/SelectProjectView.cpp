@@ -11,7 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
-#include "BaseClasses/ViewEvent.h"
+#include "Application/Views/ToastView.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include <nanoprintf.h>
 
@@ -41,10 +41,15 @@ static void DeleteProjectCallback(View &v, ModalView &dialog) {
     PersistencyService *ps = PersistencyService::GetInstance();
     char buffer[MAX_PROJECT_NAME_LENGTH + 1];
     ((SelectProjectView &)v).getHighlightedProjectName(buffer);
-    ps->DeleteProject(buffer);
-
-    // reload list
-    ((SelectProjectView &)v).setCurrentFolder();
+    if (ps->DeleteProject(buffer)) {
+      // reload list
+      ToastView::getInstance()->Show("Project deleted successfully.",
+                                     &ttSuccess, ToastDuration::regular);
+      ((SelectProjectView &)v).setCurrentFolder();
+    } else {
+      ToastView::getInstance()->Show("Failed to delete project.", &ttError,
+                                     ToastDuration::regular);
+    }
   }
 }
 
@@ -361,15 +366,20 @@ bool SelectProjectView::SaveSelectedProject() {
 
   Trace::Error("%s -> %s", current, selected);
 
-  if (ps->Save(selected, current, true) != PERSIST_SAVED) {
-    return false;
-  }
+  bool result = ps->Save(selected, current, true) == PERSIST_SAVED;
 
-  // all good so now persist the new project name in project state
-  bool result = ps->SaveProjectState(selected) == PERSIST_SAVED;
+  if (result) {
+    // all good so now persist the new project name in project state
+    result = ps->SaveProjectState(selected) == PERSIST_SAVED;
+  }
 
   if (result) {
     viewData_->project_->SetProjectName(selected);
+    ToastView::getInstance()->Show("Project saved successfully.", &ttSuccess,
+                                   ToastDuration::regular);
+  } else {
+    ToastView::getInstance()->Show("Failed to save project.", &ttError,
+                                   ToastDuration::regular);
   }
 
   return result;

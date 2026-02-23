@@ -10,6 +10,7 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Views/ToastView.h"
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
@@ -74,9 +75,8 @@ void SamplePool::Load(const char *projectName) {
       progressBar[11] = char_button_border_right;
       progressBar[12] = 0;
 
-      Status::SetMultiLine("Copying %s" char_indicator_ellipsis_s
-                           "\n \n%s %d%%",
-                           name, (const char *)progressBar, progress);
+      Status::Set("Copying %s" char_indicator_ellipsis_s "\n \n%s %d%%", name,
+                  (const char *)progressBar, progress);
 
       loadSample(name);
     }
@@ -159,7 +159,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
   projectSamplePath.append(projSampleFilename);
-  Status::SetMultiLine("Loading %s->\n%s", name, projSampleFilename);
+  Status::Set("Loading %s->\n%s", name, projSampleFilename);
 
   auto fout = FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
@@ -284,8 +284,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     if (totalSize > 0) {
       progress = (totalRead * 100) / totalSize;
     }
-    Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
-                         progress);
+    Status::Set("Loading:\n%s\n%d%%", projSampleFilename.c_str(), progress);
   }
 
   // Flush the resampler to write any delayed tail samples after input ends.
@@ -356,6 +355,11 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   ev.index_ = count_ - 1;
   ev.type_ = SPET_INSERT;
   NotifyObservers(&ev);
+
+  ToastView *t = ToastView::getInstance();
+  t->Show(status ? "Loaded successfully." : "Loading failed.",
+          status ? &ttSuccess : &ttError, 1500);
+
   return status ? (count_ - 1) : -1;
 };
 

@@ -15,6 +15,7 @@
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "Application/Views/SampleEditorView.h"
+#include "Application/Views/ToastView.h"
 #include "BaseClasses/UIActionField.h"
 #include "BaseClasses/UIIntVarField.h"
 #include "BaseClasses/UIStaticField.h"
@@ -332,6 +333,16 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     char projName[MAX_PROJECT_NAME_LENGTH + 1];
     project_->GetProjectName(projName);
 
+    const auto toastSuccess = [&]() {
+      ToastView::getInstance()->Show("Project saved successfully.", &ttSuccess,
+                                     ToastDuration::regular);
+    };
+
+    const auto toastFailure = [&]() {
+      ToastView::getInstance()->Show("Failed to save the project.", &ttError,
+                                     ToastDuration::regular);
+    };
+
     if (saveAsFlag_) {
       // first need to check if project with this name already exists
       if (persist->Exists(projName)) {
@@ -341,23 +352,24 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
         DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
         return;
       }
+
       if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
           PERSIST_SAVED) {
         Trace::Error("failed to save project state");
-        MessageBox *mb =
-            MessageBox::Create(*this, "Error saving Project", MBBF_OK);
-        DoModal(mb);
+        toastFailure();
         return;
+      } else {
+        toastSuccess();
       }
       clearSaveAsFlag();
     } else {
       if (persist->Save(projName, oldProjName_.c_str(), saveAsFlag_) !=
           PERSIST_SAVED) {
         Trace::Error("failed to save project state");
-        MessageBox *mb =
-            MessageBox::Create(*this, "Error saving Project", MBBF_OK);
-        DoModal(mb);
+        toastFailure();
         return;
+      } else {
+        toastSuccess();
       }
     }
     // all good so now persist the new project name in project state
