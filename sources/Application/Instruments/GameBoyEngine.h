@@ -229,7 +229,8 @@ typedef struct voice_t {
       if (timeToLive == 0) {
         if (flags.retrigger) {
           flags.retrigger = 0; // clear retrigger flag
-          note_on(note, true, parameters);
+          // retrigger without resetting clocks
+          note_on(note, false, parameters, true);
         } else {
           // note off, kill everything
           wave = gbWaveNone;
@@ -318,7 +319,9 @@ typedef struct voice_t {
   }
 
   inline void note_on(unsigned char note, bool retrigger,
-                      InstrumentParameters parameters) {
+                      InstrumentParameters parameters,
+                      bool keepClocks = false) {
+    // bool retrigger is currently unused
     this->parameters = parameters;
 
     // is this the best time to store that?
@@ -358,9 +361,9 @@ typedef struct voice_t {
     timeToLive = (parameters.length == 0) ? 0x7FFF'FFFF : (parameters.length);
     phase = 0;
 
-    // don't reset timers on retrig - they might mid-execution and will
-    // underflow
-    if (!retrigger) {
+    // don't reset timers on internal retrigger via command (IRT, ...)
+    // they might be mid-execution and will underflow
+    if (!keepClocks) {
       time = 0;
       tick = 0;
       tock = 0;
@@ -447,6 +450,24 @@ typedef struct voice_t {
     vibrato.swing = frequencyLUT[fIndex + 1] - frequency;
     vibrato.depth = depth;
     vibrato.delay = 0; // vibrato starts immediately on command
+  }
+
+  void command_init_finetune(uint8_t rate, int8_t amount) {
+    // finetune uses the same mechanism as legato
+    int32_t offset = semitoneRatioQ16[128 + sign(amount)];
+    offset = (offset * amount) >> 7;
+
+    // not exponential in the GameBoy instrument, for performance reasons (atm)
+    int ticks = 1 + rate; // minimum 1 tick
+
+    // get total ratio from table (Q16.16)
+    legato.targetFreq = offset;
+    legato.coefficient = (legato.targetFreq - 0x0001'0000) / ticks;
+
+    legato.steps = ticks;
+    legato.factor = 0x0001'0000; // start at 1.0 in q16.16
+
+    flags.legato = 1; // set legato flag
   }
 
   // fully fixed-point per-tick legato initialization

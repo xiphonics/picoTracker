@@ -26,3 +26,5 @@ static inline int8_t interpolateS8(const int8_t *lut, uint8_t v) {
 
   return c0 + (((int32_t)(c1 - c0) * frac) >> 2);
 }
+
+static inline int32_t sign(int32_t x) { return (x > 0) - (x < 0); }

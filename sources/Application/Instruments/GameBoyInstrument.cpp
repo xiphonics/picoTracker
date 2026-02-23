@@ -113,6 +113,10 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     voices_[channel].command_init_legato(value >> 8, (int8_t)(value & 0xFF));
     break;
 
+  case FourCC::InstrumentCommandPitchFineTune:
+    voices_[channel].command_init_finetune(value >> 8, (int8_t)(value & 0xFF));
+    break;
+
   case FourCC::InstrumentCommandInstrumentRetrigger:
     voices_[channel].command_init_instrument_retrigger(value >> 8,
                                                        (int8_t)(value & 0xff));
