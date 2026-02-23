@@ -12,7 +12,9 @@
 
 #include "Application/Instruments/WavFile.h"
 #include "Application/Model/Project.h"
+#include "Externals/etl/include/etl/string.h"
 #include "Services/Audio/AudioModule.h"
+#include "System/FileSystem/FileSystem.h"
 
 #define SINGLE_CYCLE_MAX_SAMPLE_SIZE 600
 
@@ -30,7 +32,7 @@ public:
 
 protected:
   AudioFileStreamerMode mode_;
-  char name_[256];
+  etl::string<PFILENAME_SIZE - 1> name_;
   WavFile wav_;
   float position_;
   Project *project_;
