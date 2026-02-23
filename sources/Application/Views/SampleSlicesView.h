@@ -41,6 +41,7 @@ private:
   void buildFieldLayout();
   void rebuildWaveform();
   void drawWaveform();
+  void clearWaveformRegion();
   bool refreshSampleSize();
   void updateStatusLabels();
   SampleInstrument *currentInstrument();
@@ -75,6 +76,7 @@ private:
   GUIPoint graphFieldPos_;
   GraphField graphField_;
   bool modalWasOpen_;
+  uint8_t modalClearCount_;
 
   bool playKeyHeld_;
   bool previewActive_;
