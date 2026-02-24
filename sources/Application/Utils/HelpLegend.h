@@ -92,8 +92,8 @@ static char **getHelpLegend(FourCC command) {
     result[1] = (char *)("if aa > 0, set all tracks");
     break;
   case FourCC::InstrumentCommandInstrumentRetrigger:
-    result[0] = (char *)("InstrumentReTrig:aabb,");
-    result[1] = (char *)("trig&transpose aa speed bb");
+    result[0] = (char *)("InstrumentReTrig: --bb");
+    result[1] = (char *)("retrigger & transpose by bb");
     break;
   case FourCC::InstrumentCommandPitchFineTune:
     result[0] = (char *)("PitchFineTune:aabb, tune");
