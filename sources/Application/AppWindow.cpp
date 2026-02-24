@@ -37,6 +37,7 @@
 #include "Application/Views/TableView.h"
 #include "Application/Views/ThemeImportView.h"
 #include "Application/Views/ThemeView.h"
+#include "Application/Views/ToastView.h"
 #include "BaseClasses/View.h"
 #include "Foundation/Variables/WatchedVariable.h"
 #include "Player/Player.h"
@@ -207,6 +208,8 @@ AppWindow::AppWindow(I_GUIWindowImp &imp, const char *projectName)
   memset(_charScreenProp, 0, SCREEN_CHARS);
   memset(_preScreenProp, 0, SCREEN_CHARS);
 
+  ToastView::Init(*this, &viewData_);
+
   Redraw();
 
   // there is some sort of race that if we call LoadProject() from here directly
@@ -309,6 +312,8 @@ void AppWindow::InvalidateTextCache() {
 // Flush current screen to display
 //
 void AppWindow::Flush() {
+  // draw the ToastView, it handles its own visibility
+  ToastView::getInstance()->Draw((*this));
 
   Lock();
 
@@ -696,9 +701,8 @@ void AppWindow::AnimationUpdate() {
     if (loadResult == LoadProjectResult::LOAD_FAILED) {
       npf_snprintf(failedProjectName_, sizeof(failedProjectName_), "%s",
                    projectName_);
-      Status::SetMultiLine(
-          "Invalid Project:\n%s\n  \nPress any key\nto continue...",
-          failedProjectName_);
+      Status::Set("Invalid Project:\n%s\n  \nPress any key\nto continue...",
+                  failedProjectName_);
       Trace::Error(
           "Failed to load project '%s'. Waiting for key press to load untitled",
           failedProjectName_);
@@ -727,6 +731,10 @@ void AppWindow::AnimationUpdate() {
       }
     }
   }
+
+  // Check for ToastView animation updates (needs to run frequently for smooth
+  // animation)
+  ToastView::getInstance()->UpdateTimer();
 
   if (lowBatteryState_ && !lowBatteryMessageShown_) {
     if (!_currentView->HasModalView()) {
@@ -945,9 +953,7 @@ void AppWindow::onQuitApp() {
   System::GetInstance()->PostQuitMessage();
 }
 
-void AppWindow::Print(char *line) { PrintMultiLine(line); }
-
-void AppWindow::PrintMultiLine(char *line) {
+void AppWindow::Print(char *line) {
   Clear();
   GUITextProperties props;
   SetColor(CD_NORMAL);
