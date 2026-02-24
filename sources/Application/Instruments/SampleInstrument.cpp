@@ -470,6 +470,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     break;
 
   case SILM_OSC:
+  case SILM_WAVETABLE:
     //		case SILM_OSCFINE:
     {
 
@@ -797,6 +798,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             break;
           case SILM_LOOP:
           case SILM_OSC:
+          case SILM_WAVETABLE:
           case SILM_LOOPSYNC:
             input = loopPosition;
             rpReverse = (loopPosition > lastSample);
@@ -844,6 +846,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             break;
           case SILM_LOOP:
           case SILM_OSC:
+          case SILM_WAVETABLE:
           case SILM_LOOPSYNC:
             input = loopPosition;
             rpReverse = (loopPosition > lastSample);

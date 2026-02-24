@@ -11,7 +11,7 @@
 
 const char *loopTypes[SILM_LAST] = {"none", "loop", "pingpong", "oscillator",
                                     //	"oscillator fine",
-                                    "looper sync"};
+                                    "looper sync", "wavetable"};
 
 const char *interpolationTypes[] = {"linear", "none"};
 

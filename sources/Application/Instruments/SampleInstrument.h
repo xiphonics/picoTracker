@@ -29,6 +29,7 @@ enum SampleInstrumentLoopMode {
   SILM_OSC,
   //	SILM_OSCFINE,
   SILM_LOOPSYNC,
+  SILM_WAVETABLE,
   SILM_LAST
 };
 

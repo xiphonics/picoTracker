@@ -16,6 +16,7 @@ add_library(application_instruments
   WavFile.cpp
   WavFileWriter.cpp
   WavHeader.cpp
+  Wavetables/BundledWavetables.cpp
 )
 
 target_link_libraries(application_instruments PUBLIC
