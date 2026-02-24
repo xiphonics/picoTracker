@@ -30,11 +30,11 @@ static char **getHelpLegend(FourCC command) {
     result[1] = (char *)("Cycle thru relative pitch abcd");
     break;
   case FourCC::InstrumentCommandVolume:
-    result[0] = (char *)("VOLume:aabb");
+    result[0] = (char *)("VOLume: aabb");
     result[1] = (char *)("reach volume bb at speed aa");
     break;
   case FourCC::InstrumentCommandVelocity:
-    result[0] = (char *)("VELocity:--bb");
+    result[0] = (char *)("VELocity: --bb");
     result[1] = (char *)("send MIDI velocity cmd bb");
     break;
   case FourCC::InstrumentCommandPitchSlide:
@@ -94,7 +94,7 @@ static char **getHelpLegend(FourCC command) {
     result[1] = (char *)("speed aa, value bb (00 right)");
     break;
   case FourCC::InstrumentCommandGroove:
-    result[0] = (char *)("GRooVe:aabb");
+    result[0] = (char *)("GRooVe: aabb");
     result[1] = (char *)("set bb (aa > 0,set all tracks)");
     break;
   case FourCC::InstrumentCommandInstrumentRetrigger:
@@ -102,11 +102,11 @@ static char **getHelpLegend(FourCC command) {
     result[1] = (char *)("retrigger & transpose by bb");
     break;
   case FourCC::InstrumentCommandPitchFineTune:
-    result[0] = (char *)("PitchFineTune:aabb");
+    result[0] = (char *)("PitchFineTune: aabb");
     result[1] = (char *)("speed aa, tune bb (~+/-1 st)");
     break;
   case FourCC::InstrumentCommandDelay:
-    result[0] = (char *)("Delay:---b");
+    result[0] = (char *)("Delay: ---b");
     result[1] = (char *)("delay b+1 ticks");
     break;
   case FourCC::InstrumentCommandStop:
