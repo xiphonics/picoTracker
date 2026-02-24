@@ -100,9 +100,10 @@ protected:
   void updateInstrumentData(bool search);
   void doTickUpdate(int channel);
   void doKRateUpdate(int channel);
+  bool setupBundledWavetableSlices(uint32_t sampleSize);
 
 private:
-  etl::list<Variable *, 21> variables_;
+  etl::list<Variable *, 22> variables_;
 
   SoundSource *source_;
   __attribute__((section(".DTCMRAM"))) static struct renderParams
@@ -130,6 +131,7 @@ private:
   Variable loopMode_;
   WatchedVariable loopStart_;
   WatchedVariable loopEnd_;
+  Variable wavetable_;
   Variable table_;
   Variable tableAuto_;
   // TODO (democloid): evaluate if this should be in DTCMRAM

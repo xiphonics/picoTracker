@@ -11,6 +11,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+class SoundSource;
+
 struct BundledWavetableInfo {
   const char *name;
   const uint8_t *data;
@@ -20,3 +22,4 @@ struct BundledWavetableInfo {
 
 extern const BundledWavetableInfo gBundledWavetables[];
 extern const size_t gBundledWavetableCount;
+SoundSource *GetBundledWavetableSource(int index);

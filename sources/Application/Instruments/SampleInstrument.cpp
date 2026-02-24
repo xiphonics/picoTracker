@@ -9,6 +9,7 @@
 
 #include "SampleInstrument.h"
 #include "Application/Instruments/Filters.h"
+#include "Application/Instruments/Wavetables/BundledWavetables.h"
 #include "Application/Model/Table.h"
 #include "Application/Player/PlayerMixer.h" // For MIX_BUFFER_SIZE.. kick out pls
 #include "Application/Player/SyncMaster.h"
@@ -60,6 +61,7 @@ SampleInstrument::SampleInstrument()
       loopMode_(FourCC::SampleInstrumentLoopMode, loopTypes, SILM_LAST, 0),
       loopStart_(FourCC::SampleInstrumentLoopStart, 0),
       loopEnd_(FourCC::SampleInstrumentEnd, 0),
+      wavetable_(FourCC::SampleInstrumentWavetable, 0),
       table_(FourCC::SampleInstrumentTable, -1),
       tableAuto_(FourCC::SampleInstrumentTableAutomation, false) {
 
@@ -98,6 +100,7 @@ SampleInstrument::SampleInstrument()
   loopStart_.AddObserver(*this);
   variables_.insert(variables_.end(), &loopEnd_);
   loopEnd_.AddObserver(*this);
+  variables_.insert(variables_.end(), &wavetable_);
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
 
@@ -344,13 +347,81 @@ void SampleInstrument::clampSlicePoints(uint32_t sampleSize) {
   }
 }
 
+bool SampleInstrument::setupBundledWavetableSlices(uint32_t sampleSize) {
+  if (gBundledWavetableCount == 0) {
+    return false;
+  }
+
+  int index = wavetable_.GetInt();
+  if (index < 0) {
+    index = 0;
+  }
+  if (index >= static_cast<int>(gBundledWavetableCount)) {
+    index = static_cast<int>(gBundledWavetableCount) - 1;
+  }
+  if (index != wavetable_.GetInt()) {
+    wavetable_.SetInt(index, false);
+  }
+
+  const BundledWavetableInfo &wt = gBundledWavetables[static_cast<size_t>(index)];
+  if (wt.frameCount == 0 || wt.samplesPerFrame == 0) {
+    return false;
+  }
+
+  uint32_t totalSize =
+      static_cast<uint32_t>(wt.frameCount) * static_cast<uint32_t>(wt.samplesPerFrame);
+  if (sampleSize == 0) {
+    sampleSize = totalSize;
+  }
+  if (sampleSize == 0) {
+    return false;
+  }
+
+  uint32_t frameLength = static_cast<uint32_t>(wt.samplesPerFrame);
+  uint32_t availableFrames = sampleSize / frameLength;
+  if (availableFrames == 0) {
+    return false;
+  }
+
+  size_t framesToWrite = availableFrames;
+  if (framesToWrite > static_cast<size_t>(wt.frameCount)) {
+    framesToWrite = wt.frameCount;
+  }
+  if (framesToWrite > MaxSlices) {
+    framesToWrite = MaxSlices;
+  }
+
+  bool changed = false;
+  for (size_t i = 0; i < MaxSlices; ++i) {
+    uint32_t value = 0;
+    if (i < framesToWrite) {
+      value = static_cast<uint32_t>(i) * frameLength;
+    }
+    if (slicePoints_[i] != value) {
+      slicePoints_[i] = value;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    SetChanged();
+    NotifyObservers();
+  }
+
+  return framesToWrite > 0;
+}
+
 bool SampleInstrument::Init() {
 
   SamplePool *pool = SamplePool::GetInstance();
   Variable *vSample = FindVariable(FourCC::SampleInstrumentSample);
   NAssert(vSample);
   int index = vSample->GetInt();
-  source_ = (index >= 0) ? pool->GetSource(index) : 0;
+  if ((SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+    source_ = GetBundledWavetableSource(wavetable_.GetInt());
+  } else {
+    source_ = (index >= 0) ? pool->GetSource(index) : 0;
+  }
   tableState_.Reset();
   return false;
 }
@@ -363,6 +434,14 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
 
   if (dirty_) {
     updateInstrumentData(false);
+  }
+
+  if ((SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+    source_ = GetBundledWavetableSource(wavetable_.GetInt());
+  } else {
+    SamplePool *pool = SamplePool::GetInstance();
+    int sampleIndex = sample_.GetInt();
+    source_ = (sampleIndex >= 0) ? pool->GetSource(sampleIndex) : nullptr;
   }
 
   running_ = true;
@@ -418,10 +497,29 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   SampleInstrumentLoopMode loopmode =
       (SampleInstrumentLoopMode)loopMode_.GetInt();
 
+  bool wavetableFrameActive = false;
+  uint32_t wavetableFrameStart = 0;
+  uint32_t wavetableFrameEnd = 0;
+  if (loopmode == SILM_WAVETABLE && !source_->IsMulti()) {
+    if (setupBundledWavetableSlices(sampleSizeU)) {
+      wavetableFrameStart = computeSliceStart(0, sampleSizeU);
+      wavetableFrameEnd = computeSliceEnd(0, sampleSizeU);
+      if (wavetableFrameStart < wavetableFrameEnd) {
+        rp->rendLoopStart_ = static_cast<int>(wavetableFrameStart);
+        rp->rendLoopEnd_ = static_cast<int>(wavetableFrameEnd);
+        wavetableFrameActive = true;
+      }
+    }
+  }
+
   size_t sliceIndex = 0;
-  bool sliceActive = shouldUseSlice(midinote, sliceIndex, sampleSizeU);
+  bool sliceActive = false;
+  if (loopmode != SILM_WAVETABLE) {
+    sliceActive = shouldUseSlice(midinote, sliceIndex, sampleSizeU);
+  }
   // Only play valid slices
-  if (!sliceActive && HasSlicesForPlayback() && midinote >= SliceNoteBase &&
+  if (loopmode != SILM_WAVETABLE && !sliceActive && HasSlicesForPlayback() &&
+      midinote >= SliceNoteBase &&
       midinote < static_cast<unsigned char>(SliceNoteBase + MaxSlices)) {
     return false;
   }
@@ -438,7 +536,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   rp->sliceActive_ = sliceActive;
   rp->activeSliceIndex_ = sliceActive ? static_cast<uint8_t>(sliceIndex) : 0;
 
-  if (sliceActive) {
+  if (sliceActive && loopmode != SILM_WAVETABLE) {
     loopmode = SILM_ONESHOT;
   }
   rp->loopModeValue_ = static_cast<int>(loopmode);
@@ -518,6 +616,15 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     rp->rendLoopEnd_ = static_cast<int>(sliceEnd);
     rp->rendFirst_ = static_cast<int>(sliceStart);
     rp->position_ = float(sliceStart);
+    rp->reverse_ = false;
+  }
+  if (loopmode == SILM_WAVETABLE && wavetableFrameActive) {
+    rp->rendLoopStart_ = static_cast<int>(wavetableFrameStart);
+    rp->rendLoopEnd_ = static_cast<int>(wavetableFrameEnd);
+    rp->rendFirst_ = static_cast<int>(wavetableFrameStart);
+    if (cleanstart) {
+      rp->position_ = float(wavetableFrameStart);
+    }
     rp->reverse_ = false;
   }
 
@@ -718,6 +825,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     // Get sound characteristics
 
     char *wavbuf = (char *)rp->sampleBuffer_;
+    bool wavetableU8 = (loopMode == SILM_WAVETABLE);
+    int bytesPerSample = wavetableU8 ? 1 : 2;
 
     int channelCount = rp->channelCount_;
 
@@ -741,9 +850,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     // Get pan multiplicators, and take volume into account
 
     int n = int(rp->position_);
-    short *input = (short *)(wavbuf + 2 * channelCount *
-                                          n); // input is the current
-                                              // sample to the left of position
+    char *input = wavbuf + bytesPerSample * channelCount * n; // left sample
 
     fixed fpPos = fl2fp(rp->position_ - n); // fpPos is current pos from input
     fixed fpSpeed = rp->speed_;             // speed in fixed
@@ -755,13 +862,12 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     s2 = 0;
     t2 = 0;
 
-    short *loopPosition =
-        (short *)(wavbuf + rp->rendLoopStart_ * 2 * channelCount);
-    short *lastSample =
-        (short *)(wavbuf + (rp->rendLoopEnd_ - 1) * 2 * channelCount);
+    char *loopPosition = wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
+    char *lastSample =
+        wavbuf + (rp->rendLoopEnd_ - 1) * bytesPerSample * channelCount;
 
     if (/*(loopMode==SILM_OSCFINE)||*/ (rp->reverse_)) {
-      lastSample = (short *)(wavbuf + rp->rendLoopEnd_ * 2 * channelCount);
+      lastSample = wavbuf + rp->rendLoopEnd_ * bytesPerSample * channelCount;
     }
 
     fixed zerofive = fl2fp(0.5f);
@@ -784,7 +890,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     fixed *fltDelayPtr = 0;
     fixed *fltHeightPtr = 0;
 
-    short *dsBasePtr = ((short *)wavbuf) + rp->rendFirst_ * channelCount;
+    char *dsBasePtr = wavbuf + rp->rendFirst_ * bytesPerSample * channelCount;
 
     while (count > 0) {
 
@@ -936,25 +1042,25 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         // get input sample to interpolate from
         // s= left channel
         // t= right channel
-        short *i1 = input;
+        char *i1 = input;
         if (dsMask != 0xFFFFFFFF) {
-          if (useDirtyDownsampling_) {
-            i1 = (short *)(((uintptr_t)input) & dsMask);
+          if (useDirtyDownsampling_ && !wavetableU8) {
+            // Preserve legacy pointer-masking behavior for 16-bit samples.
+            i1 = (char *)(((uintptr_t)input) & dsMask);
           } else {
-            // prevent input ever being lower mem address then dsBasePtr (sample
-            // start point) this can occur eg. if doing reverse playback and
-            // using RTG cmds
+            // Frame-aligned downsampling for generic byte-width sample data.
             if (input < dsBasePtr) {
               i1 = dsBasePtr;
             } else {
-              unsigned int distance =
-                  (unsigned int)(input - dsBasePtr) / channelCount;
-              i1 = dsBasePtr + (distance & dsMask) * channelCount;
+              unsigned int distance = (unsigned int)(input - dsBasePtr) /
+                                      (unsigned int)(bytesPerSample * channelCount);
+              i1 = dsBasePtr +
+                   (distance & dsMask) * bytesPerSample * channelCount;
             }
           }
         }
 
-        short *i2 = i1 + channelCount;
+        char *i2 = i1 + bytesPerSample * channelCount;
 
         if (filtering) {
           fltSpeedPtr = fltSpeed;
@@ -964,8 +1070,17 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
         for (int i = 0; i < channelCount; i++) {
           t2 = s2; // move L to R if necessary
-          s1 = i2fp(*i1++);
-          s2 = i2fp(*i2++);
+          if (wavetableU8) {
+            const uint8_t sampleA = *(const uint8_t *)i1;
+            const uint8_t sampleB = *(const uint8_t *)i2;
+            s1 = i2fp((int(sampleA) - 128) << 8);
+            s2 = i2fp((int(sampleB) - 128) << 8);
+          } else {
+            s1 = i2fp(*(const short *)i1);
+            s2 = i2fp(*(const short *)i2);
+          }
+          i1 += bytesPerSample;
+          i2 += bytesPerSample;
 
           switch (interpol) {
 
@@ -1060,7 +1175,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
         fpPos = fp_add(fpPos, fpSpeed);
         int delta = fp2i(fpPos);
-        input += channelCount * delta;
+        input += bytesPerSample * channelCount * delta;
         fpPos = fp_sub(fpPos, i2fp(delta));
         count--;
       }
@@ -1071,7 +1186,7 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     // Update final sample position
     rp->position_ =
-        (((char *)input) - wavbuf) / (2 * channelCount) + fp2fl(fpPos);
+        (input - wavbuf) / (bytesPerSample * channelCount) + fp2fl(fpPos);
 
     somethingToMix = true;
   }
@@ -1101,22 +1216,42 @@ int SampleInstrument::GetVolume() {
 };
 
 int SampleInstrument::GetSampleSize(int channel) {
-  if (source_) {
-    renderParams *rp = renderParams_ + channel;
-    return source_->GetSize(rp->midiNote_);
+  SoundSource *source = source_;
+  if (!source && (SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+    source = GetBundledWavetableSource(wavetable_.GetInt());
+  }
+  if (source) {
+    int note = 0;
+    if (channel >= 0 && channel < SONG_CHANNEL_COUNT) {
+      renderParams *rp = renderParams_ + channel;
+      note = rp->midiNote_;
+    }
+    return source->GetSize(note);
   };
   return 0;
 };
 
 float SampleInstrument::GetLengthInSec() {
-  if (source_) {
-    return source_->GetLengthInSec();
+  SoundSource *source = source_;
+  if (!source && (SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+    source = GetBundledWavetableSource(wavetable_.GetInt());
+  }
+  if (source) {
+    return source->GetLengthInSec();
   } else {
     return 0.0f;
   }
 };
 
-bool SampleInstrument::IsInitialized() { return (source_ != 0); };
+bool SampleInstrument::IsInitialized() {
+  if (source_ != 0) {
+    return true;
+  }
+  if ((SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+    return GetBundledWavetableSource(wavetable_.GetInt()) != nullptr;
+  }
+  return false;
+};
 
 void SampleInstrument::updateInstrumentData(bool search) {
 
@@ -1137,11 +1272,13 @@ void SampleInstrument::updateInstrumentData(bool search) {
     vSample->SetInt(NO_SAMPLE);
   }
 
-  if (index != NO_SAMPLE) {
+  if ((SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+    source_ = GetBundledWavetableSource(wavetable_.GetInt());
+  } else if (index != NO_SAMPLE) {
     source_ = pool->GetSource(index);
-    if (source_ && (!source_->IsMulti())) {
-      instrSize = source_->GetSize(-1);
-    }
+  }
+  if (source_ && (!source_->IsMulti())) {
+    instrSize = source_->GetSize(0);
   }
 
   Variable *v = FindVariable(FourCC::SampleInstrumentEnd);
@@ -1575,6 +1712,9 @@ void SampleInstrument::Purge() {
   slicePoints_.fill(0);
 };
 bool SampleInstrument::IsEmpty() {
+  if ((SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+    return false;
+  }
   Variable *v = FindVariable(FourCC::SampleInstrumentSample);
   return (v->GetInt() == -1);
 };
