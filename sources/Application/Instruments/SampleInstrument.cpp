@@ -33,7 +33,7 @@
 #include "SampleInstrumentDatas.h"
 
 bool SampleInstrument::useDirtyDownsampling_ = false;
-bool SampleInstrument::useCycleBoundaryWavetableStepping_ = true;
+bool SampleInstrument::useCycleBoundaryWavetableStepping_ = false;
 
 renderParams SampleInstrument::renderParams_[SONG_CHANNEL_COUNT];
 
@@ -173,7 +173,7 @@ void SampleInstrument::ClearSlices() {
 }
 
 bool SampleInstrument::HasSlicesForPlayback() const {
-  if ((SampleInstrumentLoopMode)const_cast<Variable &>(loopMode_).GetInt() ==
+  if ((SampleInstrumentLoopMode) const_cast<Variable &>(loopMode_).GetInt() ==
       SILM_WAVETABLE) {
     return false;
   }
@@ -181,7 +181,7 @@ bool SampleInstrument::HasSlicesForPlayback() const {
 }
 
 bool SampleInstrument::HasSlicesForWarning() const {
-  if ((SampleInstrumentLoopMode)const_cast<Variable &>(loopMode_).GetInt() ==
+  if ((SampleInstrumentLoopMode) const_cast<Variable &>(loopMode_).GetInt() ==
       SILM_WAVETABLE) {
     return false;
   }
@@ -374,13 +374,14 @@ bool SampleInstrument::setupBundledWavetableSlices(uint32_t sampleSize) {
     wavetable_.SetInt(index, false);
   }
 
-  const BundledWavetableInfo &wt = gBundledWavetables[static_cast<size_t>(index)];
+  const BundledWavetableInfo &wt =
+      gBundledWavetables[static_cast<size_t>(index)];
   if (wt.frameCount == 0 || wt.samplesPerFrame == 0) {
     return false;
   }
 
-  uint32_t totalSize =
-      static_cast<uint32_t>(wt.frameCount) * static_cast<uint32_t>(wt.samplesPerFrame);
+  uint32_t totalSize = static_cast<uint32_t>(wt.frameCount) *
+                       static_cast<uint32_t>(wt.samplesPerFrame);
   if (sampleSize == 0) {
     sampleSize = totalSize;
   }
@@ -879,7 +880,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     s2 = 0;
     t2 = 0;
 
-    char *loopPosition = wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
+    char *loopPosition =
+        wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
     char *lastSample =
         wavbuf + (rp->rendLoopEnd_ - 1) * bytesPerSample * channelCount;
 
@@ -934,7 +936,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
       float phase = 0.0f;
       if (preservePhase) {
         float currentPos =
-            (input - wavbuf) / float(bytesPerSample * channelCount) + fp2fl(fpPos);
+            (input - wavbuf) / float(bytesPerSample * channelCount) +
+            fp2fl(fpPos);
         phase = currentPos - float(oldLoopStart);
         if (oldLoopLen > 0) {
           while (phase < 0.0f) {
@@ -962,7 +965,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         fpPos = fl2fp(rp->position_ - posIndex);
       }
 
-      loopPosition = wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
+      loopPosition =
+          wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
       lastSample =
           wavbuf + (rp->rendLoopEnd_ - 1) * bytesPerSample * channelCount;
       if (rpReverse) {
@@ -1167,8 +1171,9 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             if (input < dsBasePtr) {
               i1 = dsBasePtr;
             } else {
-              unsigned int distance = (unsigned int)(input - dsBasePtr) /
-                                      (unsigned int)(bytesPerSample * channelCount);
+              unsigned int distance =
+                  (unsigned int)(input - dsBasePtr) /
+                  (unsigned int)(bytesPerSample * channelCount);
               i1 = dsBasePtr +
                    (distance & dsMask) * bytesPerSample * channelCount;
             }
@@ -1177,9 +1182,10 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
         char *i2 = i1 + bytesPerSample * channelCount;
         if (loopMode == SILM_WAVETABLE && !rpReverse) {
-          // In wavetable mode each frame is a single-cycle loop. Interpolation at
-          // the loop edge must wrap within the frame, otherwise we interpolate
-          // against data outside the current cycle and introduce periodic clicks.
+          // In wavetable mode each frame is a single-cycle loop. Interpolation
+          // at the loop edge must wrap within the frame, otherwise we
+          // interpolate against data outside the current cycle and introduce
+          // periodic clicks.
           char *loopEndExclusive =
               wavbuf + rp->rendLoopEnd_ * bytesPerSample * channelCount;
           if (i2 >= loopEndExclusive) {
@@ -1305,7 +1311,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         count--;
       }
     }
-    // Persist k-rate countdown across render calls (otherwise it resets per block).
+    // Persist k-rate countdown across render calls (otherwise it resets per
+    // block).
     rp->krateCount_ = rpKrateCount;
 
     // Update 'reverse' mode if changed
@@ -1345,7 +1352,8 @@ int SampleInstrument::GetVolume() {
 
 int SampleInstrument::GetSampleSize(int channel) {
   SoundSource *source = source_;
-  if (!source && (SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+  if (!source &&
+      (SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
     source = GetBundledWavetableSource(wavetable_.GetInt());
   }
   if (source) {
@@ -1361,7 +1369,8 @@ int SampleInstrument::GetSampleSize(int channel) {
 
 float SampleInstrument::GetLengthInSec() {
   SoundSource *source = source_;
-  if (!source && (SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
+  if (!source &&
+      (SampleInstrumentLoopMode)loopMode_.GetInt() == SILM_WAVETABLE) {
     source = GetBundledWavetableSource(wavetable_.GetInt());
   }
   if (source) {

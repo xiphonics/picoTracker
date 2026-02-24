@@ -11,8 +11,8 @@
 #include "Application/Instruments/MidiInstrument.h"
 #include "Application/Instruments/SIDInstrument.h"
 #include "Application/Instruments/SampleInstrument.h"
-#include "Application/Instruments/Wavetables/BundledWavetables.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Instruments/Wavetables/BundledWavetables.h"
 #include "Application/Model/Config.h"
 #include "Application/Views/ImportView.h"
 #include "Application/Views/SampleEditorView.h"
@@ -438,9 +438,11 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentWavetable);
-  int wavetableMax =
-      gBundledWavetableCount > 0 ? static_cast<int>(gBundledWavetableCount) - 1 : 0;
-  intVarField_.emplace_back(position, *v, "wavetable: %d", 0, wavetableMax, 1, 1);
+  int wavetableMax = gBundledWavetableCount > 0
+                         ? static_cast<int>(gBundledWavetableCount) - 1
+                         : 0;
+  intVarField_.emplace_back(position, *v, "wavetable: %d", 0, wavetableMax, 1,
+                            1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;

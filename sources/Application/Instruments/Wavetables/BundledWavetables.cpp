@@ -16,23 +16,43 @@
 
 namespace {
 
-// Match the original PPG wavetable slot count used by wave-stuff (extra 3 waves are omitted).
+// Match the original PPG wavetable slot count used by wave-stuff (extra 3 waves
+// are omitted).
 static constexpr uint16_t kPpgFrameCount = 61;
 static constexpr uint16_t kPpgSamplesPerFrame = 128;
 
 class BundledWavetableSource : public SoundSource {
 public:
   BundledWavetableSource(const uint8_t *data, uint16_t frameCount,
-                        uint16_t samplesPerFrame)
-      : data_(data), frameCount_(frameCount), samplesPerFrame_(samplesPerFrame) {}
+                         uint16_t samplesPerFrame)
+      : data_(data), frameCount_(frameCount),
+        samplesPerFrame_(samplesPerFrame) {}
 
-  void *GetSampleBuffer(int note) override { (void)note; return const_cast<uint8_t *>(data_); }
-  int GetSize(int note) override { (void)note; return static_cast<int>(frameCount_) * static_cast<int>(samplesPerFrame_); }
-  int GetSampleRate(int note) override { (void)note; return 44100; }
-  int GetChannelCount(int note) override { (void)note; return 1; }
+  void *GetSampleBuffer(int note) override {
+    (void)note;
+    return const_cast<uint8_t *>(data_);
+  }
+  int GetSize(int note) override {
+    (void)note;
+    return static_cast<int>(frameCount_) * static_cast<int>(samplesPerFrame_);
+  }
+  int GetSampleRate(int note) override {
+    (void)note;
+    return 44100;
+  }
+  int GetChannelCount(int note) override {
+    (void)note;
+    return 1;
+  }
   bool IsMulti() override { return false; }
-  int GetRootNote(int note) override { (void)note; return 60; }
-  float GetLengthInSec() override { return static_cast<float>(GetSize(0)) / static_cast<float>(GetSampleRate(0)); }
+  int GetRootNote(int note) override {
+    (void)note;
+    return 60;
+  }
+  float GetLengthInSec() override {
+    return static_cast<float>(GetSize(0)) /
+           static_cast<float>(GetSampleRate(0));
+  }
 
 private:
   const uint8_t *data_;
@@ -40,10 +60,14 @@ private:
   uint16_t samplesPerFrame_;
 };
 
-static BundledWavetableSource ppgTable00Source(ppgTable00Data, kPpgFrameCount, kPpgSamplesPerFrame);
-static BundledWavetableSource ppgTable01Source(ppgTable01Data, kPpgFrameCount, kPpgSamplesPerFrame);
-static BundledWavetableSource ppgTable02Source(ppgTable02Data, kPpgFrameCount, kPpgSamplesPerFrame);
-static BundledWavetableSource ppgTable03Source(ppgTable03Data, kPpgFrameCount, kPpgSamplesPerFrame);
+static BundledWavetableSource ppgTable00Source(ppgTable00Data, kPpgFrameCount,
+                                               kPpgSamplesPerFrame);
+static BundledWavetableSource ppgTable01Source(ppgTable01Data, kPpgFrameCount,
+                                               kPpgSamplesPerFrame);
+static BundledWavetableSource ppgTable02Source(ppgTable02Data, kPpgFrameCount,
+                                               kPpgSamplesPerFrame);
+static BundledWavetableSource ppgTable03Source(ppgTable03Data, kPpgFrameCount,
+                                               kPpgSamplesPerFrame);
 
 static BundledWavetableSource *gBundledPpgSources[] = {
     &ppgTable00Source,
@@ -65,8 +89,12 @@ const size_t gBundledWavetableCount =
     sizeof(gBundledWavetables) / sizeof(gBundledWavetables[0]);
 
 SoundSource *GetBundledWavetableSource(int index) {
-  if (gBundledWavetableCount == 0) { return nullptr; }
-  if (index < 0) { index = 0; }
+  if (gBundledWavetableCount == 0) {
+    return nullptr;
+  }
+  if (index < 0) {
+    index = 0;
+  }
   if (index >= static_cast<int>(gBundledWavetableCount)) {
     index = static_cast<int>(gBundledWavetableCount) - 1;
   }
