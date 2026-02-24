@@ -66,6 +66,7 @@ struct FourCC {
     SampleInstrumentTable = 117,
     SampleInstrumentTableAutomation = 60,
     SampleInstrumentWavetable = 187,
+    SampleInstrumentWavetableScanSpeed = 188,
 
     MacroInstrumentShape = 93,
     MacroInstrmentTimbre = 94,
@@ -328,6 +329,7 @@ struct FourCC {
   ETL_ENUM_TYPE(SampleInstrumentTable, "table")
   ETL_ENUM_TYPE(SampleInstrumentTableAutomation, "table automation")
   ETL_ENUM_TYPE(SampleInstrumentWavetable, "wavetable")
+  ETL_ENUM_TYPE(SampleInstrumentWavetableScanSpeed, "wavetable scan")
   ETL_ENUM_TYPE(MidiInstrumentChannel, "channel")
   ETL_ENUM_TYPE(InstrumentName, "name")
   ETL_ENUM_TYPE(MidiInstrumentName, "midi name")

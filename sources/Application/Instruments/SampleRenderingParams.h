@@ -76,6 +76,10 @@ struct renderParams {
   char midiNote_; // Current midi note
   bool sliceActive_;
   uint8_t activeSliceIndex_;
+  uint8_t wavetablePos_;
+  uint8_t wavetableFrameCount_;
+  uint16_t wavetableFrameSamples_;
+  uint16_t wavetableScanAccum_;
   int loopModeValue_;
 };
 #endif

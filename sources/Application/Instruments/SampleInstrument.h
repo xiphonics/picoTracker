@@ -103,7 +103,7 @@ protected:
   bool setupBundledWavetableSlices(uint32_t sampleSize);
 
 private:
-  etl::list<Variable *, 22> variables_;
+  etl::list<Variable *, 23> variables_;
 
   SoundSource *source_;
   __attribute__((section(".DTCMRAM"))) static struct renderParams
@@ -132,6 +132,7 @@ private:
   WatchedVariable loopStart_;
   WatchedVariable loopEnd_;
   Variable wavetable_;
+  Variable wavetableScanSpeed_;
   Variable table_;
   Variable tableAuto_;
   // TODO (democloid): evaluate if this should be in DTCMRAM

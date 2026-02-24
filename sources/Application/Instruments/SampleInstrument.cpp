@@ -62,6 +62,7 @@ SampleInstrument::SampleInstrument()
       loopStart_(FourCC::SampleInstrumentLoopStart, 0),
       loopEnd_(FourCC::SampleInstrumentEnd, 0),
       wavetable_(FourCC::SampleInstrumentWavetable, 0),
+      wavetableScanSpeed_(FourCC::SampleInstrumentWavetableScanSpeed, 16),
       table_(FourCC::SampleInstrumentTable, -1),
       tableAuto_(FourCC::SampleInstrumentTableAutomation, false) {
 
@@ -101,6 +102,7 @@ SampleInstrument::SampleInstrument()
   variables_.insert(variables_.end(), &loopEnd_);
   loopEnd_.AddObserver(*this);
   variables_.insert(variables_.end(), &wavetable_);
+  variables_.insert(variables_.end(), &wavetableScanSpeed_);
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
 
@@ -170,10 +172,18 @@ void SampleInstrument::ClearSlices() {
 }
 
 bool SampleInstrument::HasSlicesForPlayback() const {
+  if ((SampleInstrumentLoopMode)const_cast<Variable &>(loopMode_).GetInt() ==
+      SILM_WAVETABLE) {
+    return false;
+  }
   return hasAnySliceValue();
 }
 
 bool SampleInstrument::HasSlicesForWarning() const {
+  if ((SampleInstrumentLoopMode)const_cast<Variable &>(loopMode_).GetInt() ==
+      SILM_WAVETABLE) {
+    return false;
+  }
   return hasAnySliceValue();
 }
 
@@ -391,23 +401,6 @@ bool SampleInstrument::setupBundledWavetableSlices(uint32_t sampleSize) {
     framesToWrite = MaxSlices;
   }
 
-  bool changed = false;
-  for (size_t i = 0; i < MaxSlices; ++i) {
-    uint32_t value = 0;
-    if (i < framesToWrite) {
-      value = static_cast<uint32_t>(i) * frameLength;
-    }
-    if (slicePoints_[i] != value) {
-      slicePoints_[i] = value;
-      changed = true;
-    }
-  }
-
-  if (changed) {
-    SetChanged();
-    NotifyObservers();
-  }
-
   return framesToWrite > 0;
 }
 
@@ -497,13 +490,35 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   SampleInstrumentLoopMode loopmode =
       (SampleInstrumentLoopMode)loopMode_.GetInt();
 
+  rp->wavetablePos_ = 0;
+  rp->wavetableFrameCount_ = 0;
+  rp->wavetableFrameSamples_ = 0;
+  rp->wavetableScanAccum_ = 0;
+
   bool wavetableFrameActive = false;
   uint32_t wavetableFrameStart = 0;
   uint32_t wavetableFrameEnd = 0;
   if (loopmode == SILM_WAVETABLE && !source_->IsMulti()) {
     if (setupBundledWavetableSlices(sampleSizeU)) {
-      wavetableFrameStart = computeSliceStart(0, sampleSizeU);
-      wavetableFrameEnd = computeSliceEnd(0, sampleSizeU);
+      int wtIndex = wavetable_.GetInt();
+      if (wtIndex < 0) {
+        wtIndex = 0;
+      }
+      if (wtIndex >= static_cast<int>(gBundledWavetableCount)) {
+        wtIndex = static_cast<int>(gBundledWavetableCount) - 1;
+      }
+      if (gBundledWavetableCount > 0) {
+        const BundledWavetableInfo &wt =
+            gBundledWavetables[static_cast<size_t>(wtIndex)];
+        rp->wavetableFrameCount_ = static_cast<uint8_t>(wt.frameCount);
+        rp->wavetableFrameSamples_ = wt.samplesPerFrame;
+      }
+      wavetableFrameStart =
+          static_cast<uint32_t>(rp->wavetablePos_) * rp->wavetableFrameSamples_;
+      wavetableFrameEnd = wavetableFrameStart + rp->wavetableFrameSamples_;
+      if (wavetableFrameEnd > sampleSizeU) {
+        wavetableFrameEnd = sampleSizeU;
+      }
       if (wavetableFrameStart < wavetableFrameEnd) {
         rp->rendLoopStart_ = static_cast<int>(wavetableFrameStart);
         rp->rendLoopEnd_ = static_cast<int>(wavetableFrameEnd);
@@ -1035,6 +1050,67 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               fpSpeed = -rp->speed_;
             } else {
               fpSpeed = rp->speed_;
+            }
+          }
+
+          if (loopMode == SILM_WAVETABLE && rp->wavetableFrameCount_ > 1 &&
+              rp->wavetableFrameSamples_ > 0) {
+            const uint16_t scanSpeed =
+                static_cast<uint16_t>(wavetableScanSpeed_.GetInt() & 0xFF);
+            if (scanSpeed != 0) {
+              const int oldLoopStart = rp->rendLoopStart_;
+              int oldLoopLen = rp->rendLoopEnd_ - rp->rendLoopStart_;
+              if (oldLoopLen == 0) {
+                oldLoopLen = static_cast<int>(rp->wavetableFrameSamples_);
+              }
+              if (oldLoopLen < 0) {
+                oldLoopLen = -oldLoopLen;
+              }
+
+              rp->wavetableScanAccum_ =
+                  static_cast<uint16_t>(rp->wavetableScanAccum_ + scanSpeed);
+              uint8_t frameSteps =
+                  static_cast<uint8_t>(rp->wavetableScanAccum_ >> 8);
+              rp->wavetableScanAccum_ &= 0x00FF;
+
+              if (frameSteps != 0) {
+                rp->wavetablePos_ = static_cast<uint8_t>(
+                    (rp->wavetablePos_ + frameSteps) % rp->wavetableFrameCount_);
+
+                const int frameLen = static_cast<int>(rp->wavetableFrameSamples_);
+                rp->rendLoopStart_ =
+                    frameLen * static_cast<int>(rp->wavetablePos_);
+                rp->rendLoopEnd_ = rp->rendLoopStart_ + frameLen;
+                rp->rendFirst_ = rp->rendLoopStart_;
+
+                float phase = rp->position_ - float(oldLoopStart);
+                if (oldLoopLen > 0) {
+                  while (phase < 0.0f) {
+                    phase += float(oldLoopLen);
+                  }
+                  while (phase >= float(oldLoopLen)) {
+                    phase -= float(oldLoopLen);
+                  }
+                } else {
+                  phase = 0.0f;
+                }
+                rp->position_ = float(rp->rendLoopStart_) + phase;
+
+                int posIndex = int(rp->position_);
+                input = wavbuf + bytesPerSample * channelCount * posIndex;
+                fpPos = fl2fp(rp->position_ - posIndex);
+
+                loopPosition =
+                    wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
+                lastSample = wavbuf + (rp->rendLoopEnd_ - 1) * bytesPerSample *
+                                          channelCount;
+                if (rpReverse) {
+                  lastSample = wavbuf +
+                               rp->rendLoopEnd_ * bytesPerSample * channelCount;
+                }
+                dsBasePtr =
+                    wavbuf + rp->rendFirst_ * bytesPerSample * channelCount;
+              }
             }
           }
         }

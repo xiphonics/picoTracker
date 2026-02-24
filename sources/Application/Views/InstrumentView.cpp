@@ -444,6 +444,11 @@ void InstrumentView::fillSampleParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
+  v = instrument->FindVariable(FourCC::SampleInstrumentWavetableScanSpeed);
+  intVarField_.emplace_back(position, *v, "wt scan: %3d", 0, 255, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentStart);
   bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0,
                                instrument->GetSampleSize() - 1, 16);
