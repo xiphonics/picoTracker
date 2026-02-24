@@ -77,6 +77,17 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // Handle key press events
   if (pressed) {
     auto fs = FileSystem::GetInstance();
+
+    // EDIT+LEFT: go to parent directory within the import file browser.
+    // NAV+LEFT remains reserved for leaving the ImportView entirely.
+    if ((mask & EPBM_EDIT) && (mask & EPBM_LEFT) && !(mask & EPBM_NAV) &&
+        !inProjectSampleDir_) {
+      setCurrentFolder(fs, "..");
+      isDirty_ = true;
+      topIndex_ = 0;
+      return;
+    }
+
     unsigned fileIndex = fileIndexList_[currentIndex_];
 
     if (mask & EPBM_PLAY) {
