@@ -57,10 +57,11 @@ typedef struct voice_t {
   int32_t frequency = 0; // precomp'd oscillator frequency (incl. vibrato, etc)
   int32_t lastFrequency = 0; // for legato slides, to compute the initial factor
 
-  uint32_t time; // sample counter
-  uint32_t tick; // sample counter for 100Hz updates
-  uint32_t tock; // sample counter for 1000Hz updates
   uint32_t timeToLive;
+
+  uint32_t time; // sample counter
+  uint16_t tick; // sample counter for 100Hz updates
+  uint16_t tock; // sample counter for 1000Hz updates
 
   uint32_t noise = 42;
   uint32_t lastSample = 0;
@@ -86,10 +87,10 @@ typedef struct voice_t {
   } arp;
 
   struct volume {
-    uint8_t level;    // current volume level (0-255) from instrument
-    uint8_t target;   // target volume level for slide commands
     uint16_t current; // current volume level (0-65535 Q8.8)
     int16_t step;     // per-tick volume change for slides
+    uint8_t level;    // current volume level (0-255) from instrument
+    uint8_t target;   // target volume level for slide commands
 
     inline bool tick() {
       if (level == target) {
@@ -107,8 +108,8 @@ typedef struct voice_t {
   } volume;
 
   struct vibrato {
-    int32_t swing;  // frequency diff between current note and next semitone
     uint16_t phase; // sine lfo phase
+    int32_t swing;  // frequency diff between current note and next semitone
     uint16_t frequency = 0xfff; // vibrato frequency
     uint16_t delay;             // ticks before auto-vibrato starts
     uint8_t depth;              // vibrato depth to apply
@@ -126,7 +127,7 @@ typedef struct voice_t {
   } vibrato;
 
   struct pan {
-    int16_t position; // current pan position (0-255, 128=center)
+    uint8_t position; // current pan position (0-255, 128=center)
     uint8_t target;   // target pan position for slew
     int8_t step;      // slew step size
 
@@ -145,12 +146,13 @@ typedef struct voice_t {
     }
   } pan;
 
+  struct sweep {
+    uint32_t coefficient;
+    int16_t steps;
+  } sweep;
+
   uint8_t burstTime; // initial white noise burst duration in ticks
   gbFlags flags;
-  struct sweep {
-    int16_t steps;
-    uint32_t coefficient;
-  } sweep;
 
   struct legato {
     // legato (exponential pitch slide)
@@ -181,6 +183,8 @@ typedef struct voice_t {
   uint16_t lfsr = 17;
 
   envelope_t envelope;
+
+  uint8_t unused; // padding to keep size at 128 bytes
 
   // implementation ------------------------------------------------------------
 
@@ -502,12 +506,12 @@ typedef struct voice_t {
   }
 
   void command_init_volume(uint8_t duration, uint8_t target) {
-    // volume slide uses the same mechanism as sweep
+    // volume slide
     volume.target = target;
 
     int ticks = std::max(1, (int)duration);
     int delta = (int(target) << 8) - int(volume.current);
-    int volume.step = delta / ticks;
+    volume.step = delta / ticks;
 
     if ((volume.step == 0) && (delta != 0)) {
       volume.step = sign(delta);
@@ -588,5 +592,8 @@ typedef struct voice_t {
   }
 } voice_t;
 #pragma pack(pop)
-// 128 bytes per voice max to keep the entire thing under 1kB for the 8 voices
-static_assert(sizeof(voice_t) <= 132, "Check sizeof(voice_t) in error message");
+
+// 128 bytes per voice max to keep the entire thing under 1kB for the 8 voices,
+// also struct needs to be aligned to 4 bytes to prevent unaligned access
+static_assert(sizeof(voice_t) <= 128, "Check sizeof(voice_t) in error message");
+static_assert((sizeof(voice_t) % 4) == 0, "voice_t size must be multiple of 4");
