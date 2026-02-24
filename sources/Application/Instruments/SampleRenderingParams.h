@@ -80,6 +80,7 @@ struct renderParams {
   uint8_t wavetableFrameCount_;
   uint16_t wavetableFrameSamples_;
   uint16_t wavetableScanAccum_;
+  uint16_t wavetablePendingSteps_;
   int loopModeValue_;
 };
 #endif

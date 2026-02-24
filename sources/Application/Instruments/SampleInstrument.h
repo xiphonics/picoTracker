@@ -139,6 +139,7 @@ private:
   etl::array<uint32_t, MaxSlices> slicePoints_;
 
   static bool useDirtyDownsampling_;
+  static bool useCycleBoundaryWavetableStepping_;
   bool isSliceIndexActive(size_t index) const;
   bool shouldUseSlice(unsigned char midinote, size_t &sliceIndex,
                       uint32_t sampleSize) const;

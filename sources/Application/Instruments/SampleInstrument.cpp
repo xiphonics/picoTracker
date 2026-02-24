@@ -33,6 +33,7 @@
 #include "SampleInstrumentDatas.h"
 
 bool SampleInstrument::useDirtyDownsampling_ = false;
+bool SampleInstrument::useCycleBoundaryWavetableStepping_ = true;
 
 renderParams SampleInstrument::renderParams_[SONG_CHANNEL_COUNT];
 
@@ -494,6 +495,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   rp->wavetableFrameCount_ = 0;
   rp->wavetableFrameSamples_ = 0;
   rp->wavetableScanAccum_ = 0;
+  rp->wavetablePendingSteps_ = 0;
 
   bool wavetableFrameActive = false;
   uint32_t wavetableFrameStart = 0;
@@ -907,6 +909,68 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     char *dsBasePtr = wavbuf + rp->rendFirst_ * bytesPerSample * channelCount;
 
+    auto applyWavetableFrameSteps = [&](uint16_t pendingSteps,
+                                        bool preservePhase) {
+      if (loopMode != SILM_WAVETABLE || rp->wavetableFrameCount_ <= 1 ||
+          rp->wavetableFrameSamples_ == 0) {
+        return;
+      }
+
+      const uint8_t frameCount = rp->wavetableFrameCount_;
+      const uint8_t steps = static_cast<uint8_t>(pendingSteps % frameCount);
+      if (steps == 0) {
+        return;
+      }
+
+      int oldLoopStart = rp->rendLoopStart_;
+      int oldLoopLen = rp->rendLoopEnd_ - rp->rendLoopStart_;
+      if (oldLoopLen == 0) {
+        oldLoopLen = static_cast<int>(rp->wavetableFrameSamples_);
+      }
+      if (oldLoopLen < 0) {
+        oldLoopLen = -oldLoopLen;
+      }
+
+      float phase = 0.0f;
+      if (preservePhase) {
+        float currentPos =
+            (input - wavbuf) / float(bytesPerSample * channelCount) + fp2fl(fpPos);
+        phase = currentPos - float(oldLoopStart);
+        if (oldLoopLen > 0) {
+          while (phase < 0.0f) {
+            phase += float(oldLoopLen);
+          }
+          while (phase >= float(oldLoopLen)) {
+            phase -= float(oldLoopLen);
+          }
+        } else {
+          phase = 0.0f;
+        }
+      }
+
+      rp->wavetablePos_ =
+          static_cast<uint8_t>((rp->wavetablePos_ + steps) % frameCount);
+      const int frameLen = static_cast<int>(rp->wavetableFrameSamples_);
+      rp->rendLoopStart_ = frameLen * static_cast<int>(rp->wavetablePos_);
+      rp->rendLoopEnd_ = rp->rendLoopStart_ + frameLen;
+      rp->rendFirst_ = rp->rendLoopStart_;
+
+      if (preservePhase) {
+        rp->position_ = float(rp->rendLoopStart_) + phase;
+        int posIndex = int(rp->position_);
+        input = wavbuf + bytesPerSample * channelCount * posIndex;
+        fpPos = fl2fp(rp->position_ - posIndex);
+      }
+
+      loopPosition = wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
+      lastSample =
+          wavbuf + (rp->rendLoopEnd_ - 1) * bytesPerSample * channelCount;
+      if (rpReverse) {
+        lastSample = wavbuf + rp->rendLoopEnd_ * bytesPerSample * channelCount;
+      }
+      dsBasePtr = wavbuf + rp->rendFirst_ * bytesPerSample * channelCount;
+    };
+
     while (count > 0) {
 
       // look where we are, if we need to
@@ -921,6 +985,13 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
           case SILM_OSC:
           case SILM_WAVETABLE:
           case SILM_LOOPSYNC:
+            if (loopMode == SILM_WAVETABLE && rp->wavetableFrameCount_ > 1 &&
+                rp->wavetableFrameSamples_ > 0 &&
+                rp->wavetablePendingSteps_ != 0) {
+              const uint16_t pending = rp->wavetablePendingSteps_;
+              rp->wavetablePendingSteps_ = 0;
+              applyWavetableFrameSteps(pending, false);
+            }
             input = loopPosition;
             rpReverse = (loopPosition > lastSample);
             if (rpReverse) {
@@ -969,6 +1040,13 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
           case SILM_OSC:
           case SILM_WAVETABLE:
           case SILM_LOOPSYNC:
+            if (loopMode == SILM_WAVETABLE && rp->wavetableFrameCount_ > 1 &&
+                rp->wavetableFrameSamples_ > 0 &&
+                rp->wavetablePendingSteps_ != 0) {
+              const uint16_t pending = rp->wavetablePendingSteps_;
+              rp->wavetablePendingSteps_ = 0;
+              applyWavetableFrameSteps(pending, false);
+            }
             input = loopPosition;
             rpReverse = (loopPosition > lastSample);
             if (rpReverse) {
@@ -1058,15 +1136,6 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
             const uint16_t scanSpeed =
                 static_cast<uint16_t>(wavetableScanSpeed_.GetInt() & 0xFF);
             if (scanSpeed != 0) {
-              const int oldLoopStart = rp->rendLoopStart_;
-              int oldLoopLen = rp->rendLoopEnd_ - rp->rendLoopStart_;
-              if (oldLoopLen == 0) {
-                oldLoopLen = static_cast<int>(rp->wavetableFrameSamples_);
-              }
-              if (oldLoopLen < 0) {
-                oldLoopLen = -oldLoopLen;
-              }
-
               rp->wavetableScanAccum_ =
                   static_cast<uint16_t>(rp->wavetableScanAccum_ + scanSpeed);
               uint8_t frameSteps =
@@ -1074,42 +1143,12 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
               rp->wavetableScanAccum_ &= 0x00FF;
 
               if (frameSteps != 0) {
-                rp->wavetablePos_ = static_cast<uint8_t>(
-                    (rp->wavetablePos_ + frameSteps) % rp->wavetableFrameCount_);
-
-                const int frameLen = static_cast<int>(rp->wavetableFrameSamples_);
-                rp->rendLoopStart_ =
-                    frameLen * static_cast<int>(rp->wavetablePos_);
-                rp->rendLoopEnd_ = rp->rendLoopStart_ + frameLen;
-                rp->rendFirst_ = rp->rendLoopStart_;
-
-                float phase = rp->position_ - float(oldLoopStart);
-                if (oldLoopLen > 0) {
-                  while (phase < 0.0f) {
-                    phase += float(oldLoopLen);
-                  }
-                  while (phase >= float(oldLoopLen)) {
-                    phase -= float(oldLoopLen);
-                  }
+                if (useCycleBoundaryWavetableStepping_) {
+                  rp->wavetablePendingSteps_ = static_cast<uint16_t>(
+                      rp->wavetablePendingSteps_ + frameSteps);
                 } else {
-                  phase = 0.0f;
+                  applyWavetableFrameSteps(frameSteps, true);
                 }
-                rp->position_ = float(rp->rendLoopStart_) + phase;
-
-                int posIndex = int(rp->position_);
-                input = wavbuf + bytesPerSample * channelCount * posIndex;
-                fpPos = fl2fp(rp->position_ - posIndex);
-
-                loopPosition =
-                    wavbuf + rp->rendLoopStart_ * bytesPerSample * channelCount;
-                lastSample = wavbuf + (rp->rendLoopEnd_ - 1) * bytesPerSample *
-                                          channelCount;
-                if (rpReverse) {
-                  lastSample = wavbuf +
-                               rp->rendLoopEnd_ * bytesPerSample * channelCount;
-                }
-                dsBasePtr =
-                    wavbuf + rp->rendFirst_ * bytesPerSample * channelCount;
               }
             }
           }
@@ -1137,6 +1176,16 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         }
 
         char *i2 = i1 + bytesPerSample * channelCount;
+        if (loopMode == SILM_WAVETABLE && !rpReverse) {
+          // In wavetable mode each frame is a single-cycle loop. Interpolation at
+          // the loop edge must wrap within the frame, otherwise we interpolate
+          // against data outside the current cycle and introduce periodic clicks.
+          char *loopEndExclusive =
+              wavbuf + rp->rendLoopEnd_ * bytesPerSample * channelCount;
+          if (i2 >= loopEndExclusive) {
+            i2 = loopPosition;
+          }
+        }
 
         if (filtering) {
           fltSpeedPtr = fltSpeed;
@@ -1256,6 +1305,9 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
         count--;
       }
     }
+    // Persist k-rate countdown across render calls (otherwise it resets per block).
+    rp->krateCount_ = rpKrateCount;
+
     // Update 'reverse' mode if changed
 
     rp->reverse_ = rpReverse;

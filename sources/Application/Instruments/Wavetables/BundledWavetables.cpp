@@ -16,7 +16,8 @@
 
 namespace {
 
-static constexpr uint16_t kPpgFrameCount = 64;
+// Match the original PPG wavetable slot count used by wave-stuff (extra 3 waves are omitted).
+static constexpr uint16_t kPpgFrameCount = 61;
 static constexpr uint16_t kPpgSamplesPerFrame = 128;
 
 class BundledWavetableSource : public SoundSource {
