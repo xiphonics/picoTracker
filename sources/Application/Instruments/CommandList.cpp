@@ -9,7 +9,8 @@
 
 #include "CommandList.h"
 
-// Keep command entries grouped by displayed mnemonic first letter; GetNextAlpha/GetPrevAlpha depend on this ordering.
+// Keep command entries grouped by displayed mnemonic first letter;
+// GetNextAlpha/GetPrevAlpha depend on this ordering.
 static FourCC _all[] = {
     FourCC::InstrumentCommandNone,
     FourCC::InstrumentCommandArpeggiator,
