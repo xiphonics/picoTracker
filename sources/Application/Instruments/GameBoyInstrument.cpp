@@ -88,10 +88,6 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     voices_[channel].stop();
     break;
 
-  case FourCC::InstrumentCommandVolume:
-    voices_[channel].parameters.level = value;
-    break;
-
   case FourCC::InstrumentCommandCrush:
     voices_[channel].bitcrush = value && 0x0f;
     voices_[channel].drive = value >> 8;
@@ -111,6 +107,10 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
 
   case FourCC::InstrumentCommandLegato:
     voices_[channel].command_init_legato(value >> 8, (int8_t)(value & 0xFF));
+    break;
+
+  case FourCC::InstrumentCommandVolume:
+    voices_[channel].command_init_volume(value >> 8, value & 0xFF);
     break;
 
   case FourCC::InstrumentCommandPitchFineTune:

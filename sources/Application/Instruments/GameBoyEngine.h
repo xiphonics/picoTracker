@@ -85,6 +85,27 @@ typedef struct voice_t {
     }
   } arp;
 
+  struct volume {
+    uint8_t level;    // current volume level (0-255) from instrument
+    uint8_t target;   // target volume level for slide commands
+    uint16_t current; // current volume level (0-65535 Q8.8)
+    int16_t step;     // per-tick volume change for slides
+
+    inline bool tick() {
+      if (level == target) {
+        return false; // no slide in progress
+      }
+      if (step < 0) {
+        current = std::max(current + step, target << 8);
+      } else {
+        current = std::min(current + step, target << 8);
+      }
+
+      level = current >> 8;
+      return true;
+    }
+  } volume;
+
   struct vibrato {
     int32_t swing;  // frequency diff between current note and next semitone
     uint16_t phase; // sine lfo phase
@@ -170,7 +191,7 @@ typedef struct voice_t {
 
   inline void sample(fixed *left, fixed *right) {
     // precompute the gain, it doesn't need to be updated every sample
-    uint32_t combinedGain = (parameters.level * envelope.value) >> 16;
+    uint32_t combinedGain = (volume.level * envelope.value) >> 16;
 
     uint8_t leftGain = std::min((0xff - pan.position) * 2, 0xff);
     uint8_t rightGain = std::min(0xff, 2 * pan.position);
@@ -182,8 +203,12 @@ typedef struct voice_t {
       tick = 441;
       envelope.tick();
 
+      if (flags.volume) {
+        flags.volume = volume.tick();
+      }
+
       // recompute combined gain when envelope changes
-      combinedGain = (parameters.level * envelope.value) >> 16;
+      combinedGain = (volume.level * envelope.value) >> 16;
 
       // sweep
       if (sweep.steps) {
@@ -343,6 +368,12 @@ typedef struct voice_t {
     pan.target = 128;
     pan.step = 0;
 
+    // reset volume slide
+    volume.level = parameters.level;
+    volume.target = parameters.level;
+    volume.current = parameters.level << 8;
+    volume.step = 0;
+
     // oscillator frequency setup
     int fIndex = std::clamp(note + 12 + parameters.transpose, 0, 127 + 24);
     frequency = frequencyLUT[fIndex];
@@ -470,6 +501,21 @@ typedef struct voice_t {
     flags.legato = 1; // set legato flag
   }
 
+  void command_init_volume(uint8_t duration, uint8_t target) {
+    // volume slide uses the same mechanism as sweep
+    volume.target = target;
+
+    int ticks = std::max(1, (int)duration);
+    int delta = (int(target) << 8) - int(volume.current);
+    int volume.step = delta / ticks;
+
+    if ((volume.step == 0) && (delta != 0)) {
+      volume.step = sign(delta);
+    }
+
+    flags.volume = 1; // set volume slide flag
+  }
+
   // fully fixed-point per-tick legato initialization
   void command_init_legato(uint8_t speed, int8_t semitones) {
     // not exponential in the GameBoy instrument, for performance reasons (atm)
@@ -543,4 +589,4 @@ typedef struct voice_t {
 } voice_t;
 #pragma pack(pop)
 // 128 bytes per voice max to keep the entire thing under 1kB for the 8 voices
-static_assert(sizeof(voice_t) <= 128, "Check sizeof(voice_t) in error message");
+static_assert(sizeof(voice_t) <= 132, "Check sizeof(voice_t) in error message");

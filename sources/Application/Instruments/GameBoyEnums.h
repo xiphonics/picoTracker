@@ -21,7 +21,8 @@ typedef union gbFlags {
     uint8_t arpeggio : 1;
     uint8_t legato : 1;
     uint8_t retrigger : 1;
-    uint8_t unused : 5;
+    uint8_t volume : 1;
+    uint8_t unused : 4;
   };
   uint8_t byte;
 } gbFlags;
