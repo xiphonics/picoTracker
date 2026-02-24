@@ -9,6 +9,7 @@
 
 #include "CommandList.h"
 
+// Keep command entries grouped by displayed mnemonic first letter; GetNextAlpha/GetPrevAlpha depend on this ordering.
 static FourCC _all[] = {
     FourCC::InstrumentCommandNone,
     FourCC::InstrumentCommandArpeggiator,
@@ -20,7 +21,6 @@ static FourCC _all[] = {
     FourCC::InstrumentCommandGateOff,
     FourCC::InstrumentCommandGroove,
     FourCC::InstrumentCommandHop,
-    FourCC::InstrumentCommandRetrigger,
     FourCC::InstrumentCommandInstrumentRetrigger,
     FourCC::InstrumentCommandKill,
     FourCC::InstrumentCommandLegato,
@@ -32,12 +32,18 @@ static FourCC _all[] = {
     FourCC::InstrumentCommandPitchFineTune,
     FourCC::InstrumentCommandPlayOfset,
     FourCC::InstrumentCommandPitchSlide,
+    FourCC::InstrumentCommandRetrigger,
     FourCC::InstrumentCommandStop,
     FourCC::InstrumentCommandTable,
     FourCC::InstrumentCommandTempo,
     FourCC::InstrumentCommandVelocity,
     FourCC::InstrumentCommandVolume,
 };
+
+static char GetCommandGroupLetter(FourCC command) {
+  const char *name = FourCC(command).c_str();
+  return (name && name[0]) ? name[0] : '\0';
+}
 
 // Applies command-specific range limits to parameter values
 ushort CommandList::RangeLimitCommandParam(FourCC command, ushort paramValue) {
@@ -78,10 +84,10 @@ FourCC CommandList::GetPrev(FourCC current) {
 };
 
 FourCC CommandList::GetNextAlpha(FourCC current) {
-  char letter = ((char *)&current)[0];
+  char letter = GetCommandGroupLetter(current);
   bool found = false;
   for (uint i = 0; i < sizeof(_all) / sizeof(FourCC); i++) {
-    char tLetter = ((char *)&_all[i])[0];
+    char tLetter = GetCommandGroupLetter(_all[i]);
     if (!found) {
       if (tLetter == letter) {
         found = true;
@@ -97,13 +103,13 @@ FourCC CommandList::GetNextAlpha(FourCC current) {
 
 FourCC CommandList::GetPrevAlpha(FourCC current) {
 
-  char letter = ((char *)&current)[0];
+  char letter = GetCommandGroupLetter(current);
   bool found = false;
   FourCC tReturn = FourCC::Default;
   uint count = sizeof(_all) / sizeof(FourCC);
 
   for (uint i = count - 1; i > 0; i--) {
-    char tLetter = ((char *)&_all[i])[0];
+    char tLetter = GetCommandGroupLetter(_all[i]);
     if (!found) {
       if (tLetter == letter) {
         found = true;
@@ -113,7 +119,7 @@ FourCC CommandList::GetPrevAlpha(FourCC current) {
         if (tReturn == 0xFF) {
           tReturn = _all[i];
         } else {
-          if (tLetter != ((char *)&tReturn)[0]) {
+          if (tLetter != GetCommandGroupLetter(tReturn)) {
             return tReturn;
           } else {
             tReturn = _all[i];
