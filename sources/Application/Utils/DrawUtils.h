@@ -7,10 +7,12 @@
  */
 
 #include "Foundation/Constants/SpecialCharacters.h"
+#include <cstdint>
 
 typedef char progressBar_t[13];
 
-static void fillProgressBar(int progress, int max, progressBar_t *progressBar) {
+static void fillProgressBar(uint32_t progress, uint32_t max,
+                            progressBar_t *progressBar) {
   const char states[6] = {char_propgress_bar_0, char_propgress_bar_1,
                           char_propgress_bar_2, char_propgress_bar_3,
                           char_propgress_bar_4, char_block_full};
@@ -19,10 +21,10 @@ static void fillProgressBar(int progress, int max, progressBar_t *progressBar) {
   (*progressBar)[11] = char_button_border_right;
   (*progressBar)[12] = 0;
 
-  int prog60 = (max <= 0) ? 60 : (progress * 60) / max;
+  int32_t prog60 = (max == 0U) ? 60 : static_cast<int32_t>((progress * 60U) / max);
 
-  for (int j = 1; j < 11; j++) {
-    int val = std::clamp(prog60, 0, 5);
+  for (int32_t j = 1; j < 11; j++) {
+    int32_t val = std::clamp(prog60, int32_t{0}, int32_t{5});
     (*progressBar)[j] = states[val];
     prog60 -= 6;
   }

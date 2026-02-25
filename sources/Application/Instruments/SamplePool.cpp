@@ -39,12 +39,14 @@ SamplePool::~SamplePool() {
   };
 };
 
-void SamplePool::updateStatus(int index, int total, const char *message) {
+void SamplePool::updateStatus(uint32_t index, uint32_t total,
+                              const char *message) {
   progressBar_t progressBar;
-  int percentage = (total > 0) ? (index * 100) / total : 100;
+  uint32_t percentage = (total > 0) ? (index * 100U) / total : 100U;
   fillProgressBar(index, total, &progressBar);
   Status::SetMultiLine("%s %.19s" char_indicator_ellipsis_s " \n \n %s %3d%%",
-                       message, importName, progressBar, percentage);
+                       message, importName, progressBar,
+                       static_cast<int>(percentage));
 };
 
 void SamplePool::Load(const char *projectName) {
@@ -286,9 +288,9 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     }
 
 #ifdef ADV
-    int total = totalSize;
+    uint32_t total = totalSize;
 #else
-    int total = totalSize * 2;
+    uint32_t total = totalSize * 2U;
 #endif
 
     importCount = total;
