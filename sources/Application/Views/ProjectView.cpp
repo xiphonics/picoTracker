@@ -158,7 +158,8 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
 #ifdef ADV
   position._y += 1;
-  actionField_.emplace_back("Recording", FourCC::ActionShowRecordView, position);
+  actionField_.emplace_back("Recording", FourCC::ActionShowRecordView,
+                            position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 #endif
