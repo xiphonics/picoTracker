@@ -212,6 +212,9 @@ struct FourCC {
     // 182 is taken for VarRecordLineGain
     // 183 is taken for VarRecordMicGain
     // 184 is taken for ActionShowSampleSlices
+    // 185 is taken for VarImportResampler
+    // 186 is taken for ActionAutoSlice
+    // 187 is taken for ActionShowRecordView
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -258,6 +261,7 @@ struct FourCC {
     VarOutputVolume = 184,
     VarImportResampler = 185,
     ActionAutoSlice = 186,
+    ActionShowRecordView = 187,
 
     Default = 255, // "    "
   };
