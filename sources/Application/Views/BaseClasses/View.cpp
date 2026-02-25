@@ -44,8 +44,9 @@ bool View::batteryDisplayInitialized_ = false;
 
 View::View(GUIWindow &w, ViewData *viewData)
     : w_(w), viewData_(viewData), needsRedraw_(false), isVisible_(true),
-      vuMeterCount_(0), viewMode_(VM_NORMAL), isDirty_(true), viewType_(VT_SONG),
-      hasFocus_(false), powerButtonPressed_(false), powerButtonHoldCount_(0) {
+      vuMeterCount_(0), viewMode_(VM_NORMAL), isDirty_(true),
+      viewType_(VT_SONG), hasFocus_(false), powerButtonPressed_(false),
+      powerButtonHoldCount_(0) {
   if (!initPrivate_) {
     View::margin_ = 0;
     songRowCount_ = 16;
