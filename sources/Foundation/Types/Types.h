@@ -14,6 +14,30 @@
 #include <stdint.h>
 
 struct FourCC {
+
+  // commands that are implemented in the instruments
+  bool IsInstrumentCommand() {
+    return ((this->value == FourCC::InstrumentCommandArpeggiator) ||
+            (this->value == FourCC::InstrumentCommandCrush) ||
+            (this->value == FourCC::InstrumentCommandFilterCut) ||
+            (this->value == FourCC::InstrumentCommandFilterResonance) ||
+            (this->value == FourCC::InstrumentCommandLowPassFilter) ||
+            (this->value == FourCC::InstrumentCommandGateOff) ||
+            (this->value == FourCC::InstrumentCommandRetrigger) ||
+            (this->value == FourCC::InstrumentCommandInstrumentRetrigger) ||
+            (this->value == FourCC::InstrumentCommandLegato) ||
+            (this->value == FourCC::InstrumentCommandLoopOffset) ||
+            (this->value == FourCC::InstrumentCommandMidiCC) ||
+            (this->value == FourCC::InstrumentCommandMidiPC) ||
+            (this->value == FourCC::InstrumentCommandMidiChord) ||
+            (this->value == FourCC::InstrumentCommandPan) ||
+            (this->value == FourCC::InstrumentCommandPitchFineTune) ||
+            (this->value == FourCC::InstrumentCommandPlayOffset) ||
+            (this->value == FourCC::InstrumentCommandPitchSlide) ||
+            (this->value == FourCC::InstrumentCommandVelocity) ||
+            (this->value == FourCC::InstrumentCommandVolume));
+  }
+
   // While the names of the FourCC codes can be changed, their values CANNOT.
   // Values are used as is in save files, so any changes would cause save files
   // to break.
@@ -31,12 +55,12 @@ struct FourCC {
     InstrumentCommandInstrumentRetrigger = 29, // IRTG
     InstrumentCommandKill = 30,                // KILL
     InstrumentCommandLegato = 31,              // LEGA
-    InstrumentCommandLoopOfset = 36,           // LPOF
+    InstrumentCommandLoopOffset = 36,          // LPOF
     InstrumentCommandMidiCC = 38,              // MDCC
     InstrumentCommandMidiPC = 39,              // MDPG
     InstrumentCommandPan = 42,                 // PAN
     InstrumentCommandPitchFineTune = 44,       // PFIN
-    InstrumentCommandPlayOfset = 46,           // PLOF
+    InstrumentCommandPlayOffset = 46,          // PLOF
     InstrumentCommandPitchSlide = 48,          // PTCH
     InstrumentCommandStop = 55,                // STOP
     InstrumentCommandTable = 58,               // TABL
@@ -268,7 +292,7 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandArpeggiator, "ARP")
   ETL_ENUM_TYPE(InstrumentCommandCrush, "CSH")
   ETL_ENUM_TYPE(InstrumentCommandKill, "KIL")
-  ETL_ENUM_TYPE(InstrumentCommandLoopOfset, "LOF")
+  ETL_ENUM_TYPE(InstrumentCommandLoopOffset, "LOF")
   ETL_ENUM_TYPE(InstrumentCommandVelocity, "VEL")
   ETL_ENUM_TYPE(InstrumentCommandVolume, "VOL")
   ETL_ENUM_TYPE(InstrumentCommandPitchSlide, "PSL")
@@ -278,7 +302,7 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandTempo, "TPO")
   ETL_ENUM_TYPE(InstrumentCommandMidiCC, "MCC")
   ETL_ENUM_TYPE(InstrumentCommandMidiPC, "MPC")
-  ETL_ENUM_TYPE(InstrumentCommandPlayOfset, "POF")
+  ETL_ENUM_TYPE(InstrumentCommandPlayOffset, "POF")
   ETL_ENUM_TYPE(InstrumentCommandLowPassFilter, "FLT")
   ETL_ENUM_TYPE(InstrumentCommandTable, "TBL")
   ETL_ENUM_TYPE(InstrumentCommandFilterCut, "FCT")
