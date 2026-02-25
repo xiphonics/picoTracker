@@ -15,6 +15,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "WavFile.h"
+#include <cstdint>
 
 #define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT * 4
 
@@ -44,6 +45,8 @@ public:
   int8_t ReloadSample(uint8_t index, const char *name);
 
 protected:
+  virtual void updateStatus(uint32_t current, uint32_t total,
+                            const char *message);
   virtual bool loadSample(const char *name) = 0;
   bool loadSoundFont(const char *path);
   uint32_t count_;
@@ -51,6 +54,10 @@ protected:
   char *names_[MAX_SAMPLES];
   WavFile wav_[MAX_SAMPLES];
   void swapEntries(int src, int dst);
+
+  uint32_t importCount;
+  uint32_t importIndex;
+  const char *importName;
 
 private:
   etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;
