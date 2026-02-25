@@ -326,6 +326,8 @@ static const char *const char_bargraph_lookup[] = {
   (char_bargraph_lookup[(x) < 0 ? 0 : ((x) > 10 ? 10 : (x))])
 
 // progress bar parts
+#define char_propgress_bar_0_s "\354"
+#define char_propgress_bar_0 char_propgress_bar_0_s[0]
 #define char_propgress_bar_1_s "\350"
 #define char_propgress_bar_1 char_propgress_bar_1_s[0]
 #define char_propgress_bar_2_s "\351"

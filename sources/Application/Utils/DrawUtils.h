@@ -11,7 +11,7 @@
 typedef char progressBar_t[13];
 
 static void fillProgressBar(int progress, int max, progressBar_t *progressBar) {
-  const char states[6] = {char_battery_empty,   char_propgress_bar_1,
+  const char states[6] = {char_propgress_bar_0, char_propgress_bar_1,
                           char_propgress_bar_2, char_propgress_bar_3,
                           char_propgress_bar_4, char_block_full};
 
