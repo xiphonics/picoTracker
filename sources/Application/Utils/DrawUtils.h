@@ -21,7 +21,8 @@ static void fillProgressBar(uint32_t progress, uint32_t max,
   (*progressBar)[11] = char_button_border_right;
   (*progressBar)[12] = 0;
 
-  int32_t prog60 = (max == 0U) ? 60 : static_cast<int32_t>((progress * 60U) / max);
+  int32_t prog60 =
+      (max == 0U) ? 60 : static_cast<int32_t>((progress * 60U) / max);
 
   for (int32_t j = 1; j < 11; j++) {
     int32_t val = std::clamp(prog60, int32_t{0}, int32_t{5});
