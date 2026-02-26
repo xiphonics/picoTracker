@@ -43,7 +43,10 @@ uint32_t View::lastBatteryDisplayFrame_ = 0;
 bool View::batteryDisplayInitialized_ = false;
 
 View::View(GUIWindow &w, ViewData *viewData)
-    : w_(w), viewData_(viewData), viewMode_(VM_NORMAL) {
+    : w_(w), viewData_(viewData), needsRedraw_(false), isVisible_(true),
+      vuMeterCount_(0), viewMode_(VM_NORMAL), isDirty_(true),
+      viewType_(VT_SONG), hasFocus_(false), powerButtonPressed_(false),
+      powerButtonHoldCount_(0) {
   if (!initPrivate_) {
     View::margin_ = 0;
     songRowCount_ = 16;
@@ -53,8 +56,6 @@ View::View(GUIWindow &w, ViewData *viewData)
   locked_ = false;
   modalView_ = 0;
   modalViewCallback_ = ModalViewCallback();
-  hasFocus_ = false;
-
   // Initialize VU meter tracking variables
   for (int i = 0; i < SONG_CHANNEL_COUNT + 1; i++) {
     prevLeftVU_[i] = 0;
@@ -354,8 +355,6 @@ void View::Redraw() {
 void View::SetDirty(bool isDirty) { isDirty_ = isDirty; };
 
 void View::ProcessButton(unsigned short mask, bool pressed) {
-  isDirty_ = false;
-
   if (!pressed) {
     powerButtonPressed_ = false;
   } else if (mask & EPBM_POWER) {
