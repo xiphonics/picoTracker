@@ -22,7 +22,7 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 
 ## DLY --bb (DLAY in lgpt)
 
-**Delays the note to be played by bb tics**
+**Delays the note by `b + 1` ticks (only the low nibble is used).**
 
 ## FCT aabb (FCUT in lgpt)
 
@@ -52,7 +52,7 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 **set Groove to bb**
 
 - In Phrases, if `aa > 0` then Groove will be set for _all_ tracks
-- In Tables, the Groove command has a maximum value of `1F` (15)
+- In Tables, the Groove command has a maximum value of `1F` (31)
 
 
 ## HOP aabb
@@ -61,20 +61,20 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 
 - hop is instant: instrument triggers and commands on the same row will be run.
 - no effect on instruments
-- in TABLES, cursor position will jump to row bb aa times, then pass thru the hop command and continue thru the rest of the table
+- in TABLES, cursor position will jump to row `0-F` (low nibble of `bb`) `aa` times, then pass thru the hop command and continue thru the rest of the table
 
-## IRT aabb (IRTG in lgpt)
+## IRT --bb (IRTG in lgpt)
 
 **Instrument Retrigger, will retrigger the current instrument. It gives a table the ability to work as progammable phrases that then can be triggered simply by changing tables.**
 
-- IRT –bb will retrigger the current instrument transposed by bb semi-tones. Note that each IRT transposition is cumulatively added. So a table with IRT 0001 will keep going a semi tone up. Great for dubby echoes :)
+- IRT `--bb` will retrigger the current instrument transposed by `bb` semi-tones. Note that each IRT transposition is cumulatively added. So a table with `IRT 0001` will keep going a semitone up. Great for dubby echoes :)
 - The retriggered instrument is NOT reset (as if you enter a note with no instrument number). The table (obviously) will continue to run and all running variable (filter,etc) won't be reset.
 - This system is also pretty useful to implement temporary non 4/4 signature without having to switch grooves, since you have the ability to re-trigger the instrument at tick resolution
 - don't forget trying to combine it with complex hop structure !
 
 ## KIL --bb (KILL in lgpt)
 
-**instrument will stop playing after aa ticks.**
+**instrument will stop playing after bb ticks.**
 
 ## LEG aabb (LEGA in lgpt)
 
@@ -130,7 +130,7 @@ When used with MIDI instruments, the LEG command also acts as an exponential MID
 
 ## MPC --bb (MDPG in lgpt)
 
-sends a program change command on the current channel. 0000 is program change 1
+sends a program change command on the current channel. `0000` is program `0`.
 
 ## PAN aabb
 
@@ -138,15 +138,15 @@ sends a program change command on the current channel. 0000 is program change 1
 
 ## PFT aabb (PFIN in lgpt)
 
-**PitchFineTune: where bb is the width and aa is the speed to get there**
+**PitchFineTune: aa is the speed, and bb is a fine tune target (about +/-1 semitone).**
 
-- Tunes the root note one semitone up (01-80) or down (FF-81)
+- `bb` sets a fractional pitch offset in roughly the range `-1 .. +1` semitone
 - 00 in bb returns the note to the root center
 - 00 is the fastest speed for aa
 
 ## POF aabb (PLOF in lgpt)
 
-**PlayOFfset virtually cuts any sample in 256 chunks. jump absolutely to chunk aa or relatively move forward/back bb chunks.**
+**PlayOFfset virtually cuts a sample into 256 chunks. It can jump absolutely to chunk `aa` and then also apply a relative signed `bb` chunk offset.**
 
 ## PSL aabb (PTCH in lgpt)
 
@@ -167,10 +167,11 @@ The PSL command also acts as a linear MIDI pitch bend controller for MIDI instru
 
 ## RTG aabb (RTRG in lgpt)
 
-**retrigger the sound by looping the from current play position over a certain amount of ticks.**
+**Retrigger the sound by looping from the current play position over a number of ticks.**
 
-- aa allows to move the loop forward of aa ticks each time the loop has been done (loop offest per retrigger)
-- bb is the number of ticks used for the looping (speed of retrigger effect)
+- For sampler instruments: `aa` moves the loop forward by `aa` ticks each retrigger (loop offset per retrigger)
+- `bb` is the loop length in ticks
+- For MIDI instruments, only `bb` is used (`aa` is ignored)
 
 RTG 0001: loop one tick from current play position
 RTG 0102: loop of two ticks but move the loop one tick every loop
@@ -180,11 +181,11 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 
 **triggers table bb**
 
-## TPO --bb (TMPO in lgpt)
+## TPO aabb (TMPO in lgpt)
 
-**sets the tempo to hex value –bb.**
+**sets the tempo to hex value `aabb`.**
 
-- TPO 0000 is safe and doesn't effect the tempo at all.
+- `TPO 0000` is clamped to the minimum tempo (`003C`, 60 BPM).
 - TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value.
   Values outside the allowable range will be clamped to the nearest value within the range.
 
@@ -198,7 +199,7 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 
 ## VEL --bb
 
-Set the velocity of the note being played on the current step for a MIDI instrument. This valid for MIDI instruments *only* and this command is not supported for use in tables.
+Sets the MIDI note velocity value (`bb`) for MIDI instruments. This is valid for MIDI instruments *only* and can also be used in tables.
 
 ## VOL aabb (VOLM in lgpt)
 
@@ -206,4 +207,4 @@ Set the velocity of the note being played on the current step for a MIDI instrum
 
 - to achieve sounds that grow in volume, make an instrument with volume 0 and then apply the VOL command
 
-*NOTE:* For MIDI instruments the VOL command sets the velocity for that step. Only 1 VOL command in the first FX column is supported for MIDI. Only bb is used for velocity, aa has no effect for MIDI instruments.
+*NOTE:* For MIDI instruments the VOL command sends MIDI CC volume (controller 7). It does **not** set note velocity.
