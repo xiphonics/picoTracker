@@ -680,8 +680,6 @@ void SampleSlicesView::startPreview() {
     if (Variable *rootNoteVar =
             instrument_->FindVariable(FourCC::SampleInstrumentRootNote)) {
       note = static_cast<uint8_t>(rootNoteVar->GetInt());
-    } else {
-      note = NOTE_C3;
     }
   }
   Player::GetInstance()->PlayNote(static_cast<unsigned short>(instrumentIndex_),
