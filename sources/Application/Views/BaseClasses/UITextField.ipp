@@ -81,8 +81,42 @@ template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
 };
 
 template <uint8_t MaxLength>
+void UITextField<MaxLength>::ProcessClear() {
+  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_->GetString());
+
+  if (buffer.empty() || buffer.compare(defaultValue_) == 0) {
+    // handle empty state
+    buffer = "A";  
+    currentChar_ = 0;
+  } else {
+    // jump to lastUsedChar_character block depending on the current character
+    if (lastUsedChar_>= 'A' && lastUsedChar_<= 'Z') {
+      lastUsedChar_= 'a';
+    } else if (lastUsedChar_>= 'a' && lastUsedChar_<= 'z') {
+      lastUsedChar_= '0';
+    } else if (lastUsedChar_>= '0' && lastUsedChar_<= '9') {
+      lastUsedChar_= '-';
+    } else {
+      lastUsedChar_= 'A';
+    }
+  }
+
+  buffer[currentChar_] = lastUsedChar_;
+  src_->SetString(buffer.c_str(), true);
+  SetChanged();
+  NotifyObservers(
+      reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
+};
+
+template <uint8_t MaxLength>
 void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
-  auto buffer(src_->GetString());
+  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_->GetString());
+  auto applyAndNotify = [&]() {
+    src_->SetString(buffer.c_str(), true);
+    SetChanged();
+    NotifyObservers(
+        reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
+  };
 
   // If the variable's value is empty, we need to initialize it when the user
   // starts editing
@@ -90,44 +124,23 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
 
   switch (mask) {
   case EPBM_UP:
-    // If buffer is empty or matches default, initialize with 'A'
-    if (isEmptyBuffer || buffer.compare(defaultValue_) == 0) {
-      currentChar_ = 0;
-      buffer.clear();
-      buffer.append("A");
-      src_->SetString(buffer.c_str(), true);
-    } else {
-      buffer[currentChar_] = getNext(buffer.c_str()[currentChar_], false);
-      src_->SetString(buffer.c_str(), true);
-    }
-    SetChanged();
-    NotifyObservers(
-        reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
-    break;
   case EPBM_DOWN:
     // If buffer is empty or matches default, initialize with 'A'
     if (isEmptyBuffer || buffer.compare(defaultValue_) == 0) {
       currentChar_ = 0;
-      buffer.clear();
-      buffer.append("A");
-      src_->SetString(buffer.c_str(), true);
+      buffer = "A";
     } else {
-      buffer[currentChar_] = getNext((char)buffer.c_str()[currentChar_], true);
-      src_->SetString(buffer.c_str(), true);
+      buffer[currentChar_] = 
+        getNext(buffer.c_str()[currentChar_], mask == EPBM_DOWN);
     }
-    SetChanged();
-    NotifyObservers(
-        reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
+    applyAndNotify();
     break;
   case EPBM_LEFT:
     // If we're showing the default value and user presses left, initialize with
     // the default
     if (isEmptyBuffer) {
       buffer = defaultValue_;
-      src_->SetString(buffer.c_str(), true);
-      SetChanged();
-      NotifyObservers(reinterpret_cast<I_ObservableData *>(
-          static_cast<uintptr_t>(fourcc_)));
+      applyAndNotify();
     }
     if (currentChar_ > 0) {
       currentChar_--;
@@ -138,24 +151,23 @@ void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
     // with the default
     if (isEmptyBuffer) {
       buffer = defaultValue_;
-      src_->SetString(buffer.c_str(), true);
-      SetChanged();
-      NotifyObservers(reinterpret_cast<I_ObservableData *>(
-          static_cast<uintptr_t>(fourcc_)));
+      applyAndNotify();
     }
     if (currentChar_ < (buffer.length() - 1)) {
       currentChar_++;
       // -1 to allow for adding 1 more char
     } else if (currentChar_ < (MaxLength - 1)) {
       currentChar_++;
-      buffer.append("A");
-      src_->SetString(buffer.c_str(), true);
-      SetChanged();
-      NotifyObservers(reinterpret_cast<I_ObservableData *>(
-          static_cast<uintptr_t>(fourcc_)));
+      char str[2] = {lastUsedChar_, 0};
+      buffer.append(str);
+      applyAndNotify();
     }
     break;
   };
+
+  // remember last used char for appending when user moves right at the end
+  // of the string
+  lastUsedChar_= buffer.c_str()[currentChar_];
 };
 
 template <uint8_t MaxLength>
