@@ -82,7 +82,7 @@ public:
   bool IsRunning();
   bool GetStopAtEnd() { return stopAtEnd_; }
 
-  void ProcessCommands();
+  void ProcessCommands(bool delayExpired[SONG_CHANNEL_COUNT] = nullptr);
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
 
   void StartStreaming(const char *name, int startSample = 0);
