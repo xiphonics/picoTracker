@@ -674,14 +674,15 @@ void SampleSlicesView::startPreview() {
   uint8_t note = static_cast<uint8_t>(SampleInstrument::SliceNoteBase +
                                       sliceIndexVar_.GetInt());
   if (instrument_ && !instrument_->HasSlicesForPlayback()) {
-    // Freshly imported samples have no stored slice points yet. Triggering a
+    // For samples  that have no stored slice points yet, triggering a
     // slice note in that state is interpreted as a pitched note, which makes
-    // preview play at the wrong speed.
-    if (Variable *rootNoteVar =
-            instrument_->FindVariable(FourCC::SampleInstrumentRootNote)) {
-      note = static_cast<uint8_t>(rootNoteVar->GetInt());
-    }
+    // preview play at the wrong speed because for slices we set the "root note"
+    // to C2 for the first slice when we enter the slicer
+    Variable *rootNoteVar =
+        instrument_->FindVariable(FourCC::SampleInstrumentRootNote);
+    note = static_cast<uint8_t>(rootNoteVar->GetInt());
   }
+
   Player::GetInstance()->PlayNote(static_cast<unsigned short>(instrumentIndex_),
                                   PreviewChannel, note, 0x7F);
   previewNote_ = note;
