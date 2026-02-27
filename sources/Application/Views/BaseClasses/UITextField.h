@@ -26,6 +26,7 @@ public:
   virtual ~UITextField();
   void Draw(GUIWindow &w, int offset = 0);
   void ProcessArrow(unsigned short mask);
+  void ProcessClear();
   void OnClick();
   void OnEditClick();
   etl::string<MaxLength> GetString();
@@ -36,6 +37,7 @@ public:
 private:
   int selected_;
   uint8_t currentChar_ = 0;
+  uint8_t lastUsedChar_ = 'A';
   Variable *src_; // Pointer instead of reference
   const etl::string<MAX_UITEXTFIELD_LABEL_LENGTH> label_;
   uint8_t fourcc_;
