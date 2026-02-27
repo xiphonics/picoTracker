@@ -15,6 +15,7 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/char.h"
+#include "ChiptuneInstrument.h"
 #include "Filters.h"
 #include "MidiInstrument.h"
 #include "OpalInstrument.h"

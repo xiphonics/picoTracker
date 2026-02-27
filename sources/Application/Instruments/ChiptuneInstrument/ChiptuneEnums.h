@@ -1,4 +1,12 @@
-#pragma once
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2026 nILS Podewski
+ *
+ * This file is part of the picoTracker firmware
+ */
+
+ #pragma once
 
 enum gbConstants { gbNumWaveforms = 8 };
 
@@ -7,7 +15,7 @@ enum gbWaveType {
   gbWavePulse25,
   gbWavePulse50,
   gbWaveTriangle,
-  gbWaveNoiseGameBoy,
+  gbWaveNoiseChiptune,
   gbWaveNoiseNES,
   gbWaveNoiseSN76489,
   gbWaveNoiseWhite,

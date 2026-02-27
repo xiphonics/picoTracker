@@ -1,4 +1,5 @@
 add_library(application_instruments
+  ChiptuneInstrument/ChiptuneInstrument.cpp
   CommandList.cpp
   Filters.cpp
   I_Instrument.cpp
@@ -6,7 +7,6 @@ add_library(application_instruments
   InstrumentNameVariable.cpp
   MidiInstrument.cpp
   OpalInstrument.cpp
-  GameBoyInstrument.cpp
   NoneInstrument.cpp
   SRPUpdaters.cpp
   SampleInstrument.cpp
@@ -19,6 +19,8 @@ add_library(application_instruments
   WavHeader.cpp
 )
 
+add_subdirectory(ChiptuneInstrument)
+
 target_link_libraries(application_instruments PUBLIC
   foundation_services
   system_io
@@ -30,6 +32,8 @@ target_link_libraries(application_instruments PUBLIC
   profiler
 )
 
-target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(application_instruments PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 include_directories(${PROJECT_SOURCE_DIR})

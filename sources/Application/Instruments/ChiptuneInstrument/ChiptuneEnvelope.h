@@ -1,8 +1,16 @@
-#pragma once
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2026 nILS Podewski
+ *
+ * This file is part of the picoTracker firmware
+ */
 
-#include "GameBoyEnums.h"
-#include "GameBoyMath.h"
-#include "GameBoyTables.h"
+ #pragma once
+
+#include "ChiptuneEnums.h"
+#include "ChiptuneMath.h"
+#include "ChiptuneTables.h"
 
 #pragma pack(push, 1)
 typedef struct envelope_t {

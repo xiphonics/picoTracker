@@ -1,26 +1,34 @@
+
 /*
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Copyright (c) 2024 xiphonics, inc.
- * Copyright (c) 2925 nILS Podewski
+ * Copyright (c) 2026 nILS Podewski
  *
  * This file is part of the picoTracker firmware
+ */
+
+ /* TODOS:
+      - use SampleRate::sampleRate
+      - reduce RAM footprint
+  */
+ 
  */
 
 #pragma once
 
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
-#include "GameBoyEngine.h"
+#include "ChiptuneEngine.h"
 #include "I_Instrument.h"
 #include "System/Console/Trace.h"
 #include <cstdint>
 
-class GameBoyInstrument : public I_Instrument {
+class ChiptuneInstrument : public I_Instrument {
 
 public:
-  GameBoyInstrument();
-  virtual ~GameBoyInstrument(){};
+  ChiptuneInstrument();
+  virtual ~ChiptuneInstrument(){};
 
   virtual bool Init() { return true; }
   virtual bool IsInitialized() { return true; };
@@ -28,7 +36,7 @@ public:
 
   virtual bool SupportsCommand(FourCC cc);
 
-  virtual InstrumentType GetType() { return IT_GAMEBOY; };
+  virtual InstrumentType GetType() { return IT_CHIPTUNE; };
 
   // Start & stop the instument
   virtual bool Start(int channel, unsigned char note, bool retrigger = true);

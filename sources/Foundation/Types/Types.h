@@ -264,19 +264,19 @@ struct FourCC {
     ActionAutoSlice = 186,
     ActionShowRecordView = 187,
 
-    GameBoyInstrumentWaveform = 200,
-    GameBoyInstrumentAttack = 201,
-    GameBoyInstrumentDecay = 202,
-    GameBoyInstrumentLevel = 203,
-    GameBoyInstrumentLength = 204,
-    GameBoyInstrumentBurst = 205,
-    GameBoyInstrumentVibrato = 206,
-    GameBoyInstrumentVibratoDelay = 207,
-    GameBoyInstrumentTranspose = 208,
-    GameBoyInstrumentTable = 209,
-    GameBoyInstrumentSweepTime = 210,
-    GameBoyInstrumentSweepAmount = 211,
-    GameBoyInstrumentArpSpeed = 212,
+    ChiptuneInstrumentWaveform = 200,
+    ChiptuneInstrumentAttack = 201,
+    ChiptuneInstrumentDecay = 202,
+    ChiptuneInstrumentLevel = 203,
+    ChiptuneInstrumentLength = 204,
+    ChiptuneInstrumentBurst = 205,
+    ChiptuneInstrumentVibrato = 206,
+    ChiptuneInstrumentVibratoDelay = 207,
+    ChiptuneInstrumentTranspose = 208,
+    ChiptuneInstrumentTable = 209,
+    ChiptuneInstrumentSweepTime = 210,
+    ChiptuneInstrumentSweepAmount = 211,
+    ChiptuneInstrumentArpSpeed = 212,
 
     Default = 255, // "    "
   };
@@ -436,20 +436,20 @@ struct FourCC {
   ETL_ENUM_TYPE(VarOutputVolume, "outputvolume")
   ETL_ENUM_TYPE(VarImportResampler, "IMPORTRESAMP")
 
-  // GameBoy Instrument Variables
-  ETL_ENUM_TYPE(GameBoyInstrumentWaveform, "waveform")
-  ETL_ENUM_TYPE(GameBoyInstrumentAttack, "attack")
-  ETL_ENUM_TYPE(GameBoyInstrumentDecay, "decay")
-  ETL_ENUM_TYPE(GameBoyInstrumentLevel, "level")
-  ETL_ENUM_TYPE(GameBoyInstrumentLength, "length")
-  ETL_ENUM_TYPE(GameBoyInstrumentBurst, "burst")
-  ETL_ENUM_TYPE(GameBoyInstrumentVibrato, "vibrato")
-  ETL_ENUM_TYPE(GameBoyInstrumentVibratoDelay, "vibrato delay")
-  ETL_ENUM_TYPE(GameBoyInstrumentTranspose, "transpose")
-  ETL_ENUM_TYPE(GameBoyInstrumentTable, "table")
-  ETL_ENUM_TYPE(GameBoyInstrumentSweepTime, "sweep time")
-  ETL_ENUM_TYPE(GameBoyInstrumentSweepAmount, "sweep amount")
-  ETL_ENUM_TYPE(GameBoyInstrumentArpSpeed, "arp speed")
+  // Chiptune Instrument Variables
+  ETL_ENUM_TYPE(ChiptuneInstrumentWaveform, "waveform")
+  ETL_ENUM_TYPE(ChiptuneInstrumentAttack, "attack")
+  ETL_ENUM_TYPE(ChiptuneInstrumentDecay, "decay")
+  ETL_ENUM_TYPE(ChiptuneInstrumentLevel, "level")
+  ETL_ENUM_TYPE(ChiptuneInstrumentLength, "length")
+  ETL_ENUM_TYPE(ChiptuneInstrumentBurst, "burst")
+  ETL_ENUM_TYPE(ChiptuneInstrumentVibrato, "vibrato")
+  ETL_ENUM_TYPE(ChiptuneInstrumentVibratoDelay, "vibrato delay")
+  ETL_ENUM_TYPE(ChiptuneInstrumentTranspose, "transpose")
+  ETL_ENUM_TYPE(ChiptuneInstrumentTable, "table")
+  ETL_ENUM_TYPE(ChiptuneInstrumentSweepTime, "sweep time")
+  ETL_ENUM_TYPE(ChiptuneInstrumentSweepAmount, "sweep amount")
+  ETL_ENUM_TYPE(ChiptuneInstrumentArpSpeed, "arp speed")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

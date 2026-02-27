@@ -7,7 +7,7 @@
  * This file is part of the picoTracker firmware
  */
 
-#include "GameBoyInstrument.h"
+#include "ChiptuneInstrument.h"
 #include "I_Instrument.h"
 #include <string.h>
 
@@ -15,23 +15,23 @@ static const char *waveShapes[gbNumWaveforms] = {
     "Pulse 12.5%", "Pulse 25%", "Pulse 50%",     "Triangle",
     "Noise GB7",   "Noise NES", "Noise SN76489", "Noise White"};
 
-voice_t GameBoyInstrument::voices_[SONG_CHANNEL_COUNT];
+voice_t ChiptuneInstrument::voices_[SONG_CHANNEL_COUNT];
 
-GameBoyInstrument::GameBoyInstrument()
-    : I_Instrument(&variables_), vWaveform_(FourCC::GameBoyInstrumentWaveform,
+ChiptuneInstrument::ChiptuneInstrument()
+    : I_Instrument(&variables_), vWaveform_(FourCC::ChiptuneInstrumentWaveform,
                                             waveShapes, gbNumWaveforms, 0),
-      vAttack_(FourCC::GameBoyInstrumentAttack, 0x00),
-      vDecay_(FourCC::GameBoyInstrumentDecay, 0x80),
-      vLevel_(FourCC::GameBoyInstrumentLevel, 0x80),
-      vLength_(FourCC::GameBoyInstrumentLength, 0),
-      vBurst_(FourCC::GameBoyInstrumentBurst, -1),
-      vVibratoDepth_(FourCC::GameBoyInstrumentVibrato, 0x07),
-      vVibratoDelay_(FourCC::GameBoyInstrumentVibratoDelay, 0x40),
-      vTranspose_(FourCC::GameBoyInstrumentTranspose, 0x00),
-      vTable_(FourCC::GameBoyInstrumentTable, -1),
-      vArpSpeed_(FourCC::GameBoyInstrumentArpSpeed, 0x12),
-      vSweepTime_(FourCC::GameBoyInstrumentSweepTime, 0x00),
-      vSweepAmount_(FourCC::GameBoyInstrumentSweepAmount, 0x00) {
+      vAttack_(FourCC::ChiptuneInstrumentAttack, 0x00),
+      vDecay_(FourCC::ChiptuneInstrumentDecay, 0x80),
+      vLevel_(FourCC::ChiptuneInstrumentLevel, 0x80),
+      vLength_(FourCC::ChiptuneInstrumentLength, 0),
+      vBurst_(FourCC::ChiptuneInstrumentBurst, -1),
+      vVibratoDepth_(FourCC::ChiptuneInstrumentVibrato, 0x07),
+      vVibratoDelay_(FourCC::ChiptuneInstrumentVibratoDelay, 0x40),
+      vTranspose_(FourCC::ChiptuneInstrumentTranspose, 0x00),
+      vTable_(FourCC::ChiptuneInstrumentTable, -1),
+      vArpSpeed_(FourCC::ChiptuneInstrumentArpSpeed, 0x12),
+      vSweepTime_(FourCC::ChiptuneInstrumentSweepTime, 0x00),
+      vSweepAmount_(FourCC::ChiptuneInstrumentSweepAmount, 0x00) {
 
   // Initialize exported variables
   // name_ is now an etl::string in the base class, not a Variable
@@ -50,9 +50,9 @@ GameBoyInstrument::GameBoyInstrument()
   variables_.insert(variables_.end(), &vSweepAmount_);
 }
 
-void GameBoyInstrument::Stop(int channel) { voices_[channel].stop(); };
+void ChiptuneInstrument::Stop(int channel) { voices_[channel].stop(); };
 
-bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
+bool ChiptuneInstrument::Start(int channel, unsigned char note, bool retrigger) {
   // note on get frequency etc.
 
   // dump instrument parameters
@@ -62,9 +62,9 @@ bool GameBoyInstrument::Start(int channel, unsigned char note, bool retrigger) {
   return true;
 }
 
-bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
+bool ChiptuneInstrument::Render(int channel, fixed *buffer, int size,
                                bool updateTick) {
-  // PROFILE_SCOPE("GameBoyInstrument::Render");
+  // PROFILE_SCOPE("ChiptuneInstrument::Render");
   voice_t &v = voices_[channel];
 
   for (int s = 0; s < size; s++) {
@@ -77,7 +77,7 @@ bool GameBoyInstrument::Render(int channel, fixed *buffer, int size,
   return true;
 }
 
-void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
+void ChiptuneInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
   case FourCC::InstrumentCommandArpeggiator:
     voices_[channel].command_init_arp(value);
@@ -124,9 +124,9 @@ void GameBoyInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   }
 }
 
-bool GameBoyInstrument::SupportsCommand(FourCC cc) { return false; }
+bool ChiptuneInstrument::SupportsCommand(FourCC cc) { return false; }
 
-InstrumentParameters GameBoyInstrument::getInstrumentParameters() {
+InstrumentParameters ChiptuneInstrument::getInstrumentParameters() {
   InstrumentParameters params;
 
   params.wave = vWaveform_.GetInt();

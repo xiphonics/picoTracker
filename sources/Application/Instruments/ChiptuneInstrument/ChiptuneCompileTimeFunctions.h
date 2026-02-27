@@ -1,11 +1,24 @@
-#pragma once
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2026 nILS Podewski
+ *
+ * This file is part of the picoTracker firmware
+ */
 
-// Generator functions for compile-time lookup tables used in GameBoyEngine.h
+ #pragma once
+
+// Generator functions for compile-time lookup tables used in ChiptuneEngine.h
 // Not (to be) used at runtime.
 
+// Tables are precalculated rather than embedded to allow tweaking the 
+// parameters of the functions (e.g. envelope curve) on the fly and to avoid
+// having to recalculate the table if the sample rate changes
 #include <array>
 #include <cmath>
 #include <cstdint>
+
+#define SAMPLE_RATE 44100.0
 
 // power function
 consteval double pow_ct(double base, double exp) {
@@ -72,15 +85,17 @@ consteval auto makeRatioLUT(std::index_sequence<Is...>) {
 }
 
 // Calculate MIDI note frequency at compile time
-// Formula: freq = 440 * 2^((note-69)/12) * (44100/440) = 100 * 2^((note-69)/12)
-// * 44100/100 The values appear to be phase increments for 44100Hz sampling
-// rate phase_increment = frequency * 2^32 / sample_rate
+// Formula: 
+// freq = 440 * 2^((note-69)/12) * (SAMPLE_RATE/440) = 100 * 2^((note-69)/12)
+// * 44100/100 
+// The values appear to be phase increments for sampling rate phase_increment = 
+// frequency * 2^32 / sample_rate
 consteval int32_t calculateFrequency(int midiNote) {
   // MIDI note to frequency: f = 440 * 2^((note-69)/12)
-  // Phase increment = f * 2^32 / 44100
+  // Phase increment = f * 2^32 / SAMPLE_RATE
   double semitones = (midiNote - 69.0) / 12.0;
   double frequency = 440.0 * pow_ct(2.0, semitones);
-  double phaseIncrement = frequency * 4294967296.0 / 44100.0;
+  double phaseIncrement = frequency * 4294967296.0 / SAMPLE_RATE;
 
   // Clamp to int32 range to prevent overflow
   if (phaseIncrement > 2147483647.0)
@@ -96,10 +111,10 @@ template <size_t... Is> consteval auto makeFreqLUT(std::index_sequence<Is...>) {
       calculateFrequency(static_cast<int>(Is) - 12)...};
 }
 
-// Calculate attack/decay coefficient at compile time
+// Calculate attack/decay coefficients at compile time
 // These coefficients are used in exponential envelope interpolation
-// The formula appears to be exponential: coeff = 65535 * exp(-k * index)
-// Analyzing the data, attack goes from 65535 down to 326
+// The formula is: coeff = 65535 * exp(-k * index)
+// attack goes from 65535 down to 326
 // decay also follows a similar exponential curve
 consteval uint16_t calculateAttackCoeff(int index) {
   if (index >= 64)

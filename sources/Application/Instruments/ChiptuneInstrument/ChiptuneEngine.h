@@ -1,15 +1,20 @@
-#pragma once
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2026 nILS Podewski
+ *
+ * This file is part of the picoTracker firmware
+ */
 
-// TODO:
-// retrigger/instrument retrigger
+#pragma once
 
 #include "Application/Utils/fixed.h"
 #include <cstdint>
 
-#include "GameBoyEnums.h"
-#include "GameBoyEnvelope.h"
-#include "GameBoyMath.h"
-#include "GameBoyTables.h"
+#include "ChiptuneEnums.h"
+#include "ChiptuneEnvelope.h"
+#include "ChiptuneMath.h"
+#include "ChiptuneTables.h"
 
 /******************************************************************************
  * InstrumentParameters holds all relevant information from the instrument    *
@@ -43,12 +48,13 @@ static_assert(sizeof(InstrumentParameters) <= 12,
  ******************************************************************************/
 
 // max rates for slew limiting the waveform against aliasing noise. could be
-// improved to be frequency-dependent later.
+// improved to be frequency-dependent later on, but this is a good start and 
+// keeps the implementation simple.y
 constexpr int32_t maxStep = 0x3fff'ffff;
 constexpr int32_t minStep = -0x3fff'ffff;
 
 // (!) alignment has to be manually kept in this to allow using pack() to  (!)
-//     size below 128 bytes
+//     kee the size <=128 bytes per voice
 #pragma pack(push, 1)
 typedef struct voice_t {
   InstrumentParameters parameters;
@@ -317,7 +323,7 @@ typedef struct voice_t {
       }
       sample &= 0xFF00'0000; // downsample
       break;
-    case gbWaveNoiseGameBoy: // noise: GB7
+    case gbWaveNoiseChiptune: // noise: GB7
       noise(voice_noise_gb7);
       break;
     case gbWaveNoiseNES: // noise: NES
@@ -453,7 +459,7 @@ typedef struct voice_t {
     return voice_noise_lfsr(lfsr, 6, 14);
   }
 
-  // GameBoy noise shift register taps at bits 0 and 1, feedback to bit 6
+  // Chiptune noise shift register taps at bits 0 and 1, feedback to bit 6
   inline uint32_t voice_noise_gb7(uint16_t *lfsr) {
     return voice_noise_lfsr(lfsr, 1, 6);
   }
@@ -492,7 +498,7 @@ typedef struct voice_t {
     int32_t offset = semitoneRatioQ16[128 + sign(amount)];
     offset = (offset * amount) >> 7;
 
-    // not exponential in the GameBoy instrument, for performance reasons (atm)
+    // not exponential in the Chiptune instrument, for performance reasons (atm)
     int ticks = 1 + rate; // minimum 1 tick
 
     // get total ratio from table (Q16.16)
@@ -522,7 +528,7 @@ typedef struct voice_t {
 
   // fully fixed-point per-tick legato initialization
   void command_init_legato(uint8_t speed, int8_t semitones) {
-    // not exponential in the GameBoy instrument, for performance reasons (atm)
+    // not exponential in the Chiptune instrument, for performance reasons (atm)
     int ticks = 1 + speed; // minimum 1 tick
 
     if (semitones == 0) {
@@ -553,7 +559,7 @@ typedef struct voice_t {
 
   // fully fixed-point per-tick pitch shift initialization
   void command_init_pitch_shift(uint8_t speed, int8_t semitones) {
-    // not exponential in the GameBoy instrument, for performance reasons (atm)
+    // not exponential in the Chiptune instrument, for performance reasons (atm)
     int ticks = 1 + speed; // minimum 1 tick
 
     // get total ratio from table (Q16.16)

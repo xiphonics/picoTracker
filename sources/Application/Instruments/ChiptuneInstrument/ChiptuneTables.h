@@ -1,6 +1,14 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Copyright (c) 2026 nILS Podewski
+ *
+ * This file is part of the picoTracker firmware
+ */
+
 #pragma once
 
-#include "GameBoyCompileTimeFunctions.h"
+#include "ChiptuneCompileTimeFunctions.h"
 
 // precalculated semitone ratios for pitch slides (Q16.16 format)
 constexpr auto semitoneRatioQ16 = makeRatioLUT(std::make_index_sequence<256>{});
