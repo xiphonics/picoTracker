@@ -156,6 +156,14 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
+#ifdef ADV
+  position._y += 1;
+  actionField_.emplace_back("Recording", FourCC::ActionShowRecordView,
+                            position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+#endif
+
   position._y += 2;
 
   // save existing fields horizontal alignment
@@ -420,6 +428,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
           *this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
     }
+    break;
+  case FourCC::ActionShowRecordView:
+    switchToRecordView();
     break;
   case FourCC::ActionImport:
     // Switch to the ImportView **BUT** to show the Project Pool by default

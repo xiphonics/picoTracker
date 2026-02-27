@@ -57,6 +57,7 @@ public:
   virtual void Clear(bool all = false);
   virtual void ClearTextRect(GUIRect &rect);
   virtual void SetColor(ColorDefinition cd);
+  void InvalidateTextCache();
 
   void SetDirty();
   void UpdateColorsFromConfig();

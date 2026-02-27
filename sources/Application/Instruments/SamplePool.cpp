@@ -10,6 +10,7 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Utils/DrawUtils.h"
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
@@ -38,6 +39,16 @@ SamplePool::~SamplePool() {
   };
 };
 
+void SamplePool::updateStatus(uint32_t index, uint32_t total,
+                              const char *message) {
+  progressBar_t progressBar;
+  uint32_t percentage = (total > 0) ? (index * 100U) / total : 100U;
+  fillProgressBar(index, total, &progressBar);
+  Status::SetMultiLine("%s %.19s" char_indicator_ellipsis_s " \n \n %s %3d%%",
+                       message, importName, progressBar,
+                       static_cast<int>(percentage));
+};
+
 void SamplePool::Load(const char *projectName) {
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir(PROJECTS_DIR) || !fs->chdir(projectName) ||
@@ -50,7 +61,14 @@ void SamplePool::Load(const char *projectName) {
   fs->list(&fileIndexes, ".wav", false);
   char name[PFILENAME_SIZE];
   uint totalSamples = fileIndexes.size();
+
+  // store for ui updates
+  importCount = totalSamples;
+
   for (uint i = 0; i < totalSamples; i++) {
+    importIndex = i;
+    importName = name;
+
     fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
     if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
       // Check if the filename exceeds the maximum allowed length
@@ -64,20 +82,8 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      int prog10 = progress / 10;
 
-      char progressBar[13];
-      for (int j = 1; j < 11; j++) {
-        progressBar[j] = j >= prog10 ? char_battery_empty : char_block_full;
-      }
-      progressBar[0] = char_button_border_left;
-      progressBar[11] = char_button_border_right;
-      progressBar[12] = 0;
-
-      Status::SetMultiLine("Copying %s" char_indicator_ellipsis_s
-                           "\n \n%s %d%%",
-                           name, (const char *)progressBar, progress);
-
+      updateStatus(importIndex, importCount, "Loading");
       loadSample(name);
     }
     if (i == MAX_SAMPLES) {
@@ -133,7 +139,6 @@ static float importResampleOut_[kImportMaxOutputSamples];
 static int16_t importResampleOutInt16_[kImportMaxOutputSamples];
 
 int SamplePool::ImportSample(const char *name, const char *projectName) {
-
   if (count_ == MAX_SAMPLES) {
     return -1;
   }
@@ -188,6 +193,8 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   uint32_t totalRead = 0;
   uint32_t totalWrittenFrames = 0;
   uint32_t totalSize = wav.GetDiskSize(-1);
+
+  importName = name;
 
   wav.Rewind();
   SRC_STATE *resampler = nullptr;
@@ -280,12 +287,15 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
       }
     }
 
-    uint32_t progress = 100;
-    if (totalSize > 0) {
-      progress = (totalRead * 100) / totalSize;
-    }
-    Status::SetMultiLine("Loading:\n%s\n%d%%", projSampleFilename.c_str(),
-                         progress);
+#ifdef ADV
+    uint32_t total = totalSize;
+#else
+    uint32_t total = totalSize * 2U;
+#endif
+
+    importCount = total;
+    importIndex = totalRead;
+    updateStatus(totalRead, total, "Copying");
   }
 
   // Flush the resampler to write any delayed tail samples after input ends.
