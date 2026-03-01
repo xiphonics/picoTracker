@@ -77,5 +77,8 @@
         <a href="midi.html">
             <li>MIDI Implementation</li>
         </a>
+        <a href="appendix-remoteui.html">
+            <li>Remote Protocol</li>
+        </a>
     </ul>
 </aside>
