@@ -431,23 +431,47 @@ void View::drawBattery(GUITextProperties &props) {
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
 
+#if BATTERY_LEVEL_AS_PERCENTAGE
+  uint8_t batteryPercent = batteryState_.percentage;
+  if (batteryPercent > 100) {
+    batteryPercent = 100;
+  }
+
+  ColorDefinition batteryColor = CD_NORMAL;
+  if (batteryPercent <= 5) {
+    batteryColor = CD_ERROR;
+  } else if (batteryPercent < 20) {
+    batteryColor = CD_WARN;
+  } else if (batteryState_.charging) {
+    batteryColor = CD_INFO;
+  }
+
+  SetColor(batteryColor);
+
+  // Keep percentage branch compact: 3 digits + right battery cap.
+  char batteryText[4];
+  npf_snprintf(batteryText, sizeof(batteryText), "%3u", batteryPercent);
+
+  GUITextProperties normalProps = props;
+  normalProps.invert_ = false;
+
+  GUITextProperties invertedProps = normalProps;
+  invertedProps.invert_ = true;
+
+  constexpr int kBatteryWidgetWidth = 4; // 3 text chars + right-side symbol
+  int startX = SCREEN_WIDTH - kBatteryWidgetWidth;
+  ClearTextRect(startX, battpos._y, kBatteryWidgetWidth, 1);
+
+  DrawString(startX, battpos._y, batteryText, invertedProps);
+  const char *rightSymbol =
+      batteryState_.charging ? char_symbol_charging_s : char_battery_right_s;
+  DrawString(startX + 3, battpos._y, rightSymbol, normalProps);
+#else
   // use define to choose between drawing battery percentage or battery level as
   // bars
   SetColor(CD_NORMAL);
   const char *battText = nullptr;
 
-#if BATTERY_LEVEL_AS_PERCENTAGE
-  char battTextBuffer[8];
-  if (batteryState_.charging) {
-    SetColor(CD_ACCENT);
-    npf_snprintf(battTextBuffer, 8, string_battery_charging);
-  } else {
-    npf_snprintf(battTextBuffer, 8,
-                 char_battery_left_s "%d%%" char_battery_right_s,
-                 batteryState_.percentage);
-  }
-  battText = battTextBuffer;
-#else
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     battText = string_battery_charging;
@@ -468,7 +492,6 @@ void View::drawBattery(GUITextProperties &props) {
       battText = string_battery_0_percent;
     }
   }
-#endif
 
   int battLen = (battText != nullptr) ? static_cast<int>(strlen(battText)) : 0;
   constexpr int kBattWidth = 6; // "[100%]" is the widest we render
@@ -477,6 +500,7 @@ void View::drawBattery(GUITextProperties &props) {
   battpos._x =
       startX + (kBattWidth - battLen); // we want to right align the batt widget
   DrawString(battpos._x, battpos._y, battText, props);
+#endif
 }
 
 // Draw power button UI overlay
