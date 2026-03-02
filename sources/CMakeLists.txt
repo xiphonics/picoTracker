@@ -114,8 +114,20 @@ else()
   message("picoTracker Advance Build")
   add_definitions(-DADV)
   
-  # Enable basic control REPL over serial port. NOTE: uses extra ~112bytes of *stack*
-  add_definitions(-DSERIAL_REPL)
+  # Enable basic control REPL over serial port.
+  # Default ON for non-Release, OFF for Release unless explicitly overridden.
+  if (NOT DEFINED ADV_SERIAL_REPL)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+      set(ADV_SERIAL_REPL OFF)
+    else()
+      set(ADV_SERIAL_REPL ON)
+    endif()
+  endif()
+  if(ADV_SERIAL_REPL)
+    add_definitions(-DSERIAL_REPL)
+  else()
+    remove_definitions(-DSERIAL_REPL)
+  endif()
 
   # Advance displays battery level as percentage instead of bars
   add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
@@ -169,11 +181,11 @@ else()
   set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp -MMD -MP")
 
   set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
-  set(CMAKE_C_FLAGS_RELEASE "-Os -g0")
+  set(CMAKE_C_FLAGS_RELEASE "-Os -g0 -DNDEBUG")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-  set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0")
+  set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0 -DNDEBUG")
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TARGET_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit")
   
   if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
