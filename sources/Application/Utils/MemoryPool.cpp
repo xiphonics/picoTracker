@@ -9,9 +9,6 @@
 #include "MemoryPool.h"
 
 #if PROTECT_SCRATCH
-#include "Application/AppWindow.h"
-#include "Application/Application.h"
-#include "Application/Views/ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #endif
 
@@ -28,12 +25,8 @@ void *MemoryPool::Acquire() {
 #if PROTECT_SCRATCH
   if (used_) {
     Trace::Error("MemoryPool is already in use!");
-    Application *app = Application::GetInstance();
-    AppWindow *window = (AppWindow *)app->GetWindow();
-    MessageBox *mb = MessageBox::Create(
-        *(window->getCurrentView()), "MemoryPool is already in use!", MBBF_OK);
-    window->getCurrentView()->DoModal(mb);
   }
+  NAssert(used_ == false);
   used_ = true;
 #endif
   return buffer_;

@@ -63,8 +63,6 @@ public:
   void UpdateColorsFromConfig();
   void SetSdCardPresent(bool present);
 
-  View *getCurrentView() const { return _currentView; }
-
   char projectName_[MAX_PROJECT_NAME_LENGTH + 1];
 
 protected: // GUIWindow implementation
@@ -106,7 +104,6 @@ private:
   unsigned short _mask;
   unsigned long _lastA;
   unsigned long _lastB;
-  char _statusLine[80];
 
   bool lowBatteryState_;
   bool lowBatteryMessageShown_;
