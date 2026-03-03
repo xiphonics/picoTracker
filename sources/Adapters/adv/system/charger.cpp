@@ -251,3 +251,26 @@ bool stopCharging(void) {
   }
   return true;
 }
+
+void configureCharger(void) {
+  uint8_t reg_value = 0;
+  HAL_StatusTypeDef status =
+      HAL_I2C_Mem_Read(&hi2c4, BQ25601_I2C_ADDR << 1, BQ25601_STATUS_REG,
+                       I2C_MEMADD_SIZE_8BIT, &reg_value, 1, HAL_MAX_DELAY);
+  if (status != HAL_OK) {
+    Trace::Error("Power status read failed: %i", status);
+    return;
+  }
+
+  bool powerPresent = (reg_value & BQ25601_PG_STAT) != 0;
+
+  if (powerPresent) {
+    if (!startCharging()) {
+      Trace::Error("Failed to enable charging during init");
+    }
+  } else {
+    if (!stopCharging()) {
+      Trace::Error("Failed to disable charging during init");
+    }
+  }
+}
