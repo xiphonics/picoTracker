@@ -19,8 +19,6 @@ add_library(application_instruments
   WavHeader.cpp
 )
 
-add_subdirectory(ChiptuneInstrument)
-
 target_link_libraries(application_instruments PUBLIC
   foundation_services
   system_io
@@ -34,6 +32,7 @@ target_link_libraries(application_instruments PUBLIC
 
 target_include_directories(application_instruments PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/ChiptuneInstrument
 )
 
 include_directories(${PROJECT_SOURCE_DIR})

@@ -8,19 +8,17 @@
  * This file is part of the picoTracker firmware
  */
 
- /* TODOS:
-      - use SampleRate::sampleRate
-      - reduce RAM footprint
-  */
- 
- */
+/* TODOS:
+    - use SampleRate::sampleRate
+    - reduce RAM footprint
+*/
 
 #pragma once
 
+#include "Application/Instruments/I_Instrument.h"
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "ChiptuneEngine.h"
-#include "I_Instrument.h"
 #include "System/Console/Trace.h"
 #include <cstdint>
 

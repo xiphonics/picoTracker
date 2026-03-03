@@ -6,19 +6,19 @@
  * This file is part of the picoTracker firmware
  */
 
- #pragma once
+#pragma once
 
 // Generator functions for compile-time lookup tables used in ChiptuneEngine.h
 // Not (to be) used at runtime.
 
-// Tables are precalculated rather than embedded to allow tweaking the 
+// Tables are precalculated rather than embedded to allow tweaking the
 // parameters of the functions (e.g. envelope curve) on the fly and to avoid
 // having to recalculate the table if the sample rate changes
 #include <array>
 #include <cmath>
 #include <cstdint>
 
-#define SAMPLE_RATE 44100.0
+static constexpr float kSampleRate = 44100.0;
 
 // power function
 consteval double pow_ct(double base, double exp) {
@@ -85,17 +85,17 @@ consteval auto makeRatioLUT(std::index_sequence<Is...>) {
 }
 
 // Calculate MIDI note frequency at compile time
-// Formula: 
-// freq = 440 * 2^((note-69)/12) * (SAMPLE_RATE/440) = 100 * 2^((note-69)/12)
-// * 44100/100 
-// The values appear to be phase increments for sampling rate phase_increment = 
-// frequency * 2^32 / sample_rate
+// Formula:
+// freq = 440 * 2^((note-69)/12) * (kSampleRate/440) = 100 * 2^((note-69)/12)
+// * 44100/100
+// The values appear to be phase increments for sampling rate phase_increment =
+// frequency * 2^32 / kSampleRate
 consteval int32_t calculateFrequency(int midiNote) {
   // MIDI note to frequency: f = 440 * 2^((note-69)/12)
-  // Phase increment = f * 2^32 / SAMPLE_RATE
+  // Phase increment = f * 2^32 / kSampleRate
   double semitones = (midiNote - 69.0) / 12.0;
   double frequency = 440.0 * pow_ct(2.0, semitones);
-  double phaseIncrement = frequency * 4294967296.0 / SAMPLE_RATE;
+  double phaseIncrement = frequency * 4294967296.0 / kSampleRate;
 
   // Clamp to int32 range to prevent overflow
   if (phaseIncrement > 2147483647.0)
