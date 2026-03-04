@@ -32,21 +32,32 @@ void Trace::trace_uart_putc(int c, void *context) {
 //------------------------------------------------------------------------------
 
 void Trace::VLog(const char *category, const char *fmt, va_list &args) {
+#ifndef NDEBUG
   // first prepend the category
   npf_pprintf(&trace_uart_putc, NULL, "[%s] ", category);
 
   npf_vpprintf(&trace_uart_putc, NULL, fmt, args);
   // end with NL+CR as thats how it previously worked using stdio' printf
   npf_pprintf(&trace_uart_putc, NULL, "\r\n");
+#else
+  (void)category;
+  (void)fmt;
+  (void)args;
+#endif
 }
 
 //------------------------------------------------------------------------------
 
 void Trace::Log(const char *category, const char *fmt, ...) {
+#ifndef NDEBUG
   va_list args;
   va_start(args, fmt);
   VLog(category, fmt, args);
   va_end(args);
+#else
+  (void)category;
+  (void)fmt;
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -57,16 +68,22 @@ void Trace::Debug(const char *fmt, ...) {
   va_start(args, fmt);
   VLog("-D-", fmt, args);
   va_end(args);
+#else
+  (void)fmt;
 #endif
 }
 
 //------------------------------------------------------------------------------
 
 void Trace::Error(const char *fmt, ...) {
+#ifndef NDEBUG
   va_list args;
   va_start(args, fmt);
   VLog("*ERROR*", fmt, args);
   va_end(args);
+#else
+  (void)fmt;
+#endif
 }
 
 //------------------------------------------------------------------------------
