@@ -32,9 +32,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#define ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE 3
-#define DISPLAY_LOWBATT_DELAY_IN_SEC 5
-
 EventManager *advSystem::eventManager_ = NULL;
 bool advSystem::invert_ = false;
 int advSystem::lastBattLevel_ = 100;
@@ -132,18 +129,7 @@ void advSystem::Boot() {
 
   // Configure the battery fuel gauge - will only update if ITPOR bit is set
   configureBatteryGauge();
-
-  // check for low batt
-  BatteryState batteryState;
-  System::GetInstance()->GetBatteryState(batteryState);
-  if (batteryState.percentage < ONBOOT_MINIMUM_ALLOWED_BATTERY_PERCENTAGE &&
-      !batteryState.charging) {
-    // show low battery message on screen
-    Trace::Log("PICOTRACKERSYSTEM", "Low Batt: %d%%\n",
-               batteryState.percentage);
-    critical_error_message("!! LOW BATTERY !!", 0x01,
-                           DISPLAY_LOWBATT_DELAY_IN_SEC, false);
-  }
+  configureCharger();
 
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
