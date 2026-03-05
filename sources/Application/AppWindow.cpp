@@ -903,12 +903,7 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       } else {
         _currentView->OnPlayerUpdate(pt->GetType(), pt->GetTickCount());
       }
-      // Avoid flooding the GUI event queue with FLUSH events while a modal is
-      // active (e.g. stems render progress dialog). Modal redraw is driven by
-      // CLOCK ticks.
-      if (!hasModal) {
-        Invalidate();
-      }
+
     }
     break;
   }
