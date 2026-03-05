@@ -411,9 +411,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       RenderProgressModal *renderDialog =
           RenderProgressModal::Create(*this, "Rendering", "Press OK to stop");
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
-      // Paint modal immediately so it is visible before render setup starts.
-      View::Redraw();
-      w_.Flush();
 
       // Start playback in rendering mode with MSM_FILE
       player->Start(PM_SONG, true, MSM_FILE, true);
@@ -425,9 +422,6 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       RenderProgressModal *renderDialog = RenderProgressModal::Create(
           *this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
-      // Paint modal immediately so it is visible before render setup starts.
-      View::Redraw();
-      w_.Flush();
 
       // Start playback in rendering mode with MSM_FILESPLIT
       player->Start(PM_SONG, true, MSM_FILESPLIT, true);
