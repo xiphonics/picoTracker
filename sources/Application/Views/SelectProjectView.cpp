@@ -37,14 +37,20 @@ static void LoadProjectCallback(View &v, ModalView &dialog) {
 
 static void DeleteProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    // delete project
+    SelectProjectView &view = (SelectProjectView &)v;
+
     PersistencyService *ps = PersistencyService::GetInstance();
     char buffer[MAX_PROJECT_NAME_LENGTH + 1];
-    ((SelectProjectView &)v).getHighlightedProjectName(buffer);
-    ps->DeleteProject(buffer);
+    view.getHighlightedProjectName(buffer);
+    if (!ps->DeleteProject(buffer)) {
+      MessageBox *mb =
+          MessageBox::Create(view, "Failed to delete project.", MBBF_OK);
+      view.DoModal(mb);
+      return;
+    }
 
     // reload list
-    ((SelectProjectView &)v).setCurrentFolder();
+    view.setCurrentFolder();
   }
 }
 
@@ -292,6 +298,7 @@ void SelectProjectView::getSelectedProjectName(char *name) {
 }
 
 void SelectProjectView::getHighlightedProjectName(char *name) {
+  name[0] = '\0';
   if (currentIndex_ >= fileIndexList_.size()) {
     return;
   }
