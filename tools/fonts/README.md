@@ -10,7 +10,7 @@ Vector graphics containing all special characters for both fonts. font_adv.svg c
 
 Exported png files with transparent background from the two svgs mentioned above.
 
-## `font_hourglass.png` and `font_yousquared`
+## `font_hourglass.png` and `font_yousquared.png`
 
 Generated png files for the Hourglass and YouSquared fonts from the code in the repo. Makes editing and fixing easier. Those files are also used for the picotracker_client.
 
@@ -28,8 +28,8 @@ Generated png files for the Hourglass and YouSquared fonts from the code in the 
 
     a) Export special characters only:
 
-    `python3 png_h.py font.png --start 128 --end 255 --name SPECIAL_CHARS`
+    `python3 import.py font_hourglass.png --start 128 --end 255 --name SPECIAL_CHARS`
 
     b) Export wide font regular range
 
-    `python3 png_h.py font.png --start 32 --end 127 --name FONT_WIDE`
+    `python3 import.py font_wide.png --start 32 --end 127 --name FONT_WIDE`
