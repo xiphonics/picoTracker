@@ -8,8 +8,8 @@
 
 #include "advAudioDriver.h"
 #include "Adapters/adv/utils/utils.h"
-#include "Application/Model/Config.h"
 #include "Application/Mixer/MixerService.h"
+#include "Application/Model/Config.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
 #include "main.h" // has to come before FreeRTOS.h due to linkage of SystemCoreClock
