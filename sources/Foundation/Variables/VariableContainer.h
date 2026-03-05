@@ -10,17 +10,19 @@
 #ifndef _VARIABLE_CONTAINER_H_
 #define _VARIABLE_CONTAINER_H_
 
-#include "Externals/etl/include/etl/list.h"
 #include "Variable.h"
 
 class VariableContainer {
 public:
-  VariableContainer(etl::ilist<Variable *> *list);
+  VariableContainer(Variable **begin, Variable **end);
   virtual ~VariableContainer();
   Variable *FindVariable(FourCC id);
   Variable *FindVariable(const char *name);
+  Variable **VarBegin() const { return begin_; }
+  Variable **VarEnd() const { return end_; }
 
 private:
-  etl::ilist<Variable *> *list_;
+  Variable **begin_;
+  Variable **end_;
 };
 #endif

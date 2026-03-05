@@ -17,6 +17,7 @@
 #include "Externals/braids/quantizer.h"
 #include "Externals/braids/signature_waveshaper.h"
 #include "Externals/braids/vco_jitter_source.h"
+#include "Externals/etl/include/etl/array.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/WatchedVariable.h"
@@ -42,7 +43,6 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
 
   // Engine playback  start callback
   virtual void OnStart();
@@ -52,7 +52,7 @@ public:
 
 protected:
 private:
-  etl::list<Variable *, 7> variables_;
+  etl::array<Variable *, 6> variables_;
 
   bool running_;
 
