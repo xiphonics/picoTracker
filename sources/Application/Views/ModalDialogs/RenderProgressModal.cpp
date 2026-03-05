@@ -12,6 +12,7 @@
 #include "Application/Player/SyncMaster.h"
 #include "Application/Views/BaseClasses/View.h"
 #include "UIFramework/BasicDatas/GUIPoint.h"
+#include <cstdint>
 #include <new>
 #include <stdio.h>
 
@@ -46,13 +47,16 @@ void RenderProgressModal::Destroy() {
 
 void RenderProgressModal::DrawView() {
   // Calculate window size
-  int width = title_.size() > message_.size() ? title_.size() : message_.size();
-  width = width > 16 ? width : 16; // Minimum width for time display
+  uint32_t width = title_.size();
+  if (message_.size() > width) {
+    width = message_.size();
+  }
+  width = width > 16u ? width : 16u; // Minimum width for time display
   SetWindow(width, 4); // Height of 4 for title, message, time, and button
 
   // Draw title
-  int y = 0;
-  int x = (width - title_.size()) / 2;
+  int32_t y = 0;
+  int32_t x = (width - title_.size()) / 2;
   GUITextProperties props;
   SetColor(CD_WARN);
   DrawString(x, y, title_.c_str(), props);
@@ -143,14 +147,17 @@ void RenderProgressModal::AnimationUpdate() {
   }
   isDirty_ = false;
 
-  int width = title_.size() > message_.size() ? title_.size() : message_.size();
-  width = width > 16 ? width : 16; // Minimum width for time display
-  int y = 2;
+  uint32_t width = title_.size();
+  if (message_.size() > width) {
+    width = message_.size();
+  }
+  width = width > 16u ? width : 16u; // Minimum width for time display
+  int32_t y = 2;
   GUITextProperties props;
 
   if (renderComplete_) {
     SetColor(CD_INFO);
-    int x = (width - message_.size()) / 2;
+    int32_t x = (width - message_.size()) / 2;
     DrawString(x, y - 1, message_.c_str(), props);
   }
 
