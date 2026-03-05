@@ -12,6 +12,7 @@
 #include "Application/Player/SyncMaster.h"
 #include "Application/Views/BaseClasses/View.h"
 #include "UIFramework/BasicDatas/GUIPoint.h"
+#include <cstdint>
 #include <new>
 #include <stdio.h>
 
@@ -46,13 +47,16 @@ void RenderProgressModal::Destroy() {
 
 void RenderProgressModal::DrawView() {
   // Calculate window size
-  int width = title_.size() > message_.size() ? title_.size() : message_.size();
-  width = width > 16 ? width : 16; // Minimum width for time display
+  uint32_t width = title_.size();
+  if (message_.size() > width) {
+    width = message_.size();
+  }
+  width = width > 16u ? width : 16u; // Minimum width for time display
   SetWindow(width, 4); // Height of 4 for title, message, time, and button
 
   // Draw title
-  int y = 0;
-  int x = (width - title_.size()) / 2;
+  int32_t y = 0;
+  int32_t x = (width - title_.size()) / 2;
   GUITextProperties props;
   SetColor(CD_WARN);
   DrawString(x, y, title_.c_str(), props);
@@ -79,15 +83,22 @@ void RenderProgressModal::OnPlayerUpdate(PlayerEventType eventType,
                                          unsigned int currentTick) {
   // This runs on core1 (audio thread)
   Player *player = Player::GetInstance();
+  const bool isRunning = player && player->IsRunning();
+  const bool hasJustFinished = renderStarted_ && !isRunning;
 
-  // Check if player has stopped and we haven't marked as complete yet
-  if (!player->IsRunning() && !renderComplete_) {
+  // Only mark completion if we have observed an active render first.
+  if (isRunning) {
+    renderStarted_ = true;
+  }
+
+  // Mark completion after transitioning from started -> stopped.
+  if (hasJustFinished && !renderComplete_) {
     renderComplete_ = true;
     message_ = "Render Complete!"; // Update the message
     isDirty_ = true;               // Mark view as dirty to trigger redraw
   }
   // Only update progress if we're still rendering
-  else if (player->IsRunning()) {
+  else if (isRunning) {
     // Calculate samples for this buffer based on the tempo
     float samplesThisBuffer = calculateSamplesPerBuffer(tempo_);
     // Add to our total sample count and mark as dirty for redraw
@@ -114,29 +125,45 @@ void RenderProgressModal::ProcessButtonMask(unsigned short mask, bool pressed) {
 }
 
 void RenderProgressModal::AnimationUpdate() {
-  // This runs on core0 (UI thread)
-  if (isDirty_) {
-    isDirty_ = false;
+  // This runs on core0 (UI thread). Keep updating progress every UI tick
+  // while rendering so the dialog stays responsive even if PET_UPDATE events
+  // are sparse during stems.
+  Player *player = Player::GetInstance();
+  const bool isRunning = player && player->IsRunning();
+  const bool hasJustFinished = renderStarted_ && !isRunning;
 
-    int width =
-        title_.size() > message_.size() ? title_.size() : message_.size();
-    width = width > 16 ? width : 16; // Minimum width for time display
-    int y = 2;
-    GUITextProperties props;
-
-    // Update completion message if needed
-    if (renderComplete_) {
-      SetColor(CD_INFO);
-      message_ = "Render Complete!";
-      int x = (width - message_.size()) / 2;
-      DrawString(x, y - 1, message_.c_str(), props);
-    }
-
-    // Always redraw the progress display
-    GUIPoint progressPos(width / 2 - 2, y);
-    SetColor(CD_NORMAL);
-    drawRenderProgress(progressPos, props);
+  if (isRunning) {
+    renderStarted_ = true;
+    totalSamples_ = player->GetPlayTime() * SAMPLE_RATE;
+    isDirty_ = true;
+  } else if (hasJustFinished && !renderComplete_) {
+    renderComplete_ = true;
+    message_ = "Render Complete!";
+    isDirty_ = true;
   }
+
+  if (!isDirty_) {
+    return;
+  }
+  isDirty_ = false;
+
+  uint32_t width = title_.size();
+  if (message_.size() > width) {
+    width = message_.size();
+  }
+  width = width > 16u ? width : 16u; // Minimum width for time display
+  int32_t y = 2;
+  GUITextProperties props;
+
+  if (renderComplete_) {
+    SetColor(CD_INFO);
+    int32_t x = (width - message_.size()) / 2;
+    DrawString(x, y - 1, message_.c_str(), props);
+  }
+
+  GUIPoint progressPos(width / 2 - 2, y);
+  SetColor(CD_NORMAL);
+  drawRenderProgress(progressPos, props);
 }
 
 void RenderProgressModal::drawRenderProgress(GUIPoint &pos,
