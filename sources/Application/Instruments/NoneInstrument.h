@@ -45,9 +45,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
 
 private:
-  etl::list<Variable *, 2> variables_;
 };
 #endif

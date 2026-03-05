@@ -12,6 +12,7 @@
 
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
+#include "Externals/etl/include/etl/array.h"
 #include "Externals/opal/opal.h"
 #include "I_Instrument.h"
 #include <cstdint>
@@ -47,7 +48,6 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
 
   void setChannel(uint8_t channel);
 
@@ -56,7 +56,7 @@ private:
 
   uint8_t breg;
 
-  etl::list<Variable *, 16> variables_;
+  etl::array<Variable *, 15> variables_;
 
   Variable algorithm_;
   Variable feedback_;

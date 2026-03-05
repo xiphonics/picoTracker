@@ -12,6 +12,7 @@
 
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
+#include "Externals/etl/include/etl/array.h"
 #include "Externals/etl/include/etl/string.h"
 #include "I_Instrument.h"
 #include "Services/Midi/MidiMessage.h"
@@ -61,7 +62,6 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
 
   void SetChannel(int i);
   void SendProgramChange(int channel, int program);
@@ -78,7 +78,7 @@ public:
   };
 
 private:
-  etl::list<Variable *, 7> variables_;
+  etl::array<Variable *, 6> variables_;
 
   etl::array<uint8_t, MAX_MIDI_CHORD_NOTES + 1> lastNotes_[SONG_CHANNEL_COUNT];
   int remainingTicks_;

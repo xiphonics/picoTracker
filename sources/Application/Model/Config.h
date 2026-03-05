@@ -11,6 +11,7 @@
 #define _CONFIG_H_
 
 #include "Application/Persistency/Persistent.h"
+#include "Externals/etl/include/etl/array.h"
 #include "Foundation/T_Singleton.h"
 #include "Foundation/Variables/StringVariable.h"
 #include "Foundation/Variables/VariableContainer.h"
@@ -36,7 +37,7 @@ public:
   bool ImportTheme(const char *themeName);
 
 private:
-  etl::list<Variable *, 26> variables_;
+  etl::array<Variable *, 24> variables_;
   // Config variables (kept as members to avoid heap allocation)
   WatchedVariable background_;
   WatchedVariable foreground_;

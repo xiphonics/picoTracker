@@ -47,7 +47,7 @@ Variable SIDInstrument::fltmode2_(FourCC::SIDInstrument2FilterMode,
 Variable SIDInstrument::vol2_(FourCC::SIDInstrument2Volume, 0xF);
 
 SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
-    : I_Instrument(&variables_), chip_(chip),
+    : I_Instrument(variables_.begin(), variables_.end()), chip_(chip),
       vpw_(FourCC::SIDInstrumentPulseWidth, 0x800),
       vwf_(FourCC::SIDInstrumentWaveform, sidWaveformText, DWF_LAST, 0x1),
       vsync_(FourCC::SIDInstrumentVSync, false),
@@ -59,24 +59,24 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
       osc_(FourCC::SIDInstrumentOSCNumber, 0) {
 
   // name_ is now an etl::string in the base class, not a Variable
-  variables_.insert(variables_.end(), &vpw_);
-  variables_.insert(variables_.end(), &vwf_);
-  variables_.insert(variables_.end(), &vsync_);
-  variables_.insert(variables_.end(), &vring_);
-  variables_.insert(variables_.end(), &vadsr_);
-  variables_.insert(variables_.end(), &vfon_);
-  variables_.insert(variables_.end(), &table_);
-  variables_.insert(variables_.end(), &tableAuto_);
-  variables_.insert(variables_.end(), &osc_);
-  variables_.insert(variables_.end(), &fltcut1_);
-  variables_.insert(variables_.end(), &fltres1_);
-  variables_.insert(variables_.end(), &fltmode1_);
-  variables_.insert(variables_.end(), &vol1_);
+  variables_[0] = &vpw_;
+  variables_[1] = &vwf_;
+  variables_[2] = &vsync_;
+  variables_[3] = &vring_;
+  variables_[4] = &vadsr_;
+  variables_[5] = &vfon_;
+  variables_[6] = &table_;
+  variables_[7] = &tableAuto_;
+  variables_[8] = &osc_;
+  variables_[9] = &fltcut1_;
+  variables_[10] = &fltres1_;
+  variables_[11] = &fltmode1_;
+  variables_[12] = &vol1_;
 
-  variables_.insert(variables_.end(), &fltcut2_);
-  variables_.insert(variables_.end(), &fltres2_);
-  variables_.insert(variables_.end(), &fltmode2_);
-  variables_.insert(variables_.end(), &vol2_);
+  variables_[13] = &fltcut2_;
+  variables_[14] = &fltres2_;
+  variables_[15] = &fltmode2_;
+  variables_[16] = &vol2_;
 }
 
 SIDInstrument::~SIDInstrument(){};
