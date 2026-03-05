@@ -903,7 +903,6 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
       } else {
         _currentView->OnPlayerUpdate(pt->GetType(), pt->GetTickCount());
       }
-
     }
     break;
   }
