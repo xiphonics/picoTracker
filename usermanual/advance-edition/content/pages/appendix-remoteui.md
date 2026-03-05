@@ -16,15 +16,15 @@ The Remote UI protocol is a communication mechanism that allows rendering the pi
 
 Every command starts with a fixed marker: `0xFE` (REMOTE_UI_CMD_MARKER). This allows clients to verify the start of a valid command.
 
-**Note:** That the use of this value as a marker to start commands means that the characters 0xFE and 0xFF from the extended ASCII range are not allowed in the protocols command parameter values.
+**Note:** The use of this value as a marker means that if the value `0xFE` or the escape character `0xFD` needs to be sent as part of a command's parameters, they must be escaped. See the **Character Escaping** section below.
 
 
 ### Command Types
 
-Note: `ASCII_SPACE_OFFSET = 0xF`
+Note: `ASCII_SPACE_OFFSET = 0x0F` (15)
 
 
-1. TEXT_CMD (0x2): Draw a character
+1. `TEXT_CMD (0x02)`: Draw a character
 
 Parameters:
 
@@ -33,19 +33,23 @@ Parameters:
 * Y position (offset by ASCII_SPACE_OFFSET)
 * Invert flag (0 for normal, 0x7F for inverted)
 
-2. `CLEAR_CMD (0x3)`: Clear screen
+2. `CLEAR_CMD (0x03)`: Clear screen
 
 Parameters:
 
-* Background color in RGB888 format
+* Background color Red (`0x00`-`0xFF`)
+* Background color Green (`0x00`-`0xFF`)
+* Background color Blue (`0x00`-`0xFF`)
 
-3. SETCOLOR_CMD (0x4): Set foreground color
+3. `SETCOLOR_CMD (0x04)`: Set foreground color
 
 Parameters:
 
-* Color in RGB888 format
+* Red (`0x00`-`0xFF`, escaped)
+* Green (`0x00`-`0xFF`, escaped)
+* Blue (`0x00`-`0xFF`, escaped)
 
-4. SETFONT_CMD (0x5)
+4. `SETFONT_CMD (0x05)`
 
 Parameters:
 
@@ -55,24 +59,48 @@ Currently the only available fonts are:
 
  | Index | Font   
  | ----- | -----
- | 0     | Hourglass
- | 1     | You Squared
+ | 0x00  | Hourglass
+ | 0x01  | You Squared
+
+5. `DRAWRECT_CMD (0x06)`: Draw a rectangle (can be used for pixel drawing)
+
+Parameters:
+
+* Left (16-bit, Little Endian, escaped)
+* Top (16-bit, Little Endian, escaped)
+* Width (16-bit, Little Endian, escaped)
+* Height (16-bit, Little Endian, escaped)
 
 
+### Character Escaping
+
+To allow the full range of byte values (`0x00`-`0xFF`) in parameters while reserving `0xFE` as a command marker, an escaping mechanism is used for certain commands (like `SETCOLOR_CMD` and `DRAWRECT_CMD`).
+
+* Escape Character: `0xFD`
+* Escape XOR mask: `0x20`
+
+If a parameter byte is either `0xFE` or `0xFD`, it is replaced by a two-byte sequence:
+1. The escape character `0xFD`
+2. The original byte XORed with `0x20`
+
+For example:
+* `0xFE` becomes `0xFD 0xDE`
+* `0xFD` becomes `0xFD 0xDD`
 
 ### Example Transmission Flow
 
-To give a concrete example, below is a simple example of how a command in the picoTracker firmware istransmitted over USB serial:
+To give a concrete example, below is a simple example of how a command in the picoTracker firmware is transmitted over USB serial:
 
 ```cpp
 
 // Drawing a character 'A' at position (2,3), not inverted
+// ASCII_SPACE_OFFSET = 0x0F (15)
 remoteUIBuffer[0] = 0xFE;        // Command marker
-remoteUIBuffer[1] = DRAW_CMD;    // Draw command
+remoteUIBuffer[1] = TEXT_CMD;    // Draw character command (0x02)
 remoteUIBuffer[2] = 'A';         // Character
-remoteUIBuffer[3] = 34;          // X position (2 + 32)
-remoteUIBuffer[4] = 35;          // Y position (3 + 32)
-remoteUIBuffer[5] = 32;          // Not inverted
+remoteUIBuffer[3] = 0x11;        // X position (2 + 15 = 17)
+remoteUIBuffer[4] = 0x12;        // Y position (3 + 15 = 18)
+remoteUIBuffer[5] = 0x00;        // Not inverted
 sendToUSBCDC(remoteUIBuffer, 6);
 ```
 
@@ -82,7 +110,7 @@ Clients are also able to send input events to the picoTracker. As for output com
 
 The events currently supported are:
 
-1. FULL_REFRESH_CMD (0x2): Request sending all the current screen and current font
+1. `FULL_REFRESH_CMD (0x02)`: Request sending all the current screen and current font
 
 Parameters:
 
@@ -95,8 +123,7 @@ Parameters:
 
 ### Client Implementation Guidelines
 
-1. Look for REMOTE_UI_CMD_MARKER (0xFD)
-1. Verify command type
-1. Subtract 32 from positional/color values
-1. Handle potential transmission errors
-1. Implement appropriate rendering based on received commands
+1. Look for REMOTE_UI_CMD_MARKER (`0xFE`)
+2. If the next byte is part of a parameter for a command that uses escaping, check if it's the escape character (`0xFD`).
+3. Handle potential transmission errors
+4. Implement appropriate rendering based on received commands
