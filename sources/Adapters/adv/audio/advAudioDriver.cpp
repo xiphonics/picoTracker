@@ -9,6 +9,7 @@
 #include "advAudioDriver.h"
 #include "Adapters/adv/utils/utils.h"
 #include "Application/Model/Config.h"
+#include "Application/Mixer/MixerService.h"
 #include "Services/Midi/MidiService.h"
 #include "System/System/System.h"
 #include "main.h" // has to come before FreeRTOS.h due to linkage of SystemCoreClock
@@ -45,6 +46,8 @@ void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai) {
 void advAudioDriver::IRQHandler() { instance_->OnChunkDone(); }
 
 void AudioThread(void *) {
+  MixerService *mixer = MixerService::GetInstance();
+
   while (true) {
     xSemaphoreTake(core1_audio, portMAX_DELAY);
 
@@ -53,6 +56,13 @@ void AudioThread(void *) {
 
     // Flush MIDI after the buffer has been queued to keep it in sync
     MidiService::GetInstance()->Flush();
+
+    // Rendering (especially stems) can keep this high-priority task runnable
+    // continuously. Yield one tick in render modes so UI/input tasks stay
+    // responsive for progress updates and cancel.
+    if (mixer->GetMode() != MSM_AUDIO) {
+      vTaskDelay(pdMS_TO_TICKS(1));
+    }
   }
 }
 
@@ -120,6 +130,13 @@ void advAudioDriver::SetVolume(int v) {
 int advAudioDriver::GetVolume() { return tlv320_get_volume(); };
 
 void advAudioDriver::OnAudioActive(bool active) {
+  // Keep codec output truly silent when audio is marked inactive (e.g. stem
+  // rendering), not just speaker-amp gated.
+  if (active) {
+    tlv320_unmute();
+  } else {
+    tlv320_mute();
+  }
   tlv320_set_audio_output_active(active);
 }
 

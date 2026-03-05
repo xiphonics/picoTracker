@@ -215,12 +215,10 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
-#ifndef ADV
   position._x += 8;
   actionField_.emplace_back("Stems", FourCC::ActionRenderStems, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
-#endif
   position._x = xalign;
 }
 
@@ -409,24 +407,30 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
-      // Start playback in rendering mode with MSM_FILE
-      player->Start(PM_SONG, true, MSM_FILE, true);
-
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog =
           RenderProgressModal::Create(*this, "Rendering", "Press OK to stop");
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
+      // Paint modal immediately so it is visible before render setup starts.
+      View::Redraw();
+      w_.Flush();
+
+      // Start playback in rendering mode with MSM_FILE
+      player->Start(PM_SONG, true, MSM_FILE, true);
     }
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
-      // Start playback in rendering mode with MSM_FILESPLIT
-      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
-
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog = RenderProgressModal::Create(
           *this, "Stems Rendering", "Press OK to stop");
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
+      // Paint modal immediately so it is visible before render setup starts.
+      View::Redraw();
+      w_.Flush();
+
+      // Start playback in rendering mode with MSM_FILESPLIT
+      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
     }
     break;
   case FourCC::ActionShowRecordView:

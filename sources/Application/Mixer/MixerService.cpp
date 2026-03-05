@@ -27,6 +27,7 @@
 MixerService::MixerService() : master_(), sync_(platform_mutex()) {
   out_ = 0;
   project_ = NULL;
+  mode_ = MSM_AUDIO;
   master_.SetName("Master");
 };
 
@@ -169,6 +170,7 @@ int MixerService::GetPlayedBufferPercentage() {
 }
 
 void MixerService::setRenderingMode(MixerServiceMode mode) {
+  mode_ = mode;
   if (mode != MSM_AUDIO) {
     // in case proj name changed since last time paths were configured
     bool pathsResult = configureRenderPaths();

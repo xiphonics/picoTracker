@@ -896,13 +896,19 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     PlayerEvent *pt = (PlayerEvent *)ve;
     if (_currentView) {
       // Check if the current view has a modal view
-      if (_currentView->HasModalView()) {
+      const bool hasModal = _currentView->HasModalView();
+      if (hasModal) {
         _currentView->GetModalView()->OnPlayerUpdate(pt->GetType(),
                                                      pt->GetTickCount());
       } else {
         _currentView->OnPlayerUpdate(pt->GetType(), pt->GetTickCount());
       }
-      Invalidate();
+      // Avoid flooding the GUI event queue with FLUSH events while a modal is
+      // active (e.g. stems render progress dialog). Modal redraw is driven by
+      // CLOCK ticks.
+      if (!hasModal) {
+        Invalidate();
+      }
     }
     break;
   }
