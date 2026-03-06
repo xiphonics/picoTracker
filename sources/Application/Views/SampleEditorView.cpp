@@ -1098,8 +1098,7 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   Trace::Log("SAMPLEEDITOR",
              "Trimmed sample '%s' to %u frames (start=%u, end=%u)",
              workingFilename.c_str(), trimResult.framesKept,
-             trimResult.clampedStart,
-             trimResult.clampedEnd);
+             trimResult.clampedStart, trimResult.clampedEnd);
   return true;
 }
 
