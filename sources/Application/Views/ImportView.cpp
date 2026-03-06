@@ -35,16 +35,14 @@ namespace {
 enum ImportButton : uint8_t {
   kImportButtonImport = 0,
   kImportButtonEdit,
-  kImportButtonVolumeUp,
-  kImportButtonVolumeDown,
+  kImportButtonVolume,
   kImportButtonCount,
 };
 
 enum ProjectPoolButton : uint8_t {
   kProjectButtonEdit = 0,
   kProjectButtonRemove,
-  kProjectButtonVolumeUp,
-  kProjectButtonVolumeDown,
+  kProjectButtonVolume,
   kProjectPoolButtonCount,
 };
 } // namespace
@@ -62,6 +60,8 @@ void ImportView::Reset() {
   toInstr_ = 0;
   playKeyHeld_ = false;
   editKeyHeld_ = false;
+  enterKeyHeld_ = false;
+  pendingDirEnterOnRelease_ = false;
   inProjectSampleDir_ = false;
   fileIndexList_.clear();
 }
@@ -72,6 +72,25 @@ void ImportView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // Check for key release events
   if (!pressed) {
+    // Open selected directory only when ENTER is released, unless ENTER was
+    // consumed by another action (e.g. volume edit).
+    if (enterKeyHeld_ && !(mask & EPBM_ENTER)) {
+      enterKeyHeld_ = false;
+      if (pendingDirEnterOnRelease_ && !fileIndexList_.empty()) {
+        auto fs = FileSystem::GetInstance();
+        unsigned fileIndex = fileIndexList_[currentIndex_];
+        if (fs->getFileType(fileIndex) == PFT_DIR) {
+          char name[PFILENAME_SIZE];
+          fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+          setCurrentFolder(fs, name);
+          isDirty_ = true;
+          topIndex_ = 0;
+        }
+      }
+      pendingDirEnterOnRelease_ = false;
+      return;
+    }
+
     // Check if play key was released
     if (playKeyHeld_ && !(mask & EPBM_PLAY)) {
       // Play key no longer pressed so should stop playback
@@ -146,15 +165,36 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
 
     if (mask & EPBM_ENTER) {
+      if (!enterKeyHeld_) {
+        enterKeyHeld_ = true;
+        pendingDirEnterOnRelease_ = true;
+      }
+      if (mask & (EPBM_LEFT | EPBM_RIGHT | EPBM_UP | EPBM_DOWN)) {
+        pendingDirEnterOnRelease_ = false;
+      }
+
       if (inProjectSampleDir_) {
-        if (selectedButton_ == kProjectButtonVolumeUp) {
-          adjustPreviewVolume(true);
-          return;
-        } else if (selectedButton_ == kProjectButtonVolumeDown) {
-          adjustPreviewVolume(false);
+        if (selectedButton_ == kProjectButtonVolume) {
+          int volumeOffset = 0;
+          if (mask & EPBM_LEFT) {
+            volumeOffset -= 1;
+          }
+          if (mask & EPBM_RIGHT) {
+            volumeOffset += 1;
+          }
+          if (mask & EPBM_DOWN) {
+            volumeOffset -= 5;
+          }
+          if (mask & EPBM_UP) {
+            volumeOffset += 5;
+          }
+          if (volumeOffset != 0) {
+            adjustPreviewVolume(volumeOffset);
+          }
           return;
         }
         if (!hasFiles) {
+          pendingDirEnterOnRelease_ = false;
           return; // Do nothing if the list is empty
         }
         if (selectedButton_ == kProjectButtonEdit) {
@@ -170,14 +210,27 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
         return;
       }
-      if (selectedButton_ == kImportButtonVolumeUp) {
-        adjustPreviewVolume(true);
-        return;
-      } else if (selectedButton_ == kImportButtonVolumeDown) {
-        adjustPreviewVolume(false);
+      if (selectedButton_ == kImportButtonVolume) {
+        int volumeOffset = 0;
+        if (mask & EPBM_LEFT) {
+          volumeOffset -= 1;
+        }
+        if (mask & EPBM_RIGHT) {
+          volumeOffset += 1;
+        }
+        if (mask & EPBM_DOWN) {
+          volumeOffset -= 5;
+        }
+        if (mask & EPBM_UP) {
+          volumeOffset += 5;
+        }
+        if (volumeOffset != 0) {
+          adjustPreviewVolume(volumeOffset);
+        }
         return;
       }
       if (!hasFiles) {
+        pendingDirEnterOnRelease_ = false;
         return;
       }
       unsigned fileIndex = fileIndexList_[currentIndex_];
@@ -237,18 +290,6 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   } else {
     // A modifier
-    if (mask & EPBM_ENTER) {
-      auto fs = FileSystem::GetInstance();
-      unsigned fileIndex = fileIndexList_[currentIndex_];
-      char name[PFILENAME_SIZE];
-      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-      if (fs->getFileType(fileIndex) == PFT_DIR) {
-        setCurrentFolder(fs, name);
-        isDirty_ = true;
-        topIndex_ = 0; // need to reset when entering a dir as prev dir may
-                       // have been already scrolled down
-      }
-    }
   }
 };
 
@@ -345,6 +386,12 @@ void ImportView::DrawView() {
     selectedButton_ = 0;
   }
 
+  int previewVolume = 0;
+  Variable *v = viewData_->project_->FindVariable(FourCC::VarPreviewVolume);
+  if (v) {
+    previewVolume = v->GetInt();
+  }
+
   if (!inProjectSampleDir_) {
     if (selectedButton_ == kImportButtonImport) {
       SetColor(CD_HILITE2);
@@ -363,27 +410,16 @@ void ImportView::DrawView() {
     }
     DrawString(x + 10, y, "Edit", props);
 
-    if (selectedButton_ == kImportButtonVolumeUp) {
+    if (selectedButton_ == kImportButtonVolume) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
     } else {
       SetColor(CD_HILITE1);
       props.invert_ = false;
     }
-    DrawString(x + 23, y, "+", props);
-
-    SetColor(CD_HILITE1);
-    props.invert_ = false;
-    DrawString(x + 25, y, "VOL", props);
-
-    if (selectedButton_ == kImportButtonVolumeDown) {
-      SetColor(CD_HILITE2);
-      props.invert_ = true;
-    } else {
-      SetColor(CD_HILITE1);
-      props.invert_ = false;
-    }
-    DrawString(x + 29, y, "-", props);
+    char volField[12];
+    npf_snprintf(volField, sizeof(volField), "vol:%2d", previewVolume);
+    DrawString(x + 23, y, volField, props);
   } else {
     if (fileIndexList_.empty()) {
       // draw this a few lines down from *top* of screen
@@ -415,33 +451,22 @@ void ImportView::DrawView() {
       DrawString(x + 9, y, "N/A", props);
 #endif
 
-      if (selectedButton_ == kProjectButtonVolumeUp) {
+      if (selectedButton_ == kProjectButtonVolume) {
         SetColor(CD_HILITE2);
         props.invert_ = true;
       } else {
         SetColor(CD_HILITE1);
         props.invert_ = false;
       }
-      DrawString(x + 23, y, "+", props);
-
-      SetColor(CD_HILITE1);
-      props.invert_ = false;
-      DrawString(x + 25, y, "VOL", props);
-
-      if (selectedButton_ == kProjectButtonVolumeDown) {
-        SetColor(CD_HILITE2);
-        props.invert_ = true;
-      } else {
-        SetColor(CD_HILITE1);
-        props.invert_ = false;
-      }
-      DrawString(x + 29, y, "-", props);
+      char volField[12];
+      npf_snprintf(volField, sizeof(volField), "vol:%2d", previewVolume);
+      DrawString(x + 23, y, volField, props);
     }
   }
   props.invert_ = false;
   y += 1;
 
-  // draw current selected file size, preview volume and single cycle indicator
+  // draw current selected file size and available storage indicator
   SetColor(CD_NORMAL);
   props.invert_ = true;
   y = 0;
@@ -458,19 +483,12 @@ void ImportView::DrawView() {
     }
   }
 
-  // Get the current preview volume
-  int previewVolume = 0;
-  Variable *v = viewData_->project_->FindVariable(FourCC::VarPreviewVolume);
-  if (v) {
-    previewVolume = v->GetInt();
-  }
-
   // Create a temporary buffer for formatting
   char tempBuffer[SCREEN_WIDTH];
   tempBuffer[SCREEN_WIDTH - 1] = '\0';
 
-  npf_snprintf(tempBuffer, sizeof(tempBuffer), "vol:%2d%% size:%i/%i",
-               previewVolume, filesize, availableSpace);
+  npf_snprintf(tempBuffer, sizeof(tempBuffer), "size:%i/%i", filesize,
+               availableSpace);
 
   // pad status line buffer with trailing space chars to ensure the invert
   // color is applied to entire line
@@ -720,7 +738,7 @@ void ImportView::import() {
   isDirty_ = true;
 };
 
-void ImportView::adjustPreviewVolume(bool increase) {
+void ImportView::adjustPreviewVolume(int offset) {
   // Get the project instance
   Project *project = viewData_->project_;
 
@@ -731,12 +749,8 @@ void ImportView::adjustPreviewVolume(bool increase) {
     return;
   }
 
-  // Get current value
-  int currentVolume = v->GetInt();
-
-  // Calculate new value (increase or decrease by 5)
-  int step = 5;
-  int newVolume = increase ? currentVolume + step : currentVolume - step;
+  // Get current value and apply offset
+  int newVolume = v->GetInt() + offset;
 
   // Clamp to valid range (0-100)
   newVolume = newVolume > 100 ? 100 : newVolume;
