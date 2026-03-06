@@ -7,6 +7,7 @@
  */
 
 #include "picoTrackerFileSystem.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Externals/etl/include/etl/pool.h"
 #include "pico/multicore.h"
 #include <cstring>
@@ -277,21 +278,24 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
   auto fSrc = sd.open(srcFilename, O_READ);
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
 
+  char *fileBuffer = (char *)MemoryPool::Acquire();
+
   int n = 0;
-  int bufferSize = sizeof(fileBuffer_);
+
   while (true) {
-    n = fSrc.read(fileBuffer_, bufferSize);
+    n = fSrc.read(fileBuffer, MEMORYPOOL_SCRATCH_SIZE);
     // check for read error and only write if no error
     if (n >= 0) {
-      fDest.write(fileBuffer_, n);
+      fDest.write(fileBuffer, n);
     } else {
       Trace::Error("Failed to read file: %s", srcFilename);
       return false;
     }
-    if (n < bufferSize) {
+    if ((size_t)n < MEMORYPOOL_SCRATCH_SIZE) {
       break;
     }
   }
+  MemoryPool::Release();
   fSrc.close();
   fDest.close();
   return true;

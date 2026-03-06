@@ -10,11 +10,8 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
-<<<<<<< HEAD
 #include "Application/Utils/DrawUtils.h"
-=======
 #include "Application/Utils/MemoryPool.h"
->>>>>>> 543b6c84 (moving fileIndexLists from stack to use the global buffer as well)
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
