@@ -1,5 +1,6 @@
 add_library(application_views_modaldialogs
   MessageBox.cpp
+  WarnMessageBox.cpp
   FullScreenBox.cpp
   TextInputModalView.cpp
   RenderProgressModal.cpp

@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/ModalDialogs/WarnMessageBox.h"
 #include "BaseClasses/ViewEvent.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include <nanoprintf.h>
@@ -123,8 +124,14 @@ void SelectProjectView::DrawView() {
 
   for (int n = 0; n < numButtons_; n++) {
     bool selected = selectedButton_ == n;
-    props.invert_ = selected;
-    SetColor(selected ? CD_HILITE2 : CD_HILITE1);
+    const bool isDeleteButton = (n == 2);
+    if (isDeleteButton && selected) {
+      props.invert_ = true;
+      SetColor(CD_WARN);
+    } else {
+      props.invert_ = selected;
+      SetColor(selected ? CD_HILITE2 : CD_HILITE1);
+    }
     DrawString(x, SCREEN_HEIGHT - 1, buttons[n], props);
 
     x += 2 + strlen(buttons[n]);
@@ -409,7 +416,8 @@ void SelectProjectView::AttemptDeletingSelectedProject() {
   char buffer[MAX_PROJECT_NAME_LENGTH + 11];
   npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", selected);
 
-  MessageBox *mb = MessageBox::Create(*this, buffer, MBBF_YES | MBBF_NO);
+  WarnMessageBox *mb =
+      WarnMessageBox::Create(*this, buffer, MBBF_YES | MBBF_NO);
   DoModal(mb, ModalViewCallback::create<&DeleteProjectCallback>());
 }
 
