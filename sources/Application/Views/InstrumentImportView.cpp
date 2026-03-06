@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Instruments/I_Instrument.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Utils/MemoryPool.h"
 #include "ModalDialogs/MessageBox.h"
 #include <memory>
 #include <nanoprintf.h>
@@ -32,7 +33,8 @@ void InstrumentImportView::Reset() {
   currentIndex_ = 0;
   selected_ = 0;
   toInstrID_ = 0;
-  fileIndexList_.clear();
+  auto fileIndexList = MemoryPool::getFileIndexList();
+  fileIndexList->clear();
 }
 
 void InstrumentImportView::ProcessButtonMask(unsigned short mask,
@@ -42,10 +44,12 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
 
   if (mask & EPBM_PLAY) {
     auto fs = FileSystem::GetInstance();
+    auto fileIndexList = MemoryPool::getFileIndexList();
+
     char name[PFILENAME_SIZE];
 
-    if (currentIndex_ < fileIndexList_.size()) {
-      unsigned fileIndex = fileIndexList_[currentIndex_];
+    if (currentIndex_ < fileIndexList->size()) {
+      unsigned fileIndex = (*fileIndexList)[currentIndex_];
       fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
       if (mask & EPBM_ALT) {
@@ -73,9 +77,10 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
     // ENTER modifier
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
+      auto fileIndexList = MemoryPool::getFileIndexList();
 
-      if (currentIndex_ < fileIndexList_.size()) {
-        unsigned fileIndex = fileIndexList_[currentIndex_];
+      if (currentIndex_ < fileIndexList->size()) {
+        unsigned fileIndex = (*fileIndexList)[currentIndex_];
         char name[PFILENAME_SIZE];
         fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
@@ -113,9 +118,11 @@ void InstrumentImportView::DrawView() {
 
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string in buffer :-(
+  auto fileIndexList = MemoryPool::getFileIndexList();
   char buffer[PFILENAME_SIZE];
+
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList->size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -125,7 +132,7 @@ void InstrumentImportView::DrawView() {
     }
 
     memset(buffer, '\0', sizeof(buffer));
-    unsigned fileIndex = fileIndexList_[i];
+    unsigned fileIndex = (*fileIndexList)[i];
     fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
     if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -151,7 +158,9 @@ void InstrumentImportView::OnFocus() {
 }
 
 void InstrumentImportView::warpToNextInstrument(bool goUp) {
-  if (fileIndexList_.empty())
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
+  if (fileIndexList->empty())
     return;
 
   if (goUp) {
@@ -162,7 +171,7 @@ void InstrumentImportView::warpToNextInstrument(bool goUp) {
       }
     }
   } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
+    if (currentIndex_ < fileIndexList->size() - 1) {
       currentIndex_++;
       if (currentIndex_ >= topIndex_ + LIST_PAGE_SIZE) {
         topIndex_ = currentIndex_ - LIST_PAGE_SIZE + 1;
@@ -337,13 +346,16 @@ void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {
     Trace::Error("FAILED to chdir to %s", name);
     return;
   }
+
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
   currentIndex_ = 0;
   topIndex_ = 0;
   isDirty_ = true;
 
   // Update list of file indexes in this new dir
-  fileIndexList_.clear();
+  fileIndexList->clear();
   // Use false for subDirOnly to include both files and directories
-  fs->list(&fileIndexList_, INSTRUMENT_FILE_EXTENSION, false);
-  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
+  fs->list(&(*fileIndexList), INSTRUMENT_FILE_EXTENSION, false);
+  Trace::Debug("loaded %d files from %s", fileIndexList->size(), name);
 }

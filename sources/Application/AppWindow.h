@@ -104,7 +104,6 @@ private:
   unsigned short _mask;
   unsigned long _lastA;
   unsigned long _lastB;
-  char _statusLine[80];
 
   bool lowBatteryState_;
   bool lowBatteryMessageShown_;
