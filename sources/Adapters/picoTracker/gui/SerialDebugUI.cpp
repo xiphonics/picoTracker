@@ -132,16 +132,17 @@ void SerialDebugUI::catFile(const char *path) {
 
 void SerialDebugUI::listFiles(const char *path) {
   auto fs = FileSystem::GetInstance();
+  auto fileIndexList = MemoryPool::getFileIndexList();
   if (!fs->chdir(path)) {
     Trace::Error("failed to ls files path:%s", path);
   }
 
-  fs->list(&MemoryPool::fileIndexList, "", false);
+  fs->list(&(*fileIndexList), "", false);
 
   char name[PFILENAME_SIZE];
-  for (size_t i = 0; i < MemoryPool::fileIndexList.size(); i++) {
-    fs->getFileName(MemoryPool::fileIndexList[i], name, PFILENAME_SIZE);
-    if (fs->getFileType(MemoryPool::fileIndexList[i]) == PFT_FILE) {
+  for (size_t i = 0; i < fileIndexList->size(); i++) {
+    fs->getFileName((*fileIndexList)[i], name, PFILENAME_SIZE);
+    if (fs->getFileType((*fileIndexList)[i]) == PFT_FILE) {
       printf("[file] %s\n", name);
     } else {
       printf("[dir] %s\n", name);

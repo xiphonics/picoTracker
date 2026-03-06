@@ -58,9 +58,11 @@ void SamplePool::Load(const char *projectName) {
                  PROJECT_SAMPLES_DIR);
   }
   // First, find all wav files
-  fs->list(&MemoryPool::fileIndexList, ".wav", false);
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
+  fs->list(&(*fileIndexList), ".wav", false);
   char name[PFILENAME_SIZE];
-  uint totalSamples = MemoryPool::fileIndexList.size();
+  uint totalSamples = fileIndexList->size();
 
   // store for ui updates
   importCount = totalSamples;
@@ -69,8 +71,8 @@ void SamplePool::Load(const char *projectName) {
     importIndex = i;
     importName = name;
 
-    fs->getFileName(MemoryPool::fileIndexList[i], name, PFILENAME_SIZE);
-    if (fs->getFileType(MemoryPool::fileIndexList[i]) == PFT_FILE) {
+    fs->getFileName((*fileIndexList)[i], name, PFILENAME_SIZE);
+    if (fs->getFileType((*fileIndexList)[i]) == PFT_FILE) {
       // Check if the filename exceeds the maximum allowed length
       if (strlen(name) > MAX_INSTRUMENT_FILENAME_LENGTH) {
         Trace::Error(

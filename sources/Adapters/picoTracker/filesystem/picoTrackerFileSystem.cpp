@@ -278,7 +278,8 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
   auto fSrc = sd.open(srcFilename, O_READ);
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
 
-  char *fileBuffer = (char *)MemoryPool::Acquire();
+  auto buffer = MemoryPool::getBuffer();
+  char *fileBuffer = buffer.data();
 
   int n = 0;
 
@@ -289,13 +290,15 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
       fDest.write(fileBuffer, n);
     } else {
       Trace::Error("Failed to read file: %s", srcFilename);
+      fSrc.close();
+      fDest.close();
       return false;
     }
     if ((size_t)n < MEMORYPOOL_SCRATCH_SIZE) {
       break;
     }
   }
-  MemoryPool::Release();
+
   fSrc.close();
   fDest.close();
   return true;

@@ -31,19 +31,22 @@ ThemeImportView::~ThemeImportView() {}
 void ThemeImportView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
-  MemoryPool::fileIndexList.clear();
+  auto fileIndexList = MemoryPool::getFileIndexList();
+  (*fileIndexList).clear();
 }
 
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
   if (mask & EPBM_PLAY) {
     auto fs = FileSystem::GetInstance();
     char name[PFILENAME_SIZE];
 
-    if (currentIndex_ < MemoryPool::fileIndexList.size()) {
-      unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
+    if (currentIndex_ < (*fileIndexList).size()) {
+      unsigned fileIndex = (*fileIndexList)[currentIndex_];
       fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
       if (mask & EPBM_ALT) {
@@ -69,8 +72,8 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
 
-      if (currentIndex_ < MemoryPool::fileIndexList.size()) {
-        unsigned fileIndex = MemoryPool::fileIndexList[currentIndex_];
+      if (currentIndex_ < (*fileIndexList).size()) {
+        unsigned fileIndex = (*fileIndexList)[currentIndex_];
         char name[PFILENAME_SIZE];
         fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
@@ -112,9 +115,10 @@ void ThemeImportView::DrawView() {
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string in buffer :-(
   char buffer[PFILENAME_SIZE];
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < MemoryPool::fileIndexList.size());
-       i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < (*fileIndexList).size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -124,7 +128,7 @@ void ThemeImportView::DrawView() {
     }
 
     memset(buffer, '\0', sizeof(buffer));
-    unsigned fileIndex = MemoryPool::fileIndexList[i];
+    unsigned fileIndex = (*fileIndexList)[i];
     fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
     if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -155,7 +159,8 @@ void ThemeImportView::OnFocus() {
 }
 
 void ThemeImportView::warpToNextTheme(bool goUp) {
-  if (MemoryPool::fileIndexList.empty())
+  auto fileIndexList = MemoryPool::getFileIndexList();
+  if (fileIndexList->empty())
     return;
 
   if (goUp) {
@@ -168,7 +173,7 @@ void ThemeImportView::warpToNextTheme(bool goUp) {
       }
     }
   } else {
-    if (currentIndex_ < MemoryPool::fileIndexList.size() - 1) {
+    if (currentIndex_ < (*fileIndexList).size() - 1) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
@@ -236,9 +241,9 @@ void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   isDirty_ = true;
 
   // Update list of file indexes in this new dir
-  MemoryPool::fileIndexList.clear();
+  auto fileIndexList = MemoryPool::getFileIndexList();
+  fileIndexList->clear();
   // Use false for subDirOnly to include both files and directories
-  fs->list(&MemoryPool::fileIndexList, THEME_FILE_EXTENSION, false);
-  Trace::Debug("loaded %d files from %s", MemoryPool::fileIndexList.size(),
-               name);
+  fs->list(&(*fileIndexList), THEME_FILE_EXTENSION, false);
+  Trace::Debug("loaded %d files from %s", fileIndexList->size(), name);
 }
