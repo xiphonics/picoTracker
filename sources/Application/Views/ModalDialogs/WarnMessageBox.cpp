@@ -14,8 +14,8 @@
 static const char *warnButtonText[MBL_LAST] = {"Ok", "Yes", "Cancel", "No"};
 
 bool WarnMessageBox::inUse_ = false;
-alignas(WarnMessageBox) static unsigned char WarnMessageBoxStorage
-    [sizeof(WarnMessageBox)];
+alignas(WarnMessageBox) static unsigned char WarnMessageBoxStorage[sizeof(
+    WarnMessageBox)];
 void *WarnMessageBox::storage_ = WarnMessageBoxStorage;
 
 WarnMessageBox *WarnMessageBox::Create(View &view, const char *message,

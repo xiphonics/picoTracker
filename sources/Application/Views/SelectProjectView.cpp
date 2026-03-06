@@ -416,7 +416,8 @@ void SelectProjectView::AttemptDeletingSelectedProject() {
   char buffer[MAX_PROJECT_NAME_LENGTH + 11];
   npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", selected);
 
-  WarnMessageBox *mb = WarnMessageBox::Create(*this, buffer, MBBF_YES | MBBF_NO);
+  WarnMessageBox *mb =
+      WarnMessageBox::Create(*this, buffer, MBBF_YES | MBBF_NO);
   DoModal(mb, ModalViewCallback::create<&DeleteProjectCallback>());
 }
 
