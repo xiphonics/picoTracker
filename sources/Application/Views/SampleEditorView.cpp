@@ -1042,11 +1042,12 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
-  const auto &filename = activeFilename();
-  if (filename.empty()) {
+  const auto &workingFilename = activeFilename();
+  if (workingFilename.empty()) {
     Trace::Error("SampleEditorView: No filename available for trim");
     return false;
   }
+  const auto &displayFilename = viewData_->sampleEditorFilename;
 
   if (tempSampleSize_ == 0) {
     Trace::Error("SampleEditorView: Cannot trim empty sample");
@@ -1059,11 +1060,11 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
-  SampleEditProgressDisplay progressDisplay(filename);
+  SampleEditProgressDisplay progressDisplay(displayFilename);
   WavTrimResult trimResult{};
   sampleEditProgressDisplay = &progressDisplay;
   bool trimmed = WavFileWriter::TrimFile(
-      filename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
+      workingFilename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
       sizeof(chunkBuffer_), trimResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(trimmed);
@@ -1096,7 +1097,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
 
   Trace::Log("SAMPLEEDITOR",
              "Trimmed sample '%s' to %u frames (start=%u, end=%u)",
-             filename.c_str(), trimResult.framesKept, trimResult.clampedStart,
+             workingFilename.c_str(), trimResult.framesKept,
+             trimResult.clampedStart,
              trimResult.clampedEnd);
   return true;
 }
@@ -1113,23 +1115,24 @@ bool SampleEditorView::applyNormalizeOperation() {
     return false;
   }
 
-  const auto &filename = activeFilename();
-  if (filename.empty()) {
+  const auto &workingFilename = activeFilename();
+  if (workingFilename.empty()) {
     Trace::Error("SampleEditorView: No filename available for normalize");
     return false;
   }
+  const auto &displayFilename = viewData_->sampleEditorFilename;
 
   if (tempSampleSize_ == 0) {
     Trace::Error("SampleEditorView: Cannot normalize empty sample");
     return false;
   }
 
-  SampleEditProgressDisplay progressDisplay(filename);
+  SampleEditProgressDisplay progressDisplay(displayFilename);
   WavNormalizeResult normalizeResult{};
   sampleEditProgressDisplay = &progressDisplay;
   bool normalized = WavFileWriter::NormalizeFile(
-      filename.c_str(), static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
-      normalizeResult, wavProgressCallback);
+      workingFilename.c_str(), static_cast<void *>(chunkBuffer_),
+      sizeof(chunkBuffer_), normalizeResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(normalized);
   if (!normalized) {
@@ -1141,7 +1144,7 @@ bool SampleEditorView::applyNormalizeOperation() {
     fullWaveformRedraw_ = true;
     Trace::Log("SAMPLEEDITOR",
                "Normalize skipped for '%s' (peak=%d, target=%d)",
-               filename.c_str(), normalizeResult.peakBefore,
+               workingFilename.c_str(), normalizeResult.peakBefore,
                normalizeResult.targetPeak);
     return true;
   }
@@ -1174,7 +1177,7 @@ bool SampleEditorView::applyNormalizeOperation() {
 
   Trace::Log("SAMPLEEDITOR",
              "Normalized sample '%s' (gain=%.3f peak=%d target=%d)",
-             filename.c_str(), normalizeResult.gainApplied,
+             workingFilename.c_str(), normalizeResult.gainApplied,
              normalizeResult.peakBefore, normalizeResult.targetPeak);
   return true;
 }
