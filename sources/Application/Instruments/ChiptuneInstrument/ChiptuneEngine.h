@@ -48,7 +48,7 @@ static_assert(sizeof(InstrumentParameters) <= 12,
  ******************************************************************************/
 
 // max rates for slew limiting the waveform against aliasing noise. could be
-// improved to be frequency-dependent later on, but this is a good start and 
+// improved to be frequency-dependent later on, but this is a good start and
 // keeps the implementation simple.y
 constexpr int32_t maxStep = 0x3fff'ffff;
 constexpr int32_t minStep = -0x3fff'ffff;
@@ -436,8 +436,9 @@ typedef struct voice_t {
   // while keeping the implementation fast enough for 8 voices on rp2040
   inline uint32_t pulse(bool high) {
     uint32_t target = high ? 0x0FFF'FFFF : 0;
+    int32_t step = frequency + 0x1fff'ffff; // 0.125 + phase increment
     int32_t diff = (int32_t)target - (int32_t)lastSample;
-    diff = std::clamp(diff, minStep, maxStep);
+    diff = std::clamp(diff, -(int32_t)step, (int32_t)step);
     return (lastSample = (lastSample + diff));
   }
 
@@ -539,7 +540,7 @@ typedef struct voice_t {
         return;
       }
 
-      // initial factor = lastFrequency / frequency (e.g., 0.5 for up an octave)
+      // initial factor = lastFrequency / frequency (0.5 for up an octave etc)
       // target factor = 1.0 (when we reach the new frequency)
       int64_t initialFactor = ((int64_t)lastFrequency << 16) / frequency;
       legato.targetFreq = 0x0001'0000; // 1.0 in Q16.16
