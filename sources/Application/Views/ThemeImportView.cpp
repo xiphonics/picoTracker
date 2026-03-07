@@ -192,6 +192,9 @@ void ThemeImportView::onImportTheme(const char *filename) {
     AppWindow &app = (AppWindow &)w_;
     app.UpdateColorsFromConfig();
 
+    // make sure we redraw everything with the new colors
+    ForceClear();
+
     // Show success message
     MessageBox *mb =
         MessageBox::Create(*this, "Theme imported successfully", MBBF_OK);

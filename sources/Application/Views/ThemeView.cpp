@@ -279,6 +279,12 @@ void ThemeView::syncColorComponentVars(Variable *colorVar) {
     uint32_t componentValue =
         (colorValue >> entry.shift) & static_cast<uint32_t>(0xFF);
     entry.componentVar->SetInt(static_cast<int>(componentValue), false);
+
+    if (entry.colorVar->GetID() == FourCC::VarBGColor) {
+      // If the background or foreground color changed, we need to force a
+      // redraw to update all the colors on the screen
+      _forceRedraw = true;
+    }
   }
 }
 
