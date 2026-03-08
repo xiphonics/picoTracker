@@ -9,7 +9,6 @@
 
 #include "RenderProgressModal.h"
 #include "Application/Player/Player.h"
-#include "Application/Player/SyncMaster.h"
 #include "Application/Views/BaseClasses/View.h"
 #include "UIFramework/BasicDatas/GUIPoint.h"
 #include <cstdint>
@@ -22,21 +21,24 @@ alignas(RenderProgressModal) static unsigned char RenderProgressModalStorage
 void *RenderProgressModal::storage_ = RenderProgressModalStorage;
 
 RenderProgressModal *RenderProgressModal::Create(View &view, const char *title,
-                                                 const char *message) {
+                                                 const char *message,
+                                                 ProgressDisplayMode
+                                                     progressDisplayMode) {
   if (inUse_) {
     auto *existing = reinterpret_cast<RenderProgressModal *>(storage_);
     existing->~RenderProgressModal();
     inUse_ = false;
   }
   inUse_ = true;
-  return new (storage_) RenderProgressModal(view, title, message);
+  return new (storage_)
+      RenderProgressModal(view, title, message, progressDisplayMode);
 }
 
 RenderProgressModal::RenderProgressModal(View &view, const char *title,
-                                         const char *message)
-    : ModalView(view), title_(title), message_(message), totalSamples_(0.0f) {
-  tempo_ = SyncMaster::GetInstance()->GetTempo();
-}
+                                         const char *message,
+                                         ProgressDisplayMode progressDisplayMode)
+    : ModalView(view), title_(title), message_(message), totalSamples_(0.0f),
+      progressDisplayMode_(progressDisplayMode) {}
 
 RenderProgressModal::~RenderProgressModal() {}
 
@@ -47,11 +49,7 @@ void RenderProgressModal::Destroy() {
 
 void RenderProgressModal::DrawView() {
   // Calculate window size
-  uint32_t width = title_.size();
-  if (message_.size() > width) {
-    width = message_.size();
-  }
-  width = width > 16u ? width : 16u; // Minimum width for time display
+  const uint32_t width = getDialogWidth();
   SetWindow(width, 4); // Height of 4 for title, message, time, and button
 
   // Draw title
@@ -81,30 +79,8 @@ void RenderProgressModal::DrawView() {
 
 void RenderProgressModal::OnPlayerUpdate(PlayerEventType eventType,
                                          unsigned int currentTick) {
-  // This runs on core1 (audio thread)
-  Player *player = Player::GetInstance();
-  const bool isRunning = player && player->IsRunning();
-  const bool hasJustFinished = renderStarted_ && !isRunning;
-
-  // Only mark completion if we have observed an active render first.
-  if (isRunning) {
-    renderStarted_ = true;
-  }
-
-  // Mark completion after transitioning from started -> stopped.
-  if (hasJustFinished && !renderComplete_) {
-    renderComplete_ = true;
-    message_ = "Render Complete!"; // Update the message
-    isDirty_ = true;               // Mark view as dirty to trigger redraw
-  }
-  // Only update progress if we're still rendering
-  else if (isRunning) {
-    // Calculate samples for this buffer based on the tempo
-    float samplesThisBuffer = calculateSamplesPerBuffer(tempo_);
-    // Add to our total sample count and mark as dirty for redraw
-    totalSamples_ += samplesThisBuffer;
-    isDirty_ = true;
-  }
+  (void)eventType;
+  (void)currentTick;
 }
 
 void RenderProgressModal::OnFocus() {}
@@ -130,13 +106,32 @@ void RenderProgressModal::AnimationUpdate() {
   // are sparse during stems.
   Player *player = Player::GetInstance();
   const bool isRunning = player && player->IsRunning();
-  const bool hasJustFinished = renderStarted_ && !isRunning;
 
   if (isRunning) {
     renderStarted_ = true;
-    totalSamples_ = player->GetPlayTime() * SAMPLE_RATE;
+    if (progressDisplayMode_ == ProgressDisplayMode::ElapsedTime) {
+      totalSamples_ = player->GetPlayTime() * SAMPLE_RATE;
+    } else {
+      // calculate the percentage progress of the song we have rendered
+      bool hasActiveRow = false;
+      const int currentRow = getCurrentRenderedSongRow(&hasActiveRow);
+      if (hasActiveRow) {
+        if (!startSongRowCaptured_) {
+          startSongRow_ = currentRow;
+          startSongRowCaptured_ = true;
+          initializeSongProgressTracking();
+        }
+        if (progressChannel_ >= 0) {
+          const int renderedUnits =
+              calculateChannelRenderedUnits(progressChannel_, startSongRow_);
+          if (renderedUnits > renderedUnits_) {
+            renderedUnits_ = renderedUnits;
+          }
+        }
+      }
+    }
     isDirty_ = true;
-  } else if (hasJustFinished && !renderComplete_) {
+  } else if (renderStarted_ && !renderComplete_) {
     renderComplete_ = true;
     message_ = "Render Complete!";
     isDirty_ = true;
@@ -147,11 +142,7 @@ void RenderProgressModal::AnimationUpdate() {
   }
   isDirty_ = false;
 
-  uint32_t width = title_.size();
-  if (message_.size() > width) {
-    width = message_.size();
-  }
-  width = width > 16u ? width : 16u; // Minimum width for time display
+  const uint32_t width = getDialogWidth();
   int32_t y = 2;
   GUITextProperties props;
 
@@ -168,25 +159,211 @@ void RenderProgressModal::AnimationUpdate() {
 
 void RenderProgressModal::drawRenderProgress(GUIPoint &pos,
                                              GUITextProperties &props) {
-  // Calculate time in seconds from total samples
-  int seconds = static_cast<int>(totalSamples_ / SAMPLE_RATE);
-  int minutes = seconds / 60;
-  seconds %= 60;
-
-  // Format as MM:SS
-  char buffer[10];
   const char *spinnerchars = "|/-\\";
   char spinner = spinnerchars[spinner_++ % 4];
-  sprintf(buffer, "%02d:%02d %c", minutes, seconds, spinner);
+
+  char buffer[12];
+  if (progressDisplayMode_ == ProgressDisplayMode::SongPercent) {
+    uint8_t percent = calculateSongRenderPercent();
+    sprintf(buffer, "%3d%% %c", percent, spinner);
+  } else {
+    // Calculate time in seconds from total samples
+    uint8_t seconds = static_cast<uint8_t>(totalSamples_ / SAMPLE_RATE);
+    uint8_t minutes = seconds / 60;
+    seconds %= 60;
+    sprintf(buffer, "%02d:%02d %c", minutes, seconds, spinner);
+  }
+
   DrawString(pos._x, pos._y, buffer, props);
 }
 
-float RenderProgressModal::calculateSamplesPerBuffer(int tempo) {
-  // Calculate samples per buffer using the same formula as in
-  // SyncMaster::SetTempo playSampleCount_ = 60.0f * driverRate * 2.0f / tempo_
-  // / 8.0f / float(AUDIO_SLICES_PER_STEP);
+uint32_t RenderProgressModal::getDialogWidth() const {
+  uint32_t width = title_.size();
+  if (message_.size() > width) {
+    width = message_.size();
+  }
+  return width > 16u ? width : 16u;
+}
 
-  float samplesPerBuffer = 60.0f * SAMPLE_RATE * 2.0f / tempo / 8.0f /
-                           static_cast<float>(AUDIO_SLICES_PER_STEP);
-  return samplesPerBuffer;
+int RenderProgressModal::getCurrentRenderedSongRow(bool *hasActive) const {
+  if (hasActive != nullptr) {
+    *hasActive = false;
+  }
+  if (viewData_ == nullptr) {
+    return 0;
+  }
+
+  int currentRow = 0;
+  bool foundActive = false;
+  for (int channel = 0; channel < SONG_CHANNEL_COUNT; channel++) {
+    if (viewData_->currentPlayPhrase_[channel] == EMPTY_SONG_VALUE) {
+      continue;
+    }
+    const int row = viewData_->songPlayPos_[channel];
+    if (!foundActive || row > currentRow) {
+      currentRow = row;
+      foundActive = true;
+    }
+  }
+
+  if (hasActive != nullptr) {
+    *hasActive = foundActive;
+  }
+
+  if (currentRow < 0) {
+    currentRow = 0;
+  } else if (currentRow >= SONG_ROW_COUNT) {
+    currentRow = SONG_ROW_COUNT - 1;
+  }
+  return currentRow;
+}
+
+int RenderProgressModal::getChainPhraseCount(int songRow, int channel) const {
+  if (viewData_ == nullptr || viewData_->song_ == nullptr) {
+    return 0;
+  }
+  if (songRow < 0 || songRow >= SONG_ROW_COUNT || channel < 0 ||
+      channel >= SONG_CHANNEL_COUNT) {
+    return 0;
+  }
+
+  const Song *song = viewData_->song_;
+  const unsigned char chain =
+      song->data_[songRow * SONG_CHANNEL_COUNT + channel];
+  if (chain == EMPTY_SONG_VALUE) {
+    return 0;
+  }
+
+  int phraseCount = 0;
+  for (int i = 0; i < PHRASES_PER_CHAIN; i++) {
+    if (song->chain_.data_[chain * PHRASES_PER_CHAIN + i] == EMPTY_SONG_VALUE) {
+      break;
+    }
+    phraseCount++;
+  }
+  return phraseCount;
+}
+
+int RenderProgressModal::calculateChannelTotalRenderUnits(int channel,
+                                                          int startSongRow) const {
+  if (startSongRow < 0 || startSongRow >= SONG_ROW_COUNT) {
+    return 0;
+  }
+
+  int totalUnits = 0;
+  for (int row = startSongRow; row < SONG_ROW_COUNT; row++) {
+    const int phraseCount = getChainPhraseCount(row, channel);
+    if (phraseCount <= 0) {
+      break;
+    }
+    totalUnits += phraseCount * STEPS_PER_PHRASE;
+
+    if (row + 1 >= SONG_ROW_COUNT || getChainPhraseCount(row + 1, channel) <= 0) {
+      break;
+    }
+  }
+
+  return totalUnits;
+}
+
+int RenderProgressModal::calculateChannelRenderedUnits(int channel,
+                                                       int startSongRow) const {
+  if (startSongRow < 0 || startSongRow >= SONG_ROW_COUNT || viewData_ == nullptr) {
+    return 0;
+  }
+  if (channel < 0 || channel >= SONG_CHANNEL_COUNT) {
+    return 0;
+  }
+
+  int currentSongRow = viewData_->songPlayPos_[channel];
+  if (currentSongRow < startSongRow) {
+    return 0;
+  }
+
+  int renderedUnits = 0;
+  for (int row = startSongRow; row < currentSongRow && row < SONG_ROW_COUNT; row++) {
+    const int phraseCount = getChainPhraseCount(row, channel);
+    if (phraseCount <= 0) {
+      return renderedUnits;
+    }
+    renderedUnits += phraseCount * STEPS_PER_PHRASE;
+  }
+
+  if (currentSongRow >= SONG_ROW_COUNT) {
+    return totalRenderUnits_;
+  }
+
+  const int currentPhraseCount = getChainPhraseCount(currentSongRow, channel);
+  if (currentPhraseCount <= 0) {
+    return renderedUnits;
+  }
+
+  int chainPos = viewData_->chainPlayPos_[channel];
+  if (chainPos < 0) {
+    chainPos = 0;
+  } else if (chainPos >= currentPhraseCount) {
+    chainPos = currentPhraseCount - 1;
+  }
+
+  int phrasePos = viewData_->phrasePlayPos_[channel];
+  if (phrasePos < 0) {
+    phrasePos = 0;
+  } else if (phrasePos >= STEPS_PER_PHRASE) {
+    phrasePos = STEPS_PER_PHRASE - 1;
+  }
+
+  renderedUnits += chainPos * STEPS_PER_PHRASE + phrasePos;
+  if (renderedUnits > totalRenderUnits_) {
+    renderedUnits = totalRenderUnits_;
+  }
+  return renderedUnits;
+}
+
+void RenderProgressModal::initializeSongProgressTracking() {
+  progressChannel_ = -1;
+  totalRenderUnits_ = 1;
+  renderedUnits_ = 0;
+
+  int bestTotalUnits = 0;
+  for (int channel = 0; channel < SONG_CHANNEL_COUNT; channel++) {
+    const int totalUnits = calculateChannelTotalRenderUnits(channel, startSongRow_);
+    if (totalUnits <= 0) {
+      continue;
+    }
+    if (progressChannel_ < 0 || totalUnits < bestTotalUnits) {
+      progressChannel_ = channel;
+      bestTotalUnits = totalUnits;
+    }
+  }
+
+  if (progressChannel_ >= 0 && bestTotalUnits > 0) {
+    totalRenderUnits_ = bestTotalUnits;
+  }
+}
+
+int RenderProgressModal::calculateSongRenderPercent() const {
+  if (renderComplete_) {
+    return 100;
+  }
+  if (!renderStarted_ || !startSongRowCaptured_ || progressChannel_ < 0) {
+    return 0;
+  }
+
+  int totalUnits = totalRenderUnits_;
+  if (totalUnits <= 0) {
+    totalUnits = 1;
+  }
+
+  int renderedUnits = renderedUnits_;
+  if (renderedUnits < 0) {
+    renderedUnits = 0;
+  } else if (renderedUnits > totalUnits) {
+    renderedUnits = totalUnits;
+  }
+
+  int percent = (renderedUnits * 100) / totalUnits;
+  if (percent > 99) {
+    percent = 99;
+  }
+  return percent;
 }

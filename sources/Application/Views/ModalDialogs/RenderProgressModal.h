@@ -12,6 +12,7 @@
 
 #include "Application/Player/Player.h"
 #include "Application/Views/BaseClasses/ModalView.h"
+#include <cstdint>
 #include <etl/string.h>
 
 // Forward declarations
@@ -21,11 +22,16 @@ class GUITextProperties;
 // Progress message box with render progress display
 class RenderProgressModal : public ModalView {
 public:
+  enum class ProgressDisplayMode { ElapsedTime, SongPercent };
+
   static RenderProgressModal *Create(View &view, const char *title,
-                                     const char *message);
+                                     const char *message,
+                                     ProgressDisplayMode progressDisplayMode =
+                                         ProgressDisplayMode::ElapsedTime);
 
   // Constructor taking a view, title and message
-  RenderProgressModal(View &view, const char *title, const char *message);
+  RenderProgressModal(View &view, const char *title, const char *message,
+                      ProgressDisplayMode progressDisplayMode);
 
   // Virtual destructor
   virtual ~RenderProgressModal();
@@ -44,9 +50,13 @@ private:
 
   // Helper method to draw the render progress
   void drawRenderProgress(GUIPoint &pos, GUITextProperties &props);
-
-  // Helper method to calculate samples per buffer based on tempo
-  float calculateSamplesPerBuffer(int tempo);
+  uint32_t getDialogWidth() const;
+  int calculateSongRenderPercent() const;
+  int getCurrentRenderedSongRow(bool *hasActive = nullptr) const;
+  int getChainPhraseCount(int songRow, int channel) const;
+  int calculateChannelTotalRenderUnits(int channel, int startSongRow) const;
+  int calculateChannelRenderedUnits(int channel, int startSongRow) const;
+  void initializeSongProgressTracking();
 
   // Title and message strings
   etl::string<20> title_;
@@ -57,12 +67,17 @@ private:
   bool renderComplete_ = false;
   bool renderStarted_ = false;
 
-  int tempo_ = 0;
+  ProgressDisplayMode progressDisplayMode_;
+  int startSongRow_ = 0;
+  int renderedUnits_ = 0;
+  int totalRenderUnits_ = 1;
+  int progressChannel_ = -1;
+  bool startSongRowCaptured_ = false;
+
   unsigned char spinner_ = 0;
 
   // Constants for sample rate calculations
   static const int SAMPLE_RATE = 44100;
-  static const int AUDIO_SLICES_PER_STEP = 6;
 
   static bool inUse_;
   static void *storage_;
