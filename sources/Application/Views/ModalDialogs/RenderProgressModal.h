@@ -68,6 +68,7 @@ private:
   bool renderStarted_ = false;
 
   ProgressDisplayMode progressDisplayMode_;
+  uint32_t dialogWidth_ = 16;
   int startSongRow_ = 0;
   int renderedUnits_ = 0;
   int totalRenderUnits_ = 1;

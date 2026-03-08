@@ -38,7 +38,15 @@ RenderProgressModal::RenderProgressModal(View &view, const char *title,
                                          const char *message,
                                          ProgressDisplayMode progressDisplayMode)
     : ModalView(view), title_(title), message_(message), totalSamples_(0.0f),
-      progressDisplayMode_(progressDisplayMode) {}
+      progressDisplayMode_(progressDisplayMode) {
+  dialogWidth_ = title_.size();
+  if (message_.size() > dialogWidth_) {
+    dialogWidth_ = message_.size();
+  }
+  if (dialogWidth_ < 16u) {
+    dialogWidth_ = 16u;
+  }
+}
 
 RenderProgressModal::~RenderProgressModal() {}
 
@@ -69,12 +77,13 @@ void RenderProgressModal::DrawView() {
   GUIPoint progressPos(width / 2 - 2, y); // Center the progress display
   drawRenderProgress(progressPos, props);
 
-  // Draw OK button
+  // Draw action button
   SetColor(CD_NORMAL);
   y++;
   props.invert_ = true;
-  x = width / 2 - 1; // Center the OK button
-  DrawString(x, y, "OK", props);
+  // Use a fixed-width label area to avoid stale characters when label shrinks.
+  x = width / 2 - 3;
+  DrawString(x, y, renderComplete_ ? "  OK  " : "Cancel", props);
 }
 
 void RenderProgressModal::OnPlayerUpdate(PlayerEventType eventType,
@@ -147,6 +156,7 @@ void RenderProgressModal::AnimationUpdate() {
   GUITextProperties props;
 
   if (renderComplete_) {
+    ClearTextRect(0, y - 1, width, 1);
     SetColor(CD_INFO);
     int32_t x = (width - message_.size()) / 2;
     DrawString(x, y - 1, message_.c_str(), props);
@@ -155,6 +165,12 @@ void RenderProgressModal::AnimationUpdate() {
   GUIPoint progressPos(width / 2 - 2, y);
   SetColor(CD_NORMAL);
   drawRenderProgress(progressPos, props);
+
+  // Keep button label in sync with render state.
+  ClearTextRect(0, y + 1, width, 1);
+  props.invert_ = true;
+  DrawString(width / 2 - 3, y + 1, renderComplete_ ? "  OK  " : "Cancel",
+             props);
 }
 
 void RenderProgressModal::drawRenderProgress(GUIPoint &pos,
@@ -178,11 +194,7 @@ void RenderProgressModal::drawRenderProgress(GUIPoint &pos,
 }
 
 uint32_t RenderProgressModal::getDialogWidth() const {
-  uint32_t width = title_.size();
-  if (message_.size() > width) {
-    width = message_.size();
-  }
-  return width > 16u ? width : 16u;
+  return dialogWidth_;
 }
 
 int RenderProgressModal::getCurrentRenderedSongRow(bool *hasActive) const {
