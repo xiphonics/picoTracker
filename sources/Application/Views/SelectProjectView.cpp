@@ -300,7 +300,10 @@ void SelectProjectView::DrawScrollBar() {
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
                                        unsigned int currentTick){};
 
-void SelectProjectView::OnFocus() { setCurrentFolder(); };
+void SelectProjectView::OnFocus() {
+  selectedButton_ = 0; // Always default to "Load" when entering this view.
+  setCurrentFolder();
+};
 
 void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
