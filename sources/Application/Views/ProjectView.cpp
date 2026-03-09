@@ -409,7 +409,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     if (!player->IsRunning()) {
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog = RenderProgressModal::Create(
-          *this, "Rendering", "Press Cancel to stop");
+          *this, "Rendering", "");
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
 
       // Start playback in rendering mode with MSM_FILE
@@ -420,7 +420,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     if (!player->IsRunning()) {
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog = RenderProgressModal::Create(
-          *this, "Stems Rendering", "Press Cancel to stop",
+          *this, "Stems Rendering", "",
           RenderProgressModal::ProgressDisplayMode::SongPercent);
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
 

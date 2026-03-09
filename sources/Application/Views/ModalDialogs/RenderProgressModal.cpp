@@ -57,7 +57,7 @@ void RenderProgressModal::Destroy() {
 void RenderProgressModal::DrawView() {
   // Calculate window size
   const uint32_t width = getDialogWidth();
-  SetWindow(width, 4); // Height of 4 for title, message, time, and button
+  SetWindow(width, 5); // Height of 5 for title, message, time/progress, and button with blank line sep
 
   // Draw title
   int32_t y = 0;
@@ -78,7 +78,7 @@ void RenderProgressModal::DrawView() {
 
   // Draw action button
   SetColor(CD_NORMAL);
-  y++;
+  y+=2;
   props.invert_ = true;
   // Use a fixed-width label area to avoid stale characters when label shrinks.
   x = width / 2 - 3;
@@ -168,7 +168,7 @@ void RenderProgressModal::AnimationUpdate() {
   // Keep button label in sync with render state.
   ClearTextRect(0, y + 1, width, 1);
   props.invert_ = true;
-  DrawString(width / 2 - 3, y + 1, renderComplete_ ? "  OK  " : "Cancel",
+  DrawString(width / 2 - 3, y + 2, renderComplete_ ? "  OK  " : "Cancel",
              props);
 }
 
