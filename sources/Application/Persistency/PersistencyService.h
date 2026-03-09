@@ -66,7 +66,6 @@ private:
   PersistencyResult SaveProjectData(const char *projectName, bool autosave);
 
   // need these as statically allocated buffers as too big for stack
-  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes_;
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferA;
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferB;
 };

@@ -44,21 +44,23 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
 
   if (mask & EPBM_PLAY) {
     auto fs = FileSystem::GetInstance();
-    auto fileIndexList = MemoryPool::getFileIndexList();
-
     char name[PFILENAME_SIZE];
+    bool shouldImport = false;
 
-    if (currentIndex_ < fileIndexList->size()) {
-      unsigned fileIndex = (*fileIndexList)[currentIndex_];
-      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-      if (mask & EPBM_ALT) {
-        Trace::Log("INSTRUMENTIMPORT", "SHIFT play - import");
-        importInstrument(name);
-      } else {
-        // TODO: audition instrument by temporarily loading it and playing a
-        // note
+    {
+      auto fileIndexList = MemoryPool::getFileIndexList();
+      if (currentIndex_ < fileIndexList->size()) {
+        unsigned fileIndex = (*fileIndexList)[currentIndex_];
+        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+        shouldImport = (mask & EPBM_ALT) != 0;
       }
+    } // lock released before importInstrument
+
+    if (shouldImport) {
+      Trace::Log("INSTRUMENTIMPORT", "SHIFT play - import");
+      importInstrument(name);
+    } else {
+      // TODO: audition instrument by temporarily loading it and playing a note
     }
 
     // handle moving up and down the file list
@@ -77,21 +79,26 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
     // ENTER modifier
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
-      auto fileIndexList = MemoryPool::getFileIndexList();
+      char name[PFILENAME_SIZE];
+      bool isNavDir = false;
+      bool hasEntry = false;
 
-      if (currentIndex_ < fileIndexList->size()) {
-        unsigned fileIndex = (*fileIndexList)[currentIndex_];
-        char name[PFILENAME_SIZE];
-        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-        // Only allow navigation into directories, not to parent directory
-        if (fs->getFileType(fileIndex) == PFT_DIR && strcmp(name, ".") != 0 &&
-            strcmp(name, "..") != 0) {
-          setCurrentFolder(fs, name);
-          isDirty_ = true;
-          topIndex_ = 0; // need to reset when entering a dir as prev dir may
-                         // have been already scrolled down
+      {
+        auto fileIndexList = MemoryPool::getFileIndexList();
+        if (currentIndex_ < fileIndexList->size()) {
+          unsigned fileIndex = (*fileIndexList)[currentIndex_];
+          fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+          isNavDir = fs->getFileType(fileIndex) == PFT_DIR &&
+                     strcmp(name, ".") != 0 && strcmp(name, "..") != 0;
+          hasEntry = true;
         }
+      } // lock released before setCurrentFolder
+
+      if (hasEntry && isNavDir) {
+        setCurrentFolder(fs, name);
+        isDirty_ = true;
+        topIndex_ = 0; // need to reset when entering a dir as prev dir may
+                       // have been already scrolled down
       }
     }
   }
@@ -347,13 +354,12 @@ void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {
     return;
   }
 
-  auto fileIndexList = MemoryPool::getFileIndexList();
-
   currentIndex_ = 0;
   topIndex_ = 0;
   isDirty_ = true;
 
   // Update list of file indexes in this new dir
+  auto fileIndexList = MemoryPool::getFileIndexList();
   fileIndexList->clear();
   // Use false for subDirOnly to include both files and directories
   fs->list(&(*fileIndexList), INSTRUMENT_FILE_EXTENSION, false);

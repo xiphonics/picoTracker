@@ -32,29 +32,29 @@ void ThemeImportView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
   auto fileIndexList = MemoryPool::getFileIndexList();
-  (*fileIndexList).clear();
+  fileIndexList->clear();
 }
 
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  auto fileIndexList = MemoryPool::getFileIndexList();
-
   if (mask & EPBM_PLAY) {
     auto fs = FileSystem::GetInstance();
     char name[PFILENAME_SIZE];
+    bool shouldImport = false;
 
-    if (currentIndex_ < (*fileIndexList).size()) {
+    auto fileIndexList = MemoryPool::getFileIndexList();
+    if (currentIndex_ < fileIndexList->size()) {
       unsigned fileIndex = (*fileIndexList)[currentIndex_];
       fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-      if (mask & EPBM_ALT) {
-        Trace::Log("THEMEIMPORT", "SHIFT play - import");
-        onImportTheme(name);
-      }
+      shouldImport = (mask & EPBM_ALT) != 0;
     }
 
+    if (shouldImport) {
+      Trace::Log("THEMEIMPORT", "SHIFT play - import");
+      onImportTheme(name);
+    }
     // handle moving up and down the file list
   } else if (mask & EPBM_UP) {
     warpToNextTheme(true);
@@ -71,15 +71,21 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // ENTER modifier
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
+      char name[PFILENAME_SIZE];
+      bool isDir = false;
+      bool hasEntry = false;
 
+      auto fileIndexList = MemoryPool::getFileIndexList();
       if (currentIndex_ < (*fileIndexList).size()) {
         unsigned fileIndex = (*fileIndexList)[currentIndex_];
-        char name[PFILENAME_SIZE];
         fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+        isDir = fs->getFileType(fileIndex) == PFT_DIR;
+        hasEntry = true;
+      }
 
+      if (hasEntry) {
         // Only allow navigation into directories, not to parent directory
-        if (fs->getFileType(fileIndex) == PFT_DIR && strcmp(name, ".") != 0 &&
-            strcmp(name, "..") != 0) {
+        if (isDir && strcmp(name, ".") != 0 && strcmp(name, "..") != 0) {
           setCurrentFolder(fs, name);
           isDirty_ = true;
           topIndex_ = 0; // need to reset when entering a dir as prev dir may
@@ -153,6 +159,7 @@ void ThemeImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {}
 
 void ThemeImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
+  auto fileIndexList = MemoryPool::getFileIndexList();
 
   // Navigate to the themes directory
   setCurrentFolder(fs, THEMES_DIR);
@@ -242,7 +249,6 @@ void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
 
   // Update list of file indexes in this new dir
   auto fileIndexList = MemoryPool::getFileIndexList();
-  fileIndexList->clear();
   // Use false for subDirOnly to include both files and directories
   fs->list(&(*fileIndexList), THEME_FILE_EXTENSION, false);
   Trace::Debug("loaded %d files from %s", fileIndexList->size(), name);

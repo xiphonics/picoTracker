@@ -85,39 +85,41 @@ void SelectProjectView::DrawView() {
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
   const char *currentProject = projectName.c_str();
 
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  {
+    auto fileIndexList = MemoryPool::getFileIndexList();
 
-  for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList->size()); i++) {
-    if (i == currentIndex_) {
-      SetColor(CD_HILITE2);
-      props.invert_ = true;
-    } else {
-      SetColor(CD_NORMAL);
-      props.invert_ = false;
+    for (size_t i = topIndex_;
+         i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList->size()); i++) {
+      if (i == currentIndex_) {
+        SetColor(CD_HILITE2);
+        props.invert_ = true;
+      } else {
+        SetColor(CD_NORMAL);
+        props.invert_ = false;
+      }
+
+      char buffer[MAX_PROJECT_NAME_LENGTH + 1];
+      memset(buffer, '\0', sizeof(buffer));
+      unsigned fileIndex = (*fileIndexList)[i];
+
+      if (fs->getFileType(fileIndex) == PFT_DIR) {
+        fs->getFileName(fileIndex, buffer, MAX_PROJECT_NAME_LENGTH + 1);
+      }
+      // SDFat lib doesn't truncate if filename longer than buffer as per docs
+      // but instead returns empty string in buffer
+      if (strlen(buffer) == 0) {
+        strcpy(buffer, INVALID_PROJECT_NAME);
+      }
+
+      if (strcmp(buffer, currentProject) == 0) {
+        // mark currently loaded project
+        DrawString(x - 1, y, "*", props);
+      }
+
+      DrawString(x, y, buffer, props);
+      y += 1;
     }
-
-    char buffer[MAX_PROJECT_NAME_LENGTH + 1];
-    memset(buffer, '\0', sizeof(buffer));
-    unsigned fileIndex = (*fileIndexList)[i];
-
-    if (fs->getFileType(fileIndex) == PFT_DIR) {
-      fs->getFileName(fileIndex, buffer, MAX_PROJECT_NAME_LENGTH + 1);
-    }
-    // SDFat lib doesn't truncate if filename longer than buffer as per docs but
-    // instead returns empty string in buffer
-    if (strlen(buffer) == 0) {
-      strcpy(buffer, INVALID_PROJECT_NAME);
-    }
-
-    if (strcmp(buffer, currentProject) == 0) {
-      // mark currently loaded project
-      DrawString(x - 1, y, "*", props);
-    }
-
-    DrawString(x, y, buffer, props);
-    y += 1;
-  };
+  } // fileIndexListMutex released here, before DrawScrollBar re-acquires it
 
   // load/delete selection buttons
   const char *buttons[numButtons_] = {
@@ -316,19 +318,22 @@ void SelectProjectView::SelectButton(int direction) {
 }
 
 void SelectProjectView::LoadProject() {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fs = FileSystem::GetInstance();
+  {
+    auto fileIndexList = MemoryPool::getFileIndexList();
 
-  if (currentIndex_ >= fileIndexList->size()) {
-    return;
+    if (currentIndex_ >= fileIndexList->size()) {
+      return;
+    }
+
+    // all subdirs directly inside /project are expected to be projects
+    unsigned fileIndex = (*fileIndexList)[currentIndex_];
+    fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
   }
 
-  // all subdirs directly inside /project are expected to be projects
-  unsigned fileIndex = (*fileIndexList)[currentIndex_];
-  auto fs = FileSystem::GetInstance();
-  fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
   if (strlen(selection_) == 0) {
     Trace::Log("SELECTPROJECTVIEW",
-               "skipping too long project name on Index:%d", fileIndex);
+               "skipping too long project name on Index:%d", currentIndex_);
     return;
   }
 
@@ -399,10 +404,11 @@ void SelectProjectView::ConfirmOverwrite() {
 }
 
 void SelectProjectView::AttemptDeletingSelectedProject() {
-  auto fileIndexList = MemoryPool::getFileIndexList();
-
-  if (currentIndex_ >= fileIndexList->size()) {
-    return;
+  {
+    auto fileIndexList = MemoryPool::getFileIndexList();
+    if (currentIndex_ >= fileIndexList->size()) {
+      return;
+    }
   }
 
   if (WarnPlayerRunning()) {
