@@ -44,12 +44,14 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     char name[PFILENAME_SIZE];
     bool shouldImport = false;
 
-    auto fileIndexList = MemoryPool::getFileIndexList();
-    if (currentIndex_ < fileIndexList->size()) {
-      unsigned fileIndex = (*fileIndexList)[currentIndex_];
-      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-      shouldImport = (mask & EPBM_ALT) != 0;
-    }
+    {
+      auto fileIndexList = MemoryPool::getFileIndexList();
+      if (currentIndex_ < fileIndexList->size()) {
+        unsigned fileIndex = (*fileIndexList)[currentIndex_];
+        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+        shouldImport = (mask & EPBM_ALT) != 0;
+      }
+    } // lock released before onImportTheme
 
     if (shouldImport) {
       Trace::Log("THEMEIMPORT", "SHIFT play - import");
@@ -75,13 +77,15 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       bool isDir = false;
       bool hasEntry = false;
 
-      auto fileIndexList = MemoryPool::getFileIndexList();
-      if (currentIndex_ < (*fileIndexList).size()) {
-        unsigned fileIndex = (*fileIndexList)[currentIndex_];
-        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-        isDir = fs->getFileType(fileIndex) == PFT_DIR;
-        hasEntry = true;
-      }
+      {
+        auto fileIndexList = MemoryPool::getFileIndexList();
+        if (currentIndex_ < (*fileIndexList).size()) {
+          unsigned fileIndex = (*fileIndexList)[currentIndex_];
+          fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+          isDir = fs->getFileType(fileIndex) == PFT_DIR;
+          hasEntry = true;
+        }
+      } // lock released before setCurrentFolder / onImportTheme
 
       if (hasEntry) {
         // Only allow navigation into directories, not to parent directory
@@ -159,9 +163,8 @@ void ThemeImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {}
 
 void ThemeImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
-  auto fileIndexList = MemoryPool::getFileIndexList();
-
-  // Navigate to the themes directory
+  // Navigate to the themes directory (setCurrentFolder acquires the lock
+  // itself)
   setCurrentFolder(fs, THEMES_DIR);
 }
 
