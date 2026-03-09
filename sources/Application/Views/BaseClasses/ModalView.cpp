@@ -13,8 +13,8 @@
 uint32_t ModalView::nextInstanceId_ = 0;
 
 ModalView::ModalView(View &v)
-    : View(v.w_, v.viewData_), instanceId_(++nextInstanceId_),
-      finished_(false), returnCode_(0){};
+    : View(v.w_, v.viewData_), instanceId_(++nextInstanceId_), finished_(false),
+      returnCode_(0){};
 
 ModalView::~ModalView(){};
 

@@ -47,9 +47,9 @@ private:
 };
 
 bool DeleteProjectConfirmModal::inUse_ = false;
-alignas(DeleteProjectConfirmModal)
-    static unsigned char DeleteProjectConfirmModalStorage
-        [sizeof(DeleteProjectConfirmModal)];
+alignas(
+    DeleteProjectConfirmModal) static unsigned char DeleteProjectConfirmModalStorage
+    [sizeof(DeleteProjectConfirmModal)];
 void *DeleteProjectConfirmModal::storage_ = DeleteProjectConfirmModalStorage;
 
 DeleteProjectConfirmModal *DeleteProjectConfirmModal::Create(View &view,
