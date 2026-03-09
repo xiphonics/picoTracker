@@ -418,7 +418,7 @@ void ImportView::DrawView() {
       props.invert_ = false;
     }
     char volField[12];
-    npf_snprintf(volField, sizeof(volField), "vol:%2d", previewVolume);
+    npf_snprintf(volField, sizeof(volField), "Vol:%2d", previewVolume);
     DrawString(x + 23, y, volField, props);
   } else {
     if (fileIndexList_.empty()) {
@@ -752,8 +752,8 @@ void ImportView::adjustPreviewVolume(int offset) {
   // Get current value and apply offset
   int newVolume = v->GetInt() + offset;
 
-  // Clamp to valid range (0-100)
-  newVolume = newVolume > 100 ? 100 : newVolume;
+  // Clamp volume to valid 0-99 as per other channels
+  newVolume = newVolume > 99 ? 99 : newVolume;
   newVolume = newVolume < 0 ? 0 : newVolume;
 
   // Set the new value
