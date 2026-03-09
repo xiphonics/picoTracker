@@ -15,7 +15,6 @@
 #include "BaseClasses/ViewEvent.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "System/System/System.h"
-#include <nanoprintf.h>
 #include <new>
 
 #define LIST_PAGE_SIZE (SCREEN_HEIGHT - 4)
@@ -154,12 +153,6 @@ void DeleteProjectConfirmModal::DrawView() {
   DrawString((26 - strlen(cancelButton)) / 2, 5, cancelButton, props);
 }
 
-static void ConfirmOverwriteCallback(View &v, ModalView &dialog) {
-  if (dialog.GetReturnCode() == MBL_YES) {
-    ((SelectProjectView &)v).SaveSelectedProject();
-  }
-}
-
 static void LoadProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
 
@@ -257,8 +250,7 @@ void SelectProjectView::DrawView() {
   };
 
   // load/delete selection buttons
-  const char *buttons[numButtons_] = {
-      "Load", SelectionIsCurrentProject() ? "Save   " : "Save as", "Delete"};
+  const char *buttons[numButtons_] = {"Load", "Delete"};
 
   int bx = x;
 
@@ -331,16 +323,6 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
         AttemptLoadingProject();
         break;
       case 1:
-        // save project
-        if (!SelectionIsCurrentProject()) {
-          // ask if the user wants to override the file
-          ConfirmOverwrite();
-        } else {
-          // save
-          SaveSelectedProject();
-        }
-        break;
-      case 2:
         AttemptDeletingSelectedProject();
         break;
       }
@@ -488,45 +470,6 @@ bool SelectProjectView::SelectionIsCurrentProject() {
   const char *current = projectName.c_str();
 
   return strcmp(current, selected) == 0;
-}
-
-bool SelectProjectView::SaveSelectedProject() {
-  auto appWindow = static_cast<AppWindow *>(&w_);
-  PersistencyService *ps = PersistencyService::GetInstance();
-
-  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
-  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
-  const char *current = projectName.c_str();
-
-  char selected[MAX_PROJECT_NAME_LENGTH + 1];
-  getHighlightedProjectName(selected);
-
-  Trace::Error("%s -> %s", current, selected);
-
-  if (ps->Save(selected, current, true) != PERSIST_SAVED) {
-    return false;
-  }
-
-  // all good so now persist the new project name in project state
-  bool result = ps->SaveProjectState(selected) == PERSIST_SAVED;
-
-  if (result) {
-    viewData_->project_->SetProjectName(selected);
-  }
-
-  return result;
-}
-
-void SelectProjectView::ConfirmOverwrite() {
-  char selected[MAX_PROJECT_NAME_LENGTH + 1];
-  getHighlightedProjectName(selected);
-
-  char buffer[MAX_PROJECT_NAME_LENGTH + 8];
-  snprintf(buffer, sizeof(buffer), "\"%s\"?", selected);
-
-  MessageBox *mb = MessageBox::Create(*this, "Overwrite existing project",
-                                      buffer, MBBF_YES | MBBF_NO);
-  DoModal(mb, ModalViewCallback::create<&ConfirmOverwriteCallback>());
 }
 
 void SelectProjectView::AttemptDeletingSelectedProject() {
