@@ -411,7 +411,7 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   case FourCC::ActionNewProject: {
     MessageBox *mb =
         MessageBox::Create(*this, "Create a new project and",
-                           "lose all changes?", MBBF_YES | MBBF_NO);
+                           "   lose all changes?", MBBF_YES | MBBF_NO);
     DoModal(mb, ModalViewCallback::create<&CreateNewProjectCallback>());
     break;
   }
@@ -432,8 +432,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
       if (!canRenderFromFirstSongRow()) {
-        MessageBox *mb = MessageBox::Create(
-            *this, "Render failed", "Song row 00 has no phrases", MBBF_OK);
+        MessageBox *mb =
+            MessageBox::Create(*this, "      Render failed",
+                               "Song row 00 has no phrases", MBBF_OK);
         DoModal(mb);
         break;
       }
@@ -450,8 +451,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
       if (!canRenderFromFirstSongRow()) {
-        MessageBox *mb = MessageBox::Create(
-            *this, "Render failed", "Song row 00 has no phrases", MBBF_OK);
+        MessageBox *mb =
+            MessageBox::Create(*this, "      Render failed",
+                               "Song row 00 has no phrases", MBBF_OK);
         DoModal(mb);
         break;
       }
