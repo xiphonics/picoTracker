@@ -57,7 +57,8 @@ void RenderProgressModal::Destroy() {
 void RenderProgressModal::DrawView() {
   // Calculate window size
   const uint32_t width = getDialogWidth();
-  SetWindow(width, 5); // Height of 5 for title, message, time/progress, and button with blank line sep
+  SetWindow(width, 5); // Height of 5 for title, message, time/progress, and
+                       // button with blank line sep
 
   // Draw title
   int32_t y = 0;
@@ -78,7 +79,7 @@ void RenderProgressModal::DrawView() {
 
   // Draw action button
   SetColor(CD_NORMAL);
-  y+=2;
+  y += 2;
   props.invert_ = true;
   // Use a fixed-width label area to avoid stale characters when label shrinks.
   x = width / 2 - 3;
