@@ -131,7 +131,7 @@ void DeleteProjectConfirmModal::ProcessButtonMask(unsigned short mask,
 }
 
 void DeleteProjectConfirmModal::DrawView() {
-  SetWindow(26, 7);
+  SetWindow(26, 6);
 
   GUITextProperties props;
   SetColor(CD_NORMAL);
@@ -139,7 +139,7 @@ void DeleteProjectConfirmModal::DrawView() {
 
   const int projectLineX = (26 - projectLine_.size()) / 2;
   DrawString(projectLineX, 0, projectLine_.c_str(), props);
-  DrawString(4, 1, "Hold ALT+PLAY+EDIT", props);
+  DrawString(0, 1, "Press & hold ALT+PLAY+EDIT", props);
 
   if (holdingCombo_ || holdProgressMs_ > 0) {
     progressBar_t progressBar;
@@ -172,7 +172,7 @@ static void DeleteProjectCallback(View &v, ModalView &dialog) {
     view.getHighlightedProjectName(buffer);
     if (!ps->DeleteProject(buffer)) {
       MessageBox *mb =
-          MessageBox::Create(view, "Folder could not be deleted.", MBBF_OK);
+          MessageBox::Create(view, "Project could not be deleted", MBBF_OK);
       view.DoModal(mb);
       return;
     }
