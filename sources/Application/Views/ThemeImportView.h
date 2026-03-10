@@ -26,7 +26,7 @@ public:
   virtual void OnFocus();
 
 protected:
-  void setCurrentFolder(FileSystem *fs, const char *name);
+  void setCurrentFolder();
   void warpToNextTheme(bool goUp);
   void onImportTheme(const char *filename);
 

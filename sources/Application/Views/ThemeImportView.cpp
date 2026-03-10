@@ -34,33 +34,22 @@ void ThemeImportView::Reset() {
 }
 
 void ThemeImportView::OpenSelectedItem() {
-  auto fs = FileSystem::GetInstance();
-
   if (currentIndex_ >= fileIndexList_.size())
     return;
 
-  char name[PFILENAME_SIZE];
-  bool isDir = false;
-  bool hasEntry = false;
-
   // get selected item
   unsigned fileIndex = fileIndexList_[currentIndex_];
+  auto fs = FileSystem::GetInstance();
+  char name[PFILENAME_SIZE];
   fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-  if (fs->getFileType(fileIndex) == PFT_DIR) { // directory, navigate into it
-    setCurrentFolder(fs, name);
-  } else { // file, import it
-    onImportTheme(name);
-  }
+  onImportTheme(name);
 }
 
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  bool openSelecterd = false;
-
-  if ((mask & EPBM_ENTER) || (mask == (EPBM_ALT | EPBM_PLAY))) {
+  if (mask & EPBM_ENTER) {
     OpenSelectedItem();
   } else if (mask & EPBM_UP) {
     warpToNextTheme(true);
@@ -89,8 +78,6 @@ void ThemeImportView::DrawView() {
   SetColor(CD_INFO);
   DrawString(pos._x + 1, pos._y, title, props);
 
-  SetColor(CD_NORMAL);
-
   // Draw theme files
   int x = 1;
   int y = pos._y + 2;
@@ -112,20 +99,13 @@ void ThemeImportView::DrawView() {
     unsigned fileIndex = fileIndexList_[i];
     fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
-    if (fs->getFileType(fileIndex) == PFT_DIR) {
-      // Draw a directory
-      DrawString(x, y, "[", props);
-      DrawString(x + 1, y, buffer, props);
-      DrawString(x + strlen(buffer) + 1, y, "]", props);
-    } else {
-      // Draw a file
-      // Remove the .ptt extension for display
-      char *dot = strrchr(buffer, '.');
-      if (dot) {
-        *dot = '\0';
-      }
-      DrawString(x, y, buffer, props);
+    // Remove the .ptt extension for display
+    char *dot = strrchr(buffer, '.');
+    if (dot) {
+      *dot = '\0';
     }
+    DrawString(x, y, buffer, props);
+
     y++;
   }
 };
@@ -133,10 +113,8 @@ void ThemeImportView::DrawView() {
 void ThemeImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {}
 
 void ThemeImportView::OnFocus() {
-  auto fs = FileSystem::GetInstance();
-
   // Navigate to the themes directory
-  setCurrentFolder(fs, THEMES_DIR);
+  setCurrentFolder();
 }
 
 void ThemeImportView::warpToNextTheme(bool goUp) {
@@ -211,16 +189,11 @@ void ThemeImportView::onImportThemeModalDismiss(View &, ModalView &dialog) {
   NotifyObservers(&ve);
 }
 
-void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
-  // Only allow navigation into directories & .. but not to parent directories
-  // above THEMES_DIR
-  if ((strcmp(name, "..") == 0) && fs->isParentRoot()) {
-    // Don't navigate above THEMES_DIR
-    return;
-  }
+void ThemeImportView::setCurrentFolder() {
+  auto fs = FileSystem::GetInstance();
 
-  if (!fs->chdir(name)) {
-    Trace::Error("FAILED to chdir to %s", name);
+  if (!fs->chdir(THEMES_DIR)) {
+    Trace::Error("FAILED to chdir to %s", THEMES_DIR);
     return;
   }
 
@@ -228,7 +201,15 @@ void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   topIndex_ = 0;
   isDirty_ = true;
 
-  // Use false for subDirOnly to include both files and directories
+  // get the directory listing
   fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
-  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
+
+  // remove directories from listing
+  for (int i = fileIndexList_.size() - 1; i >= 0; i--) {
+    if (fs->getFileType(fileIndexList_[i]) == PFT_DIR) {
+      fileIndexList_.erase(fileIndexList_.begin() + i);
+    }
+  }
+
+  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), THEMES_DIR);
 }
