@@ -8,9 +8,11 @@
  */
 
 #include "ImportView.h"
+
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Application/Views/SampleEditorView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
@@ -45,7 +47,8 @@ void ImportView::Reset() {
   playKeyHeld_ = false;
   editKeyHeld_ = false;
   inProjectSampleDir_ = false;
-  fileIndexList_.clear();
+  auto fileIndexList = MemoryPool::getFileIndexList();
+  fileIndexList->clear();
 }
 
 // Static method to set the source view type before opening ImportView
@@ -88,7 +91,11 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       return;
     }
 
-    unsigned fileIndex = fileIndexList_[currentIndex_];
+    unsigned fileIndex;
+    {
+      auto fileIndexList = MemoryPool::getFileIndexList();
+      fileIndex = (*fileIndexList)[currentIndex_];
+    }
 
     if (mask & EPBM_PLAY) {
       char name[PFILENAME_SIZE];
@@ -136,8 +143,11 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
     if (mask & EPBM_ENTER) {
       if (inProjectSampleDir_) {
-        if (fileIndexList_.empty()) {
-          return; // Do nothing if the list is empty
+        {
+          auto fileIndexList = MemoryPool::getFileIndexList();
+          if (fileIndexList->empty()) {
+            return; // Do nothing if the list is empty
+          }
         }
         // NOTE: the order of buttons in project pool is: edit, remove
         // while in file browser its: import, edit
@@ -167,8 +177,11 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // handle changing selected "bottom button", note: ignore if this is a
     // nav+arrow combo
     if ((mask & EPBM_LEFT || mask & EPBM_RIGHT) && !(mask & EPBM_NAV)) {
-      if (inProjectSampleDir_ && fileIndexList_.empty()) {
-        return; // Do nothing if the list is empty
+      {
+        auto fileIndexList = MemoryPool::getFileIndexList();
+        if (inProjectSampleDir_ && fileIndexList->empty()) {
+          return; // Do nothing if the list is empty
+        }
       }
       // toggle the selected button
       selectedButton_ = (selectedButton_ == 0) ? 1 : 0;
@@ -182,13 +195,19 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   // handle moving up and down the file list
   if (mask & EPBM_UP) {
-    if (inProjectSampleDir_ && fileIndexList_.empty()) {
-      return; // Do nothing if the list is empty
+    {
+      auto fileIndexList = MemoryPool::getFileIndexList();
+      if (inProjectSampleDir_ && fileIndexList->empty()) {
+        return; // Do nothing if the list is empty
+      }
     }
     warpToNextSample(true);
   } else if (mask & EPBM_DOWN) {
-    if (inProjectSampleDir_ && fileIndexList_.empty()) {
-      return; // Do nothing if the list is empty
+    {
+      auto fileIndexList = MemoryPool::getFileIndexList();
+      if (inProjectSampleDir_ && fileIndexList->empty()) {
+        return; // Do nothing if the list is empty
+      }
     }
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
@@ -204,7 +223,11 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // A modifier
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
-      unsigned fileIndex = fileIndexList_[currentIndex_];
+      unsigned fileIndex;
+      {
+        auto fileIndexList = MemoryPool::getFileIndexList();
+        fileIndex = (*fileIndexList)[currentIndex_];
+      }
       char name[PFILENAME_SIZE];
       fs->getFileName(fileIndex, name, PFILENAME_SIZE);
       if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -244,61 +267,65 @@ void ImportView::DrawView() {
       SamplePool::GetInstance()->GetAvailableSampleStorageSpace();
 
   // Loop through visible files in the list
-  for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
-    props.invert_ = false;
+  {
+    auto fileIndexList = MemoryPool::getFileIndexList();
 
-    unsigned fileIndex = fileIndexList_[i];
-    etl::string<PFILENAME_SIZE> displayName;
+    for (size_t i = topIndex_;
+         i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList->size()); i++) {
+      props.invert_ = false;
 
-    if (fs->getFileType(fileIndex) != PFT_DIR) {
-      SetColor(CD_NORMAL);
-      // Handle regular files
-      char tempBuffer[PFILENAME_SIZE];
-      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+      unsigned fileIndex = (*fileIndexList)[i];
+      etl::string<PFILENAME_SIZE> displayName;
 
-      // Check if it's a single cycle waveform
-      int filesize = fs->getFileSize(fileIndex);
-      bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
-
-      displayName += tempBuffer;
-      // Format the display name with appropriate prefix
-      if (inProjectSampleDir_ &&
-          viewData_->project_->SampleInUse(
-              etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(tempBuffer))) {
-        SetColor(CD_ACCENT);
-        DrawString(x, y, "*", props);
+      if (fs->getFileType(fileIndex) != PFT_DIR) {
         SetColor(CD_NORMAL);
-      } else if (isSingleCycle) {
-        SetColor(CD_ACCENT);
-        DrawString(x, y, "~", props);
-        SetColor(CD_NORMAL);
+        // Handle regular files
+        char tempBuffer[PFILENAME_SIZE];
+        fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+
+        // Check if it's a single cycle waveform
+        int filesize = fs->getFileSize(fileIndex);
+        bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
+
+        displayName += tempBuffer;
+        // Format the display name with appropriate prefix
+        if (inProjectSampleDir_ &&
+            viewData_->project_->SampleInUse(
+                etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(tempBuffer))) {
+          SetColor(CD_ACCENT);
+          DrawString(x, y, "*", props);
+          SetColor(CD_NORMAL);
+        } else if (isSingleCycle) {
+          SetColor(CD_ACCENT);
+          DrawString(x, y, "~", props);
+          SetColor(CD_NORMAL);
+        } else {
+          DrawString(x, y, " ", props);
+        }
       } else {
-        DrawString(x, y, " ", props);
+        SetColor(CD_ACCENT);
+        // Handle directories
+        char tempBuffer[PFILENAME_SIZE];
+        displayName = "/";
+        // clear temp buffer
+        memset(tempBuffer, 0, PFILENAME_SIZE);
+        fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+        displayName += tempBuffer;
       }
-    } else {
-      SetColor(CD_ACCENT);
-      // Handle directories
-      char tempBuffer[PFILENAME_SIZE];
-      displayName = "/";
-      // clear temp buffer
-      memset(tempBuffer, 0, PFILENAME_SIZE);
-      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
-      displayName += tempBuffer;
-    }
 
-    // Truncate to fit display width
-    if (displayName.size() > LIST_WIDTH) {
-      displayName.resize(LIST_WIDTH);
-    }
+      // Truncate to fit display width
+      if (displayName.size() > LIST_WIDTH) {
+        displayName.resize(LIST_WIDTH);
+      }
 
-    if (i == currentIndex_) {
-      SetColor(CD_HILITE2);
-      props.invert_ = true;
+      if (i == currentIndex_) {
+        SetColor(CD_HILITE2);
+        props.invert_ = true;
+      }
+      DrawString(x + 1, y, displayName.c_str(), props);
+      y += 1;
     }
-    DrawString(x + 1, y, displayName.c_str(), props);
-    y += 1;
-  };
+  } // fileIndexListMutex released here
 
   SetColor(CD_HILITE1);
   y = SCREEN_HEIGHT - 2;
@@ -320,7 +347,13 @@ void ImportView::DrawView() {
     }
     DrawString(x + 10, y, "Edit", props);
   } else {
-    if (fileIndexList_.empty()) {
+    bool poolEmpty;
+    {
+      auto fileIndexList = MemoryPool::getFileIndexList();
+      poolEmpty = fileIndexList->empty();
+    }
+
+    if (poolEmpty) {
       // draw this a few lines down from *top* of screen
       SetColor(CD_NORMAL);
       props.invert_ = false;
@@ -359,16 +392,19 @@ void ImportView::DrawView() {
   props.invert_ = true;
   y = 0;
   uint32_t filesize = 0;
-  auto currentFileIndex = fileIndexList_[currentIndex_];
+  {
+    auto fileIndexList = MemoryPool::getFileIndexList();
+    unsigned currentFileIndex = (*fileIndexList)[currentIndex_];
 
-  // only get file size if it's a file not a dir
-  if (fs->getFileType(currentFileIndex) == PFT_FILE) {
-    filesize = fs->getFileSize(currentFileIndex);
-    // if file size is larger than available space, set color to warning
-    if (filesize > availableSpace) {
-      SetColor(CD_WARN);
+    // only get file size if it's a file not a dir
+    if (fs->getFileType(currentFileIndex) == PFT_FILE) {
+      filesize = fs->getFileSize(currentFileIndex);
+      // if file size is larger than available space, set color to warning
+      if (filesize > availableSpace) {
+        SetColor(CD_WARN);
+      }
     }
-  }
+  } // fileIndexList lock released
 
   // Get the current preview volume
   int previewVolume = 0;
@@ -405,6 +441,8 @@ void ImportView::OnFocus() {
 
   inProjectSampleDir_ = viewData_->isShowingSampleEditorProjectPool;
 
+  // Do NOT hold fileIndexList lock here: setCurrentFolder ->
+  // refreshFileIndexList will acquire it internally.
   if (inProjectSampleDir_) {
     goProjectSamplesDir(viewData_);
     setCurrentFolder(fs, ".");
@@ -414,6 +452,8 @@ void ImportView::OnFocus() {
 };
 
 void ImportView::warpToNextSample(bool goUp) {
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
   if (goUp) {
     if (currentIndex_ > 0) {
       currentIndex_--;
@@ -424,7 +464,7 @@ void ImportView::warpToNextSample(bool goUp) {
       }
     }
   } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
+    if (currentIndex_ < fileIndexList->size() - 1) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
@@ -438,7 +478,12 @@ void ImportView::warpToNextSample(bool goUp) {
 
 void ImportView::preview(char *name) {
   auto fs = FileSystem::GetInstance();
-  unsigned fileIndex = fileIndexList_[currentIndex_];
+
+  unsigned fileIndex;
+  {
+    auto fileIndexList = MemoryPool::getFileIndexList();
+    fileIndex = (*fileIndexList)[currentIndex_];
+  }
 
   // do not preview directories
   if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -513,8 +558,12 @@ void ImportView::import() {
 
   auto fs = FileSystem::GetInstance();
   char name[PFILENAME_SIZE];
-  unsigned fileIndex = fileIndexList_[currentIndex_];
-  fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+  unsigned fileIndex;
+  {
+    auto fileIndexList = MemoryPool::getFileIndexList();
+    fileIndex = (*fileIndexList)[currentIndex_];
+    fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+  }
 
   // Get current project name
   char projName[MAX_PROJECT_NAME_LENGTH + 1];
@@ -771,20 +820,24 @@ void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {
-  fs->list(&fileIndexList_, ".wav", false);
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
+  fs->list(&(*fileIndexList), ".wav", false);
 
   if (fs->isCurrentRoot() || inProjectSampleDir_) {
-    for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
+    for (auto it = (*fileIndexList).begin(); it != (*fileIndexList).end();
+         ++it) {
       char entryName[PFILENAME_SIZE];
       fs->getFileName(*it, entryName, PFILENAME_SIZE);
       if (strcmp(entryName, "..") == 0) {
-        fileIndexList_.erase(it);
+        (*fileIndexList).erase(it);
         break;
       }
     }
   }
 
-  if (currentIndex_ >= fileIndexList_.size()) {
-    currentIndex_ = fileIndexList_.empty() ? 0 : fileIndexList_.size() - 1;
+  size_t sz = (*fileIndexList).size();
+  if (currentIndex_ >= sz) {
+    currentIndex_ = (*fileIndexList).empty() ? 0 : sz - 1;
   }
 }

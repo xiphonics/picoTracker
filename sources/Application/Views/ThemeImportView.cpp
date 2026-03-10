@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
@@ -30,7 +31,8 @@ ThemeImportView::~ThemeImportView() {}
 void ThemeImportView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
-  fileIndexList_.clear();
+  auto fileIndexList = MemoryPool::getFileIndexList();
+  fileIndexList->clear();
 }
 
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
@@ -40,17 +42,21 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_PLAY) {
     auto fs = FileSystem::GetInstance();
     char name[PFILENAME_SIZE];
+    bool shouldImport = false;
 
-    if (currentIndex_ < fileIndexList_.size()) {
-      unsigned fileIndex = fileIndexList_[currentIndex_];
-      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-      if (mask & EPBM_ALT) {
-        Trace::Log("THEMEIMPORT", "SHIFT play - import");
-        onImportTheme(name);
+    {
+      auto fileIndexList = MemoryPool::getFileIndexList();
+      if (currentIndex_ < fileIndexList->size()) {
+        unsigned fileIndex = (*fileIndexList)[currentIndex_];
+        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+        shouldImport = (mask & EPBM_ALT) != 0;
       }
-    }
+    } // lock released before onImportTheme
 
+    if (shouldImport) {
+      Trace::Log("THEMEIMPORT", "SHIFT play - import");
+      onImportTheme(name);
+    }
     // handle moving up and down the file list
   } else if (mask & EPBM_UP) {
     warpToNextTheme(true);
@@ -67,15 +73,23 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // ENTER modifier
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
+      char name[PFILENAME_SIZE];
+      bool isDir = false;
+      bool hasEntry = false;
 
-      if (currentIndex_ < fileIndexList_.size()) {
-        unsigned fileIndex = fileIndexList_[currentIndex_];
-        char name[PFILENAME_SIZE];
-        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+      {
+        auto fileIndexList = MemoryPool::getFileIndexList();
+        if (currentIndex_ < (*fileIndexList).size()) {
+          unsigned fileIndex = (*fileIndexList)[currentIndex_];
+          fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+          isDir = fs->getFileType(fileIndex) == PFT_DIR;
+          hasEntry = true;
+        }
+      } // lock released before setCurrentFolder / onImportTheme
 
+      if (hasEntry) {
         // Only allow navigation into directories, not to parent directory
-        if (fs->getFileType(fileIndex) == PFT_DIR && strcmp(name, ".") != 0 &&
-            strcmp(name, "..") != 0) {
+        if (isDir && strcmp(name, ".") != 0 && strcmp(name, "..") != 0) {
           setCurrentFolder(fs, name);
           isDirty_ = true;
           topIndex_ = 0; // need to reset when entering a dir as prev dir may
@@ -111,8 +125,10 @@ void ThemeImportView::DrawView() {
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string in buffer :-(
   char buffer[PFILENAME_SIZE];
+  auto fileIndexList = MemoryPool::getFileIndexList();
+
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < (*fileIndexList).size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -122,7 +138,7 @@ void ThemeImportView::DrawView() {
     }
 
     memset(buffer, '\0', sizeof(buffer));
-    unsigned fileIndex = fileIndexList_[i];
+    unsigned fileIndex = (*fileIndexList)[i];
     fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
     if (fs->getFileType(fileIndex) == PFT_DIR) {
@@ -147,13 +163,14 @@ void ThemeImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {}
 
 void ThemeImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
-
-  // Navigate to the themes directory
+  // Navigate to the themes directory (setCurrentFolder acquires the lock
+  // itself)
   setCurrentFolder(fs, THEMES_DIR);
 }
 
 void ThemeImportView::warpToNextTheme(bool goUp) {
-  if (fileIndexList_.empty())
+  auto fileIndexList = MemoryPool::getFileIndexList();
+  if (fileIndexList->empty())
     return;
 
   if (goUp) {
@@ -166,7 +183,7 @@ void ThemeImportView::warpToNextTheme(bool goUp) {
       }
     }
   } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
+    if (currentIndex_ < (*fileIndexList).size() - 1) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
@@ -234,8 +251,8 @@ void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   isDirty_ = true;
 
   // Update list of file indexes in this new dir
-  fileIndexList_.clear();
+  auto fileIndexList = MemoryPool::getFileIndexList();
   // Use false for subDirOnly to include both files and directories
-  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
-  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
+  fs->list(&(*fileIndexList), THEME_FILE_EXTENSION, false);
+  Trace::Debug("loaded %d files from %s", fileIndexList->size(), name);
 }
