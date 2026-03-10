@@ -18,21 +18,21 @@ static const char *waveShapes[gbNumWaveforms] = {
 voice_t ChiptuneInstrument::voices_[SONG_CHANNEL_COUNT];
 
 ChiptuneInstrument::ChiptuneInstrument()
-    : I_Instrument(&variables_), vWaveform_(FourCC::ChiptuneInstrumentWaveform,
-                                            waveShapes, gbNumWaveforms, 0),
-      vAttack_(FourCC::ChiptuneInstrumentAttack, 0x00),
-      vDecay_(FourCC::ChiptuneInstrumentDecay, 0x80),
-      vLevel_(FourCC::ChiptuneInstrumentLevel, 0x80),
-      vLength_(FourCC::ChiptuneInstrumentLength, 0),
-      vBurst_(FourCC::ChiptuneInstrumentBurst, -1),
-      vVibratoDepth_(FourCC::ChiptuneInstrumentVibrato, 0x07),
-      vVibratoDelay_(FourCC::ChiptuneInstrumentVibratoDelay, 0x40),
-      vTranspose_(FourCC::ChiptuneInstrumentTranspose, 0x00),
-      vTable_(FourCC::ChiptuneInstrumentTable, -1),
+    : I_Instrument(&variables_),
       vArpSpeed_(FourCC::ChiptuneInstrumentArpSpeed, 0x12),
+      vAttack_(FourCC::ChiptuneInstrumentAttack, 0x00),
+      vBurst_(FourCC::ChiptuneInstrumentBurst, -1),
+      vDecay_(FourCC::ChiptuneInstrumentDecay, 0x80),
+      vLength_(FourCC::ChiptuneInstrumentLength, -1),
+      vLevel_(FourCC::ChiptuneInstrumentLevel, 0x80),
+      vSweepAmount_(FourCC::ChiptuneInstrumentSweepAmount, 0x00),
       vSweepTime_(FourCC::ChiptuneInstrumentSweepTime, 0x00),
-      vSweepAmount_(FourCC::ChiptuneInstrumentSweepAmount, 0x00) {
-
+      vTable_(FourCC::ChiptuneInstrumentTable, -1),
+      vTranspose_(FourCC::ChiptuneInstrumentTranspose, 0),
+      vVibratoDelay_(FourCC::ChiptuneInstrumentVibratoDelay, 0x40),
+      vVibratoDepth_(FourCC::ChiptuneInstrumentVibrato, 0x07),
+      vWaveform_(FourCC::ChiptuneInstrumentWaveform, waveShapes, gbNumWaveforms,
+                 0) {
   // Initialize exported variables
   // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &vWaveform_);
@@ -52,18 +52,17 @@ ChiptuneInstrument::ChiptuneInstrument()
 
 void ChiptuneInstrument::Stop(int channel) { voices_[channel].stop(); };
 
-bool ChiptuneInstrument::Start(int channel, unsigned char note, bool retrigger) {
-  // note on get frequency etc.
-
-  // dump instrument parameters
-  InstrumentParameters params = getInstrumentParameters();
-  voices_[channel].note_on(note, retrigger, params);
+bool ChiptuneInstrument::Start(int channel, unsigned char note,
+                               bool retrigger) {
+  // get the instrument parameters from the instrument and pass them to the
+  // current voice
+  voices_[channel].note_on(note, retrigger, getInstrumentParameters());
 
   return true;
 }
 
 bool ChiptuneInstrument::Render(int channel, fixed *buffer, int size,
-                               bool updateTick) {
+                                bool updateTick) {
   // PROFILE_SCOPE("ChiptuneInstrument::Render");
   voice_t &v = voices_[channel];
 

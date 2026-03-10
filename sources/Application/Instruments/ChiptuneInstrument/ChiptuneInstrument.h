@@ -61,19 +61,19 @@ private:
 
   etl::list<Variable *, 13> variables_;
 
-  Variable vWaveform_;
-  Variable vAttack_;
-  Variable vDecay_;
-  Variable vLevel_;
-  Variable vLength_;
-  Variable vBurst_;
-  Variable vVibratoDepth_;
-  Variable vVibratoDelay_;
-  Variable vTranspose_;
-  Variable vTable_;
   Variable vArpSpeed_;
-  Variable vSweepTime_;
+  Variable vAttack_;
+  Variable vBurst_;
+  Variable vDecay_;
+  Variable vLength_;
+  Variable vLevel_;
   Variable vSweepAmount_;
+  Variable vSweepTime_;
+  Variable vTable_;
+  Variable vTranspose_;
+  Variable vVibratoDelay_;
+  Variable vVibratoDepth_;
+  Variable vWaveform_;
 
   void RunCommand(int channel);
   void CommandInitArp(int channel, ushort value);

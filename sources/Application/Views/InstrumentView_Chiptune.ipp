@@ -16,8 +16,8 @@ void InstrumentView::fillChiptuneParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::ChiptuneInstrumentTranspose);
-  intVarField_.emplace_back(position, *v, "Transpose: %+02d", 0, 48, 1, 12, 
-    -24);
+  intVarField_.emplace_back(position, *v, "Transpose: %+02d", -24, 24, 1, 12, 
+    0);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
