@@ -391,6 +391,10 @@ typedef struct voice_t {
     wave = parameters.wave;
     burstTime = parameters.burst;
 
+    // reset noise seed to get deterministic noise
+    lfsr = 42;
+    lastSample = 0;
+
     this->note = note;
 
     // reset apreggio to default state (off, base frequency only)
