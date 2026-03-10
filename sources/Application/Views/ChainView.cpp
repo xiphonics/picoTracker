@@ -647,7 +647,16 @@ void ChainView::processSelectionButtonMask(unsigned short mask) {
   }
 };
 
-void ChainView::OnFocus() { clipboard_.active_ = false; };
+void ChainView::OnFocus() {
+  clipboard_.active_ = false;
+
+  // reset the cursor position to within the range with data
+  uint8_t *c = viewData_->song_->chain_.data_ + 16 * viewData_->currentChain_ +
+               viewData_->chainRow_;
+  while (viewData_->chainRow_ > 0 && *c-- == 0xFF) {
+    viewData_->chainRow_--;
+  }
+};
 
 void ChainView::setTextProps(GUITextProperties &props, int row, int col,
                              bool restore) {
