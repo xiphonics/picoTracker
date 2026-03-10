@@ -120,7 +120,8 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
 }
 
 void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
-                                 const char *filter, bool subDirOnly) {
+                                 const char *filter, bool subDirOnly,
+                                 bool includeHidden) {
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
@@ -143,7 +144,6 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
 
   File entry;
   uint16_t count = 0;
-
   // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
   while (entry.openNext(&cwd, O_READ) && (count < fileIndexes->capacity())) {
     uint32_t index = entry.dirIndex();
@@ -158,7 +158,7 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     }
     // filter out "." and files that dont match filter if a filter is given
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
-        (!entry.isHidden() && matchesFilter)) {
+        ((includeHidden || !entry.isHidden()) && matchesFilter)) {
       if (subDirOnly) {
         if (entry.isDirectory()) {
           fileIndexes->push_back(index);

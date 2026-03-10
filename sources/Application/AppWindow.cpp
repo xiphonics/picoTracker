@@ -780,6 +780,8 @@ void AppWindow::AnimationUpdate() {
     if (modalView) {
       // Update the modal view
       modalView->AnimationUpdate();
+      // Modal can complete from animation updates (e.g. timed hold confirms).
+      _currentView->DismissModal();
     }
   }
 
