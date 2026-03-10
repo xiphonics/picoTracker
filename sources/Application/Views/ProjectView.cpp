@@ -96,6 +96,30 @@ static void RenderStopCallback(View &v, ModalView &dialog) {
   }
 }
 
+bool ProjectView::canRenderFromFirstSongRow() const {
+  if (project_ == nullptr) {
+    return false;
+  }
+
+  const unsigned char *songRow = project_->song_.data_;
+  for (int channel = 0; channel < SONG_CHANNEL_COUNT; channel++) {
+    const unsigned char chain = songRow[channel];
+    if (chain == EMPTY_SONG_VALUE) {
+      continue;
+    }
+
+    for (int phrase = 0; phrase < PHRASES_PER_CHAIN; phrase++) {
+      const unsigned char phraseId =
+          project_->song_.chain_.data_[chain * PHRASES_PER_CHAIN + phrase];
+      if (phraseId != EMPTY_SONG_VALUE) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   lastClock_ = 0;
@@ -407,6 +431,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
+      if (!canRenderFromFirstSongRow()) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "Render failed", "Song row 00 has no phrases", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog = RenderProgressModal::Create(
           *this, "Rendering", "",
@@ -419,6 +449,12 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
+      if (!canRenderFromFirstSongRow()) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "Render failed", "Song row 00 has no phrases", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog = RenderProgressModal::Create(
           *this, "Stems Rendering", "",

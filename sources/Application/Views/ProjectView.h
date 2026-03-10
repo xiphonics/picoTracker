@@ -55,6 +55,8 @@ public:
   void OnQuit();
 
 private:
+  bool canRenderFromFirstSongRow() const;
+
   Project *project_;
   // Debug
   unsigned long lastTick_;
