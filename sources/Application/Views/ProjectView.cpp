@@ -96,6 +96,30 @@ static void RenderStopCallback(View &v, ModalView &dialog) {
   }
 }
 
+bool ProjectView::canRenderFromFirstSongRow() const {
+  if (project_ == nullptr) {
+    return false;
+  }
+
+  const unsigned char *songRow = project_->song_.data_;
+  for (int channel = 0; channel < SONG_CHANNEL_COUNT; channel++) {
+    const unsigned char chain = songRow[channel];
+    if (chain == EMPTY_SONG_VALUE) {
+      continue;
+    }
+
+    for (int phrase = 0; phrase < PHRASES_PER_CHAIN; phrase++) {
+      const unsigned char phraseId =
+          project_->song_.chain_.data_[chain * PHRASES_PER_CHAIN + phrase];
+      if (phraseId != EMPTY_SONG_VALUE) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   lastClock_ = 0;
@@ -215,12 +239,10 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
-#ifndef ADV
   position._x += 8;
   actionField_.emplace_back("Stems", FourCC::ActionRenderStems, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
-#endif
   position._x = xalign;
 }
 
@@ -409,24 +431,38 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
+      if (!canRenderFromFirstSongRow()) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "Render failed", "Song row 00 has no phrases", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
+      // Show a dialog with a Stop button during rendering
+      RenderProgressModal *renderDialog = RenderProgressModal::Create(
+          *this, "Rendering", "",
+          RenderProgressModal::ProgressDisplayMode::SongPercent);
+      DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
+
       // Start playback in rendering mode with MSM_FILE
       player->Start(PM_SONG, true, MSM_FILE, true);
-
-      // Show a dialog with a Stop button during rendering
-      RenderProgressModal *renderDialog =
-          RenderProgressModal::Create(*this, "Rendering", "Press OK to stop");
-      DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
     }
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
-      // Start playback in rendering mode with MSM_FILESPLIT
-      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
-
+      if (!canRenderFromFirstSongRow()) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "Render failed", "Song row 00 has no phrases", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
       // Show a dialog with a Stop button during rendering
       RenderProgressModal *renderDialog = RenderProgressModal::Create(
-          *this, "Stems Rendering", "Press OK to stop");
+          *this, "Stems Rendering", "",
+          RenderProgressModal::ProgressDisplayMode::SongPercent);
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
+
+      // Start playback in rendering mode with MSM_FILESPLIT
+      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
     }
     break;
   case FourCC::ActionShowRecordView:
