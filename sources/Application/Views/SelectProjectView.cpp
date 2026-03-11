@@ -10,6 +10,7 @@
 #include "SelectProjectView.h"
 #include "Application/AppWindow.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Utils/DrawUtils.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "BaseClasses/ViewEvent.h"
 #include "Foundation/Constants/SpecialCharacters.h"
@@ -82,9 +83,10 @@ void SelectProjectView::DrawView() {
   auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
   const char *currentProject = projectName.c_str();
+  size_t total = fileIndexList_.size();
 
-  for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+  for (size_t i = topIndex_; i < topIndex_ + LIST_PAGE_SIZE && (i < total);
+       i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -131,38 +133,8 @@ void SelectProjectView::DrawView() {
   }
 
   // scroll bar
-  DrawScrollBar();
+  drawScrollBar(SCREEN_WIDTH - 1, pos._y + 2, LIST_PAGE_SIZE, topIndex_, total);
 };
-
-void SelectProjectView::DrawScrollBar() {
-  int totalItems = fileIndexList_.size();
-  if (totalItems <= LIST_PAGE_SIZE) {
-    return; // no scrollbar needed
-  }
-
-  GUITextProperties props;
-  GUITextProperties inv;
-  inv.invert_ = true;
-  SetColor(CD_NORMAL);
-
-  // Thumb size represents the ratio of visible items to total items
-  int thumbSize = std::max(1, (LIST_PAGE_SIZE * LIST_PAGE_SIZE) / totalItems);
-
-  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
-  // space
-  int maxScroll = totalItems - LIST_PAGE_SIZE;
-  int availableSpace = LIST_PAGE_SIZE - thumbSize;
-  int thumbPos = (topIndex_ * availableSpace) / maxScroll;
-
-  Trace::Error("%d total, %d thumb size, %d maxScroll, %d thumbPos", totalItems,
-               thumbSize, maxScroll, thumbPos);
-  for (int y = 0; y < LIST_PAGE_SIZE; y++) {
-    bool thumb = y >= thumbPos && y < thumbPos + thumbSize;
-    DrawString(SCREEN_WIDTH - 1, 2 + y,
-               thumb ? char_block_full_s : char_border_single_vertical_s,
-               props);
-  }
-}
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
                                        unsigned int currentTick){};

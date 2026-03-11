@@ -569,3 +569,27 @@ void View::switchToRecordView() {
     NotifyObservers(&ve);
   }
 }
+
+void View::drawScrollBar(int x, int y, int height, int index, int total) {
+  if (total <= height) {
+    return; // no scrollbar needed
+  }
+
+  GUITextProperties props;
+  SetColor(CD_NORMAL);
+
+  // Thumb size represents the ratio of visible items to total items
+  int thumbSize = std::max(1, (height * height) / total);
+
+  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
+  // space
+  int maxScroll = total - height;
+  int availableSpace = height - thumbSize;
+  int thumbPos = (index * availableSpace) / maxScroll;
+
+  for (int dy = 0; dy < height; dy++) {
+    bool thumb = (dy >= thumbPos) && (dy < thumbPos + thumbSize);
+    const char *str = thumb ? char_block_full_s : char_border_single_vertical_s;
+    DrawString(x, y + dy, str, props);
+  }
+}

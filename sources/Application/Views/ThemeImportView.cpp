@@ -84,9 +84,10 @@ void ThemeImportView::DrawView() {
 
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string in buffer :-(
+  size_t total = fileIndexList_.size();
   char buffer[PFILENAME_SIZE];
-  for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+  for (size_t i = topIndex_; i < topIndex_ + LIST_PAGE_SIZE && (i < total);
+       i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -108,6 +109,8 @@ void ThemeImportView::DrawView() {
 
     y++;
   }
+
+  drawScrollBar(SCREEN_WIDTH - 1, pos._y + 2, LIST_PAGE_SIZE, topIndex_, total);
 };
 
 void ThemeImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {}
