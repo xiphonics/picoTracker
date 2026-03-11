@@ -27,7 +27,7 @@ public:
 
 protected:
   void setCurrentFolder();
-  void warpToNextTheme(bool goUp);
+  void changeSelection(int delta);
   void onImportTheme(const char *filename);
 
 private:

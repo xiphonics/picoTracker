@@ -52,9 +52,9 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (mask & EPBM_ENTER) {
     OpenSelectedItem();
   } else if (mask & EPBM_UP) {
-    warpToNextTheme(true);
+    changeSelection(mask & EPBM_EDIT ? -LIST_PAGE_SIZE : -1);
   } else if (mask & EPBM_DOWN) {
-    warpToNextTheme(false);
+    changeSelection(mask & EPBM_EDIT ? LIST_PAGE_SIZE : 1);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
     // Go to back "left" to theme screen
     ViewType vt = VT_THEME;
@@ -120,29 +120,24 @@ void ThemeImportView::OnFocus() {
   setCurrentFolder();
 }
 
-void ThemeImportView::warpToNextTheme(bool goUp) {
+void ThemeImportView::changeSelection(int delta) {
   if (fileIndexList_.empty())
     return;
 
-  if (goUp) {
-    if (currentIndex_ > 0) {
-      currentIndex_--;
-      // if we have scrolled off the top, page the file list up if not
-      // already at very top of the list
-      if (currentIndex_ < topIndex_) {
-        topIndex_ = currentIndex_;
-      }
-    }
-  } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
-      currentIndex_++;
-      // if we have scrolled off the bottom, page the file list down if not
-      // at end of the list
-      if (currentIndex_ >= (topIndex_ + LIST_PAGE_SIZE)) {
-        topIndex_++;
-      }
-    }
+  size_t max = fileIndexList_.size() - 1;
+  size_t target = std::clamp((int)(currentIndex_ + delta), 0, (int)max);
+  size_t bottom = std::min(topIndex_ + LIST_PAGE_SIZE - 1, max);
+  size_t landingOn = std::clamp(target, topIndex_, bottom);
+  bool willScroll = (currentIndex_ == landingOn) && (landingOn != target);
+
+  currentIndex_ = willScroll ? target : landingOn;
+
+  if (willScroll) {
+    size_t offset = (target > bottom) ? LIST_PAGE_SIZE - 1 : 0;
+    size_t upper = std::max(0zu, fileIndexList_.size() - LIST_PAGE_SIZE);
+    topIndex_ = std::clamp(target - offset, 0zu, upper);
   }
+
   isDirty_ = true;
 }
 
