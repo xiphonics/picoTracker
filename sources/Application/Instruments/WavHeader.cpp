@@ -238,9 +238,9 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
     uint16_t subtype = static_cast<uint16_t>(subFormat[0]) |
                        (static_cast<uint16_t>(subFormat[1]) << 8);
-    info.audioFormat =
-        (subtype == WAV_FORMAT_IEEE_FLOAT) ? WAV_FORMAT_IEEE_FLOAT
-                                           : WAV_FORMAT_PCM;
+    info.audioFormat = (subtype == WAV_FORMAT_IEEE_FLOAT)
+                           ? WAV_FORMAT_IEEE_FLOAT
+                           : WAV_FORMAT_PCM;
   }
 
   const bool isPcm = info.audioFormat == WAV_FORMAT_PCM;

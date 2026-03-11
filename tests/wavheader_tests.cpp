@@ -175,8 +175,8 @@ ByteWriter BuildExtensibleWav(uint16_t channels, uint32_t sampleRate,
   writer.AppendU32(byteRate);
   writer.AppendU16(blockAlign);
   writer.AppendU16(bitsPerSample);
-  writer.AppendU16(22); // cbSize
-  writer.AppendU16(bitsPerSample); // valid bits per sample
+  writer.AppendU16(22);                        // cbSize
+  writer.AppendU16(bitsPerSample);             // valid bits per sample
   writer.AppendU32(channels == 1 ? 0x4 : 0x3); // mono center / stereo L|R
   writer.AppendU16(subtype); // KSDATAFORMAT_SUBTYPE_* low 16 bits of Data1
   writer.AppendU16(0);
