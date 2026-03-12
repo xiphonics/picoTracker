@@ -26,12 +26,13 @@ public:
   virtual void OnFocus();
 
 protected:
-  void setCurrentFolder(FileSystem *fs, const char *name);
-  void warpToNextTheme(bool goUp);
+  void setCurrentFolder();
+  void changeSelection(int delta);
   void onImportTheme(const char *filename);
 
 private:
   void onImportThemeModalDismiss(View &view, ModalView &dialog);
+  void OpenSelectedItem();
 
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
