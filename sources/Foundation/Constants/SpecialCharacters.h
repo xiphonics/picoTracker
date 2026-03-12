@@ -10,7 +10,7 @@
 #define char_battery_half char_battery_half_s[0]
 #define char_battery_empty_s "\203"
 #define char_battery_empty char_battery_empty_s[0]
-#define char_symbol_charging_s "\251"
+#define char_symbol_charging_s "\306"
 #define char_symbol_charging char_battery_right_s[0]
 #define char_battery_charging1_s "\204"
 #define char_battery_charging1 char_battery_charging1_s[0]

@@ -10,12 +10,16 @@
 #include "ModalView.h"
 #include "Application/AppWindow.h"
 
+uint32_t ModalView::nextInstanceId_ = 0;
+
 ModalView::ModalView(View &v)
-    : View(v.w_, v.viewData_), finished_(false), returnCode_(0){};
+    : View(v.w_, v.viewData_), instanceId_(++nextInstanceId_), finished_(false),
+      returnCode_(0){};
 
 ModalView::~ModalView(){};
 
 int ModalView::GetReturnCode() { return returnCode_; };
+uint32_t ModalView::GetInstanceId() const { return instanceId_; };
 
 bool ModalView::IsFinished() { return finished_; };
 

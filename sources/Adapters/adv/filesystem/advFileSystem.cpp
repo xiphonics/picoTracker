@@ -133,7 +133,7 @@ PicoFileType advFileSystem::getFileType(int index) {
 }
 
 void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
-                         bool subDirOnly) {
+                         bool subDirOnly, bool includeHidden) {
 
   fileIndexes->clear();
 
@@ -176,7 +176,8 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     const bool isHiddenName = (fno.fname[0] == '.') && !isParentEntry;
 
     // filter out "." style hidden entries and files that dont match filter
-    if ((isDir || (isFile && matchesFilter)) && !isHiddenName) {
+    if ((isDir || (isFile && matchesFilter)) &&
+        (includeHidden || !isHiddenName)) {
       if (subDirOnly) {
         if (fno.fattrib & AM_DIR) {
           fileIndexes->push_back(i);
