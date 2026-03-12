@@ -51,15 +51,17 @@ Once you've created an instrument, you can save it for use in other projects:
 - **start:** start point of the sample regardless of if loop is enabled (note value is in hex)
 - **loop Start:** start point of the sample when loop is enabled (note value is in hex)
 - **loop End:** end point of the sample (note value is in hex). You can play samples backwards by setting the end value lower than the start
-- **slices:** Opens the Sample Slices view where you can define up to 16 slice start points for the currently selected sample. Notes from `C3` through `D#4` trigger slices 1–16 instead of pitching the entire sample.
+- **slices:** Shows number of slices applied to the sample. Select `Adjust` which opens the Sample Slices view where you can define up to 16 slice start points for the currently selected sample.
 - **automation:** If On, the table play arrows will advance one row every time the instrument is triggered, and execute only the commands on the new rows. If this is Off, table behavior is normal (play arrows will move at the speed of 1 row per tick)
 - **table:** Select a table the instrument will always run. To clone a table here: `ALT`+(`EDIT`, `ENTER`). Make a new table by selecting a higher number not yet in use.
 
 ### Sample Slices View
 
-The Sample Slices view provides a focused editor for slice start points. Use the `slice` field to choose which of the 16 slots you want to edit (`slice 0` corresponds to `C3`, `slice 15` to `D#4`, but this is hidden from the user). The `start` field lets you enter the slice start offset as a hexadecimal sample index, and a waveform preview helps visualize the positions of every defined slice. Press `PLAY` to audition only the currently selected slice at its original pitch.
+The Sample Slices view provides a visual editor for slice start points. 
 
-Slices are ordered in strict order and they cannot be reordered. Moving a slice backwards will limit it's movement to the position of the previous slice. Moving a slice forward towards another slice will shove the next slice(s) to the new position of the current slice.
+With the waveform display selected, you can use `LEFT` and `RIGHT` to select a slice point. The `slice` field shows the number of the currently selected slice. Press `PLAY` to audition only the currently selected slice.
+
+Slices are ordered in strict order and they cannot be reordered. Moving a slice backwards will limit it's movement to the position of the previous slice. Moving a slice forward towards another slice will "shove" the next slice(s) to the new position of the current slice.
 
 Slices are stored per instrument and always reference the currently assigned sample. Changing the instrument's sample when slices are present prompts for confirmation, because accepting the change clears all slice start points.
 

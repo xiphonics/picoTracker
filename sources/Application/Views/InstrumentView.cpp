@@ -367,7 +367,7 @@ void InstrumentView::fillSampleParameters() {
 
   GUIPoint actionPos = position;
   actionPos._x = baseX + 12;
-  sampleActionField_.emplace_back("adjust", FourCC::ActionShowSampleSlices,
+  sampleActionField_.emplace_back("Adjust", FourCC::ActionShowSampleSlices,
                                   actionPos);
   fieldList_.insert(fieldList_.end(), &sampleActionField_.back());
   sampleActionField_.back().AddObserver(*this);
