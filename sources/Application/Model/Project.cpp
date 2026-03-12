@@ -35,7 +35,7 @@
 #define DATA_UNUSED_VALUE 0xFF
 
 Project::Project(const char *name)
-    : Persistent("PROJECT"), VariableContainer(&variables_), song_(),
+    : Persistent("PROJECT"), VariableContainer(variables_.begin(), variables_.end()), song_(),
       tempoNudge_(0), tempo_(FourCC::VarTempo, DEFAULT_TEMPO),
       masterVolume_(FourCC::VarMasterVolume, DEFAULT_MASTER_VOLUME),
       channelVolume1_(FourCC::VarChannel1Volume, DEFAULT_CHANNEL_VOLUME),
@@ -52,27 +52,27 @@ Project::Project(const char *name)
       projectName_(FourCC::VarProjectName, name),
       previewVolume_(FourCC::VarPreviewVolume, DEFAULT_PREVIEW_VOLUME) {
 
-  this->variables_.insert(variables_.end(), &tempo_);
-  this->variables_.insert(variables_.end(), &masterVolume_);
+  variables_[0] = &tempo_;
+  variables_[1] = &masterVolume_;
 
   // Add individual channel volume variables to the container
-  this->variables_.insert(variables_.end(), &channelVolume1_);
-  this->variables_.insert(variables_.end(), &channelVolume2_);
-  this->variables_.insert(variables_.end(), &channelVolume3_);
-  this->variables_.insert(variables_.end(), &channelVolume4_);
-  this->variables_.insert(variables_.end(), &channelVolume5_);
-  this->variables_.insert(variables_.end(), &channelVolume6_);
-  this->variables_.insert(variables_.end(), &channelVolume7_);
-  this->variables_.insert(variables_.end(), &channelVolume8_);
+  variables_[2] = &channelVolume1_;
+  variables_[3] = &channelVolume2_;
+  variables_[4] = &channelVolume3_;
+  variables_[5] = &channelVolume4_;
+  variables_[6] = &channelVolume5_;
+  variables_[7] = &channelVolume6_;
+  variables_[8] = &channelVolume7_;
+  variables_[9] = &channelVolume8_;
 
-  this->variables_.insert(variables_.end(), &wrap_);
-  this->variables_.insert(variables_.end(), &transpose_);
-  this->variables_.insert(variables_.end(), &scale_);
+  variables_[10] = &wrap_;
+  variables_[11] = &transpose_;
+  variables_[12] = &scale_;
   scale_.SetInt(0);
-  this->variables_.insert(variables_.end(), &scaleRoot_);
+  variables_[13] = &scaleRoot_;
   scaleRoot_.SetInt(0); // Default to C (0)
-  this->variables_.insert(variables_.end(), &projectName_);
-  this->variables_.insert(variables_.end(), &previewVolume_);
+  variables_[14] = &projectName_;
+  variables_[15] = &previewVolume_;
 
   // Project name is now managed through the WatchedVariable
 
