@@ -290,10 +290,10 @@ void ThemeView::syncFieldsFromConfig() {
       continue;
     }
 
-    uint32_t colorValue = static_cast<uint32_t>(entry.colorVar->GetInt());
+    uint32_t colorValue = entry.colorVar->GetInt();
     uint32_t componentValue =
         (colorValue >> entry.shift) & static_cast<uint32_t>(0xFF);
-    entry.componentVar->SetInt(static_cast<int>(componentValue), false);
+    entry.componentVar->SetInt(componentValue, false);
   }
 }
 
