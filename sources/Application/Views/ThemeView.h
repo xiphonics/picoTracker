@@ -55,6 +55,7 @@ private:
   void addSwatchField(ColorDefinition color, GUIPoint position);
   void addColorField(const char *label, Variable *colorVar,
                      ColorDefinition color, GUIPoint position);
+  void syncFieldsFromConfig();
   void syncColorComponentVars(Variable *colorVar);
 
   struct ColorComponentField {
