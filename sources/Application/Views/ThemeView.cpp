@@ -282,6 +282,21 @@ void ThemeView::syncColorComponentVars(Variable *colorVar) {
   }
 }
 
+void ThemeView::syncFieldsFromConfig() {
+  updateThemeNameFromConfig();
+
+  for (auto &entry : colorComponentFields_) {
+    if (entry.colorVar == nullptr || entry.componentVar == nullptr) {
+      continue;
+    }
+
+    uint32_t colorValue = entry.colorVar->GetInt();
+    uint32_t componentValue =
+        (colorValue >> entry.shift) & static_cast<uint32_t>(0xFF);
+    entry.componentVar->SetInt(componentValue, false);
+  }
+}
+
 void ThemeView::Update(Observable &o, I_ObservableData *d) {
   if (!hasFocus_) {
     return;
@@ -469,9 +484,10 @@ void ThemeView::updateThemeNameFromConfig() {
 }
 
 void ThemeView::OnFocus() {
-  // Update the theme name field from Config when the view gets focus
-  // This ensures the field is updated after importing a theme
-  updateThemeNameFromConfig();
+  // Refresh local field state from Config when returning from theme import.
+  syncFieldsFromConfig();
+  _forceRedraw = true;
+  isDirty_ = true;
 }
 
 void ThemeView::OnFocusLost() {
