@@ -164,9 +164,12 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
 
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
-      tolowercase((char *)fno.fname);
-      matchesFilter = (strstr(fno.fname, filter) != nullptr);
-      Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", fno.fname, filter,
+      char filterName[PFILENAME_SIZE];
+      strncpy(filterName, fno.fname, sizeof(filterName) - 1);
+      filterName[sizeof(filterName) - 1] = '\0';
+      tolowercase(filterName);
+      matchesFilter = (strstr(filterName, filter) != nullptr);
+      Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", filterName, filter,
                  matchesFilter);
     }
 
@@ -444,7 +447,7 @@ bool advFileSystem::MoveFile(const char *srcFilename,
 }
 
 void advFileSystem::tolowercase(char *temp) {
-  // Convert to upper case
+  // Normalize to lowercase for case-insensitive comparisons only.
   char *s = temp;
   while (*s != '\0') {
     *s = tolower((unsigned char)*s);
