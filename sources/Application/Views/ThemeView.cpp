@@ -283,7 +283,19 @@ void ThemeView::syncColorComponentVars(Variable *colorVar) {
 }
 
 void ThemeView::syncFieldsFromConfig() {
-  updateThemeNameFromConfig();
+  // Get the current theme name from Config
+  Config *config = Config::GetInstance();
+  Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
+
+  if (themeNameVar && !themeNameVar->GetString().empty()) {
+    // Get the theme name from Config
+    etl::string<MAX_THEME_NAME_LENGTH> themeName = themeNameVar->GetString();
+
+    // Update the theme name field
+    themeNameVar_.SetString(themeName.c_str());
+    themeNameField_->SetVariable(themeNameVar_);
+    exportThemeName_ = themeName;
+  }
 
   for (auto &entry : colorComponentFields_) {
     if (entry.colorVar == nullptr || entry.componentVar == nullptr) {
@@ -465,22 +477,6 @@ void ThemeView::exportThemeWithName(const char *themeName, bool overwrite) {
       *this, result ? "Theme exported successfully " : "Failed to export theme",
       MBBF_OK);
   DoModal(resultMb);
-}
-
-void ThemeView::updateThemeNameFromConfig() {
-  // Get the current theme name from Config
-  Config *config = Config::GetInstance();
-  Variable *themeNameVar = config->FindVariable(FourCC::VarThemeName);
-
-  if (themeNameVar && !themeNameVar->GetString().empty()) {
-    // Get the theme name from Config
-    etl::string<MAX_THEME_NAME_LENGTH> themeName = themeNameVar->GetString();
-
-    // Update the theme name field
-    themeNameVar_.SetString(themeName.c_str());
-    themeNameField_->SetVariable(themeNameVar_);
-    exportThemeName_ = themeName;
-  }
 }
 
 void ThemeView::OnFocus() {
