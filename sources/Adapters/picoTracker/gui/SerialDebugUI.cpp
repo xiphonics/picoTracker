@@ -8,6 +8,7 @@
 
 #include "SerialDebugUI.h"
 #include "Application/Model/Config.h"
+#include "Application/Utils/MemoryPool.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
 #include "hardware/uart.h"
@@ -131,16 +132,17 @@ void SerialDebugUI::catFile(const char *path) {
 
 void SerialDebugUI::listFiles(const char *path) {
   auto fs = FileSystem::GetInstance();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   if (!fs->chdir(path)) {
     Trace::Error("failed to ls files path:%s", path);
   }
-  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
-  fs->list(&fileIndexes, "", false);
+
+  fs->list(&(*fileIndexList), "", false);
 
   char name[PFILENAME_SIZE];
-  for (size_t i = 0; i < fileIndexes.size(); i++) {
-    fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
-    if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
+  for (size_t i = 0; i < fileIndexList->size(); i++) {
+    fs->getFileName((*fileIndexList)[i], name, PFILENAME_SIZE);
+    if (fs->getFileType((*fileIndexList)[i]) == PFT_FILE) {
       printf("[file] %s\n", name);
     } else {
       printf("[dir] %s\n", name);

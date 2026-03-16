@@ -32,7 +32,6 @@ public:
 
 protected:
   AudioFileStreamerMode mode_;
-  etl::string<PFILENAME_SIZE - 1> name_;
   WavFile wav_;
   float position_;
   Project *project_;

@@ -11,6 +11,7 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/DrawUtils.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
@@ -57,10 +58,11 @@ void SamplePool::Load(const char *projectName) {
                  PROJECT_SAMPLES_DIR);
   }
   // First, find all wav files
-  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
-  fs->list(&fileIndexes, ".wav", false);
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
+
+  fs->list(&(*fileIndexList), ".wav", false);
   char name[PFILENAME_SIZE];
-  uint totalSamples = fileIndexes.size();
+  uint totalSamples = fileIndexList->size();
 
   // store for ui updates
   importCount = totalSamples;
@@ -69,8 +71,8 @@ void SamplePool::Load(const char *projectName) {
     importIndex = i;
     importName = name;
 
-    fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
-    if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
+    fs->getFileName((*fileIndexList)[i], name, PFILENAME_SIZE);
+    if (fs->getFileType((*fileIndexList)[i]) == PFT_FILE) {
       // Check if the filename exceeds the maximum allowed length
       if (strlen(name) > MAX_INSTRUMENT_FILENAME_LENGTH) {
         Trace::Error(

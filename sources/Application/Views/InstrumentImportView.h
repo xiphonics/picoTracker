@@ -37,6 +37,5 @@ private:
   size_t currentIndex_ = 0;
   short selected_ = 0;
   int toInstrID_ = 0;
-  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 #endif

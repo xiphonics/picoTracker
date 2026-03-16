@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/DrawUtils.h"
+#include "Application/Utils/MemoryPool.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "BaseClasses/ViewEvent.h"
 #include "Foundation/Constants/SpecialCharacters.h"
@@ -191,7 +192,8 @@ void SelectProjectView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
   selection_[0] = '\0';
-  fileIndexList_.clear();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
+  fileIndexList->clear();
 }
 
 void SelectProjectView::DrawView() {
@@ -217,8 +219,10 @@ void SelectProjectView::DrawView() {
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
   const char *currentProject = projectName.c_str();
 
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
+
   for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList->size()); i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -229,7 +233,7 @@ void SelectProjectView::DrawView() {
 
     char buffer[MAX_PROJECT_NAME_LENGTH + 1];
     memset(buffer, '\0', sizeof(buffer));
-    unsigned fileIndex = fileIndexList_[i];
+    unsigned fileIndex = (*fileIndexList)[i];
 
     if (fs->getFileType(fileIndex) == PFT_DIR) {
       fs->getFileName(fileIndex, buffer, MAX_PROJECT_NAME_LENGTH + 1);
@@ -268,7 +272,8 @@ void SelectProjectView::DrawView() {
 };
 
 void SelectProjectView::DrawScrollBar() {
-  int totalItems = fileIndexList_.size();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
+  int totalItems = fileIndexList->size();
   if (totalItems <= LIST_PAGE_SIZE) {
     return; // no scrollbar needed
   }
@@ -354,6 +359,7 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
 }
 
 void SelectProjectView::warpToNextProject(bool goUp) {
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (goUp) {
     if (currentIndex_ > 0) {
@@ -365,7 +371,7 @@ void SelectProjectView::warpToNextProject(bool goUp) {
       }
     }
   } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
+    if (currentIndex_ < fileIndexList->size() - 1) {
       currentIndex_++;
       // if we have scrolled off the bottom, page the file list down if not
       // at end of the list
@@ -378,17 +384,18 @@ void SelectProjectView::warpToNextProject(bool goUp) {
 }
 
 void SelectProjectView::setCurrentFolder() {
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   auto fs = FileSystem::GetInstance();
   fs->chdir(PROJECTS_DIR);
 
   // get ready
-  fileIndexList_.clear();
+  fileIndexList->clear();
 
   // Let's read all the directory in the project dir
-  fs->list(&fileIndexList_, "", true);
+  fs->list(&(*fileIndexList), "", true);
 
   // Filter out "." and ".." along with the hidden default project entry
-  for (auto it = fileIndexList_.begin(); it != fileIndexList_.end();) {
+  for (auto it = fileIndexList->begin(); it != fileIndexList->end();) {
     fs->getFileName(*it, selection_, MAX_PROJECT_NAME_LENGTH + 1);
 
     const bool isDotEntry =
@@ -398,16 +405,16 @@ void SelectProjectView::setCurrentFolder() {
     if (isDotEntry || isUntitled) {
       if (isUntitled) {
         Trace::Log("SELECTPROJECTVIEW", "skipping untitled project on Index:%d",
-                   static_cast<int>(it - fileIndexList_.begin()));
+                   static_cast<int>(it - fileIndexList->begin()));
       }
-      it = fileIndexList_.erase(it);
+      it = fileIndexList->erase(it);
     } else {
       ++it;
     }
   }
 
   // reset & redraw screen
-  currentIndex_ = std::min(currentIndex_, fileIndexList_.size() - 1);
+  currentIndex_ = std::min(currentIndex_, fileIndexList->size() - 1);
   topIndex_ = 0;
   currentIndex_ = 0;
   isDirty_ = true;
@@ -418,13 +425,15 @@ void SelectProjectView::getSelectedProjectName(char *name) {
 }
 
 void SelectProjectView::getHighlightedProjectName(char *name) {
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   name[0] = '\0';
-  if (currentIndex_ >= fileIndexList_.size()) {
+
+  if (currentIndex_ >= fileIndexList->size()) {
     return;
   }
 
   auto fs = FileSystem::GetInstance();
-  unsigned fileIndex = fileIndexList_[currentIndex_];
+  unsigned fileIndex = (*fileIndexList)[currentIndex_];
   fs->getFileName(fileIndex, name, MAX_PROJECT_NAME_LENGTH + 1);
 }
 
@@ -434,12 +443,14 @@ void SelectProjectView::SelectButton(int direction) {
 }
 
 void SelectProjectView::LoadProject() {
-  if (currentIndex_ >= fileIndexList_.size()) {
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
+
+  if (currentIndex_ >= fileIndexList->size()) {
     return;
   }
 
   // all subdirs directly inside /project are expected to be projects
-  unsigned fileIndex = fileIndexList_[currentIndex_];
+  unsigned fileIndex = (*fileIndexList)[currentIndex_];
   auto fs = FileSystem::GetInstance();
   fs->getFileName(fileIndex, selection_, MAX_PROJECT_NAME_LENGTH + 1);
   if (strlen(selection_) == 0) {
@@ -476,7 +487,9 @@ bool SelectProjectView::SelectionIsCurrentProject() {
 }
 
 void SelectProjectView::AttemptDeletingSelectedProject() {
-  if (currentIndex_ >= fileIndexList_.size()) {
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
+
+  if (currentIndex_ >= fileIndexList->size()) {
     return;
   }
 

@@ -50,9 +50,6 @@ public:
 private:
   SdFs sd;
   void tolowercase(char *temp);
-  // buffer needs to be allocated here as too big for allocation as local
-  // variable on the stack
-  uint8_t fileBuffer_[512];
 };
 
 // Concrete implementation of PI_File for picoTracker
