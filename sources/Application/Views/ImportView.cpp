@@ -297,7 +297,7 @@ void ImportView::DrawView() {
   if (fileIndexList_.empty()) {
     return;
   }
-   // ensure selected item is in visible range
+  // ensure selected item is in visible range
   const size_t pageSize = LIST_PAGE_SIZE;
   if (currentIndex_ < topIndex_) {
     topIndex_ = currentIndex_;
