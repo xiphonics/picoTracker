@@ -785,7 +785,8 @@ void ImportView::adjustPreviewVolume(int offset) {
 
 bool ImportView::changeDirectory(FileSystem *fs, const char *name) {
   if (strcmp(name, "..") == 0 && fs->isParentRoot()) {
-    Trace::Log("PICOIMPORT", "Detected top-level directory, navigating to root");
+    Trace::Log("PICOIMPORT",
+               "Detected top-level directory, navigating to root");
     return fs->chdir("/");
   }
 
