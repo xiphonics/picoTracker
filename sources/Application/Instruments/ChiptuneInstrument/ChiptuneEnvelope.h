@@ -6,7 +6,7 @@
  * This file is part of the picoTracker firmware
  */
 
- #pragma once
+#pragma once
 
 #include "ChiptuneEnums.h"
 #include "ChiptuneMath.h"
@@ -18,7 +18,7 @@ typedef struct envelope_t {
   uint16_t coefficient; // q0.16
   uint16_t attack;
   uint16_t decay;
-  gbEnvState state;
+  chiptuneEnvState state;
 
   void set_attack(uint8_t a) {
     // map 8 bit attack value to 16 bit coefficient using LUT and interpolation
@@ -32,24 +32,24 @@ typedef struct envelope_t {
 
   void trigger() {
     coefficient = attack;
-    state = gbEnvAttack;
+    state = chiptuneEnvAttack;
     value = 0;
   }
 
   void tick() {
-    if (state == gbEnvIdle)
+    if (state == chiptuneEnvIdle)
       return;
 
-    uint32_t diff = (uint32_t)(state == gbEnvAttack ? 65535 : 0) - value;
+    uint32_t diff = (uint32_t)(state == chiptuneEnvAttack ? 0xFFFF : 0) - value;
     int32_t tmp = value + ((diff * coefficient) >> 16);
 
-    if (state == gbEnvAttack && tmp >= 65530) {
-      tmp = 65535;
+    if (state == chiptuneEnvAttack && tmp >= chiptuneEnvAttackThreshold) {
+      tmp = 0xFFFF;
       coefficient = decay;
-      state = gbEnvDecay;
-    } else if (tmp <= 10) {
+      state = chiptuneEnvDecay;
+    } else if (tmp <= chiptuneEnvDecayThreshold) {
       tmp = 0;
-      state = gbEnvIdle;
+      state = chiptuneEnvIdle;
     }
 
     value = tmp;

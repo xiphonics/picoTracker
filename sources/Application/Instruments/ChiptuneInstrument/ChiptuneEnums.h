@@ -8,30 +8,41 @@
 
 #pragma once
 
-enum gbConstants { gbNumWaveforms = 8 };
-
-enum gbWaveType {
-  gbWavePulse12_5,
-  gbWavePulse25,
-  gbWavePulse50,
-  gbWaveTriangle,
-  gbWaveNoiseGameBoy7,
-  gbWaveNoiseNES,
-  gbWaveNoiseSN76489,
-  gbWaveNoiseWhite,
-  gbWaveNone
+enum chiptuneConstants {
+  chiptuneNumWaveforms = 8,
+  chiptuneEnvAttackThreshold = 65530,
+  chiptuneEnvDecayThreshold = 10,
+  chiptune100HzTicks = 441,
+  chiptune1_0_q16_16 = 0x0001'0000,
+  chiptuneVibratoFrequency = 0xFFF,
 };
 
-enum gbEnvState { gbEnvIdle, gbEnvAttack, gbEnvDecay };
+enum chiptuneWaveType : uint8_t {
+  chiptuneWavePulse12_5,
+  chiptuneWavePulse25,
+  chiptuneWavePulse50,
+  chiptuneWaveTriangle,
+  chiptuneWaveNoiseGameBoy7,
+  chiptuneWaveNoiseNES,
+  chiptuneWaveNoiseSN76489,
+  chiptuneWaveNoiseWhite,
+  chiptuneWaveNone
+};
 
-typedef union gbFlags {
+enum chiptuneEnvState : uint8_t {
+  chiptuneEnvIdle,
+  chiptuneEnvAttack,
+  chiptuneEnvDecay
+};
+
+typedef union chiptuneFlags {
   struct {
     uint8_t arpeggio : 1;
     uint8_t legato : 1;
     uint8_t retrigger : 1;
     uint8_t volume : 1;
     uint8_t burst_end : 1;
-    uint8_t unused : 2;
+    uint8_t unused : 3;
   };
   uint8_t byte;
-} gbFlags;
+} chiptuneFlags;

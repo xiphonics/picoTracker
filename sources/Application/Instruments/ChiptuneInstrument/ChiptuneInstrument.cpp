@@ -11,7 +11,7 @@
 #include "I_Instrument.h"
 #include <string.h>
 
-static const char *waveShapes[gbNumWaveforms] = {
+static const char *waveShapes[chiptuneNumWaveforms] = {
     "Pulse 12.5%", "Pulse 25%", "Pulse 50%",     "Triangle",
     "Noise GB7",   "Noise NES", "Noise SN76489", "Noise White"};
 
@@ -31,8 +31,8 @@ ChiptuneInstrument::ChiptuneInstrument()
       vTranspose_(FourCC::ChiptuneInstrumentTranspose, 0),
       vVibratoDelay_(FourCC::ChiptuneInstrumentVibratoDelay, 0x40),
       vVibratoDepth_(FourCC::ChiptuneInstrumentVibrato, 0x07),
-      vWaveform_(FourCC::ChiptuneInstrumentWaveform, waveShapes, gbNumWaveforms,
-                 0) {
+      vWaveform_(FourCC::ChiptuneInstrumentWaveform, waveShapes,
+                 chiptuneNumWaveforms, 0) {
   // Initialize exported variables
   // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &vWaveform_);
@@ -128,7 +128,7 @@ bool ChiptuneInstrument::SupportsCommand(FourCC cc) { return false; }
 InstrumentParameters ChiptuneInstrument::getInstrumentParameters() {
   InstrumentParameters params;
 
-  params.wave = vWaveform_.GetInt();
+  params.wave = (chiptuneWaveType)vWaveform_.GetInt();
   params.attack = vAttack_.GetInt();
   params.decay = vDecay_.GetInt();
   params.level = vLevel_.GetInt();

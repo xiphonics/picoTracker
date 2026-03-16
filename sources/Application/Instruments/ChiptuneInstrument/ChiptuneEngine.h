@@ -26,24 +26,34 @@
  ******************************************************************************/
 
 typedef struct InstrumentParameters {
+  // maximum length the voice can reach to cut off a voice before the decay
+  // reaches 0. 0 means do not limit
   uint8_t length;
 
-  uint8_t wave;
+  // waveform enum
+  chiptuneWaveType wave;
+  // envelope attack and decay time (0-255, where 0 is instant)
   uint8_t attack;
   uint8_t decay;
+  // instrument output level
   uint8_t level;
-
+  // plays a burst of white noise for the given time at the beginning of a note
   uint8_t burst;
+  // vibrato depth and the delay before the automatic vibrato starts
   uint8_t vibratoDepth;
   uint8_t vibratoDelay;
+  // instrument transposition (-24..24)
   int8_t transpose;
-
+  // speed at which the arpeggio cycles through the steps (0-35, where 0 is
+  // fastest)
   uint8_t arpSpeed;
+  // sweep time and amount (amount is in semitones, positive or negative)
   uint8_t sweepTime;
   int8_t sweepAmount;
 } InstrumentParameters;
 
-// 128 bytes per voice max to keep the entire thing under 1kB for the 8 voices
+// make sure any type changes do not break the target size or lead to alignment
+// issues
 static_assert(sizeof(InstrumentParameters) <= 12,
               "Check sizeof(InstrumentParameters) in error message");
 
@@ -51,8 +61,8 @@ static_assert(sizeof(InstrumentParameters) <= 12,
  * voice                                                                      *
  ******************************************************************************/
 
-// (!) alignment has to be manually kept in this to allow using pack() to  (!)
-//     kee the size <=128 bytes per voice
+// (!) alignment has to be manually kept in this struct to allow using pack()
+//     to keep the size <=128 bytes per voice
 #pragma pack(push, 1)
 typedef struct voice_t {
   InstrumentParameters parameters;
@@ -61,16 +71,17 @@ typedef struct voice_t {
   int32_t frequency = 0; // precomp'd oscillator frequency (incl. vibrato, etc)
   int32_t lastFrequency = 0; // for legato slides, to compute the initial factor
 
-  uint32_t timeToLive;
+  uint32_t timeToLive; // time before the voice is silenced
 
   uint32_t time; // sample counter
   uint16_t tick; // sample counter for 100Hz updates
   uint16_t tock; // sample counter for 1000Hz updates
 
-  uint32_t lastSample = 0;
+  uint32_t lastSample = 0; // used for both the last sample for pulse smoothing
+                           // and as the lcg register for the noise
 
   struct arp {
-    int32_t frequencies[5] = {0, 0, 0, 0, 0};
+    int32_t frequencies[5] = {0, 0, 0, 0, 0}; // precomp'd frequencies
     uint8_t clock = 0;  // internal clock for arpeggio timing
     uint8_t time = 250; // arpeggio step duration in clock ticks
     uint8_t length = 5; // number of steps in the arpeggio (1-5)
@@ -100,9 +111,9 @@ typedef struct voice_t {
         return false; // no slide in progress
       }
       if (step < 0) {
-        current = std::max(current + step, target << 8);
+        current = std::max((int32_t)current + step, (int32_t)(target << 8));
       } else {
-        current = std::min(current + step, target << 8);
+        current = std::min((int32_t)current + step, (int32_t)(target << 8));
       }
 
       level = current >> 8;
@@ -150,19 +161,19 @@ typedef struct voice_t {
   } pan;
 
   struct sweep {
-    uint32_t coefficient;
-    int16_t steps;
+    uint32_t coefficient; // addition coefficient to scale
+    int16_t steps;        // number of times to apply
   } sweep;
 
-  uint8_t burstTime; // initial white noise burst duration in ticks
-  gbFlags flags;
+  uint8_t burstTime;   // initial white noise burst duration in ticks
+  chiptuneFlags flags; // voice command flags
 
   struct legato {
-    // legato (exponential pitch slide)
-    int32_t coefficient = 0; // q16.16 multiplier per 100Hz tick
-    int32_t factor = 0;      // q16.16 multiplier per 100Hz tick
-    int32_t steps = 0;       // remaining ticks
-    int32_t targetFreq = 0;  // target frequency
+    // legato (pitch slide)
+    int32_t coefficient = 0;  // q16.16 multiplier per 100Hz tick
+    int32_t factor = 0;       // q16.16 multiplier per 100Hz tick
+    int32_t steps = 0;        // remaining ticks
+    int32_t targetFactor = 0; // target multiplication factor
 
     inline void tick() {
       if (steps) {
@@ -171,26 +182,26 @@ typedef struct voice_t {
         steps--;
 
         if (steps == 0) {
-          factor = targetFreq;
+          factor = targetFactor;
         }
       }
     }
   } legato;
 
-  uint8_t drive;
-  uint8_t bitcrush;
+  uint8_t drive;    // unused currently
+  uint8_t bitcrush; // bitcrush setting (only settable via command)
 
-  uint8_t note;
-  uint8_t wave;
+  uint8_t note;          // current base note
+  chiptuneWaveType wave; // selected waveform
 
-  uint16_t lfsr = 17;
+  uint16_t lfsr = 17; // shift register for the noise generators
 
-  envelope_t envelope;
+  envelope_t envelope; // envelope, size is 9 bytes
 
-  uint8_t leftGain;
-  uint8_t rightGain;
-  uint8_t combinedGain;
-  uint16_t buffer;
+  uint8_t leftGain;           // gain setting for the left channel
+  uint8_t rightGain;          // gain setting for the right channel
+  uint8_t combinedGain;       // master gain (precomputed at tock rate)
+  uint16_t alignemntSentinel; // placeholder to guarantee alignment and padding
 
   // implementation ------------------------------------------------------------
 
@@ -200,7 +211,7 @@ typedef struct voice_t {
   }
 
   inline void calculate_gain() {
-    leftGain = std::min((0xFF - pan.position) * 2, 0xFF);
+    leftGain = std::min(x(0xFF - pan.position) * 2, 0xFF);
     rightGain = std::min(0xFF, 2 * pan.position);
     combinedGain = (volume.level * envelope.value) >> 16;
   }
@@ -212,7 +223,7 @@ typedef struct voice_t {
     if (tick == 0) {
 
       // envelope processing at ~100Hz
-      tick = 441;
+      tick = chiptune100HzTicks;
       envelope.tick();
 
       if (flags.volume) {
@@ -242,7 +253,7 @@ typedef struct voice_t {
       // vibrato
       frequency = arp.frequencies[arp.index] + vibrato.tick(time);
 
-      // legato: exponential frequency interpolation (Q16.16 fixed-point)
+      // legato: frequency interpolation (Q16.16 fixed-point)
       if (flags.legato) {
         legato.tick();
       }
@@ -267,14 +278,14 @@ typedef struct voice_t {
           note_on(note, false, parameters, true);
         } else {
           // note off, kill everything
-          wave = gbWaveNone;
-          envelope.state = gbEnvIdle;
+          wave = chiptuneWaveNone;
+          envelope.state = chiptuneEnvIdle;
         }
       } else {
         // still in burst or already playing?
         if (burstTime > 0) {
           burstTime--;
-          wave = gbWaveNoiseWhite;
+          wave = chiptuneWaveNoiseWhite;
           flags.burst_end = (burstTime == 0);
         } else {
           // first non-burst tick, reset phase, last sample, etc.
@@ -304,16 +315,16 @@ typedef struct voice_t {
 
     // generate sample based on waveform
     switch (wave) {
-    case gbWavePulse12_5: // pulse 12.5%
+    case chiptuneWavePulse12_5: // pulse 12.5%
       sample = pulse(phase > 0x2000'0000);
       break;
-    case gbWavePulse25: // pulse 25%
+    case chiptuneWavePulse25: // pulse 25%
       sample = pulse(phase > 0x4000'0000);
       break;
-    case gbWavePulse50: // pulse 50%
+    case chiptuneWavePulse50: // pulse 50%
       sample = pulse(phase > 0x8000'0000);
       break;
-    case gbWaveTriangle:         // triangle
+    case chiptuneWaveTriangle:   // triangle
       if (phase < 0x8000'0000) { // first half, rising slope
         sample = phase >> 3;
       } else { // second half, falling slope
@@ -321,18 +332,21 @@ typedef struct voice_t {
       }
       sample &= 0xFF00'0000; // downsample
       break;
-    case gbWaveNoiseGameBoy7: // noise: GB7
+    case chiptuneWaveNoiseGameBoy7: // noise: GB7
       sample = voice_noise_lfsr(1, 6);
       break;
-    case gbWaveNoiseNES: // noise: NES
+    case chiptuneWaveNoiseNES: // noise: NES
       sample = voice_noise_lfsr(6, 14);
       break;
-    case gbWaveNoiseSN76489: // noise: SN76489
+    case chiptuneWaveNoiseSN76489: // noise: SN76489
       sample = voice_noise_lfsr(3, 14);
       break;
-    case gbWaveNoiseWhite:                              // noise: white noise
+    case chiptuneWaveNoiseWhite:                        // noise: white noise
       lastSample = (lastSample * 1664525) + 1013904223; // frequency independent
       sample = lastSample & SAMPLE_LEVEL;
+      break;
+    case chiptuneWaveNone:
+      sample = 0;
       break;
     }
 
@@ -362,9 +376,9 @@ typedef struct voice_t {
 
     // command settings
     legato.steps = 0;
-    legato.factor = 0x0001'0000;      // 1.0 in Q16.16
-    legato.coefficient = 0x0001'0000; // 1.0 in Q16.16
-    flags.byte = 0;                   // clear all flags
+    legato.factor = chiptune1_0_q16_16;      // 1.0 in Q16.16
+    legato.coefficient = chiptune1_0_q16_16; // 1.0 in Q16.16
+    flags.byte = 0;                          // clear all flags
 
     bitcrush = 0; // only accessible via command
     drive = 0;
@@ -394,7 +408,7 @@ typedef struct voice_t {
 
     this->note = note;
 
-    // reset apreggio to default state (off, base frequency only)
+    // reset arpepggio to default state (off, base frequency only)
     arp.time = 35 - parameters.arpSpeed;
     arp.index = 0;
     arp.clock = 0;
@@ -416,7 +430,7 @@ typedef struct voice_t {
     vibrato.swing = frequencyLUT[fIndex + 1] - frequency;
     vibrato.delay = parameters.vibratoDelay << 8;
     vibrato.phase = 0;
-    vibrato.frequency = 0xFFF;
+    vibrato.frequency = chiptuneVibratoFrequuency;
 
     // reset envelope
     envelope.set_attack(parameters.attack);
@@ -496,8 +510,8 @@ typedef struct voice_t {
     int ticks = 1 + rate; // minimum 1 tick
 
     // get total ratio from table (Q16.16)
-    legato.targetFreq = offset;
-    legato.coefficient = (legato.targetFreq - 0x0001'0000) / ticks;
+    legato.targetFactor = offset;
+    legato.coefficient = (legato.targetFactor - 0x0001'0000) / ticks;
 
     legato.steps = ticks;
     legato.factor = 0x0001'0000; // start at 1.0 in q16.16
@@ -536,13 +550,13 @@ typedef struct voice_t {
       // initial factor = lastFrequency / frequency (0.5 for up an octave etc)
       // target factor = 1.0 (when we reach the new frequency)
       int64_t initialFactor = ((int64_t)lastFrequency << 16) / frequency;
-      legato.targetFreq = 0x0001'0000; // 1.0 in Q16.16
-      legato.coefficient = (legato.targetFreq - initialFactor) / ticks;
+      legato.targetFactor = 0x0001'0000; // 1.0 in Q16.16
+      legato.coefficient = (legato.targetFactor - initialFactor) / ticks;
       legato.factor = initialFactor; // start at the ratio
     } else {
       // get total ratio from table (Q16.16)
-      legato.targetFreq = semitoneRatioQ16[semitones + 128];
-      legato.coefficient = (legato.targetFreq - 0x0001'0000) / ticks;
+      legato.targetFactor = semitoneRatioQ16[semitones + 128];
+      legato.coefficient = (legato.targetFactor - 0x0001'0000) / ticks;
     }
 
     legato.steps = ticks;
@@ -557,8 +571,8 @@ typedef struct voice_t {
     int ticks = 1 + speed; // minimum 1 tick
 
     // get total ratio from table (Q16.16)
-    legato.targetFreq = semitoneRatioQ16[semitones + 128];
-    legato.coefficient = (legato.targetFreq - 0x0001'0000) / ticks;
+    legato.targetFactor = semitoneRatioQ16[semitones + 128];
+    legato.coefficient = (legato.targetFactor - 0x0001'0000) / ticks;
 
     legato.steps = ticks;
     legato.factor = 0x0001'0000; // start at 1.0 in q16.16
