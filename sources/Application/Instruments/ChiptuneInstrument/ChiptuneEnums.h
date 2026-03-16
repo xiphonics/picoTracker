@@ -6,7 +6,7 @@
  * This file is part of the picoTracker firmware
  */
 
- #pragma once
+#pragma once
 
 enum gbConstants { gbNumWaveforms = 8 };
 
@@ -15,7 +15,7 @@ enum gbWaveType {
   gbWavePulse25,
   gbWavePulse50,
   gbWaveTriangle,
-  gbWaveNoiseChiptune,
+  gbWaveNoiseGameBoy7,
   gbWaveNoiseNES,
   gbWaveNoiseSN76489,
   gbWaveNoiseWhite,
@@ -30,7 +30,8 @@ typedef union gbFlags {
     uint8_t legato : 1;
     uint8_t retrigger : 1;
     uint8_t volume : 1;
-    uint8_t unused : 4;
+    uint8_t burst_end : 1;
+    uint8_t unused : 2;
   };
   uint8_t byte;
 } gbFlags;

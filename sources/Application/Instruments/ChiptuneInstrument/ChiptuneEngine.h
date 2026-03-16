@@ -16,6 +16,10 @@
 #include "ChiptuneMath.h"
 #include "ChiptuneTables.h"
 
+#define SAMPLE_LEVEL 0x0FFF'FFFF
+#define HALF_SAMPLE_LEVEL (SAMPLE_LEVEL >> 1)
+#define NOISE_PHASE_LENGTH 0x4000'0000
+
 /******************************************************************************
  * InstrumentParameters holds all relevant information from the instrument    *
  * view that is needed by the engine.                                         *
@@ -47,12 +51,6 @@ static_assert(sizeof(InstrumentParameters) <= 12,
  * voice                                                                      *
  ******************************************************************************/
 
-// max rates for slew limiting the waveform against aliasing noise. could be
-// improved to be frequency-dependent later on, but this is a good start and
-// keeps the implementation simple.y
-constexpr int32_t maxStep = 0x3fff'ffff;
-constexpr int32_t minStep = -0x3fff'ffff;
-
 // (!) alignment has to be manually kept in this to allow using pack() to  (!)
 //     kee the size <=128 bytes per voice
 #pragma pack(push, 1)
@@ -69,7 +67,6 @@ typedef struct voice_t {
   uint16_t tick; // sample counter for 100Hz updates
   uint16_t tock; // sample counter for 1000Hz updates
 
-  uint32_t noise = 42;
   uint32_t lastSample = 0;
 
   struct arp {
@@ -116,9 +113,9 @@ typedef struct voice_t {
   struct vibrato {
     uint16_t phase; // sine lfo phase
     int32_t swing;  // frequency diff between current note and next semitone
-    uint16_t frequency = 0xfff; // vibrato frequency
-    uint16_t delay;             // ticks before auto-vibrato starts
-    uint8_t depth;              // vibrato depth to apply
+    uint16_t frequency = 0x0FFF; // vibrato frequency
+    uint16_t delay;              // ticks before auto-vibrato starts
+    uint8_t depth;               // vibrato depth to apply
 
     int tick(uint32_t time) {
       if (time > delay) {
@@ -190,7 +187,10 @@ typedef struct voice_t {
 
   envelope_t envelope;
 
-  uint8_t unused; // padding to keep size at 128 bytes
+  uint8_t leftGain;
+  uint8_t rightGain;
+  uint8_t combinedGain;
+  uint16_t buffer;
 
   // implementation ------------------------------------------------------------
 
@@ -199,12 +199,14 @@ typedef struct voice_t {
     phase = 0;
   }
 
+  inline void calculate_gain() {
+    leftGain = std::min((0xFF - pan.position) * 2, 0xFF);
+    rightGain = std::min(0xFF, 2 * pan.position);
+    combinedGain = (volume.level * envelope.value) >> 16;
+  }
+
   inline void sample(fixed *left, fixed *right) {
     // precompute the gain, it doesn't need to be updated every sample
-    uint32_t combinedGain = (volume.level * envelope.value) >> 16;
-
-    uint8_t leftGain = std::min((0xff - pan.position) * 2, 0xff);
-    uint8_t rightGain = std::min(0xff, 2 * pan.position);
 
     // cold loop @ 100 Hz ------------------------------------------------------
     if (tick == 0) {
@@ -216,9 +218,6 @@ typedef struct voice_t {
       if (flags.volume) {
         flags.volume = volume.tick();
       }
-
-      // recompute combined gain when envelope changes
-      combinedGain = (volume.level * envelope.value) >> 16;
 
       // sweep
       if (sweep.steps) {
@@ -235,10 +234,10 @@ typedef struct voice_t {
       // pan
       if (pan.step) {
         pan.tick();
-
-        leftGain = std::min((0xff - pan.position) * 2, 0xff);
-        rightGain = std::min(0xff, 2 * pan.position);
       }
+
+      // recompute combined gain when envelope, pan or volume changes
+      calculate_gain();
 
       // vibrato
       frequency = arp.frequencies[arp.index] + vibrato.tick(time);
@@ -276,7 +275,15 @@ typedef struct voice_t {
         if (burstTime > 0) {
           burstTime--;
           wave = gbWaveNoiseWhite;
+          flags.burst_end = (burstTime == 0);
         } else {
+          // first non-burst tick, reset phase, last sample, etc.
+          if (flags.burst_end) {
+            flags.burst_end = 0;
+            lastSample = 0;
+            phase = 0;
+          }
+
           wave = parameters.wave;
         }
 
@@ -293,16 +300,7 @@ typedef struct voice_t {
     // advance phase
     phase += frequency;
 
-    fixed sample = 0;
-
-#define noise(func)                                                            \
-  {                                                                            \
-    if (phase > 0x4000'0000) {                                                 \
-      phase -= 0x4000'0000;                                                    \
-      noise = func(&lfsr);                                                     \
-    }                                                                          \
-    sample = noise;                                                            \
-  }
+    uint32_t sample = 0;
 
     // generate sample based on waveform
     switch (wave) {
@@ -323,18 +321,18 @@ typedef struct voice_t {
       }
       sample &= 0xFF00'0000; // downsample
       break;
-    case gbWaveNoiseChiptune: // noise: GB7
-      noise(voice_noise_gb7);
+    case gbWaveNoiseGameBoy7: // noise: GB7
+      sample = voice_noise_lfsr(1, 6);
       break;
     case gbWaveNoiseNES: // noise: NES
-      noise(voice_noise_nes);
+      sample = voice_noise_lfsr(6, 14);
       break;
     case gbWaveNoiseSN76489: // noise: SN76489
-      noise(voice_noise_sn76489);
+      sample = voice_noise_lfsr(3, 14);
       break;
-    case gbWaveNoiseWhite:                    // noise: white noise
-      noise = (noise * 1664525) + 1013904223; // frequency independent
-      sample = noise & 0x0FFF'FFFF;
+    case gbWaveNoiseWhite:                              // noise: white noise
+      lastSample = (lastSample * 1664525) + 1013904223; // frequency independent
+      sample = lastSample & SAMPLE_LEVEL;
       break;
     }
 
@@ -354,15 +352,13 @@ typedef struct voice_t {
   }
 
   inline void note_on(unsigned char note, bool retrigger,
-                      InstrumentParameters parameters,
+                      const InstrumentParameters &parameters,
                       bool keepClocks = false) {
     // bool retrigger is currently unused
     this->parameters = parameters;
 
     // is this the best time to store that?
     lastFrequency = frequency;
-
-    noise = 42; // reset the lcg to get deterministic noise bursts on each note
 
     // command settings
     legato.steps = 0;
@@ -393,7 +389,8 @@ typedef struct voice_t {
 
     // reset noise seed to get deterministic noise
     lfsr = 42;
-    lastSample = 0;
+    //    noise = 67;
+    lastSample = 42;
 
     this->note = note;
 
@@ -419,7 +416,7 @@ typedef struct voice_t {
     vibrato.swing = frequencyLUT[fIndex + 1] - frequency;
     vibrato.delay = parameters.vibratoDelay << 8;
     vibrato.phase = 0;
-    vibrato.frequency = 0xfff;
+    vibrato.frequency = 0xFFF;
 
     // reset envelope
     envelope.set_attack(parameters.attack);
@@ -430,6 +427,9 @@ typedef struct voice_t {
     int32_t sweepDepth = parameters.sweepAmount;
     sweep.coefficient = (1 << 16) + (sweepDepth * 64);
     sweep.steps = parameters.sweepTime;
+
+    // precalculate the gain
+    calculate_gain();
   }
 
   /****************************************************************************
@@ -439,39 +439,28 @@ typedef struct voice_t {
   // simple slew limited pulse generator to avoid some of the aliasing noise
   // while keeping the implementation fast enough for 8 voices on rp2040
   inline uint32_t pulse(bool high) {
-    uint32_t target = high ? 0x0FFF'FFFF : 0;
-    int32_t step = frequency + 0x1fff'ffff; // 0.125 + phase increment
-    int32_t diff = (int32_t)target - (int32_t)lastSample;
-    diff = std::clamp(diff, -(int32_t)step, (int32_t)step);
+    int32_t target = high ? SAMPLE_LEVEL : 0;
+    int32_t step = frequency + 0x1FFF'FFFF; // 0.125 + phase increment
+    int32_t diff = std::clamp(target - (int32_t)lastSample, -step, step);
     return (lastSample = (lastSample + diff));
   }
 
-  // generic LFSR function for noise generation, parameterized by tap and
-  // feedback bits
-  inline uint32_t voice_noise_lfsr(uint16_t *lfsr, int b, int feedback) {
-    uint16_t lfsr_val = *lfsr;
+  // LFSR function for noise generation, parameterized by tap and feedback bits
+  inline uint32_t voice_noise_lfsr(uint8_t bit, uint8_t feedback) {
+    // only resample noise when the phase is > 25% to get frequency-dependent
+    // noise
+    if (phase > NOISE_PHASE_LENGTH) {
+      phase -= NOISE_PHASE_LENGTH;
 
-    uint32_t bitA = lfsr_val & 1;
-    uint32_t bitB = (lfsr_val >> b) & 1;
-    uint32_t bitF = bitA ^ bitB;
+      uint32_t bitA = lfsr & 1;
+      uint32_t bitB = (lfsr >> bit) & 1;
+      uint32_t bitF = bitA ^ bitB;
 
-    *lfsr = (lfsr_val >> 1) | (bitF << feedback);
-    return bitA ? 0x0FFF'FFFF : 0;
-  }
+      lfsr = (lfsr >> 1) | (bitF << feedback);
+      lastSample = bitA ? 0x0FFF'FFFF : 0;
+    }
 
-  // NES noise shift register taps at bits 0 and 6, feedback to bit 14
-  inline uint32_t voice_noise_nes(uint16_t *lfsr) {
-    return voice_noise_lfsr(lfsr, 6, 14);
-  }
-
-  // Chiptune noise shift register taps at bits 0 and 1, feedback to bit 6
-  inline uint32_t voice_noise_gb7(uint16_t *lfsr) {
-    return voice_noise_lfsr(lfsr, 1, 6);
-  }
-
-  // SN76489 noise shift register taps at bits 0 and 1, feedback to bit 15
-  inline uint32_t voice_noise_sn76489(uint16_t *lfsr) {
-    return voice_noise_lfsr(lfsr, 3, 14);
+    return lastSample;
   }
 
   /****************************************************************************
