@@ -37,7 +37,7 @@ protected:
   void warpToNextSample(bool goUp);
   void import();
   void preview(char *name);
-  void adjustPreviewVolume(bool increase);
+  void adjustPreviewVolume(int offset);
   void showSampleEditor(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename,
                         bool isProjectSample);
   void removeProjectSample(uint8_t fileIndex, FileSystem *fs);
@@ -55,6 +55,8 @@ private:
       false; // Flag to track when the play key is being held down
   bool editKeyHeld_ =
       false; // Flag to track when the edit key is being held down
+  bool enterKeyHeld_ = false; // Track ENTER key state for deferred dir-enter
+  bool pendingDirEnterOnRelease_ = false; // Open dir on ENTER release
   bool inProjectSampleDir_ =
       false; // Flag to track if we're in the project's sample directory
   FileSystem *pendingDeleteFs_ = nullptr;

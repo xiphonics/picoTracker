@@ -331,11 +331,23 @@ void View::DoModal(ModalView *view, ModalViewCallback cb) {
 
 void View::DismissModal() {
   if (modalView_ && modalView_->IsFinished()) {
-    if (modalViewCallback_) {
-      modalViewCallback_(*this, *modalView_);
-    }
-    modalView_->Destroy();
+    ModalView *finishedModal = modalView_;
+    const uint32_t finishedModalId = finishedModal->GetInstanceId();
+    ModalViewCallback callback = modalViewCallback_;
+
+    // Clear current modal first so callback can safely open another modal.
     modalView_ = nullptr;
+    modalViewCallback_ = ModalViewCallback();
+
+    if (callback) {
+      callback(*this, *finishedModal);
+    }
+
+    // Callback may have already replaced this instance in shared storage.
+    if (finishedModal->GetInstanceId() == finishedModalId) {
+      finishedModal->Destroy();
+    }
+
     isDirty_ = true;
   }
 };
