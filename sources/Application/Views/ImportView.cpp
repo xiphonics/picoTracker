@@ -294,6 +294,17 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 };
 
 void ImportView::DrawView() {
+  if (fileIndexList_.empty()) {
+    return;
+  }
+  // ensure selected item is in visible range
+  const size_t pageSize = LIST_PAGE_SIZE;
+  if (currentIndex_ < topIndex_) {
+    topIndex_ = currentIndex_;
+  } else if (currentIndex_ >= topIndex_ + pageSize) {
+    topIndex_ = currentIndex_ - pageSize + 1;
+  }
+
   Clear();
 
   GUITextProperties props;
@@ -893,6 +904,10 @@ void ImportView::refreshFileIndexList(FileSystem *fs) {
   }
 
   if (currentIndex_ >= fileIndexList_.size()) {
-    currentIndex_ = fileIndexList_.empty() ? 0 : fileIndexList_.size() - 1;
+    currentIndex_ = fileIndexList_.size() - 1;
+  }
+  if (fileIndexList_.empty()) {
+    topIndex_ = 0;
+    currentIndex_ = 0;
   }
 }
