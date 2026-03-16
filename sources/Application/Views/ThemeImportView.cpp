@@ -31,7 +31,7 @@ ThemeImportView::~ThemeImportView() {}
 void ThemeImportView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   (*fileIndexList).clear();
 }
 
@@ -39,7 +39,7 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (mask & EPBM_PLAY) {
     auto fs = FileSystem::GetInstance();
@@ -115,7 +115,7 @@ void ThemeImportView::DrawView() {
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string in buffer :-(
   char buffer[PFILENAME_SIZE];
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < (*fileIndexList).size()); i++) {
@@ -159,7 +159,7 @@ void ThemeImportView::OnFocus() {
 }
 
 void ThemeImportView::warpToNextTheme(bool goUp) {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   if (fileIndexList->empty())
     return;
 
@@ -241,7 +241,7 @@ void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   isDirty_ = true;
 
   // Update list of file indexes in this new dir
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   fileIndexList->clear();
   // Use false for subDirOnly to include both files and directories
   fs->list(&(*fileIndexList), THEME_FILE_EXTENSION, false);

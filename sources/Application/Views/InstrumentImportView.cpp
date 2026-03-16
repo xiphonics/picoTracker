@@ -33,7 +33,7 @@ void InstrumentImportView::Reset() {
   currentIndex_ = 0;
   selected_ = 0;
   toInstrID_ = 0;
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   fileIndexList->clear();
 }
 
@@ -44,7 +44,7 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
 
   if (mask & EPBM_PLAY) {
     auto fs = FileSystem::GetInstance();
-    auto fileIndexList = MemoryPool::getFileIndexList();
+    auto fileIndexList = MemoryPool::getFileIndexList(this);
 
     char name[PFILENAME_SIZE];
 
@@ -77,7 +77,7 @@ void InstrumentImportView::ProcessButtonMask(unsigned short mask,
     // ENTER modifier
     if (mask & EPBM_ENTER) {
       auto fs = FileSystem::GetInstance();
-      auto fileIndexList = MemoryPool::getFileIndexList();
+      auto fileIndexList = MemoryPool::getFileIndexList(this);
 
       if (currentIndex_ < fileIndexList->size()) {
         unsigned fileIndex = (*fileIndexList)[currentIndex_];
@@ -118,7 +118,7 @@ void InstrumentImportView::DrawView() {
 
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string in buffer :-(
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   char buffer[PFILENAME_SIZE];
 
   for (size_t i = topIndex_;
@@ -158,7 +158,7 @@ void InstrumentImportView::OnFocus() {
 }
 
 void InstrumentImportView::warpToNextInstrument(bool goUp) {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (fileIndexList->empty())
     return;
@@ -347,7 +347,7 @@ void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {
     return;
   }
 
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   currentIndex_ = 0;
   topIndex_ = 0;

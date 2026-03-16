@@ -47,7 +47,7 @@ void ImportView::Reset() {
   playKeyHeld_ = false;
   editKeyHeld_ = false;
   inProjectSampleDir_ = false;
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   fileIndexList->clear();
 }
 
@@ -55,7 +55,7 @@ void ImportView::Reset() {
 void ImportView::SetSourceViewType(ViewType vt) { sourceViewType_ = vt; }
 
 void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   // Check for key release events
   if (!pressed) {
@@ -249,7 +249,7 @@ void ImportView::DrawView() {
       SamplePool::GetInstance()->GetAvailableSampleStorageSpace();
 
   // Loop through visible files in the list
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList->size()); i++) {
@@ -327,8 +327,6 @@ void ImportView::DrawView() {
     }
     DrawString(x + 10, y, "Edit", props);
   } else {
-    auto fileIndexList = MemoryPool::getFileIndexList();
-
     if (fileIndexList->empty()) {
       // draw this a few lines down from *top* of screen
       SetColor(CD_NORMAL);
@@ -409,7 +407,7 @@ void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){};
 
 void ImportView::OnFocus() {
   auto fs = FileSystem::GetInstance();
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   toInstr_ = viewData_->currentInstrumentID_;
 
@@ -424,7 +422,7 @@ void ImportView::OnFocus() {
 };
 
 void ImportView::warpToNextSample(bool goUp) {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (goUp) {
     if (currentIndex_ > 0) {
@@ -450,7 +448,7 @@ void ImportView::warpToNextSample(bool goUp) {
 
 void ImportView::preview(char *name) {
   auto fs = FileSystem::GetInstance();
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   unsigned fileIndex = (*fileIndexList)[currentIndex_];
 
@@ -527,7 +525,7 @@ void ImportView::import() {
 
   auto fs = FileSystem::GetInstance();
   char name[PFILENAME_SIZE];
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   unsigned fileIndex = (*fileIndexList)[currentIndex_];
   fs->getFileName(fileIndex, name, PFILENAME_SIZE);
 
@@ -786,7 +784,7 @@ void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   fs->list(&(*fileIndexList), ".wav", false);
 

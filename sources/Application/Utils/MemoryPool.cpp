@@ -26,3 +26,5 @@ SysMutex *MemoryPool::scratchBufferMutex_ = &s_scratchBufferMutex;
 etl::vector<int, MAX_FILE_INDEX_SIZE> MemoryPool::fileIndexList_;
 static Mutex s_fileIndexListMutex;
 SysMutex *MemoryPool::fileIndexListMutex_ = &s_fileIndexListMutex;
+const void *MemoryPool::fileIndexCurrentKey_ = nullptr;
+int MemoryPool::fileIndexLockDepth_ = 0;

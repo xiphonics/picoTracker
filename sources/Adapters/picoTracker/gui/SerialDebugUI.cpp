@@ -132,7 +132,7 @@ void SerialDebugUI::catFile(const char *path) {
 
 void SerialDebugUI::listFiles(const char *path) {
   auto fs = FileSystem::GetInstance();
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   if (!fs->chdir(path)) {
     Trace::Error("failed to ls files path:%s", path);
   }

@@ -58,7 +58,7 @@ void SelectProjectView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
   selection_[0] = '\0';
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   fileIndexList->clear();
 }
 
@@ -85,7 +85,7 @@ void SelectProjectView::DrawView() {
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
   const char *currentProject = projectName.c_str();
 
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   for (size_t i = topIndex_;
        i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList->size()); i++) {
@@ -139,7 +139,7 @@ void SelectProjectView::DrawView() {
 };
 
 void SelectProjectView::DrawScrollBar() {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   int totalItems = fileIndexList->size();
   if (totalItems <= LIST_PAGE_SIZE) {
     return; // no scrollbar needed
@@ -233,7 +233,7 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
 }
 
 void SelectProjectView::warpToNextProject(bool goUp) {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (goUp) {
     if (currentIndex_ > 0) {
@@ -258,7 +258,7 @@ void SelectProjectView::warpToNextProject(bool goUp) {
 }
 
 void SelectProjectView::setCurrentFolder() {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
   auto fs = FileSystem::GetInstance();
   fs->chdir(PROJECTS_DIR);
 
@@ -299,7 +299,7 @@ void SelectProjectView::getSelectedProjectName(char *name) {
 }
 
 void SelectProjectView::getHighlightedProjectName(char *name) {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (currentIndex_ >= fileIndexList->size()) {
     return;
@@ -316,7 +316,7 @@ void SelectProjectView::SelectButton(int direction) {
 }
 
 void SelectProjectView::LoadProject() {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (currentIndex_ >= fileIndexList->size()) {
     return;
@@ -399,7 +399,7 @@ void SelectProjectView::ConfirmOverwrite() {
 }
 
 void SelectProjectView::AttemptDeletingSelectedProject() {
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   if (currentIndex_ >= fileIndexList->size()) {
     return;

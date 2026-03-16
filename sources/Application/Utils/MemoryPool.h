@@ -50,8 +50,44 @@ public:
     ScopedLock lock_;
   };
 
-  [[nodiscard]] static ScopedRef<etl::vector<int, MAX_FILE_INDEX_SIZE>>
-  getFileIndexList() {
+  // Scoped accessor for the file index list with key-based recursive locking.
+  //
+  // Pass 'this' as the key so the same object can re-enter without deadlocking:
+  //   auto list = MemoryPool::getFileIndexList(this);
+  //
+  // A different key (or the first caller) acquires the mutex; the same key
+  // simply increments a depth counter and skips re-locking.  The mutex is
+  // released only when the depth reaches zero (outermost scope exits).
+  class KeyedScopedRef {
+  public:
+    using VecType = etl::vector<int, MAX_FILE_INDEX_SIZE>;
+
+    KeyedScopedRef(VecType &resource, SysMutex &mutex)
+        : resource_(resource), mutex_(mutex) {}
+
+    ~KeyedScopedRef() {
+      if (--fileIndexLockDepth_ == 0) {
+        fileIndexCurrentKey_ = nullptr;
+        mutex_.Unlock();
+      }
+    }
+
+    VecType *operator->() { return &resource_; }
+    VecType &operator*() { return resource_; }
+    KeyedScopedRef(const KeyedScopedRef &) = delete;
+    KeyedScopedRef &operator=(const KeyedScopedRef &) = delete;
+
+  private:
+    VecType &resource_;
+    SysMutex &mutex_;
+  };
+
+  [[nodiscard]] static KeyedScopedRef getFileIndexList(const void *key) {
+    if (fileIndexCurrentKey_ != key) {
+      fileIndexListMutex_->Lock();
+      fileIndexCurrentKey_ = key;
+    }
+    ++fileIndexLockDepth_;
     return {fileIndexList_, *fileIndexListMutex_};
   }
 
@@ -64,4 +100,6 @@ private:
   static etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
   static SysMutex *fileIndexListMutex_;
   static SysMutex *scratchBufferMutex_;
+  static const void *fileIndexCurrentKey_;
+  static int fileIndexLockDepth_;
 };

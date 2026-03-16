@@ -58,7 +58,7 @@ void SamplePool::Load(const char *projectName) {
                  PROJECT_SAMPLES_DIR);
   }
   // First, find all wav files
-  auto fileIndexList = MemoryPool::getFileIndexList();
+  auto fileIndexList = MemoryPool::getFileIndexList(this);
 
   fs->list(&(*fileIndexList), ".wav", false);
   char name[PFILENAME_SIZE];
