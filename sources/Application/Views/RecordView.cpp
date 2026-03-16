@@ -283,6 +283,7 @@ void RecordView::AnimationUpdate() {
       // set the current file for sample editor before switching view
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
       viewData_->sampleEditorFilename = filename;
+      viewData_->isShowingSampleEditorProjectPool = false;
 
       // Automatically switch to SampleEditor view after recording stops
       ViewType vt = VT_SAMPLE_EDITOR;

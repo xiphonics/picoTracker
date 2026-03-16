@@ -201,7 +201,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
           unsigned fileIndex = fileIndexList_[currentIndex_];
           char name[PFILENAME_SIZE];
           fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-          showSampleEditor(name, false);
+          showSampleEditor(name, true);
         } else if (selectedButton_ == kProjectButtonRemove) {
 #ifdef ADV
           unsigned fileIndex = fileIndexList_[currentIndex_];
@@ -804,6 +804,7 @@ void ImportView::showSampleEditor(
     bool isProjectSample) {
 
   viewData_->sampleEditorFilename = filename;
+  viewData_->isShowingSampleEditorProjectPool = isProjectSample;
 
   // before going to sample editor set this view as its "source" view
   SampleEditorView::sourceViewType_ = VT_IMPORT;
