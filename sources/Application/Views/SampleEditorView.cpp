@@ -1242,12 +1242,6 @@ bool SampleEditorView::fileExists(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename) {
   auto fs = FileSystem::GetInstance();
   // on failures return true just in case
-  if (!fs) {
-    Trace::Error(
-        "SampleEditorView: FileSystem unavailable for overwrite check");
-    return true;
-  }
-
   if (viewData_->isShowingSampleEditorProjectPool &&
       !goProjectSamplesDir(viewData_)) {
     Trace::Error("SampleEditorView: Overwrite check failed, couldn't chdir to "
@@ -1266,9 +1260,7 @@ bool SampleEditorView::fileExists(
 void SampleEditorView::attemptSave(bool loadToPool) {
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename;
   if (!resolveSaveFilename(filename)) {
-    if (!loadToPool) {
-      showSaveFailedDialog();
-    }
+    showSaveFailedDialog();
     return;
   }
 
@@ -1292,10 +1284,8 @@ void SampleEditorView::attemptSave(bool loadToPool) {
 void SampleEditorView::confirmSave(bool loadToPool) {
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename;
   if (!saveSample(filename)) {
-    if (!loadToPool) {
-      showSaveFailedDialog();
-      Trace::Error("SampleEditorView: Failed to save file!");
-    }
+    showSaveFailedDialog();
+    Trace::Error("SampleEditorView: Failed to save file!");
     return;
   }
 
@@ -1303,6 +1293,8 @@ void SampleEditorView::confirmSave(bool loadToPool) {
     if (loadSampleToPool(filename)) {
       viewData_->isShowingSampleEditorProjectPool = true;
       navigateToView(VT_IMPORT);
+    } else {
+      showLoadToPoolFailedDialog();
     }
     return;
   }
@@ -1320,6 +1312,16 @@ void SampleEditorView::confirmSave(bool loadToPool) {
 void SampleEditorView::showSaveFailedDialog() {
   MessageBox *errorBox = MessageBox::Create(*this, "Save Failed",
                                             "Unable to save sample", MBBF_OK);
+  clearWaveformRegion();
+  DoModal(errorBox,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
+}
+
+void SampleEditorView::showLoadToPoolFailedDialog() {
+  MessageBox *errorBox =
+      MessageBox::Create(*this, "Sample saved", "Pool load failed", MBBF_OK);
   clearWaveformRegion();
   DoModal(errorBox,
           ModalViewCallback::create<SampleEditorView,
@@ -1391,7 +1393,7 @@ bool SampleEditorView::loadSampleToPool(
     return false;
   }
 
-  uint16_t sampleId = -1;
+  int16_t sampleId = -1;
 
   if (!viewData_->isShowingSampleEditorProjectPool) {
     char projectName[MAX_PROJECT_NAME_LENGTH + 1];

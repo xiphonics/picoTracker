@@ -76,6 +76,7 @@ private:
   void attemptSave(bool loadToPool);
   void confirmSave(bool loadToPool);
   void showSaveFailedDialog();
+  void showLoadToPoolFailedDialog();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
