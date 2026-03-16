@@ -392,12 +392,16 @@ void SampleEditorView::addAllFields() {
 
   // load & save button
   position._x += 5;
-  actionField_.emplace_back("Save&Load", FourCC::ActionLoadAndSave, position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
+  if (!viewData_->isShowingSampleEditorProjectPool) {
+    actionField_.emplace_back("Save&Load", FourCC::ActionLoadAndSave, position);
+    fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+    (*actionField_.rbegin()).AddObserver(*this);
+    position._x += 12;
+  } else {
+    position._x += 7;
+  }
 
   // discard button
-  position._x += 12;
   actionField_.emplace_back("Discard", FourCC::ActionCancel, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
