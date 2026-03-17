@@ -187,18 +187,10 @@
 
 // Array of bargraph characters for fast lookup
 static const char *const char_bargraph_lookup[] = {
-    char_bargraph_bar0_s, // 0 - comments just to keep format linter happy
-    char_bargraph_bar1_s, // 1
-    char_bargraph_bar2_s, // 2
-    char_bargraph_bar3_s, // 3
-    char_bargraph_bar4_s, // 4
-    char_bargraph_bar5_s, // 5
-    char_bargraph_bar6_s, // 6
-    char_bargraph_bar7_s, // 7
-    char_bargraph_bar8_s, // 8
-    char_bargraph_bar9_s, // 9
-    char_bargraph_bar10_s // 10
-};
+    char_bargraph_bar0_s, char_bargraph_bar1_s, char_bargraph_bar2_s,
+    char_bargraph_bar3_s, char_bargraph_bar4_s, char_bargraph_bar5_s,
+    char_bargraph_bar6_s, char_bargraph_bar7_s, char_bargraph_bar8_s,
+    char_bargraph_bar9_s, char_bargraph_bar10_s};
 
 #define char_bargraph_s(x)                                                     \
   (char_bargraph_lookup[(x) < 0 ? 0 : ((x) > 10 ? 10 : (x))])
