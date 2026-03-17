@@ -50,6 +50,7 @@ public:
 protected:
 private:
   void onConfirmApplyOperation(View &view, ModalView &dialog);
+  void onConfirmOverwriteSave(View &view, ModalView &dialog);
   void onOperationFailedAck(View &view, ModalView &dialog);
   void onSimpleModalDismiss(View &view, ModalView &dialog);
 
@@ -69,6 +70,13 @@ private:
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &srcFilename,
       etl::string_view siblingName,
       etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &outFilename) const;
+  bool
+  resolveSaveFilename(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename);
+  bool fileExists(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename);
+  void attemptSave(bool loadToPool);
+  void confirmSave(bool loadToPool);
+  void showSaveFailedDialog();
+  void showLoadToPoolFailedDialog();
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
@@ -142,5 +150,6 @@ private:
 
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> workingFilename_;
   bool hasWorkingCopy_ = false;
+  bool pendingOverwriteLoadToPool_ = false;
 };
 #endif
