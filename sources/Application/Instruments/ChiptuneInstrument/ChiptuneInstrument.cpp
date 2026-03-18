@@ -1,38 +1,41 @@
 /*
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * Copyright (c) 2024 xiphonics, inc.
- * Copyright (c) 2925 nILS Podewski
+ * Copyright (c) 2026 nILS Podewski
  *
  * This file is part of the picoTracker firmware
  */
 
 #include "ChiptuneInstrument.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "I_Instrument.h"
 #include <string.h>
 
-static const char *waveShapes[chiptuneNumWaveforms] = {
-    "Pulse 12.5%", "Pulse 25%", "Pulse 50%",     "Triangle",
-    "Noise GB7",   "Noise NES", "Noise SN76489", "Noise White"};
+static const char *waveShapes[numWaveforms] = {
+    char_waveform_pulse_s " 12.5%",   char_waveform_pulse_s " 25%",
+    char_waveform_pulse_s " 50%",     char_waveform_tri_s "4bit",
+    char_waveform_noise_s " GB7",     char_waveform_noise_s " NES",
+    char_waveform_noise_s " SN76489", char_waveform_noise_s " White"};
 
 voice_t ChiptuneInstrument::voices_[SONG_CHANNEL_COUNT];
 
 ChiptuneInstrument::ChiptuneInstrument()
     : I_Instrument(&variables_),
-      vArpSpeed_(FourCC::ChiptuneInstrumentArpSpeed, 0x12),
-      vAttack_(FourCC::ChiptuneInstrumentAttack, 0x00),
-      vBurst_(FourCC::ChiptuneInstrumentBurst, -1),
-      vDecay_(FourCC::ChiptuneInstrumentDecay, 0x80),
-      vLength_(FourCC::ChiptuneInstrumentLength, -1),
-      vLevel_(FourCC::ChiptuneInstrumentLevel, 0x80),
-      vSweepAmount_(FourCC::ChiptuneInstrumentSweepAmount, 0x00),
-      vSweepTime_(FourCC::ChiptuneInstrumentSweepTime, 0x00),
-      vTable_(FourCC::ChiptuneInstrumentTable, -1),
-      vTranspose_(FourCC::ChiptuneInstrumentTranspose, 0),
-      vVibratoDelay_(FourCC::ChiptuneInstrumentVibratoDelay, 0x40),
-      vVibratoDepth_(FourCC::ChiptuneInstrumentVibrato, 0x07),
-      vWaveform_(FourCC::ChiptuneInstrumentWaveform, waveShapes,
-                 chiptuneNumWaveforms, 0) {
+      vArpSpeed_(FourCC::ChiptuneInstrumentArpSpeed, defaultArpSpeed),
+      vAttack_(FourCC::ChiptuneInstrumentAttack, defaultAttack),
+      vBurst_(FourCC::ChiptuneInstrumentBurst, defaultBurst),
+      vDecay_(FourCC::ChiptuneInstrumentDecay, defaultDecay),
+      vLength_(FourCC::ChiptuneInstrumentLength, defaultLength),
+      vLevel_(FourCC::ChiptuneInstrumentLevel, defaultLevel),
+      vSweepAmount_(FourCC::ChiptuneInstrumentSweepAmount, defaultSweepAmount),
+      vSweepTime_(FourCC::ChiptuneInstrumentSweepTime, defaultSweepTime),
+      vTable_(FourCC::ChiptuneInstrumentTable, defaultTable),
+      vTranspose_(FourCC::ChiptuneInstrumentTranspose, defaultTranspose),
+      vVibratoDelay_(FourCC::ChiptuneInstrumentVibratoDelay,
+                     defaultVibratoDelay),
+      vVibratoDepth_(FourCC::ChiptuneInstrumentVibrato, defaultVibratoDepth),
+      vWaveform_(FourCC::ChiptuneInstrumentWaveform, waveShapes, numWaveforms,
+                 defaultWaveform) {
   // Initialize exported variables
   // name_ is now an etl::string in the base class, not a Variable
   variables_.insert(variables_.end(), &vWaveform_);
@@ -128,7 +131,11 @@ bool ChiptuneInstrument::SupportsCommand(FourCC cc) { return false; }
 InstrumentParameters ChiptuneInstrument::getInstrumentParameters() {
   InstrumentParameters params;
 
+<<<<<<< HEAD
   params.wave = (chiptuneWaveType)vWaveform_.GetInt();
+=======
+  params.wave = (chiptune_wave_type_e)vWaveform_.GetInt();
+>>>>>>> d81ac5f3 (refactoring and cleanup)
   params.attack = vAttack_.GetInt();
   params.decay = vDecay_.GetInt();
   params.level = vLevel_.GetInt();

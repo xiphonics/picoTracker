@@ -31,7 +31,11 @@ typedef struct InstrumentParameters {
   uint8_t length;
 
   // waveform enum
+<<<<<<< HEAD
   chiptuneWaveType wave;
+=======
+  chiptune_wave_type_e wave;
+>>>>>>> d81ac5f3 (refactoring and cleanup)
   // envelope attack and decay time (0-255, where 0 is instant)
   uint8_t attack;
   uint8_t decay;
@@ -72,10 +76,6 @@ typedef struct voice_t {
   int32_t lastFrequency = 0; // for legato slides, to compute the initial factor
 
   uint32_t timeToLive; // time before the voice is silenced
-
-  uint32_t time; // sample counter
-  uint16_t tick; // sample counter for 100Hz updates
-  uint16_t tock; // sample counter for 1000Hz updates
 
   uint32_t lastSample = 0; // used for both the last sample for pulse smoothing
                            // and as the lcg register for the noise
@@ -191,17 +191,42 @@ typedef struct voice_t {
   uint8_t drive;    // unused currently
   uint8_t bitcrush; // bitcrush setting (only settable via command)
 
+<<<<<<< HEAD
   uint8_t note;          // current base note
   chiptuneWaveType wave; // selected waveform
+=======
+  uint8_t note;              // current base note
+  chiptune_wave_type_e wave; // selected waveform
+>>>>>>> d81ac5f3 (refactoring and cleanup)
 
   uint16_t lfsr = 17; // shift register for the noise generators
 
   envelope_t envelope; // envelope, size is 9 bytes
 
+<<<<<<< HEAD
   uint8_t leftGain;           // gain setting for the left channel
   uint8_t rightGain;          // gain setting for the right channel
   uint8_t combinedGain;       // master gain (precomputed at tock rate)
   uint16_t alignemntSentinel; // placeholder to guarantee alignment and padding
+=======
+  struct gain {
+    uint8_t left;     // gain setting for the left channel
+    uint8_t right;    // gain setting for the right channel
+    uint8_t combined; // master gain (precomputed at tock rate)
+  } gain;
+
+  inline void calculate_gain() {
+    gain.left = std::min((0xFF - pan.position) * 2, 0xFF);
+    gain.right = std::min(0xFF, 2 * pan.position);
+    gain.combined = (volume.level * envelope.value) >> 16;
+  }
+
+  uint16_t tick; // sample counter for 100Hz updates
+  uint32_t time; // sample counter
+  uint8_t tock;  // sample counter for 1000Hz updates
+
+  uint8_t alignmentSentinel[3]; // placeholder to guarantee alignment & padding
+>>>>>>> d81ac5f3 (refactoring and cleanup)
 
   // implementation ------------------------------------------------------------
 
@@ -210,10 +235,89 @@ typedef struct voice_t {
     phase = 0;
   }
 
+<<<<<<< HEAD
   inline void calculate_gain() {
     leftGain = std::min(x(0xFF - pan.position) * 2, 0xFF);
     rightGain = std::min(0xFF, 2 * pan.position);
     combinedGain = (volume.level * envelope.value) >> 16;
+=======
+  inline void tick_100Hz() {
+    // envelope processing at ~100Hz
+    envelope.tick();
+
+    if (flags.volume) {
+      flags.volume = volume.tick();
+    }
+
+    // sweep
+    if (sweep.steps) {
+      sweep.steps--;
+
+      // sweep all base frequencies
+      for (uint32_t i = 0; i < arp.length; i++) {
+        uint64_t f = arp.frequencies[i];
+        f *= sweep.coefficient;
+        arp.frequencies[i] = uint32_t(f >> 16);
+      }
+    }
+
+    // pan
+    if (pan.step) {
+      pan.tick();
+    }
+
+    // recompute combined gain when envelope, pan or volume changes
+    calculate_gain();
+
+    // vibrato
+    frequency = arp.frequencies[arp.index] + vibrato.tick(time);
+
+    // legato: frequency interpolation (Q16.16 fixed-point)
+    if (flags.legato) {
+      legato.tick();
+    }
+
+    // apply to frequency: frequency *= legato.factor (Q16.16)
+    frequency = ((int64_t)frequency * legato.factor) >> 16;
+  }
+
+  inline void tick_1000Hz() {
+    // arpeggio
+    if (flags.arpeggio) {
+      arp.tick();
+    }
+
+    if (timeToLive == 0) {
+      if (flags.retrigger) {
+        flags.retrigger = 0; // clear retrigger flag
+        // retrigger without resetting clocks
+        note_on(note, false, parameters, true);
+      } else {
+        // note off, kill everything
+        wave = waveNone;
+        envelope.state = envIdle;
+      }
+    } else {
+      // still in burst or already playing?
+      if (burstTime > 0) {
+        burstTime--;
+        wave = waveNoiseWhite;
+        flags.burst_end = (burstTime == 0);
+      } else {
+        // first non-burst tick, reset phase, last sample, etc.
+        if (flags.burst_end) {
+          flags.burst_end = 0;
+          lastSample = 0;
+          phase = 0;
+        }
+
+        wave = parameters.wave;
+      }
+
+      // length
+      timeToLive--;
+    }
+>>>>>>> d81ac5f3 (refactoring and cleanup)
   }
 
   inline void sample(fixed *left, fixed *right) {
@@ -221,86 +325,14 @@ typedef struct voice_t {
 
     // cold loop @ 100 Hz ------------------------------------------------------
     if (tick == 0) {
-
-      // envelope processing at ~100Hz
-      tick = chiptune100HzTicks;
-      envelope.tick();
-
-      if (flags.volume) {
-        flags.volume = volume.tick();
-      }
-
-      // sweep
-      if (sweep.steps) {
-        sweep.steps--;
-
-        // sweep all base frequencies
-        for (uint32_t i = 0; i < arp.length; i++) {
-          uint64_t f = arp.frequencies[i];
-          f *= sweep.coefficient;
-          arp.frequencies[i] = uint32_t(f >> 16);
-        }
-      }
-
-      // pan
-      if (pan.step) {
-        pan.tick();
-      }
-
-      // recompute combined gain when envelope, pan or volume changes
-      calculate_gain();
-
-      // vibrato
-      frequency = arp.frequencies[arp.index] + vibrato.tick(time);
-
-      // legato: frequency interpolation (Q16.16 fixed-point)
-      if (flags.legato) {
-        legato.tick();
-      }
-
-      // apply to frequency: frequency *= legato.factor (Q16.16)
-      frequency = ((int64_t)frequency * legato.factor) >> 16;
+      tick = ticks100Hz;
+      tick_100Hz();
     }
 
     // warm loop @ ~1000 Hz ----------------------------------------------------
     if (tock == 0) {
-      tock = 44;
-
-      // arpeggio
-      if (flags.arpeggio) {
-        arp.tick();
-      }
-
-      if (timeToLive == 0) {
-        if (flags.retrigger) {
-          flags.retrigger = 0; // clear retrigger flag
-          // retrigger without resetting clocks
-          note_on(note, false, parameters, true);
-        } else {
-          // note off, kill everything
-          wave = chiptuneWaveNone;
-          envelope.state = chiptuneEnvIdle;
-        }
-      } else {
-        // still in burst or already playing?
-        if (burstTime > 0) {
-          burstTime--;
-          wave = chiptuneWaveNoiseWhite;
-          flags.burst_end = (burstTime == 0);
-        } else {
-          // first non-burst tick, reset phase, last sample, etc.
-          if (flags.burst_end) {
-            flags.burst_end = 0;
-            lastSample = 0;
-            phase = 0;
-          }
-
-          wave = parameters.wave;
-        }
-
-        // length
-        timeToLive--;
-      }
+      tock = ticks1000Hz;
+      tick_100Hz(); // update at 1kHz for smoother pan and volume slides
     }
 
     // hot loop @ ~44100 Hz ----------------------------------------------------
@@ -315,16 +347,16 @@ typedef struct voice_t {
 
     // generate sample based on waveform
     switch (wave) {
-    case chiptuneWavePulse12_5: // pulse 12.5%
+    case wavePulse12_5: // pulse 12.5%
       sample = pulse(phase > 0x2000'0000);
       break;
-    case chiptuneWavePulse25: // pulse 25%
+    case wavePulse25: // pulse 25%
       sample = pulse(phase > 0x4000'0000);
       break;
-    case chiptuneWavePulse50: // pulse 50%
+    case wavePulse50: // pulse 50%
       sample = pulse(phase > 0x8000'0000);
       break;
-    case chiptuneWaveTriangle:   // triangle
+    case waveTriangle:           // triangle
       if (phase < 0x8000'0000) { // first half, rising slope
         sample = phase >> 3;
       } else { // second half, falling slope
@@ -332,20 +364,20 @@ typedef struct voice_t {
       }
       sample &= 0xFF00'0000; // downsample
       break;
-    case chiptuneWaveNoiseGameBoy7: // noise: GB7
+    case waveNoiseGameBoy7: // noise: GB7
       sample = voice_noise_lfsr(1, 6);
       break;
-    case chiptuneWaveNoiseNES: // noise: NES
+    case waveNoiseNES: // noise: NES
       sample = voice_noise_lfsr(6, 14);
       break;
-    case chiptuneWaveNoiseSN76489: // noise: SN76489
+    case waveNoiseSN76489: // noise: SN76489
       sample = voice_noise_lfsr(3, 14);
       break;
-    case chiptuneWaveNoiseWhite:                        // noise: white noise
+    case waveNoiseWhite:                                // noise: white noise
       lastSample = (lastSample * 1664525) + 1013904223; // frequency independent
       sample = lastSample & SAMPLE_LEVEL;
       break;
-    case chiptuneWaveNone:
+    case waveNone:
       sample = 0;
       break;
     }
@@ -376,9 +408,9 @@ typedef struct voice_t {
 
     // command settings
     legato.steps = 0;
-    legato.factor = chiptune1_0_q16_16;      // 1.0 in Q16.16
-    legato.coefficient = chiptune1_0_q16_16; // 1.0 in Q16.16
-    flags.byte = 0;                          // clear all flags
+    legato.factor = q16_16_1;      // 1.0 in Q16.16
+    legato.coefficient = q16_16_1; // 1.0 in Q16.16
+    flags.byte = 0;                // clear all flags
 
     bitcrush = 0; // only accessible via command
     drive = 0;
@@ -430,7 +462,11 @@ typedef struct voice_t {
     vibrato.swing = frequencyLUT[fIndex + 1] - frequency;
     vibrato.delay = parameters.vibratoDelay << 8;
     vibrato.phase = 0;
+<<<<<<< HEAD
     vibrato.frequency = chiptuneVibratoFrequuency;
+=======
+    vibrato.frequency = vibratoFrequency;
+>>>>>>> d81ac5f3 (refactoring and cleanup)
 
     // reset envelope
     envelope.set_attack(parameters.attack);

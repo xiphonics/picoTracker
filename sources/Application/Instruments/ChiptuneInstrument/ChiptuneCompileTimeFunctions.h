@@ -80,8 +80,9 @@ consteval uint32_t calculateSemitoneRatioQ16(int index) {
 
 // Generate the lookup table at compile time
 template <size_t... Is>
-consteval auto makeRatioLUT(std::index_sequence<Is...>) {
-  return std::array<uint32_t, sizeof...(Is)>{calculateSemitoneRatioQ16(Is)...};
+consteval auto gen_semi_lut(std::index_sequence<Is...>) {
+  return std::array<uint32_t, sizeof...(Is)>{
+      calculate_semitone_ratio_q16(Is)...};
 }
 
 // Calculate MIDI note frequency at compile time
@@ -106,7 +107,7 @@ consteval int32_t calculateFrequency(int midiNote) {
   return static_cast<int32_t>(phaseIncrement + 0.5);
 }
 
-template <size_t... Is> consteval auto makeFreqLUT(std::index_sequence<Is...>) {
+template <size_t... Is> consteval auto gen_frq_lut(std::index_sequence<Is...>) {
   return std::array<int32_t, sizeof...(Is)>{
       calculateFrequency(static_cast<int>(Is) - 12)...};
 }
@@ -149,13 +150,13 @@ consteval uint16_t calculateDecayCoeff(int index) {
 }
 
 template <size_t... Is>
-consteval auto makeAttackLUT(std::index_sequence<Is...>) {
-  return std::array<uint16_t, sizeof...(Is)>{calculateAttackCoeff(Is)...};
+consteval auto gen_attack_lut(std::index_sequence<Is...>) {
+  return std::array<uint16_t, sizeof...(Is)>{calculate_attack_coeff(Is)...};
 }
 
 template <size_t... Is>
-consteval auto makeDecayLUT(std::index_sequence<Is...>) {
-  return std::array<uint16_t, sizeof...(Is)>{calculateDecayCoeff(Is)...};
+consteval auto gen_decay_lut(std::index_sequence<Is...>) {
+  return std::array<uint16_t, sizeof...(Is)>{calculate_decay_coeff(Is)...};
 }
 
 // Calculate sine wave value at compile time
@@ -174,6 +175,6 @@ consteval int8_t calculateSine64LUT(int index) {
 }
 
 template <size_t... Is>
-consteval auto makeSine64LUT(std::index_sequence<Is...>) {
-  return std::array<int8_t, sizeof...(Is)>{calculateSine64LUT(Is)...};
+consteval auto gen_sine64_lut(std::index_sequence<Is...>) {
+  return std::array<int8_t, sizeof...(Is)>{calculate_sine64_lut(Is)...};
 }
