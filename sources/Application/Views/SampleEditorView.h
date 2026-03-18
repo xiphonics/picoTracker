@@ -106,11 +106,11 @@ private:
   // Cached sample parameters
   uint32_t start_ = 0;
   uint32_t end_ = 0;
+  uint32_t playbackEndSample_ = 0;
 
   void DrawWaveForm();
 
-  float playbackPosition_; // Current playback position as normalized value (0.0
-                           // - 1.0)
+  float playbackPosition_; // Current playback position in source sample frames
   uint32_t playbackStartFrame_; // Animation frame when playback started
   uint32_t lastAnimationTime_;  // Timestamp of the last animation frame
   System *sys_;

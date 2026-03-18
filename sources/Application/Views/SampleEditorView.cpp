@@ -85,6 +85,7 @@ void SampleEditorView::Reset() {
   lastAnimationTime_ = 0;
   start_ = 0;
   end_ = 0;
+  playbackEndSample_ = 0;
   tempSampleSize_ = 0;
   headerInfo_ = WavHeaderInfo{};
   headerValid_ = false;
@@ -419,6 +420,8 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
         // Stop playback regardless of whether it's regular or looping
         Player::GetInstance()->StopStreaming();
         isPlaying_ = false;
+        playbackPosition_ = 0.0f;
+        playbackEndSample_ = 0;
         isDirty_ = true;
       }
       return;
@@ -446,8 +449,13 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
     // Start sample playback if no already playing
     if (!isPlaying_) {
+      updateSampleParameters();
+
       // Get the sample file name
       const auto &sampleFileName = activeFilename();
+      if (sampleFileName.empty() || tempSampleSize_ == 0) {
+        return;
+      }
       isSingleCycle_ = (tempSampleSize_ <= SINGLE_CYCLE_MAX_SAMPLE_SIZE);
 
       Trace::Debug("DEBUG: Starting playback of sample '%s' (size=%d, "
@@ -459,10 +467,11 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       isPlaying_ = true;
 
       // Get the start position which is where playback will begin
-      uint32_t startSample = startVar_.GetInt();
+      uint32_t startSample = start_;
+      uint32_t endSample = end_;
+      playbackEndSample_ = endSample;
       if (startSample < tempSampleSize_) {
-        // Initialize normalized playback position (0.0 - 1.0)
-        playbackPosition_ = (float)startSample / tempSampleSize_;
+        playbackPosition_ = static_cast<float>(startSample);
       } else {
         playbackPosition_ = 0.0f;
       }
@@ -480,9 +489,10 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (isSingleCycle_) {
         Player::GetInstance()->StartLoopingStreaming(sampleFileName.c_str());
       } else {
-        // Start playback from the specified start position
+        // Start playback from the specified start position and stop at the
+        // current end marker.
         Player::GetInstance()->StartStreaming(sampleFileName.c_str(),
-                                              startSample);
+                                              startSample, endSample);
         isDirty_ = true;
       }
     }
@@ -719,7 +729,7 @@ void SampleEditorView::updateGraphMarkers() {
   uint32_t playheadSample = 0;
   bool playheadVisible = false;
   if (isPlaying_ && tempSampleSize_ > 0) {
-    playheadSample = static_cast<uint32_t>(playbackPosition_ * tempSampleSize_);
+    playheadSample = static_cast<uint32_t>(playbackPosition_);
     if (playheadSample >= tempSampleSize_) {
       playheadSample = tempSampleSize_ - 1;
     }
@@ -818,6 +828,7 @@ void SampleEditorView::AnimationUpdate() {
       Player::GetInstance()->StopStreaming();
       isPlaying_ = false;
       playbackPosition_ = 0;
+      playbackEndSample_ = 0;
       // forceRedraw_ = true;
       Trace::Debug("DEBUG: Playback stopped, resetting playhead\n");
     } else {
@@ -826,26 +837,22 @@ void SampleEditorView::AnimationUpdate() {
       uint32_t elapsedTime = currentTime - lastAnimationTime_;
       lastAnimationTime_ = currentTime;
 
-      // Get the sample duration in milliseconds, assuming 44.1kHz sample rate
-      float durationMs = (float)tempSampleSize_ / 44100.0f * 1000.0f;
-
-      // Calculate the normalized playback position increment
-      float positionIncrement = (float)elapsedTime / durationMs;
-
-      // Update the playback position
-      playbackPosition_ += positionIncrement;
-
-      // Calculate the position in the sample
-      float samplePos = playbackPosition_ * tempSampleSize_;
+      uint32_t sampleRate =
+          (headerInfo_.sampleRate > 0) ? headerInfo_.sampleRate : 44100;
+      float sampleIncrement =
+          (static_cast<float>(elapsedTime) * static_cast<float>(sampleRate)) /
+          1000.0f;
+      float samplePos = playbackPosition_ + sampleIncrement;
+      float playbackStopSample =
+          static_cast<float>(playbackEndSample_) + 1.0f;
 
       // Check if we've reached the end
-      if (samplePos >= end_ || samplePos >= tempSampleSize_) {
-        samplePos = end_;
+      if (samplePos >= playbackStopSample || samplePos >= tempSampleSize_) {
+        samplePos = static_cast<float>(playbackEndSample_);
         Trace::Debug("Playback stopped at end!");
       }
 
-      // Update position (normalized to full sample range)
-      playbackPosition_ = samplePos / tempSampleSize_;
+      playbackPosition_ = samplePos;
     }
   }
 
@@ -892,6 +899,8 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     }
     isPlaying_ = false;
     playKeyHeld_ = false;
+    playbackPosition_ = 0.0f;
+    playbackEndSample_ = 0;
 
     auto opName = operationVar_.GetString();
     etl::string<SCREEN_WIDTH - 2> confirmLine("Apply ");
@@ -1036,6 +1045,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
   }
   isPlaying_ = false;
   playKeyHeld_ = false;
+  playbackPosition_ = 0.0f;
+  playbackEndSample_ = 0;
 
   if (!viewData_) {
     Trace::Error("SampleEditorView: View data unavailable");
@@ -1108,6 +1119,8 @@ bool SampleEditorView::applyNormalizeOperation() {
   }
   isPlaying_ = false;
   playKeyHeld_ = false;
+  playbackPosition_ = 0.0f;
+  playbackEndSample_ = 0;
 
   if (!viewData_) {
     Trace::Error("SampleEditorView: View data unavailable");
@@ -1360,6 +1373,8 @@ void SampleEditorView::navigateToView(ViewType vt) {
 
   isPlaying_ = false;
   playKeyHeld_ = false;
+  playbackPosition_ = 0.0f;
+  playbackEndSample_ = 0;
   discardWorkingCopy();
 
   ViewEvent ve(VET_SWITCH_VIEW, &vt);

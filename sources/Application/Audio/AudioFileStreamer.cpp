@@ -15,6 +15,7 @@
 #include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "System/io/Status.h"
+#include <algorithm>
 #include <string.h>
 #include <vector>
 
@@ -24,6 +25,7 @@ short AudioFileStreamer::singleCycleBuffer_[SINGLE_CYCLE_MAX_SAMPLE_SIZE] = {0};
 AudioFileStreamer::AudioFileStreamer() {
   mode_ = AFSM_STOPPED;
   position_ = 0;
+  playbackEndSample_ = -1;
   fileSampleRate_ = 44100;   // Default
   systemSampleRate_ = 44100; // Default
   fpSpeed_ = FP_ONE;         // Default 1.0 in fixed point
@@ -38,7 +40,8 @@ AudioFileStreamer::AudioFileStreamer() {
 
 AudioFileStreamer::~AudioFileStreamer() { wav_.Close(); };
 
-bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
+bool AudioFileStreamer::Start(const char *name, int startSample, int endSample,
+                              bool looping) {
   Trace::Debug("Starting to stream:%s from sample %d", name, startSample);
   if (!name) {
     Trace::Error("AudioFileStreamer: null filename");
@@ -48,6 +51,7 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
 
   name_ = name;
   position_ = (startSample > 0) ? float(startSample) : 0.0f;
+  playbackEndSample_ = endSample;
 #ifndef ADV
   stopRequested_ = false;
 #endif
@@ -66,6 +70,26 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
   systemSampleRate_ = Audio::GetInstance()->GetSampleRate();
   int channels = wav_.GetChannelCount(-1);
   long size = wav_.GetSize(-1);
+
+  if (!looping) {
+    if (playbackEndSample_ < 0) {
+      playbackEndSample_ = static_cast<int>(size);
+    } else {
+      playbackEndSample_ =
+          std::min(playbackEndSample_ + 1, static_cast<int>(size));
+    }
+
+    if (position_ >= playbackEndSample_) {
+      Trace::Error("AudioFileStreamer: Invalid preview range start=%d end=%d "
+                   "size=%ld",
+                   startSample, endSample, size);
+      wav_.Close();
+      mode_ = AFSM_STOPPED;
+      return false;
+    }
+  } else {
+    playbackEndSample_ = static_cast<int>(size);
+  }
 
   // Calculate the speed factor for sample rate conversion
   float ratio;
@@ -307,11 +331,18 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
 
   // Standard playback for normal samples
   int bufferSize = 64; // Small, safe buffer size
+  const float playbackEnd = static_cast<float>(
+      std::min<long>(static_cast<long>(playbackEndSample_), size));
+
+  if (position_ >= playbackEnd) {
+    mode_ = AFSM_STOPPED;
+    return false;
+  }
 
   // Check if we're near the end of the file
-  if (position_ + (samplecount * fp2fl(fpSpeed_)) >= size) {
-    // We'll reach the end during this render call
-    int remainingSamples = size - position_;
+  if (position_ + (samplecount * fp2fl(fpSpeed_)) >= playbackEnd) {
+    // We'll reach the end of the preview range during this render call
+    int remainingSamples = static_cast<int>(playbackEnd - position_);
     if (remainingSamples <= 0) {
       mode_ = AFSM_STOPPED;
       return false;
@@ -338,15 +369,21 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   float pos = position_;
 
   for (int i = 0; i < samplecount; i++) {
+    if (pos >= playbackEnd) {
+      position_ = playbackEnd;
+      mode_ = AFSM_STOPPED;
+      return (i > 0);
+    }
+
     // Check if we need to read more samples
     if ((int)pos >= (int)position_ + bufferSize - 1) {
       // We've moved past our buffer, need to read more
       position_ = (int)pos;
 
-      // Check if we've reached the end of the file
-      if (position_ >= size - 1) {
+      // Check if we've reached the end of the preview range
+      if (position_ >= playbackEnd) {
         mode_ = AFSM_STOPPED;
-        return false;
+        return (i > 0);
       }
 
       // Read the next buffer
@@ -376,6 +413,10 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
     // Get the current and next sample for interpolation
     short *currentSample = src + (sourcePos * channelCount);
     short *nextSample = currentSample + channelCount;
+    if ((position_ + sourcePos + 1) >= playbackEnd) {
+      nextSample = currentSample;
+      frac = 0.0f;
+    }
 
     // Linear interpolation between samples
     fixed fpFrac = fl2fp(frac);
@@ -402,8 +443,8 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   // Update the position for the next render call
   position_ = pos;
 
-  // If we've reached the end of the file, stop playback
-  if (position_ >= size) {
+  // If we've reached the end of the preview range, stop playback
+  if (position_ >= playbackEnd) {
     mode_ = AFSM_STOPPED;
   }
 

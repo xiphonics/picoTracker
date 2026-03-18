@@ -1206,8 +1206,8 @@ PlayerEventType PlayerEvent::GetType() { return type_; };
 
 unsigned int PlayerEvent::GetTickCount() { return tickCount_; };
 
-void Player::StartStreaming(const char *name, int startSample) {
-  mixer_.StartStreaming(name, startSample);
+void Player::StartStreaming(const char *name, int startSample, int endSample) {
+  mixer_.StartStreaming(name, startSample, endSample);
   if (!isRunning_) {
     SetAudioActive(true);
   }

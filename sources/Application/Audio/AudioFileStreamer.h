@@ -26,7 +26,8 @@ public:
   virtual ~AudioFileStreamer();
   virtual bool Render(fixed *buffer, int samplecount);
   // Automatically detects single cycle waveforms
-  bool Start(const char *name, int startSample = 0, bool looping = false);
+  bool Start(const char *name, int startSample = 0, int endSample = -1,
+             bool looping = false);
   void Stop();
   bool IsPlaying();
 
@@ -35,6 +36,7 @@ protected:
   etl::string<PFILENAME_SIZE - 1> name_;
   WavFile wav_;
   float position_;
+  int playbackEndSample_;
   Project *project_;
 
   // Sample rate conversion
