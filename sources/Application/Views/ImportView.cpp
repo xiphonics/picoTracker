@@ -521,6 +521,12 @@ void ImportView::DrawView() {
 void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){};
 
 void ImportView::OnFocus() {
+  // clear stale flags
+  enterKeyHeld_ = false;
+  pendingDirEnterOnRelease_ = false;
+  editKeyHeld_ = false;
+  playKeyHeld_ = false;
+
   auto fs = FileSystem::GetInstance();
 
   toInstr_ = viewData_->currentInstrumentID_;
