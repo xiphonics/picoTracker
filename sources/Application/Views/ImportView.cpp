@@ -516,7 +516,6 @@ void ImportView::OnFocus() {
   editKeyHeld_ = false;
   playKeyHeld_ = false;
 
-
   auto fs = FileSystem::GetInstance();
 
   toInstr_ = viewData_->currentInstrumentID_;
