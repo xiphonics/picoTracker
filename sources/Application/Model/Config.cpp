@@ -247,7 +247,7 @@ static const ConfigParam configParams[] = {
 };
 
 Config::Config()
-    : VariableContainer(&variables_),
+    : VariableContainer(variables_.begin(), variables_.end()),
       background_(FourCC::VarBGColor,
                   static_cast<int>(ThemeConstants::DEFAULT_BACKGROUND)),
       foreground_(FourCC::VarFGColor,
@@ -287,30 +287,30 @@ Config::Config()
       recordLineGain_(FourCC::VarRecordLineGain, DEFAULT_RECORD_LINE_GAIN_DB),
       recordMicGain_(FourCC::VarRecordMicGain, DEFAULT_RECORD_MIC_GAIN_DB) {
 
-  variables_.push_back(&background_);
-  variables_.push_back(&foreground_);
-  variables_.push_back(&hiColor1_);
-  variables_.push_back(&hiColor2_);
-  variables_.push_back(&consoleColor_);
-  variables_.push_back(&cursorColor_);
-  variables_.push_back(&infoColor_);
-  variables_.push_back(&warnColor_);
-  variables_.push_back(&errorColor_);
-  variables_.push_back(&accentColor_);
-  variables_.push_back(&accentAltColor_);
-  variables_.push_back(&emphasisColor_);
-  variables_.push_back(&lineOut_);
-  variables_.push_back(&midiDevice_);
-  variables_.push_back(&midiSync_);
-  variables_.push_back(&remoteUI_);
-  variables_.push_back(&importResampler_);
-  variables_.push_back(&uiFont_);
-  variables_.push_back(&themeName_);
-  variables_.push_back(&backlightLevel_);
-  variables_.push_back(&outputVolume_);
-  variables_.push_back(&recordSource_);
-  variables_.push_back(&recordLineGain_);
-  variables_.push_back(&recordMicGain_);
+  variables_[0] = &background_;
+  variables_[1] = &foreground_;
+  variables_[2] = &hiColor1_;
+  variables_[3] = &hiColor2_;
+  variables_[4] = &consoleColor_;
+  variables_[5] = &cursorColor_;
+  variables_[6] = &infoColor_;
+  variables_[7] = &warnColor_;
+  variables_[8] = &errorColor_;
+  variables_[9] = &accentColor_;
+  variables_[10] = &accentAltColor_;
+  variables_[11] = &emphasisColor_;
+  variables_[12] = &lineOut_;
+  variables_[13] = &midiDevice_;
+  variables_[14] = &midiSync_;
+  variables_[15] = &remoteUI_;
+  variables_[16] = &importResampler_;
+  variables_[17] = &uiFont_;
+  variables_[18] = &themeName_;
+  variables_[19] = &backlightLevel_;
+  variables_[20] = &outputVolume_;
+  variables_[21] = &recordSource_;
+  variables_[22] = &recordLineGain_;
+  variables_[23] = &recordMicGain_;
 
   PersistencyDocument doc;
 

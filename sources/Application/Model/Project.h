@@ -14,6 +14,7 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Persistency/Persistent.h"
 #include "BuildNumber.h"
+#include "Externals/etl/include/etl/array.h"
 #include "Foundation/Observable.h"
 #include "Foundation/Types/Types.h"
 #include "Foundation/Variables/StringVariable.h"
@@ -67,7 +68,7 @@ public:
   virtual void RestoreContent(PersistencyDocument *doc);
 
 private:
-  etl::list<Variable *, 16> variables_;
+  etl::array<Variable *, 16> variables_;
 
   InstrumentBank instrumentBank_;
   int tempoNudge_;
