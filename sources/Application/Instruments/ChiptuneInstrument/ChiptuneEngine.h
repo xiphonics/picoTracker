@@ -616,7 +616,7 @@ typedef struct voice_t {
     flags.legato = 1; // set legato flag
   }
 
-  void command_init_arp(ushort value) {
+  void command_init_arp(uint16_t value) {
     // preset to full length arpeggio
     arp.index = 0;
     arp.length = 5;
