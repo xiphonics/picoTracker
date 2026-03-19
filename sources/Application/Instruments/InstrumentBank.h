@@ -19,7 +19,6 @@
 #include "NoneInstrument.h"
 #include "OpalInstrument.h"
 #include "SIDInstrument.h"
-#include "GameBoyInstrument.h"
 #include "SampleInstrument.h"
 
 #define NO_MORE_INSTRUMENT 0x100

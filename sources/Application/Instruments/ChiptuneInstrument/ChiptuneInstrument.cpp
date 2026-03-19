@@ -131,11 +131,7 @@ bool ChiptuneInstrument::SupportsCommand(FourCC cc) { return false; }
 InstrumentParameters ChiptuneInstrument::getInstrumentParameters() {
   InstrumentParameters params;
 
-<<<<<<< HEAD
-  params.wave = (chiptuneWaveType)vWaveform_.GetInt();
-=======
   params.wave = (chiptune_wave_type_e)vWaveform_.GetInt();
->>>>>>> d81ac5f3 (refactoring and cleanup)
   params.attack = vAttack_.GetInt();
   params.decay = vDecay_.GetInt();
   params.level = vLevel_.GetInt();

@@ -8,33 +8,6 @@
 
 #pragma once
 
-<<<<<<< HEAD
-enum chiptuneConstants {
-  chiptuneNumWaveforms = 8,
-  chiptuneEnvAttackThreshold = 65530,
-  chiptuneEnvDecayThreshold = 10,
-  chiptune100HzTicks = 441,
-  chiptune1_0_q16_16 = 0x0001'0000,
-  chiptuneVibratoFrequency = 0xFFF,
-};
-
-enum chiptuneWaveType : uint8_t {
-  chiptuneWavePulse12_5,
-  chiptuneWavePulse25,
-  chiptuneWavePulse50,
-  chiptuneWaveTriangle,
-  chiptuneWaveNoiseGameBoy7,
-  chiptuneWaveNoiseNES,
-  chiptuneWaveNoiseSN76489,
-  chiptuneWaveNoiseWhite,
-  chiptuneWaveNone
-};
-
-enum chiptuneEnvState : uint8_t {
-  chiptuneEnvIdle,
-  chiptuneEnvAttack,
-  chiptuneEnvDecay
-=======
 #include "Foundation/Constants/SpecialCharacters.h"
 
 enum chiptune_constants_e {
@@ -85,7 +58,7 @@ static struct chiptune_instrument_ui_t {
   ui_config_t vibrato_amount = {top_indent " Amount: %02X", 0, 255, 1, 16};
   ui_config_t vibrato_delay = {bottom_indent " Delay:  %02X", 0, 255, 1, 16};
   ui_config_t sweep_time = {top_indent " Length: %02X", 0, 255, 1, 16};
-  ui_config_t sweep_amount = {bottom_indent " Amount:%+03d", -127, 127, 1, 16};
+  ui_config_t sweep_amount = {bottom_indent " Amount:%+03d" - 127, 127, 1, 16};
 } chiptune_instrument_ui_t;
 
 enum chiptune_instrument_defaults_e {
@@ -102,7 +75,6 @@ enum chiptune_instrument_defaults_e {
   defaultVibratoDelay = 0x40,
   defaultVibratoDepth = 0x07,
   defaultWaveform = wavePulse25
->>>>>>> d81ac5f3 (refactoring and cleanup)
 };
 
 typedef union chiptuneFlags {

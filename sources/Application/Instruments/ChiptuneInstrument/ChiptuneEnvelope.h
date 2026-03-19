@@ -18,11 +18,7 @@ typedef struct envelope_t {
   uint16_t coefficient; // q0.16
   uint16_t attack;
   uint16_t decay;
-<<<<<<< HEAD
-  chiptuneEnvState state;
-=======
   chiptune_env_state_e state;
->>>>>>> d81ac5f3 (refactoring and cleanup)
 
   void set_attack(uint8_t a) {
     // map 8 bit attack value to 16 bit coefficient using LUT and interpolation
