@@ -332,7 +332,7 @@ typedef struct voice_t {
     // warm loop @ ~1000 Hz ----------------------------------------------------
     if (tock == 0) {
       tock = ticks1000Hz;
-      tick_100Hz(); // update at 1kHz for smoother pan and volume slides
+      tick_1000Hz(); // update at 1kHz for smoother pan and volume slides
     }
 
     // hot loop @ ~44100 Hz ----------------------------------------------------
