@@ -82,18 +82,6 @@ void SamplePool::Load(const char *projectName) {
 
       // Show progress as percentage
       int progress = (int)((i * 100) / totalSamples);
-      int prog10 = progress / 10;
-
-      char progressBar[13];
-      for (int j = 1; j < 11; j++) {
-        progressBar[j] = j >= prog10 ? char_battery_empty : char_block_full;
-      }
-      progressBar[0] = char_button_border_left;
-      progressBar[11] = char_button_border_right;
-      progressBar[12] = 0;
-
-      Status::Set("Copying %s" char_indicator_ellipsis_s "\n \n%s %d%%", name,
-                  (const char *)progressBar, progress);
 
       updateStatus(importIndex, importCount, "Loading");
       loadSample(name);
@@ -176,7 +164,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   projectSamplePath.append(projectName);
   projectSamplePath.append("/samples/");
   projectSamplePath.append(projSampleFilename);
-  Status::Set("Loading %s->\n%s", name, projSampleFilename);
+  Status::SetMultiLine("Loading %s->\n%s", name, projSampleFilename);
 
   auto fout = FileSystem::GetInstance()->Open(projectSamplePath.c_str(), "w");
   if (!fout) {
@@ -378,11 +366,6 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   ev.index_ = count_ - 1;
   ev.type_ = SPET_INSERT;
   NotifyObservers(&ev);
-
-  ToastView *t = ToastView::getInstance();
-  t->Show(status ? "Loaded successfully." : "Loading failed.",
-          status ? &ttSuccess : &ttError, 1500);
-
   return status ? (count_ - 1) : -1;
 };
 
