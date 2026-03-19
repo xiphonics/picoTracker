@@ -589,9 +589,8 @@ void Player::Update(Observable &o, I_ObservableData *d) {
             int note = mixer_.GetChannelNote(i);
             I_Instrument *instr = mixer_.GetInstrument(i);
             if ((note <= HIGHEST_NOTE) && (instr != 0)) {
-              note += (instrRetrigger[i] >= 0x80)
-                          ? instrRetrigger[i] - 0x100
-                          : instrRetrigger[i];
+              note += (instrRetrigger[i] >= 0x80) ? instrRetrigger[i] - 0x100
+                                                  : instrRetrigger[i];
               while (note > 127) {
                 note -= 12;
               };
