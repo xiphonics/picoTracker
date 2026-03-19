@@ -57,6 +57,8 @@ Once you've created an instrument, you can save it for use in other projects:
 
 ### Sample Slices View
 
+![screen capture of slicer screen](image/slicer-screen-small.png)
+
 The Sample Slices view provides a visual editor for slice start points. 
 
 With the waveform display selected, you can use `LEFT` and `RIGHT` to select a slice point. The `slice` field shows the number of the currently selected slice. Press `PLAY` to audition only the currently selected slice.
