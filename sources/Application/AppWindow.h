@@ -85,6 +85,7 @@ protected: // GUIWindow implementation
   // Status implementation
 
   virtual void Print(char *);
+  virtual void PrintMultiLine(char *);
 
   void defineColor(FourCC colorCode, GUIColor &color, int paletteIndex);
 

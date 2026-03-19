@@ -10,11 +10,7 @@
 #include "SamplePool.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
-<<<<<<< HEAD
 #include "Application/Utils/DrawUtils.h"
-=======
-#include "Application/Views/ToastView.h"
->>>>>>> a4028561 (adds general Toast support and adds toast messages to save & delete project)
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
@@ -303,7 +299,6 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
       }
     }
 
-<<<<<<< HEAD
 #ifdef ADV
     uint32_t total = totalSize;
 #else
@@ -313,13 +308,6 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     importCount = total;
     importIndex = totalRead;
     updateStatus(totalRead, total, "Copying");
-=======
-    uint32_t progress = 100;
-    if (totalSize > 0) {
-      progress = (totalRead * 100) / totalSize;
-    }
-    Status::Set("Loading:\n%s\n%d%%", projSampleFilename.c_str(), progress);
->>>>>>> a4028561 (adds general Toast support and adds toast messages to save & delete project)
   }
 
   // Flush the resampler to write any delayed tail samples after input ends.

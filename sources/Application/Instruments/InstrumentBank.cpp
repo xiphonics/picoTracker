@@ -20,7 +20,6 @@
 #include "MidiInstrument.h"
 #include "OpalInstrument.h"
 #include "SIDInstrument.h"
-#include "ChiptuneInstrument.h"
 #include "System/io/Status.h"
 
 #define XML_DEBUG_LOGGING 0
@@ -28,7 +27,7 @@
 // Contain all instrument definition
 InstrumentBank::InstrumentBank()
     : Persistent("INSTRUMENTBANK"), sampleInstrumentPool_(),
-      midiInstrumentPool_(), sidInstrumentPool_(), opalInstrumentPool_(), 
+      midiInstrumentPool_(), sidInstrumentPool_(), opalInstrumentPool_(),
       chiptuneInstrumentPool_() {
 
   for (size_t i = 0; i < instruments_.max_size(); i++) {
