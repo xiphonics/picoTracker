@@ -31,11 +31,7 @@ typedef struct InstrumentParameters {
   uint8_t length;
 
   // waveform enum
-<<<<<<< HEAD
-  chiptuneWaveType wave;
-=======
   chiptune_wave_type_e wave;
->>>>>>> d81ac5f3 (refactoring and cleanup)
   // envelope attack and decay time (0-255, where 0 is instant)
   uint8_t attack;
   uint8_t decay;
@@ -191,24 +187,13 @@ typedef struct voice_t {
   uint8_t drive;    // unused currently
   uint8_t bitcrush; // bitcrush setting (only settable via command)
 
-<<<<<<< HEAD
-  uint8_t note;          // current base note
-  chiptuneWaveType wave; // selected waveform
-=======
   uint8_t note;              // current base note
   chiptune_wave_type_e wave; // selected waveform
->>>>>>> d81ac5f3 (refactoring and cleanup)
 
   uint16_t lfsr = 17; // shift register for the noise generators
 
   envelope_t envelope; // envelope, size is 9 bytes
 
-<<<<<<< HEAD
-  uint8_t leftGain;           // gain setting for the left channel
-  uint8_t rightGain;          // gain setting for the right channel
-  uint8_t combinedGain;       // master gain (precomputed at tock rate)
-  uint16_t alignemntSentinel; // placeholder to guarantee alignment and padding
-=======
   struct gain {
     uint8_t left;     // gain setting for the left channel
     uint8_t right;    // gain setting for the right channel
@@ -226,7 +211,6 @@ typedef struct voice_t {
   uint8_t tock;  // sample counter for 1000Hz updates
 
   uint8_t alignmentSentinel[3]; // placeholder to guarantee alignment & padding
->>>>>>> d81ac5f3 (refactoring and cleanup)
 
   // implementation ------------------------------------------------------------
 
@@ -235,12 +219,6 @@ typedef struct voice_t {
     phase = 0;
   }
 
-<<<<<<< HEAD
-  inline void calculate_gain() {
-    leftGain = std::min(x(0xFF - pan.position) * 2, 0xFF);
-    rightGain = std::min(0xFF, 2 * pan.position);
-    combinedGain = (volume.level * envelope.value) >> 16;
-=======
   inline void tick_100Hz() {
     // envelope processing at ~100Hz
     envelope.tick();
@@ -317,7 +295,6 @@ typedef struct voice_t {
       // length
       timeToLive--;
     }
->>>>>>> d81ac5f3 (refactoring and cleanup)
   }
 
   inline void sample(fixed *left, fixed *right) {
@@ -383,7 +360,7 @@ typedef struct voice_t {
     }
 
     // apply combined gain (volume * envelope) in single operation
-    sample = (sample >> 8) * combinedGain;
+    sample = (sample >> 8) * gain.combined;
 
     // apply bitcrush
     if (bitcrush) {
@@ -393,8 +370,8 @@ typedef struct voice_t {
     }
 
     // apply panning
-    *left = (sample >> 8) * leftGain;
-    *right = (sample >> 8) * rightGain;
+    *left = (sample >> 8) * gain.left;
+    *right = (sample >> 8) * gain.right;
   }
 
   inline void note_on(unsigned char note, bool retrigger,
@@ -462,11 +439,7 @@ typedef struct voice_t {
     vibrato.swing = frequencyLUT[fIndex + 1] - frequency;
     vibrato.delay = parameters.vibratoDelay << 8;
     vibrato.phase = 0;
-<<<<<<< HEAD
-    vibrato.frequency = chiptuneVibratoFrequuency;
-=======
     vibrato.frequency = vibratoFrequency;
->>>>>>> d81ac5f3 (refactoring and cleanup)
 
     // reset envelope
     envelope.set_attack(parameters.attack);

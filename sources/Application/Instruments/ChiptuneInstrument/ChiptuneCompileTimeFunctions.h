@@ -81,8 +81,7 @@ consteval uint32_t calculateSemitoneRatioQ16(int index) {
 // Generate the lookup table at compile time
 template <size_t... Is>
 consteval auto gen_semi_lut(std::index_sequence<Is...>) {
-  return std::array<uint32_t, sizeof...(Is)>{
-      calculate_semitone_ratio_q16(Is)...};
+  return std::array<uint32_t, sizeof...(Is)>{calculateSemitoneRatioQ16(Is)...};
 }
 
 // Calculate MIDI note frequency at compile time
@@ -117,7 +116,7 @@ template <size_t... Is> consteval auto gen_frq_lut(std::index_sequence<Is...>) {
 // The formula is: coeff = 65535 * exp(-k * index)
 // attack goes from 65535 down to 326
 // decay also follows a similar exponential curve
-consteval uint16_t calculateAttackCoeff(int index) {
+consteval uint16_t calculate_attack_coeff(int index) {
   if (index >= 64)
     return 326;
 
@@ -133,7 +132,7 @@ consteval uint16_t calculateAttackCoeff(int index) {
   return static_cast<uint16_t>(coeff + 0.5);
 }
 
-consteval uint16_t calculateDecayCoeff(int index) {
+consteval uint16_t calculate_decay_coeff(int index) {
   if (index >= 64)
     return 130;
 
@@ -161,7 +160,7 @@ consteval auto gen_decay_lut(std::index_sequence<Is...>) {
 
 // Calculate sine wave value at compile time
 // Generates a sine wave with 64 steps (0-63) plus one sentinel at index 64
-consteval int8_t calculateSine64LUT(int index) {
+consteval int8_t calculate_sine64_lut(int index) {
   if (index >= 64)
     return 0; // sentinel value
 

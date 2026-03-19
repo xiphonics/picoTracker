@@ -26,6 +26,8 @@
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
 #include <cstdint>
+#include <etl/format_spec.h>
+#include <etl/to_string.h>
 #include <nanoprintf.h>
 
 #ifdef ADV
