@@ -55,6 +55,7 @@ private:
   void addSwatchField(ColorDefinition color, GUIPoint position);
   void addColorField(const char *label, Variable *colorVar,
                      ColorDefinition color, GUIPoint position);
+  void syncFieldsFromConfig();
   void syncColorComponentVars(Variable *colorVar);
 
   struct ColorComponentField {
@@ -87,7 +88,6 @@ private:
   void exportTheme();
   void importTheme();
   void exportThemeWithName(const char *themeName, bool overwrite);
-  void updateThemeNameFromConfig(); // Update the theme name field from Config
 
   // need separate flag for force because isDirty_ won't work for this because
   // it gets reset before AnimationUpdate is called in ThemeViews case

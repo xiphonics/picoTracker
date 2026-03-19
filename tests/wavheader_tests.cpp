@@ -156,6 +156,53 @@ ByteWriter BuildPcmWav(uint16_t channels, uint32_t sampleRate,
   return writer;
 }
 
+ByteWriter BuildExtensibleWav(uint16_t channels, uint32_t sampleRate,
+                              uint16_t bitsPerSample, uint32_t dataSize,
+                              uint16_t subtype) {
+  ByteWriter writer;
+  uint32_t byteRate = sampleRate * channels * (bitsPerSample / 8);
+  uint16_t blockAlign = channels * (bitsPerSample / 8);
+
+  writer.AppendFourCC("RIFF");
+  writer.AppendU32(0); // placeholder, patched later
+  writer.AppendFourCC("WAVE");
+
+  writer.AppendFourCC("fmt ");
+  writer.AppendU32(40);
+  writer.AppendU16(0xFFFE); // WAVE_FORMAT_EXTENSIBLE
+  writer.AppendU16(channels);
+  writer.AppendU32(sampleRate);
+  writer.AppendU32(byteRate);
+  writer.AppendU16(blockAlign);
+  writer.AppendU16(bitsPerSample);
+  writer.AppendU16(22);                        // cbSize
+  writer.AppendU16(bitsPerSample);             // valid bits per sample
+  writer.AppendU32(channels == 1 ? 0x4 : 0x3); // mono center / stereo L|R
+  writer.AppendU16(subtype); // KSDATAFORMAT_SUBTYPE_* low 16 bits of Data1
+  writer.AppendU16(0);
+  writer.AppendU16(0);
+  writer.AppendU16(0x0010);
+  writer.AppendBytes("\x80\x00\x00\xAA\x00\x38\x9B\x71", 8);
+
+  writer.AppendFourCC("data");
+  writer.AppendU32(dataSize);
+
+  if (dataSize > 0) {
+    uint8_t zeros[8] = {0};
+    uint32_t remaining = dataSize;
+    while (remaining > 0) {
+      uint32_t chunk = remaining > sizeof(zeros) ? sizeof(zeros) : remaining;
+      writer.AppendBytes(zeros, chunk);
+      remaining -= chunk;
+    }
+  }
+
+  uint32_t riffSize = static_cast<uint32_t>(writer.size - 8);
+  std::memcpy(writer.data + 4, &riffSize, sizeof(riffSize));
+
+  return writer;
+}
+
 } // namespace
 
 TEST_CASE("ReadHeader parses valid PCM WAV") {
@@ -214,6 +261,40 @@ TEST_CASE("ReadHeader rejects unsupported audio format") {
   auto result = WavHeaderWriter::ReadHeader(&file);
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == UNSUPPORTED_AUDIO_FORMAT);
+}
+
+TEST_CASE("ReadHeader parses extensible PCM WAV") {
+  Config::SetImportResampler(1);
+  ByteWriter wav = BuildExtensibleWav(2, 48000, 24, 12, 1);
+  TestFile file(wav.data, wav.size);
+
+  auto result = WavHeaderWriter::ReadHeader(&file);
+  REQUIRE(result.has_value());
+
+  CHECK(result->audioFormat == 1);
+  CHECK(result->numChannels == 2);
+  CHECK(result->sampleRate == 48000);
+  CHECK(result->bitsPerSample == 24);
+  CHECK(result->bytesPerSample == 3);
+  CHECK(result->dataChunkSize == 12);
+  CHECK(result->dataOffset > 0);
+}
+
+TEST_CASE("ReadHeader parses extensible float WAV") {
+  Config::SetImportResampler(1);
+  ByteWriter wav = BuildExtensibleWav(2, 48000, 32, 16, 3);
+  TestFile file(wav.data, wav.size);
+
+  auto result = WavHeaderWriter::ReadHeader(&file);
+  REQUIRE(result.has_value());
+
+  CHECK(result->audioFormat == 3);
+  CHECK(result->numChannels == 2);
+  CHECK(result->sampleRate == 48000);
+  CHECK(result->bitsPerSample == 32);
+  CHECK(result->bytesPerSample == 4);
+  CHECK(result->dataChunkSize == 16);
+  CHECK(result->dataOffset > 0);
 }
 
 TEST_CASE("ReadHeader accepts data chunk beyond RIFF when still within EOF") {

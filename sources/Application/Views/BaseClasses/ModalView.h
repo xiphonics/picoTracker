@@ -11,6 +11,7 @@
 #define _MODAL_VIEW_H_
 
 #include "View.h"
+#include <stdint.h>
 
 class ModalView : public View {
 public:
@@ -19,6 +20,7 @@ public:
 
   bool IsFinished();
   int GetReturnCode();
+  uint32_t GetInstanceId() const;
 
   void EndModal(int returnCode);
   virtual void Destroy();
@@ -33,6 +35,8 @@ protected:
   virtual GUIPoint GetAnchor();
 
 private:
+  static uint32_t nextInstanceId_;
+  uint32_t instanceId_;
   bool finished_;
   int returnCode_;
   int left_;
