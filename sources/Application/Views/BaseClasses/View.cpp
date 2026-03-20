@@ -570,7 +570,7 @@ void View::switchToRecordView() {
   }
 }
 
-void View::drawScrollBar(int x, int y, int height, int index, int total) {
+void View::drawScrollBar(uint16_t x, uint16_t y, uint16_t height, uint16_t index, uint16_t total) {
   if (total <= height) {
     return; // no scrollbar needed
   }
@@ -579,13 +579,13 @@ void View::drawScrollBar(int x, int y, int height, int index, int total) {
   SetColor(CD_NORMAL);
 
   // Thumb size represents the ratio of visible items to total items
-  int thumbSize = std::max(1, (height * height) / total);
+  uint16_t thumbSize = std::max(1, (height * height) / total);
 
   // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
   // space
-  int maxScroll = total - height;
-  int availableSpace = height - thumbSize;
-  int thumbPos = (index * availableSpace) / maxScroll;
+  uint16_t maxScroll = total - height;
+  uint16_t availableSpace = height - thumbSize;
+  uint16_t thumbPos = (index * availableSpace) / maxScroll;
 
   for (int dy = 0; dy < height; dy++) {
     bool thumb = (dy >= thumbPos) && (dy < thumbPos + thumbSize);

@@ -38,7 +38,7 @@ void ThemeImportView::OpenSelectedItem() {
     return;
 
   // get selected item
-  unsigned fileIndex = fileIndexList_[currentIndex_];
+  int fileIndex = fileIndexList_[currentIndex_];
   auto fs = FileSystem::GetInstance();
   char name[PFILENAME_SIZE];
   fs->getFileName(fileIndex, name, PFILENAME_SIZE);
