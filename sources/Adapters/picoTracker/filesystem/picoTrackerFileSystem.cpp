@@ -8,7 +8,6 @@
 
 #include "picoTrackerFileSystem.h"
 #include "Application/Persistency/PersistencyService.h"
-#include "Application/Utils/MemoryPool.h"
 #include "Externals/etl/include/etl/pool.h"
 #include "pico/multicore.h"
 #include <cstring>
@@ -123,7 +122,7 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
 
 void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
                                  const char *filter, bool subDirOnly,
-                                 bool sorted) {
+                                 bool includeHidden, bool sorted) {
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
@@ -147,7 +146,7 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
   File entry;
   uint16_t count = 0;
 
-  uint32_t *sortKeys = (uint32_t *)MemoryPool::Acquire();
+  uint32_t sortKeys[MAX_FILE_INDEX_SIZE];
 
   // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
   while (entry.openNext(&cwd, O_READ) && (count < fileIndexes->capacity())) {
@@ -162,25 +161,19 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
       //            matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given
-    if ((entry.isDirectory() && entry.dirIndex() != 0) ||
-        ((!entry.isHidden() || includeHidden) && matchesFilter)) {
-      if (subDirOnly) {
-        if (entry.isDirectory()) {
-          fileIndexes->push_back(index);
-        }
-      } else {
-        fileIndexes->push_back(index);
-        count++;
+    bool validDir = entry.isDirectory() && entry.dirIndex() != 0;
+    bool matchVisible = (!entry.isHidden() || includeHidden) && matchesFilter;
 
-        if (sorted) {
-          entry.getName(buffer, PFILENAME_SIZE);
-          sortKeys[fileIndexes->size() - 1] =
-              FileSystem::getFileSortKey(buffer);
-        }
+    if ((validDir || matchVisible) && (!subDirOnly || entry.isDirectory())) {
+      if (sorted) {
+        entry.getName(buffer, PFILENAME_SIZE);
+        sortKeys[count] = FileSystem::getFileSortKey(buffer);
       }
+      fileIndexes->push_back(index);
+      count++;
       // Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
     } else {
-      // Trace::Log("FILESYSTEM", "skipped hidden: %s", buffer);
+      // Trace::Log("FILESYSTEM", "skipped non-matching file: %s", buffer);
     }
     entry.close();
   }
@@ -189,7 +182,6 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
              fileIndexes->size());
 
   if (!sorted) {
-    MemoryPool::Release();
     return;
   }
 
@@ -232,7 +224,6 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
   }
 
   cwd.close();
-  MemoryPool::Release();
 }
 
 void picoTrackerFileSystem::getFileName(int index, char *name, int length) {
@@ -334,12 +325,13 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
   auto fSrc = sd.open(srcFilename, O_READ);
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
 
-  char *fileBuffer = (char *)MemoryPool::Acquire();
+  const int FILE_BUFFER_SIZE = 1024;
+  char fileBuffer[FILE_BUFFER_SIZE];
 
   int n = 0;
 
   while (true) {
-    n = fSrc.read(fileBuffer, MEMORYPOOL_SCRATCH_SIZE);
+    n = fSrc.read(fileBuffer, FILE_BUFFER_SIZE);
     // check for read error and only write if no error
     if (n >= 0) {
       fDest.write(fileBuffer, n);
@@ -347,11 +339,10 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
       Trace::Error("Failed to read file: %s", srcFilename);
       return false;
     }
-    if ((size_t)n < MEMORYPOOL_SCRATCH_SIZE) {
+    if ((size_t)n < FILE_BUFFER_SIZE) {
       break;
     }
   }
-  MemoryPool::Release();
   fSrc.close();
   fDest.close();
   return true;

@@ -70,6 +70,7 @@ private:
   // need these as statically allocated buffers as too big for stack
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferA;
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferB;
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
   char deleteNameBuffer_[PFILENAME_SIZE];
 };
 

@@ -40,6 +40,7 @@ private:
   size_t currentIndex_ = 0;
   char selection_[MAX_PROJECT_NAME_LENGTH + 1];
   int selectedButton_ = 0;
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 
   void DrawScrollBar();
   void AttemptDeletingSelectedProject();

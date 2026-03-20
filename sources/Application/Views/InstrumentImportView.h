@@ -33,6 +33,7 @@ protected:
 private:
   void onImportSuccess(View &view, ModalView &dialog);
 
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
   short selected_ = 0;

@@ -7,7 +7,6 @@
  */
 
 #include "advFileSystem.h"
-#include "Application/Utils/MemoryPool.h"
 #include "Externals/etl/include/etl/pool.h"
 #include "FileHandle.h"
 #include <cstdio>
@@ -156,7 +155,7 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     return;
   }
 
-  uint32_t *sortKeys = (uint32_t *)MemoryPool::Acquire();
+  uint32_t sortKeys[MAX_FILE_INDEX_SIZE];
 
   for (size_t i = 0; i < file_cache_.size(); ++i) {
     if (fileIndexes->full()) {
@@ -233,7 +232,6 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
   }
 
   f_closedir(&dir);
-  MemoryPool::Release();
   Trace::Log("FILESYSTEM", "added file indexes:%d", fileIndexes->size());
 }
 
