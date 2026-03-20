@@ -6,7 +6,7 @@ styles:
     background-color: 0xffe0e0e0
   show-page-numbers-from: 1
   # path from inside assets dir
-  ttf-font-path: font/PROJEKTBlackbird.ttf
+  ttf-font-path: font/UbuntuMono-Regular.ttf
 
 tocPagePosition: 1
 

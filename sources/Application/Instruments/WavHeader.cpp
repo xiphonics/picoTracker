@@ -12,6 +12,14 @@
 #include "System/Console/Trace.h"
 #include "System/FileSystem/I_File.h"
 
+namespace {
+
+constexpr uint16_t WAV_FORMAT_PCM = 0x0001;
+constexpr uint16_t WAV_FORMAT_IEEE_FLOAT = 0x0003;
+constexpr uint16_t WAV_FORMAT_EXTENSIBLE = 0xFFFE;
+
+} // namespace
+
 bool WavHeaderWriter::WriteHeader(I_File *file, uint32_t sampleRate,
                                   uint16_t channels, uint16_t bitsPerSample) {
   if (!file)
@@ -164,10 +172,9 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return etl::unexpected(INVALID_HEADER);
   }
 
-  const bool isPcm = info.audioFormat == 1;
-  const bool isFloat = info.audioFormat == 3;
-
-  if (!isPcm && !isFloat) {
+  const bool isExtensible = info.audioFormat == WAV_FORMAT_EXTENSIBLE;
+  if (info.audioFormat != WAV_FORMAT_PCM &&
+      info.audioFormat != WAV_FORMAT_IEEE_FLOAT && !isExtensible) {
     Trace::Error("WavHeaderWriter: Unsupported audio format %u",
                  info.audioFormat);
     return etl::unexpected(UNSUPPORTED_AUDIO_FORMAT);
@@ -207,6 +214,38 @@ WavHeaderWriter::ReadHeader(I_File *file) {
     return etl::unexpected(INVALID_HEADER);
   }
 
+  if (isExtensible) {
+    if (info.fmtChunkSize < 40) {
+      Trace::Error("WavHeaderWriter: Extensible fmt chunk too small (%u)",
+                   info.fmtChunkSize);
+      return etl::unexpected(INVALID_HEADER);
+    }
+
+    uint16_t extensionSize = 0;
+    uint16_t validBitsPerSample = 0;
+    uint32_t channelMask = 0;
+    uint8_t subFormat[16] = {0};
+
+    if (file->Read(&extensionSize, 2) != 2 ||
+        file->Read(&validBitsPerSample, 2) != 2 ||
+        file->Read(&channelMask, 4) != 4 || file->Read(subFormat, 16) != 16) {
+      return etl::unexpected(INVALID_HEADER);
+    }
+
+    (void)extensionSize;
+    (void)validBitsPerSample;
+    (void)channelMask;
+
+    uint16_t subtype = static_cast<uint16_t>(subFormat[0]) |
+                       (static_cast<uint16_t>(subFormat[1]) << 8);
+    info.audioFormat = (subtype == WAV_FORMAT_IEEE_FLOAT)
+                           ? WAV_FORMAT_IEEE_FLOAT
+                           : WAV_FORMAT_PCM;
+  }
+
+  const bool isPcm = info.audioFormat == WAV_FORMAT_PCM;
+  const bool isFloat = info.audioFormat == WAV_FORMAT_IEEE_FLOAT;
+
   if (isPcm) {
     if ((info.bitsPerSample != 8) && (info.bitsPerSample != 16) &&
         (info.bitsPerSample != 24) && (info.bitsPerSample != 32)) {
@@ -224,8 +263,9 @@ WavHeaderWriter::ReadHeader(I_File *file) {
 
   info.bytesPerSample = info.bitsPerSample / 8;
 
-  if (info.fmtChunkSize > 16) {
-    uint32_t toSkip = info.fmtChunkSize - 16;
+  const uint32_t fmtBytesConsumed = isExtensible ? 40U : 16U;
+  if (info.fmtChunkSize > fmtBytesConsumed) {
+    uint32_t toSkip = info.fmtChunkSize - fmtBytesConsumed;
     if (file->Tell() + toSkip > riffEnd) {
       Trace::Error("WavHeaderWriter: fmt extra data exceeds RIFF bounds");
       return etl::unexpected(INVALID_HEADER);

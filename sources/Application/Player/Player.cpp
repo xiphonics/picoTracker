@@ -10,6 +10,7 @@
 #include "Player.h"
 #include "Application/Instruments/CommandList.h"
 #include "Application/Instruments/I_Instrument.h"
+#include "Application/Instruments/SampleInstrument.h"
 #include "Application/Mixer/MixerService.h"
 #include "Application/Model/Groove.h"
 #include "Application/Player/TablePlayback.h"
@@ -136,7 +137,13 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   // Let's get started !
 
   SyncMaster::GetInstance()->Start();
+#ifdef ADV
+  // On Advance, keep analog output muted during stem rendering to avoid
+  // audible glitches while multiple stem files are being written.
+  SetAudioActive(msmMode != MSM_FILESPLIT);
+#else
   SetAudioActive(true);
+#endif
 
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;
@@ -853,8 +860,16 @@ void Player::playCursorPosition(int channel) {
         int chainPos = viewData_->chainPlayPos_[channel];
         unsigned char *trsp =
             viewData_->song_->chain_.transpose_ + (16 * chain + chainPos);
-        note += *trsp;
-        note += project_->GetTranspose();
+        bool preserveNote = false;
+        if (instrument->GetType() == IT_SAMPLE) {
+          SampleInstrument *sampleInstrument =
+              static_cast<SampleInstrument *>(instrument);
+          preserveNote = sampleInstrument->HasSlicesForPlayback();
+        }
+        if (!preserveNote) {
+          note += *trsp;
+          note += project_->GetTranspose();
+        }
         instrumentOnChannel_[channel][0] =
             (instr / 16) > 9 ? 'A' - 10 + (instr / 16) : '0' + (instr / 16);
         instrumentOnChannel_[channel][1] =

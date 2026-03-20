@@ -41,16 +41,23 @@ AudioFileStreamer::~AudioFileStreamer() { wav_.Close(); };
 
 bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
   Trace::Debug("Starting to stream:%s from sample %d", name, startSample);
+  if (!name) {
+    Trace::Error("AudioFileStreamer: null filename");
+    mode_ = AFSM_STOPPED;
+    return false;
+  }
+
+  name_ = name;
   position_ = (startSample > 0) ? float(startSample) : 0.0f;
 #ifndef ADV
   stopRequested_ = false;
 #endif
 
   wav_.Close();
-  Trace::Log("", "wave open:%s", name);
-  auto res = wav_.Open(name);
+  Trace::Log("", "wave open:%s", name_.c_str());
+  auto res = wav_.Open(name_.c_str());
   if (!res) {
-    Trace::Error("Failed to open streaming of file:%s", name);
+    Trace::Error("Failed to open streaming of file:%s", name_.c_str());
     mode_ = AFSM_STOPPED;
     return false;
   }
@@ -89,7 +96,7 @@ bool AudioFileStreamer::Start(const char *name, int startSample, bool looping) {
   fpSpeed_ = fl2fp(ratio);
   Trace::Debug("AudioFileStreamer: File '%s' - Sample Rate: %d Hz, Channels: "
                "%d",
-               name, fileSampleRate_, channels);
+               name_.c_str(), fileSampleRate_, channels);
   Trace::Debug("Size: %ld samples, Speed: %d", size, fp2i(fpSpeed_));
 
   // Load the entire buffer for single cycle waveforms
@@ -197,7 +204,7 @@ bool AudioFileStreamer::Render(fixed *buffer, int samplecount) {
   }
   // look if we have the file loaded
   if (!wav_.IsOpen()) {
-    Trace::Error("Failed to open streaming of file");
+    Trace::Error("Failed to open streaming of file:%s", name_.c_str());
     mode_ = AFSM_STOPPED;
     return false;
   }

@@ -58,6 +58,7 @@ public:
   virtual void ClearTextRect(GUIRect &rect);
   using GUIWindow::SetColor;
   virtual void SetColor(ColorDefinition cd);
+  void InvalidateTextCache();
 
   void SetDirty();
   void UpdateColorsFromConfig();

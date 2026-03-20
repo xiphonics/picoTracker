@@ -56,6 +56,7 @@ public:
   virtual void Execute(FourCC id, float value);
 
   AudioOut *GetAudioOut();
+  MixerServiceMode GetMode() const { return mode_; }
 
   void Lock();
   void Unlock();
@@ -75,5 +76,6 @@ private:
   MixBus bus_[MAX_BUS_COUNT];
   SysMutex *sync_;
   Project *project_; // Reference to the current project
+  MixerServiceMode mode_ = MSM_AUDIO;
 };
 #endif

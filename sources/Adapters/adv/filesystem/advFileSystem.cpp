@@ -134,7 +134,7 @@ PicoFileType advFileSystem::getFileType(int index) {
 }
 
 void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
-                         bool subDirOnly, bool sorted = false) {
+                         bool subDirOnly, bool includeHidden, bool sorted) {
 
   fileIndexes->clear();
 
@@ -167,9 +167,12 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
 
     bool matchesFilter = true;
     if (strlen(filter) > 0) {
-      tolowercase((char *)fno.fname);
-      matchesFilter = (strstr(fno.fname, filter) != nullptr);
-      Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", fno.fname, filter,
+      char filterName[PFILENAME_SIZE];
+      strncpy(filterName, fno.fname, sizeof(filterName) - 1);
+      filterName[sizeof(filterName) - 1] = '\0';
+      tolowercase(filterName);
+      matchesFilter = (strstr(filterName, filter) != nullptr);
+      Trace::Log("FILESYSTEM", "FILTER: %s=%s [%d]\n", filterName, filter,
                  matchesFilter);
     }
 
@@ -179,8 +182,13 @@ void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
     const bool isHiddenName = (fno.fname[0] == '.') && !isParentEntry;
 
     // filter out "." style hidden entries and files that dont match filter
-    if ((isDir || (isFile && matchesFilter)) && !isHiddenName) {
-      if (!subDirOnly || isDir) {
+    if ((isDir || (isFile && matchesFilter)) &&
+        (includeHidden || !isHiddenName)) {
+      if (subDirOnly) {
+        if (fno.fattrib & AM_DIR) {
+          fileIndexes->push_back(i);
+        }
+      } else {
         fileIndexes->push_back(i);
 
         if (sorted) {
@@ -479,7 +487,7 @@ bool advFileSystem::MoveFile(const char *srcFilename,
 }
 
 void advFileSystem::tolowercase(char *temp) {
-  // Convert to upper case
+  // Normalize to lowercase for case-insensitive comparisons only.
   char *s = temp;
   while (*s != '\0') {
     *s = tolower((unsigned char)*s);

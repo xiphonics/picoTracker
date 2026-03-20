@@ -18,6 +18,7 @@
 #include <cstring>
 
 #define PROJECT_STATE_FILE "/.current"
+#define MAX_DELETE_DEPTH 3
 
 PersistencyService::PersistencyService()
     : Service(FourCC::ServicePersistency){};
@@ -39,7 +40,6 @@ bool PersistencyService::DeleteProject(const char *projectName) {
 
   Trace::Debug("PERSISTENCYSERVICE", "Deleting project: %s", projectName);
 
-  // TODO: navigate using absolute paths to simplify things
   if (!fs->chdir(PROJECTS_DIR)) {
     Trace::Error("PERSISTENCYSERVICE: Could not change to projects dir");
     return false;
@@ -50,41 +50,10 @@ bool PersistencyService::DeleteProject(const char *projectName) {
     return false;
   }
 
-  // no checks on the file deletion, since they may not exist and the directory
-  // deletion will fail later on if they do and cannot be deleted
-  fs->DeleteFile(PROJECT_DATA_FILE);
-  fs->DeleteFile(AUTO_SAVE_FILENAME);
-
-  if (!fs->chdir(PROJECT_SAMPLES_DIR)) {
-    Trace::Error("PERSISTENCYSERVICE: Could not change to project dir");
-    return false;
-  }
-
-  fs->list(&MemoryPool::fileIndexList, ".wav", false);
-
-  // delete all samples
-  fs->BeginBatch();
-  char filename[128];
-  for (size_t i = 0; i < MemoryPool::fileIndexList.size(); i++) {
-    fs->getFileName(MemoryPool::fileIndexList[i], filename,
-                    MAX_PROJECT_SAMPLE_PATH_LENGTH);
-    if (strcmp(filename, "..") == 0 || strcmp(filename, ".") == 0) {
-      continue;
-    }
-    if (fs->getFileType(MemoryPool::fileIndexList[i]) == PFT_DIR) {
-      continue;
-    }
-    fs->DeleteFile(filename);
-  };
-  fs->EndBatch();
-
-  if (!fs->chdir("..")) { // up to project dir
-    Trace::Error("PERSISTENCYSERVICE: Could not change back to project dir");
-    return false;
-  }
-
-  if (!fs->DeleteDir(PROJECT_SAMPLES_DIR)) {
-    Trace::Error("PERSISTENCYSERVICE: Could not delete the project sample dir");
+  if (!DeleteDirectoryContents_(0)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not delete project contents");
+    // attempt to recover to /projects for caller consistency
+    fs->chdir("..");
     return false;
   }
 
@@ -95,6 +64,97 @@ bool PersistencyService::DeleteProject(const char *projectName) {
 
   if (!fs->DeleteDir(projectName)) {
     Trace::Error("PERSISTENCYSERVICE: Could not delete the project dir");
+    return false;
+  }
+
+  return true;
+}
+
+bool PersistencyService::DeleteDirectoryContents_(uint8_t depth) {
+  auto fs = FileSystem::GetInstance();
+  if (depth > MAX_DELETE_DEPTH) {
+    Trace::Error("PERSISTENCYSERVICE: delete depth exceeded");
+    return false;
+  }
+
+  while (true) {
+    fileIndexes_.clear();
+    fs->list(&fileIndexes_, "", false, true);
+
+    bool foundEntry = false;
+    bool deletedEntry = false;
+    for (size_t i = 0; i < fileIndexes_.size(); ++i) {
+      fs->getFileName(fileIndexes_[i], deleteNameBuffer_,
+                      sizeof(deleteNameBuffer_));
+
+      if ((strcmp(deleteNameBuffer_, ".") == 0) ||
+          (strcmp(deleteNameBuffer_, "..") == 0)) {
+        continue;
+      }
+
+      foundEntry = true;
+
+      const PicoFileType type = fs->getFileType(fileIndexes_[i]);
+      if (type == PFT_FILE) {
+        if (!fs->DeleteFile(deleteNameBuffer_)) {
+          Trace::Error("PERSISTENCYSERVICE: Could not delete file: %s",
+                       deleteNameBuffer_);
+          return false;
+        }
+      } else if (type == PFT_DIR) {
+        if (!DeleteDirectoryTree_(deleteNameBuffer_, depth + 1)) {
+          return false;
+        }
+      } else {
+        Trace::Error("PERSISTENCYSERVICE: Unknown file type for %s",
+                     deleteNameBuffer_);
+        return false;
+      }
+
+      deletedEntry = true;
+      break;
+    }
+
+    if (!foundEntry) {
+      return true;
+    }
+
+    if (!deletedEntry) {
+      Trace::Error("PERSISTENCYSERVICE: Unable to delete all entries");
+      return false;
+    }
+  }
+}
+
+bool PersistencyService::DeleteDirectoryTree_(const char *dirname,
+                                              uint8_t depth) {
+  auto fs = FileSystem::GetInstance();
+  char dirnameCopy[PFILENAME_SIZE];
+  strncpy(dirnameCopy, dirname, sizeof(dirnameCopy));
+  dirnameCopy[sizeof(dirnameCopy) - 1] = '\0';
+
+  if (depth > MAX_DELETE_DEPTH) {
+    Trace::Error("PERSISTENCYSERVICE: delete depth exceeded");
+    return false;
+  }
+
+  if (!fs->chdir(dirnameCopy)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not chdir into dir: %s",
+                 dirnameCopy);
+    return false;
+  }
+
+  bool success = DeleteDirectoryContents_(depth);
+  if (!fs->chdir("..")) {
+    Trace::Error("PERSISTENCYSERVICE: Could not return to parent dir");
+    return false;
+  }
+  if (!success) {
+    return false;
+  }
+
+  if (!fs->DeleteDir(dirnameCopy)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not delete dir: %s", dirnameCopy);
     return false;
   }
 

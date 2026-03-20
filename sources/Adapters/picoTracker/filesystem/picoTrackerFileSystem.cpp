@@ -123,7 +123,7 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
 
 void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
                                  const char *filter, bool subDirOnly,
-                                 bool sorted = false) {
+                                 bool sorted) {
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
@@ -163,8 +163,12 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     }
     // filter out "." and files that dont match filter if a filter is given
     if ((entry.isDirectory() && entry.dirIndex() != 0) ||
-        (!entry.isHidden() && matchesFilter)) {
-      if (!subDirOnly || entry.isDirectory()) {
+        ((!entry.isHidden() || includeHidden) && matchesFilter)) {
+      if (subDirOnly) {
+        if (entry.isDirectory()) {
+          fileIndexes->push_back(index);
+        }
+      } else {
         fileIndexes->push_back(index);
         count++;
 

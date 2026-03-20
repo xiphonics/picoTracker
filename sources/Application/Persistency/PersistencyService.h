@@ -64,10 +64,13 @@ private:
   void CreatePath(etl::istring &path,
                   const etl::ivector<const char *> &segments);
   PersistencyResult SaveProjectData(const char *projectName, bool autosave);
+  bool DeleteDirectoryContents_(uint8_t depth);
+  bool DeleteDirectoryTree_(const char *dirname, uint8_t depth);
 
   // need these as statically allocated buffers as too big for stack
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferA;
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> pathBufferB;
+  char deleteNameBuffer_[PFILENAME_SIZE];
 };
 
 #endif

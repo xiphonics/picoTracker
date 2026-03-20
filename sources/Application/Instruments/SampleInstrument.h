@@ -88,7 +88,7 @@ public:
 
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetUserSetName();
   virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetDisplayName() override;
-  virtual etl::string<MAX_INSTRUMENT_NAME_LENGTH> GetSampleFileName();
+  virtual etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> GetSampleFileName();
 
   static void EnableDownsamplingLegacy();
   virtual void SaveContent(tinyxml2::XMLPrinter *printer) override;

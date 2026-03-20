@@ -315,6 +315,7 @@ Once a selection is started you can do a few more things:
 
 | Function                           |   Key Combination    |                            Image                             |
 |:-----------------------------------|:--------------------:|:------------------------------------------------------------:|
+| Go to parent directory             |    `EDIT + LEFT`     | ![edit + (left / right) key](image/pt-buttons-edit_leftright.jpg) |
 | Increase / Decrease preview volume | `EDIT + (UP / DOWN)` | ![edit + (up / down) key](image/pt-buttons-edit_up_down.jpg) |
 
 ### ALT Modifier
