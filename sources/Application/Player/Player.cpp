@@ -24,7 +24,7 @@
 #include <math.h>
 #include <string.h>
 
-int DecodeRetriggerOffset(int value) {
+int8_t DecodeRetriggerOffset(int8_t value) {
   return (value > 0x80) ? value - 0x100 : value;
 }
 
@@ -562,7 +562,7 @@ void Player::Update(Observable &o, I_ObservableData *d) {
       ProcessCommands();
 
     // Initialise retrigger table
-    int instrRetrigger[SONG_CHANNEL_COUNT];
+    int32_t instrRetrigger[SONG_CHANNEL_COUNT];
     memset(instrRetrigger, -1, SONG_CHANNEL_COUNT * sizeof(int));
 
     // Process any table commands now
@@ -876,7 +876,7 @@ void Player::playCursorPosition(int channel) {
 
         if (note < 128) {
           mixer_.StartInstrument(channel, instrument, note, newInstrument);
-          int instrTable = instrument->GetTable();
+          int8_t instrTable = instrument->GetTable();
 
           // If an instrument number has been specified && instrument has table,
           // we trigger the table.
@@ -954,7 +954,7 @@ void Player::StepAutomationTableForRetrigger(int channel,
 
 void Player::RetriggerChannelInstrument(int channel, int semitoneOffset,
                                         bool stepAutomationTable) {
-  int note = mixer_.GetChannelNote(channel);
+  int8_t note = mixer_.GetChannelNote(channel);
   I_Instrument *instrument = mixer_.GetInstrument(channel);
 
   if ((note > HIGHEST_NOTE) || (instrument == 0)) {
