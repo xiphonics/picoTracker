@@ -12,11 +12,15 @@
 #include "Application/Instruments/I_Instrument.h"
 
 TablePlayback TablePlayback::playback_[SONG_CHANNEL_COUNT];
+TablePlayback TablePlayback::automationPlayback_[SONG_CHANNEL_COUNT];
 
 void TableSaveState::Reset() {
   position_[0] = 0;
   position_[1] = 0;
   position_[2] = 0;
+  groove_.groove_ = -1;
+  groove_.position_ = 0;
+  groove_.ticks_ = 0;
   for (int i = 0; i < TABLE_STEPS; i++) {
     hopCount_[i][0] = 0;
     hopCount_[i][1] = 0;
@@ -27,6 +31,7 @@ void TableSaveState::Reset() {
 void TablePlayback::Reset() {
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     playback_[i].Init(i);
+    automationPlayback_[i].Init(i);
   }
 };
 
@@ -35,12 +40,20 @@ TablePlayback &TablePlayback::GetTablePlayback(int channel) {
   return playback_[channel];
 }
 
+TablePlayback &TablePlayback::GetAutomationPlayback(int channel) {
+  NAssert((channel >= 0) && (channel < SONG_CHANNEL_COUNT));
+  return automationPlayback_[channel];
+}
+
 void TablePlayback::Init(int channel) {
   channel_ = channel;
   table_ = 0;
   position_[0] = 0;
   position_[1] = 0;
   position_[2] = 0;
+  previous_[0] = -1;
+  previous_[1] = -1;
+  previous_[2] = -1;
 
   hopped_[0] = false;
   hopped_[1] = false;
@@ -66,6 +79,9 @@ void TablePlayback::Start(I_Instrument *i, Table &table, bool automated) {
     position_[0] = 0;
     position_[1] = 0;
     position_[2] = 0;
+    previous_[0] = -1;
+    previous_[1] = -1;
+    previous_[2] = -1;
 
     hopped_[0] = false;
     hopped_[1] = false;
@@ -90,6 +106,9 @@ void TablePlayback::Stop() {
   position_[0] = 0;
   position_[1] = 0;
   position_[2] = 0;
+  previous_[0] = -1;
+  previous_[1] = -1;
+  previous_[2] = -1;
 
   hopped_[0] = false;
   hopped_[1] = false;
@@ -180,6 +199,7 @@ void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
           memcpy(hopCount_, state.hopCount_,
                  sizeof(uchar) * TABLE_STEPS * TABLE_COLUMNS);
           memcpy(position_, state.position_, sizeof(int) * TABLE_COLUMNS);
+          groove_ = state.groove_;
         }
 
         // try local processing for if it changes current table or position
@@ -229,6 +249,7 @@ void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
           memcpy(state.hopCount_, hopCount_,
                  sizeof(uchar) * TABLE_STEPS * TABLE_COLUMNS);
           memcpy(state.position_, position_, sizeof(int) * TABLE_COLUMNS);
+          state.groove_ = groove_;
           instrument_->SetTableState(state);
         }
       }
