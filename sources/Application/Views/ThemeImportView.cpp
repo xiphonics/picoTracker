@@ -33,29 +33,28 @@ void ThemeImportView::Reset() {
   fileIndexList_.clear();
 }
 
+void ThemeImportView::OpenSelectedItem() {
+  if (currentIndex_ >= fileIndexList_.size())
+    return;
+
+  // get selected item
+  int fileIndex = fileIndexList_[currentIndex_];
+  auto fs = FileSystem::GetInstance();
+  char name[PFILENAME_SIZE];
+  fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+  onImportTheme(name);
+}
+
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  if (mask & EPBM_PLAY) {
-    auto fs = FileSystem::GetInstance();
-    char name[PFILENAME_SIZE];
-
-    if (currentIndex_ < fileIndexList_.size()) {
-      unsigned fileIndex = fileIndexList_[currentIndex_];
-      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-      if (mask & EPBM_ALT) {
-        Trace::Log("THEMEIMPORT", "SHIFT play - import");
-        onImportTheme(name);
-      }
-    }
-
-    // handle moving up and down the file list
+  if (mask & EPBM_ENTER) {
+    OpenSelectedItem();
   } else if (mask & EPBM_UP) {
-    warpToNextTheme(true);
+    changeSelection(mask & EPBM_EDIT ? -LIST_PAGE_SIZE : -1);
   } else if (mask & EPBM_DOWN) {
-    warpToNextTheme(false);
+    changeSelection(mask & EPBM_EDIT ? LIST_PAGE_SIZE : 1);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
     // Go to back "left" to theme screen
     ViewType vt = VT_THEME;
@@ -63,29 +62,6 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     SetChanged();
     NotifyObservers(&ve);
     return;
-  } else {
-    // ENTER modifier
-    if (mask & EPBM_ENTER) {
-      auto fs = FileSystem::GetInstance();
-
-      if (currentIndex_ < fileIndexList_.size()) {
-        unsigned fileIndex = fileIndexList_[currentIndex_];
-        char name[PFILENAME_SIZE];
-        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-        // Only allow navigation into directories, not to parent directory
-        if (fs->getFileType(fileIndex) == PFT_DIR && strcmp(name, ".") != 0 &&
-            strcmp(name, "..") != 0) {
-          setCurrentFolder(fs, name);
-          isDirty_ = true;
-          topIndex_ = 0; // need to reset when entering a dir as prev dir may
-                         // have been already scrolled down
-        } else {
-          // If it's a file, import it
-          onImportTheme(name);
-        }
-      }
-    }
   }
 };
 
@@ -102,17 +78,16 @@ void ThemeImportView::DrawView() {
   SetColor(CD_INFO);
   DrawString(pos._x + 1, pos._y, title, props);
 
-  SetColor(CD_NORMAL);
-
   // Draw theme files
   int x = 1;
   int y = pos._y + 2;
 
   // need to use fullsize buffer as sdfat doesnt truncate if filename longer
   // than buffer but instead returns empty string in buffer :-(
+  size_t total = fileIndexList_.size();
   char buffer[PFILENAME_SIZE];
-  for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+  for (size_t i = topIndex_; i < topIndex_ + LIST_PAGE_SIZE && (i < total);
+       i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
       props.invert_ = true;
@@ -125,56 +100,47 @@ void ThemeImportView::DrawView() {
     unsigned fileIndex = fileIndexList_[i];
     fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
-    if (fs->getFileType(fileIndex) == PFT_DIR) {
-      // Draw a directory
-      DrawString(x, y, "[", props);
-      DrawString(x + 1, y, buffer, props);
-      DrawString(x + strlen(buffer) + 1, y, "]", props);
-    } else {
-      // Draw a file
-      // Remove the .ptt extension for display
-      char *dot = strrchr(buffer, '.');
-      if (dot) {
-        *dot = '\0';
-      }
-      DrawString(x, y, buffer, props);
+    // Remove the .ptt extension for display
+    char *dot = strrchr(buffer, '.');
+    if (dot) {
+      *dot = '\0';
     }
+    DrawString(x, y, buffer, props);
+
     y++;
   }
+
+  drawScrollBar(SCREEN_WIDTH - 1, pos._y + 2, LIST_PAGE_SIZE, topIndex_, total);
 };
 
 void ThemeImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {}
 
 void ThemeImportView::OnFocus() {
-  auto fs = FileSystem::GetInstance();
-
   // Navigate to the themes directory
-  setCurrentFolder(fs, THEMES_DIR);
+  setCurrentFolder();
 }
 
-void ThemeImportView::warpToNextTheme(bool goUp) {
+void ThemeImportView::changeSelection(int delta) {
   if (fileIndexList_.empty())
     return;
 
-  if (goUp) {
-    if (currentIndex_ > 0) {
-      currentIndex_--;
-      // if we have scrolled off the top, page the file list up if not
-      // already at very top of the list
-      if (currentIndex_ < topIndex_) {
-        topIndex_ = currentIndex_;
-      }
-    }
-  } else {
-    if (currentIndex_ < fileIndexList_.size() - 1) {
-      currentIndex_++;
-      // if we have scrolled off the bottom, page the file list down if not
-      // at end of the list
-      if (currentIndex_ >= (topIndex_ + LIST_PAGE_SIZE)) {
-        topIndex_++;
-      }
-    }
+  size_t max = fileIndexList_.size() - 1;
+  size_t target = std::clamp((int)(currentIndex_ + delta), 0, (int)max);
+  size_t bottom = std::min(topIndex_ + LIST_PAGE_SIZE - 1, max);
+  size_t landingOn = std::clamp(target, topIndex_, bottom);
+  bool willScroll = (currentIndex_ == landingOn) && (landingOn != target);
+
+  currentIndex_ = willScroll ? target : landingOn;
+
+  if (willScroll) {
+    size_t offset = (target > bottom) ? LIST_PAGE_SIZE - 1 : 0;
+    size_t upper = fileIndexList_.size() > LIST_PAGE_SIZE
+                       ? fileIndexList_.size() - LIST_PAGE_SIZE
+                       : 0zu;
+    size_t base = target > offset ? target - offset : 0zu;
+    topIndex_ = std::min(base, upper);
   }
+
   isDirty_ = true;
 }
 
@@ -191,6 +157,9 @@ void ThemeImportView::onImportTheme(const char *filename) {
     // Get the AppWindow to update colors
     AppWindow &app = (AppWindow &)w_;
     app.UpdateColorsFromConfig();
+
+    // make sure we redraw everything with the new colors
+    ForceClear();
 
     // Show success message
     MessageBox *mb =
@@ -224,18 +193,27 @@ void ThemeImportView::onImportThemeModalDismiss(View &, ModalView &dialog) {
   NotifyObservers(&ve);
 }
 
-void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
-  if (!fs->chdir(name)) {
-    Trace::Error("FAILED to chdir to %s", name);
+void ThemeImportView::setCurrentFolder() {
+  auto fs = FileSystem::GetInstance();
+
+  if (!fs->chdir(THEMES_DIR)) {
+    Trace::Error("FAILED to chdir to %s", THEMES_DIR);
     return;
   }
+
   currentIndex_ = 0;
   topIndex_ = 0;
   isDirty_ = true;
 
-  // Update list of file indexes in this new dir
-  fileIndexList_.clear();
-  // Use false for subDirOnly to include both files and directories
-  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false, true, true);
-  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
+  // get the directory listing
+  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
+
+  // remove directories from listing
+  for (int i = fileIndexList_.size() - 1; i >= 0; i--) {
+    if (fs->getFileType(fileIndexList_[i]) == PFT_DIR) {
+      fileIndexList_.erase(fileIndexList_.begin() + i);
+    }
+  }
+
+  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), THEMES_DIR);
 }

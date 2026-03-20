@@ -42,7 +42,6 @@ private:
   int selectedButton_ = 0;
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 
-  void DrawScrollBar();
   void AttemptDeletingSelectedProject();
   void AttemptLoadingProject();
   bool SelectionIsCurrentProject();

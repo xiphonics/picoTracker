@@ -272,7 +272,7 @@ void AppWindow::Clear(bool all) {
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_charScreenProp, 0, SCREEN_CHARS);
   if (all) {
-    memset(_preScreen, ' ', SCREEN_CHARS);
+    memset(_preScreen, 0, SCREEN_CHARS);
     memset(_preScreenProp, 0, SCREEN_CHARS);
   };
 };
