@@ -570,7 +570,8 @@ void View::switchToRecordView() {
   }
 }
 
-void View::drawScrollBar(uint16_t x, uint16_t y, uint16_t height, uint16_t index, uint16_t total) {
+void View::drawScrollBar(uint16_t x, uint16_t y, uint16_t height,
+                         uint16_t index, uint16_t total) {
   if (total <= height) {
     return; // no scrollbar needed
   }
