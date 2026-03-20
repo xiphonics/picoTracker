@@ -24,6 +24,10 @@
 #include <math.h>
 #include <string.h>
 
+int DecodeRetriggerOffset(int value) {
+  return (value > 0x80) ? value - 0x100 : value;
+}
+
 // Private constructor - Singleton
 
 Player::Player() : mixer_() {
@@ -586,17 +590,8 @@ void Player::Update(Observable &o, I_ObservableData *d) {
         }
         if (!stopped) {
           if (instrRetrigger[i] >= 0) {
-            int note = mixer_.GetChannelNote(i);
-            I_Instrument *instr = mixer_.GetInstrument(i);
-            if ((note <= HIGHEST_NOTE) && (instr != 0)) {
-              note += (instrRetrigger[i] >= 0x80) ? instrRetrigger[i] - 0x100
-                                                  : instrRetrigger[i];
-              while (note > 127) {
-                note -= 12;
-              };
-              mixer_.StopInstrument(i);
-              mixer_.StartInstrument(i, instr, note, false);
-            };
+            RetriggerChannelInstrument(
+                i, DecodeRetriggerOffset(instrRetrigger[i]), true);
           };
         }
       }
@@ -828,6 +823,7 @@ void Player::playCursorPosition(int channel) {
 
     TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+    TablePlayback &atp = TablePlayback::GetAutomationPlayback(channel);
 
     if (note == NOTE_OFF) {
       mixer_.StopInstrument(channel);
@@ -888,10 +884,17 @@ void Player::playCursorPosition(int channel) {
           if ((instrTable != VAR_OFF) && (newInstrument)) {
             Table &table = th->GetTable(instrTable);
             bool automated = instrument->GetTableAutomation();
-            tpb.Start(instrument, table, automated);
+            if (automated) {
+              atp.Start(instrument, table, true);
+              tpb.Stop();
+            } else {
+              atp.Stop();
+              tpb.Start(instrument, table, false);
+            }
           } else {
             // if there was an instrument number, we stop the table
             if (newInstrument) {
+              atp.Stop();
               tpb.Stop();
             }
           }
@@ -907,27 +910,72 @@ void Player::playCursorPosition(int channel) {
           TablePlayerChange tpc;
           tpc.timeToLive_ = timeToLive_[channel];
           tpc.instrRetrigger_ = -1;
-          tpb.ProcessStep(tpc);
+          atp.ProcessStep(tpc);
           timeToLive_[channel] = tpc.timeToLive_;
           if (tpc.instrRetrigger_ >= 0) {
-            int note = mixer_.GetChannelNote(channel);
-            I_Instrument *instr = mixer_.GetInstrument(channel);
-            if ((note <= HIGHEST_NOTE) && (instr != 0)) {
-              note += (tpc.instrRetrigger_ >= 0x80)
-                          ? tpc.instrRetrigger_ - 0x100
-                          : tpc.instrRetrigger_;
-              while (note > 127) {
-                note -= 12;
-              };
-              mixer_.StopInstrument(channel);
-              // NOTE: 'newIntrument' bool flag is really the "retrigger" flag
-              mixer_.StartInstrument(channel, instr, note, false);
-            };
+            RetriggerChannelInstrument(
+                channel, DecodeRetriggerOffset(tpc.instrRetrigger_), true);
           };
         }
       }
     }
   }
+}
+
+void Player::StepAutomationTableForRetrigger(int channel,
+                                             I_Instrument *instrument,
+                                             int &semitoneOffset) {
+  if ((instrument == 0) || (!instrument->GetTableAutomation())) {
+    return;
+  }
+
+  int instrTable = instrument->GetTable();
+  if (instrTable == VAR_OFF) {
+    return;
+  }
+
+  TableHolder *th = TableHolder::GetInstance();
+  TablePlayback &automationPlayback =
+      TablePlayback::GetAutomationPlayback(channel);
+  TablePlayerChange tpc;
+
+  tpc.timeToLive_ = timeToLive_[channel];
+  tpc.instrRetrigger_ = -1;
+
+  Table &table = th->GetTable(instrTable);
+  automationPlayback.Start(instrument, table, true);
+  automationPlayback.ProcessStep(tpc);
+
+  timeToLive_[channel] = tpc.timeToLive_;
+  if (tpc.instrRetrigger_ >= 0) {
+    semitoneOffset += DecodeRetriggerOffset(tpc.instrRetrigger_);
+  }
+}
+
+void Player::RetriggerChannelInstrument(int channel, int semitoneOffset,
+                                        bool stepAutomationTable) {
+  int note = mixer_.GetChannelNote(channel);
+  I_Instrument *instrument = mixer_.GetInstrument(channel);
+
+  if ((note > HIGHEST_NOTE) || (instrument == 0)) {
+    return;
+  }
+
+  if (stepAutomationTable) {
+    StepAutomationTableForRetrigger(channel, instrument, semitoneOffset);
+  }
+
+  note += semitoneOffset;
+  while (note > 127) {
+    note -= 12;
+  }
+  while (note < 0) {
+    note += 12;
+  }
+
+  mixer_.StopInstrument(channel);
+  // NOTE: 'newInstrument' bool flag is really the "retrigger" flag
+  mixer_.StartInstrument(channel, instrument, note, false);
 }
 
 int Player::getChannelHop(int channel, int pos) {

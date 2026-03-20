@@ -1590,12 +1590,14 @@ void SampleInstrument::GetTableState(TableSaveState &state) {
   memcpy(state.hopCount_, tableState_.hopCount_,
          sizeof(uchar) * TABLE_STEPS * 3);
   memcpy(state.position_, tableState_.position_, sizeof(int) * 3);
+  state.groove_ = tableState_.groove_;
 };
 
 void SampleInstrument::SetTableState(TableSaveState &state) {
   memcpy(tableState_.hopCount_, state.hopCount_,
          sizeof(uchar) * TABLE_STEPS * 3);
   memcpy(tableState_.position_, state.position_, sizeof(int) * 3);
+  tableState_.groove_ = state.groove_;
 };
 
 bool SampleInstrument::IsMulti() { return source_->IsMulti(); }
