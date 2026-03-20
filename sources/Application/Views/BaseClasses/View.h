@@ -183,7 +183,8 @@ protected:
 
   void drawMap();
   void drawNotes();
-  void drawScrollBar(uint16_t x, uint16_t y, uint16_t height, uint16_t index, uint16_t total);
+  void drawScrollBar(uint16_t x, uint16_t y, uint16_t height, uint16_t index,
+                     uint16_t total);
   void drawBattery(GUITextProperties &props);
   void drawMasterVuMeter(Player *player, GUITextProperties props,
                          bool forceRedraw = false, uint8_t xoffset = 24);
