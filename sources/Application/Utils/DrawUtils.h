@@ -6,7 +6,6 @@
  * This file is part of the picoTracker firmware
  */
 
-
 #ifndef _DRAW_UTILS_H_
 #define _DRAW_UTILS_H_
 
