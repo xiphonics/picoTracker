@@ -12,7 +12,7 @@ END_CHAR = 255
 # ======================
 
 def main():
-    img = Image.open(INPUT_PNG).convert("L")  # grayscale
+    img = Image.open(INPUT_PNG).convert("RGBA")  # rgbA - only alpha is used
     pixels = img.load()
     w, h = img.size
 
@@ -34,8 +34,8 @@ def main():
         for y in range(CHAR_HEIGHT):
             row_data = []
             for x in range(CHAR_WIDTH):
-                # invert: black → 255, white → 0
-                value = 255 - pixels[x0 + x, y0 + y]
+                # use alpha channel: 0 (transparent) .. 255 (opaque)
+                value = pixels[x0 + x, y0 + y][3]
                 row_data.append(value)
             char_data.append(row_data)
         all_chars.append(char_data)
