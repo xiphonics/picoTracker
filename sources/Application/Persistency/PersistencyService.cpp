@@ -60,18 +60,18 @@ bool PersistencyService::DeleteProject(const char *projectName) {
     return false;
   }
 
-  fs->list(&MemoryPool::fileIndexList, ".wav", false);
+  fs->list(&fileIndexList_, ".wav", false);
 
   // delete all samples
   fs->BeginBatch();
   char filename[128];
-  for (size_t i = 0; i < MemoryPool::fileIndexList.size(); i++) {
-    fs->getFileName(MemoryPool::fileIndexList[i], filename,
+  for (size_t i = 0; i < fileIndexList_.size(); i++) {
+    fs->getFileName(fileIndexList_[i], filename,
                     MAX_PROJECT_SAMPLE_PATH_LENGTH);
     if (strcmp(filename, "..") == 0 || strcmp(filename, ".") == 0) {
       continue;
     }
-    if (fs->getFileType(MemoryPool::fileIndexList[i]) == PFT_DIR) {
+    if (fs->getFileType(fileIndexList_[i]) == PFT_DIR) {
       continue;
     }
     fs->DeleteFile(filename);
@@ -109,13 +109,13 @@ bool PersistencyService::DeleteDirectoryContents_(uint8_t depth) {
   }
 
   while (true) {
-    fileIndexes_.clear();
-    fs->list(&fileIndexes_, "", false, true);
+    fileIndexList_.clear();
+    fs->list(&fileIndexList_, "", false, true);
 
     bool foundEntry = false;
     bool deletedEntry = false;
-    for (size_t i = 0; i < fileIndexes_.size(); ++i) {
-      fs->getFileName(fileIndexes_[i], deleteNameBuffer_,
+    for (size_t i = 0; i < fileIndexList_.size(); ++i) {
+      fs->getFileName(fileIndexList_[i], deleteNameBuffer_,
                       sizeof(deleteNameBuffer_));
 
       if ((strcmp(deleteNameBuffer_, ".") == 0) ||
@@ -125,7 +125,7 @@ bool PersistencyService::DeleteDirectoryContents_(uint8_t depth) {
 
       foundEntry = true;
 
-      const PicoFileType type = fs->getFileType(fileIndexes_[i]);
+      const PicoFileType type = fs->getFileType(fileIndexList_[i]);
       if (type == PFT_FILE) {
         if (!fs->DeleteFile(deleteNameBuffer_)) {
           Trace::Error("PERSISTENCYSERVICE: Could not delete file: %s",
@@ -225,10 +225,10 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     Trace::Debug("get list of samples to copy from old project: %s",
                  oldProjectName);
 
-    fs->list(&MemoryPool::fileIndexList, ".wav", false);
+    fs->list(&fileIndexList_, ".wav", false);
     char filenameBuffer[PFILENAME_SIZE];
-    for (size_t i = 0; i < MemoryPool::fileIndexList.size(); i++) {
-      fs->getFileName(MemoryPool::fileIndexList[i], filenameBuffer,
+    for (size_t i = 0; i < fileIndexList_.size(); i++) {
+      fs->getFileName(fileIndexList_[i], filenameBuffer,
                       sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out

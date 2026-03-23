@@ -133,7 +133,7 @@ PicoFileType advFileSystem::getFileType(int index) {
 }
 
 void advFileSystem::list(etl::ivector<int> *fileIndexes, const char *filter,
-                         bool subDirOnly, bool includeHidden) {
+                         bool subDirOnly, bool includeHidden, bool sorted) {
 
   fileIndexes->clear();
 

@@ -155,11 +155,10 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
 
 void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
                                  const char *filter, bool subDirOnly,
-                                 bool sorted = false) {
+                                 bool includeHidden, bool sorted) {
   std::unique_lock<Mutex> lock(mutex);
 
-  uint32_t *sortKeys = (uint32_t *)MemoryPool::acquire();
-
+  uint32_t sortKeys[MAX_FILE_INDEX_SIZE];
   fileIndexes->clear();
 
   File cwd;
@@ -252,8 +251,6 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
     sortKeys[j] = key;
     fileIndexes->at(j) = index;
   }
-
-  MemoryPool::release();
 
   Trace::Log("FILESYSTEM", "scanned: %d, added file indexes:%d", count,
              fileIndexes->size());
@@ -359,10 +356,11 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
 
   unsigned int n = 0;
-  char *buffer = (char *)MemoryPool::acquire();
+  const int bufSize = 1024;
+  char buffer[bufSize];
 
   while (true) {
-    n = fSrc.read(buffer, sizeof(buffer));
+    n = fSrc.read(buffer, bufSize);
     // check for read error and only write if no error
     if (n >= 0) {
       fDest.write(buffer, n);
@@ -370,12 +368,10 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
       Trace::Error("Failed to read file: %s", srcFilename);
       return false;
     }
-    if (n < sizeof(buffer)) {
+    if (n < bufSize) {
       break;
     }
   }
-
-  MemoryPool::release();
 
   fSrc.close();
   fDest.close();

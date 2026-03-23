@@ -34,6 +34,7 @@ private:
   void onImportThemeModalDismiss(View &view, ModalView &dialog);
   void OpenSelectedItem();
 
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
 };

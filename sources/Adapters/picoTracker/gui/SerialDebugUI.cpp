@@ -136,12 +136,13 @@ void SerialDebugUI::listFiles(const char *path) {
     Trace::Error("failed to ls files path:%s", path);
   }
 
-  fs->list(&MemoryPool::fileIndexList, "", false);
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList;
+  fs->list(&fileIndexList, "", false, true, true);
 
   char name[PFILENAME_SIZE];
-  for (size_t i = 0; i < MemoryPool::fileIndexList.size(); i++) {
-    fs->getFileName(MemoryPool::fileIndexList[i], name, PFILENAME_SIZE);
-    if (fs->getFileType(MemoryPool::fileIndexList[i]) == PFT_FILE) {
+  for (size_t i = 0; i < fileIndexList.size(); i++) {
+    fs->getFileName(fileIndexList[i], name, PFILENAME_SIZE);
+    if (fs->getFileType(fileIndexList[i]) == PFT_FILE) {
       printf("[file] %s\n", name);
     } else {
       printf("[dir] %s\n", name);
@@ -155,11 +156,10 @@ void SerialDebugUI::rmFile(const char *path) {
     Trace::Error("failed to delete file:%s", path);
   } else {
     Trace::Log("SERIALDEBUGUI", "deleted file:%s", path);
-    char *buf = (char *)MemoryPool::acquire();
+    char buf[256];
 
     npf_snprintf(buf, sizeof(buf), "deleted:%s\n", path);
     uart_write_blocking(DEBUG_UART, (uint8_t *)buf, sizeof(buf));
-    MemoryPool::release();
   }
 }
 

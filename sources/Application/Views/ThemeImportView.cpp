@@ -31,7 +31,7 @@ ThemeImportView::~ThemeImportView() {}
 void ThemeImportView::Reset() {
   topIndex_ = 0;
   currentIndex_ = 0;
-  MemoryPool::fileIndexList.clear();
+  fileIndexList_.clear();
 }
 
 void ThemeImportView::OpenSelectedItem() {
@@ -98,7 +98,7 @@ void ThemeImportView::DrawView() {
     }
 
     memset(buffer, '\0', sizeof(buffer));
-    unsigned fileIndex = MemoryPool::fileIndexList[i];
+    unsigned fileIndex = fileIndexList_[i];
     fs->getFileName(fileIndex, buffer, PFILENAME_SIZE);
 
     // Remove the .ptt extension for display
@@ -207,7 +207,7 @@ void ThemeImportView::setCurrentFolder() {
   isDirty_ = true;
 
   // get the directory listing
-  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
+  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false, false, true);
 
   // remove directories from listing
   for (int i = fileIndexList_.size() - 1; i >= 0; i--) {

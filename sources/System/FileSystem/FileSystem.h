@@ -37,7 +37,7 @@ public:
     return false;
   } // Default implementation
   virtual void list(etl::ivector<int> *fileIndexes, const char *filter,
-                    bool subDirOnly, bool includeHidden = false, 
+                    bool subDirOnly, bool includeHidden = false,
                     bool sorted = false) = 0;
   virtual void getFileName(int index, char *name, int length) = 0;
   virtual PicoFileType getFileType(int index) = 0;

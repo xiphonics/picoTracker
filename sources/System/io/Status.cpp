@@ -19,7 +19,7 @@ void Status::Set(const char *fmt, ...) {
   if (!status)
     return;
 
-  char *buffer = (char *)MemoryPool::acquire();
+  char buffer[128];
   va_list args;
   va_start(args, fmt);
 
@@ -27,8 +27,6 @@ void Status::Set(const char *fmt, ...) {
   status->Print(buffer);
 
   va_end(args);
-
-  MemoryPool::release();
 }
 
 void Status::SetMultiLine(const char *fmt, ...) {
@@ -36,7 +34,7 @@ void Status::SetMultiLine(const char *fmt, ...) {
   if (!status)
     return;
 
-  char *buffer = (char *)MemoryPool::acquire();
+  char buffer[128];
   va_list args;
   va_start(args, fmt);
 
@@ -44,6 +42,4 @@ void Status::SetMultiLine(const char *fmt, ...) {
   status->PrintMultiLine(buffer);
 
   va_end(args);
-
-  MemoryPool::release();
 }

@@ -61,6 +61,7 @@ protected:
 
 private:
   etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
 };
 
 #endif

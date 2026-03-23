@@ -444,9 +444,8 @@ void Config::ReadColorVariable(PersistencyDocument *doc) {
   if (strcmp(doc->ElemName(), "Color") == 0) {
     // Process Color element
     const int colorSize = 64;
-    char *colorName = (char *)MemoryPool::acquire();
-    char *colorValue = colorName + colorSize;
-    memset(colorName, 0, colorSize * 2);
+    char colorName[colorSize];
+    char colorValue[colorSize];
 
     // Get the name and value attributes
     while (doc->NextAttribute()) {
@@ -540,8 +539,6 @@ void Config::ReadColorVariable(PersistencyDocument *doc) {
       }
     }
   }
-
-  MemoryPool::release();
 }
 
 bool Config::SaveTheme(tinyxml2::XMLPrinter *printer, const char *themeName) {

@@ -9,7 +9,6 @@
 
 #include "UIIntVarOffField.h"
 #include "Application/AppWindow.h"
-#include "Foundation/Services/MemoryService.h"
 #include "ViewUtils.h"
 #include <System/Console/nanoprintf.h>
 #include <string.h>
@@ -55,7 +54,6 @@ void UIIntVarOffField::ProcessArrow(unsigned short mask) {
     }
   }
   src_.SetInt(value);
-}
 
   SetChanged();
   NotifyObservers(reinterpret_cast<I_ObservableData *>(
@@ -76,7 +74,7 @@ void UIIntVarOffField::Draw(GUIWindow &w, int offset) {
     if (ivalue != VAR_OFF) {
       npf_snprintf(buffer, sizeof(buffer), format_, ivalue, ivalue);
     } else {
-      char *format = (char *)MemoryPool::acquire();
+      char format[64];
       strcpy(format, format_);
       char *location = strchr(format, '%');
       if (location) {
@@ -95,8 +93,6 @@ void UIIntVarOffField::Draw(GUIWindow &w, int offset) {
       } else {
         strcpy(buffer, "++wtf++");
       }
-
-      MemoryPool::release();
     }
   } break;
 
