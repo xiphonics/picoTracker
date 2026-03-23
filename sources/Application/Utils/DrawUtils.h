@@ -6,12 +6,15 @@
  * This file is part of the picoTracker firmware
  */
 
+#ifndef _DRAW_UTILS_H_
+#define _DRAW_UTILS_H_
+
 #include "Foundation/Constants/SpecialCharacters.h"
 #include <cstdint>
 
 typedef char progressBar_t[13];
 
-static void fillProgressBar(uint32_t progress, uint32_t max,
+inline void fillProgressBar(uint32_t progress, uint32_t max,
                             progressBar_t *progressBar) {
   const char states[6] = {
       GLYPH(char_propgress_bar_0_s), GLYPH(char_propgress_bar_1_s),
@@ -31,3 +34,5 @@ static void fillProgressBar(uint32_t progress, uint32_t max,
     prog60 -= 6;
   }
 }
+
+#endif
