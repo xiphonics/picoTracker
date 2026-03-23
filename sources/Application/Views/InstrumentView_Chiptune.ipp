@@ -71,13 +71,13 @@ void InstrumentView::fillChiptuneParameters() {
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._y++;
-  v = instrument->FindVariable(FourCC::ChiptuneInstrumentVibrato);
-  intVarField_.emplace_back(position, *v, expand(vibrato_amount));
+  v = instrument->FindVariable(FourCC::ChiptuneInstrumentVibratoDelay);
+  intVarField_.emplace_back(position, *v, expand(vibrato_delay));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y++;
-  v = instrument->FindVariable(FourCC::ChiptuneInstrumentVibratoDelay);
-  intVarField_.emplace_back(position, *v, expand(vibrato_delay));
+  v = instrument->FindVariable(FourCC::ChiptuneInstrumentVibrato);
+  intVarField_.emplace_back(position, *v, expand(vibrato_amount));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;

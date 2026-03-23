@@ -53,12 +53,12 @@ static struct chiptune_instrument_ui_t {
   ui_config_t arp = {"Arp Speed:  %02X", 1, 32, 1, 8};
   ui_config_t length = {"Length:     %02X", 1, 255, 1, 16};
   ui_config_t table = {"Table:      %02X", 0, TABLE_COUNT - 1, 1, 0x10};
-  ui_config_t attack = {"Attack:     %02X", 0, 255, 1, 16};
-  ui_config_t decay = {"Decay:      %02X", 0, 255, 1, 16};
-  ui_config_t vibrato_amount = {top_indent " Amount: %02X", 0, 255, 1, 16};
+  ui_config_t attack = {top_indent " Attack: %02X", 0, 255, 1, 16};
+  ui_config_t decay = {bottom_indent " Decay:  %02X", 0, 255, 1, 16};
   ui_config_t vibrato_delay = {bottom_indent " Delay:  %02X", 0, 255, 1, 16};
+  ui_config_t vibrato_amount = {top_indent " Amount: %02X", 0, 255, 1, 16};
   ui_config_t sweep_time = {top_indent " Length: %02X", 0, 255, 1, 16};
-  ui_config_t sweep_amount = {bottom_indent " Amount:%+03d" - 127, 127, 1, 16};
+  ui_config_t sweep_amount = {bottom_indent " Amount:%+03d", -127, 127, 1, 16};
 } chiptune_instrument_ui_t;
 
 enum chiptune_instrument_defaults_e {
