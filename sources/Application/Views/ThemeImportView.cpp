@@ -214,4 +214,6 @@ void ThemeImportView::setCurrentFolder() {
       fileIndexList_.erase(fileIndexList_.begin() + i);
     }
   }
+
+  Trace::Debug("loaded %d files from %s", fileIndexList_.size(), THEMES_DIR);
 }
