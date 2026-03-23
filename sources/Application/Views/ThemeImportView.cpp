@@ -33,25 +33,35 @@ void ThemeImportView::Reset() {
   fileIndexList_.clear();
 }
 
+void ThemeImportView::OpenSelectedItem() {
+  auto fs = FileSystem::GetInstance();
+
+  if (currentIndex_ >= fileIndexList_.size())
+    return;
+
+  char name[PFILENAME_SIZE];
+  bool isDir = false;
+  bool hasEntry = false;
+
+  // get selected item
+  unsigned fileIndex = fileIndexList_[currentIndex_];
+  fs->getFileName(fileIndex, name, PFILENAME_SIZE);
+
+  if (fs->getFileType(fileIndex) == PFT_DIR) { // directory, navigate into it
+    setCurrentFolder(fs, name);
+  } else { // file, import it
+    onImportTheme(name);
+  }
+}
+
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-  if (mask & EPBM_PLAY) {
-    auto fs = FileSystem::GetInstance();
-    char name[PFILENAME_SIZE];
+  bool openSelecterd = false;
 
-    if (currentIndex_ < fileIndexList_.size()) {
-      unsigned fileIndex = fileIndexList_[currentIndex_];
-      fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-      if (mask & EPBM_ALT) {
-        Trace::Log("THEMEIMPORT", "SHIFT play - import");
-        onImportTheme(name);
-      }
-    }
-
-    // handle moving up and down the file list
+  if ((mask & EPBM_ENTER) || (mask == (EPBM_ALT | EPBM_PLAY))) {
+    OpenSelectedItem();
   } else if (mask & EPBM_UP) {
     warpToNextTheme(true);
   } else if (mask & EPBM_DOWN) {
@@ -63,29 +73,6 @@ void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     SetChanged();
     NotifyObservers(&ve);
     return;
-  } else {
-    // ENTER modifier
-    if (mask & EPBM_ENTER) {
-      auto fs = FileSystem::GetInstance();
-
-      if (currentIndex_ < fileIndexList_.size()) {
-        unsigned fileIndex = fileIndexList_[currentIndex_];
-        char name[PFILENAME_SIZE];
-        fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-        // Only allow navigation into directories, not to parent directory
-        if (fs->getFileType(fileIndex) == PFT_DIR && strcmp(name, ".") != 0 &&
-            strcmp(name, "..") != 0) {
-          setCurrentFolder(fs, name);
-          isDirty_ = true;
-          topIndex_ = 0; // need to reset when entering a dir as prev dir may
-                         // have been already scrolled down
-        } else {
-          // If it's a file, import it
-          onImportTheme(name);
-        }
-      }
-    }
   }
 };
 
@@ -225,16 +212,22 @@ void ThemeImportView::onImportThemeModalDismiss(View &, ModalView &dialog) {
 }
 
 void ThemeImportView::setCurrentFolder(FileSystem *fs, const char *name) {
+  // Only allow navigation into directories & .. but not to parent directories
+  // above THEMES_DIR
+  if ((strcmp(name, "..") == 0) && fs->isParentRoot()) {
+    // Don't navigate above THEMES_DIR
+    return;
+  }
+
   if (!fs->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
     return;
   }
+
   currentIndex_ = 0;
   topIndex_ = 0;
   isDirty_ = true;
 
-  // Update list of file indexes in this new dir
-  fileIndexList_.clear();
   // Use false for subDirOnly to include both files and directories
   fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
   Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
