@@ -28,7 +28,6 @@ public:
   void getSelectedProjectName(char *name);
   void getHighlightedProjectName(char *name);
   void setCurrentFolder();
-  bool SaveSelectedProject();
   void LoadProject();
   void ClearAutoSave();
 
@@ -36,18 +35,16 @@ protected:
   void warpToNextProject(bool goUp);
 
 private:
-  static const int numButtons_ = 3;
+  static const int numButtons_ = 2;
   size_t topIndex_ = 0;
   size_t currentIndex_ = 0;
   char selection_[MAX_PROJECT_NAME_LENGTH + 1];
   int selectedButton_ = 0;
 
-  void DrawScrollBar();
   void AttemptDeletingSelectedProject();
   void AttemptLoadingProject();
   bool SelectionIsCurrentProject();
   bool WarnPlayerRunning();
-  void ConfirmOverwrite();
   void SelectButton(int direction);
 };
 #endif

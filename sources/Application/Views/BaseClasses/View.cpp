@@ -43,7 +43,10 @@ uint32_t View::lastBatteryDisplayFrame_ = 0;
 bool View::batteryDisplayInitialized_ = false;
 
 View::View(GUIWindow &w, ViewData *viewData)
-    : w_(w), viewData_(viewData), viewMode_(VM_NORMAL) {
+    : w_(w), viewData_(viewData), needsRedraw_(false), isVisible_(true),
+      vuMeterCount_(0), viewMode_(VM_NORMAL), isDirty_(true),
+      viewType_(VT_SONG), hasFocus_(false), powerButtonPressed_(false),
+      powerButtonHoldCount_(0) {
   if (!initPrivate_) {
     View::margin_ = 0;
     songRowCount_ = 16;
@@ -53,8 +56,6 @@ View::View(GUIWindow &w, ViewData *viewData)
   locked_ = false;
   modalView_ = 0;
   modalViewCallback_ = ModalViewCallback();
-  hasFocus_ = false;
-
   // Initialize VU meter tracking variables
   for (int i = 0; i < SONG_CHANNEL_COUNT + 1; i++) {
     prevLeftVU_[i] = 0;
@@ -330,11 +331,23 @@ void View::DoModal(ModalView *view, ModalViewCallback cb) {
 
 void View::DismissModal() {
   if (modalView_ && modalView_->IsFinished()) {
-    if (modalViewCallback_) {
-      modalViewCallback_(*this, *modalView_);
-    }
-    modalView_->Destroy();
+    ModalView *finishedModal = modalView_;
+    const uint32_t finishedModalId = finishedModal->GetInstanceId();
+    ModalViewCallback callback = modalViewCallback_;
+
+    // Clear current modal first so callback can safely open another modal.
     modalView_ = nullptr;
+    modalViewCallback_ = ModalViewCallback();
+
+    if (callback) {
+      callback(*this, *finishedModal);
+    }
+
+    // Callback may have already replaced this instance in shared storage.
+    if (finishedModal->GetInstanceId() == finishedModalId) {
+      finishedModal->Destroy();
+    }
+
     isDirty_ = true;
   }
 };
@@ -354,8 +367,6 @@ void View::Redraw() {
 void View::SetDirty(bool isDirty) { isDirty_ = isDirty; };
 
 void View::ProcessButton(unsigned short mask, bool pressed) {
-  isDirty_ = false;
-
   if (!pressed) {
     powerButtonPressed_ = false;
   } else if (mask & EPBM_POWER) {
@@ -432,23 +443,47 @@ void View::drawBattery(GUITextProperties &props) {
   GUIPoint battpos = GetAnchor();
   battpos._y = 0;
 
+#if BATTERY_LEVEL_AS_PERCENTAGE
+  uint8_t batteryPercent = batteryState_.percentage;
+  if (batteryPercent > 100) {
+    batteryPercent = 100;
+  }
+
+  ColorDefinition batteryColor = CD_NORMAL;
+  if (batteryPercent <= 5) {
+    batteryColor = CD_ERROR;
+  } else if (batteryPercent < 20) {
+    batteryColor = CD_WARN;
+  } else if (batteryState_.charging) {
+    batteryColor = CD_INFO;
+  }
+
+  SetColor(batteryColor);
+
+  // Keep percentage branch compact: 3 digits + right battery cap.
+  char batteryText[4];
+  npf_snprintf(batteryText, sizeof(batteryText), "%3u", batteryPercent);
+
+  GUITextProperties normalProps = props;
+  normalProps.invert_ = false;
+
+  GUITextProperties invertedProps = normalProps;
+  invertedProps.invert_ = true;
+
+  constexpr int kBatteryWidgetWidth = 4; // 3 text chars + right-side symbol
+  int startX = SCREEN_WIDTH - kBatteryWidgetWidth;
+  ClearTextRect(startX, battpos._y, kBatteryWidgetWidth, 1);
+
+  DrawString(startX, battpos._y, batteryText, invertedProps);
+  const char *rightSymbol =
+      batteryState_.charging ? char_symbol_charging_s : char_battery_right_s;
+  DrawString(startX + 3, battpos._y, rightSymbol, normalProps);
+#else
   // use define to choose between drawing battery percentage or battery level as
   // bars
   SetColor(CD_NORMAL);
   const char *battText = nullptr;
 
-#if BATTERY_LEVEL_AS_PERCENTAGE
-  char battTextBuffer[8];
-  if (batteryState_.charging) {
-    SetColor(CD_ACCENT);
-    npf_snprintf(battTextBuffer, 8, string_battery_charging);
-  } else {
-    npf_snprintf(battTextBuffer, 8,
-                 char_battery_left_s "%d%%" char_battery_right_s,
-                 batteryState_.percentage);
-  }
-  battText = battTextBuffer;
-#else
   if (batteryState_.charging) {
     SetColor(CD_ACCENT);
     battText = string_battery_charging;
@@ -469,7 +504,6 @@ void View::drawBattery(GUITextProperties &props) {
       battText = string_battery_0_percent;
     }
   }
-#endif
 
   int battLen = (battText != nullptr) ? static_cast<int>(strlen(battText)) : 0;
   constexpr int kBattWidth = 6; // "[100%]" is the widest we render
@@ -478,6 +512,7 @@ void View::drawBattery(GUITextProperties &props) {
   battpos._x =
       startX + (kBattWidth - battLen); // we want to right align the batt widget
   DrawString(battpos._x, battpos._y, battText, props);
+#endif
 }
 
 // Draw power button UI overlay
@@ -544,5 +579,30 @@ void View::switchToRecordView() {
     ViewEvent ve(VET_SWITCH_VIEW, &vt);
     SetChanged();
     NotifyObservers(&ve);
+  }
+}
+
+void View::drawScrollBar(uint16_t x, uint16_t y, uint16_t height,
+                         uint16_t index, uint16_t total) {
+  if (total <= height) {
+    return; // no scrollbar needed
+  }
+
+  GUITextProperties props;
+  SetColor(CD_NORMAL);
+
+  // Thumb size represents the ratio of visible items to total items
+  uint16_t thumbSize = std::max(1, (height * height) / total);
+
+  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
+  // space
+  uint16_t maxScroll = total - height;
+  uint16_t availableSpace = height - thumbSize;
+  uint16_t thumbPos = (index * availableSpace) / maxScroll;
+
+  for (int dy = 0; dy < height; dy++) {
+    bool thumb = (dy >= thumbPos) && (dy < thumbPos + thumbSize);
+    const char *str = thumb ? char_block_full_s : char_border_single_vertical_s;
+    DrawString(x, y + dy, str, props);
   }
 }

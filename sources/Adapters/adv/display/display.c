@@ -74,8 +74,11 @@ void display_set_cursor(uint8_t x, uint8_t y) {
 
 void display_putc(char c, bool invert) {
   int idx = cursor_y * TEXT_WIDTH + cursor_x;
-  if (c >= 32) {
-    screen[idx] = c - 32;
+  // Treat incoming character bytes as unsigned so custom glyphs (0x80-0xFF)
+  // are not dropped on toolchains where plain char is signed.
+  uint8_t uc = (uint8_t)c;
+  if (uc >= 32) {
+    screen[idx] = uc - 32;
     SetBit(changed, idx);
     if (invert) {
       colors[idx] = ((screen_bg_color & 0xf) << 4) | (screen_fg_color & 0xf);

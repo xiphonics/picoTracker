@@ -55,6 +55,8 @@ public:
   void OnQuit();
 
 private:
+  bool canRenderFromFirstSongRow() const;
+
   Project *project_;
   // Debug
   unsigned long lastTick_;
@@ -63,7 +65,7 @@ private:
   // Statically allocated field vectors
   etl::vector<UITempoField, 1> tempoField_;
   etl::vector<UIIntVarField, 4> intVarField_;
-  etl::vector<UIActionField, 9> actionField_;
+  etl::vector<UIActionField, 10> actionField_;
   etl::vector<UIStaticField, 1> staticField_;
   etl::vector<UITextField<MAX_PROJECT_NAME_LENGTH>, 1> textField_;
 

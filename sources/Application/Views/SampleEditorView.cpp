@@ -392,12 +392,16 @@ void SampleEditorView::addAllFields() {
 
   // load & save button
   position._x += 5;
-  actionField_.emplace_back("Save&Load", FourCC::ActionLoadAndSave, position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
+  if (!viewData_->isShowingSampleEditorProjectPool) {
+    actionField_.emplace_back("Save&Load", FourCC::ActionLoadAndSave, position);
+    fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+    (*actionField_.rbegin()).AddObserver(*this);
+    position._x += 12;
+  } else {
+    position._x += 7;
+  }
 
   // discard button
-  position._x += 12;
   actionField_.emplace_back("Discard", FourCC::ActionCancel, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -616,8 +620,22 @@ void SampleEditorView::DrawView() {
   SetColor(CD_NORMAL);
   DrawString(pos._x, pos._y, titleString, props);
 
-  // Let the base class draw all the text fields
-  FieldView::Redraw();
+  if (HasModalView()) {
+    // Modal rendering only clears text cells. Avoid redrawing the graph field
+    // border behind the modal while it is active.
+    if (GetFocus() == 0 && !fieldList_.empty()) {
+      SetFocus(*fieldList_.begin());
+    }
+    for (auto it = fieldList_.begin(); it != fieldList_.end(); ++it) {
+      if (*it == &graphField_) {
+        continue;
+      }
+      (*it)->Draw(w_);
+    }
+  } else {
+    // Let the base class draw all fields, including graph frame.
+    FieldView::Redraw();
+  }
   isDirty_ = true;
 }
 
@@ -847,6 +865,10 @@ void SampleEditorView::AnimationUpdate() {
   // dismissed
   if (modalClearCount_ > 0) {
     fullWaveformRedraw_ = true;
+    // Redraw full fields for two frames as well so GraphField border pixels
+    // that got cleared by modal text cleanup are restored.
+    isDirty_ = true;
+    ((AppWindow &)w_).SetDirty();
     DrawWaveForm();
     modalClearCount_--;
   }
@@ -897,33 +919,11 @@ void SampleEditorView::Update(Observable &o, I_ObservableData *d) {
     return;
   }
   case FourCC::ActionSave: {
-    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> savedFilename;
-    if (saveSample(savedFilename)) {
-      // if this was a recording, need to go to the /recordings dir after saving
-      const auto &originalFilename = viewData_->sampleEditorFilename;
-      if (originalFilename.compare(RECORDING_FILENAME) == 0) {
-        auto fs = FileSystem::GetInstance();
-        fs->chdir(RECORDINGS_DIR);
-        viewData_->importViewStartDir = RECORDINGS_DIR;
-      }
-      ViewType vt = SampleEditorView::sourceViewType_;
-      navigateToView(vt);
-    } else {
-      MessageBox *errorBox = MessageBox::Create(
-          *this, "Save Failed", "Unable to save sample", MBBF_OK);
-      DoModal(errorBox);
-      Trace::Error("SampleEditorView: Failed to save file!");
-    }
+    attemptSave(false);
     return;
   }
   case FourCC::ActionLoadAndSave: {
-    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> savedFilename;
-    if (saveSample(savedFilename) && loadSampleToPool(savedFilename)) {
-      // now nav to project pool view
-      // need to set this to show project pool dir in ImportView
-      viewData_->isShowingSampleEditorProjectPool = true;
-      navigateToView(VT_IMPORT);
-    }
+    attemptSave(true);
     return;
   }
   case FourCC::ActionCancel: {
@@ -955,6 +955,7 @@ void SampleEditorView::onConfirmApplyOperation(View &, ModalView &dialog) {
     if (!applySelectedOperation()) {
       MessageBox *error =
           MessageBox::Create(*this, "Operation failed", MBBF_OK);
+      clearWaveformRegion();
       DoModal(
           error,
           ModalViewCallback::create<SampleEditorView,
@@ -966,7 +967,26 @@ void SampleEditorView::onConfirmApplyOperation(View &, ModalView &dialog) {
   isDirty_ = true;
 }
 
+void SampleEditorView::onConfirmOverwriteSave(View &, ModalView &dialog) {
+  const bool loadToPool = pendingOverwriteLoadToPool_;
+  pendingOverwriteLoadToPool_ = false;
+
+  if (dialog.GetReturnCode() == MBL_OK) {
+    confirmSave(loadToPool);
+    return;
+  }
+
+  modalClearCount_ = 2;
+  isDirty_ = true;
+}
+
 void SampleEditorView::onOperationFailedAck(View &, ModalView &) {
+  modalClearCount_ = 2;
+  isDirty_ = true;
+}
+
+void SampleEditorView::onSimpleModalDismiss(View &, ModalView &) {
+  modalClearCount_ = 2;
   isDirty_ = true;
 }
 
@@ -1012,11 +1032,12 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
-  const auto &filename = activeFilename();
-  if (filename.empty()) {
+  const auto &workingFilename = activeFilename();
+  if (workingFilename.empty()) {
     Trace::Error("SampleEditorView: No filename available for trim");
     return false;
   }
+  const auto &displayFilename = viewData_->sampleEditorFilename;
 
   if (tempSampleSize_ == 0) {
     Trace::Error("SampleEditorView: Cannot trim empty sample");
@@ -1029,11 +1050,11 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
     return false;
   }
 
-  SampleEditProgressDisplay progressDisplay(filename);
+  SampleEditProgressDisplay progressDisplay(displayFilename);
   WavTrimResult trimResult{};
   sampleEditProgressDisplay = &progressDisplay;
   bool trimmed = WavFileWriter::TrimFile(
-      filename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
+      workingFilename.c_str(), start_, end_, static_cast<void *>(chunkBuffer_),
       sizeof(chunkBuffer_), trimResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(trimmed);
@@ -1066,8 +1087,8 @@ bool SampleEditorView::applyTrimOperation(uint32_t start_, uint32_t end_) {
 
   Trace::Log("SAMPLEEDITOR",
              "Trimmed sample '%s' to %u frames (start=%u, end=%u)",
-             filename.c_str(), trimResult.framesKept, trimResult.clampedStart,
-             trimResult.clampedEnd);
+             workingFilename.c_str(), trimResult.framesKept,
+             trimResult.clampedStart, trimResult.clampedEnd);
   return true;
 }
 
@@ -1083,23 +1104,24 @@ bool SampleEditorView::applyNormalizeOperation() {
     return false;
   }
 
-  const auto &filename = activeFilename();
-  if (filename.empty()) {
+  const auto &workingFilename = activeFilename();
+  if (workingFilename.empty()) {
     Trace::Error("SampleEditorView: No filename available for normalize");
     return false;
   }
+  const auto &displayFilename = viewData_->sampleEditorFilename;
 
   if (tempSampleSize_ == 0) {
     Trace::Error("SampleEditorView: Cannot normalize empty sample");
     return false;
   }
 
-  SampleEditProgressDisplay progressDisplay(filename);
+  SampleEditProgressDisplay progressDisplay(displayFilename);
   WavNormalizeResult normalizeResult{};
   sampleEditProgressDisplay = &progressDisplay;
   bool normalized = WavFileWriter::NormalizeFile(
-      filename.c_str(), static_cast<void *>(chunkBuffer_), sizeof(chunkBuffer_),
-      normalizeResult, wavProgressCallback);
+      workingFilename.c_str(), static_cast<void *>(chunkBuffer_),
+      sizeof(chunkBuffer_), normalizeResult, wavProgressCallback);
   sampleEditProgressDisplay = nullptr;
   progressDisplay.Finish(normalized);
   if (!normalized) {
@@ -1111,7 +1133,7 @@ bool SampleEditorView::applyNormalizeOperation() {
     fullWaveformRedraw_ = true;
     Trace::Log("SAMPLEEDITOR",
                "Normalize skipped for '%s' (peak=%d, target=%d)",
-               filename.c_str(), normalizeResult.peakBefore,
+               workingFilename.c_str(), normalizeResult.peakBefore,
                normalizeResult.targetPeak);
     return true;
   }
@@ -1144,7 +1166,7 @@ bool SampleEditorView::applyNormalizeOperation() {
 
   Trace::Log("SAMPLEEDITOR",
              "Normalized sample '%s' (gain=%.3f peak=%d target=%d)",
-             filename.c_str(), normalizeResult.gainApplied,
+             workingFilename.c_str(), normalizeResult.gainApplied,
              normalizeResult.peakBefore, normalizeResult.targetPeak);
   return true;
 }
@@ -1156,7 +1178,11 @@ bool SampleEditorView::reloadEditedSample() {
 #ifndef ADV
   MessageBox *warning = MessageBox::Create(*this, "Please reload project",
                                            "To apply changes", MBBF_OK);
-  DoModal(warning);
+  clearWaveformRegion();
+  DoModal(warning,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
   return true;
 #else
   auto pool = SamplePool::GetInstance();
@@ -1198,22 +1224,121 @@ bool SampleEditorView::reloadEditedSample() {
 #endif
 }
 
+bool SampleEditorView::resolveSaveFilename(
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename) {
+  filename =
+      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filenameVar_.GetString());
+  if (filename.empty()) {
+    Trace::Error("SampleEditorView: Cannot save sample with empty name");
+    return false;
+  }
+
+  filename.append(".wav");
+  if (filename.is_truncated()) {
+    Trace::Error("SampleEditorView: Filename too long");
+    return false;
+  }
+
+  return true;
+}
+
+bool SampleEditorView::fileExists(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename) {
+  auto fs = FileSystem::GetInstance();
+  // on failures return true just in case
+  if (viewData_->isShowingSampleEditorProjectPool &&
+      !goProjectSamplesDir(viewData_)) {
+    Trace::Error("SampleEditorView: Overwrite check failed, couldn't chdir to "
+                 "project samples dir");
+    return true;
+  }
+
+  const auto &originalFilename = viewData_->sampleEditorFilename;
+  if (filename == originalFilename) {
+    return false;
+  }
+
+  return fs->exists(filename.c_str());
+}
+
+void SampleEditorView::attemptSave(bool loadToPool) {
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename;
+  if (!resolveSaveFilename(filename)) {
+    showSaveFailedDialog();
+    return;
+  }
+
+  if (fileExists(filename)) {
+    pendingOverwriteLoadToPool_ = loadToPool;
+    MessageBox *confirmBox =
+        MessageBox::Create(*this, "Overwrite existing sample?",
+                           filename.c_str(), MBBF_OK | MBBF_CANCEL);
+    clearWaveformRegion();
+    DoModal(
+        confirmBox,
+        ModalViewCallback::create<SampleEditorView,
+                                  &SampleEditorView::onConfirmOverwriteSave>(
+            *this));
+    return;
+  }
+
+  confirmSave(loadToPool);
+}
+
+void SampleEditorView::confirmSave(bool loadToPool) {
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename;
+  if (!saveSample(filename)) {
+    showSaveFailedDialog();
+    Trace::Error("SampleEditorView: Failed to save file!");
+    return;
+  }
+
+  if (loadToPool) {
+    if (loadSampleToPool(filename)) {
+      viewData_->isShowingSampleEditorProjectPool = true;
+      navigateToView(VT_IMPORT);
+    } else {
+      showLoadToPoolFailedDialog();
+    }
+    return;
+  }
+
+  const auto &originalFilename = viewData_->sampleEditorFilename;
+  if (originalFilename.compare(RECORDING_FILENAME) == 0) {
+    auto fs = FileSystem::GetInstance();
+    fs->chdir(RECORDINGS_DIR);
+    viewData_->importViewStartDir = RECORDINGS_DIR;
+  }
+  ViewType vt = SampleEditorView::sourceViewType_;
+  navigateToView(vt);
+}
+
+void SampleEditorView::showSaveFailedDialog() {
+  MessageBox *errorBox = MessageBox::Create(*this, "Save Failed",
+                                            "Unable to save sample", MBBF_OK);
+  clearWaveformRegion();
+  DoModal(errorBox,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
+}
+
+void SampleEditorView::showLoadToPoolFailedDialog() {
+  MessageBox *errorBox =
+      MessageBox::Create(*this, "Sample saved", "Pool load failed", MBBF_OK);
+  clearWaveformRegion();
+  DoModal(errorBox,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
+}
+
 bool SampleEditorView::saveSample(
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
   auto fs = FileSystem::GetInstance();
   const auto &originalFilename = viewData_->sampleEditorFilename;
 
-  savedFilename =
-      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(filenameVar_.GetString());
-  if (savedFilename.empty()) {
-    Trace::Error("SampleEditorView: Cannot save sample with empty name");
-    return false;
-  }
-
-  // Ensure extension
-  savedFilename.append(".wav");
-  if (savedFilename.is_truncated()) {
-    Trace::Error("SampleEditorView: Filename too long");
+  if (!resolveSaveFilename(savedFilename)) {
     return false;
   }
 
@@ -1272,7 +1397,7 @@ bool SampleEditorView::loadSampleToPool(
     return false;
   }
 
-  uint16_t sampleId = -1;
+  int16_t sampleId = -1;
 
   if (!viewData_->isShowingSampleEditorProjectPool) {
     char projectName[MAX_PROJECT_NAME_LENGTH + 1];

@@ -180,7 +180,6 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
 
   File entry;
   uint16_t count = 0;
-
   // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
   while (entry.openNext(&cwd, O_READ) && (count < fileIndexes->capacity())) {
     uint32_t index = entry.dirIndex();

@@ -1444,12 +1444,13 @@ etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetUserSetName() {
 };
 
 // Get the sample file name from the SampleInstrumentSample variable
-etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetSampleFileName() {
+etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>
+SampleInstrument::GetSampleFileName() {
   Variable *v = this->FindVariable(FourCC::SampleInstrumentSample);
   if (v) {
     return v->GetString();
   }
-  return etl::string<MAX_INSTRUMENT_NAME_LENGTH>();
+  return etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>();
 };
 
 etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
@@ -1470,7 +1471,7 @@ etl::string<MAX_INSTRUMENT_NAME_LENGTH> SampleInstrument::GetDisplayName() {
 
   // Strip .wav extension if present
   size_t dotPos = sampleFileName.find_last_of('.');
-  if (dotPos != etl::string<MAX_INSTRUMENT_NAME_LENGTH>::npos) {
+  if (dotPos != etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>::npos) {
     // remove the filename extension
     return sampleFileName.substr(0, dotPos);
   }
@@ -1519,37 +1520,35 @@ void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
 
   while (subelem) {
     bool attr = doc->NextAttribute();
-    char name[24] = "";
-    char value[24] = "";
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> name;
+    etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> value;
 
     while (attr) {
       if (!strcasecmp(doc->attrname_, "NAME")) {
-        strncpy(name, doc->attrval_, sizeof(name) - 1);
-        name[sizeof(name) - 1] = '\0';
+        name = doc->attrval_;
       }
       if (!strcasecmp(doc->attrname_, "VALUE")) {
-        strncpy(value, doc->attrval_, sizeof(value) - 1);
-        value[sizeof(value) - 1] = '\0';
+        value = doc->attrval_;
       }
       attr = doc->NextAttribute();
     }
 
-    if (name[0] != '\0' && value[0] != '\0') {
-      if (!strcasecmp(name, "InstrumentName")) {
-        SetName(value);
-      } else if (!strncasecmp(name, "SL", 2)) {
-        setSliceFromString(name + 2, value);
+    if (!name.empty() && !value.empty()) {
+      if (!strcasecmp(name.c_str(), "InstrumentName")) {
+        SetName(value.c_str());
+      } else if (!strncasecmp(name.c_str(), "SL", 2)) {
+        setSliceFromString(name.c_str() + 2, value.c_str());
       } else {
         bool found = false;
         for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
-          if (!strcasecmp((*it)->GetName(), name)) {
-            (*it)->SetString(value);
+          if (!strcasecmp((*it)->GetName(), name.c_str())) {
+            (*it)->SetString(value.c_str());
             found = true;
             break;
           }
         }
         if (!found) {
-          Trace::Error("Parameter '%s' not found in instrument", name);
+          Trace::Error("Parameter '%s' not found in instrument", name.c_str());
         }
       }
     }

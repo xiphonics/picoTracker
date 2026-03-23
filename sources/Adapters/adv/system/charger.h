@@ -15,6 +15,7 @@ extern "C" {
 bool startCharging(void);
 bool stopCharging(void);
 void powerOff();
+void configureCharger(void);
 
 typedef enum {
   NOT_CHARGING,

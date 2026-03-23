@@ -272,7 +272,7 @@ void AppWindow::Clear(bool all) {
   memset(_charScreen, ' ', SCREEN_CHARS);
   memset(_charScreenProp, 0, SCREEN_CHARS);
   if (all) {
-    memset(_preScreen, ' ', SCREEN_CHARS);
+    memset(_preScreen, 0, SCREEN_CHARS);
     memset(_preScreenProp, 0, SCREEN_CHARS);
   };
 };
@@ -295,6 +295,13 @@ void AppWindow::ClearTextRect(GUIRect &r) {
     pr += (SCREEN_WIDTH - w);
   }
 };
+
+void AppWindow::InvalidateTextCache() {
+  // Force the next text flush to resend all cells without changing the current
+  // text buffer contents.
+  memset(_preScreen, 0xFF, SCREEN_CHARS);
+  memset(_preScreenProp, 0xFF, SCREEN_CHARS);
+}
 
 //
 // Flush current screen to display
@@ -771,6 +778,8 @@ void AppWindow::AnimationUpdate() {
     if (modalView) {
       // Update the modal view
       modalView->AnimationUpdate();
+      // Modal can complete from animation updates (e.g. timed hold confirms).
+      _currentView->DismissModal();
     }
   }
 
@@ -887,13 +896,13 @@ void AppWindow::Update(Observable &o, I_ObservableData *d) {
     PlayerEvent *pt = (PlayerEvent *)ve;
     if (_currentView) {
       // Check if the current view has a modal view
-      if (_currentView->HasModalView()) {
+      const bool hasModal = _currentView->HasModalView();
+      if (hasModal) {
         _currentView->GetModalView()->OnPlayerUpdate(pt->GetType(),
                                                      pt->GetTickCount());
       } else {
         _currentView->OnPlayerUpdate(pt->GetType(), pt->GetTickCount());
       }
-      Invalidate();
     }
     break;
   }

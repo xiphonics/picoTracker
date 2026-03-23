@@ -121,17 +121,21 @@ void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
     return;
   }
   if (x + width > ILI9341_TFTHEIGHT) {
-    width = ILI9341_TFTHEIGHT;
+    width = ILI9341_TFTHEIGHT - x;
   }
   if (y + height > ILI9341_TFTWIDTH) {
-    height = ILI9341_TFTWIDTH;
+    height = ILI9341_TFTWIDTH - y;
   }
 
   // display_x is from right hand edge and since the picoTracker LCD is mounted
   // rotated 90deg clockwise, the LCDs "physical height" is actually visually
   // speaking the width
   uint16_t display_x = ILI9341_TFTHEIGHT - x - width;
+#ifdef LCD_ST7789
   uint16_t display_y = y;
+#else
+  uint16_t display_y = ILI9341_TFTWIDTH - y - height;
+#endif
   uint16_t display_w = width;
   uint16_t display_h = height;
 
@@ -166,7 +170,7 @@ void chargfx_fill_rect(uint8_t color_index, uint16_t x, uint16_t y,
 
   // Restore original rotation
   ili9341_set_command(ILI9341_MADCTL);
-  ili9341_command_param(0xC0);
+  ili9341_command_param(LCD_MADCTL_DEFAULT);
 }
 
 inline void chargfx_draw_sub_region(uint8_t x, uint8_t y, uint8_t width,

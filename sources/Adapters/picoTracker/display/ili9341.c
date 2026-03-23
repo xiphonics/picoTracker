@@ -96,15 +96,11 @@ void ili9341_init() {
 
   // memory access control
   ili9341_set_command(ILI9341_MADCTL);
+  ili9341_command_param(LCD_MADCTL_DEFAULT);
 
-  // correct orientation and invert colors for ST7789
 #ifdef LCD_ST7789
-  // D7 D6 D5 D4 D3  D2 D1 D0
-  // MY MX MV ML RGB MH -  -
-  ili9341_command_param(0xC0);
+  // correct orientation and invert colors for ST7789
   ili9341_set_command(ILI9341_INVON);
-#else
-  ili9341_command_param(0x88);
 #endif
 
   // pixel format

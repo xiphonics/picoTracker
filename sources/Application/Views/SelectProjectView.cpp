@@ -10,21 +10,149 @@
 #include "SelectProjectView.h"
 #include "Application/AppWindow.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Application/Utils/DrawUtils.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
 #include "Foundation/Services/MemoryService.h"
 
 #include "BaseClasses/ViewEvent.h"
 #include "Foundation/Constants/SpecialCharacters.h"
-#include <nanoprintf.h>
+#include "System/System/System.h"
+#include <new>
 
 #define LIST_PAGE_SIZE (SCREEN_HEIGHT - 4)
 #define LIST_WIDTH 26
 #define INVALID_PROJECT_NAME "INVALID NAME"
+#define DELETE_HOLD_MASK (EPBM_ALT | EPBM_PLAY | EPBM_EDIT)
+#define DELETE_HOLD_DURATION_MS 2000
 
-static void ConfirmOverwriteCallback(View &v, ModalView &dialog) {
-  if (dialog.GetReturnCode() == MBL_YES) {
-    ((SelectProjectView &)v).SaveSelectedProject();
+class DeleteProjectConfirmModal : public ModalView {
+public:
+  static DeleteProjectConfirmModal *Create(View &view, const char *projectName);
+  virtual ~DeleteProjectConfirmModal();
+  virtual void Destroy() override;
+  virtual void DrawView() override;
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int) override {}
+  virtual void OnFocus() override {}
+  virtual void ProcessButtonMask(unsigned short mask, bool pressed) override;
+  virtual void AnimationUpdate() override;
+
+private:
+  DeleteProjectConfirmModal(View &view, const char *projectName);
+  void UpdateProgress_();
+  static bool inUse_;
+  static void *storage_;
+  etl::string<MAX_PROJECT_NAME_LENGTH + 12> projectLine_;
+  unsigned short currentMask_ = 0;
+  unsigned long holdStartMs_ = 0;
+  uint16_t holdProgressMs_ = 0;
+  bool holdingCombo_ = false;
+};
+
+bool DeleteProjectConfirmModal::inUse_ = false;
+alignas(
+    DeleteProjectConfirmModal) static unsigned char DeleteProjectConfirmModalStorage
+    [sizeof(DeleteProjectConfirmModal)];
+void *DeleteProjectConfirmModal::storage_ = DeleteProjectConfirmModalStorage;
+
+DeleteProjectConfirmModal *DeleteProjectConfirmModal::Create(View &view,
+                                                             const char *name) {
+  if (inUse_) {
+    auto *existing = reinterpret_cast<DeleteProjectConfirmModal *>(storage_);
+    existing->~DeleteProjectConfirmModal();
+    inUse_ = false;
   }
+  inUse_ = true;
+  return new (storage_) DeleteProjectConfirmModal(view, name);
+}
+
+DeleteProjectConfirmModal::DeleteProjectConfirmModal(View &view,
+                                                     const char *projectName)
+    : ModalView(view), projectLine_("Delete \"") {
+  projectLine_.append(projectName);
+  projectLine_.append("\"");
+}
+
+DeleteProjectConfirmModal::~DeleteProjectConfirmModal() {}
+
+void DeleteProjectConfirmModal::Destroy() {
+  this->~DeleteProjectConfirmModal();
+  inUse_ = false;
+}
+
+void DeleteProjectConfirmModal::UpdateProgress_() {
+  const bool comboHeld = (currentMask_ & DELETE_HOLD_MASK) == DELETE_HOLD_MASK;
+  const unsigned long now = System::GetInstance()->GetClock();
+
+  if (!comboHeld) {
+    if (holdingCombo_ || (holdProgressMs_ != 0)) {
+      holdingCombo_ = false;
+      holdProgressMs_ = 0;
+      isDirty_ = true;
+      static_cast<AppWindow &>(w_).SetDirty();
+    }
+    return;
+  }
+
+  if (!holdingCombo_) {
+    holdingCombo_ = true;
+    holdStartMs_ = now;
+    holdProgressMs_ = 0;
+    isDirty_ = true;
+    static_cast<AppWindow &>(w_).SetDirty();
+    return;
+  }
+
+  unsigned long elapsed = now - holdStartMs_;
+  if (elapsed > DELETE_HOLD_DURATION_MS) {
+    elapsed = DELETE_HOLD_DURATION_MS;
+  }
+
+  if (holdProgressMs_ != elapsed) {
+    holdProgressMs_ = elapsed;
+    isDirty_ = true;
+    static_cast<AppWindow &>(w_).SetDirty();
+  }
+
+  if (holdProgressMs_ >= DELETE_HOLD_DURATION_MS) {
+    EndModal(MBL_YES);
+  }
+}
+
+void DeleteProjectConfirmModal::AnimationUpdate() { UpdateProgress_(); }
+
+void DeleteProjectConfirmModal::ProcessButtonMask(unsigned short mask,
+                                                  bool pressed) {
+  currentMask_ = mask;
+
+  if (pressed && (mask & EPBM_ENTER)) {
+    EndModal(MBL_CANCEL);
+    return;
+  }
+
+  UpdateProgress_();
+}
+
+void DeleteProjectConfirmModal::DrawView() {
+  SetWindow(26, 6);
+
+  GUITextProperties props;
+  SetColor(CD_NORMAL);
+  props.invert_ = false;
+
+  const int projectLineX = (26 - projectLine_.size()) / 2;
+  DrawString(projectLineX, 0, projectLine_.c_str(), props);
+  DrawString(0, 1, "Press & hold ALT+PLAY+EDIT", props);
+
+  if (holdingCombo_ || holdProgressMs_ > 0) {
+    progressBar_t progressBar;
+    fillProgressBar(holdProgressMs_, DELETE_HOLD_DURATION_MS, &progressBar);
+    DrawString((26 - 12) / 2, 3, progressBar, props);
+  }
+
+  const char *cancelButton = "[ Cancel ]";
+  SetColor(CD_HILITE2);
+  props.invert_ = true;
+  DrawString((26 - strlen(cancelButton)) / 2, 5, cancelButton, props);
 }
 
 static void LoadProjectCallback(View &v, ModalView &dialog) {
@@ -39,14 +167,20 @@ static void LoadProjectCallback(View &v, ModalView &dialog) {
 
 static void DeleteProjectCallback(View &v, ModalView &dialog) {
   if (dialog.GetReturnCode() == MBL_YES) {
-    // delete project
+    SelectProjectView &view = (SelectProjectView &)v;
+
     PersistencyService *ps = PersistencyService::GetInstance();
     char buffer[MAX_PROJECT_NAME_LENGTH + 1];
-    ((SelectProjectView &)v).getHighlightedProjectName(buffer);
-    ps->DeleteProject(buffer);
+    view.getHighlightedProjectName(buffer);
+    if (!ps->DeleteProject(buffer)) {
+      MessageBox *mb =
+          MessageBox::Create(view, "Project could not be deleted", MBBF_OK);
+      view.DoModal(mb);
+      return;
+    }
 
     // reload list
-    ((SelectProjectView &)v).setCurrentFolder();
+    view.setCurrentFolder();
   }
 }
 
@@ -84,9 +218,9 @@ void SelectProjectView::DrawView() {
   auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
   const char *currentProject = projectName.c_str();
+  size_t total = fileIndexList_.size();
 
-  for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < MemoryPool::fileIndexList.size());
+  for (size_t i = topIndex_; i < topIndex_ + LIST_PAGE_SIZE && (i < total);
        i++) {
     if (i == currentIndex_) {
       SetColor(CD_HILITE2);
@@ -119,8 +253,7 @@ void SelectProjectView::DrawView() {
   };
 
   // load/delete selection buttons
-  const char *buttons[numButtons_] = {
-      "Load", SelectionIsCurrentProject() ? "Save   " : "Save as", "Delete"};
+  const char *buttons[numButtons_] = {"Load", "Delete"};
 
   int bx = x;
 
@@ -134,43 +267,16 @@ void SelectProjectView::DrawView() {
   }
 
   // scroll bar
-  DrawScrollBar();
+  drawScrollBar(SCREEN_WIDTH - 1, pos._y + 2, LIST_PAGE_SIZE, topIndex_, total);
 };
-
-void SelectProjectView::DrawScrollBar() {
-  int totalItems = MemoryPool::fileIndexList.size();
-  if (totalItems <= LIST_PAGE_SIZE) {
-    return; // no scrollbar needed
-  }
-
-  GUITextProperties props;
-  GUITextProperties inv;
-  inv.invert_ = true;
-  SetColor(CD_NORMAL);
-
-  // Thumb size represents the ratio of visible items to total items
-  int thumbSize = std::max(1, (LIST_PAGE_SIZE * LIST_PAGE_SIZE) / totalItems);
-
-  // Thumb position: map topIndex (0 to maxScroll) onto available scrollbar
-  // space
-  int maxScroll = totalItems - LIST_PAGE_SIZE;
-  int availableSpace = LIST_PAGE_SIZE - thumbSize;
-  int thumbPos = (topIndex_ * availableSpace) / maxScroll;
-
-  Trace::Error("%d total, %d thumb size, %d maxScroll, %d thumbPos", totalItems,
-               thumbSize, maxScroll, thumbPos);
-  for (int y = 0; y < LIST_PAGE_SIZE; y++) {
-    bool thumb = y >= thumbPos && y < thumbPos + thumbSize;
-    DrawString(SCREEN_WIDTH - 1, 2 + y,
-               thumb ? char_block_full_s : char_border_single_vertical_s,
-               props);
-  }
-}
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
                                        unsigned int currentTick){};
 
-void SelectProjectView::OnFocus() { setCurrentFolder(); };
+void SelectProjectView::OnFocus() {
+  selectedButton_ = 0; // Always default to "Load" when entering this view.
+  setCurrentFolder();
+};
 
 void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
@@ -193,16 +299,6 @@ void SelectProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
         AttemptLoadingProject();
         break;
       case 1:
-        // save project
-        if (!SelectionIsCurrentProject()) {
-          // ask if the user wants to override the file
-          ConfirmOverwrite();
-        } else {
-          // save
-          SaveSelectedProject();
-        }
-        break;
-      case 2:
         AttemptDeletingSelectedProject();
         break;
       }
@@ -296,7 +392,8 @@ void SelectProjectView::getSelectedProjectName(char *name) {
 }
 
 void SelectProjectView::getHighlightedProjectName(char *name) {
-  if (currentIndex_ >= MemoryPool::fileIndexList.size()) {
+  name[0] = '\0';
+  if (currentIndex_ >= fileIndexList_.size()) {
     return;
   }
 
@@ -352,45 +449,6 @@ bool SelectProjectView::SelectionIsCurrentProject() {
   return strcmp(current, selected) == 0;
 }
 
-bool SelectProjectView::SaveSelectedProject() {
-  auto appWindow = static_cast<AppWindow *>(&w_);
-  PersistencyService *ps = PersistencyService::GetInstance();
-
-  auto var = viewData_->project_->FindVariable(FourCC::VarProjectName);
-  etl::string<MAX_PROJECT_NAME_LENGTH> projectName = var->GetString();
-  const char *current = projectName.c_str();
-
-  char selected[MAX_PROJECT_NAME_LENGTH + 1];
-  getHighlightedProjectName(selected);
-
-  Trace::Error("%s -> %s", current, selected);
-
-  if (ps->Save(selected, current, true) != PERSIST_SAVED) {
-    return false;
-  }
-
-  // all good so now persist the new project name in project state
-  bool result = ps->SaveProjectState(selected) == PERSIST_SAVED;
-
-  if (result) {
-    viewData_->project_->SetProjectName(selected);
-  }
-
-  return result;
-}
-
-void SelectProjectView::ConfirmOverwrite() {
-  char selected[MAX_PROJECT_NAME_LENGTH + 1];
-  getHighlightedProjectName(selected);
-
-  char buffer[MAX_PROJECT_NAME_LENGTH + 8];
-  snprintf(buffer, sizeof(buffer), "\"%s\"?", selected);
-
-  MessageBox *mb = MessageBox::Create(*this, "Overwrite existing project",
-                                      buffer, MBBF_YES | MBBF_NO);
-  DoModal(mb, ModalViewCallback::create<&ConfirmOverwriteCallback>());
-}
-
 void SelectProjectView::AttemptDeletingSelectedProject() {
   if (currentIndex_ >= MemoryPool::fileIndexList.size()) {
     return;
@@ -410,10 +468,7 @@ void SelectProjectView::AttemptDeletingSelectedProject() {
   char selected[MAX_PROJECT_NAME_LENGTH + 1];
   getHighlightedProjectName(selected);
 
-  char buffer[MAX_PROJECT_NAME_LENGTH + 11];
-  npf_snprintf(buffer, sizeof(buffer), "Delete \"%s\"?", selected);
-
-  MessageBox *mb = MessageBox::Create(*this, buffer, MBBF_YES | MBBF_NO);
+  ModalView *mb = DeleteProjectConfirmModal::Create(*this, selected);
   DoModal(mb, ModalViewCallback::create<&DeleteProjectCallback>());
 }
 
