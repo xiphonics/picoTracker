@@ -736,14 +736,25 @@ void ChainView::DrawView() {
   pos = anchor;
   pos._x += 3;
 
+  char buf[5];
+
   data = viewData_->song_->chain_.transpose_ + (16 * viewData_->currentChain_);
 
   for (int j = 0; j < 16; j++) {
     unsigned char d = *data++;
     hex2char(d, row);
     setTextProps(props, 1, j, false);
+    SetColor(CD_NORMAL);
     DrawString(pos._x, pos._y, row, props);
     setTextProps(props, 1, j, true);
+
+    // decimal representation for transpose with sign
+    int8_t t = (int8_t)d; // interpret as signed
+    char sign = (t > 0) ? '+' : ((t < 0) ? '-' : ' ');
+    snprintf(buf, sizeof(buf), "%c%-3d", sign, abs(t));
+    SetColor(CD_CONSOLE);
+    DrawString(pos._x + 3, pos._y, buf, props);
+
     pos._y++;
   }
   Player *player = Player::GetInstance();
