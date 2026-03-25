@@ -181,14 +181,25 @@ bool PlayerMixer::IsChannelMuted(int channel) {
 }
 
 void PlayerMixer::StartStreaming(const char *name, int startSample) {
+  MixerService *ms = MixerService::GetInstance();
+  ms->Lock();
   fileStreamer_.Start(name, startSample);
+  ms->Unlock();
 };
 
 void PlayerMixer::StartLoopingStreaming(const char *name) {
+  MixerService *ms = MixerService::GetInstance();
+  ms->Lock();
   fileStreamer_.Start(name, 0, true);
+  ms->Unlock();
 };
 
-void PlayerMixer::StopStreaming() { fileStreamer_.Stop(); };
+void PlayerMixer::StopStreaming() {
+  MixerService *ms = MixerService::GetInstance();
+  ms->Lock();
+  fileStreamer_.Stop();
+  ms->Unlock();
+};
 
 void PlayerMixer::StartRecordStreaming(uint16_t *srcBuffer, uint32_t size,
                                        bool stereo) {
