@@ -11,6 +11,7 @@
 #define _IMPORT_VIEW_H_
 
 #include "Application/Views/ScreenView.h"
+#include "Externals/etl/include/etl/stack.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "System/FileSystem/FileSystem.h"
 #include "ViewData.h"
@@ -64,8 +65,7 @@ private:
   bool pendingDirEnterOnRelease_ = false; // Open dir on ENTER release
   bool inProjectSampleDir_ =
       false; // Flag to track if we're in the project's sample directory
-  uint8_t dirDepth_ = 0;
-  uint8_t dirIndexStack_[kDirectoryIndexStackDepth] = {};
+  etl::stack<uint8_t, kDirectoryIndexStackDepth> dirIndexStack_;
   FileSystem *pendingDeleteFs_ = nullptr;
   char pendingDeleteFilename_[PFILENAME_SIZE] = {};
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;

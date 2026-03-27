@@ -58,7 +58,7 @@ void ImportView::Reset() {
   previewPlayingIndex_ = 0;
   selectedButton_ = 0;
   toInstr_ = 0;
-  dirDepth_ = 0;
+  dirIndexStack_.clear();
   playKeyHeld_ = false;
   editKeyHeld_ = false;
   enterKeyHeld_ = false;
@@ -809,7 +809,7 @@ void ImportView::enterDirectory(FileSystem *fs, const char *name) {
     return;
   }
 
-  if (dirDepth_ >= kDirectoryIndexStackDepth) {
+  if (dirIndexStack_.full()) {
     Trace::Error("ImportView directory stack overflow");
     return;
   }
@@ -819,8 +819,7 @@ void ImportView::enterDirectory(FileSystem *fs, const char *name) {
     return;
   }
 
-  dirIndexStack_[dirDepth_] = savedIndex;
-  ++dirDepth_;
+  dirIndexStack_.push(savedIndex);
   topIndex_ = 0;
   currentIndex_ = 0;
   refreshFileIndexList(fs);
@@ -831,9 +830,9 @@ void ImportView::goToParentDirectory(FileSystem *fs) {
     return;
   }
 
-  if (dirDepth_ > 0) {
-    --dirDepth_;
-    currentIndex_ = dirIndexStack_[dirDepth_];
+  if (!dirIndexStack_.empty()) {
+    currentIndex_ = dirIndexStack_.top();
+    dirIndexStack_.pop();
   } else {
     currentIndex_ = 0;
   }
@@ -846,7 +845,7 @@ void ImportView::jumpToDirectory(FileSystem *fs, const char *name) {
     return;
   }
 
-  dirDepth_ = 0;
+  dirIndexStack_.clear();
   topIndex_ = 0;
   currentIndex_ = 0;
   refreshFileIndexList(fs);
