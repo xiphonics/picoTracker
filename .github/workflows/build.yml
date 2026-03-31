@@ -1,5 +1,5 @@
 name: Build
-on: 
+on:
   push:
     paths:
       - sources/**
@@ -11,7 +11,10 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     steps:
     - name: checkout
@@ -39,8 +42,8 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{github.workspace}}/build-ili9341
-      # Note the current convention is to use the -S and -B options here to specify source 
-      # and build directories, but this is only available with CMake 3.13 and higher.  
+      # Note the current convention is to use the -S and -B options here to specify source
+      # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: PICO_SDK_PATH=../sources/Externals/pico-sdk PICO_TOOLCHAIN_PATH=${{steps.arm-none-eabi-gcc-action.outputs.path}} cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_LCD=LCD_ILI9341
 
@@ -52,20 +55,16 @@ jobs:
 
     - name: Old Cmake in Mbedtls workaround
       shell: bash
-      run: rm -rf sources/Externals/pico-sdk/lib/mbedtls  
-
-    - name: Get core count
-      id: core_count
-      run : cat /proc/cpuinfo  | grep processor | wc -l
+      run: rm -rf sources/Externals/pico-sdk/lib/mbedtls
 
     - name: Build ILI9341
       working-directory: ${{github.workspace}}/build-ili9341
       shell: bash
-      run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
+      run: cmake --build . --config $BUILD_TYPE --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
     - uses: actions/upload-artifact@v4
       with:
-        name: picoTracker_ili9341-uf2
-        path: ${{github.workspace}}/build-ili9341/Adapters/picoTracker/main/picoTracker.uf2 
+        name: picoTracker_ili9341-${{ matrix.os }}-uf2
+        path: ${{github.workspace}}/build-ili9341/Adapters/picoTracker/main/picoTracker.uf2
 
     - name: Create Build Environment for ST7789
       # Some projects don't allow in-source building, so create a separate build directory
@@ -77,16 +76,16 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{github.workspace}}/build-st7789
-      # Note the current convention is to use the -S and -B options here to specify source 
-      # and build directories, but this is only available with CMake 3.13 and higher.  
+      # Note the current convention is to use the -S and -B options here to specify source
+      # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: PICO_SDK_PATH=../sources/Externals/pico-sdk PICO_TOOLCHAIN_PATH=${{steps.arm-none-eabi-gcc-action.outputs.path}} cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_LCD=LCD_ST7789 
-  
+      run: PICO_SDK_PATH=../sources/Externals/pico-sdk PICO_TOOLCHAIN_PATH=${{steps.arm-none-eabi-gcc-action.outputs.path}} cmake ../sources -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DUSE_LCD=LCD_ST7789
+
     - name: Build ST7789
       working-directory: ${{github.workspace}}/build-st7789
       shell: bash
-      run: cmake --build . --config $BUILD_TYPE --parallel $(nproc) 
+      run: cmake --build . --config $BUILD_TYPE --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
     - uses: actions/upload-artifact@v4
       with:
-        name: picoTracker_st7789-uf2
-        path: ${{github.workspace}}/build-st7789/Adapters/picoTracker/main/picoTracker.uf2 
+        name: picoTracker_st7789-${{ matrix.os }}-uf2
+        path: ${{github.workspace}}/build-st7789/Adapters/picoTracker/main/picoTracker.uf2
