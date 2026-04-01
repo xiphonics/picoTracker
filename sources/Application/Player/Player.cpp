@@ -589,8 +589,8 @@ void Player::Update(Observable &o, I_ObservableData *d) {
             int note = mixer_.GetChannelNote(i);
             I_Instrument *instr = mixer_.GetInstrument(i);
             if ((note <= HIGHEST_NOTE) && (instr != 0)) {
-              note += (instrRetrigger[i] > 80) ? instrRetrigger[i] - 256
-                                               : instrRetrigger[i];
+              note += (instrRetrigger[i] >= 0x80) ? instrRetrigger[i] - 0x100
+                                                  : instrRetrigger[i];
               while (note > 127) {
                 note -= 12;
               };
@@ -913,9 +913,9 @@ void Player::playCursorPosition(int channel) {
             int note = mixer_.GetChannelNote(channel);
             I_Instrument *instr = mixer_.GetInstrument(channel);
             if ((note <= HIGHEST_NOTE) && (instr != 0)) {
-              // TODO: should we instead allow for transposing notes *down* with
-              // values over 64?
-              note += (tpc.instrRetrigger_ > 80) ? 80 : tpc.instrRetrigger_;
+              note += (tpc.instrRetrigger_ >= 0x80)
+                          ? tpc.instrRetrigger_ - 0x100
+                          : tpc.instrRetrigger_;
               while (note > 127) {
                 note -= 12;
               };
