@@ -1268,8 +1268,7 @@ bool SampleEditorView::preflightProjectPoolSaveAs(
 
   uint32_t availableBytes = pool->GetAvailableSampleStorageSpace();
   char message[SCREEN_WIDTH];
-  npf_snprintf(message, sizeof(message), "Only %d bytes free",
-               availableBytes);
+  npf_snprintf(message, sizeof(message), "Only %d bytes free", availableBytes);
   MessageBox *mb =
       MessageBox::Create(*this, "Sample Too Large       ", message, MBBF_OK);
   clearWaveformRegion();
