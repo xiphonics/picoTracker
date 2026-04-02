@@ -7,6 +7,7 @@
  */
 
 #include "picoTrackerFileSystem.h"
+#include "Application/Persistency/PersistencyService.h"
 #include "Externals/etl/include/etl/pool.h"
 #include "pico/multicore.h"
 #include <cstring>
@@ -121,19 +122,19 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
 
 void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
                                  const char *filter, bool subDirOnly,
-                                 bool includeHidden) {
+                                 bool includeHidden, bool sorted) {
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();
 
   File cwd;
+  char buffer[PFILENAME_SIZE];
+
   if (!cwd.openCwd()) {
-    char name[PFILENAME_SIZE];
-    cwd.getName(name, PFILENAME_SIZE);
+    cwd.getName(buffer, PFILENAME_SIZE);
     Trace::Error("Failed to open cwd");
     return;
   }
-  char buffer[PFILENAME_SIZE];
   cwd.getName(buffer, PFILENAME_SIZE);
   Trace::Log("FILESYSTEM", "LIST DIR:%s", buffer);
 
@@ -144,6 +145,9 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
 
   File entry;
   uint16_t count = 0;
+
+  uint32_t sortKeys[MAX_FILE_INDEX_SIZE];
+
   // ref: https://github.com/greiman/SdFat/issues/353#issuecomment-1003422848
   while (entry.openNext(&cwd, O_READ) && (count < fileIndexes->capacity())) {
     uint32_t index = entry.dirIndex();
@@ -157,25 +161,69 @@ void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
       //            matchesFilter);
     }
     // filter out "." and files that dont match filter if a filter is given
-    if ((entry.isDirectory() && entry.dirIndex() != 0) ||
-        ((includeHidden || !entry.isHidden()) && matchesFilter)) {
-      if (subDirOnly) {
-        if (entry.isDirectory()) {
-          fileIndexes->push_back(index);
-        }
-      } else {
-        fileIndexes->push_back(index);
+    bool validDir = entry.isDirectory() && entry.dirIndex() != 0;
+    bool matchVisible = (!entry.isHidden() || includeHidden) && matchesFilter;
+
+    if ((validDir || matchVisible) && (!subDirOnly || entry.isDirectory())) {
+      if (sorted) {
+        entry.getName(buffer, PFILENAME_SIZE);
+        sortKeys[count] = FileSystem::getFileSortKey(buffer);
       }
-      // Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
+      fileIndexes->push_back(index);
       count++;
+      // Trace::Log("FILESYSTEM", "[%d] got file: %s", index, buffer);
     } else {
-      // Trace::Log("FILESYSTEM", "skipped hidden: %s", buffer);
+      // Trace::Log("FILESYSTEM", "skipped non-matching file: %s", buffer);
     }
     entry.close();
   }
-  cwd.close();
+
   Trace::Log("FILESYSTEM", "scanned: %d, added file indexes:%d", count,
              fileIndexes->size());
+
+  if (!sorted) {
+    return;
+  }
+
+  // sort using insertion sort (with an extra step if our keys are identical)
+  char currentName[PFILENAME_SIZE];
+
+  for (size_t i = 1; i < count; i++) {
+    uint32_t key = sortKeys[i];
+    int index = fileIndexes->at(i);
+    size_t j = i;
+
+    while (j > 0) {
+      bool shouldMove = sortKeys[j - 1] > key;
+
+      if (!shouldMove && sortKeys[j - 1] == key) {
+        // keys are identical, do a tiebreaker by doing a string compare to
+        // ensure stable sorting of files with same first 4 letters
+        entry.open(index);
+        entry.getName(currentName, PFILENAME_SIZE);
+        entry.close();
+
+        entry.open(fileIndexes->at(j - 1));
+        entry.getName(buffer, PFILENAME_SIZE);
+        entry.close();
+
+        shouldMove = strcasecmp(buffer, currentName) > 0;
+      }
+
+      if (shouldMove) {
+        sortKeys[j] = sortKeys[j - 1];
+        fileIndexes->at(j) = fileIndexes->at(j - 1);
+        --j;
+      } else {
+        break;
+      }
+    }
+
+    sortKeys[j] = key;
+    fileIndexes->at(j) = index;
+  }
+
+  cwd.close();
 }
 
 void picoTrackerFileSystem::getFileName(int index, char *name, int length) {
@@ -277,18 +325,21 @@ bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
   auto fSrc = sd.open(srcFilename, O_READ);
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
 
+  const int FILE_BUFFER_SIZE = 1024;
+  char fileBuffer[FILE_BUFFER_SIZE];
+
   int n = 0;
-  int bufferSize = sizeof(fileBuffer_);
+
   while (true) {
-    n = fSrc.read(fileBuffer_, bufferSize);
+    n = fSrc.read(fileBuffer, FILE_BUFFER_SIZE);
     // check for read error and only write if no error
     if (n >= 0) {
-      fDest.write(fileBuffer_, n);
+      fDest.write(fileBuffer, n);
     } else {
       Trace::Error("Failed to read file: %s", srcFilename);
       return false;
     }
-    if (n < bufferSize) {
+    if ((size_t)n < FILE_BUFFER_SIZE) {
       break;
     }
   }

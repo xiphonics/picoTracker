@@ -27,7 +27,9 @@ UIIntField::UIIntField(const GUIPoint &position, int *src, const char *format,
   yOffset_ = yOffset;
 };
 
-void UIIntField::Draw(GUIWindow &w) {
+void UIIntField::Draw(GUIWindow &w, int offset) {
+
+  (void)offset;
 
   GUITextProperties props;
   GUIPoint position = GetPosition();

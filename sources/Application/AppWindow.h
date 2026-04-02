@@ -56,12 +56,15 @@ public:
   using GUIWindow::Clear;
   virtual void Clear(bool all = false);
   virtual void ClearTextRect(GUIRect &rect);
+  using GUIWindow::SetColor;
   virtual void SetColor(ColorDefinition cd);
   void InvalidateTextCache();
 
   void SetDirty();
   void UpdateColorsFromConfig();
   void SetSdCardPresent(bool present);
+
+  View *getCurrentView() const { return _currentView; }
 
   char projectName_[MAX_PROJECT_NAME_LENGTH + 1];
 
@@ -104,7 +107,6 @@ private:
   unsigned short _mask;
   unsigned long _lastA;
   unsigned long _lastB;
-  char _statusLine[80];
 
   bool lowBatteryState_;
   bool lowBatteryMessageShown_;

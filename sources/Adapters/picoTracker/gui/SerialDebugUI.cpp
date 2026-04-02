@@ -134,13 +134,14 @@ void SerialDebugUI::listFiles(const char *path) {
   if (!fs->chdir(path)) {
     Trace::Error("failed to ls files path:%s", path);
   }
-  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
-  fs->list(&fileIndexes, "", false);
+
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
+  fs->list(&fileIndexList_, "", false, false, true);
 
   char name[PFILENAME_SIZE];
-  for (size_t i = 0; i < fileIndexes.size(); i++) {
-    fs->getFileName(fileIndexes[i], name, PFILENAME_SIZE);
-    if (fs->getFileType(fileIndexes[i]) == PFT_FILE) {
+  for (size_t i = 0; i < fileIndexList_.size(); i++) {
+    fs->getFileName(fileIndexList_[i], name, PFILENAME_SIZE);
+    if (fs->getFileType(fileIndexList_[i]) == PFT_FILE) {
       printf("[file] %s\n", name);
     } else {
       printf("[dir] %s\n", name);
