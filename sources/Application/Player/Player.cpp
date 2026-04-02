@@ -880,7 +880,7 @@ void Player::playCursorPosition(int channel) {
 
         if (note < 128) {
           mixer_.StartInstrument(channel, instrument, note, newInstrument);
-          int8_t instrTable = instrument->GetTable();
+          int instrTable = instrument->GetTable();
 
           // If an instrument number has been specified && instrument has table,
           // we trigger the table.
@@ -959,7 +959,7 @@ void Player::StepAutomationTableForRetrigger(int channel,
 
 void Player::RetriggerChannelInstrument(int channel, int semitoneOffset,
                                         bool stepAutomationTable) {
-  int8_t note = mixer_.GetChannelNote(channel);
+  int note = mixer_.GetChannelNote(channel);
   I_Instrument *instrument = mixer_.GetInstrument(channel);
 
   if ((note > HIGHEST_NOTE) || (instrument == 0)) {
