@@ -1259,14 +1259,20 @@ bool SampleEditorView::preflightProjectPoolSaveAs(
   if (!viewData_ || !viewData_->isShowingSampleEditorProjectPool) {
     return true;
   }
-  auto *pool = SamplePool::GetInstance();
 
-  // Existing filenames are already handled by fileExists() and the overwrite
-  // confirmation flow in attemptSave(). Capacity checks below only apply when
-  // Save As would add a new sample pool entry.
-  if (pool->FindSampleIndexByName(savedFilename) >= 0) {
-    return true;
+  const auto &originalFilename = viewData_->sampleEditorFilename;
+  if (savedFilename != originalFilename && fileExists(savedFilename)) {
+    MessageBox *mb = MessageBox::Create(*this, "Cannot Save Sample        ",
+                                        "Sample name already used", MBBF_OK);
+    clearWaveformRegion();
+    DoModal(mb,
+            ModalViewCallback::create<SampleEditorView,
+                                      &SampleEditorView::onSimpleModalDismiss>(
+                *this));
+    return false;
   }
+
+  auto *pool = SamplePool::GetInstance();
 
   if (pool->GetNameListSize() >= MAX_SAMPLES) {
     char message[SCREEN_WIDTH];
@@ -1439,26 +1445,10 @@ bool SampleEditorView::syncSavedAsProjectPoolSample(
     return false;
   }
 
-  int32_t existingIndex = pool->FindSampleIndexByName(savedFilename);
-  if (existingIndex < 0) {
-    if (pool->LoadProjectSample(savedFilename.c_str()) < 0) {
-      Trace::Error("SampleEditorView: Failed to add pool sample %s",
-                   savedFilename.c_str());
-      return false;
-    }
-    return true;
-  }
-
-  auto users = collectSampleUsers(existingIndex);
-  int32_t newIndex = pool->ReloadSample(existingIndex, savedFilename.c_str());
-  if (newIndex < 0) {
-    Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+  if (pool->LoadProjectSample(savedFilename.c_str()) < 0) {
+    Trace::Error("SampleEditorView: Failed to add pool sample %s",
                  savedFilename.c_str());
     return false;
-  }
-
-  if (newIndex != existingIndex) {
-    retargetSampleUsers(users, newIndex);
   }
 
   return true;
