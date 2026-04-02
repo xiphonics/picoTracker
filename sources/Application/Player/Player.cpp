@@ -129,7 +129,9 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
     timeToLive_[i] = 0;
     timeToStart_[i] = 0;
     TablePlayback &tpb = TablePlayback::GetTablePlayback(i);
+    TablePlayback &atp = TablePlayback::GetAutomationPlayback(i);
     tpb.Stop();
+    atp.Stop();
   }
 
   // Tell the instruments we're starting
@@ -223,6 +225,8 @@ void Player::Stop() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     mixer_.StopChannel(i);
+    TablePlayback::GetTablePlayback(i).Stop();
+    TablePlayback::GetAutomationPlayback(i).Stop();
   }
   MidiService::GetInstance()->OnPlayerStop();
   mixer_.OnPlayerStop();
