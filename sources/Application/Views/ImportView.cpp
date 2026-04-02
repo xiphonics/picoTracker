@@ -58,6 +58,7 @@ void ImportView::Reset() {
   previewPlayingIndex_ = 0;
   selectedButton_ = 0;
   toInstr_ = 0;
+  dirIndexStack_.clear();
   playKeyHeld_ = false;
   editKeyHeld_ = false;
   enterKeyHeld_ = false;
@@ -82,9 +83,12 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
         if (fs->getFileType(fileIndex) == PFT_DIR) {
           char name[PFILENAME_SIZE];
           fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-          setCurrentFolder(fs, name);
+          if (strcmp(name, "..") == 0) {
+            goToParentDirectory(fs);
+          } else {
+            enterDirectory(fs, name);
+          }
           isDirty_ = true;
-          topIndex_ = 0;
         }
       }
       pendingDirEnterOnRelease_ = false;
@@ -120,9 +124,8 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     // NAV+LEFT remains reserved for leaving the ImportView entirely.
     if ((mask & EPBM_EDIT) && (mask & EPBM_LEFT) && !(mask & EPBM_NAV) &&
         !inProjectSampleDir_) {
-      setCurrentFolder(fs, "..");
+      goToParentDirectory(fs);
       isDirty_ = true;
-      topIndex_ = 0;
       return;
     }
 
@@ -156,10 +159,10 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
       // toggle from sdcard "import sample" & project pool listing
       if (inProjectSampleDir_) {
         inProjectSampleDir_ = false;
-        setCurrentFolder(fs, SAMPLES_LIB_DIR);
+        jumpToDirectory(fs, SAMPLES_LIB_DIR);
       } else {
         inProjectSampleDir_ = true;
-        setCurrentFolder(fs, PROJECT_SAMPLES_DIR);
+        jumpToDirectory(fs, PROJECT_SAMPLES_DIR);
       }
       selectedButton_ = 0;
     }
@@ -535,9 +538,9 @@ void ImportView::OnFocus() {
 
   if (inProjectSampleDir_) {
     goProjectSamplesDir(viewData_);
-    setCurrentFolder(fs, ".");
+    jumpToDirectory(fs, ".");
   } else {
-    setCurrentFolder(fs, viewData_->importViewStartDir);
+    jumpToDirectory(fs, viewData_->importViewStartDir);
   }
 };
 
@@ -780,40 +783,72 @@ void ImportView::adjustPreviewVolume(int offset) {
   isDirty_ = true;
 }
 
-void ImportView::setCurrentFolder(FileSystem *fs, const char *name) {
-  // Special case: if we're trying to go up (..) from a top-level directory
-  if (strcmp(name, "..") == 0) {
-    // Check if we're in a top-level directory (parent is root)
-    if (fs->isParentRoot()) {
-      Trace::Log("PICOIMPORT",
-                 "Detected top-level directory, navigating to root");
-      // Navigate directly to root instead of using ".."
-      fs->chdir("/");
-    }
+bool ImportView::changeDirectory(FileSystem *fs, const char *name) {
+  if (strcmp(name, "..") == 0 && fs->isParentRoot()) {
+    Trace::Log("PICOIMPORT",
+               "Detected top-level directory, navigating to root");
+    return fs->chdir("/");
   }
 
-  // Normal directory navigation
   if (!fs->chdir(name)) {
     Trace::Error("FAILED to chdir to %s", name);
+    return false;
   }
-  currentIndex_ = 0;
-  refreshFileIndexList(fs);
+  return true;
+}
 
-  // Check if we're in the projects directory
-  // and if trying to go into the same dir as current project and if so dont
-  // allow it
+void ImportView::enterDirectory(FileSystem *fs, const char *name) {
   char projName[MAX_PROJECT_NAME_LENGTH + 1];
   viewData_->project_->GetProjectName(projName);
 
   if (strcmp(projName, name) == 0) {
-    // We just navigated to a current project directory, not allowed!
-    etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> expectedPath(PROJECTS_DIR);
-    // so instead go back out into the projects dir
-    setCurrentFolder(fs, PROJECTS_DIR);
+    jumpToDirectory(fs, PROJECTS_DIR);
 
     Trace::Log("PICOIMPORT",
                "NOT allowed to browse into current project sample directory");
+    return;
   }
+
+  if (dirIndexStack_.full()) {
+    Trace::Error("ImportView directory stack overflow");
+    return;
+  }
+
+  uint8_t savedIndex = static_cast<uint8_t>(currentIndex_);
+  if (!changeDirectory(fs, name)) {
+    return;
+  }
+
+  dirIndexStack_.push(savedIndex);
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  refreshFileIndexList(fs);
+}
+
+void ImportView::goToParentDirectory(FileSystem *fs) {
+  if (!changeDirectory(fs, "..")) {
+    return;
+  }
+
+  if (!dirIndexStack_.empty()) {
+    currentIndex_ = dirIndexStack_.top();
+    dirIndexStack_.pop();
+  } else {
+    currentIndex_ = 0;
+  }
+
+  refreshFileIndexList(fs);
+}
+
+void ImportView::jumpToDirectory(FileSystem *fs, const char *name) {
+  if (!changeDirectory(fs, name)) {
+    return;
+  }
+
+  dirIndexStack_.clear();
+  topIndex_ = 0;
+  currentIndex_ = 0;
+  refreshFileIndexList(fs);
 }
 
 void ImportView::showSampleEditor(
@@ -909,11 +944,10 @@ void ImportView::refreshFileIndexList(FileSystem *fs) {
     }
   }
 
-  if (currentIndex_ >= fileIndexList_.size()) {
-    currentIndex_ = fileIndexList_.size() - 1;
-  }
   if (fileIndexList_.empty()) {
     topIndex_ = 0;
     currentIndex_ = 0;
+  } else if (currentIndex_ >= fileIndexList_.size()) {
+    currentIndex_ = fileIndexList_.size() - 1;
   }
 }
