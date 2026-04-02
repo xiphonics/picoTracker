@@ -142,8 +142,7 @@ protected:
   void updateChainPos(int position, int channel, int hop = 0);
   void updatePhrasePos(int pos, int channel);
   void playCursorPosition(int channel);
-  void StepAutomationTableForRetrigger(int channel, I_Instrument *instrument,
-                                       int &semitoneOffset);
+  void StepAutomationTableForRetrigger(int channel, I_Instrument *instrument);
   void RetriggerChannelInstrument(int channel, int semitoneOffset,
                                   bool stepAutomationTable);
   int getChannelHop(int channel, int pos);
