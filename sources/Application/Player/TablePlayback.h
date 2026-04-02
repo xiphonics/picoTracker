@@ -36,6 +36,7 @@ public:
 
   static void Reset();
   static TablePlayback &GetTablePlayback(int channel);
+  static TablePlayback &GetAutomationPlayback(int channel);
 
 private:
   Table *table_;
@@ -49,6 +50,7 @@ private:
   ChannelGroove groove_;
 
   static TablePlayback playback_[SONG_CHANNEL_COUNT];
+  static TablePlayback automationPlayback_[SONG_CHANNEL_COUNT];
 };
 
 class TableSaveState {
@@ -56,6 +58,7 @@ public:
   void Reset();
   uchar hopCount_[TABLE_STEPS][TABLE_COLUMNS];
   int position_[TABLE_COLUMNS];
+  ChannelGroove groove_;
 };
 
 #endif
