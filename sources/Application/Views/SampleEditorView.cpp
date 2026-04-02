@@ -1254,12 +1254,16 @@ bool SampleEditorView::fileExists(
   return fs->exists(filename.c_str());
 }
 
+// check preconditions for doing save-ad in project pool, checking pool
+// available space & size & not overwriting existing file
 bool SampleEditorView::preflightProjectPoolSaveAs(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
   if (!viewData_ || !viewData_->isShowingSampleEditorProjectPool) {
     return true;
   }
 
+  // Project-pool Save As must create a new pool entry. Reusing another
+  // existing sample filename is not allowed.
   const auto &originalFilename = viewData_->sampleEditorFilename;
   if (savedFilename != originalFilename && fileExists(savedFilename)) {
     MessageBox *mb = MessageBox::Create(*this, "Cannot Save Sample        ",
@@ -1420,10 +1424,7 @@ SampleEditorView::collectSampleUsers(int sampleIndex) const {
 
 void SampleEditorView::retargetSampleUsers(
     const etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> &users,
-    int newIndex) {
-  if (newIndex < 0) {
-    return;
-  }
+    uint16_t newIndex) {
 
   for (auto *sampleInstrument : users) {
     if (sampleInstrument) {
@@ -1435,10 +1436,6 @@ void SampleEditorView::retargetSampleUsers(
 bool SampleEditorView::syncSavedAsProjectPoolSample(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
   auto *pool = SamplePool::GetInstance();
-  if (!pool) {
-    Trace::Error("SampleEditorView: SamplePool unavailable");
-    return false;
-  }
 
   if (!goProjectSamplesDir(viewData_)) {
     Trace::Error("SampleEditorView: Failed to chdir for pool sync");
