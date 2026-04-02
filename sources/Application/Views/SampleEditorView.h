@@ -77,9 +77,18 @@ private:
   void confirmSave(bool loadToPool);
   void showSaveFailedDialog();
   void showLoadToPoolFailedDialog();
+  etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT>
+  collectSampleUsers(int sampleIndex) const;
+  void retargetSampleUsers(
+      const etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> &users,
+      int newIndex);
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
+  // Save As must only register or refresh the saved filename in the pool.
+  // It must not move instruments away from the source filename.
+  bool syncSavedAsProjectPoolSample(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool saveSample(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool loadSampleToPool(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);

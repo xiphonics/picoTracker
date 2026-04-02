@@ -38,6 +38,7 @@ public:
   uint32_t FindSampleIndexByName(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name);
   int ImportSample(const char *name, const char *projectName);
+  int LoadProjectSample(const char *name);
   void PurgeSample(int i, const char *projectName);
   virtual bool CheckSampleFits(int sampleSize) = 0;
   virtual uint32_t GetAvailableSampleStorageSpace() = 0;
