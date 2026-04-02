@@ -1294,6 +1294,84 @@ void SampleEditorView::showLoadToPoolFailedDialog() {
               *this));
 }
 
+etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT>
+SampleEditorView::collectSampleUsers(int sampleIndex) const {
+  etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> users;
+  if (!viewData_ || !viewData_->project_ || sampleIndex < 0) {
+    return users;
+  }
+
+  auto *instrumentBank = viewData_->project_->GetInstrumentBank();
+  if (!instrumentBank) {
+    return users;
+  }
+
+  for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+    if (!instrument || instrument->GetType() != IT_SAMPLE) {
+      continue;
+    }
+
+    auto *sampleInstrument = static_cast<SampleInstrument *>(instrument);
+    if (sampleInstrument->GetSampleIndex() == sampleIndex) {
+      users.push_back(sampleInstrument);
+    }
+  }
+
+  return users;
+}
+
+void SampleEditorView::retargetSampleUsers(
+    const etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> &users,
+    int newIndex) {
+  if (newIndex < 0) {
+    return;
+  }
+
+  for (auto *sampleInstrument : users) {
+    if (sampleInstrument) {
+      sampleInstrument->AssignSample(newIndex);
+    }
+  }
+}
+
+bool SampleEditorView::syncSavedAsProjectPoolSample(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  auto *pool = SamplePool::GetInstance();
+  if (!pool) {
+    Trace::Error("SampleEditorView: SamplePool unavailable");
+    return false;
+  }
+
+  if (!goProjectSamplesDir(viewData_)) {
+    Trace::Error("SampleEditorView: Failed to chdir for pool sync");
+    return false;
+  }
+
+  int32_t existingIndex = pool->FindSampleIndexByName(savedFilename);
+  if (existingIndex < 0) {
+    if (pool->LoadProjectSample(savedFilename.c_str()) < 0) {
+      Trace::Error("SampleEditorView: Failed to add pool sample %s",
+                   savedFilename.c_str());
+      return false;
+    }
+    return true;
+  }
+
+  auto users = collectSampleUsers(existingIndex);
+  int32_t newIndex = pool->ReloadSample(existingIndex, savedFilename.c_str());
+  if (newIndex < 0) {
+    Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
+                 savedFilename.c_str());
+    return false;
+  }
+
+  if (newIndex != existingIndex) {
+    retargetSampleUsers(users, newIndex);
+  }
+
+  return true;
+}
+
 bool SampleEditorView::saveSample(
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
   auto fs = FileSystem::GetInstance();
@@ -1339,6 +1417,11 @@ bool SampleEditorView::saveSample(
     Trace::Error("SampleEditorView: Save committed but failed pool refresh");
   }
 
+  if (viewData_->isShowingSampleEditorProjectPool && !commitToOriginal &&
+      !syncSavedAsProjectPoolSample(savedFilename)) {
+    Trace::Error("SampleEditorView: Save committed but failed pool sync");
+  }
+
   Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
              savedFilename.c_str());
 
@@ -1371,6 +1454,9 @@ bool SampleEditorView::loadSampleToPool(
       return false;
     }
   } else {
+    if (!syncSavedAsProjectPoolSample(savedFilename)) {
+      return false;
+    }
     sampleId = pool->FindSampleIndexByName(savedFilename);
     if (sampleId < 0) {
       Trace::Error("SampleEditorView: Sample %s not found in pool",
