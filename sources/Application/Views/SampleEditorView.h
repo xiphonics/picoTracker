@@ -73,6 +73,8 @@ private:
   bool
   resolveSaveFilename(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename);
   bool fileExists(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename);
+  bool preflightProjectPoolSaveAs(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   void attemptSave(bool loadToPool);
   void confirmSave(bool loadToPool);
   void showSaveFailedDialog();

@@ -24,6 +24,7 @@
 #include "SampleEditProgressDisplay.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/Console/nanoprintf.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
@@ -1253,10 +1254,71 @@ bool SampleEditorView::fileExists(
   return fs->exists(filename.c_str());
 }
 
+bool SampleEditorView::preflightProjectPoolSaveAs(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  if (!viewData_ || !viewData_->isShowingSampleEditorProjectPool) {
+    return true;
+  }
+  auto *pool = SamplePool::GetInstance();
+
+  // Existing filenames are already handled by fileExists() and the overwrite
+  // confirmation flow in attemptSave(). Capacity checks below only apply when
+  // Save As would add a new sample pool entry.
+  if (pool->FindSampleIndexByName(savedFilename) >= 0) {
+    return true;
+  }
+
+  if (pool->GetNameListSize() >= MAX_SAMPLES) {
+    char message[SCREEN_WIDTH];
+    npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
+                 MAX_SAMPLES);
+    MessageBox *mb = MessageBox::Create(*this, "Cannot Save Sample        ",
+                                        message, MBBF_OK);
+    clearWaveformRegion();
+    DoModal(mb,
+            ModalViewCallback::create<SampleEditorView,
+                                      &SampleEditorView::onSimpleModalDismiss>(
+                *this));
+    return false;
+  }
+
+  WavFile wav;
+  auto wavRes = wav.Open(activeFilename().c_str());
+  if (!wavRes) {
+    Trace::Error("SampleEditorView: Failed opening %s for save preflight",
+                 activeFilename().c_str());
+    return false;
+  }
+
+  uint32_t sampleSize = wav.GetDiskSize(-1);
+  wav.Close();
+
+  if (pool->CheckSampleFits(sampleSize)) {
+    return true;
+  }
+
+  uint32_t availableBytes = pool->GetAvailableSampleStorageSpace();
+  char message[SCREEN_WIDTH];
+  npf_snprintf(message, sizeof(message), "Only %d bytes free",
+               availableBytes);
+  MessageBox *mb =
+      MessageBox::Create(*this, "Sample Too Large       ", message, MBBF_OK);
+  clearWaveformRegion();
+  DoModal(mb,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
+  return false;
+}
+
 void SampleEditorView::attemptSave(bool loadToPool) {
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename;
   if (!resolveSaveFilename(filename)) {
     showSaveFailedDialog();
+    return;
+  }
+
+  if (!preflightProjectPoolSaveAs(filename)) {
     return;
   }
 
