@@ -15,6 +15,7 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/char.h"
+#include "ChiptuneInstrument.h"
 #include "Filters.h"
 #include "MidiInstrument.h"
 #include "OpalInstrument.h"
@@ -26,7 +27,8 @@
 // Contain all instrument definition
 InstrumentBank::InstrumentBank()
     : Persistent("INSTRUMENTBANK"), sampleInstrumentPool_(),
-      midiInstrumentPool_(), sidInstrumentPool_(), opalInstrumentPool_() {
+      midiInstrumentPool_(), sidInstrumentPool_(), opalInstrumentPool_(),
+      chiptuneInstrumentPool_() {
 
   for (size_t i = 0; i < instruments_.max_size(); i++) {
     instruments_[i] = &none_;
@@ -42,6 +44,7 @@ void InstrumentBank::Reset() {
   midiInstrumentPool_.release_all();
   sidInstrumentPool_.release_all();
   opalInstrumentPool_.release_all();
+  chiptuneInstrumentPool_.release_all();
 
   for (size_t i = 0; i < instruments_.max_size(); i++) {
     instruments_[i] = &none_;
@@ -188,6 +191,16 @@ unsigned short InstrumentBank::GetNextAndAssignID(InstrumentType type,
     instruments_[id] = oi;
     return id;
   } break;
+  case IT_CHIPTUNE: {
+    ChiptuneInstrument *cti = chiptuneInstrumentPool_.create();
+    if (cti == nullptr) {
+      Trace::Error("CHIPTUNE INSTRUMENT EXHAUSTED!");
+      return NO_MORE_INSTRUMENT;
+    }
+    cti->Init();
+    instruments_[id] = cti;
+    return id;
+  } break;
   case IT_NONE:
     instruments_[id] = &none_;
     return id;
@@ -213,6 +226,9 @@ void InstrumentBank::releaseInstrument(unsigned short id) {
     break;
   case IT_OPAL:
     opalInstrumentPool_.destroy(instrument);
+    break;
+  case IT_CHIPTUNE:
+    chiptuneInstrumentPool_.destroy(instrument);
     break;
   case IT_NONE:
     // NA: None is a "singleton" so no need to release from pool

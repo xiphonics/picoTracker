@@ -1,4 +1,5 @@
 add_library(application_instruments
+  ChiptuneInstrument/ChiptuneInstrument.cpp
   CommandList.cpp
   Filters.cpp
   I_Instrument.cpp
@@ -29,6 +30,9 @@ target_link_libraries(application_instruments PUBLIC
   profiler
 )
 
-target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(application_instruments PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/ChiptuneInstrument
+)
 
 include_directories(${PROJECT_SOURCE_DIR})

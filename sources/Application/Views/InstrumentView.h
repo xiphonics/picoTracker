@@ -52,6 +52,7 @@ protected:
   void fillSIDParameters();
   void fillMidiParameters();
   void fillOpalParameters();
+  void fillChiptuneParameters();
   void fillNoneParameters();
   I_Instrument *getInstrument();
   void Update(Observable &o, I_ObservableData *d);
@@ -87,7 +88,7 @@ private:
   etl::vector<UINoteVarField, 1> noteVarField_;
   etl::vector<UIStaticField, 10> staticField_;
   etl::vector<UIBigHexVarField, 4> bigHexVarField_;
-  etl::vector<UIIntVarOffField, 2> intVarOffField_;
+  etl::vector<UIIntVarOffField, 3> intVarOffField_;
   etl::vector<UIActionField, 1> sampleActionField_;
   etl::vector<UIBitmaskVarField, 3> bitmaskVarField_;
   etl::vector<UITextField<MAX_INSTRUMENT_NAME_LENGTH>, 1> nameTextField_;
