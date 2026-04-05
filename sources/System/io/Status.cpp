@@ -8,6 +8,7 @@
  */
 
 #include "Status.h"
+#include "Foundation/Services/MemoryService.h"
 #include <System/Console/nanoprintf.h>
 #include <stdarg.h>
 #include <stdio.h>

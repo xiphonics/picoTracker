@@ -9,8 +9,8 @@
 
 #include "PersistencyService.h"
 #include "../Instruments/SamplePool.h"
+#include "Foundation/Services/MemoryService.h"
 #include "Foundation/Services/ServiceRegistry.h"
-
 #include "Foundation/Types/Types.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
@@ -50,10 +50,41 @@ bool PersistencyService::DeleteProject(const char *projectName) {
     return false;
   }
 
-  if (!DeleteDirectoryContents_(0)) {
-    Trace::Error("PERSISTENCYSERVICE: Could not delete project contents");
-    // attempt to recover to /projects for caller consistency
-    fs->chdir("..");
+  // no checks on the file deletion, since they may not exist and the directory
+  // deletion will fail later on if they do and cannot be deleted
+  fs->DeleteFile(PROJECT_DATA_FILE);
+  fs->DeleteFile(AUTO_SAVE_FILENAME);
+
+  if (!fs->chdir(PROJECT_SAMPLES_DIR)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not change to project dir");
+    return false;
+  }
+
+  fs->list(&fileIndexList_, ".wav", false);
+
+  // delete all samples
+  fs->BeginBatch();
+  char filename[128];
+  for (size_t i = 0; i < fileIndexList_.size(); i++) {
+    fs->getFileName(fileIndexList_[i], filename,
+                    MAX_PROJECT_SAMPLE_PATH_LENGTH);
+    if (strcmp(filename, "..") == 0 || strcmp(filename, ".") == 0) {
+      continue;
+    }
+    if (fs->getFileType(fileIndexList_[i]) == PFT_DIR) {
+      continue;
+    }
+    fs->DeleteFile(filename);
+  };
+  fs->EndBatch();
+
+  if (!fs->chdir("..")) { // up to project dir
+    Trace::Error("PERSISTENCYSERVICE: Could not change back to project dir");
+    return false;
+  }
+
+  if (!fs->DeleteDir(PROJECT_SAMPLES_DIR)) {
+    Trace::Error("PERSISTENCYSERVICE: Could not delete the project sample dir");
     return false;
   }
 
@@ -78,13 +109,13 @@ bool PersistencyService::DeleteDirectoryContents_(uint8_t depth) {
   }
 
   while (true) {
-    fileIndexes_.clear();
-    fs->list(&fileIndexes_, "", false, true);
+    fileIndexList_.clear();
+    fs->list(&fileIndexList_, "", false, true);
 
     bool foundEntry = false;
     bool deletedEntry = false;
-    for (size_t i = 0; i < fileIndexes_.size(); ++i) {
-      fs->getFileName(fileIndexes_[i], deleteNameBuffer_,
+    for (size_t i = 0; i < fileIndexList_.size(); ++i) {
+      fs->getFileName(fileIndexList_[i], deleteNameBuffer_,
                       sizeof(deleteNameBuffer_));
 
       if ((strcmp(deleteNameBuffer_, ".") == 0) ||
@@ -94,7 +125,7 @@ bool PersistencyService::DeleteDirectoryContents_(uint8_t depth) {
 
       foundEntry = true;
 
-      const PicoFileType type = fs->getFileType(fileIndexes_[i]);
+      const PicoFileType type = fs->getFileType(fileIndexList_[i]);
       if (type == PFT_FILE) {
         if (!fs->DeleteFile(deleteNameBuffer_)) {
           Trace::Error("PERSISTENCYSERVICE: Could not delete file: %s",
@@ -194,10 +225,11 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     Trace::Debug("get list of samples to copy from old project: %s",
                  oldProjectName);
 
-    fs->list(&fileIndexes_, ".wav", false);
+    fs->list(&fileIndexList_, ".wav", false);
     char filenameBuffer[PFILENAME_SIZE];
-    for (size_t i = 0; i < fileIndexes_.size(); i++) {
-      fs->getFileName(fileIndexes_[i], filenameBuffer, sizeof(filenameBuffer));
+    for (size_t i = 0; i < fileIndexList_.size(); i++) {
+      fs->getFileName(fileIndexList_[i], filenameBuffer,
+                      sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)

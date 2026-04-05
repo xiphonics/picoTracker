@@ -12,6 +12,7 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Foundation/Services/MemoryService.h"
 #include "ModalDialogs/MessageBox.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
@@ -206,7 +207,7 @@ void ThemeImportView::setCurrentFolder() {
   isDirty_ = true;
 
   // get the directory listing
-  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
+  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false, false, true);
 
   // remove directories from listing
   for (int i = fileIndexList_.size() - 1; i >= 0; i--) {

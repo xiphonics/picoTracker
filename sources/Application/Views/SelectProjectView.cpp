@@ -12,6 +12,8 @@
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/DrawUtils.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Foundation/Services/MemoryService.h"
+
 #include "BaseClasses/ViewEvent.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "System/System/System.h"
@@ -356,7 +358,7 @@ void SelectProjectView::setCurrentFolder() {
   fileIndexList_.clear();
 
   // Let's read all the directory in the project dir
-  fs->list(&fileIndexList_, "", true);
+  fs->list(&fileIndexList_, "", true, true, true);
 
   // Filter out "." and ".." along with the hidden default project entry
   for (auto it = fileIndexList_.begin(); it != fileIndexList_.end();) {

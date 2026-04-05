@@ -11,6 +11,7 @@
 #include "Application/AppWindow.h"
 #include "Application/Instruments/I_Instrument.h"
 #include "Application/Persistency/PersistencyService.h"
+#include "Foundation/Services/MemoryService.h"
 #include "ModalDialogs/MessageBox.h"
 #include <memory>
 #include <nanoprintf.h>
@@ -344,6 +345,6 @@ void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Update list of file indexes in this new dir
   fileIndexList_.clear();
   // Use false for subDirOnly to include both files and directories
-  fs->list(&fileIndexList_, INSTRUMENT_FILE_EXTENSION, false);
+  fs->list(&fileIndexList_, INSTRUMENT_FILE_EXTENSION, false, false, true);
   Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
 }

@@ -152,6 +152,8 @@ private:
 public:
   // Static accessor for the animation frame counter
   static uint32_t GetAnimationFrameCounter() { return animationFrameCounter_; }
+
+  View *getCurrentView() { return _currentView; }
 };
 
 #endif

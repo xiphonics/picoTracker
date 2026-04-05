@@ -11,6 +11,8 @@
 #include "Application/Audio/AudioFileStreamer.h"
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
+#include "Foundation/Services/MemoryService.h"
+
 #include "Application/Views/SampleEditorView.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/to_string.h"
@@ -896,7 +898,7 @@ void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {
-  fs->list(&fileIndexList_, ".wav", false);
+  fs->list(&fileIndexList_, ".wav", false, false, true);
 
   if (fs->isCurrentRoot() || inProjectSampleDir_) {
     for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {
