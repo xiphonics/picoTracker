@@ -22,7 +22,8 @@ TimerService *MidiInstrument::timerSvc_ = 0;
 MidiInstrument::NoteOffInfo MidiInstrument::NoteOffInfo::current = {0, 0};
 
 MidiInstrument::MidiInstrument()
-    : I_Instrument(&variables_), channel_(FourCC::MidiInstrumentChannel, 0),
+    : I_Instrument(variables_.begin(), variables_.end()),
+      channel_(FourCC::MidiInstrumentChannel, 0),
       noteLen_(FourCC::MidiInstrumentNoteLength, 0),
       volume_(FourCC::MidiInstrumentVolume, 255),
       table_(FourCC::MidiInstrumentTable, VAR_OFF),
@@ -38,12 +39,12 @@ MidiInstrument::MidiInstrument()
   };
 
   // name_ is now an etl::string in the base class, not a Variable
-  variables_.insert(variables_.end(), &channel_);
-  variables_.insert(variables_.end(), &noteLen_);
-  variables_.insert(variables_.end(), &volume_);
-  variables_.insert(variables_.end(), &table_);
-  variables_.insert(variables_.end(), &tableAuto_);
-  variables_.insert(variables_.end(), &program_);
+  variables_[0] = &channel_;
+  variables_[1] = &noteLen_;
+  variables_[2] = &volume_;
+  variables_[3] = &table_;
+  variables_[4] = &tableAuto_;
+  variables_[5] = &program_;
 }
 
 MidiInstrument::~MidiInstrument(){};

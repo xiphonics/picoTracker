@@ -1183,13 +1183,11 @@ bool InstrumentView::checkInstrumentModified() {
   }
 
   // Get the list of variables for this instrument
-  etl::ilist<Variable *> *variables = instrument->Variables();
-  if (!variables) {
-    return false;
-  }
+  Variable **begin = instrument->VarBegin();
+  Variable **end = instrument->VarEnd();
 
   // Check if any variable has been modified from its default value
-  for (auto it = variables->begin(); it != variables->end(); ++it) {
+  for (auto it = begin; it != end; ++it) {
     Variable *var = *it;
     if (var && var->IsModified()) {
       return true;
@@ -1207,14 +1205,8 @@ void InstrumentView::resetInstrumentToDefaults() {
     return;
   }
 
-  // Get the list of variables for this instrument
-  etl::ilist<Variable *> *variables = instrument->Variables();
-  if (!variables) {
-    return;
-  }
-
   // Reset all variables to their default values
-  for (auto it = variables->begin(); it != variables->end(); ++it) {
+  for (auto it = instrument->VarBegin(); it != instrument->VarEnd(); ++it) {
     Variable *var = *it;
     if (var) {
       var->Reset();

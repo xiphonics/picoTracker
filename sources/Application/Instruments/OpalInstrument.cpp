@@ -32,7 +32,7 @@ static const unsigned int noteFNumbers[] = {342, 363, 385, 408, 432, 458,
                                             485, 514, 544, 577, 611, 647};
 
 OpalInstrument::OpalInstrument()
-    : I_Instrument(&variables_),
+    : I_Instrument(variables_.begin(), variables_.end()),
       algorithm_(FourCC::OPALInstrumentAlgorithm, algorithms, 6, 0),
       feedback_(FourCC::OPALInstrumentFeedback, 0),
       deepTremeloVibrato_(FourCC::OPALInstrumentDeepTremeloVibrato, 0),
@@ -52,21 +52,21 @@ OpalInstrument::OpalInstrument()
                         0) {
 
   // name_ is now an etl::string in the base class, not a Variable
-  variables_.insert(variables_.end(), &algorithm_);
-  variables_.insert(variables_.end(), &feedback_);
-  variables_.insert(variables_.end(), &deepTremeloVibrato_);
-  variables_.insert(variables_.end(), &op1Level_);
-  variables_.insert(variables_.end(), &op1Multiplier_);
-  variables_.insert(variables_.end(), &op1ADSR_);
-  variables_.insert(variables_.end(), &op1WaveShape_);
-  variables_.insert(variables_.end(), &op1KeyScaleLevel_);
-  variables_.insert(variables_.end(), &op1TremVibSusKSR_);
-  variables_.insert(variables_.end(), &op2Level_);
-  variables_.insert(variables_.end(), &op2Multiplier_);
-  variables_.insert(variables_.end(), &op2ADSR_);
-  variables_.insert(variables_.end(), &op2WaveShape_);
-  variables_.insert(variables_.end(), &op2KeyScaleLevel_);
-  variables_.insert(variables_.end(), &op2TremVibSusKSR_);
+  variables_[0] = &algorithm_;
+  variables_[1] = &feedback_;
+  variables_[2] = &deepTremeloVibrato_;
+  variables_[3] = &op1Level_;
+  variables_[4] = &op1Multiplier_;
+  variables_[5] = &op1ADSR_;
+  variables_[6] = &op1WaveShape_;
+  variables_[7] = &op1KeyScaleLevel_;
+  variables_[8] = &op1TremVibSusKSR_;
+  variables_[9] = &op2Level_;
+  variables_[10] = &op2Multiplier_;
+  variables_[11] = &op2ADSR_;
+  variables_[12] = &op2WaveShape_;
+  variables_[13] = &op2KeyScaleLevel_;
+  variables_[14] = &op2TremVibSusKSR_;
 }
 
 OpalInstrument::~OpalInstrument(){};

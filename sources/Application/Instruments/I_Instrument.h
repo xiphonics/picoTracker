@@ -37,10 +37,10 @@ protected:
   etl::string<MAX_INSTRUMENT_NAME_LENGTH> name_;
 
 public:
-  I_Instrument(etl::ilist<Variable *> *list,
+  I_Instrument(Variable **begin, Variable **end,
                const char *nodeName = "INSTRUMENT",
                bool registerWithPersistence = false)
-      : VariableContainer(list),
+      : VariableContainer(begin, end),
         Persistent(nodeName, registerWithPersistence){};
   virtual ~I_Instrument();
 
@@ -113,7 +113,6 @@ public:
 
   virtual void GetTableState(TableSaveState &state) = 0;
   virtual void SetTableState(TableSaveState &state) = 0;
-  virtual etl::ilist<Variable *> *Variables() = 0;
 
   // Persistent implementation
   virtual void SaveContent(tinyxml2::XMLPrinter *printer) override;
