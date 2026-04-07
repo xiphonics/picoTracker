@@ -811,10 +811,10 @@ void ImportView::enterDirectory(FileSystem *fs, const char *name) {
 
   if (dirIndexStack_.full()) {
     Trace::Error("ImportView directory stack overflow at depth %d",
-                 kDirectoryIndexStackDepth);
+                 DirectoryIndexStackDepth);
     char message[SCREEN_WIDTH];
     npf_snprintf(message, sizeof(message), "Max depth is %d",
-                 kDirectoryIndexStackDepth);
+                 DirectoryIndexStackDepth);
     MessageBox *mb =
         MessageBox::Create(*this, "Can't enter folder", message, MBBF_OK);
     DoModal(mb);
@@ -837,11 +837,9 @@ void ImportView::goToParentDirectory(FileSystem *fs) {
     return;
   }
 
+  currentIndex_ = dirIndexStack_.empty() ? 0 : dirIndexStack_.top();
   if (!dirIndexStack_.empty()) {
-    currentIndex_ = dirIndexStack_.top();
     dirIndexStack_.pop();
-  } else {
-    currentIndex_ = 0;
   }
 
   refreshFileIndexList(fs);

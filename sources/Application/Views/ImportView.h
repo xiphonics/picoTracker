@@ -47,7 +47,7 @@ protected:
   void refreshFileIndexList(FileSystem *fs);
 
 private:
-  static constexpr uint8_t kDirectoryIndexStackDepth = 32;
+  static const uint8_t DirectoryIndexStackDepth = 32;
 
   bool changeDirectory(FileSystem *fs, const char *name);
   void onConfirmRemoveProjectSample(View &view, ModalView &dialog);
@@ -65,7 +65,7 @@ private:
   bool pendingDirEnterOnRelease_ = false; // Open dir on ENTER release
   bool inProjectSampleDir_ =
       false; // Flag to track if we're in the project's sample directory
-  etl::stack<uint8_t, kDirectoryIndexStackDepth> dirIndexStack_;
+  etl::stack<uint8_t, DirectoryIndexStackDepth> dirIndexStack_;
   FileSystem *pendingDeleteFs_ = nullptr;
   char pendingDeleteFilename_[PFILENAME_SIZE] = {};
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
