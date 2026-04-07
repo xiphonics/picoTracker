@@ -1,39 +1,36 @@
 {
-  "version": 3,
+  "version": 6,
   "configurePresets": [
     {
-      "name": "rp2040-debug",
-      "displayName": "RP2040 Debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/../build-debug",
+      "name": "pico-debug",
+      "displayName": "Pico RP2040 Debug",
+      "binaryDir": "${sourceDir}/../build",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "PICO_DEOPTIMIZED_DEBUG": "0",
-        "PICO_PLATFORM": "rp2040",
-        "USE_LCD": "LCD_ST7789"
+        "ADV": "false",
+        "PICO_DEOPTIMIZED_DEBUG": "1",
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "rp2040-release",
-      "displayName": "RP2040 Release",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/../build-release",
+      "name": "pico-release",
+      "displayName": "Pico RP2040 Release",
+      "binaryDir": "${sourceDir}/../build-opt",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "PICO_DEOPTIMIZED_DEBUG": "0",
-        "PICO_PLATFORM": "rp2040",
-        "USE_LCD": "LCD_ST7789"
+        "ADV": "false",
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "rp2040-debug",
-      "configurePreset": "rp2040-debug"
+      "name": "pico-debug",
+      "configurePreset": "pico-debug",
+      "jobs": 16
     },
     {
-      "name": "rp2040-release",
-      "configurePreset": "rp2040-release"
+      "name": "pico-release",
+      "configurePreset": "pico-release",
+      "jobs": 16
     }
   ]
 }
