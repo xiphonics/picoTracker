@@ -1365,6 +1365,7 @@ void SampleEditorView::showLoadToPoolFailedDialog() {
               *this));
 }
 
+#ifdef ADV
 etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT>
 SampleEditorView::collectSampleUsers(int sampleIndex) const {
   etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> users;
@@ -1394,13 +1395,13 @@ SampleEditorView::collectSampleUsers(int sampleIndex) const {
 void SampleEditorView::retargetSampleUsers(
     const etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> &users,
     uint16_t newIndex) {
-
   for (auto *sampleInstrument : users) {
     if (sampleInstrument) {
       sampleInstrument->AssignSample(newIndex);
     }
   }
 }
+#endif
 
 bool SampleEditorView::syncSavedAsProjectPoolSample(
     const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {

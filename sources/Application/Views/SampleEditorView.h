@@ -79,11 +79,13 @@ private:
   void confirmSave(bool loadToPool);
   void showSaveFailedDialog();
   void showLoadToPoolFailedDialog();
+#ifdef ADV
   etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT>
   collectSampleUsers(int sampleIndex) const;
   void retargetSampleUsers(
       const etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> &users,
       uint16_t newIndex);
+#endif
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
