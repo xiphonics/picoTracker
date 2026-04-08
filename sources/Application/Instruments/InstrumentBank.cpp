@@ -252,8 +252,7 @@ unsigned short InstrumentBank::Clone(unsigned short i) {
     return NO_MORE_INSTRUMENT;
   }
 
-  for (auto it = src->Variables()->begin(); it != src->Variables()->end();
-       it++) {
+  for (auto it = src->Variables().begin(); it != src->Variables().end(); it++) {
     Variable *dstV = dst->FindVariable((*it)->GetID());
     if (dstV) {
       dstV->CopyFrom(**it);

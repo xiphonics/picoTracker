@@ -247,7 +247,7 @@ static const ConfigParam configParams[] = {
 };
 
 Config::Config()
-    : VariableContainer(&variables_),
+    : VariableContainer(variables_),
       background_(FourCC::VarBGColor,
                   static_cast<int>(ThemeConstants::DEFAULT_BACKGROUND)),
       foreground_(FourCC::VarFGColor,
@@ -285,32 +285,15 @@ Config::Config()
       outputVolume_(FourCC::VarOutputVolume, DEFAULT_OUTPUT_VOLUME),
       recordSource_(FourCC::VarRecordSource, recordSourceOptions, 4, 1),
       recordLineGain_(FourCC::VarRecordLineGain, DEFAULT_RECORD_LINE_GAIN_DB),
-      recordMicGain_(FourCC::VarRecordMicGain, DEFAULT_RECORD_MIC_GAIN_DB) {
-
-  variables_.push_back(&background_);
-  variables_.push_back(&foreground_);
-  variables_.push_back(&hiColor1_);
-  variables_.push_back(&hiColor2_);
-  variables_.push_back(&consoleColor_);
-  variables_.push_back(&cursorColor_);
-  variables_.push_back(&infoColor_);
-  variables_.push_back(&warnColor_);
-  variables_.push_back(&errorColor_);
-  variables_.push_back(&accentColor_);
-  variables_.push_back(&accentAltColor_);
-  variables_.push_back(&emphasisColor_);
-  variables_.push_back(&lineOut_);
-  variables_.push_back(&midiDevice_);
-  variables_.push_back(&midiSync_);
-  variables_.push_back(&remoteUI_);
-  variables_.push_back(&importResampler_);
-  variables_.push_back(&uiFont_);
-  variables_.push_back(&themeName_);
-  variables_.push_back(&backlightLevel_);
-  variables_.push_back(&outputVolume_);
-  variables_.push_back(&recordSource_);
-  variables_.push_back(&recordLineGain_);
-  variables_.push_back(&recordMicGain_);
+      recordMicGain_(FourCC::VarRecordMicGain, DEFAULT_RECORD_MIC_GAIN_DB),
+      variables_{&background_, &foreground_, &hiColor1_,
+                 &hiColor2_, &consoleColor_, &cursorColor_,
+                 &infoColor_, &warnColor_, &errorColor_,
+                 &accentColor_, &accentAltColor_, &emphasisColor_,
+                 &lineOut_, &midiDevice_, &midiSync_,
+                 &remoteUI_, &importResampler_, &uiFont_,
+                 &themeName_, &backlightLevel_, &outputVolume_,
+                 &recordSource_, &recordLineGain_, &recordMicGain_} {
 
   PersistencyDocument doc;
 

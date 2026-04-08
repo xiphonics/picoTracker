@@ -32,7 +32,7 @@ static const unsigned int noteFNumbers[] = {342, 363, 385, 408, 432, 458,
                                             485, 514, 544, 577, 611, 647};
 
 OpalInstrument::OpalInstrument()
-    : I_Instrument(&variables_),
+    : I_Instrument(variables_),
       algorithm_(FourCC::OPALInstrumentAlgorithm, algorithms, 6, 0),
       feedback_(FourCC::OPALInstrumentFeedback, 0),
       deepTremeloVibrato_(FourCC::OPALInstrumentDeepTremeloVibrato, 0),
@@ -49,25 +49,12 @@ OpalInstrument::OpalInstrument()
       op2WaveShape_(FourCC::OPALInstrumentOp2WaveShape, waveShapes, 8, 0),
       op2TremVibSusKSR_(FourCC::OPALInstrumentOp2TremVibSusKSR, 0x2),
       op2KeyScaleLevel_(FourCC::OPALInstrumentOp2KeyScaleLevel, kslValues, 4,
-                        0) {
-
-  // name_ is now an etl::string in the base class, not a Variable
-  variables_.insert(variables_.end(), &algorithm_);
-  variables_.insert(variables_.end(), &feedback_);
-  variables_.insert(variables_.end(), &deepTremeloVibrato_);
-  variables_.insert(variables_.end(), &op1Level_);
-  variables_.insert(variables_.end(), &op1Multiplier_);
-  variables_.insert(variables_.end(), &op1ADSR_);
-  variables_.insert(variables_.end(), &op1WaveShape_);
-  variables_.insert(variables_.end(), &op1KeyScaleLevel_);
-  variables_.insert(variables_.end(), &op1TremVibSusKSR_);
-  variables_.insert(variables_.end(), &op2Level_);
-  variables_.insert(variables_.end(), &op2Multiplier_);
-  variables_.insert(variables_.end(), &op2ADSR_);
-  variables_.insert(variables_.end(), &op2WaveShape_);
-  variables_.insert(variables_.end(), &op2KeyScaleLevel_);
-  variables_.insert(variables_.end(), &op2TremVibSusKSR_);
-}
+                        0),
+      variables_{&algorithm_,    &feedback_,         &deepTremeloVibrato_,
+                 &op1Level_,     &op1Multiplier_,    &op1ADSR_,
+                 &op1WaveShape_, &op1KeyScaleLevel_, &op1TremVibSusKSR_,
+                 &op2Level_,     &op2Multiplier_,    &op2ADSR_,
+                 &op2WaveShape_, &op2KeyScaleLevel_, &op2TremVibSusKSR_} {}
 
 OpalInstrument::~OpalInstrument(){};
 

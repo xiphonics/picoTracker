@@ -53,7 +53,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
+  etl::array_view<Variable *> Variables() { return variables_; };
 
   bool IsMulti();
 
@@ -101,8 +101,6 @@ protected:
   void doKRateUpdate(int channel);
 
 private:
-  etl::list<Variable *, 21> variables_;
-
   SoundSource *source_;
   __attribute__((section(".DTCMRAM"))) static struct renderParams
       renderParams_[SONG_CHANNEL_COUNT];
@@ -131,6 +129,9 @@ private:
   WatchedVariable loopEnd_;
   Variable table_;
   Variable tableAuto_;
+
+  etl::array<Variable *, 21> variables_;
+
   // TODO (democloid): evaluate if this should be in DTCMRAM
   etl::array<uint32_t, MaxSlices> slicePoints_;
 
