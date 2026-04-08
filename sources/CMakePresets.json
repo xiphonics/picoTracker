@@ -1,0 +1,39 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "rp2040-debug",
+      "displayName": "RP2040 Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "PICO_DEOPTIMIZED_DEBUG": "0",
+        "PICO_PLATFORM": "rp2040",
+        "USE_LCD": "LCD_ST7789"
+      }
+    },
+    {
+      "name": "rp2040-release",
+      "displayName": "RP2040 Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../build-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PICO_DEOPTIMIZED_DEBUG": "0",
+        "PICO_PLATFORM": "rp2040",
+        "USE_LCD": "LCD_ST7789"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "rp2040-debug",
+      "configurePreset": "rp2040-debug"
+    },
+    {
+      "name": "rp2040-release",
+      "configurePreset": "rp2040-release"
+    }
+  ]
+}

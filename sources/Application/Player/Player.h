@@ -34,6 +34,8 @@ enum QueueingMode {
 
 typedef uint32_t MixerStereoLevel;
 
+class I_Instrument;
+
 class PlayerEvent : public ViewEvent {
 public:
   PlayerEvent(PlayerEventType type, unsigned int tickCount = 0);
@@ -140,6 +142,9 @@ protected:
   void updateChainPos(int position, int channel, int hop = 0);
   void updatePhrasePos(int pos, int channel);
   void playCursorPosition(int channel);
+  void StepAutomationTableForRetrigger(int channel, I_Instrument *instrument);
+  void RetriggerChannelInstrument(int channel, int semitoneOffset,
+                                  bool stepAutomationTable);
   int getChannelHop(int channel, int pos);
   void moveToNextStep();
   void moveToNextPhrase(int channel, int hop = -1);

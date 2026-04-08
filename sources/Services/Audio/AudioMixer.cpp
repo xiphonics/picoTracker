@@ -103,30 +103,30 @@ bool AudioMixer::Render(fixed *buffer, int samplecount) {
     if (volume_ == FP_ONE) {
       // unity gain, no calculations to be done, just grab the levels
       for (int i = 0; i < samplecount; i += 32, c += 64) {
-        fixed l = *c;
-        fixed r = *(c + 1);
-        if (l > peakL)
-          peakL = l;
+        fixed r = *c;
+        fixed l = *(c + 1);
         if (r > peakR)
           peakR = r;
+        if (l > peakL)
+          peakL = l;
       }
     } else {
       for (int i = 0; i < samplecount; i++) {
-        // Left
-        fixed l = fp_mul(*c, volume_);
-        *c++ = l;
-
         // Right
         fixed r = fp_mul(*c, volume_);
         *c++ = r;
 
+        // Left
+        fixed l = fp_mul(*c, volume_);
+        *c++ = l;
+
         // update the level every 32 sample pairs
         // (!(i & 31)) =^= (i % 32 == 0) and is used for performance
         if (!(i & 31)) {
-          if (l > peakL)
-            peakL = l;
           if (r > peakR)
             peakR = r;
+          if (l > peakL)
+            peakL = l;
         }
       }
     }

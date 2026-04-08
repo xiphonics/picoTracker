@@ -978,21 +978,30 @@ void TableView::AnimationUpdate() {
     if (player->IsRunning()) {
       // Get current channel
       int channel = viewData_->songX_;
-      // Table associated to the channel player
       TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
-      Table *playbackTable = tpb.GetTable();
-      // Table we're viewing
+      TablePlayback &atp = TablePlayback::GetAutomationPlayback(channel);
       Table &viewTable = th->GetTable(viewData_->currentTable_);
 
-      if (playbackTable == &viewTable && viewData_->playMode_ != PM_AUDITION) {
-        // Draw cursors at current positions
+      if (viewData_->playMode_ != PM_AUDITION) {
         SetColor(CD_ACCENT);
-        for (int i = 0; i < 3; i++) {
-          int yPos = tpb.GetPlaybackPosition(i);
-          if (yPos >= 0 && yPos < 16) { // Only draw if position is valid
-            pos._x = anchor._x - 1 + (i * 9);
-            pos._y = anchor._y + yPos;
-            DrawString(pos._x, pos._y, ">", props);
+        if (tpb.GetTable() == &viewTable) {
+          for (int i = 0; i < 3; i++) {
+            int yPos = tpb.GetPlaybackPosition(i);
+            if (yPos >= 0 && yPos < 16) {
+              pos._x = anchor._x - 1 + (i * 9);
+              pos._y = anchor._y + yPos;
+              DrawString(pos._x, pos._y, ">", props);
+            }
+          }
+        }
+        if (atp.GetTable() == &viewTable) {
+          for (int i = 0; i < 3; i++) {
+            int yPos = atp.GetPlaybackPosition(i);
+            if (yPos >= 0 && yPos < 16) {
+              pos._x = anchor._x - 1 + (i * 9);
+              pos._y = anchor._y + yPos;
+              DrawString(pos._x, pos._y, ">", props);
+            }
           }
         }
       }
