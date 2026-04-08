@@ -38,6 +38,7 @@ static FourCC _all[] = {
     FourCC::InstrumentCommandTable,
     FourCC::InstrumentCommandTempo,
     FourCC::InstrumentCommandVelocity,
+    FourCC::InstrumentCommandVibrato,
     FourCC::InstrumentCommandVolume,
 };
 

@@ -16,6 +16,7 @@ picoTracker supports several different types of instruments, each with its own u
    - **MIDI**: For controlling external MIDI devices
    - **SID**: Emulation of the Commodore 64 SID chip
    - **OPAL**: FM synthesis emulating classic PC soundcards
+   - **CHIPTUNE**: Gameboy-esque chiptune instrument for classic 8-bit sound
 4. If you've made changes to the current instrument, you'll be asked to confirm before switching types
 5. Note that you cannot change instrument types while playback is active
 
@@ -203,8 +204,6 @@ SID Notes:
 
 A pulse width of `0` creates a very thin pulse (almost a spike), while a value of `FFF` (4095) creates a full square wave. Values in between create asymmetrical square waves with varying harmonic characteristics.
 
-
-
 ### OPAL
 
 ![screen capture of OPAL instrument screen](image/opal-screen-small.png)
@@ -232,6 +231,58 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 
 ![screen capture of OPAL instrument screen](image/opal-waveforms-small.png)
 
+### Chiptune
+
+![screen capture of the chiptune instrument screen](image/chiptune-instrument-small.png)
+
+- **Waveform:** Select the base sound waverform. Options are:
+  - Pulse (12.5%, 25%, 50% duty cycle)
+  - 4-bit triangle
+  - Pitched noise generators inspired by classic Game Boy (7-bit), NES and SN76489
+  - white noise
+- **Transpose:** Shifts the pitch up or down by up to two octaves (±24 semitones).
+- **Level:** Sets the output volume (0x00–0xFF).
+- **Burst:** Adds a short white noise burst at the start of each note. Useful for percussive attacks (off, 0x01–0xFF).
+- **Arp Speed:** Controls how fast arpeggios (via the `ARP` command) are cycled.
+- **Length:** Limits the duration of a note (-- = no limit, 0x01–0xFF). Useful for short, percussive sounds without relying on envelopes.
+- **Table:** Assigns a table that is automatically executed for this instrument.
+- **Envelope**
+  - **Attack:** Controls how quickly the volume reaches its peak (0x00 = instant, 0xFF = slowest).
+  - **Decay:** Controls how quickly the volume falls after the attack phase (0x00 = instant, 0xFF = slowest).
+- **Vibrato**
+  - **Delay:** Sets how long it takes before vibrato begins after a note is triggered.
+  - **Amount:** Sets the intensity of the automatic vibrato.
+- **Sweep**
+  - **Length:** Defines the duration of the pitch sweep applied at note start.
+  - **Amount:** Defines the pitch range of the sweep (−127 to 127).
+
+#### Sample instruments
+
+The following sample instruments can serve as a starting point for creating your own sounds:
+
+| Parameter          | Lead      | Arpeggio  | Bass      | Kick drum | Snare         | Hi-Hat      |
+|--------------------|-----------|-----------|-----------|-----------|---------------|-------------|
+| **Waveform**       | Pulse 50% | Pulse 25% | Pulse 50% | Noise GB7 | Noise SN76489 | White noise |
+| **Transpose**      | +12       | 0         | -12       | 0         | +12           | 0           |
+| **Level**          | 80        | 80        | 80        | 80        | 80            | A0          |
+| **Burst**          | 10        | --        | --        | --        | 0B            | --          |
+| **ArpSpeed**       | 12        | 12        | 12        | 12        | 12            | 12          |
+| **Length**         | --        | --        | --        | --        | 10            | 03          |
+| **Table**          | --        | --        | --        | --        | --            | --          |
+| **Attack**         | 10        | 00        | 00        | 00        | 00            | 00          |
+| **Decay**          | 80        | 60        | A0        | 70        | 70            | FF          |
+| **Vibrato Delay**  | 07        | 00        | 03        | 00        | 00            | 00          |
+| **Vibrato Amount** | 20        | 00        | 04        | 00        | 00            | 00          |
+| **Sweep Length**   | 00        | 00        | 00        | 14        | 10            | 00          |
+| **Sweep Amount**   | 00        | 00        | 00        | -80       | -16           | 00          |
+
+
+The picoTracker supports up to 8 simultaneous voices running the chiptune instrument. Up to 16 different instruments can be used within a single project.
+
+#### Supported Commands
+
+The following commands are supported: `ARP` (Arpeggiator), `KIL` (Kill / Note Off), `GOF` (Gate Off), `CSH` (Crush & Drive), `VIB` (Vibrato), `PAN` (Stereo Panning), `PSL` (Pitch Slide), `LEG` (Legato), `VOL` (Volume), `IRT` (Isntrument Retrigger) and `PFT` (Pitch Fine Tune).
+
 ### Exporting an Instrument
 
 1. Make sure your instrument has a name set in the "name:" field
@@ -254,8 +305,6 @@ Exported instruments are stored in `/instruments/` on your SD card.
 5. The imported instrument will replace the currently selected instrument
 6. Press **OK** to continue after the import is complete message is shown
 
-
-
 ### Tips for Instrument Management
 
 - You can organise your instrument files into subfolders inside the `/instruments` directory but exported files will always be saved in the root `/instruments` directory
@@ -263,12 +312,11 @@ Exported instruments are stored in `/instruments/` on your SD card.
 - The instrument name is used for the export filename, so ensure it's set before exporting
 - Back up your `/instruments` directory when backing up your picoTracker data on your sdcard
 
-
 ## Limitations of instrument performance
 
 The picoTrackers CPU limits the number of simultaneous instruments that can be played at once. The specific limit depends on the instrument type and the settings of each instrument. In general the limit is:
 * 4-5 Sample instruments or
-* 3 OPAL instruments or
+* 3 OPAL instruments or 
 * 3 SID instruments
 * 8 MIDI instruments
 
