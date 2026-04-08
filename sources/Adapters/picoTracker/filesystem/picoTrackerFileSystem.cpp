@@ -121,8 +121,10 @@ PicoFileType picoTrackerFileSystem::getFileType(int index) {
 }
 
 void picoTrackerFileSystem::list(etl::ivector<int> *fileIndexes,
-                                 const char *filter, bool subDirOnly,
-                                 bool includeHidden, bool sorted) {
+                                 const char *filter, ListFlags flags) {
+  bool subDirOnly = flags & LF_SUBDIRS_ONLY;
+  bool includeHidden = flags & LF_INCLUDE_HIDDEN;
+  bool sorted = flags & LF_SORTED;
   std::lock_guard<Mutex> lock(mutex);
 
   fileIndexes->clear();

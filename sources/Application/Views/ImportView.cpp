@@ -897,7 +897,7 @@ void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
 }
 
 void ImportView::refreshFileIndexList(FileSystem *fs) {
-  fs->list(&fileIndexList_, ".wav", false, true, true);
+  fs->list(&fileIndexList_, ".wav", (ListFlags)(LF_INCLUDE_HIDDEN | LF_SORTED));
 
   if (fs->isCurrentRoot() || inProjectSampleDir_) {
     for (auto it = fileIndexList_.begin(); it != fileIndexList_.end(); ++it) {

@@ -344,6 +344,7 @@ void InstrumentImportView::setCurrentFolder(FileSystem *fs, const char *name) {
   // Update list of file indexes in this new dir
   fileIndexList_.clear();
   // Use false for subDirOnly to include both files and directories
-  fs->list(&fileIndexList_, INSTRUMENT_FILE_EXTENSION, false, true, true);
+  fs->list(&fileIndexList_, INSTRUMENT_FILE_EXTENSION,
+           (ListFlags)(LF_INCLUDE_HIDDEN | LF_SORTED));
   Trace::Debug("loaded %d files from %s", fileIndexList_.size(), name);
 }

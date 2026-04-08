@@ -206,7 +206,7 @@ void ThemeImportView::setCurrentFolder() {
   isDirty_ = true;
 
   // get the directory listing
-  fs->list(&fileIndexList_, THEME_FILE_EXTENSION, false);
+  fs->list(&fileIndexList_, THEME_FILE_EXTENSION);
 
   // remove directories from listing
   for (int i = fileIndexList_.size() - 1; i >= 0; i--) {

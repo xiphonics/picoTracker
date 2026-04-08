@@ -136,7 +136,7 @@ void SerialDebugUI::listFiles(const char *path) {
   }
 
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexList_;
-  fs->list(&fileIndexList_, "", false, false, true);
+  fs->list(&fileIndexList_, "", LF_SORTED);
 
   char name[PFILENAME_SIZE];
   for (size_t i = 0; i < fileIndexList_.size(); i++) {

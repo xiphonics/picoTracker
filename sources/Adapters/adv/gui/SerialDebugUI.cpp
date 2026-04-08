@@ -199,7 +199,7 @@ void SerialDebugUI::listFiles(const char *path) {
     Trace::Error("failed to ls files path:%s", path);
   }
 
-  fs->list(&fileIndexList_, "", false, false, true);
+  fs->list(&fileIndexList_, "", LF_SORTED);
 
   // No need to actually do the printing below for now as the current debug code
   // in PicoFileSystem class is already printing all the files fetched when the

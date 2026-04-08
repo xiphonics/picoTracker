@@ -78,7 +78,7 @@ bool PersistencyService::DeleteDirectoryContents_(uint8_t depth) {
 
   while (true) {
     fileIndexList_.clear();
-    fs->list(&fileIndexList_, "", false, true);
+    fs->list(&fileIndexList_, "", LF_INCLUDE_HIDDEN);
 
     bool foundEntry = false;
     bool deletedEntry = false;
@@ -193,7 +193,7 @@ PersistencyResult PersistencyService::Save(const char *projectName,
     Trace::Debug("get list of samples to copy from old project: %s",
                  oldProjectName);
 
-    fs->list(&fileIndexList_, ".wav", false);
+    fs->list(&fileIndexList_, ".wav");
     char filenameBuffer[PFILENAME_SIZE];
     for (size_t i = 0; i < fileIndexList_.size(); i++) {
       fs->getFileName(fileIndexList_[i], filenameBuffer,
