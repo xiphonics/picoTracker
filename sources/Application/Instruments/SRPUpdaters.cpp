@@ -323,7 +323,7 @@ void Vibrato::Trigger(bool tableTick) {
   phase_ += rate_;
   // sine is i16, depth u8 -> 23 bit value, shifted down by 10 bits gives a
   // range of 13 bits (~±0.26 -> four semitones)
-  current_ = FP_ONE + ((sine_i16_interpolated_64(phase_) * depth_) >> 10);
+  current_ = FP_ONE + ((sine_i16_interpolated_256(phase_) * depth_) >> 10);
 };
 
 void Vibrato::UpdateSRP(struct RUParams &rup) {
