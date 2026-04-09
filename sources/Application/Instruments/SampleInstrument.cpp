@@ -398,6 +398,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   rp->volume_ = rp->baseVolume_ = i2fp(volume_.GetInt());
 
   rp->pan_ = rp->basePan_ = i2fp(pan_.GetInt());
+  rp->vibrato_.Reset();
 
   if (!source_->IsMulti()) {
     rp->rendLoopStart_ = loopStart_.GetInt();

@@ -117,6 +117,7 @@ class Vibrato : public I_SRPUpdater {
 public:
   Vibrato(){};
   virtual ~Vibrato(){};
+  void Reset();
   void SetData(uint8_t rate, uint8_t depth);
   virtual void Trigger(bool tableTick);
   virtual void UpdateSRP(struct RUParams &rup);

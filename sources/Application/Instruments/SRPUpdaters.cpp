@@ -305,6 +305,11 @@ void Arp::UpdateSRP(struct RUParams &rup) {
 // Vibrato
 //
 
+void Vibrato::Reset() {
+  phase_ = 0;
+  current_ = FP_ONE;
+};
+
 void Vibrato::SetData(uint8_t rate, uint8_t depth) {
   // lower 8 bits: depth, upper 8 bits: speed
   depth_ = depth;
