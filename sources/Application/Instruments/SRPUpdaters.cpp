@@ -314,10 +314,6 @@ void Vibrato::SetData(uint8_t rate, uint8_t depth) {
   // lower 8 bits: depth, upper 8 bits: speed
   depth_ = depth;
   rate_ = 1 + (rate << 4);
-
-  // reset output and phase
-  phase_ = 0;
-  current_ = FP_ONE;
 };
 
 void Vibrato::Trigger(bool tableTick) {
