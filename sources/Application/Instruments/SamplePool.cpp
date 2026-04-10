@@ -365,6 +365,23 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   return status ? (count_ - 1) : -1;
 };
 
+int SamplePool::LoadProjectSample(const char *name) {
+  if (count_ == MAX_SAMPLES) {
+    return -1;
+  }
+
+  if (!loadSample(name)) {
+    return -1;
+  }
+
+  SetChanged();
+  SamplePoolEvent ev;
+  ev.index_ = count_ - 1;
+  ev.type_ = SPET_INSERT;
+  NotifyObservers(&ev);
+  return count_ - 1;
+}
+
 void SamplePool::PurgeSample(int i, const char *projectName) {
   auto fs = FileSystem::GetInstance();
 

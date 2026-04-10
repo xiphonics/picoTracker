@@ -24,6 +24,7 @@
 #include "SampleEditProgressDisplay.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/Console/nanoprintf.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
@@ -1222,10 +1223,80 @@ bool SampleEditorView::fileExists(
   return fs->exists(filename.c_str());
 }
 
+// check preconditions for doing save-ad in project pool, checking pool
+// available space & size & not overwriting existing file
+bool SampleEditorView::preflightProjectPoolSaveAs(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  if (!viewData_ || !viewData_->isShowingSampleEditorProjectPool) {
+    return true;
+  }
+
+  // Project-pool Save As must create a new pool entry. Reusing another
+  // existing sample filename is not allowed.
+  const auto &originalFilename = viewData_->sampleEditorFilename;
+  if (savedFilename != originalFilename && fileExists(savedFilename)) {
+    MessageBox *mb = MessageBox::Create(*this, "Cannot Save Sample        ",
+                                        "Sample name already used", MBBF_OK);
+    clearWaveformRegion();
+    DoModal(mb,
+            ModalViewCallback::create<SampleEditorView,
+                                      &SampleEditorView::onSimpleModalDismiss>(
+                *this));
+    return false;
+  }
+
+  auto *pool = SamplePool::GetInstance();
+
+  if (pool->GetNameListSize() >= MAX_SAMPLES) {
+    char message[SCREEN_WIDTH];
+    npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
+                 MAX_SAMPLES);
+    MessageBox *mb = MessageBox::Create(*this, "Cannot Save Sample        ",
+                                        message, MBBF_OK);
+    clearWaveformRegion();
+    DoModal(mb,
+            ModalViewCallback::create<SampleEditorView,
+                                      &SampleEditorView::onSimpleModalDismiss>(
+                *this));
+    return false;
+  }
+
+  WavFile wav;
+  auto wavRes = wav.Open(activeFilename().c_str());
+  if (!wavRes) {
+    Trace::Error("SampleEditorView: Failed opening %s for save preflight",
+                 activeFilename().c_str());
+    return false;
+  }
+
+  uint32_t sampleSize = wav.GetDiskSize(-1);
+  wav.Close();
+
+  if (pool->CheckSampleFits(sampleSize)) {
+    return true;
+  }
+
+  uint32_t availableBytes = pool->GetAvailableSampleStorageSpace();
+  char message[SCREEN_WIDTH];
+  npf_snprintf(message, sizeof(message), "Only %d bytes free", availableBytes);
+  MessageBox *mb =
+      MessageBox::Create(*this, "Sample Too Large       ", message, MBBF_OK);
+  clearWaveformRegion();
+  DoModal(mb,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
+  return false;
+}
+
 void SampleEditorView::attemptSave(bool loadToPool) {
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename;
   if (!resolveSaveFilename(filename)) {
     showSaveFailedDialog();
+    return;
+  }
+
+  if (!preflightProjectPoolSaveAs(filename)) {
     return;
   }
 
@@ -1294,6 +1365,62 @@ void SampleEditorView::showLoadToPoolFailedDialog() {
               *this));
 }
 
+#ifdef ADV
+etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT>
+SampleEditorView::collectSampleUsers(int sampleIndex) const {
+  etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> users;
+  if (!viewData_ || !viewData_->project_ || sampleIndex < 0) {
+    return users;
+  }
+
+  auto *instrumentBank = viewData_->project_->GetInstrumentBank();
+  if (!instrumentBank) {
+    return users;
+  }
+
+  for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
+    if (!instrument || instrument->GetType() != IT_SAMPLE) {
+      continue;
+    }
+
+    auto *sampleInstrument = static_cast<SampleInstrument *>(instrument);
+    if (sampleInstrument->GetSampleIndex() == sampleIndex) {
+      users.push_back(sampleInstrument);
+    }
+  }
+
+  return users;
+}
+
+void SampleEditorView::retargetSampleUsers(
+    const etl::vector<SampleInstrument *, MAX_INSTRUMENT_COUNT> &users,
+    uint16_t newIndex) {
+  for (auto *sampleInstrument : users) {
+    if (sampleInstrument) {
+      sampleInstrument->AssignSample(newIndex);
+    }
+  }
+}
+#endif
+
+bool SampleEditorView::syncSavedAsProjectPoolSample(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  auto *pool = SamplePool::GetInstance();
+
+  if (!goProjectSamplesDir(viewData_)) {
+    Trace::Error("SampleEditorView: Failed to chdir for pool sync");
+    return false;
+  }
+
+  if (pool->LoadProjectSample(savedFilename.c_str()) < 0) {
+    Trace::Error("SampleEditorView: Failed to add pool sample %s",
+                 savedFilename.c_str());
+    return false;
+  }
+
+  return true;
+}
+
 bool SampleEditorView::saveSample(
     etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
   auto fs = FileSystem::GetInstance();
@@ -1339,6 +1466,11 @@ bool SampleEditorView::saveSample(
     Trace::Error("SampleEditorView: Save committed but failed pool refresh");
   }
 
+  if (viewData_->isShowingSampleEditorProjectPool && !commitToOriginal &&
+      !syncSavedAsProjectPoolSample(savedFilename)) {
+    Trace::Error("SampleEditorView: Save committed but failed pool sync");
+  }
+
   Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
              savedFilename.c_str());
 
@@ -1371,6 +1503,9 @@ bool SampleEditorView::loadSampleToPool(
       return false;
     }
   } else {
+    if (!syncSavedAsProjectPoolSample(savedFilename)) {
+      return false;
+    }
     sampleId = pool->FindSampleIndexByName(savedFilename);
     if (sampleId < 0) {
       Trace::Error("SampleEditorView: Sample %s not found in pool",
