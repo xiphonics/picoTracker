@@ -16,13 +16,9 @@
 
 class GraphField : public UIField {
 public:
-#ifdef ADV
-  static constexpr int32_t BitmapWidth = 720;
-  static constexpr int32_t BitmapHeight = 180;
-#else
   static constexpr int32_t BitmapWidth = 320;
   static constexpr int32_t BitmapHeight = 80;
-#endif
+
   static constexpr int32_t CacheSize = BitmapWidth;
   static constexpr size_t MaxMarkers = SampleInstrument::MaxSlices + 3;
 

@@ -143,13 +143,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   // Let's get started !
 
   SyncMaster::GetInstance()->Start();
-#ifdef ADV
-  // On Advance, keep analog output muted during stem rendering to avoid
-  // audible glitches while multiple stem files are being written.
-  SetAudioActive(msmMode != MSM_FILESPLIT);
-#else
   SetAudioActive(true);
-#endif
 
   firstPlayCycle_ = true;
   mode_ = viewData_->playMode_;

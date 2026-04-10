@@ -12,13 +12,8 @@
 
 #include "Foundation/Types/Types.h"
 
-#ifdef ADV
-#define PHRASE_COUNT 0xFF
-#define NO_MORE_PHRASE 0x100
-#else
 #define PHRASE_COUNT 0x80
 #define NO_MORE_PHRASE 0x81
-#endif
 #define STEPS_PER_PHRASE 16
 
 class Phrase {

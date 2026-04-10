@@ -52,8 +52,6 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data)
   actionPos._y += 1;
 
   // Font selection
-  // BUT Not on the Advance where there is currently only a single font
-#ifndef ADV
   position._y = FONT_FIELD_LINE;
   Variable *fontVar = config->FindVariable(FourCC::VarUIFont);
   intVarField_.emplace_back(position, *fontVar, "Font: %s", 0,
@@ -62,9 +60,6 @@ ThemeView::ThemeView(GUIWindow &w, ViewData *data)
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
   position._y += 2;
-#else
-  position._y += 1;
-#endif
 
   // Get the current theme name from Config
   Variable *configThemeVar = config->FindVariable(FourCC::VarThemeName);
