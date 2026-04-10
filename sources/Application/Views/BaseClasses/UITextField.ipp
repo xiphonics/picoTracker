@@ -81,34 +81,6 @@ template <uint8_t MaxLength> void UITextField<MaxLength>::OnEditClick() {
 };
 
 template <uint8_t MaxLength>
-void UITextField<MaxLength>::ProcessClear() {
-  etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_->GetString());
-
-  if (buffer.empty() || buffer.compare(defaultValue_) == 0) {
-    // handle empty state
-    buffer = "A";  
-    currentChar_ = 0;
-  } else {
-    // jump to lastUsedChar_character block depending on the current character
-    if (lastUsedChar_>= 'A' && lastUsedChar_<= 'Z') {
-      lastUsedChar_= 'a';
-    } else if (lastUsedChar_>= 'a' && lastUsedChar_<= 'z') {
-      lastUsedChar_= '0';
-    } else if (lastUsedChar_>= '0' && lastUsedChar_<= '9') {
-      lastUsedChar_= '-';
-    } else {
-      lastUsedChar_= 'A';
-    }
-  }
-
-  buffer[currentChar_] = lastUsedChar_;
-  src_->SetString(buffer.c_str(), true);
-  SetChanged();
-  NotifyObservers(
-      reinterpret_cast<I_ObservableData *>(static_cast<uintptr_t>(fourcc_)));
-};
-
-template <uint8_t MaxLength>
 void UITextField<MaxLength>::ProcessArrow(unsigned short mask) {
   etl::string<MAX_VARIABLE_STRING_LENGTH> buffer(src_->GetString());
   auto applyAndNotify = [&]() {
