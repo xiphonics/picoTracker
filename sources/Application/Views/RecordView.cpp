@@ -254,8 +254,7 @@ void RecordView::stop() {
   Trace::Log("RECORD", "Recording not yet supported on pico");
 }
 
-void RecordView::stopAndSwitchToEditor() {
-}
+void RecordView::stopAndSwitchToEditor() {}
 
 void RecordView::formatTime(uint32_t milliseconds, char *buffer,
                             size_t bufferSize) {
