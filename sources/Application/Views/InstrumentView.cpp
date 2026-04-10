@@ -29,12 +29,8 @@
 #include <cstdint>
 #include <nanoprintf.h>
 
-#ifdef ADV
-static constexpr InstrumentType kMaxSelectableInstrumentType = IT_MIDI;
-#else
 static constexpr InstrumentType kMaxSelectableInstrumentType =
     static_cast<InstrumentType>(IT_LAST - 1);
-#endif
 
 InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
     : FieldView(w, data), instrumentType_(FourCC::VarInstrumentType,
@@ -165,7 +161,7 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
     // Needed as the alternative is to change InstrumentTypeNames array plus all
     // switch instances which reference the types that wouldn't be available on
     // this platform
-#ifndef ADV
+
     // Show a dialog to the user
     char message[40];
     npf_snprintf(message, sizeof(message), "%s instruments exhausted!",
@@ -173,7 +169,7 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
     MessageBox *mb =
         MessageBox::Create(*this, message, "Trying next...", MBBF_OK);
     DoModal(mb);
-#endif
+
     // Try to find the next available instrument type
     bool found = false;
     for (int i = nuType + 1;

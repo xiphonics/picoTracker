@@ -287,11 +287,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
       }
     }
 
-#ifdef ADV
-    uint32_t total = totalSize;
-#else
     uint32_t total = totalSize * 2U;
-#endif
 
     importCount = total;
     importIndex = totalRead;

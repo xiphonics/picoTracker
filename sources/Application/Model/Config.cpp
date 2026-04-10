@@ -33,14 +33,8 @@ static const char *midiDeviceList[MIDI_DEVICE_LEN] = {"OFF", "TRS", "USB",
 static const char *midiSendSync[2] = {"Off", "Send"};
 static const char *midiClockSyncOptions[2] = {"Internal", "External"};
 static const char *remoteUIOnOff[2] = {"Off", "On"};
-#ifdef ADV
-static const char *importResamplerOptions[] = {"None", "Linear", "Sinc",
-                                               "Sinc Best"};
-static constexpr int kImportResamplerOptionCount = 4;
-#else
 static const char *importResamplerOptions[] = {"None", "Linear"};
 static constexpr int kImportResamplerOptionCount = 2;
-#endif
 
 // NOTE: these MUST match up to the RecordSource enum in record.h (of all
 // adapters) also note we *dont* show "All Off" as a UI option for now
@@ -61,11 +55,7 @@ constexpr int DEFAULT_REC_SOURCE = 0x0;
 constexpr int DEFAULT_RECORD_LINE_GAIN_DB = 0;
 constexpr int DEFAULT_RECORD_MIC_GAIN_DB = 0;
 constexpr int DEFAULT_OUTPUT_VOLUME = 40;
-#ifdef ADV
-constexpr int DEFAULT_IMPORT_RESAMPLER = 2; // Sinc by default
-#else
 constexpr int DEFAULT_IMPORT_RESAMPLER = 0; // default for picoTracker is none (as original)
-#endif
 
 // Use a struct to define parameter information
 struct ConfigParam {

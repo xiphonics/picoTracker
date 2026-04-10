@@ -1175,7 +1175,6 @@ bool SampleEditorView::reloadEditedSample() {
   loadSample(viewData_->sampleEditorFilename,
              viewData_->isShowingSampleEditorProjectPool);
 
-#ifndef ADV
   MessageBox *warning = MessageBox::Create(*this, "Please reload project",
                                            "To apply changes", MBBF_OK);
   clearWaveformRegion();
@@ -1184,44 +1183,6 @@ bool SampleEditorView::reloadEditedSample() {
                                     &SampleEditorView::onSimpleModalDismiss>(
               *this));
   return true;
-#else
-  auto pool = SamplePool::GetInstance();
-
-  if (!goProjectSamplesDir(viewData_)) {
-    Trace::Error("SampleEditorView: Failed to chdir for pool reload");
-    return false;
-  }
-
-  int32_t old_index =
-      pool->FindSampleIndexByName(viewData_->sampleEditorFilename);
-  if (old_index < 0) {
-    Trace::Error("SampleEditorView: Sample %s not found in pool for reload",
-                 viewData_->sampleEditorFilename.c_str());
-    return false;
-  }
-
-  int32_t new_index =
-      pool->ReloadSample(old_index, viewData_->sampleEditorFilename.c_str());
-  if (new_index < 0) {
-    Trace::Error("SampleEditorView: Failed to refresh pool sample %s",
-                 viewData_->sampleEditorFilename.c_str());
-    return false;
-  }
-
-  if (new_index != old_index) {
-    auto instrumentBank = viewData_->project_->GetInstrumentBank();
-    for (I_Instrument *instrument : instrumentBank->InstrumentsList()) {
-      if (instrument && instrument->GetType() == IT_SAMPLE) {
-        SampleInstrument *sampleInstrument =
-            static_cast<SampleInstrument *>(instrument);
-        if (sampleInstrument->GetSampleIndex() == old_index) {
-          sampleInstrument->AssignSample(new_index);
-        }
-      }
-    }
-  }
-  return true;
-#endif
 }
 
 bool SampleEditorView::resolveSaveFilename(

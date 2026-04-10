@@ -14,7 +14,6 @@ While all releases are built on CI using GitHub Actions on the release branch, e
 1. [Draft a new release on GitHub](https://github.com/xiphonics/picoTracker/releases/new)
 1. When you do "Choose a tag", make sure you select to "create a tag on publish" with the name of the release, eg. `v2.0.0`
 1. Title the release with the version number, eg. `v2.0.0`
-1. For the Advance, rename to `pT-Advance-versionnumber.bin` and the ILI build to `picoTracker-legacy-versionnumber.uf2` and upload them to the release
 1. Click the "Generate release notes" button
 1. Edit the release notes if required for a description of the changes in this release
 1. Publish the release
