@@ -82,7 +82,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
+  etl::array_view<Variable *> Variables() { return variables_; };
 
   SIDInstrumentInstance GetChip() { return chip_; };
   unsigned short GetOsc() { return osc_.GetInt(); };
@@ -92,8 +92,6 @@ public:
   const char *GetChipName() { return (chip_ == SID1) ? "SID #1" : "SID #2"; };
 
 private:
-  etl::list<Variable *, 19> variables_;
-
   SIDInstrumentInstance chip_; // SID1 or SID2
   bool render_ = false;
 
@@ -121,6 +119,8 @@ private:
   Variable table_;
   Variable tableAuto_;
   Variable osc_; // 0, 1 or 2
+
+  etl::array<Variable *, 19> variables_;
 
   // all these settings are shared by all oscillators on a single SID Chip
   static Variable fltcut1_;

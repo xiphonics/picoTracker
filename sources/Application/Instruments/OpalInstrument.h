@@ -47,7 +47,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
+  etl::array_view<Variable *> Variables() { return variables_; };
 
   void setChannel(uint8_t channel);
 
@@ -55,8 +55,6 @@ private:
   Opal opl_ = (44100);
 
   uint8_t breg;
-
-  etl::list<Variable *, 16> variables_;
 
   Variable algorithm_;
   Variable feedback_;
@@ -76,6 +74,8 @@ private:
   // Termelo(AM),Vibrato(VIB),SustainingVoice(EG),EnveloperScale(KSR)
   Variable op2TremVibSusKSR_;
   Variable op2KeyScaleLevel_;
+
+  etl::array<Variable *, 16> variables_;
 };
 
 #endif
