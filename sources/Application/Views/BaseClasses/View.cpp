@@ -568,18 +568,17 @@ void View::drawPowerButtonUI(GUITextProperties &props) {
 }
 
 void View::switchToRecordView() {
-  // recording view only for the Advance
-#ifndef ADV
+  // recording view only not yet supported on pico
   return;
-#endif
-  if (!Player::GetInstance()->IsRunning()) {
-    RecordView::SetSourceViewType(viewType_);
-    SampleEditorView::SetSourceViewType(viewType_);
-    ViewType vt = VT_RECORD;
-    ViewEvent ve(VET_SWITCH_VIEW, &vt);
-    SetChanged();
-    NotifyObservers(&ve);
-  }
+
+  // if (!Player::GetInstance()->IsRunning()) {
+  //   RecordView::SetSourceViewType(viewType_);
+  //   SampleEditorView::SetSourceViewType(viewType_);
+  //   ViewType vt = VT_RECORD;
+  //   ViewEvent ve(VET_SWITCH_VIEW, &vt);
+  //   SetChanged();
+  //   NotifyObservers(&ve);
+  // }
 }
 
 void View::drawScrollBar(uint16_t x, uint16_t y, uint16_t height,

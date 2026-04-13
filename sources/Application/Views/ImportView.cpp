@@ -206,10 +206,7 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
           fs->getFileName(fileIndex, name, PFILENAME_SIZE);
           showSampleEditor(name, true);
         } else if (selectedButton_ == kProjectButtonRemove) {
-#ifdef ADV
-          unsigned fileIndex = fileIndexList_[currentIndex_];
-          removeProjectSample(fileIndex, fs);
-#endif
+          // note yet supported on pico
         }
         return;
       }
@@ -441,9 +438,7 @@ void ImportView::DrawView() {
       props.invert_ = false;
       DrawString(2, 3, "[pool empty]", props);
     } else {
-      // we make edit the first button to make things easier because remove is
-      // only available for now on the Advance and even on Advance we dont want
-      // remove to be the default button
+      // we make edit the first button to make things easier
       if (selectedButton_ == 0) {
         SetColor(CD_HILITE2);
         props.invert_ = true;
@@ -459,11 +454,7 @@ void ImportView::DrawView() {
         SetColor(CD_HILITE1);
         props.invert_ = false;
       }
-#ifdef ADV
-      DrawString(x + 9, y, "Remove", props);
-#else
       DrawString(x + 9, y, "N/A", props);
-#endif
 
       if (selectedButton_ == kProjectButtonVolume) {
         SetColor(CD_HILITE2);

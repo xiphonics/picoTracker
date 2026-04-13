@@ -50,11 +50,7 @@
 #include <nanoprintf.h>
 #include <string.h>
 
-#ifdef ADV
-#include "Adapters/adv/audio/record.h"
-#else
 #include "Adapters/picoTracker/audio/record.h"
-#endif
 
 const uint16_t AUTOSAVE_INTERVAL_IN_SECONDS = 1 * 60;
 

@@ -52,13 +52,11 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
-#ifndef ADV
   position._y += 1;
   v = config->FindVariable(FourCC::VarLineOut);
   intVarField_.emplace_back(position, *v, "Line Out Mode: %s", 0, 2, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
-#endif
 
   position._y += 1;
   v = config->FindVariable(FourCC::VarRemoteUI);
@@ -80,14 +78,6 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
                             0xFF, 1, 16);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
-
-#ifdef ADV
-  position._y += 1;
-  v = config->FindVariable(FourCC::VarOutputVolume);
-  intVarField_.emplace_back(position, *v, "Output volume: %3d", 0, 100, 1, 5);
-  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
-  (*intVarField_.rbegin()).AddObserver(*this);
-#endif
 
   position._y += 2;
   actionField_.emplace_back("Theme settings", FourCC::ActionShowTheme,
@@ -146,22 +136,6 @@ void DeviceView::DrawView() {
   DrawString(pos._x, pos._y, projectString, props);
 
   FieldView::Redraw();
-
-#ifdef ADV
-  // Draw battery health
-  pos._x = SCREEN_MAP_WIDTH + 1;
-  pos._y = 21;
-  SetColor(CD_NORMAL);
-  DrawString(pos._x, pos._y, "Battery health:", props);
-
-  pos._x += strlen("Battery health") + 1;
-  int16_t soh = battery_health();
-  char sohText[5];
-  (soh < 0) ? npf_snprintf(sohText, sizeof(sohText), "%s", "NA")
-            : npf_snprintf(sohText, sizeof(sohText), "%i%%", soh);
-  SetColor(CD_NORMAL);
-  DrawString(pos._x, pos._y, sohText, props);
-#endif
 
   SetColor(CD_NORMAL);
   drawMap();

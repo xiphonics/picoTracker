@@ -38,11 +38,7 @@ set(SRC_SOURCES
   src_linear.c
 )
 
-if(ADV)
-  list(APPEND SRC_SOURCES src_sinc.c)
-else()
-  list(APPEND SRC_SOURCES src_sinc_stub.c)
-endif()
+list(APPEND SRC_SOURCES src_sinc_stub.c)
 
 add_library(samplerate ${SRC_SOURCES})
 
@@ -66,8 +62,3 @@ endif()
 
 # Set public header
 set_property(TARGET samplerate PROPERTY PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/samplerate.h)
-
-if(ADV)
-  # Advance has the option to use sinc converters on import
-  target_compile_definitions(samplerate PRIVATE ENABLE_SINC_FAST_CONVERTER ENABLE_SINC_MEDIUM_CONVERTER)
-endif()

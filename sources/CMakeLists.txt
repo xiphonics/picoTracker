@@ -8,11 +8,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile_commands.json")
 add_compile_options(
   -Werror
   -Wall
-  -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+  -Wno-format # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
   -fstack-usage
   -fcallgraph-info=su # include above info in callgraph
   -Wstack-usage=2074 # allows high watermark at the time this option was added TODO: reduce this for safety and/or reduce stack size
-  
+
   # braids
   -Wno-unused-variable
   -Wno-array-bounds
@@ -22,190 +22,86 @@ add_compile_options(
   -Wno-missing-field-initializers
 )
 
-if (NOT DEFINED ADV)
-  set(ADV false)
+
+set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
+# Pull in SDK (must be before project)
+include(pico_sdk_import.cmake)
+
+project(picoTracker)
+
+if(PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
+  message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
+# For debugging purposes, print all mallocs
+# add_definitions(-DPICO_DEBUG_MALLOC)
+# add_definitions(-DALL_MALLOC)
+# add_definitions(-DSHOW_MEM_USAGE)
+# Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
+# add_definitions(-DSDIO_BENCH)
+# Enable loading samples into Flash
+add_definitions(-DLOAD_IN_FLASH)
+# define to use battery level as percentage instead of battery level as "+" bars
+#add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
 
-# pico
-if (NOT ${ADV})
-  set(PICO_SDK_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Externals/pico-sdk)
-  # Pull in SDK (must be before project)
-  include(pico_sdk_import.cmake)
-
-  project(picoTracker)
-
-  if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
-    message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
-  endif()
-
-  # For debugging purposes, print all mallocs
-  # add_definitions(-DPICO_DEBUG_MALLOC)
-  # add_definitions(-DALL_MALLOC)
-  # add_definitions(-DSHOW_MEM_USAGE)
-  # Perform a benchmark of SD card using SDIO oin startup. Can be removed once performance issues have been solved
-  # add_definitions(-DSDIO_BENCH)
-  # Enable loading samples into Flash
-  add_definitions(-DLOAD_IN_FLASH)
-  # define to use battery level as percentage instead of battery level as "+" bars
-  #add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
-
-  #disabled for now as USB **input** is not yet fully implemented
-  #add_definitions(USB_REMOTE_UI_INPUT)
-  # ST7789 controller based LCD instead of a ILI9341 controller
-  # for CI builds this will be set via command line
-  if(NOT USE_LCD)
-    set(USE_LCD LCD_ST7789)
-  endif()
-  message(USE_LCD="${USE_LCD}")
-  add_compile_definitions(${USE_LCD})
-  # add_compile_definitions(LCD_ST7789)
-
-  set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/config/no_heap.h")
-
-  # Needed for ETL to pick up our etl_profile.h
-  include_directories("config/")
-
-  include_directories("Adapters/picoTracker/platform/")
-
-  # Initialize the SDK
-  pico_sdk_init()
-
-  add_subdirectory(sdk_bundle)
-
-  add_subdirectory(Adapters/picoTracker)
-  add_subdirectory(Externals/SdFat)
-
-  set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
-
-  target_compile_options(picoTracker PRIVATE
-    -fno-unwind-tables
-    -fno-asynchronous-unwind-tables
-  )
-
-  target_compile_definitions(picoTracker PUBLIC
-    #	PICO_HEAP_SIZE=204800
-    PICO_DEBUG_MALLOC_LOW_WATER=1000
-    PICO_MALLOC_PANIC=0
-    PICO_STACK_SIZE=4096
-    PICO_CORE1_STACK_SIZE=4096 # Safe value. 2K seems to be enough. Is it for all use cases?
-    PICO_USE_STACK_GUARDS
-    PICO_FLASH_SIZE_BYTES=16*1024*1024
-    # workaround for slow init crystal on some boards see: https://github.com/raspberrypi/pico-sdk/pull/457
-    PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
-  )
-  
-  target_compile_definitions(picoTracker PUBLIC
-    PICO_DEFAULT_UART=1
-    PICO_DEFAULT_UART_TX_PIN=24
-    PICO_DEFAULT_UART_RX_PIN=25
-  )
-
-  # Debug output with USB uses +6K memory
-  pico_enable_stdio_usb(${PROJECT_NAME} 0)
-  pico_enable_stdio_uart(${PROJECT_NAME} 1)
-  
-  # This is the default, but better to make it explicit
-  pico_set_float_implementation(${PROJECT_NAME} pico)
-
-# Advance
-else()
-  message("picoTracker Advance Build")
-  add_definitions(-DADV)
-  
-  # Enable basic control REPL over serial port on non-Release ADV builds.
-  if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    remove_definitions(-DSERIAL_REPL)
-  else()
-    add_definitions(-DSERIAL_REPL)
-  endif()
-
-  # Advance displays battery level as percentage instead of bars
-  add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
-
-  # Enable stats for RTOS
-  #add_definitions(-DRTOS_STATS)
-
-  # FreeRTOS goes before compiler definitions for cubemx since it
-  # does it's own thing (doesn't compile after those definitions)
-  add_library(freertos_config INTERFACE)
-  target_include_directories(freertos_config SYSTEM
-    INTERFACE
-    Adapters/adv/config # The config file directory
-    Adapters/adv/platform
-  )
-
-  target_compile_definitions(freertos_config
-    INTERFACE
-    projCOVERAGE_TEST=0)
-  set(FREERTOS_PORT GCC_ARM_CM7 CACHE STRING "")
-
-  # ------- cmake/gcc-arm-none-eabi.cmake START -------
-
-  set(CMAKE_SYSTEM_NAME               Generic)
-  set(CMAKE_SYSTEM_PROCESSOR          arm)
-
-  set(CMAKE_C_COMPILER_ID GNU)
-  set(CMAKE_CXX_COMPILER_ID GNU)
-
-  # Some default GCC settings
-  # arm-none-eabi- must be part of path environment
-  set(TOOLCHAIN_PREFIX                arm-none-eabi-)
-
-  set(CMAKE_C_COMPILER                ${TOOLCHAIN_PREFIX}gcc)
-  set(CMAKE_ASM_COMPILER              ${CMAKE_C_COMPILER})
-  set(CMAKE_CXX_COMPILER              ${TOOLCHAIN_PREFIX}g++)
-  set(CMAKE_LINKER                    ${TOOLCHAIN_PREFIX}g++)
-  set(CMAKE_OBJCOPY                   ${TOOLCHAIN_PREFIX}objcopy)
-  set(CMAKE_SIZE                      ${TOOLCHAIN_PREFIX}size)
-
-  set(CMAKE_EXECUTABLE_SUFFIX_ASM     ".elf")
-  set(CMAKE_EXEUTABLE_SUFFIX_C       ".elf")
-  set(CMAKE_EXECUTABLE_SUFFIX_CXX     ".elf")
-
-  set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-
-  # MCU specific flags
-  set(TARGET_FLAGS "-mcpu=cortex-m7 -mfpu=fpv5-d16 -mfloat-abi=hard ")
-
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TARGET_FLAGS}")
-  set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp -MMD -MP")
-
-  set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
-  set(CMAKE_C_FLAGS_RELEASE "-Os -g0 -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
-  set(CMAKE_CXX_FLAGS_RELEASE "-Os -g0 -DNDEBUG")
-
-  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions -fno-threadsafe-statics -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit")
-  
-  if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
-  endif()
-  
-  set(CMAKE_CXX_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -Wl,--start-group -lstdc++ -lsupc++ -Wl,--end-group")
-  # ------- cmake/gcc-arm-none-eabi.cmake STOP -------
-
-  project(picoTrackerAdvance C CXX ASM)
-  set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/config/no_heap.h")
-
-  add_subdirectory(Externals/FreeRTOS-Kernel)
-  add_subdirectory(Externals/FatFs)
-  add_subdirectory(Externals/tinyusb)
-  
-  # TODO: Add ETL here
-  # cubemx and freertos is included on all targets
-  link_libraries(stm32cubemx freertos_kernel)
-
-#  set(LV_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}/config/lv_conf.h" CACHE STRING "Path to LVGL config")
-#  set(LV_CONF_BUILD_DISABLE_DEMOS 1)
-#  set(LV_CONF_BUILD_DISABLE_EXAMPLES 1)
-#  add_subdirectory(Externals/lvgl)
-
-  add_subdirectory(Adapters/adv)
-
+#disabled for now as USB **input** is not yet fully implemented
+#add_definitions(USB_REMOTE_UI_INPUT)
+# ST7789 controller based LCD instead of a ILI9341 controller
+# for CI builds this will be set via command line
+if(NOT USE_LCD)
+  set(USE_LCD LCD_ST7789)
 endif()
+message(USE_LCD="${USE_LCD}")
+add_compile_definitions(${USE_LCD})
+# add_compile_definitions(LCD_ST7789)
+
+set(CMAKE_CXX_FLAGS
+  "${CMAKE_CXX_FLAGS} -include ${CMAKE_CURRENT_SOURCE_DIR}/config/no_heap.h")
+
+# Needed for ETL to pick up our etl_profile.h
+include_directories("config/")
+
+include_directories("Adapters/picoTracker/platform/")
+
+# Initialize the SDK
+pico_sdk_init()
+
+add_subdirectory(sdk_bundle)
+
+add_subdirectory(Adapters/picoTracker)
+add_subdirectory(Externals/SdFat)
+
+set_property(TARGET picoTracker APPEND_STRING PROPERTY LINK_FLAGS "-Wl,--print-memory-usage")
+
+target_compile_options(picoTracker PRIVATE
+  -fno-unwind-tables
+  -fno-asynchronous-unwind-tables
+)
+
+target_compile_definitions(picoTracker PUBLIC
+  #	PICO_HEAP_SIZE=204800
+  PICO_DEBUG_MALLOC_LOW_WATER=1000
+  PICO_MALLOC_PANIC=0
+  PICO_STACK_SIZE=4096
+  PICO_CORE1_STACK_SIZE=4096 # Safe value. 2K seems to be enough. Is it for all use cases?
+  PICO_USE_STACK_GUARDS
+  PICO_FLASH_SIZE_BYTES=16*1024*1024
+  # workaround for slow init crystal on some boards see: https://github.com/raspberrypi/pico-sdk/pull/457
+  PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
+)
+
+target_compile_definitions(picoTracker PUBLIC
+  PICO_DEFAULT_UART=1
+  PICO_DEFAULT_UART_TX_PIN=24
+  PICO_DEFAULT_UART_RX_PIN=25
+)
+
+# Debug output with USB uses +6K memory
+pico_enable_stdio_usb(${PROJECT_NAME} 0)
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
+
+# This is the default, but better to make it explicit
+pico_set_float_implementation(${PROJECT_NAME} pico)
 
 # Enable ETL debug mode only for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
