@@ -34,26 +34,6 @@ void ThemeImportView::Reset() {
 }
 
 void ThemeImportView::OpenSelectedItem() {
-<<<<<<< HEAD
-  auto fs = FileSystem::GetInstance();
-
-  if (currentIndex_ >= fileIndexList_.size())
-    return;
-
-  char name[PFILENAME_SIZE];
-  bool isDir = false;
-  bool hasEntry = false;
-
-  // get selected item
-  unsigned fileIndex = fileIndexList_[currentIndex_];
-  fs->getFileName(fileIndex, name, PFILENAME_SIZE);
-
-  if (fs->getFileType(fileIndex) == PFT_DIR) { // directory, navigate into it
-    setCurrentFolder(fs, name);
-  } else { // file, import it
-    onImportTheme(name);
-  }
-=======
   if (currentIndex_ >= fileIndexList_.size())
     return;
 
@@ -63,20 +43,13 @@ void ThemeImportView::OpenSelectedItem() {
   char name[PFILENAME_SIZE];
   fs->getFileName(fileIndex, name, PFILENAME_SIZE);
   onImportTheme(name);
->>>>>>> upstream/master
 }
 
 void ThemeImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
   if (!pressed)
     return;
 
-<<<<<<< HEAD
-  bool openSelecterd = false;
-
-  if ((mask & EPBM_ENTER) || (mask == (EPBM_ALT | EPBM_PLAY))) {
-=======
   if (mask & EPBM_ENTER) {
->>>>>>> upstream/master
     OpenSelectedItem();
   } else if (mask & EPBM_UP) {
     changeSelection(mask & EPBM_EDIT ? -LIST_PAGE_SIZE : -1);
