@@ -16,11 +16,7 @@
 #include "UIController.h"
 #include "ViewData.h"
 
-#ifdef ADV
-#include "Adapters/adv/audio/record.h"
-#else
 #include "Adapters/picoTracker/audio/record.h"
-#endif
 
 static constexpr uint32_t kMaxRecordDurationMs = 30000;
 
@@ -90,9 +86,6 @@ void RecordView::ProcessButtonMask(unsigned short mask, bool pressed) {
   // - NAV-LEFT: leave immediately and stop recording in background
   if (uiRecordingActive_) {
     if ((mask & EPBM_NAV) && (mask & EPBM_LEFT)) {
-#ifdef ADV
-      RequestStopRecording();
-#endif
       uiRecordingActive_ = false;
       uiSavingActive_ = false;
       autoSwitchPending_ = false;
@@ -200,10 +193,6 @@ void RecordView::OnFocus() {
   recordingDuration_ = 0;
 
   auto config = Config::GetInstance();
-#ifdef ADV
-  SetLineInGain(config->FindVariable(FourCC::VarRecordLineGain)->GetInt());
-  SetMicGain(config->FindVariable(FourCC::VarRecordMicGain)->GetInt());
-#endif
 
   updateRecordingSource();
   StartMonitoring();
@@ -224,14 +213,6 @@ void RecordView::Update(Observable &o, I_ObservableData *data) {
     updateRecordingSource();
     StartMonitoring();
     break;
-#ifdef ADV
-  case FourCC::VarRecordLineGain:
-    SetLineInGain(config->FindVariable(FourCC::VarRecordLineGain)->GetInt());
-    break;
-  case FourCC::VarRecordMicGain:
-    SetMicGain(config->FindVariable(FourCC::VarRecordMicGain)->GetInt());
-    break;
-#endif
   }
 }
 
@@ -239,64 +220,6 @@ void RecordView::AnimationUpdate() {
   // First call the parent class implementation to draw the battery gauge, power
   // off etc
   ScreenView::AnimationUpdate();
-
-#ifdef ADV
-  const bool backendRecordingActive = IsRecordingActive();
-  const bool backendSavingActive = IsSavingRecording();
-
-  if (uiRecordingActive_ && !backendRecordingActive) {
-    // Backend can stop on its own (duration/RAM limit). Keep the same
-    // save-progress and switch flow as a user initiated stop.
-    uiRecordingActive_ = false;
-    uiSavingActive_ = true;
-    autoSwitchPending_ = true;
-  }
-
-  if (autoSwitchPending_) {
-    // Non-blocking completion check to avoid switching before the record task
-    // has finalized and closed the WAV file.
-    if (WaitForRecordingStop(0)) {
-      FinishStopRecording();
-      uiSavingActive_ = false;
-      autoSwitchPending_ = false;
-      Trace::Log("RECORD", "Recording stopped");
-
-      if (!DidLastRecordingCaptureAudio()) {
-        // Treat empty captures as cancelled: stay on record view and resume
-        // monitoring instead of switching to sample editor.
-        recordingDuration_ = 0;
-        updateRecordingSource();
-        StartMonitoring();
-        isDirty_ = true;
-        DrawView();
-        return;
-      }
-
-      // SampleEditor expects a relative filename for recordings; make sure the
-      // working directory points at the recordings folder before switching.
-      auto fs = FileSystem::GetInstance();
-      if (!fs || !fs->chdir(RECORDINGS_DIR)) {
-        Trace::Error("RECORDVIEW: failed to chdir to %s before editor switch",
-                     RECORDINGS_DIR);
-      }
-
-      // set the current file for sample editor before switching view
-      etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename(RECORDING_FILENAME);
-      viewData_->sampleEditorFilename = filename;
-      viewData_->isShowingSampleEditorProjectPool = false;
-
-      // Automatically switch to SampleEditor view after recording stops
-      ViewType vt = VT_SAMPLE_EDITOR;
-      ViewEvent ve(VET_SWITCH_VIEW, &vt);
-      SetChanged();
-      NotifyObservers(&ve);
-      return;
-    }
-    uiSavingActive_ = true;
-  } else {
-    uiSavingActive_ = backendSavingActive;
-  }
-#endif
 
   if (uiRecordingActive_) {
     // Update recording duration
@@ -324,58 +247,14 @@ void RecordView::AnimationUpdate() {
 }
 
 void RecordView::record() {
-#ifdef ADV
-  if (uiRecordingActive_) {
-    return;
-  }
-
-  // Get audio source setting (0 = Line In, 1 = Mic)
-  auto config = Config::GetInstance();
-  Variable *v = config->FindVariable(FourCC::VarRecordSource);
-  int audioSource = v->GetInt();
-  Trace::Log("RECORD", "Starting recording to %s, source: %s",
-             RECORDING_FILENAME, audioSource == 0 ? "Line In" : "Mic");
-
-  // Start recording with threshold and no duration set, ie. unlimited
-  // recording time
-  bool success = StartRecording(RECORDING_FILENAME, 10, 0);
-
-  if (success) {
-    uiRecordingActive_ = true;
-    uiSavingActive_ = false;
-    autoSwitchPending_ = false;
-    recordingStartTime_ = System::GetInstance()->Millis();
-    recordingDuration_ = 0;
-    Trace::Log("RECORDVIEW", "Recording started successfully");
-  } else {
-    Trace::Error("RECORDVIEW: Failed to start recording");
-  }
-#else
-  Trace::Log("RECORD", "Recording not supported on pico");
-#endif
+  Trace::Log("RECORD", "Recording not yet supported on pico");
 }
 
 void RecordView::stop() {
-#ifdef ADV
-  const bool backendRecordingActive = IsRecordingActive();
-  if (!uiRecordingActive_ && !backendRecordingActive) {
-    return;
-  }
-
-  RequestStopRecording();
-  uiRecordingActive_ = false;
-  uiSavingActive_ = true;
-  autoSwitchPending_ = true;
-  isDirty_ = true;
-  DrawView();
-#endif
+  Trace::Log("RECORD", "Recording not yet supported on pico");
 }
 
-void RecordView::stopAndSwitchToEditor() {
-#ifdef ADV
-  stop();
-#endif
-}
+void RecordView::stopAndSwitchToEditor() {}
 
 void RecordView::formatTime(uint32_t milliseconds, char *buffer,
                             size_t bufferSize) {

@@ -28,11 +28,7 @@ enum PersistencyResult {
 };
 
 #define UNNAMED_PROJECT_NAME ".untitled"
-#ifdef ADV
-#define PROJECT_DATA_FILE "ptsav.dat"
-#else
 #define PROJECT_DATA_FILE "lgptsav.dat"
-#endif
 #define AUTO_SAVE_FILENAME "autosave.dat"
 
 class PersistencyService : public Service,
