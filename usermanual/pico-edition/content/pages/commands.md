@@ -201,6 +201,16 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 
 Sets the MIDI note velocity value (`bb`) for MIDI instruments. This is valid for MIDI instruments *only* and can also be used in tables.
 
+## VIB aabb
+
+
+**Applies a vibrato using a sine LFO for pitch modulation: `aa` is the rate and `bb` is the depth.**
+
+- `aa` sets how fast the vibrato cycles (`00` is slowest at ~0.05 Hz, `FF` fastest at ~30.0 Hz)
+- `bb` sets vibrato depth (`00` = no modulation, `FF` = maximum depth)
+- at maximum depth, modulation range is roughly `+/-4` semitones
+
+
 ## VOL aabb (VOLM in lgpt)
 
 **starting from the instrument's volume setting, approach volume bb at speed aa. 00 is the lowest volume and 00 is the fastest speed (instant).**

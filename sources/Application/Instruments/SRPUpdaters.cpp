@@ -317,7 +317,7 @@ void Vibrato::SetData(uint8_t rate, uint8_t depth) {
 };
 
 void Vibrato::Trigger(bool tableTick) {
-  if (!enabled_)
+  if (!enabled_ || tableTick)
     return;
 
   // step the lfo phase
