@@ -187,9 +187,9 @@ void picoTrackerAudioDriver::SetAudioLevel(int level) {
     offsetCount = 3u;
     backfillCount = 10u;
     break;
-  case 2: // Line level (loudest)
-    offsetCount = 1u;
-    backfillCount = 12u;
+  case 2: // Line level (loudest) - minimum MSB padding for maximum output
+    offsetCount = 0u;
+    backfillCount = 13u;
     break;
   case 0: // Default: matches PIO defaults (OFFSET_COUNT=6, BACKFILL_COUNT=7)
   default:
