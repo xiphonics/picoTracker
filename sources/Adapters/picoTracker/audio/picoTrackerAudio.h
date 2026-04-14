@@ -19,6 +19,7 @@ public:
   virtual void Close();
   virtual int GetMixerVolume();
   virtual void SetMixerVolume(int volume);
+  virtual void SetAudioLevel(int level);
 
 private:
   AudioSettings hints_;

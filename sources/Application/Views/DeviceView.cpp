@@ -195,10 +195,14 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     return;
   }
   case FourCC::VarLineOut: {
-    MessageBox *mb =
-        MessageBox::Create(*this, "Reboot for new Audio Level!", MBBF_OK);
-    DoModal(mb);
     Config *config = Config::GetInstance();
+    Variable *lv = config->FindVariable(FourCC::VarLineOut);
+    if (lv) {
+      Audio *audio = Audio::GetInstance();
+      if (audio) {
+        audio->SetAudioLevel(lv->GetInt());
+      }
+    }
     if (!config->Save()) {
       Trace::Error("DEVICEVIEW",
                    "Failed to save device config after line out change");
