@@ -32,6 +32,12 @@ public:
   void OnChunkDone();
   void SetVolume(int v);
   int GetVolume();
+  // Patch the I2S PIO program's SET Y immediates to change the output level
+  // without requiring a reboot. level matches the LINEOUT config values:
+  //   0 = default (quietest, sensitive headphones)
+  //   1 = HP high volume
+  //   2 = line level
+  void SetAudioLevel(int level);
   virtual double GetStreamTime();
   static void IRQHandler();
   static void BufferNeeded();
@@ -43,5 +49,6 @@ private:
   static const char miniBlank_[MINI_BLANK_SIZE * 2 * sizeof(short)];
   int volume_;
   uint32_t startTime_;
+  unsigned int pioOffset_;
 };
 #endif

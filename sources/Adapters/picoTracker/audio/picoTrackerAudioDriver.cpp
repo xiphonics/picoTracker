@@ -109,38 +109,23 @@ bool picoTrackerAudioDriver::InitDriver() {
   volume_ = config->GetValue("VOLUME");
 
   // Audio Level support in PIO code:
-  // need to modify the PIO instructions 9 and 21 to use the number of "offset"
-  // aka the OFFSET_COUNT const in the PIO asm code, its value is 3 for default
-  // "headphones level" bits required and then need to modify the PIO
-  // instructions 3 and 15 to use aka the BACKFILL_COUNT in the PIO asm code,
-  // its value is 10 for default "headphones level" the matching number of
-  // "backfill" number of bits required
+  // PIO instructions 9 and 21 hold the SET Y immediate for OFFSET_COUNT
+  // (MSB sign-extension padding - more = quieter), and instructions 3 and 15
+  // hold the SET Y immediate for BACKFILL_COUNT (LSB zero padding).
+  // We load the default program and then patch those four instructions in
+  // PIO instruction memory via SetAudioLevel, which can also be called at
+  // runtime to change the level without rebooting.
   memcpy(modified_audio_i2s_instructions, audio_i2s_program_instructions,
          24 * 2);
-
-  // ---- HP High volume
-  if (audioLevel == 1) {
-    modified_audio_i2s_instructions[9] = 0xe843;
-    modified_audio_i2s_instructions[21] = 0xf843;
-
-    modified_audio_i2s_instructions[3] = 0xf84a;
-    modified_audio_i2s_instructions[15] = 0xe84a;
-  }
-
-  // ---- Line Level volume
-  if (audioLevel == 2) {
-    modified_audio_i2s_instructions[9] = 0xe841;
-    modified_audio_i2s_instructions[21] = 0xf841;
-
-    modified_audio_i2s_instructions[3] = 0xf84c;
-    modified_audio_i2s_instructions[15] = 0xe84c;
-  }
-
   modified_audio_i2s_program.instructions = modified_audio_i2s_instructions;
 
   uint offset = pio_add_program(AUDIO_PIO, &modified_audio_i2s_program);
+  pioOffset_ = offset;
 
   audio_i2s_program_init(AUDIO_PIO, AUDIO_SM, offset, AUDIO_SDATA, AUDIO_BCLK);
+
+  // Apply the configured audio level by patching the PIO instruction memory.
+  SetAudioLevel(audioLevel);
 
   // Claim and configure DMA
   dma_channel_claim(AUDIO_DMA);
@@ -181,6 +166,45 @@ bool picoTrackerAudioDriver::InitDriver() {
 
   return true;
 };
+
+// SET Y, value with sideset bits - encoded for the I2S PIO program's specific
+// sideset values at instruction indices 3, 9, 15, 21.
+// See audio_i2s.pio: indices 3 and 21 use side 0b11; indices 9 and 15 use
+// side 0b01. Layout: 111(SET) | side(2) | delay(3) | dst=Y(010) | value(5).
+static inline uint16_t set_y_side11(uint8_t value) {
+  return (uint16_t)(0xf840u | (value & 0x1fu));
+}
+static inline uint16_t set_y_side01(uint8_t value) {
+  return (uint16_t)(0xe840u | (value & 0x1fu));
+}
+
+void picoTrackerAudioDriver::SetAudioLevel(int level) {
+  uint8_t offsetCount;
+  uint8_t backfillCount;
+
+  switch (level) {
+  case 1: // HP high volume
+    offsetCount = 3u;
+    backfillCount = 10u;
+    break;
+  case 2: // Line level (loudest) - minimum MSB padding for maximum output
+    offsetCount = 0u;
+    backfillCount = 13u;
+    break;
+  case 0: // Default: matches PIO defaults (OFFSET_COUNT=6, BACKFILL_COUNT=7)
+  default:
+    offsetCount = 6u;
+    backfillCount = 7u;
+    break;
+  }
+
+  // Single-word writes to instruction memory; the SM picks up the new
+  // immediate next time it executes that PC.
+  AUDIO_PIO->instr_mem[pioOffset_ + 3u] = set_y_side11(backfillCount);
+  AUDIO_PIO->instr_mem[pioOffset_ + 9u] = set_y_side01(offsetCount);
+  AUDIO_PIO->instr_mem[pioOffset_ + 15u] = set_y_side01(backfillCount);
+  AUDIO_PIO->instr_mem[pioOffset_ + 21u] = set_y_side11(offsetCount);
+}
 
 void picoTrackerAudioDriver::SetVolume(int v) {
   volume_ = (v <= 100) ? v : 100;
