@@ -49,7 +49,49 @@ void SamplePool::updateStatus(uint32_t index, uint32_t total,
                        static_cast<int>(percentage));
 };
 
+bool SamplePool::LoadFromCache(const char *projectName) {
+  static etl::vector<SampleCacheEntry, MAX_SAMPLES> entries;
+  entries.clear();
+  uint32_t eraseOff = 0;
+  uint32_t writeOff = 0;
+  auto *ps = PersistencyService::GetInstance();
+  auto res = ps->LoadSampleCache(projectName, GetSampleCacheBuildId(), entries,
+                                 eraseOff, writeOff);
+  if (res != PERSIST_LOADED) {
+    Trace::Log("SAMPLEPOOL",
+               "No usable sample cache for '%s' (res=%d) — SD load",
+               projectName, (int)res);
+    return false;
+  }
+  // Monotonicity check: write offset must cover every cached entry.
+  for (size_t i = 0; i < entries.size(); ++i) {
+    uint32_t end = entries[i].flashOffset + entries[i].sampleBufferSize;
+    if (end > writeOff) {
+      Trace::Error("SAMPLEPOOL: cache entry '%s' exceeds writeOff (%u > %u)",
+                   entries[i].name, end, writeOff);
+      ps->DeleteSampleCache();
+      return false;
+    }
+  }
+  ResumeFromCache(eraseOff, writeOff);
+  for (size_t i = 0; i < entries.size(); ++i) {
+    if (!rebuildSampleFromCache(entries[i])) {
+      Trace::Error("SAMPLEPOOL: failed to rebuild '%s' from cache",
+                   entries[i].name);
+      Reset();
+      ps->DeleteSampleCache();
+      return false;
+    }
+  }
+  Trace::Log("SAMPLEPOOL", "Loaded %u samples from cache for '%s'",
+             (unsigned)entries.size(), projectName);
+  return true;
+}
+
 void SamplePool::Load(const char *projectName) {
+  if (LoadFromCache(projectName)) {
+    return;
+  }
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir(PROJECTS_DIR) || !fs->chdir(projectName) ||
       !fs->chdir(PROJECT_SAMPLES_DIR)) {
@@ -104,6 +146,9 @@ void SamplePool::Load(const char *projectName) {
     swapEntries(index, rest - 1);
     rest--;
   };
+
+  // Write sample cache so that next boot can skip SD reloads.
+  SaveSampleCacheForCurrentPool(projectName);
 };
 
 SoundSource *SamplePool::GetSource(uint32_t i) {
@@ -355,6 +400,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
                               projSampleFilename.size());
       nameStore_[loadedIndex][projSampleFilename.size()] = '\0';
     }
+    SaveSampleCacheForCurrentPool(projectName);
   }
 
   SetChanged();
@@ -387,6 +433,8 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   wav_[count_].Close();
   nameStore_[count_][0] = '\0';
 
+  SaveSampleCacheForCurrentPool(projectName);
+
   // now notify observers
   SetChanged();
   SamplePoolEvent ev;
@@ -399,6 +447,9 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
 int8_t SamplePool::ReloadSample(uint8_t index, const char *name) {
   if (unloadSample(index)) {
     if (loadSample(name)) {
+      // No projectName available here; invalidate cache so next boot rebuilds
+      // from SD and rewrites the cache.
+      PersistencyService::GetInstance()->DeleteSampleCache();
       return count_ - 1;
     }
   }
