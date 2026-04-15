@@ -10,6 +10,7 @@
 #ifndef _WAV_FILE_H_
 #define _WAV_FILE_H_
 
+#include "Application/Persistency/PersistencyService.h"
 #include "Externals/etl/include/etl/expected.h"
 #include "SoundSource.h"
 #include "System/FileSystem/FileSystem.h"
@@ -29,6 +30,7 @@ public:
   virtual ~WavFile() = default;
 
   etl::expected<void, WAVEFILE_ERROR> Open(const char *);
+  void OpenFromFlash(const SampleCacheEntry &e, short *flashPtr);
   bool IsOpen() const;
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);
@@ -46,6 +48,11 @@ public:
   void Close();
 
   virtual bool IsMulti() { return false; };
+
+  short *GetSamplesPtr() const { return samples_; }
+  int GetSampleBufferSize() const { return sampleBufferSize_; }
+  int GetBytePerSample() const { return bytePerSample_; }
+  uint16_t GetAudioFormat() const { return audioFormat_; }
 
 protected:
   long readBlock(long position, long count);

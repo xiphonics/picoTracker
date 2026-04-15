@@ -169,6 +169,20 @@ etl::expected<void, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   return {};
 };
 
+void WavFile::OpenFromFlash(const SampleCacheEntry &e, short *flashPtr) {
+  Close();
+  samples_ = flashPtr;
+  sampleBufferSize_ = (int)e.sampleBufferSize;
+  size_ = (int)e.size;
+  sampleRate_ = (int)e.sampleRate;
+  channelCount_ = e.channelCount;
+  bytePerSample_ = e.bytePerSample;
+  audioFormat_ = e.audioFormat;
+  dataPosition_ = 0;
+  readCount_ = 0;
+  readBufferSize_ = 0;
+}
+
 void *WavFile::GetSampleBuffer(int note) { return samples_; };
 
 void WavFile::SetSampleBuffer(short *ptr) { samples_ = ptr; }

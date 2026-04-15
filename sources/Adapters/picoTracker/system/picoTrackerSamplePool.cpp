@@ -7,6 +7,8 @@
  */
 
 #include "picoTrackerSamplePool.h"
+#include "Application/Persistency/PersistencyService.h"
+#include "Externals/etl/include/etl/vector.h"
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 #include "pico/multicore.h"
@@ -85,6 +87,12 @@ void picoTrackerSamplePool::Reset() {
   // Reset flash erase and write pointers when we close project
   flashEraseOffset_ = FLASH_TARGET_OFFSET;
   flashWriteOffset_ = FLASH_TARGET_OFFSET;
+
+  // Intentionally do NOT delete the sample cache here. Reset() runs before
+  // every Load (including boot), and the cache is name-keyed — a different
+  // project will be rejected by LoadSampleCache's project-name check and fall
+  // back to an SD rebuild which rewrites the cache. Explicit invalidation
+  // happens in project-deletion and reload paths.
 };
 
 bool picoTrackerSamplePool::loadSample(const char *name) {
@@ -202,6 +210,81 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 };
 
 bool picoTrackerSamplePool::unloadSample(uint32_t index) { return false; };
+
+bool picoTrackerSamplePool::rebuildSampleFromCache(const SampleCacheEntry &e) {
+  if (count_ >= MAX_SAMPLES) {
+    return false;
+  }
+  // Bounds-check the flash region against our allocator window.
+  if (e.flashOffset < FLASH_TARGET_OFFSET ||
+      e.flashOffset + e.sampleBufferSize > flashLimit_) {
+    Trace::Error("Cache entry '%s' flash range out of bounds", e.name);
+    return false;
+  }
+  short *flashPtr = (short *)(XIP_BASE + e.flashOffset);
+  wav_[count_].OpenFromFlash(e, flashPtr);
+  snprintf(nameStore_[count_], sizeof(nameStore_[count_]), "%s", e.name);
+  count_++;
+  return true;
+}
+
+void picoTrackerSamplePool::SaveSampleCacheForCurrentPool(
+    const char *projectName) {
+  static etl::vector<SampleCacheEntry, MAX_SAMPLES> entries;
+  static etl::vector<SampleCacheEntry, MAX_SAMPLES> verify;
+  entries.clear();
+  verify.clear();
+  for (uint32_t i = 0; i < count_; ++i) {
+    SampleCacheEntry e{};
+    strncpy(e.name, nameStore_[i], MAX_INSTRUMENT_FILENAME_LENGTH);
+    e.name[MAX_INSTRUMENT_FILENAME_LENGTH] = '\0';
+    short *ptr = wav_[i].GetSamplesPtr();
+    e.flashOffset = ptr ? (uint32_t)((uintptr_t)ptr - (uintptr_t)XIP_BASE) : 0u;
+    e.sampleBufferSize = (uint32_t)wav_[i].GetSampleBufferSize();
+    e.size = (uint32_t)wav_[i].GetSize(-1);
+    e.sampleRate = (uint32_t)wav_[i].GetSampleRate(-1);
+    e.channelCount = (uint16_t)wav_[i].GetChannelCount(-1);
+    e.bytePerSample = (uint16_t)wav_[i].GetBytePerSample();
+    e.audioFormat = wav_[i].GetAudioFormat();
+    entries.push_back(e);
+  }
+
+  auto *ps = PersistencyService::GetInstance();
+  auto res =
+      ps->SaveSampleCache(projectName, GetSampleCacheBuildId(), entries.data(),
+                          entries.size(), flashEraseOffset_, flashWriteOffset_);
+  if (res != PERSIST_SAVED) {
+    Trace::Error("Failed to save sample cache for '%s'", projectName);
+    return;
+  }
+
+  // Round-trip verify: read the cache back and sanity-check counts/offsets.
+  uint32_t eraseOff = 0, writeOff = 0;
+  auto loadRes = ps->LoadSampleCache(projectName, GetSampleCacheBuildId(),
+                                     verify, eraseOff, writeOff);
+  if (loadRes != PERSIST_LOADED || verify.size() != entries.size() ||
+      eraseOff != flashEraseOffset_ || writeOff != flashWriteOffset_) {
+    Trace::Error("Sample cache round-trip verify failed (res=%d size=%u/%u)",
+                 (int)loadRes, (unsigned)verify.size(),
+                 (unsigned)entries.size());
+  } else {
+    Trace::Log("SAMPLEPOOL", "Sample cache verified (%u entries)",
+               (unsigned)verify.size());
+  }
+}
+
+// Build-id mixed into the sample cache header. Combines FLASH_TARGET_OFFSET
+// (catches firmware-size changes that move the sample region) with a hash of
+// the build date/time so any rebuild of this adapter invalidates stale caches.
+uint32_t picoTrackerSamplePool::GetSampleCacheBuildId() const {
+  constexpr const char kBuildStamp[] = __DATE__ " " __TIME__;
+  uint32_t hash = 2166136261u; // FNV-1a offset basis
+  for (size_t i = 0; i < sizeof(kBuildStamp) - 1; ++i) {
+    hash ^= static_cast<uint8_t>(kBuildStamp[i]);
+    hash *= 16777619u;
+  }
+  return hash ^ static_cast<uint32_t>(FLASH_TARGET_OFFSET);
+}
 
 bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
   // Calculate flash storage needed (round up to flash page size)

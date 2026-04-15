@@ -676,6 +676,7 @@ void AppWindow::AnimationUpdate() {
   if (awaitingProjectLoadAck_) {
     if (_mask != 0) {
       FileSystem::GetInstance()->DeleteFile("/.current");
+      PersistencyService::GetInstance()->DeleteSampleCache();
       npf_snprintf(projectName_, sizeof(projectName_), "%s",
                    UNNAMED_PROJECT_NAME);
       loadProject_ = true;

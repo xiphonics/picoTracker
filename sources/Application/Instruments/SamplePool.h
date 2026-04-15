@@ -44,6 +44,19 @@ public:
   virtual bool unloadSample(uint32_t i) = 0;
   int8_t ReloadSample(uint8_t index, const char *name);
 
+  virtual void SaveSampleCacheForCurrentPool(const char *projectName) {}
+  virtual bool rebuildSampleFromCache(const SampleCacheEntry &e) {
+    return false;
+  }
+  virtual void ResumeFromCache(uint32_t flashEraseOffset,
+                               uint32_t flashWriteOffset) {}
+  // Firmware-specific id mixed into the sample-cache header so a firmware
+  // update whose flash layout has shifted rejects a stale cache. Default 0
+  // disables the check on platforms without a meaningful build id.
+  virtual uint32_t GetSampleCacheBuildId() const { return 0; }
+
+  bool LoadFromCache(const char *projectName);
+
 protected:
   virtual void updateStatus(uint32_t current, uint32_t total,
                             const char *message);
