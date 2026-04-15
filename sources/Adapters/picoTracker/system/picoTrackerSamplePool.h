@@ -23,6 +23,21 @@ public:
     return (flashLimit_ - flashWriteOffset_);
   }
 
+  void SaveSampleCacheForCurrentPool(const char *projectName) override;
+  bool rebuildSampleFromCache(const SampleCacheEntry &e) override;
+  void ResumeFromCache(uint32_t flashEraseOffset,
+                       uint32_t flashWriteOffset) override {
+    flashEraseOffset_ = flashEraseOffset;
+    flashWriteOffset_ = flashWriteOffset;
+    Trace::Log("SAMPLEPOOL", "Resumed flash allocator: erase=%u write=%u",
+               flashEraseOffset_, flashWriteOffset_);
+  }
+
+  static uint32_t GetFlashEraseOffset() { return flashEraseOffset_; }
+  static uint32_t GetFlashWriteOffset() { return flashWriteOffset_; }
+
+  uint32_t GetSampleCacheBuildId() const override;
+
 protected:
   virtual bool loadSample(const char *name);
   virtual bool unloadSample(uint32_t index);
