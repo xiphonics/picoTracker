@@ -58,14 +58,14 @@ To render stems:
 
 ## Render Output
 
-The rendered audio files are saved to your device's SD card in the `/renders` top level directory. The exact location and format of the files depends on your picoTracker configuration:
+The rendered audio files are saved to your device's SD card in the `/renders` top level directory.
 
 - Mixdown files are named `(projectname)-mixdown.wav`
 - Stem files are named `(projectname)-channel(number).wav`
 
 ## Render Quality
 
-All audio is rendered at 44.1kHz sample rate with 16-bit depth.
+All audio is rendered in stereo at 44.1kHz sample rate with 16-bit depth.
 
 ## Tips for Rendering
 
