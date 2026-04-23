@@ -27,14 +27,14 @@ To create a mixdown:
 1. Navigate to the Project View
 2. Make sure your song is not currently playing
 3. Select the "Mixdown" option under "Render:"
-4. The rendering process will begin, and a progress dialog will display the current render time
-5. The song will play through once from beginning to end while rendering
+4. The rendering process will begin, and a progress dialog will display the current render progress
+5. The song will play through until the end while rendering
 6. You can press "OK" at any time to stop the rendering process
 7. When the song has completed playing through, the rendering will automatically finish
 
-***NOTE:*** Mixdown rendering starts on the last played row in the Song screen.
+***NOTE:*** Rendering is only possible if the first row of your song (Row 00) contains at least one phrase. Rendering starts on the last played row in the Song screen.
 
-***NOTE:*** The time displayed during the rendering process is the elapsed time of the audio being rendered, not the actual "clock" time of how long it takes to perform the render.
+***NOTE:*** The progress displayed during the rendering process shows the percentage of the song rendered.
 
 ***NOTE:*** You may hear noise or audio artifacts while the rendering is in progress or the audio being played at slower speed than expected, but this is normal due to the extra processing required during rendering and it will **not** affect the final rendered audio.
 
@@ -51,21 +51,21 @@ To render stems:
 1. Navigate to the Project View
 2. Make sure your song is not currently playing
 3. Select the "Stems" option under "Render:"
-4. The rendering process will begin, and a progress dialog will display the current render time
-5. The song will play through once from beginning to end while rendering
+4. The rendering process will begin, and a progress dialog will display the current render progress
+5. The song will play through until the end while rendering
 6. You can press "OK" at any time to stop the rendering process
 7. When the song has completed playing through, the rendering will automatically finish
 
 ## Render Output
 
-The rendered audio files are saved to your device's sdcard int he `/renders` top level directory. The exact location and format of the files depends on your picoTracker configuration:
+The rendered audio files are saved to your device's SD card in the `/renders` top level directory.
 
 - Mixdown files are named `(projectname)-mixdown.wav`
 - Stem files are named `(projectname)-channel(number).wav`
 
 ## Render Quality
 
-All audio is rendered at 44.1kHz sample rate with 16-bit depth.
+All audio is rendered in stereo at 44.1kHz sample rate with 16-bit depth.
 
 ## Tips for Rendering
 
