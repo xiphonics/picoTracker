@@ -42,7 +42,7 @@ signed char SampleInstrument::lastMidiNote_[SONG_CHANNEL_COUNT];
 #define KRATE_SAMPLE_COUNT 100
 
 SampleInstrument::SampleInstrument()
-    : I_Instrument(&variables_), sample_(FourCC::SampleInstrumentSample),
+    : I_Instrument(variables_), sample_(FourCC::SampleInstrumentSample),
       volume_(FourCC::SampleInstrumentVolume, 0x80),
       interpolation_(FourCC::SampleInstrumentInterpolation, interpolationTypes,
                      2, 0),
@@ -61,7 +61,12 @@ SampleInstrument::SampleInstrument()
       loopStart_(FourCC::SampleInstrumentLoopStart, 0),
       loopEnd_(FourCC::SampleInstrumentEnd, 0),
       table_(FourCC::SampleInstrumentTable, -1),
-      tableAuto_(FourCC::SampleInstrumentTableAutomation, false) {
+      tableAuto_(FourCC::SampleInstrumentTableAutomation, false),
+      variables_{&sample_,     &volume_,     &interpolation_, &crush_,
+                 &drive_,      &downsample_, &rootNote_,      &fineTune_,
+                 &pan_,        &cutoff_,     &reso_,          &filterMix_,
+                 &filterMode_, &start_,      &loopMode_,      &loopStart_,
+                 &loopEnd_,    &table_,      &tableAuto_} {
 
   // Initialize MIDI notes
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
@@ -73,33 +78,11 @@ SampleInstrument::SampleInstrument()
   dirty_ = false;
   running_ = false;
 
-  // Initialize exported variables
-  // name_ is now an etl::string in the base class, not a Variable
-  variables_.insert(variables_.end(), &sample_);
   sample_.AddObserver(*this);
-
-  variables_.insert(variables_.end(), &volume_);
-  variables_.insert(variables_.end(), &interpolation_);
-  variables_.insert(variables_.end(), &crush_);
-  variables_.insert(variables_.end(), &drive_);
-  variables_.insert(variables_.end(), &downsample_);
-  variables_.insert(variables_.end(), &rootNote_);
-  variables_.insert(variables_.end(), &fineTune_);
-  variables_.insert(variables_.end(), &pan_);
-  variables_.insert(variables_.end(), &cutoff_);
-  variables_.insert(variables_.end(), &reso_);
-  variables_.insert(variables_.end(), &filterMix_);
-  variables_.insert(variables_.end(), &filterMode_);
-  variables_.insert(variables_.end(), &start_);
   start_.AddObserver(*this);
-  variables_.insert(variables_.end(), &loopMode_);
   loopMode_.SetInt(0);
-  variables_.insert(variables_.end(), &loopStart_);
   loopStart_.AddObserver(*this);
-  variables_.insert(variables_.end(), &loopEnd_);
   loopEnd_.AddObserver(*this);
-  variables_.insert(variables_.end(), &table_);
-  variables_.insert(variables_.end(), &tableAuto_);
 
   tableState_.Reset();
   slicePoints_.fill(0);
@@ -1540,7 +1523,7 @@ void SampleInstrument::RestoreContent(PersistencyDocument *doc) {
         setSliceFromString(name.c_str() + 2, value.c_str());
       } else {
         bool found = false;
-        for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+        for (auto it = Variables().begin(); it != Variables().end(); it++) {
           if (!strcasecmp((*it)->GetName(), name.c_str())) {
             (*it)->SetString(value.c_str());
             found = true;

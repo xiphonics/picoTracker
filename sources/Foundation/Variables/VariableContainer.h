@@ -10,17 +10,17 @@
 #ifndef _VARIABLE_CONTAINER_H_
 #define _VARIABLE_CONTAINER_H_
 
-#include "Externals/etl/include/etl/list.h"
+#include "Externals/etl/include/etl/array_view.h"
 #include "Variable.h"
 
 class VariableContainer {
 public:
-  VariableContainer(etl::ilist<Variable *> *list);
+  VariableContainer(etl::array_view<Variable *> list);
   virtual ~VariableContainer();
   Variable *FindVariable(FourCC id);
   Variable *FindVariable(const char *name);
 
 private:
-  etl::ilist<Variable *> *list_;
+  etl::array_view<Variable *> list_;
 };
 #endif
