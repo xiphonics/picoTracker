@@ -38,13 +38,14 @@ struct FourCC {
     InstrumentCommandPitchFineTune = 44,       // PFIN
     InstrumentCommandPlayOfset = 46,           // PLOF
     InstrumentCommandPitchSlide = 48,          // PTCH
-    InstrumentCommandStop = 55,                // STOP
-    InstrumentCommandTable = 58,               // TABL
-    InstrumentCommandTempo = 62,               // TMPO
-    InstrumentCommandVelocity = 66,            // VELM
-    InstrumentCommandVolume = 69,              // VOLM
-    InstrumentCommandVibrato = 73,             // VIBR
-    InstrumentCommandNone = 45,                // ----
+    InstrumentCommandSetInstrumentParameter = 188,
+    InstrumentCommandStop = 55,     // STOP
+    InstrumentCommandTable = 58,    // TABL
+    InstrumentCommandTempo = 62,    // TMPO
+    InstrumentCommandVelocity = 66, // VELM
+    InstrumentCommandVolume = 69,   // VOLM
+    InstrumentCommandVibrato = 73,  // VIB
+    InstrumentCommandNone = 45,     // ----
     InstrumentCommandMidiChord = 143,
 
     SampleInstrumentCrushVolume = 3,
@@ -216,6 +217,7 @@ struct FourCC {
     // 185 is taken for VarImportResampler
     // 186 is taken for ActionAutoSlice
     // 187 is taken for ActionShowRecordView
+    // 188 is taken for InstrumentCommandSetInstrumentParameter
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -305,6 +307,7 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandPan, "PAN")
   ETL_ENUM_TYPE(InstrumentCommandGateOff, "GOF")
   ETL_ENUM_TYPE(InstrumentCommandGroove, "GRV")
+  ETL_ENUM_TYPE(InstrumentCommandSetInstrumentParameter, "SIP")
   ETL_ENUM_TYPE(InstrumentCommandStop, "STP")
   ETL_ENUM_TYPE(InstrumentCommandNone, "---")
   ETL_ENUM_TYPE(InstrumentCommandPitchFineTune, "PFT")

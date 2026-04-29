@@ -81,6 +81,10 @@ bool ChiptuneInstrument::Render(int channel, fixed *buffer, int size,
 
 void ChiptuneInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
   switch (cc) {
+  case FourCC::InstrumentCommandSetInstrumentParameter:
+    voices_[channel].set_instrument_parameter(value >> 8, value & 0xFF);
+    break;
+
   case FourCC::InstrumentCommandArpeggiator:
     voices_[channel].command_init_arp(value);
     break;

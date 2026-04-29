@@ -589,6 +589,57 @@ typedef struct voice_t {
     flags.legato = 1; // set legato flag
   }
 
+  void set_instrument_parameter(uint8_t param, uint8_t value) {
+    // TODO POD: implement parameter setting via command
+    switch (param) {
+    case 0: // waveform
+      wave = static_cast<chiptune_wave_type_e>(
+          std::min(value, (uint8_t)(waveLastItem - 1))); // clamp to valid range
+      break;
+    case 1: // attack
+      envelope.set_attack(value);
+      break;
+    case 2: // decay
+      envelope.set_decay(value);
+      break;
+    case 3: // level
+      volume.level = value;
+      volume.target = value;
+      calculate_gain(); // recalculate gain immediately on level change
+      break;
+    case 4:               // length
+      timeToLive = value; // TODO POD: is this correct?
+      break;
+    case 5: // burst
+      burstTime = value;
+      break;
+    case 6: // vibrato depth
+      vibrato.depth = value;
+      break;
+    case 7: // vibrato delay
+      vibrato.delay =
+          value << 8; // convert from ticks to internal delay representation
+      break;
+    case 8:                                 // transpose
+      parameters.transpose = (int8_t)value; // reinterpret as signed
+      // TODO POD: there's more to this in the case of ARP or the likes
+      break;
+    case 9: // arpeggio speed
+      arp.time = 35 - value;
+      break;
+    case 10: // sweep time
+      sweep.steps = value;
+      break;
+    case 11: // sweep amount
+      sweep.coefficient = (1 << 16) + ((int8_t)value * 64);
+      break;
+
+    default:
+      // invalid parameter index, ignore for now
+      break;
+    }
+  }
+
   void command_init_arp(uint16_t value) {
     // preset to full length arpeggio
     arp.index = 0;

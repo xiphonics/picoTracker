@@ -29,6 +29,7 @@ enum chiptune_wave_type_e : uint8_t {
   waveNoiseNES,
   waveNoiseSN76489,
   waveNoiseWhite,
+  waveLastItem = waveNoiseWhite,
   waveNone
 };
 

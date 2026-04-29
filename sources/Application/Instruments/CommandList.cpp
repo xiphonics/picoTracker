@@ -35,6 +35,7 @@ static FourCC _all[] = {
     FourCC::InstrumentCommandPitchSlide,
     FourCC::InstrumentCommandRetrigger,
     FourCC::InstrumentCommandStop,
+    FourCC::InstrumentCommandSetInstrumentParameter,
     FourCC::InstrumentCommandTable,
     FourCC::InstrumentCommandTempo,
     FourCC::InstrumentCommandVelocity,
