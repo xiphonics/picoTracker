@@ -11,6 +11,8 @@
 #include "Application/Utils/fixed.h"
 #include <cstdint>
 
+#include "System/Console/Trace.h"
+
 #include "ChiptuneEnums.h"
 #include "ChiptuneEnvelope.h"
 #include "ChiptuneMath.h"
@@ -280,15 +282,12 @@ typedef struct voice_t {
       if (burstTime > 0) {
         burstTime--;
         wave = waveNoiseWhite;
-        flags.burst_end = (burstTime == 0);
-      } else {
+        flags.burstEnd = (burstTime == 0);
+      } else if (flags.burstEnd) {
         // first non-burst tick, reset phase, last sample, etc.
-        if (flags.burst_end) {
-          flags.burst_end = 0;
-          lastSample = 0;
-          phase = 0;
-        }
-
+        flags.burstEnd = 0;
+        lastSample = 0;
+        phase = 0;
         wave = parameters.wave;
       }
 
@@ -333,10 +332,12 @@ typedef struct voice_t {
     case wavePulse50: // pulse 50%
       sample = pulse(phase > 0x8000'0000);
       break;
-    case waveTriangle:           // triangle
-      if (phase < 0x8000'0000) { // first half, rising slope
+    case waveTriangle: // triangle
+      if (phase < 0x8000'0000) {
+        // first half, rising slope
         sample = phase >> 3;
-      } else { // second half, falling slope
+      } else {
+        // second half, falling slope
         sample = (0xFFFF'FFFF - phase) >> 3;
       }
       sample &= 0xFF00'0000; // downsample
@@ -409,6 +410,7 @@ typedef struct voice_t {
     arp.frequencies[0] = frequency;
     wave = parameters.wave;
     burstTime = parameters.burst;
+    flags.burstEnd = (burstTime == 0);
 
     // reset noise seed to get deterministic noise
     lfsr = 42;
@@ -590,42 +592,42 @@ typedef struct voice_t {
   }
 
   void set_instrument_parameter(uint8_t param, uint8_t value) {
-    // TODO POD: implement parameter setting via command
+    Trace::Error("Set parameter %d to %d", param, value);
     switch (param) {
     case 0: // waveform
       wave = static_cast<chiptune_wave_type_e>(
           std::min(value, (uint8_t)(waveLastItem - 1))); // clamp to valid range
       break;
-    case 1: // attack
-      envelope.set_attack(value);
+    case 1:                                 // transpose
+      parameters.transpose = (int8_t)value; // reinterpret as signed
+      // TODO POD: there's more to this in the case of ARP or the likes
       break;
-    case 2: // decay
-      envelope.set_decay(value);
-      break;
-    case 3: // level
+    case 2: // level
       volume.level = value;
       volume.target = value;
       calculate_gain(); // recalculate gain immediately on level change
       break;
-    case 4:               // length
-      timeToLive = value; // TODO POD: is this correct?
-      break;
-    case 5: // burst
+    case 3: // burst
       burstTime = value;
       break;
-    case 6: // vibrato depth
-      vibrato.depth = value;
+    case 4: // arpeggio speed
+      arp.time = 35 - value;
       break;
-    case 7: // vibrato delay
+    case 5:               // length
+      timeToLive = value; // TODO POD: is this correct?
+      break;
+    case 6: // attack
+      envelope.set_attack(value);
+      break;
+    case 7: // decay
+      envelope.set_decay(value);
+      break;
+    case 8: // vibrato delay
       vibrato.delay =
           value << 8; // convert from ticks to internal delay representation
       break;
-    case 8:                                 // transpose
-      parameters.transpose = (int8_t)value; // reinterpret as signed
-      // TODO POD: there's more to this in the case of ARP or the likes
-      break;
-    case 9: // arpeggio speed
-      arp.time = 35 - value;
+    case 9: // vibrato depth
+      vibrato.depth = value;
       break;
     case 10: // sweep time
       sweep.steps = value;
