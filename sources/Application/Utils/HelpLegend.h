@@ -110,8 +110,8 @@ static char **getHelpLegend(FourCC command) {
     result[1] = (char *)("delay b+1 ticks");
     break;
   case FourCC::InstrumentCommandSetInstrumentParameter:
-    result[0] = (char *)("SetInstrumentParameter: aabb");
-    result[1] = (char *)("set parameter aa to value bb");
+    result[0] = (char *)("SetInstrumentParameter");
+    result[1] = (char *)("aabb: set param aa to value bb");
     break;
   case FourCC::InstrumentCommandStop:
     result[0] = (char *)("Stop table playback");
