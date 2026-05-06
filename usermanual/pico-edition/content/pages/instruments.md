@@ -235,26 +235,28 @@ The picoTracker currently only supports up to 3 OPAL instruments. Because each o
 
 ![screen capture of the chiptune instrument screen](image/chiptune-instrument-small.png)
 
-- **Waveform:** Select the base sound waverform. Options are:
+- **Waveform [0]:** Select the base sound waverform. Options are:
   - Pulse (12.5%, 25%, 50% duty cycle)
   - 4-bit triangle
   - Pitched noise generators inspired by classic Game Boy (7-bit), NES and SN76489
   - white noise
-- **Transpose:** Shifts the pitch up or down by up to two octaves (±24 semitones).
-- **Level:** Sets the output volume (0x00–0xFF).
-- **Burst:** Adds a short white noise burst at the start of each note. Useful for percussive attacks (off, 0x01–0xFF).
-- **Arp Speed:** Controls how fast arpeggios (via the `ARP` command) are cycled.
-- **Length:** Limits the duration of a note (-- = no limit, 0x01–0xFF). Useful for short, percussive sounds without relying on envelopes.
+- **Transpose [1]:** Shifts the pitch up or down by up to two octaves (±24 semitones).
+- **Level [2]:** Sets the output volume (0x00–0xFF).
+- **Burst [3]:** Adds a short white noise burst at the start of each note. Useful for percussive attacks (off, 0x01–0xFF).
+- **Arp Speed [4]:** Controls how fast arpeggios (via the `ARP` command) are cycled.
+- **Length [5]:** Limits the duration of a note (-- = no limit, 0x01–0xFF). Useful for short, percussive sounds without relying on envelopes.
 - **Table:** Assigns a table that is automatically executed for this instrument.
 - **Envelope**
-  - **Attack:** Controls how quickly the volume reaches its peak (0x00 = instant, 0xFF = slowest).
-  - **Decay:** Controls how quickly the volume falls after the attack phase (0x00 = instant, 0xFF = slowest).
+  - **Attack [6]:** Controls how quickly the volume reaches its peak (0x00 = instant, 0xFF = slowest).
+  - **Decay [7]:** Controls how quickly the volume falls after the attack phase (0x00 = instant, 0xFF = slowest).
 - **Vibrato**
-  - **Delay:** Sets how long it takes before vibrato begins after a note is triggered.
-  - **Amount:** Sets the intensity of the automatic vibrato.
+  - **Delay [8]:** Sets how long it takes before vibrato begins after a note is triggered.
+  - **Amount [9]:** Sets the intensity of the automatic vibrato.
 - **Sweep**
-  - **Length:** Defines the duration of the pitch sweep applied at note start.
-  - **Amount:** Defines the pitch range of the sweep (−127 to 127).
+  - **Length [A]:** Defines the duration of the pitch sweep applied at note start.
+  - **Amount [B]:** Defines the pitch range of the sweep (−127 to 127).
+
+The parameter index in [], which is shown on the very right edge of the instrument view, is the ID which can be pass to the `SIP` command (details below).
 
 #### Sample instruments
 
@@ -276,12 +278,13 @@ The following sample instruments can serve as a starting point for creating your
 | **Sweep Length**   | 00        | 00        | 00        | 14        | 10            | 00          |
 | **Sweep Amount**   | 00        | 00        | 00        | -80       | -16           | 00          |
 
-
 The picoTracker supports up to 8 simultaneous voices running the chiptune instrument. Up to 16 different instruments can be used within a single project.
 
 #### Supported Commands
 
-The following commands are supported: `ARP` (Arpeggiator), `KIL` (Kill / Note Off), `GOF` (Gate Off), `CSH` (Crush & Drive), `VIB` (Vibrato), `PAN` (Stereo Panning), `PSL` (Pitch Slide), `LEG` (Legato), `VOL` (Volume), `IRT` (Isntrument Retrigger) and `PFT` (Pitch Fine Tune).
+The following commands are supported: `ARP` (ARPeggiator), `CSH` (CruSH & Drive), `GOF` (Gate OFf), `IRT` (Instrument ReTrigger), `KIL` (KILl / Note Off), `LEG` (LEGato), `PAN` (Stereo PANning), `PFT` (Pitch Fine Tune), `PSL` (Pitch SLide), `SIP` (Set Instrument Parameter), `VIB` (VIBrato), `VOL` (VOLume).
+
+The `SIP aabb` command is only available for the chiptune instrument. It directly overwrites any supported parameter of the instrument to allow all possible sound changes directly from a phrase or table. `aa` is the parameter index as shown in the instrument view, `bb`is the value to set.
 
 ### Exporting an Instrument
 

@@ -111,7 +111,7 @@ static char **getHelpLegend(FourCC command) {
     break;
   case FourCC::InstrumentCommandSetInstrumentParameter:
     result[0] = (char *)("SetInstrumentParameter: aabb");
-    result[1] = (char *)("Set parameter aa to value bb");
+    result[1] = (char *)("set parameter aa to value bb");
     break;
   case FourCC::InstrumentCommandStop:
     result[0] = (char *)("Stop table playback");
