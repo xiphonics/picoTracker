@@ -276,6 +276,9 @@ typedef struct voice_t {
         // note off, kill everything
         wave = waveNone;
         envelope.state = envIdle;
+        gain.combined = 0;
+        gain.left = 0;
+        gain.right = 0;
       }
     } else {
       // still in burst or already playing?
@@ -596,7 +599,7 @@ typedef struct voice_t {
     switch (param) {
     case 0: // waveform
       wave = static_cast<chiptune_wave_type_e>(
-          std::min(value, (uint8_t)(waveLastItem - 1))); // clamp to valid range
+          std::min(value, (uint8_t)waveLastItem)); // clamp to valid range
       break;
     case 1:                                 // transpose
       parameters.transpose = (int8_t)value; // reinterpret as signed
@@ -613,8 +616,8 @@ typedef struct voice_t {
     case 4: // arpeggio speed
       arp.time = 35 - value;
       break;
-    case 5:               // length
-      timeToLive = value; // TODO POD: is this correct?
+    case 5: // length
+      timeToLive = value;
       break;
     case 6: // attack
       envelope.set_attack(value);
