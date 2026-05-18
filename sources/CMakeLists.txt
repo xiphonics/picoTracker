@@ -44,6 +44,12 @@ add_definitions(-DLOAD_IN_FLASH)
 # define to use battery level as percentage instead of battery level as "+" bars
 #add_definitions(-DBATTERY_LEVEL_AS_PERCENTAGE)
 
+# disable ADC battery monitoring (e.g. RP2350 boards without battery sense)
+option(DISABLE_BATTERY_MONITORING "Disable battery ADC monitoring" OFF)
+if(DISABLE_BATTERY_MONITORING)
+  add_compile_definitions(DISABLE_BATTERY_MONITORING)
+endif()
+
 #disabled for now as USB **input** is not yet fully implemented
 #add_definitions(USB_REMOTE_UI_INPUT)
 # ST7789 controller based LCD instead of a ILI9341 controller

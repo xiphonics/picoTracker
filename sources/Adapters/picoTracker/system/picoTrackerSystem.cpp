@@ -123,7 +123,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
   eventManager_ = I_GUIWindowFactory::GetInstance()->GetEventManager();
   eventManager_->Init();
 
-#if PICO_RP2040
+#if PICO_RP2040 && !DISABLE_BATTERY_MONITORING
   // init GPIO for use as ADC: hi-Z, no pullups, etc
   adc_gpio_init(BATT_VOLTAGE_IN);
 
@@ -152,6 +152,15 @@ unsigned long picoTrackerSystem::GetClock() {
 }
 
 void picoTrackerSystem::GetBatteryState(BatteryState &state) {
+#if DISABLE_BATTERY_MONITORING
+  state.error = true;
+  state.percentage = 100;
+  state.voltage_mv = 3900;
+  state.charging = false;
+
+  return;
+#endif
+
   uint32_t adc_reading = adc_read(); // raw voltage from ADC
   // 0.8mV per unit of ADC
   // * 2 because picoTracker use voltage divider for voltage on ADC pin
