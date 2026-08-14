@@ -39,6 +39,16 @@ bool ParseUint32(const char *text, uint32_t &value) {
   value = static_cast<uint32_t>(parsed);
   return true;
 }
+
+bool ParseUint16(const char *text, uint16_t &value) {
+  uint32_t parsed = 0;
+  if (!ParseUint32(text, parsed) ||
+      parsed > std::numeric_limits<uint16_t>::max()) {
+    return false;
+  }
+  value = static_cast<uint16_t>(parsed);
+  return true;
+}
 } // namespace
 
 PersistencyService::PersistencyService()
@@ -517,37 +527,51 @@ PersistencyResult PersistencyService::LoadSampleCache(
   uint32_t magic = 0;
   uint32_t version = 0;
   uint32_t buildId = 0;
+  uint32_t expectedCount = 0;
   char projectInFile[MAX_PROJECT_NAME_LENGTH + 1] = {0};
   flashEraseOffset = 0;
   flashWriteOffset = 0;
+  bool hasValidMagic = false;
+  bool hasValidVersion = false;
+  bool hasValidProject = false;
+  bool hasValidBuildId = false;
   bool hasValidEraseOffset = false;
   bool hasValidWriteOffset = false;
+  bool hasValidCount = false;
 
   bool hasAttr = doc.NextAttribute();
   while (hasAttr) {
     if (!strcasecmp(doc.attrname_, "MAGIC")) {
-      magic = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
+      hasValidMagic = ParseUint32(doc.attrval_, magic);
     } else if (!strcasecmp(doc.attrname_, "VERSION")) {
-      version = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
+      hasValidVersion = ParseUint32(doc.attrval_, version);
     } else if (!strcasecmp(doc.attrname_, "PROJECT")) {
-      snprintf(projectInFile, sizeof(projectInFile), "%s", doc.attrval_);
+      const size_t length = strlen(doc.attrval_);
+      hasValidProject = length > 0 && length < sizeof(projectInFile);
+      if (hasValidProject) {
+        memcpy(projectInFile, doc.attrval_, length + 1);
+      }
     } else if (!strcasecmp(doc.attrname_, "BUILDID")) {
-      buildId = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
+      hasValidBuildId = ParseUint32(doc.attrval_, buildId);
     } else if (!strcasecmp(doc.attrname_, "ERASEOFF")) {
       hasValidEraseOffset = ParseUint32(doc.attrval_, flashEraseOffset);
     } else if (!strcasecmp(doc.attrname_, "WRITEOFF")) {
       hasValidWriteOffset = ParseUint32(doc.attrval_, flashWriteOffset);
+    } else if (!strcasecmp(doc.attrname_, "COUNT")) {
+      hasValidCount = ParseUint32(doc.attrval_, expectedCount);
     }
     hasAttr = doc.NextAttribute();
   }
 
+  if (!hasValidMagic || !hasValidVersion || !hasValidProject ||
+      !hasValidBuildId || !hasValidEraseOffset || !hasValidWriteOffset ||
+      !hasValidCount) {
+    Trace::Error("PERSISTENCYSERVICE: sample cache missing/invalid attributes");
+    return PERSIST_LOAD_FAILED;
+  }
   if (magic != PROJECT_SAMPLES_CACHE_MAGIC ||
       version != PROJECT_SAMPLES_CACHE_VERSION) {
     Trace::Error("PERSISTENCYSERVICE: sample cache magic/version mismatch");
-    return PERSIST_LOAD_FAILED;
-  }
-  if (!hasValidEraseOffset || !hasValidWriteOffset) {
-    Trace::Error("PERSISTENCYSERVICE: sample cache missing/invalid offsets");
     return PERSIST_LOAD_FAILED;
   }
   if (buildId != expectedBuildId) {
@@ -565,39 +589,68 @@ PersistencyResult PersistencyService::LoadSampleCache(
 
   bool hasChild = doc.FirstChild();
   while (hasChild) {
-    if (!strcmp(doc.ElemName(), "SAMPLE")) {
-      if (entries.full()) {
-        Trace::Error("PERSISTENCYSERVICE: sample cache has too many entries");
-        return PERSIST_LOAD_FAILED;
-      }
-      SampleCacheEntry e{};
-      bool a = doc.NextAttribute();
-      while (a) {
-        if (!strcasecmp(doc.attrname_, "NAME")) {
-          snprintf(e.name, sizeof(e.name), "%s", doc.attrval_);
-        } else if (!strcasecmp(doc.attrname_, "FLASHOFF")) {
-          e.flashOffset = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
-        } else if (!strcasecmp(doc.attrname_, "BUFSIZE")) {
-          e.sampleBufferSize = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
-        } else if (!strcasecmp(doc.attrname_, "SIZE")) {
-          e.size = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
-        } else if (!strcasecmp(doc.attrname_, "RATE")) {
-          e.sampleRate = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
-        } else if (!strcasecmp(doc.attrname_, "CHANS")) {
-          e.channelCount = (uint16_t)strtoul(doc.attrval_, nullptr, 10);
-        } else if (!strcasecmp(doc.attrname_, "BPS")) {
-          e.bytePerSample = (uint16_t)strtoul(doc.attrval_, nullptr, 10);
-        } else if (!strcasecmp(doc.attrname_, "FMT")) {
-          e.audioFormat = (uint16_t)strtoul(doc.attrval_, nullptr, 10);
-        }
-        a = doc.NextAttribute();
-      }
-      entries.push_back(e);
+    if (strcmp(doc.ElemName(), "SAMPLE")) {
+      Trace::Error("PERSISTENCYSERVICE: unexpected sample cache element '%s'",
+                   doc.ElemName());
+      return PERSIST_LOAD_FAILED;
     }
+    if (entries.full()) {
+      Trace::Error("PERSISTENCYSERVICE: sample cache has too many entries");
+      return PERSIST_LOAD_FAILED;
+    }
+
+    SampleCacheEntry e{};
+    bool hasValidName = false;
+    bool hasValidFlashOffset = false;
+    bool hasValidBufferSize = false;
+    bool hasValidSize = false;
+    bool hasValidRate = false;
+    bool hasValidChannels = false;
+    bool hasValidBytesPerSample = false;
+    bool hasValidFormat = false;
+    bool a = doc.NextAttribute();
+    while (a) {
+      if (!strcasecmp(doc.attrname_, "NAME")) {
+        const size_t length = strlen(doc.attrval_);
+        hasValidName = length > 0 && length < sizeof(e.name);
+        if (hasValidName) {
+          memcpy(e.name, doc.attrval_, length + 1);
+        }
+      } else if (!strcasecmp(doc.attrname_, "FLASHOFF")) {
+        hasValidFlashOffset = ParseUint32(doc.attrval_, e.flashOffset);
+      } else if (!strcasecmp(doc.attrname_, "BUFSIZE")) {
+        hasValidBufferSize = ParseUint32(doc.attrval_, e.sampleBufferSize);
+      } else if (!strcasecmp(doc.attrname_, "SIZE")) {
+        hasValidSize = ParseUint32(doc.attrval_, e.size);
+      } else if (!strcasecmp(doc.attrname_, "RATE")) {
+        hasValidRate = ParseUint32(doc.attrval_, e.sampleRate);
+      } else if (!strcasecmp(doc.attrname_, "CHANS")) {
+        hasValidChannels = ParseUint16(doc.attrval_, e.channelCount);
+      } else if (!strcasecmp(doc.attrname_, "BPS")) {
+        hasValidBytesPerSample = ParseUint16(doc.attrval_, e.bytePerSample);
+      } else if (!strcasecmp(doc.attrname_, "FMT")) {
+        hasValidFormat = ParseUint16(doc.attrval_, e.audioFormat);
+      }
+      a = doc.NextAttribute();
+    }
+    if (!hasValidName || !hasValidFlashOffset || !hasValidBufferSize ||
+        !hasValidSize || !hasValidRate || !hasValidChannels ||
+        !hasValidBytesPerSample || !hasValidFormat) {
+      Trace::Error(
+          "PERSISTENCYSERVICE: sample cache entry missing/invalid attributes");
+      return PERSIST_LOAD_FAILED;
+    }
+    entries.push_back(e);
     hasChild = doc.NextSibling();
   }
   if (doc.HadError()) {
     Trace::Error("PERSISTENCYSERVICE: XML error parsing sample cache");
+    return PERSIST_LOAD_FAILED;
+  }
+  if (entries.size() != expectedCount) {
+    Trace::Error("PERSISTENCYSERVICE: sample cache count mismatch (%u != %u)",
+                 static_cast<unsigned>(entries.size()), expectedCount);
+    entries.clear();
     return PERSIST_LOAD_FAILED;
   }
   return PERSIST_LOADED;
