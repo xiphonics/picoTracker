@@ -16,11 +16,30 @@
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #define PROJECT_STATE_FILE "/.current"
 #define MAX_DELETE_DEPTH 3
+
+namespace {
+bool ParseUint32(const char *text, uint32_t &value) {
+  if (!text || !text[0] || text[0] == '-') {
+    return false;
+  }
+  errno = 0;
+  char *end = nullptr;
+  const unsigned long long parsed = strtoull(text, &end, 10);
+  if (errno == ERANGE || !end || *end != '\0' ||
+      parsed > std::numeric_limits<uint32_t>::max()) {
+    return false;
+  }
+  value = static_cast<uint32_t>(parsed);
+  return true;
+}
+} // namespace
 
 PersistencyService::PersistencyService()
     : Service(FourCC::ServicePersistency){};
@@ -501,6 +520,8 @@ PersistencyResult PersistencyService::LoadSampleCache(
   char projectInFile[MAX_PROJECT_NAME_LENGTH + 1] = {0};
   flashEraseOffset = 0;
   flashWriteOffset = 0;
+  bool hasValidEraseOffset = false;
+  bool hasValidWriteOffset = false;
 
   bool hasAttr = doc.NextAttribute();
   while (hasAttr) {
@@ -513,9 +534,9 @@ PersistencyResult PersistencyService::LoadSampleCache(
     } else if (!strcasecmp(doc.attrname_, "BUILDID")) {
       buildId = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
     } else if (!strcasecmp(doc.attrname_, "ERASEOFF")) {
-      flashEraseOffset = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
+      hasValidEraseOffset = ParseUint32(doc.attrval_, flashEraseOffset);
     } else if (!strcasecmp(doc.attrname_, "WRITEOFF")) {
-      flashWriteOffset = (uint32_t)strtoul(doc.attrval_, nullptr, 10);
+      hasValidWriteOffset = ParseUint32(doc.attrval_, flashWriteOffset);
     }
     hasAttr = doc.NextAttribute();
   }
@@ -523,6 +544,10 @@ PersistencyResult PersistencyService::LoadSampleCache(
   if (magic != PROJECT_SAMPLES_CACHE_MAGIC ||
       version != PROJECT_SAMPLES_CACHE_VERSION) {
     Trace::Error("PERSISTENCYSERVICE: sample cache magic/version mismatch");
+    return PERSIST_LOAD_FAILED;
+  }
+  if (!hasValidEraseOffset || !hasValidWriteOffset) {
+    Trace::Error("PERSISTENCYSERVICE: sample cache missing/invalid offsets");
     return PERSIST_LOAD_FAILED;
   }
   if (buildId != expectedBuildId) {

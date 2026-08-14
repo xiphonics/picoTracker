@@ -63,15 +63,22 @@ bool SamplePool::LoadFromCache(const char *projectName) {
                projectName, (int)res);
     return false;
   }
-  // Monotonicity check: write offset must cover every cached entry.
+  // Monotonicity check: write offset must cover every cached entry. Use
+  // subtraction so a corrupt offset/size pair cannot wrap past writeOff.
   for (size_t i = 0; i < entries.size(); ++i) {
-    uint32_t end = entries[i].flashOffset + entries[i].sampleBufferSize;
-    if (end > writeOff) {
-      Trace::Error("SAMPLEPOOL: cache entry '%s' exceeds writeOff (%u > %u)",
-                   entries[i].name, end, writeOff);
+    const SampleCacheEntry &entry = entries[i];
+    if (entry.flashOffset > writeOff ||
+        entry.sampleBufferSize > writeOff - entry.flashOffset) {
+      Trace::Error("SAMPLEPOOL: cache entry '%s' exceeds writeOff",
+                   entry.name);
       ps->DeleteSampleCache();
       return false;
     }
+  }
+  if (!ValidateSampleCache(entries, eraseOff, writeOff)) {
+    Trace::Error("SAMPLEPOOL: cache has invalid flash allocator state");
+    ps->DeleteSampleCache();
+    return false;
   }
   ResumeFromCache(eraseOff, writeOff);
   for (size_t i = 0; i < entries.size(); ++i) {

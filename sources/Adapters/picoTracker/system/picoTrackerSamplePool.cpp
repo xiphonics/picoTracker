@@ -211,13 +211,43 @@ bool picoTrackerSamplePool::LoadInFlash(WavFile *wave) {
 
 bool picoTrackerSamplePool::unloadSample(uint32_t index) { return false; };
 
+bool picoTrackerSamplePool::ValidateSampleCache(
+    const etl::ivector<SampleCacheEntry> &entries, uint32_t flashEraseOffset,
+    uint32_t flashWriteOffset) const {
+  if (flashWriteOffset < FLASH_TARGET_OFFSET ||
+      flashWriteOffset > flashEraseOffset || flashEraseOffset > flashLimit_) {
+    Trace::Error("Invalid cache allocator offsets: target=%u write=%u erase=%u "
+                 "limit=%u",
+                 FLASH_TARGET_OFFSET, flashWriteOffset, flashEraseOffset,
+                 flashLimit_);
+    return false;
+  }
+  if ((flashWriteOffset % FLASH_PAGE_SIZE) != 0 ||
+      (flashEraseOffset % FLASH_SECTOR_SIZE) != 0) {
+    Trace::Error("Unaligned cache allocator offsets: write=%u erase=%u",
+                 flashWriteOffset, flashEraseOffset);
+    return false;
+  }
+
+  for (const SampleCacheEntry &entry : entries) {
+    if (entry.flashOffset < FLASH_TARGET_OFFSET ||
+        (entry.flashOffset % FLASH_PAGE_SIZE) != 0 ||
+        entry.flashOffset > flashWriteOffset ||
+        entry.sampleBufferSize > flashWriteOffset - entry.flashOffset) {
+      Trace::Error("Cache entry '%s' has invalid flash range", entry.name);
+      return false;
+    }
+  }
+  return true;
+}
+
 bool picoTrackerSamplePool::rebuildSampleFromCache(const SampleCacheEntry &e) {
   if (count_ >= MAX_SAMPLES) {
     return false;
   }
   // Bounds-check the flash region against our allocator window.
-  if (e.flashOffset < FLASH_TARGET_OFFSET ||
-      e.flashOffset + e.sampleBufferSize > flashLimit_) {
+  if (e.flashOffset < FLASH_TARGET_OFFSET || e.flashOffset > flashLimit_ ||
+      e.sampleBufferSize > flashLimit_ - e.flashOffset) {
     Trace::Error("Cache entry '%s' flash range out of bounds", e.name);
     return false;
   }

@@ -25,6 +25,9 @@ public:
 
   void SaveSampleCacheForCurrentPool(const char *projectName) override;
   bool rebuildSampleFromCache(const SampleCacheEntry &e) override;
+  bool ValidateSampleCache(const etl::ivector<SampleCacheEntry> &entries,
+                           uint32_t flashEraseOffset,
+                           uint32_t flashWriteOffset) const override;
   void ResumeFromCache(uint32_t flashEraseOffset,
                        uint32_t flashWriteOffset) override {
     flashEraseOffset_ = flashEraseOffset;

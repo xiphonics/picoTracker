@@ -48,6 +48,11 @@ public:
   virtual bool rebuildSampleFromCache(const SampleCacheEntry &e) {
     return false;
   }
+  virtual bool ValidateSampleCache(
+      const etl::ivector<SampleCacheEntry> &entries,
+      uint32_t flashEraseOffset, uint32_t flashWriteOffset) const {
+    return true;
+  }
   virtual void ResumeFromCache(uint32_t flashEraseOffset,
                                uint32_t flashWriteOffset) {}
   // Firmware-specific id mixed into the sample-cache header so a firmware
