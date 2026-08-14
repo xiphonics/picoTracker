@@ -50,7 +50,7 @@ void SamplePool::updateStatus(uint32_t index, uint32_t total,
 };
 
 bool SamplePool::LoadFromCache(const char *projectName) {
-  static etl::vector<SampleCacheEntry, MAX_SAMPLES> entries;
+  auto &entries = sampleCacheEntries_;
   entries.clear();
   uint32_t eraseOff = 0;
   uint32_t writeOff = 0;

@@ -260,10 +260,8 @@ bool picoTrackerSamplePool::rebuildSampleFromCache(const SampleCacheEntry &e) {
 
 void picoTrackerSamplePool::SaveSampleCacheForCurrentPool(
     const char *projectName) {
-  static etl::vector<SampleCacheEntry, MAX_SAMPLES> entries;
-  static etl::vector<SampleCacheEntry, MAX_SAMPLES> verify;
+  auto &entries = sampleCacheEntries_;
   entries.clear();
-  verify.clear();
   for (uint32_t i = 0; i < count_; ++i) {
     SampleCacheEntry e{};
     strncpy(e.name, nameStore_[i], MAX_INSTRUMENT_FILENAME_LENGTH);
@@ -288,18 +286,20 @@ void picoTrackerSamplePool::SaveSampleCacheForCurrentPool(
     return;
   }
 
-  // Round-trip verify: read the cache back and sanity-check counts/offsets.
+  // The save call has consumed the entries, so reuse the same storage for the
+  // round-trip read instead of permanently allocating a verification buffer.
+  const size_t savedCount = entries.size();
+  entries.clear();
   uint32_t eraseOff = 0, writeOff = 0;
   auto loadRes = ps->LoadSampleCache(projectName, GetSampleCacheBuildId(),
-                                     verify, eraseOff, writeOff);
-  if (loadRes != PERSIST_LOADED || verify.size() != entries.size() ||
+                                     entries, eraseOff, writeOff);
+  if (loadRes != PERSIST_LOADED || entries.size() != savedCount ||
       eraseOff != flashEraseOffset_ || writeOff != flashWriteOffset_) {
     Trace::Error("Sample cache round-trip verify failed (res=%d size=%u/%u)",
-                 (int)loadRes, (unsigned)verify.size(),
-                 (unsigned)entries.size());
+                 (int)loadRes, (unsigned)entries.size(), (unsigned)savedCount);
   } else {
     Trace::Log("SAMPLEPOOL", "Sample cache verified (%u entries)",
-               (unsigned)verify.size());
+               (unsigned)entries.size());
   }
 }
 

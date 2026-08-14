@@ -71,6 +71,7 @@ protected:
   char nameStore_[MAX_SAMPLES][MAX_INSTRUMENT_FILENAME_LENGTH + 1];
   char *names_[MAX_SAMPLES];
   WavFile wav_[MAX_SAMPLES];
+  etl::vector<SampleCacheEntry, MAX_SAMPLES> sampleCacheEntries_;
   void swapEntries(int src, int dst);
 
   uint32_t importCount;
