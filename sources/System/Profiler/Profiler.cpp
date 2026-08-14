@@ -103,34 +103,27 @@ AverageProfiler::AverageProfiler(const char *name)
 AverageProfiler::~AverageProfiler() { logStats(); }
 
 void AverageProfiler::addSample(uint32_t duration) {
-  static uint32_t sample_count = 0;
-  sample_count++;
-
-  // Debug: Print every 1000th sample
-  if (sample_count % 1000 == 0) {
-    printf("[PROFILER] %-30s: sample %lu, duration=%lu\n", name_,
-           (unsigned long)sample_count, (unsigned long)duration);
-  }
-
   total_time_ += duration;
   call_count_++;
 
   // Log stats every 1 second (1,000,000 microseconds)
-  static uint32_t last_log_time = 0;
   System *sys = System::GetInstance();
   uint32_t current_time = sys->Micros();
-  if (time_diff(current_time, last_log_time) > 1000000) { // 1 second
+  if (last_log_time_ == 0) {
+    last_log_time_ = current_time;
+  } else if (time_diff(current_time, last_log_time_) > 1000000) { // 1 second
     logStats();
-    last_log_time = current_time;
+    last_log_time_ = current_time;
   }
 }
 
 void AverageProfiler::logStats() {
   if (call_count_ > 0) {
-    // Always log all stats for now
     uint32_t avg = total_time_ / call_count_;
-    Trace::Log("PROFILER", "%-30s: avg=%4u us, calls=%5u, total=%6llu us",
-               name_, avg, call_count_, total_time_);
+    printf("[PROFILER] %-30s: avg=%4lu us, calls=%5lu, total=%6lu us\n",
+           name_, static_cast<unsigned long>(avg),
+           static_cast<unsigned long>(call_count_),
+           static_cast<unsigned long>(total_time_));
 
     // Reset counters after logging
     total_time_ = 0;

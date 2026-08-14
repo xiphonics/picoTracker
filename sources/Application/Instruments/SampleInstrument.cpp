@@ -18,6 +18,7 @@
 #include "SampleVariable.h"
 #include "Services/Audio/Audio.h"
 #include "System/Console/Trace.h"
+#include "System/Profiler/Profiler.h"
 #include "System/io/Status.h"
 #include <assert.h>
 
@@ -624,6 +625,8 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
 
     if (*rpFinished)
       return false;
+
+    PROFILE_AVERAGE("SampleInstrument::Render");
 
     // clear the fixed point buffer
 

@@ -33,9 +33,13 @@ typedef signed int fixed;
 // where |COEF| <= FP_ONE. Splitting x into 16-bit halves lets the whole
 // computation use 32-bit multiplications instead.
 inline fixed fp_mul_coef(fixed x, fixed coef) {
+#if FP_MUL_COEF_BASELINE
+  return fp_mul(x, coef);
+#else
   fixed x_hi = x >> 16;
   fixed x_lo = x & 0xFFFF;
   return (x_hi * coef << 1) + ((x_lo * coef) >> FIXED_SHIFT);
+#endif
 }
 
 #define fp_div(x, y) ((((x) << 2) / ((y) >> 8)) << 10)

@@ -31,4 +31,10 @@ target_link_libraries(application_instruments PUBLIC
 
 target_include_directories(application_instruments PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+if(FP_MUL_COEF_BASELINE)
+  target_compile_definitions(application_instruments PRIVATE
+    FP_MUL_COEF_BASELINE=1
+  )
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR})

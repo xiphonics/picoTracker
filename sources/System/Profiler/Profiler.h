@@ -6,6 +6,7 @@
 #include <Externals/etl/include/etl/map.h>
 #include <Externals/etl/include/etl/string.h>
 #include <System/Console/Trace.h>
+#include <System/System/System.h>
 #include <cstdio>
 
 // Helper function to safely calculate time differences with wrap-around
@@ -88,11 +89,14 @@ private:
 #if ENABLE_PROFILING
 #define PROFILE_AVERAGE(name)                                                  \
   static AverageProfiler avg_prof(name);                                       \
-  uint32_t start_time_avg = micros();                                          \
+  uint32_t start_time_avg = System::GetInstance()->Micros();                   \
   struct scope_guard {                                                         \
     AverageProfiler &prof;                                                     \
     uint32_t &start;                                                           \
-    ~scope_guard() { prof.addSample(time_diff(micros(), start)); }             \
+    ~scope_guard() {                                                           \
+      prof.addSample(                                                          \
+          time_diff(System::GetInstance()->Micros(), start));                  \
+    }                                                                          \
   } guard{avg_prof, start_time_avg};
 #else
 #define PROFILE_AVERAGE(name)
