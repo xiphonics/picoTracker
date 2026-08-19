@@ -36,7 +36,7 @@ Variable::Variable(FourCC id, bool value) : id_(id) {
 
 Variable::Variable(FourCC id, const char *const *list, int size, int index)
     : id_(id) {
-  list_.char_ = list;
+  list_ = list;
   listSize_ = size;
   value_.index_ = index;
   defaultValue_.index_ = index;
@@ -190,8 +190,8 @@ void Variable::SetString(const char *string, bool notify) {
   case CHAR_LIST:
     value_.index_ = -1;
     for (int i = 0; i < listSize_; i++) {
-      if (list_.char_[i]) {
-        if (strcasecmp(string, list_.char_[i]) == 0) {
+      if (list_[i]) {
+        if (strcasecmp(string, list_[i]) == 0) {
           value_.index_ = i;
           break;
         }
@@ -227,7 +227,7 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
     if ((value_.index_ < 0) || (value_.index_ >= listSize_)) {
       return "";
     } else {
-      return list_.char_[value_.index_];
+      return list_[value_.index_];
     }
     break;
   };
@@ -245,7 +245,7 @@ void Variable::CopyFrom(Variable &other) {
 
 const char *const *Variable::GetListPointer() {
   NAssert(type_ == CHAR_LIST);
-  return list_.char_;
+  return list_;
 };
 
 uint8_t Variable::GetListSize() {

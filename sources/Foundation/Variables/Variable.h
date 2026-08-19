@@ -58,6 +58,7 @@ protected:
 
   FourCC id_;
   Type type_;
+  uint8_t listSize_ = 0;
 
   union {
     int int_;
@@ -73,12 +74,12 @@ protected:
     int index_;
   } defaultValue_;
 
+  // list_ and stringValue_ are mutually exclusive:
+  // list_ is only used when type_ == CHAR_LIST
+  // stringValue_ is only used when type_ == STRING
   union {
-    const char *const *char_;
-  } list_;
-
-  etl::istring *stringValue_ = nullptr;
-
-  uint8_t listSize_;
+    const char *const *list_;
+    etl::istring *stringValue_;
+  };
 };
 #endif

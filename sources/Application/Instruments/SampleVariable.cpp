@@ -12,7 +12,7 @@
 
 SampleVariable::SampleVariable(FourCC id) : WatchedVariable(id, 0, 0, -1) {
   SamplePool *pool = SamplePool::GetInstance();
-  list_.char_ = pool->GetNameList();
+  list_ = pool->GetNameList();
   listSize_ = pool->GetNameListSize();
   pool->AddObserver(*this);
 };
@@ -43,6 +43,6 @@ void SampleVariable::Update(Observable &o, I_ObservableData *d) {
   // For inserts, just refresh list pointers below
   // indices remain valid since imports append at the end
   SamplePool *pool = (SamplePool *)&o;
-  list_.char_ = pool->GetNameList();
+  list_ = pool->GetNameList();
   listSize_ = pool->GetNameListSize();
 };
