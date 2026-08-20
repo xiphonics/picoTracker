@@ -83,6 +83,9 @@
         <a href="midi.html">
             <li>MIDI Implementation</li>
         </a>
+        <a href="midi-control-surfaces.html">
+            <li>MIDI Control Surfaces</li>
+        </a>
         <a href="appendix-remoteui.html">
             <li>Remote Protocol</li>
         </a>

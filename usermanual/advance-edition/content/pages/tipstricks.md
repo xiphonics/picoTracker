@@ -9,11 +9,17 @@ The command names have been changed to match picoTracker's naming convention and
 
 ----
 
+{% callout type=note %}
+The tips below are community-sourced and may describe workflows that depend on instrument or project setup.
+{% endcallout %}
+
+{% callout type=warn | If a sample is extremely short, retrigger tricks may cut out unexpectedly due to voice optimization. %}
+
 ## Delays and Echoes 
 
 ### Simulating LSDj's D command
 
-One command that is from LSDj but doesn't exist in picoTracker is the [D]elay command. However, it is possible to emulate it. It's a little tricky but gives a good view of several commands so I'll explain it here:
+One command that from LSDJ that didn't exist in the early implementations of LGPT was the [D]elay command. Whle a Delay is now available in the Advance, the trick of simulating can still be handy to build upon for other uses like Echos outlined below so its still useful to explain how it can be done.
 
 For this, we'll need to use `POF` (play offset). `POF` is the command that allows to position the sample playback cursor both/either to an absolute point in the sample or relative to the current play position. For example, `POF 8000` will put the playback head to the middle of the sample, `POF 4000` to the first quarter. `POF 0040` will jump ahead from current position of a offset equivalent to a quarter of the sample size.
 
@@ -40,6 +46,7 @@ Will do the trick :)
 Note: if you are using very short samples, it might be that before one tick, the sample is finished and the voice is automatically killed (to save CPU). In that case, POF'ing it will have not effect. So, in general, when using re-positioning with `POF`, it is better to put a short loop (for example of 1 sample long at the end) in the instrument definition.
 
 ## Doing Echoes
+
 Using the 'retriggering' system we just saw, we can easily emulate echoes without having to enter notes at each step. Since doing `POF 01FF` will restart the sound from it's beginning we can do the following table :
 
 ```
@@ -57,7 +64,7 @@ Note that you can also emulate triplet using this technique.
 
 ### Oscillator base
 
-Oscillator is a special looping mode that allows to generate timbre from basically anything. It basically the loop start and loop end point of the instrument settings and adapts the sample scanning speed so that it becomes pitched to the played note.
+Oscillator is a special looping mode that allows generating a timbre from basically anything. It basically the loop start and loop end point of the instrument settings and adapts the sample scanning speed so that it becomes pitched to the played note.
 
 The most straightforward use is when you have short waveform samples (a single square wave for example). Rather than having to compute the sample length or try to find the note that is played when looped, just turn the instrument's loop mode to 'oscillator' and it'll be automatically tuned. Of course, nothing prevents you to grab loops in ANY kind of sample, voices, drum loops wathever. The oscillator mode is a great way to get timbres from material you already got.
 
@@ -72,7 +79,7 @@ LOF 0100
 Alternatively, you can also scan slowly from one wave to the other by doing a table
 ```
 00 LOF 0001 ---- ---- ---- -----
-01 HOP  0000 ---- ---- ---- -----
+01 HOP 0000 ---- ---- ---- -----
 ```
 This trick works also very neatly to change the timbre of some notes only by doing single LOF commands in the phrase view, changing slightly (depending on the value used) the timbre for each note.
 
@@ -91,6 +98,10 @@ See for example the [PeteyDroney](http://www.hexawe.net/lgptwiki/lgpt-%20PeteyDr
 ## Breakz !
 
 ### Loop choppin' with commands
+
+{% callout type=note %}
+This tip was written before the picoTracker (both pico and Advance) had the dedicated Slicer feature added, but is kept here in case its useful for future readers to make use of this technique for other purposes.
+{% endcallout %}
 
 Loop chopping is really easy in picoTracker through the `POF` command. POF sees the whole sample as 256 chunks of the same length. It allows to put the current playback head to the beginning of any of those chunks. To get it, we'll take a really simple drum loop sample going like this:
 
