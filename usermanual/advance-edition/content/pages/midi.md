@@ -15,7 +15,7 @@ picoTracker supports two MIDI input methods:
 
 2. **TRS MIDI (3.5mm)**: Connect standard MIDI devices using a MIDI to TRS adapter. **Note:** TRS MIDI input requires a v2.1 or newer picoTracker PCB _*_.
 
-Both USB and TRS MIDI inputs are always enabled by default when the picoTracker starts up.
+In addition to regular MIDI input, picoTracker Advance also allows for dedicated **MIDI control surfaces** that provide a hands-on live performance experience. See [MIDI Control Surfaces](midi-control-surfaces.html) for details on the compatible midi controllers.
 
 ### MIDI Note Playback
 
@@ -48,12 +48,10 @@ The following message types are recognized but **not** implemented yet:
 
 ### MIDI Configuration
 
-Currently, MIDI input is always enabled by default when picoTracker starts up. There is no specific configuration required to use MIDI input.
+MIDI input setting on the Device screen needs to be enabled to use MIDI input.
 
 Each MIDI channel directly maps to an instrument index in picoTracker. For example, MIDI channel 1 will trigger instrument 1, MIDI channel 2 will trigger instrument 2, and so on.
 
 ## MIDI Output
 
-*[MIDI output documentation to be added]*
-
- (v1.2 and v2.0 PCBs require a soldered hardware modification to enable TRS MIDI input)
+MIDI output is supported via MIDI Instruments and related MIDI commands.

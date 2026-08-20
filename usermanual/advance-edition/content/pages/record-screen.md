@@ -11,7 +11,7 @@ The Record screen allows you to capture audio from external sources directly int
 
 ## Accessing the Record Screen
 
-You can access it from any screen by pressing `EDIT` + `PLAY` when the sequencer is stopped.
+You can access it from any screen by pressing <span class="minikeys">EDIT</span> + <span class="minikeys">PLAY</span> when the sequencer is stopped.
 
 ## Screen Layout
 
@@ -23,8 +23,8 @@ The Record screen displays the following information:
 
 ## Recording Controls
 
-*   **PLAY:** Press the `PLAY` button to start recording. If a recording is in progress, pressing `PLAY` will stop it.
-*   **NAV + LEFT:** Press `NAV` + `LEFT` to exit the Record screen and return to the Song view. If a recording is in progress, it will be discarded.
+*   **PLAY:** Press the <span class="minikeys">PLAY</span> button to start recording. If a recording is in progress, pressing <span class="minikeys">PLAY</span> will stop it.
+*   **<span class="minikeys">NAV</span> + <span class="minikeys">LEFT</span>:** Press <span class="minikeys">NAV</span> + <span class="minikeys">LEFT</span> to exit the Record screen and return to the Song view. If a recording is in progress, it will be discarded.
 
 ## Recording Settings
 
@@ -34,14 +34,14 @@ You can configure the following settings on the Record screen:
 *   **Line gain:** Adjust the input gain for the line-in source.
 *   **Mic gain:** Adjust the input gain for the microphone.
 
-Use the `ARROW` keys to navigate between these settings and `EDIT` + `LEFT`/`RIGHT` to change their values.
+Use the <span class="minikeys">ARROW</span> keys to navigate between these settings and <span class="minikeys">EDIT</span> + <span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span> to change their values.
 
 ## The Recording Process
 
 1.  Navigate to the Record screen.
 2.  Select your desired audio source and adjust the gain.
-3.  Press `PLAY` to start recording. The status indicator will turn to `[REC]`, and the timer will start.
-4.  When you are finished, press `PLAY` again to stop.
+3.  Press <span class="minikeys">PLAY</span> to start recording. The status indicator will turn to `[REC]`, and the timer will start.
+4.  When you are finished, press <span class="minikeys">PLAY</span> again to stop.
 5.  The picoTracker will save the recording as `REC01.wav` in the `/recordings` directory on your SD card.
 6.  After saving, the picoTracker will automatically switch to the Sample Editor screen with the new recording loaded, ready for you to edit and use.
 

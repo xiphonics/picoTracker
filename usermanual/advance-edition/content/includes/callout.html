@@ -1,0 +1,23 @@
+<div class="callout callout-{{type}}">
+<table class="callout-table">
+<tr>
+<td class="callout-icon" width="40">
+{{#is_type_note}}
+<img src="image/pico-happy-callout-transparent.png" alt="Note" width="30" height="30" />
+{{/is_type_note}}
+{{#is_type_warn}}
+<img src="image/pico-worried-callout-transparent.png" alt="Warning" width="30" height="30" />
+{{/is_type_warn}}
+{{^is_type_note}}{{^is_type_warn}}
+<img src="image/pico-happy-callout-transparent.png" alt="{{type}}" width="30" height="30" />
+{{/is_type_warn}}{{/is_type_note}}
+</td>
+<td class="callout-text">
+{{#is_type_note}}<em>Note:</em>{{/is_type_note}}
+{{#is_type_warn}}<strong>Warning:</strong>{{/is_type_warn}}
+{{^is_type_note}}{{^is_type_warn}}<span style="text-transform: capitalize; font-weight: bold;">{{type}}:</span>{{/is_type_warn}}{{/is_type_note}}
+{{{content}}}
+</td>
+</tr>
+</table>
+</div>
