@@ -14,7 +14,7 @@ Tables are one of the most powerful features in picoTracker, allowing you to cre
 - picoTracker provides 16 tables (0-15) that can be used throughout your project
 - Each table can contain up to 16 rows of commands
 - Tables can be looped, played once, or used to jump between different sections
-- You can navigate between tables by pressing `EDIT`+`LEFT`/`RIGHT`
+- You can navigate between tables by pressing <span class="minikeys">EDIT</span>+<span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span>
 - You can use all the [standard picoTracker key editing combos](keypadcombos.html) for navigating and editing the table screen.
 
 
@@ -37,9 +37,7 @@ The table screen consists of seven columns:
 
 Tables can be triggered directly from the phrase screen by using the `TBL` command in the effect column:
 
-```
-C-4 01 -- TBL 03
-```
+`C-4 01 -- TBL 03`
 
 This will trigger table 3 when this step in the phrase is played. The table will be applied to the instrument in the current track.
 
@@ -51,7 +49,7 @@ When a table is triggered from a phrase:
 
 ## Assigning Tables to Instruments
 
-Tables can also be assigned directly to sampler instruments:
+Tables can also be assigned directly to Sample and Original Sample instruments:
 
 1. Navigate to the instrument edit screen
 2. Find the `table:` field at the bottom of the screen

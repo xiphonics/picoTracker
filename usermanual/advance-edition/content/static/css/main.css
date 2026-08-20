@@ -301,7 +301,7 @@ body>div#cover {
 }
 
 .minikeys {
-    border: 1px #ccc solid;
+    border: 2px #777 solid;
     border-radius: 4px;
     box-sizing: border-box;
     display: inline-block;

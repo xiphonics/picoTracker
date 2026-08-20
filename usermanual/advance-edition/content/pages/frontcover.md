@@ -1,6 +1,6 @@
 ---
-title: The picoTracker User Manual
+title: The picoTracker Advance User Manual
 template: cover
 ---
 
-![picoTracker image](image/picotracker-assembled-small.png)
+![picoTracker image](image/advance-frontpage.png)

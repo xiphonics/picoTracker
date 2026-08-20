@@ -16,7 +16,7 @@ The Sample Editor lets you trim and rename samples already in your project.
 You can enter the Sample Editor from the Sample Browser:
 
 1. Select a sample in the Project Pool or Sample Library.
-2. Choose the `Edit` onscreen field and press `ENTER`.
+2. Choose the `Edit` onscreen field and press <span class="minikeys">ENTER</span>.
 
 ## Screen Layout
 
@@ -31,16 +31,16 @@ Use the arrow keys to move the cursor between these fields.
 
 ## Editing a Sample
 
-*   **Move around:** Use the `ARROW` keys to select fields.
-*   **Preview:** Hold `PLAY` to audition the current start/end range.
-*   **Adjust values:** Hold `ENTER` and press `UP`/`DOWN` to change the selected fields value.
-*   **Edit name:** While the name field is selected, use `ENTER`+`LEFT`/`RIGHT` to move the cursor, and `EDIT` to delete the character at the cursor.
+*   **Move around:** Use the <span class="minikeys">ARROW</span> keys to select fields.
+*   **Preview:** Hold <span class="minikeys">PLAY</span> to audition the current start/end range.
+*   **Adjust values:** Hold <span class="minikeys">ENTER</span> and press <span class="minikeys">UP</span>/<span class="minikeys">DOWN</span> to change the selected fields value.
+*   **Edit name:** While the name field is selected, use <span class="minikeys">ENTER</span>+<span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span> to move the cursor, and <span class="minikeys">EDIT</span> to delete the character at the cursor.
 
 ## Saving Changes
 
 Select `Apply` to **DESTRUCTIVELY** apply the currently selected operation and its parameters (start and end points) to the currently filename.
 
-Select `Save` and press `ENTER` to write the edits to disk. Use `NAV`+`LEFT` to return to the Sample Browser without saving.
+Select `Save` and press <span class="minikeys">ENTER</span> to write the edits to disk. Use <span class="minikeys">NAV</span>+<span class="minikeys">LEFT</span> to return to the Sample Browser without saving.
 
 `Save & Load` will save the file and load it into the Project Pool.
 
