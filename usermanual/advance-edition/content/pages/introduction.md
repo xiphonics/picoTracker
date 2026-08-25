@@ -13,7 +13,7 @@ Trackers later evolved to also run on devices such as the Gameboy as popularised
 
 ## Overview
 
-picoTracker Advance is the evolution of the original picoTracker — a portable music instrument built around the classical tracker interface. It currently supports eight stereo channels, with per-step assignable sample and MIDI instruments. The new hardware is designed to enable new creative possibilities as the firmware continues to evolve.
+picoTracker Advance is the evolution of the original picoTracker — a portable music instrument built around the classical tracker interface. It currently supports eight stereo channels, with per-step assignable sample, Synth and MIDI instruments. The new hardware is designed to enable new creative possibilities as the firmware continues to evolve.
 
 Your picoTracker Advance comes included with a:
 
