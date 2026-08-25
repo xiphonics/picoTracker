@@ -11,6 +11,16 @@ Note most commands only effect Sample or Original Sample instruments unless othe
 
 ----
 
+### Commands speed
+
+For `SAMPLE`, `FM6`, `SID`, `STARLOOM`, and `PICOSWARM`, every command with an `aa` speed field uses the same duration scale. Each speed unit represents one sequencer tick. A default step contains six tickss: `00` is instant, `01` takes 1 tick, `06` takes 1 default step, `18` takes 1 beat, `60` takes one 16-step phrase, and `FF` takes 42.5 default steps.
+
+### Combining pitch commands
+
+`ARP`, `LEG`, `PFT`, and `PSL` each have one active pitch contribution per voice. Running a command again while that same command is already active updates its existing contribution; it does not add or stack another copy of the curve. `ARP` replaces and restarts its sequence, while `PFT` and `PSL` retarget their existing curves. `LEG` starts a new curve only for a tied note on the same row.
+
+Different pitch command types remain independent and are combined. For example, an active `PFT` offset is applied together with an active `PSL` curve; issuing another `PSL` updates only the `PSL` curve.
+
 ## ARP abcd (ARPG in lgpt)
 
 **cycle through relative pitches `a`, `b`, `c`, and `d` (starting with original pitch, then up `a` semitones, `b` semitones and so forth). The cycle loops if there's only zero's past a given post**
@@ -61,7 +71,8 @@ Examples:
 **adjust the filter cutoff to bb at speed aa**
 
 - `FCT 0080` will instantly set the filter cutoff to 50%
-- `FCT 1000` will close the filter entirely at speed 10
+- `FCT 1000` will close the filter entirely over 16 ticks (about 2.67 default
+  steps)
 
 ## FLT aabb (FLTR in lgpt)
 
@@ -73,7 +84,8 @@ Examples:
 
 **adjust the filter resonance to bb at speed aa**
 
-- FRS 08FF will raise the resonance to screeching at speed `08`
+- `FRS 08FF` will raise the resonance to screeching over 8 ticks (about 1.33
+  default steps)
 
 ## REL --bb
 
@@ -104,8 +116,8 @@ Examples:
 
 **Instrument Retrigger, will retrigger the current instrument. It gives a table the ability to work as progammable phrases that then can be triggered simply by changing tables.**
 
+- `IRT` is a table-only command and is not available on the phrase screen.
 - IRT `--bb` will retrigger the current instrument transposed by `bb` semi-tones. Note that each IRT transposition is cumulatively added. So a table with `IRT 0001` will keep going a semitone up. Great for dubby echoes :)
-- The retriggered instrument is NOT reset (as if you enter a note with no instrument number). The table (obviously) will continue to run and all running variable (filter,etc) won't be reset.
 - This system is also pretty useful to implement temporary non 4/4 signature without having to switch grooves, since you have the ability to re-trigger the instrument at tick resolution
 - don't forget trying to combine it with complex hop structure !
 
@@ -113,25 +125,26 @@ Examples:
 
 **instrument will stop playing after `bb` ticks.**
 
-## LEG aabb (LEGA in lgpt)
+## LEG aa-- (LEGA in lgpt)
 
-**performs an exponential pitch slide from previous note value to pitch `bb` at speed `aa`**
+Performs a logarithmic pitch slide from the previously sounding note to a new tied note. `aa` sets the duration.
 
-- `aa` is the slide speed; the relationship is non-linear and inverted, so larger values slide more slowly and `00` is the fastest (instant)
-- `bb` values are relative: 00-7F are up, 80-FF are down, expressed in semi-tones
-- if `LEG` is put on a row where a note is present and the pitch offset is 0 (e.g. `C4 I3 LEG 1000`) the slide will occur automatically from the previous note's pitch to the current note's pitch at the given speed. This requires a note on the row: without one, the current note is unchanged and `bb=00` produces no slide.
+- `LEG` is a phrase-only command
+- Put `LEG` on the same row as the new note and leave that row's instrument column empty. The note supplies the destination; without a tied note on that row, `LEG` does nothing.
+- `aa` represents the speed and is equivalent to sequencer ticks. `00` is instant and larger values take longer.
+  - `01` takes 1 ticks, `06` takes 1 default step, and `FF` takes 42.5 default steps.
 - `LEG` only modulates the pitch of the voice already playing on the channel; it does not trigger or re-trigger any instrument. Whether an instrument (re)triggers is governed by the presence of an instrument number on the row, not by `LEG` (see [Tied Notes / Legato Slides](phrases.html)).
-- `LEG` does exponential pitch change (i.e. it goes at the same speed through all octaves), while `PSL` performs a linear pitch slide
+- `LEG` uses a logarithmic pitch curve, moving evenly through musical intervals.
 
-When used with MIDI instruments, the `LEG` command also acts as an exponential MIDI pitch bend controller:
+When used with MIDI instruments, the `LEG` command retains its exponential MIDI pitch bend behavior:
 
-- As with internal instruments, aa sets the speed (with 00 being instant).
-- bb sets the target pitch bend position, scaled to the MIDI 14-bit pitch bend range (0–16383):
+- `aa` uses the existing MIDI-specific bend rate, with `00` being instant.
+- `bb` sets the target pitch bend position, scaled to the MIDI 14-bit pitch bend range (0–16383):
   - `7F` is the center (no bend).
   - `00` is full downward bend.
   - `FF` is full upward bend.
 - MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually reset the bend to center.
-  - This can be done by sending the aabb value `LEG 007F` on the next note or at any time.
+  - This can be done with `LEG 007F` on the next note or at any time.
 - MIDI pitch bend can be sent without triggering a note, allowing for continuous pitch control.
  
 
@@ -171,12 +184,11 @@ sends a program change command on the current channel. `0000` is program `0`.
 
 ## PAN aabb
 
-**PAN aabb: where `bb` is the pan destination and aa is the speed to get there**
+**PAN aabb: where `bb` is the pan destination and `aa` is the speed to get there**
 
 ## PFT aabb (PFIN in lgpt)
 
 **PitchFineTune: `aa` is the speed, and bb is a fine tune target (about +/-1 semitone).**
-
 - `bb` sets a fractional pitch offset in roughly the range `-1 .. +1` semitone
 - `00` in `bb` returns the note to the root center
 - `00` is the fastest speed for `aa`
@@ -188,13 +200,13 @@ sends a program change command on the current channel. `0000` is program `0`.
 ## PSL aabb (PTCH in lgpt)
 
 **PitchSLide performs a linear pitch slide from previous note value to pitch `bb` at speed `aa`**
-- `aa` is the slide speed; the relationship is non-linear and inverted, so larger values slide more slowly and `00` is the fastest (instant)
-- `bb` values are relative: `00-7F` are up, `80-FF` are down, expressed in semi-tones (same encoding as `LEG`)
-- PSL performs a linear pitch change, in contrast to LEG which is exponential
+- `aa` sets the slide duration in sequencer-ticks units. `00` is instant and larger values take longer.
+- `bb` values are relative: `00-7F` are up, `80-FF` are down, expressed in semi-tones
+- PSL performs a linear pitch change
 
 The PSL command also acts as a linear MIDI pitch bend controller for MIDI instruments.
 
-- As with internal instruments, aa sets the speed (with 00 being instant).
+- `aa` uses the existing MIDI-specific bend rate, with `00` being instant.
 - bb sets the target pitch bend position, scaled to the MIDI 14-bit pitch bend range (0–16383):
   - `7F` is the center (no bend).
   - `00` is full downward bend.
@@ -250,6 +262,8 @@ Examples:
 
 **triggers table bb**
 
+- `TBL` is a phrase-only command and is not available inside a table.
+
 ## TLN --bb
 
 **Sets the trigger length (gate length) of the current note to `bb` ticks.**
@@ -286,4 +300,8 @@ Sets the MIDI note velocity value (`bb`) for MIDI instruments. This is valid for
 
 - to achieve sounds that grow in volume, make an instrument with volume 0 and then apply the VOL command
 
-*NOTE:* For MIDI instruments the VOL command sends MIDI CC volume (controller 7). It does **not** set note velocity.
+For MIDI instruments, `VOL` controls MIDI channel volume (controller 7). The
+`bb` target is converted from the tracker's `00`-`FF` range to MIDI's `0`-`127`
+range. The `aa` duration uses the same tick scale described above: `00` is
+instant, `01` takes 1 tick, and `06` takes one default step. It does **not** set
+note velocity; use `VEL` for that.

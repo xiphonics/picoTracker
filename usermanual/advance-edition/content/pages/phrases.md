@@ -31,9 +31,10 @@ In Song mode <span class="minikeys">Play</span>+<span class="minikeys">NAV</span
 
 ## Tied Notes / Legato Slides
 
-You can create smooth, continuous transitions between notes on a track by leaving the instrument column empty when entering a new note. This "ties" the new note to the previous one, continuing the existing voice without retriggering.
-
-For example, entering `C-4 01` followed by `E-4 --` (with no instrument number on the second note) will play the instrument at C-4, then smoothly transition to E-4 without stopping and restarting the voice. This is especially useful with:
+You can create smooth, continuous transitions between notes on a track by leaving the instrument column e
+mpty when entering a new note. This "ties" the new note to the previous one, continuing the existing voice without retriggering. If `LEG aaxx` command is used, the transition will slide smoothly at `aa` speed.
+ 
+For example, entering `C-4 01` followed by `E-4 -- LEG 1000` (with no instrument number on the second note) will play the instrument at C-4, then slide to E-4 without stopping and rettrigering the note. This is especially useful with:
 
 - Tables are not stopped, running commands are not stopped and phase of oscillator and any envelopes for that instrument are **not** reset
 - Sample instruments with long sustain for legato melodies
@@ -48,14 +49,14 @@ Example:
 |----------|----------|----------|----------|
 | Note     | Instr    | FX1      | Param1   |
 | C-4      | 01       |          |          |
-| E-4      |          |          |          |
-| G-4      |          |          |          |
+| E-4      |          | LEG      | 1000     |
+| G-4      |          | LEG      | 1000     |
 ```
 
 In the phrase screen excerpt above:
 - `C-4` plays with instrument 1 (`01`)  
-- `E-4` is tied to the previous note and slides up to E-4, the instrument continues without retriggering
-- `G-4` is also tied — the slide continues from E-4 to G-4
+- `E-4` is tied to the previous note and `LEG 1000` slides up to it over four steps; the instrument continues without retriggering
+- `G-4` is also tied and starts another four-step slide from E-4 to G-4
 
 ### Behavior by instrument type
 

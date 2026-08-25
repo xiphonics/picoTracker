@@ -11,6 +11,8 @@ Songs are made up of chains. Each hex number on the song screen grid is a chain.
 
 * The top of the song screen displays if you are in SONG or LIVE mode (toggle with <span class="minikeys">EDIT</span>+<span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span>) and the name of the project that is currently open.
 
+* When a song channel is assigned to MIDI input, `IN` row appears above the song grid and shows its incoming MIDI channel. Unassigned columns stay blank. MIDI input assignments are edited on the Project screen.
+
 * At the bottom of the screen are the channel playback visualiser boxes. Each box correlates with the above column in the song grid. When a step is triggered in one of the columns, the note value of that trigger is displayed in the play-time visualizer.
 
 * On the top right of the song screen we have play-time statistics. First there is the clipping indicator which displays “----” when your volume levels are ok and “clip” when you've cleared the headroom and are chopping off the top of your samples. The bottom row of the play-time statistics is the amount of time which has passed since you pressed Play.
@@ -20,6 +22,8 @@ Songs are made up of chains. Each hex number on the song screen grid is a chain.
 * You can toggle between "SONG" or "LIVE" mode with <span class="minikeys">EDIT</span>+<span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span>
 
 * You can navigate through the grid of chains using <span class="minikeys">UP</span>/<span class="minikeys">DOWN</span>/<span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span> 
+
+* An assigned song channel is reserved for MIDI input and its song data is shown dimmed. That data is kept in the project and becomes playable again when the assignment is cleared on the Project screen. Assigning the same MIDI channel to more than one song channel allows that MIDI channel to play multiple notes at once.
 
 * You can jump the cursor to the next/previous chain in a column by pressing <span class="minikeys">NAV</span>+<span class="minikeys">DOWN</span>/<span class="minikeys">UP</span>
 
@@ -69,6 +73,8 @@ In the song mode <span class="minikeys">Play</span> starts and stops song playba
 
 Hold <span class="minikeys">PLAY</span> for about one second to panic stop. This immediately stops playback and cuts currently sounding audio, including stuck notes or long effect tails. A normal short press of <span class="minikeys">PLAY</span> still starts or stops playback when you release the key.
 
+In Song mode <span class="minikeys">ALT</span>+<span class="minikeys">PLAY</span> works the same as <span class="minikeys">PLAY</span>, starting or stopping song playback from any screen.
+
 #### Live Mode
 
 In Live mode <span class="minikeys">Play</span> queues from the currently highlighted channel step.
@@ -79,7 +85,7 @@ In Live mode <span class="minikeys">Play</span> queues from the currently highli
 * The queued item will be played as soon as the playing phrase on its channel reaches the last step. 
 * Immediate mode Queued items are shown with a fast blinking `>`.
 
-<span class="minikeys">ALT</span>+<span class="minikeys">PLAY</span> will queue all channel steps on the current row. 
+<span class="minikeys">ALT</span>+<span class="minikeys">PLAY</span> will queue all channel steps on the current row.
 * The queued items will be played as soon as the playing chain on their channel reaches its last step. 
 * Queued items are shown with a blinking `>`. 
 * Pressing <span class="minikeys">Play</span> a second time will queue the items using immediate mode. 

@@ -16,6 +16,10 @@ You can ***explicitly*** save the current project by pressing [SAVE] on the proj
 - **Tempo:**: Can be set between 60bpm [0x3c] and 300bpm [0x190]. You can also tap tempo: move the cursor to the `tempo` field and press <span class="minikeys">EDIT</span> repeatedly in time.
 - **Transpose:** Live transposition of every triggered instruments.
 - **Scale:** Set the scale that will applied to all notes entered in the project. When entering a note in the Phrase screen, you will only be able to enter notes that belong to the selected scale. See [the reference](scales.html) for a list of all available scales.
+- **MIDI CHANNEL MAP:** Assigns an incoming MIDI channel to each of the eight song channels. The values run from `01` through `10` in hexadecimal; `00` leaves that song channel under normal sequencer control. The eight values correspond to song channels from left to right. Assign the same MIDI channel more than once to allow it to play multiple notes at the same time.
+- **MIDI DEFAULT PROGRAM:** Selects the initial program (instrument) for each of the 16 MIDI channels when the project loads. Values use picoTracker's instrument numbers from `00` through `3F`, so `00` selects instrument `00` and `3F` selects instrument `3F`. Changing a value selects that instrument immediately for subsequent notes on its MIDI channel and keeps it as the new default. MIDI channels are ordered from `01` through `10` in hexadecimal, moving left to right across the first row and then the second. A later MIDI Program Change replaces the current selection for that MIDI channel until the project is loaded again or its default is edited.
+
+Hold <span class="minikeys">ENTER</span> and use <span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span> to change a MIDI value by one, or <span class="minikeys">DOWN</span>/<span class="minikeys">UP</span> to change it by `10` hexadecimal.
 
 {% callout type=note %}
 For best tap tempo results, tap at least 2-3 times at a steady pace. If taps are too far apart, tap detection restarts from the latest tap.

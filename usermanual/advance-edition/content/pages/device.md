@@ -43,6 +43,12 @@ The [official picoTracker remote UI web application is available here](https://u
 
 ***NOTE:*** The remote ui webapp ONLY works in _Chromium_ based _desktop_ browsers.
 
+## Instrument Audition
+
+This setting enables or disables automatic instrument audition when you edit sound-changing parameters in the Instrument and Voice screens. It is `On` by default.
+
+See [Auditioning Instruments](instruments.html#auditioning-instruments) for the complete behavior.
+
 ## Import Resampler
 
 This setting allows the selection of the sample rate converter used during sample import. Available options are:

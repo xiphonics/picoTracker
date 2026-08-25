@@ -61,7 +61,7 @@ To reset all muted and soloed tracks, press <span class="minikeys">NAV</span> + 
 |:------------------------------------------------------------------------------------------------------|:--------------------------:|:---------------------------------------------------------------:|
 | Jump up/down to next populated row after a blank row                                                  | <span class="minikeys">ALT</span> + (<span class="minikeys">UP</span> / <span class="minikeys">DOWN</span>)     |     ![alt + up/down keys](image/pt-buttons-alt_up_down.jpg)     |
 | Nudge tempo down/up                                                                                   | <span class="minikeys">ALT</span> + (<span class="minikeys">LEFT</span> / <span class="minikeys">RIGHT</span>)   | ![nav + alt + left/right](image/pt-buttons-alt_left_right.jpg)  |
-| Queue current row for playback                                                                        | <span class="minikeys">ALT</span> + <span class="minikeys">PLAY</span> |   ![nav + alt + play](image/pt-buttons-alt_play.jpg)        |
+| Start/stop song, or queue current row for playback in Live mode                                     | <span class="minikeys">ALT</span> + <span class="minikeys">PLAY</span> |   ![nav + alt + play](image/pt-buttons-alt_play.jpg)        |
 | Reset all muted & soloed tracks                                                                       | <span class="minikeys">ALT</span> + <span class="minikeys">NAV</span>         |       ![nav + alt + enter](image/pt-buttons-nav_alt.jpg)        |
 | Cut the current cursor position if filled, paste otherwise                                            | <span class="minikeys">ALT</span> + <span class="minikeys">ENTER</span>        |          ![arrow keys](image/pt-buttons-alt_enter.jpg)          |
 | Clone: Overwrite current highlighted Item with a copy of itself using the next unused Item available. | <span class="minikeys">ALT</span> + (<span class="minikeys">EDIT</span>, <span class="minikeys">ENTER</span>)    | ![alt + edit + enter keys](image/pt-buttons-alt_edit_enter.jpg) |
@@ -260,6 +260,12 @@ Once a selection is started you can do a few more things:
 | Switch to Table view (if instrument has table)       |  <span class="minikeys">NAV</span> + <span class="minikeys">DOWN</span>   | ![nav + down key](image/pt-buttons-nav_down.jpg)  |
 | Start playback (phrase mode)                         |  <span class="minikeys">NAV</span> + <span class="minikeys">PLAY</span>   | ![nav + play key](image/pt-buttons-nav_play.jpg)  |
 
+### ALT Modifier
+
+| Function                                                                                         | Key Combination |                         Image                          |
+|:-------------------------------------------------------------------------------------------------|:---------------:|:------------------------------------------------------:|
+| Audition current audio instrument in the Instrument or Voice view (hold; works during playback) | <span class="minikeys">ALT</span> + <span class="minikeys">PLAY</span> | ![alt + play key](image/pt-buttons-alt_play.jpg) |
+
 ### EDIT Modifier
 
 | Function                                                                     |     Key Combination     |                               Image                               |
@@ -301,13 +307,13 @@ Once a selection is started you can do a few more things:
 | Function                                       | Key Combination |                      Image                       |
 |:-----------------------------------------------|:---------------:|:------------------------------------------------:|
 | Return to source view (Phrase or Instrument)   |  <span class="minikeys">NAV</span> + <span class="minikeys">LEFT</span>   | ![nav + left key](image/pt-buttons-nav_left.jpg) |
+| Go to parent directory                         | <span class="minikeys">NAV</span> + <span class="minikeys">UP</span>     | ![nav + up key](image/pt-buttons-nav_up.jpg)     |
 | Toggle between sample library and project pool |  <span class="minikeys">NAV</span> + <span class="minikeys">EDIT</span>   | ![nav + edit key](image/pt-buttons-nav_edit.jpg) |
 
 ### EDIT Modifier
 
 | Function                           |   Key Combination    |                            Image                             |
 |:-----------------------------------|:--------------------:|:------------------------------------------------------------:|
-| Go to parent directory             | <span class="minikeys">EDIT</span> + <span class="minikeys">LEFT</span>     | ![edit + (left / right) key](image/pt-buttons-edit_leftright.jpg) |
 | Increase / Decrease preview volume | <span class="minikeys">EDIT</span> + (<span class="minikeys">UP</span> / <span class="minikeys">DOWN</span>) | ![edit + (up / down) key](image/pt-buttons-edit_up_down.jpg) |
 
 ### ALT Modifier
