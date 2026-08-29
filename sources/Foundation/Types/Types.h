@@ -38,12 +38,14 @@ struct FourCC {
     InstrumentCommandPitchFineTune = 44,       // PFIN
     InstrumentCommandPlayOfset = 46,           // PLOF
     InstrumentCommandPitchSlide = 48,          // PTCH
-    InstrumentCommandStop = 55,                // STOP
-    InstrumentCommandTable = 58,               // TABL
-    InstrumentCommandTempo = 62,               // TMPO
-    InstrumentCommandVelocity = 66,            // VELM
-    InstrumentCommandVolume = 69,              // VOLM
-    InstrumentCommandNone = 45,                // ----
+    InstrumentCommandSetInstrumentParameter = 188,
+    InstrumentCommandStop = 55,     // STOP
+    InstrumentCommandTable = 58,    // TABL
+    InstrumentCommandTempo = 62,    // TMPO
+    InstrumentCommandVelocity = 66, // VELM
+    InstrumentCommandVolume = 69,   // VOLM
+    InstrumentCommandVibrato = 73,  // VIB
+    InstrumentCommandNone = 45,     // ----
     InstrumentCommandMidiChord = 143,
 
     SampleInstrumentCrushVolume = 3,
@@ -215,6 +217,7 @@ struct FourCC {
     // 185 is taken for VarImportResampler
     // 186 is taken for ActionAutoSlice
     // 187 is taken for ActionShowRecordView
+    // 188 is taken for InstrumentCommandSetInstrumentParameter
 
     VarChannel1Volume = 163,
     VarChannel2Volume = 164,
@@ -263,6 +266,20 @@ struct FourCC {
     ActionAutoSlice = 186,
     ActionShowRecordView = 187,
 
+    ChiptuneInstrumentWaveform = 200,
+    ChiptuneInstrumentAttack = 201,
+    ChiptuneInstrumentDecay = 202,
+    ChiptuneInstrumentLevel = 203,
+    ChiptuneInstrumentLength = 204,
+    ChiptuneInstrumentBurst = 205,
+    ChiptuneInstrumentVibrato = 206,
+    ChiptuneInstrumentVibratoDelay = 207,
+    ChiptuneInstrumentTranspose = 208,
+    ChiptuneInstrumentTable = 209,
+    ChiptuneInstrumentSweepTime = 210,
+    ChiptuneInstrumentSweepAmount = 211,
+    ChiptuneInstrumentArpSpeed = 212,
+
     Default = 255, // "    "
   };
   ETL_DECLARE_ENUM_TYPE(FourCC, char)
@@ -290,12 +307,14 @@ struct FourCC {
   ETL_ENUM_TYPE(InstrumentCommandPan, "PAN")
   ETL_ENUM_TYPE(InstrumentCommandGateOff, "GOF")
   ETL_ENUM_TYPE(InstrumentCommandGroove, "GRV")
+  ETL_ENUM_TYPE(InstrumentCommandSetInstrumentParameter, "SIP")
   ETL_ENUM_TYPE(InstrumentCommandStop, "STP")
   ETL_ENUM_TYPE(InstrumentCommandNone, "---")
   ETL_ENUM_TYPE(InstrumentCommandPitchFineTune, "PFT")
   ETL_ENUM_TYPE(InstrumentCommandDelay, "DLY")
   ETL_ENUM_TYPE(InstrumentCommandInstrumentRetrigger, "IRT")
   ETL_ENUM_TYPE(InstrumentCommandMidiChord, "MCH")
+  ETL_ENUM_TYPE(InstrumentCommandVibrato, "VIB")
 
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
@@ -419,6 +438,21 @@ struct FourCC {
   ETL_ENUM_TYPE(VarRecordMicGain, "recordmicgain")
   ETL_ENUM_TYPE(VarOutputVolume, "outputvolume")
   ETL_ENUM_TYPE(VarImportResampler, "IMPORTRESAMP")
+
+  // Chiptune Instrument Variables
+  ETL_ENUM_TYPE(ChiptuneInstrumentWaveform, "waveform")
+  ETL_ENUM_TYPE(ChiptuneInstrumentAttack, "attack")
+  ETL_ENUM_TYPE(ChiptuneInstrumentDecay, "decay")
+  ETL_ENUM_TYPE(ChiptuneInstrumentLevel, "level")
+  ETL_ENUM_TYPE(ChiptuneInstrumentLength, "length")
+  ETL_ENUM_TYPE(ChiptuneInstrumentBurst, "burst")
+  ETL_ENUM_TYPE(ChiptuneInstrumentVibrato, "vibrato")
+  ETL_ENUM_TYPE(ChiptuneInstrumentVibratoDelay, "vibrato delay")
+  ETL_ENUM_TYPE(ChiptuneInstrumentTranspose, "transpose")
+  ETL_ENUM_TYPE(ChiptuneInstrumentTable, "table")
+  ETL_ENUM_TYPE(ChiptuneInstrumentSweepTime, "sweep time")
+  ETL_ENUM_TYPE(ChiptuneInstrumentSweepAmount, "sweep amount")
+  ETL_ENUM_TYPE(ChiptuneInstrumentArpSpeed, "arp speed")
 
   ETL_ENUM_TYPE(Default, "   ")
   ETL_END_ENUM_TYPE

@@ -17,7 +17,7 @@
 #include "WavFile.h"
 #include <cstdint>
 
-#define MAX_SAMPLES MAX_SAMPLEINSTRUMENT_COUNT * 4
+#define MAX_SAMPLES MAX_INSTRUMENT_COUNT
 
 enum SamplePoolEventType { SPET_INSERT, SPET_DELETE };
 
@@ -60,7 +60,7 @@ protected:
   const char *importName;
 
 private:
-  etl::vector<I_Observer *, MAX_SAMPLEINSTRUMENT_COUNT> observers_;
+  etl::vector<I_Observer *, MAX_INSTRUMENT_COUNT> observers_;
 };
 
 #endif

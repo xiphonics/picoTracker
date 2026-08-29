@@ -828,10 +828,11 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       if (col_ < 2) {
         InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
-        auto nextId = bank->GetNextFreeInstrumentSlotId();
+        auto next = bank->GetNextFreeInstrumentSlotId();
         // New Instruments default to type NONE!
-        unsigned short next = bank->GetNextAndAssignID(IT_NONE, nextId);
-        if (next != NO_MORE_INSTRUMENT) {
+        if (next != NO_MORE_INSTRUMENT &&
+            bank->AssignInstrumentToSlot(IT_NONE, next) ==
+                InstrumentAssignResult::Success) {
           unsigned char *c =
               phrase_->instr_ + (16 * viewData_->currentPhrase_ + row_);
           *c = (unsigned char)next;

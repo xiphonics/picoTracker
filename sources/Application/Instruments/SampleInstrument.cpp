@@ -345,14 +345,18 @@ void SampleInstrument::clampSlicePoints(uint32_t sampleSize) {
 }
 
 bool SampleInstrument::Init() {
-
   SamplePool *pool = SamplePool::GetInstance();
   Variable *vSample = FindVariable(FourCC::SampleInstrumentSample);
   NAssert(vSample);
   int index = vSample->GetInt();
+  if (index != NO_SAMPLE) {
+    Trace::Log("SAMPLEINSTRUMENT",
+               "unexpected sample value for new instrument: %d", index);
+    return false;
+  }
   source_ = (index >= 0) ? pool->GetSource(index) : 0;
   tableState_.Reset();
-  return false;
+  return true;
 }
 
 void SampleInstrument::OnStart() { tableState_.Reset(); };

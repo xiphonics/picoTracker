@@ -20,13 +20,14 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
-#include "Externals/etl/include/etl/to_string.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
 #include <cstdint>
+#include <etl/format_spec.h>
+#include <etl/to_string.h>
 #include <nanoprintf.h>
 
 static constexpr InstrumentType kMaxSelectableInstrumentType =
@@ -150,50 +151,52 @@ void InstrumentView::onInstrumentTypeChange(bool updateUI) {
   }
 
   // now assign new instrument type to the current instrument slot id
-  unsigned short result = bank->GetNextAndAssignID(nuType, id);
+  InstrumentAssignResult result = bank->AssignInstrumentToSlot(nuType, id);
 
-  if (result == NO_MORE_INSTRUMENT) {
-    Trace::Error("INSTRUMENTVIEW", "Failed to assign new instrument type: %d",
-                 nuType);
+  // lambda to clear on fail
+  auto setCurrentInstrumentToNone = [&]() {
+    bank->AssignInstrumentToSlot(IT_NONE, id);
+    instrumentType_.SetInt(IT_NONE, false);
+  };
 
-    // TODO (democloid): this is a hack in order to ignore all existence of
-    // certain instruments and seamlessly set NONE
-    // Needed as the alternative is to change InstrumentTypeNames array plus all
-    // switch instances which reference the types that wouldn't be available on
-    // this platform
+  // initialization failed, could not initialize this instruments, let's try the
+  // next type
+  if (result == InstrumentAssignResult::PoolExhausted) {
+    Trace::Error("Instrument pool exhausted.");
+    setCurrentInstrumentToNone();
+  } else if (result == InstrumentAssignResult::InitFailed) {
+    Trace::Error("Failed to initialize new instrument of type %d", nuType);
 
-    // Show a dialog to the user
-    char message[40];
-    npf_snprintf(message, sizeof(message), "%s instruments exhausted!",
-                 InstrumentTypeNames[nuType]);
-    MessageBox *mb =
-        MessageBox::Create(*this, message, "Trying next...", MBBF_OK);
-    DoModal(mb);
-
-    // Try to find the next available instrument type
+    // try to find the next available instrument type
     bool found = false;
     for (int i = nuType + 1;
          i <= static_cast<int>(kMaxSelectableInstrumentType); i++) {
-      InstrumentType nextType = (InstrumentType)i;
-      result = bank->GetNextAndAssignID(nextType, id);
-      if (result != NO_MORE_INSTRUMENT) {
-        Trace::Log("INSTRUMENTVIEW", "Assigned next available type: %d",
-                   nextType);
-        instrumentType_.SetInt(nextType, false);
-        found = true;
-        break; // Exit loop on success
+      InstrumentType nextType = static_cast<InstrumentType>(i);
+      result = bank->AssignInstrumentToSlot(nextType, id);
+
+      if (result == InstrumentAssignResult::PoolExhausted) {
+        // no more instruments available
+        break;
+      } else if (result == InstrumentAssignResult::InitFailed) {
+        // failed to initialize this type, keep going
+        Trace::Error("Failed to initialize new instrument of type %d",
+                     nextType);
+        continue;
       }
+
+      Trace::Log("INSTRUMENTVIEW", "Assigned next available type: %d",
+                 nextType);
+      instrumentType_.SetInt(nextType, false);
+      found = true;
+      // Success, stop searching
+      break;
     }
 
     if (!found) {
-      Trace::Log("INSTRUMENTVIEW",
-                 "No other instrument types available, setting to NONE");
-      instrumentType_.SetInt(IT_NONE, false);
+      Trace::Error(
+          "Failed to initialize any instrument type, defaulting to NONE");
+      setCurrentInstrumentToNone();
     }
-
-    refreshInstrumentFields();
-    isDirty_ = true;
-    return;
   }
 
   // Get the new instrument after type change
@@ -304,6 +307,9 @@ void InstrumentView::refreshInstrumentFields() {
     break;
   case IT_OPAL:
     fillOpalParameters();
+    break;
+  case IT_CHIPTUNE:
+    fillChiptuneParameters();
     break;
   case IT_LAST:
     // NA
@@ -579,6 +585,8 @@ void InstrumentView::fillSIDParameters() {
   intVarField_.emplace_back(position, *v, "Volume:        %1.1X", 0, 0xF, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 };
+
+#include "InstrumentView_Chiptune.ipp"
 
 void InstrumentView::fillMidiParameters() {
 
@@ -973,10 +981,12 @@ void InstrumentView::DrawView() {
 
   // Draw title
 
-  char title[20];
+  char title[26];
   SetColor(CD_NORMAL);
-  npf_snprintf(title, sizeof(title), "Instrument %2.2X",
-               viewData_->currentInstrumentID_);
+  npf_snprintf(title, sizeof(title), "Instrument %2.2X (%d/%d)",
+               viewData_->currentInstrumentID_,
+               project_->GetInstrumentBank()->UsedInstrumentCount(),
+               MAX_INSTRUMENT_COUNT);
   DrawString(pos._x, pos._y, title, props);
   // Draw fields
   FieldView::Redraw();
@@ -986,7 +996,7 @@ void InstrumentView::DrawView() {
   I_Instrument *instr = getInstrument();
   if (instr) {
     InstrumentType type = instr->GetType();
-    if (type == IT_SID || type == IT_OPAL) {
+    if (type == IT_SID || type == IT_OPAL || type == IT_CHIPTUNE) {
       SetColor(CD_WARN);
       DrawString(18, 1, char_button_border_left_s, props);
       DrawString(19, 1, "EXPERIMENTAL", GUITextProperties(true));

@@ -236,8 +236,8 @@ void InstrumentImportView::importInstrument(char *name) {
     bank->releaseInstrument(toInstrID_);
 
     // Create a new instrument of the correct type in the same slot
-    if (bank->GetNextAndAssignID(importedType, toInstrID_) ==
-        NO_MORE_INSTRUMENT) {
+    if (bank->AssignInstrumentToSlot(importedType, toInstrID_) !=
+        InstrumentAssignResult::Success) {
       MessageBox *mb =
           MessageBox::Create(*this, "Failed to create instrument", MBBF_OK);
       DoModal(mb);

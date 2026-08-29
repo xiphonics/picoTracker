@@ -23,7 +23,8 @@ public:
 
   virtual bool IsStatic();
 
-protected:
+  ColorDefinition color_;
+
 protected:
   const char *string_;
 };
