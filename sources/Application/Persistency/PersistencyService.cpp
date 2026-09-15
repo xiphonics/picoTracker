@@ -52,7 +52,7 @@ bool ParseUint16(const char *text, uint16_t &value) {
 } // namespace
 
 PersistencyService::PersistencyService()
-    : Service(FourCC::ServicePersistency){};
+    : Service(FourCC::ServicePersistency) {};
 
 PersistencyResult PersistencyService::CreateProject() {
   Trace::Log("APPLICATION", "create new project");
@@ -492,6 +492,7 @@ PersistencyResult PersistencyService::SaveSampleCache(
       printer.PushAttribute("CHANS", e.channelCount);
       printer.PushAttribute("BPS", e.bytePerSample);
       printer.PushAttribute("FMT", e.audioFormat);
+      printer.PushAttribute("SRCFILE", (int64_t)e.sourceDiskSize);
       printer.CloseElement();
     }
     printer.CloseElement();
@@ -608,6 +609,7 @@ PersistencyResult PersistencyService::LoadSampleCache(
     bool hasValidChannels = false;
     bool hasValidBytesPerSample = false;
     bool hasValidFormat = false;
+    bool hasValidSourceSize = false;
     bool a = doc.NextAttribute();
     while (a) {
       if (!strcasecmp(doc.attrname_, "NAME")) {
@@ -630,12 +632,14 @@ PersistencyResult PersistencyService::LoadSampleCache(
         hasValidBytesPerSample = ParseUint16(doc.attrval_, e.bytePerSample);
       } else if (!strcasecmp(doc.attrname_, "FMT")) {
         hasValidFormat = ParseUint16(doc.attrval_, e.audioFormat);
+      } else if (!strcasecmp(doc.attrname_, "SRCFILE")) {
+        hasValidSourceSize = ParseUint32(doc.attrval_, e.sourceDiskSize);
       }
       a = doc.NextAttribute();
     }
     if (!hasValidName || !hasValidFlashOffset || !hasValidBufferSize ||
         !hasValidSize || !hasValidRate || !hasValidChannels ||
-        !hasValidBytesPerSample || !hasValidFormat) {
+        !hasValidBytesPerSample || !hasValidFormat || !hasValidSourceSize) {
       Trace::Error(
           "PERSISTENCYSERVICE: sample cache entry missing/invalid attributes");
       return PERSIST_LOAD_FAILED;

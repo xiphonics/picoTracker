@@ -90,6 +90,55 @@ void SamplePool::SaveSampleCacheForCurrentPool(const char *projectName) {
   writeSampleCache(projectName);
 }
 
+bool SamplePool::validateCacheAgainstSd(
+    const char *projectName, const etl::ivector<SampleCacheEntry> &entries) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->chdir(PROJECTS_DIR) || !fs->chdir(projectName) ||
+      !fs->chdir(PROJECT_SAMPLES_DIR)) {
+    Trace::Log("SAMPLEPOOL",
+               "Sample cache unverified for '%s': samples dir unavailable",
+               projectName);
+    return false;
+  }
+
+  // Directory scan plus one stat per candidate; no sample data is read.
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
+  fs->list(&fileIndexes, ".wav", false);
+
+  size_t candidates = 0;
+  size_t unchanged = 0;
+  char name[PFILENAME_SIZE];
+  for (size_t j = 0; j < fileIndexes.size(); ++j) {
+    fs->getFileName(fileIndexes[j], name, PFILENAME_SIZE);
+    // Skip exactly what Load() would skip so the counts stay comparable.
+    if (fs->getFileType(fileIndexes[j]) != PFT_FILE ||
+        strlen(name) > MAX_INSTRUMENT_FILENAME_LENGTH) {
+      continue;
+    }
+    candidates++;
+    for (size_t i = 0; i < entries.size(); ++i) {
+      if (strcmp(name, entries[i].name) == 0) {
+        if (fs->getFileSize(fileIndexes[j]) == entries[i].sourceDiskSize) {
+          unchanged++;
+        }
+        break;
+      }
+    }
+  }
+
+  // Any difference means the pool a cache hit would build is not the pool an
+  // SD load would build, either in contents or in order.
+  if (candidates != entries.size() || unchanged != entries.size()) {
+    Trace::Log("SAMPLEPOOL",
+               "Sample cache stale for '%s': card has %u sample(s), %u "
+               "unchanged, cache holds %u",
+               projectName, (unsigned)candidates, (unsigned)unchanged,
+               (unsigned)entries.size());
+    return false;
+  }
+  return true;
+}
+
 bool SamplePool::LoadFromCache(const char *projectName) {
   if (sampleCacheStale_) {
     // Pool contents no longer match the WAVs on SD and the on-disk cache was
@@ -123,6 +172,12 @@ bool SamplePool::LoadFromCache(const char *projectName) {
   }
   if (!ValidateSampleCache(entries, eraseOff, writeOff)) {
     Trace::Error("SAMPLEPOOL: cache has invalid flash allocator state");
+    ps->DeleteSampleCache();
+    return false;
+  }
+  // The cache only describes audio that is still byte-for-byte what was loaded
+  // into flash, so check the source files before trusting it.
+  if (!validateCacheAgainstSd(projectName, entries)) {
     ps->DeleteSampleCache();
     return false;
   }

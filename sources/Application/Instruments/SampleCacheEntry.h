@@ -17,7 +17,10 @@
 // can reference it without dragging in the persistence layer.
 #define PROJECT_SAMPLES_CACHE_FILE "/.current.samples"
 #define PROJECT_SAMPLES_CACHE_MAGIC 0x50545343u // 'PTSC'
-#define PROJECT_SAMPLES_CACHE_VERSION 1
+// Bump whenever the cache format or its validity rules change, so caches
+// written by another firmware version are rejected instead of misread.
+// v2 added SRCFILE (issue #120 review: detect out-of-band WAV changes).
+#define PROJECT_SAMPLES_CACHE_VERSION 2
 
 // One pooled sample as recorded in the cache: where its 16 bit PCM lives in
 // flash plus the WAV metadata needed to rebuild a WavFile without touching the
@@ -31,6 +34,11 @@ struct SampleCacheEntry {
   uint16_t channelCount;
   uint16_t bytePerSample;
   uint16_t audioFormat;
+  // Size in bytes of the source WAV on the SD card, i.e. of the file this
+  // entry was loaded from. Checked against the card on every cache hit so that
+  // a replaced, resized, added or removed WAV forces a full reload instead of
+  // silently playing stale audio or reindexing the pool.
+  uint32_t sourceDiskSize;
 };
 
 #endif // _SAMPLE_CACHE_ENTRY_H_

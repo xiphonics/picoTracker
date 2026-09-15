@@ -84,6 +84,15 @@ public:
   bool LoadFromCache(const char *projectName);
 
 protected:
+  // Confirm the WAVs on the card still match the cached entries, using
+  // directory metadata only - no sample data is read. Rejects the cache when a
+  // sample was replaced, resized, added or removed out of band, since the pool
+  // (and so every instrument sample index) would otherwise diverge from a
+  // fresh SD load. Leaves the cwd in the project samples dir, which a full
+  // Load() has always done as a side effect.
+  bool validateCacheAgainstSd(const char *projectName,
+                              const etl::ivector<SampleCacheEntry> &entries);
+
   virtual void updateStatus(uint32_t current, uint32_t total,
                             const char *message);
   virtual bool loadSample(const char *name) = 0;

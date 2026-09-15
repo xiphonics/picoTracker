@@ -272,6 +272,9 @@ void picoTrackerSamplePool::writeSampleCache(const char *projectName) {
     e.channelCount = (uint16_t)wav_[i].GetChannelCount(-1);
     e.bytePerSample = (uint16_t)wav_[i].GetBytePerSample();
     e.audioFormat = wav_[i].GetAudioFormat();
+    // Remember which bytes on the card this entry came from; GetFileSize()
+    // survives WavFile::Close() and is re-seeded from the entry on a cache hit.
+    e.sourceDiskSize = wav_[i].GetFileSize();
     entries.push_back(e);
   }
 
