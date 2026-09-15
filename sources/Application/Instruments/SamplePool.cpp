@@ -268,6 +268,16 @@ void SamplePool::Load(const char *projectName) {
   SaveSampleCacheForCurrentPool(projectName);
 };
 
+void SamplePool::RebuildCacheFromSd(const char *projectName) {
+  // Reset first: this is what releases the pool and rewinds the flash allocator
+  // to the start of the sample area so the reload packs tightly.
+  Reset();
+  // Force Load() down its SD path rather than accepting the very cache we are
+  // replacing. Load() clears the stale flag and republishes the cache itself.
+  DiscardSampleCache();
+  Load(projectName);
+};
+
 SoundSource *SamplePool::GetSource(uint32_t i) {
   if (i < 0 || i >= count_) {
     return nullptr;

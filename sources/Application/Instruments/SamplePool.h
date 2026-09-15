@@ -86,6 +86,13 @@ public:
 
   bool LoadFromCache(const char *projectName);
 
+  // Reload every sample of the project from SD so that flash is repacked from
+  // the start of the sample area, then republish the cache. Import and purge
+  // only ever append, so this is the way back from a write high-water mark that
+  // no longer reflects how much is really in use. Nothing may be playing: every
+  // sample pointer moves, and the caller should reload the project afterwards.
+  void RebuildCacheFromSd(const char *projectName);
+
 protected:
   // Confirm the WAVs on the card still match the cached entries, using
   // directory metadata only - no sample data is read. Rejects the cache when a

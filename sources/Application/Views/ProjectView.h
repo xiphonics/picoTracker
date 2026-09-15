@@ -30,7 +30,7 @@ public:
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
-  virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int) {};
   virtual void OnFocus();
 
   etl::string<MAX_PROJECT_NAME_LENGTH> getProjectName() {
@@ -52,6 +52,7 @@ public:
 
   void OnPurgeInstruments();
   void OnPurge();
+  void OnRebuildSampleCache();
   void OnQuit();
 
 private:
