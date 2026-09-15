@@ -36,9 +36,6 @@ public:
                flashEraseOffset_, flashWriteOffset_);
   }
 
-  static uint32_t GetFlashEraseOffset() { return flashEraseOffset_; }
-  static uint32_t GetFlashWriteOffset() { return flashWriteOffset_; }
-
   uint32_t GetSampleCacheBuildId() const override;
 
 protected:

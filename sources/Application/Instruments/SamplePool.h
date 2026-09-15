@@ -55,7 +55,6 @@ public:
   // because a later import or purge would republish a cache describing the
   // stale in-flash state and silently undo the change on next reload.
   void InvalidateSampleCache();
-  bool IsSampleCacheStale() const { return sampleCacheStale_; }
 
   // Delete the on-disk cache *without* marking the pool stale. Call right
   // before flash or the project WAVs are destructively rewritten so that a
