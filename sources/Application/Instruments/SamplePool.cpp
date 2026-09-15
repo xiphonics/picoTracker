@@ -62,15 +62,23 @@ etl::vector<SampleCacheEntry, MAX_SAMPLES> &SamplePool::cacheEntryScratch() {
 void SamplePool::InvalidateSampleCache() {
   sampleCacheStale_ = true;
   if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
-    Trace::Error("SAMPLEPOOL: cache file could not be deleted, staying marked "
-                 "stale (no cache will be written until project reload)");
+    // Still stale: the flag alone is enough to keep later writes from
+    // republishing state that no longer matches the WAVs on the card.
+    Trace::Error("SAMPLEPOOL: CACHE INVALIDATED (file could not be deleted); "
+                 "no cache will be written until project reload");
+    return;
   }
+  Trace::Log("SAMPLEPOOL", "CACHE INVALIDATED - no cache write until the "
+                           "project is reloaded");
 }
 
 void SamplePool::DiscardSampleCache() {
   if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
     Trace::Error("SAMPLEPOOL: write-ahead cache delete failed");
+    return;
   }
+  Trace::Log("SAMPLEPOOL",
+             "CACHE DISCARDED ahead of rewriting flash or the project WAVs");
 }
 
 void SamplePool::RekeySampleCache(const char *projectName) {
