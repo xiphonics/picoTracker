@@ -205,6 +205,10 @@ bool SamplePool::LoadFromCache(const char *projectName) {
       return false;
     }
   }
+  // validateCacheAgainstSd() above left the cwd in /projects/<name>/samples, so
+  // a cache hit ends up where the SD path below always left it. Views set their
+  // own cwd before listing (goProjectSamplesDir, ImportView) but this keeps the
+  // two paths indistinguishable either way.
   Trace::Log("SAMPLEPOOL", "Loaded %u samples from cache for '%s'",
              (unsigned)entries.size(), projectName);
   return true;
