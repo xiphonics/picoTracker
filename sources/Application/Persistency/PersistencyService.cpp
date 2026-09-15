@@ -52,7 +52,7 @@ bool ParseUint16(const char *text, uint16_t &value) {
 } // namespace
 
 PersistencyService::PersistencyService()
-    : Service(FourCC::ServicePersistency) {};
+    : Service(FourCC::ServicePersistency){};
 
 PersistencyResult PersistencyService::CreateProject() {
   Trace::Log("APPLICATION", "create new project");

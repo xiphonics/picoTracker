@@ -94,7 +94,7 @@ static void RebuildSampleCacheCallback(View &v, ModalView &dialog) {
 };
 
 // For informational dialogs that only need to be dismissed.
-static void DismissCallback(View &, ModalView &) {};
+static void DismissCallback(View &, ModalView &){};
 
 static void RenderStopCallback(View &v, ModalView &dialog) {
   // If the user clicked OK, stop the rendering

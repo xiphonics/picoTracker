@@ -123,10 +123,10 @@ protected:
 
   // Staging buffer for the cache, shared by the only two places that need it:
   // LoadFromCache() and the derived writeSampleCache(). Deliberately a function
-  // local static rather than a member so the 3.2 KB does not sit inside the base
-  // object and inside every future subclass that does not use the cache at all.
-  // One buffer, not one per user - two would cost 6.5 KB. Not reentrant: only
-  // ever touched from the main thread while loading, importing or purging.
+  // local static rather than a member so the 3.2 KB does not sit inside the
+  // base object and inside every future subclass that does not use the cache at
+  // all. One buffer, not one per user - two would cost 6.5 KB. Not reentrant:
+  // only ever touched from the main thread while loading, importing or purging.
   static etl::vector<SampleCacheEntry, MAX_SAMPLES> &cacheEntryScratch();
 
   uint32_t count_;
