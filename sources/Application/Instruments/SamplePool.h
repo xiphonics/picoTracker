@@ -54,6 +54,17 @@ public:
   void InvalidateSampleCache();
   bool IsSampleCacheStale() const { return sampleCacheStale_; }
 
+  // Delete the on-disk cache *without* marking the pool stale. Call right
+  // before flash or the project WAVs are destructively rewritten so that a
+  // power cut mid-operation leaves no cache behind to hit, rather than relying
+  // on the replacement write at the end of the operation. The caller is
+  // expected to republish the cache once the operation completes.
+  void DiscardSampleCache();
+
+  // Collapse a batch of imports or purges into one cache write. Nestable.
+  void BeginBulkCacheUpdate();
+  void EndBulkCacheUpdate(const char *projectName);
+
   virtual bool rebuildSampleFromCache(const SampleCacheEntry &e) {
     return false;
   }
@@ -84,6 +95,7 @@ protected:
 
   uint32_t count_;
   bool sampleCacheStale_;
+  uint8_t bulkCacheUpdateDepth_;
   char nameStore_[MAX_SAMPLES][MAX_INSTRUMENT_FILENAME_LENGTH + 1];
   char *names_[MAX_SAMPLES];
   WavFile wav_[MAX_SAMPLES];

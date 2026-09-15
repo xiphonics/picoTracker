@@ -25,7 +25,9 @@
 #include <string.h>
 #include <utility>
 
-SamplePool::SamplePool() : Observable(&observers_), sampleCacheStale_(false) {
+SamplePool::SamplePool()
+    : Observable(&observers_), sampleCacheStale_(false),
+      bulkCacheUpdateDepth_(0) {
   count_ = 0;
   for (int i = 0; i < MAX_SAMPLES; i++) {
     names_[i] = nameStore_[i];
@@ -57,10 +59,32 @@ void SamplePool::InvalidateSampleCache() {
   }
 }
 
+void SamplePool::DiscardSampleCache() {
+  if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
+    Trace::Error("SAMPLEPOOL: write-ahead cache delete failed");
+  }
+}
+
+void SamplePool::BeginBulkCacheUpdate() { bulkCacheUpdateDepth_++; }
+
+void SamplePool::EndBulkCacheUpdate(const char *projectName) {
+  if (bulkCacheUpdateDepth_ > 0) {
+    bulkCacheUpdateDepth_--;
+  }
+  if (bulkCacheUpdateDepth_ == 0) {
+    SaveSampleCacheForCurrentPool(projectName);
+  }
+}
+
 void SamplePool::SaveSampleCacheForCurrentPool(const char *projectName) {
   if (sampleCacheStale_) {
     Trace::Log("SAMPLEPOOL", "Sample cache stale - skipping write for '%s'",
                projectName);
+    return;
+  }
+  if (bulkCacheUpdateDepth_ > 0) {
+    // Deferred to EndBulkCacheUpdate(): a mid-batch cache would not describe
+    // the operation as a whole.
     return;
   }
   writeSampleCache(projectName);
@@ -130,6 +154,12 @@ void SamplePool::Load(const char *projectName) {
     Trace::Error("Failed to chdir into %s/%s/%s", PROJECTS_DIR, projectName,
                  PROJECT_SAMPLES_DIR);
   }
+  // Write-ahead invalidation: from the first loadSample() on we rewrite flash
+  // destructively while /.current still names this project. Deleting the cache
+  // up front means a power cut part way through leaves a cold SD load rather
+  // than a cache hit pointing at half-written flash.
+  DiscardSampleCache();
+
   // First, find all wav files
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
@@ -421,6 +451,10 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   // Close the output file before re-opening it for import.
   fout.reset();
 
+  // Write-ahead invalidation: loadSample() appends to flash, so from here on a
+  // power cut would leave the cache pointing at a partly written pool.
+  DiscardSampleCache();
+
   // now load the sample into memory/flash from the project pool path
   bool status = loadSample(projectSamplePath.c_str());
   if (status) {
@@ -451,6 +485,10 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
 
   delPath << "/" << PROJECTS_DIR << "/" << projectName << "/"
           << PROJECT_SAMPLES_DIR << "/" << names_[i];
+
+  // Write-ahead invalidation: the WAV disappears from SD before the cache can
+  // be rewritten, so delete first and let the write at the end republish.
+  DiscardSampleCache();
 
   // delete file
   FileSystem::GetInstance()->DeleteFile(delPath.str().c_str());

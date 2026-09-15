@@ -326,6 +326,10 @@ void Project::PurgeSamples() {
   // Now remove all unused samples from disk
   int purged = 0;
   SamplePool *sp = SamplePool::GetInstance();
+  // One cache write for the whole purge, and nothing on disk that still claims
+  // to describe the pool while unused WAVs are being deleted.
+  sp->DiscardSampleCache();
+  sp->BeginBulkCacheUpdate();
   for (int i = 0; i < MAX_SAMPLES; i++) {
     if ((!isUsed[i]) && (sp->GetSource(i - purged))) {
       sp->PurgeSample(i - purged, projectName_.GetString().c_str());
@@ -335,6 +339,7 @@ void Project::PurgeSamples() {
       Trace::Debug("Sample [%d] not purged", i);
     }
   };
+  sp->EndBulkCacheUpdate(projectName_.GetString().c_str());
   Trace::Debug("Purged %d samples", purged);
 }
 
