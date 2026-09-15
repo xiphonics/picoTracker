@@ -36,7 +36,7 @@ That file is only used when it can be trusted:
 
 - It belongs to one project, by name. Loading a different project ignores it.
 - Every sample it lists must still exist on the card with the same file size, and no extra samples may have appeared. Replacing, resizing, adding or removing a `.wav` file in the project's `samples` folder makes the next load read the samples from the card instead - slower once, and the cache is then refreshed.
-- A firmware update that moves or changes the sample area invalidates it.
+- A firmware update invalidates it, so the first boot after updating reads the samples from the card once.
 
 Two consequences worth knowing:
 

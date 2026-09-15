@@ -17,10 +17,9 @@
 // can reference it without dragging in the persistence layer.
 #define PROJECT_SAMPLES_CACHE_FILE "/.current.samples"
 #define PROJECT_SAMPLES_CACHE_MAGIC 0x50545343u // 'PTSC'
-// Bump whenever the cache format or its validity rules change, so caches
-// written by another firmware version are rejected instead of misread.
-// v2 added SRCFILE (issue #120 review: detect out-of-band WAV changes).
-#define PROJECT_SAMPLES_CACHE_VERSION 2
+// Bump if the entry attributes below ever change in an incompatible way, so
+// caches written by older firmware are rejected rather than misread.
+#define PROJECT_SAMPLES_CACHE_VERSION 1
 
 // One pooled sample as recorded in the cache: where its 16 bit PCM lives in
 // flash plus the WAV metadata needed to rebuild a WavFile without touching the

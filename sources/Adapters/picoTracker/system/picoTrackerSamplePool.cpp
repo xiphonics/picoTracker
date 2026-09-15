@@ -8,7 +8,6 @@
 
 #include "picoTrackerSamplePool.h"
 #include "Application/Instruments/SampleCacheValidate.h"
-#include "Application/Model/Project.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Externals/etl/include/etl/vector.h"
 #include "hardware/flash.h"
@@ -315,28 +314,17 @@ void picoTrackerSamplePool::writeSampleCache(const char *projectName,
   }
 }
 
-// Identity mixed into the sample cache header, so a cache written by something
-// that would read the offsets differently is rejected rather than misused.
-// Deliberately not a build stamp: hashing __DATE__/__TIME__ invalidated every
-// cache on every rebuild, including reflashing byte-identical source. These are
-// the things that actually change what a cached offset means - where the sample
-// area begins (FLASH_TARGET_OFFSET moves when the firmware size changes), the
-// firmware release that wrote it, and the cache scheme itself.
+// Build-id mixed into the sample cache header. Combines FLASH_TARGET_OFFSET
+// (catches firmware-size changes that move the sample region) with a hash of
+// the build date/time so any rebuild of this adapter invalidates stale caches.
 uint32_t picoTrackerSamplePool::GetSampleCacheBuildId() const {
+  constexpr const char kBuildStamp[] = __DATE__ " " __TIME__;
   uint32_t hash = 2166136261u; // FNV-1a offset basis
-  auto mix = [&hash](uint32_t value) {
-    for (size_t i = 0; i < sizeof(value); ++i) {
-      hash ^= static_cast<uint8_t>(value >> (i * 8));
-      hash *= 16777619u;
-    }
-  };
-  mix(static_cast<uint32_t>(FLASH_TARGET_OFFSET));
-  mix(static_cast<uint32_t>(PROJECT_SAMPLES_CACHE_VERSION));
-  for (const char *p = PROJECT_NUMBER; *p != '\0'; ++p) {
-    hash ^= static_cast<uint8_t>(*p);
+  for (size_t i = 0; i < sizeof(kBuildStamp) - 1; ++i) {
+    hash ^= static_cast<uint8_t>(kBuildStamp[i]);
     hash *= 16777619u;
   }
-  return hash;
+  return hash ^ static_cast<uint32_t>(FLASH_TARGET_OFFSET);
 }
 
 bool picoTrackerSamplePool::CheckSampleFits(int sampleSize) {
