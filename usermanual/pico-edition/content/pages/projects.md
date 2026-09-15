@@ -25,7 +25,25 @@ For best tap tempo results, tap at least 2-3 times at a steady pace. If taps are
 
 - **Sample Pool:** Opens the sample import browser specifically for the project's local sample directory. This allows you to manage and import samples directly into your project's folder.
 - **Remove Unused Samples:** Scans the project's sample folder and removes any audio files that are not currently used by any instrument in the project.
+- **Rebuild Sample Cache:** Reloads every sample of the current project from the SD card. Use it if a sample is reported as not fitting even though the pool is nearly empty, or after sample files were changed on the card by a computer. Not available during playback, and reload the project afterwards. See [Sample cache](#sample-cache).
 - **Remove Unused Instruments:** Resets all instruments that are not used in any phrase to their default state and removes their associated samples from the project.
+
+## Sample cache
+
+A project's samples are copied into the picoTracker's internal flash when the project loads, which is what makes playback fast. Where each sample ended up is written to a small file on the SD card (`/.current.samples`), so that loading the same project again - including after a power cycle - skips copying the samples and is near instant.
+
+That file is only used when it can be trusted:
+
+- It belongs to one project, by name. Loading a different project ignores it.
+- Every sample it lists must still exist on the card with the same file size, and no extra samples may have appeared. Replacing, resizing, adding or removing a `.wav` file in the project's `samples` folder makes the next load read the samples from the card instead - slower once, and the cache is then refreshed.
+- A firmware update that moves or changes the sample area invalidates it.
+
+Two consequences worth knowing:
+
+- **Sample edits need a project reload.** Trimming or normalising a sample in the [Sample Editor](sample-editor.html) writes the new WAV to the card, but the pool keeps playing the old audio held in flash until you reload the project. Reload it before importing more samples or loading another project.
+- **Removing a sample** in the [Project Pool](projectpool.html) deletes the file from the card, while the pool keeps the sample until the project is reloaded.
+
+Samples are only ever *appended* to flash, so removing and re-importing grows the space they use. It is reclaimed by **Rebuild Sample Cache**, by reloading the project, or by rebooting.
 
 ## Project Management
 

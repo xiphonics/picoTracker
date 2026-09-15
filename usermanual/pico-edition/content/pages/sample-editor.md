@@ -44,4 +44,6 @@ Select `Save` and press `ENTER` to write the edits to disk. Use `NAV`+`LEFT` to 
 
 `Save & Load` will save the file and load it into the Project Pool.
 
+**NOTE:** if you are editing a sample that belongs to the current project pool, saving writes the new WAV to the SD card, but the pool keeps playing the audio already in the picoTracker's internal flash. You will be asked to reload the project; do it before importing more samples or loading another project, otherwise the pool goes on using the pre-edit audio. See [Sample cache](projects.html#sample-cache).
+
 `Discard` will also leave the Sample Editor screen to return to the Sample Browser without saving.
