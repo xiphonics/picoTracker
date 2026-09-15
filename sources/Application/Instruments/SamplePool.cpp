@@ -568,19 +568,6 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   NotifyObservers(&ev);
 };
 
-// returns the new samples index or -1 on error
-int8_t SamplePool::ReloadSample(uint8_t index, const char *name) {
-  if (unloadSample(index)) {
-    if (loadSample(name)) {
-      // No projectName available here; invalidate cache so next boot rebuilds
-      // from SD and rewrites the cache.
-      PersistencyService::GetInstance()->DeleteSampleCache();
-      return count_ - 1;
-    }
-  }
-  return -1;
-}
-
 void SamplePool::swapEntries(int src, int dst) {
   if (src == dst) {
     return;

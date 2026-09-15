@@ -43,8 +43,11 @@ public:
   void PurgeSample(int i, const char *projectName);
   virtual bool CheckSampleFits(int sampleSize) = 0;
   virtual uint32_t GetAvailableSampleStorageSpace() = 0;
+  // Drop a sample from the pool. picoTracker cannot reclaim flash in place, so
+  // the implementation currently always fails and the entry survives until the
+  // project is reloaded - callers must not gate cache invalidation, or anything
+  // else, on the result.
   virtual bool unloadSample(uint32_t i) = 0;
-  int8_t ReloadSample(uint8_t index, const char *name);
 
   // Marks the on-disk sample cache unusable and remembers it until the pool is
   // rebuilt by Load(). Needed whenever flash and the project WAVs diverge (a
