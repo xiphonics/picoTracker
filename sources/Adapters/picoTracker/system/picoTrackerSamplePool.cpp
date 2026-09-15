@@ -258,7 +258,8 @@ bool picoTrackerSamplePool::rebuildSampleFromCache(const SampleCacheEntry &e) {
   return true;
 }
 
-void picoTrackerSamplePool::writeSampleCache(const char *projectName) {
+void picoTrackerSamplePool::writeSampleCache(const char *projectName,
+                                             bool verify) {
   auto &entries = sampleCacheEntries_;
   entries.clear();
   for (uint32_t i = 0; i < count_; ++i) {
@@ -285,6 +286,12 @@ void picoTrackerSamplePool::writeSampleCache(const char *projectName) {
                           entries.size(), flashEraseOffset_, flashWriteOffset_);
   if (res != PERSIST_SAVED) {
     Trace::Error("Failed to save sample cache for '%s'", projectName);
+    return;
+  }
+
+  if (!verify) {
+    // Imports and purges would double their SD traffic if every write were read
+    // back; the full project load in SamplePool::Load() does verify.
     return;
   }
 

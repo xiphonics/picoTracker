@@ -115,9 +115,11 @@ protected:
   virtual bool loadSample(const char *name) = 0;
   bool loadSoundFont(const char *path);
   // Single gate for publishing cache state: does nothing while the pool is
-  // known to be out of sync with the WAVs on SD.
-  void SaveSampleCacheForCurrentPool(const char *projectName);
-  virtual void writeSampleCache(const char *projectName) {}
+  // known to be out of sync with the WAVs on SD. verify reads the file back to
+  // confirm it reached the card - worth the extra SD traffic after a full
+  // project load, not after every single import or purge.
+  void SaveSampleCacheForCurrentPool(const char *projectName, bool verify);
+  virtual void writeSampleCache(const char *projectName, bool verify) {}
 
   uint32_t count_;
   bool sampleCacheStale_;

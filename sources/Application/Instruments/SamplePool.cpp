@@ -68,7 +68,7 @@ void SamplePool::DiscardSampleCache() {
 void SamplePool::RekeySampleCache(const char *projectName) {
   // Goes through the same gate as every other write, so a pool that has
   // diverged from its WAVs is never filed under the new name either.
-  SaveSampleCacheForCurrentPool(projectName);
+  SaveSampleCacheForCurrentPool(projectName, false);
 }
 
 void SamplePool::BeginBulkCacheUpdate() { bulkCacheUpdateDepth_++; }
@@ -78,11 +78,12 @@ void SamplePool::EndBulkCacheUpdate(const char *projectName) {
     bulkCacheUpdateDepth_--;
   }
   if (bulkCacheUpdateDepth_ == 0) {
-    SaveSampleCacheForCurrentPool(projectName);
+    SaveSampleCacheForCurrentPool(projectName, false);
   }
 }
 
-void SamplePool::SaveSampleCacheForCurrentPool(const char *projectName) {
+void SamplePool::SaveSampleCacheForCurrentPool(const char *projectName,
+                                               bool verify) {
   if (sampleCacheStale_) {
     Trace::Log("SAMPLEPOOL", "Sample cache stale - skipping write for '%s'",
                projectName);
@@ -93,7 +94,7 @@ void SamplePool::SaveSampleCacheForCurrentPool(const char *projectName) {
     // the operation as a whole.
     return;
   }
-  writeSampleCache(projectName);
+  writeSampleCache(projectName, verify);
 }
 
 bool SamplePool::validateCacheAgainstSd(
@@ -270,8 +271,11 @@ void SamplePool::Load(const char *projectName) {
     rest--;
   };
 
-  // Write sample cache so that next boot can skip SD reloads.
-  SaveSampleCacheForCurrentPool(projectName);
+  // Write sample cache so that next boot can skip SD reloads. This is the one
+  // place the read-back check pays for itself: everything else about the pool
+  // has just been rebuilt, and a cache that silently failed to land would be
+  // indistinguishable from a working one.
+  SaveSampleCacheForCurrentPool(projectName, true);
 };
 
 void SamplePool::RebuildCacheFromSd(const char *projectName) {
@@ -537,7 +541,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
                               projSampleFilename.size());
       nameStore_[loadedIndex][projSampleFilename.size()] = '\0';
     }
-    SaveSampleCacheForCurrentPool(projectName);
+    SaveSampleCacheForCurrentPool(projectName, false);
   }
 
   SetChanged();
@@ -574,7 +578,7 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   wav_[count_].Close();
   nameStore_[count_][0] = '\0';
 
-  SaveSampleCacheForCurrentPool(projectName);
+  SaveSampleCacheForCurrentPool(projectName, false);
 
   // now notify observers
   SetChanged();
