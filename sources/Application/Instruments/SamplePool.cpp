@@ -25,7 +25,7 @@
 #include <string.h>
 #include <utility>
 
-SamplePool::SamplePool() : Observable(&observers_) {
+SamplePool::SamplePool() : Observable(&observers_), sampleCacheStale_(false) {
   count_ = 0;
   for (int i = 0; i < MAX_SAMPLES; i++) {
     names_[i] = nameStore_[i];
@@ -49,7 +49,30 @@ void SamplePool::updateStatus(uint32_t index, uint32_t total,
                        static_cast<int>(percentage));
 };
 
+void SamplePool::InvalidateSampleCache() {
+  sampleCacheStale_ = true;
+  if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
+    Trace::Error("SAMPLEPOOL: cache file could not be deleted, staying marked "
+                 "stale (no cache will be written until project reload)");
+  }
+}
+
+void SamplePool::SaveSampleCacheForCurrentPool(const char *projectName) {
+  if (sampleCacheStale_) {
+    Trace::Log("SAMPLEPOOL", "Sample cache stale - skipping write for '%s'",
+               projectName);
+    return;
+  }
+  writeSampleCache(projectName);
+}
+
 bool SamplePool::LoadFromCache(const char *projectName) {
+  if (sampleCacheStale_) {
+    // Pool contents no longer match the WAVs on SD and the on-disk cache was
+    // already removed; go to SD and republish.
+    Trace::Log("SAMPLEPOOL", "Sample cache invalidated - SD load");
+    return false;
+  }
   auto &entries = sampleCacheEntries_;
   entries.clear();
   uint32_t eraseOff = 0;
@@ -69,8 +92,7 @@ bool SamplePool::LoadFromCache(const char *projectName) {
     const SampleCacheEntry &entry = entries[i];
     if (entry.flashOffset > writeOff ||
         entry.sampleBufferSize > writeOff - entry.flashOffset) {
-      Trace::Error("SAMPLEPOOL: cache entry '%s' exceeds writeOff",
-                   entry.name);
+      Trace::Error("SAMPLEPOOL: cache entry '%s' exceeds writeOff", entry.name);
       ps->DeleteSampleCache();
       return false;
     }
@@ -96,6 +118,9 @@ bool SamplePool::LoadFromCache(const char *projectName) {
 }
 
 void SamplePool::Load(const char *projectName) {
+  // Either branch below leaves the pool exactly matching the cached flash
+  // state or the SD contents, so the stale flag no longer applies.
+  sampleCacheStale_ = false;
   if (LoadFromCache(projectName)) {
     return;
   }

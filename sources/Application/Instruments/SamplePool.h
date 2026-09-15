@@ -46,7 +46,14 @@ public:
   virtual bool unloadSample(uint32_t i) = 0;
   int8_t ReloadSample(uint8_t index, const char *name);
 
-  virtual void SaveSampleCacheForCurrentPool(const char *projectName) {}
+  // Marks the on-disk sample cache unusable and remembers it until the pool is
+  // rebuilt by Load(). Needed whenever flash and the project WAVs diverge (a
+  // sample edit, a removed sample): deleting the file alone is not enough,
+  // because a later import or purge would republish a cache describing the
+  // stale in-flash state and silently undo the change on next reload.
+  void InvalidateSampleCache();
+  bool IsSampleCacheStale() const { return sampleCacheStale_; }
+
   virtual bool rebuildSampleFromCache(const SampleCacheEntry &e) {
     return false;
   }
@@ -70,7 +77,13 @@ protected:
                             const char *message);
   virtual bool loadSample(const char *name) = 0;
   bool loadSoundFont(const char *path);
+  // Single gate for publishing cache state: does nothing while the pool is
+  // known to be out of sync with the WAVs on SD.
+  void SaveSampleCacheForCurrentPool(const char *projectName);
+  virtual void writeSampleCache(const char *projectName) {}
+
   uint32_t count_;
+  bool sampleCacheStale_;
   char nameStore_[MAX_SAMPLES][MAX_INSTRUMENT_FILENAME_LENGTH + 1];
   char *names_[MAX_SAMPLES];
   WavFile wav_[MAX_SAMPLES];

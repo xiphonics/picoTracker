@@ -23,7 +23,7 @@ public:
     return (flashLimit_ - flashWriteOffset_);
   }
 
-  void SaveSampleCacheForCurrentPool(const char *projectName) override;
+  void writeSampleCache(const char *projectName) override;
   bool rebuildSampleFromCache(const SampleCacheEntry &e) override;
   bool ValidateSampleCache(const etl::ivector<SampleCacheEntry> &entries,
                            uint32_t flashEraseOffset,

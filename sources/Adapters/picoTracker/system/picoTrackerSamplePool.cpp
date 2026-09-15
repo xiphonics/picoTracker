@@ -25,8 +25,7 @@
 // Use all flash available after binary for samples
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET                                                    \
-  ((((uintptr_t) & __flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) +    \
-   1) *                                                                        \
+  ((((uintptr_t)&__flash_binary_end - 0x10000000u) / FLASH_SECTOR_SIZE) + 1) * \
       FLASH_SECTOR_SIZE
 
 // Total flash size depends on hardware:
@@ -258,8 +257,7 @@ bool picoTrackerSamplePool::rebuildSampleFromCache(const SampleCacheEntry &e) {
   return true;
 }
 
-void picoTrackerSamplePool::SaveSampleCacheForCurrentPool(
-    const char *projectName) {
+void picoTrackerSamplePool::writeSampleCache(const char *projectName) {
   auto &entries = sampleCacheEntries_;
   entries.clear();
   for (uint32_t i = 0; i < count_; ++i) {

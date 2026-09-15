@@ -14,7 +14,6 @@
 #include "Application/Instruments/WavHeader.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistenceConstants.h"
-#include "Application/Persistency/PersistencyService.h"
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
 #include "BaseClasses/UIBigHexVarField.h"
@@ -1173,12 +1172,11 @@ bool SampleEditorView::applyNormalizeOperation() {
 }
 
 bool SampleEditorView::reloadEditedSample() {
-  // The pool still points at the pre-edit audio in flash. Force the next
-  // project load to rebuild it from the WAV we just committed.
-  if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
-    Trace::Error("SampleEditorView: Failed to invalidate edited sample cache");
-    return false;
-  }
+  // The pool still points at the pre-edit audio in flash. Mark the cache stale
+  // so the divergence is remembered in memory as well as on disk: deleting the
+  // file alone could be undone by an import or purge before the project is
+  // reloaded, which would republish a cache holding the pre-edit sample.
+  SamplePool::GetInstance()->InvalidateSampleCache();
 
   loadSample(viewData_->sampleEditorFilename,
              viewData_->isShowingSampleEditorProjectPool);
