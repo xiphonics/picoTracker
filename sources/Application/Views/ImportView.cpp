@@ -512,7 +512,7 @@ void ImportView::DrawView() {
   SetColor(CD_NORMAL);
 };
 
-void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick){};
+void ImportView::OnPlayerUpdate(PlayerEventType, unsigned int tick) {};
 
 void ImportView::OnFocus() {
   // clear stale flags
@@ -916,7 +916,13 @@ void ImportView::onConfirmRemoveProjectSample(View &, ModalView &dialog) {
     return;
   }
 
+  // Note that unloadSample() cannot do anything on picoTracker: the entry keeps
+  // pointing at flash until the project is reloaded. What matters for the
+  // sample cache is that the WAV is now gone from the card, so invalidate
+  // durably - the pool would otherwise happily republish the removed sample on
+  // the next import and it would keep playing across reboots.
   SamplePool::GetInstance()->unloadSample(sampleIndex);
+  SamplePool::GetInstance()->InvalidateSampleCache();
 
   if (currentIndex_ > 0) {
     --currentIndex_;
