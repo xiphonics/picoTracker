@@ -7,6 +7,7 @@
  */
 
 #include "picoTrackerSamplePool.h"
+#include "Application/Instruments/SampleCacheValidate.h"
 #include "Application/Model/Project.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Externals/etl/include/etl/vector.h"
@@ -231,10 +232,11 @@ bool picoTrackerSamplePool::ValidateSampleCache(
   }
 
   for (const SampleCacheEntry &entry : entries) {
-    if (entry.flashOffset < FLASH_TARGET_OFFSET ||
-        (entry.flashOffset % FLASH_PAGE_SIZE) != 0 ||
-        entry.flashOffset > flashWriteOffset ||
-        entry.sampleBufferSize > flashWriteOffset - entry.flashOffset) {
+    // An entry has to occupy at least one byte, so its offset must be strictly
+    // below the write offset rather than merely not past it.
+    if ((entry.flashOffset % FLASH_PAGE_SIZE) != 0 ||
+        !flashRangeFits(entry.flashOffset, entry.sampleBufferSize,
+                        FLASH_TARGET_OFFSET, flashWriteOffset)) {
       Trace::Error("Cache entry '%s' has invalid flash range", entry.name);
       return false;
     }
@@ -247,8 +249,8 @@ bool picoTrackerSamplePool::rebuildSampleFromCache(const SampleCacheEntry &e) {
     return false;
   }
   // Bounds-check the flash region against our allocator window.
-  if (e.flashOffset < FLASH_TARGET_OFFSET || e.flashOffset > flashLimit_ ||
-      e.sampleBufferSize > flashLimit_ - e.flashOffset) {
+  if (!flashRangeFits(e.flashOffset, e.sampleBufferSize, FLASH_TARGET_OFFSET,
+                      flashLimit_)) {
     Trace::Error("Cache entry '%s' flash range out of bounds", e.name);
     return false;
   }

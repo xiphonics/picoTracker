@@ -15,6 +15,7 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
 #include "Foundation/Constants/SpecialCharacters.h"
+#include "SampleCacheValidate.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
@@ -115,12 +116,13 @@ bool SamplePool::validateCacheAgainstSd(
     return false;
   }
 
-  // Directory scan plus one stat per candidate; no sample data is read.
+  // Directory scan plus one stat per candidate; no sample data is read, and no
+  // per-sample storage is kept, so this stays cheap on RAM.
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
 
-  size_t candidates = 0;
-  size_t unchanged = 0;
+  size_t cardSamples = 0;
+  size_t cardSamplesUnchanged = 0;
   char name[PFILENAME_SIZE];
   for (size_t j = 0; j < fileIndexes.size(); ++j) {
     fs->getFileName(fileIndexes[j], name, PFILENAME_SIZE);
@@ -129,25 +131,21 @@ bool SamplePool::validateCacheAgainstSd(
         strlen(name) > MAX_INSTRUMENT_FILENAME_LENGTH) {
       continue;
     }
-    candidates++;
-    for (size_t i = 0; i < entries.size(); ++i) {
-      if (strcmp(name, entries[i].name) == 0) {
-        if (fs->getFileSize(fileIndexes[j]) == entries[i].sourceDiskSize) {
-          unchanged++;
-        }
-        break;
-      }
+    cardSamples++;
+    auto pairing = pairCardSampleWithCache(
+        name, static_cast<uint32_t>(fs->getFileSize(fileIndexes[j])),
+        entries.data(), entries.size());
+    if (pairing == SampleCachePairing::Matched) {
+      cardSamplesUnchanged++;
     }
   }
 
-  // Any difference means the pool a cache hit would build is not the pool an
-  // SD load would build, either in contents or in order.
-  if (candidates != entries.size() || unchanged != entries.size()) {
+  if (!cacheAndCardAgree(cardSamples, cardSamplesUnchanged, entries.size())) {
     Trace::Log("SAMPLEPOOL",
                "Sample cache stale for '%s': card has %u sample(s), %u "
                "unchanged, cache holds %u",
-               projectName, (unsigned)candidates, (unsigned)unchanged,
-               (unsigned)entries.size());
+               projectName, (unsigned)cardSamples,
+               (unsigned)cardSamplesUnchanged, (unsigned)entries.size());
     return false;
   }
   return true;

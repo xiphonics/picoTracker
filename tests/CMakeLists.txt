@@ -9,8 +9,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(picoTracker_tests
   test_main.cpp
   foundation_types_tests.cpp
+  samplecache_tests.cpp
   wavheader_tests.cpp
   ../sources/Application/Instruments/WavHeader.cpp
+  ../sources/Application/Instruments/SampleCacheValidate.cpp
 )
 
 target_include_directories(picoTracker_tests PRIVATE
