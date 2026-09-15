@@ -12,13 +12,44 @@
 #include "Foundation/Services/ServiceRegistry.h"
 
 #include "Foundation/Types/Types.h"
+#include "PersistencyDocument.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #define PROJECT_STATE_FILE "/.current"
 #define MAX_DELETE_DEPTH 3
+
+namespace {
+bool ParseUint32(const char *text, uint32_t &value) {
+  if (!text || !text[0] || text[0] == '-') {
+    return false;
+  }
+  errno = 0;
+  char *end = nullptr;
+  const unsigned long long parsed = strtoull(text, &end, 10);
+  if (errno == ERANGE || !end || *end != '\0' ||
+      parsed > std::numeric_limits<uint32_t>::max()) {
+    return false;
+  }
+  value = static_cast<uint32_t>(parsed);
+  return true;
+}
+
+bool ParseUint16(const char *text, uint16_t &value) {
+  uint32_t parsed = 0;
+  if (!ParseUint32(text, parsed) ||
+      parsed > std::numeric_limits<uint16_t>::max()) {
+    return false;
+  }
+  value = static_cast<uint16_t>(parsed);
+  return true;
+}
+} // namespace
 
 PersistencyService::PersistencyService()
     : Service(FourCC::ServicePersistency){};
@@ -39,6 +70,17 @@ bool PersistencyService::DeleteProject(const char *projectName) {
   auto fs = FileSystem::GetInstance();
 
   Trace::Debug("PERSISTENCYSERVICE", "Deleting project: %s", projectName);
+
+  // Work out what to do with the sample cache before anything is deleted. The
+  // cache describes the flash contents of one project, named inside the file,
+  // so only the current project's deletion may drop it - deleting an unrelated
+  // project must not throw away a good cache, and PurgeUnnamedProject gets here
+  // on every "New project". Resolved up front because LoadCurrentProjectName()
+  // still has to be able to see the project directory.
+  char currentProject[MAX_PROJECT_NAME_LENGTH + 1] = {0};
+  const bool cacheIsOurs =
+      LoadCurrentProjectName(currentProject) == PERSIST_LOADED &&
+      strcmp(currentProject, projectName) == 0;
 
   if (!fs->chdir(PROJECTS_DIR)) {
     Trace::Error("PERSISTENCYSERVICE: Could not change to projects dir");
@@ -65,6 +107,11 @@ bool PersistencyService::DeleteProject(const char *projectName) {
   if (!fs->DeleteDir(projectName)) {
     Trace::Error("PERSISTENCYSERVICE: Could not delete the project dir");
     return false;
+  }
+
+  if (cacheIsOurs) {
+    // The project these offsets point into no longer exists.
+    DeleteSampleCache();
   }
 
   return true;
@@ -425,6 +472,212 @@ PersistencyResult PersistencyService::ExportInstrument(
   instrument->Save(&printer);
 
   return PERSIST_SAVED;
+}
+
+PersistencyResult PersistencyService::SaveSampleCache(
+    const char *projectName, uint32_t buildId, const SampleCacheEntry *entries,
+    size_t count, uint32_t flashEraseOffset, uint32_t flashWriteOffset) {
+  auto fs = FileSystem::GetInstance();
+  auto fp = fs->Open(PROJECT_SAMPLES_CACHE_FILE, "w");
+  if (!fp) {
+    Trace::Error("PERSISTENCYSERVICE: Could not open sample cache for write");
+    return PERSIST_ERROR;
+  }
+  {
+    tinyxml2::XMLPrinter printer(fp.get());
+    printer.OpenElement("SAMPLECACHE");
+    printer.PushAttribute("MAGIC", (int64_t)PROJECT_SAMPLES_CACHE_MAGIC);
+    printer.PushAttribute("VERSION", PROJECT_SAMPLES_CACHE_VERSION);
+    printer.PushAttribute("PROJECT", projectName);
+    printer.PushAttribute("BUILDID", (int64_t)buildId);
+    printer.PushAttribute("ERASEOFF", (int64_t)flashEraseOffset);
+    printer.PushAttribute("WRITEOFF", (int64_t)flashWriteOffset);
+    printer.PushAttribute("COUNT", (int64_t)count);
+    for (size_t i = 0; i < count; ++i) {
+      const SampleCacheEntry &e = entries[i];
+      printer.OpenElement("SAMPLE");
+      printer.PushAttribute("NAME", e.name);
+      printer.PushAttribute("FLASHOFF", (int64_t)e.flashOffset);
+      printer.PushAttribute("BUFSIZE", (int64_t)e.sampleBufferSize);
+      printer.PushAttribute("SIZE", (int64_t)e.size);
+      printer.PushAttribute("RATE", (int64_t)e.sampleRate);
+      printer.PushAttribute("CHANS", e.channelCount);
+      printer.PushAttribute("BPS", e.bytePerSample);
+      printer.PushAttribute("FMT", e.audioFormat);
+      printer.PushAttribute("SRCFILE", (int64_t)e.sourceDiskSize);
+      printer.CloseElement();
+    }
+    printer.CloseElement();
+  }
+  // Ensure data + directory entry land on the SD card before power loss.
+  // Without this, the cache file is often absent after a cold reboot.
+  fp->Sync();
+  fp.reset();
+  Trace::Log("PERSISTENCYSERVICE",
+             "Wrote sample cache for '%s' (%u entries, erase=%u write=%u)",
+             projectName, (unsigned)count, flashEraseOffset, flashWriteOffset);
+  return PERSIST_SAVED;
+}
+
+PersistencyResult PersistencyService::LoadSampleCache(
+    const char *expectedProjectName, uint32_t expectedBuildId,
+    etl::ivector<SampleCacheEntry> &entries, uint32_t &flashEraseOffset,
+    uint32_t &flashWriteOffset) {
+  entries.clear();
+  auto fs = FileSystem::GetInstance();
+  if (!fs->exists(PROJECT_SAMPLES_CACHE_FILE)) {
+    return PERSIST_LOAD_FAILED;
+  }
+  PersistencyDocument doc;
+  if (!doc.Load(PROJECT_SAMPLES_CACHE_FILE)) {
+    return PERSIST_LOAD_FAILED;
+  }
+  if (!doc.FirstChild() || strcmp(doc.ElemName(), "SAMPLECACHE")) {
+    Trace::Error("PERSISTENCYSERVICE: sample cache missing root");
+    return PERSIST_LOAD_FAILED;
+  }
+
+  uint32_t magic = 0;
+  uint32_t version = 0;
+  uint32_t buildId = 0;
+  uint32_t expectedCount = 0;
+  char projectInFile[MAX_PROJECT_NAME_LENGTH + 1] = {0};
+  flashEraseOffset = 0;
+  flashWriteOffset = 0;
+  bool hasValidMagic = false;
+  bool hasValidVersion = false;
+  bool hasValidProject = false;
+  bool hasValidBuildId = false;
+  bool hasValidEraseOffset = false;
+  bool hasValidWriteOffset = false;
+  bool hasValidCount = false;
+
+  bool hasAttr = doc.NextAttribute();
+  while (hasAttr) {
+    if (!strcasecmp(doc.attrname_, "MAGIC")) {
+      hasValidMagic = ParseUint32(doc.attrval_, magic);
+    } else if (!strcasecmp(doc.attrname_, "VERSION")) {
+      hasValidVersion = ParseUint32(doc.attrval_, version);
+    } else if (!strcasecmp(doc.attrname_, "PROJECT")) {
+      const size_t length = strlen(doc.attrval_);
+      hasValidProject = length > 0 && length < sizeof(projectInFile);
+      if (hasValidProject) {
+        memcpy(projectInFile, doc.attrval_, length + 1);
+      }
+    } else if (!strcasecmp(doc.attrname_, "BUILDID")) {
+      hasValidBuildId = ParseUint32(doc.attrval_, buildId);
+    } else if (!strcasecmp(doc.attrname_, "ERASEOFF")) {
+      hasValidEraseOffset = ParseUint32(doc.attrval_, flashEraseOffset);
+    } else if (!strcasecmp(doc.attrname_, "WRITEOFF")) {
+      hasValidWriteOffset = ParseUint32(doc.attrval_, flashWriteOffset);
+    } else if (!strcasecmp(doc.attrname_, "COUNT")) {
+      hasValidCount = ParseUint32(doc.attrval_, expectedCount);
+    }
+    hasAttr = doc.NextAttribute();
+  }
+
+  if (!hasValidMagic || !hasValidVersion || !hasValidProject ||
+      !hasValidBuildId || !hasValidEraseOffset || !hasValidWriteOffset ||
+      !hasValidCount) {
+    Trace::Error("PERSISTENCYSERVICE: sample cache missing/invalid attributes");
+    return PERSIST_LOAD_FAILED;
+  }
+  if (magic != PROJECT_SAMPLES_CACHE_MAGIC ||
+      version != PROJECT_SAMPLES_CACHE_VERSION) {
+    Trace::Error("PERSISTENCYSERVICE: sample cache magic/version mismatch");
+    return PERSIST_LOAD_FAILED;
+  }
+  if (buildId != expectedBuildId) {
+    Trace::Log("PERSISTENCYSERVICE",
+               "sample cache build-id mismatch: file=0x%08x expected=0x%08x",
+               buildId, expectedBuildId);
+    return PERSIST_LOAD_FAILED;
+  }
+  if (strcmp(projectInFile, expectedProjectName) != 0) {
+    Trace::Log("PERSISTENCYSERVICE",
+               "sample cache project mismatch: file='%s' expected='%s'",
+               projectInFile, expectedProjectName);
+    return PERSIST_LOAD_FAILED;
+  }
+
+  bool hasChild = doc.FirstChild();
+  while (hasChild) {
+    if (strcmp(doc.ElemName(), "SAMPLE")) {
+      Trace::Error("PERSISTENCYSERVICE: unexpected sample cache element '%s'",
+                   doc.ElemName());
+      return PERSIST_LOAD_FAILED;
+    }
+    if (entries.full()) {
+      Trace::Error("PERSISTENCYSERVICE: sample cache has too many entries");
+      return PERSIST_LOAD_FAILED;
+    }
+
+    SampleCacheEntry e{};
+    bool hasValidName = false;
+    bool hasValidFlashOffset = false;
+    bool hasValidBufferSize = false;
+    bool hasValidSize = false;
+    bool hasValidRate = false;
+    bool hasValidChannels = false;
+    bool hasValidBytesPerSample = false;
+    bool hasValidFormat = false;
+    bool hasValidSourceSize = false;
+    bool a = doc.NextAttribute();
+    while (a) {
+      if (!strcasecmp(doc.attrname_, "NAME")) {
+        const size_t length = strlen(doc.attrval_);
+        hasValidName = length > 0 && length < sizeof(e.name);
+        if (hasValidName) {
+          memcpy(e.name, doc.attrval_, length + 1);
+        }
+      } else if (!strcasecmp(doc.attrname_, "FLASHOFF")) {
+        hasValidFlashOffset = ParseUint32(doc.attrval_, e.flashOffset);
+      } else if (!strcasecmp(doc.attrname_, "BUFSIZE")) {
+        hasValidBufferSize = ParseUint32(doc.attrval_, e.sampleBufferSize);
+      } else if (!strcasecmp(doc.attrname_, "SIZE")) {
+        hasValidSize = ParseUint32(doc.attrval_, e.size);
+      } else if (!strcasecmp(doc.attrname_, "RATE")) {
+        hasValidRate = ParseUint32(doc.attrval_, e.sampleRate);
+      } else if (!strcasecmp(doc.attrname_, "CHANS")) {
+        hasValidChannels = ParseUint16(doc.attrval_, e.channelCount);
+      } else if (!strcasecmp(doc.attrname_, "BPS")) {
+        hasValidBytesPerSample = ParseUint16(doc.attrval_, e.bytePerSample);
+      } else if (!strcasecmp(doc.attrname_, "FMT")) {
+        hasValidFormat = ParseUint16(doc.attrval_, e.audioFormat);
+      } else if (!strcasecmp(doc.attrname_, "SRCFILE")) {
+        hasValidSourceSize = ParseUint32(doc.attrval_, e.sourceDiskSize);
+      }
+      a = doc.NextAttribute();
+    }
+    if (!hasValidName || !hasValidFlashOffset || !hasValidBufferSize ||
+        !hasValidSize || !hasValidRate || !hasValidChannels ||
+        !hasValidBytesPerSample || !hasValidFormat || !hasValidSourceSize) {
+      Trace::Error(
+          "PERSISTENCYSERVICE: sample cache entry missing/invalid attributes");
+      return PERSIST_LOAD_FAILED;
+    }
+    entries.push_back(e);
+    hasChild = doc.NextSibling();
+  }
+  if (doc.HadError()) {
+    Trace::Error("PERSISTENCYSERVICE: XML error parsing sample cache");
+    return PERSIST_LOAD_FAILED;
+  }
+  if (entries.size() != expectedCount) {
+    Trace::Error("PERSISTENCYSERVICE: sample cache count mismatch (%u != %u)",
+                 static_cast<unsigned>(entries.size()), expectedCount);
+    entries.clear();
+    return PERSIST_LOAD_FAILED;
+  }
+  return PERSIST_LOADED;
+}
+
+bool PersistencyService::DeleteSampleCache() {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->exists(PROJECT_SAMPLES_CACHE_FILE)) {
+    return true;
+  }
+  return fs->DeleteFile(PROJECT_SAMPLES_CACHE_FILE);
 }
 
 InstrumentType PersistencyService::DetectInstrumentType(const char *name) {

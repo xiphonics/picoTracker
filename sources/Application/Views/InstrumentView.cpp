@@ -13,6 +13,7 @@
 #include "Application/Instruments/SampleInstrument.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Config.h"
+#include "Application/Persistency/PersistencyService.h"
 #include "Application/Views/ImportView.h"
 #include "Application/Views/SampleEditorView.h"
 #include "BaseClasses/UIBigHexVarField.h"

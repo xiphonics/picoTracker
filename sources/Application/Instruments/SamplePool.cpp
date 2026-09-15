@@ -15,6 +15,7 @@
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
 #include "Foundation/Constants/SpecialCharacters.h"
+#include "SampleCacheValidate.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
@@ -25,7 +26,9 @@
 #include <string.h>
 #include <utility>
 
-SamplePool::SamplePool() : Observable(&observers_) {
+SamplePool::SamplePool()
+    : Observable(&observers_), sampleCacheStale_(false),
+      bulkCacheUpdateDepth_(0) {
   count_ = 0;
   for (int i = 0; i < MAX_SAMPLES; i++) {
     names_[i] = nameStore_[i];
@@ -49,13 +52,193 @@ void SamplePool::updateStatus(uint32_t index, uint32_t total,
                        static_cast<int>(percentage));
 };
 
+etl::vector<SampleCacheEntry, MAX_SAMPLES> &SamplePool::cacheEntryScratch() {
+  // Initialised on first use, so it costs nothing at start-up and does not take
+  // part in static initialisation order.
+  static etl::vector<SampleCacheEntry, MAX_SAMPLES> entries;
+  return entries;
+}
+
+void SamplePool::InvalidateSampleCache() {
+  sampleCacheStale_ = true;
+  if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
+    // Still stale: the flag alone is enough to keep later writes from
+    // republishing state that no longer matches the WAVs on the card.
+    Trace::Error("SAMPLEPOOL: CACHE INVALIDATED (file could not be deleted); "
+                 "no cache will be written until project reload");
+    return;
+  }
+  Trace::Log("SAMPLEPOOL", "CACHE INVALIDATED - no cache write until the "
+                           "project is reloaded");
+}
+
+void SamplePool::DiscardSampleCache() {
+  if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
+    Trace::Error("SAMPLEPOOL: write-ahead cache delete failed");
+    return;
+  }
+  Trace::Log("SAMPLEPOOL",
+             "CACHE DISCARDED ahead of rewriting flash or the project WAVs");
+}
+
+void SamplePool::RekeySampleCache(const char *projectName) {
+  // Goes through the same gate as every other write, so a pool that has
+  // diverged from its WAVs is never filed under the new name either.
+  SaveSampleCacheForCurrentPool(projectName, false);
+}
+
+void SamplePool::BeginBulkCacheUpdate() { bulkCacheUpdateDepth_++; }
+
+void SamplePool::EndBulkCacheUpdate(const char *projectName) {
+  if (bulkCacheUpdateDepth_ > 0) {
+    bulkCacheUpdateDepth_--;
+  }
+  if (bulkCacheUpdateDepth_ == 0) {
+    SaveSampleCacheForCurrentPool(projectName, false);
+  }
+}
+
+void SamplePool::SaveSampleCacheForCurrentPool(const char *projectName,
+                                               bool verify) {
+  if (sampleCacheStale_) {
+    Trace::Log("SAMPLEPOOL", "Sample cache stale - skipping write for '%s'",
+               projectName);
+    return;
+  }
+  if (bulkCacheUpdateDepth_ > 0) {
+    // Deferred to EndBulkCacheUpdate(): a mid-batch cache would not describe
+    // the operation as a whole.
+    return;
+  }
+  writeSampleCache(projectName, verify);
+}
+
+bool SamplePool::validateCacheAgainstSd(
+    const char *projectName, const etl::ivector<SampleCacheEntry> &entries) {
+  auto fs = FileSystem::GetInstance();
+  if (!fs->chdir(PROJECTS_DIR) || !fs->chdir(projectName) ||
+      !fs->chdir(PROJECT_SAMPLES_DIR)) {
+    Trace::Log("SAMPLEPOOL",
+               "Sample cache unverified for '%s': samples dir unavailable",
+               projectName);
+    return false;
+  }
+
+  // Directory scan plus one stat per candidate; no sample data is read, and no
+  // per-sample storage is kept, so this stays cheap on RAM.
+  etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
+  fs->list(&fileIndexes, ".wav", false);
+
+  size_t cardSamples = 0;
+  size_t cardSamplesUnchanged = 0;
+  char name[PFILENAME_SIZE];
+  for (size_t j = 0; j < fileIndexes.size(); ++j) {
+    fs->getFileName(fileIndexes[j], name, PFILENAME_SIZE);
+    // Skip exactly what Load() would skip so the counts stay comparable.
+    if (fs->getFileType(fileIndexes[j]) != PFT_FILE ||
+        strlen(name) > MAX_INSTRUMENT_FILENAME_LENGTH) {
+      continue;
+    }
+    cardSamples++;
+    auto pairing = pairCardSampleWithCache(
+        name, static_cast<uint32_t>(fs->getFileSize(fileIndexes[j])),
+        entries.data(), entries.size());
+    if (pairing == SampleCachePairing::Matched) {
+      cardSamplesUnchanged++;
+    }
+  }
+
+  if (!cacheAndCardAgree(cardSamples, cardSamplesUnchanged, entries.size())) {
+    Trace::Log("SAMPLEPOOL",
+               "Sample cache stale for '%s': card has %u sample(s), %u "
+               "unchanged, cache holds %u",
+               projectName, (unsigned)cardSamples,
+               (unsigned)cardSamplesUnchanged, (unsigned)entries.size());
+    return false;
+  }
+  return true;
+}
+
+bool SamplePool::LoadFromCache(const char *projectName) {
+  if (sampleCacheStale_) {
+    // Pool contents no longer match the WAVs on SD and the on-disk cache was
+    // already removed; go to SD and republish.
+    Trace::Log("SAMPLEPOOL", "Sample cache invalidated - SD load");
+    return false;
+  }
+  auto &entries = cacheEntryScratch();
+  entries.clear();
+  uint32_t eraseOff = 0;
+  uint32_t writeOff = 0;
+  auto *ps = PersistencyService::GetInstance();
+  auto res = ps->LoadSampleCache(projectName, GetSampleCacheBuildId(), entries,
+                                 eraseOff, writeOff);
+  if (res != PERSIST_LOADED) {
+    Trace::Log("SAMPLEPOOL",
+               "No usable sample cache for '%s' (res=%d) — SD load",
+               projectName, (int)res);
+    return false;
+  }
+  // Monotonicity check: write offset must cover every cached entry. Use
+  // subtraction so a corrupt offset/size pair cannot wrap past writeOff.
+  for (size_t i = 0; i < entries.size(); ++i) {
+    const SampleCacheEntry &entry = entries[i];
+    if (entry.flashOffset > writeOff ||
+        entry.sampleBufferSize > writeOff - entry.flashOffset) {
+      Trace::Error("SAMPLEPOOL: cache entry '%s' exceeds writeOff", entry.name);
+      ps->DeleteSampleCache();
+      return false;
+    }
+  }
+  if (!ValidateSampleCache(entries, eraseOff, writeOff)) {
+    Trace::Error("SAMPLEPOOL: cache has invalid flash allocator state");
+    ps->DeleteSampleCache();
+    return false;
+  }
+  // The cache only describes audio that is still byte-for-byte what was loaded
+  // into flash, so check the source files before trusting it.
+  if (!validateCacheAgainstSd(projectName, entries)) {
+    ps->DeleteSampleCache();
+    return false;
+  }
+  ResumeFromCache(eraseOff, writeOff);
+  for (size_t i = 0; i < entries.size(); ++i) {
+    if (!rebuildSampleFromCache(entries[i])) {
+      Trace::Error("SAMPLEPOOL: failed to rebuild '%s' from cache",
+                   entries[i].name);
+      Reset();
+      ps->DeleteSampleCache();
+      return false;
+    }
+  }
+  // validateCacheAgainstSd() above left the cwd in /projects/<name>/samples, so
+  // a cache hit ends up where the SD path below always left it. Views set their
+  // own cwd before listing (goProjectSamplesDir, ImportView) but this keeps the
+  // two paths indistinguishable either way.
+  Trace::Log("SAMPLEPOOL", "Loaded %u samples from cache for '%s'",
+             (unsigned)entries.size(), projectName);
+  return true;
+}
+
 void SamplePool::Load(const char *projectName) {
+  // Either branch below leaves the pool exactly matching the cached flash
+  // state or the SD contents, so the stale flag no longer applies.
+  sampleCacheStale_ = false;
+  if (LoadFromCache(projectName)) {
+    return;
+  }
   auto fs = FileSystem::GetInstance();
   if (!fs->chdir(PROJECTS_DIR) || !fs->chdir(projectName) ||
       !fs->chdir(PROJECT_SAMPLES_DIR)) {
     Trace::Error("Failed to chdir into %s/%s/%s", PROJECTS_DIR, projectName,
                  PROJECT_SAMPLES_DIR);
   }
+  // Write-ahead invalidation: from the first loadSample() on we rewrite flash
+  // destructively while /.current still names this project. Deleting the cache
+  // up front means a power cut part way through leaves a cold SD load rather
+  // than a cache hit pointing at half-written flash.
+  DiscardSampleCache();
+
   // First, find all wav files
   etl::vector<int, MAX_FILE_INDEX_SIZE> fileIndexes;
   fs->list(&fileIndexes, ".wav", false);
@@ -104,6 +287,22 @@ void SamplePool::Load(const char *projectName) {
     swapEntries(index, rest - 1);
     rest--;
   };
+
+  // Write sample cache so that next boot can skip SD reloads. This is the one
+  // place the read-back check pays for itself: everything else about the pool
+  // has just been rebuilt, and a cache that silently failed to land would be
+  // indistinguishable from a working one.
+  SaveSampleCacheForCurrentPool(projectName, true);
+};
+
+void SamplePool::RebuildCacheFromSd(const char *projectName) {
+  // Reset first: this is what releases the pool and rewinds the flash allocator
+  // to the start of the sample area so the reload packs tightly.
+  Reset();
+  // Force Load() down its SD path rather than accepting the very cache we are
+  // replacing. Load() clears the stale flag and republishes the cache itself.
+  DiscardSampleCache();
+  Load(projectName);
 };
 
 SoundSource *SamplePool::GetSource(uint32_t i) {
@@ -344,6 +543,10 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   // Close the output file before re-opening it for import.
   fout.reset();
 
+  // Write-ahead invalidation: loadSample() appends to flash, so from here on a
+  // power cut would leave the cache pointing at a partly written pool.
+  DiscardSampleCache();
+
   // now load the sample into memory/flash from the project pool path
   bool status = loadSample(projectSamplePath.c_str());
   if (status) {
@@ -355,6 +558,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
                               projSampleFilename.size());
       nameStore_[loadedIndex][projSampleFilename.size()] = '\0';
     }
+    SaveSampleCacheForCurrentPool(projectName, false);
   }
 
   SetChanged();
@@ -374,6 +578,10 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   delPath << "/" << PROJECTS_DIR << "/" << projectName << "/"
           << PROJECT_SAMPLES_DIR << "/" << names_[i];
 
+  // Write-ahead invalidation: the WAV disappears from SD before the cache can
+  // be rewritten, so delete first and let the write at the end republish.
+  DiscardSampleCache();
+
   // delete file
   FileSystem::GetInstance()->DeleteFile(delPath.str().c_str());
   // shift all entries from deleted to end
@@ -387,6 +595,8 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   wav_[count_].Close();
   nameStore_[count_][0] = '\0';
 
+  SaveSampleCacheForCurrentPool(projectName, false);
+
   // now notify observers
   SetChanged();
   SamplePoolEvent ev;
@@ -394,16 +604,6 @@ void SamplePool::PurgeSample(int i, const char *projectName) {
   ev.type_ = SPET_DELETE;
   NotifyObservers(&ev);
 };
-
-// returns the new samples index or -1 on error
-int8_t SamplePool::ReloadSample(uint8_t index, const char *name) {
-  if (unloadSample(index)) {
-    if (loadSample(name)) {
-      return count_ - 1;
-    }
-  }
-  return -1;
-}
 
 void SamplePool::swapEntries(int src, int dst) {
   if (src == dst) {

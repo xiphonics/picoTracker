@@ -22,3 +22,5 @@ The Project Pool is the sample browser for the samples that belong to the curren
 *   **Return:** Press `NAV` + `LEFT` to return to the previous screen.
 
 Samples appear here after you import them into the project. The pool is stored with the project, so loading a different project will show its own pool.
+
+**Removing a sample** deletes its file from the SD card. The pool itself keeps playing the sample until the project is reloaded, because the audio it plays lives in the picoTracker's internal flash. See [Sample cache](projects.html#sample-cache).

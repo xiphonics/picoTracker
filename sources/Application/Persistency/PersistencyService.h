@@ -11,13 +11,16 @@
 #define _PERSISTENCY_SERVICE_H_
 
 #include "Application/Instruments/I_Instrument.h"
+#include "Application/Instruments/SampleCacheEntry.h"
 #include "Externals/TinyXML2/tinyxml2.h"
 #include "Externals/etl/include/etl/string.h"
+#include "Externals/etl/include/etl/vector.h"
 #include "Externals/yxml/yxml.h"
 
 #include "Foundation/Services/Service.h"
 #include "Foundation/T_Singleton.h"
 #include "PersistenceConstants.h"
+#include <cstdint>
 
 enum PersistencyResult {
   PERSIST_SAVED,
@@ -54,6 +57,17 @@ public:
   PersistencyResult ImportInstrument(I_Instrument *instrument,
                                      const char *name);
   InstrumentType DetectInstrumentType(const char *name);
+
+  PersistencyResult SaveSampleCache(const char *projectName, uint32_t buildId,
+                                    const SampleCacheEntry *entries,
+                                    size_t count, uint32_t flashEraseOffset,
+                                    uint32_t flashWriteOffset);
+  PersistencyResult LoadSampleCache(const char *expectedProjectName,
+                                    uint32_t expectedBuildId,
+                                    etl::ivector<SampleCacheEntry> &entries,
+                                    uint32_t &flashEraseOffset,
+                                    uint32_t &flashWriteOffset);
+  bool DeleteSampleCache();
 
 private:
   PersistencyResult CreateProjectDirs_(const char *projectName);

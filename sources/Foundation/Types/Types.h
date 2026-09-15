@@ -262,6 +262,7 @@ struct FourCC {
     VarImportResampler = 185,
     ActionAutoSlice = 186,
     ActionShowRecordView = 187,
+    ActionRebuildSampleCache = 188,
 
     Default = 255, // "    "
   };

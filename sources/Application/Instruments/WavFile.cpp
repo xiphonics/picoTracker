@@ -127,7 +127,7 @@ float ConvertSampleToFloat(const uint8_t *samplePtr, uint16_t audioFormat,
 WavFile::WavFile()
     : file_(), readBufferSize_(0), samples_(nullptr), sampleBufferSize_(0),
       size_(0), sampleRate_(0), channelCount_(0), bytePerSample_(0),
-      audioFormat_(0), dataPosition_(0), readCount_(0) {}
+      audioFormat_(0), dataPosition_(0), readCount_(0), diskFileSize_(0) {}
 
 etl::expected<void, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   // open file
@@ -165,9 +165,30 @@ etl::expected<void, WAVEFILE_ERROR> WavFile::Open(const char *name) {
   readBufferSize_ = 0;
   samples_ = nullptr;
 
+  // Fingerprint of the file on the card for the sample cache. Seek/Tell only,
+  // no sample data is read, and Close() deliberately keeps the value.
+  file_->Seek(0, SEEK_END);
+  const long fileSize = file_->Tell();
+  diskFileSize_ = fileSize > 0 ? static_cast<uint32_t>(fileSize) : 0;
+
   file_->Seek(header->dataOffset, SEEK_SET);
   return {};
 };
+
+void WavFile::OpenFromFlash(const SampleCacheEntry &e, short *flashPtr) {
+  Close();
+  samples_ = flashPtr;
+  sampleBufferSize_ = (int)e.sampleBufferSize;
+  size_ = (int)e.size;
+  sampleRate_ = (int)e.sampleRate;
+  channelCount_ = e.channelCount;
+  bytePerSample_ = e.bytePerSample;
+  audioFormat_ = e.audioFormat;
+  dataPosition_ = 0;
+  readCount_ = 0;
+  readBufferSize_ = 0;
+  diskFileSize_ = e.sourceDiskSize;
+}
 
 void *WavFile::GetSampleBuffer(int note) { return samples_; };
 

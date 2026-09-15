@@ -8,6 +8,7 @@
  */
 
 #include "ProjectView.h"
+#include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/randomnames.h"
@@ -61,6 +62,11 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
         .DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
     return;
   }
+  // The samples were copied byte for byte, so flash and the pool still match
+  // what the cache describes and only the name it is filed under is wrong.
+  // Re-keying keeps a rename from costing a full sample reload on next boot.
+  SamplePool::GetInstance()->RekeySampleCache(projName);
+
   if (persist->SaveProjectState(projName) != PERSIST_SAVED) {
     Trace::Error("Failed to save project state");
   } else {
@@ -80,6 +86,15 @@ static void PurgeInstrumentsCallback(View &v, ModalView &dialog) {
     ((ProjectView &)v).OnPurgeInstruments();
   }
 };
+
+static void RebuildSampleCacheCallback(View &v, ModalView &dialog) {
+  if (dialog.GetReturnCode() == MBL_YES) {
+    ((ProjectView &)v).OnRebuildSampleCache();
+  }
+};
+
+// For informational dialogs that only need to be dismissed.
+static void DismissCallback(View &, ModalView &){};
 
 static void RenderStopCallback(View &v, ModalView &dialog) {
   // If the user clicked OK, stop the rendering
@@ -169,6 +184,12 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   position._y += 1;
   actionField_.emplace_back("Remove Unused Samples", FourCC::ActionPurge,
                             position);
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
+  actionField_.emplace_back("Rebuild Sample Cache",
+                            FourCC::ActionRebuildSampleCache, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
@@ -329,6 +350,13 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     MessageBox *mb =
         MessageBox::Create(*this, "Remove unused samples?", MBBF_YES | MBBF_NO);
     DoModal(mb, ModalViewCallback::create<&PurgeCallback>());
+    break;
+  }
+  case FourCC::ActionRebuildSampleCache: {
+    MessageBox *mb =
+        MessageBox::Create(*this, "Rebuild sample cache?",
+                           "Reload samples from card", MBBF_YES | MBBF_NO);
+    DoModal(mb, ModalViewCallback::create<&RebuildSampleCacheCallback>());
     break;
   }
   case FourCC::ActionPurgeInstrument: {
@@ -495,6 +523,29 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
 };
 
 void ProjectView::OnPurge() { project_->PurgeSamples(); };
+
+// Escape hatch for the sample cache: purging and importing only ever append to
+// flash, so the write high-water mark can grow far past what the pool actually
+// occupies until "doesn't fit" is reported for a nearly empty project. It also
+// refreshes the cache after samples were changed outside picoTracker.
+void ProjectView::OnRebuildSampleCache() {
+  if (Player::GetInstance()->IsPlaying()) {
+    MessageBox *mb = MessageBox::Create(*this, "Cannot rebuild",
+                                        "Stop playback first", MBBF_OK);
+    DoModal(mb, ModalViewCallback::create<&DismissCallback>());
+    return;
+  }
+
+  char projName[MAX_PROJECT_NAME_LENGTH + 1];
+  project_->GetProjectName(projName);
+  SamplePool::GetInstance()->RebuildCacheFromSd(projName);
+
+  // Flash offsets all moved, so ask for a reload rather than claim the running
+  // state is untouched.
+  MessageBox *mb = MessageBox::Create(*this, "Sample cache rebuilt",
+                                      "Please reload project", MBBF_OK);
+  DoModal(mb, ModalViewCallback::create<&DismissCallback>());
+};
 
 void ProjectView::OnPurgeInstruments() { project_->PurgeInstruments(); };
 

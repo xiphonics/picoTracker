@@ -52,6 +52,7 @@ public:
 
   void OnPurgeInstruments();
   void OnPurge();
+  void OnRebuildSampleCache();
   void OnQuit();
 
 private:

@@ -10,6 +10,7 @@
 #ifndef _WAV_FILE_H_
 #define _WAV_FILE_H_
 
+#include "Application/Instruments/SampleCacheEntry.h"
 #include "Externals/etl/include/etl/expected.h"
 #include "SoundSource.h"
 #include "System/FileSystem/FileSystem.h"
@@ -29,6 +30,7 @@ public:
   virtual ~WavFile() = default;
 
   etl::expected<void, WAVEFILE_ERROR> Open(const char *);
+  void OpenFromFlash(const SampleCacheEntry &e, short *flashPtr);
   bool IsOpen() const;
   virtual void *GetSampleBuffer(int note);
   void SetSampleBuffer(short *ptr);
@@ -40,12 +42,21 @@ public:
   virtual float GetLengthInSec();
 
   uint32_t GetDiskSize(int note);
+  // Byte size of the WAV file this entry was loaded from, kept after Close()
+  // so the sample cache can fingerprint the file on the card. Zero for entries
+  // restored from flash, which carry their own recorded size.
+  uint32_t GetFileSize() const { return diskFileSize_; }
   bool Rewind();
   bool Read(void *buff, uint32_t btr, uint32_t *bytesRead);
   bool ReadFloat(float *buff, uint32_t maxSamples, uint32_t *samplesRead);
   void Close();
 
   virtual bool IsMulti() { return false; };
+
+  short *GetSamplesPtr() const { return samples_; }
+  int GetSampleBufferSize() const { return sampleBufferSize_; }
+  int GetBytePerSample() const { return bytePerSample_; }
+  uint16_t GetAudioFormat() const { return audioFormat_; }
 
 protected:
   long readBlock(long position, long count);
@@ -55,13 +66,14 @@ private:
   int readBufferSize_; // Read buffer size
   short *samples_;     // sample buffer size (16 bits)
   int sampleBufferSize_;
-  int size_;             // number of samples
-  int sampleRate_;       // sample rate
-  int channelCount_;     // mono / stereo
-  int bytePerSample_;    // original file depth (8/16/24/32bit or float)
-  uint16_t audioFormat_; // PCM or IEEE float
-  int dataPosition_;     // offset in file to get to data
-  uint32_t readCount_;   // remaining bytes to be read from file
+  int size_;              // number of samples
+  int sampleRate_;        // sample rate
+  int channelCount_;      // mono / stereo
+  int bytePerSample_;     // original file depth (8/16/24/32bit or float)
+  uint16_t audioFormat_;  // PCM or IEEE float
+  int dataPosition_;      // offset in file to get to data
+  uint32_t readCount_;    // remaining bytes to be read from file
+  uint32_t diskFileSize_; // size of the source file on the card
 
   static unsigned char readBuffer_[BUFFER_SIZE];
   static int16_t convertedBuffer_[BUFFER_SIZE / 2];

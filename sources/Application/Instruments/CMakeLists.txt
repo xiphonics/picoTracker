@@ -9,6 +9,7 @@ add_library(application_instruments
   NoneInstrument.cpp
   SRPUpdaters.cpp
   SampleInstrument.cpp
+  SampleCacheValidate.cpp
   SamplePool.cpp
   SampleVariable.cpp
   SIDInstrument.cpp

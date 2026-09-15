@@ -1172,6 +1172,12 @@ bool SampleEditorView::applyNormalizeOperation() {
 }
 
 bool SampleEditorView::reloadEditedSample() {
+  // The pool still points at the pre-edit audio in flash. Mark the cache stale
+  // so the divergence is remembered in memory as well as on disk: deleting the
+  // file alone could be undone by an import or purge before the project is
+  // reloaded, which would republish a cache holding the pre-edit sample.
+  SamplePool::GetInstance()->InvalidateSampleCache();
+
   loadSample(viewData_->sampleEditorFilename,
              viewData_->isShowingSampleEditorProjectPool);
 
