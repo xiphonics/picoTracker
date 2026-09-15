@@ -10,7 +10,7 @@
 #ifndef _WAV_FILE_H_
 #define _WAV_FILE_H_
 
-#include "Application/Persistency/PersistencyService.h"
+#include "Application/Instruments/SampleCacheEntry.h"
 #include "Externals/etl/include/etl/expected.h"
 #include "SoundSource.h"
 #include "System/FileSystem/FileSystem.h"

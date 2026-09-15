@@ -11,6 +11,7 @@
 #define _PERSISTENCY_SERVICE_H_
 
 #include "Application/Instruments/I_Instrument.h"
+#include "Application/Instruments/SampleCacheEntry.h"
 #include "Externals/TinyXML2/tinyxml2.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/vector.h"
@@ -20,21 +21,6 @@
 #include "Foundation/T_Singleton.h"
 #include "PersistenceConstants.h"
 #include <cstdint>
-
-#define PROJECT_SAMPLES_CACHE_FILE "/.current.samples"
-#define PROJECT_SAMPLES_CACHE_MAGIC 0x50545343u // 'PTSC'
-#define PROJECT_SAMPLES_CACHE_VERSION 1
-
-struct SampleCacheEntry {
-  char name[MAX_INSTRUMENT_FILENAME_LENGTH + 1];
-  uint32_t flashOffset;
-  uint32_t sampleBufferSize;
-  uint32_t size;
-  uint32_t sampleRate;
-  uint16_t channelCount;
-  uint16_t bytePerSample;
-  uint16_t audioFormat;
-};
 
 enum PersistencyResult {
   PERSIST_SAVED,

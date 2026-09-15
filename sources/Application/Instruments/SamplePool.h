@@ -10,8 +10,10 @@
 #ifndef _SAMPLE_POOL_H_
 #define _SAMPLE_POOL_H_
 
+#include "Application/Instruments/SampleCacheEntry.h"
 #include "Application/Model/Song.h"
-#include "Application/Persistency/PersistencyService.h"
+#include "Externals/etl/include/etl/string.h"
+#include "Externals/etl/include/etl/vector.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "WavFile.h"
@@ -48,9 +50,10 @@ public:
   virtual bool rebuildSampleFromCache(const SampleCacheEntry &e) {
     return false;
   }
-  virtual bool ValidateSampleCache(
-      const etl::ivector<SampleCacheEntry> &entries,
-      uint32_t flashEraseOffset, uint32_t flashWriteOffset) const {
+  virtual bool
+  ValidateSampleCache(const etl::ivector<SampleCacheEntry> &entries,
+                      uint32_t flashEraseOffset,
+                      uint32_t flashWriteOffset) const {
     return true;
   }
   virtual void ResumeFromCache(uint32_t flashEraseOffset,
