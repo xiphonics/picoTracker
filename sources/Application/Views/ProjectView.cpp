@@ -62,6 +62,11 @@ static void SaveAsOverwriteCallback(View &v, ModalView &dialog) {
         .DoModal(mb, ModalViewCallback::create<&SaveAsOverwriteCallback>());
     return;
   }
+  // The samples were copied byte for byte, so flash and the pool still match
+  // what the cache describes and only the name it is filed under is wrong.
+  // Re-keying keeps a rename from costing a full sample reload on next boot.
+  SamplePool::GetInstance()->RekeySampleCache(projName);
+
   if (persist->SaveProjectState(projName) != PERSIST_SAVED) {
     Trace::Error("Failed to save project state");
   } else {

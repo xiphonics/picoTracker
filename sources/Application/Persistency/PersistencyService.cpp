@@ -71,6 +71,17 @@ bool PersistencyService::DeleteProject(const char *projectName) {
 
   Trace::Debug("PERSISTENCYSERVICE", "Deleting project: %s", projectName);
 
+  // Work out what to do with the sample cache before anything is deleted. The
+  // cache describes the flash contents of one project, named inside the file,
+  // so only the current project's deletion may drop it - deleting an unrelated
+  // project must not throw away a good cache, and PurgeUnnamedProject gets here
+  // on every "New project". Resolved up front because LoadCurrentProjectName()
+  // still has to be able to see the project directory.
+  char currentProject[MAX_PROJECT_NAME_LENGTH + 1] = {0};
+  const bool cacheIsOurs =
+      LoadCurrentProjectName(currentProject) == PERSIST_LOADED &&
+      strcmp(currentProject, projectName) == 0;
+
   if (!fs->chdir(PROJECTS_DIR)) {
     Trace::Error("PERSISTENCYSERVICE: Could not change to projects dir");
     return false;
@@ -98,9 +109,10 @@ bool PersistencyService::DeleteProject(const char *projectName) {
     return false;
   }
 
-  // Sample cache is keyed to a single project's flash contents; once the
-  // project is gone the cached offsets are meaningless.
-  DeleteSampleCache();
+  if (cacheIsOurs) {
+    // The project these offsets point into no longer exists.
+    DeleteSampleCache();
+  }
 
   return true;
 }

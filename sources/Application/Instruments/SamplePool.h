@@ -64,6 +64,13 @@ public:
   // expected to republish the cache once the operation completes.
   void DiscardSampleCache();
 
+  // File the cache under a different project name without touching flash. "Save
+  // as" copies the samples byte for byte, so the cached offsets and
+  // fingerprints stay correct and only the name in the header is wrong;
+  // republishing it keeps the rename from costing a full sample reload on the
+  // next boot. Does nothing while the pool is stale.
+  void RekeySampleCache(const char *projectName);
+
   // Collapse a batch of imports or purges into one cache write. Nestable.
   void BeginBulkCacheUpdate();
   void EndBulkCacheUpdate(const char *projectName);

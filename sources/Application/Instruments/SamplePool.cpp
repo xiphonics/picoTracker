@@ -65,6 +65,12 @@ void SamplePool::DiscardSampleCache() {
   }
 }
 
+void SamplePool::RekeySampleCache(const char *projectName) {
+  // Goes through the same gate as every other write, so a pool that has
+  // diverged from its WAVs is never filed under the new name either.
+  SaveSampleCacheForCurrentPool(projectName);
+}
+
 void SamplePool::BeginBulkCacheUpdate() { bulkCacheUpdateDepth_++; }
 
 void SamplePool::EndBulkCacheUpdate(const char *projectName) {
