@@ -260,7 +260,7 @@ bool picoTrackerSamplePool::rebuildSampleFromCache(const SampleCacheEntry &e) {
 
 void picoTrackerSamplePool::writeSampleCache(const char *projectName,
                                              bool verify) {
-  auto &entries = sampleCacheEntries_;
+  auto &entries = cacheEntryScratch();
   entries.clear();
   for (uint32_t i = 0; i < count_; ++i) {
     SampleCacheEntry e{};

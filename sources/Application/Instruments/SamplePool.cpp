@@ -51,6 +51,13 @@ void SamplePool::updateStatus(uint32_t index, uint32_t total,
                        static_cast<int>(percentage));
 };
 
+etl::vector<SampleCacheEntry, MAX_SAMPLES> &SamplePool::cacheEntryScratch() {
+  // Initialised on first use, so it costs nothing at start-up and does not take
+  // part in static initialisation order.
+  static etl::vector<SampleCacheEntry, MAX_SAMPLES> entries;
+  return entries;
+}
+
 void SamplePool::InvalidateSampleCache() {
   sampleCacheStale_ = true;
   if (!PersistencyService::GetInstance()->DeleteSampleCache()) {
@@ -153,7 +160,7 @@ bool SamplePool::LoadFromCache(const char *projectName) {
     Trace::Log("SAMPLEPOOL", "Sample cache invalidated - SD load");
     return false;
   }
-  auto &entries = sampleCacheEntries_;
+  auto &entries = cacheEntryScratch();
   entries.clear();
   uint32_t eraseOff = 0;
   uint32_t writeOff = 0;
