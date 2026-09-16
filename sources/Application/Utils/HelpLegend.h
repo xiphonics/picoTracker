@@ -118,11 +118,11 @@ static char **getHelpLegend(FourCC command) {
     result[1] = (char *)("");
     break;
   case FourCC::InstrumentCommandMidiChord:
-    result[0] = (char *)("MIDI Chord:abcd");
-    result[1] = (char *)("send rel notes:+a,+b,+c,+d");
+    result[0] = (char *)"Midi CHord: abcd";
+    result[1] = (char *)"Send rel notes: +a,+b,+c,+d";
     break;
   default:
-    result[0] = result[1] = (char *)("");
+    result[0] = result[1] = (char *)"";
     break;
   }
   return result;
