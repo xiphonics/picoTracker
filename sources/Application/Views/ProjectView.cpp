@@ -146,18 +146,18 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   Variable *v = project_->FindVariable(FourCC::VarTempo);
   tempoField_.emplace_back(FourCC::ActionTempoChanged, position, *v,
-                           "tempo: %d [%2.2X]", MIN_TEMPO, MAX_TEMPO, 1, 10);
+                           "Tempo: %d [%2.2X]", MIN_TEMPO, MAX_TEMPO, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*tempoField_.rbegin()));
   (*tempoField_.rbegin()).AddObserver(*this);
 
   v = project_->FindVariable(FourCC::VarMasterVolume);
   position._y += 1;
-  intVarField_.emplace_back(position, *v, "master vol: %d%%", 0, 100, 1, 5);
+  intVarField_.emplace_back(position, *v, "Master vol: %d%%", 0, 100, 1, 5);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   v = project_->FindVariable(FourCC::VarTranspose);
   position._y += 1;
-  intVarField_.emplace_back(position, *v, "transpose: %3.2d", -48, 48, 0x1,
+  intVarField_.emplace_back(position, *v, "Transpose: %3.2d", -48, 48, 0x1,
                             0xC);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -167,13 +167,13 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
     v->SetInt(0);
   }
   position._y += 1;
-  intVarField_.emplace_back(position, *v, "scale: %s", 0, numScales - 1, 1, 10);
+  intVarField_.emplace_back(position, *v, "Scale: %s", 0, numScales - 1, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   // Add Scale Root field
   position._y += 1;
   v = project_->FindVariable(FourCC::VarScaleRoot);
-  intVarField_.emplace_back(position, *v, "scale root: %s", 0, 11, 1, 1);
+  intVarField_.emplace_back(position, *v, "Scale root: %s", 0, 11, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
@@ -206,7 +206,7 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
 
   v = project_->FindVariable(FourCC::VarProjectName);
   auto label =
-      etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("project: ");
+      etl::make_string_with_capacity<MAX_UITEXTFIELD_LABEL_LENGTH>("Project: ");
   auto defaultName = etl::make_string_with_capacity<MAX_PROJECT_NAME_LENGTH>(
       UNNAMED_PROJECT_NAME);
   textField_.emplace_back(*v, position, label, FourCC::ActionProjectRename,
