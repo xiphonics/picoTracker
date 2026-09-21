@@ -97,9 +97,9 @@ static void updateSliceCountLabel(etl::string<20> &label,
     }
   }
   if (count <= 1) {
-    label = "slices: off";
+    label = "Slices: off";
   } else {
-    label = "slices: ";
+    label = "Slices: ";
     etl::format_spec format;
     format.width(2).fill(' ');
     etl::to_string(count, label, format, true);
@@ -353,7 +353,7 @@ void InstrumentView::fillSampleParameters() {
 
   Variable *v = instrument->FindVariable(FourCC::SampleInstrumentSample);
   SamplePool *sp = SamplePool::GetInstance();
-  intVarField_.emplace_back(position, *v, "sample: %.17s", 0,
+  intVarField_.emplace_back(position, *v, "Sample: %.17s", 0,
                             sp->GetNameListSize() - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
@@ -371,41 +371,41 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentVolume);
-  intVarField_.emplace_back(position, *v, "volume: %d [%2.2X]", 0, 255, 1, 10);
+  intVarField_.emplace_back(position, *v, "Volume: %d [%2.2X]", 0, 255, 1, 10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentPan);
-  intVarField_.emplace_back(position, *v, "pan: %2.2X", 0, 0xFE, 1, 0x10);
+  intVarField_.emplace_back(position, *v, "Pan: %2.2X", 0, 0xFE, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentRootNote);
-  noteVarField_.emplace_back(position, *v, "root note: %s", 0, 0x7F, 1, 0x0C);
+  noteVarField_.emplace_back(position, *v, "Root note: %s", 0, 0x7F, 1, 0x0C);
   fieldList_.insert(fieldList_.end(), &(*noteVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentFineTune);
-  intVarField_.emplace_back(position, *v, "detune: %2.2X", 0, 255, 1, 0x10);
+  intVarField_.emplace_back(position, *v, "Detune: %2.2X", 0, 255, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentCrushVolume);
-  intVarField_.emplace_back(position, *v, "drive: %2.2X", 0, 0xFF, 1, 0x10);
+  intVarField_.emplace_back(position, *v, "Drive: %2.2X", 0, 0xFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentCrush);
-  intVarField_.emplace_back(position, *v, "crush: %d", 1, 0x10, 1, 4);
+  intVarField_.emplace_back(position, *v, "Crush: %d", 1, 0x10, 1, 4);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentDownsample);
-  intVarField_.emplace_back(position, *v, "downsample: %d", 0, 8, 1, 4);
+  intVarField_.emplace_back(position, *v, "Downsample: %d", 0, 8, 1, 4);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 2;
-  staticField_.emplace_back(position, "flt cut/res:");
+  staticField_.emplace_back(position, "Flt cut/res:");
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
   position._x += 13;
@@ -422,7 +422,7 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentFilterType);
-  intVarField_.emplace_back(position, *v, "type: %2.2X", 0, 0xFF, 1, 0x10);
+  intVarField_.emplace_back(position, *v, "Type: %2.2X", 0, 0xFF, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
@@ -432,42 +432,42 @@ void InstrumentView::fillSampleParameters() {
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentInterpolation);
-  intVarField_.emplace_back(position, *v, "interpolation: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Interpolation: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentLoopMode);
-  intVarField_.emplace_back(position, *v, "loop mode: %s", 0, SILM_LAST - 1, 1,
+  intVarField_.emplace_back(position, *v, "Loop mode: %s", 0, SILM_LAST - 1, 1,
                             1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentStart);
-  bigHexVarField_.emplace_back(position, *v, 7, "start: %7.7X", 0,
+  bigHexVarField_.emplace_back(position, *v, 7, "Start: %7.7X", 0,
                                instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentLoopStart);
-  bigHexVarField_.emplace_back(position, *v, 7, "loop start: %7.7X", 0,
+  bigHexVarField_.emplace_back(position, *v, 7, "Loop start: %7.7X", 0,
                                instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentEnd);
-  bigHexVarField_.emplace_back(position, *v, 7, "loop end: %7.7X", 0,
+  bigHexVarField_.emplace_back(position, *v, 7, "Loop end: %7.7X", 0,
                                instrument->GetSampleSize() - 1, 16);
   fieldList_.insert(fieldList_.end(), &(*bigHexVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::SampleInstrumentTable);
-  intVarOffField_.emplace_back(position, *v, "table: %2.2X", 0x00,
+  intVarOffField_.emplace_back(position, *v, "Table: %2.2X", 0x00,
                                TABLE_COUNT - 1, 1, 0x10);
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 
   v = instrument->FindVariable(FourCC::SampleInstrumentTableAutomation);
   position._x += 12;
-  intVarField_.emplace_back(position, *v, "auto: %s", 0, 1, 1, 1);
+  intVarField_.emplace_back(position, *v, "Auto: %s", 0, 1, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 };
 
@@ -594,37 +594,37 @@ void InstrumentView::fillMidiParameters() {
 
   Variable *v = instrument->FindVariable(FourCC::MidiInstrumentChannel);
   intVarField_.emplace_back(
-      UIIntVarField(position, *v, "channel: %2.2d", 0, 0x0F, 1, 0x04, 1));
+      UIIntVarField(position, *v, "Channel: %2.2d", 0, 0x0F, 1, 0x04, 1));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentVolume);
   intVarField_.emplace_back(
-      UIIntVarField(position, *v, "volume: %2.2X", 0, 0xFF, 1, 0x10));
+      UIIntVarField(position, *v, "Volume: %2.2X", 0, 0xFF, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentNoteLength);
   intVarField_.emplace_back(
-      UIIntVarField(position, *v, "length: %2.2X", 0, 0xFF, 1, 0x10));
+      UIIntVarField(position, *v, "Length: %2.2X", 0, 0xFF, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentProgram);
   intVarOffField_.emplace_back(
-      UIIntVarOffField(position, *v, "program: %2.2X", 0, 0x7F, 1, 0x10));
+      UIIntVarOffField(position, *v, "Program: %2.2X", 0, 0x7F, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentTableAutomation);
   intVarField_.emplace_back(
-      UIIntVarField(position, *v, "automation: %s", 0, 1, 1, 1));
+      UIIntVarField(position, *v, "Automation: %s", 0, 1, 1, 1));
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 
   position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentTable);
   intVarOffField_.emplace_back(
-      UIIntVarOffField(position, *v, "table: %2.2X", 0, 0x7F, 1, 0x10));
+      UIIntVarOffField(position, *v, "Table: %2.2X", 0, 0x7F, 1, 0x10));
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 };
 

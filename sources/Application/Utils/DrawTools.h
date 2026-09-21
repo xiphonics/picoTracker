@@ -14,3 +14,5 @@ void DrawDoubleBorder(View &view, int x, int y, int width, int height,
                       const GUITextProperties &props);
 void DrawSingleBorder(View &view, int x, int y, int width, int height,
                       const GUITextProperties &props);
+void DrawSolidBorder(View &view, int x, int y, int width, int height,
+                     const GUITextProperties &props);

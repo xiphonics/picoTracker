@@ -93,8 +93,8 @@
 
 #define char_filledBorder_bottom_s "\xDF"
 #define char_filledBorder_top_s "\xDC"
-#define char_filledBorder_right_s "\xDE"
-#define char_filledBorder_left_s "\xDD"
+#define char_filledBorder_left_s "\xDE"
+#define char_filledBorder_right_s "\xDD"
 #define char_filledBorder_topLeftCorner_s "\xE0"
 #define char_filledBorder_topRightCorner_s "\xE3"
 #define char_filledBorder_bottomLeftCorner_s "\xE1"
@@ -161,6 +161,15 @@
   char_border_single_topLeft_s char_border_single_topRight_s                   \
       char_border_single_bottomLeft_s char_border_single_bottomRight_s         \
           char_border_single_horizontal_s char_border_single_vertical_s
+
+#define char_border_solid_charset                                              \
+  char_filledBorder_topLeftCorner_s char_filledBorder_topRightCorner_s         \
+      char_filledBorder_bottomLeftCorner_s                                     \
+          char_filledBorder_bottomRightCorner_s char_filledBorder_top_s        \
+              char_filledBorder_bottom_s char_filledBorder_left_s              \
+                  char_filledBorder_right_s
+
+#define char_border_filled_charset char_border_solid_charset
 
 #define char_logo_x_s "\xD0"
 #define char_logo_xiponics_0_s "\xD1"

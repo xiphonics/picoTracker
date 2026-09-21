@@ -69,5 +69,5 @@ void ModalView::SetWindow(int width, int height) {
 
   SetColor(CD_ACCENT);
   GUITextProperties props;
-  DrawDoubleBorder(*this, -2, -2, width + 4, height + 4, props);
+  DrawSolidBorder(*this, -2, -2, width + 4, height + 4, props);
 }
