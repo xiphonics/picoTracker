@@ -22,7 +22,10 @@ ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitone
 
 ## DLY --bb (DLAY in lgpt)
 
-**Delays the note by `b + 1` ticks (only the low nibble is used).**
+**Delays the entire row by `b + 1` ticks (only the low nibble is used).**
+
+- the whole row is delayed, the note and every command that sits on that row - commands are always processed with the note they belong to
+- a delay equal or superior to the length of the current groove step skips the row, as the sequencer has moved on before the row is triggered
 
 ## FCT aabb (FCUT in lgpt)
 

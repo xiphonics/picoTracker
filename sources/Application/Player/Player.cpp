@@ -200,7 +200,10 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
     break;
   }
 
-  ProcessCommands();
+  // Apply the commands of the first row now that the song position is known.
+  // The countdown that defers a row containing DLY has not ticked yet, hence
+  // ignorePendingDelay - it is taken into account from the first Update().
+  ProcessCommands(nullptr, true);
 
   startTime_ = mixer_.GetAudioOut()->GetStreamTime();
 
@@ -548,17 +551,23 @@ void Player::Update(Observable &o, I_ObservableData *d) {
       };
     }
 
+    // Flag the channels whose DLY countdown expires now, their commands must
+    // be processed with the note they belong to even if the groove does not
+    // trigger on this tick
+    bool delayExpired[SONG_CHANNEL_COUNT];
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+      delayExpired[i] = false;
       if (timeToStart_[i] > 0) {
         if (--timeToStart_[i] == 0) {
           playCursorPosition(i);
+          delayExpired[i] = true;
         }
       }
     }
 
     // Process commands in current phrase
     if (viewData_->playMode_ != PM_AUDITION)
-      ProcessCommands();
+      ProcessCommands(delayExpired);
 
     // Initialise retrigger table
     int32_t instrRetrigger[SONG_CHANNEL_COUNT];
@@ -611,10 +620,13 @@ void Player::Update(Observable &o, I_ObservableData *d) {
 /************************************************************
  ProcessCommands:
         Check if there's any command to trigger at current playing
-        position for all channels
+        position for all channels. A row that is waiting for its DLY to
+        run out is skipped, its commands are processed by the tick that
+        triggers the note it belongs to.
  ************************************************************/
 
-void Player::ProcessCommands() {
+void Player::ProcessCommands(const bool *delayExpired,
+                             bool ignorePendingDelay) {
 
   // loop on all channels
 
@@ -628,7 +640,17 @@ void Player::ProcessCommands() {
 
       uchar phrase = viewData_->currentPlayPhrase_[i];
       if (phrase != 0xFF) {
-        if (gs->TriggerChannel(i)) { // If groove says it is time to play
+
+        // The commands of a row with DLY are set in motion with its own note,
+        // not with the one that is still sounding: timeToStart_ is only non
+        // zero while such a row is waiting, see updatePhrasePos().
+        if (!ignorePendingDelay && timeToStart_[i]) {
+          continue;
+        }
+
+        // If groove says it is time to play, or the delay of this channel has
+        // just expired
+        if (gs->TriggerChannel(i) || (delayExpired && delayExpired[i])) {
           int pos = viewData_->phrasePlayPos_[i];
           FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
           ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];

@@ -84,7 +84,15 @@ public:
   bool IsRunning();
   bool GetStopAtEnd() { return stopAtEnd_; }
 
-  void ProcessCommands();
+  // Process the commands of the row under the play cursor of every channel.
+  // delayExpired is an optional SONG_CHANNEL_COUNT long array flagging the
+  // channels whose DLY countdown expired this tick. Their commands belong to
+  // the note that has just been triggered, so they run even if the groove
+  // says it is not time yet.
+  // ignorePendingDelay is used by Player::Start(), where the countdown of the
+  // first row has not ticked yet but its commands still have to be applied.
+  void ProcessCommands(const bool *delayExpired = nullptr,
+                       bool ignorePendingDelay = false);
   bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
 
   void StartStreaming(const char *name, int startSample = 0);
