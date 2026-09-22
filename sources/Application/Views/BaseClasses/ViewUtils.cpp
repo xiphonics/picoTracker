@@ -40,7 +40,11 @@ bool goProjectSamplesDir(ViewData *viewData_) {
 
     if (fs->chdir(projectName)) {
       // Finally, navigate into the samples subdirectory
-      return fs->chdir(PROJECT_SAMPLES_DIR);
+      const bool inSamples = fs->chdir(PROJECT_SAMPLES_DIR);
+      // POOLDIAG: which pool folder was asked for and whether we got in
+      Trace::Log("POOL", "pool folder '%s' chdir(%s)=%d", projectName,
+                 PROJECT_SAMPLES_DIR, (int)inSamples);
+      return inSamples;
     } else {
       Trace::Error("SampleEditorView: Failed to chdir to project dir: %s",
                    projectName);
