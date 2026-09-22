@@ -24,6 +24,7 @@
 #include "SampleEditProgressDisplay.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/Console/nanoprintf.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/Profiler/Profiler.h"
 #include "UIController.h"
@@ -1228,10 +1229,97 @@ bool SampleEditorView::fileExists(
   return fs->exists(filename.c_str());
 }
 
+// Explain with a modal why a save could not go ahead. The waveform region has
+// to be cleared first because the dialog is drawn over it and the text layer
+// does not know how to restore it.
+void SampleEditorView::showSaveBlockedDialog(const char *title,
+                                             const char *message) {
+  MessageBox *mb = MessageBox::Create(*this, title, message, MBBF_OK);
+  clearWaveformRegion();
+  DoModal(mb,
+          ModalViewCallback::create<SampleEditorView,
+                                    &SampleEditorView::onSimpleModalDismiss>(
+              *this));
+}
+
+// Check the preconditions of a project pool Save As: the new name must not be
+// taken, and the new sample must still fit in the pool, because a Save As
+// registers a second copy of the audio in flash next to the one being edited.
+// Overwriting the edited sample is deliberately not checked: an overwrite
+// cannot update flash at all (see reloadEditedSample()), so it allocates
+// nothing and its space is only accounted for when the project reloads the
+// pool from the SD card.
+bool SampleEditorView::preflightPoolSaveAs(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  if (!viewData_ || !viewData_->isShowingSampleEditorProjectPool) {
+    return true;
+  }
+  if (savedFilename == viewData_->sampleEditorFilename) {
+    return true;
+  }
+
+  // Everything below stats or opens files relative to the project's samples
+  // subdir, which is not guaranteed to be the current directory.
+  if (!goProjectSamplesDir(viewData_)) {
+    Trace::Error("SampleEditorView: Save As preflight failed, couldn't chdir "
+                 "to project samples dir");
+    showSaveFailedDialog();
+    return false;
+  }
+
+  // A Save As creates a new pool entry, so reusing another sample's name is
+  // not allowed.
+  if (fileExists(savedFilename)) {
+    showSaveBlockedDialog("Cannot Save Sample        ",
+                          "Sample name already used");
+    return false;
+  }
+
+  auto *pool = SamplePool::GetInstance();
+
+  if (pool->GetNameListSize() >= MAX_SAMPLES) {
+    // SCREEN_WIDTH is room for the longest message below, "Maximum of 64
+    // samples reached".
+    char message[SCREEN_WIDTH];
+    npf_snprintf(message, sizeof(message), "Maximum of %d samples reached",
+                 MAX_SAMPLES);
+    showSaveBlockedDialog("Cannot Save Sample        ", message);
+    return false;
+  }
+
+  // Measure what is about to be committed: the working copy if an operation
+  // was applied, the edited sample otherwise. GetDiskSize() is the same
+  // footprint LoadInFlash() reserves, page rounded.
+  WavFile wav;
+  auto wavRes = wav.Open(activeFilename().c_str());
+  if (!wavRes) {
+    Trace::Error("SampleEditorView: Failed opening %s for save preflight",
+                 activeFilename().c_str());
+    showSaveFailedDialog();
+    return false;
+  }
+  uint32_t sampleSize = wav.GetDiskSize(-1);
+  wav.Close();
+
+  if (!pool->CheckSampleFits(sampleSize)) {
+    char message[SCREEN_WIDTH];
+    npf_snprintf(message, sizeof(message), "Only %u bytes free",
+                 pool->GetAvailableSampleStorageSpace());
+    showSaveBlockedDialog("Sample Too Large       ", message);
+    return false;
+  }
+
+  return true;
+}
+
 void SampleEditorView::attemptSave(bool loadToPool) {
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> filename;
   if (!resolveSaveFilename(filename)) {
     showSaveFailedDialog();
+    return;
+  }
+
+  if (!preflightPoolSaveAs(filename)) {
     return;
   }
 
@@ -1270,6 +1358,15 @@ void SampleEditorView::confirmSave(bool loadToPool) {
     return;
   }
 
+  if (poolSyncFailed_) {
+    // The WAV is on the card but the pool never got the new entry, so the
+    // sample only becomes usable when the project is reloaded. Stay in the
+    // editor rather than navigating away underneath the dialog.
+    poolSyncFailed_ = false;
+    showLoadToPoolFailedDialog();
+    return;
+  }
+
   const auto &originalFilename = viewData_->sampleEditorFilename;
   if (originalFilename.compare(RECORDING_FILENAME) == 0) {
     auto fs = FileSystem::GetInstance();
@@ -1298,6 +1395,30 @@ void SampleEditorView::showLoadToPoolFailedDialog() {
           ModalViewCallback::create<SampleEditorView,
                                     &SampleEditorView::onSimpleModalDismiss>(
               *this));
+}
+
+// Register the file a Save As just wrote into the project's samples subdir as
+// a new pool entry, which is what makes the new sample assignable without
+// reloading the project. Flash cannot be updated in place, so the edit gets its
+// own entry and the sample being edited keeps its old one until the project is
+// reloaded. Returns false if the pool refused the entry, leaving the file on
+// the card for the caller to report.
+bool SampleEditorView::syncSavedAsProjectPoolSample(
+    const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename) {
+  auto *pool = SamplePool::GetInstance();
+
+  if (!goProjectSamplesDir(viewData_)) {
+    Trace::Error("SampleEditorView: Failed to chdir for pool sync");
+    return false;
+  }
+
+  if (pool->LoadProjectSample(savedFilename.c_str()) < 0) {
+    Trace::Error("SampleEditorView: Failed to add pool sample %s",
+                 savedFilename.c_str());
+    return false;
+  }
+
+  return true;
 }
 
 bool SampleEditorView::saveSample(
@@ -1345,6 +1466,14 @@ bool SampleEditorView::saveSample(
     Trace::Error("SampleEditorView: Save committed but failed pool refresh");
   }
 
+  if (viewData_->isShowingSampleEditorProjectPool && !commitToOriginal &&
+      !syncSavedAsProjectPoolSample(savedFilename)) {
+    // Keep the file: the edit only exists in it now, the temp copy is gone.
+    // confirmSave() reports it and asks for a project reload.
+    poolSyncFailed_ = true;
+    Trace::Error("SampleEditorView: Save committed but failed pool sync");
+  }
+
   Trace::Log("SampleEditor", "Saved %s->%s", originalFilename.c_str(),
              savedFilename.c_str());
 
@@ -1377,6 +1506,8 @@ bool SampleEditorView::loadSampleToPool(
       return false;
     }
   } else {
+    // Pool mode: saveSample() already registered a Save As result, so there is
+    // nothing to import here. Re-importing would flash a second copy.
     sampleId = pool->FindSampleIndexByName(savedFilename);
     if (sampleId < 0) {
       Trace::Error("SampleEditorView: Sample %s not found in pool",
