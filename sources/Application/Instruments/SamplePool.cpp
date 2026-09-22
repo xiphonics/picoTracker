@@ -569,6 +569,36 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   return status ? (count_ - 1) : -1;
 };
 
+// Register a WAV that already sits in the current project's samples subdir as
+// a new pool entry. Unlike ImportSample() there is nothing to convert or
+// resample, the sample editor wrote the file itself. The entry is appended and
+// unsorted, exactly as ImportSample() leaves it, and flash can only be
+// appended to, so callers must make sure the name is not already pooled.
+// Returns the new pool index or -1.
+int SamplePool::LoadProjectSample(const char *name) {
+  if (count_ >= MAX_SAMPLES) {
+    return -1;
+  }
+
+  // loadSample() reports progress through these. There is a single file and it
+  // is already on the card, so show it as done instead of reusing whatever the
+  // last project load or import left behind.
+  importName = name;
+  importIndex = 1;
+  importCount = 1;
+
+  if (!loadSample(name)) {
+    return -1;
+  }
+
+  SetChanged();
+  SamplePoolEvent ev;
+  ev.index_ = count_ - 1;
+  ev.type_ = SPET_INSERT;
+  NotifyObservers(&ev);
+  return count_ - 1;
+}
+
 void SamplePool::PurgeSample(int i, const char *projectName) {
   auto fs = FileSystem::GetInstance();
 

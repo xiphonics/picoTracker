@@ -294,14 +294,11 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
 };
 
 void ImportView::DrawView() {
-  if (fileIndexList_.empty()) {
-    return;
-  }
   // ensure selected item is in visible range
   const size_t pageSize = LIST_PAGE_SIZE;
-  if (currentIndex_ < topIndex_) {
+  if (!fileIndexList_.empty() && currentIndex_ < topIndex_) {
     topIndex_ = currentIndex_;
-  } else if (currentIndex_ >= topIndex_ + pageSize) {
+  } else if (!fileIndexList_.empty() && currentIndex_ >= topIndex_ + pageSize) {
     topIndex_ = currentIndex_ - pageSize + 1;
   }
 
@@ -330,62 +327,69 @@ void ImportView::DrawView() {
   uint32_t availableSpace =
       SamplePool::GetInstance()->GetAvailableSampleStorageSpace();
 
-  // Loop through visible files in the list
-  for (size_t i = topIndex_;
-       i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+  if (fileIndexList_.empty()) {
+    SetColor(CD_NORMAL);
     props.invert_ = false;
+    DrawString(2, 3, inProjectSampleDir_ ? "[pool empty]" : "[no wav files]",
+               props);
+  } else {
+    // Loop through visible files in the list
+    for (size_t i = topIndex_;
+         i < topIndex_ + LIST_PAGE_SIZE && (i < fileIndexList_.size()); i++) {
+      props.invert_ = false;
 
-    unsigned fileIndex = fileIndexList_[i];
-    etl::string<PFILENAME_SIZE> displayName;
+      unsigned fileIndex = fileIndexList_[i];
+      etl::string<PFILENAME_SIZE> displayName;
 
-    if (fs->getFileType(fileIndex) != PFT_DIR) {
-      SetColor(CD_NORMAL);
-      // Handle regular files
-      char tempBuffer[PFILENAME_SIZE];
-      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
-
-      // Check if it's a single cycle waveform
-      int filesize = fs->getFileSize(fileIndex);
-      bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
-
-      displayName += tempBuffer;
-      // Format the display name with appropriate prefix
-      if (inProjectSampleDir_ &&
-          viewData_->project_->SampleInUse(
-              etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(tempBuffer))) {
-        SetColor(CD_ACCENT);
-        DrawString(x, y, "*", props);
+      if (fs->getFileType(fileIndex) != PFT_DIR) {
         SetColor(CD_NORMAL);
-      } else if (isSingleCycle) {
-        SetColor(CD_ACCENT);
-        DrawString(x, y, "~", props);
-        SetColor(CD_NORMAL);
+        // Handle regular files
+        char tempBuffer[PFILENAME_SIZE];
+        fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+
+        // Check if it's a single cycle waveform
+        int filesize = fs->getFileSize(fileIndex);
+        bool isSingleCycle = IS_SINGLE_CYCLE(filesize);
+
+        displayName += tempBuffer;
+        // Format the display name with appropriate prefix
+        if (inProjectSampleDir_ &&
+            viewData_->project_->SampleInUse(
+                etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>(tempBuffer))) {
+          SetColor(CD_ACCENT);
+          DrawString(x, y, "*", props);
+          SetColor(CD_NORMAL);
+        } else if (isSingleCycle) {
+          SetColor(CD_ACCENT);
+          DrawString(x, y, "~", props);
+          SetColor(CD_NORMAL);
+        } else {
+          DrawString(x, y, " ", props);
+        }
       } else {
-        DrawString(x, y, " ", props);
+        SetColor(CD_ACCENT);
+        // Handle directories
+        char tempBuffer[PFILENAME_SIZE];
+        displayName = "/";
+        // clear temp buffer
+        memset(tempBuffer, 0, PFILENAME_SIZE);
+        fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
+        displayName += tempBuffer;
       }
-    } else {
-      SetColor(CD_ACCENT);
-      // Handle directories
-      char tempBuffer[PFILENAME_SIZE];
-      displayName = "/";
-      // clear temp buffer
-      memset(tempBuffer, 0, PFILENAME_SIZE);
-      fs->getFileName(fileIndex, tempBuffer, PFILENAME_SIZE);
-      displayName += tempBuffer;
-    }
 
-    // Truncate to fit display width
-    if (displayName.size() > LIST_WIDTH) {
-      displayName.resize(LIST_WIDTH);
-    }
+      // Truncate to fit display width
+      if (displayName.size() > LIST_WIDTH) {
+        displayName.resize(LIST_WIDTH);
+      }
 
-    if (i == currentIndex_) {
-      SetColor(CD_HILITE2);
-      props.invert_ = true;
-    }
-    DrawString(x + 1, y, displayName.c_str(), props);
-    y += 1;
-  };
+      if (i == currentIndex_) {
+        SetColor(CD_HILITE2);
+        props.invert_ = true;
+      }
+      DrawString(x + 1, y, displayName.c_str(), props);
+      y += 1;
+    };
+  }
 
   SetColor(CD_HILITE1);
   y = SCREEN_HEIGHT - 2;
@@ -432,12 +436,7 @@ void ImportView::DrawView() {
     npf_snprintf(volField, sizeof(volField), "Vol:%2d", previewVolume);
     DrawString(x + 23, y, volField, props);
   } else {
-    if (fileIndexList_.empty()) {
-      // draw this a few lines down from *top* of screen
-      SetColor(CD_NORMAL);
-      props.invert_ = false;
-      DrawString(2, 3, "[pool empty]", props);
-    } else {
+    if (!fileIndexList_.empty()) {
       // we make edit the first button to make things easier
       if (selectedButton_ == 0) {
         SetColor(CD_HILITE2);

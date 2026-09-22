@@ -73,13 +73,23 @@ private:
   bool
   resolveSaveFilename(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename);
   bool fileExists(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &filename);
+  // Guard a project pool Save As against exceeding the pool's sample count
+  // and free storage. Overwrites of the sample being edited are not checked;
+  // an overwrite cannot update flash in place so it allocates nothing.
+  bool preflightPoolSaveAs(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   void attemptSave(bool loadToPool);
   void confirmSave(bool loadToPool);
   void showSaveFailedDialog();
   void showLoadToPoolFailedDialog();
+  void showSaveBlockedDialog(const char *title, const char *message);
   void loadSample(const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> path,
                   bool isProjectSampleFile);
   bool reloadEditedSample();
+  // Save As must only register or refresh the saved filename in the pool.
+  // It must not move instruments away from the source filename.
+  bool syncSavedAsProjectPoolSample(
+      const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool saveSample(etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
   bool loadSampleToPool(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &savedFilename);
@@ -151,5 +161,8 @@ private:
   etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> workingFilename_;
   bool hasWorkingCopy_ = false;
   bool pendingOverwriteLoadToPool_ = false;
+  // Set when a Save As wrote its file but the pool rejected the new entry, so
+  // the caller can report it and ask for a project reload.
+  bool poolSyncFailed_ = false;
 };
 #endif
