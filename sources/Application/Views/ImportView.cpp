@@ -530,8 +530,22 @@ void ImportView::OnFocus() {
   inProjectSampleDir_ = viewData_->isShowingSampleEditorProjectPool;
 
   if (inProjectSampleDir_) {
-    goProjectSamplesDir(viewData_);
-    jumpToDirectory(fs, ".");
+    // The pool folder is not somewhere we navigate to: goProjectSamplesDir()
+    // moves the current directory straight into it, so all that is left is to
+    // reset the cursor and read it. Going through jumpToDirectory(".") instead
+    // used to leave the pool unlisted, because SdFat refuses chdir(".") and
+    // jumpToDirectory() stops when the change fails.
+    if (goProjectSamplesDir(viewData_)) {
+      dirIndexStack_.clear();
+      topIndex_ = 0;
+      currentIndex_ = 0;
+      refreshFileIndexList(fs);
+    } else {
+      // Report an empty pool rather than the last folder that was browsed: the
+      // list is only cleared on project load, so stale entries survive here.
+      Trace::Error("ImportView: cannot open the current project's pool folder");
+      fileIndexList_.clear();
+    }
   } else {
     jumpToDirectory(fs, viewData_->importViewStartDir);
   }
@@ -775,6 +789,13 @@ void ImportView::adjustPreviewVolume(int offset) {
 }
 
 bool ImportView::changeDirectory(FileSystem *fs, const char *name) {
+  // "." means stay where we are, so there is nothing to change. SdFat reports
+  // failure for it, which would make every caller skip the folder they are
+  // already in.
+  if (strcmp(name, ".") == 0) {
+    return true;
+  }
+
   if (strcmp(name, "..") == 0 && fs->isParentRoot()) {
     Trace::Log("PICOIMPORT",
                "Detected top-level directory, navigating to root");
@@ -945,6 +966,11 @@ void ImportView::refreshFileIndexList(FileSystem *fs) {
       }
     }
   }
+
+  // POOLDIAG: what the pool browser ends up drawing. The folder it came from is
+  // in the FILESYSTEM "LIST DIR" line just above.
+  Trace::Log("POOL", "listing -> %d entries (pool=%d)",
+             (int)fileIndexList_.size(), (int)inProjectSampleDir_);
 
   if (fileIndexList_.empty()) {
     topIndex_ = 0;
