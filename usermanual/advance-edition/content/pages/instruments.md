@@ -393,15 +393,9 @@ Exported instruments are stored in `/instruments/` on your SD card.
 - Back up your `/instruments` directory when backing up your picoTracker data on your sdcard
 
 
-## Limitations of instrument performance
+## Instrument performance
 
-The picoTrackers CPU limits the number of simultaneous instruments that can be played at once. The specific limit depends on the instrument type and the settings of each instrument. In general the limit is:
-* 4-5 Sample instruments or
-* 8 MIDI instruments
-
-Because they are very light weight when it comes to CPU usage, 8 MIDI instruments can be sequenced at once, the limit then coming from the limit of 8 channels (aka tracks) available for sequencing on the picoTracker.
-
-Even given the above limits, it is still possible to mix and match instruments of different types *roughly* within the above limits. For example 2 Sample instruments and 4 MIDI should in theory be possible. Note this only applies to simultaneously sounding (playing) instruments and if care is taken to limit the number of simultaneously sounding instruments, a larger number of instruments can be defined within a project.
+The Advance and its firmware have been designed so that its possible to play any combination of simultaneous instruments with commands and output effects. Thus you can be confident that you can use all 8 sequencer channels to sequence any combination of instruments possible within the Advance's user interface for your tracks without any CPU load limitations.
 
 ## Exporting and Importing Instruments
 
