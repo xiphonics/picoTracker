@@ -301,7 +301,7 @@ body>div#cover {
 }
 
 .minikeys {
-    border: 1px #ccc solid;
+    border: 2px #777 solid;
     border-radius: 4px;
     box-sizing: border-box;
     display: inline-block;
@@ -316,6 +316,61 @@ body>div#cover {
     padding: 0;
     filter: none;
     vertical-align: middle;
+}
+
+/* Callout blocks (Note / Warning / custom types).
+   Mirrors the PDF block_class_styles in pdfconfig.yaml so the HTML and
+   PDF renderings look consistent. */
+.callout {
+    border: 1px solid;
+    border-radius: 6px;
+    padding: 8px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.callout .callout-table {
+    width: 100%;
+    border: none;
+    border-collapse: collapse;
+    padding: 0;
+    margin: 0;
+}
+
+.callout .callout-icon {
+    width: 56px;
+    border: none;
+    padding: 0;
+    vertical-align: top;
+    text-align: center;
+}
+
+.callout .callout-icon img {
+    width: 48px;
+    height: 48px;
+}
+
+.callout .callout-text {
+    border: none;
+    padding: 0 0 0 4px;
+    vertical-align: top;
+    font-size: 1.15em;
+}
+
+/* Colour variants */
+.callout-note {
+    background-color: #e9f2fb;
+    border-color: #c7def5;
+}
+
+.callout-tip {
+    background-color: #eef8ed;
+    border-color: #cfe8cc;
+}
+
+.callout-warn {
+    background-color: #fff3e6;
+    border-color: #f1d2b3;
 }
 
 .mobile-menu-toggle,

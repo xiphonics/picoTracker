@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir usermanual/bin; curl -L "https://github.com/maks/picosite/releases/download/0.3.0/picosite-linux" -o "usermanual/bin/picosite"; chmod +x usermanual/bin/picosite
+      - run: mkdir -p usermanual/bin && curl -L "https://github.com/maks/picosite/releases/download/1.6.0/picosite-linux.zip" -o "usermanual/bin/picosite.zip" && unzip -o usermanual/bin/picosite.zip -d usermanual/bin && mv usermanual/bin/picosite-linux usermanual/bin/picosite && chmod +x usermanual/bin/picosite
       - run: cd usermanual; ./build.sh
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

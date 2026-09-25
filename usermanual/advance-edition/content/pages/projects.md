@@ -5,48 +5,46 @@ template: page
 
 ![screen capture of project screen](image/project-screen-small.png)
 
-On the project screen you can change various settings for the current project, save it, rename it (including giving it a random name), create a new blank project, or browse for another project to load. You can also render your song to audio files.
+On the project screen you change various settings of the current project, `Save` the current project,`Rename` it (including giving it a `Random` new name) create a `New` blank project or go to the project browser screen to load a project from the `/projects` directory on your sdcard.
 
-Your current project settings are saved automatically every minute except when the sequencer is running (i.e., when the current project is playing). This means that should you restart the picoTracker, accidentally power off, or if a crash occurs, your project state from within the last minute will be restored.
+Your current project settings are backed-up automatically every minute _except_ when the sequencer is running, ie. when the current project is playing. This means that should you restart the picoTracker or a crash occurs, your current project state within the last minute will be restored when you restart the picoTracker.
 
-You can ***explicitly*** save the current project by selecting **Save**. This is recommended before performing major changes or after a successful session.
+You can ***explicitly*** save the current project by pressing [SAVE] on the project screen. By doing this you can then later on revert to the state that you just saved by reloading the current project using the [Load] button on screen button on the project screen.
 
-## Current Project Settings
+## Current Project settings
 
-- **tempo:** Can be set between 60bpm and 400bpm. You can also tap tempo: move the cursor to the `tempo` field and press **EDIT** repeatedly in time.
-- **master vol:** Sets the overall master output volume from 0% to 100%.
-- **transpose:** Live transposition of every triggered instrument in semitones (-48 to +48).
-- **scale:** Set the scale that will be applied to all notes entered in the project. When entering a note in the Phrase screen, you will only be able to enter notes that belong to the selected scale. See [the reference](scales.html) for a list of all available scales.
-- **scale root:** Sets the root note for the selected scale (e.g., C, C#, D, etc.).
+- **Tempo:**: Can be set between 60bpm [0x3c] and 300bpm [0x190]. You can also tap tempo: move the cursor to the `tempo` field and press <span class="minikeys">EDIT</span> repeatedly in time.
+- **Transpose:** Live transposition of every triggered instruments.
+- **Scale:** Set the scale that will applied to all notes entered in the project. When entering a note in the Phrase screen, you will only be able to enter notes that belong to the selected scale. See [the reference](scales.html) for a list of all available scales.
+- **MIDI CHANNEL MAP:** Assigns an incoming MIDI channel to each of the eight song channels. The values run from `01` through `10` in hexadecimal; `00` leaves that song channel under normal sequencer control. The eight values correspond to song channels from left to right. Assign the same MIDI channel more than once to allow it to play multiple notes at the same time.
+- **MIDI DEFAULT PROGRAM:** Selects the initial program (instrument) for each of the 16 MIDI channels when the project loads. Values use picoTracker's instrument numbers from `00` through `3F`, so `00` selects instrument `00` and `3F` selects instrument `3F`. Changing a value selects that instrument immediately for subsequent notes on its MIDI channel and keeps it as the new default. MIDI channels are ordered from `01` through `10` in hexadecimal, moving left to right across the first row and then the second. A later MIDI Program Change replaces the current selection for that MIDI channel until the project is loaded again or its default is edited.
 
+Hold <span class="minikeys">ENTER</span> and use <span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span> to change a MIDI value by one, or <span class="minikeys">DOWN</span>/<span class="minikeys">UP</span> to change it by `10` hexadecimal.
+
+{% callout type=note %}
 For best tap tempo results, tap at least 2-3 times at a steady pace. If taps are too far apart, tap detection restarts from the latest tap.
+{% endcallout %}
 
-## Project Optimization
+## Rendering Selection Display
 
-- **Sample Pool:** Opens the sample import browser specifically for the project's local sample directory. This allows you to manage and import samples directly into your project's folder.
-- **Remove Unused Samples:** Scans the project's sample folder and removes any audio files that are not currently used by any instrument in the project.
-- **Remove Unused Instruments:** Resets all instruments that are not used in any phrase to their default state and removes their associated samples from the project.
+The **Render:** section at the bottom of the Project screen shows information about your current selection from the Song screen. When you make a grid selection in the Song screen (using `EDIT`+`LEFT/RIGHT/UP/DOWN`), the Project screen will display the selected row range and channel range next to "Render:" — for example, `Row[03-0A] Ch[1-4]`. This is the range of rows that will be used for either the mixdown or stems rendering to file as well as the range of channels that will be included in the rendering.
+
+If no selection is active in the Song screen, the Project screen will display `[No Selection]` instead. You must have an active selection before using the **Mixdown** or **Stems** render buttons; otherwise, pressing them will show an error message.
+
+## Current Project optimisation
+
+- **Compact Instruments:** All unused instruments will have their sample set to (null) and the sample file will be removed from the projects sample subdirectory.
 
 ## Project Management
 
-- **project:** Displays the current name of the project. To edit the name:
-  - Hold **ENTER** and use **UP** / **DOWN** to change the character at the cursor.
-  - Hold **ENTER** and use **LEFT** / **RIGHT** to move the cursor.
-  - Press **RIGHT** at the end of the name to add a new character.
-  - Press **EDIT** to delete the character at the cursor.
-  The project name is limited to 16 characters.
-- **Browse:** Go to the project file browser to load a different project.
-- **Save:** Save the current project state to disk. **NOTE:** *Saving cannot be done during playback.*
-- **New:** Replaces the current project with a new, blank project. A confirmation dialog will appear.
-- **Random:** Generates a new, random name for the current project.
+- **project:** Displays the current name of the project and allows you to edit it
+- **Load** Go to the project file browser to load a different project or reload the last explicitly saved version of the current project
+- **Save** Save the current project **NOTE:** *saving currently cannot be done during playback.*
+- **New** *REPLACE* the current project with a new, *Blank* project.  
+- **Random** *RENAME* the current project with a new, *Randomly generated* name.
+- **Import Sample** Access the sample import file browser with a single press of the <span class="minikeys">ENTER</span> key. When you're done in the Import Screen, you can press <span class="minikeys">NAV</span>+<span class="minikeys">LEFT</span> to return to the Project Screen.
 
-## Rendering
+The project name is **limited to 16 characters**. 
 
-You can render your song to audio files (.wav) directly on the picoTracker. Rendering starts from the last played row in the Song screen and continues until the song ends.
-
-**Note:** Rendering is only possible if the first row of your song (Row 00) contains at least one phrase.
-
-- **Mixdown:** Renders the entire song to a single stereo master file in the `/renders` folder on your SD card.
-- **Stems:** Renders each of the 8 channels to separate audio files (stems) simultaneously in the `/renders` folder.
-
-During rendering, a progress bar is shown. You can cancel the process at any time by pressing **OK**. For more details, see the [Renders and Stems](renders.html) page.
+You edit to project name by moving onto the name field and then holding the <span class="minikeys">ENTER</span> key while using the <span class="minikeys">UP</span> and <span class="minikeys">DOWN</span> keys to change the selected character and <span class="minikeys">LEFT</span> and <span class="minikeys">RIGHT</span> keys to move the cursor to the left or right of the current character. When on the last character, you can add chararacter to the end of the project name by using the <span class="minikeys">RIGHT</span> key.
+To delete a character, place the cursor on the character and press <span class="minikeys">ENTER</span>+<span class="minikeys">EDIT</span>. 

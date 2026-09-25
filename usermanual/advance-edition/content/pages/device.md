@@ -3,51 +3,79 @@ title: Device Management
 template: page
 ---
 
-The device screen allows you to manage settings for the picoTracker device hardware itself.
+The device screen allows you to manage settings for the Advance device hardware itself.
 
-**Note:** the picoTracker saves its device settings to the SDCard so if you replace the sdcard in your picoTracker, the device configuration will reset to factory defaults.
+**Note:** the Advance saves its device settings to the sdcard, so if you replace the sdcard in your Advance, the device configuration will reset to factory defaults.
 
 ![screen capture of device screen](image/device-screen-small.png)
 
+<hr>
+
 ## MIDI
 
-- **MIDI device:** Lists the picoTracker MIDI interfaces available. Available options are:
-    * None
+The MIDI section contains settings for MIDI input and output.
+
+- **Output Device:** Selects the MIDI output interface. Available options are:
+    * Off
     * TRS
     * USB
     * TRS+USB
-- **MIDI sync:** Enable/disable MIDI clock sync messages being sent by the picoTracker.
 
-## Line Out Mode (1st Edition RP2040 model only)
+- **Ctrl Surface:** Enable or disable automatic MIDI control surface input handling. Available options are:
+    * Off
+    * Auto
 
-On the first edition picoTracker, the audio output can be set to one of 3 amplification levels to make the audio level output more useful for Line Level output or Headphone output. The 3 possible settings are: 
-* `HP Low`
-* `HP High`
-* `Line Level`
+- **Transport/Sync:** Controls whether the Advance sends MIDI clock sync messages. Available options are:
+    * Off
+    * Send
 
-**NOTE: A reboot of the picoTracker is required to apply the newly changed audio output level!** 
-
-**PLEASE exercise caution when using earphones or headphones!*
+- **Input Device:** Selects the MIDI input interface. Available options are:
+    * Off
+    * TRS
+    * USB
+    * TRS+USB
 
 ## Remote UI
 
-This setting enables or disables sending commands to a computer attached via USB to the picoTracker running a "remote UI" application that can mirror the display from the picoTracker.
+This setting enables or disables sending commands to a computer attached via USB to the Advance running a "remote UI" application that can mirror the display from the Advance.
 
-The [official picoTracker remote UI web application is available ](https://ui.xiphonics.com), it works only with Chromium based browsers.
+The [official picoTracker remote UI web application is available here](https://ui.xiphonics.com).
 
-## Import resampler
+***NOTE:*** The remote ui webapp ONLY works in _Chromium_ based _desktop_ browsers.
 
-This settings allows the selection of the sample rate converter used during sample import. Check the sample instrument section for more details.
+## Instrument Audition
+
+This setting enables or disables automatic instrument audition when you edit sound-changing parameters in the Instrument and Voice screens. It is `On` by default.
+
+See [Auditioning Instruments](instruments.html#auditioning-instruments) for the complete behavior.
+
+## Import Resampler
+
+This setting allows the selection of the sample rate converter used during sample import. Available options are:
+* None
+* Linear
+* Sinc
+* Sinc HQ
+
+Check the sample instrument section for more details.
 
 ## Display Brightness
 
-The display brightness setting allows you to adjust the backlight level of the picoTracker's LCD display. The brightness can be set from `05` (minimum brightness) to `ff` (maximum brightness). The default value is `80` (medium brightness).
+The display brightness setting allows you to adjust the backlight level of the Advance's LCD display. The brightness value is shown in hexadecimal and can be set from `0F` (minimum) to `FF` (maximum). The default value is `FF` (maximum brightness).
 
 Adjusting the brightness can help with battery life (lower brightness uses less power) and visibility in different lighting conditions.
 
+## Output Volume
+
+The output volume setting controls the master audio output level. The value ranges from `0` (muted) to `100` (maximum). The default value is `40`.
+
+## Battery Health
+
+The device screen displays the current battery state of charge (State of Health) as a percentage on the right-hand side of the screen. If the battery reading is not available, `NA` will be shown instead.
+
 ## Theme Settings
 
-The Theme Settings screen allows you to customize the appearance of the picoTracker interface, including fonts and colors. To access the Theme Settings screen, select the "Theme settings" option on the Device screen.
+The Theme Settings screen allows you to customize the appearance of the Advance interface, including fonts and colors. To access the Theme Settings screen, select the "Theme settings" option on the Device screen.
 
 See the [Theme Settings](theme.html) chapter for more details.
 
@@ -55,14 +83,16 @@ See the [Theme Settings](theme.html) chapter for more details.
 
 First copy the new firmware file you want to install to the top level directory of your sdcard using your computer and then insert it back into your Advance.
 
-Then go to the Device Screen and select the `Update firmware` menu item. This will reboot the Advance into its "bootloader" mode.
+Then go to the Device Screen and select the `Update firmware` menu item. You will be prompted to confirm that you want to reboot and lose any unsaved changes. This will reboot the Advance into its "bootloader" mode.
+
+If the sequencer is currently playing, the update will be blocked with a "Not while playing" message — stop playback first.
 
 Once the Advance has booted into the bootloader mode, you will see the bootloader user interface on the screen:
 
-![bootloader image](image/advance-bootloader.jpg)
+![bootloader image](image/bootloader.png)
 
-You can now use the arrow buttons to select the `.bin` firmware file to install from the sdcard and press `ENTER` to install the firmware.
+You can now use the arrow buttons to select the `.bin` firmware file to install from the sdcard and press <span class="minikeys">ENTER</span> to install the firmware.
 
 Once installation of the new firmware is completed, you can use the arrow keys to move the selection to the `Reboot` on screen option to reboot into normal mode and be running the newly installed firmware.
 
-**NOTE:** If for some reason you cannot boot into the normal mode on your Advance, you can also boot the Advance into its "bootloader" mode by holding down the boot button, accessible through a small hole below the sdcard slot as you keep pressing the power button for approximately 8 seconds to reboot into the bootloader mode.
+**NOTE:** If for some reason you cannot boot into the normal mode on your Advance, you can also boot the Advance into its _bootloader_ mode by holding down the boot button, accessible through a small hole below the sdcard slot as you keep pressing the power button for approximately 8 seconds to reboot into the bootloader mode.

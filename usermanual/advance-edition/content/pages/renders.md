@@ -13,8 +13,10 @@ picoTracker allows you to render your compositions to audio files, providing two
 
 The render options can be found in the **Project View**. Navigate to the Project View and look for the "Render:" section, which contains two options:
 
-- **Mixdown** - Creates a single stereo audio file of your entire composition
-- **Stems** - Creates separate audio files for each channel/instrument in your composition
+- **Mixdown** - Creates a single stereo audio file of the selected portion of your song
+- **Stems** - Creates separate audio files for each channel within the selected rows of your song
+
+**Important:** Before rendering, you must select rows in the **Song screen**. Use grid selection (`EDIT`+`LEFT/RIGHT/UP/DOWN`) to highlight the rows and channels you want to render. The currently selected row range and channel range are displayed on the Project screen next to the "Render:" label (e.g., `Row[03-0A] Ch[1-4]`). If no selection is active, the Project screen will display `[No Selection]` and the Mixdown/Stems buttons will show an error when pressed.
 
 ***NOTE:***  Any existing files in the `/renders` directory for the current project will be **overwritten** by the rendering process.
 
@@ -24,23 +26,22 @@ A mixdown creates a single stereo audio file containing your entire composition.
 
 To create a mixdown:
 
-1. Navigate to the Project View
-2. Make sure your song is not currently playing
-3. Select the "Mixdown" option under "Render:"
-4. The rendering process will begin, and a progress dialog will display the current render progress
-5. The song will play through until the end while rendering
-6. You can press "OK" at any time to stop the rendering process
-7. When the song has completed playing through, the rendering will automatically finish
+1. Go to the **Song screen** and make a grid selection (`EDIT`+`RIGHT`) covering the rows you want to render
+2. Navigate to the Project View — the selected row range and channel range will be shown next to "Render:" (e.g., `Row[03-0A] Ch[1-4]`)
+3. Make sure your song is not currently playing
+4. Select the "Mixdown" option under "Render:"
+5. The rendering process will begin, and a progress dialog will display the current render time
+6. The selected portion of the song will play through once while rendering
+7. You can press "Cancel" at any time to stop the rendering process
+8. When the selection has completed playing through, the rendering will automatically finish
 
-***NOTE:*** Rendering is only possible if the first row of your song (Row 00) contains at least one phrase. Rendering starts on the last played row in the Song screen.
-
-***NOTE:*** The progress displayed during the rendering process shows the percentage of the song rendered.
+***NOTE:*** The time displayed during the rendering process is the elapsed time of the audio being rendered, not the actual "clock" time of how long it takes to perform the render.
 
 ***NOTE:*** You may hear noise or audio artifacts while the rendering is in progress or the audio being played at slower speed than expected, but this is normal due to the extra processing required during rendering and it will **not** affect the final rendered audio.
 
 ## Rendering Stems
 
-Stems are separate audio files for each individual channel/instrument in your composition. This is particularly useful when you want to:
+Stems are separate audio files for each individual channel in your composition. This is particularly useful when you want to:
 
 - Further process individual elements of your track in a DAW
 - Create remixes or alternative versions of your composition
@@ -48,17 +49,18 @@ Stems are separate audio files for each individual channel/instrument in your co
 
 To render stems:
 
-1. Navigate to the Project View
-2. Make sure your song is not currently playing
-3. Select the "Stems" option under "Render:"
-4. The rendering process will begin, and a progress dialog will display the current render progress
-5. The song will play through until the end while rendering
-6. You can press "OK" at any time to stop the rendering process
-7. When the song has completed playing through, the rendering will automatically finish
+1. Go to the **Song screen** and make a grid selection (`EDIT`+`RIGHT`) covering the rows you want to render
+2. Navigate to the Project View — the selected row range and channel range will be shown next to "Render:" (e.g., `Row[03-0A] Ch[1-4]`)
+3. Make sure your song is not currently playing
+4. Select the "Stems" option under "Render:"
+5. The rendering process will begin, and a progress dialog will display the current render time
+6. The selected portion of the song will play through once while rendering, producing one stereo file per channel
+7. You can press "Cancel" at any time to stop the rendering process
+8. When the selection has completed playing through, the rendering will automatically finish
 
 ## Render Output
 
-The rendered audio files are saved to your device's SD card in the `/renders` top level directory. The exact location and format of the files depends on your picoTracker configuration:
+The rendered audio files are saved to your device's sdcard int he `/renders` top level directory. The exact location and format of the files depends on your picoTracker configuration:
 
 - Mixdown files are named `(projectname)-mixdown.wav`
 - Stem files are named `(projectname)-channel(number).wav`

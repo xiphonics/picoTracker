@@ -13,7 +13,7 @@ Trackers later evolved to also run on devices such as the Gameboy as popularised
 
 ## Overview
 
-picoTracker Advance is the evolution of the original picoTracker — a portable music instrument built around the classical tracker interface. It currently supports eight stereo channels, with per-step assignable sample and MIDI instruments. The new hardware is designed to enable new creative possibilities as the firmware continues to evolve.
+picoTracker Advance is the evolution of the original picoTracker — a portable music instrument built around the classical tracker interface. It currently supports eight stereo channels, with per-step assignable sample, Synth and MIDI instruments. The new hardware is designed to enable new creative possibilities as the firmware continues to evolve.
 
 Your picoTracker Advance comes included with a:
 
@@ -21,17 +21,17 @@ Your picoTracker Advance comes included with a:
 * MIDI TRS adapter (type B)
 * quick reference card
 
-(note: Does NOT include power supply or USB-C cable. Uses any standard USB-C charger)
+(note: Does NOT include power supply or USB-C cable. The Advance uses any standard USB-C charger)
 
 ### Hardware specs
 
 * HiDPI 720x720 4" display
 * Powerful ARM processor
-* 48MB of sample memory
-* MicroSD for project and sample storage
-* In/Out TRS and USB MIDI
+* 48MB of sample memory per project
+* MicroSD for project, settings and sample storage
+* TRS and USB MIDI In/Out
 * Headphone/Line output and speaker
-* Line input and microphone
+* Line input and built-in microphone
 * Battery lasts up to 6 hours
 * Weight: 233g (8.2oz)
 * Dimensions: 143x78x15mm (5.6x3x0.6in)
@@ -39,4 +39,4 @@ Your picoTracker Advance comes included with a:
 
 ## Acknowledgements
 
-As with any big open source undertaking, this project would not have been possible without standing on the shoulders of many great open source projects and libraries. We would especially like to thank [Marc Resibois aka Nostromo](https://github.com/Mdashdotdashn), the creator of LittleGPTracker and making it available under a liberal open source license. 
+As with any big open source undertaking, this project would not have been possible without standing on the shoulders of many great open source projects and libraries. We would especially like to thank [Marc Resibois aka Nostromo](https://github.com/Mdashdotdashn), the creator of LittleGPTracker and for making it available under a liberal open source license. 
