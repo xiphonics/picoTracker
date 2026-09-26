@@ -31,7 +31,7 @@ void I_Instrument::SaveContent(tinyxml2::XMLPrinter *printer) {
   }
 
   // Save all the instrument's parameters
-  for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+  for (auto it = Variables().begin(); it != Variables().end(); it++) {
     printer->OpenElement("PARAM");
     printer->PushAttribute("NAME", (*it)->GetName());
     printer->PushAttribute("VALUE", (*it)->GetString().c_str());
@@ -83,7 +83,7 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
         bool found = false;
 
         // Find the variable with this name and set its value
-        for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+        for (auto it = Variables().begin(); it != Variables().end(); it++) {
           if (!strcasecmp((*it)->GetName(), name)) {
             (*it)->SetString(value);
             // Trace::Log("I_INSTRUMENT", "Set parameter: %s = %s", name,
@@ -114,7 +114,7 @@ void I_Instrument::RestoreContent(PersistencyDocument *doc) {
 }
 
 void I_Instrument::Purge() {
-  for (auto it = Variables()->begin(); it != Variables()->end(); it++) {
+  for (auto it = Variables().begin(); it != Variables().end(); it++) {
     (*it)->Reset();
   }
 };

@@ -36,7 +36,6 @@ public:
   bool ImportTheme(const char *themeName);
 
 private:
-  etl::list<Variable *, 26> variables_;
   // Config variables (kept as members to avoid heap allocation)
   WatchedVariable background_;
   WatchedVariable foreground_;
@@ -62,6 +61,8 @@ private:
   WatchedVariable recordSource_;
   WatchedVariable recordLineGain_;
   WatchedVariable recordMicGain_;
+
+  etl::array<Variable *, 24> variables_;
 
   void SaveContent(tinyxml2::XMLPrinter *printer);
   void useDefaultConfig();

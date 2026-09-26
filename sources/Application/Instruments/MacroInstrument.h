@@ -42,7 +42,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
+  etl::array_view<Variable *> Variables() { return variables_; };
 
   // Engine playback  start callback
   virtual void OnStart();
@@ -52,8 +52,6 @@ public:
 
 protected:
 private:
-  etl::list<Variable *, 7> variables_;
-
   bool running_;
 
   braids::MacroOscillator osc_;
@@ -70,6 +68,8 @@ private:
   Variable attack_;
   Variable decay_;
   Variable signature_;
+
+  etl::array<Variable *, 7> variables_;
 
   uint16_t gain_lp_;
   uint16_t remain_;

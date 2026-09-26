@@ -11,7 +11,7 @@
 #include "Application/Persistency/PersistenceConstants.h"
 #include "Externals/etl/include/etl/string.h"
 
-NoneInstrument::NoneInstrument() : I_Instrument(&variables_) {}
+NoneInstrument::NoneInstrument() : I_Instrument(variables_) {}
 
 NoneInstrument::~NoneInstrument(){};
 

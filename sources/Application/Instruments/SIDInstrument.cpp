@@ -47,7 +47,7 @@ Variable SIDInstrument::fltmode2_(FourCC::SIDInstrument2FilterMode,
 Variable SIDInstrument::vol2_(FourCC::SIDInstrument2Volume, 0xF);
 
 SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
-    : I_Instrument(&variables_), chip_(chip),
+    : I_Instrument(variables_), chip_(chip),
       vpw_(FourCC::SIDInstrumentPulseWidth, 0x800),
       vwf_(FourCC::SIDInstrumentWaveform, sidWaveformText, DWF_LAST, 0x1),
       vsync_(FourCC::SIDInstrumentVSync, false),
@@ -56,28 +56,11 @@ SIDInstrument::SIDInstrument(SIDInstrumentInstance chip)
       vfon_(FourCC::SIDInstrumentFilterOn, false),
       table_(FourCC::SIDInstrumentTable, -1),
       tableAuto_(FourCC::SIDInstrumentTableAutomation, false),
-      osc_(FourCC::SIDInstrumentOSCNumber, 0) {
-
-  // name_ is now an etl::string in the base class, not a Variable
-  variables_.insert(variables_.end(), &vpw_);
-  variables_.insert(variables_.end(), &vwf_);
-  variables_.insert(variables_.end(), &vsync_);
-  variables_.insert(variables_.end(), &vring_);
-  variables_.insert(variables_.end(), &vadsr_);
-  variables_.insert(variables_.end(), &vfon_);
-  variables_.insert(variables_.end(), &table_);
-  variables_.insert(variables_.end(), &tableAuto_);
-  variables_.insert(variables_.end(), &osc_);
-  variables_.insert(variables_.end(), &fltcut1_);
-  variables_.insert(variables_.end(), &fltres1_);
-  variables_.insert(variables_.end(), &fltmode1_);
-  variables_.insert(variables_.end(), &vol1_);
-
-  variables_.insert(variables_.end(), &fltcut2_);
-  variables_.insert(variables_.end(), &fltres2_);
-  variables_.insert(variables_.end(), &fltmode2_);
-  variables_.insert(variables_.end(), &vol2_);
-}
+      osc_(FourCC::SIDInstrumentOSCNumber, 0),
+      variables_{&vpw_,      &vwf_,      &vsync_,     &vring_,   &vadsr_,
+                 &vfon_,     &table_,    &tableAuto_, &osc_,     &fltcut1_,
+                 &fltres1_,  &fltmode1_, &vol1_,      &fltcut2_, &fltres2_,
+                 &fltmode2_, &vol2_} {}
 
 SIDInstrument::~SIDInstrument(){};
 
