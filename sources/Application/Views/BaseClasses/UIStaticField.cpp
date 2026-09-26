@@ -13,7 +13,7 @@
 #include <string.h>
 
 UIStaticField::UIStaticField(const GUIPoint &position, const char *string)
-    : UIField(position) {
+    : UIField(position), color_(CD_NORMAL) {
   string_ = string;
 };
 
@@ -23,7 +23,7 @@ void UIStaticField::Draw(GUIWindow &w, int offset) {
   GUIPoint position = GetPosition();
   position._y += offset;
 
-  ((AppWindow &)w).SetColor(CD_NORMAL);
+  ((AppWindow &)w).SetColor(color_);
   w.DrawString(string_, position, props);
 };
 

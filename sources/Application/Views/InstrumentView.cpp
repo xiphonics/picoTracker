@@ -21,13 +21,14 @@
 #include "BaseClasses/UIIntVarOffField.h"
 #include "BaseClasses/UINoteVarField.h"
 #include "BaseClasses/UIStaticField.h"
-#include "Externals/etl/include/etl/to_string.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "ModalDialogs/MessageBox.h"
 #include "ModalDialogs/TextInputModalView.h"
 #include "System/System/System.h"
 #include <Application/Utils/stringutils.h>
 #include <cstdint>
+#include <etl/format_spec.h>
+#include <etl/to_string.h>
 #include <nanoprintf.h>
 
 static constexpr InstrumentType kMaxSelectableInstrumentType =
@@ -306,6 +307,9 @@ void InstrumentView::refreshInstrumentFields() {
   case IT_OPAL:
     fillOpalParameters();
     break;
+  case IT_CHIPTUNE:
+    fillChiptuneParameters();
+    break;
   case IT_LAST:
     // NA
     break;
@@ -580,6 +584,8 @@ void InstrumentView::fillSIDParameters() {
   intVarField_.emplace_back(position, *v, "Volume:        %1.1X", 0, 0xF, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
 };
+
+#include "InstrumentView_Chiptune.ipp"
 
 void InstrumentView::fillMidiParameters() {
 
@@ -987,7 +993,7 @@ void InstrumentView::DrawView() {
   I_Instrument *instr = getInstrument();
   if (instr) {
     InstrumentType type = instr->GetType();
-    if (type == IT_SID || type == IT_OPAL) {
+    if (type == IT_SID || type == IT_OPAL || type == IT_CHIPTUNE) {
       SetColor(CD_WARN);
       DrawString(18, 1, char_button_border_left_s, props);
       DrawString(19, 1, "EXPERIMENTAL", GUITextProperties(true));
