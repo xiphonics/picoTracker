@@ -21,23 +21,17 @@
 #include <assert.h>
 
 MacroInstrument::MacroInstrument()
-    : I_Instrument(&variables_),
+    : I_Instrument(variables_),
       shape_(FourCC::MacroInstrumentShape, braids::algo_values,
              braids::MACRO_OSC_SHAPE_LAST - 2, 0),
       timbre_(FourCC::MacroInstrmentTimbre, 0x7f),
       color_(FourCC::MacroInstrumentColor, 0x7f),
       attack_(FourCC::MacroInstrumentAttack, 0),
       decay_(FourCC::MacroInstrumentDecay, 0x05),
-      signature_(FourCC::MacroInstrumentSignature, 0) {
+      signature_(FourCC::MacroInstrumentSignature, 0),
+      variables_{&shape_, &timbre_, &color_, &attack_, &decay_, &signature_} {
 
   running_ = false;
-
-  variables_.insert(variables_.end(), &shape_);
-  variables_.insert(variables_.end(), &timbre_);
-  variables_.insert(variables_.end(), &color_);
-  variables_.insert(variables_.end(), &attack_);
-  variables_.insert(variables_.end(), &decay_);
-  variables_.insert(variables_.end(), &signature_);
 }
 
 MacroInstrument::~MacroInstrument() {}

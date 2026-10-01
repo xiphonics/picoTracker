@@ -67,8 +67,6 @@ public:
   virtual void RestoreContent(PersistencyDocument *doc);
 
 private:
-  etl::list<Variable *, 16> variables_;
-
   InstrumentBank instrumentBank_;
   int tempoNudge_;
   unsigned long lastTap_[MAX_TAP];
@@ -95,6 +93,8 @@ private:
   Variable scaleRoot_;
   StringWatchedVariable<MAX_PROJECT_NAME_LENGTH> projectName_;
   Variable previewVolume_;
+
+  etl::array<Variable *, 16> variables_;
 };
 
 #endif
