@@ -39,6 +39,15 @@ public:
   int GetNameListSize();
   uint32_t FindSampleIndexByName(
       const etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> &name);
+  // The name a file from the SD card takes inside the project pool: names over
+  // the length limit are truncated exactly the way ImportSample() truncates
+  // them, so a duplicate check can never disagree with the name written.
+  static etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>
+  makeProjectFilename(const char *name);
+  // True when the pool already holds a sample of that name. Imports only ever
+  // append, so a second sample under a pooled name would overwrite the project
+  // WAV and leave two pool entries pointing at the same file.
+  bool hasSampleName(const char *name) const;
   int ImportSample(const char *name, const char *projectName);
   int LoadProjectSample(const char *name);
   void PurgeSample(int i, const char *projectName);
