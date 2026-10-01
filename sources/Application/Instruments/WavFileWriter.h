@@ -36,11 +36,15 @@ typedef void (*SampleEditProgressCallback)(uint8_t percent);
 
 class WavFileWriter {
 public:
+  static constexpr size_t CopyScratchBufferSize = 4096;
+
   WavFileWriter();
   WavFileWriter(const char *path);
   ~WavFileWriter();
   bool Open(const char *path);
   bool IsOpen() const;
+  // Borrowed for Save As copies while the audio render writer is idle.
+  static void *GetCopyScratchBuffer() { return buffer_; }
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,

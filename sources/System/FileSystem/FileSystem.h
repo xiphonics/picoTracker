@@ -56,7 +56,9 @@ public:
   virtual uint64_t getFileSize(int index) = 0;
   virtual bool CopyFile(const char *srcFilename, const char *destFilename,
                         FileCopyProgressCallback progressCallback = nullptr,
-                        void *progressContext = nullptr) = 0;
+                        void *progressContext = nullptr,
+                        void *scratchBuffer = nullptr,
+                        size_t scratchBufferSize = 0) = 0;
   virtual bool MoveFile(const char *srcFilename, const char *destFilename) = 0;
   virtual bool isExFat() = 0;
 };

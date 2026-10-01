@@ -11,6 +11,7 @@
 #include "../Instruments/SamplePool.h"
 #include "Foundation/Services/ServiceRegistry.h"
 
+#include "Application/Instruments/WavFileWriter.h"
 #include "Application/Utils/DrawUtils.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "Foundation/Types/Types.h"
@@ -312,7 +313,9 @@ PersistencyResult PersistencyService::Save(const char *projectName,
       progress.currentFilename = filenameBuffer;
       progress.lastPercent = 255;
       if (!fs->CopyFile(pathBufferA.c_str(), pathBufferB.c_str(),
-                        UpdateSaveAsProgress, &progress)) {
+                        UpdateSaveAsProgress, &progress,
+                        WavFileWriter::GetCopyScratchBuffer(),
+                        WavFileWriter::CopyScratchBufferSize)) {
         Trace::Error("PERSISTENCYSERVICE: failed copying sample %s",
                      filenameBuffer);
         return PERSIST_ERROR;
