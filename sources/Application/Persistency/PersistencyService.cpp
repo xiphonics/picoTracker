@@ -11,11 +11,14 @@
 #include "../Instruments/SamplePool.h"
 #include "Foundation/Services/ServiceRegistry.h"
 
+#include "Application/Utils/DrawUtils.h"
+#include "Foundation/Constants/SpecialCharacters.h"
 #include "Foundation/Types/Types.h"
 #include "PersistencyDocument.h"
 #include "Persistent.h"
 #include "System/Console/Trace.h"
 #include "System/FileSystem/FileSystem.h"
+#include "System/io/Status.h"
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -49,10 +52,39 @@ bool ParseUint16(const char *text, uint16_t &value) {
   value = static_cast<uint16_t>(parsed);
   return true;
 }
+
+struct SaveAsProgress {
+  uint64_t completedBytes;
+  uint64_t totalBytes;
+  const char *currentFilename;
+  uint8_t lastPercent;
+};
+
+void UpdateSaveAsProgress(uint64_t bytesCopied, uint64_t, void *context) {
+  auto *progress = static_cast<SaveAsProgress *>(context);
+  const uint64_t copiedBytes = progress->completedBytes + bytesCopied;
+  const uint8_t percent =
+      progress->totalBytes == 0
+          ? 100
+          : static_cast<uint8_t>(copiedBytes >= progress->totalBytes
+                                     ? 100
+                                     : (copiedBytes * 100) /
+                                           progress->totalBytes);
+  if (percent == progress->lastPercent) {
+    return;
+  }
+
+  progressBar_t progressBar;
+  fillProgressBar(percent, 100, &progressBar);
+  Status::SetMultiLine("Save As: copying samples\n%.19s\n%s %3u%%",
+                       progress->currentFilename, progressBar,
+                       static_cast<unsigned int>(percent));
+  progress->lastPercent = percent;
+}
 } // namespace
 
 PersistencyService::PersistencyService()
-    : Service(FourCC::ServicePersistency){};
+    : Service(FourCC::ServicePersistency) {};
 
 PersistencyResult PersistencyService::CreateProject() {
   Trace::Log("APPLICATION", "create new project");
@@ -242,9 +274,28 @@ PersistencyResult PersistencyService::Save(const char *projectName,
                  oldProjectName);
 
     fs->list(&fileIndexes_, ".wav", false);
+    uint64_t totalBytes = 0;
     char filenameBuffer[PFILENAME_SIZE];
     for (size_t i = 0; i < fileIndexes_.size(); i++) {
-      fs->getFileName(fileIndexes_[i], filenameBuffer, sizeof(filenameBuffer));
+      const int fileIndex = fileIndexes_[i];
+      if (fs->getFileType(fileIndex) != PFT_FILE) {
+        continue;
+      }
+      fs->getFileName(fileIndex, filenameBuffer, sizeof(filenameBuffer));
+      if (strcmp(filenameBuffer, ".") == 0 ||
+          strcmp(filenameBuffer, "..") == 0) {
+        continue;
+      }
+      totalBytes += fs->getFileSize(fileIndex);
+    }
+
+    SaveAsProgress progress{0, totalBytes, "", 255};
+    for (size_t i = 0; i < fileIndexes_.size(); i++) {
+      const int fileIndex = fileIndexes_[i];
+      if (fs->getFileType(fileIndex) != PFT_FILE) {
+        continue;
+      }
+      fs->getFileName(fileIndex, filenameBuffer, sizeof(filenameBuffer));
 
       // ignore . and .. entries as using *.wav doesnt filter them out
       if (strcmp(filenameBuffer, ".") == 0 || strcmp(filenameBuffer, "..") == 0)
@@ -258,7 +309,15 @@ PersistencyResult PersistencyService::Save(const char *projectName,
                           filenameBuffer};
       CreatePath(pathBufferB, filePathSegments);
 
-      fs->CopyFile(pathBufferA.c_str(), pathBufferB.c_str());
+      progress.currentFilename = filenameBuffer;
+      progress.lastPercent = 255;
+      if (!fs->CopyFile(pathBufferA.c_str(), pathBufferB.c_str(),
+                        UpdateSaveAsProgress, &progress)) {
+        Trace::Error("PERSISTENCYSERVICE: failed copying sample %s",
+                     filenameBuffer);
+        return PERSIST_ERROR;
+      }
+      progress.completedBytes += fs->getFileSize(fileIndex);
     };
   }
   return SaveProjectData(projectName, false);

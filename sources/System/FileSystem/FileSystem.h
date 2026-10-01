@@ -13,6 +13,7 @@
 #include "Externals/etl/include/etl/vector.h"
 #include "Foundation/T_Factory.h"
 #include "System/FileSystem/FileHandle.h"
+#include <stddef.h>
 #include <stdint.h>
 
 #define MAX_FILE_INDEX_SIZE 256
@@ -20,6 +21,9 @@
 #define MAX_PROJECT_SAMPLE_PATH_LENGTH 146 // 17 + 128 + 1
 
 enum PicoFileType { PFT_UNKNOWN, PFT_FILE, PFT_DIR };
+
+using FileCopyProgressCallback = void (*)(uint64_t bytesCopied,
+                                          uint64_t totalBytes, void *context);
 
 // Forward declaration
 class I_File;
@@ -50,7 +54,9 @@ public:
   virtual bool exists(const char *path) = 0;
   virtual bool makeDir(const char *path, bool pFlag = false) = 0;
   virtual uint64_t getFileSize(int index) = 0;
-  virtual bool CopyFile(const char *srcFilename, const char *destFilename) = 0;
+  virtual bool CopyFile(const char *srcFilename, const char *destFilename,
+                        FileCopyProgressCallback progressCallback = nullptr,
+                        void *progressContext = nullptr) = 0;
   virtual bool MoveFile(const char *srcFilename, const char *destFilename) = 0;
   virtual bool isExFat() = 0;
 };

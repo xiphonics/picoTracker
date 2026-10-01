@@ -272,21 +272,47 @@ uint64_t picoTrackerFileSystem::getFileSize(const int index) {
 }
 
 bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
-                                     const char *destFilename) {
+                                     const char *destFilename,
+                                     FileCopyProgressCallback progressCallback,
+                                     void *progressContext) {
   std::lock_guard<Mutex> lock(mutex);
   auto fSrc = sd.open(srcFilename, O_READ);
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
+  if (!fSrc || !fDest) {
+    if (fSrc) {
+      fSrc.close();
+    }
+    if (fDest) {
+      fDest.close();
+    }
+    return false;
+  }
 
   int n = 0;
   int bufferSize = sizeof(fileBuffer_);
+  const uint64_t totalBytes = fSrc.fileSize();
+  uint64_t bytesCopied = 0;
+  if (progressCallback) {
+    progressCallback(0, totalBytes, progressContext);
+  }
   while (true) {
     n = fSrc.read(fileBuffer_, bufferSize);
     // check for read error and only write if no error
-    if (n >= 0) {
-      fDest.write(fileBuffer_, n);
-    } else {
+    if (n < 0) {
       Trace::Error("Failed to read file: %s", srcFilename);
+      fSrc.close();
+      fDest.close();
       return false;
+    }
+    if (n > 0 && fDest.write(fileBuffer_, n) != static_cast<size_t>(n)) {
+      Trace::Error("Failed to write file: %s", destFilename);
+      fSrc.close();
+      fDest.close();
+      return false;
+    }
+    bytesCopied += static_cast<uint64_t>(n);
+    if (progressCallback) {
+      progressCallback(bytesCopied, totalBytes, progressContext);
     }
     if (n < bufferSize) {
       break;
