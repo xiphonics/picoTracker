@@ -314,8 +314,8 @@ PersistencyResult PersistencyService::Save(const char *projectName,
       progress.lastPercent = 255;
       if (!fs->CopyFile(pathBufferA.c_str(), pathBufferB.c_str(),
                         UpdateSaveAsProgress, &progress,
-                        WavFileWriter::GetCopyScratchBuffer(),
-                        WavFileWriter::CopyScratchBufferSize)) {
+                        WavFileWriter::GetSharedBuffer(),
+                        WavFileWriter::SharedBufferSize)) {
         Trace::Error("PERSISTENCYSERVICE: failed copying sample %s",
                      filenameBuffer);
         return PERSIST_ERROR;

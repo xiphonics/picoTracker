@@ -15,7 +15,7 @@
 #include <cstring>
 #include <limits>
 
-short WavFileWriter::buffer_[MAX_SAMPLE_COUNT * 2];
+uint8_t WavFileWriter::sharedBuffer_[WavFileWriter::SharedBufferSize];
 
 inline void reportProgress(SampleEditProgressCallback callback,
                            uint32_t processed, uint32_t total) {
@@ -57,7 +57,7 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
   if (!file_)
     return;
 
-  short *s = buffer_;
+  auto *s = reinterpret_cast<short *>(sharedBuffer_);
   fixed *p = bufferIn;
 
   fixed v;
@@ -74,7 +74,7 @@ void WavFileWriter::AddBuffer(fixed *bufferIn, int size) {
     }
     *s++ = short(fp2i(v));
   };
-  file_->Write(buffer_, 2, size * 2);
+  file_->Write(sharedBuffer_, 2, size * 2);
   sampleCount_ += size;
 };
 
