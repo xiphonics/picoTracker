@@ -71,9 +71,11 @@ The tempo will return to its original value when you release the keys.
 
 In the song mode <span class="minikeys">Play</span> starts and stops song playback from the currently highlighted row of the chain grid. If one of the rows channel is marked `--`, that channel will be ignored entirely for the rest of the playback session (until playback is stopped). 
 
+When a grid selection is active, <span class="minikeys">PLAY</span> starts at the first selected row and loops the selected row range, playing only the selected channels.
+
 Hold <span class="minikeys">PLAY</span> for about one second to panic stop. This immediately stops playback and cuts currently sounding audio, including stuck notes or long effect tails. A normal short press of <span class="minikeys">PLAY</span> still starts or stops playback when you release the key.
 
-In Song mode <span class="minikeys">ALT</span>+<span class="minikeys">PLAY</span> works the same as <span class="minikeys">PLAY</span>, starting or stopping song playback from any screen.
+In Song mode <span class="minikeys">ALT</span>+<span class="minikeys">PLAY</span> starts or stops normal song playback from any screen; it does not loop a Song-screen selection.
 
 #### Live Mode
 

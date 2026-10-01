@@ -13,11 +13,9 @@ The Mixer screen displays a set of vertical stereo level (VU) meters, one for ea
 
 *   **Channel Level Meter:** 2 vertical bars representing the left and right channels that dynamically displays the current audio level of the channel. The higher the bar, the louder the channel's output.
 * **Mute:** Each channel can be muted. The 'M' under each channel indicates when a channel is muted.
-* **FX1–FX4:** Each channel has four post-fader send levels. A send routes the channel to the corresponding output-effect slot without removing it from the dry master mix.
+* **DLY and RVB:** Each channel has post-fader sends for delay and reverb. Under the master channel column is the level of the effects returns.
 
-The effect names at the left of the FX rows are selectable. Move left from channel 1 on an FX row, then hold <span class="minikeys">ENTER</span> and press <span class="minikeys">UP</span> or <span class="minikeys">DOWN</span> to select the effect for that slot.
-
-Effect types cannot be changed while the player is running. Changing a type while stopped performs a kill first: sounding notes and any remaining effect tails stop immediately.
+The effect names at the left of the rows are fixed. Press <span class="minikeys">NAV</span>+<span class="minikeys">DOWN</span> on an effect row to open its Master Effects page.
 
 ## Master Output
 
@@ -28,17 +26,31 @@ The rightmost section of the Mixer screen displays the **Master Output** level m
 
 ## Master Effects
 
-Press <span class="minikeys">NAV</span>+<span class="minikeys">DOWN</span> from the Mixer to open **Master FX**. Output effects reserve one to four resource units. Each unit reserves part of the processing power and working space available to the effects. The four slots share four units. The slot's **SLOT RES** value shows its reservation, and the title shows the total in use. Effect choices that would exceed the budget are unavailable. Selecting `NONE` always releases the slot's reservation.
+Press <span class="minikeys">NAV</span>+<span class="minikeys">DOWN</span> from the Mixer to open **Master Effects**.
 
-`RING` selects Rings reverb and reserves two units. `FREE` selects Freeverb and reserves three units. Both provide the same input, time, diffusion and low-pass controls.
+`DLY` is a stereo delay. Its controls are:
 
-The displayed slot provides:
+* **Time:** Sets the delay time in audio ticks so echoes align with tracker timing. A 16-step bar contains 96 ticks: `01` is one tick, `06` is one step, `12` is two steps, `24` is four steps, `48` is half a bar, and `96` is the maximum of one full bar. The delay follows the song tempo.
+* **Feedback:** Sets how much of each echo returns to the delay. `00` produces one echo with no repetitions. `FF` gives the longest decay but remains just below a sustained loop.
 
-* **RETURN:** The level of that slot's wet output mixed into the master output.
-* **Effect parameters:** Controls belonging to the selected effect.
-* **TO2–TO4:** Sends from the selected slot to each later slot. As with channel sends, `00` is off and `99` sends the slot's fully wet processed output at full level.
+`RVB` is a stereo reverb. Its controls are:
 
-Slot routing is forward-only: FX1 can feed FX2–FX4, FX2 can feed FX3–FX4, and FX3 can feed FX4. These wet-output sends are applied before `RETURN`, so a slot can feed a later effect while its own master return is zero. All slot-to-slot sends default to zero, preserving a parallel-effects layout until routing is added.
+* **Pre-delay:** Sets the time between the original sound and the beginning of the reverb. `00` applies no pre-delay and `FF` applies the longest pre-delay.
+* **Input tone:** Sets the brightness of sound entering the reverb. `00` is darkest and `FF` is brightest.
+* **Diffuse:** Sets how much the sound if diffused.
+* **Decay time:** Sets how long the reverb takes to fade. `00` is the shortest finite decay, `FE` is the longest finite decay, and `FF` holds the reverb without fading.
+* **Tail tone:** Sets the brightness of the fading reverb. `00` produces the darkest tail and `FF` the brightest.
+* **Mod speed:** Sets the speed of movement in the reverb. `00` stops the movement and `FF` is the fastest rate.
+* **Mod level:** Sets how strongly that movement affects the reverb. `00` turns it off and `FF` gives the strongest movement.
+
+`RVB` control changes take effect immediately while playing. The effect output is always fully wet: channel sends control how much signal enters the reverb, and the effect return in the Mixer's rightmost column controls how much reverb is mixed into the master output.
+
+The same controls can be automated from phrases or tables with the `RVP`, `RVI`,
+`RVF`, `RVD`, `RVT`, `RVS`, and `RVL` commands.
+
+The delay column also provides **RVB send**, which sends the delay's wet output into the reverb.
+
+The delay-to-reverb send is applied before the delay **RETURN**, so the delay can feed the reverb while its own master return is zero. It defaults to zero, preserving a parallel-effects layout until routing is added.
 
 ## VU Meter Details
 

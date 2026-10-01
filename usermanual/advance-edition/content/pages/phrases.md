@@ -23,6 +23,21 @@ With a selection active, press <span class="minikeys">ENTER</span>+<span class="
 
 Phrase resampling renders only the selected rows, writes `resample.wav` into the current project's samples folder, and loads it into the sample pool.
 
+## Interpolating Notes and Velocity
+
+To fill a range evenly between two values, make a selection in a single phrase
+column spanning at least three rows, then press <span class="minikeys">ENTER</span>.
+The first and last selected rows are the endpoints; picoTracker replaces the
+values on the rows between them with a linear interpolation.
+
+Interpolation supports:
+
+- The note column, when both endpoints contain notes (not `----` or `REL`).
+- Either FX parameter column, when both endpoint commands are `VEL`. Intermediate
+  rows are set to `VEL`, and their values are limited to the MIDI range `00`-`7F`.
+
+The selection must contain only the note column or one FX parameter column.
+
 In Song mode <span class="minikeys">Play</span> starts and stops playback from Step 00, soloing the current phrase
 
 In Live mode <span class="minikeys">Play</span> queues the Edited Chain Step from 00

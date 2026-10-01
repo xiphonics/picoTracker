@@ -35,6 +35,21 @@ The MIDI section contains settings for MIDI input and output.
     * USB
     * TRS+USB
 
+- **Clock in:** Selects whether playback tempo follows MIDI clock received from
+  the selected input device. Available options are:
+    * Off: Playback uses the project tempo.
+    * On: Incoming MIDI clock adjusts the playback tempo. Sudden tempo changes
+      settle smoothly without skipping song positions. If MIDI clock stops
+      arriving, playback smoothly returns to the project tempo.
+
+MIDI Start, Continue, and Stop messages from the selected input device control
+playback whether Clock in is Off or On.
+
+The current playback tempo is shown immediately to the left of the battery
+display, followed by `I` for the internal clock or `M` for MIDI clock. The value
+is averaged so that small timing variations do not make the display difficult
+to read.
+
 ## Remote UI
 
 This setting enables or disables sending commands to a computer attached via USB to the Advance running a "remote UI" application that can mirror the display from the Advance.
