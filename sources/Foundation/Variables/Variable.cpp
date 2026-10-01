@@ -236,10 +236,21 @@ etl::string<MAX_VARIABLE_STRING_LENGTH> Variable::GetString() {
 };
 
 void Variable::CopyFrom(Variable &other) {
-  type_ = other.type_;
-  value_ = other.value_;
-  list_ = other.list_;
-  listSize_ = other.listSize_;
+  NAssert(type_ == other.type_);
+  if (type_ != other.type_) {
+    return;
+  }
+
+  if (type_ == STRING) {
+    const auto string = other.GetString();
+    SetString(string.c_str(), false);
+  } else {
+    value_ = other.value_;
+    if (type_ == CHAR_LIST) {
+      list_ = other.list_;
+      listSize_ = other.listSize_;
+    }
+  }
   onChange();
 }
 
