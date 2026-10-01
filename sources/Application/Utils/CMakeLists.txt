@@ -1,5 +1,6 @@
 add_library(application_utils
   HexBuffers.cpp
+  SharedBuffer.cpp
   char.cpp
   fixed.cpp
   stringutils.cpp

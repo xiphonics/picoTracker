@@ -10,6 +10,7 @@ target_link_libraries(application_persistency PUBLIC
   tinyxml2
   etl
   application_model
+  application_utils
 )
 
 target_include_directories(application_persistency PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

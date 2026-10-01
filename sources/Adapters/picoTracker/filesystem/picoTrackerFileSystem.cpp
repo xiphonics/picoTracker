@@ -10,6 +10,7 @@
 #include "Externals/etl/include/etl/pool.h"
 #include "pico/multicore.h"
 #include <cstring>
+#include <limits>
 
 // Global mutex for thread safety
 Mutex mutex;
@@ -272,21 +273,57 @@ uint64_t picoTrackerFileSystem::getFileSize(const int index) {
 }
 
 bool picoTrackerFileSystem::CopyFile(const char *srcFilename,
-                                     const char *destFilename) {
+                                     const char *destFilename,
+                                     FileCopyProgressCallback progressCallback,
+                                     void *progressContext, void *scratchBuffer,
+                                     size_t scratchBufferSize) {
   std::lock_guard<Mutex> lock(mutex);
   auto fSrc = sd.open(srcFilename, O_READ);
   auto fDest = sd.open(destFilename, O_WRITE | O_CREAT);
+  if (!fSrc || !fDest) {
+    if (fSrc) {
+      fSrc.close();
+    }
+    if (fDest) {
+      fDest.close();
+    }
+    return false;
+  }
 
   int n = 0;
-  int bufferSize = sizeof(fileBuffer_);
+  void *copyBuffer = fileBuffer_;
+  size_t copyBufferSize = sizeof(fileBuffer_);
+  if (scratchBuffer != nullptr && scratchBufferSize > 0) {
+    copyBuffer = scratchBuffer;
+    copyBufferSize = scratchBufferSize;
+  }
+  const size_t maxBufferSize =
+      static_cast<size_t>(std::numeric_limits<int>::max());
+  const int bufferSize = static_cast<int>(
+      copyBufferSize > maxBufferSize ? maxBufferSize : copyBufferSize);
+  const uint64_t totalBytes = fSrc.fileSize();
+  uint64_t bytesCopied = 0;
+  if (progressCallback) {
+    progressCallback(0, totalBytes, progressContext);
+  }
   while (true) {
-    n = fSrc.read(fileBuffer_, bufferSize);
+    n = fSrc.read(copyBuffer, bufferSize);
     // check for read error and only write if no error
-    if (n >= 0) {
-      fDest.write(fileBuffer_, n);
-    } else {
+    if (n < 0) {
       Trace::Error("Failed to read file: %s", srcFilename);
+      fSrc.close();
+      fDest.close();
       return false;
+    }
+    if (n > 0 && fDest.write(copyBuffer, n) != static_cast<size_t>(n)) {
+      Trace::Error("Failed to write file: %s", destFilename);
+      fSrc.close();
+      fDest.close();
+      return false;
+    }
+    bytesCopied += static_cast<uint64_t>(n);
+    if (progressCallback) {
+      progressCallback(bytesCopied, totalBytes, progressContext);
     }
     if (n < bufferSize) {
       break;
