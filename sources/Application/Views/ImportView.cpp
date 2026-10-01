@@ -668,6 +668,18 @@ void ImportView::import() {
 
   SamplePool *pool = SamplePool::GetInstance();
 
+  // Imports only ever append, so a sample whose project filename is already
+  // pooled would overwrite that project WAV and leave two pool entries
+  // pointing at the same file
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> poolFilename =
+      SamplePool::makeProjectFilename(name);
+  if (pool->hasSampleName(poolFilename.c_str())) {
+    MessageBox *mb = MessageBox::Create(*this, "Sample already in project",
+                                        poolFilename.c_str(), MBBF_OK);
+    DoModal(mb);
+    return;
+  }
+
   // Check if we've reached the maximum number of samples
   int currentCount = pool->GetNameListSize();
   if (currentCount >= MAX_SAMPLES) {

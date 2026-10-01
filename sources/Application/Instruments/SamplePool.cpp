@@ -328,6 +328,29 @@ uint32_t SamplePool::FindSampleIndexByName(
   return -1;
 }
 
+etl::string<MAX_INSTRUMENT_FILENAME_LENGTH>
+SamplePool::makeProjectFilename(const char *name) {
+  // will truncate too long filenames to make sure the filename imported into
+  // the project is with filename length limit
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> projSampleFilename(name);
+  if (projSampleFilename.is_truncated()) {
+    // Truncate the string in-place and then append the extension
+    projSampleFilename =
+        projSampleFilename.substr(0, MAX_INSTRUMENT_FILENAME_LENGTH - 4);
+    projSampleFilename.append(".wav");
+  }
+  return projSampleFilename;
+}
+
+bool SamplePool::hasSampleName(const char *name) const {
+  for (uint32_t i = 0; i < count_; ++i) {
+    if (names_[i] && strcmp(names_[i], name) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 #define IMPORT_CHUNK_SIZE 512
 static constexpr int32_t kImportInputSamples =
     IMPORT_CHUNK_SIZE / static_cast<int32_t>(sizeof(int16_t));
@@ -349,15 +372,8 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
     return -1;
   }
 
-  // will truncate too long filenames to make sure the filename imported into
-  // the project is with filename length limit
-  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> projSampleFilename(name);
-  if (projSampleFilename.is_truncated()) {
-    // Truncate the string in-place and then append the extension
-    projSampleFilename =
-        projSampleFilename.substr(0, MAX_INSTRUMENT_FILENAME_LENGTH - 4);
-    projSampleFilename.append(".wav");
-  }
+  etl::string<MAX_INSTRUMENT_FILENAME_LENGTH> projSampleFilename =
+      makeProjectFilename(name);
 
   etl::string<MAX_PROJECT_SAMPLE_PATH_LENGTH> projectSamplePath("/projects/");
   projectSamplePath.append(projectName);
