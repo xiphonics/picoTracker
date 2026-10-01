@@ -66,6 +66,22 @@ Examples:
 
 **Delays the note by `b + 1` ticks (only the low nibble is used).**
 
+## DLF --bb
+
+**Sets the Delay send effect feedback**
+
+- `bb` ranges from `00` to `3F`
+- `00` produces one echo without feedback
+- `3F` produces the longest decay
+
+## DLT --bb
+
+**Sets the Delay send effect time**
+
+- `bb` ranges from `01` to `60`
+- `01` is one tick, `06` is one step, `18` is four steps, `30` is half a
+  16-step phrase, and `60` is one full phrase
+
 ## FCT aabb (FCUT in lgpt)
 
 **adjust the filter cutoff to bb at speed aa**
@@ -233,7 +249,9 @@ The PSL command also acts as a linear MIDI pitch bend controller for MIDI instru
 - Split commands like `VOL`, `FCT`, `FLT`, `FRS`, `PAN`, `PSL`, `LEG`, `PFT`, `POF`, and `RTG` randomize their two bytes independently.
 - `CSH` randomizes the drive byte and the crush nibble independently.
 - `MCC` keeps the controller number and randomizes only the value.
-- `GRV`, `DLY`, `IRT`, `KIL`, `REL`, `TLN`, and `VEL` randomize only their active low-byte or low-nibble value.
+- `DLF`, `DLT`, `GRV`, `DLY`, `IRT`, `KIL`, `REL`, `RVD`, `RVF`, `RVI`,
+  `RVL`, `RVP`, `RVS`, `RVT`, `TLN`, and `VEL` randomize only their active
+  low-byte or low-nibble value.
 - `HOP` randomizes both its repeat count (high byte) and destination step (low nibble) independently.
 - `LOF` and `TPO` randomize as whole values.
 - Control or identity commands such as `CHN`, `RND`, `STP`, `TBL`, and `MPC` are not randomized when targeted.
@@ -257,6 +275,56 @@ Examples:
 `RTG 0001`: loop one tick from current play position
 `RTG 0102`: loop of two ticks but move the loop one tick every loop
 `RTG 0101`: does not do anything because after looping one tick, you move forward one tick and therefore go back to the current position
+
+## RVP --bb
+
+**Sets the ReVerb Pre-delay.**
+
+- `00` starts the reverb immediately
+- `FF` gives the longest pre-delay
+
+## RVI --bb
+
+**Sets the ReVerb Input tone.**
+
+- `00` is darkest
+- `FF` is brightest
+
+## RVF --bb
+
+**Sets how strongly the ReVerb diFfuses the sound.**
+
+- `00` is least diffuse
+- `FF` is most diffuse
+
+## RVD --bb
+
+**Sets the ReVerb Decay time.**
+
+- `00` gives the shortest decay
+- `FE` gives the longest fading decay
+- `FF` holds the reverb without fading
+
+## RVT --bb
+
+**Sets the ReVerb Tail tone.**
+
+- `00` produces the darkest tail
+- `FF` produces the brightest tail
+
+## RVS --bb
+
+**Sets the ReVerb modulation Speed.**
+
+- `00` stops the movement
+- `FF` gives the fastest movement
+
+## RVL --bb
+
+**Sets the ReVerb modulation Level.**
+
+- `00` turns the movement off
+- `FF` gives the strongest movement
 
 ## TBL --bb (TABL in lgpt)
 

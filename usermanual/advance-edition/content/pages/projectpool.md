@@ -12,6 +12,7 @@ The Project Pool is the sample browser for the samples that belong to the curren
 ## Accessing the Project Pool
 
 1. Open the Sample Browser from the Project screen (select **Sample Pool** and press <span class="minikeys">ENTER</span>).
+2. Press <span class="minikeys">NAV</span> + <span class="minikeys">EDIT</span> to switch between the Project Pool and the sample library/filesystem browser.
 
 ## Using the Project Pool
 

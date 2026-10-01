@@ -20,7 +20,8 @@ picoTracker supports several different types of instruments, each with its own u
    - **PICOSWARM**: A detuned multi-oscillator synthesizer
    - **ORIGINAL SAMPLE**: The earlier sampler appears only in projects that already contain one. Once available in a project, you can select it again or create additional Original Sample instruments.
 4. If you've made changes to the current instrument, you'll be asked to confirm before switching types
-5. Note that you cannot change instrument types while playback is active
+5. While playback is active, you can change an instrument's type only when it
+   is currently `NONE` or is not used by any phrase or MIDI input assignment
 
 ### Importing and Exporting Instruments
 
@@ -189,8 +190,11 @@ A great collection of single cycle waveforms can be found in the [Adventure Kid 
 
 The status bar at the bottom of the screen shows additional information about the selected file and other information such as:
 - Current preview volume (vol:XX%)
-- File size in bytes
+- Sample memory required after import in bytes
 - Available project sample storage size in bytes
+
+If the selected sample cannot fit in either sample memory area, the status line
+is shown in a warning color.
 
 ### Basic Controls
 
@@ -199,7 +203,7 @@ The status bar at the bottom of the screen shows additional information about th
 - Press <span class="minikeys">NAV</span>+<span class="minikeys">UP</span> to go back to the parent directory
 - Hold down <span class="minikeys">PLAY</span> to audition the currently selected sample wave file
 - Press <span class="minikeys">ALT</span>+<span class="minikeys">PLAY</span> to import the currently selected wave file
-- Use <span class="minikeys">EDIT</span>+<span class="minikeys">UP</span>/<span class="minikeys">DOWN</span> to adjust the preview volume
+- Use <span class="minikeys">EDIT</span>+<span class="minikeys">UP</span>/<span class="minikeys">DOWN</span> to page up and down in the file list
 
 ### Importing Multiple Samples
 
@@ -221,12 +225,12 @@ You can also Edit and Rename your sample files as you browse them from the impor
 
 ### Auditioning Volume Control
 
-The Import View includes a convenient way to adjust the volume when previewing samples:
+The Import View includes a convenient way to adjust the volume when previewing samples: select the **Vol** button at the bottom of the screen using <span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span>, then hold <span class="minikeys">ENTER</span> and use the arrow keys:
 
-- **<span class="minikeys">EDIT</span> + <span class="minikeys">UP</span>**: Increase preview volume by 5%
-- **<span class="minikeys">EDIT</span> + <span class="minikeys">DOWN</span>**: Decrease preview volume by 5%
+- **<span class="minikeys">ENTER</span> + <span class="minikeys">UP</span> / <span class="minikeys">DOWN</span>**: Increase / decrease preview volume by 5%
+- **<span class="minikeys">ENTER</span> + <span class="minikeys">RIGHT</span> / <span class="minikeys">LEFT</span>**: Increase / decrease preview volume by 1%
 
-The current preview volume is always displayed in the status bar at the bottom of the screen as "vol:XX%" alongside the file size information. 
+The current preview volume is always displayed on the Vol button and in the status bar at the bottom of the screen alongside the file size information. 
 
 The preview volume uses a non-linear (quadratic) scale that provides more precise control at lower volumes, making it easier to fine-tune quiet previews. This setting is saved with your project and will be restored when you reload it.
 
@@ -238,7 +242,7 @@ The preview volume uses a non-linear (quadratic) scale that provides more precis
 Sample files must be:
 * Uncompressed PCM (Wave/*.wav)
 * Unsigned 8 bit; signed 16, 24 or 32 bit; float 32 or 64 bit
-* Any samplerate from 8kHz to 192kHz
+* Any samplerate from 8kHz to 384kHz
 * Mono or stereo
 
 Bit rate and sample rate are converted on import and saved into the project in the native picoTracker format (16bit/44100Hz/Mono or Stereo)

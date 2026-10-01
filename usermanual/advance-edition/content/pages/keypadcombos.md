@@ -79,6 +79,7 @@ Once a selection is started you can do a few more things:
 | Increase selection to full row / screen | <span class="minikeys">ALT</span> + <span class="minikeys">EDIT</span>   | ![nav + enter](image/pt-buttons-alt_edit.jpg) |
 | Copy selection to clipboard             | <span class="minikeys">EDIT</span>      |   ![arrow keys](image/pt-buttons-edit.jpg)    |
 | Cut selection to clipboard              | <span class="minikeys">ALT</span> + <span class="minikeys">ENTER</span>  | ![arrow keys](image/pt-buttons-alt_enter.jpg) |
+| Loop selected rows and channels in Song mode | <span class="minikeys">PLAY</span> | ![play key](image/pt-buttons-play.jpg) |
 | Resample selection                      | <span class="minikeys">ENTER</span> + <span class="minikeys">PLAY</span>  |    ![play key](image/pt-buttons-play.jpg)     |
 
 ### EDIT Modifier
@@ -312,9 +313,9 @@ Once a selection is started you can do a few more things:
 
 ### EDIT Modifier
 
-| Function                           |   Key Combination    |                            Image                             |
-|:-----------------------------------|:--------------------:|:------------------------------------------------------------:|
-| Increase / Decrease preview volume | <span class="minikeys">EDIT</span> + (<span class="minikeys">UP</span> / <span class="minikeys">DOWN</span>) | ![edit + (up / down) key](image/pt-buttons-edit_up_down.jpg) |
+| Function                    |   Key Combination    |                            Image                             |
+|:----------------------------|:--------------------:|:------------------------------------------------------------:|
+| Page up / down in file list | <span class="minikeys">EDIT</span> + (<span class="minikeys">UP</span> / <span class="minikeys">DOWN</span>) | ![edit + (up / down) key](image/pt-buttons-edit_up_down.jpg) |
 
 ### ALT Modifier
 
