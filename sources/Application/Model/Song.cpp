@@ -112,8 +112,8 @@ void Song::RestoreContent(PersistencyDocument *doc) {
 
   data = phrase_.note_;
 
-  FourCC *table1 = phrase_.cmd1_;
-  FourCC *table2 = phrase_.cmd2_;
+  TrackerCommand *table1 = phrase_.cmd1_;
+  TrackerCommand *table2 = phrase_.cmd2_;
 
   ushort *param1 = phrase_.param1_;
   ushort *param2 = phrase_.param2_;
@@ -125,11 +125,11 @@ void Song::RestoreContent(PersistencyDocument *doc) {
       if (*data != 0xFF) {
         phrase_.SetUsed(i);
       }
-      if (*table1 == FourCC::InstrumentCommandTable) {
+      if (*table1 == TrackerCommand::InstrumentCommandTable) {
         *param1 &= 0x7F;
         th->SetUsed((*param1));
       };
-      if (*table2 == FourCC::InstrumentCommandTable) {
+      if (*table2 == TrackerCommand::InstrumentCommandTable) {
         *param2 &= 0x7F;
         th->SetUsed((*param2));
       };

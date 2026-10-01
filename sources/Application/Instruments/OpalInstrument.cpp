@@ -176,9 +176,10 @@ bool OpalInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
-void OpalInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
+void OpalInstrument::ProcessCommand(int channel, TrackerCommand cc,
+                                    ushort value) {
   switch (cc) {
-  case FourCC::InstrumentCommandGateOff:
+  case TrackerCommand::InstrumentCommandGateOff:
     uint8_t stop = BitClr(breg, 5);
     opl_.Port(OCTAVE_BASE_REG, stop);
     break;

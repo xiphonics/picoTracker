@@ -263,9 +263,9 @@ void Project::Purge() {
   data = song_.phrase_.note_;
   data2 = song_.phrase_.instr_;
 
-  FourCC *cmd1 = song_.phrase_.cmd1_;
+  TrackerCommand *cmd1 = song_.phrase_.cmd1_;
   ushort *param1 = song_.phrase_.param1_;
-  FourCC *cmd2 = song_.phrase_.cmd2_;
+  TrackerCommand *cmd2 = song_.phrase_.cmd2_;
   ushort *param2 = song_.phrase_.param2_;
 
   for (int i = 0; i < PHRASE_COUNT; i++) {
@@ -273,9 +273,9 @@ void Project::Purge() {
       if (!song_.phrase_.IsUsed(i)) {
         *data = DATA_UNUSED_VALUE;
         *data2 = DATA_UNUSED_VALUE;
-        *cmd1 = FourCC::InstrumentCommandNone;
+        *cmd1 = TrackerCommand::InstrumentCommandNone;
         *param1 = 0;
-        *cmd2 = FourCC::InstrumentCommandNone;
+        *cmd2 = TrackerCommand::InstrumentCommandNone;
         *param2 = 0;
       }
       data++;

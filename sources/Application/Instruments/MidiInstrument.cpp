@@ -230,14 +230,15 @@ bool MidiInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
-void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
+void MidiInstrument::ProcessCommand(int channel, TrackerCommand cc,
+                                    ushort value) {
 
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int mchannel = v->GetInt();
 
   switch (cc) {
 
-  case FourCC::InstrumentCommandRetrigger: {
+  case TrackerCommand::InstrumentCommandRetrigger: {
     unsigned char loop = (value & 0xFF); // number of ticks before repeat
     if (loop != 0) {
       retrig_ = true;
@@ -248,7 +249,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case FourCC::InstrumentCommandLegato: {
+  case TrackerCommand::InstrumentCommandLegato: {
     pitchBendTarget_ = uint8_t(value & 0xFF);
     pitchBendSpeed_ = uint8_t(value >> 8);
     pitchBend_ = true;
@@ -262,7 +263,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     interpolationAlpha_ = powf(normalized, PB_CURVE_SHAPE) * PB_MAX_ALPHA;
   } break;
 
-  case FourCC::InstrumentCommandPitchSlide: {
+  case TrackerCommand::InstrumentCommandPitchSlide: {
     pitchBendTarget_ = uint8_t(value & 0xFF);
     pitchBendSpeed_ = uint8_t(value >> 8);
     pitchBend_ = true;
@@ -270,13 +271,13 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     useLogCurve_ = false;
   } break;
 
-  case FourCC::InstrumentCommandVelocity: {
+  case TrackerCommand::InstrumentCommandVelocity: {
     // VELM cmds set velocity for MIDI steps
     // Ensure velocity doesn't exceed 127 (MIDI spec maximum)
     velocity_ = value & 0x7F;
   }; break;
 
-  case FourCC::InstrumentCommandVolume: {
+  case TrackerCommand::InstrumentCommandVolume: {
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + mchannel;
     msg.data1_ = MidiCC::CC_VOLUME;
@@ -284,7 +285,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     svc_->QueueMessage(msg);
   }; break;
 
-  case FourCC::InstrumentCommandMidiCC: {
+  case TrackerCommand::InstrumentCommandMidiCC: {
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + mchannel;
     msg.data1_ = (value & 0x7F00) >> 8;
@@ -292,11 +293,11 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     svc_->QueueMessage(msg);
   }; break;
 
-  case FourCC::InstrumentCommandMidiPC: {
+  case TrackerCommand::InstrumentCommandMidiPC: {
     SendProgramChange(mchannel, value & 0x7F);
   }; break;
 
-  case FourCC::InstrumentCommandMidiChord: {
+  case TrackerCommand::InstrumentCommandMidiChord: {
     // split into 4 note offsets
     for (int i = 0; i < MAX_MIDI_CHORD_NOTES; i++) {
       uint8_t noteOffset = (value >> (i * 4)) & 0xF;
@@ -330,7 +331,7 @@ void MidiInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       }
     }
   }; break;
-  case FourCC::InstrumentCommandKill: {
+  case TrackerCommand::InstrumentCommandKill: {
     Stop(channel);
   }; break;
   }

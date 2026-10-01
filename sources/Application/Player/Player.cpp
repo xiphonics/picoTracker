@@ -652,13 +652,14 @@ void Player::ProcessCommands(const bool *delayExpired,
         // just expired
         if (gs->TriggerChannel(i) || (delayExpired && delayExpired[i])) {
           int pos = viewData_->phrasePlayPos_[i];
-          FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
+          TrackerCommand cc =
+              viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
           ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
 
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
 
-          if (cc != FourCC::InstrumentCommandNone) {
+          if (cc != TrackerCommand::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
               I_Instrument *instrument = mixer_.GetInstrument(i);
               if (instrument) {
@@ -675,7 +676,7 @@ void Player::ProcessCommands(const bool *delayExpired,
           // if there's any command to trigger, first pass it on the player
           // then pass it on to the instrument
 
-          if (cc != FourCC::InstrumentCommandNone) {
+          if (cc != TrackerCommand::InstrumentCommandNone) {
             if (!ProcessChannelCommand(i, cc, param)) {
               I_Instrument *instrument = mixer_.GetInstrument(i);
               if (instrument) {
@@ -689,18 +690,19 @@ void Player::ProcessCommands(const bool *delayExpired,
   };
 };
 
-bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
+bool Player::ProcessChannelCommand(int channel, TrackerCommand cmd,
+                                   ushort param) {
 
   I_Instrument *instr = mixer_.GetInstrument(channel);
 
   switch (cmd) {
-  case FourCC::InstrumentCommandKill:
+  case TrackerCommand::InstrumentCommandKill:
     if (instr) {
       int timeToLive = (param & 0xFF);
       timeToLive_[channel] = timeToLive + 1;
     }
     return true;
-  case FourCC::InstrumentCommandTempo: {
+  case TrackerCommand::InstrumentCommandTempo: {
     param = std::clamp(param, MIN_TEMPO, MAX_TEMPO);
     Variable *v = project_->FindVariable(FourCC::VarTempo);
     v->SetInt(param);
@@ -709,7 +711,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     return true;
     break;
   }
-  case FourCC::InstrumentCommandTable: {
+  case TrackerCommand::InstrumentCommandTable: {
     TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
     param = param & 0x7F;
@@ -718,7 +720,7 @@ bool Player::ProcessChannelCommand(int channel, FourCC cmd, ushort param) {
     return true;
     break;
   }
-  case FourCC::InstrumentCommandGroove: {
+  case TrackerCommand::InstrumentCommandGroove: {
     Groove *gr = Groove::GetInstance();
     bool all = (param & 0xFF00) != 0;
     param = param & 0xFF;
@@ -815,14 +817,14 @@ void Player::updatePhrasePos(int pos, int channel) {
 
   // Check both param colum 1 & 2
 
-  FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == FourCC::InstrumentCommandDelay) {
+  TrackerCommand cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
+  if (cc == TrackerCommand::InstrumentCommandDelay) {
     ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
 
   cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == FourCC::InstrumentCommandDelay) {
+  if (cc == TrackerCommand::InstrumentCommandDelay) {
     ushort param = viewData_->song_->phrase_.param2_[phrase * 16 + pos];
     timeToStart_[channel] = (param & 0x0F) + 1;
   }
@@ -1003,12 +1005,12 @@ void Player::RetriggerChannelInstrument(int channel, int semitoneOffset,
 int Player::getChannelHop(int channel, int pos) {
 
   int phrase = viewData_->currentPlayPhrase_[channel];
-  FourCC cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == FourCC::InstrumentCommandHop) {
+  TrackerCommand cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
+  if (cc == TrackerCommand::InstrumentCommandHop) {
     return (viewData_->song_->phrase_.param1_[phrase * 16 + pos]) & 0xF;
   }
   cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == FourCC::InstrumentCommandHop) {
+  if (cc == TrackerCommand::InstrumentCommandHop) {
     return (viewData_->song_->phrase_.param2_[phrase * 16 + pos]) & 0xF;
   }
   return -1;

@@ -1173,14 +1173,15 @@ void SampleInstrument::Update(Observable &o, I_ObservableData *d) {
   };
 };
 
-void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
+void SampleInstrument::ProcessCommand(int channel, TrackerCommand cc,
+                                      ushort value) {
 
   renderParams *rp = renderParams_ + channel;
   if (!source_)
     return;
 
   switch (cc) {
-  case FourCC::InstrumentCommandLoopOfset:
+  case TrackerCommand::InstrumentCommandLoopOfset:
 
     if (value > 0x8000) {
       value = 0x10000 - value;
@@ -1196,7 +1197,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
     break;
 
-  case FourCC::InstrumentCommandPlayOfset: {
+  case TrackerCommand::InstrumentCommandPlayOfset: {
     if (!source_)
       return;
     int wavSize = source_->GetSize(rp->midiNote_);
@@ -1218,7 +1219,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     rp->couldClick_ = SHOULD_KILL_CLICKS;
   } break;
 
-  case FourCC::InstrumentCommandArpeggiator: {
+  case TrackerCommand::InstrumentCommandArpeggiator: {
     rp->arp_.SetData(value);
     if (!rp->arp_.Enabled()) {
       rp->arp_.Enable();
@@ -1226,7 +1227,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case FourCC::InstrumentCommandVolume: {
+  case TrackerCommand::InstrumentCommandVolume: {
     float targetVolume = float(value & 0xFF);
     float speed = float(value >> 8);
     float startVolume = fp2fl(rp->volume_);
@@ -1244,7 +1245,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case FourCC::InstrumentCommandPan: {
+  case TrackerCommand::InstrumentCommandPan: {
     float targetPan = float(value & 0xFF);
     if (targetPan == 0xFF) {
       targetPan = 0xFE;
@@ -1263,7 +1264,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case FourCC::InstrumentCommandFilterCut: {
+  case TrackerCommand::InstrumentCommandFilterCut: {
     float target = float(value & 0xFF) / 255.0f;
     float speed = float(value >> 8);
     float start = fp2fl(rp->cutoff_);
@@ -1279,7 +1280,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   } break;
 
-  case FourCC::InstrumentCommandFilterResonance: {
+  case TrackerCommand::InstrumentCommandFilterResonance: {
     float target = float(value & 0xFF) / 255.0f;
     float speed = float(value >> 8);
     float start = fp2fl(rp->reso_);
@@ -1294,7 +1295,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       rp->activeUpdaters_.push_back(&rp->resRamp_);
     }
   } break;
-  case FourCC::InstrumentCommandPitchSlide: {
+  case TrackerCommand::InstrumentCommandPitchSlide: {
     int pitch = (char)(value & 0xFF); // number of semi tones
     float speed = float(value >> 8);  // get speed parameter
     if (pitch > 127)
@@ -1320,7 +1321,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case FourCC::InstrumentCommandLegato: {
+  case TrackerCommand::InstrumentCommandLegato: {
     int pitch = (char)(value & 0xFF); // number of semi tones
     float speed = float(value >> 8);  // get speed parameter
 
@@ -1353,7 +1354,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case FourCC::InstrumentCommandPitchFineTune: {
+  case TrackerCommand::InstrumentCommandPitchFineTune: {
 
     float semi = (value & 0xFF) / float(0x80); // number of semi tones
     if (semi > 1)
@@ -1378,7 +1379,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
   }; break;
 
-  case FourCC::InstrumentCommandRetrigger: {
+  case TrackerCommand::InstrumentCommandRetrigger: {
     unsigned char loop = (value & 0xFF); // number of ticks before repeat
     unsigned char offset =
         (value >> 8); // number of ticks to offset at each repeat
@@ -1392,7 +1393,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
       rp->retrig_ = false;
     }
   } break;
-  case FourCC::InstrumentCommandLowPassFilter: {
+  case TrackerCommand::InstrumentCommandLowPassFilter: {
     float cut =
         (value >> 8) / 255.0f; // cutoff frequency (FF=all pass, 0=none pass)
     float res =
@@ -1425,7 +1426,7 @@ void SampleInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
     }
 
   } break;
-  case FourCC::InstrumentCommandCrush: {
+  case TrackerCommand::InstrumentCommandCrush: {
     unsigned char drive = (value >> 8);
     unsigned char crush = (value & 0x0F);
     if (drive > 0)

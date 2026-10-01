@@ -39,7 +39,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   col_ = 0;
   lastNote_ = NOTE_C3;
   lastInstr_ = 0;
-  lastCmd_ = FourCC::InstrumentCommandNone;
+  lastCmd_ = TrackerCommand::InstrumentCommandNone;
   lastParam_ = 0;
 
   clipboard_.active_ = false;
@@ -61,7 +61,7 @@ void PhraseView::Reset() {
   col_ = 0;
   lastNote_ = NOTE_C3;
   lastInstr_ = 0;
-  lastCmd_ = FourCC::InstrumentCommandNone;
+  lastCmd_ = TrackerCommand::InstrumentCommandNone;
   lastParam_ = 0;
   viewData_->phraseCurPos_ = 0;
 
@@ -176,7 +176,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
   unsigned char *c = 0;
   unsigned char limit = 0;
   bool wrap = false;
-  FourCC *cc;
+  TrackerCommand *cc;
 
   switch (col_ + xOffset) {
   case 0:
@@ -224,7 +224,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       break;
     }
     // Sanitize MIDI velocity values if needed
-    FourCC currentCmd =
+    TrackerCommand currentCmd =
         *(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_ + yOffset));
     ushort paramValue = cmdEdit_.GetInt();
     paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
@@ -268,7 +268,7 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
       break;
     }
     // Sanitize MIDI velocity values if needed
-    FourCC currentCmd =
+    TrackerCommand currentCmd =
         *(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset));
     ushort paramValue = cmdEdit_.GetInt();
     paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
@@ -379,7 +379,7 @@ void PhraseView::pasteLast() {
   case 2:
     c = (unsigned char *)phrase_->cmd1_ +
         (16 * viewData_->currentPhrase_ + row_);
-    if (*c == FourCC::InstrumentCommandNone) {
+    if (*c == TrackerCommand::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -400,7 +400,7 @@ void PhraseView::pasteLast() {
   case 4:
     c = (unsigned char *)phrase_->cmd2_ +
         (16 * viewData_->currentPhrase_ + row_);
-    if (*c == FourCC::InstrumentCommandNone) {
+    if (*c == TrackerCommand::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -664,13 +664,13 @@ void PhraseView::cutSelection() {
         dst2[j + clipboard_.row_] = 0xFF;
         break;
       case 2:
-        dst3[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
+        dst3[j + clipboard_.row_] = TrackerCommand::InstrumentCommandNone;
         break;
       case 3:
         dst4[j + clipboard_.row_] = 0x0000;
         break;
       case 4:
-        dst5[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
+        dst5[j + clipboard_.row_] = TrackerCommand::InstrumentCommandNone;
         break;
       case 5:
         dst6[j + clipboard_.row_] = 0x0000;
@@ -849,7 +849,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       } else {
         if ((col_ == 3) &&
             (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::InstrumentCommandTable) {
+                TrackerCommand::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -863,7 +863,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         }
         if ((col_ == 5) &&
             (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-                FourCC::InstrumentCommandTable) {
+                TrackerCommand::InstrumentCommandTable) {
           TableHolder *th = TableHolder::GetInstance();
           unsigned short next = th->GetNext();
           if (next != NO_MORE_TABLE) {
@@ -900,7 +900,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
     } else {
       if ((col_ == 3) &&
           (*(phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_))) ==
-              FourCC::InstrumentCommandTable) {
+              TrackerCommand::InstrumentCommandTable) {
         TableHolder *th = TableHolder::GetInstance();
         int current =
             *(phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_));
@@ -919,7 +919,7 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
       }
       if ((col_ == 5) &&
           (*(phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_))) ==
-              FourCC::InstrumentCommandTable) {
+              TrackerCommand::InstrumentCommandTable) {
         TableHolder *th = TableHolder::GetInstance();
         unsigned short next = th->Clone(
             *(phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_)));
@@ -1033,15 +1033,16 @@ void PhraseView::processNormalButtonMask(unsigned short mask) {
 
       ViewType vt = VT_TABLE;
 
-      FourCC *cmd = phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_);
+      TrackerCommand *cmd =
+          phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_);
       ushort *param =
           phrase_->param1_ + (16 * viewData_->currentPhrase_ + row_);
 
-      if (*cmd != FourCC::InstrumentCommandTable) {
+      if (*cmd != TrackerCommand::InstrumentCommandTable) {
         cmd = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_);
         param = phrase_->param2_ + (16 * viewData_->currentPhrase_ + row_);
       }
-      if (*cmd == FourCC::InstrumentCommandTable) {
+      if (*cmd == TrackerCommand::InstrumentCommandTable) {
         viewData_->currentTable_ = (*param) & (TABLE_COUNT - 1);
       }
       ViewEvent ve(VET_SWITCH_VIEW, &vt);
@@ -1317,10 +1318,10 @@ void PhraseView::DrawView() {
   pos = anchor;
   pos._x += 8;
 
-  FourCC *f = phrase_->cmd1_ + (16 * viewData_->currentPhrase_);
+  TrackerCommand *f = phrase_->cmd1_ + (16 * viewData_->currentPhrase_);
 
   for (int j = 0; j < 16; j++) {
-    FourCC command = *f++;
+    TrackerCommand command = *f++;
     setTextProps(props, 2, j, false);
     DrawString(pos._x, pos._y + j, command.c_str(), props);
     setTextProps(props, 2, j, true);
@@ -1350,7 +1351,7 @@ void PhraseView::DrawView() {
   f = phrase_->cmd2_ + (16 * viewData_->currentPhrase_);
 
   for (int j = 0; j < 16; j++) {
-    FourCC command = *f++;
+    TrackerCommand command = *f++;
     setTextProps(props, 4, j, false);
     DrawString(pos._x, pos._y + j, command.c_str(), props);
     setTextProps(props, 4, j, true);
@@ -1512,7 +1513,7 @@ void PhraseView::AnimationUpdate() {
 
 void PhraseView::drawHelpLegend() {
   GUITextProperties props;
-  FourCC *command = nullptr;
+  TrackerCommand *command = nullptr;
 
   if (col_ == 2 || col_ == 3) {
     command = phrase_->cmd1_;
@@ -1527,7 +1528,7 @@ void PhraseView::drawHelpLegend() {
 
   command += (16 * viewData_->currentPhrase_ + row_);
 
-  if (*command == FourCC::InstrumentCommandNone) {
+  if (*command == TrackerCommand::InstrumentCommandNone) {
     // no command -> no help text
     return;
   }

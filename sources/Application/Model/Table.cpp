@@ -18,11 +18,11 @@ Table::Table() { Reset(); };
 
 void Table::Reset() {
   for (int i = 0; i < TABLE_STEPS; i++) {
-    cmd1_[i] = FourCC::InstrumentCommandNone;
+    cmd1_[i] = TrackerCommand::InstrumentCommandNone;
     param1_[i] = 0;
-    cmd2_[i] = FourCC::InstrumentCommandNone;
+    cmd2_[i] = TrackerCommand::InstrumentCommandNone;
     param2_[i] = 0;
-    cmd3_[i] = FourCC::InstrumentCommandNone;
+    cmd3_[i] = TrackerCommand::InstrumentCommandNone;
     param3_[i] = 0;
   }
 };
@@ -41,13 +41,13 @@ void Table::Copy(const Table &other) {
 bool Table::IsEmpty() {
 
   for (int i = 0; i < TABLE_STEPS; i++) {
-    if (cmd1_[i] != FourCC::InstrumentCommandNone) {
+    if (cmd1_[i] != TrackerCommand::InstrumentCommandNone) {
       return false;
     };
-    if (cmd2_[i] != FourCC::InstrumentCommandNone) {
+    if (cmd2_[i] != TrackerCommand::InstrumentCommandNone) {
       return false;
     };
-    if (cmd3_[i] != FourCC::InstrumentCommandNone) {
+    if (cmd3_[i] != TrackerCommand::InstrumentCommandNone) {
       return false;
     };
     if (param1_[i] != 0) {

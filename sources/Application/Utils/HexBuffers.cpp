@@ -76,9 +76,9 @@ void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
 }
 
 void saveHexBuffer(tinyxml2::XMLPrinter *printer, const char *nodeName,
-                   FourCC *src, unsigned len) {
+                   TrackerCommand *src, unsigned len) {
   saveHexBuffer(printer, nodeName, (unsigned char *)src,
-                len * sizeof(FourCC::enum_type));
+                len * sizeof(TrackerCommand::enum_type));
 }
 
 void restoreHexBuffer(PersistencyDocument *doc, unsigned char *destination) {
