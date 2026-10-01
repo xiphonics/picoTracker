@@ -139,17 +139,19 @@ void ChainView::warpInColumn(int offset) {
 
 void ChainView::warpToNeighbour(int offset) {
 
-  int newPos = viewData_->songX_ + offset;
-  if ((newPos > -1) && (newPos < SONG_CHANNEL_COUNT)) {
+  const int channelCount = SONG_CHANNEL_COUNT;
+  int oldSongX = viewData_->songX_;
+  for (int newPos = oldSongX + offset; (newPos > -1) && (newPos < channelCount);
+       newPos += offset) {
     viewData_->songX_ = newPos;
     unsigned char *c = viewData_->GetCurrentSongPointer();
     if (*c != 0xFF) {
       viewData_->currentChain_ = *c;
       isDirty_ = true;
-    } else {
-      viewData_->songX_ -= offset;
+      return;
     }
   }
+  viewData_->songX_ = oldSongX;
 };
 
 void ChainView::clonePosition() {
