@@ -85,7 +85,7 @@ void UpdateSaveAsProgress(uint64_t bytesCopied, uint64_t, void *context) {
 } // namespace
 
 PersistencyService::PersistencyService()
-    : Service(FourCC::ServicePersistency) {};
+    : Service(FourCC::ServicePersistency){};
 
 PersistencyResult PersistencyService::CreateProject() {
   Trace::Log("APPLICATION", "create new project");
