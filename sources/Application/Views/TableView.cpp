@@ -27,7 +27,7 @@ TableView::TableView(GUIWindow &w, ViewData *viewData)
   lastVol_ = 0;
   lastTick_ = 0;
   lastTsp_ = 0;
-  lastCmd_ = FourCC::InstrumentCommandNone;
+  lastCmd_ = TrackerCommand::InstrumentCommandNone;
   lastParam_ = 0;
 
   clipboard_.active_ = false;
@@ -43,7 +43,7 @@ void TableView::Reset() {
   lastVol_ = 0;
   lastTick_ = 0;
   lastTsp_ = 0;
-  lastCmd_ = FourCC::InstrumentCommandNone;
+  lastCmd_ = TrackerCommand::InstrumentCommandNone;
   lastParam_ = 0;
   cmdEdit_.SetInt(0, false);
 
@@ -198,19 +198,19 @@ void TableView::cutSelection() {
     for (int j = 0; j < clipboard_.height_; j++) {
       switch (i + clipboard_.col_) {
       case 0:
-        dst1[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
+        dst1[j + clipboard_.row_] = TrackerCommand::InstrumentCommandNone;
         break;
       case 1:
         dst2[j + clipboard_.row_] = 0x0000;
         break;
       case 2:
-        dst3[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
+        dst3[j + clipboard_.row_] = TrackerCommand::InstrumentCommandNone;
         break;
       case 3:
         dst4[j + clipboard_.row_] = 0x0000;
         break;
       case 4:
-        dst5[j + clipboard_.row_] = FourCC::InstrumentCommandNone;
+        dst5[j + clipboard_.row_] = TrackerCommand::InstrumentCommandNone;
         break;
       case 5:
         dst6[j + clipboard_.row_] = 0x0000;
@@ -350,7 +350,7 @@ void TableView::updateCursorValue(int offset) {
   unsigned char *c = 0;
   unsigned char limit = 0;
   bool wrap = false;
-  FourCC *cc;
+  TrackerCommand *cc;
 
   Table &table = TableHolder::GetInstance()->GetTable(viewData_->currentTable_);
 
@@ -360,25 +360,25 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetNext(*cc);
       }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetNextAlpha(*cc);
       }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetPrev(*cc);
       }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetPrevAlpha(*cc);
       }
       break;
@@ -402,7 +402,7 @@ void TableView::updateCursorValue(int offset) {
       break;
     }
     // Sanitize MIDI velocity values if needed
-    FourCC currentCmd = *(table.cmd1_ + row_);
+    TrackerCommand currentCmd = *(table.cmd1_ + row_);
     ushort paramValue = cmdEdit_.GetInt();
     paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
     cmdEdit_.SetInt(paramValue);
@@ -415,25 +415,25 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetNext(*cc);
       }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetNextAlpha(*cc);
       }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetPrev(*cc);
       }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetPrevAlpha(*cc);
       }
       break;
@@ -457,7 +457,7 @@ void TableView::updateCursorValue(int offset) {
       break;
     }
     // Sanitize MIDI velocity values if needed
-    FourCC currentCmd = *(table.cmd2_ + row_);
+    TrackerCommand currentCmd = *(table.cmd2_ + row_);
     ushort paramValue = cmdEdit_.GetInt();
     paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
     cmdEdit_.SetInt(paramValue);
@@ -470,25 +470,25 @@ void TableView::updateCursorValue(int offset) {
     switch (offset) {
     case 0x01:
       *cc = CommandList::GetNext(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetNext(*cc);
       }
       break;
     case 0x10:
       *cc = CommandList::GetNextAlpha(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetNextAlpha(*cc);
       }
       break;
     case -0x01:
       *cc = CommandList::GetPrev(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetPrev(*cc);
       }
       break;
     case -0x10:
       *cc = CommandList::GetPrevAlpha(*cc);
-      if (*cc == FourCC::InstrumentCommandTable) {
+      if (*cc == TrackerCommand::InstrumentCommandTable) {
         *cc = CommandList::GetPrevAlpha(*cc);
       }
       break;
@@ -512,7 +512,7 @@ void TableView::updateCursorValue(int offset) {
       break;
     }
     // Sanitize MIDI velocity values if needed
-    FourCC currentCmd = *(table.cmd3_ + row_);
+    TrackerCommand currentCmd = *(table.cmd3_ + row_);
     ushort paramValue = cmdEdit_.GetInt();
     paramValue = CommandList::RangeLimitCommandParam(currentCmd, paramValue);
     cmdEdit_.SetInt(paramValue);
@@ -546,7 +546,7 @@ void TableView::pasteLast() {
   switch (col_) {
   case 0:
     c = (unsigned char *)table.cmd1_ + row_;
-    if (*c == FourCC::InstrumentCommandNone) {
+    if (*c == TrackerCommand::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -559,7 +559,7 @@ void TableView::pasteLast() {
 
   case 2:
     c = (unsigned char *)table.cmd2_ + row_;
-    if (*c == FourCC::InstrumentCommandNone) {
+    if (*c == TrackerCommand::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -572,7 +572,7 @@ void TableView::pasteLast() {
 
   case 4:
     c = (unsigned char *)table.cmd3_ + row_;
-    if (*c == FourCC::InstrumentCommandNone) {
+    if (*c == TrackerCommand::InstrumentCommandNone) {
       *c = lastCmd_;
       isDirty_ = true;
     } else {
@@ -813,10 +813,10 @@ void TableView::DrawView() {
 
   pos = anchor;
 
-  FourCC *f = table.cmd1_;
+  TrackerCommand *f = table.cmd1_;
 
   for (int j = 0; j < 16; j++) {
-    FourCC command = *f++;
+    TrackerCommand command = *f++;
     setTextProps(props, 0, j, false);
     DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 0, j, true);
@@ -851,7 +851,7 @@ void TableView::DrawView() {
   f = table.cmd2_;
 
   for (int j = 0; j < 16; j++) {
-    FourCC command = *f++;
+    TrackerCommand command = *f++;
     setTextProps(props, 2, j, false);
     DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 2, j, true);
@@ -886,7 +886,7 @@ void TableView::DrawView() {
   f = table.cmd3_;
 
   for (int j = 0; j < 16; j++) {
-    FourCC command = *f++;
+    TrackerCommand command = *f++;
     setTextProps(props, 4, j, false);
     DrawString(pos._x, pos._y, command.c_str(), props);
     setTextProps(props, 4, j, true);
@@ -1019,7 +1019,8 @@ void TableView::AnimationUpdate() {
   w_.Flush();
 }
 
-void TableView::printHelpLegend(FourCC command, GUITextProperties props) {
+void TableView::printHelpLegend(TrackerCommand command,
+                                GUITextProperties props) {
   char **helpLegend = getHelpLegend(command);
   char line[32]; //-1 for 1char space start of line
   strcpy(line, " ");

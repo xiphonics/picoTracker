@@ -28,11 +28,11 @@ public:
   void Copy(const Table &other);
 
 public:
-  FourCC cmd1_[TABLE_STEPS];
+  TrackerCommand cmd1_[TABLE_STEPS];
   ushort param1_[TABLE_STEPS];
-  FourCC cmd2_[TABLE_STEPS];
+  TrackerCommand cmd2_[TABLE_STEPS];
   ushort param2_[TABLE_STEPS];
-  FourCC cmd3_[TABLE_STEPS];
+  TrackerCommand cmd3_[TABLE_STEPS];
   ushort param3_[TABLE_STEPS];
 };
 

@@ -28,9 +28,9 @@ public:
 
   uchar note_[PHRASE_COUNT * STEPS_PER_PHRASE];
   uchar instr_[PHRASE_COUNT * STEPS_PER_PHRASE];
-  FourCC cmd1_[PHRASE_COUNT * STEPS_PER_PHRASE];
+  TrackerCommand cmd1_[PHRASE_COUNT * STEPS_PER_PHRASE];
   ushort param1_[PHRASE_COUNT * STEPS_PER_PHRASE];
-  FourCC cmd2_[PHRASE_COUNT * STEPS_PER_PHRASE];
+  TrackerCommand cmd2_[PHRASE_COUNT * STEPS_PER_PHRASE];
   ushort param2_[PHRASE_COUNT * STEPS_PER_PHRASE];
 
 private:

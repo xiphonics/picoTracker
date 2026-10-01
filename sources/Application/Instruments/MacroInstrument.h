@@ -37,7 +37,7 @@ public:
 
   // TODO: set a real instrument type before shipping macro instruments
   virtual InstrumentType GetType() { return IT_NONE; };
-  virtual void ProcessCommand(int channel, FourCC cc, ushort value);
+  virtual void ProcessCommand(int channel, TrackerCommand cc, ushort value);
   virtual int GetTable();
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);

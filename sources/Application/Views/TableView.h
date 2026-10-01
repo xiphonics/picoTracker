@@ -58,7 +58,7 @@ private:
   Variable cmdEdit_;
   GUIPoint cmdEditPos_;
   UIBigHexVarField cmdEditField_;
-  void printHelpLegend(FourCC command, GUITextProperties props);
+  void printHelpLegend(TrackerCommand command, GUITextProperties props);
 
   struct clipboard {
     bool active_;

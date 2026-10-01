@@ -93,7 +93,7 @@ public:
   // first row has not ticked yet but its commands still have to be applied.
   void ProcessCommands(const bool *delayExpired = nullptr,
                        bool ignorePendingDelay = false);
-  bool ProcessChannelCommand(int channel, FourCC cmd, ushort param);
+  bool ProcessChannelCommand(int channel, TrackerCommand cmd, ushort param);
 
   void StartStreaming(const char *name, int startSample = 0);
   void StartLoopingStreaming(const char *name);

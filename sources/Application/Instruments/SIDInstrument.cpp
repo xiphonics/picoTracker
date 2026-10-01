@@ -235,9 +235,10 @@ bool SIDInstrument::IsInitialized() {
   return true; // Always initialised
 };
 
-void SIDInstrument::ProcessCommand(int channel, FourCC cc, ushort value) {
+void SIDInstrument::ProcessCommand(int channel, TrackerCommand cc,
+                                   ushort value) {
   switch (cc) {
-  case FourCC::InstrumentCommandGateOff:
+  case TrackerCommand::InstrumentCommandGateOff:
     int osc = GetOsc();
     sid_->Register[4 + osc * 7] &= ~1; // Set gate bit off
     gate_ = false;

@@ -11,52 +11,53 @@
 
 // Keep command entries grouped by displayed mnemonic first letter;
 // GetNextAlpha/GetPrevAlpha depend on this ordering.
-static FourCC _all[] = {
-    FourCC::InstrumentCommandNone,
-    FourCC::InstrumentCommandArpeggiator,
-    FourCC::InstrumentCommandCrush,
-    FourCC::InstrumentCommandDelay,
-    FourCC::InstrumentCommandFilterCut,
-    FourCC::InstrumentCommandLowPassFilter,
-    FourCC::InstrumentCommandFilterResonance,
-    FourCC::InstrumentCommandGateOff,
-    FourCC::InstrumentCommandGroove,
-    FourCC::InstrumentCommandHop,
-    FourCC::InstrumentCommandInstrumentRetrigger,
-    FourCC::InstrumentCommandKill,
-    FourCC::InstrumentCommandLegato,
-    FourCC::InstrumentCommandLoopOfset,
-    FourCC::InstrumentCommandMidiCC,
-    FourCC::InstrumentCommandMidiChord,
-    FourCC::InstrumentCommandMidiPC,
-    FourCC::InstrumentCommandPan,
-    FourCC::InstrumentCommandPitchFineTune,
-    FourCC::InstrumentCommandPlayOfset,
-    FourCC::InstrumentCommandPitchSlide,
-    FourCC::InstrumentCommandRetrigger,
-    FourCC::InstrumentCommandStop,
-    FourCC::InstrumentCommandTable,
-    FourCC::InstrumentCommandTempo,
-    FourCC::InstrumentCommandVelocity,
-    FourCC::InstrumentCommandVolume,
+static TrackerCommand _all[] = {
+    TrackerCommand::InstrumentCommandNone,
+    TrackerCommand::InstrumentCommandArpeggiator,
+    TrackerCommand::InstrumentCommandCrush,
+    TrackerCommand::InstrumentCommandDelay,
+    TrackerCommand::InstrumentCommandFilterCut,
+    TrackerCommand::InstrumentCommandLowPassFilter,
+    TrackerCommand::InstrumentCommandFilterResonance,
+    TrackerCommand::InstrumentCommandGateOff,
+    TrackerCommand::InstrumentCommandGroove,
+    TrackerCommand::InstrumentCommandHop,
+    TrackerCommand::InstrumentCommandInstrumentRetrigger,
+    TrackerCommand::InstrumentCommandKill,
+    TrackerCommand::InstrumentCommandLegato,
+    TrackerCommand::InstrumentCommandLoopOfset,
+    TrackerCommand::InstrumentCommandMidiCC,
+    TrackerCommand::InstrumentCommandMidiChord,
+    TrackerCommand::InstrumentCommandMidiPC,
+    TrackerCommand::InstrumentCommandPan,
+    TrackerCommand::InstrumentCommandPitchFineTune,
+    TrackerCommand::InstrumentCommandPlayOfset,
+    TrackerCommand::InstrumentCommandPitchSlide,
+    TrackerCommand::InstrumentCommandRetrigger,
+    TrackerCommand::InstrumentCommandStop,
+    TrackerCommand::InstrumentCommandTable,
+    TrackerCommand::InstrumentCommandTempo,
+    TrackerCommand::InstrumentCommandVelocity,
+    TrackerCommand::InstrumentCommandVolume,
 };
 
-static char GetCommandGroupLetter(FourCC command) {
-  const char *name = FourCC(command).c_str();
+static char GetCommandGroupLetter(TrackerCommand command) {
+  const char *name = TrackerCommand(command).c_str();
   return (name && name[0]) ? name[0] : '\0';
 }
 
 // Applies command-specific range limits to parameter values
-ushort CommandList::RangeLimitCommandParam(FourCC command, ushort paramValue) {
+ushort CommandList::RangeLimitCommandParam(TrackerCommand command,
+                                           ushort paramValue) {
   // Each command type can have its own specific range limits
-  if (command == FourCC::InstrumentCommandVelocity) {
+  if (command == TrackerCommand::InstrumentCommandVelocity) {
     // For VEL command, limit the bb part to 0x7F (127) while preserving the aa
     // part
     return (paramValue & 0xFF00) | (paramValue & 0x7F);
   }
   // Add more command-specific limits here as needed
   // Example:
-  // else if (command == FourCC::InstrumentCommandMidiCC) {
+  // else if (command == TrackerCommand::InstrumentCommandMidiCC) {
   //   // MIDI CC values should also be limited to 0-127
   //   return (paramValue & 0xFF00) | (paramValue & 0x7F);
   // }
@@ -65,8 +66,8 @@ ushort CommandList::RangeLimitCommandParam(FourCC command, ushort paramValue) {
   return paramValue;
 }
 
-FourCC CommandList::GetNext(FourCC current) {
-  for (uint i = 0; i < sizeof(_all) / sizeof(FourCC) - 1; i++) {
+TrackerCommand CommandList::GetNext(TrackerCommand current) {
+  for (uint i = 0; i < sizeof(_all) / sizeof(TrackerCommand) - 1; i++) {
     if (_all[i] == current) {
       return _all[i + 1];
     };
@@ -74,8 +75,8 @@ FourCC CommandList::GetNext(FourCC current) {
   return current;
 };
 
-FourCC CommandList::GetPrev(FourCC current) {
-  uint count = sizeof(_all) / sizeof(FourCC);
+TrackerCommand CommandList::GetPrev(TrackerCommand current) {
+  uint count = sizeof(_all) / sizeof(TrackerCommand);
   for (uint i = 2; i < count; i++) {
     if (_all[i] == current) {
       return _all[i - 1];
@@ -84,10 +85,10 @@ FourCC CommandList::GetPrev(FourCC current) {
   return current;
 };
 
-FourCC CommandList::GetNextAlpha(FourCC current) {
+TrackerCommand CommandList::GetNextAlpha(TrackerCommand current) {
   char letter = GetCommandGroupLetter(current);
   bool found = false;
-  for (uint i = 0; i < sizeof(_all) / sizeof(FourCC); i++) {
+  for (uint i = 0; i < sizeof(_all) / sizeof(TrackerCommand); i++) {
     char tLetter = GetCommandGroupLetter(_all[i]);
     if (!found) {
       if (tLetter == letter) {
@@ -102,12 +103,12 @@ FourCC CommandList::GetNextAlpha(FourCC current) {
   return current;
 };
 
-FourCC CommandList::GetPrevAlpha(FourCC current) {
+TrackerCommand CommandList::GetPrevAlpha(TrackerCommand current) {
 
   char letter = GetCommandGroupLetter(current);
   bool found = false;
-  FourCC tReturn = FourCC::Default;
-  uint count = sizeof(_all) / sizeof(FourCC);
+  TrackerCommand tReturn = TrackerCommand::Default;
+  uint count = sizeof(_all) / sizeof(TrackerCommand);
 
   for (uint i = count - 1; i > 0; i--) {
     char tLetter = GetCommandGroupLetter(_all[i]);
