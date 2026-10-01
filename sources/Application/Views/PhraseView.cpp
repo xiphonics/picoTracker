@@ -469,13 +469,16 @@ void PhraseView::warpInChain(int offset) {
 }
 
 void PhraseView::warpToNeighbour(int offset) {
-  int newPos = viewData_->songX_ + offset;
-  if ((newPos > -1) && (newPos < SONG_CHANNEL_COUNT)) {
+  const int channelCount = SONG_CHANNEL_COUNT;
+  int oldSongX = viewData_->songX_;
+  unsigned char oldChain = viewData_->currentChain_;
+
+  for (int newPos = oldSongX + offset; (newPos > -1) && (newPos < channelCount);
+       newPos += offset) {
     // Go to neighbout song channel
     viewData_->songX_ = newPos;
     unsigned char *c = viewData_->GetCurrentSongPointer();
     // is there a chain ?
-    unsigned char oldChain = viewData_->currentChain_;
     if (*c != 0xFF) {
       // go to chain
       viewData_->currentChain_ = *c;
@@ -486,14 +489,13 @@ void PhraseView::warpToNeighbour(int offset) {
         viewData_->currentPhrase_ = *p;
         updateCursor(0, 0);
         isDirty_ = true;
-      } else { // restore chain & song
-        viewData_->currentChain_ = oldChain;
-        viewData_->songX_ -= offset;
+        return;
       }
-    } else { // restore song
-      viewData_->songX_ -= offset;
     }
   }
+
+  viewData_->currentChain_ = oldChain;
+  viewData_->songX_ = oldSongX;
 }
 
 /******************************************************
