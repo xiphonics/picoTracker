@@ -8,10 +8,10 @@
  */
 
 #include "SamplePool.h"
-#include "Application/Instruments/WavFileWriter.h"
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/DrawUtils.h"
+#include "Application/Utils/SharedBuffer.h"
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
@@ -387,8 +387,8 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   }
 
   // copy file to current project as 16-bit PCM
-  auto *buffer = static_cast<uint8_t *>(WavFileWriter::GetSharedBuffer());
-  constexpr uint32_t copyBufferSize = WavFileWriter::SharedBufferSize;
+  auto *buffer = static_cast<uint8_t *>(SharedBuffer::Get());
+  constexpr uint32_t copyBufferSize = SharedBuffer::Size;
   uint32_t bytesRead = 0;
   uint32_t samplesRead = 0;
   uint32_t totalRead = 0;

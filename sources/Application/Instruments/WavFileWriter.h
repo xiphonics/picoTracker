@@ -36,15 +36,11 @@ typedef void (*SampleEditProgressCallback)(uint8_t percent);
 
 class WavFileWriter {
 public:
-  static constexpr size_t SharedBufferSize = 8 * 1024;
-
   WavFileWriter();
   WavFileWriter(const char *path);
   ~WavFileWriter();
   bool Open(const char *path);
   bool IsOpen() const;
-  // Borrow only while the WAV render writer is idle.
-  static void *GetSharedBuffer() { return sharedBuffer_; }
   void AddBuffer(fixed *, int size); // size in samples
   void Close();
   static bool TrimFile(const char *path, uint32_t startFrame, uint32_t endFrame,
@@ -58,9 +54,6 @@ public:
 
 private:
   int sampleCount_;
-  // Aligned AXI RAM for rendered WAV output, project Save As copies, and WAV
-  // import chunks.
-  __attribute__((aligned(32))) static uint8_t sharedBuffer_[SharedBufferSize];
   FileHandle file_;
 };
 #endif
