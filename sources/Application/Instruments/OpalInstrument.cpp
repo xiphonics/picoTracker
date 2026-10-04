@@ -31,6 +31,9 @@ static const char *kslValues[4] = {"0", "1.5", "3", "6"};
 static const unsigned int noteFNumbers[] = {342, 363, 385, 408, 432, 458,
                                             485, 514, 544, 577, 611, 647};
 
+etl::array<OpalInstrument::OpalRenderParams, SONG_CHANNEL_COUNT>
+    OpalInstrument::renderParams_;
+
 OpalInstrument::OpalInstrument()
     : I_Instrument(&variables_),
       algorithm_(FourCC::OPALInstrumentAlgorithm, algorithms, 6, 0),
@@ -72,8 +75,11 @@ OpalInstrument::OpalInstrument()
 OpalInstrument::~OpalInstrument(){};
 
 bool OpalInstrument::Init() {
-  // enable left/right only for 0 channel
-  opl_.Port(0xC0 + CHANNEL, 0x30);
+  // enable left/right only for 0 channel of each chip
+  for (auto &params : renderParams_) {
+    params.chip.Port(0xC0 + CHANNEL, 0x30);
+    params.breg = 0;
+  }
 
   return true;
 };
@@ -81,10 +87,13 @@ bool OpalInstrument::Init() {
 void OpalInstrument::OnStart(){};
 
 bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
+  Opal &chip = renderParams_[channel].chip;
+  uint8_t &breg = renderParams_[channel].breg;
+
   // channel wide settings
   // enable left/right output (D4, D5) & set algorithm D0
   // for now only 2 op so just Additive or FM
-  opl_.Port(0xC0 + CHANNEL, 0x30 + algorithm_.GetInt());
+  chip.Port(0xC0 + CHANNEL, 0x30 + algorithm_.GetInt());
 
   // set note in OPAL
   uint8_t block = note / 12;
@@ -100,13 +109,13 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   uint8_t tvskmOp1 = (tremVibSusKSR1 << 4) + freqMultOp1;
   uint8_t tvskmOp2 = (tremVibSusKSR2 << 4) + freqMultOp2;
 
-  // For proper monophonic behavior and to support slides:
+  // For proper per-channel monophonic behavior and to support slides:
   // 1. First update the frequency registers without changing key-on bit
   // 2. Only retrigger the note (key-off then key-on) if retrigger is true
 
   // Set the frequency (low 8 bits)
   uint8_t areg = fnum & 0xFF;
-  opl_.Port(FREQ_BASE_REG + CHANNEL, areg);
+  chip.Port(FREQ_BASE_REG + CHANNEL, areg);
 
   // Prepare the block/high-freq bits with key-on bit
   uint8_t new_breg = 0x20 | (block << 2) | (fnum >> 8);
@@ -114,17 +123,17 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   if (retrigger) {
     // For retriggering, we need to key-off first to restart the envelope
     uint8_t key_off = BitClr(new_breg, 5); // Clear key-on bit from new value
-    opl_.Port(OCTAVE_BASE_REG + CHANNEL, key_off);
+    chip.Port(OCTAVE_BASE_REG + CHANNEL, key_off);
   }
 
   // Store the new register value for future reference
   breg = new_breg;
 
   // Note on, block, hi freq - this will set the key-on bit
-  opl_.Port(OCTAVE_BASE_REG + CHANNEL, breg);
+  chip.Port(OCTAVE_BASE_REG + CHANNEL, breg);
   // Tremolo/Vibrato/Sustain/KSR/Multiplication
-  opl_.Port(0x20 + CHANNEL, tvskmOp1);
-  opl_.Port(0x21 + CHANNEL, tvskmOp2);
+  chip.Port(0x20 + CHANNEL, tvskmOp1);
+  chip.Port(0x21 + CHANNEL, tvskmOp2);
 
   // 0 = pure sine
   uint8_t waveform1 = op1WaveShape_.GetInt();
@@ -139,35 +148,38 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   uint16_t adsr2 = op2ADSR_.GetInt();
 
   // Waveform
-  opl_.Port(0xE0 + CHANNEL, waveform1);
-  opl_.Port(0xE1 + CHANNEL, waveform2);
+  chip.Port(0xE0 + CHANNEL, waveform1);
+  chip.Port(0xE1 + CHANNEL, waveform2);
 
   // Key Scale Level/Output Level
-  opl_.Port(0x40 + CHANNEL, keyscaleOutLvl1);
-  opl_.Port(0x41 + CHANNEL, keyscaleOutLvl2);
+  chip.Port(0x40 + CHANNEL, keyscaleOutLvl1);
+  chip.Port(0x41 + CHANNEL, keyscaleOutLvl2);
 
   // Attack Rate/Decay Rate
-  opl_.Port(0x60 + CHANNEL, adsr1 >> 8);
-  opl_.Port(0x61 + CHANNEL, adsr2 >> 8);
+  chip.Port(0x60 + CHANNEL, adsr1 >> 8);
+  chip.Port(0x61 + CHANNEL, adsr2 >> 8);
 
   // Sustain Level/Release Rate
-  opl_.Port(0x80 + CHANNEL, (uint8_t)(adsr1 & 0x00FF));
-  opl_.Port(0x81 + CHANNEL, (uint8_t)(adsr2 & 0x00FF));
+  chip.Port(0x80 + CHANNEL, (uint8_t)(adsr1 & 0x00FF));
+  chip.Port(0x81 + CHANNEL, (uint8_t)(adsr2 & 0x00FF));
 
   return true;
 };
 
-void OpalInstrument::Stop(int c) {
-  uint8_t stop = BitClr(breg, 5);
-  opl_.Port(OCTAVE_BASE_REG, stop);
+void OpalInstrument::Stop(int channel) {
+  OpalRenderParams &params = renderParams_[channel];
+  uint8_t stop = BitClr(params.breg, 5);
+  params.chip.Port(OCTAVE_BASE_REG + CHANNEL, stop);
 };
 
 bool OpalInstrument::Render(int channel, fixed *buffer, int size,
                             bool updateTick) {
   PROFILE_SCOPE("OpalInstrument::Render");
 
+  // Each tracker channel owns its own chip, so channels sharing this
+  // instrument render independent voices.
   // optimise to remove function calls in hot loop
-  opl_.SampleBuffer(buffer, size);
+  renderParams_[channel].chip.SampleBuffer(buffer, size);
 
   return true;
 };
@@ -179,10 +191,12 @@ bool OpalInstrument::IsInitialized() {
 void OpalInstrument::ProcessCommand(int channel, TrackerCommand cc,
                                     ushort value) {
   switch (cc) {
-  case TrackerCommand::InstrumentCommandGateOff:
-    uint8_t stop = BitClr(breg, 5);
-    opl_.Port(OCTAVE_BASE_REG, stop);
+  case TrackerCommand::InstrumentCommandGateOff: {
+    OpalRenderParams &params = renderParams_[channel];
+    uint8_t stop = BitClr(params.breg, 5);
+    params.chip.Port(OCTAVE_BASE_REG + CHANNEL, stop);
     break;
+  }
   }
 };
 

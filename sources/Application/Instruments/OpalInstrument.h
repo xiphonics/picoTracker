@@ -12,6 +12,7 @@
 
 #include "Application/Model/Song.h"
 #include "Application/Persistency/PersistenceConstants.h"
+#include "Externals/etl/include/etl/array.h"
 #include "Externals/opal/opal.h"
 #include "I_Instrument.h"
 #include <cstdint>
@@ -49,12 +50,19 @@ public:
   virtual void SetTableState(TableSaveState &state);
   etl::ilist<Variable *> *Variables() { return &variables_; };
 
-  void setChannel(uint8_t channel);
-
 private:
-  Opal opl_ = (44100);
+  struct OpalRenderParams {
+    OpalRenderParams() : chip(44100), breg(0) {}
 
-  uint8_t breg;
+    Opal chip;
+    uint8_t breg;
+  };
+
+  // Playback state is owned per tracker channel rather than per instrument
+  // definition, following the Advance FM6 instrument model, so one OPAL
+  // instrument can sound independently on several channels. Each chip is a
+  // single FM voice; the RAM cost is sizeof(Opal) per channel.
+  static etl::array<OpalRenderParams, SONG_CHANNEL_COUNT> renderParams_;
 
   etl::list<Variable *, 16> variables_;
 
