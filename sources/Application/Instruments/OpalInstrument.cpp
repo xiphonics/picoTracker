@@ -26,7 +26,9 @@ static const char *kslValues[4] = {"0", "1.5", "3", "6"};
 #define FREQ_BASE_REG 0xA0
 #define OCTAVE_BASE_REG 0xB0
 
-#define CHANNEL 0 // just hardcoding to channel 0 for now
+// Each tracker channel owns a full Opal instance acting as a single voice,
+// so we always address channel 0 within the chip
+#define CHANNEL 0
 
 static const unsigned int noteFNumbers[] = {342, 363, 385, 408, 432, 458,
                                             485, 514, 544, 577, 611, 647};
@@ -75,12 +77,10 @@ OpalInstrument::OpalInstrument()
 OpalInstrument::~OpalInstrument(){};
 
 bool OpalInstrument::Init() {
-  // enable left/right only for 0 channel of each chip
-  for (auto &params : renderParams_) {
-    params.chip.Port(0xC0 + CHANNEL, 0x30);
-    params.breg = 0;
-  }
-
+  // Per-channel voices are already zero-initialised by the
+  // OpalRenderParams constructor and Start() writes the full register set
+  // including 0xC0. Doing register writes here would perturb voices
+  // already sounding on other channels when a new instrument is created.
   return true;
 };
 
@@ -91,9 +91,13 @@ bool OpalInstrument::Start(int channel, unsigned char note, bool retrigger) {
   uint8_t &breg = renderParams_[channel].breg;
 
   // channel wide settings
-  // enable left/right output (D4, D5) & set algorithm D0
-  // for now only 2 op so just Additive or FM
-  chip.Port(0xC0 + CHANNEL, 0x30 + algorithm_.GetInt());
+  // enable left/right output (D5, D4), set feedback (D3:D1) & set algorithm
+  // D0. For now only 2 op so just Additive or FM
+  uint8_t feedback = (feedback_.GetInt() & 0x07) << 1;
+  chip.Port(0xC0 + CHANNEL, 0x30 + feedback + algorithm_.GetInt());
+
+  // deep tremolo / deep vibrato global depth (BD7/BD6)
+  chip.Port(0xBD, deepTremeloVibrato_.GetInt() ? 0xC0 : 0x00);
 
   // set note in OPAL
   uint8_t block = note / 12;

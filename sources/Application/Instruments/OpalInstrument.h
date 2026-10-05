@@ -17,8 +17,6 @@
 #include "I_Instrument.h"
 #include <cstdint>
 
-#define OPAL_MAX_CHANNELS 4
-
 class OpalInstrument : public I_Instrument {
 
 public:
@@ -61,7 +59,8 @@ private:
   // Playback state is owned per tracker channel rather than per instrument
   // definition, following the Advance FM6 instrument model, so one OPAL
   // instrument can sound independently on several channels. Each chip is a
-  // single FM voice; the RAM cost is sizeof(Opal) per channel.
+  // single FM voice. The cost is one voice per tracker channel of static
+  // RAM, allocated unconditionally: 8 x sizeof(Opal) ~= 2.5 kB.
   static etl::array<OpalRenderParams, SONG_CHANNEL_COUNT> renderParams_;
 
   etl::list<Variable *, 16> variables_;
