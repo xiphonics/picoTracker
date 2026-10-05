@@ -11,6 +11,7 @@
 #include "Application/Model/Config.h"
 #include "Application/Persistency/PersistencyService.h"
 #include "Application/Utils/DrawUtils.h"
+#include "Application/Utils/SharedBuffer.h"
 #include "Externals/SRC/common.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Externals/etl/include/etl/string_stream.h"
@@ -402,7 +403,8 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
   }
 
   // copy file to current project as 16-bit PCM
-  uint8_t buffer[IMPORT_CHUNK_SIZE];
+  auto *buffer = static_cast<uint8_t *>(SharedBuffer::Get());
+  constexpr uint32_t copyBufferSize = SharedBuffer::Size;
   uint32_t bytesRead = 0;
   uint32_t samplesRead = 0;
   uint32_t totalRead = 0;
@@ -435,7 +437,7 @@ int SamplePool::ImportSample(const char *name, const char *projectName) {
 
   while (true) {
     if (!shouldResample) {
-      if (!wav.Read(buffer, sizeof(buffer), &bytesRead)) {
+      if (!wav.Read(buffer, copyBufferSize, &bytesRead)) {
         Trace::Error("Failed reading sample data from:%s", name);
         return -1;
       }
