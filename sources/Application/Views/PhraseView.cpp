@@ -28,6 +28,19 @@
 
 short PhraseView::offsets_[2][4] = {-1, 1, 12, -12, -1, 1, 16, -16};
 
+// IRT is only valid in tables so it is skipped when cycling commands in
+// phrases, mirroring how TableView skips the TABLE command inside tables.
+// The extra cycle is safe because IRT is the only command in its "I" group.
+static TrackerCommand
+cyclePhraseCommand(TrackerCommand (*cycle)(TrackerCommand),
+                   TrackerCommand current) {
+  TrackerCommand command = cycle(current);
+  if (command == TrackerCommand::InstrumentCommandInstrumentRetrigger) {
+    command = cycle(command);
+  }
+  return command;
+}
+
 PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
     : ScreenView(w, viewData), cmdEdit_(FourCC::ActionEdit, 0),
       cmdEditPos_(0, 10),
@@ -193,16 +206,16 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     cc = phrase_->cmd1_ + (16 * viewData_->currentPhrase_ + row_ + yOffset);
     switch (direction) {
     case VUD_RIGHT:
-      *cc = CommandList::GetNext(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetNext, *cc);
       break;
     case VUD_UP:
-      *cc = CommandList::GetNextAlpha(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetNextAlpha, *cc);
       break;
     case VUD_LEFT:
-      *cc = CommandList::GetPrev(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetPrev, *cc);
       break;
     case VUD_DOWN:
-      *cc = CommandList::GetPrevAlpha(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetPrevAlpha, *cc);
       break;
     }
     lastCmd_ = *cc;
@@ -238,16 +251,16 @@ void PhraseView::updateCursorValue(ViewUpdateDirection direction, int xOffset,
     cc = phrase_->cmd2_ + (16 * viewData_->currentPhrase_ + row_ + yOffset);
     switch (direction) {
     case VUD_RIGHT:
-      *cc = CommandList::GetNext(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetNext, *cc);
       break;
     case VUD_UP:
-      *cc = CommandList::GetNextAlpha(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetNextAlpha, *cc);
       break;
     case VUD_LEFT:
-      *cc = CommandList::GetPrev(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetPrev, *cc);
       break;
     case VUD_DOWN:
-      *cc = CommandList::GetPrevAlpha(*cc);
+      *cc = cyclePhraseCommand(CommandList::GetPrevAlpha, *cc);
       break;
     }
     lastCmd_ = *cc;
