@@ -41,3 +41,7 @@ usermanual/web
 optbuild/**
 AGENTS.md
 refs/**
+
+# Local VSCode folder settings override the tracked picoTracker.code-workspace
+# and must never be committed
+.vscode/

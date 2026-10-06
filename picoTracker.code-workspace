@@ -1,0 +1,93 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		// All paths in this file must stay relative so the workspace works in
+		// any clone or worktree. Machine-specific tool locations come from PATH;
+		// override them in your local copy only if a tool is not on PATH.
+		"cmake.sourceDirectory": "sources",
+		"cmake.useCMakePresets": "always",
+		// Switch both of these between "rp2040-debug" and "rp2040-release"
+		// when you want to change build type from this workspace file.
+		"cmake.configurePreset": "rp2040-debug",
+		"cmake.buildPreset": "rp2040-debug",
+		"cortex-debug.gdbPath": "gdb",
+		"cortex-debug.variableUseNaturalFormat": true,
+		// USUALLY WANT DEOPT when running from within VSCODE for good debugging
+		"editor.formatOnSaveMode": "file",
+		"editor.formatOnSave": false,
+		"files.associations": {
+			"*.fe": "lisp",
+			"functional": "c",
+			"string": "cpp",
+			"cstring": "cpp",
+			"cstdint": "cpp",
+			"compare": "cpp",
+			"stdlib.h": "c",
+			"typeinfo": "cpp",
+			"chrono": "cpp"
+		}
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "RP2040 Debug",
+				"cwd": "${workspaceFolder}",
+				"executable": "build-debug/Adapters/picoTracker/main/picoTracker.elf",
+				"request": "launch",
+				"type": "cortex-debug",
+				"servertype": "openocd",
+				"device": "RP2040",
+				"configFiles": [
+					"interface/cmsis-dap.cfg",
+					"target/rp2040.cfg"
+				],
+				"openOCDLaunchCommands": [
+					"adapter speed 5000"
+				],
+				"showDevDebugOutput": "raw",
+				"svdFile": "${workspaceFolder}/sources/Externals/pico-sdk/src/rp2040/hardware_regs/RP2040.svd"
+			},
+			{
+				"name": "RP2040 Release",
+				"cwd": "${workspaceFolder}",
+				"executable": "build-release/Adapters/picoTracker/main/picoTracker.elf",
+				"request": "launch",
+				"type": "cortex-debug",
+				"servertype": "openocd",
+				"device": "RP2040",
+				"configFiles": [
+					"interface/cmsis-dap.cfg",
+					"target/rp2040.cfg"
+				],
+				"openOCDLaunchCommands": [
+					"adapter speed 5000"
+				],
+				"showDevDebugOutput": "raw",
+				"svdFile": "${workspaceFolder}/sources/Externals/pico-sdk/src/rp2040/hardware_regs/RP2040.svd"
+			},
+			{
+				"name": "RP2350 Debug",
+				"cwd": "${workspaceFolder}",
+				"executable": "build-rp2350/Adapters/picoTrackerPlus/main/picoTracker.elf",
+				"request": "launch",
+				"type": "cortex-debug",
+				"servertype": "openocd",
+				"device": "RP2350",
+				"configFiles": [
+					"interface/cmsis-dap.cfg",
+					"target/rp2350.cfg"
+				],
+				"openOCDLaunchCommands": [
+					"adapter speed 5000"
+				],
+				"svdFile": "${workspaceFolder}/sources/Externals/pico-sdk/src/rp2350/hardware_regs/RP2350.svd"
+			}
+		],
+		"compounds": []
+	}
+}
