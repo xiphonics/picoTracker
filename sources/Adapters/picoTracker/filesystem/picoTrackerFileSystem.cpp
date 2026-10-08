@@ -399,16 +399,12 @@ int picoTrackerFile::Error() {
 }
 
 bool picoTrackerFile::Close() {
+  std::lock_guard<Mutex> lock(mutex);
   if (!isOpen_) {
     return true;
   }
-
-  std::lock_guard<Mutex> lock(mutex);
-  bool closed = file_.close();
-  if (closed) {
-    isOpen_ = false;
-  }
-  return closed;
+  isOpen_ = false;
+  return file_.close();
 }
 
 bool picoTrackerFile::Sync() {
@@ -416,4 +412,8 @@ bool picoTrackerFile::Sync() {
   return file_.sync();
 }
 
-void picoTrackerFile::Dispose() { filePool.destroy(this); }
+void picoTrackerFile::Dispose() {
+  Close();
+  std::lock_guard<Mutex> lock(mutex);
+  filePool.destroy(this);
+}

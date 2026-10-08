@@ -99,10 +99,8 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (playKeyHeld_ && !(mask & EPBM_PLAY)) {
       // Play key no longer pressed so should stop playback
       playKeyHeld_ = false;
-      if (Player::GetInstance()->IsPlaying()) {
-        Player::GetInstance()->StopStreaming();
-        previewPlayingIndex_ = (size_t)-1;
-      }
+      Player::GetInstance()->StopStreaming();
+      previewPlayingIndex_ = (size_t)-1;
       return;
     }
 
@@ -280,6 +278,10 @@ void ImportView::ProcessButtonMask(unsigned short mask, bool pressed) {
     }
     warpToNextSample(false);
   } else if ((mask & EPBM_LEFT) && (mask & EPBM_NAV)) {
+    // Stop playback if leaving this screen
+    Player::GetInstance()->StopStreaming();
+    previewPlayingIndex_ = (size_t)-1;
+
     // clear this flag on leaving this screen
     viewData_->isShowingSampleEditorProjectPool = false;
 
@@ -590,9 +592,7 @@ void ImportView::preview(char *name) {
   bool isSingleCycle = IS_SINGLE_CYCLE(fileSize);
 
   // If something is already playing, stop it first
-  if (Player::GetInstance()->IsPlaying()) {
-    Player::GetInstance()->StopStreaming();
-  }
+  Player::GetInstance()->StopStreaming();
 
   WavFile wav;
   auto wavRes = wav.Open(name);

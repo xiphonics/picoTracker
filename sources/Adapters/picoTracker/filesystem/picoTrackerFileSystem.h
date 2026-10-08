@@ -82,14 +82,14 @@ private:
 
 // Mutex implementation for thread safety
 struct Mutex {
-  Mutex() { mutex_init(&mutex); }
-  void lock() { mutex_enter_blocking(&mutex); }
-  void unlock() { mutex_exit(&mutex); }
+  Mutex() { recursive_mutex_init(&mutex); }
+  void lock() { recursive_mutex_enter_blocking(&mutex); }
+  void unlock() { recursive_mutex_exit(&mutex); }
   Mutex(const Mutex &) = delete;
   Mutex &operator=(const Mutex &) = delete;
 
 private:
-  mutex_t mutex;
+  recursive_mutex_t mutex;
 };
 
 #endif // _PICOTRACKER_FILESYSTEM_H_
