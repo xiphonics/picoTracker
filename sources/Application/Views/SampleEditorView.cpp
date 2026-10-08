@@ -419,13 +419,9 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
     if (playKeyHeld_ && !(mask & EPBM_PLAY)) {
       // Play key no longer pressed so should stop playback
       playKeyHeld_ = false;
-
-      if (Player::GetInstance()->IsPlaying()) {
-        // Stop playback regardless of whether it's regular or looping
-        Player::GetInstance()->StopStreaming();
-        isPlaying_ = false;
-        isDirty_ = true;
-      }
+      Player::GetInstance()->StopStreaming();
+      isPlaying_ = false;
+      isDirty_ = true;
       return;
     }
   }
@@ -477,9 +473,7 @@ void SampleEditorView::ProcessButtonMask(unsigned short mask, bool pressed) {
       lastAnimationTime_ = sys_->Millis();
 
       // If something is already playing, stop it first
-      if (Player::GetInstance()->IsPlaying()) {
-        Player::GetInstance()->StopStreaming();
-      }
+      Player::GetInstance()->StopStreaming();
 
       // Start playing the sample with just the filename
       if (isSingleCycle_) {
@@ -1538,9 +1532,7 @@ SampleInstrument *SampleEditorView::getCurrentSampleInstrument() {
 }
 
 void SampleEditorView::navigateToView(ViewType vt) {
-  if (Player::GetInstance()->IsPlaying()) {
-    Player::GetInstance()->StopStreaming();
-  }
+  Player::GetInstance()->StopStreaming();
   // "clear" the prev screen by setting it to Song screen
   // now that we are leaving this screen
   SampleEditorView::sourceViewType_ = VT_SONG;

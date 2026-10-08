@@ -49,7 +49,6 @@ protected:
 
   // For matching oscillator mode in SampleInstrument
   float referencePitch_; // Reference pitch in Hz (C3 = 130.81 Hz)
-  volatile bool stopRequested_;
 
 public:
   void SetProject(Project *project) { project_ = project; }
