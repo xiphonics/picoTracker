@@ -1549,18 +1549,15 @@ void PhraseView::drawHelpLegend() {
   }
 
   char **helpLegend = getHelpLegend(*command);
-  char line[32]; //-1 for 1char space start of line
   // first clear top line upto battery gauge
   DrawString(0, 0, "                           ", props);
   // TODO: use ClearTextRect instead of DrawString() once it is implemented
   // ClearTextRect(0, 0, SCREEN_WIDTH - BATTERY_GAUGE_WIDTH, 0);
-  strcpy(line, " ");
-  strcpy(line, helpLegend[0]);
-  DrawString(0, 0, line, props);
-  memset(line, ' ', 32);
+  etl::string<HelpLegendLineCapacity> line(helpLegend[0]);
+  DrawString(0, 0, line.c_str(), props);
   if (helpLegend[1] != NULL) {
-    strcpy(line, helpLegend[1]);
-    DrawString(0, 1, line, props);
+    line = helpLegend[1];
+    DrawString(0, 1, line.c_str(), props);
   }
 
   // highlight the upper case letters before the ':'

@@ -7,8 +7,12 @@
  * This file is part of the picoTracker firmware
  */
 
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <etl/string.h>
+
+static constexpr size_t HelpLegendLineCapacity = 31;
 
 // CAUTION: all strings must fit in the line length limits!
 // First line is max 31 - MAX_BATTERY_GAUGE_WIDTH, second line is max 31
@@ -17,6 +21,10 @@ static char **getHelpLegend(TrackerCommand command) {
   static char *result[2];
   result[1] = (char *)("                               ");
   switch (command) {
+  case TrackerCommand::InstrumentCommandChance:
+    result[0] = (char *)("CHaNce: --bb");
+    result[1] = (char *)("target left col; bb chance");
+    break;
   case TrackerCommand::InstrumentCommandKill:
     result[0] = (char *)("KILl: --bb");
     result[1] = (char *)("stop playing after bb ticks");
@@ -108,6 +116,10 @@ static char **getHelpLegend(TrackerCommand command) {
   case TrackerCommand::InstrumentCommandDelay:
     result[0] = (char *)("Delay: ---b");
     result[1] = (char *)("delay b+1 ticks");
+    break;
+  case TrackerCommand::InstrumentCommandRandom:
+    result[0] = (char *)("RaNDom: --bb");
+    result[1] = (char *)("target left col; bb depth");
     break;
   case TrackerCommand::InstrumentCommandStop:
     result[0] = (char *)("Stop table playback");

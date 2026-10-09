@@ -13,21 +13,26 @@
 #include "Application/Model/Groove.h"
 #include "Application/Model/Song.h"
 #include "Application/Model/Table.h"
+#include "RowFx.h"
 
 class I_Instrument;
 
 class TablePlayerChange {
 public:
-  int timeToLive_;
-  int instrRetrigger_;
+  int32_t timeToLive_ = 0;
+  int32_t instrRetrigger_ = -1;
+  int32_t noteRetrigger_ = -1;
 };
 
 struct TablePlayback {
 public:
   void Init(int i);
-  void ProcessStep(TablePlayerChange &tpc);
-  bool ProcessLocalCommand(int row, TrackerCommand *commandList,
-                           ushort *paramList, TablePlayerChange &tpc);
+  void ProcessStep(TablePlayerChange &tpc, uchar currentNote,
+                   PlayerLastActiveCommandState &lastActive);
+  bool ProcessPositionCommand(uint8_t row, TrackerCommand command,
+                              ushort param);
+  bool ProcessLocalCommand(TrackerCommand command, ushort param,
+                           TablePlayerChange &tpc);
   void Start(I_Instrument *, Table &, bool automated);
   void Stop();
   int GetPlaybackPosition(int channel);

@@ -8,12 +8,14 @@
  */
 
 #include "CommandList.h"
+#include <algorithm>
 
 // Keep command entries grouped by displayed mnemonic first letter;
 // GetNextAlpha/GetPrevAlpha depend on this ordering.
 static TrackerCommand _all[] = {
     TrackerCommand::InstrumentCommandNone,
     TrackerCommand::InstrumentCommandArpeggiator,
+    TrackerCommand::InstrumentCommandChance,
     TrackerCommand::InstrumentCommandCrush,
     TrackerCommand::InstrumentCommandDelay,
     TrackerCommand::InstrumentCommandFilterCut,
@@ -33,6 +35,7 @@ static TrackerCommand _all[] = {
     TrackerCommand::InstrumentCommandPitchFineTune,
     TrackerCommand::InstrumentCommandPlayOfset,
     TrackerCommand::InstrumentCommandPitchSlide,
+    TrackerCommand::InstrumentCommandRandom,
     TrackerCommand::InstrumentCommandRetrigger,
     TrackerCommand::InstrumentCommandStop,
     TrackerCommand::InstrumentCommandTable,
@@ -54,6 +57,10 @@ ushort CommandList::RangeLimitCommandParam(TrackerCommand command,
     // For VEL command, limit the bb part to 0x7F (127) while preserving the aa
     // part
     return (paramValue & 0xFF00) | (paramValue & 0x7F);
+  }
+  if (command == TrackerCommand::InstrumentCommandPan) {
+    // PAN targets the shared panlaw table, which is indexed 0..0xFE.
+    return (paramValue & 0xFF00) | std::min<ushort>(paramValue & 0x00FF, 0xFE);
   }
   // Add more command-specific limits here as needed
   // Example:

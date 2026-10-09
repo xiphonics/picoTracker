@@ -15,6 +15,7 @@
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
 #include "PlayerMixer.h"
+#include "RowFx.h"
 #include "SyncMaster.h"
 #include "System/Timer/Timer.h"
 #include "config/StringLimits.h"
@@ -153,6 +154,8 @@ protected:
   void StepAutomationTableForRetrigger(int channel, I_Instrument *instrument);
   void RetriggerChannelInstrument(int channel, int semitoneOffset,
                                   bool stepAutomationTable);
+  void RetriggerChannelInstrumentAtNote(int channel, int note,
+                                        bool stepAutomationTable);
   int getChannelHop(int channel, int pos);
   void moveToNextStep();
   void moveToNextPhrase(int channel, int hop = -1);
@@ -166,6 +169,9 @@ protected:
   bool findPlayable(uchar *row, int col, uchar chainPos = 0);
 
 private:
+  void ResetLastActiveCommands();
+  void RecordLastActiveCommand(int channel, TrackerCommand cmd, ushort param);
+
   PlayerMixer mixer_;
   ViewData *viewData_;
   Project *project_;
@@ -198,6 +204,7 @@ private:
 
   bool retrigAllImmediate_;
   unsigned char retrigPos_;
+  PlayerLastActiveCommandState lastActiveCommands_[SONG_CHANNEL_COUNT];
 };
 
 #endif
