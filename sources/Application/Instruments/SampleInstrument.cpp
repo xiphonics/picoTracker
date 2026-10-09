@@ -729,8 +729,10 @@ bool SampleInstrument::Render(int channel, fixed *buffer, int size,
     fixed volscale = fl2fp(0.003921568627450980392156862745098f);
     fixed volfactor = fp_mul(rp->volume_, volscale);
     int pan = fp2i(rp->pan_);
-    fixed fixedpanl = panlaw[pan];
-    fixed fixedpanr = panlaw[254 - pan];
+    // Pan values increase from left to right: 0 is hard left, 0xFE is hard
+    // right.
+    fixed fixedpanl = panlaw[254 - pan];
+    fixed fixedpanr = panlaw[pan];
 
     // filter constants
 
