@@ -850,7 +850,7 @@ void SongView::DrawView() {
 
   // In live mode, show how to get back to song mode below the mode indicator
   if (player->GetSequencerMode() == SM_LIVE) {
-    SetColor(CD_HILITE1);
+    SetColor(CD_INFO);
     DrawString(pos._x, pos._y + 1, "EDIT+LEFT/RIGHT:exit live", props);
     SetColor(CD_NORMAL);
   }
