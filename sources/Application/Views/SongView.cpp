@@ -446,6 +446,7 @@ void SongView::startCurrentRow() {
   Player *player = Player::GetInstance();
   player->SetSequencerMode(SM_LIVE);
   player->OnSongStartButton(0, 7, false, false);
+  isDirty_ = true;
 }
 
 void SongView::startImmediate() {
@@ -846,6 +847,13 @@ void SongView::DrawView() {
 
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
   DrawString(pos._x + 5, pos._y, projectName.c_str(), props);
+
+  // In live mode, show how to get back to song mode below the mode indicator
+  if (player->GetSequencerMode() == SM_LIVE) {
+    SetColor(CD_HILITE1);
+    DrawString(pos._x, pos._y + 1, "EDIT+LEFT/RIGHT:exit live", props);
+    SetColor(CD_NORMAL);
+  }
 
   // Compute song grid location
   GUIPoint anchor = GetAnchor();
