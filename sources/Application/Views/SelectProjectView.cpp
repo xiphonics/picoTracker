@@ -269,7 +269,7 @@ void SelectProjectView::DrawView() {
 };
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
-                                       unsigned int currentTick){};
+                                       unsigned int currentTick) {};
 
 void SelectProjectView::OnFocus() {
   selectedButton_ = 0; // Always default to "Load" when entering this view.
@@ -358,7 +358,9 @@ void SelectProjectView::setCurrentFolder() {
   // Let's read all the directory in the project dir
   fs->list(&fileIndexList_, "", true);
 
-  // Filter out "." and ".." along with the hidden default project entry
+  // Filter out "." and ".." along with the hidden default project entry,
+  // and any directory that does not contain a picoTracker project file
+  // (lgptsav.dat)
   for (auto it = fileIndexList_.begin(); it != fileIndexList_.end();) {
     fs->getFileName(*it, selection_, MAX_PROJECT_NAME_LENGTH + 1);
 
@@ -372,13 +374,30 @@ void SelectProjectView::setCurrentFolder() {
                    static_cast<int>(it - fileIndexList_.begin()));
       }
       it = fileIndexList_.erase(it);
-    } else {
-      ++it;
+      continue;
     }
+
+    etl::string<sizeof(PROJECTS_DIR) + MAX_PROJECT_NAME_LENGTH +
+                sizeof(PROJECT_DATA_FILE) + 2>
+        projectDataPath(PROJECTS_DIR);
+    projectDataPath.append("/");
+    projectDataPath.append(selection_);
+    projectDataPath.append("/");
+    projectDataPath.append(PROJECT_DATA_FILE);
+
+    if (!fs->exists(projectDataPath.c_str())) {
+      Trace::Log("SELECTPROJECTVIEW",
+                 "skipping non-pico project (missing %s) on Index:%d: %s",
+                 PROJECT_DATA_FILE,
+                 static_cast<int>(it - fileIndexList_.begin()), selection_);
+      it = fileIndexList_.erase(it);
+      continue;
+    }
+
+    ++it;
   }
 
   // reset & redraw screen
-  currentIndex_ = std::min(currentIndex_, fileIndexList_.size() - 1);
   topIndex_ = 0;
   currentIndex_ = 0;
   isDirty_ = true;
@@ -470,6 +489,10 @@ void SelectProjectView::AttemptDeletingSelectedProject() {
 }
 
 void SelectProjectView::AttemptLoadingProject() {
+  if (currentIndex_ >= fileIndexList_.size()) {
+    return;
+  }
+
   if (WarnPlayerRunning()) {
     return;
   }
