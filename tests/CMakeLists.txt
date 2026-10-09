@@ -9,7 +9,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(picoTracker_tests
   test_main.cpp
   foundation_types_tests.cpp
+  row_fx_tests.cpp
   ../sources/Application/Instruments/CommandList.cpp
+  ../sources/Application/Player/RowFx.cpp
   samplecache_tests.cpp
   wavheader_tests.cpp
   ../sources/Application/Instruments/WavHeader.cpp

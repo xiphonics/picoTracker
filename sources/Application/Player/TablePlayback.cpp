@@ -121,17 +121,11 @@ Table *TablePlayback::GetTable() { return table_; };
 
 bool TablePlayback::GetAutomation() { return automated_; };
 
-bool TablePlayback::ProcessLocalCommand(int row, TrackerCommand *commandList,
-                                        ushort *paramList,
-                                        TablePlayerChange &tpc) {
-
+bool TablePlayback::ProcessPositionCommand(uint8_t row, TrackerCommand command,
+                                           ushort param) {
   bool hopped = false;
 
-  TrackerCommand command = commandList[position_[row]];
-  ushort param = paramList[position_[row]];
-
   // First process any positional command
-
   switch (command) {
   case TrackerCommand::InstrumentCommandHop: {
     int count = param >> 8;
@@ -149,50 +143,46 @@ bool TablePlayback::ProcessLocalCommand(int row, TrackerCommand *commandList,
     };
     break;
   }
+  default:
+    break;
   }
 
-  // Update values if needed
+  return hopped;
+}
 
-  if (hopped) {
-    command = commandList[position_[row]];
-    param = paramList[position_[row]];
-  }
-
-  // Now process local command on possibly hopped row
-
+bool TablePlayback::ProcessLocalCommand(TrackerCommand command, ushort param,
+                                        TablePlayerChange &tpc) {
   switch (command) {
   case TrackerCommand::InstrumentCommandKill:
     tpc.timeToLive_ = (param & 0xFF) + 1;
-    break;
+    return true;
   case TrackerCommand::InstrumentCommandInstrumentRetrigger:
     tpc.instrRetrigger_ = (param & 0xFF);
-    break;
+    return true;
   case TrackerCommand::InstrumentCommandGroove:
     param = param & 0x1F;
     groove_.groove_ = (unsigned char)param;
     groove_.position_ = 0;
     groove_.ticks_ = 0;
-    break;
+    return true;
   case TrackerCommand::InstrumentCommandStop:
     Stop();
+    return true;
+  default:
     break;
   }
-  return hopped;
+  return false;
 }
 
-void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
-
+void TablePlayback::ProcessStep(TablePlayerChange &tpc, uchar currentNote,
+                                PlayerLastActiveCommandState &lastActive) {
   Groove *gs = Groove::GetInstance();
 
   if (table_ != 0) {
     if (instrument_) {
-
       // See if groove tells us we need to process a step
-
       if (groove_.ticks_ == 0) {
-
         // If automated, restore state
-
         if (automated_) {
           TableSaveState state;
           instrument_->GetTableState(state);
@@ -202,21 +192,73 @@ void TablePlayback::ProcessStep(TablePlayerChange &tpc) {
           groove_ = state.groove_;
         }
 
-        // try local processing for if it changes current table or position
+        const TrackerCommand currentCmd[TABLE_COLUMNS] = {
+            table_->cmd1_[position_[0]],
+            table_->cmd2_[position_[1]],
+            table_->cmd3_[position_[2]],
+        };
+        const ushort currentParam[TABLE_COLUMNS] = {
+            table_->param1_[position_[0]],
+            table_->param2_[position_[1]],
+            table_->param3_[position_[2]],
+        };
 
-        hopped_[0] =
-            ProcessLocalCommand(0, table_->cmd1_, table_->param1_, tpc);
-        hopped_[1] =
-            ProcessLocalCommand(1, table_->cmd2_, table_->param2_, tpc);
-        hopped_[2] =
-            ProcessLocalCommand(2, table_->cmd3_, table_->param3_, tpc);
+        // Keep table HOP handling in the positional pass, but allow a RND
+        // command immediately to the right to randomize the HOP destination
+        // before the jump occurs, or a CHN command to gate it.
+        TableRowFxResult fx = ResolveTableRowFx(currentCmd, currentParam,
+                                                currentNote, lastActive, true);
 
-        instrument_->ProcessCommand(channel_, table_->cmd1_[position_[0]],
-                                    table_->param1_[position_[0]]);
-        instrument_->ProcessCommand(channel_, table_->cmd2_[position_[1]],
-                                    table_->param2_[position_[1]]);
-        instrument_->ProcessCommand(channel_, table_->cmd3_[position_[2]],
-                                    table_->param3_[position_[2]]);
+        hopped_[0] = (fx.allowCmd[0])
+                         ? ProcessPositionCommand(0, fx.cmd[0], fx.param[0])
+                         : false;
+        hopped_[1] = (fx.allowCmd[1])
+                         ? ProcessPositionCommand(1, fx.cmd[1], fx.param[1])
+                         : false;
+        hopped_[2] = (fx.allowCmd[2])
+                         ? ProcessPositionCommand(2, fx.cmd[2], fx.param[2])
+                         : false;
+
+        if (hopped_[0] || hopped_[1] || hopped_[2]) {
+          const TrackerCommand activeCmd[TABLE_COLUMNS] = {
+              table_->cmd1_[position_[0]],
+              table_->cmd2_[position_[1]],
+              table_->cmd3_[position_[2]],
+          };
+          const ushort activeParam[TABLE_COLUMNS] = {
+              table_->param1_[position_[0]],
+              table_->param2_[position_[1]],
+              table_->param3_[position_[2]],
+          };
+          fx = ResolveTableRowFx(activeCmd, activeParam, currentNote,
+                                 lastActive, true);
+        }
+
+        if (fx.allowNote && fx.note <= HIGHEST_NOTE && fx.note != currentNote) {
+          tpc.noteRetrigger_ = fx.note;
+        }
+
+        auto dispatchResolved = [&](int column) {
+          if (!fx.allowCmd[column] ||
+              fx.cmd[column] == TrackerCommand::InstrumentCommandNone ||
+              fx.cmd[column] == TrackerCommand::InstrumentCommandChance ||
+              fx.cmd[column] == TrackerCommand::InstrumentCommandRandom) {
+            return;
+          }
+
+          const bool handledLocally =
+              ProcessLocalCommand(fx.cmd[column], fx.param[column], tpc);
+          if (!handledLocally) {
+            instrument_->ProcessCommand(channel_, fx.cmd[column],
+                                        fx.param[column]);
+          }
+          UpdateLastActiveCommandState(lastActive, fx.cmd[column],
+                                       fx.param[column]);
+        };
+
+        dispatchResolved(0);
+        dispatchResolved(1);
+        dispatchResolved(2);
 
         previous_[0] = position_[0];
         previous_[1] = position_[1];

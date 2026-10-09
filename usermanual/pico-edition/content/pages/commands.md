@@ -16,6 +16,30 @@ ARP 3000: loops between original pitch and +3 semitones
 ARP 4050: loops between original pitch, +4 semitones, +0 semitones, + 5 semitones
 
 - speed of arpeggiator is constant and can not be changed
+
+## CHN aabb
+
+**Chance. The command targets the value immediately to its left. `bb` sets the chance amount.**
+
+- The `aa` byte is ignored.
+- In phrase command column 1, `CHN` targets the phrase step note.
+- In phrase command column 2, `CHN` targets command column 1.
+- In table command column 1, `CHN` targets the currently playing note.
+- In table command columns 2 and 3, `CHN` targets the command column immediately to the left.
+- `CHN` can also be used to gate positional commands like `HOP`.
+- `bb` is a raw chance value from `00` to `FF`
+  - `00` = never
+  - `FF` = always
+  - `80` = about 50%
+- `CHN` is a control command only. It does not get sent on to the instrument itself.
+
+Examples:
+
+- `CHN 0080`: in phrase command column 1, the note on this row plays roughly half the time
+- `VOL 0080 CHN 00C0`: the `VOL` command runs most of the time, but not always
+- `HOP 0005 CHN 0080`: the `HOP` command only executes roughly half the time
+- In a table, `VOL 0080 CHN 0080 --- ----`: the `VOL` in column 1 runs roughly half the time
+
 ## CSH aabb (CRSH in lgpt)
 
 **aa = pre crush drive (from 1 to 0xFF, 00 is no change) & bb = crush setting (from 0 to 0xF, 0x0 is 1 bit, 0xF is 16bit )**
@@ -167,6 +191,37 @@ The PSL command also acts as a linear MIDI pitch bend controller for MIDI instru
 - MIDI pitch bend is persistent across notes — if you want to return to normal pitch, you must manually reset the bend to center.
   - This can be done by sending the aabb value `PSL 007F` on the next note or at any time.
 - MIDI pitch bend can be sent without triggering a note, allowing for continuous pitch control.
+
+## RND aabb
+
+**RaNDom. The command targets the value immediately to its left. `aabb` sets the randomization amount.**
+
+- For note targets, `bb` sets the randomization amount and `aa` is ignored.
+- In phrase command column 1, `RND` randomizes the phrase step note.
+- In phrase command column 2, `RND` randomizes command column 1's parameter.
+- In table command column 1, `RND` randomizes the currently playing note and retriggers the instrument.
+- In table command columns 2 and 3, `RND` randomizes the parameter of the command column immediately to the left.
+- For command targets, each RND field controls the matching target field. For example, `VOL 4080 RND 0010` varies only the `80` volume target, while `VOL 4080 RND 1000` varies only the `40` speed.
+- Each field's value is the randomization depth:
+  - `00` = no change
+  - `FF` = maximum randomization
+- Randomization is applied to the target command's meaningful value fields and then clamped back into the valid range for that command.
+- Nibble-based commands like `ARP` and `MCH` randomize each interval nibble independently.
+- Split commands like `VOL`, `FCT`, `FLT`, `FRS`, `PAN`, `PSL`, `LEG`, `PFT`, `POF`, and `RTG` randomize their two bytes independently.
+- `CSH` randomizes the drive byte and the crush nibble independently.
+- `MCC` keeps the controller number and randomizes only the value.
+- `GRV`, `DLY`, `IRT`, `KIL`, `GOF`, and `VEL` randomize only their active low-byte or low-nibble value.
+- `HOP` randomizes both its repeat count (high byte) and destination step (low nibble) independently.
+- `LOF` and `TPO` randomize as whole values.
+- Control or identity commands such as `CHN`, `RND`, `STP`, `TBL`, and `MPC` are not randomized when targeted.
+- Randomized note values are clamped to the valid phrase note range.
+
+Examples:
+
+- `RND 0080`: in phrase command column 1, randomizes the note on this row by a moderate amount
+- `VOL 4080 RND 0080`: randomizes the `VOL` parameter by a moderate amount
+- `HOP 0804 RND 10FF`: randomizes the `HOP` repeat count around 08 and the destination to any row from 0 to F
+- In a table, `FCT 2080 RND 0080 --- ----`: randomizes the `FCT` parameter in column 1
 
 ## RTG aabb (RTRG in lgpt)
 

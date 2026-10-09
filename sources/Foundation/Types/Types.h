@@ -43,17 +43,21 @@ struct TrackerCommand {
     InstrumentCommandVolume = 69,              // VOLM
     InstrumentCommandNone = 45,                // ----
     InstrumentCommandMidiChord = 143,
+    InstrumentCommandChance = 188, // CHN
+    InstrumentCommandRandom = 189, // RND
 
     Default = 255,
   };
   ETL_DECLARE_ENUM_TYPE(TrackerCommand, uint8_t)
   ETL_ENUM_TYPE(InstrumentCommandArpeggiator, "ARP")
+  ETL_ENUM_TYPE(InstrumentCommandChance, "CHN")
   ETL_ENUM_TYPE(InstrumentCommandCrush, "CSH")
   ETL_ENUM_TYPE(InstrumentCommandKill, "KIL")
   ETL_ENUM_TYPE(InstrumentCommandLoopOfset, "LOF")
   ETL_ENUM_TYPE(InstrumentCommandVelocity, "VEL")
   ETL_ENUM_TYPE(InstrumentCommandVolume, "VOL")
   ETL_ENUM_TYPE(InstrumentCommandPitchSlide, "PSL")
+  ETL_ENUM_TYPE(InstrumentCommandRandom, "RND")
   ETL_ENUM_TYPE(InstrumentCommandHop, "HOP")
   ETL_ENUM_TYPE(InstrumentCommandLegato, "LEG")
   ETL_ENUM_TYPE(InstrumentCommandRetrigger, "RTG")

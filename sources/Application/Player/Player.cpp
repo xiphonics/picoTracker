@@ -135,6 +135,8 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
     atp.Stop();
   }
 
+  ResetLastActiveCommands();
+
   // Tell the instruments we're starting
 
   project_->GetInstrumentBank()->OnStart();
@@ -571,7 +573,9 @@ void Player::Update(Observable &o, I_ObservableData *d) {
 
     // Initialise retrigger table
     int32_t instrRetrigger[SONG_CHANNEL_COUNT];
+    int32_t noteRetrigger[SONG_CHANNEL_COUNT];
     memset(instrRetrigger, -1, SONG_CHANNEL_COUNT * sizeof(int32_t));
+    memset(noteRetrigger, -1, SONG_CHANNEL_COUNT * sizeof(int32_t));
 
     // Process any table commands now
     for (int channel = 0; channel < SONG_CHANNEL_COUNT; channel++) {
@@ -580,9 +584,12 @@ void Player::Update(Observable &o, I_ObservableData *d) {
         TablePlayerChange tpc;
         tpc.timeToLive_ = timeToLive_[channel];
         tpc.instrRetrigger_ = -1;
-        tpb.ProcessStep(tpc);
+        tpc.noteRetrigger_ = -1;
+        tpb.ProcessStep(tpc, mixer_.GetChannelNote(channel),
+                        lastActiveCommands_[channel]);
         timeToLive_[channel] = tpc.timeToLive_;
         instrRetrigger[channel] = tpc.instrRetrigger_;
+        noteRetrigger[channel] = tpc.noteRetrigger_;
       }
     }
 
@@ -597,7 +604,9 @@ void Player::Update(Observable &o, I_ObservableData *d) {
           }
         }
         if (!stopped) {
-          if (instrRetrigger[i] >= 0) {
+          if (noteRetrigger[i] >= 0) {
+            RetriggerChannelInstrumentAtNote(i, noteRetrigger[i], true);
+          } else if (instrRetrigger[i] >= 0) {
             RetriggerChannelInstrument(
                 i, DecodeRetriggerOffset(instrRetrigger[i]), true);
           };
@@ -652,38 +661,38 @@ void Player::ProcessCommands(const bool *delayExpired,
         // just expired
         if (gs->TriggerChannel(i) || (delayExpired && delayExpired[i])) {
           int pos = viewData_->phrasePlayPos_[i];
-          TrackerCommand cc =
-              viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-          ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
+          uchar note = viewData_->song_->phrase_.note_[phrase * 16 + pos];
+          RowFxResult fx = ResolveRowFx(
+              note, viewData_->song_->phrase_.cmd1_[phrase * 16 + pos],
+              viewData_->song_->phrase_.param1_[phrase * 16 + pos],
+              viewData_->song_->phrase_.cmd2_[phrase * 16 + pos],
+              viewData_->song_->phrase_.param2_[phrase * 16 + pos],
+              lastActiveCommands_[i], true, false);
 
-          // if there's any command to trigger, first pass it on the player
-          // then pass it on to the instrument
+          auto dispatchResolvedCommand = [&](bool allowed, TrackerCommand cc,
+                                             ushort param) {
+            if (!allowed || cc == TrackerCommand::InstrumentCommandNone ||
+                cc == TrackerCommand::InstrumentCommandChance ||
+                cc == TrackerCommand::InstrumentCommandRandom) {
+              return;
+            }
 
-          if (cc != TrackerCommand::InstrumentCommandNone) {
-            if (!ProcessChannelCommand(i, cc, param)) {
+            bool handledByPlayer = ProcessChannelCommand(i, cc, param);
+            bool executed = handledByPlayer;
+            if (!handledByPlayer) {
               I_Instrument *instrument = mixer_.GetInstrument(i);
               if (instrument) {
                 instrument->ProcessCommand(i, cc, param);
+                executed = true;
               }
             };
+            if (executed) {
+              RecordLastActiveCommand(i, cc, param);
+            }
           };
 
-          // Now process second command row
-
-          cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-          param = viewData_->song_->phrase_.param2_[phrase * 16 + pos];
-
-          // if there's any command to trigger, first pass it on the player
-          // then pass it on to the instrument
-
-          if (cc != TrackerCommand::InstrumentCommandNone) {
-            if (!ProcessChannelCommand(i, cc, param)) {
-              I_Instrument *instrument = mixer_.GetInstrument(i);
-              if (instrument) {
-                instrument->ProcessCommand(i, cc, param);
-              }
-            };
-          };
+          dispatchResolvedCommand(fx.allowCmd1, fx.cmd1, fx.param1);
+          dispatchResolvedCommand(fx.allowCmd2, fx.cmd2, fx.param2);
         }
       }
     }
@@ -737,6 +746,22 @@ bool Player::ProcessChannelCommand(int channel, TrackerCommand cmd,
   };
   return false;
 };
+
+void Player::ResetLastActiveCommands() {
+  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
+    lastActiveCommands_[i].lastCmd = TrackerCommand::InstrumentCommandNone;
+    lastActiveCommands_[i].lastParam = 0;
+    lastActiveCommands_[i].valid = false;
+  }
+}
+
+void Player::RecordLastActiveCommand(int channel, TrackerCommand cmd,
+                                     ushort param) {
+  if (channel < 0 || channel >= SONG_CHANNEL_COUNT) {
+    return;
+  }
+  UpdateLastActiveCommandState(lastActiveCommands_[channel], cmd, param);
+}
 
 /********************************************************
  triggerLiveChains:
@@ -843,6 +868,12 @@ void Player::playCursorPosition(int channel) {
     Phrase *phrase = &(song->phrase_);
     unsigned char note = phrase->note_[16 * currentPhrase + pos];
     unsigned char instr = phrase->instr_[16 * currentPhrase + pos];
+    RowFxResult fx = ResolveRowFx(note, phrase->cmd1_[16 * currentPhrase + pos],
+                                  phrase->param1_[16 * currentPhrase + pos],
+                                  phrase->cmd2_[16 * currentPhrase + pos],
+                                  phrase->param2_[16 * currentPhrase + pos],
+                                  lastActiveCommands_[channel], false);
+    note = fx.note;
 
     TableHolder *th = TableHolder::GetInstance();
     TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
@@ -850,7 +881,7 @@ void Player::playCursorPosition(int channel) {
 
     if (note == NOTE_OFF) {
       mixer_.StopInstrument(channel);
-    } else if (note <= HIGHEST_NOTE) {
+    } else if (note <= HIGHEST_NOTE && fx.allowNote) {
 
       // Stop instrument if playing
 
@@ -926,16 +957,21 @@ void Player::playCursorPosition(int channel) {
         }
       }
     }
-    if ((note <= HIGHEST_NOTE) || (instr != 0xFF)) {
+    if ((note <= HIGHEST_NOTE && fx.allowNote) || (instr != 0xFF)) {
       I_Instrument *instrument = mixer_.GetInstrument(channel);
       if (instrument) {
         if (instrument->GetTableAutomation()) {
           TablePlayerChange tpc;
           tpc.timeToLive_ = timeToLive_[channel];
           tpc.instrRetrigger_ = -1;
-          atp.ProcessStep(tpc);
+          tpc.noteRetrigger_ = -1;
+          atp.ProcessStep(tpc, mixer_.GetChannelNote(channel),
+                          lastActiveCommands_[channel]);
           timeToLive_[channel] = tpc.timeToLive_;
-          if (tpc.instrRetrigger_ >= 0) {
+          if (tpc.noteRetrigger_ >= 0) {
+            RetriggerChannelInstrumentAtNote(channel, tpc.noteRetrigger_,
+                                             false);
+          } else if (tpc.instrRetrigger_ >= 0) {
             RetriggerChannelInstrument(
                 channel, DecodeRetriggerOffset(tpc.instrRetrigger_), false);
           };
@@ -968,8 +1004,10 @@ void Player::StepAutomationTableForRetrigger(int channel,
 
   tpc.timeToLive_ = timeToLive_[channel];
   tpc.instrRetrigger_ = -1;
+  tpc.noteRetrigger_ = -1;
 
-  automationPlayback.ProcessStep(tpc);
+  automationPlayback.ProcessStep(tpc, mixer_.GetChannelNote(channel),
+                                 lastActiveCommands_[channel]);
 
   timeToLive_[channel] = tpc.timeToLive_;
   // Ignore IRT generated by this follow-up automation step to keep retrigger
@@ -978,14 +1016,22 @@ void Player::StepAutomationTableForRetrigger(int channel,
 
 void Player::RetriggerChannelInstrument(int channel, int semitoneOffset,
                                         bool stepAutomationTable) {
-  int note = mixer_.GetChannelNote(channel);
+  int baseNote = mixer_.GetChannelNote(channel);
+  if (baseNote > HIGHEST_NOTE) {
+    return;
+  }
+  RetriggerChannelInstrumentAtNote(channel, baseNote + semitoneOffset,
+                                   stepAutomationTable);
+}
+
+void Player::RetriggerChannelInstrumentAtNote(int channel, int note,
+                                              bool stepAutomationTable) {
   I_Instrument *instrument = mixer_.GetInstrument(channel);
 
-  if ((note > HIGHEST_NOTE) || (instrument == 0)) {
+  if (instrument == 0) {
     return;
   }
 
-  note += semitoneOffset;
   while (note > 127) {
     note -= 12;
   }
@@ -1003,17 +1049,11 @@ void Player::RetriggerChannelInstrument(int channel, int semitoneOffset,
 }
 
 int Player::getChannelHop(int channel, int pos) {
-
   int phrase = viewData_->currentPlayPhrase_[channel];
-  TrackerCommand cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == TrackerCommand::InstrumentCommandHop) {
-    return (viewData_->song_->phrase_.param1_[phrase * 16 + pos]) & 0xF;
-  }
-  cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == TrackerCommand::InstrumentCommandHop) {
-    return (viewData_->song_->phrase_.param2_[phrase * 16 + pos]) & 0xF;
-  }
-  return -1;
+  return ResolveRowHop(viewData_->song_->phrase_.cmd1_[phrase * 16 + pos],
+                       viewData_->song_->phrase_.param1_[phrase * 16 + pos],
+                       viewData_->song_->phrase_.cmd2_[phrase * 16 + pos],
+                       viewData_->song_->phrase_.param2_[phrase * 16 + pos]);
 }
 
 /********************************************************

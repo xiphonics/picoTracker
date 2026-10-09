@@ -2,6 +2,7 @@ add_library(application_player
   Player.cpp
   PlayerChannel.cpp
   PlayerMixer.cpp
+  RowFx.cpp
   SyncMaster.cpp
   TablePlayback.cpp
 )

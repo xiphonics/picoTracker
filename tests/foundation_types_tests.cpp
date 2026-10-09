@@ -34,6 +34,8 @@ TEST_CASE("TrackerCommand stable persisted enum values") {
   CHECK(TrackerCommand::InstrumentCommandVolume == 69);
   CHECK(TrackerCommand::InstrumentCommandNone == 45);
   CHECK(TrackerCommand::InstrumentCommandMidiChord == 143);
+  CHECK(TrackerCommand::InstrumentCommandChance == 188);
+  CHECK(TrackerCommand::InstrumentCommandRandom == 189);
 }
 
 TEST_CASE("Commands retain byte storage and unsigned values") {
@@ -82,6 +84,8 @@ TEST_CASE("Command navigation retains Pico mnemonic groups") {
         TrackerCommand::InstrumentCommandGateOff);
   CHECK(CommandList::RangeLimitCommandParam(
             TrackerCommand::InstrumentCommandVelocity, 0xABFF) == 0xAB7F);
+  CHECK(CommandList::RangeLimitCommandParam(
+            TrackerCommand::InstrumentCommandPan, 0xABFF) == 0xABFE);
   CHECK(CommandList::RangeLimitCommandParam(
             TrackerCommand::InstrumentCommandVolume, 0xABFF) == 0xABFF);
 }
