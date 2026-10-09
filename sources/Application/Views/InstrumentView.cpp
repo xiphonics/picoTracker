@@ -1055,7 +1055,19 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
 
     // Check if player is running
     Player *player = Player::GetInstance();
-    if (!player->IsRunning()) {
+    bool instrumentUsedInPhrase = false;
+    if (currentType != IT_NONE) {
+      const uchar *phraseInstruments = viewData_->song_->phrase_.instr_;
+      for (int i = 0; i < PHRASE_COUNT * STEPS_PER_PHRASE; i++) {
+        if (phraseInstruments[i] == viewData_->currentInstrumentID_) {
+          instrumentUsedInPhrase = true;
+          break;
+        }
+      }
+    }
+
+    if (!player->IsRunning() || currentType == IT_NONE ||
+        !instrumentUsedInPhrase) {
       // Check if any instrument field has been modified
       bool instrumentModified = checkInstrumentModified();
       if (instrumentModified) {
