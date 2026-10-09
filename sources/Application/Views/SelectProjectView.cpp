@@ -269,7 +269,7 @@ void SelectProjectView::DrawView() {
 };
 
 void SelectProjectView::OnPlayerUpdate(PlayerEventType,
-                                       unsigned int currentTick) {};
+                                       unsigned int currentTick){};
 
 void SelectProjectView::OnFocus() {
   selectedButton_ = 0; // Always default to "Load" when entering this view.
