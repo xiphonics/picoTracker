@@ -46,7 +46,7 @@ public:
   virtual bool GetTableAutomation();
   virtual void GetTableState(TableSaveState &state);
   virtual void SetTableState(TableSaveState &state);
-  etl::ilist<Variable *> *Variables() { return &variables_; };
+  etl::array_view<Variable *> Variables() { return variables_; };
 
 private:
   struct OpalRenderParams {
@@ -62,8 +62,6 @@ private:
   // single FM voice. The cost is one voice per tracker channel of static
   // RAM, allocated unconditionally: 8 x sizeof(Opal) ~= 2.5 kB.
   static etl::array<OpalRenderParams, SONG_CHANNEL_COUNT> renderParams_;
-
-  etl::list<Variable *, 16> variables_;
 
   Variable algorithm_;
   Variable feedback_;
@@ -83,6 +81,8 @@ private:
   // Termelo(AM),Vibrato(VIB),SustainingVoice(EG),EnveloperScale(KSR)
   Variable op2TremVibSusKSR_;
   Variable op2KeyScaleLevel_;
+
+  etl::array<Variable *, 16> variables_;
 };
 
 #endif
