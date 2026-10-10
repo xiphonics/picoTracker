@@ -13,7 +13,7 @@ You can ***explicitly*** save the current project by selecting **Save**. This is
 
 ## Current Project Settings
 
-- **tempo:** Can be set between 60bpm and 400bpm. You can also tap tempo: move the cursor to the `tempo` field and press **EDIT** repeatedly in time.
+- **tempo:** Can be set between 60bpm and 300bpm. You can also tap tempo: move the cursor to the `tempo` field and press **EDIT** repeatedly in time.
 - **master vol:** Sets the overall master output volume from 0% to 100%.
 - **transpose:** Live transposition of every triggered instrument in semitones (-48 to +48).
 - **scale:** Set the scale that will be applied to all notes entered in the project. When entering a note in the Phrase screen, you will only be able to enter notes that belong to the selected scale. See [the reference](scales.html) for a list of all available scales.

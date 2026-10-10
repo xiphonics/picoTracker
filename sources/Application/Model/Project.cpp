@@ -21,6 +21,7 @@
 #include "System/io/Status.h"
 #include "Table.h"
 
+#include <algorithm>
 #include <math.h>
 
 #define DEFAULT_CHANNEL_VOLUME 99
@@ -138,8 +139,8 @@ uint8_t Project::GetScaleRoot() {
 int Project::GetTempo() {
   Variable *v = FindVariable(FourCC::VarTempo);
   NAssert(v);
-  int tempo = v->GetInt() + tempoNudge_;
-  return tempo;
+  // Nudging cannot push the effective tempo outside of the allowed range.
+  return std::clamp(v->GetInt() + tempoNudge_, int(MIN_TEMPO), int(MAX_TEMPO));
 };
 
 int Project::GetMasterVolume() {
@@ -188,9 +189,14 @@ void Project::SetProjectName(char *name) {
 }
 
 void Project::NudgeTempo(int value) {
-  if ((GetTempo() + tempoNudge_) > 0) {
-    tempoNudge_ += value;
-  }
+  // GetTempo() already includes the current nudge, so clamp the resulting
+  // effective tempo and derive the nudge offset from it.
+  Variable *v = FindVariable(FourCC::VarTempo);
+  NAssert(v);
+  const int base = v->GetInt();
+  const int effective =
+      std::clamp(base + tempoNudge_ + value, int(MIN_TEMPO), int(MAX_TEMPO));
+  tempoNudge_ = effective - base;
 };
 
 void Project::Trigger() {
@@ -410,6 +416,9 @@ void Project::RestoreContent(PersistencyDocument *doc) {
     // Project name now comes from the directory, so ignore any persisted value.
     if (v && v->GetID() != FourCC::VarProjectName) {
       v->SetString(value);
+      if (v->GetID() == FourCC::VarTempo) {
+        v->SetInt(std::clamp(v->GetInt(), int(MIN_TEMPO), int(MAX_TEMPO)));
+      }
     }
     elem = doc->NextSibling();
   }
@@ -465,7 +474,7 @@ void Project::OnTempoTap() {
           int(60000 * (tempoTapCount_ - 1) / (float)(now - lastTap_[0]));
       Variable *v = FindVariable(FourCC::VarTempo);
       // ensure tempo is within range
-      tempo = std::clamp((unsigned short)tempo, MIN_TEMPO, MAX_TEMPO);
+      tempo = std::clamp(tempo, int(MIN_TEMPO), int(MAX_TEMPO));
       v->SetInt(tempo);
     } else {
       tempoTapCount_ = 1;

@@ -27,9 +27,9 @@
 
 #define MAX_TAP 3
 
-const unsigned short MAX_TEMPO = 400;
-const unsigned short MIN_TEMPO = 60;
-const unsigned short DEFAULT_TEMPO = 138;
+const uint16_t MAX_TEMPO = 300;
+const uint16_t MIN_TEMPO = 60;
+const uint16_t DEFAULT_TEMPO = 138;
 
 class Project : public Persistent, public VariableContainer, I_Observer {
 public:

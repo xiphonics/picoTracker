@@ -244,7 +244,7 @@ RTG 0101: does not do anything because after looping one tick, you move forward 
 **sets the tempo to hex value `aabb`.**
 
 - `TPO 0000` is clamped to the minimum tempo (`003C`, 60 BPM).
-- TPO 003C (60bpm) is the lowest acceptable value and TPO 0190 (400bpm) is the highest acceptable value.
+- TPO 003C (60bpm) is the lowest acceptable value and TPO 012C (300bpm) is the highest acceptable value.
   Values outside the allowable range will be clamped to the nearest value within the range.
 
 ## STP (STOP in lgpt)
