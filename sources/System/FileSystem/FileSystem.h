@@ -60,7 +60,6 @@ public:
                         void *scratchBuffer = nullptr,
                         size_t scratchBufferSize = 0) = 0;
   virtual bool MoveFile(const char *srcFilename, const char *destFilename) = 0;
-  virtual bool isExFat() = 0;
 };
 
 #endif // _FILESYSTEM_H_

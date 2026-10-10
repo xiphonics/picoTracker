@@ -49,7 +49,6 @@ public:
                         size_t scratchBufferSize = 0) override;
   virtual bool MoveFile(const char *srcFilename,
                         const char *destFilename) override;
-  virtual bool isExFat();
 
 private:
   SdFs sd;
