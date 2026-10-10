@@ -13,7 +13,7 @@ You can ***explicitly*** save the current project by pressing [SAVE] on the proj
 
 ## Current Project settings
 
-- **Tempo:**: Can be set between 60bpm [0x3c] and 300bpm [0x190]. You can also tap tempo: move the cursor to the `tempo` field and press <span class="minikeys">EDIT</span> repeatedly in time.
+- **Tempo:**: Can be set between 60bpm [0x3c] and 300bpm [0x12c]. You can also tap tempo: move the cursor to the `tempo` field and press <span class="minikeys">EDIT</span> repeatedly in time.
 - **Transpose:** Live transposition of every triggered instruments.
 - **Scale:** Set the scale that will applied to all notes entered in the project. When entering a note in the Phrase screen, you will only be able to enter notes that belong to the selected scale. See [the reference](scales.html) for a list of all available scales.
 - **MIDI CHANNEL MAP:** Assigns an incoming MIDI channel to each of the eight song channels. The values run from `01` through `10` in hexadecimal; `00` leaves that song channel under normal sequencer control. The eight values correspond to song channels from left to right. Assign the same MIDI channel more than once to allow it to play multiple notes at the same time.

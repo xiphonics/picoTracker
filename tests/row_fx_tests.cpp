@@ -372,7 +372,8 @@ TEST_CASE("RND randomizes tempo as one clamped whole value") {
       60, TrackerCommand::InstrumentCommandTempo, 0x012C,
       TrackerCommand::InstrumentCommandRandom, 0x00FF, lastActive, true);
 
-  CHECK(fx.param1 == MAX_TEMPO);
+  // 300 is the documented maximum tempo, so pin the literal value here
+  CHECK(fx.param1 == 300);
 }
 
 TEST_CASE("RND does not randomize protected target commands") {
