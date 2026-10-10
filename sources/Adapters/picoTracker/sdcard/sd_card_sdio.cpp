@@ -256,6 +256,11 @@ bool SdioCard::cardCMD6(uint32_t arg, uint8_t *status) {
   return false;
 }
 
+bool SdioCard::readSDS(sds_t *sds) {
+  Trace::Log("SDIO", "SdioCard::readSDS() not implemented");
+  return false;
+}
+
 bool SdioCard::readSCR(scr_t *scr) {
   Trace::Log("SDIO", "SdioCard::readSCR() not implemented");
   return false;

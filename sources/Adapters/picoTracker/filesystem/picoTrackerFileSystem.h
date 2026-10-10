@@ -15,6 +15,7 @@
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/I_File.h"
 #include "pico/sync.h"
+#include "picoTrackerPath.h"
 #include <mutex>
 
 // Forward declaration
@@ -52,6 +53,11 @@ public:
 
 private:
   SdFs sd;
+  // This singleton is placed in static storage at boot; no heap allocation.
+  char cwd_[picoTrackerPath::BufferSize] = "/";
+  bool resolvePath(const char *path, picoTrackerPath::PathString &resolved);
+  bool openDirectory(FsBaseFile &directory);
+  bool openEntry(int32_t index, FsBaseFile &entry);
   void tolowercase(char *temp);
   // buffer needs to be allocated here as too big for allocation as local
   // variable on the stack
@@ -61,7 +67,7 @@ private:
 // Concrete implementation of PI_File for picoTracker
 class picoTrackerFile : public I_File {
 public:
-  picoTrackerFile(FsBaseFile file);
+  picoTrackerFile(FsBaseFile &&file);
   virtual ~picoTrackerFile();
 
   // PI_File interface implementation

@@ -1,10 +1,11 @@
 add_library(sdfat_sdcard
   SdCard.h
-  SdSpiCard.h SdSpiCard.cpp
+  SdSpiCard/SdSpiCard.h SdSpiCard/SdSpiCard.cpp
   SdCardInfo.h SdCardInfo.cpp
 )
 
-target_link_libraries(sdfat_sdcard PUBLIC platform_utils
+target_link_libraries(sdfat_sdcard PUBLIC sdfat_config
+                                   PUBLIC platform_utils
                                    PUBLIC pico_stdlib
 )
 

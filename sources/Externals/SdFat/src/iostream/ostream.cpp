@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -22,8 +22,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include <string.h>
 #include "ostream.h"
+#ifdef __AVR__
+#include <avr/pgmspace.h>
+#endif  // __AVR__
+#include <string.h>
 #ifndef PSTR
 #define PSTR(x) x
 #endif  // PSTR
@@ -61,7 +64,7 @@ void ostream::putChar(char c) {
 //------------------------------------------------------------------------------
 void ostream::putDouble(double n) {
   uint8_t nd = precision();
-  double round = 0.5;
+  double roundDbl = 0.5;
   char sign;
   char buf[13];  // room for sign, 10 digits, '.', and zero byte
   char *ptr = buf + sizeof(buf) - 1;
@@ -81,11 +84,11 @@ void ostream::putDouble(double n) {
     putPgm(PSTR("BIG FLT"));
     return;
   }
-  // round up and separate int and fraction parts
+  // roundDbl up and separate int and fraction parts
   for (uint8_t i = 0; i < nd; ++i) {
-    round *= 0.1;
+    roundDbl *= 0.1;
   }
-  n += round;
+  n += roundDbl;
   uint32_t intPart = n;
   double fractionPart = n - intPart;
 
@@ -127,22 +130,28 @@ void ostream::putDouble(double n) {
 //------------------------------------------------------------------------------
 void ostream::putNum(int32_t n) {
   bool neg = n < 0 && flagsToBase() == 10;
-  putNum((uint32_t)(neg ? -n : n), neg);
+  putNum(static_cast<uint32_t>(neg ? -n : n), neg);
 }
 //------------------------------------------------------------------------------
 void ostream::putNum(int64_t n) {
   bool neg = n < 0 && flagsToBase() == 10;
-  putNum((uint64_t)(neg ? -n : n), neg);
+  putNum(static_cast<uint64_t>(neg ? -n : n), neg);
 }
 //------------------------------------------------------------------------------
-void ostream::putPgm(const char* str) {
+void ostream::putPgm(const char *str) {
+#ifndef __AVR__
+  putStr(str);
+#else   // __AVR__
+  uint8_t c;
   int n;
-  for (n = 0; pgm_read_byte(&str[n]); n++) {}
+  for (n = 0; pgm_read_byte(&str[n]); n++) {
+  }
   fill_not_left(n);
-  for (uint8_t c; (c = pgm_read_byte(str)); str++) {
+  for (n = 0; (c = pgm_read_byte(&str[n])); n++) {
     putch(c);
   }
   do_fill(n);
+#endif  // __AVR__
 }
 //------------------------------------------------------------------------------
 void ostream::putStr(const char *str) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -23,12 +23,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 #define DBG_FILE "ExFatFileWrite.cpp"
+#include "../common/DateLib.h"
 #include "../common/DebugMacros.h"
 #include "ExFatLib.h"
 //==============================================================================
 #if EXFAT_READ_ONLY
 bool ExFatFile::mkdir(ExFatFile* parent, const char* path, bool pFlag) {
-  (void) parent;
+  (void)parent;
   (void)path;
   (void)pFlag;
   return false;
@@ -46,12 +47,8 @@ bool ExFatFile::rename(ExFatFile* dirFile, const char* newPath) {
   (void)newPath;
   return false;
 }
-bool ExFatFile::sync() {
-  return false;
-}
-bool ExFatFile::truncate() {
-  return false;
-}
+bool ExFatFile::sync() { return false; }
+bool ExFatFile::truncate() { return false; }
 size_t ExFatFile::write(const void* buf, size_t nbyte) {
   (void)buf;
   (void)nbyte;
@@ -69,7 +66,7 @@ static uint16_t exFatDirChecksum(const uint8_t* data, uint16_t checksum) {
 }
 //------------------------------------------------------------------------------
 bool ExFatFile::addCluster() {
-  uint32_t find = m_vol->bitmapFind(m_curCluster ?  m_curCluster + 1 : 0, 1);
+  Cluster_t find = m_vol->bitmapFind(m_curCluster ? m_curCluster + 1 : 0, 1);
   if (find < 2) {
     DBG_FAIL_MACRO;
     goto fail;
@@ -89,7 +86,7 @@ bool ExFatFile::addCluster() {
     // No longer contiguous so make FAT chain.
     m_flags &= ~FILE_FLAG_CONTIGUOUS;
 
-    for (uint32_t c = m_firstCluster; c < m_curCluster; c++) {
+    for (Cluster_t c = m_firstCluster; c < m_curCluster; c++) {
       if (!m_vol->fatPut(c, c + 1)) {
         DBG_FAIL_MACRO;
         goto fail;
@@ -109,16 +106,16 @@ bool ExFatFile::addCluster() {
     }
   }
 
- done:
+done:
   m_curCluster = find;
   return true;
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
 bool ExFatFile::addDirCluster() {
-  uint32_t sector;
+  Sector_t sector;
   uint32_t dl = isRoot() ? m_vol->rootLength() : m_dataLength;
   uint8_t* cache;
   dl += m_vol->bytesPerCluster();
@@ -131,9 +128,9 @@ bool ExFatFile::addDirCluster() {
     goto fail;
   }
   sector = m_vol->clusterStartSector(m_curCluster);
-  for (uint32_t i = 0; i  < m_vol->sectorsPerCluster(); i++) {
-    cache = m_vol->dataCachePrepare(sector + i,
-                                    FsCache::CACHE_RESERVE_FOR_WRITE);
+  for (uint32_t i = 0; i < m_vol->sectorsPerCluster(); i++) {
+    cache =
+        m_vol->dataCachePrepare(sector + i, FsCache::CACHE_RESERVE_FOR_WRITE);
     if (!cache) {
       DBG_FAIL_MACRO;
       goto fail;
@@ -142,12 +139,12 @@ bool ExFatFile::addDirCluster() {
   }
   if (!isRoot()) {
     m_flags |= FILE_FLAG_DIR_DIRTY;
-    m_dataLength  += m_vol->bytesPerCluster();
+    m_dataLength += m_vol->bytesPerCluster();
     m_validLength += m_vol->bytesPerCluster();
   }
   return sync();
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -183,13 +180,13 @@ bool ExFatFile::mkdir(ExFatFile* parent, const char* path, bool pFlag) {
         goto fail;
       }
     }
-    tmpDir = *this;
+    tmpDir.copy(this);
     parent = &tmpDir;
     close();
   }
   return mkdir(parent, &fname);
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -218,7 +215,7 @@ bool ExFatFile::mkdir(ExFatFile* parent, ExName_t* fname) {
   m_flags = FILE_FLAG_READ | FILE_FLAG_CONTIGUOUS | FILE_FLAG_DIR_DIRTY;
   return sync();
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -248,7 +245,7 @@ bool ExFatFile::preAllocate(uint64_t length) {
   }
   return true;
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -290,7 +287,7 @@ bool ExFatFile::remove() {
   // Write entry to device.
   return m_vol->cacheSync();
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -316,7 +313,7 @@ bool ExFatFile::rename(ExFatFile* dirFile, const char* newPath) {
     DBG_FAIL_MACRO;
     goto fail;
   }
-  oldFile = *this;
+  oldFile.copy(this);
   m_dirPos = file.m_dirPos;
   m_setCount = file.m_setCount;
   m_flags |= FILE_FLAG_DIR_DIRTY;
@@ -330,7 +327,7 @@ bool ExFatFile::rename(ExFatFile* dirFile, const char* newPath) {
   oldFile.m_attributes = FILE_ATTR_FILE;
   return oldFile.remove();
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -363,7 +360,7 @@ bool ExFatFile::rmdir() {
   m_flags |= FILE_FLAG_WRITE;
   return remove();
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -382,7 +379,7 @@ bool ExFatFile::sync() {
   }
   return true;
 
- fail:
+fail:
   m_error |= WRITE_ERROR;
   return false;
 }
@@ -393,7 +390,7 @@ bool ExFatFile::syncDir() {
   uint8_t* cache;
   uint16_t checksum = 0;
 
-  for (uint8_t is = 0; is <= m_setCount ; is++) {
+  for (uint8_t is = 0; is <= m_setCount; is++) {
     cache = dirCache(is, FsCache::CACHE_FOR_READ);
     if (!cache) {
       DBG_FAIL_MACRO;
@@ -439,8 +436,8 @@ bool ExFatFile::syncDir() {
     }
     checksum = exFatDirChecksum(cache, checksum);
   }
-  df = reinterpret_cast<DirFile_t*>
-       (m_vol->dirCache(&m_dirPos, FsCache::CACHE_FOR_WRITE));
+  df = reinterpret_cast<DirFile_t*>(
+      m_vol->dirCache(&m_dirPos, FsCache::CACHE_FOR_WRITE));
   if (!df) {
     DBG_FAIL_MACRO;
     goto fail;
@@ -452,13 +449,14 @@ bool ExFatFile::syncDir() {
   }
   return true;
 
- fail:
+fail:
   m_error |= WRITE_ERROR;
   return false;
 }
 //------------------------------------------------------------------------------
 bool ExFatFile::timestamp(uint8_t flags, uint16_t year, uint8_t month,
-                   uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
+                          uint8_t day, uint8_t hour, uint8_t minute,
+                          uint8_t second) {
   DirFile_t* df;
   uint8_t* cache;
   uint16_t checksum = 0;
@@ -466,16 +464,9 @@ bool ExFatFile::timestamp(uint8_t flags, uint16_t year, uint8_t month,
   uint16_t time;
   uint8_t ms10;
 
-  if (!isFile()
-      || year < 1980
-      || year > 2107
-      || month < 1
-      || month > 12
-      || day < 1
-      || day > 31
-      || hour > 23
-      || minute > 59
-      || second > 59) {
+  if (!isFileOrSubDir() || year < 1980 || year > 2099 || month < 1 ||
+      month > 12 || day < 1 || day > daysInMonth(year, month) || hour > 23 ||
+      minute > 59 || second > 59) {
     DBG_FAIL_MACRO;
     goto fail;
   }
@@ -529,8 +520,8 @@ bool ExFatFile::timestamp(uint8_t flags, uint16_t year, uint8_t month,
     }
     checksum = exFatDirChecksum(cache, checksum);
   }
-  df = reinterpret_cast<DirFile_t*>
-       (m_vol->dirCache(&m_dirPos, FsCache::CACHE_FOR_WRITE));
+  df = reinterpret_cast<DirFile_t*>(
+      m_vol->dirCache(&m_dirPos, FsCache::CACHE_FOR_WRITE));
   if (!df) {
     DBG_FAIL_MACRO;
     goto fail;
@@ -542,7 +533,7 @@ bool ExFatFile::timestamp(uint8_t flags, uint16_t year, uint8_t month,
   }
   return true;
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -554,7 +545,7 @@ bool ExFatFile::truncate() {
     goto fail;
   }
   if (m_firstCluster == 0) {
-      return true;
+    return true;
   }
   if (isContiguous()) {
     uint32_t nc = 1 + ((m_dataLength - 1) >> m_vol->bytesPerClusterShift());
@@ -596,12 +587,12 @@ bool ExFatFile::truncate() {
       }
     }
   }
+  m_validLength = m_curPosition > m_validLength ? m_validLength : m_curPosition;
   m_dataLength = m_curPosition;
-  m_validLength = m_curPosition;
   m_flags |= FILE_FLAG_DIR_DIRTY;
   return sync();
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -611,12 +602,12 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
   uint8_t* cache;
   uint8_t cacheOption;
   uint16_t sectorOffset;
-  uint32_t sector;
+  Sector_t sector;
   uint32_t clusterOffset;
-
-  // number of bytes left to write  -  must be before goto statements
+  uint64_t toFill = 0;
   size_t toWrite = nbyte;
   size_t n;
+
   // error if not an open file or is read-only
   if (!isWritable()) {
     DBG_FAIL_MACRO;
@@ -624,6 +615,13 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
   }
   // seek to end of file if append flag
   if ((m_flags & FILE_FLAG_APPEND)) {
+    if (!seekSet(m_dataLength)) {
+      DBG_FAIL_MACRO;
+      goto fail;
+    }
+  }
+  if (m_curPosition > m_validLength) {
+    toFill = m_curPosition - m_validLength;
     if (!seekSet(m_validLength)) {
       DBG_FAIL_MACRO;
       goto fail;
@@ -638,7 +636,7 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
         int fg;
 
         if (isContiguous()) {
-          uint32_t lc = m_firstCluster;
+          Cluster_t lc = m_firstCluster;
           lc += (m_dataLength - 1) >> m_vol->bytesPerClusterShift();
           if (m_curCluster < lc) {
             m_curCluster++;
@@ -677,14 +675,10 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
     sector = m_vol->clusterStartSector(m_curCluster) +
              (clusterOffset >> m_vol->bytesPerSectorShift());
 
-    if (sectorOffset != 0 || toWrite < m_vol->bytesPerSector()) {
+    if (sectorOffset != 0 || toWrite < m_vol->bytesPerSector() || toFill) {
       // partial sector - must use cache
       // max space in sector
       n = m_vol->bytesPerSector() - sectorOffset;
-      // lesser of space and amount to write
-      if (n > toWrite) {
-        n = toWrite;
-      }
 
       if (sectorOffset == 0 && m_curPosition >= m_validLength) {
         // start of new sector don't need to read into cache
@@ -699,7 +693,18 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
         goto fail;
       }
       uint8_t* dst = cache + sectorOffset;
-      memcpy(dst, src, n);
+
+      if (toFill) {
+        if (n > toFill) {
+          n = toFill;
+        }
+        memset(dst, 0, n);
+      } else {
+        if (n > toWrite) {
+          n = toWrite;
+        }
+        memcpy(dst, src, n);
+      }
       if (m_vol->bytesPerSector() == (n + sectorOffset)) {
         // Force write if sector is full - improves large writes.
         if (!m_vol->dataCacheSync()) {
@@ -708,18 +713,18 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
         }
       }
 #if USE_MULTI_SECTOR_IO
-    } else if (toWrite >= 2*m_vol->bytesPerSector()) {
+    } else if (toWrite >= 2 * m_vol->bytesPerSector()) {
       // use multiple sector write command
       uint32_t ns = toWrite >> m_vol->bytesPerSectorShift();
       // Limit writes to current cluster.
-      uint32_t maxNs = m_vol->sectorsPerCluster()
-                       - (clusterOffset >> m_vol->bytesPerSectorShift());
+      uint32_t maxNs = m_vol->sectorsPerCluster() -
+                       (clusterOffset >> m_vol->bytesPerSectorShift());
       if (ns > maxNs) {
         ns = maxNs;
       }
       n = ns << m_vol->bytesPerSectorShift();
       if (!m_vol->cacheSafeWrite(sector, src, ns)) {
-         DBG_FAIL_MACRO;
+        DBG_FAIL_MACRO;
         goto fail;
       }
 #endif  // USE_MULTI_SECTOR_IO
@@ -731,8 +736,12 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
       }
     }
     m_curPosition += n;
-    src += n;
-    toWrite -= n;
+    if (toFill) {
+      toFill -= n;
+    } else {
+      src += n;
+      toWrite -= n;
+    }
     if (m_curPosition > m_validLength) {
       m_flags |= FILE_FLAG_DIR_DIRTY;
       m_validLength = m_curPosition;
@@ -748,7 +757,7 @@ size_t ExFatFile::write(const void* buf, size_t nbyte) {
   }
   return nbyte;
 
- fail:
+fail:
   // return for write error
   m_error |= WRITE_ERROR;
   return 0;

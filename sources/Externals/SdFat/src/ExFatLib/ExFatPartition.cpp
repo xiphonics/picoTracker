@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -27,20 +27,20 @@
 #include "ExFatLib.h"
 //------------------------------------------------------------------------------
 // return 0 if error, 1 if no space, else start cluster.
-uint32_t ExFatPartition::bitmapFind(uint32_t cluster, uint32_t count) {
-  uint32_t start = cluster ? cluster - 2 : m_bitmapStart;
+Cluster_t ExFatPartition::bitmapFind(Cluster_t cluster, uint32_t count) {
+  Cluster_t start = cluster ? cluster - 2 : m_bitmapStart;
   if (start >= m_clusterCount) {
     start = 0;
   }
-  uint32_t endAlloc = start;
-  uint32_t bgnAlloc = start;
+  Cluster_t endAlloc = start;
+  Cluster_t bgnAlloc = start;
   uint16_t sectorSize = 1 << m_bytesPerSectorShift;
   size_t i = (start >> 3) & (sectorSize - 1);
-  uint8_t* cache;
+  const uint8_t* cache;
   uint8_t mask = 1 << (start & 7);
   while (true) {
-    uint32_t sector = m_clusterHeapStartSector +
-                     (endAlloc >> (m_bytesPerSectorShift + 3));
+    Sector_t sector =
+        m_clusterHeapStartSector + (endAlloc >> (m_bytesPerSectorShift + 3));
     cache = bitmapCachePrepare(sector, FsCache::CACHE_FOR_READ);
     if (!cache) {
       return 0;
@@ -75,10 +75,10 @@ uint32_t ExFatPartition::bitmapFind(uint32_t cluster, uint32_t count) {
   return 0;
 }
 //------------------------------------------------------------------------------
-bool ExFatPartition::bitmapModify(uint32_t cluster,
-                                  uint32_t count, bool value) {
-  uint32_t sector;
-  uint32_t start = cluster - 2;
+bool ExFatPartition::bitmapModify(Cluster_t cluster, uint32_t count,
+                                  bool value) {
+  Sector_t sector;
+  Cluster_t start = cluster - 2;
   size_t i;
   uint8_t* cache;
   uint8_t mask;
@@ -88,7 +88,7 @@ bool ExFatPartition::bitmapModify(uint32_t cluster,
     goto fail;
   }
   if (value) {
-    if (start  <= m_bitmapStart && m_bitmapStart < (start + count)) {
+    if (start <= m_bitmapStart && m_bitmapStart < (start + count)) {
       m_bitmapStart = (start + count) < m_clusterCount ? start + count : 0;
     }
   } else {
@@ -97,8 +97,7 @@ bool ExFatPartition::bitmapModify(uint32_t cluster,
     }
   }
   mask = 1 << (start & 7);
-  sector = m_clusterHeapStartSector +
-                   (start >> (m_bytesPerSectorShift + 3));
+  sector = m_clusterHeapStartSector + (start >> (m_bytesPerSectorShift + 3));
   i = (start >> 3) & m_sectorMask;
   while (true) {
     cache = bitmapCachePrepare(sector++, FsCache::CACHE_FOR_WRITE);
@@ -122,23 +121,23 @@ bool ExFatPartition::bitmapModify(uint32_t cluster,
     i = 0;
   }
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
-uint32_t ExFatPartition::chainSize(uint32_t cluster) {
+uint32_t ExFatPartition::chainSize(Cluster_t cluster) {
   uint32_t n = 0;
   int8_t status;
   do {
-    status = fatGet(cluster, & cluster);
+    status = fatGet(cluster, &cluster);
     if (status < 0) return 0;
     n++;
   } while (status);
   return n;
 }
 //------------------------------------------------------------------------------
-uint8_t* ExFatPartition::dirCache(DirPos_t* pos, uint8_t options) {
-  uint32_t sector = clusterStartSector(pos->cluster);
+uint8_t* ExFatPartition::dirCache(const DirPos_t* pos, uint8_t options) {
+  Sector_t sector = clusterStartSector(pos->cluster);
   sector += (m_clusterMask & pos->position) >> m_bytesPerSectorShift;
   uint8_t* cache = dataCachePrepare(sector, options);
   return cache ? cache + (pos->position & m_sectorMask) : nullptr;
@@ -164,10 +163,10 @@ int8_t ExFatPartition::dirSeek(DirPos_t* pos, uint32_t offset) {
 }
 //------------------------------------------------------------------------------
 // return -1 error, 0 EOC, 1 OK
-int8_t ExFatPartition::fatGet(uint32_t cluster, uint32_t* value) {
-  uint8_t* cache;
-  uint32_t next;
-  uint32_t sector;
+int8_t ExFatPartition::fatGet(Cluster_t cluster, Cluster_t* value) {
+  const uint8_t* cache;
+  Cluster_t next;
+  Sector_t sector;
 
   if (cluster > (m_clusterCount + 1)) {
     DBG_FAIL_MACRO;
@@ -187,8 +186,8 @@ int8_t ExFatPartition::fatGet(uint32_t cluster, uint32_t* value) {
   return 1;
 }
 //------------------------------------------------------------------------------
-bool ExFatPartition::fatPut(uint32_t cluster, uint32_t value) {
-  uint32_t sector;
+bool ExFatPartition::fatPut(Cluster_t cluster, Cluster_t value) {
+  Sector_t sector;
   uint8_t* cache;
   if (cluster < 2 || cluster > (m_clusterCount + 1)) {
     DBG_FAIL_MACRO;
@@ -203,13 +202,13 @@ bool ExFatPartition::fatPut(uint32_t cluster, uint32_t value) {
   setLe32(cache + ((cluster << 2) & m_sectorMask), value);
   return true;
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
-bool ExFatPartition::freeChain(uint32_t cluster) {
-  uint32_t next;
-  uint32_t start = cluster;
+bool ExFatPartition::freeChain(Cluster_t cluster) {
+  Cluster_t next;
+  Cluster_t start = cluster;
   int8_t status;
   do {
     status = fatGet(cluster, &next);
@@ -233,15 +232,15 @@ bool ExFatPartition::freeChain(uint32_t cluster) {
 
   return true;
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------
-int32_t ExFatPartition::freeClusterCount() {
-  uint32_t nc = 0;
-  uint32_t sector = m_clusterHeapStartSector;
-  uint32_t usedCount = 0;
-  uint8_t* cache;
+Cluster_t ExFatPartition::freeClusterCount() {
+  Cluster_t nc = 0;
+  Sector_t sector = m_clusterHeapStartSector;
+  Cluster_t usedCount = 0;
+  const uint8_t* cache;
 
   while (true) {
     cache = dataCachePrepare(sector++, FsCache::CACHE_FOR_READ);
@@ -250,9 +249,9 @@ int32_t ExFatPartition::freeClusterCount() {
     }
     for (size_t i = 0; i < m_bytesPerSector; i++) {
       if (cache[i] == 0XFF) {
-        usedCount+= 8;
+        usedCount += 8;
       } else if (cache[i]) {
-        for (uint8_t mask = 1; mask ; mask <<=1) {
+        for (uint8_t mask = 1; mask; mask <<= 1) {
           if ((mask & cache[i])) {
             usedCount++;
           }
@@ -266,10 +265,11 @@ int32_t ExFatPartition::freeClusterCount() {
   }
 }
 //------------------------------------------------------------------------------
-bool ExFatPartition::init(FsBlockDevice* dev, uint8_t part, uint32_t volStart) {
+bool ExFatPartition::init(FsBlockDevice* dev, uint8_t part,
+                          Sector_t startSector) {
   pbs_t* pbs;
-  BpbExFat_t* bpb;
-  MbrSector_t* mbr;
+  const BpbExFat_t* bpb;
+  const MbrSector_t* mbr;
   m_fatType = 0;
   m_blockDev = dev;
   cacheInit(m_blockDev);
@@ -280,21 +280,21 @@ bool ExFatPartition::init(FsBlockDevice* dev, uint8_t part, uint32_t volStart) {
       DBG_FAIL_MACRO;
       goto fail;
     }
-    mbr = reinterpret_cast<MbrSector_t*>
-          (dataCachePrepare(0, FsCache::CACHE_FOR_READ));
+    mbr = reinterpret_cast<MbrSector_t*>(
+        dataCachePrepare(0, FsCache::CACHE_FOR_READ));
     if (!mbr) {
       DBG_FAIL_MACRO;
       goto fail;
     }
-    MbrPart_t* mp = mbr->part + part - 1;
+    const MbrPart_t* mp = mbr->part + part - 1;
     if (mp->type == 0 || (mp->boot != 0 && mp->boot != 0X80)) {
       DBG_FAIL_MACRO;
       goto fail;
     }
-    volStart = getLe32(mp->relativeSectors);
+    startSector = getLe32(mp->startSector);
   }
-  pbs = reinterpret_cast<pbs_t*>
-        (dataCachePrepare(volStart, FsCache::CACHE_FOR_READ));
+  pbs = reinterpret_cast<pbs_t*>(
+      dataCachePrepare(startSector, FsCache::CACHE_FOR_READ));
   if (!pbs) {
     DBG_FAIL_MACRO;
     goto fail;
@@ -308,9 +308,9 @@ bool ExFatPartition::init(FsBlockDevice* dev, uint8_t part, uint32_t volStart) {
     DBG_FAIL_MACRO;
     goto fail;
   }
-  m_fatStartSector = volStart + getLe32(bpb->fatOffset);
+  m_fatStartSector = startSector + getLe32(bpb->fatOffset);
   m_fatLength = getLe32(bpb->fatLength);
-  m_clusterHeapStartSector = volStart + getLe32(bpb->clusterHeapOffset);
+  m_clusterHeapStartSector = startSector + getLe32(bpb->clusterHeapOffset);
   m_clusterCount = getLe32(bpb->clusterCount);
   m_rootDirectoryCluster = getLe32(bpb->rootDirectoryCluster);
   m_sectorsPerClusterShift = bpb->sectorsPerClusterShift;
@@ -322,7 +322,7 @@ bool ExFatPartition::init(FsBlockDevice* dev, uint8_t part, uint32_t volStart) {
   m_fatType = FAT_TYPE_EXFAT;
   return true;
 
- fail:
+fail:
   return false;
 }
 //------------------------------------------------------------------------------

@@ -4,11 +4,14 @@ add_library(sdfat_common
   FsBlockDevice.h
   FsCache.h FsCache.cpp
   FsDateTime.h FsDateTime.cpp
+  FsName.h FsName.cpp
+  FsStructs.h FsStructs.cpp
+  upcase.cpp
   FsUtf.h FsUtf.cpp
   FmtNumber.h FmtNumber.cpp
 )
 
-target_link_libraries(sdfat_common PUBLIC sdfat_sdcard)
+target_link_libraries(sdfat_common PUBLIC sdfat_sdcard sdfat_config)
 
 target_include_directories(sdfat_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 )

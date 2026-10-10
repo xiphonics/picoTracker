@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -23,10 +23,11 @@
  * DEALINGS IN THE SOFTWARE.
  */
 #define DBG_FILE "FsCache.cpp"
-#include "DebugMacros.h"
 #include "FsCache.h"
+
+#include "DebugMacros.h"
 //------------------------------------------------------------------------------
-uint8_t* FsCache::prepare(uint32_t sector, uint8_t option) {
+uint8_t* FsCache::prepare(Sector_t sector, uint8_t option) {
   if (!m_blockDev) {
     DBG_FAIL_MACRO;
     goto fail;
@@ -48,7 +49,7 @@ uint8_t* FsCache::prepare(uint32_t sector, uint8_t option) {
   m_status |= option & CACHE_STATUS_MASK;
   return m_buffer;
 
- fail:
+fail:
   return nullptr;
 }
 //------------------------------------------------------------------------------
@@ -60,8 +61,7 @@ bool FsCache::sync() {
     }
     // mirror second FAT
     if (m_status & CACHE_STATUS_MIRROR_FAT) {
-      uint32_t sector = m_sector + m_mirrorOffset;
-      if (!m_blockDev->writeSector(sector, m_buffer)) {
+      if (!m_blockDev->writeSector(m_sector + m_mirrorOffset, m_buffer)) {
         DBG_FAIL_MACRO;
         goto fail;
       }
@@ -70,6 +70,6 @@ bool FsCache::sync() {
   }
   return true;
 
- fail:
+fail:
   return false;
 }

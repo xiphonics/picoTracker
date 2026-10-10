@@ -23,6 +23,17 @@ discussion, others are intended to be the start of conversations (in GitHub issu
   compatible with previous firmware versions
 
 
+## Filesystem paths
+
+The pico filesystem adapter owns a fixed 260-byte current-directory buffer,
+including the terminating null. It resolves relative paths, `.` and `..`
+against that buffer and passes absolute paths or explicit directory handles
+to SdFat. Paths longer than 259 bytes are rejected. A failed `chdir()` leaves
+the current directory unchanged; parent navigation at `/` stays at `/`.
+
+Directory listings provide a synthetic `..` entry below root. The adapter
+does not use SdFat's working-directory state or expose physical dot entries.
+
 ## Coding style
 
 The coding style is based on the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and is enforced with clang-format run on CI so please try to run it locally before submitting a pull request.

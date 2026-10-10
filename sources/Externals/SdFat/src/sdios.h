@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -22,13 +22,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#ifndef sdios_h
-#define sdios_h
+#pragma once
 /**
  * \file
  * \brief C++ IO Streams features.
  */
 #include "iostream/ArduinoStream.h"
-#include "iostream/fstream.h"
 #include "iostream/StdioStream.h"
-#endif  // sdios_h
+#include "iostream/fstream.h"

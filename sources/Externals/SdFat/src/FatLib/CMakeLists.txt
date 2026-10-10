@@ -8,7 +8,7 @@ add_library(sdfat_fatlib
   FatFilePrint.cpp
 )
 
-target_link_libraries(sdfat_fatlib PUBLIC pico_stdlib)
+target_link_libraries(sdfat_fatlib PUBLIC pico_stdlib sdfat_common)
 
 target_include_directories(sdfat_fatlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
