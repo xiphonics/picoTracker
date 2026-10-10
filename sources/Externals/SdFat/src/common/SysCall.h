@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -26,16 +26,19 @@
  * \file
  * \brief SysCall class
  */
-#ifndef SysCall_h
-#define SysCall_h
-#include <stdint.h>
+#pragma once
 #include <stddef.h>
+#include <stdint.h>
+
 #include "../SdFatConfig.h"
 #if __cplusplus < 201103
 #warning nullptr defined
 /** Define nullptr if not C++11 */
 #define nullptr NULL
 #endif  // __cplusplus < 201103
+//------------------------------------------------------------------------------
+/** Type for FsBlockDevice sector */
+typedef uint32_t Sector_t;
 //------------------------------------------------------------------------------
 #if ENABLE_ARDUINO_FEATURES
 #if defined(ARDUINO)
@@ -57,6 +60,10 @@ typedef Stream stream_t;
 /** If not Arduino */
 typedef PrintBasic print_t;
 /** If not Arduino */
-typedef PrintBasic stream_t;
+class stream_t : public print_t {
+ public:
+  virtual int available() = 0;
+  virtual int read() = 0;
+  virtual int peek() = 0;
+};
 #endif  // ENABLE_ARDUINO_FEATURES
-#endif  // SysCall_h

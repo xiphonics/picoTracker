@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -23,15 +23,16 @@
  * DEALINGS IN THE SOFTWARE.
  */
 #include "FatLib.h"
+#if ENABLE_ARDUINO_FEATURES
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 //------------------------------------------------------------------------------
-static uint16_t getLfnChar(DirLfn_t* ldir, uint8_t i) {
+static uint16_t getLfnChar(const DirLfn_t* ldir, uint8_t i) {
   if (i < 5) {
-    return getLe16(ldir->unicode1 + 2*i);
+    return getLe16(ldir->unicode1 + 2 * i);
   } else if (i < 11) {
-    return getLe16(ldir->unicode2 + 2*i - 10);
+    return getLe16(ldir->unicode2 + 2 * (i - 5));
   } else if (i < 13) {
-    return getLe16(ldir->unicode3 + 2*i - 22);
+    return getLe16(ldir->unicode3 + 2 * (i - 11));
   }
   return 0;
 }
@@ -58,7 +59,7 @@ static void printHex(print_t* pr, uint8_t w, uint16_t h) {
 static void printHex(print_t* pr, uint16_t val) {
   bool space = true;
   for (uint8_t i = 0; i < 4; i++) {
-    uint8_t h = (val >> (12 - 4*i)) & 15;
+    uint8_t h = (val >> (12 - 4 * i)) & 15;
     if (h || i == 3) {
       space = false;
     }
@@ -73,7 +74,7 @@ static void printHex(print_t* pr, uint16_t val) {
 static void printHex(print_t* pr, uint32_t val) {
   bool space = true;
   for (uint8_t i = 0; i < 8; i++) {
-    uint8_t h = (val >> (28 - 4*i)) & 15;
+    uint8_t h = (val >> (28 - 4 * i)) & 15;
     if (h || i == 7) {
       space = false;
     }
@@ -85,14 +86,14 @@ static void printHex(print_t* pr, uint32_t val) {
   }
 }
 //------------------------------------------------------------------------------
-template<typename Uint>
+template <typename Uint>
 static void printHexLn(print_t* pr, Uint val) {
   printHex(pr, val);
   pr->println();
 }
 //------------------------------------------------------------------------------
 static bool printFatDir(print_t* pr, DirFat_t* dir) {
-  DirLfn_t* ldir = reinterpret_cast<DirLfn_t*>(dir);
+  const DirLfn_t* ldir = reinterpret_cast<DirLfn_t*>(dir);
   if (!dir->name[0]) {
     pr->println(F("Unused"));
     return false;
@@ -111,8 +112,9 @@ static bool printFatDir(print_t* pr, DirFat_t* dir) {
     printHexLn(pr, dir->attributes);
     pr->print(F("caseFlags: 0X"));
     printHexLn(pr, dir->caseFlags);
-    uint32_t fc = ((uint32_t)getLe16(dir->firstClusterHigh) << 16)
-                 | getLe16(dir->firstClusterLow);
+    Cluster_t fc =
+        (static_cast<uint32_t>(getLe16(dir->firstClusterHigh)) << 16) |
+        getLe16(dir->firstClusterLow);
     pr->print(F("firstCluster: "));
     pr->println(fc, HEX);
     pr->print(F("fileSize: "));
@@ -175,13 +177,13 @@ void FatFile::dmpFile(print_t* pr, uint32_t pos, size_t n) {
     }
     pr->write(' ');
     printHex(pr, 2, h);
-    text[i&15] = ' ' <= h && h < 0X7F ? h : '.';
+    text[i & 15] = ' ' <= h && h < 0X7F ? h : '.';
   }
   pr->write('\r');
   pr->write('\n');
 }
 //------------------------------------------------------------------------------
-bool FatPartition::dmpDirSector(print_t* pr, uint32_t sector) {
+bool FatPartition::dmpDirSector(print_t* pr, Sector_t sector) {
   DirFat_t dir[16];
   if (!cacheSafeRead(sector, reinterpret_cast<uint8_t*>(dir))) {
     pr->println(F("dmpDir failed"));
@@ -196,7 +198,7 @@ bool FatPartition::dmpDirSector(print_t* pr, uint32_t sector) {
 }
 //------------------------------------------------------------------------------
 bool FatPartition::dmpRootDir(print_t* pr, uint32_t n) {
-  uint32_t sector;
+  Sector_t sector;
   if (fatType() == 16) {
     sector = rootDirStart();
   } else if (fatType() == 32) {
@@ -208,14 +210,14 @@ bool FatPartition::dmpRootDir(print_t* pr, uint32_t n) {
   return dmpDirSector(pr, sector + n);
 }
 //------------------------------------------------------------------------------
-void FatPartition::dmpSector(print_t* pr, uint32_t sector, uint8_t bits) {
+void FatPartition::dmpSector(print_t* pr, Sector_t sector, uint8_t bits) {
   uint8_t data[FatPartition::m_bytesPerSector];
   if (!cacheSafeRead(sector, data)) {
     pr->println(F("dmpSector failed"));
     return;
   }
   for (uint16_t i = 0; i < m_bytesPerSector;) {
-    if (i%32 == 0) {
+    if (i % 32 == 0) {
       if (i) {
         pr->println();
       }
@@ -242,16 +244,16 @@ void FatPartition::dmpFat(print_t* pr, uint32_t start, uint32_t count) {
     return;
   }
   pr->println(F("FAT:"));
-  uint32_t sector = m_fatStartSector + start;
-  uint32_t cluster = nf*start;
+  Sector_t sector = m_fatStartSector + start;
+  Cluster_t cluster = nf * start;
   for (uint32_t i = 0; i < count; i++) {
-    uint8_t* pc = fatCachePrepare(sector + i, FsCache::CACHE_FOR_READ);
+    const uint8_t* pc = fatCachePrepare(sector + i, FsCache::CACHE_FOR_READ);
     if (!pc) {
       pr->println(F("cache read failed"));
       return;
     }
     for (size_t k = 0; k < nf; k++) {
-      if (0 == cluster%8) {
+      if (0 == cluster % 8) {
         if (k) {
           pr->println();
         }
@@ -259,10 +261,11 @@ void FatPartition::dmpFat(print_t* pr, uint32_t start, uint32_t count) {
       }
       cluster++;
       pr->write(' ');
-      uint32_t v = fatType() == 32 ? getLe32(pc + 4*k) : getLe16(pc + 2*k);
+      uint32_t v = fatType() == 32 ? getLe32(pc + 4 * k) : getLe16(pc + 2 * k);
       printHex(pr, v);
     }
     pr->println();
   }
 }
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
+#endif  // ENABLE_ARDUINO_FEATURES

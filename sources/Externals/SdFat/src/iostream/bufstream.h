@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -22,13 +22,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#ifndef bufstream_h
-#define bufstream_h
+#pragma once
 /**
  * \file
  * \brief \ref ibufstream and \ref obufstream classes
  */
 #include <string.h>
+
 #include "iostream.h"
 //==============================================================================
 /**
@@ -43,9 +43,7 @@ class ibufstream : public istream {
    * \param[in] str pointer to string to be parsed
    * Warning: The string will not be copied so must stay in scope.
    */
-  explicit ibufstream(const char* str) {
-    init(str);
-  }
+  explicit ibufstream(const char* str) { init(str); }
   /** Initialize an ibufstream
    * \param[in] str pointer to string to be parsed
    * Warning: The string will not be copied so must stay in scope.
@@ -66,9 +64,7 @@ class ibufstream : public istream {
     setstate(eofbit);
     return -1;
   }
-  void getpos(pos_t* pos) {
-    pos->position = m_pos;
-  }
+  void getpos(pos_t* pos) { pos->position = m_pos; }
   bool seekoff(off_type off, seekdir way) {
     (void)off;
     (void)way;
@@ -81,12 +77,8 @@ class ibufstream : public istream {
     }
     return false;
   }
-  void setpos(pos_t* pos) {
-    m_pos = pos->position;
-  }
-  pos_type tellpos() {
-    return m_pos;
-  }
+  void setpos(const pos_t* pos) { m_pos = pos->position; }
+  pos_type tellpos() { return m_pos; }
   /// @endcond
  private:
   const char* m_buf = nullptr;
@@ -106,27 +98,21 @@ class obufstream : public ostream {
    * \param[in] buf buffer for formatted string
    * \param[in] size buffer size
    */
-  obufstream(char *buf, size_t size) {
-    init(buf, size);
-  }
+  obufstream(char* buf, size_t size) { init(buf, size); }
   /** Initialize an obufstream
    * \param[in] buf buffer for formatted string
    * \param[in] size buffer size
    */
-  void init(char *buf, size_t size) {
+  void init(char* buf, size_t size) {
     m_buf = buf;
     buf[0] = '\0';
     m_size = size;
     m_in = 0;
   }
   /** \return a pointer to the buffer */
-  char* buf() {
-    return m_buf;
-  }
+  char* buf() { return m_buf; }
   /** \return the length of the formatted string */
-  size_t length() {
-    return m_in;
-  }
+  size_t length() { return m_in; }
 
  protected:
   /// @cond SHOW_PROTECTED
@@ -138,7 +124,7 @@ class obufstream : public ostream {
     m_buf[m_in++] = c;
     m_buf[m_in] = '\0';
   }
-  void putstr(const char *str) {
+  void putstr(const char* str) {
     while (*str) {
       putch(*str++);
     }
@@ -156,16 +142,11 @@ class obufstream : public ostream {
     m_buf[m_in] = '\0';
     return true;
   }
-  bool sync() {
-    return true;
-  }
-  pos_type tellpos() {
-    return m_in;
-  }
+  bool sync() { return true; }
+  pos_type tellpos() { return m_in; }
   /// @endcond
  private:
-  char *m_buf = nullptr;
+  char* m_buf = nullptr;
   size_t m_size = 0;
   size_t m_in = 0;
 };
-#endif  // bufstream_h

@@ -1,3 +1,9 @@
+# Configuration applies to every SdFat source and its consumers.
+add_library(sdfat_config INTERFACE)
+target_compile_options(sdfat_config INTERFACE
+  "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-include ${PROJECT_SOURCE_DIR}/Adapters/picoTracker/sdcard/sdfatConfig.h>"
+)
+
 add_library(sdfat
   FreeStack.h FreeStack.cpp
   MinimumSerial.h MinimumSerial.cpp

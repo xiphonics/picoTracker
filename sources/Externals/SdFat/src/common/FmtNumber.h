@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -22,22 +22,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#ifndef FmtNumber_h
-#define FmtNumber_h
+#pragma once
 #include <math.h>
-#include <stdint.h>
 #include <stddef.h>
-inline bool isDigit(char c) {
-  return '0' <= (c) && (c) <= '9';
-}
-inline bool isSpace(char c) {
-  return (c) == ' ' || (0X9 <= (c) && (c) <= 0XD);
-}
+#include <stdint.h>
+inline bool isDigit(char c) { return '0' <= (c) && (c) <= '9'; }
+inline bool isSpace(char c) { return (c) == ' ' || (0X9 <= (c) && (c) <= 0XD); }
 char* fmtBase10(char* str, uint16_t n);
 char* fmtBase10(char* str, uint32_t n);
-char* fmtDouble(char *str, double d, uint8_t prec, bool altFmt);
+char* fmtDouble(char* str, double d, uint8_t prec, bool altFmt);
 char* fmtDouble(char* str, double d, uint8_t prec, bool altFmt, char expChar);
 char* fmtHex(char* str, uint32_t n);
 char* fmtSigned(char* str, int32_t n, uint8_t base, bool caps);
 char* fmtUnsigned(char* str, uint32_t n, uint8_t base, bool caps);
-#endif  // FmtNumber_h

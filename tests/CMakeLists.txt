@@ -12,6 +12,7 @@ add_executable(picoTracker_tests
   row_fx_tests.cpp
   ../sources/Application/Instruments/CommandList.cpp
   ../sources/Application/Player/RowFx.cpp
+  filesystem_path_tests.cpp
   samplecache_tests.cpp
   wavheader_tests.cpp
   ../sources/Application/Instruments/WavHeader.cpp

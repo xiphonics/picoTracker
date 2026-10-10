@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 Bill Greiman
+ * Copyright (c) 2011-2025 Bill Greiman
  * This file is part of the SdFat library for SD memory cards.
  *
  * MIT License
@@ -22,16 +22,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#ifndef FsFormatter_h
-#define FsFormatter_h
-#include "FatLib/FatLib.h"
+#pragma once
 #include "ExFatLib/ExFatLib.h"
+#include "FatLib/FatLib.h"
 /**
  * \class FsFormatter
  * \brief Format a exFAT/FAT volume.
  */
 class FsFormatter {
  public:
+  /** Constructor. */
+  FsFormatter() = default;
   /**
    * Format a FAT volume.
    *
@@ -42,16 +43,15 @@ class FsFormatter {
    * \return true for success or false for failure.
    */
   bool format(FsBlockDevice* dev, uint8_t* secBuffer, print_t* pr = nullptr) {
-    uint32_t sectorCount = dev->sectorCount();
+    Sector_t sectorCount = dev->sectorCount();
     if (sectorCount == 0) {
       return false;
     }
-    return sectorCount <= 67108864 ?
-      m_fFmt.format(dev, secBuffer, pr) :
-      m_xFmt.format(dev, secBuffer, pr);
+    return sectorCount <= 67108864 ? m_fFmt.format(dev, secBuffer, pr)
+                                   : m_xFmt.format(dev, secBuffer, pr);
   }
+
  private:
   FatFormatter m_fFmt;
   ExFatFormatter m_xFmt;
 };
-#endif  // FsFormatter_h
