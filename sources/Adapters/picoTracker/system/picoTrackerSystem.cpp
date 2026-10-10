@@ -44,17 +44,7 @@ int picoTrackerSystem::MainLoop() {
   return eventManager_->MainLoop();
 };
 
-enum SdCardStatus { SD_OK, SD_EXFAT, SD_MISSING };
-
-static SdCardStatus checkSDCard(FileSystem *fs) {
-  if (fs->isExFat()) {
-    return SD_EXFAT;
-  }
-  if (!fs->chdir("/")) {
-    return SD_MISSING;
-  }
-  return SD_OK;
-}
+static bool checkSDCard(FileSystem *fs) { return fs->chdir("/"); }
 
 static bool pollForValidSDCard() {
   drawInputTester();
@@ -64,7 +54,7 @@ static bool pollForValidSDCard() {
   FileSystem::Install(new (fsMemBuf) picoTrackerFileSystem());
 
   auto fs = FileSystem::GetInstance();
-  return checkSDCard(fs) == SD_OK;
+  return checkSDCard(fs);
 }
 
 void picoTrackerSystem::Boot(int argc, char **argv) {
@@ -91,11 +81,7 @@ void picoTrackerSystem::Boot(int argc, char **argv) {
 
   // First check for SDCard
   auto fs = FileSystem::GetInstance();
-  SdCardStatus sdStatus = checkSDCard(fs);
-  if (sdStatus == SD_EXFAT) {
-    Trace::Log("PICOTRACKERSYSTEM", "SDCARD exFAT not supported");
-    critical_error_message("unsupported sdcard", 0x01, pollForValidSDCard);
-  } else if (sdStatus == SD_MISSING || scanKeys()) {
+  if (!checkSDCard(fs) || scanKeys()) {
     Trace::Log("PICOTRACKERSYSTEM", "SDCARD MISSING!!");
     critical_error_message("SDCARD MISSING", 0x01, pollForValidSDCard);
   }

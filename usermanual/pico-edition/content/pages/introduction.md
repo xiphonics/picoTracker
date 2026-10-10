@@ -32,7 +32,7 @@ The picoTracker is powered by an RP2040 microcontroller and supports the followi
 *  TRS MIDI In & Out, USB MIDI Out
 *  320x240 2.8in LCD display
 *  16MB of Flash
-*  MicroSD cards upto 32GB for project & sample library storage
+*  MicroSD cards formatted as FAT16, FAT32, or exFAT for project & sample library storage
 *  USB-C for MIDI, charging and simple drag&drop firmware upgrades
 
 
