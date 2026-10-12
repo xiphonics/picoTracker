@@ -49,7 +49,8 @@ Examples:
 **Delays the entire row by `b + 1` ticks (only the low nibble is used).**
 
 - the whole row is delayed, the note and every command that sits on that row - commands are always processed with the note they belong to
-- a delay equal or superior to the length of the current groove step skips the row, as the sequencer has moved on before the row is triggered
+- delayed rows still trigger after the sequencer advances to another row or phrase, using their original notes, commands, and chain transpose
+- several delayed rows can be pending on a channel; rows that trigger on the same tick play in their original sequence order
 
 ## FCT aabb (FCUT in lgpt)
 

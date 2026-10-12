@@ -11,6 +11,7 @@
 #define _PLAYER_H_
 #include "Application/Views/BaseClasses/ViewEvent.h"
 #include "Application/Views/ViewData.h"
+#include "DelayedRows.h"
 #include "Externals/etl/include/etl/string.h"
 #include "Foundation/Observable.h"
 #include "Foundation/T_Singleton.h"
@@ -89,15 +90,6 @@ public:
   bool IsRunning();
   bool GetStopAtEnd() { return stopAtEnd_; }
 
-  // Process the commands of the row under the play cursor of every channel.
-  // delayExpired is an optional SONG_CHANNEL_COUNT long array flagging the
-  // channels whose DLY countdown expired this tick. Their commands belong to
-  // the note that has just been triggered, so they run even if the groove
-  // says it is not time yet.
-  // ignorePendingDelay is used by Player::Start(), where the countdown of the
-  // first row has not ticked yet but its commands still have to be applied.
-  void ProcessCommands(const bool *delayExpired = nullptr,
-                       bool ignorePendingDelay = false);
   bool ProcessChannelCommand(int channel, TrackerCommand cmd, ushort param);
 
   void StartStreaming(const char *name, int startSample = 0);
@@ -154,7 +146,8 @@ protected:
   void updateSongPos(int position, int channel, int chainPos = 0, int hop = -1);
   void updateChainPos(int position, int channel, int hop = 0);
   void updatePhrasePos(int pos, int channel);
-  void playCursorPosition(int channel);
+  void playRow(int32_t channel, const DelayedRow &row);
+  void processRowCommands(int32_t channel, const DelayedRow &row);
   void StepAutomationTableForRetrigger(int channel, I_Instrument *instrument);
   void RetriggerChannelInstrument(int channel, int semitoneOffset,
                                   bool stepAutomationTable);
@@ -213,7 +206,7 @@ private:
   QueueingMode liveQueueingMode_[SONG_CHANNEL_COUNT];
   unsigned char liveQueueChainPosition_[SONG_CHANNEL_COUNT];
   unsigned int timeToLive_[SONG_CHANNEL_COUNT];
-  unsigned int timeToStart_[SONG_CHANNEL_COUNT];
+  DelayedRows delayedRows_[SONG_CHANNEL_COUNT];
 
   bool retrigAllImmediate_;
   unsigned char retrigPos_;
