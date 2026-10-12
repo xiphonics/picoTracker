@@ -20,3 +20,5 @@ template: page
 - Chain resampling starts from the first selected phrase row, renders the selected rows in song context, writes `resample.wav` into the current project's samples folder, and loads it into the sample pool.
 - In Song mode, <span class="minikeys">Play</span> starts/stops playback from the highlighted step, soloing the current chain
 - In Live mode <span class="minikeys">Play</span> queues the currently highlighted phrase step
+
+Cloning a phrase or pressing ENTER twice to create a new phrase chooses the first unused number above the highlighted phrase. On an empty cell, the search starts above the last entered phrase. The search continues across hexadecimal blocks (for example, `1F` to `20`) and wraps to `00` if no higher number is free. If all numbers are used, the cell stays unchanged.

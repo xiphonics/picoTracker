@@ -11,6 +11,7 @@
 #define _CHAIN_H_
 
 #include <bitset>
+#include <cstdint>
 
 #define CHAIN_COUNT 0xFF
 #define NO_MORE_CHAIN 0x100
@@ -21,7 +22,8 @@ public:
   Chain();
   ~Chain();
   void Reset();
-  unsigned short GetNext();
+  // Search from start, wrapping to zero when no higher slot is free.
+  uint16_t GetNext(uint16_t start = 0);
   bool IsUsed(unsigned char i) { return isUsed_[i]; };
   void SetUsed(unsigned char c);
   void ClearAllocation();

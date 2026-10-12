@@ -163,7 +163,7 @@ void ChainView::clonePosition() {
   if (current == 255)
     return;
 
-  unsigned short next = viewData_->song_->phrase_.GetNext();
+  uint16_t next = viewData_->song_->phrase_.GetNext(current + 1);
   if (next == NO_MORE_PHRASE)
     return;
 
@@ -427,7 +427,9 @@ void ChainView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_ENTER) {
-      unsigned short next = viewData_->song_->phrase_.GetNext();
+      const uint8_t current = *viewData_->GetCurrentChainPointer();
+      const uint16_t start = (current == 0xFF ? lastPhrase_ : current) + 1;
+      uint16_t next = viewData_->song_->phrase_.GetNext(start);
       if (next != NO_MORE_PHRASE) {
         setPhrase((unsigned char)next);
         isDirty_ = true;
