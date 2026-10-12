@@ -241,11 +241,14 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 void Player::StartSelectionRender(PlayMode mode, uint8_t startRow,
                                   uint8_t endRow, uint8_t channelStart,
                                   uint8_t channelEnd,
-                                  MixerServiceMode outputMode) {
+                                  MixerServiceMode outputMode,
+                                  bool numberedSelectionRender) {
   if (startRow > endRow || channelStart > channelEnd ||
       channelEnd >= SONG_CHANNEL_COUNT) {
     return;
   }
+  MixerService::GetInstance()->SetNumberedSelectionRender(
+      numberedSelectionRender);
   selectionRenderActive_ = true;
   selectionRenderMode_ = mode;
   selectionRenderStartRow_ = startRow;

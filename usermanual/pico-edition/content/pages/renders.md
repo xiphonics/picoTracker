@@ -18,7 +18,7 @@ The render options can be found in the **Project View**. Navigate to the Project
 
 ***NOTE:***  Any existing files in the `/renders` directory for the current project will be **overwritten** by the rendering process.
 
-Use `EDIT`+arrow keys to select rows in the Song, Chain, or Phrase screen. Press `ENTER`+`PLAY` on one of these screens to render the selected rows to a mixdown file in `/renders`. On the Project screen, **Mixdown** renders the active Song screen selection, including its selected channels, to `/renders`.
+Use `EDIT`+arrow keys to select rows in the Song, Chain, or Phrase screen. Press `ENTER`+`PLAY` on one of these screens to render the selected rows to the next available `<projectName>-mixNNN.wav` file in `/renders`. On the Project screen, **Mixdown** renders the active Song screen selection, including its selected channels, to `/renders`.
 
 ## Rendering a Mixdown
 
@@ -37,7 +37,7 @@ To create a mixdown:
 
 ***NOTE:*** A Song screen selection is required when rendering from the Project screen. To render a selected region from the Song, Chain, or Phrase screen directly, use `ENTER`+`PLAY`.
 
-***NOTE:*** `ENTER`+`PLAY` saves to `/renders/(project name)-mixdown.wav`, overwriting any previous mixdown for the project.
+***NOTE:*** `ENTER`+`PLAY` saves to the next available `<projectName>-mixNNN.wav` file in `/renders`.
 
 ***NOTE:*** The progress displayed during the rendering process shows the percentage of the song rendered.
 

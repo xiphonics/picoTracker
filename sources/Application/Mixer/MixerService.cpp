@@ -20,6 +20,7 @@
 #include "Services/Audio/AudioOut.h"
 #include "Services/Midi/MidiService.h"
 #include "System/Console/Trace.h"
+#include "System/FileSystem/FileSystem.h"
 #include "System/System/System.h"
 #include "platform.h"
 #include <nanoprintf.h>
@@ -31,7 +32,7 @@ MixerService::MixerService() : master_(), sync_(platform_mutex()) {
   master_.SetName("Master");
 };
 
-MixerService::~MixerService() {};
+MixerService::~MixerService(){};
 
 bool MixerService::Init() {
   out_ = 0;
@@ -205,7 +206,12 @@ void MixerService::OnPlayerStart(MixerServiceMode mode) {
 void MixerService::OnPlayerStop() {
   // always reset back to audio mode when stopping
   setRenderingMode(MSM_AUDIO);
+  numberedSelectionRender_ = false;
 };
+
+void MixerService::SetNumberedSelectionRender(bool enabled) {
+  numberedSelectionRender_ = enabled;
+}
 
 bool MixerService::configureRenderPaths() {
   if (!out_) {
@@ -222,8 +228,24 @@ bool MixerService::configureRenderPaths() {
   char projectname[MAX_PROJECT_NAME_LENGTH + 1];
   project->GetProjectName(projectname);
 
-  char path[30 + MAX_PROJECT_NAME_LENGTH];
-  npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
+  char path[MAX_PROJECT_SAMPLE_PATH_LENGTH];
+  if (numberedSelectionRender_) {
+    bool pathFound = false;
+    for (uint16_t index = 1; index <= 999; ++index) {
+      npf_snprintf(path, sizeof(path), "/renders/%s-mix%03u.wav", projectname,
+                   static_cast<unsigned>(index));
+      if (!FileSystem::GetInstance()->exists(path)) {
+        pathFound = true;
+        break;
+      }
+    }
+    if (!pathFound) {
+      Trace::Error("MIXERSERVICE", "No free numbered render filename");
+      return false;
+    }
+  } else {
+    npf_snprintf(path, sizeof(path), "/renders/%s-mixdown.wav", projectname);
+  }
   out_->SetFileRenderer(path);
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     npf_snprintf(path, sizeof(path), "/renders/%s-channel%d.wav", projectname,

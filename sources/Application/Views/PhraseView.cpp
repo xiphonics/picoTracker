@@ -66,7 +66,7 @@ PhraseView::PhraseView(GUIWindow &w, ViewData *viewData)
   };
 }
 
-PhraseView::~PhraseView() {};
+PhraseView::~PhraseView(){};
 
 void PhraseView::Reset() {
   phrase_ = &(viewData_->song_->phrase_);
@@ -919,7 +919,8 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
         RenderProgressModal::ProgressDisplayMode::ElapsedTime);
     DoModal(dialog);
     player->StartSelectionRender(PM_PHRASE, selection.Top(), selection.Bottom(),
-                                 viewData_->songX_, viewData_->songX_);
+                                 viewData_->songX_, viewData_->songX_, MSM_FILE,
+                                 true);
     return;
   }
 
