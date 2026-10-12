@@ -1159,12 +1159,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
   } break;
   case FourCC::MidiInstrumentProgram:
   case FourCC::MidiInstrumentBank: {
-    // When the bank or program changes, send Bank Select before Program Change
-    // during playback.
-    if (!Player::GetInstance()->IsRunning()) {
-      break;
-    }
-
+    // Send the selected bank and program, then audition the program.
     I_Instrument *instr = getInstrument();
     if (instr && instr->GetType() == IT_MIDI) {
       MidiInstrument *midiInstr = (MidiInstrument *)instr;
@@ -1180,7 +1175,7 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         int program = programVar->GetInt();
 
         if (program >= 0 && program <= 0x7F) {
-          midiInstr->SendProgramChange(channel, program);
+          midiInstr->SendProgramChangeWithNote(channel, program);
         }
       }
     }
