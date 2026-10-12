@@ -10,6 +10,7 @@
 #include "TablePlayback.h"
 #include "Application/Instruments/CommandList.h"
 #include "Application/Instruments/I_Instrument.h"
+#include "Services/Midi/MidiService.h"
 
 TablePlayback TablePlayback::playback_[SONG_CHANNEL_COUNT];
 TablePlayback TablePlayback::automationPlayback_[SONG_CHANNEL_COUNT];
@@ -153,6 +154,12 @@ bool TablePlayback::ProcessPositionCommand(uint8_t row, TrackerCommand command,
 bool TablePlayback::ProcessLocalCommand(TrackerCommand command, ushort param,
                                         TablePlayerChange &tpc) {
   switch (command) {
+  case TrackerCommand::InstrumentCommandMidiStart:
+    MidiService::GetInstance()->SendMidiStart();
+    return true;
+  case TrackerCommand::InstrumentCommandMidiStop:
+    MidiService::GetInstance()->SendMidiStop();
+    return true;
   case TrackerCommand::InstrumentCommandKill:
     tpc.timeToLive_ = (param & 0xFF) + 1;
     return true;

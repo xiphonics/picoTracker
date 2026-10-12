@@ -31,6 +31,8 @@ static TrackerCommand _all[] = {
     TrackerCommand::InstrumentCommandMidiCC,
     TrackerCommand::InstrumentCommandMidiChord,
     TrackerCommand::InstrumentCommandMidiPC,
+    TrackerCommand::InstrumentCommandMidiStop,
+    TrackerCommand::InstrumentCommandMidiStart,
     TrackerCommand::InstrumentCommandPan,
     TrackerCommand::InstrumentCommandPitchFineTune,
     TrackerCommand::InstrumentCommandPlayOfset,

@@ -51,6 +51,8 @@ public:
   void OnMidiStart();
   void OnMidiStop();
   void OnMidiClock();
+  void SendMidiStart();
+  void SendMidiStop();
 
 protected:
   etl::vector<MidiInDevice *, 2> inList_;
