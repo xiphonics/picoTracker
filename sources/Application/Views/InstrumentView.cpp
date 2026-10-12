@@ -63,13 +63,11 @@ InstrumentView::InstrumentView(GUIWindow &w, ViewData *data)
   persistentActionField_.emplace_back("Import", FourCC::ActionImport, position);
   fieldList_.insert(fieldList_.end(), &(*persistentActionField_.rbegin()));
   (*persistentActionField_.rbegin()).AddObserver(*this);
-  lastFocusID_ = FourCC::ActionImport;
 
   position._x += 8;
   persistentActionField_.emplace_back("Export", FourCC::ActionExport, position);
   fieldList_.insert(fieldList_.end(), &(*persistentActionField_.rbegin()));
   (*persistentActionField_.rbegin()).AddObserver(*this);
-  lastFocusID_ = FourCC::ActionExport;
 
   sliceCountLabel_.clear();
 }
@@ -264,7 +262,6 @@ void InstrumentView::refreshInstrumentFields() {
 
   // first put back the type field as its shown on *all* instrument types
   fieldList_.insert(fieldList_.end(), &(*typeIntVarField_.rbegin()));
-  lastFocusID_ = FourCC::VarInstrumentType;
 
   // Re-add the action fields for export and import only if not IT_NONE
   if (instrumentType_.GetInt() != IT_NONE) {
@@ -311,9 +308,10 @@ void InstrumentView::refreshInstrumentFields() {
     break;
   };
 
-  for (auto field : fieldList_) {
-    if (((UIIntVarField *)field)->GetVariableID() == lastFocusID_) {
-      SetFocus(field);
+  SetFocus(&(*typeIntVarField_.rbegin()));
+  for (auto &field : intVarField_) {
+    if (field.GetVariableID() == lastFocusID_) {
+      SetFocus(&field);
       break;
     }
   }
