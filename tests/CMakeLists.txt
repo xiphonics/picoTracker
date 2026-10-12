@@ -49,3 +49,22 @@ target_include_directories(midi_input_tests PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}/../sources
 )
 target_compile_definitions(midi_input_tests PRIVATE HOST_TEST)
+
+add_executable(midi_instrument_tests
+  test_main.cpp
+  midi_instrument_tests.cpp
+  midi_instrument_link_stubs.cpp
+  ../sources/Application/Instruments/MidiInstrument.cpp
+  ../sources/Application/Player/PlayerChannel.cpp
+  ../sources/Application/Model/Scale.cpp
+  ../sources/Foundation/Observable.cpp
+  ../sources/Foundation/Variables/Variable.cpp
+  ../sources/Foundation/Variables/VariableContainer.cpp
+)
+target_include_directories(midi_instrument_tests PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}/instrument_stubs
+  ${CMAKE_CURRENT_LIST_DIR}/stubs
+  ${CMAKE_CURRENT_LIST_DIR}/../sources/Externals
+  ${CMAKE_CURRENT_LIST_DIR}/../sources
+)
+target_compile_definitions(midi_instrument_tests PRIVATE HOST_TEST)
