@@ -26,8 +26,10 @@ void Chain::Reset() {
   }
 }
 
-unsigned short Chain::GetNext() {
-  for (int i = 0; i < CHAIN_COUNT; i++) {
+uint16_t Chain::GetNext(uint16_t start) {
+  start %= CHAIN_COUNT;
+  for (uint16_t offset = 0; offset < CHAIN_COUNT; ++offset) {
+    const uint16_t i = (start + offset) % CHAIN_COUNT;
     if (!isUsed_[i]) {
       isUsed_[i] = true;
       return i;

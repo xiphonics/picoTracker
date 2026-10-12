@@ -17,6 +17,8 @@ Songs are made up of chains. Each hex number on the song screen grid is a chain.
 
 * On the top right of the song screen we have play-time statistics. First there is the clipping indicator which displays “----” when your volume levels are ok and “clip” when you've cleared the headroom and are chopping off the top of your samples. The bottom row of the play-time statistics is the amount of time which has passed since you pressed Play.
 
+Cloning a chain or pressing ENTER twice to create a new chain chooses the first unused number above the highlighted chain. On an empty cell, the search starts above the last entered chain. The search continues across hexadecimal blocks (for example, `1F` to `20`) and wraps to `00` if no higher number is free. If all numbers are used, the cell stays unchanged.
+
 ### Controls
 
 * You can toggle between "SONG" or "LIVE" mode with <span class="minikeys">EDIT</span>+<span class="minikeys">LEFT</span>/<span class="minikeys">RIGHT</span>

@@ -18,3 +18,4 @@ template: page
 - Press `NAV`+`ENTER` to paste.
 - In Song mode, `Play` starts/stops playback from the highlighted step, soloing the current chain
 - In Live mode `Play` queues the currently highlighted phrase step
+Cloning a phrase or pressing ENTER twice to create a new phrase chooses the first unused number above the highlighted phrase. On an empty cell, the search starts above the last entered phrase. The search continues across hexadecimal blocks (for example, `1F` to `20`) and wraps to `00` if no higher number is free. If all numbers are used, the cell stays unchanged.

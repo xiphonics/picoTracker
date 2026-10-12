@@ -31,8 +31,10 @@ void Phrase::Reset() {
   }
 }
 
-unsigned short Phrase::GetNext() {
-  for (int i = 0; i < PHRASE_COUNT; i++) {
+uint16_t Phrase::GetNext(uint16_t start) {
+  start %= PHRASE_COUNT;
+  for (uint16_t offset = 0; offset < PHRASE_COUNT; ++offset) {
+    const uint16_t i = (start + offset) % PHRASE_COUNT;
     if (!isUsed_[i]) {
       isUsed_[i] = true;
       return i;

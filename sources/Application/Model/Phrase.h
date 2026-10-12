@@ -21,7 +21,8 @@ public:
   Phrase();
   ~Phrase();
   void Reset();
-  unsigned short GetNext();
+  // Search from start, wrapping to zero when no higher slot is free.
+  uint16_t GetNext(uint16_t start = 0);
   bool IsUsed(uchar i) { return isUsed_[i]; };
   void SetUsed(uchar c);
   void ClearAllocation();
