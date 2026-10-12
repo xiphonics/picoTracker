@@ -258,27 +258,47 @@ void TableView::pasteClipboard() {
   ushort *dst6 = table.param3_;
   ushort *src6 = clipboard_.param3_;
 
+  uchar *sourceCommands[] = {src1, src3, src5};
+  uchar *destinationCommands[] = {dst1, dst3, dst5};
+  ushort *sourceParameters[] = {src2, src4, src6};
+  ushort *destinationParameters[] = {dst2, dst4, dst6};
+
   for (int i = 0; i < clipboard_.width_; i++) {
+    int32_t sourceColumn = clipboard_.col_ + i;
+    int32_t destinationColumn = col_ + i;
     for (int j = 0; j < height; j++) {
-      switch (i + clipboard_.col_) {
-      case 0:
-        dst1[(j + row_) % 16] = src1[j];
-        break;
-      case 1:
-        dst2[(j + row_) % 16] = src2[j];
-        break;
-      case 2:
-        dst3[(j + row_) % 16] = src3[j];
-        break;
-      case 3:
-        dst4[(j + row_) % 16] = src4[j];
-        break;
-      case 4:
-        dst5[(j + row_) % 16] = src5[j];
-        break;
-      case 5:
-        dst6[(j + row_) % 16] = src6[j];
-        break;
+      if (sourceColumn < 6 && destinationColumn < 6 &&
+          sourceColumn % 2 == destinationColumn % 2) {
+        int32_t sourceLane = sourceColumn / 2;
+        int32_t destinationLane = destinationColumn / 2;
+        if (sourceColumn % 2 == 0) {
+          destinationCommands[destinationLane][(j + row_) % 16] =
+              sourceCommands[sourceLane][j];
+        } else {
+          destinationParameters[destinationLane][(j + row_) % 16] =
+              sourceParameters[sourceLane][j];
+        }
+      } else {
+        switch (sourceColumn) {
+        case 0:
+          dst1[(j + row_) % 16] = src1[j];
+          break;
+        case 1:
+          dst2[(j + row_) % 16] = src2[j];
+          break;
+        case 2:
+          dst3[(j + row_) % 16] = src3[j];
+          break;
+        case 3:
+          dst4[(j + row_) % 16] = src4[j];
+          break;
+        case 4:
+          dst5[(j + row_) % 16] = src5[j];
+          break;
+        case 5:
+          dst6[(j + row_) % 16] = src6[j];
+          break;
+        }
       }
     }
   }
