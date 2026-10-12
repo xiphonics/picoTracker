@@ -65,6 +65,7 @@ public:
 
   void SetChannel(int i);
   void SendProgramChange(int channel, int program);
+  void SendBankSelect(int channel, int bank);
   void SendProgramChangeWithNote(int channel, int program);
 
   // Static callback for handling delayed note-off messages
@@ -102,6 +103,7 @@ private:
   Variable table_;
   Variable tableAuto_;
   Variable program_;
+  Variable bank_;
   static MidiService *svc_;
   static TimerService *timerSvc_;
 };

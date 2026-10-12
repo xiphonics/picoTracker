@@ -122,6 +122,7 @@ struct FourCC {
     MidiInstrumentTableAutomation,
     MidiInstrumentName,
     MidiInstrumentProgram,
+    MidiInstrumentBank,
 
     SIDInstrumentWaveform,
     SIDInstrument1FilterCut,
@@ -305,6 +306,7 @@ struct FourCC {
   ETL_ENUM_TYPE(MidiInstrumentTable, "table")
   ETL_ENUM_TYPE(MidiInstrumentTableAutomation, "table automation")
   ETL_ENUM_TYPE(MidiInstrumentProgram, "program")
+  ETL_ENUM_TYPE(MidiInstrumentBank, "bank")
   ETL_ENUM_TYPE(SIDInstrumentWaveform, "VWF")
   ETL_ENUM_TYPE(SIDInstrument1FilterCut, "FILTCUT1")
   ETL_ENUM_TYPE(SIDInstrument1FilterResonance, "RES1")

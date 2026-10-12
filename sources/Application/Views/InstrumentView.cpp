@@ -614,6 +614,12 @@ void InstrumentView::fillMidiParameters() {
   fieldList_.insert(fieldList_.end(), &(*intVarOffField_.rbegin()));
 
   position._y += 1;
+  v = instrument->FindVariable(FourCC::MidiInstrumentBank);
+  intVarField_.emplace_back(
+      UIIntVarField(position, *v, "Bank: %5.5d", 0, 0x3FFF, 1, 0x100));
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+
+  position._y += 1;
   v = instrument->FindVariable(FourCC::MidiInstrumentTableAutomation);
   intVarField_.emplace_back(
       UIIntVarField(position, *v, "Automation: %s", 0, 1, 1, 1));
@@ -1151,9 +1157,10 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
     SetChanged();
     NotifyObservers(&ve);
   } break;
-  case FourCC::MidiInstrumentProgram: {
-    // When program value changes, send a MIDI Program Change message during
-    // playback
+  case FourCC::MidiInstrumentProgram:
+  case FourCC::MidiInstrumentBank: {
+    // When the bank or program changes, send Bank Select before Program Change
+    // during playback.
     if (!Player::GetInstance()->IsRunning()) {
       break;
     }
@@ -1172,8 +1179,9 @@ void InstrumentView::Update(Observable &o, I_ObservableData *data) {
         int channel = channelVar->GetInt();
         int program = programVar->GetInt();
 
-        // Send Program Change message
-        midiInstr->SendProgramChange(channel, program);
+        if (program >= 0 && program <= 0x7F) {
+          midiInstr->SendProgramChange(channel, program);
+        }
       }
     }
   } break;

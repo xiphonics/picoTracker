@@ -56,3 +56,8 @@ Use `MIDI CHANNEL MAP` on the Project screen to choose which song channels recei
 ## MIDI Output
 
 MIDI output is supported via MIDI Instruments and related MIDI commands.
+
+Each MIDI Instrument has a `Bank` setting from 0 to 16383. When a Program Change
+is sent, picoTracker sends the bank as Bank Select MSB (CC 0) and LSB (CC 32)
+first, followed by the Program Change. The bank number is encoded as
+`MSB * 128 + LSB`. Synthesizers can map bank numbers to sounds differently.
