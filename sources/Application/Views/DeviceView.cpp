@@ -41,7 +41,13 @@ DeviceView::DeviceView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   Variable *v;
 
   v = config->FindVariable(FourCC::VarMidiDevice);
-  intVarField_.emplace_back(position, *v, "MIDI device: %s", 0, 3, 1, 1);
+  intVarField_.emplace_back(position, *v, "MIDI output: %s", 0, 3, 1, 1);
+  fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
+  (*intVarField_.rbegin()).AddObserver(*this);
+
+  position._y += 1;
+  v = config->FindVariable(FourCC::VarMidiInput);
+  intVarField_.emplace_back(position, *v, "MIDI input: %s", 0, 3, 1, 1);
   fieldList_.insert(fieldList_.end(), &(*intVarField_.rbegin()));
   (*intVarField_.rbegin()).AddObserver(*this);
 
@@ -214,6 +220,7 @@ void DeviceView::Update(Observable &, I_ObservableData *data) {
     break;
   }
   case FourCC::VarMidiDevice:
+  case FourCC::VarMidiInput:
   case FourCC::VarMidiSync:
   case FourCC::VarRemoteUI:
   case FourCC::VarImportResampler: {

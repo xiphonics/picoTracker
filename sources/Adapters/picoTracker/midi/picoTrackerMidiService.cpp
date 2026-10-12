@@ -26,9 +26,6 @@ picoTrackerMidiService::~picoTrackerMidiService(){};
 void picoTrackerMidiService::poll() {
   // Poll all MIDI input devices
   for (auto dev : inList_) {
-    picoTrackerMidiInDevice *ptDev = (picoTrackerMidiInDevice *)dev;
-    if (ptDev) {
-      ptDev->poll();
-    }
+    dev->poll();
   }
 };

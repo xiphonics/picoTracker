@@ -30,3 +30,19 @@ target_include_directories(picoTracker_tests PRIVATE
 target_compile_definitions(picoTracker_tests PRIVATE
   HOST_TEST
 )
+
+add_executable(midi_input_tests
+  test_main.cpp
+  midi_input_tests.cpp
+  ../sources/Foundation/Observable.cpp
+  ../sources/Services/Midi/MidiInDevice.cpp
+  ../sources/Services/Midi/MidiNoteTracker.cpp
+  ../sources/Adapters/picoTracker/midi/picoTrackerUSBMidiInDevice.cpp
+)
+target_include_directories(midi_input_tests PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}/midi_stubs
+  ${CMAKE_CURRENT_LIST_DIR}/stubs
+  ${CMAKE_CURRENT_LIST_DIR}/../sources/Externals
+  ${CMAKE_CURRENT_LIST_DIR}/../sources
+)
+target_compile_definitions(midi_input_tests PRIVATE HOST_TEST)
