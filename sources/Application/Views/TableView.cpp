@@ -279,7 +279,7 @@ void TableView::pasteClipboard() {
               sourceParameters[sourceLane][j];
         }
       } else {
-        switch (destinationColumn) {
+        switch (sourceColumn) {
         case 0:
           dst1[(j + row_) % 16] = src1[j];
           break;
