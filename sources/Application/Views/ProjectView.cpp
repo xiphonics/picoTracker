@@ -8,6 +8,7 @@
  */
 
 #include "ProjectView.h"
+#include "Application/AppWindow.h"
 #include "Application/Instruments/SamplePool.h"
 #include "Application/Model/Scale.h"
 #include "Application/Persistency/PersistencyService.h"
@@ -109,30 +110,6 @@ static void RenderStopCallback(View &v, ModalView &dialog) {
       ((ProjectView &)v).DoModal(cancelDialog);
     }
   }
-}
-
-bool ProjectView::canRenderFromFirstSongRow() const {
-  if (project_ == nullptr) {
-    return false;
-  }
-
-  const unsigned char *songRow = project_->song_.data_;
-  for (int channel = 0; channel < SONG_CHANNEL_COUNT; channel++) {
-    const unsigned char chain = songRow[channel];
-    if (chain == EMPTY_SONG_VALUE) {
-      continue;
-    }
-
-    for (int phrase = 0; phrase < PHRASES_PER_CHAIN; phrase++) {
-      const unsigned char phraseId =
-          project_->song_.chain_.data_[chain * PHRASES_PER_CHAIN + phrase];
-      if (phraseId != EMPTY_SONG_VALUE) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }
 
 ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
@@ -241,18 +218,22 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   position._y += 2;
 
   // Add a static field as a label for the render actions
+  renderLabelPos_ = position;
   staticField_.emplace_back(position, "Render:");
   fieldList_.insert(fieldList_.end(), &(*staticField_.rbegin()));
 
-  // Position the Mixdown action field to the right of the label
-  position._x += 8;
+  // Render actions occupy their own line so the selection range fits beside
+  // the label above.
+  position._y += 1;
   actionField_.emplace_back("Mixdown", FourCC::ActionRenderMixdown, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  mixdownField_ = &(*actionField_.rbegin());
   (*actionField_.rbegin()).AddObserver(*this);
 
   position._x += 8;
   actionField_.emplace_back("Stems", FourCC::ActionRenderStems, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  stemsField_ = &(*actionField_.rbegin());
   (*actionField_.rbegin()).AddObserver(*this);
   position._x = xalign;
 }
@@ -322,9 +303,44 @@ void ProjectView::DrawView() {
   etl::string<MAX_PROJECT_NAME_LENGTH> projectName = v->GetString();
   DrawString(pos._x + strlen(title), pos._y, projectName.c_str(), props);
 
+  GUIRect selection;
+  const bool hasSelection =
+      static_cast<AppWindow &>(w_).GetSongSelectionRect(selection);
+  fieldList_.remove(mixdownField_);
+  fieldList_.remove(stemsField_);
+  if (hasSelection) {
+    fieldList_.push_back(mixdownField_);
+    fieldList_.push_back(stemsField_);
+  } else if (GetFocus() == mixdownField_ || GetFocus() == stemsField_) {
+    ClearFocus();
+  }
   FieldView::Redraw();
+  if (hasSelection) {
+    DrawRenderSelectionSummary(selection);
+  } else {
+    SetColor(CD_NORMAL);
+    GUIPoint noSelectionPos = renderLabelPos_;
+    noSelectionPos._x += 8;
+    DrawString(noSelectionPos._x, noSelectionPos._y, "[No Selection]", props);
+  }
   drawMap();
 };
+
+void ProjectView::DrawRenderSelectionSummary(const GUIRect &selection) {
+  char summary[32];
+  const uint8_t rowCount =
+      static_cast<uint8_t>(selection.Bottom() - selection.Top() + 1);
+  const uint8_t channelCount =
+      static_cast<uint8_t>(selection.Right() - selection.Left() + 1);
+  npf_snprintf(summary, sizeof(summary), "Rows:%u Ch:%u",
+               static_cast<unsigned>(rowCount),
+               static_cast<unsigned>(channelCount));
+  SetColor(CD_NORMAL);
+  GUITextProperties props;
+  GUIPoint summaryPos = renderLabelPos_;
+  summaryPos._x += 8;
+  DrawString(summaryPos._x, summaryPos._y, summary, props);
+}
 
 void ProjectView::Update(Observable &, I_ObservableData *data) {
 
@@ -449,10 +465,28 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
     break;
   case FourCC::ActionRenderMixdown:
     if (!player->IsRunning()) {
-      if (!canRenderFromFirstSongRow()) {
-        MessageBox *mb =
-            MessageBox::Create(*this, "      Render failed",
-                               "Song row 00 has no phrases", MBBF_OK);
+      GUIRect selection;
+      if (!static_cast<AppWindow &>(w_).GetSongSelectionRect(selection)) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "Select rows in Song view first", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
+      bool hasPlayableContent = false;
+      for (int channel = selection.Left(); channel <= selection.Right();
+           ++channel) {
+        const unsigned char chain =
+            viewData_->song_
+                ->data_[selection.Top() * SONG_CHANNEL_COUNT + channel];
+        if (chain != 0xFF &&
+            viewData_->song_->chain_.data_[chain * 16] != 0xFF) {
+          hasPlayableContent = true;
+          break;
+        }
+      }
+      if (!hasPlayableContent) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "Selection must start on a playable row", MBBF_OK);
         DoModal(mb);
         break;
       }
@@ -463,15 +497,35 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
 
       // Start playback in rendering mode with MSM_FILE
-      player->Start(PM_SONG, true, MSM_FILE, true);
+      player->StartSelectionRender(PM_SONG, selection.Top(), selection.Bottom(),
+                                   selection.Left(), selection.Right());
     }
     break;
   case FourCC::ActionRenderStems:
     if (!player->IsRunning()) {
-      if (!canRenderFromFirstSongRow()) {
-        MessageBox *mb =
-            MessageBox::Create(*this, "      Render failed",
-                               "Song row 00 has no phrases", MBBF_OK);
+      GUIRect selection;
+      if (!static_cast<AppWindow &>(w_).GetSongSelectionRect(selection)) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "Select rows in Song view first", MBBF_OK);
+        DoModal(mb);
+        break;
+      }
+      bool hasPlayableContent = false;
+      for (int channel = selection.Left(); channel <= selection.Right();
+           ++channel) {
+        const unsigned char chain =
+            viewData_->song_
+                ->data_[selection.Top() * SONG_CHANNEL_COUNT + channel];
+        if (chain != 0xFF &&
+            viewData_->song_->chain_.data_[chain * 16] != 0xFF) {
+          hasPlayableContent = true;
+          break;
+        }
+      }
+      if (!hasPlayableContent) {
+        MessageBox *mb = MessageBox::Create(
+            *this, "      Render failed",
+            "Selection must start on a playable row", MBBF_OK);
         DoModal(mb);
         break;
       }
@@ -482,7 +536,9 @@ void ProjectView::Update(Observable &, I_ObservableData *data) {
       DoModal(renderDialog, ModalViewCallback::create<&RenderStopCallback>());
 
       // Start playback in rendering mode with MSM_FILESPLIT
-      player->Start(PM_SONG, true, MSM_FILESPLIT, true);
+      player->StartSelectionRender(PM_SONG, selection.Top(), selection.Bottom(),
+                                   selection.Left(), selection.Right(),
+                                   MSM_FILESPLIT);
     }
     break;
   case FourCC::ActionShowRecordView:

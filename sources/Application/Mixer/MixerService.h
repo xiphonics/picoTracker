@@ -49,6 +49,7 @@ public:
 
   void OnPlayerStart(MixerServiceMode mode);
   void OnPlayerStop();
+  void SetNumberedSelectionRender(bool enabled);
 
   void SetMasterVolume(int);
   int GetPlayedBufferPercentage();
@@ -77,5 +78,6 @@ private:
   SysMutex *sync_;
   Project *project_; // Reference to the current project
   MixerServiceMode mode_ = MSM_AUDIO;
+  bool numberedSelectionRender_ = false;
 };
 #endif

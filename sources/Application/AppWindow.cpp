@@ -222,6 +222,11 @@ void AppWindow::SetSdCardPresent(bool present) {
   SetDirty();
 }
 
+bool AppWindow::GetSongSelectionRect(GUIRect &selectionRect) const {
+  return views_ != nullptr &&
+         views_->songView.GetActiveSelectionRect(selectionRect);
+}
+
 void appwindow_set_sdcard_present(bool present) {
   if (instance) {
     instance->SetSdCardPresent(present);

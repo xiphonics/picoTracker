@@ -13,26 +13,31 @@ picoTracker allows you to render your compositions to audio files, providing two
 
 The render options can be found in the **Project View**. Navigate to the Project View and look for the "Render:" section, which contains two options:
 
-- **Mixdown** - Creates a single stereo audio file of your entire composition
+- **Mixdown** - Creates a single stereo audio file of the selected portion of your song
 - **Stems** - Creates separate audio files for each channel/instrument in your composition
 
 ***NOTE:***  Any existing files in the `/renders` directory for the current project will be **overwritten** by the rendering process.
 
+Use `EDIT`+arrow keys to select rows in the Song, Chain, or Phrase screen. Press `ENTER`+`PLAY` on one of these screens to render the selected rows to the next available `<projectName>-mixNNN.wav` file in `/renders`. On the Project screen, **Mixdown** renders the active Song screen selection, including its selected channels, to `/renders`.
+
 ## Rendering a Mixdown
 
-A mixdown creates a single stereo audio file containing your entire composition. This is useful when you want to share your completed track or use it in other applications.
+A mixdown creates a single stereo audio file containing the selected part of your composition. This is useful when you want to share your track or use it in other applications.
 
 To create a mixdown:
 
-1. Navigate to the Project View
-2. Make sure your song is not currently playing
-3. Select the "Mixdown" option under "Render:"
-4. The rendering process will begin, and a progress dialog will display the current render progress
-5. The song will play through until the end while rendering
-6. You can press "OK" at any time to stop the rendering process
-7. When the song has completed playing through, the rendering will automatically finish
+1. In the Song screen, select the rows and channels you want to render with `EDIT`+arrow keys
+2. Navigate to the Project View
+3. Make sure your song is not currently playing
+4. Select the "Mixdown" option under "Render:"
+5. The rendering process will begin, and a progress dialog will display the current render progress
+6. The selected portion of the song will play through while rendering
+7. You can press "OK" at any time to stop the rendering process
+8. When the selection has completed playing through, the rendering will automatically finish
 
-***NOTE:*** Rendering is only possible if the first row of your song (Row 00) contains at least one phrase. Rendering starts on the last played row in the Song screen.
+***NOTE:*** A Song screen selection is required when rendering from the Project screen. To render a selected region from the Song, Chain, or Phrase screen directly, use `ENTER`+`PLAY`.
+
+***NOTE:*** `ENTER`+`PLAY` saves to the next available `<projectName>-mixNNN.wav` file in `/renders`.
 
 ***NOTE:*** The progress displayed during the rendering process shows the percentage of the song rendered.
 

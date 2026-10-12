@@ -116,6 +116,10 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   // or from last stored
 
   unsigned playPos = viewData_->songY_ + viewData_->songOffset_;
+  if (selectionRenderActive_) {
+    playPos =
+        selectionRenderMode_ == PM_SONG ? selectionRenderStartRow_ : playPos;
+  }
 
   if (forceSongMode == false) {
     lastSongPos_ = playPos;
@@ -161,8 +165,11 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   switch (viewData_->playMode_) {
   case PM_SONG: {
     for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      mixer_.StartChannel(i);
-      updateSongPos(playPos, i);
+      if (!selectionRenderActive_ || (i >= selectionRenderChannelStart_ &&
+                                      i <= selectionRenderChannelEnd_)) {
+        mixer_.StartChannel(i);
+        updateSongPos(playPos, i);
+      }
     }
   } break;
 
@@ -184,7 +191,20 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
     mixer_.StartChannel(currentChannel);
     ;
     int currentChainPos = viewData_->chainRow_;
-    updateSongPos(playPos, currentChannel, currentChainPos);
+    if (selectionRenderActive_ && selectionRenderMode_ == PM_CHAIN) {
+      currentChainPos = selectionRenderStartRow_;
+      viewData_->songPlayPos_[currentChannel] = playPos;
+      viewData_->currentPlayChain_[currentChannel] = viewData_->currentChain_;
+      updateChainPos(currentChainPos, currentChannel);
+    } else if (selectionRenderActive_ && selectionRenderMode_ == PM_PHRASE) {
+      viewData_->songPlayPos_[currentChannel] = playPos;
+      viewData_->currentPlayChain_[currentChannel] = viewData_->currentChain_;
+      viewData_->currentPlayPhrase_[currentChannel] = viewData_->currentPhrase_;
+      viewData_->chainPlayPos_[currentChannel] = viewData_->chainRow_;
+      updatePhrasePos(selectionRenderStartRow_, currentChannel);
+    } else {
+      updateSongPos(playPos, currentChannel, currentChainPos);
+    }
   } break;
 
   case PM_AUDITION: {
@@ -218,6 +238,48 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
   mixer_.Unlock();
 }
 
+void Player::StartSelectionRender(PlayMode mode, uint8_t startRow,
+                                  uint8_t endRow, uint8_t channelStart,
+                                  uint8_t channelEnd,
+                                  MixerServiceMode outputMode,
+                                  bool numberedSelectionRender) {
+  if (startRow > endRow || channelStart > channelEnd ||
+      channelEnd >= SONG_CHANNEL_COUNT) {
+    return;
+  }
+  MixerService::GetInstance()->SetNumberedSelectionRender(
+      numberedSelectionRender);
+  selectionRenderActive_ = true;
+  selectionRenderMode_ = mode;
+  selectionRenderStartRow_ = startRow;
+  selectionRenderEndRow_ = endRow;
+  selectionRenderChannelStart_ = channelStart;
+  selectionRenderChannelEnd_ = channelEnd;
+  selectionRenderFinishedChannels_ = 0;
+  if (mode == PM_SONG) {
+    for (uint8_t channel = channelStart; channel <= channelEnd; ++channel) {
+      bool hasContent = false;
+      uint8_t lastContentRow = startRow;
+      for (uint8_t row = startRow; row <= endRow; ++row) {
+        const unsigned char chain =
+            viewData_->song_->data_[row * SONG_CHANNEL_COUNT + channel];
+        if (chain == 0xFF ||
+            viewData_->song_->chain_.data_[chain * 16] == 0xFF) {
+          break;
+        }
+        hasContent = true;
+        lastContentRow = row;
+      }
+      if (hasContent) {
+        selectionRenderSongEndRows_[channel] = lastContentRow;
+      } else {
+        selectionRenderFinishedChannels_ |= (1UL << channel);
+      }
+    }
+  }
+  Start(mode, false, outputMode, false);
+}
+
 void Player::Stop() {
   mixer_.Lock();
 
@@ -233,6 +295,7 @@ void Player::Stop() {
 
   SyncMaster::GetInstance()->Stop();
   isRunning_ = false;
+  selectionRenderActive_ = false;
   SetChanged();
   PlayerEvent pe(PET_STOP);
   NotifyObservers(&pe);
@@ -1095,10 +1158,21 @@ void Player::moveToNextStep() {
 
       if (gs->TriggerChannel(i)) { // If groove says it is time to play
         if (viewData_->currentPlayPhrase_[i] != 0xFF) {
+          if (selectionRenderActive_ && selectionRenderMode_ == PM_PHRASE &&
+              i == selectionRenderChannelStart_ &&
+              viewData_->phrasePlayPos_[i] >= selectionRenderEndRow_) {
+            stopSelectionRender();
+            return;
+          }
           int pos = (viewData_->phrasePlayPos_[i]) + 1;
           if (pos != 16) {
             int hop = getChannelHop(i, pos);
             if (hop >= 0) {
+              if (selectionRenderActive_ && selectionRenderMode_ == PM_PHRASE &&
+                  hop > selectionRenderEndRow_) {
+                stopSelectionRender();
+                return;
+              }
               if (mode_ != PM_PHRASE) {
                 moveToNextPhrase(i, hop);
               } else {
@@ -1126,6 +1200,26 @@ void Player::moveToNextStep() {
   };
 }
 
+void Player::stopSelectionRender() {
+  const bool keepAudioActive = mixer_.IsPlaying();
+  for (int i = 0; i < SONG_CHANNEL_COUNT; ++i) {
+    mixer_.StopChannel(i);
+    TablePlayback::GetTablePlayback(i).Stop();
+    TablePlayback::GetAutomationPlayback(i).Stop();
+  }
+  MidiService::GetInstance()->OnPlayerStop();
+  mixer_.OnPlayerStop();
+  SyncMaster::GetInstance()->Stop();
+  isRunning_ = false;
+  selectionRenderActive_ = false;
+  SetChanged();
+  PlayerEvent event(PET_STOP);
+  NotifyObservers(&event);
+  if (!keepAudioActive) {
+    SetAudioActive(false);
+  }
+}
+
 /********************************************************
  moveToNextPhrase:
         Compute what is the next phrase to be triggered on
@@ -1134,6 +1228,13 @@ void Player::moveToNextStep() {
  ********************************************************/
 
 void Player::moveToNextPhrase(int channel, int hop) {
+
+  if (selectionRenderActive_ && selectionRenderMode_ == PM_CHAIN &&
+      channel == selectionRenderChannelStart_ &&
+      viewData_->chainPlayPos_[channel] >= selectionRenderEndRow_) {
+    stopSelectionRender();
+    return;
+  }
 
   // First check if we're in live mode and the channel
   // has been trigged in immediate mode. In which case we
@@ -1176,6 +1277,19 @@ void Player::moveToNextPhrase(int channel, int hop) {
   if (canContinue) {
     unsigned char *data = viewData_->song_->chain_.data_ + (16 * chain + pos);
     canContinue = (*data != 0xFF);
+  }
+
+  if (!canContinue && selectionRenderActive_ &&
+      selectionRenderMode_ == PM_CHAIN &&
+      channel == selectionRenderChannelStart_) {
+    for (int nextPos = pos; nextPos <= selectionRenderEndRow_; ++nextPos) {
+      if (viewData_->song_->chain_.data_[16 * chain + nextPos] != 0xFF) {
+        updateChainPos(nextPos, channel, hop);
+        return;
+      }
+    }
+    stopSelectionRender();
+    return;
   }
 
   // If so, we trigger it. Otherwise, we go to the next phrase
@@ -1244,6 +1358,24 @@ void Player::moveToNextChain(int channel, int hop) {
   }
 
   // if live mode didn't queue anything, we find the next to play
+
+  if (selectionRenderActive_ && selectionRenderMode_ == PM_SONG &&
+      channel >= selectionRenderChannelStart_ &&
+      channel <= selectionRenderChannelEnd_ &&
+      viewData_->songPlayPos_[channel] >=
+          selectionRenderSongEndRows_[channel]) {
+    mixer_.StopChannel(channel);
+    selectionRenderFinishedChannels_ |= (1UL << channel);
+    uint32_t selectedMask = 0;
+    for (uint8_t selectedChannel = selectionRenderChannelStart_;
+         selectedChannel <= selectionRenderChannelEnd_; ++selectedChannel) {
+      selectedMask |= (1UL << selectedChannel);
+    }
+    if ((selectionRenderFinishedChannels_ & selectedMask) == selectedMask) {
+      stopSelectionRender();
+    }
+    return;
+  }
 
   if (searchNext) {
     int pos = (viewData_->songPlayPos_[channel]) + 1;

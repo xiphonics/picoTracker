@@ -9,6 +9,8 @@
 
 #include "ChainView.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "Application/Views/SampleEditorView.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "ScreenView.h"
@@ -442,6 +444,49 @@ void ChainView::ProcessButtonMask(unsigned short mask, bool pressed) {
       viewMode_ = VM_SELECTION;
     }
   };
+
+  if (mask == (EPBM_ENTER | EPBM_PLAY)) {
+    Player *player = Player::GetInstance();
+    if (player->IsRunning()) {
+      MessageBox *message =
+          MessageBox::Create(*this, "Stop playback before rendering", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+    if (!clipboard_.active_) {
+      MessageBox *message =
+          MessageBox::Create(*this, "Select chain rows to render", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+    const GUIRect selection = getSelectionRect();
+    int firstPhraseRow = selection.Bottom() + 1;
+    int lastPhraseRow = selection.Top() - 1;
+    const unsigned char *phrases =
+        viewData_->song_->chain_.data_ + 16 * viewData_->currentChain_;
+    for (int row = selection.Top(); row <= selection.Bottom(); ++row) {
+      if (phrases[row] != 0xFF) {
+        if (firstPhraseRow > selection.Bottom()) {
+          firstPhraseRow = row;
+        }
+        lastPhraseRow = row;
+      }
+    }
+    if (firstPhraseRow > lastPhraseRow) {
+      MessageBox *message = MessageBox::Create(
+          *this, "Selection has no playable content", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+    RenderProgressModal *dialog = RenderProgressModal::Create(
+        *this, "Rendering Selection", "",
+        RenderProgressModal::ProgressDisplayMode::ElapsedTime);
+    DoModal(dialog);
+    player->StartSelectionRender(PM_CHAIN, firstPhraseRow, lastPhraseRow,
+                                 viewData_->songX_, viewData_->songX_, MSM_FILE,
+                                 true);
+    return;
+  }
 
   // Process selection related keys
 

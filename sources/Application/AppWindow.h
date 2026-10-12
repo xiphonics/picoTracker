@@ -58,6 +58,7 @@ public:
   void SetDirty();
   void UpdateColorsFromConfig();
   void SetSdCardPresent(bool present);
+  bool GetSongSelectionRect(GUIRect &selectionRect) const;
 
   char projectName_[MAX_PROJECT_NAME_LENGTH + 1];
 

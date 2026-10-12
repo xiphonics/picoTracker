@@ -15,6 +15,7 @@
 #include "Application/Utils/HelpLegend.h"
 #include "Application/Utils/char.h"
 #include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "Application/Views/SampleEditorView.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "System/Console/Trace.h"
@@ -896,6 +897,31 @@ void PhraseView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if ((viewMode_ == VM_CLONE) && !((mask & EPBM_ENTER) && (mask & EPBM_ALT))) {
     viewMode_ = VM_SELECTION;
+  }
+
+  if (mask == (EPBM_ENTER | EPBM_PLAY)) {
+    Player *player = Player::GetInstance();
+    if (player->IsRunning()) {
+      MessageBox *message =
+          MessageBox::Create(*this, "Stop playback before rendering", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+    if (!clipboard_.active_) {
+      MessageBox *message =
+          MessageBox::Create(*this, "Select phrase rows to render", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+    const GUIRect selection = getSelectionRect();
+    RenderProgressModal *dialog = RenderProgressModal::Create(
+        *this, "Rendering Selection", "",
+        RenderProgressModal::ProgressDisplayMode::ElapsedTime);
+    DoModal(dialog);
+    player->StartSelectionRender(PM_PHRASE, selection.Top(), selection.Bottom(),
+                                 viewData_->songX_, viewData_->songX_, MSM_FILE,
+                                 true);
+    return;
   }
 
   if ((mask == (EPBM_ALT | EPBM_EDIT | EPBM_ENTER)) ||
