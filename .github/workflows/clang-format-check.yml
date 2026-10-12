@@ -1,6 +1,8 @@
 name: clang-format Check
 on:
   push:
+    branches:
+      - master
     paths:
       - sources/**
   pull_request:
