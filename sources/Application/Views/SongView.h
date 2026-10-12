@@ -25,7 +25,9 @@ public:
   virtual void DrawView();
   virtual void OnPlayerUpdate(PlayerEventType, unsigned int tick = 0);
   virtual void OnFocus();
+  void OnFocusLost() override;
   virtual void AnimationUpdate();
+  bool GetActiveSelectionRect(GUIRect &selectionRect) const;
 
 protected:
   void processNormalButtonMask(unsigned int mask);
@@ -89,6 +91,9 @@ private:
   int saveX_;
   int saveY_;
   int saveOffset_;
+  int selectionEndX_ = 0;
+  int selectionEndY_ = 0;
+  int selectionEndOffset_ = 0;
   bool invertBatt_;
   bool needClear_;
 

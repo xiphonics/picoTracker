@@ -30,7 +30,7 @@ public:
 
   virtual void ProcessButtonMask(unsigned short mask, bool pressed);
   virtual void DrawView();
-  virtual void OnPlayerUpdate(PlayerEventType, unsigned int){};
+  virtual void OnPlayerUpdate(PlayerEventType, unsigned int) {};
   virtual void OnFocus();
 
   etl::string<MAX_PROJECT_NAME_LENGTH> getProjectName() {
@@ -56,7 +56,7 @@ public:
   void OnQuit();
 
 private:
-  bool canRenderFromFirstSongRow() const;
+  void DrawRenderSelectionSummary(const GUIRect &selectionRect);
 
   Project *project_;
   // Debug
@@ -72,6 +72,9 @@ private:
 
   // References to specific fields that need direct access
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
+  UIActionField *mixdownField_ = nullptr;
+  UIActionField *stemsField_ = nullptr;
+  GUIPoint renderLabelPos_;
   bool saveAsFlag_ = false;
   etl::string<MAX_PROJECT_NAME_LENGTH> oldProjName_;
 

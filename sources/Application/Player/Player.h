@@ -67,6 +67,9 @@ public:
 
   void Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
              bool stopAtEnd = false);
+  void StartSelectionRender(PlayMode mode, uint8_t startRow, uint8_t endRow,
+                            uint8_t channelStart, uint8_t channelEnd,
+                            MixerServiceMode outputMode = MSM_FILE);
   void Stop();
 
   void SetSequencerMode(SequencerMode mode);
@@ -171,6 +174,7 @@ protected:
 private:
   void ResetLastActiveCommands();
   void RecordLastActiveCommand(int channel, TrackerCommand cmd, ushort param);
+  void stopSelectionRender();
 
   PlayerMixer mixer_;
   ViewData *viewData_;
@@ -180,6 +184,14 @@ private:
   PlayMode mode_;
   bool isRunning_;
   bool stopAtEnd_;
+  bool selectionRenderActive_ = false;
+  PlayMode selectionRenderMode_ = PM_SONG;
+  uint8_t selectionRenderStartRow_ = 0;
+  uint8_t selectionRenderEndRow_ = 0;
+  uint8_t selectionRenderChannelStart_ = 0;
+  uint8_t selectionRenderChannelEnd_ = SONG_CHANNEL_COUNT - 1;
+  uint32_t selectionRenderFinishedChannels_ = 0;
+  uint8_t selectionRenderSongEndRows_[SONG_CHANNEL_COUNT] = {};
 
   unsigned long startClock_; // .Used to time display live queued chains
                              //  for blinking effect

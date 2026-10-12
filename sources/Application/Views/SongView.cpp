@@ -10,6 +10,8 @@
 #include "SongView.h"
 #include "Application/Player/Player.h"
 #include "Application/Utils/char.h"
+#include "Application/Views/ModalDialogs/MessageBox.h"
+#include "Application/Views/ModalDialogs/RenderProgressModal.h"
 #include "Application/Views/SampleEditorView.h"
 #include "Foundation/Constants/SpecialCharacters.h"
 #include "System/Console/Trace.h"
@@ -226,7 +228,11 @@ void SongView::extendSelection() {
  ******************************************************/
 
 void SongView::OnFocus() {
-  clipboard_.active_ = false;
+  if (clipboard_.active_) {
+    viewData_->songX_ = selectionEndX_;
+    viewData_->songY_ = selectionEndY_;
+    viewData_->songOffset_ = selectionEndOffset_;
+  }
 
   // eg. if the user was in master channel in mixerview and came to songview
   // we need to make sure we're not outside channel range
@@ -235,11 +241,31 @@ void SongView::OnFocus() {
   }
 };
 
-GUIRect SongView::getSelectionRect() {
+void SongView::OnFocusLost() {
+  if (clipboard_.active_) {
+    selectionEndX_ = viewData_->songX_;
+    selectionEndY_ = viewData_->songY_;
+    selectionEndOffset_ = viewData_->songOffset_;
+  }
+}
 
+bool SongView::GetActiveSelectionRect(GUIRect &selectionRect) const {
+  if (!clipboard_.active_) {
+    return false;
+  }
+  GUIRect selected(clipboard_.x_, clipboard_.y_ + clipboard_.offset_,
+                   selectionEndX_, selectionEndY_ + selectionEndOffset_);
+  selected.Normalize();
+  selectionRect = selected;
+  return true;
+}
+
+GUIRect SongView::getSelectionRect() {
   GUIRect selRect(clipboard_.x_, clipboard_.y_ + clipboard_.offset_,
-                  viewData_->songX_,
-                  viewData_->songY_ + viewData_->songOffset_);
+                  clipboard_.active_ ? selectionEndX_ : viewData_->songX_,
+                  clipboard_.active_
+                      ? selectionEndY_ + selectionEndOffset_
+                      : viewData_->songY_ + viewData_->songOffset_);
 
   selRect.Normalize();
   return selRect;
@@ -540,6 +566,49 @@ void SongView::ProcessButtonMask(unsigned short mask, bool pressed) {
     return;
   };
 
+  if (mask == (EPBM_ENTER | EPBM_PLAY)) {
+    Player *player = Player::GetInstance();
+    if (player->IsRunning()) {
+      MessageBox *message =
+          MessageBox::Create(*this, "Stop playback before rendering", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+    if (!clipboard_.active_) {
+      MessageBox *message =
+          MessageBox::Create(*this, "Select song rows to render", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+
+    const GUIRect selection = getSelectionRect();
+    bool hasPlayableContent = false;
+    for (int channel = selection.Left(); channel <= selection.Right();
+         ++channel) {
+      const unsigned char chain =
+          viewData_->song_
+              ->data_[selection.Top() * SONG_CHANNEL_COUNT + channel];
+      if (chain != 0xFF && viewData_->song_->chain_.data_[chain * 16] != 0xFF) {
+        hasPlayableContent = true;
+        break;
+      }
+    }
+    if (!hasPlayableContent) {
+      MessageBox *message = MessageBox::Create(
+          *this, "Selection must start on a playable row", MBBF_OK);
+      DoModal(message);
+      return;
+    }
+
+    RenderProgressModal *dialog = RenderProgressModal::Create(
+        *this, "Rendering Selection", "",
+        RenderProgressModal::ProgressDisplayMode::SongPercent);
+    DoModal(dialog);
+    player->StartSelectionRender(PM_SONG, selection.Top(), selection.Bottom(),
+                                 selection.Left(), selection.Right());
+    return;
+  }
+
   if (viewMode_ == VM_NEW) {
     if (mask == EPBM_ENTER) {
       unsigned short next = viewData_->song_->chain_.GetNext();
@@ -574,8 +643,16 @@ void SongView::ProcessButtonMask(unsigned short mask, bool pressed) {
       saveX_ = clipboard_.x_;
       saveY_ = clipboard_.y_;
       saveOffset_ = clipboard_.offset_;
+      selectionEndX_ = viewData_->songX_;
+      selectionEndY_ = viewData_->songY_;
+      selectionEndOffset_ = viewData_->songOffset_;
     }
     processSelectionButtonMask(mask);
+    if (clipboard_.active_) {
+      selectionEndX_ = viewData_->songX_;
+      selectionEndY_ = viewData_->songY_;
+      selectionEndOffset_ = viewData_->songOffset_;
+    }
   } else {
 
     // Switch back to normal mode
