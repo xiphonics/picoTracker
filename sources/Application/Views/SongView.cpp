@@ -605,7 +605,8 @@ void SongView::ProcessButtonMask(unsigned short mask, bool pressed) {
         RenderProgressModal::ProgressDisplayMode::SongPercent);
     DoModal(dialog);
     player->StartSelectionRender(PM_SONG, selection.Top(), selection.Bottom(),
-                                 selection.Left(), selection.Right());
+                                 selection.Left(), selection.Right(), MSM_FILE,
+                                 true);
     return;
   }
 

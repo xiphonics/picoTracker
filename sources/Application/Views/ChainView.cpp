@@ -483,7 +483,8 @@ void ChainView::ProcessButtonMask(unsigned short mask, bool pressed) {
         RenderProgressModal::ProgressDisplayMode::ElapsedTime);
     DoModal(dialog);
     player->StartSelectionRender(PM_CHAIN, firstPhraseRow, lastPhraseRow,
-                                 viewData_->songX_, viewData_->songX_);
+                                 viewData_->songX_, viewData_->songX_, MSM_FILE,
+                                 true);
     return;
   }
 
