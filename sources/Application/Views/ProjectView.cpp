@@ -194,16 +194,17 @@ ProjectView::ProjectView(GUIWindow &w, ViewData *data) : FieldView(w, data) {
   fieldList_.insert(fieldList_.end(), nameField_);
 
   position._y += 1;
+  actionField_.emplace_back("Save", FourCC::ActionSave, position);
+  saveField_ = &actionField_.back();
+  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
+  (*actionField_.rbegin()).AddObserver(*this);
+
+  position._x += 5;
   actionField_.emplace_back("Browse", FourCC::ActionBrowse, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
 
   position._x += 7;
-  actionField_.emplace_back("Save", FourCC::ActionSave, position);
-  fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
-  (*actionField_.rbegin()).AddObserver(*this);
-
-  position._x += 5;
   actionField_.emplace_back("New", FourCC::ActionNewProject, position);
   fieldList_.insert(fieldList_.end(), &(*actionField_.rbegin()));
   (*actionField_.rbegin()).AddObserver(*this);
@@ -244,6 +245,13 @@ void ProjectView::ProcessButtonMask(unsigned short mask, bool pressed) {
 
   if (!pressed)
     return;
+
+  // Prefer saving when moving up from Mixdown.
+  if (mask == EPBM_UP && GetFocus() == mixdownField_) {
+    SetFocus(saveField_);
+    isDirty_ = true;
+    return;
+  }
 
   FieldView::ProcessButtonMask(mask, pressed);
 

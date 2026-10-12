@@ -72,6 +72,7 @@ private:
 
   // References to specific fields that need direct access
   UITextField<MAX_PROJECT_NAME_LENGTH> *nameField_;
+  UIActionField *saveField_ = nullptr;
   UIActionField *mixdownField_ = nullptr;
   UIActionField *stemsField_ = nullptr;
   GUIPoint renderLabelPos_;
