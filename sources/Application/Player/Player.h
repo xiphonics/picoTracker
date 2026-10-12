@@ -69,8 +69,7 @@ public:
              bool stopAtEnd = false);
   void StartSelectionRender(PlayMode mode, uint8_t startRow, uint8_t endRow,
                             uint8_t channelStart, uint8_t channelEnd,
-                            MixerServiceMode outputMode = MSM_FILE,
-                            bool renderToProjectPool = false);
+                            MixerServiceMode outputMode = MSM_FILE);
   void Stop();
 
   void SetSequencerMode(SequencerMode mode);

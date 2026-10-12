@@ -200,6 +200,7 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
       viewData_->songPlayPos_[currentChannel] = playPos;
       viewData_->currentPlayChain_[currentChannel] = viewData_->currentChain_;
       viewData_->currentPlayPhrase_[currentChannel] = viewData_->currentPhrase_;
+      viewData_->chainPlayPos_[currentChannel] = viewData_->chainRow_;
       updatePhrasePos(selectionRenderStartRow_, currentChannel);
     } else {
       updateSongPos(playPos, currentChannel, currentChainPos);
@@ -240,14 +241,11 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 void Player::StartSelectionRender(PlayMode mode, uint8_t startRow,
                                   uint8_t endRow, uint8_t channelStart,
                                   uint8_t channelEnd,
-                                  MixerServiceMode outputMode,
-                                  bool renderToProjectPool) {
+                                  MixerServiceMode outputMode) {
   if (startRow > endRow || channelStart > channelEnd ||
       channelEnd >= SONG_CHANNEL_COUNT) {
     return;
   }
-  MixerService::GetInstance()->SetRenderTargetToProjectPool(
-      renderToProjectPool);
   selectionRenderActive_ = true;
   selectionRenderMode_ = mode;
   selectionRenderStartRow_ = startRow;
