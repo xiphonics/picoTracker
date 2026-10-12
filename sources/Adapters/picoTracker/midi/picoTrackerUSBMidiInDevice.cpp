@@ -7,10 +7,8 @@
  */
 
 #include "picoTrackerUSBMidiInDevice.h"
-#include "Adapters/picoTracker/platform/platform.h"
 #include "Services/Midi/MidiMessage.h"
 #include "System/Console/Trace.h"
-#include "pico/stdlib.h"
 #include "tusb.h"
 
 picoTrackerUSBMidiInDevice::picoTrackerUSBMidiInDevice(const char *name)
@@ -32,10 +30,15 @@ void picoTrackerUSBMidiInDevice::Close() {
 
 bool picoTrackerUSBMidiInDevice::Start() {
   Trace::Log("MIDI", "Started USB MIDI input driver");
-  return true;
+  // Discard packets queued before enabling input.
+  uint8_t packet[4];
+  while (tud_midi_packet_read(packet)) {
+  }
+  return MidiInDevice::Start();
 }
 
 void picoTrackerUSBMidiInDevice::Stop() {
+  MidiInDevice::Stop();
   Trace::Log("MIDI", "Stopped USB MIDI input driver");
 }
 
@@ -56,6 +59,11 @@ void picoTrackerUSBMidiInDevice::poll() {
     if (bytesRead == 0) {
       Trace::Error("Failed to read expected MIDI packet!");
       break;
+    }
+
+    // Keep draining disabled input so old packets cannot replay.
+    if (!IsRunning()) {
+      continue;
     }
 
     // Extract the Code Index Number (CIN) from the first byte

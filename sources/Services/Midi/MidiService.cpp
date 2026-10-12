@@ -40,7 +40,7 @@ bool MidiService::Init() {
   }
 
   for (auto dev : inList_) {
-    dev->Start();
+    dev->Init();
     // Add this service as an observer to receive transport control messages
     dev->AddObserver(*this);
   }
@@ -57,6 +57,11 @@ bool MidiService::Init() {
 
   auto activeDeviceConfig = midiDevVar->GetInt();
   updateActiveDevicesList(activeDeviceConfig);
+
+  auto midiInputVar = static_cast<WatchedVariable *>(
+      config->FindVariable(FourCC::VarMidiInput));
+  midiInputVar->AddObserver(*this);
+  updateInputDevices(midiInputVar->GetInt());
 
   auto midiSyncVar =
       (WatchedVariable *)config->FindVariable(FourCC::VarMidiSync);
@@ -104,27 +109,48 @@ void MidiService::AdvancePlayQueue() {
 }
 
 void MidiService::Update(Observable &o, I_ObservableData *d) {
-  AudioDriver::Event *event = (AudioDriver::Event *)d;
-  if (event->type_ == AudioDriver::Event::ADET_DRIVERTICK) {
-    onAudioTick();
-  }
-  WatchedVariable &v = (WatchedVariable &)o;
-  switch (v.GetID()) {
-    // need braces inside case statements due to:
-    // https://stackoverflow.com/a/11578973/85472
-  case FourCC::VarMidiDevice: {
-    auto activeDeviceConfig = v.GetInt();
-    // note deviceID has 0 == OFF
-    Trace::Debug("midi device var changed:%d", activeDeviceConfig);
+  // Settings notifications encode an ID in d, rather than pointing to data.
+  auto config = Config::GetInstance();
+  for (auto id :
+       {FourCC::VarMidiDevice, FourCC::VarMidiInput, FourCC::VarMidiSync}) {
+    auto variable = static_cast<WatchedVariable *>(config->FindVariable(id));
+    if (&o != variable) {
+      continue;
+    }
+    WatchedVariable &v = *variable;
+    switch (v.GetID()) {
+      // need braces inside case statements due to:
+      // https://stackoverflow.com/a/11578973/85472
+    case FourCC::VarMidiDevice: {
+      auto activeDeviceConfig = v.GetInt();
+      // note deviceID has 0 == OFF
+      Trace::Debug("midi device var changed:%d", activeDeviceConfig);
 
-    stopDevice();
-    updateActiveDevicesList(activeDeviceConfig);
-    startDevice();
-  } break;
-  case FourCC::VarMidiSync: {
-    auto sync = v.GetInt();
-    sendSync_ = sync != 0;
-  } break;
+      stopDevice();
+      updateActiveDevicesList(activeDeviceConfig);
+      startDevice();
+    } break;
+    case FourCC::VarMidiInput:
+      updateInputDevices(v.GetInt());
+      break;
+    case FourCC::VarMidiSync: {
+      auto sync = v.GetInt();
+      sendSync_ = sync != 0;
+    } break;
+    }
+    return;
+  }
+  // Input messages are handled directly by MidiInDevice.
+  for (auto dev : inList_) {
+    if (&o == dev) {
+      return;
+    }
+  }
+  if (d) {
+    auto event = static_cast<AudioDriver::Event *>(d);
+    if (event->type_ == AudioDriver::Event::ADET_DRIVERTICK) {
+      onAudioTick();
+    }
   }
 }
 
@@ -175,6 +201,19 @@ void MidiService::updateActiveDevicesList(unsigned short config) {
     activeOutDevices_.insert(activeOutDevices_.end(), outList_[0]);
     activeOutDevices_.insert(activeOutDevices_.end(), outList_[1]);
     break;
+  }
+}
+
+void MidiService::updateInputDevices(uint8_t config) {
+  // Input list order is TRS, USB, matching the setting's bit mask.
+  for (uint8_t index = 0; index < inList_.size(); ++index) {
+    auto dev = inList_[index];
+    bool enabled = config <= 3 && (config & (1u << index)) != 0;
+    if (enabled && !dev->IsRunning()) {
+      dev->Start();
+    } else if (!enabled && dev->IsRunning()) {
+      dev->Stop();
+    }
   }
 }
 

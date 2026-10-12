@@ -68,12 +68,15 @@ void picoTrackerMidiInDevice::closeDriver() {
   Trace::Log("MIDI", "Closed MIDI input driver");
 }
 
-bool picoTrackerMidiInDevice::Start() { return startDriver(); }
+bool picoTrackerMidiInDevice::Start() { return MidiInDevice::Start(); }
 
-void picoTrackerMidiInDevice::Stop() { stopDriver(); }
+void picoTrackerMidiInDevice::Stop() { MidiInDevice::Stop(); }
 
 bool picoTrackerMidiInDevice::startDriver() {
-  // Clear the queue
+  // Discard bytes received while input was disabled.
+  while (uart_is_readable(MIDI_UART)) {
+    uart_getc(MIDI_UART);
+  }
   midi_rx_queue.clear();
 
   // Set up the interrupt handler
@@ -92,6 +95,7 @@ void picoTrackerMidiInDevice::stopDriver() {
   // Disable UART RX interrupt
   irq_set_enabled(MIDI_UART_IRQ, false);
   uart_set_irq_enables(MIDI_UART, false, false);
+  midi_rx_queue.clear();
   Trace::Log("MIDI", "Stopped MIDI input driver");
 }
 

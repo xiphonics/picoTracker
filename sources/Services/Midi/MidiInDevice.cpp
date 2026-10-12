@@ -10,7 +10,6 @@
 #include "MidiInDevice.h"
 #include "Application/Player/Player.h"
 #include "System/Console/Trace.h"
-#include "System/System/System.h"
 
 #define MIDI_CHANNEL_MASK 0x0F
 #define MIDI_DATA_MASK 0x7F
@@ -39,21 +38,36 @@ bool MidiInDevice::Init() { return initDriver(); };
 void MidiInDevice::Close() { closeDriver(); };
 
 bool MidiInDevice::Start() {
-  isRunning_ = true;
-
   // Reset the MIDI parser state
   midiStatus = 0;
+  midiData1 = 0;
   midiDataCount = 0;
+  midiDataBytes = 0;
 
   // Clear the note tracker when starting
   noteTracker_.clear();
 
-  return startDriver();
+  isRunning_ = startDriver();
+  return isRunning_;
 };
 
 void MidiInDevice::Stop() {
   isRunning_ = false;
   stopDriver();
+
+  // Release held input notes before their note-offs are disabled.
+  auto player = Player::GetInstance();
+  for (uint8_t channel = 0; channel < 16; ++channel) {
+    for (uint8_t note = 0; note < 128; ++note) {
+      while (noteTracker_.isNoteActiveOnChannel(note, channel)) {
+        int16_t audioChannel = noteTracker_.unregisterNote(note, channel);
+        if (player && audioChannel >= 0) {
+          player->StopNote(channel, audioChannel);
+        }
+      }
+    }
+  }
+  noteTracker_.clear();
 };
 
 bool MidiInDevice::IsRunning() { return isRunning_; };
@@ -295,6 +309,9 @@ void MidiInDevice::ClearChannelAssignment(int midiChannel) {
 }
 
 void MidiInDevice::processMidiData(uint8_t data) {
+  if (!isRunning_) {
+    return;
+  }
   // Handle MIDI data byte
   if (data & 0x80) {
     // This is a status byte

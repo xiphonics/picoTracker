@@ -52,6 +52,7 @@ private:
   WatchedVariable emphasisColor_;
   WatchedVariable lineOut_;
   WatchedVariable midiDevice_;
+  WatchedVariable midiInput_;
   WatchedVariable midiSync_;
   WatchedVariable remoteUI_;
   WatchedVariable importResampler_;

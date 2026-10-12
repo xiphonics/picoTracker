@@ -49,6 +49,7 @@ typedef etl::string<13> ParamString;
 constexpr int DEFAULT_LINEOUT = 0x2;
 constexpr int DEFAULT_MIDIDEVICE = 0x0;
 constexpr int DEFAULT_MIDISYNC = 0x0;
+constexpr uint8_t defaultMidiInput = 3;
 constexpr int DEFAULT_REMOTEUI = 0x1;
 constexpr int DEFAULT_BACKLIGHT_LEVEL = 0xFF; // Default to max brightness (255)
 constexpr int DEFAULT_REC_SOURCE = 0x0;
@@ -161,6 +162,12 @@ static const ConfigParam configParams[] = {
      midiDeviceList,
      4,
      false},
+    {.name = "MIDIINPUT",
+     .defaultValue = {.intValue = defaultMidiInput},
+     .fourcc = FourCC::VarMidiInput,
+     .options = midiDeviceList,
+     .optionCount = MIDI_DEVICE_LEN,
+     .isString = false},
     {"MIDISYNC",
      {.intValue = DEFAULT_MIDISYNC},
      FourCC::VarMidiSync,
@@ -264,6 +271,8 @@ Config::Config()
                      static_cast<int>(ThemeConstants::DEFAULT_EMPHASIS)),
       lineOut_(FourCC::VarLineOut, lineOutOptions, 3, DEFAULT_LINEOUT),
       midiDevice_(FourCC::VarMidiDevice, midiDeviceList, 4, DEFAULT_MIDIDEVICE),
+      midiInput_(FourCC::VarMidiInput, midiDeviceList, MIDI_DEVICE_LEN,
+                 defaultMidiInput),
       midiSync_(FourCC::VarMidiSync, midiSendSync, 2, DEFAULT_MIDISYNC),
       remoteUI_(FourCC::VarRemoteUI, remoteUIOnOff, 2, DEFAULT_REMOTEUI),
       importResampler_(FourCC::VarImportResampler, importResamplerOptions,
@@ -291,6 +300,7 @@ Config::Config()
   variables_.push_back(&emphasisColor_);
   variables_.push_back(&lineOut_);
   variables_.push_back(&midiDevice_);
+  variables_.push_back(&midiInput_);
   variables_.push_back(&midiSync_);
   variables_.push_back(&remoteUI_);
   variables_.push_back(&importResampler_);

@@ -11,12 +11,16 @@ The device screen allows you to manage settings for the picoTracker device hardw
 
 ## MIDI
 
-- **MIDI device:** Lists the picoTracker MIDI interfaces available. Available options are:
-    * None
+- **MIDI output:** Selects the picoTracker MIDI output interfaces. Available options are:
+    * Off
     * TRS
     * USB
     * TRS+USB
+- **MIDI input:** Selects which interfaces receive MIDI notes and transport messages: Off, TRS, USB, or TRS+USB (default). Changes take effect immediately and are independent of MIDI output. Disabling an input releases its held notes.
+
 - **MIDI sync:** Enable/disable MIDI clock sync messages being sent by the picoTracker.
+
+Device settings are saved when you leave the Device screen.
 
 ## Line Out Mode (1st Edition RP2040 model only)
 

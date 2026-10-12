@@ -259,11 +259,13 @@ struct FourCC {
     ActionAutoSlice,
     ActionShowRecordView,
     ActionRebuildSampleCache,
+    VarMidiInput,
   };
   ETL_DECLARE_ENUM_TYPE(FourCC, uint16_t)
   // Reflect the IDs used for display and variable persistence.
   ETL_ENUM_TYPE(VarLineOut, "LINEOUT")
   ETL_ENUM_TYPE(VarMidiDevice, "MIDIDEVICE")
+  ETL_ENUM_TYPE(VarMidiInput, "MIDIINPUT")
   ETL_ENUM_TYPE(VarMidiSync, "MIDISYNC")
   ETL_ENUM_TYPE(VarMidiClockSync, "MIDICLOCKSYNC")
   ETL_ENUM_TYPE(VarRemoteUI, "REMOTEUI")
