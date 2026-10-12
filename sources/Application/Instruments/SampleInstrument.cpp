@@ -373,6 +373,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
   // Get Rendering params for current voice & fill init data
 
   renderParams *rp = renderParams_ + channel;
+  const bool resumePosition = !cleanstart && !rp->finished_;
 
   rp->midiNote_ = midinote;
 
@@ -463,7 +464,9 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     // travel slower in sample
 
     rp->rendFirst_ = start_.GetInt();
-    rp->position_ = float(rp->rendFirst_);
+    if (!resumePosition) {
+      rp->position_ = float(rp->rendFirst_);
+    }
     rp->baseSpeed_ = fl2fp(source_->GetSampleRate(rp->midiNote_) / driverRate);
     rp->reverse_ = (rp->rendLoopEnd_ < rp->position_);
 
@@ -486,7 +489,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
       };
       rp->baseSpeed_ = fl2fp((freq * length) / driverRate);
       rp->rendFirst_ = rp->rendLoopStart_;
-      if (cleanstart) {
+      if (!resumePosition) {
         rp->position_ = float(rp->rendFirst_);
       }
       break;
@@ -502,7 +505,7 @@ bool SampleInstrument::Start(int channel, unsigned char midinote,
     sampleCount *= (6 * 16);
     rp->baseSpeed_ = fl2fp(length / float(sampleCount));
     rp->rendFirst_ = rp->rendLoopStart_;
-    if (cleanstart) {
+    if (!resumePosition) {
       rp->position_ = float(rp->rendFirst_);
     }
     break;

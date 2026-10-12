@@ -24,7 +24,8 @@ PlayerChannel::~PlayerChannel() {}
 
 void PlayerChannel::StartInstrument(I_Instrument *instr, unsigned char note,
                                     bool trigger) {
-  if (instr_) {
+  const bool continueInstrument = (instr_ == instr) && !trigger;
+  if (instr_ && !continueInstrument) {
     StopInstrument();
   }
   if (instr->Start(
@@ -32,6 +33,9 @@ void PlayerChannel::StartInstrument(I_Instrument *instr, unsigned char note,
           trigger)) { // note could be refused coz it's out of the keymap
     instr_ = instr;
   } else {
+    if (continueInstrument) {
+      StopInstrument();
+    }
     instr_ = 0;
   };
 };

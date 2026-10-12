@@ -46,6 +46,13 @@ MidiInstrument::MidiInstrument()
   variables_.insert(variables_.end(), &tableAuto_);
   variables_.insert(variables_.end(), &program_);
   variables_.insert(variables_.end(), &bank_);
+
+  for (uint8_t i = 0; i < SONG_CHANNEL_COUNT; ++i) {
+    first_[i] = false;
+    lastNoteCount_[i] = 0;
+    pendingNoteOffs_[i] = 0xFF;
+    lastNotes_[i].fill(0);
+  }
 }
 
 MidiInstrument::~MidiInstrument(){};
@@ -81,25 +88,65 @@ void MidiInstrument::OnStart() {
 };
 
 bool MidiInstrument::Start(int c, unsigned char note, bool retrigger) {
+  const bool hasActiveNotes = lastNoteCount_[c] > 0;
+  const bool continueNote = !retrigger && hasActiveNotes;
+  const bool sameNoteContinue = continueNote && (lastNotes_[c][0] == note);
+  const auto armNoteLength = [&]() {
+    remainingTicks_ = noteLen_.GetInt();
+    if (remainingTicks_ == 0) {
+      remainingTicks_ = -1;
+    }
+  };
+
+  if (sameNoteContinue) {
+    armNoteLength();
+    velocity_ = INITIAL_NOTE_VELOCITY;
+    retrig_ = false;
+    playing_ = true;
+    return true;
+  }
+
+  if (continueNote) {
+    const uint8_t midiChannel = channel_.GetInt();
+    if (pendingNoteOffs_[c] != 0xFF) {
+      MidiMessage msg;
+      msg.status_ = MidiMessage::MIDI_NOTE_OFF + midiChannel;
+      msg.data1_ = pendingNoteOffs_[c];
+      msg.data2_ = 0x00;
+      svc_->QueueMessage(msg);
+    }
+    pendingNoteOffs_[c] = lastNotes_[c][0];
+
+    // MIDI ties preserve the monophonic root note. Release any MCH chord
+    // tones immediately so they cannot hang after the tied note starts.
+    for (uint8_t i = 1; i < lastNoteCount_[c]; ++i) {
+      MidiMessage msg;
+      msg.status_ = MidiMessage::MIDI_NOTE_OFF + midiChannel;
+      msg.data1_ = lastNotes_[c][i];
+      msg.data2_ = 0x00;
+      svc_->QueueMessage(msg);
+    }
+  } else {
+    pendingNoteOffs_[c] = 0xFF;
+  }
 
   first_[c] = true;
+  lastNoteCount_[c] = 1;
   lastNotes_[c][0] = note;
-
-  Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
-  int channel = v->GetInt();
-
-  v = FindVariable(FourCC::MidiInstrumentNoteLength);
-  remainingTicks_ = v->GetInt();
-  if (remainingTicks_ == 0) {
-    remainingTicks_ = -1;
+  for (uint8_t i = 1; i < MAX_MIDI_CHORD_NOTES + 1; ++i) {
+    lastNotes_[c][i] = 0;
   }
+
+  armNoteLength();
 
   // set initial velocity (changed via InstrumentCommandVelocity)
   velocity_ = INITIAL_NOTE_VELOCITY;
   playing_ = true;
   retrig_ = false;
-  pitchBend_ = false;
-  useLogCurve_ = false;
+  if (!continueNote) {
+    pitchBend_ = false;
+    useLogCurve_ = false;
+  }
 
   return true;
 };
@@ -111,10 +158,16 @@ void MidiInstrument::Stop(int c) {
   Variable *v = FindVariable(FourCC::MidiInstrumentChannel);
   int channel = v->GetInt();
 
-  for (int i = 0; i < MAX_MIDI_CHORD_NOTES + 1; i++) {
-    if (lastNotes_[c][i] == 0) {
-      continue;
-    }
+  if (pendingNoteOffs_[c] != 0xFF) {
+    MidiMessage msg;
+    msg.status_ = MidiMessage::MIDI_NOTE_OFF + channel;
+    msg.data1_ = pendingNoteOffs_[c];
+    msg.data2_ = 0x00;
+    svc_->QueueMessage(msg);
+    pendingNoteOffs_[c] = 0xFF;
+  }
+
+  for (uint8_t i = 0; i < lastNoteCount_[c]; i++) {
     MidiMessage msg;
     msg.status_ = MidiMessage::MIDI_NOTE_OFF + channel;
     msg.data1_ = lastNotes_[c][i];
@@ -124,6 +177,9 @@ void MidiInstrument::Stop(int c) {
   }
   // clear last notes array
   lastNotes_[c].fill(0);
+  lastNoteCount_[c] = 0;
+  pendingNoteOffs_[c] = 0xFF;
+  first_[c] = false;
   playing_ = false;
 };
 
@@ -147,6 +203,16 @@ bool MidiInstrument::Render(int channel, fixed *buffer, int size,
     svc_->QueueMessage(msg);
 
     first_[channel] = false;
+
+    // Continued MIDI notes replace the previous note after the new one is
+    // armed, so external synth envelopes can keep flowing without a gap.
+    if (pendingNoteOffs_[channel] != 0xFF) {
+      msg.status_ = MidiMessage::MIDI_NOTE_OFF + mchannel;
+      msg.data1_ = pendingNoteOffs_[channel];
+      msg.data2_ = 0x00;
+      svc_->QueueMessage(msg);
+      pendingNoteOffs_[channel] = 0xFF;
+    }
   }
 
   // Update pitch bend logic if a pitch bend is active.
@@ -303,7 +369,8 @@ void MidiInstrument::ProcessCommand(int channel, TrackerCommand cc,
     // split into 4 note offsets
     for (int i = 0; i < MAX_MIDI_CHORD_NOTES; i++) {
       uint8_t noteOffset = (value >> (i * 4)) & 0xF;
-      if (noteOffset == 0) {
+      if (noteOffset == 0 ||
+          lastNoteCount_[channel] >= MAX_MIDI_CHORD_NOTES + 1) {
         continue;
       }
 
@@ -321,7 +388,7 @@ void MidiInstrument::ProcessCommand(int channel, TrackerCommand cc,
       //              noteOffset);
 
       // save the chord note for sending a note off later
-      lastNotes_[channel][i + 1] = note;
+      lastNotes_[channel][lastNoteCount_[channel]++] = note;
 
       if (noteOffset != 0) {
         MidiMessage msg;

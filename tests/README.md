@@ -16,4 +16,5 @@ cmake --build build-host
 ```
 ./build-host/picoTracker_tests
 ./build-host/midi_input_tests
+./build-host/midi_instrument_tests
 ```

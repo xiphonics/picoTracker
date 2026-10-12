@@ -82,6 +82,8 @@ private:
   etl::list<Variable *, 7> variables_;
 
   etl::array<uint8_t, MAX_MIDI_CHORD_NOTES + 1> lastNotes_[SONG_CHANNEL_COUNT];
+  uint8_t lastNoteCount_[SONG_CHANNEL_COUNT];
+  uint8_t pendingNoteOffs_[SONG_CHANNEL_COUNT];
   int remainingTicks_;
   bool playing_;
   bool retrig_;

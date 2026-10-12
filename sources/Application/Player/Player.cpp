@@ -885,9 +885,6 @@ void Player::playRow(int32_t channel, const DelayedRow &row) {
     mixer_.StopInstrument(channel);
   } else if (note <= HIGHEST_NOTE && fx.allowNote) {
 
-    // Stop instrument if playing
-
-    mixer_.StopInstrument(channel);
     InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
     // get instrument for next note
@@ -927,6 +924,9 @@ void Player::playRow(int32_t channel, const DelayedRow &row) {
       // Check if note is in acceptable midi range
 
       if (note < 128) {
+        if (newInstrument) {
+          mixer_.StopInstrument(channel);
+        }
         mixer_.StartInstrument(channel, instrument, note, newInstrument);
         int instrTable = instrument->GetTable();
 
