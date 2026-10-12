@@ -131,8 +131,8 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     mixer_.StopChannel(i);
+    delayedRows_[i].Clear();
     timeToLive_[i] = 0;
-    timeToStart_[i] = 0;
     TablePlayback &tpb = TablePlayback::GetTablePlayback(i);
     TablePlayback &atp = TablePlayback::GetAutomationPlayback(i);
     tpb.Stop();
@@ -222,11 +222,6 @@ void Player::Start(PlayMode mode, bool forceSongMode, MixerServiceMode msmMode,
     break;
   }
 
-  // Apply the commands of the first row now that the song position is known.
-  // The countdown that defers a row containing DLY has not ticked yet, hence
-  // ignorePendingDelay - it is taken into account from the first Update().
-  ProcessCommands(nullptr, true);
-
   startTime_ = mixer_.GetAudioOut()->GetStreamTime();
 
   SetChanged();
@@ -287,6 +282,7 @@ void Player::Stop() {
 
   for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
     mixer_.StopChannel(i);
+    delayedRows_[i].Clear();
     TablePlayback::GetTablePlayback(i).Stop();
     TablePlayback::GetAutomationPlayback(i).Stop();
   }
@@ -616,23 +612,18 @@ void Player::Update(Observable &o, I_ObservableData *d) {
       };
     }
 
-    // Flag the channels whose DLY countdown expires now, their commands must
-    // be processed with the note they belong to even if the groove does not
-    // trigger on this tick
-    bool delayExpired[SONG_CHANNEL_COUNT];
-    for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-      delayExpired[i] = false;
-      if (timeToStart_[i] > 0) {
-        if (--timeToStart_[i] == 0) {
-          playCursorPosition(i);
-          delayExpired[i] = true;
-        }
+    for (int32_t channel = 0; channel < SONG_CHANNEL_COUNT; ++channel) {
+      if (!isRunning_ || !mixer_.IsChannelPlaying(channel)) {
+        delayedRows_[channel].Clear();
+        continue;
       }
+      delayedRows_[channel].Tick([&](const DelayedRow &row) {
+        playRow(channel, row);
+        if (viewData_->playMode_ != PM_AUDITION) {
+          processRowCommands(channel, row);
+        }
+      });
     }
-
-    // Process commands in current phrase
-    if (viewData_->playMode_ != PM_AUDITION)
-      ProcessCommands(delayExpired);
 
     // Initialise retrigger table
     int32_t instrRetrigger[SONG_CHANNEL_COUNT];
@@ -689,78 +680,36 @@ void Player::Update(Observable &o, I_ObservableData *d) {
   }
 };
 
-/************************************************************
- ProcessCommands:
-        Check if there's any command to trigger at current playing
-        position for all channels. A row that is waiting for its DLY to
-        run out is skipped, its commands are processed by the tick that
-        triggers the note it belongs to.
- ************************************************************/
+// Apply the commands captured with the row whose note just triggered.
+void Player::processRowCommands(int32_t i, const DelayedRow &row) {
+  RowFxResult fx =
+      ResolveRowFx(row.note, row.cmd1, row.param1, row.cmd2, row.param2,
+                   lastActiveCommands_[i], true, false);
+  auto dispatchResolvedCommand = [&](bool allowed, TrackerCommand cc,
+                                     ushort param) {
+    if (!allowed || cc == TrackerCommand::InstrumentCommandNone ||
+        cc == TrackerCommand::InstrumentCommandChance ||
+        cc == TrackerCommand::InstrumentCommandRandom) {
+      return;
+    }
 
-void Player::ProcessCommands(const bool *delayExpired,
-                             bool ignorePendingDelay) {
-
-  // loop on all channels
-
-  Groove *gs = Groove::GetInstance();
-
-  for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
-
-    if (mixer_.IsChannelPlaying(i)) {
-
-      // check if there's any phrase playing
-
-      uchar phrase = viewData_->currentPlayPhrase_[i];
-      if (phrase != 0xFF) {
-
-        // The commands of a row with DLY are set in motion with its own note,
-        // not with the one that is still sounding: timeToStart_ is only non
-        // zero while such a row is waiting, see updatePhrasePos().
-        if (!ignorePendingDelay && timeToStart_[i]) {
-          continue;
-        }
-
-        // If groove says it is time to play, or the delay of this channel has
-        // just expired
-        if (gs->TriggerChannel(i) || (delayExpired && delayExpired[i])) {
-          int pos = viewData_->phrasePlayPos_[i];
-          uchar note = viewData_->song_->phrase_.note_[phrase * 16 + pos];
-          RowFxResult fx = ResolveRowFx(
-              note, viewData_->song_->phrase_.cmd1_[phrase * 16 + pos],
-              viewData_->song_->phrase_.param1_[phrase * 16 + pos],
-              viewData_->song_->phrase_.cmd2_[phrase * 16 + pos],
-              viewData_->song_->phrase_.param2_[phrase * 16 + pos],
-              lastActiveCommands_[i], true, false);
-
-          auto dispatchResolvedCommand = [&](bool allowed, TrackerCommand cc,
-                                             ushort param) {
-            if (!allowed || cc == TrackerCommand::InstrumentCommandNone ||
-                cc == TrackerCommand::InstrumentCommandChance ||
-                cc == TrackerCommand::InstrumentCommandRandom) {
-              return;
-            }
-
-            bool handledByPlayer = ProcessChannelCommand(i, cc, param);
-            bool executed = handledByPlayer;
-            if (!handledByPlayer) {
-              I_Instrument *instrument = mixer_.GetInstrument(i);
-              if (instrument) {
-                instrument->ProcessCommand(i, cc, param);
-                executed = true;
-              }
-            };
-            if (executed) {
-              RecordLastActiveCommand(i, cc, param);
-            }
-          };
-
-          dispatchResolvedCommand(fx.allowCmd1, fx.cmd1, fx.param1);
-          dispatchResolvedCommand(fx.allowCmd2, fx.cmd2, fx.param2);
-        }
+    bool handledByPlayer = ProcessChannelCommand(i, cc, param);
+    bool executed = handledByPlayer;
+    if (!handledByPlayer) {
+      I_Instrument *instrument = mixer_.GetInstrument(i);
+      if (instrument) {
+        instrument->ProcessCommand(i, cc, param);
+        executed = true;
       }
+    };
+    if (executed) {
+      RecordLastActiveCommand(i, cc, param);
     }
   };
-};
+
+  dispatchResolvedCommand(fx.allowCmd1, fx.cmd1, fx.param1);
+  dispatchResolvedCommand(fx.allowCmd2, fx.cmd2, fx.param2);
+}
 
 bool Player::ProcessChannelCommand(int channel, TrackerCommand cmd,
                                    ushort param) {
@@ -881,10 +830,12 @@ void Player::updateChainPos(int pos, int channel, int hop) {
     if (*data == 0xFF) { // This could happen if starting in song mode on a row
                          // where a chain contains no phrase
       mixer_.StopChannel(channel);
+      delayedRows_[channel].Clear();
     }
   } else {
     viewData_->currentPlayPhrase_[channel] = 0xFF;
     mixer_.StopChannel(channel);
+    delayedRows_[channel].Clear();
   };
   updatePhrasePos((hop >= 0) ? hop : 0, channel);
 }
@@ -898,147 +849,129 @@ void Player::updatePhrasePos(int pos, int channel) {
 
   viewData_->phrasePlayPos_[channel] = pos;
 
-  // See if we need to delay the trigger
-  timeToStart_[channel] = 1;
-
-  uchar phrase = viewData_->currentPlayPhrase_[channel];
-
-  // Check both param colum 1 & 2
-
-  TrackerCommand cc = viewData_->song_->phrase_.cmd1_[phrase * 16 + pos];
-  if (cc == TrackerCommand::InstrumentCommandDelay) {
-    ushort param = viewData_->song_->phrase_.param1_[phrase * 16 + pos];
-    timeToStart_[channel] = (param & 0x0F) + 1;
+  const uint8_t phrase = viewData_->currentPlayPhrase_[channel];
+  if (phrase == 0xFF || !mixer_.IsChannelPlaying(channel)) {
+    delayedRows_[channel].Clear();
+    return;
   }
-
-  cc = viewData_->song_->phrase_.cmd2_[phrase * 16 + pos];
-  if (cc == TrackerCommand::InstrumentCommandDelay) {
-    ushort param = viewData_->song_->phrase_.param2_[phrase * 16 + pos];
-    timeToStart_[channel] = (param & 0x0F) + 1;
-  }
+  const Phrase &data = viewData_->song_->phrase_;
+  const int32_t index = phrase * 16 + pos;
+  const int32_t chainIndex = viewData_->currentPlayChain_[channel] * 16 +
+                             viewData_->chainPlayPos_[channel];
+  delayedRows_[channel].Add({
+      .note = data.note_[index],
+      .instrument = data.instr_[index],
+      .transpose = viewData_->song_->chain_.transpose_[chainIndex],
+      .cmd1 = data.cmd1_[index],
+      .cmd2 = data.cmd2_[index],
+      .param1 = data.param1_[index],
+      .param2 = data.param2_[index],
+  });
 }
 
-void Player::playCursorPosition(int channel) {
+void Player::playRow(int32_t channel, const DelayedRow &row) {
+  uint8_t note = row.note;
+  const uint8_t instr = row.instrument;
+  RowFxResult fx =
+      ResolveRowFx(note, row.cmd1, row.param1, row.cmd2, row.param2,
+                   lastActiveCommands_[channel], false);
+  note = fx.note;
 
-  int pos = viewData_->phrasePlayPos_[channel];
+  TableHolder *th = TableHolder::GetInstance();
+  TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
+  TablePlayback &atp = TablePlayback::GetAutomationPlayback(channel);
 
-  // Get chain content and see if instr needs to be started/Stopped
-  unsigned char currentPhrase = viewData_->currentPlayPhrase_[channel];
+  if (note == NOTE_OFF) {
+    mixer_.StopInstrument(channel);
+  } else if (note <= HIGHEST_NOTE && fx.allowNote) {
 
-  if (currentPhrase != 0xFF) {
+    // Stop instrument if playing
 
-    Song *song = viewData_->song_;
-    Phrase *phrase = &(song->phrase_);
-    unsigned char note = phrase->note_[16 * currentPhrase + pos];
-    unsigned char instr = phrase->instr_[16 * currentPhrase + pos];
-    RowFxResult fx = ResolveRowFx(note, phrase->cmd1_[16 * currentPhrase + pos],
-                                  phrase->param1_[16 * currentPhrase + pos],
-                                  phrase->cmd2_[16 * currentPhrase + pos],
-                                  phrase->param2_[16 * currentPhrase + pos],
-                                  lastActiveCommands_[channel], false);
-    note = fx.note;
+    mixer_.StopInstrument(channel);
+    InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
 
-    TableHolder *th = TableHolder::GetInstance();
-    TablePlayback &tpb = TablePlayback::GetTablePlayback(channel);
-    TablePlayback &atp = TablePlayback::GetAutomationPlayback(channel);
+    // get instrument for next note
 
-    if (note == NOTE_OFF) {
-      mixer_.StopInstrument(channel);
-    } else if (note <= HIGHEST_NOTE && fx.allowNote) {
+    bool newInstrument = false;
 
-      // Stop instrument if playing
+    I_Instrument *instrument;
+    if (instr != 0xFF) {
+      instrument = bank->GetInstrument(instr);
+      newInstrument = true;
+    } else {
+      instrument = mixer_.GetLastInstrument(channel);
+    }
 
-      mixer_.StopInstrument(channel);
-      InstrumentBank *bank = viewData_->project_->GetInstrumentBank();
+    if (instrument == 0) {
+      instrument = bank->GetInstrument(0);
+    }
 
-      // get instrument for next note
+    if (instrument != 0) {
 
-      bool newInstrument = false;
-
-      I_Instrument *instrument;
-      if (instr != 0xFF) {
-        instrument = bank->GetInstrument(instr);
-        newInstrument = true;
-      } else {
-        instrument = mixer_.GetLastInstrument(channel);
+      bool preserveNote = false;
+      if (instrument->GetType() == IT_SAMPLE) {
+        SampleInstrument *sampleInstrument =
+            static_cast<SampleInstrument *>(instrument);
+        preserveNote = sampleInstrument->HasSlicesForPlayback();
       }
-
-      if (instrument == 0) {
-        instrument = bank->GetInstrument(0);
+      if (!preserveNote) {
+        note += row.transpose;
+        note += project_->GetTranspose();
       }
+      instrumentOnChannel_[channel][0] =
+          (instr / 16) > 9 ? 'A' - 10 + (instr / 16) : '0' + (instr / 16);
+      instrumentOnChannel_[channel][1] =
+          (instr % 16) > 9 ? 'A' - 10 + (instr % 16) : '0' + (instr % 16);
+      instrumentOnChannel_[channel][2] = '\0';
 
-      if (instrument != 0) {
+      // Check if note is in acceptable midi range
 
-        int chain = viewData_->currentPlayChain_[channel];
-        int chainPos = viewData_->chainPlayPos_[channel];
-        unsigned char *trsp =
-            viewData_->song_->chain_.transpose_ + (16 * chain + chainPos);
-        bool preserveNote = false;
-        if (instrument->GetType() == IT_SAMPLE) {
-          SampleInstrument *sampleInstrument =
-              static_cast<SampleInstrument *>(instrument);
-          preserveNote = sampleInstrument->HasSlicesForPlayback();
-        }
-        if (!preserveNote) {
-          note += *trsp;
-          note += project_->GetTranspose();
-        }
-        instrumentOnChannel_[channel][0] =
-            (instr / 16) > 9 ? 'A' - 10 + (instr / 16) : '0' + (instr / 16);
-        instrumentOnChannel_[channel][1] =
-            (instr % 16) > 9 ? 'A' - 10 + (instr % 16) : '0' + (instr % 16);
-        instrumentOnChannel_[channel][2] = '\0';
+      if (note < 128) {
+        mixer_.StartInstrument(channel, instrument, note, newInstrument);
+        int instrTable = instrument->GetTable();
 
-        // Check if note is in acceptable midi range
+        // If an instrument number has been specified && instrument has table,
+        // we trigger the table.
 
-        if (note < 128) {
-          mixer_.StartInstrument(channel, instrument, note, newInstrument);
-          int instrTable = instrument->GetTable();
-
-          // If an instrument number has been specified && instrument has table,
-          // we trigger the table.
-
-          if ((instrTable != VAR_OFF) && (newInstrument)) {
-            Table &table = th->GetTable(instrTable);
-            bool automated = instrument->GetTableAutomation();
-            if (automated) {
-              atp.Start(instrument, table, true);
-              tpb.Stop();
-            } else {
-              atp.Stop();
-              tpb.Start(instrument, table, false);
-            }
+        if ((instrTable != VAR_OFF) && (newInstrument)) {
+          Table &table = th->GetTable(instrTable);
+          bool automated = instrument->GetTableAutomation();
+          if (automated) {
+            atp.Start(instrument, table, true);
+            tpb.Stop();
           } else {
-            // if there was an instrument number, we stop the table
-            if (newInstrument) {
-              atp.Stop();
-              tpb.Stop();
-            }
+            atp.Stop();
+            tpb.Start(instrument, table, false);
           }
         } else {
-          Trace::Error("Note outside range: %02x", (unsigned int)note);
+          // if there was an instrument number, we stop the table
+          if (newInstrument) {
+            atp.Stop();
+            tpb.Stop();
+          }
         }
+      } else {
+        Trace::Error("Note outside range: %02x", (unsigned int)note);
       }
     }
-    if ((note <= HIGHEST_NOTE && fx.allowNote) || (instr != 0xFF)) {
-      I_Instrument *instrument = mixer_.GetInstrument(channel);
-      if (instrument) {
-        if (instrument->GetTableAutomation()) {
-          TablePlayerChange tpc;
-          tpc.timeToLive_ = timeToLive_[channel];
-          tpc.instrRetrigger_ = -1;
-          tpc.noteRetrigger_ = -1;
-          atp.ProcessStep(tpc, mixer_.GetChannelNote(channel),
-                          lastActiveCommands_[channel]);
-          timeToLive_[channel] = tpc.timeToLive_;
-          if (tpc.noteRetrigger_ >= 0) {
-            RetriggerChannelInstrumentAtNote(channel, tpc.noteRetrigger_,
-                                             false);
-          } else if (tpc.instrRetrigger_ >= 0) {
-            RetriggerChannelInstrument(
-                channel, DecodeRetriggerOffset(tpc.instrRetrigger_), false);
-          };
-        }
+  }
+  if ((note <= HIGHEST_NOTE && fx.allowNote) || (instr != 0xFF)) {
+    I_Instrument *instrument = mixer_.GetInstrument(channel);
+    if (instrument) {
+      if (instrument->GetTableAutomation()) {
+        TablePlayerChange tpc;
+        tpc.timeToLive_ = timeToLive_[channel];
+        tpc.instrRetrigger_ = -1;
+        tpc.noteRetrigger_ = -1;
+        atp.ProcessStep(tpc, mixer_.GetChannelNote(channel),
+                        lastActiveCommands_[channel]);
+        timeToLive_[channel] = tpc.timeToLive_;
+        if (tpc.noteRetrigger_ >= 0) {
+          RetriggerChannelInstrumentAtNote(channel, tpc.noteRetrigger_, false);
+        } else if (tpc.instrRetrigger_ >= 0) {
+          RetriggerChannelInstrument(
+              channel, DecodeRetriggerOffset(tpc.instrRetrigger_), false);
+        };
       }
     }
   }
@@ -1255,6 +1188,7 @@ void Player::moveToNextPhrase(int channel, int hop) {
       break;
     case QM_PHRASESTOP:
       mixer_.StopChannel(channel);
+      delayedRows_[channel].Clear();
       liveQueueingMode_[channel] = QM_NONE;
       return;
     case QM_CHAINSTART:
@@ -1348,6 +1282,7 @@ void Player::moveToNextChain(int channel, int hop) {
     case QM_CHAINSTOP:
     case QM_PHRASESTOP:
       mixer_.StopChannel(channel);
+      delayedRows_[channel].Clear();
       liveQueueingMode_[channel] = QM_NONE;
       return;
 
@@ -1393,6 +1328,7 @@ void Player::moveToNextChain(int channel, int hop) {
         // Stop all channels
         for (int i = 0; i < SONG_CHANNEL_COUNT; i++) {
           mixer_.StopChannel(i);
+          delayedRows_[i].Clear();
         }
         MidiService::GetInstance()->OnPlayerStop();
         mixer_.OnPlayerStop();
@@ -1431,6 +1367,7 @@ void Player::moveToNextChain(int channel, int hop) {
     updateSongPos(nextPos, channel, chainPosition, hop);
   } else {
     mixer_.StopChannel(channel);
+    delayedRows_[channel].Clear();
   }
 };
 
