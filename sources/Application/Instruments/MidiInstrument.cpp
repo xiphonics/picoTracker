@@ -27,7 +27,8 @@ MidiInstrument::MidiInstrument()
       volume_(FourCC::MidiInstrumentVolume, 255),
       table_(FourCC::MidiInstrumentTable, VAR_OFF),
       tableAuto_(FourCC::MidiInstrumentTableAutomation, false),
-      program_(FourCC::MidiInstrumentProgram, VAR_OFF) {
+      program_(FourCC::MidiInstrumentProgram, VAR_OFF),
+      bank_(FourCC::MidiInstrumentBank, 0) {
 
   if (svc_ == 0) {
     svc_ = MidiService::GetInstance();
@@ -44,6 +45,7 @@ MidiInstrument::MidiInstrument()
   variables_.insert(variables_.end(), &table_);
   variables_.insert(variables_.end(), &tableAuto_);
   variables_.insert(variables_.end(), &program_);
+  variables_.insert(variables_.end(), &bank_);
 }
 
 MidiInstrument::~MidiInstrument(){};
@@ -372,10 +374,30 @@ void MidiInstrument::SetTableState(TableSaveState &state) {
 };
 
 void MidiInstrument::SendProgramChange(int channel, int program) {
+  SendBankSelect(channel, bank_.GetInt());
+
   MidiMessage msg;
   msg.status_ = MidiMessage::MIDI_PROGRAM_CHANGE + channel;
   msg.data1_ = program;
   msg.data2_ = MidiMessage::UNUSED_BYTE;
+  svc_->QueueMessage(msg);
+};
+
+void MidiInstrument::SendBankSelect(int channel, int bank) {
+  if (bank < 0) {
+    bank = 0;
+  } else if (bank > 0x3FFF) {
+    bank = 0x3FFF;
+  }
+
+  MidiMessage msg;
+  msg.status_ = MidiMessage::MIDI_CONTROL_CHANGE + channel;
+  msg.data1_ = 0;
+  msg.data2_ = (bank >> 7) & 0x7F;
+  svc_->QueueMessage(msg);
+
+  msg.data1_ = 32;
+  msg.data2_ = bank & 0x7F;
   svc_->QueueMessage(msg);
 };
 
