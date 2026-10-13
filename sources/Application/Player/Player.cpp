@@ -717,6 +717,12 @@ bool Player::ProcessChannelCommand(int channel, TrackerCommand cmd,
   I_Instrument *instr = mixer_.GetInstrument(channel);
 
   switch (cmd) {
+  case TrackerCommand::InstrumentCommandMidiStart:
+    MidiService::GetInstance()->SendMidiStart();
+    return true;
+  case TrackerCommand::InstrumentCommandMidiStop:
+    MidiService::GetInstance()->SendMidiStop();
+    return true;
   case TrackerCommand::InstrumentCommandKill:
     if (instr) {
       int timeToLive = (param & 0xFF);

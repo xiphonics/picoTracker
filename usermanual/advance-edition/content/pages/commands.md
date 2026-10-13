@@ -182,6 +182,14 @@ When used with MIDI instruments, the `LEG` command retains its exponential MIDI 
 
 sends a program change command on the current channel. `0000` is program `0`.
 
+## MSP ----
+
+Sends the MIDI Stop real-time transport message (`0xFC`) to the active MIDI outputs.
+
+## MST ----
+
+Sends the MIDI Start real-time transport message (`0xFA`) to the active MIDI outputs.
+
 ## PAN aabb
 
 **PAN aabb: where `bb` is the pan destination and `aa` is the speed to get there**

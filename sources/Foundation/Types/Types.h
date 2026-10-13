@@ -43,6 +43,8 @@ struct TrackerCommand {
     InstrumentCommandVolume = 69,              // VOLM
     InstrumentCommandNone = 45,                // ----
     InstrumentCommandMidiChord = 143,
+    InstrumentCommandMidiStart = 70,
+    InstrumentCommandMidiStop = 71,
     InstrumentCommandChance = 188, // CHN
     InstrumentCommandRandom = 189, // RND
 
@@ -64,6 +66,8 @@ struct TrackerCommand {
   ETL_ENUM_TYPE(InstrumentCommandTempo, "TPO")
   ETL_ENUM_TYPE(InstrumentCommandMidiCC, "MCC")
   ETL_ENUM_TYPE(InstrumentCommandMidiPC, "MPC")
+  ETL_ENUM_TYPE(InstrumentCommandMidiStart, "MST")
+  ETL_ENUM_TYPE(InstrumentCommandMidiStop, "MSP")
   ETL_ENUM_TYPE(InstrumentCommandPlayOfset, "POF")
   ETL_ENUM_TYPE(InstrumentCommandLowPassFilter, "FLT")
   ETL_ENUM_TYPE(InstrumentCommandTable, "TBL")

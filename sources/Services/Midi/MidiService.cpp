@@ -225,6 +225,18 @@ void MidiService::startDevice() {
   }
 };
 
+void MidiService::SendMidiStart() {
+  MidiMessage msg;
+  msg.status_ = MidiMessage::MIDI_START;
+  QueueMessage(msg);
+}
+
+void MidiService::SendMidiStop() {
+  MidiMessage msg;
+  msg.status_ = MidiMessage::MIDI_STOP;
+  QueueMessage(msg);
+}
+
 void MidiService::stopDevice() {
   for (auto dev : outList_) {
     dev->Stop();
